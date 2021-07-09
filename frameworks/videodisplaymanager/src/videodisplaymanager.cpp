@@ -56,6 +56,7 @@ namespace {
         int32_t fence;
         SurfaceError ret;
 
+        VIDEO_DISPLAY_ENTER();
         if (surface_ == nullptr) {
             BLOGFE("surface is null");
             return;
@@ -76,6 +77,7 @@ namespace {
             }
         }
         preBuffer = buffer;
+        VIDEO_DISPLAY_EXIT();
     }
 
     VideoDisplayManager::VideoDisplayManager() : surface_(nullptr), listener(nullptr)
