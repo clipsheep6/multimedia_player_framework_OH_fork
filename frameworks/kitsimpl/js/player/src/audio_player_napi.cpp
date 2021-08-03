@@ -333,10 +333,8 @@ napi_value AudioPlayerNapi::Seek(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &undefinedResult);
 
     size_t argCount = 1;
-    napi_value result = nullptr;
     napi_value args[1] = { nullptr };
     napi_value jsThis = nullptr;
-    napi_value jsCallback = nullptr;
     int64_t position = -1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && argCount >= 1, nullptr, "fail to Seek");
@@ -361,23 +359,6 @@ napi_value AudioPlayerNapi::Seek(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
 
-    if (player->timeUpdateCallback_ == nullptr) {
-        MEDIA_LOGE("fail to Seek");
-        return undefinedResult;
-    }
-
-    status = napi_get_reference_value(env, player->timeUpdateCallback_, &jsCallback);
-    if (status != napi_ok && jsCallback == nullptr) {
-        MEDIA_LOGE("fail to Seek");
-        return undefinedResult;
-    }
-
-    status = napi_call_function(env, nullptr, jsCallback, 0, nullptr, &result);
-    if (status != napi_ok) {
-        MEDIA_LOGE("fail to Seek");
-        return undefinedResult;
-    }
-
     MEDIA_LOGD("Seek success");
     return undefinedResult;
 }
@@ -388,10 +369,8 @@ napi_value AudioPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &undefinedResult);
 
     size_t argCount = 1;
-    napi_value result = nullptr;
     napi_value args[1] = { nullptr };
     napi_value jsThis = nullptr;
-    napi_value jsCallback = nullptr;
     double volumeLevel;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && argCount >= 1, nullptr, "fail to SetVolume");
@@ -414,21 +393,6 @@ napi_value AudioPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
         MEDIA_LOGE("fail to SetVolume");
         return undefinedResult;
     }
-
-    if (player->volumeChangeCallback_ == nullptr) {
-        MEDIA_LOGE("fail to SetVolume");
-        return undefinedResult;
-    }
-
-    status = napi_get_reference_value(env, player->volumeChangeCallback_, &jsCallback);
-    if (status != napi_ok && jsCallback == nullptr) {
-        MEDIA_LOGE("fail to SetVolume");
-        return undefinedResult;
-    }
-
-    status = napi_call_function(env, nullptr, jsCallback, 0, nullptr, &result);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "fail to SetVolume");
-
     MEDIA_LOGD("SetVolume success");
     return undefinedResult;
 }
@@ -474,8 +438,8 @@ napi_value AudioPlayerNapi::On(napi_env env, napi_callback_info info)
 
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
-    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string
-        || napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
+    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
+        napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
         MEDIA_LOGE("invalid arguments type");
         return undefinedResult;
     }
@@ -518,10 +482,13 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
 
-    player->callbackNapi_ = std::make_shared<PlayerCallbackNapi>(env, *player);
-    if (player->nativePlayer_->SetPlayerCallback(player->callbackNapi_) != 0) {
-        MEDIA_LOGE("fail to SetPlayerCallback");
-        return undefinedResult;
+    if (player->callbackNapi_ == nullptr) {
+        player->callbackNapi_ = std::make_shared<PlayerCallbackNapi>(env, *player);
+        CHECK_AND_RETURN_RET_LOG(player->callbackNapi_ != nullptr, undefinedResult, "callbackNapi_ no memory");
+        if (player->nativePlayer_->SetPlayerCallback(player->callbackNapi_) != 0) {
+            MEDIA_LOGE("fail to SetPlayerCallback");
+            return undefinedResult;
+        }
     }
 
     if (player->nativePlayer_->PrepareAsync() != 0) {
@@ -744,7 +711,7 @@ napi_value AudioPlayerNapi::GetState(napi_env env, napi_callback_info info)
     status = napi_create_string_utf8(env, curState.c_str(), NAPI_AUTO_LENGTH, &jsResult);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "napi_create_string_utf8 error");
 
-    MEDIA_LOGD("GetState success, State: %{public}d", status);
+    MEDIA_LOGD("GetState success, State: %{public}d", player->currentState_);
     return jsResult;
 }
 
