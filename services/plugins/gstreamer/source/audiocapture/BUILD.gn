@@ -71,7 +71,7 @@ ohos_shared_library("gst_audio_capture_src") {
   ]
 
   deps = [
-    "//foundation/multimedia/audio_standard/interfaces/innerkits/native/audiorecorder:audio_recorder",
+    "//foundation/multimedia/audio_standard/interfaces/innerkits/native/audiocapturer:audio_capturer",
     "//third_party/gstreamer/gstreamer:gstreamer",
     "//third_party/gstreamer/gstreamer:gstbase",
     "//third_party/gstreamer/gstplugins_base:gstaudio",
