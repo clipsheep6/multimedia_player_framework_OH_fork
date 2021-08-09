@@ -82,7 +82,7 @@ int32_t AudioCaptureAsImpl::GetCaptureParameter(uint32_t &bitrate, uint32_t &cha
     (void)bitrate;
     MEDIA_LOGD("GetCaptureParameter");
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
-    AudioStandard::AudioRecorderParams params;
+    AudioStandard::AudioCapturerParams params;
     CHECK_AND_RETURN_RET(audioCapturer_->GetParams(params) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
     channels = params.audioChannel;
     sampleRate = params.samplingRate;
