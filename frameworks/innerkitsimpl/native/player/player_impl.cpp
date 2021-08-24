@@ -85,7 +85,7 @@ int32_t PlayerImpl::SetSource(const std::string &uri)
 
 int32_t PlayerImpl::Play()
 {
-    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, ERR_INVALID_OPERATION, "player service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
 
     return playerService_->Play();
 }
