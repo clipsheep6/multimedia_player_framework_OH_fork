@@ -17,6 +17,7 @@
 #define AUDIO_PLAYER_NAPI_H_
 
 #include "player.h"
+#include "media_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
@@ -24,22 +25,7 @@ namespace OHOS {
 namespace Media {
 class AudioPlayerNapi {
 public:
-    AudioPlayerNapi();
-    ~AudioPlayerNapi();
-
     static napi_value Init(napi_env env, napi_value exports);
-
-    napi_ref errorCallback_ = nullptr;  // error
-    napi_ref playCallback_ = nullptr;   // started
-    napi_ref pauseCallback_ = nullptr;  // paused
-    napi_ref stopCallback_ = nullptr;   // stopped
-    napi_ref resetCallback_ = nullptr; // idle
-    napi_ref dataLoadCallback_ = nullptr; // prepared
-    napi_ref finishCallback_ = nullptr;    // endofstream
-    napi_ref timeUpdateCallback_ = nullptr;  // seekdone
-    napi_ref volumeChangeCallback_ = nullptr;
-
-    void SetCurrentState(PlayerStates state);
 
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
@@ -53,7 +39,6 @@ private:
     static napi_value SetVolume(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
-
     static napi_value SetSrc(napi_env env, napi_callback_info info);
     static napi_value GetSrc(napi_env env, napi_callback_info info);
     static napi_value SetLoop(napi_env env, napi_callback_info info);
@@ -61,11 +46,9 @@ private:
     static napi_value GetCurrentTime(napi_env env, napi_callback_info info);
     static napi_value GetDuration(napi_env env, napi_callback_info info);
     static napi_value GetState(napi_env env, napi_callback_info info);
-    static void SendErrorCallback(napi_env env, napi_ref &callbackRef,
-                                  const std::string &errCode, const std::string &errType);
-
-    void SaveCallbackReference(napi_env env, AudioPlayerNapi &audioPlayer,
-                               const std::string &callbackName, napi_value callback) const;
+    void ErrorCallback(napi_env env, MediaServiceExtErrCode errCode);
+    AudioPlayerNapi();
+    ~AudioPlayerNapi();
 
     static napi_ref constructor_;
     napi_env env_ = nullptr;
@@ -73,8 +56,6 @@ private:
     std::shared_ptr<Player> nativePlayer_ = nullptr;
     std::shared_ptr<PlayerCallback> callbackNapi_ = nullptr;
     std::string uri_ = "";
-    PlayerStates currentState_ = PLAYER_IDLE;
-    bool isRelease = false;
 };
 } // namespace Media
 } // namespace OHOS
