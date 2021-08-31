@@ -27,9 +27,6 @@ enum PlayerErrorType : int32_t {
     PLAYER_ERROR,
     /* Unknown error */
     PLAYER_ERROR_UNKNOWN,
-    /* the service process is dead. */
-    PLAYER_ERROR_SERVICE_DIED,
-
      /** extend error type start,The extension error type agreed upon by the plug-in and
          the application will be transparently transmitted by the service. */
     PLAYER_ERROR_EXTEND_START = 0X10000,
@@ -60,15 +57,15 @@ enum PlayerMessageType : int32_t {
 enum PlayerOnInfoType : int32_t {
     /* return the message when seeking done. */
     INFO_TYPE_SEEKDONE = 1,
-    /*return the message when playback is end of steam. */
+    /* return the message when playback is end of steam.  */
     INFO_TYPE_EOS,
-    /* return the message when PlayerStates changed. */
+    /* return the message when PlayerStates changed.  */
     INFO_TYPE_STATE_CHANGE,
-    /* return the current posion of playback automaticly. */
+    /* return the current posion of playback automaticly.  */
     INFO_TYPE_POSITION_UPDATE,
-    /* return the playback message. */
+    /* return the playback message.  */
     INFO_TYPE_MESSAGE,
-    /* return the message when volume changed. */
+    /* return the message when volume changed.  */
     INFO_TYPE_VOLUME_CHANGE,
     /* return the message with extra infomation in format. */
     INFO_TYPE_EXTRA_FORMAT
@@ -135,9 +132,9 @@ public:
      *
      * @param type Indicates the information type. For details, see {@link PlayerOnInfoType}.
      * @param extra Indicates other information, for example, the start time position of a playing file.
-     * @param InfoBody According to the info type, the information carrier passed.Is an optional parameter.
+     * @param infoBody According to the info type, the information carrier passed.Is an optional parameter.
      */
-    virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) = 0;
+    virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
 };
 
 class Player {
@@ -149,7 +146,7 @@ public:
      * ocal file URI
      *
      * @param uri Indicates the playback source. Currently, only local file URIs are supported.
-     * @return Returns {@link SUCCESS} if the uri is set successfully; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the uri is set successfully; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -162,7 +159,7 @@ public:
      * This function must be called after {@link Prepare}. If the player state is <b>Prepared</b>,
      * this function is called to start playback.
      *
-     * @return Returns {@link SUCCESS} if the playback is started; otherwise returns an error code defined
+     * @return Returns {@link MSERR_OK} if the playback is started; otherwise returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -174,7 +171,7 @@ public:
      *
      * This function must be called after {@link SetSource}.
      *
-     * @return Returns {@link SUCCESS} if the playback is prepared; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the playback is prepared; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -186,7 +183,7 @@ public:
      *
      * This function must be called after {@link SetSource}.
      *
-     * @return Returns {@link SUCCESS} if the playback is preparing; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the playback is preparing; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -196,7 +193,7 @@ public:
     /**
      * @brief Pauses playback.
      *
-     * @return Returns {@link SUCCESS} if the playback is paused; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the playback is paused; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -206,7 +203,7 @@ public:
     /**
      * @brief Stop playback.
      *
-     * @return Returns {@link SUCCESS} if the playback is stopped; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the playback is stopped; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -219,7 +216,7 @@ public:
      * After the function is called, add a playback source by calling {@link SetSource},
      * call {@link Play} to start playback again after {@link Prepare} is called.
      *
-     * @return Returns {@link SUCCESS} if the playback is reset; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the playback is reset; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -229,7 +226,7 @@ public:
     /**
      * @brief Releases player resources
      *
-     * @return Returns {@link SUCCESS} if the playback is released; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -247,7 +244,7 @@ public:
      *        ranging from 0 to 1. each step is 0.01.
      * @param rightVolume Indicates the target volume of the right audio channel to set,
      *        ranging from 0 to 1. each step is 0.01.
-     * @return Returns {@link SUCCESS} if the volume is set; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the volume is set; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -261,7 +258,7 @@ public:
      *
      * @param mSeconds Indicates the target playback position, accurate to milliseconds.
      * @param mode Indicates the player seek mode. For details, see {@link PlayerSeekMode}.
-     * @return Returns {@link SUCCESS} if the seek is done; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the seek is done; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -272,7 +269,7 @@ public:
      * @brief Obtains the playback position, accurate to millisecond.
      *
      * @param currentTime Indicates the playback position.
-     * @return Returns {@link SUCCESS} if the current position is get; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the current position is get; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -283,7 +280,7 @@ public:
      * @brief Obtains the total duration of media files, accurate to milliseconds.
      *
      * @param duration Indicates the total duration of media files.
-     * @return Returns {@link SUCCESS} if the current duration is get; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the current duration is get; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -294,7 +291,7 @@ public:
      * @brief set the player playback rate
      *
      * @param mode the rate mode {@link PlaybackRateMode} which can set.
-     * @return Returns {@link SUCCESS} if the playback rate is set successfull; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the playback rate is set successfull; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -305,7 +302,7 @@ public:
      * @brief get the current player playback rate
      *
      * @param mode the rate mode {@link PlaybackRateMode} which can get.
-     * @return Returns {@link SUCCESS} if the current player playback rate is get; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the current player playback rate is get; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -316,7 +313,7 @@ public:
      * @brief Method to set the surface.
      *
      * @param surface pointer of the surface.
-     * @return Returns {@link SUCCESS} if the surface is set; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the surface is set; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -344,7 +341,7 @@ public:
     /**
      * @brief Enables single looping of the media playback.
      *
-     * @return Returns {@link SUCCESS} if the single looping is set; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the single looping is set; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
@@ -355,7 +352,7 @@ public:
      * @brief Method to set player callback.
      *
      * @param callback object pointer.
-     * @return Returns {@link SUCCESS} if the playercallback is set; returns an error code defined
+     * @return Returns {@link MSERR_OK} if the playercallback is set; returns an error code defined
      * in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0

@@ -26,36 +26,39 @@
 
 namespace OHOS {
 namespace Media {
+    constexpr float INVALID_VOLUME = -1.0;
+
 class GstPlayerCtrl {
 public:
     explicit GstPlayerCtrl(GstPlayer *gstPlayer);
     ~GstPlayerCtrl();
 
-    int32_t SetUri(std::string uri);
+    int32_t SetUri(const std::string &uri);
     int32_t SetCallbacks(const std::weak_ptr<IPlayerEngineObs> &obs);
     void SetVideoTrack(bool enable);
     void Pause(bool cancelNotExecuted = false);
     void Play();
     void Seek(uint64_t position, const PlayerSeekMode mode);
-    void Stop();
+    void Stop(bool cancelNotExecuted = false);
     void SetLoop(bool loop);
-    void SetVolume(float leftVolume, float rightVolume);
+    void SetVolume(const float &leftVolume, const float &rightVolume);
     uint64_t GetPosition();
     uint64_t GetDuration();
     void SetRate(double rate);
     double GetRate();
-    PlayerStates GetState();
-    static void OnStateChangedCb(const GstPlayer *player, GstPlayerState state, const GstPlayerCtrl *self);
-    static void OnEndOfStreamCb(const GstPlayer *player, const GstPlayerCtrl *self);
+    PlayerStates GetState() const;
+    static void OnStateChangedCb(const GstPlayer *player, GstPlayerState state, GstPlayerCtrl *playerGst);
+    static void OnEndOfStreamCb(const GstPlayer *player, GstPlayerCtrl *playerGst);
     static void StreamDecErrorParse(const gchar *name, int32_t &errorCode);
     static void StreamErrorParse(const gchar *name, const GError *err, int32_t &errorCode);
     static void ResourceErrorParse(const GError *err, int32_t &errorCode);
     static void MessageErrorProcess(const char *name, const GError *err,
         PlayerErrorType &errorType, int32_t &errorCode);
     static void ErrorProcess(const GstMessage *msg, PlayerErrorType &errorType, int32_t &errorCode);
-    static void OnErrorCb(const GstPlayer *player, const GstMessage *msg, const GstPlayerCtrl *self);
-    static void OnSeekDoneCb(const GstPlayer *player, guint64 position, const GstPlayerCtrl *self);
-    static void OnPositionUpdatedCb(const GstPlayer *player, guint64 position, const GstPlayerCtrl *self);
+    static void OnErrorCb(const GstPlayer *player, const GstMessage *msg, GstPlayerCtrl *playerGst);
+    static void OnSeekDoneCb(const GstPlayer *player, guint64 position, GstPlayerCtrl *playerGst);
+    static void OnPositionUpdatedCb(const GstPlayer *player, guint64 position, const GstPlayerCtrl *playerGst);
+    static void OnVolumeChangeCb(GObject *combiner, GParamSpec *pspec, const GstPlayerCtrl *playerGst);
 
 private:
     PlayerStates ProcessStoppedState();
@@ -63,27 +66,28 @@ private:
     int32_t ChangeSeekModeToGstFlag(const PlayerSeekMode mode) const;
     void ProcessStateChanged(const GstPlayer *cbPlayer, GstPlayerState state);
     void ProcessSeekDone(const GstPlayer *cbPlayer, uint64_t position);
-    void ProcessPositionUpdated(const GstPlayer *cbPlayer, uint64_t position);
+    void ProcessPositionUpdated(const GstPlayer *cbPlayer, uint64_t position) const;
     void ProcessEndOfStream(const GstPlayer *cbPlayer);
     void OnStateChanged(PlayerStates state);
-    void OnVolumeChange();
+    void OnVolumeChange() const;
     void OnSeekDone();
     void OnEndOfStream();
-    void OnMessage(int32_t type, int32_t extra);
+    void OnMessage(int32_t extra) const;
     void InitDuration();
     void PlaySync();
     void SeekSync(uint64_t position, const PlayerSeekMode mode);
+    void SetRateSync(double rate);
     void MultipleSeek();
     void StopSync();
     void PauseSync();
     void OnNotify(PlayerStates state);
-
-private:
+    void GetAudioSink();
     std::mutex mutex_;
     std::condition_variable condVarPlaySync_;
     std::condition_variable condVarPauseSync_;
     std::condition_variable condVarStopSync_;
     std::condition_variable condVarSeekSync_;
+    std::condition_variable condVarCompleteSync_;
     GstPlayer *gstPlayer_ = nullptr;
     TaskQueue taskQue_;
     std::weak_ptr<IPlayerEngineObs> obs_;
@@ -102,6 +106,8 @@ private:
     bool seekDoneNeedCb_ = false;
     bool endOfStreamCb_ = false;
     std::vector<gulong> signalIds_;
+    GstElement *audioSink_ = nullptr;
+    float volume_ = INVALID_VOLUME;
 };
 } // Media
 } // OHOS

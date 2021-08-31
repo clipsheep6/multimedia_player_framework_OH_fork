@@ -15,13 +15,13 @@
 
 #include "gst_loader.h"
 #include <string>
-#include <regex>
 #include <map>
 #include <queue>
 #include <glib.h>
 #include <gst/gst.h>
+#include "string_ex.h"
 #include "param_wrapper.h"
-#include "errors.h"
+#include "media_errors.h"
 #include "media_log.h"
 
 namespace {
@@ -157,20 +157,10 @@ static void EnableGLog(GLogFunc func)
     return;
 }
 
-static void SplitString(const std::string &input, const std::string &delimiter, std::queue<std::string> &strQueue)
-{
-    std::regex reg(delimiter);
-    std::sregex_token_iterator pos(input.begin(), input.end(), reg, -1);
-    decltype(pos) end;
-    for (; pos != end; pos++) {
-        strQueue.push(pos->str());
-    }
-}
-
 static void SetGstLogLevelFromSysPara()
 {
     std::string levelPara;
-    int32_t res = OHOS::system::GetStringParameter("sys.media.log.level", levelPara, "");
+    int res = OHOS::system::GetStringParameter("sys.media.log.level", levelPara, "");
     if (res != 0 || levelPara.empty()) {
         gst_debug_set_default_threshold (GST_LEVEL_WARNING);
         MEDIA_LOGD("sys.media.log.level not find");
@@ -179,28 +169,22 @@ static void SetGstLogLevelFromSysPara()
     MEDIA_LOGD("sys.media.log.level=%{public}s", levelPara.c_str());
 
     static std::map<std::string, char> logTagLevelMap = {{g_gstDftTag, 'I'}, };
-    std::queue<std::string> tagLevelQ;
-    SplitString(levelPara, ",", tagLevelQ); // different module tag split by ","
-    while (!tagLevelQ.empty()) {
-        std::string tagLevel = tagLevelQ.front();
-        tagLevelQ.pop();
-
-        std::queue<std::string> item;
-        SplitString(tagLevel, ":", item); // module format:"tagname:level"
-        if (item.empty()) {
+    std::vector<std::string> tagLevelVec;
+    SplitStr(levelPara, ",", tagLevelVec, false, true);
+    for (auto& tagLevel : tagLevelVec) {
+        std::vector<std::string> item;
+        SplitStr(tagLevel, ":", item, false, true); // module format:"tagname:level"
+        if (item.size() < 2) { // module format:"tagname:level"
             continue;
         }
-        std::string tag = item.front();
-        item.pop();
-        if (item.empty() || tag.size() >= 128) { // max tag size is 128
+        std::string &tag = item[0];
+        if (tag.size() >= 128) { // max tag size is 128
             continue;
         }
         if (logTagLevelMap.size() >= 512 && logTagLevelMap.count(tag) == 0) { // 512 is max tag number
             continue;
         }
-
-        std::string level = item.front();
-        item.pop();
+        std::string &level = item[1];
         if (level.empty() || LOG_LEVEL_TO_GST_LEVEL.count(level.c_str()[0]) == 0) {
             continue;
         }
@@ -258,7 +242,7 @@ int32_t GstLoader::SetUp()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (isInit_) {
-        return ERR_OK;
+        return MSERR_OK;
     }
 
     EnableGLog(GLogCallbackFunc);
@@ -269,7 +253,7 @@ int32_t GstLoader::SetUp()
     MEDIA_LOGI("SetUp GstLoader argc=%{public}d", argc);
     gchar ***argv = CreateGstInitArgv();
     if (!argv) {
-        return ERR_NO_MEMORY;
+        return MSERR_NO_MEMORY;
     }
     gst_init(&argc, argv);
     DestroyGstInitArgv(argv);
@@ -277,7 +261,7 @@ int32_t GstLoader::SetUp()
 
     MEDIA_LOGI("SetUp GstLoader finished!");
 
-    return ERR_OK;
+    return MSERR_OK;
 }
 
 void GstLoader::UpdateLogLevel() const

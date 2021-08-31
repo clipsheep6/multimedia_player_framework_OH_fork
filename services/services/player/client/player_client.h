@@ -55,7 +55,6 @@ public:
 private:
     int32_t CreateListenerObject();
 
-private:
     sptr<IStandardPlayerService> playerProxy_ = nullptr;
     sptr<PlayerListenerStub> listenerStub_ = nullptr;
     std::shared_ptr<PlayerCallback> callback_ = nullptr;

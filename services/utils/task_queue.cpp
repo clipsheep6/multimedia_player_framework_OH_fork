@@ -15,6 +15,7 @@
 
 #include "task_queue.h"
 #include "media_log.h"
+#include "media_errors.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "TaskQueue"};
@@ -24,7 +25,7 @@ namespace OHOS {
 namespace Media {
 TaskQueue::~TaskQueue()
 {
-    Stop();
+    (void)Stop();
 }
 
 int32_t TaskQueue::Start()
@@ -32,20 +33,25 @@ int32_t TaskQueue::Start()
     std::unique_lock<std::mutex> lock(mutex_);
     if (thread_ != nullptr) {
         MEDIA_LOGW("Started already, ignore ! [%{public}s]", name_.c_str());
-        return ERR_OK;
+        return MSERR_OK;
     }
     isExit_ = false;
     thread_ = std::make_unique<std::thread>(&TaskQueue::TaskProcessor, this);
 
-    return ERR_OK;
+    return MSERR_OK;
 }
 
-int32_t TaskQueue::Stop()
+int32_t TaskQueue::Stop() noexcept
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (isExit_) {
         MEDIA_LOGI("Stopped already, ignore ! [%{public}s]", name_.c_str());
-        return ERR_OK;
+        return MSERR_OK;
+    }
+
+    if (std::this_thread::get_id() == thread_->get_id()) {
+        MEDIA_LOGI("Stop at the task thread, reject");
+        return MSERR_INVALID_OPERATION;
     }
 
     std::unique_ptr<std::thread> t;
@@ -60,10 +66,10 @@ int32_t TaskQueue::Stop()
 
     lock.lock();
     CancelNotExecutedTaskLocked();
-    return ERR_OK;
+    return MSERR_OK;
 }
 
-int32_t TaskQueue::EnqueueTask(std::shared_ptr<TaskHandler> task, bool cancelNotExecuted)
+int32_t TaskQueue::EnqueueTask(const std::shared_ptr<ITaskHandler> &task, bool cancelNotExecuted)
 {
     if (task == nullptr) {
         return -1;
@@ -89,7 +95,7 @@ void TaskQueue::CancelNotExecutedTaskLocked()
 {
     MEDIA_LOGI("All task not executed are being cancelled..........[%{public}s]", name_.c_str());
     while (!taskQ_.empty()) {
-        std::shared_ptr<TaskHandler> task = taskQ_.front();
+        std::shared_ptr<ITaskHandler> task = taskQ_.front();
         taskQ_.pop();
         if (task != nullptr) {
             task->Cancel();
@@ -107,11 +113,11 @@ void TaskQueue::TaskProcessor()
             MEDIA_LOGI("Exit TaskProcessor [%{public}s]", name_.c_str());
             return;
         }
-        std::shared_ptr<TaskHandler> task = taskQ_.front();
+        std::shared_ptr<ITaskHandler> task = taskQ_.front();
         taskQ_.pop();
         lock.unlock();
 
-        if (task != nullptr) {
+        if (task != nullptr && !task->IsCanceled()) {
             task->Execute();
         }
     }

@@ -13,30 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef GST_LOADER_H
-#define GST_LOADER_H
+#ifndef I_STANDARD_MEDIA_LISTENER_H
+#define I_STANDARD_MEDIA_LISTENER_H
 
-#include <mutex>
+#include "ipc_types.h"
+#include "iremote_broker.h"
+#include "iremote_proxy.h"
+#include "iremote_stub.h"
 
 namespace OHOS {
-namespace Media  {
-class GstLoader {
+namespace Media {
+class IStandardMediaListener : public IRemoteBroker {
 public:
-    static GstLoader &Instance()
-    {
-        static GstLoader inst;
-        return inst;
-    }
+    virtual ~IStandardMediaListener() = default;
 
-    int32_t SetUp();
-    void UpdateLogLevel() const;
-private:
-    GstLoader() = default;
-    ~GstLoader() = default;
-
-    bool isInit_ = false;
-    std::mutex mutex_;
+    DECLARE_INTERFACE_DESCRIPTOR(u"IStandardMediaListener");
 };
-}
-}
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // I_STANDARD_MEDIA_LISTENER_H

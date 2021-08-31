@@ -41,11 +41,14 @@ config("media_service_config") {
     "player/server",
     "recorder/ipc",
     "recorder/server",
+    "avmetadatahelper/ipc",
+    "avmetadatahelper/server",
     "//foundation/multimedia/media_standard/services/include",
     "//foundation/multimedia/media_standard/services/services/factory",
-    "//foundation/multimedia/media_standard/services/engine/include",
+    "//foundation/multimedia/media_standard/services/services/engine_intf",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/services/services/common",
     "//utils/native/base/include",
   ]
 
@@ -59,6 +62,7 @@ ohos_shared_library("media_service") {
 
   sources = [
     "sa_media/ipc/media_service_stub.cpp",
+    "sa_media/ipc/media_listener_proxy.cpp",
     "sa_media/server/media_server.cpp",
     "sa_media/server/media_server_manager.cpp",
     "recorder/ipc/recorder_service_stub.cpp",
@@ -67,8 +71,11 @@ ohos_shared_library("media_service") {
     "player/ipc/player_service_stub.cpp",
     "player/ipc/player_listener_proxy.cpp",
     "player/server/player_server.cpp",
+    "avmetadatahelper/ipc/avmetadatahelper_service_stub.cpp",
+    "avmetadatahelper/server/avmetadatahelper_server.cpp",
     "factory/engine_factory_repo.cpp",
-    "common/avsharedmemory_ipc.cpp"
+    "common/avsharedmemory_ipc.cpp",
+    "//foundation/multimedia/media_standard/services/utils/avsharedmemorybase.cpp",
   ]
 
   configs = [

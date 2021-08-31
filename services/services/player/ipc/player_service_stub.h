@@ -28,6 +28,7 @@ class PlayerServiceStub : public IRemoteStub<IStandardPlayerService> {
 public:
     static sptr<PlayerServiceStub> Create();
     virtual ~PlayerServiceStub();
+    DISALLOW_COPY_AND_MOVE(PlayerServiceStub);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
     using PlayerStubFunc = int32_t(PlayerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
@@ -56,8 +57,6 @@ public:
 private:
     PlayerServiceStub();
     int32_t Init();
-    void Destory();
-    void ClientDied();
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
     int32_t SetSource(MessageParcel &data, MessageParcel &reply);
     int32_t Play(MessageParcel &data, MessageParcel &reply);
@@ -80,11 +79,9 @@ private:
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlayerCallback(MessageParcel &data, MessageParcel &reply);
 
-private:
     std::mutex mutex_;
     std::shared_ptr<PlayerCallback> playerCallback_ = nullptr;
     std::shared_ptr<IPlayerService> playerServer_ = nullptr;
-    sptr<MediaDeathRecipient> deathRecipient_ = nullptr;
     std::map<uint32_t, PlayerStubFunc> playerFuncs_;
 };
 }

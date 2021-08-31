@@ -22,13 +22,17 @@
 #include "refbase.h"
 #include "display_type.h"
 #include "nocopyable.h"
+#include "avsharedmemory.h"
 
 namespace OHOS {
 namespace Media {
 /**
  * @attention This is the stub for image module, the complete definition must be provided by the image module.
  */
-class PixelMap;
+class PixelMap : public RefBase {
+    PixelMap() = default;
+    ~PixelMap() = default;
+};
 
 /**
  * @brief Enumerates avmetadata usage.

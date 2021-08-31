@@ -35,9 +35,9 @@ private:
     void GetCodecData(const uint8_t *data, int32_t len, std::vector<uint8_t> &sps, std::vector<uint8_t> &pps,
                       uint32_t &nalSize);
 
-    int32_t frameSequence_ = 0;
+    uint32_t frameSequence_ = 0;
     char *codecData_ = nullptr;
-    int32_t codecDataSize_ = 0;
+    uint32_t codecDataSize_ = 0;
     uint32_t nalSize_ = 0;
     bool transStreamFormat = true;
 };

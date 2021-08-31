@@ -142,13 +142,13 @@ static void gst_hdi_set_format(const Param *param, GstHDIFormat *format)
     g_return_if_fail(format != NULL);
     switch (param->key) {
         case KEY_WIDTH:
-            format->width = (guint)(param->val);
+            format->width = *((guint *)param->val);
             break;
         case KEY_HEIGHT:
-            format->height = (guint)(param->val);
+            format->height = *((guint *)param->val);
             break;
         case KEY_STRIDE:
-            format->stride = (guint)(param->val);
+            format->stride = *((guint *)param->val);
             break;
         default:
             GST_INFO_OBJECT(NULL, "param key %d not in format", param->key);
@@ -439,6 +439,7 @@ gint gst_hdi_deque_input_buffer(const GstHDICodec *codec, GstBuffer **gst_buffer
         GST_ERROR_OBJECT(NULL, "fail to deque input buffer, in error %s", gst_hdi_error_to_string(ret));
         return ret;
     }
+    g_return_val_if_fail(input_buffer->buffers != NULL, HDI_FAILURE);
     (*gst_buffer) = gst_buffer_new_wrapped_full((GstMemoryFlags)0, (gpointer)input_buffer->buffers->addr,
         input_buffer->buffers->length, 0, 0, NULL, NULL);
     return ret;
@@ -471,6 +472,7 @@ gint gst_hdi_queue_output_buffer(const GstHDICodec *codec, GstBuffer *gst_buffer
     g_return_val_if_fail(codec->handle != NULL, HDI_FAILURE);
     g_return_val_if_fail(codec->output_free_buffers != NULL, HDI_FAILURE);
     OutputInfo *output_buffer = (OutputInfo*)codec->output_free_buffers->data;
+    g_return_val_if_fail(output_buffer != NULL, HDI_FAILURE);
     gst_hdi_gst_buffer_to_buffer_info(output_buffer->buffers, gst_buffer);
     int32_t ret = CodecQueueOutput(codec->handle, output_buffer, timeoutMs, -1);
     if (ret != HDI_SUCCESS) {
@@ -512,7 +514,7 @@ gint gst_hdi_deque_output_buffer(GstHDICodec *codec, GstBuffer **gst_buffer, gui
     buffer->codec = codec;
     buffer->output_info = output_info;
     *gst_buffer = gst_buffer_new_wrapped_full((GstMemoryFlags)0, (gpointer)output_info->buffers->addr, 
-            output_info->buffers->length, 0, sizeof(GstHDIBuffer),(guint8*)buffer,
+            output_info->buffers->length, 0, sizeof(GstHDIBuffer), (guint8*)buffer,
             (GDestroyNotify)gst_hdi_move_outbuffer_to_dirty_list);
     if (*gst_buffer == NULL) {
         gst_hdi_move_outbuffer_to_dirty_list(buffer);
@@ -559,7 +561,7 @@ GstHDICodec *gst_hdi_codec_ref(GstHDICodec *codec)
 void gst_hdi_codec_unref(GstHDICodec *codec)
 {
     g_return_if_fail(codec != NULL);
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST(codec));
+    gst_mini_object_unref(GST_MINI_OBJECT_CAST(codec));
 }
 
 static void gst_hdi_init_params_func(GstHDIClassData *class_data)

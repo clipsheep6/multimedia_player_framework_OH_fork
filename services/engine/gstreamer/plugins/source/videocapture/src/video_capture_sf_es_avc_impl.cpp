@@ -15,13 +15,13 @@
 
 #include "video_capture_sf_es_avc_impl.h"
 #include "media_log.h"
-#include "errors.h"
+#include "media_errors.h"
 #include "scope_guard.h"
 #include "securec.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoCaptureSfEsAvcImpl"};
-    constexpr uint32_t MAX_SURFACE_BUFFER_SIZE = 20 * 1024 * 1024;
+    constexpr uint32_t MAX_SURFACE_BUFFER_SIZE = 10 * 1024 * 1024;
 }
 
 namespace OHOS {
@@ -146,7 +146,6 @@ std::shared_ptr<VideoFrameBuffer> VideoCaptureSfEsAvcImpl::DoGetFrameBuffer()
     frameBuffer->gstBuffer = gstBuffer;
     frameBuffer->duration = static_cast<uint64_t>(duration_);
     frameBuffer->size = static_cast<uint64_t>(bufferSize);
-    frameSequence_++;
 
     CANCEL_SCOPE_EXIT_GUARD(1);
     return frameBuffer;

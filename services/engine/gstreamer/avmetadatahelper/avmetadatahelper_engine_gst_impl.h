@@ -16,11 +16,18 @@
 #ifndef AVMETADATAHELPER_ENGINE_GST_IMPL_H
 #define AVMETADATAHELPER_ENGINE_GST_IMPL_H
 
+#include <mutex>
+#include <condition_variable>
 #include "nocopyable.h"
 #include "i_avmetadatahelper_engine.h"
 
 namespace OHOS {
 namespace Media {
+class IPlayBinCtrler;
+class PlayBinSinkProvider;
+class FrameConverter;
+struct PlayBinMessage;
+
 class AVMetadataHelperEngineGstImpl : public IAVMetadataHelperEngine {
 public:
     AVMetadataHelperEngineGstImpl();
@@ -33,6 +40,30 @@ public:
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(
         int64_t timeUs, int32_t option, OutputConfiguration param) override;
+
+private:
+    void OnNotifyMessage(const PlayBinMessage &msg);
+    int32_t InitPipeline(int32_t usage);
+    int32_t InitConverter(const OutputConfiguration &config);
+    int32_t PrepareInternel(bool async, std::unique_lock<std::mutex> &lock);
+    int32_t SeekInternel(int64_t timeUs, int32_t option, std::unique_lock<std::mutex> &lock);
+    bool TakeOwnerShip(std::unique_lock<std::mutex> &lock, bool canceling = false);
+    void ReleaseOwnerShip();
+    void Reset();
+    void DoReset();
+
+    std::shared_ptr<IPlayBinCtrler> playBinCtrler_;
+    std::shared_ptr<PlayBinSinkProvider> sinkProvider_;
+    std::shared_ptr<FrameConverter> converter_;
+    int32_t usage_ = AVMetadataUsage::AV_META_USAGE_PIXEL_MAP;
+
+    std::mutex mutex_;
+    std::mutex mutexCb_;
+    std::condition_variable cond_;
+    int32_t playbinState_;
+    bool seekDone_ = false;
+    bool canceled_ = false;
+    bool inProgressing_ = false;
 };
 }
 }

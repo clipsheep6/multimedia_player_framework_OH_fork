@@ -57,11 +57,9 @@ private:
     double ChangeModeToSpeed(const PlaybackRateMode &mode) const;
     PlaybackRateMode ChangeSpeedToMode(double rate) const;
     int32_t GstPlayerInit();
-    int32_t GstPlayerPrepare();
+    int32_t GstPlayerPrepare() const;
     void PlayerLoop();
     void GstPlayerDeInit();
-
-private:
     std::mutex mutex_;
     std::mutex mutexSync_;
     std::unique_ptr<GstPlayerBuild> playerBuild_ = nullptr;

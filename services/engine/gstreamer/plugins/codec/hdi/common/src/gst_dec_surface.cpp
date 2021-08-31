@@ -93,8 +93,9 @@ GstBuffer *SurfaceBufferToGstBuffer(void *surface, guint width, guint height)
     }
     Media::DecSurfaceBufferWrapper *surfaceBufferWrap =
         new(std::nothrow) Media::DecSurfaceBufferWrapper(producerSurface, surfaceBuffer);
+    g_return_val_if_fail(surfaceBufferWrap != nullptr, nullptr);
     surfaceBufferWrap->SetSurfaceSize(surfaceBuffer->GetSize());
-    GstBuffer *gstSurfaceBuffer = gst_buffer_new_wrapped_full((GstMemoryFlags)0, (gpointer)surfaceBufferWrap, 
+    GstBuffer *gstSurfaceBuffer = gst_buffer_new_wrapped_full((GstMemoryFlags)0, (gpointer)surfaceBufferWrap,
         sizeof(*surfaceBufferWrap), 0, sizeof(*surfaceBufferWrap), (guint8 *)(surfaceBufferWrap),
         (GDestroyNotify)(FreeSurfaceBufferWrapper));
 

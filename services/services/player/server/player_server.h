@@ -50,15 +50,15 @@ public:
     int32_t SetLooping(bool loop) override;
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
 
+    // IPlayerEngineObs override
+    void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+
 private:
     int32_t Init();
     bool IsValidSeekMode(PlayerSeekMode mode);
     int32_t OnReset();
 
-    // IPlayerEngineObs override
-    void OnError(PlayerErrorType errorType, int32_t errorCode) override;
-    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
-private:
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
     sptr<Surface> surface_ = nullptr;

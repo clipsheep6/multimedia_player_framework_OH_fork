@@ -20,13 +20,14 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoCaptureSfmpl"};
+    constexpr int32_t DEFAULT_SURFACE_QUEUE_SIZE = 6;
+    constexpr int32_t DEFAULT_SURFACE_SIZE = 1024 * 1024;
+    constexpr int32_t DEFAULT_SURFACE_WIDTH = 1920;
+    constexpr int32_t DEFAULT_SURFACE_HEIGHT = 1080;
 }
 
 namespace OHOS {
 namespace Media {
-constexpr int32_t DEFAULT_SURFACE_QUEUE_SIZE = 6;
-constexpr int32_t DEFAULT_SURFACE_SIZE = 1024 * 1024;
-
 const std::map<uint32_t, uint32_t> SURFACE_RESOLUTION_MAP = {
     { 1920, 1080 },
     { 1280, 720 },
@@ -34,8 +35,8 @@ const std::map<uint32_t, uint32_t> SURFACE_RESOLUTION_MAP = {
 };
 
 VideoCaptureSfImpl::VideoCaptureSfImpl()
-    : surfaceWidth_(1920),
-      surfaceHeight_(1080),
+    : surfaceWidth_(DEFAULT_SURFACE_WIDTH),
+      surfaceHeight_(DEFAULT_SURFACE_HEIGHT),
       fence_(-1),
       bufferAvailableCount_(0),
       timestamp_(0),
@@ -52,7 +53,7 @@ VideoCaptureSfImpl::VideoCaptureSfImpl()
 
 VideoCaptureSfImpl::~VideoCaptureSfImpl()
 {
-    Stop();
+    (void)Stop();
 }
 
 int32_t VideoCaptureSfImpl::Prepare()
@@ -66,7 +67,10 @@ int32_t VideoCaptureSfImpl::Prepare()
 
     sptr<IBufferConsumerListener> listenerProxy = new (std::nothrow) ConsumerListenerProxy(*this);
     CHECK_AND_RETURN_RET_LOG(listenerProxy != nullptr, MSERR_NO_MEMORY, "create consumer listener fail");
-    consumerSurface->RegisterConsumerListener(listenerProxy);
+
+    if (consumerSurface->RegisterConsumerListener(listenerProxy) != SURFACE_ERROR_OK) {
+        MEDIA_LOGW("register consumer listener fail");
+    }
 
     sptr<IBufferProducer> producer = consumerSurface->GetProducer();
     CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_NO_MEMORY, "get producer fail");
@@ -76,11 +80,7 @@ int32_t VideoCaptureSfImpl::Prepare()
     dataConSurface_ = consumerSurface;
     producerSurface_ = producerSurface;
 
-    dataConSurface_->SetUserData("surface_width", std::to_string(surfaceWidth_));
-    dataConSurface_->SetUserData("surface_height", std::to_string(surfaceHeight_));
-    dataConSurface_->SetQueueSize(DEFAULT_SURFACE_QUEUE_SIZE);
-    dataConSurface_->SetUserData("surface_size", std::to_string(DEFAULT_SURFACE_SIZE));
-
+    SetSurfaceUserData();
     return MSERR_OK;
 }
 
@@ -111,7 +111,9 @@ int32_t VideoCaptureSfImpl::Stop()
     }
     bufferAvailableCondition_.notify_all();
     if (dataConSurface_ != nullptr) {
-        dataConSurface_->UnregisterConsumerListener();
+        if (dataConSurface_->UnregisterConsumerListener() != SURFACE_ERROR_OK) {
+            MEDIA_LOGW("deregister consumer listener fail");
+        }
         dataConSurface_ = nullptr;
         producerSurface_ = nullptr;
     }
@@ -169,6 +171,26 @@ std::shared_ptr<VideoFrameBuffer> VideoCaptureSfImpl::GetFrameBuffer()
     return nullptr;
 }
 
+void VideoCaptureSfImpl::SetSurfaceUserData()
+{
+    SurfaceError ret = dataConSurface_->SetUserData("surface_width", std::to_string(surfaceWidth_));
+    if (ret != SURFACE_ERROR_OK) {
+        MEDIA_LOGW("set surface width fail");
+    }
+    ret = dataConSurface_->SetUserData("surface_height", std::to_string(surfaceHeight_));
+    if (ret != SURFACE_ERROR_OK) {
+        MEDIA_LOGW("set surface height fail");
+    }
+    ret = dataConSurface_->SetQueueSize(DEFAULT_SURFACE_QUEUE_SIZE);
+    if (ret != SURFACE_ERROR_OK) {
+        MEDIA_LOGW("set queue size fail");
+    }
+    ret = dataConSurface_->SetUserData("surface_size", std::to_string(DEFAULT_SURFACE_SIZE));
+    if (ret != SURFACE_ERROR_OK) {
+        MEDIA_LOGW("set surface size fail");
+    }
+}
+
 int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -182,10 +204,10 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
     if (dataConSurface_->AcquireBuffer(surfaceBuffer_, fence_, timestamp_, damage_) != SURFACE_ERROR_OK) {
         return MSERR_UNKNOWN;
     }
-
+    
     surfaceBuffer_->ExtraGet("dataSize", dataSize_);
     surfaceBuffer_->ExtraGet("pts", pts_);
-    surfaceBuffer_->ExtraGet("duration", duration_);
+    surfaceBuffer_->ExtraGet("duration", duration_);    
     bufferAvailableCount_--;
     return MSERR_OK;
 }

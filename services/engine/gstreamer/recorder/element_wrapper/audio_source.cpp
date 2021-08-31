@@ -15,7 +15,7 @@
 
 #include "audio_source.h"
 #include <gst/gst.h>
-#include "errors.h"
+#include "media_errors.h"
 #include "media_log.h"
 #include "recorder_private_param.h"
 
@@ -33,12 +33,12 @@ int32_t AudioSource::Init()
         return ERR_INVALID_OPERATION;
     }
     g_object_set(gstElem_, "source-type", desc_.type_, nullptr);
-    return ERR_OK;
+    return MSERR_OK;
 }
 
 int32_t AudioSource::Configure(const RecorderParam &recParam)
 {
-    int ret = ERR_OK;
+    int ret = MSERR_OK;
     switch (recParam.type) {
         case RecorderPublicParamType::AUD_SAMPLERATE:
             ret = ConfigAudioSampleRate(recParam);
@@ -66,9 +66,9 @@ int32_t AudioSource::ConfigAudioSampleRate(const RecorderParam &recParam)
     MEDIA_LOGI("Set audio sample rate: %{public}d", param.sampleRate);
     g_object_set(gstElem_, "sample-rate", static_cast<uint32_t>(param.sampleRate), nullptr);
 
-    MarkParameter(RecorderPublicParamType::AUD_SAMPLERATE);
+    MarkParameter(static_cast<int32_t>(RecorderPublicParamType::AUD_SAMPLERATE));
     sampleRate_ = param.sampleRate;
-    return ERR_OK;
+    return MSERR_OK;
 }
 
 int32_t AudioSource::ConfigAudioChannels(const RecorderParam &recParam)
@@ -81,9 +81,9 @@ int32_t AudioSource::ConfigAudioChannels(const RecorderParam &recParam)
     MEDIA_LOGI("Set audio channels: %{public}d", param.channel);
     g_object_set(gstElem_, "channels", static_cast<uint32_t>(param.channel), nullptr);
 
-    MarkParameter(RecorderPublicParamType::AUD_CHANNEL);
+    MarkParameter(static_cast<int32_t>(RecorderPublicParamType::AUD_CHANNEL));
     channels_ = param.channel;
-    return ERR_OK;
+    return MSERR_OK;
 }
 
 int32_t AudioSource::ConfigAudioBitRate(const RecorderParam &recParam)
@@ -96,9 +96,9 @@ int32_t AudioSource::ConfigAudioBitRate(const RecorderParam &recParam)
     MEDIA_LOGI("Set audio bitrate: %{public}d", param.bitRate);
     g_object_set(gstElem_, "bitrate", static_cast<uint32_t>(param.bitRate), nullptr);
 
-    MarkParameter(RecorderPublicParamType::AUD_BITRATE);
+    MarkParameter(static_cast<int32_t>(RecorderPublicParamType::AUD_BITRATE));
     bitRate_ = param.bitRate;
-    return ERR_OK;
+    return MSERR_OK;
 }
 
 int32_t AudioSource::CheckConfigReady()
@@ -112,7 +112,7 @@ int32_t AudioSource::CheckConfigReady()
         MEDIA_LOGE("audiosource required parameter not configured completely, failed !");
         return ERR_INVALID_OPERATION;
     }
-    return ERR_OK;
+    return MSERR_OK;
 }
 
 bool AudioSource::DrainAll()

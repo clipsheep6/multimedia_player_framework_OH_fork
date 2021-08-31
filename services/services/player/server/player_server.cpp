@@ -31,9 +31,7 @@ std::shared_ptr<IPlayerService> PlayerServer::Create()
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "failed to new PlayerServer");
 
-    int32_t ret = server->Init();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "Player server init Failed!");
-
+    (void)server->Init();
     return server;
 }
 
@@ -81,7 +79,7 @@ int32_t PlayerServer::SetSource(const std::string &uri)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
 
     status_ = PLAYER_INITIALIZED;
-    return ret;
+    return MSERR_OK;
 }
 
 int32_t PlayerServer::Prepare()
@@ -298,9 +296,9 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 
     if (status_ != PLAYER_PREPARED && status_ != PLAYER_PAUSED &&
         status_ != PLAYER_STARTED && status_ != PLAYER_PLAYBACK_COMPLETE) {
-            MEDIA_LOGE("Can not Seek, currentState is %{public}d", status_);
-            return MSERR_INVALID_OPERATION;
-        }
+        MEDIA_LOGE("Can not Seek, currentState is %{public}d", status_);
+        return MSERR_INVALID_OPERATION;
+    }
 
     if (IsValidSeekMode(mode) != true) {
         MEDIA_LOGE("Seek failed, inValid mode");
@@ -394,7 +392,7 @@ bool PlayerServer::IsPlaying()
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not judge IsPlaying, currentState is PLAYER_STATE_ERROR");
-        return MSERR_INVALID_OPERATION;
+        return false;
     }
 
     return status_ == PLAYER_STARTED;
@@ -405,7 +403,7 @@ bool PlayerServer::IsLooping()
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not judge IsLooping, currentState is PLAYER_STATE_ERROR");
-        return MSERR_INVALID_OPERATION;
+        return false;
     }
 
     return looping_;
@@ -432,15 +430,11 @@ int32_t PlayerServer::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &c
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
 
-    if (status_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not SetPlayerCallback, currentState is PLAYER_STATE_ERROR");
-        return MSERR_INVALID_OPERATION;
-    }
-
-    if (status_ == PLAYER_IDLE || status_ == PLAYER_STOPPED) {
+    if (status_ != PLAYER_IDLE && status_ != PLAYER_INITIALIZED) {
         MEDIA_LOGE("Can not SetPlayerCallback, currentState is %{public}d", status_);
         return MSERR_INVALID_OPERATION;
     }
+
     {
         std::lock_guard<std::mutex> lockCb(mutexCb_);
         playerCb_ = callback;

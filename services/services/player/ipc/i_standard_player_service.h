@@ -76,7 +76,6 @@ public:
         SET_CALLBACK,
     };
 
-public:
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");
 };
 } // namespace Media

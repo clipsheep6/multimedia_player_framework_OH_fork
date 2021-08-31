@@ -63,6 +63,7 @@ public:
         ERROR_EXTEND_START = 0X10000,
     };
 
+    virtual ~IRecorderEngineObs() = default;
     virtual void OnError(ErrorType errorType, int32_t errorCode) = 0;
     virtual void OnInfo(InfoType type, int32_t extra) = 0;
 };
@@ -78,7 +79,7 @@ public:
      * Sets the video source for recording. The sourceId can be used to identify the video source when configure
      * the video track's any properties. When the setting is failed, the sourceId is -1.
      * This interface must be called before SetOutputFormat.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId) = 0;
 
@@ -86,20 +87,20 @@ public:
      * Sets the audio source for recording. The sourceId can be used to identify the audio source when configure
      * the audio track's any properties. When the setting is failed, the sourceId is -1.
      * This interface must be called before SetOutputFormat.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) = 0;
 
     /**
      * Sets the output file format. The function must be called after SetVideoSource or SetAudioSource, and before
      * Prepare. After this interface called, the engine will not accept any source setting interface call.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t SetOutputFormat(OutputFormatType format) = 0;
 
     /**
      * Register a recording observer.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t SetObs(const std::weak_ptr<IRecorderEngineObs> &obs) = 0;
 
@@ -107,7 +108,7 @@ public:
      * Configure static record parameters before calling the Prepare interface. The interface must be called after
      * SetOutputFormat. The sourceId indicates the source ID, which can be obtained from SetVideoSource
      * or SetAudioSource. Use the DUMMY_SOURCE_ID  to configure the source-independent parameters.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Configure(int32_t sourceId, const RecorderParam &recParam) = 0;
 
@@ -120,27 +121,27 @@ public:
     /**
      * Prepares for recording. This function must be called before Start. Ensure all required recorder parameter
      * have already been set, or this call will be failed.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Prepare() = 0;
 
     /**
      * Starts recording. This function must be called after Prepare.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Start() = 0;
 
     /**
      * Pause recording. This function must be called during recording. The audio and video source streams are
      * not paused, and source data is discarded.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Pause() = 0;
 
     /**
      * Resume recording. This function must be called during recording. After called, the paused recording will
      * be resumed.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Resume() = 0;
 
@@ -148,13 +149,13 @@ public:
      * Stop recording. This function must be called during recording. The isDrainAll indicates whether all caches
      * need to be discarded. If true, wait all caches to be processed, or discard all caches.
      * Currently, this interface behaves like the Reset, so after it called, anything need to be reconfigured.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Stop(bool isDrainAll = false) = 0;
 
     /**
      * Resets the recording. After this interface called, anything need to be reconfigured.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t Reset() = 0;
 
@@ -162,7 +163,7 @@ public:
      * Sets an extended parameter for recording. It must be called after Prepare. The sourceId indicates the
      * source ID, which can be obtained from SetVideoSource or SetAudioSource. Use the DUMMY_SOURCE_ID  to
      * configure the source-independent parameters.
-     * Return ERR_OK indicates success, or others indicate failed.
+     * Return MSERR_OK indicates success, or others indicate failed.
      */
     virtual int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam) = 0;
 };
