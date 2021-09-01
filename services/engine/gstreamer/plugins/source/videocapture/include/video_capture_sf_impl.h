@@ -71,8 +71,8 @@ protected:
     sptr<Surface> producerSurface_;
     int32_t dataSize_ = 0;
     int64_t pts_ = 0;
-    int64_t duration_ = 0; // from surfacebuffer across ipc
-    
+    int64_t duration_ = 0;
+
 private:
     void SetSurfaceUserData();
     int32_t AcquireSurfaceBuffer();

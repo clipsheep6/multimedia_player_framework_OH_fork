@@ -211,11 +211,11 @@ int32_t GstPlayerVideoRendererCtrl::InitVideoSink(const GstElement *playbin)
     if (videoCaps_ == nullptr) {
         std::string formatName = GetVideoSinkFormat();
         videoCaps_ = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, formatName.c_str(), nullptr);
-        CHECK_AND_RETURN_RET_LOG(videoCaps_ != nullptr, ERR_INVALID_OPERATION, "gst_caps_new_simple failed..");
+        CHECK_AND_RETURN_RET_LOG(videoCaps_ != nullptr, MSERR_INVALID_OPERATION, "gst_caps_new_simple failed..");
 
         videoSink_ = GstPlayerVideoRendererCap::CreateVideoSink(videoCaps_,
             GstPlayerVideoRendererCap::VideoDataAvailableCb, reinterpret_cast<gpointer>(this), signalId_);
-        CHECK_AND_RETURN_RET_LOG(videoSink_ != nullptr, ERR_INVALID_OPERATION, "CreateVideoSink failed..");
+        CHECK_AND_RETURN_RET_LOG(videoSink_ != nullptr, MSERR_INVALID_OPERATION, "CreateVideoSink failed..");
 
         g_object_set(const_cast<GstElement *>(playbin), "video-sink", videoSink_, nullptr);
     }
@@ -248,10 +248,10 @@ int32_t GstPlayerVideoRendererCtrl::InitAudioSink(const GstElement *playbin)
                                          "format", G_TYPE_STRING, "S16LE",
                                          "rate", G_TYPE_INT, rate,
                                          "channels", G_TYPE_INT, channels, nullptr);
-        CHECK_AND_RETURN_RET_LOG(audioCaps_ != nullptr, ERR_INVALID_OPERATION, "gst_caps_new_simple failed..");
+        CHECK_AND_RETURN_RET_LOG(audioCaps_ != nullptr, MSERR_INVALID_OPERATION, "gst_caps_new_simple failed..");
 
         audioSink_ = GstPlayerVideoRendererCap::CreateAudioSink(audioCaps_, nullptr, reinterpret_cast<gpointer>(this));
-        CHECK_AND_RETURN_RET_LOG(audioSink_ != nullptr, ERR_INVALID_OPERATION, "CreateAudioSink failed..");
+        CHECK_AND_RETURN_RET_LOG(audioSink_ != nullptr, MSERR_INVALID_OPERATION, "CreateAudioSink failed..");
 
         g_object_set(const_cast<GstElement *>(playbin), "audio-sink", audioSink_, nullptr);
     }
@@ -260,17 +260,17 @@ int32_t GstPlayerVideoRendererCtrl::InitAudioSink(const GstElement *playbin)
 
 int32_t GstPlayerVideoRendererCtrl::PullVideoBuffer()
 {
-    CHECK_AND_RETURN_RET_LOG(videoSink_ != nullptr, ERR_INVALID_OPERATION, "videoSink_ is nullptr..");
+    CHECK_AND_RETURN_RET_LOG(videoSink_ != nullptr, MSERR_INVALID_OPERATION, "videoSink_ is nullptr..");
 
     GstSample *sample = nullptr;
     g_signal_emit_by_name(G_OBJECT(videoSink_), "pull-sample", &sample);
-    CHECK_AND_RETURN_RET_LOG(sample != nullptr, ERR_INVALID_OPERATION, "sample is nullptr..");
+    CHECK_AND_RETURN_RET_LOG(sample != nullptr, MSERR_INVALID_OPERATION, "sample is nullptr..");
 
     GstBuffer *buf = gst_sample_get_buffer(sample);
     if (buf == nullptr) {
         MEDIA_LOGE("gst_sample_get_buffer err");
         gst_sample_unref(sample);
-        return ERR_INVALID_OPERATION;
+        return MSERR_INVALID_OPERATION;
     }
 
     int32_t ret = UpdateSurfaceBuffer(*buf);
@@ -300,7 +300,7 @@ void GstPlayerVideoRendererCtrl::SetSurfaceTimeFromSysPara()
 
 void GstPlayerVideoRendererCtrl::UpdateResquestConfig(BufferRequestConfig &requestConfig,
     const GstVideoMeta *videoMeta) const
-{ 
+{
     requestConfig.width = static_cast<int32_t>(videoMeta->width);
     requestConfig.height = static_cast<int32_t>(videoMeta->height);
     constexpr int32_t strideAlignment = 8;
@@ -318,7 +318,7 @@ void GstPlayerVideoRendererCtrl::UpdateResquestConfig(BufferRequestConfig &reque
 
 int32_t GstPlayerVideoRendererCtrl::UpdateSurfaceBuffer(const GstBuffer &buffer)
 {
-    CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, ERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, MSERR_INVALID_OPERATION,
         "Surface is nullptr.Video cannot be played.");
     if (surfaceTimeEnable) {
         surfaceTimeMonitor_.StartTime();
@@ -326,12 +326,12 @@ int32_t GstPlayerVideoRendererCtrl::UpdateSurfaceBuffer(const GstBuffer &buffer)
     auto buf = const_cast<GstBuffer *>(&buffer);
 
     GstVideoMeta *videoMeta = gst_buffer_get_video_meta(buf);
-    CHECK_AND_RETURN_RET_LOG(videoMeta != nullptr, ERR_INVALID_VALUE, "gst_buffer_get_video_meta failed..");
+    CHECK_AND_RETURN_RET_LOG(videoMeta != nullptr, MSERR_INVALID_VAL, "gst_buffer_get_video_meta failed..");
     CHECK_AND_RETURN_RET_LOG(videoMeta->width < MAX_DEFAULT_WIDTH && videoMeta->height < MAX_DEFAULT_HEIGHT,
-        ERR_INVALID_VALUE, "Surface is nullptr.Video cannot be played.");
+        MSERR_INVALID_VAL, "Surface is nullptr.Video cannot be played.");
 
     gsize size = gst_buffer_get_size(buf);
-    CHECK_AND_RETURN_RET_LOG(size > 0, ERR_INVALID_VALUE, "gst_buffer_get_size failed..");
+    CHECK_AND_RETURN_RET_LOG(size > 0, MSERR_INVALID_VAL, "gst_buffer_get_size failed..");
 
     BufferRequestConfig requestConfig;
     UpdateResquestConfig(requestConfig, videoMeta);
@@ -339,11 +339,12 @@ int32_t GstPlayerVideoRendererCtrl::UpdateSurfaceBuffer(const GstBuffer &buffer)
     sptr<SurfaceBuffer> surfaceBuffer;
 
     SurfaceError ret = producerSurface_->RequestBuffer(surfaceBuffer, releaseFence, requestConfig);
-    CHECK_AND_RETURN_RET_LOG(ret == SURFACE_ERROR_OK, ERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(ret == SURFACE_ERROR_OK, MSERR_INVALID_OPERATION,
         "RequestBuffer failed(ret = %{public}d)..", ret);
 
-    CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, ERR_INVALID_OPERATION, "surfaceBuffer is nullptr..");
-    CHECK_AND_RETURN_RET_LOG(surfaceBuffer->GetVirAddr() != 0, ERR_INVALID_OPERATION, "Buffer addr is nullptr..");
+    CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, MSERR_INVALID_OPERATION, "surfaceBuffer is nullptr..");
+    CHECK_AND_RETURN_RET_LOG(surfaceBuffer->GetVirAddr() != nullptr,
+        MSERR_INVALID_OPERATION, "Buffer addr is nullptr..");
     gsize sizeCopy = gst_buffer_extract(buf, 0, surfaceBuffer->GetVirAddr(), size);
     if (sizeCopy != size) {
         MEDIA_LOGW("extract buffer from size : %" G_GSIZE_FORMAT " to size %" G_GSIZE_FORMAT, size, sizeCopy);
@@ -355,7 +356,7 @@ int32_t GstPlayerVideoRendererCtrl::UpdateSurfaceBuffer(const GstBuffer &buffer)
     flushConfig.damage.w = static_cast<int32_t>(videoMeta->width);
     flushConfig.damage.h = static_cast<int32_t>(videoMeta->height);
     ret = producerSurface_->FlushBuffer(surfaceBuffer, -1, flushConfig);
-    CHECK_AND_RETURN_RET_LOG(ret == SURFACE_ERROR_OK, ERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(ret == SURFACE_ERROR_OK, MSERR_INVALID_OPERATION,
         "FlushBuffer failed(ret = %{public}d)..", ret);
     if (surfaceTimeEnable) {
         surfaceTimeMonitor_.FinishTime();

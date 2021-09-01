@@ -32,6 +32,7 @@ constexpr float SPEED_1_00_X = 1.00;
 constexpr float SPEED_1_25_X = 1.25;
 constexpr float SPEED_1_75_X = 1.75;
 constexpr float SPEED_2_00_X = 2.00;
+constexpr size_t MAX_URI_SIZE = 4096;
 
 PlayerEngineGstImpl::PlayerEngineGstImpl()
 {
@@ -40,45 +41,78 @@ PlayerEngineGstImpl::PlayerEngineGstImpl()
 
 PlayerEngineGstImpl::~PlayerEngineGstImpl()
 {
-    Reset();
+    (void)Reset();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+bool PlayerEngineGstImpl::IsFileUri(const std::string &uri) const
+{
+    bool ret = false;
+    std::string fileHead = "file://";
+    std::string prefix = uri.substr(0, fileHead.length());
+    if (strcasecmp(prefix.c_str(), fileHead.c_str()) == 0 || uri.find("://") == std::string::npos) {
+        ret = true;
+    }
+    return ret;
+}
+
+int32_t PlayerEngineGstImpl::GetRealPath(const std::string &uri, std::string &realUriPath) const
+{
+    std::string fileHead = "file://";
+    std::string tempUriPath;
+    bool ret = false;
+
+    std::string prefix = uri.substr(0, fileHead.length());
+    if (strcasecmp(prefix.c_str(), fileHead.c_str()) == 0) {
+        tempUriPath = uri.substr(fileHead.size());
+    } else {
+        tempUriPath = uri;
+    }
+
+    ret = PathToRealPath(tempUriPath, realUriPath);
+    CHECK_AND_RETURN_RET_LOG(ret, MSERR_OPEN_FILE_FAILED,
+        "invalid uri. The Uri (%{public}s) path may be invalid.", uri.c_str());
+
+    if (access(realUriPath.c_str(), R_OK) != 0) {
+        return MSERR_FILE_ACCESS_FAILED;
+    }
+
+    return MSERR_OK;
 }
 
 int32_t PlayerEngineGstImpl::SetSource(const std::string &uri)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "input uri is empty!");
+    CHECK_AND_RETURN_RET_LOG(uri.length() <= MAX_URI_SIZE, MSERR_INVALID_VAL, "input uri length is invalid!");
 
-    bool hasFileHead = false;
-    std::string::size_type position = 0;
-    bool ret;
-    std::string fileHead = "file://";
-    std::string realUriPath, tempUriPath;
+    std::string realUriPath;
+    int32_t ret = MSERR_UNKNOWN;
 
-    position = uri.find(fileHead);
-    hasFileHead = position != std::string::npos ? true : false;
-
-    if (hasFileHead) {
-        CHECK_AND_RETURN_RET_LOG(position == 0, MSERR_INVALID_VAL, "illegal uri!");
-    }
-
-    if (hasFileHead) {
-        tempUriPath = uri.substr(position + fileHead.size());
+    if (IsFileUri(uri)) {
+        ret = GetRealPath(uri, realUriPath);
+        if (ret != MSERR_OK) {
+            return ret;
+        }
+        uri_ = "file://" + realUriPath;
     } else {
-        tempUriPath = uri;
+        uri_ = uri;
+        ret = MSERR_OK;
     }
 
-    ret = PathToRealPath(tempUriPath, realUriPath);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_OPEN_FILE_FAILED,
-        "invalid uri. The Uri (%{public}s) path may be invalid.", uri.c_str());
+    MEDIA_LOGI("set player source: %{public}s", uri_.c_str());
+    return ret;
+}
 
-    if (access(realUriPath.c_str(), R_OK) != 0) {
-        MEDIA_LOGE("dont have premission to open %{public}s.", realUriPath.c_str());
-        return MSERR_FILE_ACCESS_FAILED;
-    }
-
-    fileUri_ = "file://" + realUriPath;
-    MEDIA_LOGI("set player source: %{public}s", fileUri_.c_str());
+int32_t PlayerEngineGstImpl::SetMediaDataSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "input dataSrc is empty!");
+    int32_t size = 0;
+    int32_t ret = dataSrc->GetSize(size);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "media data source get size failed!");
+    appsrcWarp_ = std::make_shared<GstAppsrcWarp>(dataSrc, size);
+    CHECK_AND_RETURN_RET_LOG(appsrcWarp_ != nullptr, MSERR_NO_MEMORY, "new appsrcwarp failed!");
     return MSERR_OK;
 }
 
@@ -198,13 +232,19 @@ void PlayerEngineGstImpl::GstPlayerDeInit()
     playerCtrl_ = nullptr;
     playerBuild_ = nullptr;
     gstPlayerInit_ = false;
+    appsrcWarp_ = nullptr;
 }
 
 int32_t PlayerEngineGstImpl::GstPlayerPrepare() const
 {
     MEDIA_LOGI("GstPlayerPrepare In");
     CHECK_AND_RETURN_RET_LOG(playerCtrl_ != nullptr, MSERR_INVALID_VAL, "playerCtrl_ is nullptr");
-    int32_t ret = playerCtrl_->SetUri(fileUri_);
+    int32_t ret = MSERR_OK;
+    if (appsrcWarp_ == nullptr) {
+        ret = playerCtrl_->SetUri(uri_);
+    } else {
+        ret = playerCtrl_->SetMediaDataSource(appsrcWarp_);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "SetUri failed");
 
     ret = playerCtrl_->SetCallbacks(obs_);
@@ -359,8 +399,7 @@ int32_t PlayerEngineGstImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     MEDIA_LOGI("Seek in %{public}d", mSeconds);
 
     uint64_t position = static_cast<uint64_t>(mSeconds);
-    playerCtrl_->Seek(position, mode);
-    return MSERR_OK;
+    return playerCtrl_->Seek(position, mode);
 }
 
 int32_t PlayerEngineGstImpl::SetVolume(float leftVolume, float rightVolume)

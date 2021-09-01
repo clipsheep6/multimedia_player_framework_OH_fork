@@ -32,14 +32,15 @@ public:
         SCENE_RECORDER,
     };
 
-    static constexpr int32_t MAX_SCORE = 100;
-    static constexpr int32_t MIN_SCORE = 0;
-
     virtual ~IEngineFactory() = default;
     virtual int32_t Score(Scene scene, const std::string &uri = "") = 0;
     virtual std::unique_ptr<IPlayerEngine> CreatePlayerEngine() = 0;
     virtual std::unique_ptr<IRecorderEngine> CreateRecorderEngine() = 0;
     virtual std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine() = 0;
+
+protected:
+    static constexpr int32_t MAX_SCORE = 100;
+    static constexpr int32_t MIN_SCORE = 0;
 };
 }
 }

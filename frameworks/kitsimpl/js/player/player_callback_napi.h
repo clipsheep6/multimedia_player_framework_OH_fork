@@ -43,15 +43,13 @@ public:
     explicit PlayerCallbackNapi(napi_env env);
     virtual ~PlayerCallbackNapi();
     void SaveCallbackReference(const std::string &callbackName, napi_value callback);
-    void SendErrorCallback(napi_env env, MediaServiceExtErrCode errCode);
+    void SendErrorCallback(napi_env env, MediaServiceExtErrCode errCode, const std::string &info = "unknown");
     PlayerStates GetCurrentState() const;
-
-protected:
     void OnError(PlayerErrorType errName, int32_t errMsg) override;
-    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
 
 private:
-    static napi_status FillErrorArgs(napi_env env, int32_t errCode, napi_value &args);
+    static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
     void OnSeekDoneCb(int32_t currentPositon);
     void OnEosCb(int32_t isLooping);
     void OnStateChangeCb(PlayerStates state);

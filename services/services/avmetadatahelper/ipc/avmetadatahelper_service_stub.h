@@ -28,7 +28,7 @@ public:
     static sptr<AVMetadataHelperServiceStub> Create();
     virtual ~AVMetadataHelperServiceStub();
     DISALLOW_COPY_AND_MOVE(AVMetadataHelperServiceStub);
-    
+
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
     using AVMetadataHelperStubFunc =

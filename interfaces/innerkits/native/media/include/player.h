@@ -19,6 +19,7 @@
 #include <cstdint>
 #include "surface.h"
 #include "format.h"
+#include "media_data_source.h"
 
 namespace OHOS {
 namespace Media {
@@ -152,6 +153,17 @@ public:
      * @version 1.0
      */
     virtual int32_t SetSource(const std::string &uri) = 0;
+
+    /**
+     * @brief Sets the playback media data source for the player.
+     *
+     * @param dataSrc Indicates the media data source. in {@link media_data_source.h}
+     * @return Returns {@link MSERR_OK} if the mediadatasource is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetMediaDataSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
 
     /**
      * @brief Start playback.

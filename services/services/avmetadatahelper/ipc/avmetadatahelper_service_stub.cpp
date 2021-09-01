@@ -149,7 +149,7 @@ int32_t AVMetadataHelperServiceStub::ResolveMetadataMap(MessageParcel &data, Mes
         key.push_back(it->first);
         dataStr.push_back(it->second);
     }
-    
+
     reply.WriteInt32Vector(key);
     reply.WriteStringVector(dataStr);
     return MSERR_OK;

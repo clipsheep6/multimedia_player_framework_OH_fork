@@ -23,7 +23,6 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "UriHelper"};
 }
 
-
 namespace OHOS {
 namespace Media {
 static bool PathToRealPath(const std::string_view &path, std::string &realPath)
@@ -61,6 +60,10 @@ UriHelper::UriHelper(UriHelper &&rhs) noexcept
 
 UriHelper &UriHelper::operator=(UriHelper &&rhs) noexcept
 {
+    if (&rhs == this) {
+        return *this;
+    }
+
     uri_.swap(rhs.uri_);
     formattedUri_.swap(rhs.formattedUri_);
     type_ = rhs.type_;
@@ -68,7 +71,7 @@ UriHelper &UriHelper::operator=(UriHelper &&rhs) noexcept
     return *this;
 }
 
-UriHelper& UriHelper::FormatMe()
+UriHelper &UriHelper::FormatMe()
 {
     static const std::map<std::string_view, uint8_t> VALID_URI_HEAD_MAP = {
         {"file", URI_TYPE_FILE}, {"fd", URI_TYPE_FD}, {"http", URI_TYPE_HTTP}
@@ -99,7 +102,7 @@ UriHelper& UriHelper::FormatMe()
     type_ = VALID_URI_HEAD_MAP.at(head);
     if (type_ == URI_TYPE_FILE) {
         if (PathToRealPath(rawUri, formattedUri_)) {
-            formattedUri_.insert(0, "file://");
+            (void)formattedUri_.insert(0, "file://");
         }
     }
     return *this;

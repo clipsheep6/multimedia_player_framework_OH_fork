@@ -22,6 +22,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "string_ex.h"
+#include "common_napi.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioRecorderNapi"};
@@ -375,25 +376,6 @@ napi_value AudioRecorderNapi::Release(napi_env env, napi_callback_info info)
     return undefinedResult;
 }
 
-static std::string GetStringArgument(napi_env env, napi_value value)
-{
-    std::string strValue = "";
-    size_t bufLength = 0;
-    napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &bufLength);
-    if (status == napi_ok && bufLength > 0 && bufLength < PATH_MAX) {
-        char *buffer = (char *)malloc((bufLength + 1) * sizeof(char));
-        CHECK_AND_RETURN_RET_LOG(buffer != nullptr, strValue, "no memory");
-        status = napi_get_value_string_utf8(env, value, buffer, bufLength + 1, &bufLength);
-        if (status == napi_ok) {
-            MEDIA_LOGD("argument = %{public}s", buffer);
-            strValue = buffer;
-        }
-        free(buffer);
-        buffer = nullptr;
-    }
-    return strValue;
-}
-
 napi_value AudioRecorderNapi::On(napi_env env, napi_callback_info info)
 {
     napi_value undefinedResult = nullptr;
@@ -421,7 +403,7 @@ napi_value AudioRecorderNapi::On(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
 
-    std::string callbackName = GetStringArgument(env, args[0]);
+    std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     MEDIA_LOGD("callbackName: %{public}s", callbackName.c_str());
 
     CHECK_AND_RETURN_RET_LOG(recorder->callbackNapi_ != nullptr, undefinedResult, "callbackNapi_ is nullptr");
@@ -434,7 +416,7 @@ int32_t AudioRecorderNapi::SetFormat(napi_env env, napi_value args, int32_t &sou
 {
     int32_t ret = -1;
     AudioSourceType nativeSourceType = AUDIO_SOURCE_DEFAULT;
-    this->GetAudioConfig(env, args, "AudioSourceType", ret);
+    CommonNapi::GetPropertyInt32(env, args, "AudioSourceType", ret);
     switch (ret) {
         case JS_MIC:
             nativeSourceType = AUDIO_MIC;
@@ -450,7 +432,7 @@ int32_t AudioRecorderNapi::SetFormat(napi_env env, napi_value args, int32_t &sou
     }
 
     OutputFormatType nativeOutputFormatType = FORMAT_DEFAULT;
-    this->GetAudioConfig(env, args, "fileFormat", ret);
+    CommonNapi::GetPropertyInt32(env, args, "fileFormat", ret);
     switch (ret) {
         case JS_MP4:
             nativeOutputFormatType = FORMAT_MPEG_4;
@@ -472,7 +454,7 @@ int32_t AudioRecorderNapi::SetAudioProperties(napi_env env, napi_value args, int
 {
     int32_t ret = -1;
     AudioCodecFormat nativeAudioCodecFormat = AUDIO_DEFAULT;
-    this->GetAudioConfig(env, args, "audioEncoder", ret);
+    CommonNapi::GetPropertyInt32(env, args, "audioEncoder", ret);
     switch (ret) {
         case JS_AAC_LC:
             nativeAudioCodecFormat = AAC_LC;
@@ -486,7 +468,7 @@ int32_t AudioRecorderNapi::SetAudioProperties(napi_env env, napi_value args, int
         return MSERR_INVALID_OPERATION;
     }
 
-    this->GetAudioConfig(env, args, "audioEncodeBitRate", ret);
+    CommonNapi::GetPropertyInt32(env, args, "audioEncodeBitRate", ret);
     if (ret == -1) {
         ret = DEFAULT_AUDIO_ENCODER_BIT_RATE;
     }
@@ -495,7 +477,7 @@ int32_t AudioRecorderNapi::SetAudioProperties(napi_env env, napi_value args, int
         return MSERR_INVALID_OPERATION;
     }
 
-    this->GetAudioConfig(env, args, "audioSampleRate", ret);
+    CommonNapi::GetPropertyInt32(env, args, "audioSampleRate", ret);
     if (ret == -1) {
         ret = DEFAULT_AUDIO_SAMPLE_RATE;
     }
@@ -504,7 +486,7 @@ int32_t AudioRecorderNapi::SetAudioProperties(napi_env env, napi_value args, int
         return MSERR_INVALID_OPERATION;
     }
 
-    this->GetAudioConfig(env, args, "numberOfChannels", ret);
+    CommonNapi::GetPropertyInt32(env, args, "numberOfChannels", ret);
     if (ret == -1) {
         ret = DEFAULT_NUMBER_OF_CHANNELS;
     }
@@ -561,6 +543,7 @@ int32_t AudioRecorderNapi::SetUri(napi_env env, napi_value args)
         CHECK_AND_RETURN_RET(CheckValidPath(filePath) == MSERR_OK, MSERR_INVALID_VAL);
         CHECK_AND_RETURN_RET(!filePath_.empty(), MSERR_INVALID_VAL);
         fdNum = open(filePath_.c_str(), O_CREAT | O_WRONLY, 0664); // rw-rw-r
+        CHECK_AND_RETURN_RET(fdNum >= 0, MSERR_INVALID_OPERATION);
         int32_t ret = nativeRecorder_->SetOutputFile(fdNum);
         if (ret != MSERR_OK) {
             close(fdNum);
@@ -580,27 +563,6 @@ int32_t AudioRecorderNapi::SetUri(napi_env env, napi_value args)
     return MSERR_OK;
 }
 
-void AudioRecorderNapi::GetAudioConfig(napi_env env, napi_value configObj,
-    const std::string &type, int32_t &result) const
-{
-    napi_value item = nullptr;
-    bool exist = false;
-    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
-    if (status != napi_ok || !exist) {
-        MEDIA_LOGE("can not find named property");
-        return;
-    }
-
-    if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
-        MEDIA_LOGE("get named property fail");
-        return;
-    }
-
-    if (napi_get_value_int32(env, item, &result) != napi_ok) {
-        MEDIA_LOGE("get property value fail");
-    }
-}
-
 void AudioRecorderNapi::ErrorCallback(napi_env env, MediaServiceExtErrCode errCode)
 {
     if (callbackNapi_ != nullptr) {
@@ -609,7 +571,7 @@ void AudioRecorderNapi::ErrorCallback(napi_env env, MediaServiceExtErrCode errCo
     }
 }
 
-void AudioRecorderNapi::StateCallback(napi_env env, std::string callbackName)
+void AudioRecorderNapi::StateCallback(napi_env env, const std::string &callbackName)
 {
     if (callbackNapi_ != nullptr) {
         std::shared_ptr<RecorderCallbackNapi> napiCb = std::static_pointer_cast<RecorderCallbackNapi>(callbackNapi_);

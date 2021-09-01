@@ -38,7 +38,7 @@ struct KeyToXMap {
 #define METADATA_KEY_TO_X_MAP_ITEM(key, innerKey) { key, { #key, innerKey }}
 static const std::unordered_map<int32_t, KeyToXMap> METAKEY_TO_X_MAP = {
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_ALBUM, INNER_META_KEY_ALBUM),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_ALBUMARTIST, INNER_META_KEY_ALBUMARTIST),
+    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_ALBUM_ARTIST, INNER_META_KEY_ALBUM_ARTIST),
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_ARTIST, INNER_META_KEY_ARTIST),
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_AUTHOR, INNER_META_KEY_AUTHOR),
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_COMPOSER, INNER_META_KEY_COMPOSER),
@@ -46,9 +46,9 @@ static const std::unordered_map<int32_t, KeyToXMap> METAKEY_TO_X_MAP = {
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_GENRE, INNER_META_KEY_GENRE),
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_HAS_AUDIO, INNER_META_KEY_HAS_AUDIO),
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_HAS_VIDEO, INNER_META_KEY_HAS_VIDEO),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_MIMETYPE, INNER_META_KEY_MIMETYPE),
+    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_MIME_TYPE, INNER_META_KEY_MIME_TYPE),
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_NUM_TRACKS, INNER_META_KEY_NUM_TRACKS),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_SAMPLERATE, INNER_META_KEY_SAMPLERATE),
+    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_SAMPLE_RATE, INNER_META_KEY_SAMPLE_RATE),
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_TITLE, INNER_META_KEY_TITLE),
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_VIDEO_HEIGHT, INNER_META_KEY_VIDEO_HEIGHT),
     METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_VIDEO_WIDTH, INNER_META_KEY_VIDEO_WIDTH),
@@ -56,7 +56,7 @@ static const std::unordered_map<int32_t, KeyToXMap> METAKEY_TO_X_MAP = {
 
 static const std::unordered_map<int32_t, int32_t> INNER_META_KEY_TO_AVMETA_KEY_TABLE = {
     { INNER_META_KEY_ALBUM, AV_KEY_ALBUM },
-    { INNER_META_KEY_ALBUMARTIST, AV_KEY_ALBUMARTIST },
+    { INNER_META_KEY_ALBUM_ARTIST, AV_KEY_ALBUM_ARTIST },
     { INNER_META_KEY_ARTIST, AV_KEY_ARTIST },
     { INNER_META_KEY_AUTHOR, AV_KEY_AUTHOR },
     { INNER_META_KEY_COMPOSER, AV_KEY_COMPOSER },
@@ -64,9 +64,9 @@ static const std::unordered_map<int32_t, int32_t> INNER_META_KEY_TO_AVMETA_KEY_T
     { INNER_META_KEY_GENRE, AV_KEY_GENRE },
     { INNER_META_KEY_HAS_AUDIO, AV_KEY_HAS_AUDIO },
     { INNER_META_KEY_HAS_VIDEO, AV_KEY_HAS_VIDEO },
-    { INNER_META_KEY_MIMETYPE, AV_KEY_MIMETYPE },
+    { INNER_META_KEY_MIME_TYPE, AV_KEY_MIME_TYPE },
     { INNER_META_KEY_NUM_TRACKS, AV_KEY_NUM_TRACKS },
-    { INNER_META_KEY_SAMPLERATE, AV_KEY_SAMPLERATE },
+    { INNER_META_KEY_SAMPLE_RATE, AV_KEY_SAMPLE_RATE },
     { INNER_META_KEY_TITLE, AV_KEY_TITLE },
     { INNER_META_KEY_VIDEO_HEIGHT, AV_KEY_VIDEO_HEIGHT },
     { INNER_META_KEY_VIDEO_WIDTH, AV_KEY_VIDEO_WIDTH },
@@ -116,6 +116,7 @@ int32_t AVMetadataHelperEngineGstImpl::SetSource(const std::string &uri, int32_t
 
 std::string AVMetadataHelperEngineGstImpl::ResolveMetadata(int32_t key)
 {
+    MEDIA_LOGD("enter");
     std::string result;
 
     if (METAKEY_TO_X_MAP.find(key) == METAKEY_TO_X_MAP.end()) {
@@ -144,11 +145,14 @@ std::string AVMetadataHelperEngineGstImpl::ResolveMetadata(int32_t key)
                    METAKEY_TO_X_MAP.at(key).keyName.data());
     }
 
+    MEDIA_LOGD("exit");
     return result;
 }
 
 std::unordered_map<int32_t, std::string> AVMetadataHelperEngineGstImpl::ResolveMetadata()
 {
+    MEDIA_LOGD("enter");
+
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(playBinCtrler_ != nullptr, {});
 
@@ -179,12 +183,15 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperEngineGstImpl::ResolveM
         (void)result.emplace(INNER_META_KEY_TO_AVMETA_KEY_TABLE.at(item.first), item.second);
     }
 
+    MEDIA_LOGD("exit");
     return result;
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchFrameAtTime(
     int64_t timeUs, int32_t option, OutputConfiguration param)
 {
+    MEDIA_LOGD("enter");
+
     if ((option != AV_META_QUERY_CLOSEST) && (option != AV_META_QUERY_CLOSEST_SYNC) &&
         (option != AV_META_QUERY_NEXT_SYNC) && (option != AV_META_QUERY_PREVIOUS_SYNC)) {
         MEDIA_LOGE("Invalid query option: %{public}d", option);
@@ -215,8 +222,9 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchFrameAtTime(
     CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
 
     std::shared_ptr<AVSharedMemory> frame = converter_->GetOneFrame(); // need exception awaken up.
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
+    CHECK_AND_RETURN_RET(frame != nullptr, nullptr);
 
+    MEDIA_LOGD("exit");
     return frame;
 }
 
@@ -323,10 +331,14 @@ void AVMetadataHelperEngineGstImpl::DoReset()
 
 void AVMetadataHelperEngineGstImpl::Reset()
 {
+    MEDIA_LOGD("enter");
+
     std::unique_lock<std::mutex> lock(mutex_);
     DoReset();
     canceled_ = true;
     cond_.notify_all();
+
+    MEDIA_LOGD("exit");
 }
 
 void AVMetadataHelperEngineGstImpl::OnNotifyMessage(const PlayBinMessage &msg)

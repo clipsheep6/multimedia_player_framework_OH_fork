@@ -34,6 +34,10 @@ using PlayBinCtrlerWrapper = ThizWrapper<PlayBinCtrlerBase>;
 void PlayBinCtrlerBase::ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userdata)
 {
     (void)playbin;
+    if (elem == nullptr || userdata == nullptr) {
+        return;
+    }
+
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
     if (thizStrong != nullptr) {
         return thizStrong->OnElementSetup(*elem);
@@ -48,7 +52,7 @@ PlayBinCtrlerBase::PlayBinCtrlerBase(const PlayBinMsgNotifier &notifier) : notif
 PlayBinCtrlerBase::~PlayBinCtrlerBase()
 {
     MEDIA_LOGD("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
-    (void)Reset();
+    Reset();
 }
 
 int32_t PlayBinCtrlerBase::Init()
@@ -108,14 +112,13 @@ int32_t PlayBinCtrlerBase::SetScene(PlayBinScene scene)
 
     if (currScene_ == PlayBinScene::PLAYBIN_SCENE_PLAYBACK || scene == PlayBinScene::PLAYBIN_SCENE_PLAYBACK) {
         MEDIA_LOGI("can't support change scene from %{public}hhu to %{public}hhu", currScene_, scene);
-    }
-
-    if (currScene_ == PlayBinScene::PLAYBIN_SCENE_METADATA) {
-        CancelBlockDecodersLocked();
+        return MSERR_INVALID_VAL;
     }
 
     MEDIA_LOGI("set playbin scene %{public}hhu success", scene);
     currScene_ = scene;
+    SetupMetaParser();
+
     return MSERR_OK;
 }
 
@@ -128,9 +131,9 @@ int32_t PlayBinCtrlerBase::SetSource(const std::string &uri)
     }
 
     std::unique_lock<std::mutex> lock(mutex_);
-    uri_ = uri;
+    uri_ = uriHeper.FormattedUri();
 
-    MEDIA_LOGI("Set source: %{public}s", uri_.c_str());
+    MEDIA_LOGI("Set source: %{public}s", uriHeper.FormattedUri().c_str());
     return MSERR_OK;
 }
 
@@ -246,6 +249,10 @@ int32_t PlayBinCtrlerBase::Stop()
     MEDIA_LOGD("enter");
 
     std::unique_lock<std::mutex> lock(mutex_);
+    if (!isInitialized) {
+        return MSERR_OK;
+    }
+
     auto stopTask = std::make_shared<TaskHandler<void>>([this]() {
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Stop();
@@ -265,7 +272,6 @@ void PlayBinCtrlerBase::Reset() noexcept
 
     isInitialized = false;
     currScene_ = PlayBinScene::PLAYBIN_SCENE_UNKNOWN;
-    CancelBlockDecodersLocked();
 
     auto idleTask = std::make_shared<TaskHandler<void>>([this]() { ChangeState(idleState_); });
     (void)taskQueue_->EnqueueTask(idleTask, true);
@@ -284,16 +290,18 @@ void PlayBinCtrlerBase::Reset() noexcept
     }
 
     if (metaParser_ != nullptr) {
-        metaParser_->Reset();
+        metaParser_->Stop();
         metaParser_ = nullptr;
     }
 
     sinkProvider_ = nullptr;
 
+    MEDIA_LOGD("unref playbin start");
     if (playbin_ != nullptr) {
         gst_object_unref(playbin_);
         playbin_ = nullptr;
     }
+    MEDIA_LOGD("unref playbin stop");
 }
 
 std::string PlayBinCtrlerBase::GetMetadata(int32_t key)
@@ -395,7 +403,7 @@ int32_t PlayBinCtrlerBase::SetupSignalMessage()
     CHECK_AND_RETURN_RET_LOG(wrapper != nullptr, MSERR_NO_MEMORY, "can not create this wrapper");
 
     (void)g_signal_connect_data(playbin_, "element-setup", G_CALLBACK(&PlayBinCtrlerBase::ElementSetup),
-        wrapper, &PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+        wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
 
     GstBus *bus = gst_pipeline_get_bus(playbin_);
     CHECK_AND_RETURN_RET_LOG(bus != nullptr, MSERR_UNKNOWN, "can not get bus");
@@ -416,55 +424,50 @@ int32_t PlayBinCtrlerBase::SetupSignalMessage()
     return MSERR_OK;
 }
 
-int32_t PlayBinCtrlerBase::SetupMetaParser()
+void PlayBinCtrlerBase::SetupMetaParser()
 {
-    metaParser_ = std::make_shared<GstMetaParser>();
-    return metaParser_->Init();
+    if (metaParser_ == nullptr)  {
+        metaParser_ = std::make_shared<GstMetaParser>();
+    }
+
+    if (currScene_ == PlayBinScene::PLAYBIN_SCENE_METADATA) {
+        metaParser_->Start(true);
+    } else {
+        metaParser_->Start(false);
+    }
 }
 
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 {
     MEDIA_LOGD("element setup: %{public}s", GST_ELEMENT_NAME(&elem));
-    bool matchResult = MatchElementByKlassMeta(elem, {"Codec", "Decoder"});
-    if (matchResult) {
-        MEDIA_LOGD("find decoder: %{public}s", GST_ELEMENT_NAME(&elem));
-        BlockDecoder(elem);
-        metaParser_->AddMetaSource(elem);
-    }
-}
 
-void PlayBinCtrlerBase::BlockDecoder(GstElement &decoder)
-{
     std::unique_lock<std::mutex> lock(mutex_);
-    if (currScene_ != PlayBinScene::PLAYBIN_SCENE_METADATA) {
+    if (metaParser_ == nullptr) {
         return;
     }
 
-    MEDIA_LOGI("decoder %{public}s setup, block it's sinkpad", GST_ELEMENT_NAME(&decoder));
-
-    auto decoderPair = decoders_.emplace(&decoder, PadProbeIdVec {});
-
-    GList *allSinkPad = decoder.sinkpads;
-    for (GList *padNode = g_list_first(allSinkPad); padNode != nullptr; padNode = padNode->next) {
-        if (padNode->data == nullptr) {
-            continue;
-        }
-        GstPad *pad = reinterpret_cast<GstPad *>(gst_object_ref(padNode->data));
-        gulong probeId = gst_pad_add_probe(pad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
-            (GstPadProbeCallback)BlockPadForBuffer, nullptr, nullptr);
-
-        // {iterator, bool} ==> {{decoder, PadProbeIdVec}, bool}
-        decoderPair.first->second.emplace_back(std::pair<GstPad *, gulong> { pad, probeId });
+    bool matchResult = MatchElementByMeta(elem, GST_ELEMENT_METADATA_LONGNAME, {"TypeFind"});
+    if (matchResult) {
+        MEDIA_LOGD("find typefind: %{public}s", GST_ELEMENT_NAME(&elem));
+        metaParser_->AddMetaSource(elem, GstMetaParser::MetaSourceType::META_SRC_TYPEFIND);
     }
-}
 
-void PlayBinCtrlerBase::CancelBlockDecodersLocked()
-{
-    for (auto &decoderPair : decoders_) {
-        for (auto &padProbeIdPair : decoderPair.second) {
-            gst_pad_remove_probe(padProbeIdPair.first, padProbeIdPair.second);
-            gst_object_unref(padProbeIdPair.first);
-        }
+    matchResult = MatchElementByMeta(elem, GST_ELEMENT_METADATA_KLASS, {"Codec", "Demuxer"});
+    if (matchResult) {
+        MEDIA_LOGD("find demuxer: %{public}s", GST_ELEMENT_NAME(&elem));
+        metaParser_->AddMetaSource(elem, GstMetaParser::MetaSourceType::META_SRC_DEMUXER);
+    }
+
+    matchResult = MatchElementByMeta(elem, GST_ELEMENT_METADATA_KLASS, {"Codec", "Parser"});
+    if (matchResult) {
+        MEDIA_LOGD("find parser: %{public}s", GST_ELEMENT_NAME(&elem));
+        metaParser_->AddMetaSource(elem, GstMetaParser::MetaSourceType::META_SRC_PARSER);
+    }
+
+    matchResult = MatchElementByMeta(elem, GST_ELEMENT_METADATA_KLASS, {"Codec", "Decoder"});
+    if (matchResult) {
+        MEDIA_LOGD("find parser: %{public}s", GST_ELEMENT_NAME(&elem));
+        metaParser_->AddMetaSource(elem, GstMetaParser::MetaSourceType::META_SRC_DECODER);
     }
 }
 

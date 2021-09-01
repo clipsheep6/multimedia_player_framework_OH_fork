@@ -15,6 +15,7 @@
 
 #include "player_service_stub.h"
 #include "player_listener_proxy.h"
+#include "media_data_source_proxy.h"
 #include "media_server_manager.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -52,6 +53,7 @@ int32_t PlayerServiceStub::Init()
 
     playerFuncs_[SET_LISTENER_OBJ] = &PlayerServiceStub::SetListenerObject;
     playerFuncs_[SET_SOURCE] = &PlayerServiceStub::SetSource;
+    playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = &PlayerServiceStub::SetMediaDataSource;
     playerFuncs_[PLAY] = &PlayerServiceStub::Play;
     playerFuncs_[PREPARE] = &PlayerServiceStub::Prepare;
     playerFuncs_[PREPAREASYNC] = &PlayerServiceStub::PrepareAsync;
@@ -122,6 +124,20 @@ int32_t PlayerServiceStub::SetSource(const std::string &uri)
 {
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetSource(uri);
+}
+
+int32_t PlayerServiceStub::SetMediaDataSource(const sptr<IRemoteObject> &object)
+{
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set mediadatasrc object is nullptr");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+
+    sptr<IStandardMediaDataSource> proxy = iface_cast<IStandardMediaDataSource>(object);
+    CHECK_AND_RETURN_RET_LOG(proxy != nullptr, MSERR_NO_MEMORY, "failed to convert MeidaDataSourceProxy");
+
+    std::shared_ptr<IMediaDataSource> mediaDataSrc = std::make_shared<MediaDataCallback>(proxy);
+    CHECK_AND_RETURN_RET_LOG(mediaDataSrc != nullptr, MSERR_NO_MEMORY, "failed to new PlayerListenerCallback");
+
+    return playerServer_->SetMediaDataSource(mediaDataSrc);
 }
 
 int32_t PlayerServiceStub::Play()
@@ -245,6 +261,13 @@ int32_t PlayerServiceStub::SetSource(MessageParcel &data, MessageParcel &reply)
 {
     std::string uri = data.ReadString();
     reply.WriteInt32(SetSource(uri));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetMediaDataSource(MessageParcel &data, MessageParcel &reply)
+{
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    reply.WriteInt32(SetMediaDataSource(object));
     return MSERR_OK;
 }
 

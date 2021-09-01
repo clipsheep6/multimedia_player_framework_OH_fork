@@ -26,11 +26,11 @@ namespace Media {
 FrameConverter::FrameConverter()
 {
     MEDIA_LOGD("enter ctor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
-    (void)Reset();
 }
 
 FrameConverter::~FrameConverter()
 {
+    (void)Reset();
     MEDIA_LOGD("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
 

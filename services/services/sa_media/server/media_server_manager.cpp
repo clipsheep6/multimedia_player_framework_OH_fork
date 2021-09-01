@@ -159,7 +159,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
                 if (it->first ==  object) {
                     MEDIA_LOGD("destory avmetadatahelper stub services(%{public}zu) pid(%{public}d).",
                         avMetadataHelperStubMap_.size(), pid);
-                    avMetadataHelperStubMap_.erase(it);
+                    (void)avMetadataHelperStubMap_.erase(it);
                     return;
                 }
             }

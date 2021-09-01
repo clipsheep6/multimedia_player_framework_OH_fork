@@ -117,7 +117,7 @@ std::shared_ptr<VideoFrameBuffer> VideoCaptureSfEsAvcImpl::DoGetFrameBuffer()
     gpointer buffer = surfaceBuffer_->GetVirAddr();
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, nullptr, "surface buffer address is invalid");
 
-    if (transStreamFormat) {
+    if (transStreamFormat_) {
         uint32_t frameSize = bufferSize - nalSize_;
         // 0x00000001, 0x000001
         if (nalSize_ == 4) {
@@ -161,7 +161,7 @@ std::shared_ptr<VideoFrameBuffer> VideoCaptureSfEsAvcImpl::GetFirstBuffer()
 
     ON_SCOPE_EXIT(1) { gst_buffer_unref(gstBuffer); };
 
-    if (transStreamFormat) {
+    if (transStreamFormat_) {
         // 0x00000001, 0x000001
         uint32_t frameSize = bufferSize - nalSize_;
         if (nalSize_ == 4) {

@@ -105,7 +105,7 @@ static const std::unordered_map<GstMessageType, MsgConvFunc> MSG_CONV_FUNC_TABLE
     { GST_MESSAGE_STATE_CHANGED, ConvertStateChangedMessage },
 };
 
-int32_t GstMsgConverterDefault::ConvertToInnerMsg(const GstMessage &gstMsg, InnerMessage &innerMsg)
+int32_t GstMsgConverterDefault::ConvertToInnerMsg(const GstMessage &gstMsg, InnerMessage &innerMsg) const
 {
     innerMsg.type = INNER_MSG_UNKNOWN;
 

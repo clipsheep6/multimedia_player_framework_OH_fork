@@ -21,47 +21,78 @@
 #include <unordered_map>
 #include <mutex>
 #include <condition_variable>
+#include <memory>
 #include <gst/gst.h>
 #include <nocopyable.h>
 
 namespace OHOS {
 namespace Media {
-class GstMetaParser {
+template <typename T>
+class ThizWrapper;
+
+class GstMetaParser : public std::enable_shared_from_this<GstMetaParser> {
 public:
+    enum class MetaSourceType : uint8_t {
+        META_SRC_UNKNOWN,
+        META_SRC_DECODER,
+        META_SRC_PARSER,
+        META_SRC_DEMUXER,
+        META_SRC_TYPEFIND,
+    };
+
     GstMetaParser();
     ~GstMetaParser();
 
-    int32_t Init();
-    void AddMetaSource(GstElement &src);
+    void Start(bool needBlockBuffer = false);
+    void BlockBuffer(bool needBlock);
+    void AddMetaSource(GstElement &src, MetaSourceType type);
     std::string GetMetadata(int32_t key);
     std::unordered_map<int32_t, std::string> GetMetadata();
-    void Reset();
+    void Stop();
 
     DISALLOW_COPY_AND_MOVE(GstMetaParser);
 
 private:
+    void Reset();
+    void AddDecoderMetaSource(GstElement &src);
+    void AddParserMetaSource(GstElement &src);
+    void AddDemuxerMetaSource(GstElement &src);
+    void AddTypeFindMetaSource(GstElement &src);
     bool CheckCollectCompleted() const;
-    static GstPadProbeReturn EventProbe(const GstPad *pad, GstPadProbeInfo *info, GstMetaParser *thiz);
-    void DoEventProbe(const GstPad &pad, GstEvent &event);
-    void TagEventParse(const GstPad &pad, const GstTagList &tagList);
-    static void TagVisitor(const GstTagList *list, const gchar *tag, GstMetaParser *thiz);
+    void TagEventParse(GstPad &pad, const GstTagList &tagList);
     void CapsEventParse(const GstPad &pad, const GstCaps &caps);
+    void FileCapsParse(const GstStructure &structure);
     void VideoCapsParse(const GstPad &pad, const GstStructure &structure);
     void AudioCapsParse(const GstPad &pad, const GstStructure &structure);
+    void ImageCapsParse(const GstPad &pad, const GstStructure &structure);
+    void TextCapsParse(const GstPad &pad, const GstStructure &structure);
     void ExpectedCapsParse(const GstStructure &structure, const std::vector<std::string_view> &fields);
+    static void PadAddedCallback(GstElement *elem, GstPad *pad, gpointer userdata);
+    static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer usrdata);
+    static GstPadProbeReturn BlockCallback(GstPad *pad, GstPadProbeInfo *info, gpointer usrdata);
+    static void HaveTypeCallback(GstElement *elem, guint probability, GstCaps *caps, gpointer userdata);
+    static void TagVisitor(const GstTagList *list, const gchar *tag, GstMetaParser *thiz);
+    void OnHaveType(const GstElement &elem, guint probability, const GstCaps &caps);
+    void OnPadAdded(const GstElement &elem, GstPad &pad);
+    void OnEventProbe(GstPad &pad, GstEvent &event);
+    void OnBufferProbe(GstPad &pad, GstBuffer &buffer);
+    int32_t AddProbeToPad(GstPad &pad, MetaSourceType srcType);
+    void QueryDuration(GstPad &pad);
 
     std::mutex mutex_;
     std::condition_variable cond_;
-    bool canceled_ = false;
+    bool collecting_ = false;
+    bool needBlockBuffer_ = false;
 
-    using PadProbeIdPair = std::pair<GstPad *, gulong>;
-    std::unordered_map<const GstElement *, PadProbeIdPair> metaSrcs_;
+    struct PadInfo;
+    std::unordered_map<GstPad *, PadInfo> padInfos_;
+    GstElement *demuxer_ = nullptr;
+
     std::unordered_map<int32_t, std::string> allMetaInfo_;
-
-    struct StreamMetaInfo;
-    std::unordered_map<const GstPad *, StreamMetaInfo> streamInfos_;
-    struct GlobalMetaInfo;
-    std::unique_ptr<GlobalMetaInfo> globalInfos_;
+    struct TrackMetaInfo;
+    std::unordered_map<const GstPad *, TrackMetaInfo> trackMetaInfos_;
+    struct FileMetaInfo;
+    std::unique_ptr<FileMetaInfo> fileMetaInfo_;
 };
 }
 }

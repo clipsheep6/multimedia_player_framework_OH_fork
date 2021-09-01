@@ -75,6 +75,12 @@ PlayerImpl::~PlayerImpl()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
+int32_t PlayerImpl::SetMediaDataSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+{
+    CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
+    return playerService_->SetMediaDataSource(dataSrc);
+}
+
 int32_t PlayerImpl::SetSource(const std::string &uri)
 {
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");

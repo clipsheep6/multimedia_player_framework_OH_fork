@@ -15,9 +15,9 @@
 #ifndef MEDIA_ERRORS_H
 #define MEDIA_ERRORS_H
 
-#include "errors.h"
 #include <map>
 #include <string>
+#include "errors.h"
 
 namespace OHOS {
 namespace Media {
@@ -64,6 +64,9 @@ enum MediaServiceErrCode : ErrCode {
     MSERR_SEEK_FAILED,                                // audio/video seek failed.
     MSERR_NETWORK_TIMEOUT,                            // network timeout.
     MSERR_NOT_FIND_CONTAINER,                         // not find a demuxer.
+    MSERR_DATA_SOURCE_IO_ERROR,                       // media data source IO failed.
+    MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR,               // media data source get mem failed.
+    MSERR_DATA_SOURCE_ERROR_UNKNOWN,                  // media data source error unknow.
     MSERR_EXTEND_START      = MS_ERR_OFFSET + 0xF000, // extend err start.
 };
 

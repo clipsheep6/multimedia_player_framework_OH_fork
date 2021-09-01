@@ -47,7 +47,7 @@ private:
     GstCaps *audioCaps_ = nullptr;
     bool surfaceTimeEnable = false;
     TimeMonitor surfaceTimeMonitor_;
-    gulong signalId_;
+    gulong signalId_ = 0;
 };
 
 class GstPlayerVideoRendererFactory {

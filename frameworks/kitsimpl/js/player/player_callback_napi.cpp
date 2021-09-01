@@ -76,7 +76,7 @@ void PlayerCallbackNapi::SaveCallbackReference(const std::string &callbackName, 
     }
 }
 
-napi_status PlayerCallbackNapi::FillErrorArgs(napi_env env, int32_t errCode, napi_value &args)
+napi_status PlayerCallbackNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args)
 {
     napi_value codeStr = nullptr;
     napi_status status = napi_create_string_utf8(env, "code", NAPI_AUTO_LENGTH, &codeStr);
@@ -105,8 +105,9 @@ napi_status PlayerCallbackNapi::FillErrorArgs(napi_env env, int32_t errCode, nap
     return napi_ok;
 }
 
-void PlayerCallbackNapi::SendErrorCallback(napi_env env, MediaServiceExtErrCode errCode)
+void PlayerCallbackNapi::SendErrorCallback(napi_env env, MediaServiceExtErrCode errCode, const std::string &info)
 {
+    MEDIA_LOGE("ErrorCallback: %{public}s", info.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(env != nullptr, "env is nullptr");
     CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "no error callback reference");
@@ -143,13 +144,12 @@ void PlayerCallbackNapi::OnError(PlayerErrorType errorType, int32_t errorCode)
     MEDIA_LOGD("OnError is called, name: %{public}d, message: %{public}d", errorType, errorCode);
     CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "errorCallback_ is nullptr");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback {
-        .callback = errorCallback_,
-        .callbackName = ERROR_CALLBACK_NAME,
-        .errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode)),
-        .errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode)),
-    };
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->callback = errorCallback_;
+    cb->callbackName = ERROR_CALLBACK_NAME;
+    cb->errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
+    cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
     return OnJsCallBackError(cb);
 }
 
@@ -187,12 +187,11 @@ void PlayerCallbackNapi::OnSeekDoneCb(int32_t currentPositon)
     MEDIA_LOGD("OnSeekDone is called, currentPositon: %{public}d", currentPositon);
     CHECK_AND_RETURN_LOG(timeUpdateCallback_ != nullptr, "timeUpdateCallback_ is nullptr");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback {
-        .callback = timeUpdateCallback_,
-        .callbackName = TIME_UPDATE_CALLBACK_NAME,
-        .position = currentPositon,
-    };
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->callback = timeUpdateCallback_;
+    cb->callbackName = TIME_UPDATE_CALLBACK_NAME;
+    cb->position = currentPositon;
     return OnJsCallBackPosition(cb);
 }
 
@@ -201,11 +200,10 @@ void PlayerCallbackNapi::OnEosCb(int32_t isLooping)
     MEDIA_LOGD("OnEndOfStream is called, isloop: %{public}d", isLooping);
     CHECK_AND_RETURN_LOG(finishCallback_ != nullptr, "finishCallback_ is nullptr");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback {
-        .callback = finishCallback_,
-        .callbackName = FINISH_CALLBACK_NAME,
-    };
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->callback = finishCallback_;
+    cb->callbackName = FINISH_CALLBACK_NAME;
     return OnJsCallBack(cb);
 }
 
@@ -243,11 +241,10 @@ void PlayerCallbackNapi::OnStateChangeCb(PlayerStates state)
             break;
     }
     CHECK_AND_RETURN_LOG(callback != nullptr, "callback is nullptr");
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback {
-        .callback = callback,
-        .callbackName = callbackName,
-    };
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->callback = callback;
+    cb->callbackName = callbackName;
     return OnJsCallBack(cb);
 }
 
@@ -266,11 +263,10 @@ void PlayerCallbackNapi::OnVolumeChangeCb()
     MEDIA_LOGD("OnVolumeChangeCb in");
     CHECK_AND_RETURN_LOG(volumeChangeCallback_ != nullptr, "volumeChangeCallback_ is nullptr");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback {
-        .callback = volumeChangeCallback_,
-        .callbackName = VOL_CHANGE_CALLBACK_NAME,
-    };
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->callback = volumeChangeCallback_;
+    cb->callbackName = VOL_CHANGE_CALLBACK_NAME;
     return OnJsCallBack(cb);
 }
 
@@ -287,7 +283,7 @@ void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb)
     }
     work->data = reinterpret_cast<void *>(jsCb);
 
-    uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         PlayerJsCallback *event = reinterpret_cast<PlayerJsCallback *>(work->data);
         std::string request = event->callbackName;
@@ -296,7 +292,6 @@ void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb)
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
@@ -310,6 +305,11 @@ void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb)
         delete event;
         delete work;
     });
+    if (ret != 0) {
+        MEDIA_LOGE("fail to uv_queue_work task");
+        delete jsCb;
+        delete work;
+    }
 }
 
 void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb)
@@ -325,7 +325,7 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb)
     }
     work->data = reinterpret_cast<void *>(jsCb);
 
-    uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         PlayerJsCallback *event = reinterpret_cast<PlayerJsCallback *>(work->data);
         std::string request = event->callbackName;
@@ -334,7 +334,6 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb)
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
@@ -360,6 +359,11 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb)
         delete event;
         delete work;
     });
+    if (ret != 0) {
+        MEDIA_LOGE("fail to uv_queue_work task");
+        delete jsCb;
+        delete work;
+    }
 }
 
 void PlayerCallbackNapi::OnJsCallBackPosition(PlayerJsCallback *jsCb)
@@ -375,7 +379,7 @@ void PlayerCallbackNapi::OnJsCallBackPosition(PlayerJsCallback *jsCb)
     }
     work->data = reinterpret_cast<void *>(jsCb);
 
-    uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         PlayerJsCallback *event = reinterpret_cast<PlayerJsCallback *>(work->data);
         std::string request = event->callbackName;
@@ -404,6 +408,11 @@ void PlayerCallbackNapi::OnJsCallBackPosition(PlayerJsCallback *jsCb)
         delete event;
         delete work;
     });
+    if (ret != 0) {
+        MEDIA_LOGE("fail to uv_queue_work task");
+        delete jsCb;
+        delete work;
+    }
 }
 }  // namespace Media
 }  // namespace OHOS

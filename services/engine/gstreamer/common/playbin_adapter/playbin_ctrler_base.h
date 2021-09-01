@@ -71,12 +71,10 @@ private:
     int32_t EnterInitializedState();
     void SetupCustomElement();
     int32_t SetupSignalMessage();
-    int32_t SetupMetaParser();
+    void SetupMetaParser();
     void DeferTask(const std::shared_ptr<TaskHandler<void>> &task, int64_t delayNs = 0);
     static void ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userdata);
     void OnElementSetup(GstElement &elem);
-    void BlockDecoder(GstElement &decoder);
-    void CancelBlockDecodersLocked();
     void OnMessageReceived(const InnerMessage &msg);
     void ReportMessage(const PlayBinMessage &msg);
     void Reset() noexcept;
@@ -89,8 +87,6 @@ private:
     std::unique_ptr<GstMsgProcessor> msgProcessor_;
     std::shared_ptr<GstMetaParser> metaParser_;
     PlayBinScene currScene_ = PlayBinScene::PLAYBIN_SCENE_UNKNOWN;
-    using PadProbeIdVec = std::vector<std::pair<GstPad *, gulong>>;
-    std::unordered_map<const GstElement *, PadProbeIdVec> decoders_;
     std::string uri_;
     bool isInitialized = false;
 

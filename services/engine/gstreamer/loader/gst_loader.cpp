@@ -94,10 +94,10 @@ static void GstLogCallbackFunc(GstDebugCategory *category, GstDebugLevel level, 
     const gchar *modeName = nullptr;
     (void)userData;
 
-    if (!message) {
+    if (message == nullptr) {
         return;
     }
-    if (category) {
+    if (category != nullptr) {
         if (level > gst_debug_category_get_threshold(category)) {
             return;
         }
@@ -108,12 +108,12 @@ static void GstLogCallbackFunc(GstDebugCategory *category, GstDebugLevel level, 
         }
     }
 
-    if (!modeName) {
+    if (modeName == nullptr) {
         modeName = LABEL.tag;
     }
 
     const gchar *logMsg = gst_debug_message_get(message);
-    if (!logMsg) {
+    if (logMsg == nullptr) {
         return;
     }
     GstLogPrintInfo printInfo = {level, file ? file : " ", function ? function : " ", line, object, logMsg, modeName};
@@ -125,11 +125,11 @@ static void GLogCallbackFunc(const gchar *logDomain, GLogLevelFlags level, const
     const gchar *modeName = logDomain;
     (void)userData;
 
-    if (!message || level > G_LOG_LEVEL_WARNING) {
+    if (message == nullptr || level > G_LOG_LEVEL_WARNING) {
         return;
     }
 
-    if (!modeName) {
+    if (modeName == nullptr) {
         modeName = LABEL.tag;
     }
     OHOS::HiviewDFX::HiLogLabel glibLable = {LOG_CORE, LOG_DOMAIN, modeName};
@@ -171,7 +171,7 @@ static void SetGstLogLevelFromSysPara()
     static std::map<std::string, char> logTagLevelMap = {{g_gstDftTag, 'I'}, };
     std::vector<std::string> tagLevelVec;
     SplitStr(levelPara, ",", tagLevelVec, false, true);
-    for (auto& tagLevel : tagLevelVec) {
+    for (auto &tagLevel : tagLevelVec) {
         std::vector<std::string> item;
         SplitStr(tagLevel, ":", item, false, true); // module format:"tagname:level"
         if (item.size() < 2) { // module format:"tagname:level"
@@ -198,7 +198,7 @@ static void SetGstLogLevelFromSysPara()
             continue;
         }
         GstDebugCategory *cat = _gst_debug_get_category(tag.c_str());
-        if (!cat) {
+        if (cat == nullptr) {
             continue;
         }
         gst_debug_category_set_threshold(cat, LOG_LEVEL_TO_GST_LEVEL.at(logTagLevelMap[tag]));
@@ -209,12 +209,12 @@ static gchar*** CreateGstInitArgv()
 {
     gchar ***argv = nullptr;
     argv = static_cast<gchar ***>(new (std::nothrow) (gchar **));
-    if (!argv) {
+    if (argv == nullptr) {
         MEDIA_LOGI("new argv failed");
         return nullptr;
     }
     *argv = static_cast<gchar **>(new (std::nothrow) gchar *[GST_ARGS.size()]);
-    if (!*argv) {
+    if (*argv == nullptr) {
         delete argv;
         return nullptr;
     }
@@ -227,10 +227,10 @@ static gchar*** CreateGstInitArgv()
 
 static void DestroyGstInitArgv(gchar ***argv)
 {
-    if (!argv) {
+    if (argv == nullptr) {
         return;
     }
-    if (!*argv) {
+    if (*argv == nullptr) {
         delete argv;
         return;
     }
@@ -252,7 +252,7 @@ int32_t GstLoader::SetUp()
     int32_t argc = static_cast<int32_t>(GST_ARGS.size());
     MEDIA_LOGI("SetUp GstLoader argc=%{public}d", argc);
     gchar ***argv = CreateGstInitArgv();
-    if (!argv) {
+    if (argv == nullptr) {
         return MSERR_NO_MEMORY;
     }
     gst_init(&argc, argv);

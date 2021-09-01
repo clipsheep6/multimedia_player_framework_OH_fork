@@ -53,11 +53,10 @@ private:
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     void ErrorCallback(napi_env env, MediaServiceExtErrCode errCode);
-    void StateCallback(napi_env env, std::string callbackName);
+    void StateCallback(napi_env env, const std::string &callbackName);
     int32_t SetFormat(napi_env env, napi_value args, int32_t &sourceId);
     int32_t SetAudioProperties(napi_env env, napi_value args, int32_t sourceId);
     int32_t SetUri(napi_env env, napi_value args);
-    void GetAudioConfig(napi_env env, napi_value configObj, const std::string &type, int32_t &result) const;
     int32_t CheckValidPath(const std::string &path);
 
     AudioRecorderNapi();

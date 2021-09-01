@@ -117,6 +117,7 @@ void MediaServiceStub::ClientDied(pid_t pid)
 int32_t MediaServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set listener object is nullptr");
 
     sptr<IStandardMediaListener> mediaListener = iface_cast<IStandardMediaListener>(object);
@@ -133,7 +134,7 @@ int32_t MediaServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
         (void)mediaListener->AsObject()->AddDeathRecipient(deathRecipient);
     }
 
-    MEDIA_LOGD("add listen client pid pid:%{public}d", pid);
+    MEDIA_LOGD("client pid pid:%{public}d", pid);
     mediaListenerMap_[pid] = mediaListener;
     deathRecipientMap_[pid] = deathRecipient;
     return MSERR_OK;

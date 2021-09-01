@@ -59,6 +59,7 @@ config("media_engine_gst_player_config") {
 
 ohos_static_library("media_engine_gst_player") {
   sources = [
+    "gst_appsrc_warp.cpp",
     "player_engine_gst_impl.cpp",
     "gst_player_build.cpp",
     "gst_player_ctrl.cpp",

@@ -23,6 +23,7 @@
 #include <gst/player/player.h>
 #include "i_player_engine.h"
 #include "task_queue.h"
+#include "gst_appsrc_warp.h"
 
 namespace OHOS {
 namespace Media {
@@ -34,11 +35,12 @@ public:
     ~GstPlayerCtrl();
 
     int32_t SetUri(const std::string &uri);
+    int32_t SetMediaDataSource(const std::shared_ptr<GstAppsrcWarp> &appsrcWarp);
     int32_t SetCallbacks(const std::weak_ptr<IPlayerEngineObs> &obs);
     void SetVideoTrack(bool enable);
     void Pause(bool cancelNotExecuted = false);
     void Play();
-    void Seek(uint64_t position, const PlayerSeekMode mode);
+    int32_t Seek(uint64_t position, const PlayerSeekMode mode);
     void Stop(bool cancelNotExecuted = false);
     void SetLoop(bool loop);
     void SetVolume(const float &leftVolume, const float &rightVolume);
@@ -58,7 +60,8 @@ public:
     static void OnErrorCb(const GstPlayer *player, const GstMessage *msg, GstPlayerCtrl *playerGst);
     static void OnSeekDoneCb(const GstPlayer *player, guint64 position, GstPlayerCtrl *playerGst);
     static void OnPositionUpdatedCb(const GstPlayer *player, guint64 position, const GstPlayerCtrl *playerGst);
-    static void OnVolumeChangeCb(GObject *combiner, GParamSpec *pspec, const GstPlayerCtrl *playerGst);
+    static void OnVolumeChangeCb(const GObject *combiner, const GParamSpec *pspec, const GstPlayerCtrl *playerGst);
+    static void OnSourceSetupCb(const GstPlayer *player, GstElement *src, const GstPlayerCtrl *playerGst);
 
 private:
     PlayerStates ProcessStoppedState();
@@ -82,6 +85,7 @@ private:
     void PauseSync();
     void OnNotify(PlayerStates state);
     void GetAudioSink();
+    void HandleStopNotify();
     std::mutex mutex_;
     std::condition_variable condVarPlaySync_;
     std::condition_variable condVarPauseSync_;
@@ -96,6 +100,7 @@ private:
     bool nextSeekFlag_ = false;
     bool seekInProgress_ = false;
     bool userStop_ = false;
+    bool userPause_ = false;
     bool stopTimeFlag_ = false;
     bool errorFlag_ = false;
     uint64_t nextSeekPos_ = 0;
@@ -106,8 +111,10 @@ private:
     bool seekDoneNeedCb_ = false;
     bool endOfStreamCb_ = false;
     std::vector<gulong> signalIds_;
+    gulong signalIdVolume_ = 0;
     GstElement *audioSink_ = nullptr;
     float volume_ = INVALID_VOLUME;
+    std::shared_ptr<GstAppsrcWarp> appsrcWarp_ = nullptr;
 };
 } // Media
 } // OHOS

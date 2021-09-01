@@ -59,8 +59,8 @@ public:
 
 private:
     std::string_view uri_;
-    std::string formattedUri_;
-    uint8_t type_;
+    std::string formattedUri_ = "";
+    uint8_t type_ = 0;
 };
 }
 }

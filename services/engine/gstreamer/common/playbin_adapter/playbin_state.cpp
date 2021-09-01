@@ -27,21 +27,25 @@ namespace OHOS {
 namespace Media {
 int32_t PlayBinCtrlerBase::BaseState::SetUp()
 {
+    MEDIA_LOGE("invalid state");
     return MSERR_INVALID_STATE;
 }
 
 int32_t PlayBinCtrlerBase::BaseState::Prepare()
 {
+    MEDIA_LOGE("invalid state");
     return MSERR_INVALID_STATE;
 }
 
 int32_t PlayBinCtrlerBase::BaseState::Play()
 {
+    MEDIA_LOGE("invalid state");
     return MSERR_INVALID_STATE;
 }
 
 int32_t PlayBinCtrlerBase::BaseState::Pause()
 {
+    MEDIA_LOGE("invalid state");
     return MSERR_INVALID_STATE;
 }
 
@@ -49,11 +53,14 @@ int32_t PlayBinCtrlerBase::BaseState::Seek(int64_t timeUs, int32_t option)
 {
     (void)timeUs;
     (void)option;
+
+    MEDIA_LOGE("invalid state");
     return MSERR_INVALID_STATE;
 }
 
 int32_t PlayBinCtrlerBase::BaseState::Stop()
 {
+    MEDIA_LOGE("invalid state");
     return MSERR_INVALID_STATE;
 }
 
@@ -65,6 +72,18 @@ void PlayBinCtrlerBase::BaseState::OnMessageReceived(const InnerMessage &msg)
     if (msg.type == INNER_MSG_STATE_CHANGED) {
         Dumper::DumpDotGraph(*ctrler_.playbin_, msg.detail1, msg.detail2);
     }
+
+    if (msg.type == INNER_MSG_ERROR) {
+        if (ctrler_.GetCurrState() != ctrler_.idleState_) {
+            auto stopTask = std::make_shared<TaskHandler<void>>([this]() {
+                ctrler_.ChangeState(ctrler_.stoppedState_);
+            });
+            ctrler_.DeferTask(stopTask, 0);
+        }
+
+        PlayBinMessage playbinMsg { PLAYBIN_MSG_ERROR, 0, msg.detail1 };
+        ctrler_.ReportMessage(playbinMsg);
+    }
 }
 
 int32_t PlayBinCtrlerBase::IdleState::SetUp()
@@ -74,12 +93,12 @@ int32_t PlayBinCtrlerBase::IdleState::SetUp()
     int32_t ret = ctrler_.OnInit();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
     CHECK_AND_RETURN_RET(ctrler_.playbin_ != nullptr, static_cast<int32_t>(MSERR_UNKNOWN));
+
     ctrler_.playbin_ = GST_PIPELINE_CAST(gst_object_ref(ctrler_.playbin_));
     ctrler_.SetupCustomElement();
     ret = ctrler_.SetupSignalMessage();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-    ret = ctrler_.SetupMetaParser();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+    ctrler_.SetupMetaParser();
 
     g_object_set(ctrler_.playbin_, "uri", ctrler_.uri_.c_str(), nullptr);
     ctrler_.ChangeState(ctrler_.initializedState_);

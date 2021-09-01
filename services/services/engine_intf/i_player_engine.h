@@ -39,6 +39,7 @@ public:
     virtual ~IPlayerEngine() = default;
 
     virtual int32_t SetSource(const std::string &uri) = 0;
+    virtual int32_t SetMediaDataSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
     virtual int32_t Play() = 0;
     virtual int32_t Prepare() = 0;
     virtual int32_t PrepareAsync() = 0;

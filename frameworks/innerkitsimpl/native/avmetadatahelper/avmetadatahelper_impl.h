@@ -27,7 +27,7 @@ public:
     ~AVMetadataHelperImpl();
     DISALLOW_COPY_AND_MOVE(AVMetadataHelperImpl);
 
-    int32_t SetSource(const std::string &uri, int32_t usage = AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) override;
+    int32_t SetSource(const std::string &uri, int32_t usage) override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
     sptr<PixelMap> FetchFrameAtTime(int64_t timeUs, int32_t option, PixelMapParams param) override;

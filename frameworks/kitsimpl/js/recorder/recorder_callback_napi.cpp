@@ -68,7 +68,7 @@ void RecorderCallbackNapi::SaveCallbackReference(const std::string &callbackName
     }
 }
 
-napi_status RecorderCallbackNapi::FillErrorArgs(napi_env env, int32_t errCode, napi_value &args)
+napi_status RecorderCallbackNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args)
 {
     napi_value codeStr = nullptr;
     napi_status status = napi_create_string_utf8(env, "code", NAPI_AUTO_LENGTH, &codeStr);
@@ -125,7 +125,7 @@ void RecorderCallbackNapi::SendErrorCallback(napi_env env, MediaServiceExtErrCod
     CHECK_AND_RETURN_LOG(status == napi_ok, "call error callback fail");
 }
 
-void RecorderCallbackNapi::SendCallback(napi_env env, std::string callbackName)
+void RecorderCallbackNapi::SendCallback(napi_env env, const std::string &callbackName)
 {
     std::shared_ptr<AutoRef> callbackRef = nullptr;
     if (callbackName == PREPARE_CALLBACK_NAME) {
@@ -165,13 +165,12 @@ void RecorderCallbackNapi::OnError(RecorderErrorType errorType, int32_t errCode)
     MEDIA_LOGD("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
     CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "errorCallback_ is nullptr");
 
-    RecordJsCallback *cb = new(std::nothrow) RecordJsCallback {
-        .callback = errorCallback_,
-        .callbackName = ERROR_CALLBACK_NAME,
-        .errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errorType)),
-        .errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode)),
-    };
+    RecordJsCallback *cb = new(std::nothrow) RecordJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+    cb->callback = errorCallback_;
+    cb->callbackName = ERROR_CALLBACK_NAME;
+    cb->errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errorType));
+    cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
     return ErrorCallbackToJS(cb);
 }
 
@@ -194,7 +193,7 @@ void RecorderCallbackNapi::ErrorCallbackToJS(RecordJsCallback *jsCb)
     work->data = reinterpret_cast<void *>(jsCb);
 
     // async callback, jsWork and jsWork->data should be heap object.
-    uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         RecordJsCallback *event = reinterpret_cast<RecordJsCallback *>(work->data);
         std::string request = event->callbackName;
@@ -203,7 +202,6 @@ void RecorderCallbackNapi::ErrorCallbackToJS(RecordJsCallback *jsCb)
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
@@ -231,6 +229,11 @@ void RecorderCallbackNapi::ErrorCallbackToJS(RecordJsCallback *jsCb)
         delete event;
         delete work;
     });
+    if (ret != 0) {
+        MEDIA_LOGE("fail to uv_queue_work task");
+        delete jsCb;
+        delete work;
+    }
 }
 }  // namespace Media
 }  // namespace OHOS

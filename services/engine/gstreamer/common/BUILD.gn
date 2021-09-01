@@ -41,13 +41,12 @@ config("media_engine_gst_common_config") {
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base/gst-libs",
     "//third_party/gstreamer/gstplugins_bad/gst-libs",
-    "//foundation/multimedia/media_standard/services/engine/gstreamer/common",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/loader",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/message",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/metadata",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/playbin_adapter",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/state_machine",
-    "//foundation/multimedia/media_standard/services/engine/gstreamer/common/dfx",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/common/utils",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
   ]
@@ -62,7 +61,8 @@ ohos_static_library("media_engine_gst_common") {
     "playbin_adapter/playbin_state.cpp",
     "playbin_adapter/playbin2_ctrler.cpp",
     "state_machine/state_machine.cpp",
-    "dfx/dumper.cpp",
+    "utils/dumper.cpp",
+    "utils/gst_utils.cpp",
   ]
 
   configs = [

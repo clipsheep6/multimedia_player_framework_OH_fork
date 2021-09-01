@@ -81,6 +81,20 @@ int32_t PlayerClient::SetSource(const std::string &uri)
     return playerProxy_->SetSource(uri);
 }
 
+int32_t PlayerClient::SetMediaDataSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_NO_MEMORY, "data source is nullptr");
+
+    dataSrcStub_ = new(std::nothrow) MediaDataSourceStub(dataSrc);
+    CHECK_AND_RETURN_RET_LOG(dataSrcStub_ != nullptr, MSERR_NO_MEMORY, "failed to new dataSrcStub object");
+
+    sptr<IRemoteObject> object = dataSrcStub_->AsObject();
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
+    return playerProxy_->SetMediaDataSource(object);
+}
+
 int32_t PlayerClient::Play()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -119,6 +133,7 @@ int32_t PlayerClient::Stop()
 int32_t PlayerClient::Reset()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    dataSrcStub_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
     return playerProxy_->Reset();
 }
@@ -128,6 +143,7 @@ int32_t PlayerClient::Release()
     std::lock_guard<std::mutex> lock(mutex_);
     callback_ = nullptr;
     listenerStub_ = nullptr;
+    dataSrcStub_ = nullptr;
 
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
     return playerProxy_->Release();

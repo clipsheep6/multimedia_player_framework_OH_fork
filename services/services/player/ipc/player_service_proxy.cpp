@@ -64,6 +64,21 @@ int32_t PlayerServiceProxy::SetSource(const std::string &uri)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::SetMediaDataSource(const sptr<IRemoteObject> &object)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    (void)data.WriteRemoteObject(object);
+    int error = Remote()->SendRequest(SET_MEDIA_DATA_SRC_OBJ, data, reply, option);
+    if (error != ERR_OK) {
+        MEDIA_LOGE("Set SetMediaDataSource obj failed, error: %{public}d", error);
+        return error;
+    }
+
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::Play()
 {
     MessageParcel data;

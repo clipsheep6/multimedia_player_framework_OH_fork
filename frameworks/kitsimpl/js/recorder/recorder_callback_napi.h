@@ -53,14 +53,14 @@ public:
 
     void SaveCallbackReference(const std::string &callbackName, napi_value callback);
     void SendErrorCallback(napi_env env, MediaServiceExtErrCode errCode);
-    void SendCallback(napi_env env, std::string callbackName);
+    void SendCallback(napi_env env, const std::string &callbackName);
 
 protected:
     void OnError(RecorderErrorType errorType, int32_t errCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
 
 private:
-    static napi_status FillErrorArgs(napi_env env, int32_t errCode, napi_value &args);
+    static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
 
     struct RecordJsCallback {
         std::shared_ptr<AutoRef> callback = nullptr;
@@ -69,7 +69,6 @@ private:
         MediaServiceExtErrCode errorCode = MSERR_EXT_UNKNOWN;
     };
     void ErrorCallbackToJS(RecordJsCallback *jsCb);
-
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::shared_ptr<AutoRef> errorCallback_ = nullptr;

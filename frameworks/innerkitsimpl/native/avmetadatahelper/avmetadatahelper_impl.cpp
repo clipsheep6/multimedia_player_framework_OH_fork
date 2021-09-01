@@ -87,7 +87,7 @@ sptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(int64_t timeUs, int32_t op
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
         "avmetadatahelper service does not exist.");
 
-    return nullptr; //todo avMetadataHelperService_->FetchFrameAtTime(timeUs, option, param);
+    return nullptr;
 }
 
 void AVMetadataHelperImpl::Release()

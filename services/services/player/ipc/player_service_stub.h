@@ -34,6 +34,7 @@ public:
     using PlayerStubFunc = int32_t(PlayerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t SetSource(const std::string &uri) override;
+    int32_t SetMediaDataSource(const sptr<IRemoteObject> &object) override;
     int32_t Play() override;
     int32_t Prepare() override;
     int32_t PrepareAsync() override;
@@ -59,6 +60,7 @@ private:
     int32_t Init();
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
     int32_t SetSource(MessageParcel &data, MessageParcel &reply);
+    int32_t SetMediaDataSource(MessageParcel &data, MessageParcel &reply);
     int32_t Play(MessageParcel &data, MessageParcel &reply);
     int32_t Prepare(MessageParcel &data, MessageParcel &reply);
     int32_t PrepareAsync(MessageParcel &data, MessageParcel &reply);

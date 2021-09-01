@@ -127,8 +127,8 @@ static void gst_audio_server_sink_init(GstAudioServerSink *sink)
     sink->min_frame_count = 0;
     sink->cache_buffer = nullptr;
     sink->cache_size = 0;
-    sink->enable_cache = false;
-    sink->frame_after_segment = false;
+    sink->enable_cache = FALSE;
+    sink->frame_after_segment = FALSE;
     sink->is_start = FALSE;
     g_mutex_init(&sink->render_lock);
 }
@@ -140,7 +140,7 @@ static void gst_audio_server_sink_finalize(GObject *object)
 
     g_mutex_clear(&sink->render_lock);
     if (sink->audio_sink != nullptr) {
-        sink->audio_sink->Release();
+        (void)sink->audio_sink->Release();
         sink->audio_sink = nullptr;
     }
 }
@@ -255,7 +255,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             break;
         case GST_EVENT_SEGMENT:
             g_mutex_lock(&sink->render_lock);
-            sink->frame_after_segment = true;
+            sink->frame_after_segment = TRUE;
             g_mutex_unlock(&sink->render_lock);
             break;
         case GST_EVENT_FLUSH_START:
@@ -320,7 +320,7 @@ static GstFlowReturn gst_audio_server_sink_cache_render(GstAudioServerSink *sink
     gst_buffer_unmap(buffer, &map);
 
     if (sink->cache_size == 0 && size < sink->min_buffer_size) {
-        sink->cache_size += size;
+        sink->cache_size += static_cast<guint>(size);
         sink->cache_buffer = gst_buffer_copy(buffer);
         if (sink->cache_buffer == nullptr) {
             return GST_FLOW_ERROR;
@@ -328,13 +328,13 @@ static GstFlowReturn gst_audio_server_sink_cache_render(GstAudioServerSink *sink
         return GST_FLOW_OK;
     }
 
-    sink->cache_size += size;
+    sink->cache_size += static_cast<guint>(size);
     GstBuffer *buf = gst_buffer_copy(sink->cache_buffer);
     if (buf == nullptr) {
         gst_buffer_unref(sink->cache_buffer);
         return GST_FLOW_ERROR;
     }
-    gst_buffer_ref(buffer);
+    (void)gst_buffer_ref(buffer);
     buf = gst_buffer_append(buf, buffer);
     gst_buffer_unref(sink->cache_buffer);
     sink->cache_buffer = buf;
@@ -381,6 +381,7 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             sink->is_start = FALSE;
+            break;
         default:
             break;
     }
@@ -414,7 +415,7 @@ static GstFlowReturn gst_audio_server_sink_render(GstBaseSink *basesink, GstBuff
 
     g_mutex_lock(&sink->render_lock);
     if (sink->frame_after_segment) {
-        sink->frame_after_segment = false;
+        sink->frame_after_segment = FALSE;
         uint64_t latency = 0;
         GST_INFO_OBJECT(basesink, "the first audio frame after segment has been sent to audio server");
         if (sink->audio_sink->GetLatency(latency) != MSERR_OK) {
