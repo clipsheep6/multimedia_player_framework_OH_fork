@@ -34,7 +34,7 @@ AudioSinkSvImpl::~AudioSinkSvImpl()
 {
     audioManager_ = nullptr;
     if (audioRenderer_ != nullptr) {
-        audioRenderer_->Release();
+        (void)audioRenderer_->Release();
         audioRenderer_ = nullptr;
     }
 }
@@ -44,7 +44,8 @@ int32_t AudioSinkSvImpl::SetVolume(float volume)
     MEDIA_LOGD("SetVolume");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(audioManager_ != nullptr, MSERR_INVALID_OPERATION);
-    int32_t ret = audioManager_->SetVolume(AudioStandard::AudioSystemManager::AudioVolumeType::STREAM_MUSIC, volume);
+    int32_t ret = audioManager_->SetVolume(AudioStandard::AudioSystemManager::AudioVolumeType::STREAM_MUSIC,
+        static_cast<int32_t>(volume));
     CHECK_AND_RETURN_RET(ret == AudioStandard::SUCCESS, MSERR_UNKNOWN);
     return MSERR_OK;
 }
@@ -146,7 +147,7 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
                                                                         AudioRenderer::GetSupportedSamplingRates();
     CHECK_AND_RETURN_RET(supportedSampleList.size() > 0, MSERR_UNKNOWN);
     bool isValidSampleRate = false;
-    for (auto iter = supportedSampleList.cbegin(); iter != supportedSampleList.end(); iter++) {
+    for (auto iter = supportedSampleList.cbegin(); iter != supportedSampleList.end(); ++iter) {
         CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, MSERR_UNKNOWN);
         uint32_t supportedSampleRate = static_cast<uint32_t>(*iter);
         if (sampleRate <= supportedSampleRate) {
@@ -161,7 +162,7 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
                                                                      AudioRenderer::GetSupportedChannels();
     CHECK_AND_RETURN_RET(supportedChannelsList.size() > 0, MSERR_UNKNOWN);
     bool isValidChannels = false;
-    for (auto iter = supportedChannelsList.cbegin(); iter != supportedChannelsList.end(); iter++) {
+    for (auto iter = supportedChannelsList.cbegin(); iter != supportedChannelsList.end(); ++iter) {
         CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, MSERR_UNKNOWN);
         uint32_t supportedChannels = static_cast<uint32_t>(*iter);
         if (channels == supportedChannels) {
@@ -225,7 +226,7 @@ int32_t AudioSinkSvImpl::GetAudioTime(uint64_t &time)
     AudioStandard::Timestamp timeStamp;
     bool ret = audioRenderer_->GetAudioTime(timeStamp, AudioStandard::Timestamp::Timestampbase::MONOTONIC);
     CHECK_AND_RETURN_RET(ret == true, MSERR_UNKNOWN);
-    time = timeStamp.time.tv_nsec;
+    time = static_cast<uint64_t>(timeStamp.time.tv_nsec);
     return MSERR_OK;
 }
 

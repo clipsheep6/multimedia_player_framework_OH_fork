@@ -59,7 +59,7 @@ typedef struct {
     PixelFormat pixel_format;
     GstVideoFormat gst_format;
     guint frame_rate;
-    guint pts;
+    guint64 pts;
 #ifdef GST_HDI_PARAM_PILE
     guint64 phy_addr[2];
     guint8 *vir_addr;

@@ -22,56 +22,154 @@
 #include <functional>
 #include <queue>
 #include <string>
-#include "errors.h"
+#include <optional>
+#include <type_traits>
+#include "media_errors.h"
 #include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
-class TaskHandler {
-public:
-    TaskHandler(std::function<int32_t(void)> task, int32_t defaultResult = ERR_OK)
-        : task_(task), result_(defaultResult)
+/**
+ * Simple Generalized Task Queues for Easier Implementation of Asynchronous Programming Models
+ *
+ * You can refer to following examples to use this utility.
+ *
+ * Example 1:
+ * TaskQueue taskQ("your_task_queue_name");
+ * taskQ.Start();
+ * auto handler1 = std::make_shared<TaskHandler<int32_t>>([]() {
+ *     // your job's detail code;
+ * });
+ * taskQ.EnqueueTask(handler1);
+ * auto result = handler1->GetResult();
+ * if (result.HasResult()) {
+ *     MEDIA_LOGI("handler 1 executed, result: %{public}d", result.Value());
+ * } else {
+ *     MEDIA_LOGI("handler 1 not executed");
+ * }
+ *
+ * Example 2:
+ * TaskQueue taskQ("your_task_queue_name");
+ * taskQ.Start();
+ * auto handler2 = std::make_shared<TaskHandler<void>>([]() {
+ *     // your job's detail code;
+ * });
+ * taskQ.EnqueueTask(handler1);
+ * auto result = handler1->GetResult();
+ * if (result.HasResult()) {
+ *     MEDIA_LOGI("handler 1 executed");
+ * } else {
+ *     MEDIA_LOGI("handler 1 not executed");
+ * }
+ */
+
+class TaskQueue;
+template <typename T>
+class TaskHandler;
+
+template <typename T>
+struct TaskResult {
+    bool HasResult()
     {
+        return val.has_value();
     }
+    T Value()
+    {
+        return val.value();
+    }
+private:
+    friend class TaskHandler<T>;
+    std::optional<T> val;
+};
+
+template <>
+struct TaskResult<void> {
+    bool HasResult()
+    {
+        return executed;
+    }
+private:
+    friend class TaskHandler<void>;
+    bool executed = false;
+};
+
+class ITaskHandler {
+public:
+    virtual ~ITaskHandler() = default;
+    virtual void Execute() = 0;
+    virtual void Cancel() = 0;
+    virtual bool IsCanceled() = 0;
+};
+
+template <typename T>
+class TaskHandler : public ITaskHandler {
+public:
+    explicit TaskHandler(std::function<T(void)> task) : task_(task) {}
     ~TaskHandler() = default;
 
-    void Execute()
+    void Execute() override
     {
-        int32_t result = task_();
         {
             std::unique_lock<std::mutex> lock(mutex_);
-            isFinished_ = true;
-            result_ = result;
+            if (state_ != TaskState::IDLE) {
+                return;
+            }
+            state_ = TaskState::RUNNING;
+        }
+
+        if constexpr (std::is_void_v<T>) {
+            task_();
+            std::unique_lock<std::mutex> lock(mutex_);
+            state_ = TaskState::FINISHED;
+            result_.executed = true;
+        } else {
+            T result = task_();
+            std::unique_lock<std::mutex> lock(mutex_);
+            state_ = TaskState::FINISHED;
+            result_.val = result;
         }
         cond_.notify_all();
     }
 
-    int32_t GetResult()
+    TaskResult<T> GetResult()
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        while (!isFinished_) {
+        while ((state_ != TaskState::FINISHED) && (state_ != TaskState::CANCELED)) {
             cond_.wait(lock);
         }
         return result_;
     }
 
-    void Cancel()
+    void Cancel() override
     {
-        {
-            std::unique_lock<std::mutex> lock(mutex_);
-            isFinished_ = true;
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (state_ != RUNNING) {
+            state_ = TaskState::CANCELED;
+            cond_.notify_all();
         }
-        cond_.notify_all();
+    }
+
+    bool IsCanceled() override
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return state_ == TaskState::CANCELED;
     }
 
     DISALLOW_COPY_AND_MOVE(TaskHandler);
 
 private:
-    bool isFinished_ = false;
+    enum TaskState {
+        IDLE,
+        RUNNING,
+        CANCELED,
+        FINISHED,
+    };
+
+    TaskState state_ = TaskState::IDLE;
     std::mutex mutex_;
     std::condition_variable cond_;
-    std::function<int32_t(void)> task_;
-    int32_t result_;
+    std::function<T(void)> task_;
+    TaskResult<T> result_;
 };
 
 class __attribute__((visibility("default"))) TaskQueue {
@@ -80,8 +178,9 @@ public:
     ~TaskQueue();
 
     int32_t Start();
-    int32_t Stop();
-    int32_t EnqueueTask(std::shared_ptr<TaskHandler> task, bool cancelNotExecuted = false);
+    int32_t Stop() noexcept;
+
+    int32_t EnqueueTask(const std::shared_ptr<ITaskHandler> &task, bool cancelNotExecuted = false);
 
     DISALLOW_COPY_AND_MOVE(TaskQueue);
 
@@ -91,7 +190,7 @@ private:
 
     bool isExit_ = true;
     std::unique_ptr<std::thread> thread_;
-    std::queue<std::shared_ptr<TaskHandler>> taskQ_;
+    std::queue<std::shared_ptr<ITaskHandler>> taskQ_;
     std::mutex mutex_;
     std::condition_variable cond_;
     std::string name_;
