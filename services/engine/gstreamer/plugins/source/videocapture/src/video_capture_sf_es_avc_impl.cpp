@@ -19,6 +19,16 @@
 #include "scope_guard.h"
 #include "securec.h"
 
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoCaptureSfEsAvcImpl"};
     constexpr uint32_t MAX_SURFACE_BUFFER_SIZE = 20 * 1024 * 1024;
@@ -32,6 +42,36 @@ VideoCaptureSfEsAvcImpl::VideoCaptureSfEsAvcImpl()
 
 VideoCaptureSfEsAvcImpl::~VideoCaptureSfEsAvcImpl()
 {
+}
+
+uint64_t GetCurrentLocalTimeStamp()
+{
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> tp =
+        std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+    auto tmp = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch());
+    return tmp.count();
+}
+
+int32_t VideoCaptureSfEsAvcImpl::SaveYUV(void* buffer, int32_t size)
+{
+    char path[PATH_MAX] = {0};
+    system("mkdir -p /mnt/record");
+    (void) sprintf_s(path, sizeof(path) / sizeof(path[0]),
+                    "/mnt/record/%s_%lld.mpg", "record", GetCurrentLocalTimeStamp());
+    MEDIA_LOGE("%s, saving file to %{public}s", __FUNCTION__, path);
+    int imgFd = open(path, O_RDWR | O_CREAT, 00766);
+    if (imgFd == -1) {
+        MEDIA_LOGE("%s, open file failed, errno = %{public}s.", __FUNCTION__, strerror(errno));
+        return -1;
+    }
+    int ret = write(imgFd, buffer, size);
+    if (ret == -1) {
+        MEDIA_LOGE("%s, write file failed, error = %{public}s", __FUNCTION__, strerror(errno));
+        close(imgFd);
+        return -1;
+    }
+    close(imgFd);
+    return 0;
 }
 
 std::shared_ptr<EsAvcCodecBuffer> VideoCaptureSfEsAvcImpl::DoGetCodecBuffer()
@@ -48,8 +88,16 @@ std::shared_ptr<EsAvcCodecBuffer> VideoCaptureSfEsAvcImpl::DoGetCodecBuffer()
 
     std::vector<uint8_t> sps;
     std::vector<uint8_t> pps;
+
+    //void *addr = buffer;
+    //int32_t size = bufferSize;
+    //MEDIA_LOGE("Calling SaveYUV SIZE %{public}d", bufferSize);
+    //SaveYUV(addr, size);
     GetCodecData(reinterpret_cast<const uint8_t *>(buffer), bufferSize, sps, pps, nalSize_);
-    CHECK_AND_RETURN_RET_LOG(nalSize_ > 0 && sps.size() > 0 && pps.size() > 0, nullptr, "illegal codec buffer");
+    MEDIA_LOGE("VideoCaptureSfEsAvcImpl nalSize_ = %{public}d", nalSize_);
+    MEDIA_LOGE("VideoCaptureSfEsAvcImpl sps.size() = %{public}d", sps.size());
+    MEDIA_LOGE("VideoCaptureSfEsAvcImpl ps.size() = %{public}d", pps.size());
+    CHECK_AND_RETURN_RET_LOG(nalSize_ > 0 && sps.size() > 0 && pps.size() > 0, nullptr, "illegal codec buffer 1"); 
 
     // 11 is the length of AVCDecoderConfigurationRecord field except sps and pps
     uint32_t codecBufferSize = sps.size() + pps.size() + 11;
@@ -199,12 +247,14 @@ const uint8_t *VideoCaptureSfEsAvcImpl::FindNextNal(const uint8_t *start, const 
     while (start <= end - 3) {
         // 0x000001 Nal
         if (start[0] == 0x00 && start[1] == 0x00 && start[2] == 0x01) {
+            MEDIA_LOGE("FindNextNal  nalSize = 3");
             nalSize = 3;
             return start;
         }
         // 0x00000001 Nal
         if (start[0] == 0x00 && start[1] == 0x00 && start[2] == 0x00 && start[3] == 0x01) {
             nalSize = 4;
+            MEDIA_LOGE("FindNextNal  nalSize = 4");
             return start;
         }
         start++;
@@ -219,6 +269,7 @@ void VideoCaptureSfEsAvcImpl::GetCodecData(const uint8_t *data, int32_t len,
     const uint8_t *end = data + len;
     const uint8_t *pBegin = data;
     const uint8_t *pEnd = nullptr;
+    MEDIA_LOGE("GetCodecData  pBegin = %{public}d  end = %{public}d", *pBegin, *end);
     while (pBegin < end) {
         pBegin = FindNextNal(pBegin, end, nalSize);
         if (pBegin == end) {

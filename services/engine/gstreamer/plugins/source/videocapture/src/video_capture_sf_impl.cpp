@@ -18,6 +18,17 @@
 #include "media_log.h"
 #include "media_errors.h"
 
+#include <stdio.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <sys/stat.h>
+#include <sys/time.h>
+#include <sys/types.h>
+#include <securec.h>
+
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoCaptureSfmpl"};
 }
@@ -169,6 +180,36 @@ std::shared_ptr<VideoFrameBuffer> VideoCaptureSfImpl::GetFrameBuffer()
     return nullptr;
 }
 
+uint64_t GetCurrentLocalTimeStamp1()
+{
+    std::chrono::time_point<std::chrono::system_clock, std::chrono::milliseconds> tp =
+        std::chrono::time_point_cast<std::chrono::milliseconds>(std::chrono::system_clock::now());
+    auto tmp = std::chrono::duration_cast<std::chrono::milliseconds>(tp.time_since_epoch());
+    return tmp.count();
+}
+
+int32_t VideoCaptureSfImpl::SaveYUV(void* buffer, int32_t size)
+{
+    char path[PATH_MAX] = {0};
+    system("mkdir -p /mnt/record");
+    (void) sprintf_s(path, sizeof(path) / sizeof(path[0]),
+                    "/mnt/record/%s_%lld.mpg", "record", GetCurrentLocalTimeStamp1());
+    MEDIA_LOGE("%s, saving file to %{public}s", __FUNCTION__, path);
+    int imgFd = open(path, O_RDWR | O_CREAT, 00766);
+    if (imgFd == -1) {
+        MEDIA_LOGE("%s, open file failed, errno = %{public}s.", __FUNCTION__, strerror(errno));
+        return -1;
+    }
+    int ret = write(imgFd, buffer, size);
+    if (ret == -1) {
+        MEDIA_LOGE("%s, write file failed, error = %{public}s", __FUNCTION__, strerror(errno));
+        close(imgFd);
+        return -1;
+    }
+    close(imgFd);
+    return 0;
+}
+
 int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -182,6 +223,11 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
     if (dataConSurface_->AcquireBuffer(surfaceBuffer_, fence_, timestamp_, damage_) != SURFACE_ERROR_OK) {
         return MSERR_UNKNOWN;
     }
+
+    void *addr = surfaceBuffer_->GetVirAddr();
+    int32_t size = surfaceBuffer_->GetSize();
+    SaveYUV(addr, size);
+    MEDIA_LOGE("Calling AcquireSurfaceBuffer::SaveYUV SIZE %{public}d", size);
 
     surfaceBuffer_->ExtraGet("dataSize", dataSize_);
     surfaceBuffer_->ExtraGet("pts", pts_);
