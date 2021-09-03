@@ -15,6 +15,7 @@
 #include "callback_works.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "native_engine/native_engine.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CallbackWorks"};
@@ -117,6 +118,7 @@ void CallbackWorks::DeinitWork(uv_work_t *work) const
 int32_t CallbackWorks::Run(uv_work_t *work)
 {
     uv_loop_s *loop = nullptr;
+    CHECK_AND_RETURN_RET_LOG(env_ != nullptr, MSERR_NO_MEMORY, "env is null");
     napi_get_uv_event_loop(env_, &loop);
     CHECK_AND_RETURN_RET_LOG(loop != nullptr, MSERR_NO_MEMORY, "work is null");
     CHECK_AND_RETURN_RET_LOG(work != nullptr, MSERR_NO_MEMORY, "work is null");
@@ -142,6 +144,7 @@ int32_t CallbackWorks::Run(uv_work_t *work)
         } while (0);
         CHECK_AND_RETURN_LOG(callbackWorks->Remove(work) == MSERR_OK, "unknow error, work not in works");
     });
+    reinterpret_cast<NativeEngine*>(env_)->Loop(LOOP_DEFAULT);
     return MSERR_OK;
 }
 } // namespace Media
