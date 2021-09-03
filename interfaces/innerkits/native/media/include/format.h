@@ -58,7 +58,6 @@ class Format {
 public:
     Format() = default;
     ~Format() = default;
-
     const std::map<std::string, FormatData *> &GetFormatMap() const;
 
 private:
