@@ -25,18 +25,22 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-std::shared_ptr<GstAppsrcWarp> Create(const std::shared_ptr<IMediaDataSource> &dataSrc, int32_t size)
+std::shared_ptr<GstAppsrcWarp> GstAppsrcWarp::Create(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
-    CHECK_AND_RETURN_RET_LOG(size >= -1, nullptr, "size is less than -1");
+    CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, nullptr, "input dataSrc is empty!");
+    int64_t size = 0;
+    int32_t ret = dataSrc->GetSize(size);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "media data source get size failed!");
+    CHECK_AND_RETURN_RET_LOG(size >= -1, nullptr, "size cannot less than -1");
     return std::make_shared<GstAppsrcWarp>(dataSrc, size);
 }
 
-GstAppsrcWarp::GstAppsrcWarp(const std::shared_ptr<IMediaDataSource> &dataSrc, const int32_t size)
+GstAppsrcWarp::GstAppsrcWarp(const std::shared_ptr<IMediaDataSource> &dataSrc, const int64_t size)
     : dataSrc_(dataSrc),
       size_(size),
       taskQue_("appsrcWarpTask")
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create and size %{public}d", FAKE_POINTER(this), size);
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create and size %{public}" PRId64 "", FAKE_POINTER(this), size);
     (void)taskQue_.Start();
     streamType_ = size == -1 ? GST_APP_STREAM_TYPE_STREAM : GST_APP_STREAM_TYPE_RANDOM_ACCESS;
 }
@@ -146,7 +150,7 @@ void GstAppsrcWarp::ReadAndGetMem()
     if (size_ == -1) {
         size = dataSrc_->ReadAt(len);
     } else {
-        size = dataSrc_->ReadAt(static_cast<uint32_t>(curPos_), len);
+        size = dataSrc_->ReadAt(static_cast<int64_t>(curPos_), len);
     }
 
     AnalyzeSize(size);
@@ -198,7 +202,7 @@ int32_t GstAppsrcWarp::GetAndPushMem(int32_t size)
         MEDIA_LOGE("map buffer failed");
         return MSERR_NO_MEMORY;
     }
-    if (memcpy_s(info.data, size, mem->GetBase(), size) != EOK) {
+    if (memcpy_s(info.data, static_cast<size_t>(size), mem->GetBase(), static_cast<size_t>(mem->GetSize())) != EOK) {
         gst_buffer_unmap(buffer, &info);
         gst_buffer_unref(buffer);
         MEDIA_LOGE("memcpy_s failed");

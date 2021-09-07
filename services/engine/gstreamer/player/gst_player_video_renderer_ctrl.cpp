@@ -101,7 +101,7 @@ GstElement *GstPlayerVideoRendererCap::CreateAudioSink(const GstCaps *caps,
     const DataAvailableFunc callback, const gpointer userData)
 {
     (void)callback;
-    MEDIA_LOGI("CreateVideoSink in.");
+    MEDIA_LOGI("CreateAudioSink in.");
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "input caps is nullptr..");
     CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
 

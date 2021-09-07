@@ -35,7 +35,7 @@ public:
     ~GstPlayerCtrl();
 
     int32_t SetUri(const std::string &uri);
-    int32_t SetMediaDataSource(const std::shared_ptr<GstAppsrcWarp> &appsrcWarp);
+    int32_t SetSource(const std::shared_ptr<GstAppsrcWarp> &appsrcWarp);
     int32_t SetCallbacks(const std::weak_ptr<IPlayerEngineObs> &obs);
     void SetVideoTrack(bool enable);
     void Pause(bool cancelNotExecuted = false);
@@ -49,6 +49,7 @@ public:
     void SetRate(double rate);
     double GetRate();
     PlayerStates GetState() const;
+    void SetRingBufferMaxSize(uint64_t size);
     static void OnStateChangedCb(const GstPlayer *player, GstPlayerState state, GstPlayerCtrl *playerGst);
     static void OnEndOfStreamCb(const GstPlayer *player, GstPlayerCtrl *playerGst);
     static void StreamDecErrorParse(const gchar *name, int32_t &errorCode);
@@ -86,6 +87,7 @@ private:
     void OnNotify(PlayerStates state);
     void GetAudioSink();
     void HandleStopNotify();
+    void HandlePlayBackNotify();
     std::mutex mutex_;
     std::condition_variable condVarPlaySync_;
     std::condition_variable condVarPauseSync_;

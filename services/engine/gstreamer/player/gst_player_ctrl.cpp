@@ -72,6 +72,13 @@ GstPlayerCtrl::~GstPlayerCtrl()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
+void GstPlayerCtrl::SetRingBufferMaxSize(uint64_t size)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(gstPlayer_ != nullptr, "gstPlayer_ is nullptr");
+    g_object_set(gstPlayer_, "ring-buffer-max-size", static_cast<guint64>(size), nullptr);
+}
+
 int32_t GstPlayerCtrl::SetUri(const std::string &uri)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -81,7 +88,7 @@ int32_t GstPlayerCtrl::SetUri(const std::string &uri)
     return MSERR_OK;
 }
 
-int32_t GstPlayerCtrl::SetMediaDataSource(const std::shared_ptr<GstAppsrcWarp> &appsrcWarp)
+int32_t GstPlayerCtrl::SetSource(const std::shared_ptr<GstAppsrcWarp> &appsrcWarp)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(gstPlayer_ != nullptr, MSERR_INVALID_OPERATION, "gstPlayer_ is nullptr");
@@ -536,7 +543,7 @@ void GstPlayerCtrl::MessageErrorProcess(const char *name, const GError *err,
 {
     CHECK_AND_RETURN_LOG(err != nullptr, "err is null");
     CHECK_AND_RETURN_LOG(name != nullptr, "name is null");
-    char *errMsg = gst_error_get_message (err->domain, err->code);
+    char *errMsg = gst_error_get_message(err->domain, err->code);
     MEDIA_LOGE("errMsg:%{public}s", errMsg);
     if (err->domain == GST_STREAM_ERROR) {
         errorType = PLAYER_ERROR;
@@ -694,6 +701,15 @@ void GstPlayerCtrl::HandleStopNotify()
     }
 }
 
+void GstPlayerCtrl::HandlePlayBackNotify()
+{
+    condVarCompleteSync_.notify_all();
+    if (userPause_) {
+        condVarPauseSync_.notify_all();
+        userPause_ = false;
+    }
+}
+
 void GstPlayerCtrl::OnNotify(PlayerStates state)
 {
     switch (state) {
@@ -710,7 +726,7 @@ void GstPlayerCtrl::OnNotify(PlayerStates state)
             HandleStopNotify();
             break;
         case PLAYER_PLAYBACK_COMPLETE:
-            condVarCompleteSync_.notify_all();
+            HandlePlayBackNotify();
             break;
         default:
             break;

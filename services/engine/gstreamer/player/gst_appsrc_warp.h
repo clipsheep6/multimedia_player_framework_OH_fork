@@ -27,8 +27,8 @@ namespace OHOS {
 namespace Media {
 class GstAppsrcWarp {
 public:
-    std::shared_ptr<GstAppsrcWarp> Create(const std::shared_ptr<IMediaDataSource> &dataSrc, int32_t size);
-    GstAppsrcWarp(const std::shared_ptr<IMediaDataSource> &dataSrc, const int32_t size);
+    static std::shared_ptr<GstAppsrcWarp> Create(const std::shared_ptr<IMediaDataSource> &dataSrc);
+    GstAppsrcWarp(const std::shared_ptr<IMediaDataSource> &dataSrc, const int64_t size);
     ~GstAppsrcWarp();
     DISALLOW_COPY_AND_MOVE(GstAppsrcWarp);
     int32_t SetAppsrc(GstElement *appSrc);
@@ -49,7 +49,7 @@ private:
     void PushData(void *buffer);
     void PushEos();
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
-    const int32_t size_;
+    const int64_t size_;
     uint64_t curPos_ = 0;
     uint64_t targetPos_ = 0;
     std::mutex mutex_;

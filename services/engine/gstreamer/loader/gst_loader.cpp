@@ -64,22 +64,22 @@ static void GstLogPrint(const GstLogPrintInfo &info)
         case GST_LEVEL_TRACE: // no break
         case GST_LEVEL_LOG:   // no break
         case GST_LEVEL_DEBUG:
-            ::OHOS::HiviewDFX::HiLog::Debug(gstLable,
+            (void)::OHOS::HiviewDFX::HiLog::Debug(gstLable,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
         case GST_LEVEL_INFO:
-            ::OHOS::HiviewDFX::HiLog::Info(gstLable,
+            (void)::OHOS::HiviewDFX::HiLog::Info(gstLable,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
         case GST_LEVEL_WARNING:
-            ::OHOS::HiviewDFX::HiLog::Warn(gstLable,
+            (void)::OHOS::HiviewDFX::HiLog::Warn(gstLable,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
         case GST_LEVEL_ERROR:
-            ::OHOS::HiviewDFX::HiLog::Error(gstLable,
+            (void)::OHOS::HiviewDFX::HiLog::Error(gstLable,
                 "{%{public}s():%{public}d} [gst::%{public}s:%{public}" PRIXPTR "] %{public}s",
                 info.function, info.line, objName, FAKE_POINTER(info.object), info.logMsg);
             break;
@@ -136,12 +136,12 @@ static void GLogCallbackFunc(const gchar *logDomain, GLogLevelFlags level, const
 
     switch (level) {
         case G_LOG_LEVEL_WARNING:
-            ::OHOS::HiviewDFX::HiLog::Warn(glibLable, "[glog] %{public}s", message);
+            (void)::OHOS::HiviewDFX::HiLog::Warn(glibLable, "[glog] %{public}s", message);
             break;
         case G_LOG_LEVEL_CRITICAL: // no break
         case G_LOG_LEVEL_ERROR:    // no break
         case G_LOG_FLAG_RECURSION:
-            ::OHOS::HiviewDFX::HiLog::Error(glibLable, "[glog] %{public}s", message);
+            (void)::OHOS::HiviewDFX::HiLog::Error(glibLable, "[glog] %{public}s", message);
             break;
         default:
             break;
@@ -152,7 +152,7 @@ static void EnableGLog(GLogFunc func)
 {
     // map glib default log handler, and gstreamer log hander to GLogMap
     (void)g_log_set_default_handler(func, nullptr);
-    (void)g_log_set_handler ("GStreamer", static_cast<GLogLevelFlags>(0xFFFFFFFF), func, nullptr);
+    (void)g_log_set_handler("GStreamer", static_cast<GLogLevelFlags>(0xFFFFFFFF), func, nullptr);
 
     return;
 }
