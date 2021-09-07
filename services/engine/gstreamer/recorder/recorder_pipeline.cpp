@@ -147,7 +147,7 @@ int32_t RecorderPipeline::Stop(bool isDrainAll)
     MEDIA_LOGI("enter Stop, isDrainAll = %{public}d", isDrainAll);
     DrainBuffer(isDrainAll);
 
-    (void) DoElemAction(&RecorderElement::Stop, false);
+    (void)DoElemAction(&RecorderElement::Stop, false);
 
     int32_t ret = SyncWaitChangeState(GST_STATE_NULL);
     if (ret != MSERR_OK) {
@@ -220,7 +220,7 @@ void RecorderPipeline::DrainBuffer(bool isDrainAll)
     }
 
     if (isDrainAll) {
-        (void) PostAndSyncWaitEOS();
+        (void)PostAndSyncWaitEOS();
         return;
     }
 
@@ -431,8 +431,8 @@ void RecorderPipeline::StopForError(const RecorderMessage &msg)
 
     errorState_.store(true);
     DrainBuffer(false);
-    (void) DoElemAction(&RecorderElement::Stop, false);
-    (void) SyncWaitChangeState(GST_STATE_NULL);
+    (void)DoElemAction(&RecorderElement::Stop, false);
+    (void)SyncWaitChangeState(GST_STATE_NULL);
 
     isStarted_ = false;
     gstPipeCond_.notify_all();

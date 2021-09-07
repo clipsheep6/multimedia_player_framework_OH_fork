@@ -30,7 +30,7 @@ int32_t AudioSource::Init()
     gstElem_ = gst_element_factory_make("audiocapturesrc", name_.c_str());
     if (gstElem_ == nullptr) {
         MEDIA_LOGE("Create audiosource gst element failed! sourceId: %{public}d", desc_.handle_);
-        return ERR_INVALID_OPERATION;
+        return MSERR_INVALID_OPERATION;
     }
     g_object_set(gstElem_, "source-type", desc_.type_, nullptr);
     return MSERR_OK;
@@ -61,7 +61,7 @@ int32_t AudioSource::ConfigAudioSampleRate(const RecorderParam &recParam)
     const AudSampleRate &param = static_cast<const AudSampleRate &>(recParam);
     if (param.sampleRate <= 0) {
         MEDIA_LOGE("The required audio sample rate %{public}d invalid.", param.sampleRate);
-        return ERR_INVALID_VALUE;
+        return MSERR_INVALID_VAL;
     }
     MEDIA_LOGI("Set audio sample rate: %{public}d", param.sampleRate);
     g_object_set(gstElem_, "sample-rate", static_cast<uint32_t>(param.sampleRate), nullptr);
@@ -76,7 +76,7 @@ int32_t AudioSource::ConfigAudioChannels(const RecorderParam &recParam)
     const AudChannel &param = static_cast<const AudChannel &>(recParam);
     if (param.channel <= 0) {
         MEDIA_LOGE("The required audio channels %{public}d is invalid", param.channel);
-        return ERR_INVALID_VALUE;
+        return MSERR_INVALID_VAL;
     }
     MEDIA_LOGI("Set audio channels: %{public}d", param.channel);
     g_object_set(gstElem_, "channels", static_cast<uint32_t>(param.channel), nullptr);
@@ -91,7 +91,7 @@ int32_t AudioSource::ConfigAudioBitRate(const RecorderParam &recParam)
     const AudBitRate &param = static_cast<const AudBitRate &>(recParam);
     if (param.bitRate <= 0) {
         MEDIA_LOGE("The required audio bitrate %{public}d is invalid", param.bitRate);
-        return ERR_INVALID_VALUE;
+        return MSERR_INVALID_VAL;
     }
     MEDIA_LOGI("Set audio bitrate: %{public}d", param.bitRate);
     g_object_set(gstElem_, "bitrate", static_cast<uint32_t>(param.bitRate), nullptr);
@@ -110,7 +110,7 @@ int32_t AudioSource::CheckConfigReady()
 
     if (!CheckAllParamsConfiged(expectedParam)) {
         MEDIA_LOGE("audiosource required parameter not configured completely, failed !");
-        return ERR_INVALID_OPERATION;
+        return MSERR_INVALID_OPERATION;
     }
     return MSERR_OK;
 }

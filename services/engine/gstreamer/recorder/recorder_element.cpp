@@ -51,7 +51,7 @@ int32_t RecorderElementFactory::RegisterElement(std::string key, ElementCreator 
     std::unique_lock<std::mutex> lock(tblMutex_);
     if (creatorTbl_.find(key) != creatorTbl_.end()) {
         MEDIA_LOGE("key %{public}s already registered !", key.c_str());
-        return ERR_ALREADY_EXISTS;
+        return MSERR_INVALID_OPERATION;
     }
 
     (void)creatorTbl_.emplace(key, creator);

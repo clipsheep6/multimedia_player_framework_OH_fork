@@ -77,7 +77,7 @@ int32_t RecorderPipelineBuilder::CreateMuxSink()
     muxSink_ = CreateElement("MuxSinkBin", desc, false);
     if (muxSink_ == nullptr) {
         MEDIA_LOGE("Unable to create element for MuxSinkBin !");
-        return ERR_INVALID_OPERATION;
+        return MSERR_INVALID_OPERATION;
     }
     pipelineDesc_->muxerSinkBin = muxSink_;
 
@@ -97,7 +97,7 @@ int32_t RecorderPipelineBuilder::SetVideoSource(const RecorderSourceDesc &desc)
         MEDIA_LOGE("Video source type %{public}d currently unsupported", desc.type_);
     }
 
-    CHECK_AND_RETURN_RET(element != nullptr, ERR_INVALID_VALUE);
+    CHECK_AND_RETURN_RET(element != nullptr, MSERR_INVALID_VAL);
 
     // for the second video source, the sinkpad name should be video_aux_%u
     ADD_LINK_DESC(element, muxSink_, "src", "video", true, false);
@@ -118,13 +118,13 @@ int32_t RecorderPipelineBuilder::SetAudioSource(const RecorderSourceDesc &desc)
         MEDIA_LOGE("Audio source type %{public}d currently unsupported", desc.type_);
     }
 
-    CHECK_AND_RETURN_RET(audioSrcElem != nullptr, ERR_INVALID_VALUE);
+    CHECK_AND_RETURN_RET(audioSrcElem != nullptr, MSERR_INVALID_VAL);
 
     std::shared_ptr<RecorderElement> audioConvert = CreateElement("AudioConverter", desc, false);
-    CHECK_AND_RETURN_RET(audioConvert != nullptr, ERR_INVALID_VALUE);
+    CHECK_AND_RETURN_RET(audioConvert != nullptr, MSERR_INVALID_VAL);
 
     std::shared_ptr<RecorderElement> audioEncElem = CreateElement("AudioEncoder", desc, false);
-    CHECK_AND_RETURN_RET(audioEncElem != nullptr, ERR_INVALID_VALUE);
+    CHECK_AND_RETURN_RET(audioEncElem != nullptr, MSERR_INVALID_VAL);
 
     ADD_LINK_DESC(audioSrcElem, audioConvert, "src", "sink", true, true);
     ADD_LINK_DESC(audioConvert, audioEncElem, "src", "sink", true, true);
@@ -143,14 +143,14 @@ int32_t RecorderPipelineBuilder::SetSource(const RecorderSourceDesc &desc)
 
     // should never go to here.
     MEDIA_LOGE("Invalid source description !");
-    return ERR_INVALID_VALUE;
+    return MSERR_INVALID_VAL;
 }
 
 int32_t RecorderPipelineBuilder::SetOutputFormat(OutputFormatType formatType)
 {
     if (muxSink_ == nullptr) {
         MEDIA_LOGE("No source set, set the output format invalid !");
-        return ERR_INVALID_OPERATION;
+        return MSERR_INVALID_OPERATION;
     }
 
     int32_t ret = muxSink_->Configure(OutputFormat(formatType));
@@ -164,7 +164,7 @@ int32_t RecorderPipelineBuilder::Configure(int32_t sourceId, const RecorderParam
 {
     if (!outputFormatConfiged_) {
         MEDIA_LOGE("Output format not set, configure the pipeline is invalid !");
-        return ERR_INVALID_OPERATION;
+        return MSERR_INVALID_OPERATION;
     }
 
     // distribute parameters to elements

@@ -315,7 +315,7 @@ int32_t MuxSinkBin::CreateMuxerElement(const std::string &name)
     return MSERR_OK;
 }
 
-GstPadProbeReturn MuxSinkBin::MuxerSinkPadProbe(const GstPad &pad, GstPadProbeInfo &info) const
+GstPadProbeReturn MuxSinkBin::MuxerSinkPadProbe(GstPad &pad, GstPadProbeInfo &info) const
 {
     MEDIA_LOGI("During onlyEos state, pad %{public}s's probe is processing the 0x%{public}x type probeInfo",
                GST_PAD_NAME(&pad), info.type);
