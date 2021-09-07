@@ -30,8 +30,8 @@ FrameConverter::FrameConverter()
 
 FrameConverter::~FrameConverter()
 {
-    (void)Reset();
     MEDIA_LOGD("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
+    (void)Reset();
 }
 
 int32_t FrameConverter::Init(const OutputConfiguration &config)

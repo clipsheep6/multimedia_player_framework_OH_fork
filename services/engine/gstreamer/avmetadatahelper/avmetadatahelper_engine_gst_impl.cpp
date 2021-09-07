@@ -22,7 +22,6 @@
 #include "frame_converter.h"
 #include "scope_guard.h"
 #include "uri_helper.h"
-#include "inner_meta_define.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetaEngineGstImpl"};
@@ -30,50 +29,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-struct KeyToXMap {
-    std::string_view keyName;
-    int32_t innerKey;
-};
-
-#define METADATA_KEY_TO_X_MAP_ITEM(key, innerKey) { key, { #key, innerKey }}
-static const std::unordered_map<int32_t, KeyToXMap> METAKEY_TO_X_MAP = {
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_ALBUM, INNER_META_KEY_ALBUM),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_ALBUM_ARTIST, INNER_META_KEY_ALBUM_ARTIST),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_ARTIST, INNER_META_KEY_ARTIST),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_AUTHOR, INNER_META_KEY_AUTHOR),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_COMPOSER, INNER_META_KEY_COMPOSER),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_DURATION, INNER_META_KEY_DURATION),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_GENRE, INNER_META_KEY_GENRE),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_HAS_AUDIO, INNER_META_KEY_HAS_AUDIO),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_HAS_VIDEO, INNER_META_KEY_HAS_VIDEO),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_MIME_TYPE, INNER_META_KEY_MIME_TYPE),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_NUM_TRACKS, INNER_META_KEY_NUM_TRACKS),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_SAMPLE_RATE, INNER_META_KEY_SAMPLE_RATE),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_TITLE, INNER_META_KEY_TITLE),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_VIDEO_HEIGHT, INNER_META_KEY_VIDEO_HEIGHT),
-    METADATA_KEY_TO_X_MAP_ITEM(AV_KEY_VIDEO_WIDTH, INNER_META_KEY_VIDEO_WIDTH),
-};
-
-static const std::unordered_map<int32_t, int32_t> INNER_META_KEY_TO_AVMETA_KEY_TABLE = {
-    { INNER_META_KEY_ALBUM, AV_KEY_ALBUM },
-    { INNER_META_KEY_ALBUM_ARTIST, AV_KEY_ALBUM_ARTIST },
-    { INNER_META_KEY_ARTIST, AV_KEY_ARTIST },
-    { INNER_META_KEY_AUTHOR, AV_KEY_AUTHOR },
-    { INNER_META_KEY_COMPOSER, AV_KEY_COMPOSER },
-    { INNER_META_KEY_DURATION, AV_KEY_DURATION },
-    { INNER_META_KEY_GENRE, AV_KEY_GENRE },
-    { INNER_META_KEY_HAS_AUDIO, AV_KEY_HAS_AUDIO },
-    { INNER_META_KEY_HAS_VIDEO, AV_KEY_HAS_VIDEO },
-    { INNER_META_KEY_MIME_TYPE, AV_KEY_MIME_TYPE },
-    { INNER_META_KEY_NUM_TRACKS, AV_KEY_NUM_TRACKS },
-    { INNER_META_KEY_SAMPLE_RATE, AV_KEY_SAMPLE_RATE },
-    { INNER_META_KEY_TITLE, AV_KEY_TITLE },
-    { INNER_META_KEY_VIDEO_HEIGHT, AV_KEY_VIDEO_HEIGHT },
-    { INNER_META_KEY_VIDEO_WIDTH, AV_KEY_VIDEO_WIDTH },
-};
-
 AVMetadataHelperEngineGstImpl::AVMetadataHelperEngineGstImpl()
-    : playbinState_(PLAYBIN_STATE_IDLE)
 {
     MEDIA_LOGD("enter ctor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
@@ -99,17 +55,8 @@ int32_t AVMetadataHelperEngineGstImpl::SetSource(const std::string &uri, int32_t
 
     MEDIA_LOGI("uri: %{public}s, usage: %{public}d", uri.c_str(), usage);
 
-    std::unique_lock<std::mutex> lock(mutex_);
-
-    CHECK_AND_RETURN_RET(TakeOwnerShip(lock), {});
-    ON_SCOPE_EXIT(0) { ReleaseOwnerShip(); };
-
-    int32_t ret = InitPipeline(usage);
+    int32_t ret = SetSourceInternel(uri, usage);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-
-    ret = playBinCtrler_->SetSource(uri);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-    usage_ = usage;
 
     return MSERR_OK;
 }
@@ -119,33 +66,16 @@ std::string AVMetadataHelperEngineGstImpl::ResolveMetadata(int32_t key)
     MEDIA_LOGD("enter");
     std::string result;
 
-    if (METAKEY_TO_X_MAP.find(key) == METAKEY_TO_X_MAP.end()) {
-        MEDIA_LOGE("Unsupported metadata key: %{public}d", key);
-        return result;
-    }
-
-    std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(playBinCtrler_ != nullptr, result);
-
-    CHECK_AND_RETURN_RET(TakeOwnerShip(lock), result);
-    ON_SCOPE_EXIT(0) { ReleaseOwnerShip(); };
-
-    int32_t ret = playBinCtrler_->SetScene(IPlayBinCtrler::PlayBinScene::PLAYBIN_SCENE_METADATA);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("internel error, can not resolve the meta, ret = %{public}d", ret);
-        return result;
-    }
-
-    ret = PrepareInternel(true, lock);
+    int32_t ret = ExtractMetadata();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, result);
 
-    result = playBinCtrler_->GetMetadata(METAKEY_TO_X_MAP.at(key).innerKey);
-    if (result.empty()) {
-        MEDIA_LOGE("The specified metadata %{public}s cannot be obtained from the specified stream.",
-                   METAKEY_TO_X_MAP.at(key).keyName.data());
+    if (collectedMeta_.count(key) == 0) {
+        MEDIA_LOGE("The specified metadata %{public}d cannot be obtained from the specified stream.", key);
+        return result;
     }
 
     MEDIA_LOGD("exit");
+    result = collectedMeta_[key];
     return result;
 }
 
@@ -153,38 +83,11 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperEngineGstImpl::ResolveM
 {
     MEDIA_LOGD("enter");
 
-    std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(playBinCtrler_ != nullptr, {});
-
-    CHECK_AND_RETURN_RET(TakeOwnerShip(lock), {});
-    ON_SCOPE_EXIT(0) { ReleaseOwnerShip(); };
-
-    int32_t ret = playBinCtrler_->SetScene(IPlayBinCtrler::PlayBinScene::PLAYBIN_SCENE_METADATA);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("internel error, can not resolve the meta, ret = %{public}d", ret);
-        return {};
-    }
-
-    ret = PrepareInternel(true, lock);
+    int32_t ret = ExtractMetadata();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, {});
 
-    // no need to block wait if the prepare process already finished by the FetchFrame action
-    std::unordered_map<int32_t, std::string> tmpResult = playBinCtrler_->GetMetadata();
-    if (tmpResult.empty()) {
-        MEDIA_LOGE("Can not get all metedata from the specified stream.");
-        return {};
-    }
-
-    std::unordered_map<int32_t, std::string> result;
-    for (auto &item : tmpResult) {
-        if (item.first >= INNER_META_KEY_BUTT || item.first < 0) {
-            continue;
-        }
-        (void)result.emplace(INNER_META_KEY_TO_AVMETA_KEY_TABLE.at(item.first), item.second);
-    }
-
     MEDIA_LOGD("exit");
-    return result;
+    return collectedMeta_;
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchFrameAtTime(
@@ -198,27 +101,26 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchFrameAtTime(
         return nullptr;
     }
 
-    std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, nullptr, "Call SetSource firstly !");
-
     if (usage_ != AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) {
         MEDIA_LOGE("current instance is unavaiable for pixel map, check usage !");
         return nullptr;
     }
 
-    CHECK_AND_RETURN_RET(TakeOwnerShip(lock), nullptr);
-    ON_SCOPE_EXIT(0) { ReleaseOwnerShip(); };
-
-    int32_t ret = InitConverter(param);
+    int32_t ret = ExtractMetadata();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
 
-    ret = playBinCtrler_->SetScene(IPlayBinCtrler::PlayBinScene::PLAYBIN_SCENE_THUBNAIL);
+    if (collectedMeta_.count(AV_KEY_HAS_VIDEO) == 0) {
+        MEDIA_LOGE("the associated media source does not have video track");
+        return nullptr;
+    }
+
+    ret = InitConverter(param);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
 
-    ret = PrepareInternel(false, lock);
+    ret = PrepareInternel(IPlayBinCtrler::PlayBinScene::THUBNAIL);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
 
-    ret = SeekInternel(timeUs, option, lock);
+    ret = SeekInternel(timeUs, option);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
 
     std::shared_ptr<AVSharedMemory> frame = converter_->GetOneFrame(); // need exception awaken up.
@@ -228,32 +130,39 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchFrameAtTime(
     return frame;
 }
 
-int32_t AVMetadataHelperEngineGstImpl::InitPipeline(int32_t usage)
+int32_t AVMetadataHelperEngineGstImpl::SetSourceInternel(const std::string &uri, int32_t usage)
 {
-    DoReset();
+    Reset();
 
     auto notifier = std::bind(&AVMetadataHelperEngineGstImpl::OnNotifyMessage, this, std::placeholders::_1);
-    auto playBinCtrler = IPlayBinCtrler::Create(IPlayBinCtrler::PlayBinKind::PLAYBIN_KIND_PLAYBIN2, notifier);
-    CHECK_AND_RETURN_RET(playBinCtrler != nullptr, MSERR_UNKNOWN);
+    playBinCtrler_ = IPlayBinCtrler::Create(IPlayBinCtrler::PlayBinKind::PLAYBIN_KIND_PLAYBIN2, notifier);
+    CHECK_AND_RETURN_RET(playBinCtrler_ != nullptr, MSERR_UNKNOWN);
+
+    metaCollector_ = std::make_unique<AVMetaMetaCollector>();
+    auto listener = std::bind(&AVMetadataHelperEngineGstImpl::OnNotifyElemSetup, this, std::placeholders::_1);
+    playBinCtrler_->SetElemSetupListener(listener);
 
     auto sinkProvider = std::make_shared<AVMetaSinkProvider>(usage);
-    int32_t ret = playBinCtrler->SetSinkProvider(sinkProvider);
+    int32_t ret = playBinCtrler_->SetSinkProvider(sinkProvider);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
-    playBinCtrler_ = std::move(playBinCtrler);
+    if (usage == AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) {
+        converter_ = std::make_shared<FrameConverter>();
+        sinkProvider->SetFrameCallback(converter_);
+    }
     sinkProvider_ = sinkProvider;
+
+    ret = playBinCtrler_->SetSource(uri);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+
+    metaCollector_->Start();
+    usage_ = usage;
 
     return MSERR_OK;
 }
 
 int32_t AVMetadataHelperEngineGstImpl::InitConverter(const OutputConfiguration &config)
 {
-    if (converter_ == nullptr) {
-        converter_ = std::make_shared<FrameConverter>();
-        auto provider = std::static_pointer_cast<AVMetaSinkProvider>(sinkProvider_);
-        provider->SetFrameCallback(converter_);
-    }
-
     // need to skip the same config
     int32_t ret = converter_->Init(config);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_INVALID_OPERATION);
@@ -264,61 +173,64 @@ int32_t AVMetadataHelperEngineGstImpl::InitConverter(const OutputConfiguration &
     return MSERR_OK;
 }
 
-bool AVMetadataHelperEngineGstImpl::TakeOwnerShip(std::unique_lock<std::mutex> &lock, bool canceling)
+int32_t AVMetadataHelperEngineGstImpl::PrepareInternel(IPlayBinCtrler::PlayBinScene scene)
 {
-    if (canceling) {
-        cond_.wait(lock, [this]() { return !inProgressing_; });
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "set source firstly");
+
+    int32_t ret = playBinCtrler_->SetScene(scene);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "set scene failed");
+
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (prepared_) {
+        return MSERR_OK;
+    }
+
+    if (scene == IPlayBinCtrler::PlayBinScene::METADATA) {
+        ret = playBinCtrler_->PrepareAsync();
     } else {
-        cond_.wait(lock, [this]() { return canceled_ || !inProgressing_; });
+        metaCollector_->Stop();
+        ret = playBinCtrler_->Prepare();
     }
-
-    if (!canceling && canceled_) {
-        MEDIA_LOGI("canceling: %{public}d, canceled_: %{public}d", canceling, canceled_);
-        return false;
-    }
-    inProgressing_ = true;
-
-    return true;
-}
-
-void AVMetadataHelperEngineGstImpl::ReleaseOwnerShip()
-{
-    inProgressing_ = false;
-    cond_.notify_all();
-}
-
-int32_t AVMetadataHelperEngineGstImpl::PrepareInternel(bool async, std::unique_lock<std::mutex> &lock)
-{
-    if (playbinState_ < PLAYBIN_STATE_PREPARING) {
-        int32_t ret = playBinCtrler_->PrepareAsync();
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-        playbinState_ = PLAYBIN_STATE_PREPARING;
-    }
-
-    if (!async) {
-        cond_.wait(lock, [this]() { return canceled_ || playbinState_ >= PLAYBIN_STATE_PREPARED; });
-        CHECK_AND_RETURN_RET_LOG(!canceled_, MSERR_UNKNOWN, "Canceled !");
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "prepare failed");
 
     return MSERR_OK;
 }
 
-int32_t AVMetadataHelperEngineGstImpl::SeekInternel(int64_t timeUs, int32_t option, std::unique_lock<std::mutex> &lock)
+int32_t AVMetadataHelperEngineGstImpl::SeekInternel(int64_t timeUs, int32_t option)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
+
     int32_t ret = playBinCtrler_->Seek(timeUs, option);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
-    cond_.wait(lock, [this]() { return canceled_ || seekDone_; });
+    seeking_ = true;
+    cond_.wait(lock, [this]() { return canceled_ || !seeking_; });
     CHECK_AND_RETURN_RET_LOG(!canceled_, MSERR_UNKNOWN, "Canceled !");
-    seekDone_ = false;
 
     return MSERR_OK;
 }
 
-void AVMetadataHelperEngineGstImpl::DoReset()
+int32_t AVMetadataHelperEngineGstImpl::ExtractMetadata()
 {
+    if (!hasCollecteMeta_) {
+        int32_t ret = PrepareInternel(IPlayBinCtrler::PlayBinScene::METADATA);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+
+        collectedMeta_ = metaCollector_->GetMetadata();
+        hasCollecteMeta_ = true;
+    }
+    return MSERR_OK;
+}
+
+void AVMetadataHelperEngineGstImpl::Reset()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (metaCollector_ != nullptr) {
+        metaCollector_ = nullptr;
+        hasCollecteMeta_ = false;
+    }
+
     if (playBinCtrler_ != nullptr) {
-        (void)playBinCtrler_->Stop();
         playBinCtrler_ = nullptr;
         sinkProvider_ = nullptr;
     }
@@ -327,45 +239,38 @@ void AVMetadataHelperEngineGstImpl::DoReset()
         (void)converter_->StopConvert();
         converter_ = nullptr;
     }
-}
 
-void AVMetadataHelperEngineGstImpl::Reset()
-{
-    MEDIA_LOGD("enter");
-
-    std::unique_lock<std::mutex> lock(mutex_);
-    DoReset();
     canceled_ = true;
+    seeking_ = false;
+    prepared_ = false;
     cond_.notify_all();
-
-    MEDIA_LOGD("exit");
 }
 
 void AVMetadataHelperEngineGstImpl::OnNotifyMessage(const PlayBinMessage &msg)
 {
     switch (msg.type) {
-        case PLAYBIN_MSG_ERROR: {
-            MEDIA_LOGE("internel error happened, reset");
-            Reset();
-            break;
-        }
         case PLAYBIN_MSG_STATE_CHANGE: {
             std::unique_lock<std::mutex> lock(mutex_);
-            playbinState_ = msg.code;
             if (msg.code == PLAYBIN_STATE_PREPARED) {
-                cond_.notify_one();
+                prepared_ = true;
             }
             break;
         }
         case PLAYBIN_MSG_SEEKDONE: {
             std::unique_lock<std::mutex> lock(mutex_);
-            seekDone_ = true;
+            seeking_ = false;
             cond_.notify_one();
             break;
         }
         default:
             break;
     }
+}
+
+void AVMetadataHelperEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    metaCollector_->AddMetaSource(elem);
 }
 }
 }

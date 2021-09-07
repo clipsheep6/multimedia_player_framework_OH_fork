@@ -40,9 +40,9 @@ config("media_engine_gst_avmeta_config") {
     "//foundation/multimedia/media_standard/services/utils/include",
     "//foundation/multimedia/media_standard/services/include",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/playbin_adapter",
-    "//foundation/multimedia/media_standard/services/engine/gstreamer/common/message",
-    "//foundation/multimedia/media_standard/services/engine/gstreamer/common/state_machine",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/metadata",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/common/message",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/common/utils",
     "//drivers/peripheral/base",
     "//drivers/peripheral/display/interfaces/include",
     "//utils/native/base/include",
@@ -59,6 +59,9 @@ ohos_static_library("media_engine_gst_avmeta") {
     "avmetadatahelper_engine_gst_impl.cpp",
     "avmeta_sinkprovider.cpp",
     "frame_converter.cpp",
+    "avmeta_meta_collector.cpp",
+    "avmeta_elem_meta_collector.cpp",
+    "avmeta_buffer_blocker.cpp",
   ]
 
   configs = [
