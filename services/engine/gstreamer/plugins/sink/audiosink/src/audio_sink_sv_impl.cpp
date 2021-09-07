@@ -25,14 +25,12 @@ namespace {
 namespace OHOS {
 namespace Media {
 AudioSinkSvImpl::AudioSinkSvImpl()
-    : audioRenderer_(nullptr),
-      audioManager_(nullptr)
+    : audioRenderer_(nullptr)
 {
 }
 
 AudioSinkSvImpl::~AudioSinkSvImpl()
 {
-    audioManager_ = nullptr;
     if (audioRenderer_ != nullptr) {
         (void)audioRenderer_->Release();
         audioRenderer_ = nullptr;
@@ -42,38 +40,31 @@ AudioSinkSvImpl::~AudioSinkSvImpl()
 int32_t AudioSinkSvImpl::SetVolume(float volume)
 {
     MEDIA_LOGD("SetVolume");
-    CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(audioManager_ != nullptr, MSERR_INVALID_OPERATION);
-    int32_t ret = audioManager_->SetVolume(AudioStandard::AudioSystemManager::AudioVolumeType::STREAM_MUSIC,
-        static_cast<int32_t>(volume));
-    CHECK_AND_RETURN_RET(ret == AudioStandard::SUCCESS, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audioRenderer_ is nullptr");
+    int32_t ret = audioRenderer_->SetVolume(volume);
+    CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_UNKNOWN, "audio server setvolume failed!");
     return MSERR_OK;
 }
 
 int32_t AudioSinkSvImpl::GetVolume(float &volume)
 {
     MEDIA_LOGD("GetVolume");
-    CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(audioManager_ != nullptr, MSERR_INVALID_OPERATION);
-    volume = audioManager_->GetVolume(AudioStandard::AudioSystemManager::AudioVolumeType::STREAM_MUSIC);
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audioRenderer_ is nullptr");
+    volume = audioRenderer_->GetVolume();
     return MSERR_OK;
 }
 
 int32_t AudioSinkSvImpl::GetMaxVolume(float &volume)
 {
     MEDIA_LOGD("GetMaxVolume");
-    CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(audioManager_ != nullptr, MSERR_INVALID_OPERATION);
-    volume = audioManager_->GetMaxVolume(AudioStandard::AudioSystemManager::AudioVolumeType::STREAM_MUSIC);
+    volume = 1.0; // audioRenderer maxVolume
     return MSERR_OK;
 }
 
 int32_t AudioSinkSvImpl::GetMinVolume(float &volume)
 {
     MEDIA_LOGD("GetMinVolume");
-    CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(audioManager_ != nullptr, MSERR_INVALID_OPERATION);
-    volume = audioManager_->GetMinVolume(AudioStandard::AudioSystemManager::AudioVolumeType::STREAM_MUSIC);
+    volume = 0.0; // audioRenderer minVolume
     return MSERR_OK;
 }
 
@@ -82,8 +73,6 @@ int32_t AudioSinkSvImpl::Prepare()
     MEDIA_LOGD("Prepare");
     audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC);
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
-    audioManager_ = AudioStandard::AudioSystemManager::GetInstance();
-    CHECK_AND_RETURN_RET(audioManager_ != nullptr, MSERR_INVALID_OPERATION);
     return MSERR_OK;
 }
 

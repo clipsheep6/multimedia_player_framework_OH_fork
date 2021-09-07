@@ -32,7 +32,7 @@ static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
 
 using namespace OHOS::Media;
 namespace {
-    constexpr float DEFAULT_VOLUME = 15;
+    constexpr float DEFAULT_VOLUME = 1.0f;
     constexpr uint32_t DEFAULT_BITS_PER_SAMPLE = 16;
 }
 
@@ -148,8 +148,6 @@ static void gst_audio_server_sink_finalize(GObject *object)
 static gboolean gst_audio_server_sink_set_volume(GstAudioServerSink *sink, gfloat volume)
 {
     gboolean ret = FALSE;
-    volume = 15 * volume; // map volume from [0,1] to [0,15]
-
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
     g_return_val_if_fail(volume <= sink->max_volume, FALSE);
     g_return_val_if_fail(volume >= sink->min_volume, FALSE);
