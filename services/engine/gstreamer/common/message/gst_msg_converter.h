@@ -25,7 +25,7 @@ namespace Media {
 class IGstMsgConverter {
 public:
     virtual ~IGstMsgConverter() = default;
-    virtual int32_t ConvertToInnerMsg(const GstMessage &gstMsg, InnerMessage &innerMsg) const = 0;
+    virtual int32_t ConvertToInnerMsg(GstMessage &gstMsg, InnerMessage &innerMsg) const = 0;
 };
 
 class GstMsgConverterDefault : public IGstMsgConverter {
@@ -35,7 +35,7 @@ public:
 
     DISALLOW_COPY_AND_MOVE(GstMsgConverterDefault);
 
-    int32_t ConvertToInnerMsg(const GstMessage &gstMsg, InnerMessage &innerMsg) const override;
+    int32_t ConvertToInnerMsg(GstMessage &gstMsg, InnerMessage &innerMsg) const override;
 };
 }
 }

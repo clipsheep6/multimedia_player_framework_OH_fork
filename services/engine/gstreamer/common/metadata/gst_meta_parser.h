@@ -16,83 +16,78 @@
 #ifndef GST_META_PARSER_H
 #define GST_META_PARSER_H
 
-#include <vector>
-#include <string>
-#include <unordered_map>
-#include <mutex>
-#include <condition_variable>
-#include <memory>
 #include <gst/gst.h>
-#include <nocopyable.h>
+#include <unordered_map>
+#include <string>
 
 namespace OHOS {
 namespace Media {
-template <typename T>
-class ThizWrapper;
+enum InnerMetaKey : int32_t {
+    INNER_META_KEY_ALBUM = 0,
+    INNER_META_KEY_ALBUM_ARTIST,
+    INNER_META_KEY_ARTIST,
+    INNER_META_KEY_AUTHOR,
+    INNER_META_KEY_COMPOSER,
+    INNER_META_KEY_GENRE,
+    INNER_META_KEY_HAS_AUDIO,
+    INNER_META_KEY_HAS_VIDEO,
+    INNER_META_KEY_HAS_IMAGE,
+    INNER_META_KEY_HAS_TEXT,
+    INNER_META_KEY_MIME_TYPE,
+    INNER_META_KEY_NUM_TRACKS,
+    INNER_META_KEY_SAMPLE_RATE,
+    INNER_META_KEY_TITLE,
+    INNER_META_KEY_VIDEO_HEIGHT,
+    INNER_META_KEY_VIDEO_WIDTH,
+    INNER_META_KEY_BUTT,
+};
 
-class GstMetaParser : public std::enable_shared_from_this<GstMetaParser> {
+inline constexpr std::string_view FILE_MIMETYPE_VIDEO_MP4 = "video/mp4";
+inline constexpr std::string_view FILE_MIMETYPE_AUDIO_MP4 = "audio/mp4";
+inline constexpr std::string_view FILE_MIMETYPE_AUDIO_AAC = "audio/aac-adts";
+inline constexpr std::string_view FILE_MIMETYPE_AUDIO_OGG = "audio/ogg";
+inline constexpr std::string_view FILE_MIMETYPE_AUDIO_FLAC = "audio/flac";
+inline constexpr std::string_view FILE_MIMETYPE_AUDIO_WAV = "audio/wav";
+inline constexpr std::string_view FILE_MIMETYPE_AUDIO_MP3 = "audio/mpeg";
+
+struct Metadata;
+
+class GstMetaParser {
 public:
-    enum class MetaSourceType : uint8_t {
-        META_SRC_UNKNOWN,
-        META_SRC_DECODER,
-        META_SRC_PARSER,
-        META_SRC_DEMUXER,
-        META_SRC_TYPEFIND,
-    };
-
-    GstMetaParser();
-    ~GstMetaParser();
-
-    void Start(bool needBlockBuffer = false);
-    void BlockBuffer(bool needBlock);
-    void AddMetaSource(GstElement &src, MetaSourceType type);
-    std::string GetMetadata(int32_t key);
-    std::unordered_map<int32_t, std::string> GetMetadata();
-    void Stop();
-
-    DISALLOW_COPY_AND_MOVE(GstMetaParser);
+    static void ParseTagList(const GstTagList &tagList, Metadata &metadata);
+    static void ParseStreamCaps(const GstCaps &caps, Metadata &metadata);
+    static void ParseFileMimeType(const GstCaps &caps, Metadata &metadata);
 
 private:
-    void Reset();
-    void AddDecoderMetaSource(GstElement &src);
-    void AddParserMetaSource(GstElement &src);
-    void AddDemuxerMetaSource(GstElement &src);
-    void AddTypeFindMetaSource(GstElement &src);
-    bool CheckCollectCompleted() const;
-    void TagEventParse(GstPad &pad, const GstTagList &tagList);
-    void CapsEventParse(const GstPad &pad, const GstCaps &caps);
-    void FileCapsParse(const GstStructure &structure);
-    void VideoCapsParse(const GstPad &pad, const GstStructure &structure);
-    void AudioCapsParse(const GstPad &pad, const GstStructure &structure);
-    void ImageCapsParse(const GstPad &pad, const GstStructure &structure);
-    void TextCapsParse(const GstPad &pad, const GstStructure &structure);
-    void ExpectedCapsParse(const GstStructure &structure, const std::vector<std::string_view> &fields);
-    static void PadAddedCallback(GstElement *elem, GstPad *pad, gpointer userdata);
-    static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer usrdata);
-    static GstPadProbeReturn BlockCallback(GstPad *pad, GstPadProbeInfo *info, gpointer usrdata);
-    static void HaveTypeCallback(GstElement *elem, guint probability, GstCaps *caps, gpointer userdata);
-    static void TagVisitor(const GstTagList *list, const gchar *tag, GstMetaParser *thiz);
-    void OnHaveType(const GstElement &elem, guint probability, const GstCaps &caps);
-    void OnPadAdded(const GstElement &elem, GstPad &pad);
-    void OnEventProbe(GstPad &pad, GstEvent &event);
-    void OnBufferProbe(GstPad &pad, GstBuffer &buffer);
-    int32_t AddProbeToPad(GstPad &pad, MetaSourceType srcType);
-    void QueryDuration(GstPad &pad);
+    GstMetaParser() = default;
+    ~GstMetaParser() = default;
+};
 
-    std::mutex mutex_;
-    std::condition_variable cond_;
-    bool collecting_ = false;
-    bool needBlockBuffer_ = false;
+struct Metadata {
+    Metadata() = default;
+    ~Metadata() = default;
 
-    struct PadInfo;
-    std::unordered_map<GstPad *, PadInfo> padInfos_;
-    GstElement *demuxer_ = nullptr;
+    void SetMeta(int32_t key, const std::string &value)
+    {
+        tbl_[key] = value;
+    }
 
-    std::unordered_map<int32_t, std::string> allMetaInfo_;
-    struct TrackMetaInfo;
-    std::unordered_map<const GstPad *, TrackMetaInfo> trackMetaInfos_;
-    struct FileMetaInfo;
-    std::unique_ptr<FileMetaInfo> fileMetaInfo_;
+    bool GetMeta(int32_t key, std::string &value) const
+    {
+        auto it = tbl_.find(key);
+        if (it == tbl_.end()) {
+            return false;
+        }
+        value = it->second;
+        return true;
+    }
+
+    bool HasMeta(int32_t key) const
+    {
+        return tbl_.count(key) != 0;
+    }
+
+    std::unordered_map<int32_t, std::string> tbl_;
 };
 }
 }

@@ -39,6 +39,7 @@ config("media_engine_gst_common_config") {
     "//third_party/glib",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
+    "//third_party/gstreamer/gstplugins_base",
     "//third_party/gstreamer/gstplugins_base/gst-libs",
     "//third_party/gstreamer/gstplugins_bad/gst-libs",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/loader",

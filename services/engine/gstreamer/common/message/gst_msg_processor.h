@@ -48,8 +48,8 @@ public:
 private:
     int32_t DoInit();
     static gboolean MainLoopRunDone(GstMsgProcessor *thiz);
-    static gboolean BusCallback(const GstBus *bus, const GstMessage *msg, GstMsgProcessor *thiz);
-    void ProcessGstMessage(const GstMessage &msg);
+    static gboolean BusCallback(const GstBus *bus, GstMessage *msg, GstMsgProcessor *thiz);
+    void ProcessGstMessage(GstMessage &msg);
     void DoReset();
 
     GstBus *gstBus_ = nullptr;

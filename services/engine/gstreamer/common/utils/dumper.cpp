@@ -45,7 +45,9 @@ void Dumper::DumpDotGraph(GstPipeline &pipeline, int32_t oldState, int32_t newSt
 
     std::string dumpDir;
     int res = OHOS::system::GetStringParameter("sys.media.dump.dot.path", dumpDir, "");
-    CHECK_AND_RETURN(res == 0 && !dumpDir.empty());
+    if (res != 0 || dumpDir.empty()) {
+        return;
+    }
 
     std::string realPath;
     CHECK_AND_RETURN_LOG(PathToRealPath(dumpDir, realPath), "invalid dump path: %{public}s", dumpDir.c_str());
@@ -76,10 +78,13 @@ void Dumper::DumpDotGraph(GstPipeline &pipeline, int32_t oldState, int32_t newSt
     CHECK_AND_RETURN_LOG(fp != nullptr, "open path failed, %{public}s", fullPath);
 
     gchar *buf = gst_debug_bin_to_dot_data(GST_BIN(&pipeline), GST_DEBUG_GRAPH_SHOW_ALL);
-    CHECK_AND_RETURN_LOG(buf != nullptr, "buf is nullptr");
+    if (buf != nullptr) {
+        (void)fputs(buf, fp);
+        g_free(buf);
+    } else {
+        MEDIA_LOGD("buf is nullptr");
+    }
 
-    (void)fputs(buf, fp);
-    g_free(buf);
     (void)fclose(fp);
     MEDIA_LOGD("wrote pipeline graph to : '%{public}s'", fullPath);
 }

@@ -27,6 +27,16 @@
 
 namespace OHOS {
 namespace Media {
+#define ELEM_NAME(elem) (GST_ELEMENT_NAME(elem) != nullptr) ? GST_ELEMENT_NAME(elem) : "unkonwn"
+
+#define PAD_NAME(pad) (GST_PAD_NAME(pad) != nullptr) ? GST_PAD_NAME(pad) : "unknown"
+
+#define PAD_PARENT_NAME(pad) (GST_PAD_PARENT(pad) != nullptr) ? \
+    ((GST_ELEMENT_NAME(GST_PAD_PARENT(pad)) != nullptr) ? \
+    (GST_ELEMENT_NAME(GST_PAD_PARENT(pad))) : "unknown") : "unknown"
+
+#define STRUCTURE_NAME(struc) (gst_structure_get_name(struc) != nullptr) ? gst_structure_get_name(struc) : ""
+
 bool MatchElementByMeta(
     const GstElement &elem, const std::string_view &metaKey, const std::vector<std::string_view> &expectedMetaFields);
 

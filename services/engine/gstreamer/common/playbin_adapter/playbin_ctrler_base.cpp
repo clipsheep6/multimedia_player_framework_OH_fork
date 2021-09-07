@@ -97,9 +97,7 @@ int32_t PlayBinCtrlerBase::SetSinkProvider(std::shared_ptr<PlayBinSinkProvider> 
 
 int32_t PlayBinCtrlerBase::SetScene(PlayBinScene scene)
 {
-    if (scene != PlayBinScene::PLAYBIN_SCENE_PLAYBACK &&
-        scene != PlayBinScene::PLAYBIN_SCENE_METADATA &&
-        scene != PlayBinScene::PLAYBIN_SCENE_THUBNAIL) {
+    if (scene >= PlayBinScene::UNKNOWN) {
         MEDIA_LOGE("invalid scene: %{public}hhu", scene);
         return MSERR_INVALID_VAL;
     }
@@ -110,15 +108,8 @@ int32_t PlayBinCtrlerBase::SetScene(PlayBinScene scene)
         return MSERR_OK;
     }
 
-    if (currScene_ == PlayBinScene::PLAYBIN_SCENE_PLAYBACK || scene == PlayBinScene::PLAYBIN_SCENE_PLAYBACK) {
-        MEDIA_LOGI("can't support change scene from %{public}hhu to %{public}hhu", currScene_, scene);
-        return MSERR_INVALID_VAL;
-    }
-
     MEDIA_LOGI("set playbin scene %{public}hhu success", scene);
     currScene_ = scene;
-    SetupMetaParser();
-
     return MSERR_OK;
 }
 
@@ -147,25 +138,15 @@ int32_t PlayBinCtrlerBase::Prepare()
 {
     MEDIA_LOGD("enter");
 
-    std::shared_ptr<TaskHandler<int32_t>> prepareTask;
+    int32_t ret = PrepareAsync();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+    CHECK_AND_RETURN_RET(preparedTask_ != nullptr, MSERR_UNKNOWN);
 
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        int32_t ret = EnterInitializedState();
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-
-        prepareTask = std::make_shared<TaskHandler<int32_t>>([this]() {
-            auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-            return currState->Prepare();
-        });
-
-        ret = taskQueue_->EnqueueTask(prepareTask);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Prepare failed");
-    }
-
-    auto result = prepareTask->GetResult();
+    std::unique_lock<std::mutex> lock(mutex_);
+    auto result = preparedTask_->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_UNKNOWN, "Prepare failed");
     CHECK_AND_RETURN_RET_LOG(result.Value() == MSERR_OK, result.Value(), "Prepare failed");
+    preparedTask_ = nullptr;
 
     MEDIA_LOGD("exit");
     return MSERR_OK;
@@ -176,15 +157,19 @@ int32_t PlayBinCtrlerBase::PrepareAsync()
     MEDIA_LOGD("enter");
 
     std::unique_lock<std::mutex> lock(mutex_);
+    if (preparedTask_ != nullptr) {
+        return MSERR_OK;
+    }
+
     int32_t ret = EnterInitializedState();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
-    auto prepareTask = std::make_shared<TaskHandler<void>>([this]() {
+    preparedTask_ = std::make_shared<TaskHandler<int32_t>>([this]() {
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-        (void)currState->Prepare();
+        return currState->Prepare();
     });
 
-    ret = taskQueue_->EnqueueTask(prepareTask);
+    ret = taskQueue_->EnqueueTask(preparedTask_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "PrepareAsync failed");
 
     return MSERR_OK;
@@ -195,8 +180,6 @@ int32_t PlayBinCtrlerBase::Play()
     MEDIA_LOGD("enter");
 
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(currScene_ != PlayBinScene::PLAYBIN_SCENE_METADATA, MSERR_INVALID_OPERATION);
-
     auto playingTask = std::make_shared<TaskHandler<void>>([this]() {
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Play();
@@ -213,8 +196,6 @@ int32_t PlayBinCtrlerBase::Pause()
     MEDIA_LOGD("enter");
 
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(currScene_ != PlayBinScene::PLAYBIN_SCENE_METADATA, MSERR_INVALID_OPERATION);
-
     auto pauseTask = std::make_shared<TaskHandler<void>>([this]() {
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Pause();
@@ -231,8 +212,6 @@ int32_t PlayBinCtrlerBase::Seek(int64_t timeUs, int32_t seekOption)
     MEDIA_LOGD("enter");
 
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(currScene_ != PlayBinScene::PLAYBIN_SCENE_METADATA, MSERR_INVALID_OPERATION);
-
     auto seekTask = std::make_shared<TaskHandler<void>>([this, timeUs, seekOption]() {
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Seek(timeUs, seekOption);
@@ -271,7 +250,7 @@ void PlayBinCtrlerBase::Reset() noexcept
     std::unique_lock<std::mutex> lock(mutex_);
 
     isInitialized = false;
-    currScene_ = PlayBinScene::PLAYBIN_SCENE_UNKNOWN;
+    currScene_ = PlayBinScene::UNKNOWN;
 
     auto idleTask = std::make_shared<TaskHandler<void>>([this]() { ChangeState(idleState_); });
     (void)taskQueue_->EnqueueTask(idleTask, true);
@@ -289,12 +268,8 @@ void PlayBinCtrlerBase::Reset() noexcept
         msgProcessor_ = nullptr;
     }
 
-    if (metaParser_ != nullptr) {
-        metaParser_->Stop();
-        metaParser_ = nullptr;
-    }
-
     sinkProvider_ = nullptr;
+    elemSetupListener_ = nullptr;
 
     MEDIA_LOGD("unref playbin start");
     if (playbin_ != nullptr) {
@@ -304,38 +279,14 @@ void PlayBinCtrlerBase::Reset() noexcept
     MEDIA_LOGD("unref playbin stop");
 }
 
-std::string PlayBinCtrlerBase::GetMetadata(int32_t key)
+void PlayBinCtrlerBase::SetElemSetupListener(ElemSetupListener listener)
 {
-    std::shared_ptr<GstMetaParser> metaParser;
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        CHECK_AND_RETURN_RET_LOG(isInitialized, "", "Prepare or PrepareAsyc firstly");
-        /* Although this is a synchronous interface, we cannot hold the lock for long periods
-         * of time because there are a lot of operations to acquire the lock. Since GstMetaParser's
-         * interface is synchronous, we release the lock here and delay the blocking operation
-         * inside GstMetaParser.
-         */
-        metaParser = metaParser_;
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (listener == nullptr) {
+        MEDIA_LOGE("nullptr listener");
+        return;
     }
-
-    return metaParser->GetMetadata(key);
-}
-
-std::unordered_map<int32_t, std::string> PlayBinCtrlerBase::GetMetadata()
-{
-    std::shared_ptr<GstMetaParser> metaParser;
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        CHECK_AND_RETURN_RET_LOG(isInitialized, {}, "Prepare or PrepareAsyc firstly");
-        /* Although this is a synchronous interface, we cannot hold the lock for long periods
-         * of time because there are a lot of operations to acquire the lock. Since GstMetaParser's
-         * interface is synchronous, we release the lock here and delay the blocking operation
-         * inside GstMetaParser.
-         */
-        metaParser = metaParser_;
-    }
-
-    return metaParser->GetMetadata();
+    elemSetupListener_ = listener;
 }
 
 int32_t PlayBinCtrlerBase::EnterInitializedState()
@@ -346,7 +297,7 @@ int32_t PlayBinCtrlerBase::EnterInitializedState()
 
     MEDIA_LOGD("EnterInitializedState enter");
 
-    if (currScene_ == PlayBinScene::PLAYBIN_SCENE_UNKNOWN) {
+    if (currScene_ == PlayBinScene::UNKNOWN) {
         MEDIA_LOGE("Set scene firstly!");
         return MSERR_INVALID_OPERATION;
     }
@@ -385,7 +336,7 @@ void PlayBinCtrlerBase::SetupCustomElement()
         MEDIA_LOGD("no sinkprovider, delay the sink selection until the playbin enters pause state.");
     }
 
-    if (currScene_ == PlayBinScene::PLAYBIN_SCENE_PLAYBACK) {
+    if (currScene_ == PlayBinScene::PLAYBACK) {
         GstElement *audioFilter = gst_element_factory_make("scaletempo", "scaletempo");
         if (audioFilter != nullptr) {
             g_object_set(playbin_, "audio-filter", audioFilter, nullptr);
@@ -399,7 +350,7 @@ int32_t PlayBinCtrlerBase::SetupSignalMessage()
 {
     MEDIA_LOGD("SetupSignalMessage enter");
 
-    PlayBinCtrlerWrapper *wrapper = new (std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
     CHECK_AND_RETURN_RET_LOG(wrapper != nullptr, MSERR_NO_MEMORY, "can not create this wrapper");
 
     (void)g_signal_connect_data(playbin_, "element-setup", G_CALLBACK(&PlayBinCtrlerBase::ElementSetup),
@@ -418,56 +369,19 @@ int32_t PlayBinCtrlerBase::SetupSignalMessage()
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
     // only concern the msg from playbin
-    msgProcessor_->AddMsgFilter(GST_ELEMENT_NAME(GST_ELEMENT_CAST(playbin_)));
+    msgProcessor_->AddMsgFilter(ELEM_NAME(GST_ELEMENT_CAST(playbin_)));
 
     MEDIA_LOGD("SetupSignalMessage exit");
     return MSERR_OK;
 }
 
-void PlayBinCtrlerBase::SetupMetaParser()
-{
-    if (metaParser_ == nullptr)  {
-        metaParser_ = std::make_shared<GstMetaParser>();
-    }
-
-    if (currScene_ == PlayBinScene::PLAYBIN_SCENE_METADATA) {
-        metaParser_->Start(true);
-    } else {
-        metaParser_->Start(false);
-    }
-}
-
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 {
-    MEDIA_LOGD("element setup: %{public}s", GST_ELEMENT_NAME(&elem));
+    MEDIA_LOGD("element setup: %{public}s", ELEM_NAME(&elem));
 
     std::unique_lock<std::mutex> lock(mutex_);
-    if (metaParser_ == nullptr) {
-        return;
-    }
-
-    bool matchResult = MatchElementByMeta(elem, GST_ELEMENT_METADATA_LONGNAME, {"TypeFind"});
-    if (matchResult) {
-        MEDIA_LOGD("find typefind: %{public}s", GST_ELEMENT_NAME(&elem));
-        metaParser_->AddMetaSource(elem, GstMetaParser::MetaSourceType::META_SRC_TYPEFIND);
-    }
-
-    matchResult = MatchElementByMeta(elem, GST_ELEMENT_METADATA_KLASS, {"Codec", "Demuxer"});
-    if (matchResult) {
-        MEDIA_LOGD("find demuxer: %{public}s", GST_ELEMENT_NAME(&elem));
-        metaParser_->AddMetaSource(elem, GstMetaParser::MetaSourceType::META_SRC_DEMUXER);
-    }
-
-    matchResult = MatchElementByMeta(elem, GST_ELEMENT_METADATA_KLASS, {"Codec", "Parser"});
-    if (matchResult) {
-        MEDIA_LOGD("find parser: %{public}s", GST_ELEMENT_NAME(&elem));
-        metaParser_->AddMetaSource(elem, GstMetaParser::MetaSourceType::META_SRC_PARSER);
-    }
-
-    matchResult = MatchElementByMeta(elem, GST_ELEMENT_METADATA_KLASS, {"Codec", "Decoder"});
-    if (matchResult) {
-        MEDIA_LOGD("find parser: %{public}s", GST_ELEMENT_NAME(&elem));
-        metaParser_->AddMetaSource(elem, GstMetaParser::MetaSourceType::META_SRC_DECODER);
+    if (elemSetupListener_ != nullptr) {
+        elemSetupListener_(elem);
     }
 }
 

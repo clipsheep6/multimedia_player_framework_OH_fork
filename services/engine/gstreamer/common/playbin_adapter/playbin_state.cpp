@@ -15,6 +15,7 @@
 
 #include "playbin_state.h"
 #include <gst/gst.h>
+#include <gst/playback/gstplay-enum.h>
 #include "media_errors.h"
 #include "media_log.h"
 #include "dumper.h"
@@ -98,7 +99,14 @@ int32_t PlayBinCtrlerBase::IdleState::SetUp()
     ctrler_.SetupCustomElement();
     ret = ctrler_.SetupSignalMessage();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-    ctrler_.SetupMetaParser();
+
+    if (ctrler_.currScene_ == PlayBinScene::METADATA || ctrler_.currScene_ == PlayBinScene::THUBNAIL) {
+        uint32_t flags;
+        g_object_get(ctrler_.playbin_, "flags", &flags, nullptr);
+        flags |= GST_PLAY_FLAG_NATIVE_VIDEO | GST_PLAY_FLAG_NATIVE_AUDIO;
+        flags &= ~(GST_PLAY_FLAG_SOFT_COLORBALANCE | GST_PLAY_FLAG_SOFT_VOLUME);
+        g_object_set(ctrler_.playbin_, "flags", flags, nullptr);
+    }
 
     g_object_set(ctrler_.playbin_, "uri", ctrler_.uri_.c_str(), nullptr);
     ctrler_.ChangeState(ctrler_.initializedState_);

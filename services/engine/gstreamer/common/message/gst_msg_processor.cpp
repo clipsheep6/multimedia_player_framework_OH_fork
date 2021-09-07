@@ -193,7 +193,7 @@ void GstMsgProcessor::Reset() noexcept
     msgConverter_ = nullptr;
 }
 
-gboolean GstMsgProcessor::BusCallback(const GstBus *bus, const GstMessage *msg, GstMsgProcessor *thiz)
+gboolean GstMsgProcessor::BusCallback(const GstBus *bus, GstMessage *msg, GstMsgProcessor *thiz)
 {
     (void)bus;
     if (thiz == nullptr) {
@@ -205,7 +205,7 @@ gboolean GstMsgProcessor::BusCallback(const GstBus *bus, const GstMessage *msg, 
     return TRUE;
 }
 
-void GstMsgProcessor::ProcessGstMessage(const GstMessage &msg)
+void GstMsgProcessor::ProcessGstMessage(GstMessage &msg)
 {
     InnerMessage innerMsg {};
     innerMsg.type = InnerMsgType::INNER_MSG_UNKNOWN;

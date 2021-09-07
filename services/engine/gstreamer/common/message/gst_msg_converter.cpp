@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include "media_errors.h"
 #include "media_log.h"
+#include "gst_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstMsgConvDefault"};
@@ -25,7 +26,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-static int32_t ConvertErrorMessage(const GstMessage &gstMsg, InnerMessage &innerMsg)
+static int32_t ConvertErrorMessage(GstMessage &gstMsg, InnerMessage &innerMsg)
 {
     GError *error = nullptr;
     gchar *debug  = nullptr;
@@ -44,7 +45,7 @@ static int32_t ConvertErrorMessage(const GstMessage &gstMsg, InnerMessage &inner
     return MSERR_OK;
 }
 
-static int32_t ConvertWarningMessage(const GstMessage &gstMsg, InnerMessage &innerMsg)
+static int32_t ConvertWarningMessage(GstMessage &gstMsg, InnerMessage &innerMsg)
 {
     GError *error = nullptr;
     gchar *debug  = nullptr;
@@ -62,7 +63,7 @@ static int32_t ConvertWarningMessage(const GstMessage &gstMsg, InnerMessage &inn
     return MSERR_OK;
 }
 
-static int32_t ConvertInfoMessage(const GstMessage &gstMsg, InnerMessage &innerMsg)
+static int32_t ConvertInfoMessage(GstMessage &gstMsg, InnerMessage &innerMsg)
 {
     GError *error = nullptr;
     gchar *debug  = nullptr;
@@ -80,13 +81,13 @@ static int32_t ConvertInfoMessage(const GstMessage &gstMsg, InnerMessage &innerM
     return MSERR_OK;
 }
 
-static int32_t ConvertStateChangedMessage(const GstMessage &gstMsg, InnerMessage &innerMsg)
+static int32_t ConvertStateChangedMessage(GstMessage &gstMsg, InnerMessage &innerMsg)
 {
     GstState oldState;
     GstState newState;
     GstState pendingState;
     gst_message_parse_state_changed(const_cast<GstMessage *>(&gstMsg), &oldState, &newState, &pendingState);
-    MEDIA_LOGD("%{public}s change state from %{public}s to %{public}s", GST_ELEMENT_NAME(GST_MESSAGE_SRC(&gstMsg)),
+    MEDIA_LOGD("%{public}s change state from %{public}s to %{public}s", ELEM_NAME(GST_MESSAGE_SRC(&gstMsg)),
         gst_element_state_get_name(oldState), gst_element_state_get_name(newState));
 
     innerMsg.type = INNER_MSG_STATE_CHANGED;
@@ -97,7 +98,7 @@ static int32_t ConvertStateChangedMessage(const GstMessage &gstMsg, InnerMessage
     return MSERR_OK;
 }
 
-using MsgConvFunc = std::function<int32_t(const GstMessage&, InnerMessage&)>;
+using MsgConvFunc = std::function<int32_t(GstMessage&, InnerMessage&)>;
 static const std::unordered_map<GstMessageType, MsgConvFunc> MSG_CONV_FUNC_TABLE = {
     { GST_MESSAGE_ERROR, ConvertErrorMessage },
     { GST_MESSAGE_WARNING, ConvertWarningMessage },
@@ -105,7 +106,7 @@ static const std::unordered_map<GstMessageType, MsgConvFunc> MSG_CONV_FUNC_TABLE
     { GST_MESSAGE_STATE_CHANGED, ConvertStateChangedMessage },
 };
 
-int32_t GstMsgConverterDefault::ConvertToInnerMsg(const GstMessage &gstMsg, InnerMessage &innerMsg) const
+int32_t GstMsgConverterDefault::ConvertToInnerMsg(GstMessage &gstMsg, InnerMessage &innerMsg) const
 {
     innerMsg.type = INNER_MSG_UNKNOWN;
 

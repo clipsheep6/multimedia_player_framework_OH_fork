@@ -23,19 +23,19 @@
 #include <gst/gst.h>
 #include "nocopyable.h"
 #include "i_playbin_ctrler.h"
+#include "state_machine.h"
 #include "gst_msg_processor.h"
-#include "gst_meta_parser.h"
 #include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
 class PlayBinCtrlerBase
-    : public IPlayBinCtrler
-    , public StateMachine
-    , public std::enable_shared_from_this<PlayBinCtrlerBase> {
+    : public IPlayBinCtrler,
+      public StateMachine,
+      public std::enable_shared_from_this<PlayBinCtrlerBase> {
 public:
     explicit PlayBinCtrlerBase(const PlayBinMsgNotifier &notifier);
-    virtual ~PlayBinCtrlerBase() override;
+    virtual ~PlayBinCtrlerBase();
 
     DISALLOW_COPY_AND_MOVE(PlayBinCtrlerBase);
 
@@ -49,8 +49,7 @@ public:
     int32_t Pause() override;
     int32_t Seek(int64_t timeUs, int32_t seekOption) override;
     int32_t Stop() override;
-    std::string GetMetadata(int32_t key) override;
-    std::unordered_map<int32_t, std::string> GetMetadata() override;
+    void SetElemSetupListener(ElemSetupListener listener) final;
 
 protected:
     virtual int32_t OnInit() = 0;
@@ -71,7 +70,6 @@ private:
     int32_t EnterInitializedState();
     void SetupCustomElement();
     int32_t SetupSignalMessage();
-    void SetupMetaParser();
     void DeferTask(const std::shared_ptr<TaskHandler<void>> &task, int64_t delayNs = 0);
     static void ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userdata);
     void OnElementSetup(GstElement &elem);
@@ -83,12 +81,13 @@ private:
     std::unique_ptr<TaskQueue> taskQueue_;
     std::unique_ptr<TaskQueue> msgQueue_;
     PlayBinMsgNotifier notifier_;
+    ElemSetupListener elemSetupListener_;
     std::shared_ptr<PlayBinSinkProvider> sinkProvider_;
     std::unique_ptr<GstMsgProcessor> msgProcessor_;
-    std::shared_ptr<GstMetaParser> metaParser_;
-    PlayBinScene currScene_ = PlayBinScene::PLAYBIN_SCENE_UNKNOWN;
+    PlayBinScene currScene_ = PlayBinScene::UNKNOWN;
     std::string uri_;
     bool isInitialized = false;
+    std::shared_ptr<TaskHandler<int32_t>> preparedTask_;
 
     std::shared_ptr<IdleState> idleState_;
     std::shared_ptr<InitializedState> initializedState_;

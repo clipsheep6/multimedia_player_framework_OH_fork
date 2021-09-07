@@ -22,17 +22,16 @@
 #include "nocopyable.h"
 #include "playbin_msg_define.h"
 #include "playbin_sink_provider.h"
-#include "state_machine.h"
 
 namespace OHOS {
 namespace Media {
 class IPlayBinCtrler {
 public:
     enum class PlayBinScene : uint8_t {
-        PLAYBIN_SCENE_UNKNOWN,
-        PLAYBIN_SCENE_METADATA,
-        PLAYBIN_SCENE_THUBNAIL,
-        PLAYBIN_SCENE_PLAYBACK,
+        METADATA,
+        THUBNAIL,
+        PLAYBACK,
+        UNKNOWN,
     };
 
     enum class PlayBinKind : uint8_t {
@@ -52,8 +51,9 @@ public:
     virtual int32_t Pause() = 0; // async
     virtual int32_t Seek(int64_t timeUs, int32_t seekOption) = 0; // async
     virtual int32_t Stop() = 0; // async
-    virtual std::string GetMetadata(int32_t key) = 0;
-    virtual std::unordered_map<int32_t, std::string> GetMetadata() = 0;
+
+    using ElemSetupListener = std::function<void(GstElement &elem)>;
+    virtual void SetElemSetupListener(ElemSetupListener listener) = 0;
 };
 }
 }
