@@ -54,11 +54,11 @@ private:
     ~AudioPlayerNapi();
 
     static napi_ref constructor_;
+    std::shared_ptr<MediaDataSourceCallback> dataSrcCallBack_ = nullptr;
     napi_env env_ = nullptr;
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Player> nativePlayer_ = nullptr;
     std::shared_ptr<PlayerCallback> callbackNapi_ = nullptr;
-    std::shared_ptr<MediaDataSourceCallback> dataSrcCallBack_ = nullptr;
     std::string uri_ = "";
 };
 } // namespace Media
