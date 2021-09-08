@@ -29,7 +29,7 @@ public:
     virtual ~IStandardPlayerService() = default;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t SetSource(const std::string &uri) = 0;
-    virtual int32_t SetMediaDataSource(const sptr<IRemoteObject> &object) = 0;
+    virtual int32_t SetSource(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t Play() = 0;
     virtual int32_t Prepare() = 0;
     virtual int32_t PrepareAsync() = 0;

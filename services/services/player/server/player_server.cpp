@@ -61,7 +61,7 @@ int32_t PlayerServer::SetSource(const std::string &uri)
     return ret;
 }
 
-int32_t PlayerServer::SetMediaDataSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
@@ -91,7 +91,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &uri)
     if (dataSrc_ == nullptr) {
         ret = playerEngine_->SetSource(uri);
     } else {
-        ret = playerEngine_->SetMediaDataSource(dataSrc_);
+        ret = playerEngine_->SetSource(dataSrc_);
     }
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
 
@@ -119,6 +119,7 @@ int32_t PlayerServer::OnPrepare(bool async)
     if (status_ == PLAYER_PREPARED) {
         Format format;
         OnInfo(INFO_TYPE_STATE_CHANGE, status_, format);
+        return MSERR_OK;
     }
 
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
