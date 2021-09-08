@@ -39,7 +39,7 @@ static bool PathToRealPath(const std::string_view &path, std::string &realPath)
 
     char tmpPath[PATH_MAX] = {0};
     if (realpath(path.data(), tmpPath) == nullptr) {
-        MEDIA_LOGE("path to realpath error");
+        MEDIA_LOGE("path to realpath error, %{public}s", path.data());
         return false;
     }
 

@@ -20,7 +20,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <functional>
-#include <queue>
+#include <list>
 #include <string>
 #include <optional>
 #include <type_traits>
@@ -43,9 +43,9 @@ namespace Media {
  * taskQ.EnqueueTask(handler1);
  * auto result = handler1->GetResult();
  * if (result.HasResult()) {
- *     MEDIA_LOGI("handler 1 executed, result: %{public}d", result.Value());
+ *     MEDIA_LOGI("handler1 executed, result: %{public}d", result.Value());
  * } else {
- *     MEDIA_LOGI("handler 1 not executed");
+ *     MEDIA_LOGI("handler1 not executed");
  * }
  *
  * Example 2:
@@ -54,12 +54,12 @@ namespace Media {
  * auto handler2 = std::make_shared<TaskHandler<void>>([]() {
  *     // your job's detail code;
  * });
- * taskQ.EnqueueTask(handler1);
- * auto result = handler1->GetResult();
+ * taskQ.EnqueueTask(handler2);
+ * auto result = handler2->GetResult();
  * if (result.HasResult()) {
- *     MEDIA_LOGI("handler 1 executed");
+ *     MEDIA_LOGI("handler2 executed");
  * } else {
- *     MEDIA_LOGI("handler 1 not executed");
+ *     MEDIA_LOGI("handler2 not executed");
  * }
  */
 
@@ -95,16 +95,21 @@ private:
 
 class ITaskHandler {
 public:
+    struct Attribute {
+        // periodic execute time, UINT64_MAX is not need to execute periodic.
+        uint64_t periodicTimeUs_ { UINT64_MAX };
+    };
     virtual ~ITaskHandler() = default;
     virtual void Execute() = 0;
     virtual void Cancel() = 0;
     virtual bool IsCanceled() = 0;
+    virtual Attribute GetAttribute() const = 0;
 };
 
 template <typename T>
 class TaskHandler : public ITaskHandler {
 public:
-    explicit TaskHandler(std::function<T(void)> task) : task_(task) {}
+    TaskHandler(std::function<T(void)> task, ITaskHandler::Attribute attr = {}) : task_(task), attribute_(attr) {}
     ~TaskHandler() = default;
 
     void Execute() override
@@ -155,6 +160,11 @@ public:
         return state_ == TaskState::CANCELED;
     }
 
+    ITaskHandler::Attribute GetAttribute() const override
+    {
+        return attribute_;
+    }
+
     DISALLOW_COPY_AND_MOVE(TaskHandler);
 
 private:
@@ -170,6 +180,7 @@ private:
     std::condition_variable cond_;
     std::function<T(void)> task_;
     TaskResult<T> result_;
+    ITaskHandler::Attribute attribute_; // task execute attribute.
 };
 
 class __attribute__((visibility("default"))) TaskQueue {
@@ -180,17 +191,23 @@ public:
     int32_t Start();
     int32_t Stop() noexcept;
 
-    int32_t EnqueueTask(const std::shared_ptr<ITaskHandler> &task, bool cancelNotExecuted = false);
+    // delayUs cannot be gt 10000000ULL.
+    int32_t EnqueueTask(const std::shared_ptr<ITaskHandler> &task,
+        bool cancelNotExecuted = false, uint64_t delayUs = 0ULL);
 
     DISALLOW_COPY_AND_MOVE(TaskQueue);
 
 private:
+    struct TaskHandlerItem {
+        std::shared_ptr<ITaskHandler> task_ { nullptr };
+        uint64_t executeTimeNs_ { 0ULL };
+    };
     void TaskProcessor();
     void CancelNotExecutedTaskLocked();
 
     bool isExit_ = true;
     std::unique_ptr<std::thread> thread_;
-    std::queue<std::shared_ptr<ITaskHandler>> taskQ_;
+    std::list<TaskHandlerItem> taskList_;
     std::mutex mutex_;
     std::condition_variable cond_;
     std::string name_;
