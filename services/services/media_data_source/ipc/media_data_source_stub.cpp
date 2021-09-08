@@ -41,22 +41,22 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
 {
     switch (code) {
         case ListenerMsg::READ_AT: {
-            int32_t length = data.ReadInt32();
-            int32_t realLen = ReadAt(static_cast<uint32_t>(length));
+            uint32_t length = data.ReadUint32();
+            int32_t realLen = ReadAt(length);
             reply.WriteInt32(realLen);
             return MSERR_OK;
         }
         case ListenerMsg::READ_AT_POS: {
-            int32_t pos = data.ReadInt32();
-            int32_t length = data.ReadInt32();
-            int32_t realLen = ReadAt(static_cast<uint32_t>(pos), static_cast<uint32_t>(length));
+            int64_t pos = data.ReadInt64();
+            uint32_t length = data.ReadUint32();
+            int32_t realLen = ReadAt(pos, length);
             reply.WriteInt32(realLen);
             return MSERR_OK;
         }
         case ListenerMsg::GET_SIZE: {
-            int32_t size = 0;
+            int64_t size = 0;
             int32_t ret = GetSize(size);
-            reply.WriteInt32(size);
+            reply.WriteInt64(size);
             reply.WriteInt32(ret);
             return MSERR_OK;
         }
@@ -77,7 +77,7 @@ std::shared_ptr<AVSharedMemory> MediaDataSourceStub::GetMem()
     return dataSrc_->GetMem();
 }
 
-int32_t MediaDataSourceStub::ReadAt(uint32_t pos, uint32_t length)
+int32_t MediaDataSourceStub::ReadAt(int64_t pos, uint32_t length)
 {
     CHECK_AND_RETURN_RET_LOG(dataSrc_ != nullptr, SOURCE_ERROR_IO, "dataSrc_ is nullptr");
     return dataSrc_->ReadAt(pos, length);
@@ -89,7 +89,7 @@ int32_t MediaDataSourceStub::ReadAt(uint32_t length)
     return dataSrc_->ReadAt(length);
 }
 
-int32_t MediaDataSourceStub::GetSize(int32_t &size)
+int32_t MediaDataSourceStub::GetSize(int64_t &size)
 {
     CHECK_AND_RETURN_RET_LOG(dataSrc_ != nullptr, MSERR_INVALID_OPERATION, "dataSrc_ is nullptr");
     return dataSrc_->GetSize(size);

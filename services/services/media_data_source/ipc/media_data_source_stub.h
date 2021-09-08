@@ -29,9 +29,11 @@ public:
     DISALLOW_COPY_AND_MOVE(MediaDataSourceStub);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     std::shared_ptr<AVSharedMemory> GetMem() override;
-    int32_t ReadAt(uint32_t pos, uint32_t length) override;
+    int32_t ReadAt(int64_t pos, uint32_t length) override;
     int32_t ReadAt(uint32_t length) override;
-    int32_t GetSize(int32_t &size) override;
+    int32_t GetSize(int64_t &size) override;
+
+private:
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
 };
 } // namespace Media

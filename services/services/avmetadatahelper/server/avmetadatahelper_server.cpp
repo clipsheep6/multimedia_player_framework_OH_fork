@@ -38,8 +38,9 @@ AVMetadataHelperServer::AVMetadataHelperServer()
 
 AVMetadataHelperServer::~AVMetadataHelperServer()
 {
-    avMetadataHelperEngine_ = nullptr;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    avMetadataHelperEngine_ = nullptr;
 }
 
 int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)

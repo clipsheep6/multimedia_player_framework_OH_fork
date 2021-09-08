@@ -32,7 +32,6 @@ MediaDataCallback::MediaDataCallback(const sptr<IStandardMediaDataSource> &ipcPr
 
 MediaDataCallback::~MediaDataCallback()
 {
-    callbackProxy_ = nullptr;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
@@ -48,13 +47,13 @@ int32_t MediaDataCallback::ReadAt(uint32_t length)
     return callbackProxy_->ReadAt(length);
 }
 
-int32_t MediaDataCallback::ReadAt(uint32_t pos, uint32_t length)
+int32_t MediaDataCallback::ReadAt(int64_t pos, uint32_t length)
 {
     CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, SOURCE_ERROR_IO, "callbackProxy_ is nullptr");
     return callbackProxy_->ReadAt(pos, length);
 }
 
-int32_t MediaDataCallback::GetSize(int32_t &size)
+int32_t MediaDataCallback::GetSize(int64_t &size)
 {
     CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, MSERR_INVALID_OPERATION, "callbackProxy_ is nullptr");
     return callbackProxy_->GetSize(size);
@@ -77,22 +76,22 @@ std::shared_ptr<AVSharedMemory> MediaDataSourceProxy::GetMem()
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     int error = Remote()->SendRequest(ListenerMsg::GET_MEM, data, reply, option);
-    if (error != ERR_OK) {
+    if (error != MSERR_OK) {
         MEDIA_LOGE("on info failed, error: %{public}d", error);
         return nullptr;
     }
     return ReadAVSharedMemoryFromParcel(reply);
 }
 
-int32_t MediaDataSourceProxy::ReadAt(uint32_t pos, uint32_t length)
+int32_t MediaDataSourceProxy::ReadAt(int64_t pos, uint32_t length)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    data.WriteInt32(pos);
-    data.WriteInt32(length);
+    data.WriteInt64(pos);
+    data.WriteUint32(length);
     int error = Remote()->SendRequest(ListenerMsg::READ_AT_POS, data, reply, option);
-    if (error != ERR_OK) {
+    if (error != MSERR_OK) {
         MEDIA_LOGE("on info failed, error: %{public}d", error);
         return 0;
     }
@@ -105,9 +104,9 @@ int32_t MediaDataSourceProxy::ReadAt(uint32_t length)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    data.WriteInt32(length);
+    data.WriteUint32(length);
     int error = Remote()->SendRequest(ListenerMsg::READ_AT, data, reply, option);
-    if (error != ERR_OK) {
+    if (error != MSERR_OK) {
         MEDIA_LOGE("on info failed, error: %{public}d", error);
         return 0;
     }
@@ -115,17 +114,17 @@ int32_t MediaDataSourceProxy::ReadAt(uint32_t length)
     return realLen;
 }
 
-int32_t MediaDataSourceProxy::GetSize(int32_t &size)
+int32_t MediaDataSourceProxy::GetSize(int64_t &size)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     int error = Remote()->SendRequest(ListenerMsg::GET_SIZE, data, reply, option);
-    if (error != ERR_OK) {
+    if (error != MSERR_OK) {
         MEDIA_LOGE("on info failed, error: %{public}d", error);
         return -1;
     }
-    size = reply.ReadInt32();
+    size = reply.ReadInt64();
     int32_t ret = reply.ReadInt32();
     return ret;
 }

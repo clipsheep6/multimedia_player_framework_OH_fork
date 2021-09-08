@@ -28,9 +28,9 @@ public:
     virtual ~MediaDataCallback();
     DISALLOW_COPY_AND_MOVE(MediaDataCallback);
     std::shared_ptr<AVSharedMemory> GetMem() override;
-    int32_t ReadAt(uint32_t pos, uint32_t length) override;
+    int32_t ReadAt(int64_t pos, uint32_t length) override;
     int32_t ReadAt(uint32_t length) override;
-    int32_t GetSize(int32_t &size) override;
+    int32_t GetSize(int64_t &size) override;
 
 private:
     sptr<IStandardMediaDataSource> callbackProxy_ = nullptr;
@@ -42,9 +42,9 @@ public:
     virtual ~MediaDataSourceProxy();
     DISALLOW_COPY_AND_MOVE(MediaDataSourceProxy);
     std::shared_ptr<AVSharedMemory> GetMem() override;
-    int32_t ReadAt(uint32_t pos, uint32_t length) override;
+    int32_t ReadAt(int64_t pos, uint32_t length) override;
     int32_t ReadAt(uint32_t length) override;
-    int32_t GetSize(int32_t &size) override;
+    int32_t GetSize(int64_t &size) override;
 
 private:
     static inline BrokerDelegator<MediaDataSourceProxy> delegator_;

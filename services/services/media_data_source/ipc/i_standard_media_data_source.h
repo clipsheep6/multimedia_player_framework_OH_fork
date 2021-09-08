@@ -29,9 +29,9 @@ class IStandardMediaDataSource : public IRemoteBroker {
 public:
     virtual ~IStandardMediaDataSource() = default;
     virtual std::shared_ptr<AVSharedMemory> GetMem() = 0;
-    virtual int32_t ReadAt(uint32_t pos, uint32_t length) = 0;
+    virtual int32_t ReadAt(int64_t pos, uint32_t length) = 0;
     virtual int32_t ReadAt(uint32_t length) = 0;
-    virtual int32_t GetSize(int32_t &size) = 0;
+    virtual int32_t GetSize(int64_t &size) = 0;
 
     enum ListenerMsg {
         READ_AT = 0,

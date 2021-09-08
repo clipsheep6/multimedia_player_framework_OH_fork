@@ -146,3 +146,4 @@ void AVMetadataHelperServiceProxy::Release()
 }
 } // namespace Media
 } // namespace OHOS
+
