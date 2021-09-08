@@ -57,7 +57,7 @@ public:
      * @param length Stream length player want to get.
      * @return The actual length of stream length player will return, if failed or no mem return MediaDataSourceError;
      */
-    virtual int32_t ReadAt(uint32_t pos, uint32_t length) = 0;
+    virtual int32_t ReadAt(int64_t pos, uint32_t length) = 0;
 
     /**
      * @brief One-to-one use with getMem.
@@ -74,7 +74,7 @@ public:
      * @param size Total size of the stream. If no size return -1.
      * @return MSERR_OK if ok; others if failed. see media_errors.h
      */
-    virtual int32_t GetSize(int32_t &size) = 0;
+    virtual int32_t GetSize(int64_t &size) = 0;
 };
 } // namespace Media
 } // namespace OHOS

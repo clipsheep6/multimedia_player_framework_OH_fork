@@ -163,7 +163,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetMediaDataSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
+    virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
 
     /**
      * @brief Start playback.

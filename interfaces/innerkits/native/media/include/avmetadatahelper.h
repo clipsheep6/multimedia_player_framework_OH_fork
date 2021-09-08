@@ -203,7 +203,7 @@ public:
     /**
      * Retrieve all meta data within the listed above at the definition of {@link AVMetadataCode}.
      * This method must be called after the SetSource.
-     * @return Returns the meta data values on success; empty string on failure.
+     * @return Returns the meta data values on success; empty hash map on failure.
      */
     virtual std::unordered_map<int32_t, std::string> ResolveMetadata() = 0;
 
@@ -240,4 +240,5 @@ private:
 };
 }
 }
+
 #endif

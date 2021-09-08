@@ -69,3 +69,4 @@ private:
 } // namespace OHOS
 
 #endif // FORMAT_H
+
