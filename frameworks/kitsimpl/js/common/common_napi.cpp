@@ -16,6 +16,7 @@
 #include "common_napi.h"
 #include <climits>
 #include "media_log.h"
+#include "media_errors.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "CommonNapi"};
@@ -60,6 +61,35 @@ void CommonNapi::GetPropertyInt32(napi_env env, napi_value configObj, const std:
     if (napi_get_value_int32(env, item, &result) != napi_ok) {
         MEDIA_LOGE("get property value fail");
     }
+}
+
+napi_status CommonNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args)
+{
+    napi_value codeStr = nullptr;
+    napi_status status = napi_create_string_utf8(env, "code", NAPI_AUTO_LENGTH, &codeStr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && codeStr != nullptr, napi_invalid_arg, "create code str fail");
+
+    napi_value errCodeVal = nullptr;
+    int32_t errCodeInt = errCode;
+    status = napi_create_int32(env, errCodeInt - MS_ERR_OFFSET, &errCodeVal);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && errCodeVal != nullptr, napi_invalid_arg,
+        "create error code number val fail");
+
+    status = napi_set_property(env, args, codeStr, errCodeVal);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, napi_invalid_arg, "set error code property fail");
+
+    napi_value nameStr = nullptr;
+    status = napi_create_string_utf8(env, "name", NAPI_AUTO_LENGTH, &nameStr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && nameStr != nullptr, napi_invalid_arg, "create name str fail");
+
+    napi_value errNameVal = nullptr;
+    status = napi_create_string_utf8(env, "BusinessError", NAPI_AUTO_LENGTH, &errNameVal);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && errNameVal != nullptr, napi_invalid_arg,
+        "create BusinessError str fail");
+
+    status = napi_set_property(env, args, nameStr, errNameVal);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, napi_invalid_arg, "set error name property fail");
+    return napi_ok;
 }
 }
 }

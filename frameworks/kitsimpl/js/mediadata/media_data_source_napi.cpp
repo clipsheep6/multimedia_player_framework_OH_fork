@@ -83,7 +83,7 @@ napi_value MediaDataSourceNapi::Constructor(napi_env env, napi_callback_info inf
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "constructor fail");
 
     MediaDataSourceNapi *sourceNapi = new(std::nothrow) MediaDataSourceNapi();
-    CHECK_AND_RETURN_RET_LOG(sourceNapi != nullptr, nullptr, "no memory");
+    CHECK_AND_RETURN_RET_LOG(sourceNapi != nullptr, result, "no memory");
 
     sourceNapi->env_ = env;
 
@@ -195,7 +195,7 @@ napi_value MediaDataSourceNapi::GetSize(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, jsThis, (void **)&data);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && data != nullptr, undefinedResult, "napi_unwrap error");
     napi_value result = nullptr;
-    status = napi_create_int32(env, data->size_, &result);
+    status = napi_create_int64(env, data->size_, &result);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && result != nullptr, undefinedResult, "get napi value error");
 
     MEDIA_LOGD("GetSize success");
@@ -224,7 +224,7 @@ napi_value MediaDataSourceNapi::SetSize(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
 
-    status = napi_get_value_int32(env, args[0], &data->size_);
+    status = napi_get_value_int64(env, args[0], &data->size_);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "get napi value error");
 
     MEDIA_LOGD("SetSize success");
@@ -238,10 +238,12 @@ std::shared_ptr<AVSharedMemory> MediaDataSourceNapi::GetMem()
 
     // this GetMem args count is 0
     std::shared_ptr<CallbackWarp> cb = CallbackWarp::Create(env_, 0, getMem_);
-    CHECK_AND_RETURN_RET_LOG(cb != nullptr, 0, "create callback fail");
-    CHECK_AND_RETURN_RET_LOG(CheckCallbackWorks() == MSERR_OK, 0, "works in null");
-    CHECK_AND_RETURN_RET_LOG(callbackWorks_->Push(cb) == MSERR_OK, 0, "push work fail");
-    napi_value result = cb->GetResult();
+    CHECK_AND_RETURN_RET_LOG(cb != nullptr, nullptr, "create callback fail");
+    CHECK_AND_RETURN_RET_LOG(CheckCallbackWorks() == MSERR_OK, nullptr, "works in null");
+    CHECK_AND_RETURN_RET_LOG(callbackWorks_->Push(cb) == MSERR_OK, nullptr, "push work fail");
+    napi_value result = nullptr;
+    cb->GetResult(result);
+    CHECK_AND_RETURN_RET_LOG(result != nullptr, nullptr, "get result failed");
     void *tmpArrayBufferPtr = nullptr;
     size_t arrayBufferLength = 0;
     napi_status status = napi_get_arraybuffer_info(env_, result, &tmpArrayBufferPtr, &arrayBufferLength);
@@ -249,14 +251,13 @@ std::shared_ptr<AVSharedMemory> MediaDataSourceNapi::GetMem()
     std::string name = "mediaData";
     std::shared_ptr<AVSharedMemory> mem = AVSharedMemory::Create(static_cast<int32_t>(arrayBufferLength),
         AVSharedMemory::Flags::FLAGS_READ_ONLY, name);
-    CHECK_AND_RETURN_RET_LOG(mem != nullptr, nullptr, "create avshmem failed");
-
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr && mem->GetBase() != nullptr, nullptr, "create avshmem failed");
     errno_t rc = memcpy_s(mem->GetBase(), static_cast<size_t>(mem->GetSize()), tmpArrayBufferPtr, arrayBufferLength);
     CHECK_AND_RETURN_RET_LOG(rc == EOK, nullptr, "memcpy_s failed");
     return mem;
 }
 
-int32_t MediaDataSourceNapi::ReadAt(uint32_t pos, uint32_t length)
+int32_t MediaDataSourceNapi::ReadAt(int64_t pos, uint32_t length)
 {
     CHECK_AND_RETURN_RET_LOG(env_ != nullptr, 0, "env is nullptr");
     CHECK_AND_RETURN_RET_LOG(readAt_ != nullptr, 0, "readAt_ is nullptr");
@@ -269,7 +270,9 @@ int32_t MediaDataSourceNapi::ReadAt(uint32_t pos, uint32_t length)
 
     CHECK_AND_RETURN_RET_LOG(CheckCallbackWorks() == MSERR_OK, 0, "works in null");
     CHECK_AND_RETURN_RET_LOG(callbackWorks_->Push(cb) == MSERR_OK, 0, "push work fail");
-    napi_value result = cb->GetResult();
+    napi_value result = nullptr;
+    cb->GetResult(result);
+    CHECK_AND_RETURN_RET_LOG(result != nullptr, 0, "get result failed");
     int32_t size = 0;
     napi_status status = napi_get_value_int32(env_, result, &size);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, 0, "get value for ref failed");
@@ -287,14 +290,16 @@ int32_t MediaDataSourceNapi::ReadAt(uint32_t length)
 
     CHECK_AND_RETURN_RET_LOG(CheckCallbackWorks() == MSERR_OK, 0, "works in null");
     CHECK_AND_RETURN_RET_LOG(callbackWorks_->Push(cb) == MSERR_OK, 0, "push work fail");
-    napi_value result = cb->GetResult();
+    napi_value result = nullptr;
+    cb->GetResult(result);
+    CHECK_AND_RETURN_RET_LOG(result != nullptr, 0, "get result failed");
     int32_t size = 0;
     napi_status status = napi_get_value_int32(env_, result, &size);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, 0, "get value for ref failed");
     return size;
 }
 
-int32_t MediaDataSourceNapi::GetSize(int32_t &size) const
+int32_t MediaDataSourceNapi::GetSize(int64_t &size) const
 {
     size = size_;
     return MSERR_OK;

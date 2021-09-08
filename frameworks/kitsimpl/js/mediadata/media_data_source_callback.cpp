@@ -81,7 +81,7 @@ std::shared_ptr<AVSharedMemory> MediaDataSourceCallback::GetMem()
 {
     return dataSrc_.GetMem();
 }
-int32_t MediaDataSourceCallback::ReadAt(uint32_t pos, uint32_t length)
+int32_t MediaDataSourceCallback::ReadAt(int64_t pos, uint32_t length)
 {
     return dataSrc_.ReadAt(pos, length);
 }
@@ -89,7 +89,7 @@ int32_t MediaDataSourceCallback::ReadAt(uint32_t length)
 {
     return dataSrc_.ReadAt(length);
 }
-int32_t MediaDataSourceCallback::GetSize(int32_t &size)
+int32_t MediaDataSourceCallback::GetSize(int64_t &size)
 {
     return dataSrc_.GetSize(size);
 }

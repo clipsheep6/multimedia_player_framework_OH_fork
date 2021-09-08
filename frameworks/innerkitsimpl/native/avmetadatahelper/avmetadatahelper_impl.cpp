@@ -94,6 +94,8 @@ void AVMetadataHelperImpl::Release()
 {
     CHECK_AND_RETURN_LOG(avMetadataHelperService_ != nullptr, "avmetadatahelper service does not exist.");
     avMetadataHelperService_->Release();
+    (void)MeidaServiceFactory::GetInstance().DestroyAVMetadataHelperService(avMetadataHelperService_);
+    avMetadataHelperService_ = nullptr;
 }
 } // nmamespace Media
 } // namespace OHOS

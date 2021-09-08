@@ -22,12 +22,28 @@
 
 namespace OHOS {
 namespace Media {
+struct AutoRef {
+    AutoRef(napi_env env, napi_ref cb)
+        : env_(env), cb_(cb)
+    {
+    }
+    ~AutoRef()
+    {
+        if (env_ != nullptr && cb_ != nullptr) {
+            (void)napi_delete_reference(env_, cb_);
+        }
+    }
+    napi_env env_;
+    napi_ref cb_;
+};
+
 class CommonNapi {
 public:
     CommonNapi() = delete;
     ~CommonNapi() = delete;
     static std::string GetStringArgument(napi_env env, napi_value value);
     static void GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
+    static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
 };
 }
 }

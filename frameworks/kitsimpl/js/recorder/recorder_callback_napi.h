@@ -20,6 +20,7 @@
 #include "recorder.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "common_napi.h"
 
 namespace OHOS {
 namespace Media {
@@ -31,21 +32,6 @@ const std::string RESUME_CALLBACK_NAME = "resume";
 const std::string STOP_CALLBACK_NAME = "stop";
 const std::string RESET_CALLBACK_NAME = "reset";
 const std::string RELEASE_CALLBACK_NAME = "release";
-struct AutoRef {
-    AutoRef(napi_env env, napi_ref cb)
-        : env_(env), cb_(cb)
-    {
-    }
-    ~AutoRef()
-    {
-        if (env_ != nullptr && cb_ != nullptr) {
-            napi_delete_reference(env_, cb_);
-        }
-    }
-    napi_env env_;
-    napi_ref cb_;
-};
-
 class RecorderCallbackNapi : public RecorderCallback {
 public:
     explicit RecorderCallbackNapi(napi_env env);
@@ -60,8 +46,6 @@ protected:
     void OnInfo(int32_t type, int32_t extra) override;
 
 private:
-    static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
-
     struct RecordJsCallback {
         std::shared_ptr<AutoRef> callback = nullptr;
         std::string callbackName = "unknown";
@@ -71,6 +55,7 @@ private:
     void ErrorCallbackToJS(RecordJsCallback *jsCb);
     napi_env env_ = nullptr;
     std::mutex mutex_;
+
     std::shared_ptr<AutoRef> errorCallback_ = nullptr;
     std::shared_ptr<AutoRef> prepareCallback_ = nullptr;
     std::shared_ptr<AutoRef> startCallback_ = nullptr;

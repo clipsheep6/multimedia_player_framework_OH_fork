@@ -69,6 +69,16 @@ int32_t CallbackWarp::SetArg(uint32_t arg)
     return MSERR_OK;
 }
 
+int32_t CallbackWarp::SetArg(int64_t arg)
+{
+    CHECK_AND_RETURN_RET_LOG(env_ != nullptr, MSERR_INVALID_OPERATION, "env is nullptr");
+    CHECK_AND_RETURN_RET_LOG(argsCount_ > avgsPos_, MSERR_INVALID_OPERATION, "args num error");
+    CHECK_AND_RETURN_RET_LOG(CheckArgv() == MSERR_OK, MSERR_NO_MEMORY, "malloc failed");
+    napi_status status = napi_create_int64(env_, arg, &argv_[avgsPos_++]);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_INVALID_OPERATION, "create napi val failed");
+    return MSERR_OK;
+}
+
 const napi_value *CallbackWarp::GetArgs() const
 {
     CHECK_AND_RETURN_RET_LOG(argsCount_ == avgsPos_, nullptr, "args need be full");
@@ -91,15 +101,15 @@ void CallbackWarp::SetResult(napi_value result)
     condVarResult_.notify_all();
 }
 
-napi_value CallbackWarp::GetResult()
+void CallbackWarp::GetResult(napi_value &result)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (result_ == nullptr) {
         condVarResult_.wait(lock);
     }
-    CHECK_AND_RETURN_RET_LOG(result_ != nullptr, nullptr, "result ref is nullptr");
-    CHECK_AND_RETURN_RET_LOG(resultValue_ != nullptr, nullptr, "resultValue ref is nullptr");
-    return resultValue_;
+    CHECK_AND_RETURN_LOG(result_ != nullptr, "result ref is nullptr");
+    CHECK_AND_RETURN_LOG(resultValue_ != nullptr, "resultValue ref is nullptr");
+    result = resultValue_;
 }
 
 std::string CallbackWarp::GetName() const

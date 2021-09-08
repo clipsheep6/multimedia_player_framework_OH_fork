@@ -268,7 +268,7 @@ napi_value AudioPlayerNapi::SetMediaDataSrc(napi_env env, napi_callback_info inf
         player->ErrorCallback(env, MSERR_EXT_INVALID_VAL);
         return undefinedResult;
     }
-    int32_t ret = player->nativePlayer_->SetMediaDataSource(player->dataSrcCallBack_);
+    int32_t ret = player->nativePlayer_->SetSource(player->dataSrcCallBack_);
     if (ret != MSERR_OK) {
         player->ErrorCallback(env, MSERR_EXT_INVALID_VAL);
         return undefinedResult;

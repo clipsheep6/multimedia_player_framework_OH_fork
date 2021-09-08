@@ -20,24 +20,10 @@
 #include "player.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "common_napi.h"
 
 namespace OHOS {
 namespace Media {
-struct AutoRef {
-    AutoRef(napi_env env, napi_ref cb)
-        : env_(env), cb_(cb)
-    {
-    }
-    ~AutoRef()
-    {
-        if (env_ != nullptr && cb_ != nullptr) {
-            napi_delete_reference(env_, cb_);
-        }
-    }
-    napi_env env_;
-    napi_ref cb_;
-};
-
 class PlayerCallbackNapi : public PlayerCallback {
 public:
     explicit PlayerCallbackNapi(napi_env env);
@@ -49,7 +35,6 @@ public:
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
 
 private:
-    static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
     void OnSeekDoneCb(int32_t currentPositon);
     void OnEosCb(int32_t isLooping);
     void OnStateChangeCb(PlayerStates state);

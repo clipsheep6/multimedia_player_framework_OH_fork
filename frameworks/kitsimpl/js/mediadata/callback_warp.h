@@ -29,10 +29,11 @@ public:
     ~CallbackWarp();
     DISALLOW_COPY_AND_MOVE(CallbackWarp);
     int32_t SetArg(uint32_t arg);
+    int32_t SetArg(int64_t arg);
     const napi_value *GetArgs() const;
     size_t GetArgsCount() const;
     void SetResult(napi_value val);
-    napi_value GetResult();
+    void GetResult(napi_value &result);
     std::string GetName() const;
     napi_value GetCallback() const;
     napi_env GetEnv() const;

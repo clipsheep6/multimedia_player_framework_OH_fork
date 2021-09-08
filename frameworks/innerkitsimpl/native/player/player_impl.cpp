@@ -75,10 +75,10 @@ PlayerImpl::~PlayerImpl()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-int32_t PlayerImpl::SetMediaDataSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
+int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
-    return playerService_->SetMediaDataSource(dataSrc);
+    return playerService_->SetSource(dataSrc);
 }
 
 int32_t PlayerImpl::SetSource(const std::string &uri)
@@ -134,10 +134,8 @@ int32_t PlayerImpl::Release()
 {
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
     (void)playerService_->Release();
-    if (playerService_ != nullptr) {
-        (void)MeidaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
-        playerService_ = nullptr;
-    }
+    (void)MeidaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+    playerService_ = nullptr;
     return MSERR_OK;
 }
 

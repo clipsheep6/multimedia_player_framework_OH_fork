@@ -76,35 +76,6 @@ void PlayerCallbackNapi::SaveCallbackReference(const std::string &callbackName, 
     }
 }
 
-napi_status PlayerCallbackNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args)
-{
-    napi_value codeStr = nullptr;
-    napi_status status = napi_create_string_utf8(env, "code", NAPI_AUTO_LENGTH, &codeStr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && codeStr != nullptr, napi_invalid_arg, "create code str fail");
-
-    napi_value errCodeVal = nullptr;
-    int32_t errCodeInt = errCode;
-    status = napi_create_int32(env, errCodeInt - MS_ERR_OFFSET, &errCodeVal);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && errCodeVal != nullptr, napi_invalid_arg,
-        "create error code number val fail");
-
-    status = napi_set_property(env, args, codeStr, errCodeVal);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, napi_invalid_arg, "set error code property fail");
-
-    napi_value nameStr = nullptr;
-    status = napi_create_string_utf8(env, "name", NAPI_AUTO_LENGTH, &nameStr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && nameStr != nullptr, napi_invalid_arg, "create name str fail");
-
-    napi_value errNameVal = nullptr;
-    status = napi_create_string_utf8(env, "BusinessError", NAPI_AUTO_LENGTH, &errNameVal);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && errNameVal != nullptr, napi_invalid_arg,
-        "create BusinessError str fail");
-
-    status = napi_set_property(env, args, nameStr, errNameVal);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, napi_invalid_arg, "set error name property fail");
-    return napi_ok;
-}
-
 void PlayerCallbackNapi::SendErrorCallback(napi_env env, MediaServiceExtErrCode errCode, const std::string &info)
 {
     MEDIA_LOGE("ErrorCallback: %{public}s", info.c_str());
@@ -124,7 +95,7 @@ void PlayerCallbackNapi::SendErrorCallback(napi_env env, MediaServiceExtErrCode 
     status = napi_create_error(env, nullptr, msgValStr, &args[0]);
     CHECK_AND_RETURN_LOG(status == napi_ok && args[0] != nullptr, "create error callback fail");
 
-    status = FillErrorArgs(env, static_cast<int32_t>(errCode), args[0]);
+    status = CommonNapi::FillErrorArgs(env, static_cast<int32_t>(errCode), args[0]);
     CHECK_AND_RETURN_LOG(status == napi_ok, "create error callback fail");
 
     const size_t argCount = 1;
@@ -347,7 +318,7 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb)
             nstatus = napi_create_error(env, nullptr, msgValStr, &args[0]);
             CHECK_AND_RETURN_LOG(nstatus == napi_ok && args[0] != nullptr, "create error callback fail");
 
-            nstatus = FillErrorArgs(env, static_cast<int32_t>(event->errorCode), args[0]);
+            nstatus = CommonNapi::FillErrorArgs(env, static_cast<int32_t>(event->errorCode), args[0]);
             CHECK_AND_RETURN_LOG(nstatus == napi_ok, "create error callback fail");
 
             // Call back function

@@ -235,10 +235,8 @@ int32_t RecorderImpl::Release()
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     (void)recorderService_->Release();
-    if (recorderService_ != nullptr) {
-        (void)MeidaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
-        recorderService_ = nullptr;
-    }
+    (void)MeidaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
+    recorderService_ = nullptr;
     return MSERR_OK;
 }
 

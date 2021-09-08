@@ -109,6 +109,7 @@ uv_work_t *CallbackWorks::InitWork(const std::shared_ptr<CallbackWarp> &callback
 
 void CallbackWorks::DeinitWork(uv_work_t *work) const
 {
+    CHECK_AND_RETURN_LOG(work != nullptr, "deinit work is null");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " work destroy", FAKE_POINTER(work));
     CallbackWorkData *data = reinterpret_cast<CallbackWorkData *>(work->data);
     delete data;

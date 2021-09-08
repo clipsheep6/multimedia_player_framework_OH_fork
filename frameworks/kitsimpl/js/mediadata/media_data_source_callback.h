@@ -26,13 +26,13 @@ namespace Media {
 class MediaDataSourceCallback : public IMediaDataSource {
 public:
     static std::shared_ptr<MediaDataSourceCallback> Create(napi_env env, napi_value data);
-    explicit MediaDataSourceCallback(napi_env env, napi_ref ref, MediaDataSourceNapi &src);
+    MediaDataSourceCallback(napi_env env, napi_ref ref, MediaDataSourceNapi &src);
     virtual ~MediaDataSourceCallback();
     DISALLOW_COPY_AND_MOVE(MediaDataSourceCallback);
     std::shared_ptr<AVSharedMemory> GetMem();
-    int32_t ReadAt(uint32_t pos, uint32_t length);
+    int32_t ReadAt(int64_t pos, uint32_t length);
     int32_t ReadAt(uint32_t length);
-    int32_t GetSize(int32_t &size);
+    int32_t GetSize(int64_t &size);
     void Release() const;
     napi_value GetDataSrc() const;
 private:
