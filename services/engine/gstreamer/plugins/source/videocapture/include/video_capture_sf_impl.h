@@ -33,8 +33,8 @@ public:
     int32_t Pause() override;
     int32_t Resume() override;
     int32_t Stop() override;
-    int32_t SetVideoWidth(uint32_t width) override;
-    int32_t SetVideoHeight(uint32_t height) override;
+    int32_t SetSurfaceWidth(uint32_t width) override;
+    int32_t SetSurfaceHeight(uint32_t height) override;
     sptr<Surface> GetSurface() override;
     std::shared_ptr<EsAvcCodecBuffer> GetCodecBuffer() override;
     std::shared_ptr<VideoFrameBuffer> GetFrameBuffer() override;
@@ -52,10 +52,9 @@ protected:
         VideoCaptureSfImpl &owner_;
     };
     void OnBufferAvailable();
-    int32_t GetSufferExtraData();
 
-    uint32_t videoWidth_;
-    uint32_t videoHeight_;
+    uint32_t surfaceWidth_;
+    uint32_t surfaceHeight_;
     int32_t fence_;
     int32_t bufferAvailableCount_;
     int64_t timestamp_;
@@ -72,7 +71,7 @@ protected:
     sptr<Surface> producerSurface_;
     int32_t dataSize_ = 0;
     int64_t pts_ = 0;
-    int32_t isCodecFrame_ = 0;
+    int64_t duration_ = 0;
 
 private:
     void SetSurfaceUserData();
