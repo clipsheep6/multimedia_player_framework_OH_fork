@@ -17,26 +17,26 @@
 #include <map>
 #include "media_log.h"
 #include "media_errors.h"
-#include "graphic_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoCaptureSfmpl"};
     constexpr int32_t DEFAULT_SURFACE_QUEUE_SIZE = 6;
     constexpr int32_t DEFAULT_SURFACE_SIZE = 1024 * 1024;
-    constexpr int32_t DEFAULT_VIDEO_WIDTH = 1920;
-    constexpr int32_t DEFAULT_VIDEO_HEIGHT = 1080;
+    constexpr int32_t DEFAULT_SURFACE_WIDTH = 1920;
+    constexpr int32_t DEFAULT_SURFACE_HEIGHT = 1080;
 }
 
 namespace OHOS {
 namespace Media {
-const std::map<uint32_t, uint32_t> VIDEO_RESOLUTION_MAP = {
+const std::map<uint32_t, uint32_t> SURFACE_RESOLUTION_MAP = {
     { 1920, 1080 },
     { 1280, 720 },
     { 720, 480 },
 };
+
 VideoCaptureSfImpl::VideoCaptureSfImpl()
-    : videoWidth_(DEFAULT_VIDEO_WIDTH),
-      videoHeight_(DEFAULT_VIDEO_HEIGHT),
+    : surfaceWidth_(DEFAULT_SURFACE_WIDTH),
+      surfaceHeight_(DEFAULT_SURFACE_HEIGHT),
       fence_(-1),
       bufferAvailableCount_(0),
       timestamp_(0),
@@ -58,9 +58,9 @@ VideoCaptureSfImpl::~VideoCaptureSfImpl()
 
 int32_t VideoCaptureSfImpl::Prepare()
 {
-    auto iter = VIDEO_RESOLUTION_MAP.find(videoWidth_);
-    CHECK_AND_RETURN_RET_LOG(iter != VIDEO_RESOLUTION_MAP.end(), MSERR_INVALID_VAL, "illegal video width");
-    CHECK_AND_RETURN_RET_LOG(videoHeight_ == iter->second, MSERR_INVALID_VAL, "illegal video height");
+    auto iter = SURFACE_RESOLUTION_MAP.find(surfaceWidth_);
+    CHECK_AND_RETURN_RET_LOG(iter != SURFACE_RESOLUTION_MAP.end(), MSERR_INVALID_VAL, "illegal surface width");
+    CHECK_AND_RETURN_RET_LOG(surfaceHeight_ == iter->second, MSERR_INVALID_VAL, "illegal surface height");
 
     sptr<Surface> consumerSurface = Surface::CreateSurfaceAsConsumer();
     CHECK_AND_RETURN_RET_LOG(consumerSurface != nullptr, MSERR_NO_MEMORY, "create surface fail");
@@ -120,15 +120,15 @@ int32_t VideoCaptureSfImpl::Stop()
     return MSERR_OK;
 }
 
-int32_t VideoCaptureSfImpl::SetVideoWidth(uint32_t width)
+int32_t VideoCaptureSfImpl::SetSurfaceWidth(uint32_t width)
 {
-    videoWidth_ = width;
+    surfaceWidth_ = width;
     return MSERR_OK;
 }
 
-int32_t VideoCaptureSfImpl::SetVideoHeight(uint32_t height)
+int32_t VideoCaptureSfImpl::SetSurfaceHeight(uint32_t height)
 {
-    videoHeight_ = height;
+    surfaceHeight_ = height;
     return MSERR_OK;
 }
 
@@ -173,13 +173,13 @@ std::shared_ptr<VideoFrameBuffer> VideoCaptureSfImpl::GetFrameBuffer()
 
 void VideoCaptureSfImpl::SetSurfaceUserData()
 {
-    SurfaceError ret = dataConSurface_->SetUserData("video_width", std::to_string(videoWidth_));
+    SurfaceError ret = dataConSurface_->SetUserData("surface_width", std::to_string(surfaceWidth_));
     if (ret != SURFACE_ERROR_OK) {
-        MEDIA_LOGW("set video width fail");
+        MEDIA_LOGW("set surface width fail");
     }
-    ret = dataConSurface_->SetUserData("video_height", std::to_string(videoHeight_));
+    ret = dataConSurface_->SetUserData("surface_height", std::to_string(surfaceHeight_));
     if (ret != SURFACE_ERROR_OK) {
-        MEDIA_LOGW("set video height fail");
+        MEDIA_LOGW("set surface height fail");
     }
     ret = dataConSurface_->SetQueueSize(DEFAULT_SURFACE_QUEUE_SIZE);
     if (ret != SURFACE_ERROR_OK) {
@@ -189,28 +189,6 @@ void VideoCaptureSfImpl::SetSurfaceUserData()
     if (ret != SURFACE_ERROR_OK) {
         MEDIA_LOGW("set surface size fail");
     }
-    ret = dataConSurface_->SetDefaultWidthAndHeight(videoWidth_, videoHeight_);
-    if (ret != SURFACE_ERROR_OK) {
-        MEDIA_LOGW("set surface width and height fail");
-    }
-}
-
-int32_t VideoCaptureSfImpl::GetSufferExtraData()
-{
-    CHECK_AND_RETURN_RET_LOG(surfaceBuffer_ != nullptr, MSERR_INVALID_OPERATION, "surfacebuffer is null");
-
-    SurfaceError surfaceRet;
-
-    surfaceRet = surfaceBuffer_->ExtraGet("dataSize", dataSize_);
-    CHECK_AND_RETURN_RET_LOG(surfaceRet == SURFACE_ERROR_OK, MSERR_INVALID_OPERATION, "get dataSize fail");
-    surfaceRet = surfaceBuffer_->ExtraGet("timeStamp", pts_);
-    CHECK_AND_RETURN_RET_LOG(surfaceRet == SURFACE_ERROR_OK, MSERR_INVALID_OPERATION, "get timeStamp fail");
-    surfaceRet = surfaceBuffer_->ExtraGet("isKeyFrame", isCodecFrame_);
-    CHECK_AND_RETURN_RET_LOG(surfaceRet == SURFACE_ERROR_OK, MSERR_INVALID_OPERATION, "get isKeyFrame fail");
-
-    MEDIA_LOGI("surfaceBuffer extraData dataSize_: %{public}d, pts: (%{public}" PRId64 ")", dataSize_, pts_);
-    MEDIA_LOGI("is this surfaceBuffer keyFrame ? : %{public}d", isCodecFrame_);
-    return MSERR_OK;
 }
 
 int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
@@ -226,10 +204,9 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
     if (dataConSurface_->AcquireBuffer(surfaceBuffer_, fence_, timestamp_, damage_) != SURFACE_ERROR_OK) {
         return MSERR_UNKNOWN;
     }
-
-    int32_t ret = GetSufferExtraData();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "get ExtraData fail");
-
+    surfaceBuffer_->ExtraGet("dataSize", dataSize_);
+    surfaceBuffer_->ExtraGet("pts", pts_);
+    surfaceBuffer_->ExtraGet("duration", duration_); // surfacebuffer not ready
     bufferAvailableCount_--;
     return MSERR_OK;
 }

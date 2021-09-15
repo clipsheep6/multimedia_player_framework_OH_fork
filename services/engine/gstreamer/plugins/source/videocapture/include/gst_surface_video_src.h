@@ -47,8 +47,8 @@ struct _GstSurfaceVideoSrc {
     VideoStreamType stream_type;
     std::unique_ptr<OHOS::Media::VideoCapture> capture;
     GstCaps *src_caps;
-    guint video_width;
-    guint video_height;
+    guint surface_width;
+    guint surface_height;
     gboolean is_start;
     gboolean need_codec_data;
 };

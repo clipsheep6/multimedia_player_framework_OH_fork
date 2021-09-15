@@ -24,27 +24,27 @@ The structure of the repository directory is as follows:
 ```
 /foundation/multimedia/media_standard
 +-- frameworks                           # Framework code
-Â¦   +-- innerkitsimpl                    # Native framework implementation
-Â¦   +-- kitsimpl                         # JS framework implementation
-Â¦   +-- videodisplaymanager              # Video display implementation
+¦   +-- innerkitsimpl                    # Native framework implementation
+¦   +-- kitsimpl                         # JS framework implementation
+¦   +-- videodisplaymanager              # Video display implementation
 +-- interfaces                           # External APIs
-Â¦   +-- innerkits                        # Native external interface files
-Â¦   +-- kits                             # External JS API files
+¦   +-- innerkits                        # Native external interface files
+¦   +-- kits                             # External JS API files
 +-- services                             # Service implementation
-Â¦   +-- include                          # External header files of services
-Â¦   +-- play                             # Player client/server implementation
-Â¦   Â¦   +-- client                       # Player client implementation
-Â¦   Â¦   +-- ipc                          # Player client/server framework
-Â¦   Â¦   +-- server                       # Player server implementation
-Â¦   Â¦   +-- engine                       # Player engine framework
-Â¦   +-- recorder                         # Recorder client/server implementation
-Â¦   Â¦   +-- client                       # Recorder client implementation
-Â¦   Â¦   +-- ipc                          # Recorder client/server framework
-Â¦   Â¦   +-- server                       # Recorder server implementation
-Â¦   Â¦   +-- engine                       # Recorder engine framework
-Â¦   +-- plugins                          # Custom plug-ins
-Â¦   +-- sa_media                         # Main process of the media service
-Â¦   +-- utils                            # Basic resources of the subsystem
+¦   +-- include                          # External header files of services
+¦   +-- play                             # Player client/server implementation
+¦   ¦   +-- client                       # Player client implementation
+¦   ¦   +-- ipc                          # Player client/server framework
+¦   ¦   +-- server                       # Player server implementation
+¦   ¦   +-- engine                       # Player engine framework
+¦   +-- recorder                         # Recorder client/server implementation
+¦   ¦   +-- client                       # Recorder client implementation
+¦   ¦   +-- ipc                          # Recorder client/server framework
+¦   ¦   +-- server                       # Recorder server implementation
+¦   ¦   +-- engine                       # Recorder engine framework
+¦   +-- plugins                          # Custom plug-ins
+¦   +-- sa_media                         # Main process of the media service
+¦   +-- utils                            # Basic resources of the subsystem
 +-- LICENSE                              # License file
 +-- ohos.build                           # Build file
 ```
@@ -52,3 +52,4 @@ The structure of the repository directory is as follows:
 ## Repositories Involved<a name="section1533973044317"></a>
 
 Media repository: multimedia\media_standard
+

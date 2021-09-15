@@ -13,7 +13,7 @@
 
 import("//build/config/ohos/rules.gni")
 import("//build/ohos.gni")
-
+ 
 group("media_packages") {
     public_deps = [
          "services:media_service",
