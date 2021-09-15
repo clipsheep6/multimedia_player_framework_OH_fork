@@ -79,7 +79,6 @@ private:
     void PlaySync();
     void SeekSync(uint64_t position, const PlayerSeekMode mode);
     void SetRateSync(double rate);
-    void MultipleSeek();
     void StopSync();
     void PauseSync();
     void OnNotify(PlayerStates state);
@@ -98,13 +97,10 @@ private:
     bool enableLooping_ = false;
     bool bufferingStart_ = false;
     bool nextSeekFlag_ = false;
-    bool seekInProgress_ = false;
     bool userStop_ = false;
     bool userPause_ = false;
     bool stopTimeFlag_ = false;
     bool errorFlag_ = false;
-    uint64_t nextSeekPos_ = 0;
-    PlayerSeekMode nextSeekMode_ = SEEK_PREVIOUS_SYNC;
     PlayerStates currentState_ = PLAYER_IDLE;
     uint64_t sourceDuration_ = 0;
     uint64_t seekDonePosition_ = 0;
