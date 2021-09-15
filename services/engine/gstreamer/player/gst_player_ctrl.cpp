@@ -21,6 +21,7 @@
 
 namespace {
     constexpr float INVALID_VOLUME = -1.0;
+    constexpr double DEFAULT_RATE = 1.0;
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstPlayerCtrl"};
     constexpr int MILLI = 1000;
     constexpr int MICRO = MILLI * 1000;
