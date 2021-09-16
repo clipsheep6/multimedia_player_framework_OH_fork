@@ -3,7 +3,7 @@
 -   [Introduction](#section1158716411637)
 -   [Directory Structure](#section161941989596)
 -   [Repositories Involved](#section1533973044317)
-
+ 
 ## Introduction<a name="section1158716411637"></a>
 
 The  **media\_standard**  repository provides a set of simple and easy-to-use APIs for you to access the system and media resources.
