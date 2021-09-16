@@ -46,7 +46,7 @@ The structure of the repository directory is as follows:
 ¦   +-- sa_media                         # Main process of the media service
 ¦   +-- utils                            # Basic resources of the subsystem
 +-- LICENSE                              # License file
-+-- ohos.build                           # Build file
++-- ohos.build                           # Build file 
 ```
 
 ## Repositories Involved<a name="section1533973044317"></a>
