@@ -230,6 +230,13 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
     int32_t ret = GetSufferExtraData();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "get ExtraData fail");
 
+    {
+        gpointer bufferx = surfaceBuffer_->GetVirAddr();
+        FILE *fp1 = fopen("/data/filemid.txt", "a+");
+        fwrite(bufferx, dataSize_, 1, fp1);
+        fclose(fp1);
+    }
+    
     bufferAvailableCount_--;
     return MSERR_OK;
 }
