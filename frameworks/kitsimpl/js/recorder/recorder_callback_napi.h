@@ -38,8 +38,8 @@ public:
     virtual ~RecorderCallbackNapi();
 
     void SaveCallbackReference(const std::string &callbackName, napi_value callback);
-    void SendErrorCallback(napi_env env, MediaServiceExtErrCode errCode);
-    void SendCallback(napi_env env, const std::string &callbackName);
+    void SendErrorCallback(MediaServiceExtErrCode errCode);
+    void SendStateCallback(const std::string &callbackName);
 
 protected:
     void OnError(RecorderErrorType errorType, int32_t errCode) override;
@@ -52,8 +52,8 @@ private:
         std::string errorMsg = "unknown";
         MediaServiceExtErrCode errorCode = MSERR_EXT_UNKNOWN;
     };
-    void OnJsErrorCallBack(RecordJsCallback *jsCb);
-    void OnJsStateCallBack(RecordJsCallback *jsCb);
+    void OnJsErrorCallBack(RecordJsCallback *jsCb) const;
+    void OnJsStateCallBack(RecordJsCallback *jsCb) const;
     std::shared_ptr<AutoRef> StateCallbackSelect(const std::string &callbackName) const;
     napi_env env_ = nullptr;
     std::mutex mutex_;
