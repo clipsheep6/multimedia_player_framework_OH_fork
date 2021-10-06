@@ -55,8 +55,6 @@ config("media_client_public_config") {
   ]
 
   cflags = [
-    "-std=c++17",
-    "-fno-rtti",
     "-fno-exceptions",
     "-Wall",
     "-fno-common",
@@ -69,6 +67,11 @@ config("media_client_public_config") {
     "-fvisibility=hidden",
     "-Wformat=2",
     "-Wdate-time",
+  ]
+
+  cflags_cc = [
+    "-std=c++17",
+    "-fno-rtti",
   ]
 
   if (target_cpu == "arm") {
