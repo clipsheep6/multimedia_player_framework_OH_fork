@@ -234,7 +234,8 @@ static gboolean process_caps_info(GstAudioCaptureSrc *src)
     return TRUE;
 }
 
-static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *element, GstStateChange transition)
+static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *element,
+    GstStateChange transition)
 {
     g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
     GstAudioCaptureSrc *src = GST_AUDIO_CAPTURE_SRC(element);

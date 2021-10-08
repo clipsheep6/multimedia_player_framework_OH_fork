@@ -213,7 +213,7 @@ int32_t AudioCaptureAsImpl::ResumeAudioCapture()
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(audioCapturer_->Start(), MSERR_UNKNOWN);
 
-    MEDIA_LOGI("audio capture has %{public}d times stop, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}" 
+    MEDIA_LOGI("audio capture has %{public}d times stop, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}"
         PRIu64 "", pausedCount_, persistTime_, totalPauseTime_);
     return MSERR_OK;
 }
