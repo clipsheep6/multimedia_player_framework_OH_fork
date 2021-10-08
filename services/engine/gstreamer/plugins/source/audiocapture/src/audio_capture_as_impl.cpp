@@ -186,7 +186,7 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
 int32_t AudioCaptureAsImpl::PauseAudioCapture()
 {
     MEDIA_LOGI("PauseAudioCapture");
-    pausedTime_ = timestamp_; 
+    pausedTime_ = timestamp_;
 
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     if (audioCapturer_->GetStatus() == AudioStandard::CapturerState::CAPTURER_RUNNING) {
@@ -199,7 +199,7 @@ int32_t AudioCaptureAsImpl::PauseAudioCapture()
 int32_t AudioCaptureAsImpl::ResumeAudioCapture()
 {
     MEDIA_LOGI("ResumeAudioCapture");
-    resumeTime_ = timestamp_; 
+    resumeTime_ = timestamp_;
 
     if (resumeTime_ < pausedTime_) {
         MEDIA_LOGW("get wrong timestamp from audio services!");
@@ -213,8 +213,8 @@ int32_t AudioCaptureAsImpl::ResumeAudioCapture()
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(audioCapturer_->Start(), MSERR_UNKNOWN);
 
-    MEDIA_LOGI("audio capture has %{public}d times stop, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}" PRIu64 "",
-         pausedCount_, persistTime_, totalPauseTime_);
+    MEDIA_LOGI("audio capture has %{public}d times stop, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}" 
+        PRIu64 "", pausedCount_, persistTime_, totalPauseTime_);
     return MSERR_OK;
 }
 }  // namespace Media

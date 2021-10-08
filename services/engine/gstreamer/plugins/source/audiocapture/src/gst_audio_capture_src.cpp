@@ -49,7 +49,8 @@ static void gst_audio_capture_src_set_property(GObject *object, guint prop_id,
 static void gst_audio_capture_src_get_property(GObject *object, guint prop_id,
     GValue *value, GParamSpec *pspec);
 static GstFlowReturn gst_audio_capture_src_create(GstPushSrc *psrc, GstBuffer **outbuf);
-static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *element, GstStateChange transition);
+static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *element,
+    GstStateChange transition);
 static gboolean gst_audio_capture_src_negotiate(GstBaseSrc *basesrc);
 
 #define GST_TYPE_AUDIO_CAPTURE_SRC_SOURCE_TYPE (gst_audio_capture_src_source_type_get_type())
