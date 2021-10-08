@@ -15,6 +15,7 @@
 
 #include "audio_capture_as_impl.h"
 #include <vector>
+#include <cmath>
 #include "media_log.h"
 #include "audio_errors.h"
 #include "media_errors.h"
@@ -119,14 +120,7 @@ int32_t AudioCaptureAsImpl::GetSegmentInfo(uint64_t &start)
         MEDIA_LOGW("audio frame pts too long, this shouldn't happen");
     }
     start = timeStamp.time.tv_nsec + timeStamp.time.tv_sec * secToNanosecond;
-    return MSERR_OK;
-}
-
-int32_t AudioCaptureAsImpl::StartAudioCapture()
-{
-    MEDIA_LOGD("StartAudioCapture");
-    CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(audioCapturer_->Start(), MSERR_UNKNOWN);
+    MEDIA_LOGE("timestamp from audioCapturer: %{public}" PRIu64 "", start);
     return MSERR_OK;
 }
 
@@ -151,21 +145,23 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
         return nullptr;
     }
 
-    if (queryTimestamp_) {
-        if (GetSegmentInfo(buffer->timestamp) != MSERR_OK) {
-            g_free(buffer->gstBuffer);
-            return nullptr;
-        }
-    } else {
-        timestamp_ += bufferDurationNs_;
-        buffer->timestamp = timestamp_;
+    if (GetSegmentInfo(timestamp_) != MSERR_OK) {
+        g_free(buffer->gstBuffer);
+        return nullptr;
     }
 
+    buffer->timestamp = timestamp_ - totalPauseTime_;
     buffer->duration = bufferDurationNs_;
     buffer->dataLen = bufferSize_;
-    sequence_++;
-    buffer->dataSeq = sequence_;
     return buffer;
+}
+
+int32_t AudioCaptureAsImpl::StartAudioCapture()
+{
+    MEDIA_LOGD("StartAudioCapture");
+    CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET(audioCapturer_->Start(), MSERR_UNKNOWN);
+    return MSERR_OK;
 }
 
 int32_t AudioCaptureAsImpl::StopAudioCapture()
@@ -173,13 +169,52 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
     MEDIA_LOGD("StopAudioCapture");
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     if (audioCapturer_->GetStatus() == AudioStandard::CapturerState::CAPTURER_RUNNING) {
-        CHECK_AND_RETURN_RET(audioCapturer_->Flush(), MSERR_UNKNOWN);
         CHECK_AND_RETURN_RET(audioCapturer_->Stop(), MSERR_UNKNOWN);
     }
     if (audioCapturer_->GetStatus() != AudioStandard::CapturerState::CAPTURER_RELEASED) {
         CHECK_AND_RETURN_RET(audioCapturer_->Release(), MSERR_UNKNOWN);
     }
     audioCapturer_ = nullptr;
+    pausedTime_ = 0;
+    resumeTime_ = 0;
+    persistTime_ = 0;
+    totalPauseTime_ = 0;
+    pausedCount_ = 0;
+    return MSERR_OK;
+}
+
+int32_t AudioCaptureAsImpl::PauseAudioCapture()
+{
+    MEDIA_LOGI("PauseAudioCapture");
+    pausedTime_ = timestamp_; 
+
+    CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
+    if (audioCapturer_->GetStatus() == AudioStandard::CapturerState::CAPTURER_RUNNING) {
+        CHECK_AND_RETURN_RET(audioCapturer_->Stop(), MSERR_UNKNOWN);
+    }
+    MEDIA_LOGI("exit PauseAudioCapture");
+    return MSERR_OK;
+}
+
+int32_t AudioCaptureAsImpl::ResumeAudioCapture()
+{
+    MEDIA_LOGI("ResumeAudioCapture");
+    resumeTime_ = timestamp_; 
+
+    if (resumeTime_ < pausedTime_) {
+        MEDIA_LOGW("get wrong timestamp from audio services!");
+    }
+
+    persistTime_ = std::fabs(resumeTime_ - pausedTime_);
+
+    // to check persistTime_ and newpersistTime_
+    totalPauseTime_ += persistTime_;
+    pausedCount_++; // add one pause time count
+    CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET(audioCapturer_->Start(), MSERR_UNKNOWN);
+
+    MEDIA_LOGI("audio capture has %{public}d times stop, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}" PRIu64 "",
+         pausedCount_, persistTime_, totalPauseTime_);
     return MSERR_OK;
 }
 }  // namespace Media
