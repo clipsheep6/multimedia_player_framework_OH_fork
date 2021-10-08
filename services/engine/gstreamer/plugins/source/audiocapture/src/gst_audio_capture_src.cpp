@@ -49,8 +49,7 @@ static void gst_audio_capture_src_set_property(GObject *object, guint prop_id,
 static void gst_audio_capture_src_get_property(GObject *object, guint prop_id,
     GValue *value, GParamSpec *pspec);
 static GstFlowReturn gst_audio_capture_src_create(GstPushSrc *psrc, GstBuffer **outbuf);
-static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *element,
-    GstStateChange transition);
+static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_audio_capture_src_negotiate(GstBaseSrc *basesrc);
 
 #define GST_TYPE_AUDIO_CAPTURE_SRC_SOURCE_TYPE (gst_audio_capture_src_source_type_get_type())
@@ -234,8 +233,7 @@ static gboolean process_caps_info(GstAudioCaptureSrc *src)
     return TRUE;
 }
 
-static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *element,
-    GstStateChange transition)
+static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *element, GstStateChange transition)
 {
     g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
     GstAudioCaptureSrc *src = GST_AUDIO_CAPTURE_SRC(element);
@@ -262,7 +260,6 @@ static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *eleme
                 src->is_start = TRUE;
             } else {
                 g_return_val_if_fail(src->audio_capture->ResumeAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
-                src->is_pause = FALSE;
             }
             break;
         }
@@ -275,7 +272,6 @@ static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *eleme
 
     switch (transition) {
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-            src->is_pause = TRUE;
             g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
             g_return_val_if_fail(src->audio_capture->PauseAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
             break;
