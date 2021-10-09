@@ -96,7 +96,7 @@ int32_t VideoCaptureSfImpl::Resume()
 {
     resumeTime_ = pts_;
     if (resumeTime_ < pauseTime_) {
-        MEDIA_LOGW("get wrong timestamp from camera services!");
+        MEDIA_LOGW("get wrong timestamp from HDI!");
     }
 
     persistTime_ = std::fabs(resumeTime_ - pauseTime_);

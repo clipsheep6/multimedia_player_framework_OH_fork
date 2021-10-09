@@ -120,7 +120,7 @@ int32_t AudioCaptureAsImpl::GetSegmentInfo(uint64_t &start)
         MEDIA_LOGW("audio frame pts too long, this shouldn't happen");
     }
     start = timeStamp.time.tv_nsec + timeStamp.time.tv_sec * secToNanosecond;
-    MEDIA_LOGE("timestamp from audioCapturer: %{public}" PRIu64 "", start);
+    MEDIA_LOGI("timestamp from audioCapturer: %{public}" PRIu64 "", start);
     return MSERR_OK;
 }
 
@@ -185,20 +185,20 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
 
 int32_t AudioCaptureAsImpl::PauseAudioCapture()
 {
-    MEDIA_LOGI("PauseAudioCapture");
+    MEDIA_LOGD("PauseAudioCapture");
     pausedTime_ = timestamp_;
 
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     if (audioCapturer_->GetStatus() == AudioStandard::CapturerState::CAPTURER_RUNNING) {
         CHECK_AND_RETURN_RET(audioCapturer_->Stop(), MSERR_UNKNOWN);
     }
-    MEDIA_LOGI("exit PauseAudioCapture");
+    MEDIA_LOGD("exit PauseAudioCapture");
     return MSERR_OK;
 }
 
 int32_t AudioCaptureAsImpl::ResumeAudioCapture()
 {
-    MEDIA_LOGI("ResumeAudioCapture");
+    MEDIA_LOGD("ResumeAudioCapture");
     resumeTime_ = timestamp_;
 
     if (resumeTime_ < pausedTime_) {
