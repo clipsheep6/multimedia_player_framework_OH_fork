@@ -272,6 +272,9 @@ static GstStateChangeReturn gst_surface_video_src_change_state(GstElement *eleme
     GstStateChangeReturn ret = GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
 
     switch (transition) {
+        case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+            g_return_val_if_fail(src->capture->Pause() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
+            break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             src->is_start = FALSE;
             g_return_val_if_fail(src->capture != nullptr, GST_STATE_CHANGE_FAILURE);
