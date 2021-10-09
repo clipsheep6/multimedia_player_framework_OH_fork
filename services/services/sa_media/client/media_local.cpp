@@ -19,6 +19,7 @@
 #include "player_server.h"
 #include "media_errors.h"
 #include "avmetadatahelper_server.h"
+#include "videodecoder_server.h"
 
 namespace OHOS {
 namespace Media {
@@ -43,6 +44,11 @@ std::shared_ptr<IAVMetadataHelperService> MediaLocal::CreateAVMetadataHelperServ
     return AVMetadataHelperServer::Create();
 }
 
+std::shared_ptr<IVideoDecoderService> MediaLocal::CreateVideoDecoderService()
+{
+    return VideoDecoderServer::Create();
+}
+
 int32_t MediaLocal::DestroyRecorderService(std::shared_ptr<IRecorderService> recorder)
 {
     (void)recorder;
@@ -58,6 +64,12 @@ int32_t MediaLocal::DestroyPlayerService(std::shared_ptr<IPlayerService> player)
 int32_t MediaLocal::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper)
 {
     (void)avMetadataHelper;
+    return MSERR_OK;
+}
+
+int32_t MediaLocal::DestroyVideoDecoderService(std::shared_ptr<IVideoDecoderService> videoDecoder)
+{
+    (void)videoDecoder;
     return MSERR_OK;
 }
 } // Media

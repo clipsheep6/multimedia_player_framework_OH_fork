@@ -24,6 +24,7 @@
 #include "i_standard_recorder_service.h"
 #include "i_standard_player_service.h"
 #include "i_standard_avmetadatahelper_service.h"
+#include "videodecoder_server.h"
 #include "media_errors.h"
 
 namespace {
@@ -139,6 +140,11 @@ std::shared_ptr<IAVMetadataHelperService> MediaClient::CreateAVMetadataHelperSer
     return avMetadataHelper;
 }
 
+std::shared_ptr<IVideoDecoderService> MediaClient::CreateVideoDecoderService()
+{
+    return VideoDecoderServer::Create();
+}
+
 int32_t MediaClient::DestroyRecorderService(std::shared_ptr<IRecorderService> recorder)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -161,6 +167,12 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
     CHECK_AND_RETURN_RET_LOG(avMetadataHelper != nullptr, MSERR_NO_MEMORY,
         "input avmetadatahelper is nullptr.");
     avMetadataHelperClientList_.remove(avMetadataHelper);
+    return MSERR_OK;
+}
+
+int32_t MediaClient::DestroyVideoDecoderService(std::shared_ptr<IVideoDecoderService> videoDecoder)
+{
+    (void)videoDecoder;
     return MSERR_OK;
 }
 

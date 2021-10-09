@@ -24,6 +24,7 @@ ohos_shared_library("media_engine_gst") {
     "recorder:media_engine_gst_recorder",
     "player:media_engine_gst_player",
     "avmetadatahelper:media_engine_gst_avmeta",
+    "codec/videodecoder:media_engine_ff_videodecoder",
     "common:media_engine_gst_common",
     "factory:media_engine_gst_factory",
     "loader:media_engine_gst_loader",
