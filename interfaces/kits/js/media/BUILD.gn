@@ -33,6 +33,7 @@ ohos_shared_library("media") {
     "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/mediadata",
     "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/recorder",
     "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/avmetadatahelper",
+    "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/codec/videodecoder",
     "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/common",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//third_party/libuv/include",
@@ -50,6 +51,8 @@ ohos_shared_library("media") {
     "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/player/player_callback_napi.cpp",
     "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/recorder/audio_recorder_napi.cpp",
     "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/recorder/recorder_callback_napi.cpp",
+    "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/codec/videodecoder/video_decoder_napi.cpp",
+    "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/codec/videodecoder/video_decoder_callback_napi.cpp",
   ]
 
   cflags = [

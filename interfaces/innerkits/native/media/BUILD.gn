@@ -21,6 +21,7 @@ config("media_client_local_config") {
     "$MEIDA_ROOT_DIR/services/services/player/server",
     "$MEIDA_ROOT_DIR/services/services/recorder/server",
     "$MEIDA_ROOT_DIR/services/services/avmetadatahelper/server",
+    "$MEIDA_ROOT_DIR/services/services/videodecoder/server",
     "$MEIDA_ROOT_DIR/services/services/factory",
     "$MEIDA_ROOT_DIR/services/services/engine_intf",
   ]
@@ -38,6 +39,9 @@ config("media_client_ipc_config") {
     "$MEIDA_ROOT_DIR/services/services/avmetadatahelper/client",
     "$MEIDA_ROOT_DIR/services/services/avmetadatahelper/ipc",
     "$MEIDA_ROOT_DIR/services/services/common",
+    "$MEIDA_ROOT_DIR/services/services/factory",
+    "$MEIDA_ROOT_DIR/services/services/videodecoder/server",
+    "$MEIDA_ROOT_DIR/services/services/engine_intf",
   ]
 }
 
@@ -46,6 +50,7 @@ config("media_client_public_config") {
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/player",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper",
+    "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/videodecoder",
     "$MEIDA_ROOT_DIR/interfaces/innerkits/native/media/include",
     "$MEIDA_ROOT_DIR/services/include",
     "$MEIDA_ROOT_DIR/services/utils/include",
@@ -83,6 +88,7 @@ ohos_shared_library("media_client") {
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder/recorder_impl.cpp",
+    "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/videodecoder/videodecoder_impl.cpp",
     "$MEIDA_ROOT_DIR/services/services/avmetadatahelper/client/avmetadatahelper_client.cpp",
     "$MEIDA_ROOT_DIR/services/services/avmetadatahelper/ipc/avmetadatahelper_service_proxy.cpp",
     "$MEIDA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
@@ -97,6 +103,8 @@ ohos_shared_library("media_client") {
     "$MEIDA_ROOT_DIR/services/services/sa_media/ipc/media_listener_stub.cpp",
     "$MEIDA_ROOT_DIR/services/services/sa_media/ipc/media_service_proxy.cpp",
     "$MEIDA_ROOT_DIR/services/utils/avsharedmemorybase.cpp",
+    "$MEIDA_ROOT_DIR/services/services/videodecoder/server/videodecoder_server.cpp",
+    "$MEIDA_ROOT_DIR/services/services/factory/engine_factory_repo.cpp",
   ]
 
   public_configs = [
@@ -108,6 +116,7 @@ ohos_shared_library("media_client") {
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/graphic/standard/frameworks/surface:surface",
+    "$MEIDA_ROOT_DIR/services/utils:media_service_utils",
     "//utils/native/base:utils",
     "//utils/native/base:utilsecurec",
   ]
@@ -125,6 +134,7 @@ ohos_shared_library("media_local") {
   install_enable = true
   sources = [
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
+    "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/videodecoder/videodecoder_impl.cpp",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder/recorder_impl.cpp",
@@ -133,6 +143,7 @@ ohos_shared_library("media_local") {
     "$MEIDA_ROOT_DIR/services/services/player/server/player_server.cpp",
     "$MEIDA_ROOT_DIR/services/services/recorder/server/recorder_server.cpp",
     "$MEIDA_ROOT_DIR/services/services/sa_media/client/media_local.cpp",
+    "$MEIDA_ROOT_DIR/services/services/videodecoder/server/videodecoder_server.cpp",
   ]
 
   public_configs = [
