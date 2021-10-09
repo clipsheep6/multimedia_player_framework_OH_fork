@@ -1,0 +1,86 @@
+# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+config("media_engine_ff_videodecoder_config") {
+  visibility = [ ":*" ]
+
+  cflags = [
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
+    "-Wformat=2",
+    "-Wfloat-equal",
+    "-Wdate-time",
+  ]
+
+  include_dirs = [
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/codec/videodecoder",
+    "//foundation/multimedia/media_standard/services/utils/include",
+    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/services/services/engine_intf",
+    "//foundation/multimedia/media_standard/services/include",
+    "//utils/native/base/include",
+    "//third_party/ffmpeg",
+    "//third_party/ffmpeg/libavcodec",
+    "//third_party/ffmpeg/libavformat",
+    "//third_party/ffmpeg/libswscale",
+  ]
+}
+
+ohos_static_library("media_engine_ff_videodecoder") {
+  sources = [
+    "vdec_engine_ff_impl.cpp",
+    "vdec_controller.cpp",
+    "vdec_h264.cpp",
+    "vdec_renderer.cpp",
+  ]
+
+  include_dirs = [
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/codec/videodecoder",
+    "//foundation/multimedia/media_standard/services/utils/include",
+    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/services/services/engine_intf",
+    "//foundation/multimedia/media_standard/services/include",
+    "//utils/native/base/include",
+    "//third_party/ffmpeg",
+  ]
+
+  configs = [
+    ":media_engine_ff_videodecoder_config",
+    "//foundation/multimedia/media_standard/services/utils:media_service_utils_public_config",
+    "//foundation/graphic/standard/frameworks/surface:surface_public_config"
+  ]
+
+  deps = [
+    "//foundation/multimedia/media_standard/services/utils:media_service_utils",
+    "//foundation/graphic/standard/frameworks/surface:surface",
+    "//third_party/ffmpeg:libohosffmpeg",
+  ]
+
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+  ]
+
+  subsystem_name = "multimedia"
+  part_name = "multimedia_media_standard"
+}
