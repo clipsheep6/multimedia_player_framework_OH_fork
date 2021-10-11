@@ -89,6 +89,7 @@ int32_t VideoCaptureSfImpl::Start()
 int32_t VideoCaptureSfImpl::Pause()
 {
     pauseTime_ = pts_;
+    pauseCount_++;
     return MSERR_OK;
 }
 
@@ -102,8 +103,7 @@ int32_t VideoCaptureSfImpl::Resume()
     persistTime_ = std::fabs(resumeTime_ - pauseTime_);
 
     totalPauseTime_ += persistTime_;
-    pauseCount_++;
-
+    
     MEDIA_LOGI("video capture has %{public}d times stop, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}"
     PRIu64 "", pauseCount_, persistTime_, totalPauseTime_);
     return MSERR_OK;

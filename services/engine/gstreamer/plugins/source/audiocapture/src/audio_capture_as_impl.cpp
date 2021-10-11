@@ -192,6 +192,7 @@ int32_t AudioCaptureAsImpl::PauseAudioCapture()
     if (audioCapturer_->GetStatus() == AudioStandard::CapturerState::CAPTURER_RUNNING) {
         CHECK_AND_RETURN_RET(audioCapturer_->Stop(), MSERR_UNKNOWN);
     }
+    pausedCount_++; // add one pause time count
     MEDIA_LOGD("exit PauseAudioCapture");
     return MSERR_OK;
 }
@@ -209,7 +210,6 @@ int32_t AudioCaptureAsImpl::ResumeAudioCapture()
 
     // to check persistTime_ and newpersistTime_
     totalPauseTime_ += persistTime_;
-    pausedCount_++; // add one pause time count
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(audioCapturer_->Start(), MSERR_UNKNOWN);
 
