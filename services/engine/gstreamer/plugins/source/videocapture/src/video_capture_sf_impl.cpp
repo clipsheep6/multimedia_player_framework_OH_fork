@@ -15,6 +15,7 @@
 
 #include "video_capture_sf_impl.h"
 #include <map>
+#include <cmath>
 #include "media_log.h"
 #include "media_errors.h"
 #include "graphic_common.h"
@@ -94,11 +95,24 @@ int32_t VideoCaptureSfImpl::Start()
 
 int32_t VideoCaptureSfImpl::Pause()
 {
+    pauseTime_ = pts_;
+    pauseCount_++;
     return MSERR_OK;
 }
 
 int32_t VideoCaptureSfImpl::Resume()
 {
+    resumeTime_ = pts_;
+    if (resumeTime_ < pauseTime_) {
+        MEDIA_LOGW("get wrong timestamp from HDI!");
+    }
+
+    persistTime_ = std::fabs(resumeTime_ - pauseTime_);
+
+    totalPauseTime_ += persistTime_;
+    
+    MEDIA_LOGI("video capture has %{public}d times stop, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}"
+    PRIu64 "", pauseCount_, persistTime_, totalPauseTime_);
     return MSERR_OK;
 }
 
@@ -117,6 +131,11 @@ int32_t VideoCaptureSfImpl::Stop()
         dataConSurface_ = nullptr;
         producerSurface_ = nullptr;
     }
+    pauseTime_ = 0;
+    resumeTime_ = 0;
+    persistTime_ = 0;
+    totalPauseTime_ = 0;
+    pauseCount_ = 0;
     return MSERR_OK;
 }
 
@@ -219,6 +238,12 @@ int32_t VideoCaptureSfImpl::GetSufferExtraData()
 
     MEDIA_LOGI("surfaceBuffer extraData dataSize_: %{public}d, pts: (%{public}" PRId64 ")", dataSize_, pts_);
     MEDIA_LOGI("is this surfaceBuffer keyFrame ? : %{public}d", isCodecFrame_);
+
+    if (pts_ < previousTimestamp_) {
+        MEDIA_LOGW("get error timestamp from surfaceBuffer");
+    }
+    previousTimestamp_ = pts_;
+
     return MSERR_OK;
 }
 
@@ -244,6 +269,8 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
 
     int32_t ret = GetSufferExtraData();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "get ExtraData fail");
+
+    pts_ = pts_ - totalPauseTime_;
 
     bufferAvailableCount_--;
     return MSERR_OK;
