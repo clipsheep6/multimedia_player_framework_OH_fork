@@ -269,7 +269,7 @@ void AVMetaElemMetaCollector::QueryDuration(GstPad &pad)
         }
 
         fileMeta_.SetMeta(AV_KEY_DURATION, std::to_string(milliSecond));
-        fileMetaUpdated_ = true;
+        ReportMeta(AVMETA_TRACK_NUMBER_FILE, fileMeta_);
     }
 }
 
@@ -279,7 +279,7 @@ void AVMetaElemMetaCollector::ReportMeta(int32_t trackId, const Metadata &metada
         return;
     }
 
-    if (fileMetaUpdated_) {
+    if (fileMetaUpdated_ && trackId != AVMETA_TRACK_NUMBER_FILE) {
         resCb_(AVMETA_TRACK_NUMBER_FILE, fileMeta_);
         fileMetaUpdated_ = false;
     }
