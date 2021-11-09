@@ -1,0 +1,417 @@
+/*
+ * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "video_encoder_napi.h"
+#include <unistd.h>
+#include <fcntl.h>
+#include <climits>
+#include "video_encoder_callback_napi.h"
+#include "media_log.h"
+#include "media_errors.h"
+#include "directory_ex.h"
+#include "string_ex.h"
+#include "common_napi.h"
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoEncoderNapi"};
+}
+
+namespace OHOS {
+namespace Media {
+napi_ref VideoEncoderNapi::constructor_ = nullptr;
+const std::string CLASS_NAME = "VideoEncoder";
+
+VideoEncoderNapi::VideoEncoderNapi()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+}
+
+VideoEncoderNapi::~VideoEncoderNapi()
+{
+    if (wrapper_ != nullptr) {
+        napi_delete_reference(env_, wrapper_);
+    }
+    if (taskQue_ != nullptr) {
+        (void)taskQue_->Stop();
+    }
+    callbackNapi_ = nullptr;
+    videoEncoderImpl_ = nullptr;
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+napi_value VideoEncoderNapi::Init(napi_env env, napi_value exports)
+{
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("configure", Configure),
+        DECLARE_NAPI_FUNCTION("prepare", Prepare),
+        DECLARE_NAPI_FUNCTION("start", Start),
+        DECLARE_NAPI_FUNCTION("stop", Stop),
+        DECLARE_NAPI_FUNCTION("flush", Flush),
+        DECLARE_NAPI_FUNCTION("reset", Reset),
+        DECLARE_NAPI_FUNCTION("on", On)
+    };
+    napi_property_descriptor staticProperty[] = {
+        DECLARE_NAPI_STATIC_FUNCTION("createVideoEncoder", CreateVideoEncoder),
+    };
+
+    napi_value constructor = nullptr;
+    napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
+        sizeof(properties) / sizeof(properties[0]), properties, &constructor);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define VideoEncoder class");
+
+    status = napi_create_reference(env, constructor, 1, &constructor_);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
+
+    status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
+
+    status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
+
+    MEDIA_LOGD("Init success");
+    return exports;
+}
+
+napi_value VideoEncoderNapi::Constructor(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_value jsThis = nullptr;
+    size_t argCount = 0;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok) {
+        napi_get_undefined(env, &result);
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return result;
+    }
+
+    VideoEncoderNapi *videoEncoderNapi = new(std::nothrow) VideoEncoderNapi();
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi != nullptr, nullptr, "No memory");
+
+    videoEncoderNapi->env_ = env;
+    videoEncoderNapi->videoEncoderImpl_ = VideoEncoderFactory::CreateByCodecName("todo");
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->videoEncoderImpl_ != nullptr, nullptr, "No memory");
+
+    videoEncoderNapi->taskQue_ = std::make_unique<TaskQueue>("VideoEncoderNapi");
+    (void)videoEncoderNapi->taskQue_->Start();
+
+    videoEncoderNapi->callbackNapi_ = std::make_shared<VideoEncoderCallbackNapi>(env);
+    (void)videoEncoderNapi->videoEncoderImpl_->SetCallback(videoEncoderNapi->callbackNapi_);
+
+    status = napi_wrap(env, jsThis, reinterpret_cast<void *>(videoEncoderNapi),
+        VideoEncoderNapi::Destructor, nullptr, &(videoEncoderNapi->wrapper_));
+    if (status != napi_ok) {
+        napi_get_undefined(env, &result);
+        delete videoEncoderNapi;
+        MEDIA_LOGE("Failed to wrap native instance");
+        return result;
+    }
+
+    MEDIA_LOGD("Constructor success");
+    return jsThis;
+}
+
+void VideoEncoderNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
+{
+    (void)env;
+    (void)finalize;
+    if (nativeObject != nullptr) {
+        delete reinterpret_cast<VideoEncoderNapi *>(nativeObject);
+    }
+    MEDIA_LOGD("Destructor success");
+}
+
+napi_value VideoEncoderNapi::CreateVideoEncoder(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_value constructor = nullptr;
+    napi_status status = napi_get_reference_value(env, constructor_, &constructor);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Failed to get the representation of constructor object");
+        napi_get_undefined(env, &result);
+        return result;
+    }
+
+    status = napi_new_instance(env, constructor, 0, nullptr, &result);
+    if (status != napi_ok) {
+        MEDIA_LOGE("new instance fail");
+        napi_get_undefined(env, &result);
+        return result;
+    }
+
+    MEDIA_LOGD("CreateVideoEncoder success");
+    return result;
+}
+
+napi_value VideoEncoderNapi::Configure(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    napi_value jsThis = nullptr;
+    napi_value args[1] = {nullptr};
+
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    VideoEncoderNapi *encoderNapi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&encoderNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && encoderNapi != nullptr, undefinedResult,
+        "Failed to retrieve instance");
+
+    napi_valuetype valueType = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        encoderNapi->ErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    CHECK_AND_RETURN_RET_LOG(encoderNapi->videoEncoderImpl_ != nullptr, undefinedResult, "No memory");
+    CHECK_AND_RETURN_RET_LOG(encoderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
+    auto task = std::make_shared<TaskHandler<void>>([napi = encoderNapi]() {
+        // todo
+        Format format;
+        int32_t ret = napi->videoEncoderImpl_->Configure(format);
+        if (ret == MSERR_OK) {
+            napi->StateCallback(START_CALLBACK_NAME);
+        } else {
+            napi->ErrorCallback(MSERR_EXT_UNKNOWN);
+        }
+        MEDIA_LOGD("Configure success");
+    });
+    (void)encoderNapi->taskQue_->EnqueueTask(task);
+    return undefinedResult;
+}
+
+napi_value VideoEncoderNapi::Prepare(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    size_t argCount = 0;
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    VideoEncoderNapi *videoEncoderNapi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&videoEncoderNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && videoEncoderNapi != nullptr, undefinedResult,
+        "Failed to retrieve instance");
+
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->videoEncoderImpl_ != nullptr, undefinedResult, "No memory");
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
+    auto task = std::make_shared<TaskHandler<void>>([napi = videoEncoderNapi]() {
+        int32_t ret = napi->videoEncoderImpl_->Prepare();
+        if (ret == MSERR_OK) {
+            napi->StateCallback(START_CALLBACK_NAME);
+        } else {
+            napi->ErrorCallback(MSERR_EXT_UNKNOWN);
+        }
+        MEDIA_LOGD("Prepare success");
+    });
+    (void)videoEncoderNapi->taskQue_->EnqueueTask(task);
+    return undefinedResult;
+}
+
+napi_value VideoEncoderNapi::Start(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    size_t argCount = 0;
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    VideoEncoderNapi *videoEncoderNapi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&videoEncoderNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && videoEncoderNapi != nullptr, undefinedResult,
+        "Failed to retrieve instance");
+
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->videoEncoderImpl_ != nullptr, undefinedResult, "No memory");
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
+    auto task = std::make_shared<TaskHandler<void>>([napi = videoEncoderNapi]() {
+        int32_t ret = napi->videoEncoderImpl_->Start();
+        if (ret == MSERR_OK) {
+            napi->StateCallback(START_CALLBACK_NAME);
+        } else {
+            napi->ErrorCallback(MSERR_EXT_UNKNOWN);
+        }
+        MEDIA_LOGD("Start success");
+    });
+    (void)videoEncoderNapi->taskQue_->EnqueueTask(task);
+    return undefinedResult;
+}
+
+napi_value VideoEncoderNapi::Stop(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    size_t argCount = 0;
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    VideoEncoderNapi *videoEncoderNapi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&videoEncoderNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && videoEncoderNapi != nullptr, undefinedResult,
+        "Failed to retrieve instance");
+
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->videoEncoderImpl_ != nullptr, undefinedResult, "No memory");
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
+    auto task = std::make_shared<TaskHandler<void>>([napi = videoEncoderNapi]() {
+        int32_t ret = napi->videoEncoderImpl_->Stop();
+        if (ret == MSERR_OK) {
+            napi->StateCallback(STOP_CALLBACK_NAME);
+        } else {
+            napi->ErrorCallback(MSERR_EXT_UNKNOWN);
+        }
+        MEDIA_LOGD("Stop success");
+    });
+    (void)videoEncoderNapi->taskQue_->EnqueueTask(task);
+    return undefinedResult;
+}
+
+napi_value VideoEncoderNapi::Flush(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    size_t argCount = 0;
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    VideoEncoderNapi *videoEncoderNapi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&videoEncoderNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && videoEncoderNapi != nullptr, undefinedResult,
+        "Failed to retrieve instance");
+
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->videoEncoderImpl_ != nullptr, undefinedResult, "No memory");
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
+    auto task = std::make_shared<TaskHandler<void>>([napi = videoEncoderNapi]() {
+        int32_t ret = napi->videoEncoderImpl_->Flush();
+        if (ret == MSERR_OK) {
+            napi->StateCallback(RESET_CALLBACK_NAME);
+        } else {
+            napi->ErrorCallback(MSERR_EXT_UNKNOWN);
+        }
+        MEDIA_LOGD("Flush success");
+    });
+    (void)videoEncoderNapi->taskQue_->EnqueueTask(task);
+    return undefinedResult;
+}
+
+napi_value VideoEncoderNapi::Reset(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    size_t argCount = 0;
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    VideoEncoderNapi *videoEncoderNapi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&videoEncoderNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && videoEncoderNapi != nullptr, undefinedResult,
+        "Failed to retrieve instance");
+
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->videoEncoderImpl_ != nullptr, undefinedResult, "No memory");
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
+    auto task = std::make_shared<TaskHandler<void>>([napi = videoEncoderNapi]() {
+        int32_t ret = napi->videoEncoderImpl_->Reset();
+        if (ret == MSERR_OK) {
+            napi->StateCallback(RESET_CALLBACK_NAME);
+        } else {
+            napi->ErrorCallback(MSERR_EXT_UNKNOWN);
+        }
+        MEDIA_LOGD("Reset success");
+    });
+    (void)videoEncoderNapi->taskQue_->EnqueueTask(task);
+    return undefinedResult;
+}
+
+napi_value VideoEncoderNapi::On(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    static const size_t MIN_REQUIRED_ARG_COUNT = 2;
+    size_t argCount = MIN_REQUIRED_ARG_COUNT;
+    napi_value args[MIN_REQUIRED_ARG_COUNT] = { nullptr };
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    VideoEncoderNapi *videoEncoderNapi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&videoEncoderNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && videoEncoderNapi != nullptr, undefinedResult,
+        "Failed to retrieve instance");
+
+    napi_valuetype valueType0 = napi_undefined;
+    napi_valuetype valueType1 = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
+        napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
+        videoEncoderNapi->ErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+    MEDIA_LOGD("callbackName: %{public}s", callbackName.c_str());
+
+    CHECK_AND_RETURN_RET_LOG(videoEncoderNapi->callbackNapi_ != nullptr, undefinedResult, "callbackNapi_ is nullptr");
+    auto cb = std::static_pointer_cast<VideoEncoderCallbackNapi>(videoEncoderNapi->callbackNapi_);
+    cb->SaveCallbackReference(callbackName, args[1]);
+    return undefinedResult;
+}
+
+void VideoEncoderNapi::ErrorCallback(MediaServiceExtErrCode errCode)
+{
+    if (callbackNapi_ != nullptr) {
+        auto napiCb = std::static_pointer_cast<VideoEncoderCallbackNapi>(callbackNapi_);
+        napiCb->SendErrorCallback(errCode);
+    }
+}
+
+void VideoEncoderNapi::StateCallback(const std::string &callbackName)
+{
+    if (callbackNapi_ != nullptr) {
+        auto napiCb = std::static_pointer_cast<VideoEncoderCallbackNapi>(callbackNapi_);
+        napiCb->SendStateCallback(callbackName);
+    }
+}
+}  // namespace Media
+}  // namespace OHOS
