@@ -13,12 +13,13 @@
  * limitations under the License.
  */
 
+#include "avcodec_server.h"
+#include "avmetadatahelper_server.h"
+#include "media_errors.h"
 #include "media_local.h"
 #include "media_log.h"
-#include "recorder_server.h"
 #include "player_server.h"
-#include "media_errors.h"
-#include "avmetadatahelper_server.h"
+#include "recorder_server.h"
 
 namespace OHOS {
 namespace Media {
@@ -43,6 +44,11 @@ std::shared_ptr<IAVMetadataHelperService> MediaLocal::CreateAVMetadataHelperServ
     return AVMetadataHelperServer::Create();
 }
 
+std::shared_ptr<IAVCodecService> MediaLocal::CreateAVCodecService()
+{
+    return AVCodecServer::Create();
+}
+
 int32_t MediaLocal::DestroyRecorderService(std::shared_ptr<IRecorderService> recorder)
 {
     (void)recorder;
@@ -58,6 +64,12 @@ int32_t MediaLocal::DestroyPlayerService(std::shared_ptr<IPlayerService> player)
 int32_t MediaLocal::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper)
 {
     (void)avMetadataHelper;
+    return MSERR_OK;
+}
+
+int32_t MediaLocal::DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCodec)
+{
+    (void)avCodec;
     return MSERR_OK;
 }
 } // Media
