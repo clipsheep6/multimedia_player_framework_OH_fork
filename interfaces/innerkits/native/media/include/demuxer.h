@@ -58,7 +58,7 @@ private:
     DemuxerFactory() = default;
     ~DemuxerFactory() = default;
 };
-}
-}
+}  // namespace Media
+}  // namespace OHOS
 
 #endif
