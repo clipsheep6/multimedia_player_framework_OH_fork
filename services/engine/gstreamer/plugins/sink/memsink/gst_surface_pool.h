@@ -52,6 +52,7 @@ struct _GstSurfacePool {
     GMutex lock;
     GCond cond;
     GList *preAllocated;
+    guint freeBufCnt;
 };
 
 struct _GstSurfacePoolClass {

@@ -17,6 +17,7 @@
 #include <cinttypes>
 #include "surface.h"
 #include "gst_surface_pool.h"
+#include "media_log.h"
 
 struct _GstSurfaceMemSinkPrivate {
     OHOS::sptr<OHOS::Surface> surface;
@@ -38,7 +39,7 @@ static void gst_surface_mem_sink_finalize(GObject *object);
 static void gst_surface_mem_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_surface_mem_sink_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, GstQuery *query);
-static GstFlowReturn gst_surface_mem_sink_do_render(GstMemSink *memsink, GstBuffer *buffer);
+static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer);
 
 #define gst_surface_mem_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE(GstSurfaceMemSink, gst_surface_mem_sink,
@@ -70,7 +71,7 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     memSinkClass->do_propose_allocation = gst_surface_mem_sink_do_propose_allocation;
-    memSinkClass->do_render = gst_surface_mem_sink_do_render;
+    memSinkClass->do_app_render = gst_surface_mem_sink_do_app_render;
 }
 
 static void gst_surface_mem_sink_init(GstSurfaceMemSink *sink)
@@ -154,17 +155,30 @@ static void gst_surface_mem_sink_get_property(GObject *object, guint propId, GVa
     }
 }
 
-static GstFlowReturn gst_surface_mem_sink_do_render(GstMemSink *memsink, GstBuffer *buffer)
+static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer)
 {
     g_return_val_if_fail(memsink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
     GstSurfaceMemSink *surfaceSink = GST_SURFACE_MEM_SINK_CAST(memsink);
     g_return_val_if_fail(surfaceSink != nullptr, GST_FLOW_ERROR);
+    GstSurfaceMemSinkPrivate *priv = surfaceSink->priv;
 
     for (guint i = 0; i < gst_buffer_n_memory(buffer); i++) {
         GstMemory *memory = gst_buffer_peek_memory(buffer, i);
         if (gst_is_surface_memory(memory)) {
-            GstSurfaceMemory *surfaceMem = reinterpret_cast<GstSurfaceMemory *>(memory);
-            surfaceMem->needRender = TRUE;
+            GST_WARNING_OBJECT(surfaceSink, "not surface buffer !, 0x%06" PRIXPTR, FAKE_POINTER(memory));
+            continue;
+        }
+
+        GstSurfaceMemory *surfaceMem = reinterpret_cast<GstSurfaceMemory *>(memory);
+        surfaceMem->needRender = TRUE;
+
+        OHOS::BufferFlushConfig flushConfig = {
+            { 0, 0, surfaceMem->buf->GetWidth(), surfaceMem->buf->GetHeight() },
+        };
+        OHOS::SurfaceError ret = priv->surface->FlushBuffer(surfaceMem->buf, surfaceMem->fence, flushConfig);
+        if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
+            GST_ERROR_OBJECT(surfaceSink, "flush buffer to surface failed, %d", ret);
+            return GST_FLOW_ERROR;
         }
     }
 

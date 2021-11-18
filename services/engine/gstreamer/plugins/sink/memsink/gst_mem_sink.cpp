@@ -60,7 +60,7 @@ static gboolean gst_mem_sink_query(GstBaseSink *basesink, GstQuery *query);
 static gboolean gst_mem_sink_start(GstBaseSink *basesink);
 static gboolean gst_mem_sink_stop(GstBaseSink *basesink);
 static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *basesink, GstBuffer *buffer);
-static GstFlowReturn gst_mem_sink_render(GstBaseSink *basesink, GstBuffer *buffer);
+static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *basesink, GstBuffer *buffer);
 static gboolean gst_mem_sink_propose_allocation(GstBaseSink *bsink, GstQuery *query);
 
 #define gst_mem_sink_parent_class parent_class
@@ -106,7 +106,7 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
     baseSinkClass->start = gst_mem_sink_start;
     baseSinkClass->stop = gst_mem_sink_stop;
     baseSinkClass->preroll = gst_mem_sink_preroll;
-    baseSinkClass->render = gst_mem_sink_render;
+    baseSinkClass->render = gst_mem_sink_stream_render;
     baseSinkClass->get_caps = gst_mem_sink_get_caps;
     baseSinkClass->set_caps = gst_mem_sink_set_caps;
     baseSinkClass->query = gst_mem_sink_query;
@@ -444,7 +444,7 @@ static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *bsink, GstBuffer *buffer)
     return ret;
 }
 
-static GstFlowReturn gst_mem_sink_render(GstBaseSink *bsink, GstBuffer *buffer)
+static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *bsink, GstBuffer *buffer)
 {
     GstMemSink *memSink = GST_MEM_SINK_CAST(bsink);
     g_return_val_if_fail(memSink != nullptr, GST_FLOW_ERROR);
@@ -461,11 +461,11 @@ static GstFlowReturn gst_mem_sink_render(GstBaseSink *bsink, GstBuffer *buffer)
     }
     g_mutex_unlock(&priv->mutex);
 
-    GST_INFO_OBJECT(memSink, "render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
+    GST_INFO_OBJECT(memSink, "stream render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
 
     GstFlowReturn ret = GST_FLOW_OK;
-    if (memSinkClass->do_render != nullptr) {
-        memSinkClass->do_render(memSink, buffer);
+    if (memSinkClass->do_stream_render != nullptr) {
+        ret = memSinkClass->do_stream_render(memSink, buffer);
     }
 
     if (priv->callbacks.new_sample != nullptr) {
@@ -490,11 +490,36 @@ static gboolean gst_mem_sink_propose_allocation(GstBaseSink *bsink, GstQuery *qu
     return FALSE;
 }
 
+GstFlowReturn gst_mem_sink_app_render(GstMemSink *memsink, GstBuffer *buffer)
+{
+    g_return_val_if_fail(memsink != nullptr, GST_FLOW_ERROR);
+    GstMemSinkPrivate *priv = memsink->priv;
+    g_return_val_if_fail(priv != nullptr, GST_FLOW_ERROR);
+    GstMemSinkClass *memSinkClass = GST_MEM_SINK_GET_CLASS(memsink);
+    g_return_val_if_fail(memSinkClass != nullptr, GST_FLOW_ERROR);
+
+    g_mutex_lock(&priv->mutex);
+    if (!priv->started) {
+        GST_INFO_OBJECT(memsink, "we are not started");
+        g_mutex_unlock(&priv->mutex);
+        return GST_FLOW_FLUSHING;
+    }
+    g_mutex_unlock(&priv->mutex);
+
+    GST_INFO_OBJECT(memsink, "app render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
+
+    GstFlowReturn ret = GST_FLOW_OK;
+    if (memSinkClass->do_app_render != nullptr) {
+        ret = memSinkClass->do_app_render(memsink, buffer);
+    }
+
+    return ret;
+}
+
 static gboolean plugin_init(GstPlugin *plugin)
 {
     g_return_val_if_fail(plugin != nullptr, false);
-    gboolean ret = gst_element_register(plugin, "memsink", GST_RANK_MARGINAL, GST_TYPE_MEM_SINK);
-    ret |= gst_element_register(plugin, "surfacememsink", GST_RANK_PRIMARY, GST_TYPE_SURFACE_MEM_SINK);
+    gboolean ret = gst_element_register(plugin, "surfacememsink", GST_RANK_PRIMARY, GST_TYPE_SURFACE_MEM_SINK);
     return ret;
 }
 
