@@ -57,15 +57,18 @@ struct _GstMemSinkClass {
     GstBaseSinkClass basesink_class;
 
     gboolean (*do_propose_allocation) (GstMemSink *sink, GstQuery *query);
-    GstFlowReturn (*do_render) (GstMemSink *sink, GstBuffer *buffer);
+    GstFlowReturn (*do_stream_render) (GstMemSink *sink, GstBuffer *buffer);
+    GstFlowReturn (*do_app_render) (GstMemSink *sink, GstBuffer *buffer);
 };
 
 G_GNUC_INTERNAL GType gst_mem_sink_get_type(void);
 
 GST_API void gst_mem_sink_set_callback(GstMemSink *memsink,
-                                              GstMemSinkCallbacks *callbacks,
-                                              gpointer userdata,
-                                              GDestroyNotify notify);
+                                       GstMemSinkCallbacks *callbacks,
+                                       gpointer userdata,
+                                       GDestroyNotify notify);
+
+GST_API GstFlowReturn gst_mem_sink_app_render(GstMemSink *memsink, GstBuffer *buffer);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstMemSink, gst_object_unref)

@@ -244,6 +244,7 @@ static gboolean gst_surface_pool_start(GstBufferPool *pool)
         spool->preAllocated = g_list_append(spool->preAllocated, buffer);
     }
 
+    spool->freeBufCnt = spool->maxBuffers;
     GST_BUFFER_POOL_UNLOCK(spool);
     return TRUE;
 }
@@ -296,10 +297,18 @@ static GstFlowReturn do_alloc_memory_locked(GstSurfacePool *spool,
             break;
         }
 
-        *memory = gst_surface_allocator_alloc(spool->allocator, GST_VIDEO_INFO_WIDTH(info),
-            GST_VIDEO_INFO_HEIGHT(info), spool->format);
-        if (*memory != nullptr) {
-            break;
+        /**
+         * Although we maybe able to request buffer from Surface if the surface buffer is flushed
+         * back to Surface, but we still require the GstBuffer to be released back to the pool
+         * before we allow to acquire a GstBuffer again, for avoiding the user to hold two different
+         * GstBuffer which pointer to same SurfaceBuffer.
+         */
+        if (spool->freeBufCnt > 0) {
+            *memory = gst_surface_allocator_alloc(spool->allocator, GST_VIDEO_INFO_WIDTH(info),
+                GST_VIDEO_INFO_HEIGHT(info), spool->format);
+            if (*memory != nullptr) {
+                break;
+            }
         }
 
         if (params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT) {
@@ -375,6 +384,8 @@ static GstFlowReturn gst_surface_pool_acquire_buffer(GstBufferPool *pool,
         g_return_val_if_fail(*buffer != nullptr, GST_FLOW_ERROR);
         spool->preAllocated = g_list_delete_link(spool->preAllocated, node);
         GST_DEBUG("acquire buffer from preallocated buffers");
+
+        spool->freeBufCnt -= 1;
         GST_BUFFER_POOL_UNLOCK(spool);
         return GST_FLOW_OK;
     }
@@ -386,6 +397,7 @@ static GstFlowReturn gst_surface_pool_acquire_buffer(GstBufferPool *pool,
         GST_DEBUG("no more buffers");
     }
 
+    spool->freeBufCnt -= 1;
     GST_BUFFER_POOL_UNLOCK(spool);
 
     // The GstBufferPool will add the GstBuffer's pool ref to this pool.
@@ -396,6 +408,8 @@ static void gst_surface_pool_release_buffer(GstBufferPool *pool, GstBuffer *buff
 {
     // The GstBufferPool has already cleared the GstBuffer's pool ref to this pool.
 
+    GstSurfacePool *spool = GST_SURFACE_POOL_CAST(pool);
+    g_return_if_fail(spool != nullptr);
     GST_DEBUG("release buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
 
     if (G_UNLIKELY(!gst_buffer_is_all_memory_writable(buffer))) {
@@ -414,11 +428,17 @@ static void gst_surface_pool_release_buffer(GstBufferPool *pool, GstBuffer *buff
         }
     }
 
-    // we dont queue the buffer to the idlelist. the memory rotation multiplex feature
+    // we dont queue the buffer to the idlelist. the memory rotation reuse feature
     // provided by the Surface itself.
     gst_surface_pool_free_buffer(pool, buffer);
 
+    GST_BUFFER_POOL_LOCK(spool);
+    spool->freeBufCnt += 1;
+    GST_BUFFER_POOL_UNLOCK(spool);
+
     // if there is GstSurfaceMemory that does not need to be rendered, we can
     // notify the waiters to wake up and retry to acquire buffer.
-    GST_BUFFER_POOL_NOTIFY(GST_SURFACE_POOL_CAST(pool));
+    if (needNotify) {
+        GST_BUFFER_POOL_NOTIFY(GST_SURFACE_POOL_CAST(pool));
+    }
 }

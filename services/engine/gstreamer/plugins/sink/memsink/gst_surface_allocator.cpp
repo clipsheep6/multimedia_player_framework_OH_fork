@@ -68,18 +68,10 @@ void gst_surface_allocator_free(GstSurfaceAllocator *allocator, GstSurfaceMemory
         memory->buf->GetWidth(), memory->buf->GetHeight(), memory->buf->GetFormat(), memory->buf->GetSize(),
         memory->needRender, memory->fence);
 
-    if (memory->needRender) {
+    if (!memory->needRender) {
         OHOS::SurfaceError ret = allocator->surface->CancelBuffer(memory->buf);
         if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
             GST_ERROR("cancel buffer to surface failed, %d", ret);
-        }
-    } else {
-        OHOS::BufferFlushConfig flushConfig = {
-            { 0, 0, memory->buf->GetWidth(), memory->buf->GetHeight() },
-        };
-        OHOS::SurfaceError ret = allocator->surface->FlushBuffer(memory->buf, memory->fence, flushConfig);
-        if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
-            GST_ERROR("flush buffer to surface failed, %d", ret);
         }
     }
 
