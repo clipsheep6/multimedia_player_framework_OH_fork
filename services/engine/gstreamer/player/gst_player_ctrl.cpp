@@ -83,6 +83,8 @@ void GstPlayerCtrl::SetRingBufferMaxSize(uint64_t size)
 int32_t GstPlayerCtrl::SetUri(const std::string &uri)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    int32_t test = 0;
+    (void)test;
     CHECK_AND_RETURN_RET_LOG(gstPlayer_ != nullptr, MSERR_INVALID_VAL, "gstPlayer_ is nullptr");
     gst_player_set_uri(gstPlayer_, uri.c_str());
     currentState_ = PLAYER_PREPARING;
