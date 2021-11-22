@@ -34,7 +34,7 @@ G_BEGIN_DECLS
 typedef struct _GstMemPoolSrc GstMemPoolSrc;
 typedef struct _GstMemPoolSrcClass GstMemPoolSrcClass;
 typedef struct _GstMemPoolSrcPrivate GstMemPoolSrcPrivate;
-typedef GstFlowReturn (*BufferAvailable) (GstShmemPoolSrc *shmemsrc, gpointer user_data)
+typedef GstFlowReturn (*BufferAvailable) (GstMemPoolSrc *memsrc, gpointer user_data)
 
 struct _GstMemPoolSrc {
     GstBaseSrc basesrc;
@@ -47,21 +47,21 @@ struct _GstMemPoolSrc {
 struct _GstMemPoolSrcClass {
     GstBaseSrcClass parent;
     // for subclass calling
-    GstFlowReturn (*buffer_available)(GstMemPoolSrc *shmem_pool_src);
+    GstFlowReturn (*buffer_available) (GstMemPoolSrc *memsrc);
 
     // for API and action calling, subclass need accomplish it
-    GstBuffer *(*pull_buffer)(GstMemPoolSrc *shmem_pool_src);
-    GstFlowReturn (*push_buffer)(GstMemPoolSrc *shmem_pool_src, GstBuffer *buffer);
+    GstBuffer *(*pull_buffer) (GstMemPoolSrc *memsrc);
+    GstFlowReturn (*push_buffer) (GstMemPoolSrc *memsrc, GstBuffer *buffer);
 };
 
 __attribute__((visibility("default")))
-GstBuffer *gst_shmem_pool_src_pull_buffer(GstMemPoolSrc *poolsrc);
+GstBuffer *gst_mem_pool_src_pull_buffer(GstMemPoolSrc *memsrc);
 
 __attribute__((visibility("default")))
-GstBuffer *gst_shmem_pool_src_push_buffer(GstMemPoolSrc *poolsrc);
+GstFlowReturn gst_mem_pool_src_push_buffer(GstMemPoolSrc *memsrc, GstBuffer *buffer);
 
 __attribute__((visibility("default")))
-void gst_shmem_pool_src_set_callback(GstMemPoolSrc *poolsrc, BufferAvailable callback,
+void gst_mem_pool_src_set_callback(GstMemPoolSrc *poolsrc, BufferAvailable callback,
                                         gpointer user_data, GDestroyNotify notify);
 
 GType gst_mem_pool_src_get_type(void);
