@@ -26,6 +26,9 @@ using namespace OHOS;
 namespace {
     constexpr guint MAX_SURFACE_QUEUE_SIZE = 12;
     constexpr guint DEFAULT_SURFACE_QUEUE_SIZE = 8;
+    constexpr int32_t DEFAULT_SURFACE_SIZE = 1024 * 1024;
+    constexpr int32_t DEFAULT_VIDEO_WIDTH = 1920;
+    constexpr int32_t DEFAULT_VIDEO_HEIGHT = 1080;
 }
 
 GST_DEBUG_CATEGORY_STATIC(gst_surface_pool_src_debug_category);
@@ -49,6 +52,7 @@ static void gst_surface_pool_src_destroy_surface(GstSurfacePoolSrc *src);
 static void gst_surface_pool_src_destroy_pool(GstSurfacePoolSrc *src);
 static gboolean gst_surface_pool_src_decide_allocation(GstBaseSrc *basesrc, GstQuery *query);
 static GstFlowReturn gst_surface_pool_src_fill(GstBaseSrc *src, guint64 offset, guint size, GstBuffer *buf);
+static void gst_surface_pool_src_init_surface(GstSurfacePoolSrc *src);
 
 static void gst_surface_pool_src_class_init(GstSurfacePoolSrcClass *klass)
 {
@@ -110,6 +114,8 @@ static GstStateChangeReturn gst_surface_pool_src_change_state(GstElement *elemen
             g_return_val_if_fail(gst_surface_pool_src_create_surface(surfacesrc) != TRUE, GST_STATE_CHANGE_FAILURE);
             g_return_val_if_fail(gst_surface_pool_src_create_pool(surfacesrc) != TRUE, GST_STATE_CHANGE_FAILURE);
             break;
+        case GST_STATE_CHANGE_READY_TO_PAUSED:
+            gst_surface_pool_src_init_surface(surfacesrc);
         default:
             break;
     }
@@ -139,7 +145,6 @@ static gboolean gst_surface_pool_src_create_surface(GstSurfacePoolSrc *surfacesr
     surfacesrc->consumerSurface = consumerSurface;
     surfacesrc->producerSurface = producerSurface;
 
-    gst_surface_pool_src_init_surface(surfacesrc);
     GST_DEBUG_OBJECT(surfacesrc, "create surface");
     return TRUE;
 }
@@ -158,7 +163,6 @@ static gboolean gst_surface_pool_src_create_pool(GstSurfacePoolSrc *surfacesrc)
     gst_consumer_surface_allocator_set_surface(allocator, surfacesrc->consumerSurface);
     // init pool config
     GstStructure *config = gst_buffer_pool_get_config(pool);
-    gst_buffer_pool_config_add_option(config, GST_BUFFER_POOL_OPTION_VIDEO_META);
     gst_buffer_pool_config_set_allocator(config, allocator, &params);
     gst_object_unref(allocator);
     CANCEL_SCOPE_EXIT_GUARD(1);
@@ -184,12 +188,24 @@ static void gst_surface_pool_src_destroy_surface(GstSurfacePoolSrc *src)
 static void gst_surface_pool_src_init_surface(GstSurfacePoolSrc *src)
 {
     // The internal function do not need judge whether it is empty
+    GstMemPoolSrc *memsrc = GST_MEM_POOL_SRC(src);
     sptr<Surface> surface = src->consumerSurface;
-    SurfaceError ret = surface->SetUserData("video_width", std::to_string(src->videoWidth));
+    guint width = DEFAULT_VIDEO_WIDTH;
+    guint height = DEFAULT_VIDEO_HEIGHT;
+    GST_OBJECT_LOCK(memsrc);
+    if (memsrc->caps != nullptr) {
+        GstVideoInfo info;
+        gst_video_info_init(&info);
+        gst_video_info_from_caps(&info, memsrc->caps);
+        width = info.width;
+        height = info.height;
+    }
+    GST_OBJECT_UNLOCK(memsrc);
+    SurfaceError ret = surface->SetUserData("video_width", std::to_string(width));
     if (ret != SURFACE_ERROR_OK) {
         GST_WARNING_OBJECT(src, "set video width fail");
     }
-    ret = surface->SetUserData("video_height", std::to_string(src->videoHeight));
+    ret = surface->SetUserData("video_height", std::to_string(height));
     if (ret != SURFACE_ERROR_OK) {
         GST_WARNING_OBJECT(src, "set video height fail");
     }
@@ -201,34 +217,43 @@ static void gst_surface_pool_src_init_surface(GstSurfacePoolSrc *src)
     if (ret != SURFACE_ERROR_OK) {
         GST_WARNING_OBJECT(src, "set surface size fail");
     }
-    ret = surface->SetDefaultWidthAndHeight(src->videoWidth, src->videoHeight);
+    ret = surface->SetDefaultWidthAndHeight(width, height);
     if (ret != SURFACE_ERROR_OK) {
         GST_WARNING_OBJECT(src, "set surface width and height fail");
     }
 }
 
 static gboolean gst_surface_pool_src_get_pool(GstSurfacePoolSrc *surfacesrc, GstQuery *query, GstCaps *outcaps,
-        guint size, guint minBuf, guint maxBuf)
+        guint minBuf, guint maxBuf)
 {
     g_return_val_if_fail(surfacesrc != nullptr && query != nullptr && surfacesrc->consumerSurface != nullptr, FALSE);
     if(surfacesrc->pool == nullptr) {
         return FALSE;
     }
-    GstMemPoolSrc *memsrc = GST_MEM_POOL_SRC(object);
-    if (minBuf != 0 && minBuf <= MAX_SURFACE_QUEUE_SIZE) {
-        memsrc->buffer_num = minBuf;
-        GST_INFO_OBJECT(surfacesrc, "update buffer num %u", minBuf);
+    GstMemPoolSrc *memsrc = GST_MEM_POOL_SRC(surfacesrc);
+    memsrc->buffer_num = maxBuf;
+    gboolean is_video = gst_query_find_allocation_meta(query, GST_VIDEO_META_API_TYPE, NULL);
+    if (is_video) {
+        // when video need update size
+        GstVideoInfo info;
+        gst_video_info_init(&info);
+        gst_video_info_from_caps(&info, outcaps);
+        memsrc->buffer_size = info.size;
     }
+    GST_INFO_OBJECT(surfacesrc, "update buffer num %u", memsrc->buffer_num);
     SurfaceError ret = surfacesrc->consumerSurface->SetQueueSize(memsrc->buffer_num);
     if (ret != SURFACE_ERROR_OK) {
         GST_WARNING_OBJECT(surfacesrc, "set queue size fail");
     }
     GstStructure *config = gst_buffer_pool_get_config(surfacesrc->pool);
-    gst_buffer_pool_config_set_params(config, outcaps, size, minBuf, maxBuf);
+    if (is_video) {
+        gst_buffer_pool_config_add_option(config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+    }
+    gst_buffer_pool_config_set_params(config, outcaps, memsrc->buffer_size, minBuf, maxBuf);
     if (gst_buffer_pool_set_config(surfacesrc->pool, config) != TRUE) {
         GST_WARNING_OBJECT(surfacesrc, "set config failed");
     }
-    gst_query_set_nth_allocation_pool(query, 0, surfacesrc->pool, size, minBuf, maxBuf);
+    gst_query_set_nth_allocation_pool(query, 0, surfacesrc->pool, memsrc->buffer_num, minBuf, maxBuf);
     GST_DEBUG_OBJECT(surfacesrc, "set surface pool success");
     return TRUE;
 }
@@ -260,7 +285,15 @@ static gboolean gst_surface_pool_src_decide_allocation(GstBaseSrc *basesrc, GstQ
         gst_object_unref(pool);
         pool = nullptr;
     }
-    if (gst_surface_pool_src_get_pool(surfacesrc, query, outcaps, size, minBuf, maxBuf)) {
+    if (minBuf > MAX_SURFACE_QUEUE_SIZE || maxBuf > MAX_SURFACE_QUEUE_SIZE) {
+        minBuf = MAX_SURFACE_QUEUE_SIZE;
+        maxBuf = MAX_SURFACE_QUEUE_SIZE;
+    } else if (minBuf > maxBuf) {
+        maxBuf = minBuf;
+    } else {
+        maxBuf = maxBuf == 0 ? DEFAULT_SURFACE_QUEUE_SIZE : maxBuf;
+    }
+    if (gst_surface_pool_src_get_pool(surfacesrc, query, outcaps, minBuf, maxBuf)) {
         return TRUE;
     }
     return FALSE;

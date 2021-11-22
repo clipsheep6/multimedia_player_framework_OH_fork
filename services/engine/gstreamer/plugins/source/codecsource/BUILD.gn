@@ -54,7 +54,8 @@ ohos_shared_library("gst_codec_src") {
 
   sources = [
     "gst_encoder_surface_src.cpp",
-    "gst_codec_pugins.cpp",
+    "gst_codec_shmem_src.cpp",
+    "gst_codec_plugins.cpp",
   ]
 
   configs = [ ":gst_codec_src_config" ]

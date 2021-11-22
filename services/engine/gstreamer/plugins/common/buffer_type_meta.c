@@ -17,15 +17,15 @@
 
 static gboolean gst_buffer_type_meta_init(GstMeta *meta, gpointer params, GstBuffer *buffer)
 {
-    GstBufferTypeMeta *bufferMeta = (GstBufferTypeMeta *)meta;
+    GstBufferTypeMeta *buffer_meta = (GstBufferTypeMeta *)meta;
 
-    bufferMeta->type = BUFFER_TYPE_FD;
-    bufferMeta->buf = (intptr_t)0;
-    bufferMeta->offset = 0;
-    bufferMeta->length = 0;
-    bufferMeta->totalSize = 0;
-    bufferMeta->fenceFd = -1;
-    bufferMeta->flag = FLAGS_READ_WRITE;
+    buffer_meta->type = BUFFER_TYPE_FD;
+    buffer_meta->buf = (intptr_t)0;
+    buffer_meta->offset = 0;
+    buffer_meta->length = 0;
+    buffer_meta->totalSize = 0;
+    buffer_meta->fenceFd = -1;
+    buffer_meta->flag = FLAGS_READ_WRITE;
 
     return TRUE;
 }
@@ -86,45 +86,45 @@ const GstMetaInfo *gst_buffer_type_meta_get_info(void)
 GstBufferTypeMeta *gst_buffer_get_buffer_type_meta(GstBuffer *buffer)
 {
     gpointer state = NULL;
-    GstBufferTypeMeta *bufferMeta = NULL;
+    GstBufferTypeMeta *buffer_meta = NULL;
     GstMeta *meta;
     const GstMetaInfo *info = GST_BUFFER_TYPE_META_INFO;
 
     while ((meta = gst_buffer_iterate_meta(buffer, &state))) {
         if (meta->info->api == info->api) {
-            bufferMeta = (GstBufferTypeMeta *)meta;
-            return bufferMeta;
+            buffer_meta = (GstBufferTypeMeta *)meta;
+            return buffer_meta;
         }
     }
-    return bufferMeta;
+    return buffer_meta;
 }
 
 GstBufferTypeMeta *gst_buffer_add_buffer_handle_meta(GstBuffer *buffer, intptr_t buf, int32_t fenceFd)
 {
-    GstBufferTypeMeta *bufferMeta = NULL;
+    GstBufferTypeMeta *buffer_meta = NULL;
 
-    bufferMeta = (GstBufferTypeMeta *)gst_buffer_add_meta(buffer, GST_BUFFER_TYPE_META_INFO, NULL);
-    g_return_val_if_fail(bufferMeta != NULL, bufferMeta);
+    buffer_meta = (GstBufferTypeMeta *)gst_buffer_add_meta(buffer, GST_BUFFER_TYPE_META_INFO, NULL);
+    g_return_val_if_fail(buffer_meta != NULL, buffer_meta);
 
-    bufferMeta->type = BUFFER_TYPE_HANDLE;
-    bufferMeta->buf = buf;
-    bufferMeta->fenceFd = fenceFd;
-    return bufferMeta;
+    buffer_meta->type = BUFFER_TYPE_HANDLE;
+    buffer_meta->buf = buf;
+    buffer_meta->fenceFd = fenceFd;
+    return buffer_meta;
 }
 
 GstBufferTypeMeta *gst_buffer_add_buffer_fd_meta(GstBuffer *buffer, intptr_t buf, uint32_t offset,
                                             uint32_t length, uint32_t totalSize, Flags flag)
 {
-    GstBufferTypeMeta *bufferMeta = NULL;
+    GstBufferTypeMeta *buffer_meta = NULL;
 
-    bufferMeta = (GstBufferTypeMeta *)gst_buffer_add_meta(buffer, GST_BUFFER_TYPE_META_INFO, NULL);
-    g_return_val_if_fail(bufferMeta != NULL, bufferMeta);
+    buffer_meta = (GstBufferTypeMeta *)gst_buffer_add_meta(buffer, GST_BUFFER_TYPE_META_INFO, NULL);
+    g_return_val_if_fail(buffer_meta != NULL, buffer_meta);
 
-    bufferMeta->type = BUFFER_TYPE_FD;
-    bufferMeta->buf = buf;
-    bufferMeta->offset = offset;
-    bufferMeta->length = length;
-    bufferMeta->totalSize = totalSize;
-    bufferMeta->flag = flag;
-    return bufferMeta;
+    buffer_meta->type = BUFFER_TYPE_FD;
+    buffer_meta->buf = buf;
+    buffer_meta->offset = offset;
+    buffer_meta->length = length;
+    buffer_meta->totalSize = totalSize;
+    buffer_meta->flag = flag;
+    return buffer_meta;
 }

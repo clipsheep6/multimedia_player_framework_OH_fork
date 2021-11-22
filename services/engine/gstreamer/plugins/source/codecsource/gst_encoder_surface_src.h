@@ -36,7 +36,6 @@ typedef struct _GstEncoderSurfaceSrcClass GstEncoderSurfaceSrcClass;
 
 struct _GstEncoderSurfaceSrc {
     GstSurfacePoolSrc basesrc;
-    GstCaps *newCaps;
 };
 
 struct _GstEncoderSurfaceSrcClass {

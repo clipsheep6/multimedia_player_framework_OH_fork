@@ -37,6 +37,7 @@ typedef struct _GstShmemPoolSrcPrivate GstShmemPoolSrcPrivate;
 
 struct _GstShmemPoolSrc {
     GstMemPoolSrc memsrc;
+
     /* < private > */
     GstShmemPoolSrcPrivate *priv;
 };
@@ -45,7 +46,7 @@ struct _GstShmemPoolSrcClass {
     GstMemPoolSrcClass parent_class;
 };
 
-__attribute__((visibility("default")))
+GST_API_EXPORT
 GType gst_shmem_pool_src_get_type(void);
 
 G_END_DECLS

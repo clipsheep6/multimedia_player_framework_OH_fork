@@ -14,6 +14,7 @@
  */
 #include "config.h"
 #include "gst_encoder_surface_src.h"
+#include "gst_codec_shmem_src.h"
 
 static gboolean plugin_init(GstPlugin *plugin)
 {
@@ -22,6 +23,11 @@ static gboolean plugin_init(GstPlugin *plugin)
         ret = TRUE;
     } else {
         GST_WARNING_OBJECT(NULL, "register encodersurfacesrc failed");
+    }
+    if (gst_element_register(plugin, "codecshmemsrc", GST_RANK_PRIMARY, GST_TYPE_CODEC_SHMEM_SRC)) {
+        ret = TRUE;
+    } else {
+        GST_WARNING_OBJECT(NULL, "register codecshmemsrc failed");
     }
     return ret;
 }

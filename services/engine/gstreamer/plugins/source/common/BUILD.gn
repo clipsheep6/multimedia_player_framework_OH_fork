@@ -55,6 +55,8 @@ ohos_shared_library("gst_source_common") {
     "gst_consumer_surface_allocator.cpp",
     "gst_consumer_surface_pool.cpp",
     "gst_surface_pool_src.cpp",
+    "gst_shmem_pool_src.cpp",
+    "gst_mem_pool_src.cpp",
   ]
 
   configs = [ ":gst_source_common_config" ]
@@ -65,6 +67,7 @@ ohos_shared_library("gst_source_common") {
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
+    "//third_party/gstreamer/gstplugins_base:gstvideo",
     "//third_party/gstreamer/gstreamer:gstbase",
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
