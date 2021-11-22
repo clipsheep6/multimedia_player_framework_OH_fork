@@ -42,7 +42,7 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     switch (code) {
         case ListenerMsg::READ_AT: {
             uint32_t length = data.ReadUint32();
-            std::shared_ptr<AVSharedMemory> mem = ReadAVSharedMemoryFromParcel(data);
+            std::shared_ptr<AVSharedMemory> mem = AVShMemIPCStatic::ReadFromParcel(data);
             int32_t realLen = ReadAt(length, mem);
             reply.WriteInt32(realLen);
             return MSERR_OK;
@@ -50,7 +50,7 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         case ListenerMsg::READ_AT_POS: {
             int64_t pos = data.ReadInt64();
             uint32_t length = data.ReadUint32();
-            std::shared_ptr<AVSharedMemory> mem = ReadAVSharedMemoryFromParcel(data);
+            std::shared_ptr<AVSharedMemory> mem = AVShMemIPCStatic::ReadFromParcel(data);
             int32_t realLen = ReadAt(pos, length, mem);
             reply.WriteInt32(realLen);
             return MSERR_OK;

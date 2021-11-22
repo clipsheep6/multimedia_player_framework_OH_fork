@@ -48,7 +48,10 @@ config("gst_plugins_common_config") {
 }
 
 ohos_static_library("gst_plugins_common") {
-  sources = [ "gst_shmem_allocator.cpp" ]
+  sources = [
+    "gst_shmem_allocator.cpp",
+    "gst_shmem_pool.cpp"
+  ]
 
   configs = [ ":gst_plugins_common_config" ]
 

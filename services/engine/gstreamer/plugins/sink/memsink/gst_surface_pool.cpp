@@ -15,7 +15,7 @@
 
 #include "gst_surface_pool.h"
 #include <unordered_map>
-#include <gst/video/gstvideometa.h>
+#include "gst/video/gstvideometa.h"
 #include "display_type.h"
 #include "gst_surface_allocator.h"
 #include "media_log.h"
@@ -159,6 +159,9 @@ static gboolean gst_surface_pool_set_config(GstBufferPool *pool, GstStructure *c
     if (!parse_caps_info(caps, &info, &format)) {
         return FALSE;
     }
+
+    GST_BUFFER_POOL_LOCK(spool);
+
     spool->info = info;
     spool->format = format;
     spool->minBuffers = minBuffers;
@@ -178,6 +181,7 @@ static gboolean gst_surface_pool_set_config(GstBufferPool *pool, GstStructure *c
     spool->allocator = GST_SURFACE_ALLOCATOR_CAST(allocator);
     spool->params = params;
 
+    GST_BUFFER_POOL_UNLOCK(spool);
     return TRUE;
 }
 
@@ -270,9 +274,13 @@ static gboolean gst_surface_pool_stop(GstBufferPool *pool)
     g_list_free(spool->preAllocated);
     spool->preAllocated = nullptr;
 
+    GST_BUFFER_POOL_NOTIFY(spool); // wakeup immediately
+
     // leave all configuration unchanged.
+    gboolean ret = (spool->freeBufCnt == spool->maxBuffers);
     GST_BUFFER_POOL_UNLOCK(spool);
-    return true;
+
+    return ret;
 }
 
 static GstFlowReturn do_alloc_memory_locked(GstSurfacePool *spool,
@@ -311,7 +319,7 @@ static GstFlowReturn do_alloc_memory_locked(GstSurfacePool *spool,
             }
         }
 
-        if (params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT) {
+        if ((params == nullptr) || (params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT)) {
             ret = GST_FLOW_EOS;
             break;
         }
@@ -393,14 +401,16 @@ static GstFlowReturn gst_surface_pool_acquire_buffer(GstBufferPool *pool,
     // Rather than keeping a idlelist for surface buffer by ourself, we request buffer
     // from the Surface directly.
     GstFlowReturn ret = gst_surface_pool_alloc_buffer(pool, buffer, params);
-    if (ret != GST_FLOW_OK && ret != GST_FLOW_EOS) {
+    if (ret == GST_FLOW_OK) {
+        spool->freeBufCnt -= 1;
+    }
+
+    if (ret == GST_FLOW_EOS) {
         GST_DEBUG("no more buffers");
     }
 
-    spool->freeBufCnt -= 1;
-    GST_BUFFER_POOL_UNLOCK(spool);
-
     // The GstBufferPool will add the GstBuffer's pool ref to this pool.
+    GST_BUFFER_POOL_UNLOCK(spool);
     return ret;
 }
 
@@ -439,6 +449,6 @@ static void gst_surface_pool_release_buffer(GstBufferPool *pool, GstBuffer *buff
     // if there is GstSurfaceMemory that does not need to be rendered, we can
     // notify the waiters to wake up and retry to acquire buffer.
     if (needNotify) {
-        GST_BUFFER_POOL_NOTIFY(GST_SURFACE_POOL_CAST(pool));
+        GST_BUFFER_POOL_NOTIFY(spool);
     }
 }
