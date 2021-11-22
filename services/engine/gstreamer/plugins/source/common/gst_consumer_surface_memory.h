@@ -23,11 +23,11 @@ typedef struct _GstConsumerSurfaceMemory GstConsumerSurfaceMemory;
 
 struct _GstConsumerSurfaceMemory {
     GstMemory parent;
-    OHOS::sptr<OHOS::SurfaceBuffer> surfaceBuffer;
-    intptr_t bufferHandle;
+    OHOS::sptr<OHOS::SurfaceBuffer> surface_buffer;
+    intptr_t buffer_handle;
     gint32 fencefd;
-    gint64 timeStamp;
-    gint32 iskeyFrame;
+    gint64 timestamp;
+    gint32 is_key_frame;
     OHOS::Rect damage;
 };
 

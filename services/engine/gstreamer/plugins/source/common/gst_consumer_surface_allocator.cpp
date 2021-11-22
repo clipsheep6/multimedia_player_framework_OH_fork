@@ -23,7 +23,14 @@ using namespace OHOS;
 #define GST_CONSUMER_SURFACE_MEMORY_TYPE "ConsumerSurfaceMemory"
 
 #define gst_consumer_surface_allocator_parent_class parent_class
-G_DEFINE_TYPE(GstConsumerSurfaceAllocator, gst_consumer_surface_allocator, GST_TYPE_ALLOCATOR);
+
+GST_DEBUG_CATEGORY_STATIC(gst_consumer_surface_allocator_debug_category);
+#define GST_CAT_DEFAULT gst_consumer_surface_allocator_debug_category
+#define DEBUG_INIT \
+    GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_allocator_debug_category, "mempoolsrc", 0, \
+        "debug category for mem pool src base class");
+
+G_DEFINE_TYPE_WITH_CODE(GstConsumerSurfaceAllocator, gst_consumer_surface_allocator, GST_TYPE_ALLOCATOR, DEBUG_INIT);
 
 struct _GstConsumerSurfaceAllocatorPrivate {
     sptr<Surface> csurface;
@@ -32,7 +39,7 @@ struct _GstConsumerSurfaceAllocatorPrivate {
 static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocatorClass *klass);
 static void gst_consumer_surface_allocator_free(GstAllocator *allocator, GstMemory *mem);
 static gpointer gst_consumer_surface_allocator_mem_map(GstMemory *mem, gsize maxsize, GstMapFlags flags);
-static void gst_consumer_surface_allocator_init(GstConsumerSurfaceAllocator *surfaceAllocator);
+static void gst_consumer_surface_allocator_init(GstConsumerSurfaceAllocator *sallocator);
 static void gst_consumer_surface_allocator_finalize(GObject *obj);
 
 gboolean gst_is_consumer_surface_memory(GstMemory *mem)
@@ -44,43 +51,43 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
 {
     g_return_val_if_fail(params != nullptr, nullptr);
     g_return_val_if_fail(allocator != nullptr, nullptr);
-    GstConsumerSurfaceAllocator *surfaceAllocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
-    g_return_val_if_fail(surfaceAllocator != nullptr && surfaceAllocator->priv != nullptr, nullptr);
-    g_return_val_if_fail(surfaceAllocator->priv->csurface != nullptr, nullptr);
+    GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
+    g_return_val_if_fail(sallocator != nullptr && sallocator->priv != nullptr, nullptr);
+    g_return_val_if_fail(sallocator->priv->csurface != nullptr, nullptr);
     GstConsumerSurfaceMemory *mem =
             reinterpret_cast<GstConsumerSurfaceMemory *>(g_slice_alloc0(sizeof(GstConsumerSurfaceMemory)));
     g_return_val_if_fail(mem != nullptr, nullptr);
 
     ON_SCOPE_EXIT(0) { g_slice_free(GstConsumerSurfaceMemory, mem); };
     // shorten code
-    sptr<Surface> surface = surfaceAllocator->priv->csurface;
-    sptr<SurfaceBuffer> surfaceBuffer = nullptr;
+    sptr<Surface> surface = sallocator->priv->csurface;
+    sptr<SurfaceBuffer> surface_buffer = nullptr;
     gint32 fencefd = -1;
-    gint64 timeStamp = 0;
-    gint32 dataSize = 0;
-    gboolean iskeyFrame = FALSE;
+    gint64 timestamp = 0;
+    gint32 data_size = 0;
+    gboolean is_key_frame = FALSE;
     Rect damage = {0, 0, 0, 0};
-    if (surface->AcquireBuffer(surfaceBuffer, fencefd, timeStamp, damage) != SURFACE_ERROR_OK) {
+    if (surface->AcquireBuffer(surface_buffer, fencefd, timestamp, damage) != SURFACE_ERROR_OK) {
         return nullptr;
     }
-    g_return_val_if_fail(surfaceBuffer != nullptr, nullptr);
-    ON_SCOPE_EXIT(1) { surface->ReleaseBuffer(surfaceBuffer, -1); };
+    g_return_val_if_fail(surface_buffer != nullptr, nullptr);
+    ON_SCOPE_EXIT(1) { surface->ReleaseBuffer(surface_buffer, -1); };
     SurfaceError surfaceRet = SURFACE_ERROR_OK;
-    surfaceRet = surfaceBuffer->ExtraGet("dataSize", dataSize);
-    g_return_val_if_fail(surfaceRet == SURFACE_ERROR_OK && dataSize > 0, nullptr);
-    surfaceRet = surfaceBuffer->ExtraGet("timeStamp", timeStamp);
+    surfaceRet = surface_buffer->ExtraGet("dataSize", data_size);
+    g_return_val_if_fail(surfaceRet == SURFACE_ERROR_OK && data_size > 0, nullptr);
+    surfaceRet = surface_buffer->ExtraGet("timeStamp", timestamp);
     g_return_val_if_fail(surfaceRet == SURFACE_ERROR_OK, nullptr);
-    surfaceRet = surfaceBuffer->ExtraGet("isKeyFrame", iskeyFrame);
+    surfaceRet = surface_buffer->ExtraGet("isKeyFrame", is_key_frame);
     g_return_val_if_fail(surfaceRet == SURFACE_ERROR_OK, nullptr);
 
     gst_memory_init(GST_MEMORY_CAST(mem), GST_MEMORY_FLAG_NO_SHARE,
-        allocator, nullptr, surfaceBuffer->GetSize(), 0, 0, dataSize);
-    mem->surfaceBuffer = surfaceBuffer;
+        allocator, nullptr, surface_buffer->GetSize(), 0, 0, data_size);
+    mem->surface_buffer = surface_buffer;
     mem->fencefd = fencefd;
-    mem->timeStamp = timeStamp;
-    mem->iskeyFrame = iskeyFrame;
+    mem->timestamp = timestamp;
+    mem->is_key_frame = is_key_frame;
     mem->damage = damage;
-    mem->bufferHandle = reinterpret_cast<intptr_t>(surfaceBuffer->GetBufferHandle());
+    mem->bufferHandle = reinterpret_cast<intptr_t>(surface_buffer->GetBufferHandle());
     GST_INFO_OBJECT(allocator, "acquire surface buffer");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
@@ -92,13 +99,13 @@ static void gst_consumer_surface_allocator_free(GstAllocator *allocator, GstMemo
 {
     g_return_if_fail(mem != nullptr && allocator != nullptr);
     g_return_if_fail(gst_is_consumer_surface_memory(mem));
-    GstConsumerSurfaceAllocator *surfaceAllocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
-    g_return_if_fail(surfaceAllocator->priv != nullptr && surfaceAllocator->priv->csurface != nullptr);
+    GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
+    g_return_if_fail(sallocator->priv != nullptr && sallocator->priv->csurface != nullptr);
 
-    GstConsumerSurfaceMemory *surfaceMem = reinterpret_cast<GstConsumerSurfaceMemory *>(mem);
-    (void)surfaceAllocator->priv->csurface->ReleaseBuffer(surfaceMem->surfaceBuffer, surfaceMem->fencefd);
+    GstConsumerSurfaceMemory *surfacemem = reinterpret_cast<GstConsumerSurfaceMemory *>(mem);
+    (void)sallocator->priv->csurface->ReleaseBuffer(surfacemem->surface_buffer, surfacemem->fencefd);
     GST_INFO_OBJECT(allocator, "release surface buffer");
-    g_slice_free(GstConsumerSurfaceMemory, surfaceMem);
+    g_slice_free(GstConsumerSurfaceMemory, surfacemem);
 }
 
 static gpointer gst_consumer_surface_allocator_mem_map(GstMemory *mem, gsize maxsize, GstMapFlags flags)
@@ -106,10 +113,10 @@ static gpointer gst_consumer_surface_allocator_mem_map(GstMemory *mem, gsize max
     g_return_val_if_fail(mem != nullptr, nullptr);
     g_return_val_if_fail(gst_is_consumer_surface_memory(mem), nullptr);
 
-    GstConsumerSurfaceMemory *surfaceMem = reinterpret_cast<GstConsumerSurfaceMemory *>(mem);
-    g_return_val_if_fail(surfaceMem->surfaceBuffer != nullptr, nullptr);
+    GstConsumerSurfaceMemory *surfacemem = reinterpret_cast<GstConsumerSurfaceMemory *>(mem);
+    g_return_val_if_fail(surfacemem->surface_buffer != nullptr, nullptr);
 
-    return surfaceMem->surfaceBuffer->GetVirAddr();
+    return surfacemem->surface_buffer->GetVirAddr();
 }
 
 static void gst_consumer_surface_allocator_mem_unmap(GstMemory *mem)
@@ -117,14 +124,14 @@ static void gst_consumer_surface_allocator_mem_unmap(GstMemory *mem)
     (void)mem;
 }
 
-static void gst_consumer_surface_allocator_init(GstConsumerSurfaceAllocator *surfaceAllocator)
+static void gst_consumer_surface_allocator_init(GstConsumerSurfaceAllocator *sallocator)
 {
-    GstAllocator *allocator = GST_ALLOCATOR_CAST(surfaceAllocator);
+    GstAllocator *allocator = GST_ALLOCATOR_CAST(sallocator);
     g_return_if_fail(allocator != nullptr);
     auto priv = reinterpret_cast<GstConsumerSurfaceAllocatorPrivate *>(
-                gst_consumer_surface_allocator_get_instance_private(surfaceAllocator));
+                gst_consumer_surface_allocator_get_instance_private(sallocator));
     g_return_if_fail(priv != nullptr);
-    surfaceAllocator->priv = priv;
+    sallocator->priv = priv;
 
     GST_DEBUG_OBJECT(allocator, "init allocator 0x%06" PRIXPTR "", FAKE_POINTER(allocator));
 
@@ -159,9 +166,9 @@ static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocato
 void gst_consumer_surface_allocator_set_surface(GstAllocator *allocator,
                                                 sptr<Surface> &consumerSurface)
 {
-    GstConsumerSurfaceAllocator *surfaceAllocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
-    g_return_if_fail(surfaceAllocator != nullptr && surfaceAllocator->priv != nullptr);
-    surfaceAllocator->priv->csurface = consumerSurface;
+    GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
+    g_return_if_fail(sallocator != nullptr && sallocator->priv != nullptr);
+    sallocator->priv->csurface = consumerSurface;
 }
 
 GstAllocator *gst_consumer_surface_allocator_new()

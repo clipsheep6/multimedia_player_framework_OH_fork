@@ -21,7 +21,6 @@
 #include "mem_buffer.h"
 #include "scope_guard.h"
 
-#define gst_mem_pool_src_parent_class parent_class
 using namespace OHOS;
 namespace {
     constexpr int32_t DEFAULT_VIDEO_WIDTH = 1920;
@@ -30,6 +29,32 @@ namespace {
     constexpr int32_t DEFAULT_BUFFER_NUM = 8;
 }
 
+#define gst_mem_pool_src_parent_class parent_class
+
+GST_DEBUG_CATEGORY_STATIC(gst_mem_pool_src_debug_category);
+#define GST_CAT_DEFAULT gst_mem_pool_src_debug_category
+#define DEBUG_INIT \
+    GST_DEBUG_CATEGORY_INIT(gst_mem_pool_src_debug_category, "mempoolsrc", 0, \
+        "debug category for mem pool src base class");
+
+struct _GstMemPoolSrcPrivate {
+    BufferAvailable buffer_available;
+    gboolean emit_signals;
+    std::mutex emit_mutex;
+    GDestroyNotify notify;
+    gpointer user_data;
+};
+
+enum
+{
+  /* signals */
+  SIGNAL_BUFFER_AVAILABLE,
+  /* actions */
+  SIGNAL_PULL_BUFFER,
+  SIGNAL_PUSH_BUFFER,
+  LAST_SIGNAL
+};
+
 enum {
     PROP_0,
     PROP_VIDEO_WIDTH,
@@ -37,20 +62,13 @@ enum {
     PROP_BUFFER_NUM,
 };
 
-G_DEFINE_ABSTRACT_TYPE(GstMemPoolSrc, gst_mem_pool_src, GST_TYPE_BASE_SRC);
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE(GstMemPoolSrc, gst_mem_pool_src, GST_TYPE_BASE_SRC, DEBUG_INIT);
 
+static guint gst_mem_pool_src_signals[LAST_SIGNAL] = { 0 };
 static void gst_mem_pool_src_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_mem_pool_src_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static gboolean gst_mem_pool_src_query(GstBaseSrc *src, GstQuery *query);
-static GstStateChangeReturn gst_mem_pool_src_change_state(GstElement *element, GstStateChange transition);
-static gboolean gst_mem_pool_src_create_mem(GstMemPoolSrc *src);
-static gboolean gst_mem_pool_src_create_pool(GstMemPoolSrc *src);
-static void gst_mem_pool_src_destroy_mem(GstMemPoolSrc *src);
-static void gst_mem_pool_src_destroy_pool(GstMemPoolSrc *src);
-static void gst_mem_pool_src_init_mem(GstMemPoolSrc *src);
-static gboolean gst_mem_pool_src_decide_allocation(GstBaseSrc *basesrc, GstQuery *query);
 static gboolean gst_mem_pool_src_is_seekable(GstBaseSrc *basesrc);
-static GstFlowReturn gst_mem_pool_src_fill(GstBaseSrc *src, guint64 offset, guint size, GstBuffer *buf);
 
 static void gst_mem_pool_src_class_init(GstMemPoolSrcClass *klass)
 {
@@ -61,6 +79,7 @@ static void gst_mem_pool_src_class_init(GstMemPoolSrcClass *klass)
 
     gobject_class->set_property = gst_mem_pool_src_set_property;
     gobject_class->get_property = gst_mem_pool_src_get_property;
+    gobject_class->dispose = gst_mem_pool_dispose;
 
     g_object_class_install_property(gobject_class, PROP_VIDEO_WIDTH,
         g_param_spec_uint("video-width", "Video width",
@@ -82,26 +101,63 @@ static void gst_mem_pool_src_class_init(GstMemPoolSrcClass *klass)
             "buffer num", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    gst_mem_pool_src_signals[SIGNAL_BUFFER_AVAILABLE] =
+        g_signal_new("buffer-available", G_TYPE_FROM_CLASS(gobject_class), G_SIGNAL_RUN_LAST,
+            0, NULL, NULL, NULL, GST_TYPE_FLOW_RETURN, 0, G_TYPE_NONE);
+
+    gst_mem_pool_src_signals[SIGNAL_PULL_BUFFER] =
+        g_signal_new("pull-buffer", G_TYPE_FROM_CLASS(gobject_class), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+            G_STRUCT_OFFSET(GstMemPoolSrcClass, pull_buffer), NULL, NULL, NULL, GST_TYPE_BUFFER, 0, G_TYPE_NONE);
+
+    gst_mem_pool_src_signals[SIGNAL_PUSH_BUFFER] =
+        g_signal_new("push-buffer", G_TYPE_FROM_CLASS(gobject_class), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+            G_STRUCT_OFFSET(GstMemPoolSrcClass, push_buffer), NULL, NULL, NULL,
+            GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER);
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Mem pool source", "Source/Mem",
         "Retrieve frame from mem buffer queue", "OpenHarmony");
 
-    gstelement_class->change_state = gst_mem_pool_src_change_state;
-
     gstbasesrc_class->is_seekable = gst_mem_pool_src_is_seekable;
-
     gstbasesrc_class->query = gst_mem_pool_src_query;
+    klass->buffer_available = gst_mem_pool_src_buffer_available;
 }
 
-static void gst_mem_pool_src_init(GstMemPoolSrc *src)
+static void gst_mem_pool_src_init(GstMemPoolSrc *memsrc)
 {
-    g_return_if_fail(src != nullptr);
+    g_return_if_fail(memsrc != nullptr);
+    auto priv = reinterpret_cast<GstMemPoolSrcPrivate *>(gst_mem_pool_src_get_instance_private(memsrc));
+    g_return_if_fail(priv != nullptr);
+    GST_OBJECT_LOCK(memsrc);
+    memsrc->video_width = DEFAULT_VIDEO_WIDTH;
+    memsrc->video_height = DEFAULT_VIDEO_HEIGHT;
+    memsrc->buffer_size = DEFAULT_BUFFER_SIZE;
+    memsrc->buffer_num = DEFAULT_BUFFER_NUM;
+    memsrc->priv = priv;
+    priv->buffer_available = nullptr;
+    priv->user_data = nullptr;
+    priv->notify = nullptr;
+    GST_OBJECT_UNLOCK(memsrc);
+}
 
-    src->videoWidth = DEFAULT_VIDEO_WIDTH;
-    src->videoHeight = DEFAULT_VIDEO_HEIGHT;
-    src->bufferSize = DEFAULT_BUFFER_SIZE;
-    src->bufferNum = DEFAULT_BUFFER_NUM;
-    src->pool = nullptr;
+static GstFlowReturn gst_mem_pool_src_buffer_available(GstMemPoolSrc *memsrc)
+{
+    g_return_val_if_fail(memsrc != nullptr && memsrc->priv != nullptr, FALSE);
+    GstFlowReturn ret = GST_FLOW_OK;
+    auto priv = memsrc->priv;
+    gboolean emit = FALSE; 
+    if (priv->buffer_available) {
+        ret = priv->buffer_available(memsrc);
+    } else {
+        {
+            std::unique_lock<std::mutex> lock(priv->emit_mutex);
+            emit = priv->emit_signals;
+        }
+        if (emit) {
+            g_signal_emit(memsrc, gst_app_src_signals[SIGNAL_BUFFER_AVAILABLE], 0, &ret);
+        }
+    }
+    return ret;
 }
 
 static gboolean gst_mem_pool_src_is_seekable(GstBaseSrc *basesrc)
@@ -110,20 +166,37 @@ static gboolean gst_mem_pool_src_is_seekable(GstBaseSrc *basesrc)
     return FALSE;
 }
 
+static void gst_mem_pool_src_dispose(GObject *obj)
+{
+    GstMemPoolSrc *memsrc = GST_MEM_POOL_SRC(object);
+    g_return_if_fail(memsrc != nullptr && memsrc->priv != nullptr);
+    auto priv = memsrc->priv;
+
+    GST_OBJECT_LOCK(memsrc);
+    if (priv->notify) {
+        priv->notify(priv->user_data);
+    }
+    priv->user_data = nullptr;
+    priv->notify = nullptr;
+    GST_OBJECT_UNLOCK(memsrc);
+
+    G_OBJECT_CLASS(parent_class)->dispose(obj);
+}
+
 static void gst_mem_pool_src_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-    GstMemPoolSrc *src = GST_MEM_POOL_SRC(object);
-    g_return_if_fail(src != nullptr);
+    GstMemPoolSrc *memsrc = GST_MEM_POOL_SRC(object);
+    g_return_if_fail(memsrc != nullptr);
     (void)pspec;
     switch (prop_id) {
         case PROP_VIDEO_WIDTH:
-            src->videoWidth = g_value_get_uint(value);
+            memsrc->video_width = g_value_get_uint(value);
             break;
         case PROP_VIDEO_HEIGHT:
-            src->videoHeight = g_value_get_uint(value);
+            memsrc->video_height = g_value_get_uint(value);
             break;
         case PROP_BUFFER_SIZE:
-            src->bufferSize = g_value_get_uint(value);
+            memsrc->buffer_size = g_value_get_uint(value);
             break;
         default:
             break;
@@ -132,21 +205,21 @@ static void gst_mem_pool_src_set_property(GObject *object, guint prop_id, const 
 
 static void gst_mem_pool_src_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
-    GstMemPoolSrc *src = GST_MEM_POOL_SRC(object);
-    g_return_if_fail(src != nullptr);
+    GstMemPoolSrc *memsrc = GST_MEM_POOL_SRC(object);
+    g_return_if_fail(memsrc != nullptr);
     (void)pspec;
     switch (prop_id) {
         case PROP_VIDEO_WIDTH:
-            g_value_set_uint(value, src->videoWidth);
+            g_value_set_uint(value, memsrc->video_width);
             break;
         case PROP_VIDEO_HEIGHT:
-            g_value_set_uint(value, src->videoHeight);
+            g_value_set_uint(value, memsrc->video_height);
             break;
         case PROP_BUFFER_SIZE:
-            g_value_set_uint(value, src->bufferSize);
+            g_value_set_uint(value, memsrc->buffer_size);
             break;
         case PROP_BUFFER_NUM:
-            g_value_set_uint(value, src->bufferNum);
+            g_value_set_uint(value, memsrc->buffer_num);
             break;
         default:
             break;
@@ -168,5 +241,14 @@ static gboolean gst_mem_pool_src_query(GstBaseSrc *src, GstQuery *query)
     return TRUE;
 }
 
-void gst_shmem_pool_src_set_callback(GstMemPoolSrc *poolsrc, BufferAvailable callback,
-                                        gpointer user_data, GDestroyNotify notify);
+void gst_shmem_pool_src_set_callback(GstMemPoolSrc *memsrc, BufferAvailable callback,
+                                        gpointer user_data, GDestroyNotify notify)
+{
+    g_return_if_fail(memsrc != nullptr && memsrc->priv != nullptr);
+    auto priv = memsrc->priv;
+    GST_OBJECT_LOCK(memsrc);
+    priv->user_data = user_data;
+    priv->notify = notify;
+    priv->buffer_available = callback;
+    GST_OBJECT_UNLOCK(memsrc);
+}

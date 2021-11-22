@@ -38,22 +38,20 @@ typedef GstFlowReturn (*BufferAvailable) (GstShmemPoolSrc *shmemsrc, gpointer us
 
 struct _GstMemPoolSrc {
     GstBaseSrc basesrc;
-    gint videoWidth;
-    gint videoHeight;
-    gint bufferSize;
-    gint bufferNum;
-    GstBufferPool *pool;
+    guint video_width;
+    guint video_height;
+    guint buffer_size;
+    guint buffer_num;
 };
 
 struct _GstMemPoolSrcClass {
-    GstBaseSrcClass parent_class;
-
-    /* signals */
+    GstBaseSrcClass parent;
+    // for subclass calling
     GstFlowReturn (*buffer_available)(GstMemPoolSrc *shmem_pool_src);
 
-    /* actions */
+    // for API and action calling, subclass need accomplish it
     GstBuffer *(*pull_buffer)(GstMemPoolSrc *shmem_pool_src);
-    GstBuffer *(*push_buffer)(GstMemPoolSrc *shmem_pool_src);
+    GstFlowReturn (*push_buffer)(GstMemPoolSrc *shmem_pool_src, GstBuffer *buffer);
 };
 
 __attribute__((visibility("default")))

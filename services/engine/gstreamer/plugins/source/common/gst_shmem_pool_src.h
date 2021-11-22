@@ -16,7 +16,7 @@
 #ifndef __GST_SHMEM_POOL_SRC_H__
 #define __GST_SHMEM_POOL_SRC_H__
 
-#include <gst/base/gstbasesrc.h>
+#include "gst_mem_pool_src.h"
 
 G_BEGIN_DECLS
 
@@ -33,16 +33,16 @@ G_BEGIN_DECLS
 
 typedef struct _GstShmemPoolSrc GstShmemPoolSrc;
 typedef struct _GstShmemPoolSrcClass GstShmemPoolSrcClass;
+typedef struct _GstShmemPoolSrcPrivate GstShmemPoolSrcPrivate;
 
 struct _GstShmemPoolSrc {
-    GstBaseSrc basesrc;
-    gint videoWidth;
-    gint videoHeight;
-    GstBufferPool *pool;    
+    GstMemPoolSrc memsrc;
+    /* < private > */
+    GstShmemPoolSrcPrivate *priv;
 };
 
 struct _GstShmemPoolSrcClass {
-    GstBaseSrcClass parent_class;
+    GstMemPoolSrcClass parent_class;
 };
 
 __attribute__((visibility("default")))

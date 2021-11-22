@@ -16,7 +16,7 @@
 #ifndef __GST_SURFACE_POOL_SRC_H__
 #define __GST_SURFACE_POOL_SRC_H__
 
-#include <gst/base/gstbasesrc.h>
+#include "gst_mem_pool_src.h"
 #include "surface.h"
 
 G_BEGIN_DECLS
@@ -34,14 +34,11 @@ G_BEGIN_DECLS
 
 typedef struct _GstSurfacePoolSrc GstSurfacePoolSrc;
 typedef struct _GstSurfacePoolSrcClass GstSurfacePoolSrcClass;
-typedef struct _GstSurfacePoolSrcPrivate GstSurfacePoolSrcPrivate;
 
 struct _GstSurfacePoolSrc {
-    GstMemPoolSrc memPoolSrc;
+    GstMemPoolSrc memsrc;
     OHOS::sptr<OHOS::Surface> consumerSurface;
     OHOS::sptr<OHOS::Surface> producerSurface;
-    gint videoWidth;
-    gint videoHeight;
     GstBufferPool *pool;
 };
 
