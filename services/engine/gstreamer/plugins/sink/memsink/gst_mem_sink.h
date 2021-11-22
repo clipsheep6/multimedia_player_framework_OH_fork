@@ -57,17 +57,35 @@ struct _GstMemSinkClass {
     GstBaseSinkClass basesink_class;
 
     gboolean (*do_propose_allocation) (GstMemSink *sink, GstQuery *query);
-    GstFlowReturn (*do_stream_render) (GstMemSink *sink, GstBuffer *buffer);
+    GstFlowReturn (*do_stream_render) (GstMemSink *sink, GstBuffer **buffer);
     GstFlowReturn (*do_app_render) (GstMemSink *sink, GstBuffer *buffer);
 };
 
 G_GNUC_INTERNAL GType gst_mem_sink_get_type(void);
 
+/**
+ * @brief call this interface to set the notifiers for new_preroll, new_sample and eos.
+ *
+ * @param memsink the sink element instance
+ * @param callbacks callbacks, refer to {@GstMemSinkCallbacks}
+ * @param userdata will be passed to callbacks
+ * @param notify the function to be used to destroy the userdata when the memsink is disposed
+ * @return GST_FLOW_OK if success, or error code.
+ */
 GST_API void gst_mem_sink_set_callback(GstMemSink *memsink,
                                        GstMemSinkCallbacks *callbacks,
                                        gpointer userdata,
                                        GDestroyNotify notify);
 
+/**
+ * @brief call this interface to indicate the app ends up the access of buffer, then
+ * the buffer can be release back to buffer pool. Call this function is not necessary,
+ * it is up to the sink and pool implementation and underlying memory type.
+ *
+ * @param memsink the sink element instance
+ * @param buffer the buffer will be rendered, allowd to be nullptr at certain situation.
+ * @return GST_FLOW_OK if success, or error code.
+ */
 GST_API GstFlowReturn gst_mem_sink_app_render(GstMemSink *memsink, GstBuffer *buffer);
 
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC

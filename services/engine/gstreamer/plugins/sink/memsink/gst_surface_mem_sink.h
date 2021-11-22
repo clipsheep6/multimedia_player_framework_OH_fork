@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef GST_SURFACE_SURFACE_MEM_SINK_H
-#define GST_SURFACE_SURFACE_MEM_SINK_H
+#ifndef GST_SURFACE_MEM_SINK_H
+#define GST_SURFACE_MEM_SINK_H
 
 #include "gst_mem_sink.h"
 

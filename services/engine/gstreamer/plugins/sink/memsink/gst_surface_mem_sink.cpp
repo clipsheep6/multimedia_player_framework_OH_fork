@@ -95,8 +95,10 @@ static void gst_surface_mem_sink_dispose(GObject *obj)
 
     GST_OBJECT_LOCK(surfaceSink);
     priv->surface = nullptr;
-    gst_object_unref(priv->pool);
-    priv->pool = nullptr;
+    if (priv->pool != nullptr) {
+        gst_object_unref(priv->pool);
+        priv->pool = nullptr;
+    }
     GST_OBJECT_UNLOCK(surfaceSink);
 
     G_OBJECT_CLASS(parent_class)->dispose(obj);
@@ -105,11 +107,6 @@ static void gst_surface_mem_sink_dispose(GObject *obj)
 static void gst_surface_mem_sink_finalize(GObject *obj)
 {
     g_return_if_fail(obj != nullptr);
-
-    GstSurfaceMemSink *surfaceSink = GST_SURFACE_MEM_SINK_CAST(obj);
-    GstSurfaceMemSinkPrivate *priv = surfaceSink->priv;
-    g_return_if_fail(priv != nullptr);
-
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
 
@@ -126,7 +123,9 @@ static void gst_surface_mem_sink_set_property(GObject *object, guint propId, con
             gpointer surface = g_value_get_pointer(value);
             g_return_if_fail(surface != nullptr);
             OHOS::sptr<OHOS::Surface> surfaceRef = reinterpret_cast<OHOS::Surface *>(surface);
+            GST_OBJECT_LOCK(surfaceSink);
             priv->surface = surfaceRef;
+            GST_OBJECT_UNLOCK(surfaceSink);
             break;
         }
         default:
@@ -145,8 +144,10 @@ static void gst_surface_mem_sink_get_property(GObject *object, guint propId, GVa
 
     switch (propId) {
         case PROP_SURFACE: {
+            GST_OBJECT_LOCK(surfaceSink);
             g_return_if_fail(priv->surface != nullptr);
             g_value_set_pointer(value, priv->surface.GetRefPtr());
+            GST_OBJECT_UNLOCK(surfaceSink);
             break;
         }
         default:
@@ -162,9 +163,11 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
     g_return_val_if_fail(surfaceSink != nullptr, GST_FLOW_ERROR);
     GstSurfaceMemSinkPrivate *priv = surfaceSink->priv;
 
+    GST_OBJECT_LOCK(surfaceSink);
+
     for (guint i = 0; i < gst_buffer_n_memory(buffer); i++) {
         GstMemory *memory = gst_buffer_peek_memory(buffer, i);
-        if (gst_is_surface_memory(memory)) {
+        if (!gst_is_surface_memory(memory)) {
             GST_WARNING_OBJECT(surfaceSink, "not surface buffer !, 0x%06" PRIXPTR, FAKE_POINTER(memory));
             continue;
         }
@@ -182,6 +185,7 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
         }
     }
 
+    GST_OBJECT_UNLOCK(surfaceSink);
     return GST_FLOW_OK;
 }
 
@@ -201,36 +205,46 @@ static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, 
         return FALSE;
     }
 
+    GST_OBJECT_LOCK(surfaceSink);
+
     guint size = 0;
     guint minBuffers = 0;
     guint maxBuffers = 0;
     gst_query_parse_nth_allocation_pool(query, 0, nullptr, &size, &minBuffers, &maxBuffers);
-    if (maxBuffers > memsink->maxPoolCapacity) {
+    if (maxBuffers > memsink->maxPoolCapacity && memsink->maxPoolCapacity != 0) {
         GST_INFO_OBJECT(surfaceSink, "correct the maxbuffer from %u to %u", maxBuffers, memsink->maxPoolCapacity);
         maxBuffers = memsink->maxPoolCapacity;
     }
 
-    GstSurfacePool *pool = gst_surface_pool_new();
+    GstSurfacePool *pool = surfaceSink->priv->pool;
     g_return_val_if_fail(pool != nullptr, FALSE);
     (void)gst_surface_pool_set_surface(pool, surfaceSink->priv->surface, memsink->waitTime);
 
     GstVideoInfo info;
     gboolean ret = gst_video_info_from_caps(&info, caps);
     g_return_val_if_fail(ret, FALSE);
-    gst_query_add_allocation_pool(query, GST_BUFFER_POOL_CAST(pool), info.size, 0, maxBuffers);
+    gst_query_add_allocation_pool(query, GST_BUFFER_POOL_CAST(pool), info.size, minBuffers, maxBuffers);
 
     GstSurfaceAllocator *allocator = gst_surface_allocator_new();
     g_return_val_if_fail(allocator != nullptr, FALSE);
     gst_query_add_allocation_param(query, GST_ALLOCATOR_CAST(allocator), nullptr);
-
     gst_query_add_allocation_meta(query, GST_VIDEO_META_API_TYPE, nullptr);
     // add buffer type meta here.
 
     GstStructure *config = gst_buffer_pool_get_config(GST_BUFFER_POOL_CAST(pool));
-    gst_buffer_pool_config_set_params(config, caps, info.size, 0, maxBuffers);
+    if (config != nullptr) {
+        GST_OBJECT_UNLOCK(surfaceSink);
+        gst_object_unref(allocator);
+        return FALSE;
+    }
+
+    gst_buffer_pool_config_set_params(config, caps, info.size, minBuffers, maxBuffers);
     gst_buffer_pool_config_set_allocator(config, GST_ALLOCATOR_CAST(allocator), nullptr);
+    // set config will take ownership of the config, we dont need to free it.
     ret = gst_buffer_pool_set_config(GST_BUFFER_POOL_CAST(pool), config);
     g_return_val_if_fail(ret, FALSE);
 
+    gst_object_unref(allocator);
+    GST_OBJECT_UNLOCK(surfaceSink);
     return TRUE;
 }

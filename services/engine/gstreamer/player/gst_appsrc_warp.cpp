@@ -18,6 +18,7 @@
 #include "media_errors.h"
 #include "player.h"
 #include "securec.h"
+#include "avsharedmemorybase.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstAppsrcWarp"};
@@ -64,8 +65,10 @@ int32_t GstAppsrcWarp::Init()
     for (int i = 0; i < buffersNum_; ++i) {
         std::shared_ptr<AppsrcMemWarp> appSrcMem = std::make_shared<AppsrcMemWarp>();
         CHECK_AND_RETURN_RET_LOG(appSrcMem != nullptr, MSERR_NO_MEMORY, "init AppsrcMemWarp failed");
-        appSrcMem->mem = AVSharedMemory::Create(bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "appsrc");
-        CHECK_AND_RETURN_RET_LOG(appSrcMem->mem != nullptr, MSERR_NO_MEMORY, "init AVSharedMemory failed");
+        auto mem = std::make_shared<AVSharedMemoryBase>(
+            bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "appsrc");
+        CHECK_AND_RETURN_RET_LOG(mem->Init() != MSERR_OK, MSERR_NO_MEMORY, "init AVShMem failed");
+        appSrcMem->mem = mem;
         (void)emptyBuffers_.emplace(appSrcMem);
     }
     return MSERR_OK;

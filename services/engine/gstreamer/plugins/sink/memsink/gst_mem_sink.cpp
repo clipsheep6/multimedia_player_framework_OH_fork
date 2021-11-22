@@ -17,13 +17,14 @@
 #include "gst_mem_sink.h"
 #include <cinttypes>
 #include "gst_surface_mem_sink.h"
+#include "gst_shared_mem_sink.h"
 
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
 namespace {
-    constexpr guint32 DEFAULT_PROP_MAX_POOL_CAPACITY = 0; // 0 means no limit
-    constexpr guint32 DEFAULT_PROP_WAIT_TIME = 5000; // us, 0 means is meanlessly
+    constexpr guint32 DEFAULT_PROP_MAX_POOL_CAPACITY = 5; // 0 is meanlessly
+    constexpr guint32 DEFAULT_PROP_WAIT_TIME = 5000; // us, 0 is meanlessly
 }
 
 struct _GstMemSinkPrivate {
@@ -93,7 +94,7 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
 
     g_object_class_install_property(gobjectClass, PROP_MAX_POOL_CAPACITY,
         g_param_spec_uint("max-pool-capacity", "Max Pool Capacity",
-            "The maximum capacity of the buffer pool (0 == unlimited)",
+            "The maximum capacity of the buffer pool (0 == meanlessly)",
             0, G_MAXUINT, DEFAULT_PROP_MAX_POOL_CAPACITY,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -148,6 +149,11 @@ static void gst_mem_sink_dispose(GObject *obj)
         gst_caps_unref(priv->caps);
         priv->caps = nullptr;
     }
+    if (priv->notify != nullptr) {
+        priv->notify(priv->userdata);
+        priv->userdata = nullptr;
+        priv->notify = nullptr;
+    }
     GST_OBJECT_UNLOCK(memSink);
 
     G_OBJECT_CLASS(parent_class)->dispose(obj);
@@ -180,7 +186,10 @@ static void gst_mem_sink_set_property(GObject *object, guint propId, const GValu
             break;
         case PROP_MAX_POOL_CAPACITY: {
             GST_OBJECT_LOCK(memSink);
-            memSink->maxPoolCapacity = g_value_get_uint(value);
+            guint maxPoolCapacity = g_value_get_uint(value);
+            if (maxPoolCapacity != 0) {
+                memSink->maxPoolCapacity = maxPoolCapacity;
+            }
             GST_DEBUG_OBJECT(memSink, "set max pool capacity: %u", memSink->maxPoolCapacity);
             GST_OBJECT_UNLOCK(memSink);
             break;
@@ -236,7 +245,7 @@ static void gst_mem_sink_get_property(GObject *object, guint propId, GValue *val
 void gst_mem_sink_set_callback(GstMemSink *memSink, GstMemSinkCallbacks *callbacks,
                                gpointer userdata, GDestroyNotify notify)
 {
-    g_return_if_fail(GST_IS_MEM_SINK (memSink));
+    g_return_if_fail(GST_IS_MEM_SINK(memSink));
     g_return_if_fail(callbacks != nullptr);
     GstMemSinkPrivate *priv = memSink->priv;
     g_return_if_fail(priv != nullptr);
@@ -447,7 +456,7 @@ static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *bsink, GstBuffer *buffer)
 static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *bsink, GstBuffer *buffer)
 {
     GstMemSink *memSink = GST_MEM_SINK_CAST(bsink);
-    g_return_val_if_fail(memSink != nullptr, GST_FLOW_ERROR);
+    g_return_val_if_fail(memSink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
     GstMemSinkPrivate *priv = memSink->priv;
     g_return_val_if_fail(priv != nullptr, GST_FLOW_ERROR);
     GstMemSinkClass *memSinkClass = GST_MEM_SINK_GET_CLASS(memSink);
@@ -465,7 +474,7 @@ static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *bsink, GstBuffer *b
 
     GstFlowReturn ret = GST_FLOW_OK;
     if (memSinkClass->do_stream_render != nullptr) {
-        ret = memSinkClass->do_stream_render(memSink, buffer);
+        ret = memSinkClass->do_stream_render(memSink, &buffer);
     }
 
     if (priv->callbacks.new_sample != nullptr) {
@@ -479,7 +488,7 @@ static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *bsink, GstBuffer *b
 static gboolean gst_mem_sink_propose_allocation(GstBaseSink *bsink, GstQuery *query)
 {
     GstMemSink *memSink = GST_MEM_SINK_CAST(bsink);
-    g_return_val_if_fail(memSink != nullptr, FALSE);
+    g_return_val_if_fail(memSink != nullptr && query != nullptr, FALSE);
     GstMemSinkClass *memSinkClass = GST_MEM_SINK_GET_CLASS(memSink);
     g_return_val_if_fail(memSinkClass != nullptr, FALSE);
 
@@ -520,6 +529,7 @@ static gboolean plugin_init(GstPlugin *plugin)
 {
     g_return_val_if_fail(plugin != nullptr, false);
     gboolean ret = gst_element_register(plugin, "surfacememsink", GST_RANK_PRIMARY, GST_TYPE_SURFACE_MEM_SINK);
+    ret = ret || gst_element_register(plugin, "sharedmemsink", GST_RANK_PRIMARY, GST_TYPE_SHARED_MEM_SINK);
     return ret;
 }
 

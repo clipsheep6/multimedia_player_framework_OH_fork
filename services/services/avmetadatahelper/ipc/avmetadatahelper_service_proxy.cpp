@@ -131,7 +131,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchFrameAtTime(i
         MEDIA_LOGE("FetchFrameAtTime failed, error: %{public}d", error);
         return nullptr;
     }
-    return ReadAVSharedMemoryFromParcel(reply);
+    return AVShMemIPCStatic::ReadFromParcel(reply);
 }
 
 void AVMetadataHelperServiceProxy::Release()

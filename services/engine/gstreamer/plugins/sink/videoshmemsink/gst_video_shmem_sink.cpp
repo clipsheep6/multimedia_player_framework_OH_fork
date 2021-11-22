@@ -805,7 +805,7 @@ static gboolean gst_video_shmem_sink_propose_allocation(GstBaseSink *bsink, GstQ
     g_return_val_if_fail(ret, FALSE);
     gst_query_add_allocation_pool(query, pool, info.size, 0, vidShMemSink->priv->maxPoolCapacity);
 
-    GstAllocator *alloc = gst_shmem_allocator_new();
+    GstAllocator *alloc = GST_ALLOCATOR_CAST(gst_shmem_allocator_new());
     g_return_val_if_fail(alloc != nullptr, FALSE);
 
     GstAllocationParams allocParams {};
