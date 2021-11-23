@@ -256,7 +256,6 @@ napi_value VideoDecoderNapi::Configure(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(decoderNapi->videoDecoderImpl_ != nullptr, undefinedResult, "No memory");
     CHECK_AND_RETURN_RET_LOG(decoderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
     auto task = std::make_shared<TaskHandler<void>>([napi = decoderNapi]() {
-        // todo
         Format format;
         int32_t ret = napi->videoDecoderImpl_->Configure(format);
         if (ret == MSERR_OK) {
@@ -660,7 +659,6 @@ napi_value VideoDecoderNapi::SetOutputSurface(napi_env env, napi_callback_info i
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == 0 && valueType == napi_object) {
-            // todo
         } else if (i == 1 && valueType == napi_function) {
             napi_create_reference(env, args[i], refCount, &asyncContext->callbackRef);
         } else {
@@ -681,7 +679,6 @@ napi_value VideoDecoderNapi::SetOutputSurface(napi_env env, napi_callback_info i
         env, nullptr, resource,
         [](napi_env env, void *data) {
             //auto context = static_cast<VideoDecoderAsyncContext *>(data);
-            // todo
             //context->status = context->videoDecoderNapi->videoDecoderImpl_->
             //    SetOutputSurface(context->);
         },
@@ -726,7 +723,6 @@ napi_value VideoDecoderNapi::SetParameter(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == 0 && valueType == napi_object) {
-            // todo
         } else if (i == 1 && valueType == napi_function) {
             napi_create_reference(env, args[i], refCount, &asyncContext->callbackRef);
         } else {
@@ -747,7 +743,6 @@ napi_value VideoDecoderNapi::SetParameter(napi_env env, napi_callback_info info)
         env, nullptr, resource,
         [](napi_env env, void *data) {
             //auto context = static_cast<VideoDecoderAsyncContext *>(data);
-            // todo
             //context->status = context->videoDecoderNapi->videoDecoderImpl_->
             //    SetParameter(context->index);
         },

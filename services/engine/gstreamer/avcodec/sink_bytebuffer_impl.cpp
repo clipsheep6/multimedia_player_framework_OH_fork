@@ -14,6 +14,7 @@
  */
 
 #include "sink_bytebuffer_impl.h"
+#include "gst_shared_mem_sink.h"
 #include "media_log.h"
 
 namespace {

@@ -14,6 +14,7 @@
  */
 
 #include "src_surface_impl.h"
+#include "gst_encoder_surface_src.h"
 #include "media_log.h"
 
 namespace {

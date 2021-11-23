@@ -36,6 +36,9 @@ config("media_engine_gst_avcodec_config") {
 
   include_dirs = [
     "//foundation/multimedia/media_standard/services/engine/gstreamer/avcodec",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/sink/memsink",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/source/codecsource",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/source/common",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
     "//foundation/multimedia/media_standard/services/services/engine_intf",
@@ -75,10 +78,17 @@ ohos_static_library("media_engine_gst_avcodec") {
   deps = [
     "//foundation/graphic/standard/frameworks/surface:surface",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/sink/memsink:gst_mem_sink",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/source/common:gst_source_common",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/source/codecsource:gst_codec_src",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common:gst_buffer_meta",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common:gst_plugins_common",
     "//third_party/glib:glib",
+    "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
-    "//third_party/gstreamer/gstplugins_base:gstaudio",
+    "//third_party/gstreamer/gstreamer:gstbase",
     "//third_party/gstreamer/gstreamer:gstreamer",
+    "//third_party/gstreamer/gstplugins_base:gstaudio",
   ]
 
   external_deps = [

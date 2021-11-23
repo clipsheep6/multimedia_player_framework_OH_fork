@@ -42,8 +42,7 @@ int32_t AVCodecEngineGstImpl::Init(AVCodecType type, bool isMimeType, const std:
     CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_NO_MEMORY);
 
     // todo codeclist
-    bool useSoftware = true;
-    int32_t ret = ctrl_->Init(type, useSoftware, name);
+    int32_t ret = ctrl_->Init(type, true, "avdec_h264");
     CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_UNKNOWN);
     return MSERR_OK;
 }

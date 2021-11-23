@@ -103,14 +103,6 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
-
-    int32_t bufferCount = src_->GetBufferCount();
-    CHECK_AND_RETURN_RET(bufferCount > 0, MSERR_UNKNOWN);
-    auto obs = obs_.lock();
-    CHECK_AND_RETURN_RET_LOG(obs != nullptr, MSERR_UNKNOWN, "Null pointer exception");
-    for(int32_t i = 0; i < bufferCount; i++) {
-        obs->OnInputBufferAvailable(i);
-    }
     return MSERR_OK;
 }
 
@@ -187,7 +179,6 @@ sptr<Surface> AVCodecEngineCtrl::CreateInputSurface()
     }
     auto surface =  src_->CreateInputSurface();
     CHECK_AND_RETURN_RET(surface != nullptr, nullptr);
-    needInputCallback = false;
     return surface;
 }
 
@@ -203,7 +194,6 @@ int32_t AVCodecEngineCtrl::SetOutputSurface(sptr<Surface> surface)
 
 std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetInputBuffer(uint32_t index)
 {
-    CHECK_AND_RETURN_RET(needInputCallback == true, nullptr);
     CHECK_AND_RETURN_RET(src_ != nullptr, nullptr);
     auto task = std::make_shared<TaskHandler<std::shared_ptr<AVSharedMemory>>>([this, index] {
         return src_->GetInputBuffer(index);
@@ -262,7 +252,6 @@ int32_t AVCodecEngineCtrl::ReleaseOutputBuffer(uint32_t index, bool render)
 
 int32_t AVCodecEngineCtrl::SetParameter(const Format &format)
 {
-    // todo
     return MSERR_OK;
 }
 } // Media

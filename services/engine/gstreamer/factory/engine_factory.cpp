@@ -77,7 +77,6 @@ std::unique_ptr<IRecorderEngine> GstEngineFactory::CreateRecorderEngine()
 std::unique_ptr<IAVCodecEngine> GstEngineFactory::CreateAVCodecEngine()
 {
     GstLoader::Instance().UpdateLogLevel();
-    //todo init
     return std::make_unique<AVCodecEngineGstImpl>();
 }
 }

@@ -14,6 +14,7 @@
  */
 
 #include "src_bytebuffer_impl.h"
+#include "gst_codec_shmem_src.h"
 #include "media_log.h"
 
 namespace {

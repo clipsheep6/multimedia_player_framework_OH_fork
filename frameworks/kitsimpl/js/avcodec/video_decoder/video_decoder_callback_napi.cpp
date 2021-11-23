@@ -142,7 +142,6 @@ void VideoDecoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCo
 void VideoDecoderCallbackNapi::OnOutputFormatChanged(const Format &format)
 {
     MEDIA_LOGD("OnOutputFormatChanged() is called");
-    //todo
 }
 
 void VideoDecoderCallbackNapi::OnInputBufferAvailable(uint32_t index)

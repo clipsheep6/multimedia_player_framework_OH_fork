@@ -14,6 +14,7 @@
  */
 
 #include "sink_surface_impl.h"
+#include "gst_surface_mem_sink.h"
 #include "media_log.h"
 
 namespace {
