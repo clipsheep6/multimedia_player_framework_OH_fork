@@ -22,7 +22,7 @@
 #include "i_demuxer_service.h"
 #include "avsharedmemory.h"
 #include "media_types.h"
-#include "media_descriptions.h"
+#include "media_description.h"
 #include "media_data_source.h"
 
 namespace OHOS {
@@ -33,10 +33,10 @@ public:
 
     virtual int32_t SetSource(const std::string &uri) = 0;
     virtual int32_t SetSource(std::shared_ptr<IMediaDataSource> dataSource) = 0;
-    virtual void GetContainerDescription(MediaDescriptions &desc) = 0;
-    virtual int32_t GetTrackDescriptions(int32_t trackId, MediaDescriptions &desc) = 0;
-    virtual int32_t SelectTrack(int32_t trackId) = 0;
-    virtual int32_t UnSelectTrack(int32_t trackId) = 0;
+    virtual int32_t GetContainerDescription(MediaDescription &desc) = 0;
+    virtual int32_t GetTrackDescription(int32_t trackIdx, MediaDescription &desc) = 0;
+    virtual int32_t SelectTrack(int32_t trackIdx) = 0;
+    virtual int32_t UnSelectTrack(int32_t trackIdx) = 0;
     virtual int32_t ReadTrackSample(const ReadSampleOption &option,
         std::vector<std::shared_ptr<AVSharedMemory>> &sampleDatas, std::vector<TrackSampleInfo> &sampleInfos) = 0;
     virtual int32_t GetCacheState(int64_t &durationUs, bool &endOfStream) = 0;

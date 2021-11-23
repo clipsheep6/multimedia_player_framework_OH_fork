@@ -21,7 +21,7 @@
 #include <vector>
 #include "avmemory.h"
 #include "media_types.h"
-#include "media_descriptions.h"
+#include "media_description.h"
 
 namespace OHOS {
 namespace Media {
@@ -29,12 +29,10 @@ class Muxer {
 public:
     virtual ~Muxer() = default;
 
-    static std::vector<std::string> GetSupportedFormats();
-
-    virtual int32_t SetOutput(const std::string &path, const std::string &format);
+    virtual int32_t SetOutput(const std::string &path, const std::string &format) = 0;
     virtual int32_t SetLocation(float latitude, float longtitude) = 0;
     virtual int32_t SetOrientationHint(int degrees) = 0;
-    virtual int32_t AddTrack(const MediaDescriptions &trackDesc, int32_t &trackId) = 0;
+    virtual int32_t AddTrack(const MediaDescription &trackDesc, int32_t &trackIdx) = 0;
     virtual int32_t Start() = 0;
     virtual int32_t WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo &info) = 0;
     virtual int32_t Stop() = 0;

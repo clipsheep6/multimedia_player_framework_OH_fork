@@ -22,10 +22,21 @@
 
 namespace OHOS {
 namespace Media {
+/**
+ * @brief Provides a wrap for raw byte buffer.
+ */
 class AVMemory {
 public:
+    /**
+     * @brief Construct a new AVMemory object with specified capacity, the raw buffer will be allocated.
+     */
     explicit AVMemory(size_t capacity);
+
+    /**
+     * @brief Construct a new AVMemory object with specified raw buffer address and capacity.
+     */
     AVMemory(uint8_t *base, size_t capacity);
+
     ~AVMemory();
 
     uint8_t *Base() { return base_; }
@@ -38,10 +49,10 @@ public:
     DISALLOW_COPY_AND_MOVE(AVMemory);
 
 private:
-    uint8_t *base_;
-    size_t offset_;
-    size_t size_;
-    size_t capacity_;
+    uint8_t *base_ = nullptr;
+    size_t offset_ = 0;
+    size_t size_ = 0;
+    size_t capacity_ = 0;
 };
 }
 }
