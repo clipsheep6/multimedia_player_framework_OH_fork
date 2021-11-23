@@ -375,6 +375,7 @@ static gboolean set_pool_for_propose_allocation(GstSharedMemSink *shmemSink, Gst
     // add buffer type meta here.
 
     priv->avShmemPool = std::make_shared<OHOS::Media::AVSharedMemoryPool>();
+    (void)gst_shmem_pool_set_avshmempool(priv->pool, priv->avShmemPool);
 
     GstStructure *config = gst_buffer_pool_get_config(GST_BUFFER_POOL_CAST(pool));
     if (config != nullptr) {
