@@ -241,6 +241,7 @@ static gboolean gst_shmem_pool_stop(GstBufferPool *pool)
     if (spool->avshmempool != nullptr) {
         spool->avshmempool->Reset();
     }
+    GST_BUFFER_POOL_NOTIFY(spool); // wakeup immediately
     gboolean ret = (spool->freeBufCnt == spool->maxBuffers);
 
     // leave all configuration unchanged.
