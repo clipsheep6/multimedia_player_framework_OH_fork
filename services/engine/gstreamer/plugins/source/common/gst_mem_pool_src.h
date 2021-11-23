@@ -29,6 +29,8 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_MEM_POOL_SRC, GstMemPoolSrc))
 #define GST_MEM_POOL_SRC_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_MEM_POOL_SRC, GstMemPoolSrcClass))
+#define GST_MEM_POOL_SRC_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MEM_POOL_SRC, GstMemPoolSrcClass))
 #define GST_IS_MEM_POOL_SRC(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_MEM_POOL_SRC))
 #define GST_IS_MEM_POOL_SRC_CLASS(klass) \
@@ -68,7 +70,7 @@ GST_API_EXPORT
 GstFlowReturn gst_mem_pool_src_push_buffer(GstMemPoolSrc *memsrc, GstBuffer *buffer);
 
 GST_API_EXPORT
-void gst_mem_pool_src_set_callback(GstMemPoolSrc *poolsrc, BufferAvailable callback,
+void gst_mem_pool_src_set_callback(GstMemPoolSrc *memsrc, BufferAvailable callback,
                                         gpointer user_data, GDestroyNotify notify);
 
 GST_API_EXPORT

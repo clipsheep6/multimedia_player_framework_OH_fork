@@ -278,7 +278,7 @@ static gboolean gst_mem_pool_src_query(GstBaseSrc *src, GstQuery *query)
     return TRUE;
 }
 
-void gst_shmem_pool_src_set_callback(GstMemPoolSrc *memsrc, BufferAvailable callback,
+void gst_mem_pool_src_set_callback(GstMemPoolSrc *memsrc, BufferAvailable callback,
                                         gpointer user_data, GDestroyNotify notify)
 {
     g_return_if_fail(memsrc != nullptr && memsrc->priv != nullptr);
@@ -288,4 +288,31 @@ void gst_shmem_pool_src_set_callback(GstMemPoolSrc *memsrc, BufferAvailable call
     priv->notify = notify;
     priv->buffer_available = callback;
     GST_OBJECT_UNLOCK(memsrc);
+}
+
+
+GstBuffer *gst_mem_pool_src_pull_buffer(GstMemPoolSrc *memsrc)
+{
+    g_return_val_if_fail(memsrc != nullptr, nullptr);
+    GstMemPoolSrcClass *memclass = GST_MEM_POOL_SRC_GET_CLASS(memsrc);
+
+    g_return_val_if_fail(memclass != nullptr, nullptr);
+    if (memclass->pull_buffer) {
+        return memclass->pull_buffer(memsrc);
+    }
+    GST_ERROR_OBJECT(memsrc, "there is no pull buffer function");
+    return nullptr;
+}
+
+GstFlowReturn gst_mem_pool_src_push_buffer(GstMemPoolSrc *memsrc, GstBuffer *buffer)
+{
+    g_return_val_if_fail(memsrc != nullptr, GST_FLOW_ERROR);
+    GstMemPoolSrcClass *memclass = GST_MEM_POOL_SRC_GET_CLASS(memsrc);
+
+    g_return_val_if_fail(memclass != nullptr, GST_FLOW_ERROR);
+    if (memclass->push_buffer) {
+        return memclass->push_buffer(memsrc, buffer);
+    }
+    GST_ERROR_OBJECT(memsrc, "there is no push buffer function");
+    return GST_FLOW_ERROR;
 }
