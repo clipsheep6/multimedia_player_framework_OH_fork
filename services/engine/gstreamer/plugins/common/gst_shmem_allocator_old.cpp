@@ -13,36 +13,25 @@
  * limitations under the License.
  */
 
+#include "config.h"
 #include "gst_shmem_allocator.h"
+#include "gst_shmem_memory.h"
 #include "media_log.h"
+#include "media_errors.h"
 
 #define gst_shmem_allocator_parent_class parent_class
 G_DEFINE_TYPE(GstShMemAllocator, gst_shmem_allocator, GST_TYPE_ALLOCATOR);
 
 static const uint32_t ALIGN_BYTES = 4;
 
-GstShMemAllocator *gst_shmem_allocator_new()
+static GstMemory *gst_shmem_allocator_alloc(GstAllocator *allocator, gsize size, GstAllocationParams *params)
 {
-    GstShMemAllocator *alloc = GST_SHMEM_ALLOCATOR_CAST(g_object_new(
-        GST_TYPE_SHMEM_ALLOCATOR, "name", "ShMemAllocator", nullptr));
-    (void)gst_object_ref_sink(alloc);
+    g_return_val_if_fail(params != nullptr, nullptr);
+    g_return_val_if_fail(allocator != nullptr, nullptr);
 
-    return alloc;
-}
-
-void gst_shmem_allocator_set_pool(GstShMemAllocator *allocator,
-                                  std::shared_ptr<OHOS::Media::AVSharedMemoryPool> pool)
-{
-    g_return_if_fail(allocator != nullptr && pool != nullptr);
-    allocator->avShmemPool = pool;
-}
-
-GstMemory *gst_shmem_allocator_alloc(GstAllocator *allocator, gsize size, GstAllocationParams *params)
-{
-    g_return_val_if_fail(allocator != nullptr && params != nullptr, nullptr);
-    GstShMemAllocator *sAlloctor = GST_SHMEM_ALLOCATOR_CAST(allocator);
-    g_return_val_if_fail(sAlloctor != nullptr && sAlloctor->avShmemPool != nullptr, nullptr);
-
+    /**
+     * currently, only concern about the prefix.
+     */
     g_return_val_if_fail((params->prefix & (ALIGN_BYTES - 1)) == 0, nullptr);
     g_return_val_if_fail((UINT64_MAX - params->prefix) >= size, nullptr);
 
@@ -51,33 +40,30 @@ GstMemory *gst_shmem_allocator_alloc(GstAllocator *allocator, gsize size, GstAll
 
     g_return_val_if_fail(allocSize < INT32_MAX, nullptr);
 
-    std::shared_ptr<OHOS::Media::AVSharedMemory> shmem = sAlloctor->avShmemPool->AcquireMemory(allocSize);
-    g_return_val_if_fail(shmem != nullptr, nullptr);
+    auto avSharedMem = std::make_shared<OHOS::Media::AVSharedMemoryBase>(
+        static_cast<int32_t>(allocSize), OHOS::Media::AVSharedMemory::FLAGS_READ_ONLY, "GstShMemAllocator");
+    g_return_val_if_fail(avSharedMem->Init() == OHOS::Media::MSERR_OK, nullptr);
 
-    GstShMemMemory *memory = reinterpret_cast<GstShMemMemory *>(g_slice_alloc0(sizeof(GstShMemMemory)));
-    g_return_val_if_fail(memory != nullptr, nullptr);
+    GstShMemMemory *mem = reinterpret_cast<GstShMemMemory *>(g_slice_alloc0(sizeof(GstShMemMemory)));
+    g_return_val_if_fail(mem != nullptr, nullptr);
+    gst_memory_init(GST_MEMORY_CAST(mem), GST_MEMORY_FLAG_NO_SHARE,
+        allocator, nullptr, allocSize, 0, 0, size);
 
-    gst_memory_init(GST_MEMORY_CAST(memory), (GstMemoryFlags)0, allocator,
-        nullptr, allocSize, 0, 0, size);
+    mem->mem = avSharedMem;
+    GST_INFO_OBJECT(allocator, "alloc memory for size: %" PRIu64 ", addr: 0x%06" PRIXPTR "",
+        allocSize, FAKE_POINTER(avSharedMem->GetBase()));
 
-    memory->mem = shmem;
-    GST_DEBUG("alloc memory for size: %" PRIu64 ", addr: 0x%06" PRIXPTR "",
-        allocSize, FAKE_POINTER(shmem->GetBase()));
-
-    return GST_MEMORY_CAST(memory);
+    return GST_MEMORY_CAST(mem);
 }
 
-void gst_shmem_allocator_free(GstAllocator *allocator, GstMemory *memory)
+static void gst_shmem_allocator_free(GstAllocator *allocator, GstMemory *mem)
 {
-    g_return_if_fail(memory != nullptr && allocator != nullptr);
-    g_return_if_fail(gst_is_shmem_memory(memory));
+    g_return_if_fail(mem != nullptr && allocator != nullptr);
+    g_return_if_fail(gst_is_shmem_memory(mem));
 
-    GstShMemMemory *avSharedMem = reinterpret_cast<GstShMemMemory *>(memory);
-    GST_DEBUG("free memory for size: %" G_GSIZE_FORMAT ", addr: 0x%06" PRIXPTR "",
-        memory->maxsize, FAKE_POINTER(avSharedMem->mem->GetBase()));
-
-    // assign the nullptr will decrease the refcount, if the refcount is zero,
-    // the memory will be released back to pool.
+    GstShMemMemory *avSharedMem = reinterpret_cast<GstShMemMemory *>(mem);
+    GST_INFO_OBJECT(allocator, "free memory for size: %" G_GSIZE_FORMAT ", addr: 0x%06" PRIXPTR "",
+        mem->maxsize, FAKE_POINTER(avSharedMem->mem->GetBase()));
     avSharedMem->mem = nullptr;
     g_slice_free(GstShMemMemory, avSharedMem);
 }
@@ -132,4 +118,13 @@ static void gst_shmem_allocator_class_init(GstShMemAllocatorClass *klass)
 
     allocatorClass->alloc = gst_shmem_allocator_alloc;
     allocatorClass->free = gst_shmem_allocator_free;
+}
+
+GstAllocator *gst_shmem_allocator_new()
+{
+    GstAllocator *alloc = GST_ALLOCATOR_CAST(g_object_new(
+        GST_TYPE_SHMEM_ALLOCATOR, "name", "AVShareMem::Allocator", nullptr));
+    (void)gst_object_ref_sink(alloc);
+
+    return alloc;
 }

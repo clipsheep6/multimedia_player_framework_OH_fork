@@ -23,32 +23,25 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVSharedMemoryBase"};
+    constexpr int32_t MAX_ALLOWED_SIZE = 100 * 1024 * 1024;
 }
 
 namespace OHOS {
 namespace Media {
-std::shared_ptr<AVSharedMemory> AVSharedMemory::Create(int32_t size, uint32_t flags, const std::string &name)
-{
-    std::shared_ptr<AVSharedMemoryBase> memory = std::make_shared<AVSharedMemoryBase>(size, flags, name);
-    int32_t ret = memory->Init();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("Create avsharedmemory failed, ret = %{public}d", ret);
-        return nullptr;
-    }
-
-    return memory;
-}
-
 AVSharedMemoryBase::AVSharedMemoryBase(int32_t size, uint32_t flags, const std::string &name)
-    : base_(nullptr), size_(size), flags_(flags), name_(name), fd_(-1)
+    : base_(nullptr), size_(size), flags_(flags), name_(name), fd_(-1), isRemote_(false)
 {
+    typeSet_.insert(TYPE);
+
     MEDIA_LOGD("enter ctor, instance: 0x%{public}06" PRIXPTR ", name = %{public}s",
                FAKE_POINTER(this), name_.c_str());
 }
 
 AVSharedMemoryBase::AVSharedMemoryBase(int32_t fd, int32_t size, uint32_t flags, const std::string &name)
-    : base_(nullptr), size_(size), flags_(flags), name_(name), fd_(dup(fd))
+    : base_(nullptr), size_(size), flags_(flags), name_(name), fd_(dup(fd)), isRemote_(true)
 {
+    typeSet_.insert(TYPE);
+
     MEDIA_LOGD("enter ctor, instance: 0x%{public}06" PRIXPTR ", name = %{public}s",
                FAKE_POINTER(this), name_.c_str());
 }
@@ -62,34 +55,54 @@ AVSharedMemoryBase::~AVSharedMemoryBase()
 
 int32_t AVSharedMemoryBase::Init()
 {
-    ON_SCOPE_EXIT(0) {
-        MEDIA_LOGE("create avsharedmemory failed, name = %{public}s, size = %{public}d, "
-                   "flags = 0x%{public}x, fd = %{public}d",
-                   name_.c_str(), size_, flags_, fd_);
-        Close();
-    };
+    ON_SCOPE_EXIT(0) { Close(); };
 
-    CHECK_AND_RETURN_RET(size_ > 0, MSERR_INVALID_VAL);
+    if (size_ <= 0 || size_ > MAX_ALLOWED_SIZE) {
+        MEDIA_LOGE("create memory failed, size %{public}d is illegal, name = %{public}s",
+                   size_, name_.c_str());
+        return MSERR_INVALID_VAL;
+    }
 
-    bool isRemote = false;
+#ifdef USE_SHARED_MEM
     if (fd_ > 0) {
         int size = AshmemGetSize(fd_);
-        CHECK_AND_RETURN_RET(size == size_, MSERR_INVALID_VAL);
-        isRemote = true;
+        if (size != size_) {
+            MEDIA_LOGE("get size failed, name = %{public}s, size = %{public}d, "
+                       "flags = 0x%{public}x, fd = %{public}d", name_.c_str(), size_, flags_, fd_);
+            return MSERR_INVALID_VAL;
+        }
     }
 
     if (fd_ <= 0) {
         fd_ = AshmemCreate(name_.c_str(), static_cast<size_t>(size_));
-        CHECK_AND_RETURN_RET(fd_ > 0, MSERR_INVALID_VAL);
+        if (fd_ <= 0) {
+            MEDIA_LOGE("create mem failed, name = %{public}s, size = %{public}d, "
+                       "flags = 0x%{public}x, fd = %{public}d", name_.c_str(), size_, flags_, fd_);
+            return MSERR_INVALID_VAL;
+        }
     }
 
-    int32_t ret = MapMemory(isRemote);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_INVALID_VAL);
+    int32_t ret = MapMemory(isRemote_);
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("map memory failed, name = %{public}s, size = %{public}d, "
+                   "flags = 0x%{public}x, fd = %{public}d", name_.c_str(), size_, flags_, fd_);
+        return ret;
+    }
+
+#else
+    base_ = new (std::nothrow) uint8_t[size_];
+    if (base_ == nullptr) {
+        MEDIA_LOGE("create memory failed, new failed, size = %{public}d , name = %{public}s",
+                   size_, name_.c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+#endif
 
     CANCEL_SCOPE_EXIT_GUARD(0);
     return MSERR_OK;
 }
 
+#ifdef USE_SHARED_MEM
 int32_t AVSharedMemoryBase::MapMemory(bool isRemote)
 {
     unsigned int prot = PROT_READ | PROT_WRITE;
@@ -106,9 +119,11 @@ int32_t AVSharedMemoryBase::MapMemory(bool isRemote)
     base_ = reinterpret_cast<uint8_t*>(addr);
     return MSERR_OK;
 }
+#endif
 
 void AVSharedMemoryBase::Close() noexcept
 {
+#ifdef USE_SHARED_MEM
     if (base_ != nullptr) {
         (void)::munmap(base_, static_cast<size_t>(size_));
         base_ = nullptr;
@@ -120,26 +135,11 @@ void AVSharedMemoryBase::Close() noexcept
         (void)::close(fd_);
         fd_ = -1;
     }
-}
-
-uint8_t *AVSharedMemoryBase::GetBase()
-{
-    return base_;
-}
-
-int32_t AVSharedMemoryBase::GetSize()
-{
-    return size_;
-}
-
-uint32_t AVSharedMemoryBase::GetFlags()
-{
-    return flags_;
-}
-
-int32_t AVSharedMemoryBase::GetFd() const
-{
-    return fd_;
+#else
+    if (base_ != nullptr) {
+        delete [] base_;
+    }
+#endif
 }
 }
 }

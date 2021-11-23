@@ -13,38 +13,34 @@
  * limitations under the License.
  */
 
-#ifndef AVSHAREDMEMORYLOCAL_H
-#define AVSHAREDMEMORYLOCAL_H
+#ifndef MEDIA_TYPES_H
+#define MEDIA_TYPES_H
 
-#include <string>
-#include "nocopyable.h"
-#include "avsharedmemory.h"
+#include <cstdint>
 
 namespace OHOS {
 namespace Media {
-class AVSharedMemoryLocal : public AVSharedMemory {
-public:
-    AVSharedMemoryLocal(int32_t size, uint32_t flags, const std::string &name);
-    ~AVSharedMemoryLocal();
+enum SampleType : uint16_t {
+    SYNC_FRAME = 1,
+    PARTIAL_FRAME = 2,
+    CODEC_DATA = 3,
+};
 
-    int32_t Init();
-    std::string GetName()
-    {
-        return name_;
-    }
-    uint8_t *GetBase() override;
-    int32_t GetSize() override;
-    uint32_t GetFlags() override;
+enum SampleFlags : uint16_t {
+    EOS_FRAME = 1,
+};
 
-    DISALLOW_COPY_AND_MOVE(AVSharedMemoryLocal);
+struct SampleInfo {
+    int64_t timeUs;
+    int32_t size;
+    int32_t offset;
+    SampleType type;
+    SampleFlags flags;
+};
 
-private:
-    uint8_t *base_;
-    int32_t size_;
-    uint32_t flags_;
-    std::string name_;
+struct TrackSampleInfo : public SampleInfo {
+    int32_t trackId;
 };
 }
 }
-
 #endif
