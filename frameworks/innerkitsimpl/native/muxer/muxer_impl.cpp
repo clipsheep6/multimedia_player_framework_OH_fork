@@ -17,8 +17,19 @@
 #include "media_errors.h"
 #include "media_log.h"
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MuxerImpl"};
+}
+
 namespace OHOS {
 namespace Media {
+std::shared_ptr<Muxer> MuxerFactory::CreateMuxer()
+{
+    auto muxer = std::make_shared<MuxerImpl>();
+    CHECK_AND_RETURN_RET_LOG(muxer->Init() == MSERR_OK, nullptr, "muxer init failed");
+    return muxer;
+}
+
 MuxerImpl::MuxerImpl()
 {
 
@@ -27,6 +38,11 @@ MuxerImpl::MuxerImpl()
 MuxerImpl::~MuxerImpl()
 {
 
+}
+
+int32_t MuxerImpl::Init()
+{
+    return MSERR_OK;
 }
 
 int32_t MuxerImpl::SetOutput(const std::string &path, const std::string &format)

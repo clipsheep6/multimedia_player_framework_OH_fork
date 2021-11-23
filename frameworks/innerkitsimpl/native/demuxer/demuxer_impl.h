@@ -26,6 +26,7 @@ public:
     DemuxerImpl();
     ~DemuxerImpl();
 
+    int32_t Init();
     int32_t SetSource(const std::string &uri, TrackSelectMode mode) override;
     int32_t SetSource(std::shared_ptr<IMediaDataSource> dataSource, TrackSelectMode mode) override;
     int32_t GetContainerDescription(MediaDescription &desc) override;

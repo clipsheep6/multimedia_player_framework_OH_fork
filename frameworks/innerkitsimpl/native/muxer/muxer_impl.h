@@ -26,6 +26,7 @@ public:
     MuxerImpl();
     ~MuxerImpl();
 
+    int32_t Init();
     int32_t SetOutput(const std::string &path, const std::string &format) override;
     int32_t SetLocation(float latitude, float longtitude) override;
     int32_t SetOrientationHint(int degrees) override;

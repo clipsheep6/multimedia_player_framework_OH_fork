@@ -17,8 +17,20 @@
 #include "media_errors.h"
 #include "media_log.h"
 
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "DemuxerImpl"};
+}
+
 namespace OHOS {
 namespace Media {
+std::shared_ptr<Demuxer> DemuxerFactory::CreateDemuxer()
+{
+    auto demuxer = std::make_shared<DemuxerImpl>();
+    int32_t ret = demuxer->Init();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "demuxer init failed");
+    return demuxer;
+}
+
 DemuxerImpl::DemuxerImpl()
 {
 
@@ -27,6 +39,11 @@ DemuxerImpl::DemuxerImpl()
 DemuxerImpl::~DemuxerImpl()
 {
 
+}
+
+int32_t DemuxerImpl::Init()
+{
+    return MSERR_OK;
 }
 
 int32_t DemuxerImpl::SetSource(const std::string &uri, TrackSelectMode mode)
