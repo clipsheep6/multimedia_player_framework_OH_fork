@@ -63,6 +63,7 @@ ohos_shared_library("gst_source_common") {
 
   deps = [
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common:gst_buffer_meta",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common:gst_plugins_common",
     "//foundation/graphic/standard:libsurface",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",

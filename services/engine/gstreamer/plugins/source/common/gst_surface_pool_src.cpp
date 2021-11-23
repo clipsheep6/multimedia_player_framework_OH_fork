@@ -116,6 +116,7 @@ static GstStateChangeReturn gst_surface_pool_src_change_state(GstElement *elemen
             break;
         case GST_STATE_CHANGE_READY_TO_PAUSED:
             gst_surface_pool_src_init_surface(surfacesrc);
+            break;
         default:
             break;
     }
