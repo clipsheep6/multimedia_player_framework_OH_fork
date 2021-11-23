@@ -17,6 +17,8 @@
 #define COMMON_NAPI_H
 
 #include <string>
+#include "avcodec_common.h"
+#include "avsharedmemory.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
@@ -44,6 +46,9 @@ public:
     static std::string GetStringArgument(napi_env env, napi_value value);
     static void GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
+    static napi_status FillCodecErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
+    static napi_value CreateCodecBuffer(napi_env env, uint32_t index, std::shared_ptr<AVSharedMemory> memory,
+                                        AVCodecBufferInfo info);
 };
 }
 }
