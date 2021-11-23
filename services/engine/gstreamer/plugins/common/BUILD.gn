@@ -48,7 +48,10 @@ config("gst_plugins_common_config") {
 }
 
 ohos_static_library("gst_plugins_common") {
-  sources = [ "gst_shmem_allocator.cpp" ]
+  sources = [
+    "gst_shmem_allocator.cpp",
+    "gst_shmem_pool.cpp"
+  ]
 
   configs = [ ":gst_plugins_common_config" ]
 
@@ -63,6 +66,63 @@ ohos_static_library("gst_plugins_common") {
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
+  subsystem_name = "multimedia"
+  part_name = "multimedia_media_standard"
+}
+
+config("gst_buffer_meta_config") {
+  visibility = [ ":*" ]
+
+  cflags = [
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
+    "-Wformat=2",
+    "-Wfloat-equal",
+    "-Wdate-time",
+  ]
+
+  include_dirs = [
+    "include",
+    "//utils/native/base/include",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
+    "//third_party/gstreamer/gstreamer",
+    "//third_party/gstreamer/gstreamer/libs",
+    "//third_party/gstreamer/gstplugins_base",
+    "//third_party/gstreamer/gstplugins_base/gst-libs",
+    "//third_party/glib/glib",
+    "//third_party/glib",
+    "//third_party/glib/gmodule",
+  ]
+}
+
+ohos_shared_library("gst_buffer_meta") {
+  install_enable = true
+
+  sources = [
+    "buffer_type_meta.c",
+  ]
+
+  configs = [ ":gst_buffer_meta_config" ]
+
+  deps = [
+    "//third_party/glib:glib",
+    "//third_party/glib:gmodule",
+    "//third_party/glib:gobject",
+    "//third_party/gstreamer/gstreamer:gstbase",
+    "//third_party/gstreamer/gstreamer:gstreamer",
+  ]
+
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+
+  relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
   part_name = "multimedia_media_standard"
 }

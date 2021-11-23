@@ -13,38 +13,30 @@
  * limitations under the License.
  */
 
-#ifndef AVSHAREDMEMORYLOCAL_H
-#define AVSHAREDMEMORYLOCAL_H
+#ifndef VIDEO_ENCORDER_H
+#define VIDEO_ENCORDER_H
 
-#include <string>
-#include "nocopyable.h"
-#include "avsharedmemory.h"
+#include "recorder_element.h"
 
 namespace OHOS {
 namespace Media {
-class AVSharedMemoryLocal : public AVSharedMemory {
+class VideoEncorder : public RecorderElement {
 public:
-    AVSharedMemoryLocal(int32_t size, uint32_t flags, const std::string &name);
-    ~AVSharedMemoryLocal();
+    using RecorderElement::RecorderElement;
+    ~VideoEncorder() = default;
 
-    int32_t Init();
-    std::string GetName()
-    {
-        return name_;
-    }
-    uint8_t *GetBase() override;
-    int32_t GetSize() override;
-    uint32_t GetFlags() override;
-
-    DISALLOW_COPY_AND_MOVE(AVSharedMemoryLocal);
+    int32_t Init() override;
+    int32_t Configure(const RecorderParam &recParam) override;
+    int32_t CheckConfigReady() override;
+    void Dump() override;
+protected:
+    RecorderMsgProcResult DoProcessMessage(GstMessage &rawMsg, RecorderMessage &prettyMsg) override;
 
 private:
-    uint8_t *base_;
-    int32_t size_;
-    uint32_t flags_;
-    std::string name_;
+    int32_t CreateElement();
+    int32_t encoderFormat_;
+    int32_t bitRate_;
 };
 }
 }
-
 #endif
