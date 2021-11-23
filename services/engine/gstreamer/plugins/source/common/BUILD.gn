@@ -13,7 +13,7 @@
 
 import("//build/ohos.gni")
 
-config("gst_plugins_common_config") {
+config("gst_source_common_config") {
   visibility = [ ":*" ]
 
   cflags = [
@@ -33,65 +33,9 @@ config("gst_plugins_common_config") {
   ]
 
   include_dirs = [
-    "include",
     "//utils/native/base/include",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
-    "//third_party/gstreamer/gstreamer",
-    "//third_party/gstreamer/gstreamer/libs",
-    "//third_party/gstreamer/gstplugins_base",
-    "//third_party/gstreamer/gstplugins_base/gst-libs",
-    "//third_party/glib/glib",
-    "//third_party/glib",
-    "//third_party/glib/gmodule",
-  ]
-}
-
-ohos_static_library("gst_plugins_common") {
-  sources = [
-    "gst_shmem_allocator.cpp",
-    "gst_shmem_pool.cpp"
-  ]
-
-  configs = [ ":gst_plugins_common_config" ]
-
-  deps = [
-    "//foundation/multimedia/media_standard/services/utils:media_service_utils",
-    "//third_party/glib:glib",
-    "//third_party/glib:gmodule",
-    "//third_party/glib:gobject",
-    "//third_party/gstreamer/gstreamer:gstbase",
-    "//third_party/gstreamer/gstreamer:gstreamer",
-  ]
-
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-
-  subsystem_name = "multimedia"
-  part_name = "multimedia_media_standard"
-}
-
-config("gst_buffer_meta_config") {
-  visibility = [ ":*" ]
-
-  cflags = [
-    "-fno-rtti",
-    "-fno-exceptions",
-    "-Wall",
-    "-fno-common",
-    "-fstack-protector-strong",
-    "-FPIC",
-    "-FS",
-    "-O2",
-    "-D_FORTIFY_SOURCE=2",
-    "-fvisibility=hidden",
-    "-Wformat=2",
-    "-Wfloat-equal",
-    "-Wdate-time",
-  ]
-
-  include_dirs = [
-    "include",
-    "//utils/native/base/include",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
@@ -100,27 +44,39 @@ config("gst_buffer_meta_config") {
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/glib/gmodule",
+    "foundation/graphic/standard/interfaces/innerkits/common",
   ]
 }
 
-ohos_shared_library("gst_buffer_meta") {
+ohos_shared_library("gst_source_common") {
   install_enable = true
 
   sources = [
-    "buffer_type_meta.c",
+    "gst_consumer_surface_allocator.cpp",
+    "gst_consumer_surface_pool.cpp",
+    "gst_surface_pool_src.cpp",
+    "gst_shmem_pool_src.cpp",
+    "gst_mem_pool_src.cpp",
   ]
 
-  configs = [ ":gst_buffer_meta_config" ]
+  configs = [ ":gst_source_common_config" ]
 
   deps = [
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common:gst_buffer_meta",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common:gst_plugins_common",
+    "//foundation/graphic/standard:libsurface",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
+    "//third_party/gstreamer/gstplugins_base:gstvideo",
     "//third_party/gstreamer/gstreamer:gstbase",
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+  ]
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
