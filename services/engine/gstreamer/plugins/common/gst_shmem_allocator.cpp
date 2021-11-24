@@ -56,9 +56,8 @@ GstMemory *gst_shmem_allocator_alloc(GstAllocator *allocator, gsize size, GstAll
 
     GstShMemMemory *memory = reinterpret_cast<GstShMemMemory *>(g_slice_alloc0(sizeof(GstShMemMemory)));
     g_return_val_if_fail(memory != nullptr, nullptr);
-
-    gst_memory_init(GST_MEMORY_CAST(memory), (GstMemoryFlags)0, allocator,
-        nullptr, allocSize, 0, 0, size);
+    gst_memory_init(GST_MEMORY_CAST(memory), GST_MEMORY_FLAG_NO_SHARE,
+        allocator, nullptr, static_cast<gsize>(allocSize), 0, 0, size);
 
     memory->mem = shmem;
     GST_DEBUG("alloc memory for size: %" PRIu64 ", addr: 0x%06" PRIXPTR "",

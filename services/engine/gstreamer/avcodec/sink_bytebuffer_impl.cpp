@@ -16,7 +16,6 @@
 #include "sink_bytebuffer_impl.h"
 #include "gst_shmem_memory.h"
 #include "media_log.h"
-#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SinkBytebufferImpl"};
