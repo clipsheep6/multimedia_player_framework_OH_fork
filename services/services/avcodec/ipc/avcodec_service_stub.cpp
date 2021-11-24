@@ -307,7 +307,7 @@ int32_t AVCodecServiceStub::GetInputBuffer(MessageParcel &data, MessageParcel &r
     uint32_t index = data.ReadUint32();
     auto buffer = GetInputBuffer(index);
     if (buffer != nullptr) {
-        (void)WriteAVSharedMemoryToParcel(buffer, reply);
+        (void)AVShMemIPCStatic::WriteToParcel(buffer, reply);
     }
     return MSERR_OK;
 }
@@ -329,7 +329,7 @@ int32_t AVCodecServiceStub::GetOutputBuffer(MessageParcel &data, MessageParcel &
     uint32_t index = data.ReadUint32();
     auto buffer = GetOutputBuffer(index);
     if (buffer != nullptr) {
-        (void)WriteAVSharedMemoryToParcel(buffer, reply);
+        (void)AVShMemIPCStatic::WriteToParcel(buffer, reply);
     }
     return MSERR_OK;
 }

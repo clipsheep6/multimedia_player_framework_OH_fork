@@ -221,7 +221,7 @@ std::shared_ptr<AVSharedMemory> AVCodecServiceProxy::GetInputBuffer(uint32_t ind
         MEDIA_LOGE("GetInputBuffer failed, error: %{public}d", ret);
         return nullptr;
     }
-    auto memory = ReadAVSharedMemoryFromParcel(reply);
+    auto memory = AVShMemIPCStatic::ReadFromParcel(reply);
     if (memory == nullptr) {
         MEDIA_LOGE("Failed to GetInputBuffer");
         return nullptr;
@@ -258,7 +258,7 @@ std::shared_ptr<AVSharedMemory> AVCodecServiceProxy::GetOutputBuffer(uint32_t in
         MEDIA_LOGE("GetOutputBuffer failed, error: %{public}d", ret);
         return nullptr;
     }
-    auto memory = ReadAVSharedMemoryFromParcel(reply);
+    auto memory = AVShMemIPCStatic::ReadFromParcel(reply);
     if (memory == nullptr) {
         MEDIA_LOGE("Failed to GetOutputBuffer");
         return nullptr;

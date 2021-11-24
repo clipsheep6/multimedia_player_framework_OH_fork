@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef AUDIO_SOURCE_H
-#define AUDIO_SOURCE_H
+#ifndef AUDIO_ENCORDER_H
+#define AUDIO_ENCORDER_H
 
 #include "recorder_element.h"
 

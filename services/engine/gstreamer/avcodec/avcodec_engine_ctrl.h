@@ -49,7 +49,6 @@ public:
 
 private:
     AVCodecType codecType_ = AVCODEC_TYPE_VIDEO_ENCODER;
-    bool needInputCallback = true;
     GstPipeline *gstPipeline_ = nullptr;
     GstElement *codecBin_ = nullptr;
     std::unique_ptr<TaskQueue> taskQueue_;

@@ -255,7 +255,6 @@ napi_value AudioEncoderNapi::Configure(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(encoderNapi->audioEncoderImpl_ != nullptr, undefinedResult, "No memory");
     CHECK_AND_RETURN_RET_LOG(encoderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
     auto task = std::make_shared<TaskHandler<void>>([napi = encoderNapi]() {
-        // todo
         Format format;
         int32_t ret = napi->audioEncoderImpl_->Configure(format);
         if (ret == MSERR_OK) {
@@ -652,7 +651,6 @@ napi_value AudioEncoderNapi::SetParameter(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == 0 && valueType == napi_object) {
-            // todo
         } else if (i == 1 && valueType == napi_function) {
             napi_create_reference(env, args[i], refCount, &asyncContext->callbackRef);
         } else {
@@ -673,7 +671,6 @@ napi_value AudioEncoderNapi::SetParameter(napi_env env, napi_callback_info info)
         env, nullptr, resource,
         [](napi_env env, void *data) {
             //auto context = static_cast<AudioEncoderAsyncContext *>(data);
-            // todo
             //context->status = context->audioEncoderNapi->audioEncoderImpl_->
             //    SetParameter(context->index);
         },
