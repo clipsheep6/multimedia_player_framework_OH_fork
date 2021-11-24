@@ -19,7 +19,6 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ProcessorAencImpl"};
-    constexpr int32_t MAX_CHANNELS = 2;
 }
 
 namespace OHOS {
@@ -34,28 +33,15 @@ ProcessorAencImpl::~ProcessorAencImpl()
 
 int32_t ProcessorAencImpl::ProcessMandatory(const Format &format)
 {
-    MEDIA_LOGD("ProcessMandatory");
-    (void)channels_;
-    (void)sampleRate_;
-    (void)pcmFormat_;
-    //CHECK_AND_RETURN_RET(Format::GetIntValue("channels", channels_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET_LOG(channels_ <= MAX_CHANNELS, MSERR_INVALID_VAL, "Invalid channel cout");
-    //CHECK_AND_RETURN_RET(Format::GetIntValue("sampleRate", sampleRate_) == true, MSERR_INVALID_VAL);
-    //CHECK_AND_RETURN_RET(Format::GetIntValue("pcmFormat", pcmFormat_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("channels", channels_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("sampleRate", sampleRate_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("pcmFormat", pcmFormat_) == true, MSERR_INVALID_VAL);
     return MSERR_OK;
 }
 
 int32_t ProcessorAencImpl::ProcessOptional(const Format &format)
 {
-    (void)profile_;
-    //(void)Format::GetIntValue("profile", profile_);
-    // switch (mimeType_) {
-    //     case aac:
-    //         break;
-    //     default:
-    //         MEDIA_LOGE("Unknown type");
-    //         break;
-    // }
+    (void)format.GetIntValue("profile", profile_);
     return MSERR_OK;
 }
 
@@ -73,13 +59,31 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetInputPortConfig()
         "format", G_TYPE_STRING, "S16LE",
         "channel-mask", GST_TYPE_BITMASK, channelMask,
         "layout", G_TYPE_STRING, "interleaved", nullptr);
+    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
+
     auto config = std::make_shared<ProcessorConfig>(caps);
+    if (config == nullptr) {
+        MEDIA_LOGE("No memory");
+        gst_caps_unref(caps);
+        return nullptr;
+    }
     return config;
 }
 
 std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
 {
-    return nullptr;
+    GstCaps *caps = gst_caps_new_simple("audio/mpeg",
+        "mpegversion", G_TYPE_INT, 1,
+        "layer", G_TYPE_INT, 3, nullptr);
+    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
+
+    auto config = std::make_shared<ProcessorConfig>(caps);
+    if (config == nullptr) {
+        MEDIA_LOGE("No memory");
+        gst_caps_unref(caps);
+        return nullptr;
+    }
+    return config;
 }
 } // Media
 } // OHOS

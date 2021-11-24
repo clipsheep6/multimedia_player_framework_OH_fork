@@ -33,13 +33,9 @@ ProcessorAdecImpl::~ProcessorAdecImpl()
 
 int32_t ProcessorAdecImpl::ProcessMandatory(const Format &format)
 {
-    MEDIA_LOGD("ProcessMandatory");
-    (void)channels_;
-    (void)sampleRate_;
-    (void)pcmFormat_;
-    //CHECK_AND_RETURN_RET(Format::GetIntValue("channels", channels_) == true, MSERR_INVALID_VAL);
-    //CHECK_AND_RETURN_RET(Format::GetIntValue("sampleRate", sampleRate_) == true, MSERR_INVALID_VAL);
-    //CHECK_AND_RETURN_RET(Format::GetIntValue("pcmFormat", pcmFormat_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("channels", channels_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("sampleRate", sampleRate_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("pcmFormat", pcmFormat_) == true, MSERR_INVALID_VAL);
     return MSERR_OK;
 }
 
@@ -51,10 +47,16 @@ int32_t ProcessorAdecImpl::ProcessOptional(const Format &format)
 std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
 {
     GstCaps *caps = gst_caps_new_simple("audio/mpeg",
-        "mpegversion", G_TYPE_INT, 4,
-        "stream-format", G_TYPE_STRING, "adts", nullptr);
-    //GstCaps *caps = gst_caps_new_simple("audio/x-flac", nullptr);
+        "mpegversion", G_TYPE_INT, 1,
+        "layer", G_TYPE_INT, 3, nullptr);
+    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
+
     auto config = std::make_shared<ProcessorConfig>(caps);
+    if (config == nullptr) {
+        MEDIA_LOGE("No memory");
+        gst_caps_unref(caps);
+        return nullptr;
+    }
     return config;
 }
 
@@ -72,7 +74,14 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetOutputPortConfig()
         "format", G_TYPE_STRING, "S16LE",
         "channel-mask", GST_TYPE_BITMASK, channelMask,
         "layout", G_TYPE_STRING, "interleaved", nullptr);
+    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
+
     auto config = std::make_shared<ProcessorConfig>(caps);
+    if (config == nullptr) {
+        MEDIA_LOGE("No memory");
+        gst_caps_unref(caps);
+        return nullptr;
+    }
     return config;
 }
 } // Media

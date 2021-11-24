@@ -33,41 +33,20 @@ ProcessorVencImpl::~ProcessorVencImpl()
 
 int32_t ProcessorVencImpl::ProcessMandatory(const Format &format)
 {
-    MEDIA_LOGD("ProcessMandatory");
-    (void)width_;
-    (void)height_;
-    (void)pixelFormat_;
-    (void)frameRate_;
-    //CHECK_AND_RETURN_RET(Format::GetIntValue("width", width_) == true, MSERR_INVALID_VAL);
-    //CHECK_AND_RETURN_RET(Format::GetIntValue("height", height_) == true, MSERR_INVALID_VAL);
-    //CHECK_AND_RETURN_RET(Format::GetIntValue("pixelFormat", pixelFormat_) == true, MSERR_INVALID_VAL);
-    //CHECK_AND_RETURN_RET(Format::GetIntValue("frameRate", frameRate_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("width", width_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("height", height_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("pixelFormat", pixelFormat_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("frameRate", frameRate_) == true, MSERR_INVALID_VAL);
     return MSERR_OK;
 }
 
 int32_t ProcessorVencImpl::ProcessOptional(const Format &format)
 {
-    (void)bitrate_;
-    (void)iFrameInterval_;
-    (void)profile_;
-    (void)quality_;
-    (void)level_;
-    // (void)Format::GetIntValue("bitrate", bitrate_);
-    // (void)Format::GetIntValue("i_frame_interval", iFrameInterval_);
-    // (void)Format::GetIntValue("profile", profile_);
-    // (void)Format::GetIntValue("quality", quality_);
-    // (void)Format::GetIntValue("level", level_);
-    // switch (mimeType_) {
-    //     case 264:
-    //         break;
-    //     case 265:
-    //         break;
-    //     case mpeg:
-    //         break;
-    //     default:
-    //         MEDIA_LOGE("Unknown type");
-    //         break;
-    // }
+    (void)format.GetIntValue("bitrate", bitrate_);
+    (void)format.GetIntValue("i_frame_interval", iFrameInterval_);
+    (void)format.GetIntValue("profile", profile_);
+    (void)format.GetIntValue("quality", quality_);
+    (void)format.GetIntValue("level", level_);
     return MSERR_OK;
 }
 
@@ -78,7 +57,14 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetInputPortConfig()
         "height", G_TYPE_INT, height_,
         "format", G_TYPE_STRING, "NV12",
         "framerate", G_TYPE_INT, frameRate_, nullptr);
+    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
+
     auto config = std::make_shared<ProcessorConfig>(caps);
+    if (config == nullptr) {
+        MEDIA_LOGE("No memory");
+        gst_caps_unref(caps);
+        return nullptr;
+    }
     return config;
 }
 
@@ -90,13 +76,14 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
         "alignment", G_TYPE_STRING, "au",
         "framerate", G_TYPE_INT, frameRate_,
         "stream-format", G_TYPE_STRING, "byte-stream", nullptr);
-    // GstCaps *caps = gst_caps_new_simple("video/x-h265",
-    //     "width", G_TYPE_INT, width_,
-    //     "height", G_TYPE_INT, height_,
-    //     "alignment", G_TYPE_STRING, "au",
-    //     "framerate", G_TYPE_INT, frameRate_,
-    //     "stream-format", G_TYPE_STRING, "byte-stream", nullptr);
+    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
+
     auto config = std::make_shared<ProcessorConfig>(caps);
+    if (config == nullptr) {
+        MEDIA_LOGE("No memory");
+        gst_caps_unref(caps);
+        return nullptr;
+    }
     return config;
 }
 } // Media
