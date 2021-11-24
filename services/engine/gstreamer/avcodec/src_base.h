@@ -37,7 +37,6 @@ class SrcBase {
 public:
     virtual ~SrcBase() = default;
 
-    virtual int32_t AllocateBuffer() = 0;
     virtual int32_t Init() = 0;
     virtual int32_t Configure(std::shared_ptr<ProcessorConfig> config) = 0;
     virtual int32_t Flush() = 0;
@@ -45,11 +44,6 @@ public:
     virtual sptr<Surface> CreateInputSurface()
     {
         return nullptr;
-    }
-
-    virtual int32_t GetBufferCount()
-    {
-        return 0;
     }
 
     virtual GstElement *GetElement()

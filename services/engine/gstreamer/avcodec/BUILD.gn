@@ -36,6 +36,7 @@ config("media_engine_gst_avcodec_config") {
 
   include_dirs = [
     "//foundation/multimedia/media_standard/services/engine/gstreamer/avcodec",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/sink/memsink",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/source/codecsource",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/source/common",

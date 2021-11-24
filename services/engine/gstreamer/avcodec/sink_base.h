@@ -36,7 +36,6 @@ enum SinkType : int32_t {
 class SinkBase {
 public:
     virtual ~SinkBase() = default;
-    virtual int32_t AllocateBuffer() = 0;
     virtual int32_t Init() = 0;
     virtual int32_t Configure(std::shared_ptr<ProcessorConfig> config) = 0;
     virtual int32_t Flush() = 0;

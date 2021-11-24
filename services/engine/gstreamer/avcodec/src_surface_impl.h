@@ -28,7 +28,6 @@ public:
     virtual ~SrcSurfaceImpl();
     DISALLOW_COPY_AND_MOVE(SrcSurfaceImpl);
 
-    int32_t AllocateBuffer() override;
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
     int32_t Flush() override;

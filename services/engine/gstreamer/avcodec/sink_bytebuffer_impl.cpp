@@ -14,8 +14,9 @@
  */
 
 #include "sink_bytebuffer_impl.h"
-#include "gst_shared_mem_sink.h"
+#include "gst_shmem_memory.h"
 #include "media_log.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SinkBytebufferImpl"};
@@ -32,68 +33,27 @@ SinkBytebufferImpl::~SinkBytebufferImpl()
     bufferList_.clear();
     shareMemList_.clear();
     if (element_ != nullptr) {
-        g_signal_handler_disconnect(G_OBJECT(element_), signalId_);
         gst_object_unref(element_);
         element_ = nullptr;
     }
 }
 
-int32_t SinkBytebufferImpl::AllocateBuffer()
-{
-    CHECK_AND_RETURN_RET(bufferCount_ > 0, MSERR_UNKNOWN);
-    int32_t ret = MSERR_UNKNOWN;
-    for (uint32_t i = 0; i < bufferCount_; i++) {
-        GstSample *sample = nullptr;
-        g_signal_emit_by_name(G_OBJECT(element_), "pull-sample", &sample);
-        CHECK_AND_BREAK_LOG(sample != nullptr, "Failed to pull sample");
-        GstBuffer *buf = gst_sample_get_buffer(sample);
-        if (buf == nullptr) {
-            MEDIA_LOGE("Failed to gst_sample_get_buffer");
-            gst_sample_unref(sample);
-            break;
-        }
-        auto bufferWrapper = std::make_shared<BufferWrapper>(buf, i);
-        if (bufferWrapper == nullptr) {
-            MEDIA_LOGE("No memory");
-            gst_sample_unref(sample);
-            break;
-        }
-        bufferList_.push_back(bufferWrapper);
-        // todo construct share memory by gstBuffer_
-        // auto shareMem = xxx
-        // if (shareMem == nullptr) {
-        //     MEDIA_LOGE("No memory");
-        //     gst_sample_unref(sample);
-        //     break;
-        // }
-        // shareMemList_.push_back(shareMem);
-        gst_sample_unref(sample);
-        ret = (i == (bufferCount_ - 1)) ? MSERR_OK : MSERR_UNKNOWN;
-    }
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_UNKNOWN);
-    for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
-        if ((*it)->gstBuffer_ != nullptr) {
-            gst_buffer_unref((*it)->gstBuffer_);
-        }
-    }
-    return ret;
-}
-
 int32_t SinkBytebufferImpl::Init()
 {
-    element_ = gst_element_factory_make("todo", nullptr);
+    element_ = gst_element_factory_make("sharedmemsink", nullptr);
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     return MSERR_OK;
 }
 
 int32_t SinkBytebufferImpl::Flush()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
-        (*it)->owner_ = BufferWrapper::DOWNSTREAM;
-        if ((*it)->gstBuffer_ != nullptr) {
+        if ((*it)->owner_ != BufferWrapper::DOWNSTREAM && (*it)->gstBuffer_ != nullptr) {
             gst_buffer_unref((*it)->gstBuffer_);
         }
+        (*it)->owner_ = BufferWrapper::DOWNSTREAM;
     }
     return MSERR_OK;
 }
@@ -105,6 +65,7 @@ std::shared_ptr<AVSharedMemory> SinkBytebufferImpl::GetOutputBuffer(uint32_t ind
     CHECK_AND_RETURN_RET(index <= bufferList_.size() && index <= shareMemList_.size(), nullptr);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::SERVER, nullptr);
     CHECK_AND_RETURN_RET(shareMemList_[index] != nullptr, nullptr);
+
     bufferList_[index]->owner_ = BufferWrapper::APP;
     return shareMemList_[index];
 }
@@ -117,15 +78,16 @@ int32_t SinkBytebufferImpl::ReleaseOutputBuffer(uint32_t index, bool render)
     CHECK_AND_RETURN_RET(index <= bufferList_.size(), MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->gstBuffer_ != nullptr, MSERR_UNKNOWN);
-    bufferList_[index]->owner_ = BufferWrapper::DOWNSTREAM;
+
     gst_buffer_unref(bufferList_[index]->gstBuffer_);
+    bufferList_[index]->owner_ = BufferWrapper::DOWNSTREAM;
     return MSERR_OK;
 }
 
 int32_t SinkBytebufferImpl::SetParameter(const Format &format)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGD("Unsupport");
+    MEDIA_LOGE("Unsupport");
     return MSERR_OK;
 }
 
@@ -134,7 +96,8 @@ int32_t SinkBytebufferImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &
     std::unique_lock<std::mutex> lock(mutex_);
     obs_ = obs;
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
-    signalId_ = g_signal_connect(element_, "need-data", G_CALLBACK(OutputAvailableCb), this);
+    GstMemSinkCallbacks callback = { nullptr, nullptr, OutputAvailableCb};
+    gst_mem_sink_set_callback((GstMemSink *)element_, &callback, this, nullptr);
     return MSERR_OK;
 }
 
@@ -142,40 +105,70 @@ int32_t SinkBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
-    //g_object_set(G_OBJECT(element_), "caps", caps, nullptr);
+    g_object_set(G_OBJECT(element_), "caps", config->caps_, nullptr);
     return MSERR_OK;
 }
 
-void SinkBytebufferImpl::OutputAvailableCb(const GstElement *sink, uint32_t size, gpointer self)
+GstFlowReturn SinkBytebufferImpl::OutputAvailableCb(GstMemSink *sink, GstBuffer *buffer, gpointer userData)
 {
-    (void)sink;
-    CHECK_AND_RETURN_LOG(self != nullptr, "Null pointer exception");
-    auto impl = static_cast<SinkBytebufferImpl *>(self);
-
-    GstSample *sample = nullptr;
-    g_signal_emit_by_name(G_OBJECT(impl->element_), "pull-sample", &sample);
-    CHECK_AND_RETURN_LOG(sample != nullptr, "Failed to pull sample");
-    GstBuffer *buf = gst_sample_get_buffer(sample);
-    if (buf == nullptr) {
-        MEDIA_LOGE("Failed to gst_sample_get_buffer");
-        gst_sample_unref(sample);
-        return;
-    }
+    CHECK_AND_RETURN_RET(sink != nullptr && buffer != nullptr && userData != nullptr, GST_FLOW_ERROR);
+    auto impl = static_cast<SinkBytebufferImpl *>(userData);
 
     uint32_t index = 0;
+    bool findBuffer = false;
     for (auto it = impl->bufferList_.begin(); it != impl->bufferList_.end(); it++) {
-        if ((*it)->gstBuffer_ != nullptr && (*it)->gstBuffer_ == buf) {
+        if ((*it) != nullptr && (*it)->gstBuffer_ == buffer) {
+            findBuffer = true;
             index = (*it)->index_;
             (*it)->owner_ = BufferWrapper::SERVER;
             break;
         }
     }
-    gst_sample_unref(sample);
+
+    if (!findBuffer) {
+        if (ConstructBufferWrapper(impl, buffer, index) != GST_FLOW_OK) {
+            gst_buffer_unref(buffer);
+            return GST_FLOW_ERROR;
+        }
+    }
+
     auto obs = impl->obs_.lock();
-    CHECK_AND_RETURN_LOG(obs != nullptr, "Null pointer exception");
-    // todo
+    CHECK_AND_RETURN_RET(obs != nullptr, GST_FLOW_ERROR);
     AVCodecBufferInfo info;
+    info.presentationTimeUs = GST_BUFFER_PTS(buffer);
+    info.offset = GST_BUFFER_OFFSET(buffer);
+    info.size = GST_BUFFER_OFFSET_END(buffer) - GST_BUFFER_OFFSET(buffer);
     obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
+    return GST_FLOW_OK;
+}
+
+GstFlowReturn SinkBytebufferImpl::ConstructBufferWrapper(SinkBytebufferImpl *impl, GstBuffer *buffer, uint32_t &index)
+{
+    CHECK_AND_RETURN_RET(impl != nullptr && buffer != nullptr, GST_FLOW_ERROR);
+
+    auto bufWrap = std::make_shared<BufferWrapper>(buffer, impl->bufferList_.size(), BufferWrapper::SERVER);
+    CHECK_AND_RETURN_RET_LOG(bufWrap != nullptr, GST_FLOW_ERROR, "No memory");
+
+    bool findShmem = false;
+    for (guint i = 0; i < gst_buffer_n_memory(buffer); i++) {
+        GstMemory *memory = gst_buffer_peek_memory(buffer, i);
+        if (!gst_is_shmem_memory(memory)) {
+            continue;
+        } else {
+            GstShMemMemory *shmem = reinterpret_cast<GstShMemMemory *>(memory);
+            CHECK_AND_RETURN_RET(shmem->mem != nullptr, GST_FLOW_ERROR);
+            findShmem = true;
+            impl->shareMemList_.push_back(shmem->mem);
+            break;
+        }
+    }
+
+    CHECK_AND_RETURN_RET(findShmem == true, GST_FLOW_ERROR);
+    impl->bufferList_.push_back(bufWrap);
+    index = impl->bufferList_.size();
+    impl->bufferCount_++;
+
+    return GST_FLOW_OK;
 }
 } // Media
 } // OHOS
