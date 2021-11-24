@@ -87,7 +87,7 @@ static void gst_mem_pool_src_class_init(GstMemPoolSrcClass *klass)
         g_param_spec_uint("buffer-num", "buffer num",
             "buffer num", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-    
+
     g_object_class_install_property (gobject_class, PROP_CAPS,
         g_param_spec_boxed ("caps", "Caps",
             "The allowed caps for the src pad", GST_TYPE_CAPS,
@@ -142,7 +142,7 @@ GstFlowReturn gst_mem_pool_src_buffer_available(GstMemPoolSrc *memsrc)
     g_return_val_if_fail(memsrc != nullptr && memsrc->priv != nullptr, GST_FLOW_ERROR);
     GstFlowReturn ret = GST_FLOW_OK;
     auto priv = memsrc->priv;
-    gboolean emit = FALSE; 
+    gboolean emit = FALSE;
     if (priv->buffer_available) {
         ret = priv->buffer_available(memsrc, priv->user_data);
     } else {
@@ -171,7 +171,7 @@ void gst_mem_pool_src_set_caps(GstMemPoolSrc *memsrc, const GstCaps *caps)
     GstCaps *old_caps = memsrc->caps;
     if (old_caps != caps) {
         if (caps != nullptr) {
-            memsrc->caps = gst_caps_copy(caps); 
+            memsrc->caps = gst_caps_copy(caps);
         } else {
             memsrc->caps = nullptr;
         }
@@ -278,7 +278,7 @@ static gboolean gst_mem_pool_src_query(GstBaseSrc *src, GstQuery *query)
     return TRUE;
 }
 
-void gst_shmem_pool_src_set_callback(GstMemPoolSrc *memsrc, BufferAvailable callback,
+void gst_mem_pool_src_set_callback(GstMemPoolSrc *memsrc, BufferAvailable callback,
                                         gpointer user_data, GDestroyNotify notify)
 {
     g_return_if_fail(memsrc != nullptr && memsrc->priv != nullptr);

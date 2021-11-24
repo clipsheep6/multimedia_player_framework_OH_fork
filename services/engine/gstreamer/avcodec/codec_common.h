@@ -32,8 +32,8 @@ struct BufferWrapper {
         SERVER,
         DOWNSTREAM
     };
-    BufferWrapper(GstBuffer *gstBuffer, uint32_t index)
-    : gstBuffer_(gstBuffer), index_(index)
+    BufferWrapper(GstBuffer *gstBuffer, uint32_t index, Owner owner)
+    : gstBuffer_(gstBuffer), index_(index), owner_(owner)
     {
     }
     ~BufferWrapper()

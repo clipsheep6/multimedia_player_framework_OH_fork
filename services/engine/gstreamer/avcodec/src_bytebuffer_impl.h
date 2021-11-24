@@ -18,6 +18,7 @@
 
 #include "src_base.h"
 #include "codec_common.h"
+#include "gst_codec_shmem_src.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -28,24 +29,23 @@ public:
     virtual ~SrcBytebufferImpl();
     DISALLOW_COPY_AND_MOVE(SrcBytebufferImpl);
 
-    int32_t AllocateBuffer() override;
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
     int32_t Flush() override;
-    int32_t GetBufferCount() override;
     std::shared_ptr<AVSharedMemory> GetInputBuffer(uint32_t index) override;
     int32_t QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
     int32_t SetParameter(const Format &format) override;
     int32_t SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs) override;
 
 private:
-    static void InputAvailableCb(const GstElement *sink, uint32_t size, gpointer self);
+    int32_t SignalEOS();
+    static GstFlowReturn NeedDataCb(GstMemPoolSrc *src, gpointer userData);
+    static GstFlowReturn ConstructBufferWrapper(SrcBytebufferImpl *impl, GstBuffer *buffer, uint32_t &index);
 
     std::vector<std::shared_ptr<BufferWrapper>> bufferList_;
     std::vector<std::shared_ptr<AVSharedMemory>> shareMemList_;
     uint32_t bufferCount_ = 0;
     std::mutex mutex_;
-    gulong signalId_ = 0;
     std::weak_ptr<IAVCodecEngineObs> obs_;
 };
 } // Media

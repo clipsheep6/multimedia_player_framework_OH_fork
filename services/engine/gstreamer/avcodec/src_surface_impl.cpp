@@ -35,21 +35,25 @@ SrcSurfaceImpl::~SrcSurfaceImpl()
     }
 }
 
-int32_t SrcSurfaceImpl::AllocateBuffer()
+int32_t SrcSurfaceImpl::Init()
 {
+    element_ = gst_element_factory_make("encodersurfacesrc", nullptr);
+    CHECK_AND_RETURN_RET_LOG(element_ != nullptr, MSERR_UNKNOWN, "Failed to gst_element_factory_make");
     return MSERR_OK;
 }
 
-int32_t SrcSurfaceImpl::Init()
+int32_t SrcSurfaceImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 {
-    element_ = gst_element_factory_make("appsrc", nullptr);
-    CHECK_AND_RETURN_RET_LOG(element_ != nullptr, MSERR_UNKNOWN, "Failed to gst_element_factory_make");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
+    g_object_set(G_OBJECT(element_), "caps", config->caps_, nullptr);
     return MSERR_OK;
 }
 
 int32_t SrcSurfaceImpl::Flush()
 {
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
+    MEDIA_LOGE("Unsupport");
     return MSERR_OK;
 }
 
@@ -66,21 +70,13 @@ sptr<Surface> SrcSurfaceImpl::CreateInputSurface()
 int32_t SrcSurfaceImpl::SetParameter(const Format &format)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGD("Unsupport");
+    MEDIA_LOGE("Unsupport");
     return MSERR_OK;
 }
 
 int32_t SrcSurfaceImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    return MSERR_OK;
-}
-
-int32_t SrcSurfaceImpl::Configure(std::shared_ptr<ProcessorConfig> config)
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
-    //g_object_set(G_OBJECT(element_), "caps", caps, nullptr);
     return MSERR_OK;
 }
 } // Media

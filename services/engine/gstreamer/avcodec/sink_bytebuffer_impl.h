@@ -21,6 +21,7 @@
 #include <vector>
 #include "avsharedmemory.h"
 #include "codec_common.h"
+#include "gst_shared_mem_sink.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -31,7 +32,6 @@ public:
     virtual ~SinkBytebufferImpl();
     DISALLOW_COPY_AND_MOVE(SinkBytebufferImpl);
 
-    int32_t AllocateBuffer() override;
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
     int32_t Flush() override;
@@ -41,13 +41,13 @@ public:
     int32_t SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs) override;
 
 private:
-    static void OutputAvailableCb(const GstElement *sink, uint32_t size, gpointer self);
+    static GstFlowReturn OutputAvailableCb(GstMemSink *sink, GstBuffer *buffer, gpointer userData);
+    static GstFlowReturn ConstructBufferWrapper(SinkBytebufferImpl *impl, GstBuffer *buffer, uint32_t &index);
 
     std::vector<std::shared_ptr<BufferWrapper>> bufferList_;
     std::vector<std::shared_ptr<AVSharedMemory>> shareMemList_;
     uint32_t bufferCount_ = 0;
     std::mutex mutex_;
-    gulong signalId_ = 0;
     std::weak_ptr<IAVCodecEngineObs> obs_;
 };
 } // Media
