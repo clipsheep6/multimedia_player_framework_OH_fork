@@ -36,6 +36,7 @@ int32_t ProcessorAencImpl::ProcessMandatory(const Format &format)
     CHECK_AND_RETURN_RET(format.GetIntValue("channels", channels_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("sampleRate", sampleRate_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("pcmFormat", pcmFormat_) == true, MSERR_INVALID_VAL);
+    MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d", channels_, sampleRate_, pcmFormat_);
     return MSERR_OK;
 }
 

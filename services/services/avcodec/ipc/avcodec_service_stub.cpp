@@ -19,6 +19,7 @@
 #include "avsharedmemory_ipc.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "media_parcel.h"
 #include "media_server_manager.h"
 
 namespace {
@@ -216,7 +217,7 @@ int32_t AVCodecServiceStub::SetListenerObject(MessageParcel &data, MessageParcel
 int32_t AVCodecServiceStub::InitParameter(MessageParcel &data, MessageParcel &reply)
 {
 
-    AVCodecType type = static_cast<AVCodecType>(data.ReadInt64());
+    AVCodecType type = static_cast<AVCodecType>(data.ReadInt32());
     bool isMimeType = data.ReadBool();
     std::string name = data.ReadString();
     reply.WriteInt32(InitParameter(type, isMimeType, name));
@@ -225,9 +226,9 @@ int32_t AVCodecServiceStub::InitParameter(MessageParcel &data, MessageParcel &re
 
 int32_t AVCodecServiceStub::Configure(MessageParcel &data, MessageParcel &reply)
 {
-    //todo format deserialization
-    //Format format =
-    //reply.WriteInt32(Configure(format));
+    Format format;
+    (void)MediaParcel::Unmarshalling(data, format);
+    reply.WriteInt32(Configure(format));
     return MSERR_OK;
 }
 
@@ -344,9 +345,9 @@ int32_t AVCodecServiceStub::ReleaseOutputBuffer(MessageParcel &data, MessageParc
 
 int32_t AVCodecServiceStub::SetParameter(MessageParcel &data, MessageParcel &reply)
 {
-    //todo format deserialization
-    //Format format =
-    //reply.WriteInt32(SetParameter(format));
+    Format format;
+    (void)MediaParcel::Unmarshalling(data, format);
+    reply.WriteInt32(SetParameter(format));
     return MSERR_OK;
 }
 

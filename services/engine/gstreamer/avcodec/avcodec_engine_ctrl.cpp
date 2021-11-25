@@ -50,11 +50,12 @@ AVCodecEngineCtrl::~AVCodecEngineCtrl()
 
 int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::string &name)
 {
+    MEDIA_LOGD("Enter Init");
     codecType_ = type;
     gstPipeline_ = reinterpret_cast<GstPipeline *>(gst_pipeline_new("codec-pipeline"));
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_NO_MEMORY);
 
-    codecBin_ = gst_element_factory_make("gstcodecbin", "codec_bin");
+    codecBin_ = gst_element_factory_make("codecbin", "codec_bin");
     CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_NO_MEMORY);
 
     g_object_set(codecBin_, "use-software", static_cast<gboolean>(useSoftware), nullptr);
@@ -76,6 +77,7 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
 int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
     std::shared_ptr<ProcessorConfig> outputConfig)
 {
+    MEDIA_LOGD("Enter Prepare");
     auto task = std::make_shared<TaskHandler<int32_t>>([this, inputConfig, outputConfig] {
         if (src_ == nullptr) {
             src_ = AVCodecEngineFactory::CreateSrc(SrcType::SRC_TYPE_BYTEBUFFER);
@@ -108,6 +110,7 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
 
 int32_t AVCodecEngineCtrl::Start()
 {
+    MEDIA_LOGD("Enter Start");
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
     auto task = std::make_shared<TaskHandler<int32_t>>([this] {
         return gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS;
@@ -123,6 +126,7 @@ int32_t AVCodecEngineCtrl::Start()
 
 int32_t AVCodecEngineCtrl::Stop()
 {
+    MEDIA_LOGD("Enter Stop");
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
     auto task = std::make_shared<TaskHandler<int32_t>>([this] {
         return gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) == GST_STATE_CHANGE_SUCCESS;
@@ -138,6 +142,7 @@ int32_t AVCodecEngineCtrl::Stop()
 
 int32_t AVCodecEngineCtrl::Flush()
 {
+    MEDIA_LOGD("Enter Flush");
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
     auto task = std::make_shared<TaskHandler<int32_t>>([this] {
         CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
@@ -172,6 +177,7 @@ void AVCodecEngineCtrl::SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs)
 
 sptr<Surface> AVCodecEngineCtrl::CreateInputSurface()
 {
+    MEDIA_LOGD("Enter CreateInputSurface");
     CHECK_AND_RETURN_RET(codecType_ == AVCODEC_TYPE_VIDEO_ENCODER, nullptr);
     if (src_ == nullptr) {
         src_ = AVCodecEngineFactory::CreateSrc(SrcType::SRC_TYPE_SURFACE);
@@ -184,6 +190,7 @@ sptr<Surface> AVCodecEngineCtrl::CreateInputSurface()
 
 int32_t AVCodecEngineCtrl::SetOutputSurface(sptr<Surface> surface)
 {
+    MEDIA_LOGD("Enter SetOutputSurface");
     CHECK_AND_RETURN_RET(codecType_ == AVCODEC_TYPE_VIDEO_DECODER, MSERR_INVALID_OPERATION);
     if (sink_ == nullptr) {
         sink_ = AVCodecEngineFactory::CreateSink(SinkType::SINK_TYPE_SURFACE);
@@ -194,6 +201,7 @@ int32_t AVCodecEngineCtrl::SetOutputSurface(sptr<Surface> surface)
 
 std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetInputBuffer(uint32_t index)
 {
+    MEDIA_LOGD("Enter GetInputBuffer");
     CHECK_AND_RETURN_RET(src_ != nullptr, nullptr);
     auto task = std::make_shared<TaskHandler<std::shared_ptr<AVSharedMemory>>>([this, index] {
         return src_->GetInputBuffer(index);
@@ -208,6 +216,7 @@ std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetInputBuffer(uint32_t index
 
 int32_t AVCodecEngineCtrl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
+    MEDIA_LOGD("Enter QueueInputBuffer");
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
     auto task = std::make_shared<TaskHandler<int32_t>>([this, index, info, flag] {
         return src_->QueueInputBuffer(index, info, flag);
@@ -223,6 +232,7 @@ int32_t AVCodecEngineCtrl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
 
 std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetOutputBuffer(uint32_t index)
 {
+    MEDIA_LOGD("Enter GetOutputBuffer");
     CHECK_AND_RETURN_RET(sink_ != nullptr, nullptr);
     auto task = std::make_shared<TaskHandler<std::shared_ptr<AVSharedMemory>>>([this, index] {
         return sink_->GetOutputBuffer(index);
@@ -237,6 +247,7 @@ std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetOutputBuffer(uint32_t inde
 
 int32_t AVCodecEngineCtrl::ReleaseOutputBuffer(uint32_t index, bool render)
 {
+    MEDIA_LOGD("Enter ReleaseOutputBuffer");
     CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
     auto task = std::make_shared<TaskHandler<int32_t>>([this, index, render] {
         return sink_->ReleaseOutputBuffer(index, render);

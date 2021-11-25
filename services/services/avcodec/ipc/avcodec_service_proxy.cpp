@@ -16,8 +16,9 @@
 #include "avcodec_service_proxy.h"
 #include "avcodec_listener_stub.h"
 #include "avsharedmemory_ipc.h"
-#include "media_log.h"
 #include "media_errors.h"
+#include "media_log.h"
+#include "media_parcel.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecServiceProxy"};
@@ -71,7 +72,7 @@ int32_t AVCodecServiceProxy::Configure(const Format &format)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    // todo format serialization
+    (void)MediaParcel::Marshalling(data, format);
     int32_t ret = Remote()->SendRequest(CONFIGURE, data, reply, option);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("Set listener obj failed, error: %{public}d", ret);
@@ -286,7 +287,7 @@ int32_t AVCodecServiceProxy::SetParameter(const Format &format)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    // todo format serialization
+    (void)MediaParcel::Marshalling(data, format);
     int32_t ret = Remote()->SendRequest(SET_PARAMETER, data, reply, option);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("SetParameter failed, error: %{public}d", ret);

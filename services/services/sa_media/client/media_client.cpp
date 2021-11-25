@@ -145,13 +145,13 @@ std::shared_ptr<IAVCodecService> MediaClient::CreateAVCodecService()
     }
 
     sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
-        IStandardMediaService::MediaSystemAbility::MEDIA_CODEC);
+        IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "avcodec proxy object is nullptr.");
 
-    sptr<IStandardAVCodecService> avMetadataHelperProxy = iface_cast<IStandardAVCodecService>(object);
-    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy != nullptr, nullptr, "avcodec proxy is nullptr.");
+    sptr<IStandardAVCodecService> avCodecProxy = iface_cast<IStandardAVCodecService>(object);
+    CHECK_AND_RETURN_RET_LOG(avCodecProxy != nullptr, nullptr, "avcodec proxy is nullptr.");
 
-    std::shared_ptr<AVCodecClient> avCodec = AVCodecClient::Create(avMetadataHelperProxy);
+    std::shared_ptr<AVCodecClient> avCodec = AVCodecClient::Create(avCodecProxy);
     CHECK_AND_RETURN_RET_LOG(avCodec != nullptr, nullptr, "failed to create avcodec client.");
 
     std::lock_guard<std::mutex> lock(mutex_);

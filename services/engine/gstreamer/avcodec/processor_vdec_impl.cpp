@@ -37,6 +37,8 @@ int32_t ProcessorVdecImpl::ProcessMandatory(const Format &format)
     CHECK_AND_RETURN_RET(format.GetIntValue("height", height_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("pixelFormat", pixelFormat_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("frameRate", frameRate_) == true, MSERR_INVALID_VAL);
+    MEDIA_LOGD("width:%{public}d, height:%{public}d, pixel:%{public}d, frameRate:%{public}d",
+        width_, height_, pixelFormat_, frameRate_);
     return MSERR_OK;
 }
 

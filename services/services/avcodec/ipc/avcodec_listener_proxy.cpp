@@ -14,8 +14,9 @@
  */
 
 #include "avcodec_listener_proxy.h"
-#include "media_log.h"
 #include "media_errors.h"
+#include "media_log.h"
+#include "media_parcel.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecListenerProxy"};
@@ -52,7 +53,7 @@ void AVCodecListenerProxy::OnOutputFormatChanged(const Format &format)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
-    // todo format serialization
+    (void)MediaParcel::Marshalling(data, format);
     int error = Remote()->SendRequest(AVCodecListenerMsg::ON_OUTPUT_FORMAT_CHANGED, data, reply, option);
     if (error != MSERR_OK) {
         MEDIA_LOGE("OnOutputFormatChanged failed, error: %{public}d", error);

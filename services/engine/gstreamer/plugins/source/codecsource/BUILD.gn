@@ -75,7 +75,6 @@ ohos_shared_library("gst_codec_src") {
     "ipc:ipc_core",
   ]
 
-  relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
   part_name = "multimedia_media_standard"
 }
