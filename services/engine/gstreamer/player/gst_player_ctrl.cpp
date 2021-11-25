@@ -85,6 +85,8 @@ void GstPlayerCtrl::SetRingBufferMaxSize(uint64_t size)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(gstPlayer_ != nullptr, "gstPlayer_ is nullptr");
+    uint64_t test;
+    (void)test;
     g_object_set(gstPlayer_, "ring-buffer-max-size", static_cast<guint64>(size), nullptr);
 }
 
