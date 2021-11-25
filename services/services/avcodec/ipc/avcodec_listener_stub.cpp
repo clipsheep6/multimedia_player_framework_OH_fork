@@ -14,8 +14,9 @@
  */
 
 #include "avcodec_listener_stub.h"
-#include "media_log.h"
 #include "media_errors.h"
+#include "media_log.h"
+#include "media_parcel.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecListenerStub"};
@@ -44,8 +45,9 @@ int AVCodecListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
             return MSERR_OK;
         }
         case AVCodecListenerMsg::ON_OUTPUT_FORMAT_CHANGED: {
-            // todo format deserialization
-            //OnOutputFormatChanged(format);
+            Format format;
+            (void)MediaParcel::Unmarshalling(data, format);
+            OnOutputFormatChanged(format);
             return MSERR_OK;
         }
         case AVCodecListenerMsg::ON_INPUT_BUFFER_AVAILABLE: {

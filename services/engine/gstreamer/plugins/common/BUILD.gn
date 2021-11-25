@@ -122,7 +122,6 @@ ohos_shared_library("gst_buffer_meta") {
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
-  relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
   part_name = "multimedia_media_standard"
 }

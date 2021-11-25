@@ -35,6 +35,7 @@ AVCodecEngineGstImpl::~AVCodecEngineGstImpl()
 
 int32_t AVCodecEngineGstImpl::Init(AVCodecType type, bool isMimeType, const std::string &name)
 {
+    MEDIA_LOGD("Init AVCodecEngine with type:%{public}d, %{public}d, name:%{public}s", type, isMimeType, name.c_str());
     processor_ = AVCodecEngineFactory::CreateProcessor(type);
     CHECK_AND_RETURN_RET(processor_ != nullptr, MSERR_NO_MEMORY);
 
