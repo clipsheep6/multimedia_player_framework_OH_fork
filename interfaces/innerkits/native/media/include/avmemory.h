@@ -25,7 +25,7 @@ namespace Media {
 /**
  * @brief Provides a wrap for raw byte buffer.
  */
-class AVMemory {
+class __attribute__((visibility("default"))) AVMemory {
 public:
     /**
      * @brief Construct a new AVMemory object with specified capacity, the raw buffer will be allocated.

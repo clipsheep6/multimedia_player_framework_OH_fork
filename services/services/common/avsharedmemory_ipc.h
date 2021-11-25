@@ -17,6 +17,7 @@
 #define AVSHAREDMEMORY_IPC_H
 
 #include <unordered_map>
+#include <mutex>
 #include <message_parcel.h>
 #include "nocopyable.h"
 #include "avsharedmemory.h"
@@ -39,7 +40,7 @@ private:
  * with the AVShMemIPCRemote and RefCntSharedMemory. It will cache all memory to decrease the
  * overhead of mmap.
  */
-class AVShMemIPCLocal {
+class AVShMemIPCLocal : public std::enable_shared_from_this<AVShMemIPCLocal> {
 public:
     AVShMemIPCLocal() = default;
     ~AVShMemIPCLocal() = default;
@@ -49,7 +50,10 @@ public:
     DISALLOW_COPY_AND_MOVE(AVShMemIPCLocal);
 
 private:
-    std::unordered_map<std::shared_ptr<RefCntSharedMemory>, uint32_t> memoryCache_;
+    void DeathCallback(RefCntSharedMemory *memory);
+
+    std::mutex mutex_;
+    std::unordered_map<RefCntSharedMemory *, uint32_t> memoryCache_;
 };
 
 /**
@@ -67,6 +71,7 @@ public:
     DISALLOW_COPY_AND_MOVE(AVShMemIPCRemote);
 
 private:
+    std::mutex mutex_;
     std::unordered_map<uint32_t, std::shared_ptr<RefCntSharedMemory>> indexCache_;
 };
 }

@@ -16,8 +16,9 @@
 #ifndef REFCNT_SHARED_MEMORY_H
 #define REFCNT_SHARED_MEMORY_H
 
-#include <string>
 #include <atomic>
+#include <functional>
+#include <string>
 #include "nocopyable.h"
 #include "avsharedmemorybase.h"
 
@@ -113,6 +114,14 @@ public:
         return std::atomic_load(&block->deadObject);
     }
 
+    // Not MT-Safe
+    void SetDeathNotifier(std::function<void(RefCntSharedMemory *)> notifier)
+    {
+        if (notifier_ != nullptr) {
+            notifier_ = notifier;
+        }
+    }
+
     DISALLOW_COPY_AND_MOVE(RefCntSharedMemory);
 
 private:
@@ -120,6 +129,8 @@ private:
         std::atomic<int> refCount;
         std::atomic<bool> deadObject;
     };
+
+    std::function<void(RefCntSharedMemory *)> notifier_;
 };
 }
 }

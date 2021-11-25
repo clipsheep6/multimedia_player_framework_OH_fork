@@ -101,15 +101,6 @@ std::shared_ptr<AVSharedMemory> AVShMemIPCStatic::ReadFromParcel(MessageParcel &
 
 int32_t AVShMemIPCLocal::WriteToParcel(const std::shared_ptr<AVSharedMemory> &memory, MessageParcel &parcel)
 {
-    // clear the invalid cache
-    for (auto iter = memoryCache_.begin(); iter != memoryCache_.end();) {
-        if (iter->first->IsDeadObject()) {
-            iter = memoryCache_.erase(iter);
-        } else {
-            iter++;
-        }
-    }
-
     std::shared_ptr<AVSharedMemoryBase> baseMem = std::static_pointer_cast<AVSharedMemoryBase>(memory);
     CHECK_AND_RETURN_RET_LOG(baseMem != nullptr, MSERR_INVALID_VAL, "invalid pointer");
 
@@ -120,15 +111,16 @@ int32_t AVShMemIPCLocal::WriteToParcel(const std::shared_ptr<AVSharedMemory> &me
     int32_t size = refCntMem->GetSize();
     CHECK_AND_RETURN_RET_LOG(fd > 0 && size > 0, MSERR_INVALID_VAL, "fd or size invalid");
 
-    auto iter = memoryCache_.find(refCntMem);
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    auto iter = memoryCache_.find(refCntMem.get());
     if (iter != memoryCache_.end()) {
         (void)parcel.WriteUint8(IpcDataType::INDEX);
         (void)parcel.WriteUint32(iter->second);
     } else {
         size_t index = static_cast<uint32_t>(memoryCache_.size());
-        auto rst = memoryCache_.emplace(refCntMem, index);
+        auto rst = memoryCache_.emplace(refCntMem.get(), index);
         CHECK_AND_RETURN_RET_LOG(rst.second, MSERR_NO_MEMORY, "cache RefCntShMem failed");
-        (void)refCntMem->AddRefCount(1);
 
         (void)parcel.WriteUint8(IpcDataType::SHMEM);
         (void)parcel.WriteUint32(index);
@@ -136,13 +128,36 @@ int32_t AVShMemIPCLocal::WriteToParcel(const std::shared_ptr<AVSharedMemory> &me
         (void)parcel.WriteInt32(size);
         (void)parcel.WriteUint32(baseMem->GetFlags());
         (void)parcel.WriteString(baseMem->GetName());
+
+        auto deathNotifier = [weakThis = weak_from_this()](RefCntSharedMemory *memory) {
+            auto strongThis = weakThis.lock();
+            if (strongThis == nullptr) {
+                return;
+            }
+            strongThis->DeathCallback(memory);
+        };
+        refCntMem->SetDeathNotifier(deathNotifier);
     }
 
+    (void)refCntMem->AddRefCount(1);
     return MSERR_OK;
+}
+
+void AVShMemIPCLocal::DeathCallback(RefCntSharedMemory *memory)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    auto iter = memoryCache_.find(memory);
+    if (iter == memoryCache_.end()) {
+        return;
+    }
+    memoryCache_.erase(iter);
 }
 
 std::shared_ptr<AVSharedMemory> AVShMemIPCRemote::ReadFromParcel(MessageParcel &parcel)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
+
     // clear the invalid cache
     for (auto iter = indexCache_.begin(); iter != indexCache_.end();) {
         if (iter->second->IsDeadObject()) {
