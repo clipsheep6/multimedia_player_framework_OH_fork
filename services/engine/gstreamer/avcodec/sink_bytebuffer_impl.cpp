@@ -39,7 +39,7 @@ SinkBytebufferImpl::~SinkBytebufferImpl()
 
 int32_t SinkBytebufferImpl::Init()
 {
-    element_ = gst_element_factory_make("sharedmemsink", nullptr);
+    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("sharedmemsink", nullptr)));
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     return MSERR_OK;
 }
@@ -59,6 +59,7 @@ int32_t SinkBytebufferImpl::Flush()
 
 std::shared_ptr<AVSharedMemory> SinkBytebufferImpl::GetOutputBuffer(uint32_t index)
 {
+    MEDIA_LOGD("GetOutputBuffer");
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index < bufferCount_, nullptr);
     CHECK_AND_RETURN_RET(index <= bufferList_.size() && index <= shareMemList_.size(), nullptr);
@@ -71,6 +72,7 @@ std::shared_ptr<AVSharedMemory> SinkBytebufferImpl::GetOutputBuffer(uint32_t ind
 
 int32_t SinkBytebufferImpl::ReleaseOutputBuffer(uint32_t index, bool render)
 {
+    MEDIA_LOGD("ReleaseOutputBuffer");
     (void)render;
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index < bufferCount_, MSERR_INVALID_OPERATION);
@@ -110,6 +112,7 @@ int32_t SinkBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 
 GstFlowReturn SinkBytebufferImpl::OutputAvailableCb(GstMemSink *sink, GstBuffer *buffer, gpointer userData)
 {
+    MEDIA_LOGD("OutputAvailableCb");
     CHECK_AND_RETURN_RET(sink != nullptr && buffer != nullptr && userData != nullptr, GST_FLOW_ERROR);
     auto impl = static_cast<SinkBytebufferImpl *>(userData);
 

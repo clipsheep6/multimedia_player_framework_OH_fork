@@ -53,7 +53,7 @@ public:
      */
     enum AVCodecServiceMsg {
         SET_LISTENER_OBJ = 0,
-        INIT_PARAMETER = 0,
+        INIT_PARAMETER,
         CONFIGURE,
         PREPARE,
         START,

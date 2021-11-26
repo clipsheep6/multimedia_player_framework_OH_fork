@@ -52,18 +52,19 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
 {
     MEDIA_LOGD("Enter Init");
     codecType_ = type;
-    gstPipeline_ = reinterpret_cast<GstPipeline *>(gst_pipeline_new("codec-pipeline"));
+    gstPipeline_ = GST_PIPELINE_CAST(gst_pipeline_new("codec-pipeline"));
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_NO_MEMORY);
 
-    codecBin_ = gst_element_factory_make("codecbin", "codec_bin");
+    codecBin_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("codecbin", "the_codec_bin")));
     CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_NO_MEMORY);
+
+    gst_bin_add(GST_BIN_CAST(gstPipeline_), codecBin_);
 
     g_object_set(codecBin_, "use-software", static_cast<gboolean>(useSoftware), nullptr);
     g_object_set(codecBin_, "type", static_cast<int32_t>(type), nullptr);
     g_object_set(codecBin_, "stream-input", static_cast<gboolean>(false), nullptr);
-    g_object_set(codecBin_, "name", name.c_str(), nullptr);
-
-    gst_bin_add(GST_BIN(gstPipeline_), codecBin_);
+    g_object_set(codecBin_, "sink-convert", static_cast<gboolean>(true), nullptr);
+    g_object_set(codecBin_, "coder-name", name.c_str(), nullptr);
 
     if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_READY) != GST_STATE_CHANGE_SUCCESS) {
         return MSERR_UNKNOWN;
@@ -82,10 +83,14 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
         if (src_ == nullptr) {
             src_ = AVCodecEngineFactory::CreateSrc(SrcType::SRC_TYPE_BYTEBUFFER);
             CHECK_AND_RETURN_RET_LOG(src_ != nullptr, MSERR_NO_MEMORY, "No memory");
+            CHECK_AND_RETURN_RET(src_->Init() == MSERR_OK, MSERR_UNKNOWN);
+            CHECK_AND_RETURN_RET(src_->SetCallback(obs_) == MSERR_OK, MSERR_UNKNOWN);
         }
         if (sink_ == nullptr) {
             sink_ = AVCodecEngineFactory::CreateSink(SinkType::SINK_TYPE_BYTEBUFFER);
             CHECK_AND_RETURN_RET_LOG(sink_ != nullptr, MSERR_NO_MEMORY, "No memory");
+            CHECK_AND_RETURN_RET(sink_->Init() == MSERR_OK, MSERR_UNKNOWN);
+            CHECK_AND_RETURN_RET(sink_->SetCallback(obs_) == MSERR_OK, MSERR_UNKNOWN);
         }
         CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_UNKNOWN);
         g_object_set(codecBin_, "src", static_cast<gpointer>(src_->GetElement()), nullptr);
@@ -113,7 +118,10 @@ int32_t AVCodecEngineCtrl::Start()
     MEDIA_LOGD("Enter Start");
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
     auto task = std::make_shared<TaskHandler<int32_t>>([this] {
-        return gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS;
+        if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS) {
+            return MSERR_OK;
+        }
+        return MSERR_UNKNOWN;
     });
     int32_t ret = taskQueue_->EnqueueTask(task, true);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
@@ -121,6 +129,7 @@ int32_t AVCodecEngineCtrl::Start()
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
+    MEDIA_LOGD("Start Success");
     return MSERR_OK;
 }
 
@@ -182,6 +191,7 @@ sptr<Surface> AVCodecEngineCtrl::CreateInputSurface()
     if (src_ == nullptr) {
         src_ = AVCodecEngineFactory::CreateSrc(SrcType::SRC_TYPE_SURFACE);
         CHECK_AND_RETURN_RET_LOG(src_ != nullptr, nullptr, "No memory");
+        CHECK_AND_RETURN_RET_LOG(src_->Init() == MSERR_OK, nullptr, "Failed to create input surface");
     }
     auto surface =  src_->CreateInputSurface();
     CHECK_AND_RETURN_RET(surface != nullptr, nullptr);
@@ -194,7 +204,8 @@ int32_t AVCodecEngineCtrl::SetOutputSurface(sptr<Surface> surface)
     CHECK_AND_RETURN_RET(codecType_ == AVCODEC_TYPE_VIDEO_DECODER, MSERR_INVALID_OPERATION);
     if (sink_ == nullptr) {
         sink_ = AVCodecEngineFactory::CreateSink(SinkType::SINK_TYPE_SURFACE);
-        CHECK_AND_RETURN_RET_LOG(sink_ != nullptr, MSERR_UNKNOWN, "No memory");
+        CHECK_AND_RETURN_RET_LOG(sink_ != nullptr, MSERR_NO_MEMORY, "No memory");
+        CHECK_AND_RETURN_RET(sink_->Init() == MSERR_OK, MSERR_UNKNOWN);
     }
     return sink_->SetOutputSurface(surface);
 }
