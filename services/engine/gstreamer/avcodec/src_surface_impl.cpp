@@ -37,7 +37,7 @@ SrcSurfaceImpl::~SrcSurfaceImpl()
 
 int32_t SrcSurfaceImpl::Init()
 {
-    element_ = gst_element_factory_make("encodersurfacesrc", nullptr);
+    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("encodersurfacesrc", nullptr)));
     CHECK_AND_RETURN_RET_LOG(element_ != nullptr, MSERR_UNKNOWN, "Failed to gst_element_factory_make");
     return MSERR_OK;
 }

@@ -39,9 +39,7 @@ int32_t AVCodecEngineGstImpl::Init(AVCodecType type, bool isMimeType, const std:
     processor_ = AVCodecEngineFactory::CreateProcessor(type);
     CHECK_AND_RETURN_RET(processor_ != nullptr, MSERR_NO_MEMORY);
 
-    ctrl_ = std::make_unique<AVCodecEngineCtrl>();
-    CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_NO_MEMORY);
-
+    CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_UNKNOWN);
     // todo codeclist
     int32_t ret = ctrl_->Init(type, true, "avdec_h264");
     CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_UNKNOWN);
@@ -141,6 +139,8 @@ int32_t AVCodecEngineGstImpl::SetParameter(const Format &format)
 int32_t AVCodecEngineGstImpl::SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    ctrl_ = std::make_unique<AVCodecEngineCtrl>();
+    CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_NO_MEMORY);
     ctrl_->SetObs(obs);
     return MSERR_OK;
 }

@@ -39,8 +39,10 @@ SrcBytebufferImpl::~SrcBytebufferImpl()
 
 int32_t SrcBytebufferImpl::Init()
 {
-    element_ = gst_element_factory_make("codecshmemsrc", nullptr);
+    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("codecshmemsrc", nullptr)));
     CHECK_AND_RETURN_RET_LOG(element_ != nullptr, MSERR_UNKNOWN, "Failed to gst_element_factory_make");
+    // todo calculate
+    g_object_set(element_, "buffer-size", 8000, nullptr);
     return MSERR_OK;
 }
 
@@ -58,6 +60,7 @@ int32_t SrcBytebufferImpl::Flush()
 
 std::shared_ptr<AVSharedMemory> SrcBytebufferImpl::GetInputBuffer(uint32_t index)
 {
+    MEDIA_LOGD("GetInputBuffer");
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index < bufferCount_, nullptr);
     CHECK_AND_RETURN_RET(index <= bufferList_.size() && index <= shareMemList_.size(), nullptr);
@@ -70,6 +73,7 @@ std::shared_ptr<AVSharedMemory> SrcBytebufferImpl::GetInputBuffer(uint32_t index
 
 int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
+    MEDIA_LOGD("QueueInputBuffer");
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index < bufferCount_, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(index <= bufferList_.size(), MSERR_UNKNOWN);
@@ -107,7 +111,7 @@ int32_t SrcBytebufferImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &o
     std::unique_lock<std::mutex> lock(mutex_);
     obs_ = obs;
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
-    gst_mem_pool_src_set_callback((GstMemPoolSrc *)element_, NeedDataCb, this, nullptr);
+    gst_mem_pool_src_set_callback(GST_MEM_POOL_SRC(element_), NeedDataCb, this, nullptr);
     return MSERR_OK;
 }
 
@@ -126,6 +130,7 @@ int32_t SrcBytebufferImpl::SignalEOS()
 
 GstFlowReturn SrcBytebufferImpl::NeedDataCb(GstMemPoolSrc *src, gpointer userData)
 {
+    MEDIA_LOGD("NeedDataCb");
     CHECK_AND_RETURN_RET(src != nullptr && userData != nullptr, GST_FLOW_ERROR);
     auto impl = static_cast<SrcBytebufferImpl *>(userData);
 

@@ -37,7 +37,7 @@ SinkSurfaceImpl::~SinkSurfaceImpl()
 
 int32_t SinkSurfaceImpl::Init()
 {
-    element_ = gst_element_factory_make("surfacememsink", nullptr);
+    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("surfacememsink", nullptr)));
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     return MSERR_OK;
 }
@@ -65,6 +65,7 @@ int32_t SinkSurfaceImpl::SetOutputSurface(sptr<Surface> surface)
 
 int32_t SinkSurfaceImpl::ReleaseOutputBuffer(uint32_t index, bool render)
 {
+    MEDIA_LOGD("ReleaseOutputBuffer");
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index < bufferCount_, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(index <= bufferList_.size(), MSERR_UNKNOWN);
@@ -108,6 +109,7 @@ int32_t SinkSurfaceImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 
 GstFlowReturn SinkSurfaceImpl::OutputAvailableCb(GstMemSink *sink, GstBuffer *buffer, gpointer userData)
 {
+    MEDIA_LOGD("OutputAvailableCb");
     CHECK_AND_RETURN_RET(sink != nullptr && buffer != nullptr && userData != nullptr, GST_FLOW_ERROR);
     auto impl = static_cast<SinkSurfaceImpl *>(userData);
 
