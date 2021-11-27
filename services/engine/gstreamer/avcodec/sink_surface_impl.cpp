@@ -37,7 +37,7 @@ SinkSurfaceImpl::~SinkSurfaceImpl()
 
 int32_t SinkSurfaceImpl::Init()
 {
-    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("surfacememsink", nullptr)));
+    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("surfacememsink", "surfacesink")));
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     return MSERR_OK;
 }

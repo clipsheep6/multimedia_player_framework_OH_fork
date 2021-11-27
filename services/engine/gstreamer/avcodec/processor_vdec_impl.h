@@ -37,9 +37,9 @@ protected:
 private:
     int32_t width_ = 0;
     int32_t height_ = 0;
-    int32_t pixelFormat_ = 0;
+    std::string pixelFormat_ = "";
     int32_t frameRate_ = 0;
-    int32_t pushBlankFrame_ = 0;
+    CodecName name_ = CODEC_NAME_VIDEO_AVC;
 };
 } // Media
 } // OHOS

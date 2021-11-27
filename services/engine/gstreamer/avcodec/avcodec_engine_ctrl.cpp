@@ -73,12 +73,14 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
 {
     MEDIA_LOGD("Enter Prepare");
     if (src_ == nullptr) {
+        MEDIA_LOGD("Use buffer src");
         src_ = AVCodecEngineFactory::CreateSrc(SrcType::SRC_TYPE_BYTEBUFFER);
         CHECK_AND_RETURN_RET_LOG(src_ != nullptr, MSERR_NO_MEMORY, "No memory");
         CHECK_AND_RETURN_RET(src_->Init() == MSERR_OK, MSERR_UNKNOWN);
         CHECK_AND_RETURN_RET(src_->SetCallback(obs_) == MSERR_OK, MSERR_UNKNOWN);
     }
     if (sink_ == nullptr) {
+        MEDIA_LOGD("Use buffer sink");
         sink_ = AVCodecEngineFactory::CreateSink(SinkType::SINK_TYPE_BYTEBUFFER);
         CHECK_AND_RETURN_RET_LOG(sink_ != nullptr, MSERR_NO_MEMORY, "No memory");
         CHECK_AND_RETURN_RET(sink_->Init() == MSERR_OK, MSERR_UNKNOWN);
@@ -149,6 +151,7 @@ sptr<Surface> AVCodecEngineCtrl::CreateInputSurface()
     MEDIA_LOGD("Enter CreateInputSurface");
     CHECK_AND_RETURN_RET(codecType_ == AVCODEC_TYPE_VIDEO_ENCODER, nullptr);
     if (src_ == nullptr) {
+        MEDIA_LOGD("Use surface src");
         src_ = AVCodecEngineFactory::CreateSrc(SrcType::SRC_TYPE_SURFACE);
         CHECK_AND_RETURN_RET_LOG(src_ != nullptr, nullptr, "No memory");
         CHECK_AND_RETURN_RET_LOG(src_->Init() == MSERR_OK, nullptr, "Failed to create input surface");
@@ -163,6 +166,7 @@ int32_t AVCodecEngineCtrl::SetOutputSurface(sptr<Surface> surface)
     MEDIA_LOGD("Enter SetOutputSurface");
     CHECK_AND_RETURN_RET(codecType_ == AVCODEC_TYPE_VIDEO_DECODER, MSERR_INVALID_OPERATION);
     if (sink_ == nullptr) {
+        MEDIA_LOGD("Use surface sink");
         sink_ = AVCodecEngineFactory::CreateSink(SinkType::SINK_TYPE_SURFACE);
         CHECK_AND_RETURN_RET_LOG(sink_ != nullptr, MSERR_NO_MEMORY, "No memory");
         CHECK_AND_RETURN_RET(sink_->Init() == MSERR_OK, MSERR_UNKNOWN);

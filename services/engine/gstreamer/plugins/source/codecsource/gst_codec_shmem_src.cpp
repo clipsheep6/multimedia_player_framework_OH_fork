@@ -21,7 +21,7 @@ GST_STATIC_PAD_TEMPLATE("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
-#define gst_codec_shemm_src_parent_class parent_class
+#define gst_codec_shmem_src_parent_class parent_class
 G_DEFINE_TYPE(GstCodecShmemSrc, gst_codec_shmem_src, GST_TYPE_SHMEM_POOL_SRC);
 
 static void gst_codec_shmem_src_class_init(GstCodecShmemSrcClass *klass)
