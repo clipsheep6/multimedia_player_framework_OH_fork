@@ -52,7 +52,7 @@ struct _GstShmemPoolSrcPrivate
     std::shared_ptr<OHOS::Media::AVSharedMemoryPool> av_shmem_pool;
 };
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE(GstShmemPoolSrc, gst_shmem_pool_src, GST_TYPE_BASE_SRC, DEBUG_INIT);
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE(GstShmemPoolSrc, gst_shmem_pool_src, GST_TYPE_MEM_POOL_SRC, DEBUG_INIT);
 
 static GstStateChangeReturn gst_shmem_pool_src_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_shmem_pool_src_decide_allocation(GstBaseSrc *basesrc, GstQuery *query);

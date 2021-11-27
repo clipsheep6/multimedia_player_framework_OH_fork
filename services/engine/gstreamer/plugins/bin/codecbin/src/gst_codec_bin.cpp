@@ -240,17 +240,19 @@ static GstStateChangeReturn create_software_coder(GstCodecBin *codec_bin)
 {
     GST_INFO_OBJECT(codec_bin, "create_software_coder");
     g_return_val_if_fail(codec_bin != nullptr, GST_STATE_CHANGE_FAILURE);
-    codec_bin->coder = gst_element_factory_make(codec_bin->coder_name, "avdec_h264");
+    codec_bin->coder = gst_element_factory_make(codec_bin->coder_name, "dec");
     if (codec_bin->coder != nullptr) {
         gst_bin_add(GST_BIN_CAST(codec_bin), codec_bin->coder);
         return gst_element_set_state(codec_bin->coder, GST_STATE_READY);
     }
+    GST_ERROR_OBJECT(codec_bin, "Failed to create_software_coder");
     return GST_STATE_CHANGE_FAILURE;
 }
 
 static GstStateChangeReturn create_coder(GstCodecBin *codec_bin)
 {
     g_return_val_if_fail(codec_bin != nullptr, GST_STATE_CHANGE_FAILURE);
+    GST_INFO_OBJECT(codec_bin, "create_coder enter");
     g_return_val_if_fail(codec_bin->coder_name != nullptr, GST_STATE_CHANGE_FAILURE);
     g_return_val_if_fail(codec_bin->type != CODEC_BIN_TYPE_UNKNOWN, GST_STATE_CHANGE_FAILURE);
 
@@ -262,7 +264,7 @@ static GstStateChangeReturn create_coder(GstCodecBin *codec_bin)
 
 static GstStateChangeReturn connect_element(GstCodecBin *codec_bin)
 {
-    GST_INFO_OBJECT(codec_bin, "connect_element");
+    GST_INFO_OBJECT(codec_bin, "Begin to connect_element");
     g_return_val_if_fail(codec_bin != nullptr && codec_bin->src != nullptr &&
         codec_bin->coder != nullptr && codec_bin->sink != nullptr, GST_STATE_CHANGE_FAILURE);
 
@@ -277,13 +279,16 @@ static GstStateChangeReturn connect_element(GstCodecBin *codec_bin)
         GstPad *src_convert_sink_pad = gst_element_get_static_pad(codec_bin->src_convert, "sink");
         GstPad *src_convert_src_pad = gst_element_get_static_pad(codec_bin->src_convert, "src");
         if (gst_pad_link(src_src_pad, src_convert_sink_pad) != GST_PAD_LINK_OK) {
+            GST_ERROR_OBJECT(codec_bin, "Failed to link src->src_convert");
             return GST_STATE_CHANGE_FAILURE;
         }
         if (gst_pad_link(src_convert_src_pad, coder_sink_pad) != GST_PAD_LINK_OK) {
+            GST_ERROR_OBJECT(codec_bin, "Failed to link src_convert->coder");
             return GST_STATE_CHANGE_FAILURE;
         }
     } else {
         if (gst_pad_link(src_src_pad, coder_sink_pad) != GST_PAD_LINK_OK) {
+            GST_ERROR_OBJECT(codec_bin, "Failed to link src->coder");
             return GST_STATE_CHANGE_FAILURE;
         }
     }
@@ -292,13 +297,16 @@ static GstStateChangeReturn connect_element(GstCodecBin *codec_bin)
         GstPad *sink_convert_sink_pad = gst_element_get_static_pad(codec_bin->sink_convert, "sink");
         GstPad *sink_convert_src_pad = gst_element_get_static_pad(codec_bin->sink_convert, "src");
         if (gst_pad_link(coder_src_pad, sink_convert_sink_pad) != GST_PAD_LINK_OK) {
+            GST_ERROR_OBJECT(codec_bin, "Failed to link coder->sink_convert");
             return GST_STATE_CHANGE_FAILURE;
         }
         if (gst_pad_link(sink_convert_src_pad, sink_sink_pad) != GST_PAD_LINK_OK) {
+            GST_ERROR_OBJECT(codec_bin, "Failed to link sink_covert->sink");
             return GST_STATE_CHANGE_FAILURE;
         }
     } else {
         if (gst_pad_link(coder_src_pad, sink_sink_pad) != GST_PAD_LINK_OK) {
+            GST_ERROR_OBJECT(codec_bin, "Failed to link coder->sink");
             return GST_STATE_CHANGE_FAILURE;
         }
     }
@@ -344,9 +352,11 @@ static GstStateChangeReturn add_convert_if_necessary(GstCodecBin *codec_bin)
 {
     g_return_val_if_fail(codec_bin != nullptr, GST_STATE_CHANGE_FAILURE);
     if (codec_bin->need_src_convert && add_src_convert(codec_bin) != GST_STATE_CHANGE_SUCCESS) {
+        GST_ERROR_OBJECT(codec_bin, "Failed to add_src_convert");
         return GST_STATE_CHANGE_FAILURE;
     }
     if (codec_bin->need_sink_convert && add_sink_convert(codec_bin) != GST_STATE_CHANGE_SUCCESS) {
+        GST_ERROR_OBJECT(codec_bin, "Failed to add_sink_convert");
         return GST_STATE_CHANGE_FAILURE;
     }
     return GST_STATE_CHANGE_SUCCESS;
@@ -354,31 +364,33 @@ static GstStateChangeReturn add_convert_if_necessary(GstCodecBin *codec_bin)
 
 static GstStateChangeReturn add_element_to_bin(GstCodecBin *codec_bin)
 {
-    GST_INFO_OBJECT(codec_bin, "add_element_to_bin");
+    GST_INFO_OBJECT(codec_bin, "begin to add_element_to_bin");
     g_return_val_if_fail(codec_bin != nullptr && codec_bin->src != nullptr &&
         codec_bin->sink != nullptr, GST_STATE_CHANGE_FAILURE);
 
+    GST_INFO_OBJECT(codec_bin, "begin to add src element");
     gst_bin_add(GST_BIN_CAST(codec_bin), codec_bin->src);
     if (gst_element_set_state(codec_bin->src, GST_STATE_READY) != GST_STATE_CHANGE_SUCCESS) {
         return GST_STATE_CHANGE_FAILURE;
     }
 
     if (add_convert_if_necessary(codec_bin) != GST_STATE_CHANGE_SUCCESS) {
+        GST_ERROR_OBJECT(codec_bin, "Failed to add convert");
         return GST_STATE_CHANGE_FAILURE;
     }
 
+    GST_INFO_OBJECT(codec_bin, "begin to add sink element");
     gst_bin_add(GST_BIN_CAST(codec_bin), codec_bin->sink);
     if (gst_element_set_state(codec_bin->sink, GST_STATE_READY) != GST_STATE_CHANGE_SUCCESS) {
         return GST_STATE_CHANGE_FAILURE;
     }
-    GST_INFO_OBJECT(codec_bin, "connect_element success");
+    GST_INFO_OBJECT(codec_bin, "add_element_to_bin success");
     return GST_STATE_CHANGE_SUCCESS;
 }
 
 static GstStateChangeReturn gst_codec_bin_change_state(GstElement *element, GstStateChange transition)
 {
     GstCodecBin *codec_bin = GST_CODEC_BIN(element);
-    GST_INFO_OBJECT(codec_bin, "gst_codec_bin_change_state");
     g_return_val_if_fail(codec_bin != nullptr && codec_bin->type != CODEC_BIN_TYPE_UNKNOWN, GST_STATE_CHANGE_FAILURE);
 
     switch (transition) {
@@ -412,7 +424,7 @@ static gboolean plugin_init(GstPlugin *plugin)
 
 GST_PLUGIN_DEFINE(GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    _codecc_bin,
+    _codec_bin,
     "GStreamer Codec Bin",
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
