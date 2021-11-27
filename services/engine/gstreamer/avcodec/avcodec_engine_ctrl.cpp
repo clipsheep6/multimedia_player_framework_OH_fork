@@ -32,10 +32,6 @@ AVCodecEngineCtrl::AVCodecEngineCtrl()
 AVCodecEngineCtrl::~AVCodecEngineCtrl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-    if (taskQueue_ != nullptr) {
-        (void)Stop();
-        (void)taskQueue_->Stop();
-    }
     src_ = nullptr;
     sink_ = nullptr;
     if (codecBin_ != nullptr) {
@@ -69,9 +65,6 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
     if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_READY) != GST_STATE_CHANGE_SUCCESS) {
         return MSERR_UNKNOWN;
     }
-    taskQueue_ = std::make_unique<TaskQueue>("codec");
-    CHECK_AND_RETURN_RET(taskQueue_ != nullptr, MSERR_NO_MEMORY);
-    CHECK_AND_RETURN_RET(taskQueue_->Start() == MSERR_OK, MSERR_UNKNOWN);
     return MSERR_OK;
 }
 
@@ -79,37 +72,28 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
     std::shared_ptr<ProcessorConfig> outputConfig)
 {
     MEDIA_LOGD("Enter Prepare");
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, inputConfig, outputConfig] {
-        if (src_ == nullptr) {
-            src_ = AVCodecEngineFactory::CreateSrc(SrcType::SRC_TYPE_BYTEBUFFER);
-            CHECK_AND_RETURN_RET_LOG(src_ != nullptr, MSERR_NO_MEMORY, "No memory");
-            CHECK_AND_RETURN_RET(src_->Init() == MSERR_OK, MSERR_UNKNOWN);
-            CHECK_AND_RETURN_RET(src_->SetCallback(obs_) == MSERR_OK, MSERR_UNKNOWN);
-        }
-        if (sink_ == nullptr) {
-            sink_ = AVCodecEngineFactory::CreateSink(SinkType::SINK_TYPE_BYTEBUFFER);
-            CHECK_AND_RETURN_RET_LOG(sink_ != nullptr, MSERR_NO_MEMORY, "No memory");
-            CHECK_AND_RETURN_RET(sink_->Init() == MSERR_OK, MSERR_UNKNOWN);
-            CHECK_AND_RETURN_RET(sink_->SetCallback(obs_) == MSERR_OK, MSERR_UNKNOWN);
-        }
-        CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_UNKNOWN);
-        g_object_set(codecBin_, "src", static_cast<gpointer>(src_->GetElement()), nullptr);
-        CHECK_AND_RETURN_RET(src_->Configure(inputConfig) == MSERR_OK, MSERR_UNKNOWN);
-        g_object_set(codecBin_, "sink", static_cast<gpointer>(sink_->GetElement()), nullptr);
-        CHECK_AND_RETURN_RET(sink_->Configure(outputConfig) == MSERR_OK, MSERR_UNKNOWN);
+    if (src_ == nullptr) {
+        src_ = AVCodecEngineFactory::CreateSrc(SrcType::SRC_TYPE_BYTEBUFFER);
+        CHECK_AND_RETURN_RET_LOG(src_ != nullptr, MSERR_NO_MEMORY, "No memory");
+        CHECK_AND_RETURN_RET(src_->Init() == MSERR_OK, MSERR_UNKNOWN);
+        CHECK_AND_RETURN_RET(src_->SetCallback(obs_) == MSERR_OK, MSERR_UNKNOWN);
+    }
+    if (sink_ == nullptr) {
+        sink_ = AVCodecEngineFactory::CreateSink(SinkType::SINK_TYPE_BYTEBUFFER);
+        CHECK_AND_RETURN_RET_LOG(sink_ != nullptr, MSERR_NO_MEMORY, "No memory");
+        CHECK_AND_RETURN_RET(sink_->Init() == MSERR_OK, MSERR_UNKNOWN);
+        CHECK_AND_RETURN_RET(sink_->SetCallback(obs_) == MSERR_OK, MSERR_UNKNOWN);
+    }
+    CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_UNKNOWN);
+    g_object_set(codecBin_, "src", static_cast<gpointer>(src_->GetElement()), nullptr);
+    CHECK_AND_RETURN_RET(src_->Configure(inputConfig) == MSERR_OK, MSERR_UNKNOWN);
+    g_object_set(codecBin_, "sink", static_cast<gpointer>(sink_->GetElement()), nullptr);
+    CHECK_AND_RETURN_RET(sink_->Configure(outputConfig) == MSERR_OK, MSERR_UNKNOWN);
 
-        CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-        if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) != GST_STATE_CHANGE_SUCCESS) {
-            return MSERR_UNKNOWN;
-        }
-        return MSERR_OK;
-    });
-    int32_t ret = taskQueue_->EnqueueTask(task, true);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
-    CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
+    CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
+    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) != GST_STATE_CHANGE_SUCCESS) {
+        return MSERR_UNKNOWN;
+    }
     return MSERR_OK;
 }
 
@@ -117,65 +101,41 @@ int32_t AVCodecEngineCtrl::Start()
 {
     MEDIA_LOGD("Enter Start");
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-    auto task = std::make_shared<TaskHandler<int32_t>>([this] {
-        if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS) {
-            return MSERR_OK;
-        }
-        return MSERR_UNKNOWN;
-    });
-    int32_t ret = taskQueue_->EnqueueTask(task, true);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
-    CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
-    MEDIA_LOGD("Start Success");
-    return MSERR_OK;
+    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS) {
+        return MSERR_OK;
+    }
+    return MSERR_UNKNOWN;
 }
 
 int32_t AVCodecEngineCtrl::Stop()
 {
     MEDIA_LOGD("Enter Stop");
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-    auto task = std::make_shared<TaskHandler<int32_t>>([this] {
-        return gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) == GST_STATE_CHANGE_SUCCESS;
-    });
-    int32_t ret = taskQueue_->EnqueueTask(task, true);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
-    CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
-    return MSERR_OK;
+    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) == GST_STATE_CHANGE_SUCCESS) {
+        return MSERR_OK;
+    }
+    return MSERR_UNKNOWN;
 }
 
 int32_t AVCodecEngineCtrl::Flush()
 {
     MEDIA_LOGD("Enter Flush");
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-    auto task = std::make_shared<TaskHandler<int32_t>>([this] {
-        CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
-        CHECK_AND_RETURN_RET(src_->Flush() == MSERR_OK, MSERR_UNKNOWN);
 
-        CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
-        CHECK_AND_RETURN_RET(sink_->Flush() == MSERR_OK, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET(src_->Flush() == MSERR_OK, MSERR_UNKNOWN);
 
-        CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_UNKNOWN);
-        GstEvent *event = gst_event_new_flush_start();
-        CHECK_AND_RETURN_RET(event != nullptr, MSERR_NO_MEMORY);
-        (void)gst_element_send_event(codecBin_, event);
+    CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET(sink_->Flush() == MSERR_OK, MSERR_UNKNOWN);
 
-        event = gst_event_new_flush_stop(FALSE);
-        CHECK_AND_RETURN_RET(event != nullptr, MSERR_NO_MEMORY);
-        (void)gst_element_send_event(codecBin_, event);
-        return MSERR_OK;
-    });
-    int32_t ret = taskQueue_->EnqueueTask(task, true);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+    CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_UNKNOWN);
+    GstEvent *event = gst_event_new_flush_start();
+    CHECK_AND_RETURN_RET(event != nullptr, MSERR_NO_MEMORY);
+    (void)gst_element_send_event(codecBin_, event);
 
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
-    CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
+    event = gst_event_new_flush_stop(FALSE);
+    CHECK_AND_RETURN_RET(event != nullptr, MSERR_NO_MEMORY);
+    (void)gst_element_send_event(codecBin_, event);
     return MSERR_OK;
 }
 
@@ -214,62 +174,28 @@ std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetInputBuffer(uint32_t index
 {
     MEDIA_LOGD("Enter GetInputBuffer");
     CHECK_AND_RETURN_RET(src_ != nullptr, nullptr);
-    auto task = std::make_shared<TaskHandler<std::shared_ptr<AVSharedMemory>>>([this, index] {
-        return src_->GetInputBuffer(index);
-    });
-    int32_t ret = taskQueue_->EnqueueTask(task, true);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
-
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), nullptr);
-    return result.Value();
+    return src_->GetInputBuffer(index);
 }
 
 int32_t AVCodecEngineCtrl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     MEDIA_LOGD("Enter QueueInputBuffer");
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, index, info, flag] {
-        return src_->QueueInputBuffer(index, info, flag);
-    });
-    int32_t ret = taskQueue_->EnqueueTask(task, true);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
-    CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
-    return MSERR_OK;
+    return src_->QueueInputBuffer(index, info, flag);
 }
 
 std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetOutputBuffer(uint32_t index)
 {
     MEDIA_LOGD("Enter GetOutputBuffer");
     CHECK_AND_RETURN_RET(sink_ != nullptr, nullptr);
-    auto task = std::make_shared<TaskHandler<std::shared_ptr<AVSharedMemory>>>([this, index] {
-        return sink_->GetOutputBuffer(index);
-    });
-    int32_t ret = taskQueue_->EnqueueTask(task, true);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
-
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), nullptr);
-    return result.Value();
+    return sink_->GetOutputBuffer(index);
 }
 
 int32_t AVCodecEngineCtrl::ReleaseOutputBuffer(uint32_t index, bool render)
 {
     MEDIA_LOGD("Enter ReleaseOutputBuffer");
     CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, index, render] {
-        return sink_->ReleaseOutputBuffer(index, render);
-    });
-    int32_t ret = taskQueue_->EnqueueTask(task, true);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
-    CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
-    return MSERR_OK;
+    return sink_->ReleaseOutputBuffer(index, render);
 }
 
 int32_t AVCodecEngineCtrl::SetParameter(const Format &format)
