@@ -56,6 +56,7 @@ config("media_engine_gst_avcodec_config") {
 
 ohos_static_library("media_engine_gst_avcodec") {
   sources = [
+    "codec_common.cpp",
     "processor_base.cpp",
     "processor_adec_impl.cpp",
     "processor_aenc_impl.cpp",

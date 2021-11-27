@@ -37,13 +37,9 @@ protected:
 private:
     int32_t width_ = 0;
     int32_t height_ = 0;
-    int32_t pixelFormat_ = 0;
+    std::string pixelFormat_ = "";
     int32_t frameRate_ = 0;
-    int32_t bitrate_ = 0;
-    int32_t iFrameInterval_ = 0;
-    int32_t profile_ = 0;
-    int32_t quality_ = 0;
-    int32_t level_ = 0;
+    CodecName name_ = CODEC_NAME_VIDEO_AVC;
 };
 } // Media
 } // OHOS

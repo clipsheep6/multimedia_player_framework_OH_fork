@@ -39,7 +39,7 @@ SinkBytebufferImpl::~SinkBytebufferImpl()
 
 int32_t SinkBytebufferImpl::Init()
 {
-    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("sharedmemsink", nullptr)));
+    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("sharedmemsink", "buffersink")));
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     return MSERR_OK;
 }

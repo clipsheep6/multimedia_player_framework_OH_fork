@@ -39,7 +39,7 @@ SrcBytebufferImpl::~SrcBytebufferImpl()
 
 int32_t SrcBytebufferImpl::Init()
 {
-    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("codecshmemsrc", nullptr)));
+    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("codecshmemsrc", "buffersrc")));
     CHECK_AND_RETURN_RET_LOG(element_ != nullptr, MSERR_UNKNOWN, "Failed to gst_element_factory_make");
     // todo calculate
     g_object_set(element_, "buffer-size", 8000, nullptr);
