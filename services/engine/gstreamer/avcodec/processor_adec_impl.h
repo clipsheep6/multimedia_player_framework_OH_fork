@@ -38,7 +38,7 @@ private:
     int32_t channels_ = 0;
     int32_t sampleRate_ = 0;
     int32_t pcmFormat_ = 0;
-    CodecName name_ = CODEC_NAME_AUDIO_AAC;
+    CodecName codecName_ = CODEC_NAME_AUDIO_AAC;
 };
 } // Media
 } // OHOS

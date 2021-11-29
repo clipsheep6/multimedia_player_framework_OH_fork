@@ -55,7 +55,7 @@ int32_t ProcessorVdecImpl::ProcessOptional(const Format &format)
 std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
 {
     GstCaps *caps = nullptr;
-    switch (name_) {
+    switch (codecName_) {
         case CODEC_NAME_VIDEO_MPEG2:
             caps = gst_caps_new_simple("video/mpeg",
                 "width", G_TYPE_INT, width_,
