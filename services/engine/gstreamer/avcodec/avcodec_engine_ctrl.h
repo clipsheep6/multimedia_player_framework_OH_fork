@@ -51,6 +51,7 @@ private:
     AVCodecType codecType_ = AVCODEC_TYPE_VIDEO_ENCODER;
     GstPipeline *gstPipeline_ = nullptr;
     GstElement *codecBin_ = nullptr;
+    bool useSurfaceRender_ = false;
     std::weak_ptr<IAVCodecEngineObs> obs_;
     std::unique_ptr<SrcBase> src_;
     std::unique_ptr<SinkBase> sink_;

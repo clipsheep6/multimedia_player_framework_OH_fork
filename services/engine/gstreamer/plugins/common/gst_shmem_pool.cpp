@@ -182,7 +182,7 @@ static gboolean gst_shmem_pool_set_config(GstBufferPool *pool, GstStructure *con
         return FALSE;
     }
 
-    GST_INFO("set config, size: %u, min_bufs: %u, max_bufs: %u", size, minBuffers, maxBuffers);
+    GST_INFO("set config, size: %u, min_bufs: %u, max_bufs: %u", size, spool->minBuffers, spool->maxBuffers);
 
     spool->allocator = GST_SHMEM_ALLOCATOR_CAST(allocator);
     spool->params = params;
