@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef GST_DEMUX_BIN_H
-#define GST_DEMUX_BIN_H
+#ifndef GST_AVSPLITER_BIN_H
+#define GST_AVSPLITER_BIN_H
 
 #include <gst/gst.h>
 

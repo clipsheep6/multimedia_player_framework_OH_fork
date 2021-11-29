@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef DEMUXER_IMPL_H
-#define DEMUXER_IMPL_H
+#ifndef AVSPLITER_IMPL_H
+#define AVSPLITER_IMPL_H
 
-#include "demuxer.h"
+#include "avspliter.h"
 #include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
-class DemuxerImpl : public Demuxer {
+class AVSpliterImpl : public AVSpliter {
 public:
-    DemuxerImpl();
-    ~DemuxerImpl();
+    AVSpliterImpl();
+    ~AVSpliterImpl();
 
     int32_t Init();
     int32_t SetSource(const std::string &uri, TrackSelectMode mode) override;
@@ -34,11 +34,11 @@ public:
     int32_t SelectTrack(int32_t trackIdx) override;
     int32_t UnSelectTrack(int32_t trackIdx) override;
     int32_t ReadTrackSample(std::shared_ptr<AVMemory> buffer, TrackSampleInfo &info) override;
-    int32_t Seek(int64_t timeUs, DemuxerSeekMode mode) override;
+    int32_t Seek(int64_t timeUs, AVSpliterSeekMode mode) override;
     int32_t GetCacheState(int64_t &durationUs, bool &endOfStream) override;
     void Release() override;
 
-    DISALLOW_COPY_AND_MOVE(DemuxerImpl);
+    DISALLOW_COPY_AND_MOVE(AVSpliterImpl);
 };
 }
 }

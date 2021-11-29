@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef DEMUXER_H
-#define DEMUXER_H
+#ifndef AVSPLITER_H
+#define AVSPLITER_H
 
 #include <string>
 #include "avmemory.h"
@@ -45,35 +45,35 @@ enum TrackSelectMode : uint8_t {
 };
 
 /**
- * @brief Enumerates the seek mode for demuxer.
+ * @brief Enumerates the seek mode for avspliter.
  */
-enum DemuxerSeekMode : uint8_t {
+enum AVSpliterSeekMode : uint8_t {
     /**
      * @brief this mode is used to seek to a key frame that is located right or before at
      * the given timestamp.
      */
-    DEMUXER_SEEK_PREV_SYNC = 0,
+    AVSPLITER_SEEK_PREV_SYNC = 0,
     /**
      * @brief this mode is used to seek to a key frame that is located right or after at
      * the given timestamp.
      */
-    DEMUXER_SEEK_NEXT_SYNC = 1,
+    AVSPLITER_SEEK_NEXT_SYNC = 1,
     /**
      * @brief this mode is used to seek to a key frame that is located right or closest at
      * the given timestamp.
      */
-    DEMUXER_SEEK_CLOSEST_SYNC = 2,
+    AVSPLITER_SEEK_CLOSEST_SYNC = 2,
 };
 
 /**
- * @brief Provides the demux function for media files.
+ * @brief Provides the track spliter for media files to get sample data of each track.
  */
-class Demuxer {
+class AVSpliter {
 public:
-    virtual ~Demuxer() = default;
+    virtual ~AVSpliter() = default;
 
     /**
-     * @brief Set the uri source for demuxer. Calling this method before the reset
+     * @brief Set the uri source for avspliter. Calling this method before the reset
      * of the methods in this class. This method maybe time consuming.
      *
      * @param uri the URI of input media source.
@@ -85,10 +85,10 @@ public:
     virtual int32_t SetSource(const std::string &uri, TrackSelectMode mode) = 0;
 
     /**
-     * @brief Set the data source for demuxer. Calling this method before the reset
+     * @brief Set the data source for avspliter. Calling this method before the reset
      * of the methods in this class. This method maybe time consuming.
      *
-     * @param dataSource the media data source to be demuxed
+     * @param dataSource the media data source to be split
      * @param mode the mode indicates how to set the track's sample read position
      * when select a new track, see {@link TrackSelectMode}.
      * @return Returns {@link MSERR_OK} if the setting is successful; returns
@@ -146,7 +146,8 @@ public:
      * @brief Read a encoded sample from all selected track sample, and store it in the
      * buffer starting at the given offset. All sample will be read in sequence based on
      * timestamps. If no track selected, the default track for supported media type will
-     * be read.
+     * be read. The Codec Specific Data will be output before any frame data. Such data
+     * would be marked using the flag {@link FrameFlags::CODEC_DATA}.
      *
      * @param buffer the destination output buffer, see{@link AVMemory}.
      * @param info the sample's description information, see {@link TrackSampleInfo}.
@@ -163,7 +164,7 @@ public:
      * @return Returns {@link MSERR_OK} if the seek is success, returns an error code
      * otherwise.
      */
-    virtual int32_t Seek(int64_t timeUs, DemuxerSeekMode mode) = 0;
+    virtual int32_t Seek(int64_t timeUs, AVSpliterSeekMode mode) = 0;
 
     /**
      * @brief Get the an current estimate of how much data is cached in memory, and
@@ -178,18 +179,18 @@ public:
     virtual int32_t GetCacheState(int64_t &durationUs, bool &endOfStream) = 0;
 
     /**
-     * @brief Release the internel resource. After this method called, the demuxer
+     * @brief Release the internel resource. After this method called, the avspliter
      * instance can not be used again.
      */
     virtual void Release() = 0;
 };
 
-class __attribute__((visibility("default"))) DemuxerFactory {
+class __attribute__((visibility("default"))) AVSpliterFactory {
 public:
-    static std::shared_ptr<Demuxer> CreateDemuxer();
+    static std::shared_ptr<AVSpliter> CreateAVSpliter();
 private:
-    DemuxerFactory() = default;
-    ~DemuxerFactory() = default;
+    AVSpliterFactory() = default;
+    ~AVSpliterFactory() = default;
 };
 }  // namespace Media
 }  // namespace OHOS
