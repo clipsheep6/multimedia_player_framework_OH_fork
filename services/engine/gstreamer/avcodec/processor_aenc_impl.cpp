@@ -73,9 +73,20 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetInputPortConfig()
 
 std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
 {
-    GstCaps *caps = gst_caps_new_simple("audio/mpeg",
-        "mpegversion", G_TYPE_INT, 1,
-        "layer", G_TYPE_INT, 3, nullptr);
+    GstCaps *caps = nullptr;
+    switch (codecName_) {
+        case CODEC_NAME_AUDIO_AAC:
+            caps = gst_caps_new_simple("audio/mpeg",
+                "rate", G_TYPE_INT, sampleRate_,
+                "channels", G_TYPE_INT, channels_,
+                "mpegversion", G_TYPE_INT, 4,
+                "base-profile", G_TYPE_STRING, "lc",
+                "stream-format", G_TYPE_STRING, "adts", nullptr);
+            break;
+        default :
+            MEDIA_LOGE("Unsupported format");
+            break;
+    }
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
     auto config = std::make_shared<ProcessorConfig>(caps);

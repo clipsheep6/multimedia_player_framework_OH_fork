@@ -47,9 +47,37 @@ int32_t ProcessorAdecImpl::ProcessOptional(const Format &format)
 
 std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
 {
-    GstCaps *caps = gst_caps_new_simple("audio/mpeg",
-        "mpegversion", G_TYPE_INT, 1,
-        "layer", G_TYPE_INT, 3, nullptr);
+    GstCaps *caps = nullptr;
+    switch (codecName_) {
+        case CODEC_NAME_AUDIO_VORBIS:
+            caps = gst_caps_new_simple("audio/x-vorbis",
+                "rate", G_TYPE_INT, sampleRate_,
+                "channels", G_TYPE_INT, channels_, nullptr);
+            break;
+        case CODEC_NAME_AUDIO_MP3:
+            caps = gst_caps_new_simple("audio/mpeg",
+                "rate", G_TYPE_INT, sampleRate_,
+                "channels", G_TYPE_INT, channels_,
+                "mpegversion", G_TYPE_INT, 1,
+                "layer", G_TYPE_INT, 3, nullptr);
+            break;
+        case CODEC_NAME_AUDIO_AAC:
+            caps = gst_caps_new_simple("audio/mpeg",
+                "rate", G_TYPE_INT, sampleRate_,
+                "channels", G_TYPE_INT, channels_,
+                "mpegversion", G_TYPE_INT, 4,
+                "stream-format", G_TYPE_STRING, "adts", nullptr);
+            break;
+        case CODEC_NAME_AUDIO_FLAC:
+            caps = gst_caps_new_simple("audio/x-flac",
+                "rate", G_TYPE_INT, sampleRate_,
+                "channels", G_TYPE_INT, channels_,
+                "framed", G_TYPE_BOOLEAN, TRUE, nullptr);
+            break;
+        default :
+            MEDIA_LOGE("Unsupported format");
+            break;
+    }
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
     auto config = std::make_shared<ProcessorConfig>(caps);
