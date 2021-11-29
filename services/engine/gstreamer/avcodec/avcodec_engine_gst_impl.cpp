@@ -38,8 +38,14 @@ int32_t AVCodecEngineGstImpl::Init(AVCodecType type, bool isMimeType, const std:
     MEDIA_LOGD("Init AVCodecEngine with type:%{public}d, %{public}d, name:%{public}s", type, isMimeType, name.c_str());
     processor_ = AVCodecEngineFactory::CreateProcessor(type);
     CHECK_AND_RETURN_RET(processor_ != nullptr, MSERR_NO_MEMORY);
-
     CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_UNKNOWN);
+
+    // if (isMimeType) {
+    //     CHECK_AND_RETURN_RET(HandleMimeType(type) == MSERR_OK, MSERR_UNKNOWN);
+    // } else {
+    //     CHECK_AND_RETURN_RET(HandlePluginName(type, name) == MSERR_OK, MSERR_UNKNOWN);
+    // }
+
     // todo codeclist
     int32_t ret = ctrl_->Init(type, true, "avdec_h264");
     CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_UNKNOWN);
@@ -144,5 +150,108 @@ int32_t AVCodecEngineGstImpl::SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs
     ctrl_->SetObs(obs);
     return MSERR_OK;
 }
+
+// int32_t AVCodecEngineGstImpl::HandleMimeType(AVCodecType type)
+// {
+//     int32_t ret = MSERR_OK;
+//     std::string pluginName;
+//     Format format;
+//     format.PutStringValue("codec_mime", name);
+//     switch (type) {
+//         case AVCODEC_TYPE_VIDEO_ENCODER:
+//             pluginName = CodecList::FindVideoDecoder(format);
+//             break;
+//         case AVCODEC_TYPE_VIDEO_DECODER:
+//             pluginName = CodecList::FindVideoEncoder(format);
+//             break;
+//         case AVCODEC_TYPE_AUDIO_ENCODER:
+//             pluginName = CodecList::FindAudioDecoder(format);
+//             break;
+//         case AVCODEC_TYPE_AUDIO_DECODER:
+//             pluginName = CodecList::FindAudioEncoder(format);
+//             break;
+//         default:
+//             ret = MSERR_INVALID_VAL;
+//             MEDIA_LOGE("Unknown type");
+//             break;
+//     }
+//     CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_UNKNOWN);
+
+//     bool isSoftware = true;
+//     CHECK_AND_RETURN_RET(IsSoftPlugin(type, name, isSoftware) == MSERR_OK, MSERR_UNKNOWN);
+
+//     CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_UNKNOWN);
+//     return ctrl_->Init(type, isSoftware, pluginName);
+// }
+
+// int32_t AVCodecEngineGstImpl::HandlePluginName(AVCodecType type, const std::string &name)
+// {
+//     bool isSoftware = true;
+//     CHECK_AND_RETURN_RET(IsSoftPlugin(type, name, isSoftware) == MSERR_OK, MSERR_UNKNOWN);
+
+//     CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_UNKNOWN);
+//     return ctrl_->Init(type, isSoftware, name);
+// }
+
+// int32_t AVCodecEngineGstImpl::IsSoftPlugin(AVCodecType type, const std::string &name, bool &isSoftware)
+// {
+//     int32_t ret = MSERR_OK;
+//     switch (type) {
+//         case AVCODEC_TYPE_VIDEO_ENCODER: {
+//             std::vector<VideoCaps> caps = CodecList::GetVideoEncoderCaps();
+//             for (auto it = caps.begin(); it != caps.end(); it++) {
+//                 if (*it != nullptr) {
+//                     auto codecInfo = *it->GetCodecInfo();
+//                     if (codecInfo != nullptr && codecInfo.GetName == name) {
+//                         isSoftware = codecInfo.IsSoftwareOnly();
+//                     }
+//                 }
+//             }
+//             break;
+//         }
+//         case AVCODEC_TYPE_VIDEO_DECODER: {
+//             std::vector<VideoCaps> caps = CodecList::GetVideoDecoderCaps();
+//             for (auto it = caps.begin(); it != caps.end(); it++) {
+//                 if (*it != nullptr) {
+//                     auto codecInfo = *it->GetCodecInfo();
+//                     if (codecInfo != nullptr && codecInfo.GetName == name) {
+//                         isSoftware = codecInfo.IsSoftwareOnly();
+//                     }
+//                 }
+//             }
+//             break;
+//         }
+//         case AVCODEC_TYPE_AUDIO_ENCODER: {
+//             std::vector<AudioCaps> caps = CodecList::GetAudioEncoderCaps();
+//             for (auto it = caps.begin(); it != caps.end(); it++) {
+//                 if (*it != nullptr) {
+//                     auto codecInfo = *it->GetCodecInfo();
+//                     if (codecInfo != nullptr && codecInfo.GetName == name) {
+//                         isSoftware = codecInfo.IsSoftwareOnly();
+//                     }
+//                 }
+//             }
+//             break;
+//         }
+//         case AVCODEC_TYPE_AUDIO_DECODER: {
+//             std::vector<AudioCaps> caps = CodecList::GetAudioDecoderCaps();
+//             for (auto it = caps.begin(); it != caps.end(); it++) {
+//                 if (*it != nullptr) {
+//                     auto codecInfo = *it->GetCodecInfo();
+//                     if (codecInfo != nullptr && codecInfo.GetName == name) {
+//                         isSoftware = codecInfo.IsSoftwareOnly();
+//                     }
+//                 }
+//             }
+//             break;
+//         }
+//         default: {
+//             ret = MSERR_INVALID_VAL;
+//             MEDIA_LOGE("Unknown type");
+//             break;
+//         }
+//     }
+//     return ret;
+// }
 } // Media
 } // OHOS
