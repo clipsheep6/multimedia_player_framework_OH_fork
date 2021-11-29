@@ -60,7 +60,6 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
             caps = gst_caps_new_simple("video/mpeg",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
-                "framerate", G_TYPE_INT, frameRate_,
                 "systemstream", G_TYPE_BOOLEAN, FALSE,
                 "mpegversion", G_TYPE_INT, 2, nullptr);
             break;
@@ -68,7 +67,6 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
             caps = gst_caps_new_simple("video/mpeg",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
-                "framerate", G_TYPE_INT, frameRate_,
                 "mpegversion", G_TYPE_INT, 4,
                 "stream-format", G_TYPE_STRING, "adts", nullptr);
             break;
@@ -76,15 +74,12 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
             caps = gst_caps_new_simple("video/x-h263",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
-                "framerate", G_TYPE_INT, frameRate_,
                 "variant", G_TYPE_STRING, "itu", nullptr);
             break;
         case CODEC_NAME_VIDEO_AVC:
             caps = gst_caps_new_simple("video/x-h264",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
-                "framerate", G_TYPE_INT, frameRate_,
-                "alignment", G_TYPE_STRING, "au",
                 "stream-format", G_TYPE_STRING, "avc", nullptr);
             break;
         default :
@@ -104,11 +99,10 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
 
 std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
 {
+    // GstCaps *caps = gst_caps_new_simple("video/x-raw",
+    //     "format", G_TYPE_STRING, pixelFormat_.c_str(), nullptr);
     GstCaps *caps = gst_caps_new_simple("video/x-raw",
-        "width", G_TYPE_INT, width_,
-        "height", G_TYPE_INT, height_,
-        "format", G_TYPE_STRING, pixelFormat_.c_str(),
-        "framerate", G_TYPE_INT, frameRate_, nullptr);
+        "format", G_TYPE_STRING, "RGBA", nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
     auto config = std::make_shared<ProcessorConfig>(caps);

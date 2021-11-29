@@ -62,7 +62,8 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
     g_object_set(codecBin_, "sink-convert", static_cast<gboolean>(true), nullptr);
     g_object_set(codecBin_, "coder-name", name.c_str(), nullptr);
 
-    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_READY) != GST_STATE_CHANGE_SUCCESS) {
+    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_READY) == GST_STATE_CHANGE_FAILURE) {
+        MEDIA_LOGE("Failed to change state");
         return MSERR_UNKNOWN;
     }
     return MSERR_OK;
@@ -79,6 +80,7 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
         CHECK_AND_RETURN_RET(src_->Init() == MSERR_OK, MSERR_UNKNOWN);
         CHECK_AND_RETURN_RET(src_->SetCallback(obs_) == MSERR_OK, MSERR_UNKNOWN);
     }
+
     if (sink_ == nullptr) {
         MEDIA_LOGD("Use buffer sink");
         sink_ = AVCodecEngineFactory::CreateSink(SinkType::SINK_TYPE_BYTEBUFFER);
@@ -86,14 +88,21 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
         CHECK_AND_RETURN_RET(sink_->Init() == MSERR_OK, MSERR_UNKNOWN);
         CHECK_AND_RETURN_RET(sink_->SetCallback(obs_) == MSERR_OK, MSERR_UNKNOWN);
     }
+
     CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_UNKNOWN);
     g_object_set(codecBin_, "src", static_cast<gpointer>(src_->GetElement()), nullptr);
     CHECK_AND_RETURN_RET(src_->Configure(inputConfig) == MSERR_OK, MSERR_UNKNOWN);
+
+    if (useSurfaceRender_) {
+        MEDIA_LOGD("Need to overwrite sink color space");
+        //todo
+    }
     g_object_set(codecBin_, "sink", static_cast<gpointer>(sink_->GetElement()), nullptr);
     CHECK_AND_RETURN_RET(sink_->Configure(outputConfig) == MSERR_OK, MSERR_UNKNOWN);
 
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) != GST_STATE_CHANGE_SUCCESS) {
+    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
+        MEDIA_LOGE("Failed to change state");
         return MSERR_UNKNOWN;
     }
     return MSERR_OK;
@@ -103,20 +112,22 @@ int32_t AVCodecEngineCtrl::Start()
 {
     MEDIA_LOGD("Enter Start");
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS) {
-        return MSERR_OK;
+    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+        MEDIA_LOGE("Failed to change state");
+        return MSERR_UNKNOWN;
     }
-    return MSERR_UNKNOWN;
+    return MSERR_OK;
 }
 
 int32_t AVCodecEngineCtrl::Stop()
 {
     MEDIA_LOGD("Enter Stop");
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) == GST_STATE_CHANGE_SUCCESS) {
-        return MSERR_OK;
+    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
+        MEDIA_LOGE("Failed to change state");
+        return MSERR_UNKNOWN;
     }
-    return MSERR_UNKNOWN;
+    return MSERR_OK;
 }
 
 int32_t AVCodecEngineCtrl::Flush()
@@ -171,7 +182,12 @@ int32_t AVCodecEngineCtrl::SetOutputSurface(sptr<Surface> surface)
         CHECK_AND_RETURN_RET_LOG(sink_ != nullptr, MSERR_NO_MEMORY, "No memory");
         CHECK_AND_RETURN_RET(sink_->Init() == MSERR_OK, MSERR_UNKNOWN);
     }
-    return sink_->SetOutputSurface(surface);
+    if (sink_->SetOutputSurface(surface) == MSERR_OK) {
+        useSurfaceRender_ = true;
+    } else {
+        return MSERR_UNKNOWN;
+    }
+    return MSERR_OK;
 }
 
 std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetInputBuffer(uint32_t index)
