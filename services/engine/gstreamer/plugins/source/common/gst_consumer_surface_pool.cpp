@@ -24,11 +24,17 @@ using namespace OHOS;
 
 GST_DEBUG_CATEGORY_STATIC(gst_consumer_surface_pool_debug_category);
 #define GST_CAT_DEFAULT gst_consumer_surface_pool_debug_category
-#define DEBUG_INIT \
-    GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_pool_debug_category, "mempoolsrc", 0, \
-        "debug category for mem pool src base class");
 
-G_DEFINE_TYPE_WITH_CODE(GstConsumerSurfacePool, gst_consumer_surface_pool, GST_TYPE_BUFFER_POOL, DEBUG_INIT);
+struct _GstConsumerSurfacePoolPrivate {
+    sptr<Surface> consumer_surface;
+    guint available_buf_count;
+    GMutex pool_lock;
+    GCond buffer_available_con;
+    gboolean flushing;
+    gboolean start;
+};
+
+G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfacePool, gst_consumer_surface_pool, GST_TYPE_VIDEO_BUFFER_POOL);
 
 class ConsumerListenerProxy : public IBufferConsumerListener {
 public:
@@ -38,15 +44,6 @@ public:
     void OnBufferAvailable() override;
 private:
     GstConsumerSurfacePool &owner_;
-};
-
-struct _GstConsumerSurfacePoolPrivate {
-    sptr<Surface> consumer_surface;
-    guint available_buf_count;
-    GMutex pool_lock;
-    GCond buffer_available_con;
-    gboolean flushing;
-    gboolean start;
 };
 
 static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool);
@@ -107,7 +104,7 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
     g_return_if_fail(klass != nullptr);
     GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS (klass);
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
-
+    GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_pool_debug_category, "surfacepool", 0, "surface pool");
     gobjectClass->finalize = gst_consumer_surface_pool_finalize;
     poolClass->get_options = gst_consumer_surface_pool_get_options;
     poolClass->set_config = gst_consumer_surface_pool_set_config;

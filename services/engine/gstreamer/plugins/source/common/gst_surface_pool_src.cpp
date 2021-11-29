@@ -33,16 +33,13 @@ namespace {
 
 GST_DEBUG_CATEGORY_STATIC(gst_surface_pool_src_debug_category);
 #define GST_CAT_DEFAULT gst_surface_pool_src_debug_category
-#define DEBUG_INIT \
-    GST_DEBUG_CATEGORY_INIT(gst_surface_pool_src_debug_category, "surfacepoolsrc", 0, \
-        "debug category for surface pool src base class");
 
 enum {
     PROP_0,
     PROP_SURFACE,
 };
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE(GstSurfacePoolSrc, gst_surface_pool_src, GST_TYPE_MEM_POOL_SRC, DEBUG_INIT);
+G_DEFINE_ABSTRACT_TYPE(GstSurfacePoolSrc, gst_surface_pool_src, GST_TYPE_MEM_POOL_SRC);
 
 static void gst_surface_pool_src_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstStateChangeReturn gst_surface_pool_src_change_state(GstElement *element, GstStateChange transition);
@@ -60,16 +57,12 @@ static void gst_surface_pool_src_class_init(GstSurfacePoolSrcClass *klass)
     GObjectClass *gobject_class = reinterpret_cast<GObjectClass *>(klass);
     GstElementClass *gstelement_class = reinterpret_cast<GstElementClass *>(klass);
     GstBaseSrcClass *gstbasesrc_class = reinterpret_cast<GstBaseSrcClass *>(klass);
-
+    GST_DEBUG_CATEGORY_INIT(gst_surface_pool_src_debug_category, "surfacepoolsrc", 0, "surface pool src base class");
     gobject_class->get_property = gst_surface_pool_src_get_property;
 
     g_object_class_install_property(gobject_class, PROP_SURFACE,
         g_param_spec_pointer("surface", "Surface", "Surface for buffer",
             (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
-
-    gst_element_class_set_static_metadata(gstelement_class,
-        "Surface pool source", "Source/Surface",
-        "Retrieve frame from surface buffer queue", "OpenHarmony");
 
     gstelement_class->change_state = gst_surface_pool_src_change_state;
     gstbasesrc_class->fill = gst_surface_pool_src_fill;
