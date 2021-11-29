@@ -14,7 +14,7 @@
  */
 
 #include "config.h"
-#include "gst_shmem_allocator.h"
+#include "gst_shmem_allocator_old.h"
 #include "gst_shmem_memory.h"
 #include "media_log.h"
 #include "media_errors.h"
