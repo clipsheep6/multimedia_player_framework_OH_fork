@@ -26,15 +26,12 @@ using namespace OHOS;
 
 GST_DEBUG_CATEGORY_STATIC(gst_consumer_surface_allocator_debug_category);
 #define GST_CAT_DEFAULT gst_consumer_surface_allocator_debug_category
-#define DEBUG_INIT \
-    GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_allocator_debug_category, "mempoolsrc", 0, \
-        "debug category for mem pool src base class");
-
-G_DEFINE_TYPE_WITH_CODE(GstConsumerSurfaceAllocator, gst_consumer_surface_allocator, GST_TYPE_ALLOCATOR, DEBUG_INIT);
 
 struct _GstConsumerSurfaceAllocatorPrivate {
     sptr<Surface> csurface;
 };
+
+G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfaceAllocator, gst_consumer_surface_allocator, GST_TYPE_ALLOCATOR);
 
 static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocatorClass *klass);
 static void gst_consumer_surface_allocator_free(GstAllocator *allocator, GstMemory *mem);
@@ -153,7 +150,7 @@ static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocato
 {
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
     g_return_if_fail(gobjectClass != nullptr);
-
+    GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_allocator_debug_category, "surfaceallocator", 0, "surface allocator");
     gobjectClass->finalize = gst_consumer_surface_allocator_finalize;
 
     GstAllocatorClass *allocatorClass = GST_ALLOCATOR_CLASS(klass);

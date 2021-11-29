@@ -28,15 +28,12 @@ namespace {
 
 GST_DEBUG_CATEGORY_STATIC(gst_mem_pool_src_debug_category);
 #define GST_CAT_DEFAULT gst_mem_pool_src_debug_category
-#define DEBUG_INIT \
-    GST_DEBUG_CATEGORY_INIT(gst_mem_pool_src_debug_category, "mempoolsrc", 0, \
-        "debug category for mem pool src base class");
 
 struct _GstMemPoolSrcPrivate {
     BufferAvailable buffer_available;
     gboolean emit_signals;
-    GDestroyNotify notify;
     gpointer user_data;
+    GDestroyNotify notify;
 };
 
 enum
@@ -57,7 +54,7 @@ enum {
     PROP_BUFFER_SIZE,
 };
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE(GstMemPoolSrc, gst_mem_pool_src, GST_TYPE_BASE_SRC, DEBUG_INIT);
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(GstMemPoolSrc, gst_mem_pool_src, GST_TYPE_BASE_SRC);
 
 static guint gst_mem_pool_src_signals[LAST_SIGNAL] = { 0 };
 static void gst_mem_pool_src_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -71,9 +68,8 @@ static void gst_mem_pool_src_class_init(GstMemPoolSrcClass *klass)
 {
     g_return_if_fail(klass != nullptr);
     GObjectClass *gobject_class = reinterpret_cast<GObjectClass *>(klass);
-    GstElementClass *gstelement_class = reinterpret_cast<GstElementClass *>(klass);
     GstBaseSrcClass *gstbasesrc_class = reinterpret_cast<GstBaseSrcClass *>(klass);
-
+    GST_DEBUG_CATEGORY_INIT(gst_mem_pool_src_debug_category, "mempoolsrc", 0, "mem pool src base class");
     gobject_class->set_property = gst_mem_pool_src_set_property;
     gobject_class->get_property = gst_mem_pool_src_get_property;
     gobject_class->dispose = gst_mem_pool_src_dispose;
@@ -113,10 +109,6 @@ static void gst_mem_pool_src_class_init(GstMemPoolSrcClass *klass)
             static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION),
             G_STRUCT_OFFSET(GstMemPoolSrcClass, push_buffer), NULL, NULL, NULL,
             GST_TYPE_FLOW_RETURN, 1, GST_TYPE_BUFFER);
-
-    gst_element_class_set_static_metadata(gstelement_class,
-        "Mem pool source", "Source/Mem",
-        "Retrieve frame from mem buffer queue", "OpenHarmony");
 
     gstbasesrc_class->is_seekable = gst_mem_pool_src_is_seekable;
     gstbasesrc_class->query = gst_mem_pool_src_query;

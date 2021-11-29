@@ -30,9 +30,6 @@ namespace {
 
 GST_DEBUG_CATEGORY_STATIC(gst_shmem_pool_src_debug_category);
 #define GST_CAT_DEFAULT gst_shmem_pool_src_debug_category
-#define DEBUG_INIT \
-    GST_DEBUG_CATEGORY_INIT(gst_shmem_pool_src_debug_category, "shmempoolsrc", 0, \
-        "debug category for shmem pool src base class");
 
 struct _GstShmemPoolSrcPrivate
 {
@@ -52,7 +49,7 @@ struct _GstShmemPoolSrcPrivate
     std::shared_ptr<OHOS::Media::AVSharedMemoryPool> av_shmem_pool;
 };
 
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE(GstShmemPoolSrc, gst_shmem_pool_src, GST_TYPE_BASE_SRC, DEBUG_INIT);
+G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(GstShmemPoolSrc, gst_shmem_pool_src, GST_TYPE_MEM_POOL_SRC);
 
 static GstStateChangeReturn gst_shmem_pool_src_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_shmem_pool_src_decide_allocation(GstBaseSrc *basesrc, GstQuery *query);
@@ -75,11 +72,7 @@ static void gst_shmem_pool_src_class_init(GstShmemPoolSrcClass *klass)
     GstElementClass *gstelement_class = reinterpret_cast<GstElementClass *>(klass);
     GstBaseSrcClass *gstbasesrc_class = reinterpret_cast<GstBaseSrcClass *>(klass);
     GstMemPoolSrcClass *gstmemsrc_class = reinterpret_cast<GstMemPoolSrcClass *>(klass);
-
-    gst_element_class_set_static_metadata(gstelement_class,
-        "Shmem pool source", "Source/Shmem",
-        "Retrieve frame from shmem buffer queue", "OpenHarmony");
-
+    GST_DEBUG_CATEGORY_INIT(gst_shmem_pool_src_debug_category, "shmempoolsrc", 0, "shmem pool src base class");
     gobject_class->finalize = gst_shmem_pool_src_finalize;
     gobject_class->dispose = gst_mem_pool_src_dispose;
     gstelement_class->change_state = gst_shmem_pool_src_change_state;
