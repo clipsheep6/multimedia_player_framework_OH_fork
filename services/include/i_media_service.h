@@ -20,6 +20,7 @@
 #include "i_recorder_service.h"
 #include "i_player_service.h"
 #include "i_avmetadatahelper_service.h"
+#include "i_muxer_service.h"
 
 namespace OHOS {
 namespace Media {
@@ -61,6 +62,17 @@ public:
     virtual std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() = 0;
 
     /**
+     * @brief Create an muxer service.
+     *
+     * All muxer functions must be created and obtained first.
+     *
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual std::shared_ptr<IMuxerService> CreateMuxerService() = 0;
+
+    /**
      * @brief Destroy a recorder service.
      *
      * call the API to destroy the recorder service.
@@ -95,6 +107,18 @@ public:
      * @version 1.0
      */
     virtual int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) = 0;
+
+    /**
+     * @brief Destroy a muxer service.
+     *
+     * call the API to destroy the muxer service.
+     *
+     * @param pointer to the muxer service.
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t DestroyMuxerService(std::shared_ptr<IMuxerService> muxer) = 0;
 };
 
 class __attribute__((visibility("default"))) MeidaServiceFactory {

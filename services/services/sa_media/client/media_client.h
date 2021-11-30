@@ -23,6 +23,7 @@
 #include "recorder_client.h"
 #include "player_client.h"
 #include "avmetadatahelper_client.h"
+#include "muxer_client.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -35,9 +36,11 @@ public:
     std::shared_ptr<IRecorderService> CreateRecorderService() override;
     std::shared_ptr<IPlayerService> CreatePlayerService() override;
     std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() override;
+    std::shared_ptr<IMuxerService> CreateMuxerService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
     int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) override;
     int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;
+    int32_t DestroyMuxerService(std::shared_ptr<IMuxerService> muxer) override;
 
 private:
     sptr<IStandardMediaService> GetMediaProxy();
@@ -51,6 +54,7 @@ private:
     std::list<std::shared_ptr<IRecorderService>> recorderClientList_;
     std::list<std::shared_ptr<IPlayerService>> playerClientList_;
     std::list<std::shared_ptr<IAVMetadataHelperService>> avMetadataHelperClientList_;
+    std::list<std::shared_ptr<IMuxerService>> muxerClientList_;
     std::mutex mutex_;
 };
 } // namespace Media

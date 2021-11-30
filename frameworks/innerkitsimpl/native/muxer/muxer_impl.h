@@ -18,6 +18,7 @@
 
 #include "muxer.h"
 #include "nocopyable.h"
+#include "i_muxer_service.h"
 
 namespace OHOS {
 namespace Media {
@@ -25,20 +26,22 @@ class MuxerImpl : public Muxer {
 public:
     MuxerImpl();
     ~MuxerImpl();
-
-    int32_t Init();
-    int32_t SetOutput(const std::string &path, const std::string &format) override;
-    int32_t SetLocation(float latitude, float longtitude) override;
-    int32_t SetOrientationHint(int degrees) override;
-    int32_t AddTrack(const MediaDescription &trackDesc, int32_t &trackIdx) override;
-    int32_t Start() override;
-    int32_t WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo &info) override;
-    int32_t Stop() override;
-    void Release() override;
-
     DISALLOW_COPY_AND_MOVE(MuxerImpl);
-};
-}
-}
 
-#endif
+    static std::vector<std::string> GetSupportedFormats();
+
+	int32_t SetOutput(const std::string& path, const std::string& format) override;
+	int32_t SetLocation(float latitude, float longtitude) override;
+	int32_t SetOrientationHint(int degrees) override;
+	int32_t AddTrack(const MediaDescription& trackDesc, int32_t& trackId) override;
+	int32_t Start() override;
+	int32_t WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo& info) override;
+	int32_t Stop() override;
+	void Release() override;
+	int32_t Init();
+private:
+    std::shared_ptr<IMuxerService> muxerService_ = nullptr;
+};
+}  // namespace Media
+}  // namespace OHOSes 2.add muxer_demo 3.add state change check for muxer server
+#endif  // MUXER_IMPL_H

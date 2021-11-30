@@ -31,7 +31,7 @@ inline constexpr std::string_view MD_KEY_TRACK_INDEX = "track_index";
 /**
  * Key for track type, value type is uint8_t, see {link @MediaTrackType}
  */
-inline constexpr std::string_view MD_KEY_TRACK_TYPE = "track_index";
+inline constexpr std::string_view MD_KEY_TRACK_TYPE = "track_type";
 
 /**
  * Key for codec mime type, value type is string

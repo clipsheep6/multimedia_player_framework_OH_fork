@@ -21,6 +21,7 @@
 #include "i_standard_recorder_service.h"
 #include "i_standard_player_service.h"
 #include "i_standard_avmetadatahelper_service.h"
+#include "i_standard_muxer_service.h"
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -137,6 +138,28 @@ std::shared_ptr<IAVMetadataHelperService> MediaClient::CreateAVMetadataHelperSer
     return avMetadataHelper;
 }
 
+std::shared_ptr<IMuxerService> MediaClient::CreateMuxerService()
+{
+    if (!IsAlived()) {
+        MEDIA_LOGE("media service does not exist.");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_MUXER);
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "muxer proxy object is nullptr.");
+
+    sptr<IStandardMuxerService> muxerProxy = iface_cast<IStandardMuxerService>(object);
+    CHECK_AND_RETURN_RET_LOG(muxerProxy != nullptr, nullptr, "muxer proxy is nullptr.");
+
+    std::shared_ptr<MuxerClient> muxer = MuxerClient::Create(muxerProxy);
+    CHECK_AND_RETURN_RET_LOG(muxer != nullptr, nullptr, "failed to create muxer client.");
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    muxerClientList_.push_back(muxer);
+    return muxer;
+}
+
 int32_t MediaClient::DestroyRecorderService(std::shared_ptr<IRecorderService> recorder)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -159,6 +182,14 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
     CHECK_AND_RETURN_RET_LOG(avMetadataHelper != nullptr, MSERR_NO_MEMORY,
         "input avmetadatahelper is nullptr.");
     avMetadataHelperClientList_.remove(avMetadataHelper);
+    return MSERR_OK;
+}
+
+int32_t MediaClient::DestroyMuxerService(std::shared_ptr<IMuxerService> muxer)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(muxer != nullptr, MSERR_NO_MEMORY, "input muxer is nullptr.");
+    muxerClientList_.remove(muxer);
     return MSERR_OK;
 }
 
@@ -218,6 +249,13 @@ void MediaClient::MediaServerDied(pid_t pid)
         auto avMetadataHelper = std::static_pointer_cast<AVMetadataHelperClient>(it);
         if (avMetadataHelper != nullptr) {
             avMetadataHelper->MediaServerDied();
+        }
+    }
+
+    for (auto &it : muxerClientList_) {
+        auto muxer = std::static_pointer_cast<MuxerClient>(it);
+        if (muxer != nullptr) {
+            muxer->MediaServerDied();
         }
     }
 }
