@@ -62,7 +62,8 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
     codecBin_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("codecbin", "the_codec_bin")));
     CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_NO_MEMORY);
 
-    gst_bin_add(GST_BIN_CAST(gstPipeline_), codecBin_);
+    gboolean ret = gst_bin_add(GST_BIN_CAST(gstPipeline_), codecBin_);
+    CHECK_AND_RETURN_RET(ret == TRUE, MSERR_NO_MEMORY);
 
     g_object_set(codecBin_, "use-software", static_cast<gboolean>(useSoftware), nullptr);
     g_object_set(codecBin_, "type", static_cast<int32_t>(type), nullptr);
@@ -214,6 +215,10 @@ int32_t AVCodecEngineCtrl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
 {
     MEDIA_LOGD("Enter QueueInputBuffer");
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
+    if (static_cast<int32_t>(flag) | static_cast<int32_t>(AVCODEC_BUFFER_FLAG_EOS)) {
+        MEDIA_LOGE("Unsupport flush");
+        //return Flush;
+    }
     return src_->QueueInputBuffer(index, info, flag);
 }
 
