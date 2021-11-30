@@ -80,6 +80,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
             caps = gst_caps_new_simple("video/x-h264",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
+                "alignment", G_TYPE_STRING, "au",
                 "stream-format", G_TYPE_STRING, "avc", nullptr);
             break;
         default :

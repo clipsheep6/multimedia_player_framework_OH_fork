@@ -37,7 +37,7 @@ SrcSurfaceImpl::~SrcSurfaceImpl()
 
 int32_t SrcSurfaceImpl::Init()
 {
-    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("encodersurfacesrc", "surfacesrc")));
+    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("encodersurfacesrc", "encodersurfacesrc")));
     CHECK_AND_RETURN_RET_LOG(element_ != nullptr, MSERR_UNKNOWN, "Failed to gst_element_factory_make");
     return MSERR_OK;
 }
@@ -77,6 +77,7 @@ int32_t SrcSurfaceImpl::SetParameter(const Format &format)
 int32_t SrcSurfaceImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGD("SetCallback success");
     return MSERR_OK;
 }
 } // Media

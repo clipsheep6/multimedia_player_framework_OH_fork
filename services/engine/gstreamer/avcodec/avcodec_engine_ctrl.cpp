@@ -42,6 +42,10 @@ AVCodecEngineCtrl::~AVCodecEngineCtrl()
         gst_object_unref(gstPipeline_);
         gstPipeline_ = nullptr;
     }
+    if (bus_ != nullptr) {
+        g_clear_object(&bus_);
+        bus_ = nullptr;
+    }
 }
 
 int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::string &name)
@@ -50,6 +54,10 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
     codecType_ = type;
     gstPipeline_ = GST_PIPELINE_CAST(gst_pipeline_new("codec-pipeline"));
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_NO_MEMORY);
+
+    bus_ = gst_pipeline_get_bus(gstPipeline_);
+    CHECK_AND_RETURN_RET(bus_ != nullptr, MSERR_UNKNOWN);
+    gst_bus_set_sync_handler(bus_, BusSyncHandler, this, nullptr);
 
     codecBin_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("codecbin", "the_codec_bin")));
     CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_NO_MEMORY);
@@ -61,11 +69,6 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
     g_object_set(codecBin_, "stream-input", static_cast<gboolean>(false), nullptr);
     g_object_set(codecBin_, "sink-convert", static_cast<gboolean>(true), nullptr);
     g_object_set(codecBin_, "coder-name", name.c_str(), nullptr);
-
-    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_READY) == GST_STATE_CHANGE_FAILURE) {
-        MEDIA_LOGE("Failed to change state");
-        return MSERR_UNKNOWN;
-    }
     return MSERR_OK;
 }
 
@@ -101,10 +104,14 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
     CHECK_AND_RETURN_RET(sink_->Configure(outputConfig) == MSERR_OK, MSERR_UNKNOWN);
 
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
-        MEDIA_LOGE("Failed to change state");
-        return MSERR_UNKNOWN;
+    GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED);
+    CHECK_AND_RETURN_RET(ret != GST_STATE_CHANGE_FAILURE, MSERR_UNKNOWN);
+    if (ret == GST_STATE_CHANGE_ASYNC) {
+        MEDIA_LOGD("Wait state change");
+        std::unique_lock<std::mutex> lock(gstPipeMutex_);
+        gstPipeCond_.wait(lock);
     }
+    MEDIA_LOGD("Prepare success");
     return MSERR_OK;
 }
 
@@ -112,21 +119,27 @@ int32_t AVCodecEngineCtrl::Start()
 {
     MEDIA_LOGD("Enter Start");
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-        MEDIA_LOGE("Failed to change state");
-        return MSERR_UNKNOWN;
+    GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PLAYING);
+    CHECK_AND_RETURN_RET(ret != GST_STATE_CHANGE_FAILURE, MSERR_UNKNOWN);
+    if (ret == GST_STATE_CHANGE_ASYNC) {
+        MEDIA_LOGD("Wait state change");
+        std::unique_lock<std::mutex> lock(gstPipeMutex_);
+        gstPipeCond_.wait(lock);
     }
+    MEDIA_LOGD("Start success");
     return MSERR_OK;
 }
 
 int32_t AVCodecEngineCtrl::Stop()
 {
     MEDIA_LOGD("Enter Stop");
-    CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-    if (gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
-        MEDIA_LOGE("Failed to change state");
-        return MSERR_UNKNOWN;
+    GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED);
+    CHECK_AND_RETURN_RET(ret != GST_STATE_CHANGE_FAILURE, MSERR_UNKNOWN);
+    if (ret == GST_STATE_CHANGE_ASYNC) {
+        std::unique_lock<std::mutex> lock(gstPipeMutex_);
+        gstPipeCond_.wait(lock);
     }
+    MEDIA_LOGD("Stop success");
     return MSERR_OK;
 }
 
@@ -221,6 +234,22 @@ int32_t AVCodecEngineCtrl::ReleaseOutputBuffer(uint32_t index, bool render)
 int32_t AVCodecEngineCtrl::SetParameter(const Format &format)
 {
     return MSERR_OK;
+}
+
+GstBusSyncReply AVCodecEngineCtrl::BusSyncHandler(GstBus *bus, GstMessage *message, gpointer userData)
+{
+    auto self = reinterpret_cast<AVCodecEngineCtrl *>(userData);
+    switch (GST_MESSAGE_TYPE(message)) {
+        case GST_MESSAGE_STATE_CHANGED: {
+            std::unique_lock<std::mutex> lock(self->gstPipeMutex_);
+            self->gstPipeCond_.notify_all();
+            break;
+        }
+        default: {
+            break;
+        }
+    }
+    return GST_BUS_PASS;
 }
 } // Media
 } // OHOS

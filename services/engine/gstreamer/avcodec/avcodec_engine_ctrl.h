@@ -17,6 +17,8 @@
 #define AVCODEC_ENGINE_CTRL_H
 
 #include <cstdint>
+#include <condition_variable>
+#include <mutex>
 #include "i_avcodec_engine.h"
 #include "nocopyable.h"
 #include "sink_base.h"
@@ -48,10 +50,15 @@ public:
     DISALLOW_COPY_AND_MOVE(AVCodecEngineCtrl);
 
 private:
+    static GstBusSyncReply BusSyncHandler(GstBus *bus, GstMessage *message, gpointer userData);
+
     AVCodecType codecType_ = AVCODEC_TYPE_VIDEO_ENCODER;
     GstPipeline *gstPipeline_ = nullptr;
+    GstBus *bus_ = nullptr;
     GstElement *codecBin_ = nullptr;
     bool useSurfaceRender_ = false;
+    std::condition_variable gstPipeCond_;
+    std::mutex gstPipeMutex_;
     std::weak_ptr<IAVCodecEngineObs> obs_;
     std::unique_ptr<SrcBase> src_;
     std::unique_ptr<SinkBase> sink_;
