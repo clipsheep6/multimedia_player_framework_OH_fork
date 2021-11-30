@@ -39,7 +39,7 @@ SinkBytebufferImpl::~SinkBytebufferImpl()
 
 int32_t SinkBytebufferImpl::Init()
 {
-    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("sharedmemsink", "buffersink")));
+    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("sharedmemsink", "sharedmemsink")));
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     return MSERR_OK;
 }
@@ -99,6 +99,7 @@ int32_t SinkBytebufferImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     GstMemSinkCallbacks callback = { nullptr, nullptr, OutputAvailableCb};
     gst_mem_sink_set_callback((GstMemSink *)element_, &callback, this, nullptr);
+    MEDIA_LOGD("SetCallback success");
     return MSERR_OK;
 }
 

@@ -220,7 +220,7 @@ static gboolean gst_shmem_pool_src_start_task(GstShmemPoolSrc *shmemsrc)
     auto priv = shmemsrc->priv;
     g_mutex_lock(&priv->priv_lock);
     if (priv->pool) {
-        gst_buffer_pool_set_active(priv->pool, FALSE);
+        gst_buffer_pool_set_active(priv->pool, TRUE);
     }
     shmemsrc->priv->task_start = TRUE;
     g_mutex_unlock(&priv->priv_lock);
@@ -324,26 +324,6 @@ static GstFlowReturn gst_shmem_pool_src_create(GstBaseSrc *src, guint64 offset, 
     return GST_FLOW_OK;
 }
 
-static GstBufferPool *get_shmem_pool_src_create_shmem_pool(GstShmemPoolSrc *shmemsrc)
-{
-    g_return_val_if_fail(shmemsrc != nullptr && shmemsrc->priv != nullptr, nullptr);
-    auto priv = shmemsrc->priv;
-    g_return_val_if_fail(priv->allocator != nullptr, nullptr);
-    GstShMemPool *pool = gst_shmem_pool_new();
-    g_return_val_if_fail(pool != nullptr, nullptr);
-    ON_SCOPE_EXIT(0) { gst_object_unref(pool); };
-    priv->av_shmem_pool = std::make_shared<OHOS::Media::AVSharedMemoryPool>();
-    (void)gst_shmem_pool_set_avshmempool(pool, priv->av_shmem_pool);
-    (void)gst_shmem_allocator_set_pool(priv->allocator, priv->av_shmem_pool);
-
-    GstStructure *config = gst_buffer_pool_get_config(GST_BUFFER_POOL_CAST(pool));
-    g_return_val_if_fail(config != nullptr, nullptr);
-    gst_buffer_pool_config_set_allocator(config, GST_ALLOCATOR_CAST(priv->allocator), &priv->allocParams);
-    g_return_val_if_fail(gst_buffer_pool_set_config(GST_BUFFER_POOL_CAST(pool), config), nullptr);
-    CANCEL_SCOPE_EXIT_GUARD(0);
-    return reinterpret_cast<GstBufferPool*>(pool);
-}
-
 static gboolean gst_shmem_pool_src_set_pool(GstShmemPoolSrc *shmemsrc, GstBufferPool *pool,
                 GstQuery *query, guint minBuf, guint maxBuf)
 {
@@ -365,18 +345,25 @@ static gboolean gst_shmem_pool_src_set_pool(GstShmemPoolSrc *shmemsrc, GstBuffer
         size = info.size;
     }
     if (pool == nullptr) {
-        pool = get_shmem_pool_src_create_shmem_pool(shmemsrc);
+        g_return_val_if_fail(priv->allocator != nullptr, FALSE);
+        GstShMemPool *mem_pool = gst_shmem_pool_new();
+        g_return_val_if_fail(mem_pool != nullptr, FALSE);
+        ON_SCOPE_EXIT(0) { gst_object_unref(mem_pool); };
+        priv->av_shmem_pool = std::make_shared<OHOS::Media::AVSharedMemoryPool>();
+        (void)gst_shmem_pool_set_avshmempool(mem_pool, priv->av_shmem_pool);
+        (void)gst_shmem_allocator_set_pool(priv->allocator, priv->av_shmem_pool);
+        GstStructure *config = gst_buffer_pool_get_config(GST_BUFFER_POOL_CAST(mem_pool));
+        g_return_val_if_fail(config != nullptr, FALSE);
+        if (is_video) {
+            gst_buffer_pool_config_add_option(config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+        }
+        gst_buffer_pool_config_set_params(config, outcaps, size, minBuf, maxBuf);
+        gst_buffer_pool_config_set_allocator(config, GST_ALLOCATOR_CAST(priv->allocator), &priv->allocParams);
+        g_return_val_if_fail(gst_buffer_pool_set_config(GST_BUFFER_POOL_CAST(mem_pool), config), FALSE);
+        pool = reinterpret_cast<GstBufferPool*>(mem_pool);
+        CANCEL_SCOPE_EXIT_GUARD(0);
     }
     g_return_val_if_fail(pool != nullptr, FALSE);
-    ON_SCOPE_EXIT(0) { gst_object_unref(pool); };
-    GstStructure *config = gst_buffer_pool_get_config(pool);
-    g_return_val_if_fail(config != nullptr, FALSE);
-    if (is_video) {
-        gst_buffer_pool_config_add_option(config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-    }
-    gst_buffer_pool_config_set_params(config, outcaps, size, minBuf, maxBuf);
-    g_return_val_if_fail(gst_buffer_pool_set_config(priv->pool, config), FALSE);
-    CANCEL_SCOPE_EXIT_GUARD(0);
     g_mutex_lock(&priv->priv_lock);
     if (priv->pool) {
         gst_buffer_pool_set_active(priv->pool, FALSE);

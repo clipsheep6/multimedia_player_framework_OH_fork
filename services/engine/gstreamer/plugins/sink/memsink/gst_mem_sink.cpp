@@ -134,6 +134,7 @@ static void gst_mem_sink_init(GstMemSink *memSink)
     priv->callbacks.new_sample = nullptr;
     priv->userdata = nullptr;
     priv->notify = nullptr;
+    gst_base_sink_set_async_enabled(GST_BASE_SINK(memSink), FALSE);
 }
 
 static void gst_mem_sink_dispose(GObject *obj)

@@ -149,12 +149,12 @@ std::shared_ptr<AVSharedMemory> AVSharedMemoryPool::AcquireMemory(int32_t size)
 
     if ((size <= 0 && size != -1) ||
         (!option_.enableFixedSize && size == -1) ||
-        (option_.enableFixedSize && (size > option_.memSize || size != -1))) {
+        (option_.enableFixedSize && (size > option_.memSize || size == -1))) {
         MEDIA_LOGE("invalid size, size = %{public}u", size);
         return nullptr;
     }
 
-    MEDIA_LOGD("acquire memory for size: %d", size);
+    MEDIA_LOGD("acquire memory for size: %{public}d", size);
     if (option_.enableFixedSize) {
         size = option_.memSize;
     }
@@ -185,7 +185,6 @@ std::shared_ptr<AVSharedMemory> AVSharedMemoryPool::AcquireMemory(int32_t size)
             delete memory;
         }
     });
-
     MEDIA_LOGD("0x%{public}06" PRIXPTR " acquired from pool", FAKE_POINTER(memory));
     return result;
 }
