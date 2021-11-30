@@ -178,9 +178,9 @@ static void gst_shmem_pool_src_loop(GstShmemPoolSrc *shmemsrc)
     g_mutex_unlock(&priv->priv_lock);
 
     GstBuffer *buffer = nullptr;
-    gboolean ret = gst_buffer_pool_acquire_buffer(pool, &buffer, NULL);
+    GstFlowReturn ret = gst_buffer_pool_acquire_buffer(pool, &buffer, NULL);
     gst_object_unref(pool);
-    g_return_if_fail(ret == TRUE && buffer != nullptr);
+    g_return_if_fail(ret == GST_FLOW_OK && buffer != nullptr);
     g_mutex_lock(&priv->priv_lock);
     priv->available_buffer = buffer;
     g_mutex_unlock(&priv->priv_lock);

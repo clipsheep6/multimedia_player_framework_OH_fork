@@ -84,13 +84,8 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
     GST_BUFFER_OFFSET(bufferList_[index]->gstBuffer_) = info.offset;
     GST_BUFFER_OFFSET_END(bufferList_[index]->gstBuffer_) = info.offset + info.size;
 
-
     if (static_cast<int32_t>(flag) | static_cast<int32_t>(AVCODEC_BUFFER_FLAG_SYNC_FRAME)) {
         GST_BUFFER_FLAG_SET(bufferList_[index]->gstBuffer_, GST_BUFFER_FLAG_RESYNC);
-    }
-    if (static_cast<int32_t>(flag) | static_cast<int32_t>(AVCODEC_BUFFER_FLAG_EOS)) {
-        MEDIA_LOGE("Unsupport");
-        (void)SignalEOS();
     }
 
     CHECK_AND_RETURN_RET(gst_mem_pool_src_push_buffer((GstMemPoolSrc *)element_,
@@ -121,11 +116,6 @@ int32_t SrcBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     g_object_set(G_OBJECT(element_), "caps", config->caps_, nullptr);
-    return MSERR_OK;
-}
-
-int32_t SrcBytebufferImpl::SignalEOS()
-{
     return MSERR_OK;
 }
 
