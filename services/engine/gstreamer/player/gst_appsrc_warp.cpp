@@ -67,7 +67,7 @@ int32_t GstAppsrcWarp::Init()
         CHECK_AND_RETURN_RET_LOG(appSrcMem != nullptr, MSERR_NO_MEMORY, "init AppsrcMemWarp failed");
         auto mem = std::make_shared<AVSharedMemoryBase>(
             bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "appsrc");
-        CHECK_AND_RETURN_RET_LOG(mem->Init() != MSERR_OK, MSERR_NO_MEMORY, "init AVShMem failed");
+        CHECK_AND_RETURN_RET_LOG(mem->Init() == MSERR_OK, MSERR_NO_MEMORY, "init AVShMem failed");
         appSrcMem->mem = mem;
         (void)emptyBuffers_.emplace(appSrcMem);
     }
