@@ -49,8 +49,8 @@ int32_t AVSharedMemoryPool::Init(const InitializeOption &option)
         option_.preAllocMemCnt = option.maxMemCnt;
     }
 
-    MEDIA_LOGI("init option: preAllocMemCnt = %u, memSize = %d, maxMemCnt = %u, "
-               "enableRemoteRefCnt = %d, enableFixedSize = %d",
+    MEDIA_LOGI("init option: preAllocMemCnt = %{public}u, memSize = %{public}d, maxMemCnt = %{public}u, "
+               "enableRemoteRefCnt = %{public}d, enableFixedSize = %{public}d",
                option_.preAllocMemCnt, option_.memSize, option_.maxMemCnt,
                option_.enableRemoteRefCnt, option_.enableFixedSize);
 
