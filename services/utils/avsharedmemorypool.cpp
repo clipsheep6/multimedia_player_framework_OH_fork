@@ -67,7 +67,7 @@ AVSharedMemory *AVSharedMemoryPool::AllocMemory(int32_t size)
 {
     AVSharedMemoryBase *memory = nullptr;
 
-    if (option_.enableRemoteRefCnt) {
+    if (!option_.enableRemoteRefCnt) {
         memory = new (std::nothrow) AVSharedMemoryBase(size, option_.flags, "AVShMemPool");
     } else {
         memory = new (std::nothrow) RefCntSharedMemory(size, option_.flags, "AVShMemPool");
