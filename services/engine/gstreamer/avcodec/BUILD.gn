@@ -35,6 +35,10 @@ config("media_engine_gst_avcodec_config") {
   ]
 
   include_dirs = [
+    ".",
+    "format_processor",
+    "sink_wrapper",
+    "src_wrapper",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/avcodec",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/sink/memsink",
@@ -57,15 +61,15 @@ config("media_engine_gst_avcodec_config") {
 ohos_static_library("media_engine_gst_avcodec") {
   sources = [
     "codec_common.cpp",
-    "processor_base.cpp",
-    "processor_adec_impl.cpp",
-    "processor_aenc_impl.cpp",
-    "processor_vdec_impl.cpp",
-    "processor_venc_impl.cpp",
-    "sink_bytebuffer_impl.cpp",
-    "sink_surface_impl.cpp",
-    "src_bytebuffer_impl.cpp",
-    "src_surface_impl.cpp",
+    "format_processor/processor_base.cpp",
+    "format_processor/processor_adec_impl.cpp",
+    "format_processor/processor_aenc_impl.cpp",
+    "format_processor/processor_vdec_impl.cpp",
+    "format_processor/processor_venc_impl.cpp",
+    "sink_wrapper/sink_bytebuffer_impl.cpp",
+    "sink_wrapper/sink_surface_impl.cpp",
+    "src_wrapper/src_bytebuffer_impl.cpp",
+    "src_wrapper/src_surface_impl.cpp",
     "avcodec_engine_ctrl.cpp",
     "avcodec_engine_factory.cpp",
     "avcodec_engine_gst_impl.cpp",
