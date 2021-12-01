@@ -50,6 +50,7 @@ enum {
     PROP_0,
     PROP_CAPS,
     PROP_EMIT_SIGNALS,
+    PROP_CODEC_DATA,
     PROP_BUFFER_NUM,
     PROP_BUFFER_SIZE,
 };
@@ -89,10 +90,14 @@ static void gst_mem_pool_src_class_init(GstMemPoolSrcClass *klass)
             "The allowed caps for the src pad", GST_TYPE_CAPS,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  g_object_class_install_property (gobject_class, PROP_EMIT_SIGNALS,
+    g_object_class_install_property (gobject_class, PROP_EMIT_SIGNALS,
         g_param_spec_boolean ("emit-signals", "Emit signals",
             "Emit new-preroll and new-sample signals", FALSE,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_CODEC_DATA,
+        g_param_spec_pointer("codec-data", "Codec data", "Codec data",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     gst_mem_pool_src_signals[SIGNAL_BUFFER_AVAILABLE] =
         g_signal_new("buffer-available", G_TYPE_FROM_CLASS(gobject_class), G_SIGNAL_RUN_LAST,
@@ -191,6 +196,11 @@ void gst_mem_pool_src_set_buffer_size(GstMemPoolSrc *memsrc, guint size)
     GST_OBJECT_UNLOCK(memsrc);
 }
 
+void gst_mem_pool_src_set_codec_data(GstMemPoolSrc *memsrc, GstBuffer *buffer)
+{
+    GST_ERROR("jinguoen set codec data");
+}
+
 static gboolean gst_mem_pool_src_is_seekable(GstBaseSrc *basesrc)
 {
     (void)basesrc;
@@ -233,6 +243,8 @@ static void gst_mem_pool_src_set_property(GObject *object, guint prop_id, const 
         case PROP_BUFFER_SIZE:
             gst_mem_pool_src_set_buffer_size(memsrc, g_value_get_uint(value));
             break;
+        case PROP_CODEC_DATA:
+            gst_mem_pool_src_set_codec_data(memsrc, static_cast<GstBuffer *>(g_value_get_pointer(value)));
         default:
             break;
     }

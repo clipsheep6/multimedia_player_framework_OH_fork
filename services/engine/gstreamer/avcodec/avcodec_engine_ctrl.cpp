@@ -14,6 +14,7 @@
  */
 
 #include "avcodec_engine_ctrl.h"
+#include <vector>
 #include "avcodec_engine_factory.h"
 #include "media_errors.h"
 #include "media_log.h"

@@ -39,11 +39,16 @@ public:
 
 private:
     int32_t SignalEOS();
+    int32_t SetCodecData(GstBuffer *codecBuffer);
     static GstFlowReturn NeedDataCb(GstMemPoolSrc *src, gpointer userData);
     static GstFlowReturn ConstructBufferWrapper(SrcBytebufferImpl *impl, GstBuffer *buffer, uint32_t &index);
+    const uint8_t *FindNextNal(const uint8_t *start, const uint8_t *end);
+    void GetCodecData(const uint8_t *data, int32_t len, std::vector<uint8_t> &sps, std::vector<uint8_t> &pps);
+    GstBuffer *AVCDecoderConfiguration(std::vector<uint8_t> &sps, std::vector<uint8_t> &pps);
 
     std::vector<std::shared_ptr<BufferWrapper>> bufferList_;
     std::vector<std::shared_ptr<AVSharedMemory>> shareMemList_;
+    uint32_t nalSize_ = 0;
     uint32_t bufferCount_ = 0;
     std::mutex mutex_;
     std::weak_ptr<IAVCodecEngineObs> obs_;
