@@ -199,6 +199,9 @@ void gst_mem_pool_src_set_buffer_size(GstMemPoolSrc *memsrc, guint size)
 void gst_mem_pool_src_set_codec_data(GstMemPoolSrc *memsrc, GstBuffer *buffer)
 {
     GST_ERROR("jinguoen set codec data");
+    g_return_if_fail(memsrc != nullptr);
+    gst_caps_set_simple(memsrc->caps, "codec_data", GST_TYPE_BUFFER, buffer, nullptr);
+    gst_base_src_set_caps(GST_BASE_SRC(memsrc), memsrc->caps);
 }
 
 static gboolean gst_mem_pool_src_is_seekable(GstBaseSrc *basesrc)

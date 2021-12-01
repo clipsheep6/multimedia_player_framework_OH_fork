@@ -17,10 +17,10 @@
 #define AVCODEC_ENGINE_FACTORY_H
 
 #include <memory>
-#include "processor_base.h"
+#include "format_processor/processor_base.h"
 #include "nocopyable.h"
-#include "sink_base.h"
-#include "src_base.h"
+#include "sink_wrapper/sink_base.h"
+#include "src_wrapper/src_base.h"
 
 namespace OHOS {
 namespace Media {

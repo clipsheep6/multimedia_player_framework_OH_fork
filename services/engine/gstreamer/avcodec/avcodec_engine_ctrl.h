@@ -19,12 +19,9 @@
 #include <cstdint>
 #include <condition_variable>
 #include <mutex>
+#include "avcodec_engine_factory.h"
 #include "i_avcodec_engine.h"
 #include "nocopyable.h"
-#include "sink_base.h"
-#include "src_base.h"
-#include "processor_base.h"
-#include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
