@@ -108,6 +108,11 @@ inline constexpr std::string_view MD_KEY_SAMPLE_RATE = "sample-rate";
 inline constexpr std::string_view MD_KEY_TRACK_COUNT = "track-count";
 
 /**
+ * Key for container format type, value type is string
+ */
+inline constexpr std::string_view MD_KEY_CONTAINER_FORMAT = "container-format";
+
+/**
  * custom key prefix, media service will pass through to HAL.
  */
 inline constexpr std::string_view MD_KEY_CUSTOM_PREFIX = "vendor.";

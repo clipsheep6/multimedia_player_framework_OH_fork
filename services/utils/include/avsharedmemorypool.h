@@ -89,6 +89,7 @@ private:
     bool DoAcquireMemory(int32_t size, AVSharedMemory **outMemory);
     AVSharedMemory *AllocMemory(int32_t size);
     void ReleaseMemory(AVSharedMemory *memory);
+    bool CheckSize(int32_t size);
 
     InitializeOption option_ {};
     std::list<AVSharedMemory *> idleList_;

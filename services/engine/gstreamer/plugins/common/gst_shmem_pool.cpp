@@ -206,7 +206,7 @@ static gboolean gst_shmem_pool_start(GstBufferPool *pool)
     }
 
     static const uint32_t alignBytes = 4;
-    gsize alignedPrefix = (spool->params.prefix + alignBytes) & ~(alignBytes - 1);
+    gsize alignedPrefix = (spool->params.prefix + alignBytes - 1) & ~(alignBytes - 1);
     OHOS::Media::AVSharedMemoryPool::InitializeOption option = {
         .preAllocMemCnt = spool->minBuffers,
         .memSize = spool->size + alignedPrefix,

@@ -1116,6 +1116,8 @@ static void no_more_pads_cb(GstElement *element, GstAVSpliterChain *chain)
         gst_avspliter_bin_expose(chain->avspliter);
     }
     EXPOSE_UNLOCK(chain->avspliter);
+
+    gst_element_no_more_pads(GST_ELEMENT_CAST(chain->avspliter));
 }
 
 static void collect_new_element_srcpads(GstAVSpliterChain *chain, ConnectPadParams *params)

@@ -143,14 +143,35 @@ bool AVSharedMemoryPool::DoAcquireMemory(int32_t size, AVSharedMemory **outMemor
     return true;
 }
 
+bool AVSharedMemoryPool::CheckSize(int32_t size)
+{
+    if (size <= 0 && size != -1) {
+        return false;
+    }
+
+    if (!option_.enableFixedSize && size == -1) {
+        return false;
+    }
+
+    if (option_.enableFixedSize) {
+        if (size > option_.memSize) {
+            return false;
+        }
+
+        if (size <= 0 && size != -1) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 std::shared_ptr<AVSharedMemory> AVSharedMemoryPool::AcquireMemory(int32_t size)
 {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    if ((size <= 0 && size != -1) ||
-        (!option_.enableFixedSize && size == -1) ||
-        (option_.enableFixedSize && (size > option_.memSize || size != -1))) {
-        MEDIA_LOGE("invalid size, size = %{public}u", size);
+    if (!CheckSize(size)) {
+        MEDIA_LOGE("invalid size: %{public}d", size);
         return nullptr;
     }
 
