@@ -13,100 +13,100 @@
  * limitations under the License.
  */
 
-#include "demuxer_impl.h"
+#include "avspliter_impl.h"
 #include "media_errors.h"
 #include "media_log.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "DemuxerImpl"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVSpliterImpl"};
 }
 
 namespace OHOS {
 namespace Media {
-std::shared_ptr<Demuxer> DemuxerFactory::CreateDemuxer()
+std::shared_ptr<AVSpliter> AVSpliterFactory::CreateAVSpliter()
 {
-    auto demuxer = std::make_shared<DemuxerImpl>();
-    int32_t ret = demuxer->Init();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "demuxer init failed");
-    return demuxer;
+    auto avspliter = std::make_shared<AVSpliterImpl>();
+    int32_t ret = avspliter->Init();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "avspliter init failed");
+    return avspliter;
 }
 
-DemuxerImpl::DemuxerImpl()
-{
-
-}
-
-DemuxerImpl::~DemuxerImpl()
+AVSpliterImpl::AVSpliterImpl()
 {
 
 }
 
-int32_t DemuxerImpl::Init()
+AVSpliterImpl::~AVSpliterImpl()
+{
+
+}
+
+int32_t AVSpliterImpl::Init()
 {
     return MSERR_OK;
 }
 
-int32_t DemuxerImpl::SetSource(const std::string &uri, TrackSelectMode mode)
+int32_t AVSpliterImpl::SetSource(const std::string &uri, TrackSelectMode mode)
 {
     (void)uri;
     (void)mode;
     return MSERR_OK;
 }
 
-int32_t DemuxerImpl::SetSource(std::shared_ptr<IMediaDataSource> dataSource, TrackSelectMode mode)
+int32_t AVSpliterImpl::SetSource(std::shared_ptr<IMediaDataSource> dataSource, TrackSelectMode mode)
 {
     (void)dataSource;
     (void)mode;
     return MSERR_OK;
 }
 
-int32_t DemuxerImpl::GetContainerDescription(MediaDescription &desc)
+int32_t AVSpliterImpl::GetContainerDescription(MediaDescription &desc)
 {
     (void)desc;
     return MSERR_OK;
 }
 
-int32_t DemuxerImpl::GetTrackDescription(int32_t trackIdx, MediaDescription &desc)
+int32_t AVSpliterImpl::GetTrackDescription(int32_t trackIdx, MediaDescription &desc)
 {
     (void)trackIdx;
     (void)desc;
     return MSERR_OK;
 }
 
-int32_t DemuxerImpl::SelectTrack(int32_t trackIdx)
+int32_t AVSpliterImpl::SelectTrack(int32_t trackIdx)
 {
     (void)trackIdx;
     return MSERR_OK;
 }
 
-int32_t DemuxerImpl::UnSelectTrack(int32_t trackIdx)
+int32_t AVSpliterImpl::UnSelectTrack(int32_t trackIdx)
 {
     (void)trackIdx;
     return MSERR_OK;
 }
 
-int32_t DemuxerImpl::ReadTrackSample(std::shared_ptr<AVMemory> buffer, TrackSampleInfo &info)
+int32_t AVSpliterImpl::ReadTrackSample(std::shared_ptr<AVMemory> buffer, TrackSampleInfo &info)
 {
     (void)buffer;
     (void)info;
     return MSERR_OK;
 }
 
-int32_t DemuxerImpl::Seek(int64_t timeUs, DemuxerSeekMode mode)
+int32_t AVSpliterImpl::Seek(int64_t timeUs, AVSpliterSeekMode mode)
 {
     (void)timeUs;
     (void)mode;
     return MSERR_OK;
 }
 
-int32_t DemuxerImpl::GetCacheState(int64_t &durationUs, bool &endOfStream)
+int32_t AVSpliterImpl::GetCacheState(int64_t &durationUs, bool &endOfStream)
 {
     (void)durationUs;
     (void)endOfStream;
     return MSERR_OK;
 }
 
-void DemuxerImpl::Release()
+void AVSpliterImpl::Release()
 {
 }
 }

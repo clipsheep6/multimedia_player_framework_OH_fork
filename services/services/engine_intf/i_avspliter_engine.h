@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef I_DEMUXER_SERVICE_H
-#define I_DEMUXER_SERVICE_H
+#ifndef I_AVSPLITER_ENGINE_H
+#define I_AVSPLITER_ENGINE_H
 
 #include <string>
 #include <memory>
 #include <vector>
-#include "demuxer.h"
+#include "i_avspliter_service.h"
 #include "avsharedmemory.h"
 #include "media_types.h"
 #include "media_description.h"
@@ -27,16 +27,9 @@
 
 namespace OHOS {
 namespace Media {
-struct ReadSampleOption {
-    int64_t startTimeUs;
-    int32_t sampleCount;
-    int64_t endTimeUs;
-    DemuxerSeekMode seekMode;
-};
-
-class IDemuxerService {
+class IAVSpliterEngine {
 public:
-    virtual ~IDemuxerService() = default;
+    virtual ~IAVSpliterEngine() = default;
 
     virtual int32_t SetSource(const std::string &uri) = 0;
     virtual int32_t SetSource(std::shared_ptr<IMediaDataSource> dataSource) = 0;
@@ -47,7 +40,6 @@ public:
     virtual int32_t ReadTrackSample(const ReadSampleOption &option,
         std::vector<std::shared_ptr<AVSharedMemory>> &sampleDatas, std::vector<TrackSampleInfo> &sampleInfos) = 0;
     virtual int32_t GetCacheState(int64_t &durationUs, bool &endOfStream) = 0;
-    virtual void Release() = 0;
 };
 }
 }

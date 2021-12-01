@@ -49,7 +49,7 @@ config("media_client_public_config") {
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/player",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper",
-    "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/demuxer",
+    "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avspliter",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/muxer",
     "$MEIDA_ROOT_DIR/interfaces/innerkits/native/media/include",
     "$MEIDA_ROOT_DIR/services/include",
@@ -91,7 +91,7 @@ ohos_shared_library("media_client") {
   if (defined(ohos_lite)) {
     sources = [
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/demuxer/demuxer_impl.cpp",
+      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avspliter/avspliter_impl.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/avmemory.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/muxer/muxer_impl.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
@@ -127,7 +127,7 @@ ohos_shared_library("media_client") {
   } else {
     sources = [
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/demuxer/demuxer_impl.cpp",
+      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avspliter/avspliter_impl.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/avmemory.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/muxer/muxer_impl.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
