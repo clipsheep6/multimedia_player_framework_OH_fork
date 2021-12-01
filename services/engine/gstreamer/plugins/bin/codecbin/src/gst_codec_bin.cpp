@@ -116,7 +116,6 @@ static void gst_codec_bin_init(GstCodecBin *codec_bin)
     codec_bin->type = CODEC_BIN_TYPE_UNKNOWN;
     codec_bin->use_software = FALSE;
     codec_bin->coder_name = nullptr;
-    codec_bin->stream_input = FALSE;
     codec_bin->need_src_convert = FALSE;
     codec_bin->need_sink_convert = FALSE;
 }
