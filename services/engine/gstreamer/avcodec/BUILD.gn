@@ -39,6 +39,7 @@ config("media_engine_gst_avcodec_config") {
     "format_processor",
     "sink_wrapper",
     "src_wrapper",
+    "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/avcodec",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
@@ -48,6 +49,7 @@ config("media_engine_gst_avcodec_config") {
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base",
     "//third_party/gstreamer/gstplugins_base/gst-libs",
+    "//third_party/gstreamer/gstplugins_bad/gst-libs",
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/glib/gmodule",
@@ -85,7 +87,9 @@ ohos_static_library("media_engine_gst_avcodec") {
     "//third_party/glib:gobject",
     "//third_party/gstreamer/gstreamer:gstbase",
     "//third_party/gstreamer/gstreamer:gstreamer",
+    "//third_party/gstreamer/gstplugins_bad:gstplayer",
     "//third_party/gstreamer/gstplugins_base:gstaudio",
+    "//third_party/gstreamer/gstplugins_base:gstvideo",
   ]
 
   external_deps = [
