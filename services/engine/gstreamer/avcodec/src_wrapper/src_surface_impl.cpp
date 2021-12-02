@@ -44,7 +44,6 @@ int32_t SrcSurfaceImpl::Init()
 int32_t SrcSurfaceImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 {
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
-    g_object_set(G_OBJECT(element_), "caps", config->caps_, nullptr);
     return MSERR_OK;
 }
 
@@ -56,12 +55,6 @@ sptr<Surface> SrcSurfaceImpl::CreateInputSurface()
     CHECK_AND_RETURN_RET_LOG(surfaceObj != nullptr, nullptr, "Failed to get surface");
     sptr<Surface> surface = (Surface *)surfaceObj;
     return surface;
-}
-
-int32_t SrcSurfaceImpl::SetParameter(const Format &format)
-{
-    MEDIA_LOGE("Unsupport");
-    return MSERR_OK;
 }
 } // Media
 } // OHOS

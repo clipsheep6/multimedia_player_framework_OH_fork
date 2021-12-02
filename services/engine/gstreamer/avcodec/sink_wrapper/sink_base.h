@@ -56,7 +56,12 @@ public:
     }
 
     virtual int32_t ReleaseOutputBuffer(uint32_t index, bool render) = 0;
-    virtual int32_t SetParameter(const Format &format) = 0;
+
+    virtual int32_t SetParameter(const Format &format)
+    {
+        return MSERR_OK;
+    }
+
     virtual int32_t SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs) = 0;
 
 protected:

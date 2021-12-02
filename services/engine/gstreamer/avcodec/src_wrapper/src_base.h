@@ -65,7 +65,10 @@ public:
         return MSERR_INVALID_OPERATION;
     }
 
-    virtual int32_t SetParameter(const Format &format) = 0;
+    virtual int32_t SetParameter(const Format &format)
+    {
+        return MSERR_OK;
+    }
 
     virtual int32_t SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs)
     {

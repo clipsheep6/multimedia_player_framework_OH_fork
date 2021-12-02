@@ -32,10 +32,10 @@ public:
     int32_t Flush() override;
     std::shared_ptr<AVSharedMemory> GetInputBuffer(uint32_t index) override;
     int32_t QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
-    int32_t SetParameter(const Format &format) override;
     int32_t SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs) override;
 
 private:
+    std::mutex mutex_;
     std::vector<std::shared_ptr<BufferWrapper>> bufferList_;
     uint32_t bufferCount_ = 0;
     uint32_t bufferSize_ = 0;

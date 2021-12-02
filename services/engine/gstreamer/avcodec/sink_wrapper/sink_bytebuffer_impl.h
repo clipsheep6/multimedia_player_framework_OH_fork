@@ -35,14 +35,17 @@ public:
     int32_t Flush() override;
     std::shared_ptr<AVSharedMemory> GetOutputBuffer(uint32_t index) override;
     int32_t ReleaseOutputBuffer(uint32_t index, bool render = false) override;
-    int32_t SetParameter(const Format &format) override;
     int32_t SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs) override;
 
 private:
-    std::vector<std::shared_ptr<BufferWrapper>> bufferList_;
-    std::vector<std::shared_ptr<AVSharedMemory>> shareMemList_;
-    uint32_t bufferCount_ = 0;
+    static GstFlowReturn OutputAvailableCb(GstElement *sink, gpointer userData);
+    int32_t HandleOutputCb();
+
     std::mutex mutex_;
+    gulong signalId_ = 0;
+    uint32_t bufferCount_ = 0;
+    uint32_t bufferSize_ = 0;
+    std::vector<std::shared_ptr<BufferWrapper>> bufferList_;
     std::weak_ptr<IAVCodecEngineObs> obs_;
 };
 } // Media
