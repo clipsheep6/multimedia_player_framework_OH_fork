@@ -55,6 +55,9 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         case AVMETADATAHELPER: {
             return CreateAVMetadataHelperStubObject();
         }
+        case AVCODEC: {
+            return CreateAVCodecStubObject();
+        }
         default: {
             MEDIA_LOGE("default case, media server manager failed");
             return nullptr;
@@ -122,6 +125,27 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMetadataHelperStubObject()
         pid_t pid = IPCSkeleton::GetCallingPid();
         avMetadataHelperStubMap_[object] = pid;
         MEDIA_LOGD("The number of avmetadatahelper services(%{public}zu).", avMetadataHelperStubMap_.size());
+    }
+    return object;
+}
+
+sptr<IRemoteObject> MediaServerManager::CreateAVCodecStubObject()
+{
+    if (avCodecStubMap_.size() >= SERVER_MAX_NUMBER) {
+        MEDIA_LOGE("The number of avcodec services(%{public}zu) has reached the upper limit."
+            "Please release the applied resources.", avCodecStubMap_.size());
+        return nullptr;
+    }
+    sptr<AVCodecServiceStub> avCodecHelperStub = AVCodecServiceStub::Create();
+    if (avCodecHelperStub == nullptr) {
+        MEDIA_LOGE("failed to create AVCodecServiceStub");
+        return nullptr;
+    }
+    sptr<IRemoteObject> object = avCodecHelperStub->AsObject();
+    if (object != nullptr) {
+        pid_t pid = IPCSkeleton::GetCallingPid();
+        avCodecStubMap_[object] = pid;
+        MEDIA_LOGD("The number of avcodec services(%{public}zu).", avCodecStubMap_.size());
     }
     return object;
 }

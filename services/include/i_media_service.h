@@ -20,6 +20,7 @@
 #include "i_recorder_service.h"
 #include "i_player_service.h"
 #include "i_avmetadatahelper_service.h"
+#include "i_avcodec_service.h"
 
 namespace OHOS {
 namespace Media {
@@ -61,6 +62,17 @@ public:
     virtual std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() = 0;
 
     /**
+     * @brief Create an avcodec service.
+     *
+     * All player functions must be created and obtained first.
+     *
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual std::shared_ptr<IAVCodecService> CreateAVCodecService() = 0;
+
+    /**
      * @brief Destroy a recorder service.
      *
      * call the API to destroy the recorder service.
@@ -95,6 +107,18 @@ public:
      * @version 1.0
      */
     virtual int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) = 0;
+
+    /**
+     * @brief Destroy a avcodec service.
+     *
+     * call the API to destroy the avcodec service.
+     *
+     * @param pointer to the avcodec service.
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCodec) = 0;
 };
 
 class __attribute__((visibility("default"))) MeidaServiceFactory {
