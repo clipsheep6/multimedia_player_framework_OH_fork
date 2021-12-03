@@ -77,6 +77,11 @@ int32_t SrcBytebufferImpl::Flush()
     return MSERR_OK;
 }
 
+uint32_t SrcBytebufferImpl::GetBufferCount()
+{
+    return bufferCount_;
+}
+
 std::shared_ptr<AVSharedMemory> SrcBytebufferImpl::GetInputBuffer(uint32_t index)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -91,7 +96,7 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index < bufferCount_ && index <= bufferList_.size(), MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::SERVER, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->mem_ != nullptr, MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET(bufferList_[index]->gstBuffer_ != nullptr, MSERR_UNKNOWN);
 
@@ -108,6 +113,7 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
     int32_t ret = GST_FLOW_OK;
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     g_signal_emit_by_name(element_, "push-buffer", bufferList_[index]->gstBuffer_, &ret);
+    bufferList_[index]->owner_ = BufferWrapper::SERVER;
 
     auto obs = obs_.lock();
     CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);

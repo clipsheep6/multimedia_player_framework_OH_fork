@@ -30,6 +30,7 @@ public:
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
     int32_t Flush() override;
+    uint32_t GetBufferCount() override;
     std::shared_ptr<AVSharedMemory> GetInputBuffer(uint32_t index) override;
     int32_t QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
     int32_t SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs) override;

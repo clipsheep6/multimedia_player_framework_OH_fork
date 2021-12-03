@@ -46,6 +46,7 @@ int32_t SinkSurfaceImpl::Init()
 {
     element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("appsink", "sink")));
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
+    gst_base_sink_set_async_enabled(GST_BASE_SINK(element_), FALSE);
 
     bufferCount_ = DEFAULT_BUFFER_COUNT;
     return MSERR_OK;
@@ -112,6 +113,7 @@ GstFlowReturn SinkSurfaceImpl::OutputAvailableCb(GstElement *sink, gpointer user
     (void)sink;
     auto impl = static_cast<SinkSurfaceImpl *>(userData);
     CHECK_AND_RETURN_RET(impl != nullptr, GST_FLOW_ERROR);
+    std::unique_lock<std::mutex> lock(impl->mutex_);
     CHECK_AND_RETURN_RET(impl->HandleOutputCb() == MSERR_OK, GST_FLOW_ERROR);
     return GST_FLOW_OK;
 }

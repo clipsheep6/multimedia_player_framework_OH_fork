@@ -42,6 +42,7 @@ int32_t SinkBytebufferImpl::Init()
 {
     element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("appsink", "sink")));
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
+    gst_base_sink_set_async_enabled(GST_BASE_SINK(element_), FALSE);
 
     bufferCount_ = DEFAULT_BUFFER_COUNT;
     bufferSize_ = DEFAULT_BUFFER_SIZE;
@@ -61,7 +62,7 @@ int32_t SinkBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
         GstBuffer *buffer = gst_buffer_new_allocate(nullptr, static_cast<gsize>(DEFAULT_BUFFER_SIZE), nullptr);
         CHECK_AND_RETURN_RET(buffer != nullptr, MSERR_NO_MEMORY);
 
-        auto bufWrap = std::make_shared<BufferWrapper>(mem, buffer, bufferList_.size(), BufferWrapper::SERVER);
+        auto bufWrap = std::make_shared<BufferWrapper>(mem, buffer, bufferList_.size(), BufferWrapper::DOWNSTREAM);
         CHECK_AND_RETURN_RET(bufWrap != nullptr, MSERR_NO_MEMORY);
         bufferList_.push_back(bufWrap);
     }
@@ -113,6 +114,7 @@ GstFlowReturn SinkBytebufferImpl::OutputAvailableCb(GstElement *sink, gpointer u
     (void)sink;
     auto impl = static_cast<SinkBytebufferImpl *>(userData);
     CHECK_AND_RETURN_RET(impl != nullptr, GST_FLOW_ERROR);
+    std::unique_lock<std::mutex> lock(impl->mutex_);
     CHECK_AND_RETURN_RET(impl->HandleOutputCb() == MSERR_OK, GST_FLOW_ERROR);
     return GST_FLOW_OK;
 }
@@ -133,7 +135,7 @@ int32_t SinkBytebufferImpl::HandleOutputCb()
     uint32_t index = 0;
     for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
         if ((*it)->owner_ == BufferWrapper::DOWNSTREAM) {
-            (*it)->owner_ = BufferWrapper::APP;
+            (*it)->owner_ = BufferWrapper::SERVER;
             (*it)->gstBuffer_ = buf;
         }
         index++;

@@ -54,6 +54,7 @@ private:
     GstBus *bus_ = nullptr;
     GstElement *codecBin_ = nullptr;
     bool useSurfaceRender_ = false;
+    bool needInputCallback_ = true;
     std::condition_variable gstPipeCond_;
     std::mutex gstPipeMutex_;
     std::weak_ptr<IAVCodecEngineObs> obs_;
