@@ -98,9 +98,16 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
     CHECK_AND_RETURN_RET(src_->Configure(inputConfig) == MSERR_OK, MSERR_UNKNOWN);
 
     if (useSurfaceRender_) {
-        MEDIA_LOGD("Need to overwrite sink color space");
-        //todo
+        MEDIA_LOGD("Need to overwrite pixel format by RGBA");
+        GstCaps *caps = outputConfig->caps_;
+        CHECK_AND_RETURN_RET(caps != nullptr, MSERR_UNKNOWN);
+        GValue value = G_VALUE_INIT;
+        g_value_init (&value, G_TYPE_STRING);
+        g_value_set_string (&value, "RGBA");
+        gst_caps_set_value(caps, "format", &value);
+        g_value_unset(&value);
     }
+
     g_object_set(codecBin_, "sink", static_cast<gpointer>(sink_->GetElement()), nullptr);
     CHECK_AND_RETURN_RET(sink_->Configure(outputConfig) == MSERR_OK, MSERR_UNKNOWN);
 
@@ -243,11 +250,35 @@ int32_t AVCodecEngineCtrl::SetParameter(const Format &format)
 
 GstBusSyncReply AVCodecEngineCtrl::BusSyncHandler(GstBus *bus, GstMessage *message, gpointer userData)
 {
+    CHECK_AND_RETURN_RET(message != nullptr, GST_BUS_DROP);
+
     auto self = reinterpret_cast<AVCodecEngineCtrl *>(userData);
     switch (GST_MESSAGE_TYPE(message)) {
         case GST_MESSAGE_STATE_CHANGED: {
-            std::unique_lock<std::mutex> lock(self->gstPipeMutex_);
-            self->gstPipeCond_.notify_all();
+            CHECK_AND_RETURN_RET(message->src != nullptr, GST_BUS_DROP);
+            if (GST_IS_BIN(message->src)) {
+                MEDIA_LOGD("Finish state change");
+                std::unique_lock<std::mutex> lock(self->gstPipeMutex_);
+                self->gstPipeCond_.notify_all();
+            }
+            break;
+        }
+        case GST_MESSAGE_ERROR: {
+            int32_t errCode = MSERR_UNKNOWN;
+            GError *err = nullptr;
+            gst_message_parse_error(message, &err, nullptr);
+            if (err->domain == GST_CORE_ERROR) {
+                errCode = MSERR_UNKNOWN;
+            } else if (err->domain == GST_LIBRARY_ERROR) {
+                errCode = MSERR_OPEN_FILE_FAILED;
+            } else if (err->domain == GST_RESOURCE_ERROR) {
+                errCode = MSERR_INVALID_VAL;
+            } else if (err->domain == GST_STREAM_ERROR) {
+                errCode = MSERR_DATA_SOURCE_ERROR_UNKNOWN;
+            }
+            auto obs = self->obs_.lock();
+            CHECK_AND_RETURN_RET(obs != nullptr, GST_BUS_DROP);
+            obs->OnError(AVCODEC_ERROR_INTERNAL, errCode);
             break;
         }
         default: {

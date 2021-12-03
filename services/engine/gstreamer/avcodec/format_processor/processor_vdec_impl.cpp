@@ -100,10 +100,8 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
 
 std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
 {
-    // GstCaps *caps = gst_caps_new_simple("video/x-raw",
-    //     "format", G_TYPE_STRING, pixelFormat_.c_str(), nullptr);
     GstCaps *caps = gst_caps_new_simple("video/x-raw",
-        "format", G_TYPE_STRING, "RGBA", nullptr);
+        "format", G_TYPE_STRING, pixelFormat_.c_str(), nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
     auto config = std::make_shared<ProcessorConfig>(caps);

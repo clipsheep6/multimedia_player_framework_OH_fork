@@ -39,7 +39,6 @@ struct _GstCodecBin {
 
     /* private */
     GstElement *src;
-    GstElement *src_parser;
     GstElement *src_convert;
     GstElement *coder;
     GstElement *sink_parser;
