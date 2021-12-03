@@ -41,7 +41,6 @@ struct _GstCodecBin {
     GstElement *src;
     GstElement *src_convert;
     GstElement *coder;
-    GstElement *sink_parser;
     GstElement *sink_convert;
     GstElement *sink;
 

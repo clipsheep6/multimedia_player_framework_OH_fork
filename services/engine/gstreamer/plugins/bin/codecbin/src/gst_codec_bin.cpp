@@ -109,7 +109,6 @@ static void gst_codec_bin_init(GstCodecBin *bin)
     bin->src = nullptr;
     bin->src_convert = nullptr;
     bin->coder = nullptr;
-    bin->sink_parser = nullptr;
     bin->sink_convert = nullptr;
     bin->sink = nullptr;
     bin->type = CODEC_BIN_TYPE_UNKNOWN;

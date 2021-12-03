@@ -134,6 +134,15 @@ int32_t AVCodecEngineCtrl::Start()
         std::unique_lock<std::mutex> lock(gstPipeMutex_);
         gstPipeCond_.wait(lock);
     }
+    if (needInputCallback_) {
+        auto obs = obs_.lock();
+        CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
+        CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
+        uint32_t bufferCount = src_->GetBufferCount();
+        for (uint32_t i = 0; i < bufferCount; i ++) {
+            obs->OnInputBufferAvailable(i);
+        }
+    }
     MEDIA_LOGD("Start success");
     return MSERR_OK;
 }
@@ -190,6 +199,7 @@ sptr<Surface> AVCodecEngineCtrl::CreateInputSurface()
     }
     auto surface =  src_->CreateInputSurface();
     CHECK_AND_RETURN_RET(surface != nullptr, nullptr);
+    needInputCallback_ = false;
     return surface;
 }
 
@@ -256,7 +266,7 @@ GstBusSyncReply AVCodecEngineCtrl::BusSyncHandler(GstBus *bus, GstMessage *messa
     switch (GST_MESSAGE_TYPE(message)) {
         case GST_MESSAGE_STATE_CHANGED: {
             CHECK_AND_RETURN_RET(message->src != nullptr, GST_BUS_DROP);
-            if (GST_IS_BIN(message->src)) {
+            if (GST_IS_BIN(message->src) && !GST_IS_PIPELINE(message->src)) {
                 MEDIA_LOGD("Finish state change");
                 std::unique_lock<std::mutex> lock(self->gstPipeMutex_);
                 self->gstPipeCond_.notify_all();

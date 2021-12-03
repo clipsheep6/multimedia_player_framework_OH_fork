@@ -81,7 +81,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
                 "alignment", G_TYPE_STRING, "au",
-                "stream-format", G_TYPE_STRING, "avc", nullptr);
+                "stream-format", G_TYPE_STRING, "byte-stream", nullptr);
             break;
         default :
             MEDIA_LOGE("Unsupported format");
