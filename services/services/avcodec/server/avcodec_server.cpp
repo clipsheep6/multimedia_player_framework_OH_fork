@@ -165,7 +165,7 @@ int32_t AVCodecServer::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, 
     CHECK_AND_RETURN_RET_LOG(status_ == AVCODEC_RUNNING, MSERR_INVALID_OPERATION, "invalid state");
     CHECK_AND_RETURN_RET_LOG(codecEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     int32_t ret = codecEngine_->QueueInputBuffer(index, info, flag);
-    if (static_cast<int32_t>(flag) | static_cast<int32_t>(AVCODEC_BUFFER_FLAG_EOS)) {
+    if (static_cast<int32_t>(flag) & static_cast<int32_t>(AVCODEC_BUFFER_FLAG_EOS)) {
         status_ = (ret == MSERR_OK ? AVCODEC_END_OF_STREAM : AVCODEC_ERROR);
     } else {
         status_ = (ret == MSERR_OK ? AVCODEC_RUNNING : AVCODEC_ERROR);
