@@ -232,7 +232,7 @@ int32_t AVCodecEngineCtrl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
 {
     MEDIA_LOGD("Enter QueueInputBuffer");
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
-    if (static_cast<int32_t>(flag) | static_cast<int32_t>(AVCODEC_BUFFER_FLAG_EOS)) {
+    if (static_cast<int32_t>(flag) & static_cast<int32_t>(AVCODEC_BUFFER_FLAG_EOS)) {
         MEDIA_LOGE("Unsupport flush");
         //return Flush;
     }
