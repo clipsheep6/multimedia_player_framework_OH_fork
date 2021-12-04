@@ -42,7 +42,7 @@ static void gst_avspliter_pad_init(GstAVSpliterPad *pad)
     pad->chain = NULL;
     pad->blocked = FALSE;
     pad->exposed = FALSE;
-    gst_object_ref_sink (pad);
+    gst_object_ref_sink(pad);
 }
 
 static void gst_avspliter_pad_dispose(GObject *object)

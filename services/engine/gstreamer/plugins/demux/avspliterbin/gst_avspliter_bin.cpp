@@ -111,7 +111,8 @@ static void gst_avspliter_bin_class_init(GstAVSpliterBinClass *klass)
     gst_avspliter_bin_signals[SIGNAL_HAVE_TYPE] = g_signal_new("have-type",
         G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET(GstAVSpliterBinClass, have_type),
-        nullptr, nullptr, nullptr, G_TYPE_NONE, 0, G_TYPE_NONE);
+        nullptr, nullptr, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
+        G_TYPE_UINT, GST_TYPE_CAPS | G_SIGNAL_TYPE_STATIC_SCOPE);
 
     gst_element_class_add_pad_template(elementClass, gst_static_pad_template_get(&g_avspliterSinkTemplate));
     gst_element_class_add_pad_template(elementClass, gst_static_pad_template_get(&g_avspliterSrcTemplate));
@@ -391,7 +392,7 @@ static void found_type_callback(GstElement *typefind, guint probability, GstCaps
     }
     avspliter->haveType = TRUE;
 
-    g_signal_emit(avspliter, gst_avspliter_bin_signals[SIGNAL_HAVE_TYPE], 0, nullptr);
+    g_signal_emit(avspliter, gst_avspliter_bin_signals[SIGNAL_HAVE_TYPE], 0, probability, caps);
 
     GstPad *srcpad = gst_element_get_static_pad(typefind, "src");
     GstPad *sinkpad = gst_element_get_static_pad(typefind, "sink");
@@ -459,6 +460,7 @@ gboolean gst_avspliter_bin_expose(GstAVSpliterBin *avspliter)
 
     g_list_free(endpads);
     endpads = nullptr;
+    gst_element_no_more_pads(GST_ELEMENT_CAST(avspliter));
 
     GST_DEBUG_OBJECT(avspliter, "Exposed everything");
     return TRUE;
