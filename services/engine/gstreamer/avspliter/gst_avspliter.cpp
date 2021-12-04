@@ -263,6 +263,45 @@ gboolean gst_avspliter_select_track(GstAVSpliter *avspliter, guint trackIdx, gbo
     return FALSE;
 }
 
+enum TrackPullReturn {
+    TRACK_PULL_UNSELECTED,
+    TRACK_PULL_ENDTIME,
+    TRACK_PULL_EOS,
+    TRACK_PULL_CACHE_EMPTY,
+    TRACK_PULL_SUCCESS,
+};
+
+TrackPullReturn try_pull_one_sample(GstAVSpliter *avspliter,
+    GstAVSpliterStream *stream, GstClockTime endtime, GstBuffer **out)
+{
+    /**
+     * 加锁，防止被选择的轨道发生变化
+     *
+     * 循环直到满足退出条件
+     *   检查是否shutdown了
+     *
+     *   遍历所有的轨道
+     *     从该轨道的缓存中取出一帧（返回值：未被选择，达到endtime，达到eos，没有缓存，成功取帧）
+     *       查看该帧的时间戳，确认是否要丢弃，如果要丢弃，则丢弃并重新取一帧，重新检查
+     *       若不需要丢弃，则看是否该轨道被选择，若没有被选择，则直接返回未被选择
+     *       若被选择，则看该帧是否超过了endtime，若超过了则重新push回队列，并返回endtime
+     *       到这说明这一帧满足要求，返回成功取帧与该帧
+     *       若不能从缓存中取出一帧，则看该轨道是否达到EOS，是则返回EOS
+     *     若成功取出一帧，按照时间顺序插入到list中
+     *
+     *   遍历所有轨道结束，看这一轮遍历，是否有新pull出来的buffer，若有，则
+     *     检查是否已经满足了所需的帧数，若满足则直接返回结果
+     *     检查是否所有被选择的轨道都已经满足了endtime，若满足则直接返回结果
+     *     到这，继续回到最开始的那一步，继续取帧
+     *
+     *   若没有新pull出来的帧，说明被选择的轨道没有缓存了，则检查是否需要等待新缓存
+     *     遍历所有被选择的轨道，确认是否已经都达到了EOS，若是则立即退出
+     *     遍历所有的轨道，确认是否有轨道的cacheSize顶满了cacheLimit,
+     *       若是，则无法继续等待，否则有可能陷入无限等待，需要立即退出
+     *       若不是，则检查是否shutdown了，没有shutdown就等待直到被唤醒
+     */
+}
+
 GList *gst_avspliter_pull_samples(GstAVSpliter *avspliter,
     GstClockTime starttime, GstClockTime endtime, guint bufcnt)
 {
@@ -273,46 +312,32 @@ GList *gst_avspliter_pull_samples(GstAVSpliter *avspliter,
         return FALSE;
     }
 
-    if (bufcnt == 0 && endtime == GST_CLOCK_TIME_NONE) {
-        GST_ERROR_OBJECT(avspliter, "invalid param");
-        return nullptr;
-    }
-
     /* notify the underlying pool of sink: the app has already release the reference to sharedmemory */
     for (guint trackId = 0; trackId < avspliter->streams->len; trackId++) {
         GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, trackId);
         gst_mem_sink_app_render(GST_MEM_SINK_CAST(stream->shmemSink), nullptr);
     }
 
+    if (bufcnt == 0 && endtime == GST_CLOCK_TIME_NONE) {
+        GST_ERROR_OBJECT(avspliter, "invalid param");
+        return nullptr;
+    }
+
+    GST_DEBUG_OBJECT(avspliter, "pull sample, starttime: %" GST_TIME_FORMAT
+        ", endtime: " GST_TIME_FORMAT " , bufcnt: %u",
+        GST_TIME_ARGS(starttime), GST_TIME_ARGS(endtime), bufcnt);
+
     SAMPLE_LOCK(avspliter);
 
-    GstClockTime lastPos = GST_CLOCK_TIME_NONE;
-    for (guint trackId = 0; trackId < avspliter->streams->len; trackId++) {
-        GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, trackId);
-        if (lastPos == GST_CLOCK_TIME_NONE) {
-            lastPos = stream->lastPos;
-        }
-        if (lastPos > stream->lastPos) {
-            lastPos = stream->lastPos;
-        }
-    }
-
     if (starttime != GST_CLOCK_TIME_NONE) {
-        while (lastPos < starttime) {
-            for (guint trackId = 0; trackId < avspliter->streams->len; trackId++) {
-                GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, trackId);
-                if (stream->sampleQueue == nullptr) {
-                    continue;
-                }
-
-                if (stream->cacheSize == 0) {
-
-                }
-                GstBuffer *buffer = GST_BUFFER_CAST(gst_queue_array_pop_head(stream->sampleQueue));
-                if (buffer != nullptr)
-            }
+        GstClockTime lastPos = GST_CLOCK_TIME_NONE;
+        for (guint trackId = 0; trackId < avspliter->streams->len; trackId++) {
+            GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, trackId);
+            stream->lastPos = (stream->lastPos > starttime) ? stream->lastPos : starttime;
         }
     }
+
+    SAMPLE_UNLOCK(avspliter);
 }
 
 static gboolean activate_avspliter(GstAVSpliter *avspliter)

@@ -92,6 +92,8 @@ GST_EXPORT gboolean gst_avspliter_select_track(GstAVSpliter *avspliter, guint tr
 GST_EXPORT GList *gst_avspliter_pull_samples(GstAVSpliter *avspliter,
     GstClockTime starttime, GstClockTime endtime, guint bufcnt);
 
+GST_EXPORT gboolean gst_avspliter_track_is_eos(GstAVSpliter *avspliter, guint trackIdx);
+
 GST_EXPORT gboolean gst_avspliter_seek(GstAVSpliter *avspliter, GstClockTime pos, GstSeekFlags flags);
 
 #define GST_TYPE_AVSPLITER_MEDIA_INFO (gst_avspliter_media_info_get_type())
