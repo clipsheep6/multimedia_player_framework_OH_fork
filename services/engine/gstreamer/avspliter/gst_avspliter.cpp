@@ -263,44 +263,130 @@ gboolean gst_avspliter_select_track(GstAVSpliter *avspliter, guint trackIdx, gbo
     return FALSE;
 }
 
-enum TrackPullReturn {
-    TRACK_PULL_UNSELECTED,
-    TRACK_PULL_ENDTIME,
-    TRACK_PULL_EOS,
-    TRACK_PULL_CACHE_EMPTY,
-    TRACK_PULL_SUCCESS,
-};
-
-TrackPullReturn try_pull_one_sample(GstAVSpliter *avspliter,
-    GstAVSpliterStream *stream, GstClockTime endtime, GstBuffer **out)
+GstBuffer *try_pull_one_sample(GstAVSpliter *avspliter, GstAVSpliterStream *stream, GstClockTime endtime)
 {
-    /**
-     * 加锁，防止被选择的轨道发生变化
-     *
-     * 循环直到满足退出条件
-     *   检查是否shutdown了
-     *
-     *   遍历所有的轨道
-     *     从该轨道的缓存中取出一帧（返回值：未被选择，达到endtime，达到eos，没有缓存，成功取帧）
-     *       查看该帧的时间戳，确认是否要丢弃，如果要丢弃，则丢弃并重新取一帧，重新检查
-     *       若不需要丢弃，则看是否该轨道被选择，若没有被选择，则直接返回未被选择
-     *       若被选择，则看该帧是否超过了endtime，若超过了则重新push回队列，并返回endtime
-     *       到这说明这一帧满足要求，返回成功取帧与该帧
-     *       若不能从缓存中取出一帧，则看该轨道是否达到EOS，是则返回EOS
-     *     若成功取出一帧，按照时间顺序插入到list中
-     *
-     *   遍历所有轨道结束，看这一轮遍历，是否有新pull出来的buffer，若有，则
-     *     检查是否已经满足了所需的帧数，若满足则直接返回结果
-     *     检查是否所有被选择的轨道都已经满足了endtime，若满足则直接返回结果
-     *     到这，继续回到最开始的那一步，继续取帧
-     *
-     *   若没有新pull出来的帧，说明被选择的轨道没有缓存了，则检查是否需要等待新缓存
-     *     遍历所有被选择的轨道，确认是否已经都达到了EOS，若是则立即退出
-     *     遍历所有的轨道，确认是否有轨道的cacheSize顶满了cacheLimit,
-     *       若是，则无法继续等待，否则有可能陷入无限等待，需要立即退出
-     *       若不是，则检查是否shutdown了，没有shutdown就等待直到被唤醒
-     */
+
 }
+
+GList *insert_sample_by_pts(GList *list, GstBuffer *newSample)
+{
+    if (list == nullptr) {
+        return g_list_append(list, newSample);
+    }
+
+    gboolean insertPrev = FALSE; // false means append, true means prepend
+    GList *insertPos = list;
+    gint lastCmpRst = 0; // 0 means no compare, -1 means less than, 1 means greater than
+
+    while (TRUE) {
+        GstBuffer *cur = GST_BUFFER_CAST(insertPos);
+        if (GST_BUFFER_PTS(cur) > GST_BUFFER_PTS(newSample)) {
+            if (lastCmpRst == -1 || insertPos->prev == nullptr) {
+                insertPrev = TRUE;
+                break;
+            }
+            lastCmpRst = 1;
+            insertPos = insertPos->prev;
+        } else if (GST_BUFFER_PTS(cur) < GST_BUFFER_PTS(newSample)) {
+            if (lastCmpRst == 1 || insertPos->next == nullptr) {
+                insertPrev = FALSE;
+                break;
+            }
+            lastCmpRst = -1;
+            insertPos = insertPos->next;
+        } else {
+            insertPrev = FALSE;
+            break;
+        }
+    }
+
+    if (insertPrev) {
+        list = g_list_prepend(insertPos, newSample);
+    } else {
+        list = g_list_append(insertPos, newSample);
+        list = g_list_last(list);
+    }
+
+    return list;
+}
+
+/**
+ * 加锁，防止被选择的轨道发生变化
+ *
+ *   以下逻辑能够处理同步和独立两种模式，不需要客户端做适配处理，客户端唯一的区别时，在取数据时，给不给时间戳
+ *
+ *   new_sample_arrived:
+ *       检查当前sample是否小于lastPos，是的话，直接drop掉，否则加入队列，并唤醒waiters
+ *       可以优化一下，避免无效唤醒，以减少线程调度的开销
+ *
+ *   eos_arrived:
+ *       标记该轨道已经eos了，唤醒waiters
+ *
+ *   select_track:
+ *       检查该轨道是否需要seek回原位置，是的话，指定以精准seek到指定位置（会收到flush事件，清空所有缓存）
+ *       标记该轨道为select。
+ *
+ *   try_wait_one_track_sample:
+ *       确认当前轨道没有帧，也不是EOS，也没有shutdown，执行以下操作，否则直接退出。
+ *       遍历所有轨道，如果存在某个未被选择的轨道，看:
+ *           1. 是否cache full，是的话，
+ *               先尝试drop掉该track所有的小于lastPos的帧；
+ *               再检查是否该轨道eos达到，达到了的话，跳过该轨道
+ *               检查该轨道是否仍然cache full，不是的话，跳过该轨道
+ *               是的话，drop掉该轨道所有帧，记录该轨道下次被选择时，需要seek回到原位置
+ *           2. 没有full的话，直接跳过
+ *       进行wait，直到被唤醒，唤醒后。检查是否期望轨道的帧已经有了，没有的话，重复以上操作。
+ *
+ *
+ *   try_pull_one_sample:
+ *       遍历所有的轨道（记录每个轨道的查询结果：TrackPullReturn）
+ *         1. 从该轨道的缓存中peek出一帧，确认：
+ *             1. cacheSize为0，检查是否被选择，没有被选择直接返回UNSELECTED，否则检查是否EOS，若是EOS，返回EOS，
+ *                否则则是CACHE_EMPTY，需要进行wait，进入wait流程，wait结束后，如果EOS，返回结果
+ *             2. 如果该帧的时间戳小于该轨道的lastPos，则直接丢弃，重新peek新帧
+ *             3. 若该轨道没有被选择，则退出对轨道的操作，返回UNSELECTED
+ *             4. 若帧的时间戳超过了endtime，则退出对该轨道的操作，返回ENDTIME
+ *             5. 到这说明该帧满足要求，取出该帧，记录该帧所属的轨道，并退出对该轨道的操作，返回SUCCESS
+ *       检查所有被选择的轨道所取出来的这一帧，留下时间戳最小的帧，剩下的还回各自的队列，并将那一帧作为结果返回，AVSpliterReturn::SUCCESS
+ *       若没有任何帧，则：
+ *           1. 检查是否所有被选择的轨道都已经EOS了或者EndTime，是则直接返回AVSpliterPullReturn::EOS或者EndTime
+ *
+ *   try_pull_samples:
+ *      如果没有任何轨道被选择，则临时设置defaultTrack为被选择
+ *      循环调用try_pull_one_sample，并检查返回结果：
+ *          1. SUCCESS，将该帧append到结果链表，并确认是否帧数已经满足要求了，不是的话继续循环，否则退出
+ *          2. EOS或者EndTime，退出循环
+ *      如果之前设置了defaultTrack为被选择，则这是unselect它。
+ */
+
+GList *try_pull_samples(GstAVSpliter *avspliter, GstClockTime endtime, guint bufcnt)
+{
+    GList *result = nullptr;
+    guint accum = 0;
+
+    do {
+        guint lastAccum = accum;
+
+        for (guint i = 0; i < avspliter->streams->len; i++) {
+            GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, i);
+            GstBuffer *buffer = try_pull_one_sample(avspliter, stream, endtime);
+            if (buffer != nullptr) {
+                result = insert_sample_by_pts(result, buffer);
+                accum ++ 1;
+            }
+        }
+
+        if (accum > lastAccum) {
+            if (accum >= bufcnt) {
+
+            }
+        }
+    } while (TRUE)
+}
+
+/**
+ *
+ */
 
 GList *gst_avspliter_pull_samples(GstAVSpliter *avspliter,
     GstClockTime starttime, GstClockTime endtime, guint bufcnt)
@@ -327,17 +413,14 @@ GList *gst_avspliter_pull_samples(GstAVSpliter *avspliter,
         ", endtime: " GST_TIME_FORMAT " , bufcnt: %u",
         GST_TIME_ARGS(starttime), GST_TIME_ARGS(endtime), bufcnt);
 
-    SAMPLE_LOCK(avspliter);
-
     if (starttime != GST_CLOCK_TIME_NONE) {
-        GstClockTime lastPos = GST_CLOCK_TIME_NONE;
         for (guint trackId = 0; trackId < avspliter->streams->len; trackId++) {
             GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, trackId);
             stream->lastPos = (stream->lastPos > starttime) ? stream->lastPos : starttime;
         }
     }
 
-    SAMPLE_UNLOCK(avspliter);
+    GList *result = nullptr;
 }
 
 static gboolean activate_avspliter(GstAVSpliter *avspliter)

@@ -40,6 +40,14 @@ typedef struct _GstAVSpliterMediaInfoClass GstAVSpliterMediaInfoClass;
 
 #define GST_AVSPLITER_STREAM(obj) ((GstAVSpliterStream *)(obj))
 
+enum TrackPullReturn {
+    TRACK_PULL_UNSELECTED,
+    TRACK_PULL_ENDTIME,
+    TRACK_PULL_EOS,
+    TRACK_PULL_CACHE_EMPTY,
+    TRACK_PULL_SUCCESS,
+};
+
 struct _GstAVSpliterStream {
     guint id;
     GstPad *avsBinPad; // not ref
@@ -56,6 +64,7 @@ struct _GstAVSpliterStream {
     gboolean eos;
     GstClockTime lastPos;
     gboolean selected;
+    TrackPullReturn lastPullRet;
 };
 
 struct _GstAVSpliter {
