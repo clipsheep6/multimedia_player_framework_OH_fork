@@ -15,6 +15,7 @@
 
 #include "src_bytebuffer_impl.h"
 #include "media_log.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SrcBytebufferImpl"};
@@ -34,6 +35,10 @@ SrcBytebufferImpl::~SrcBytebufferImpl()
     if (element_ != nullptr) {
         gst_object_unref(element_);
         element_ = nullptr;
+    }
+    if (caps_ != nullptr) {
+        gst_caps_unref(caps_);
+        caps_ = nullptr;
     }
 }
 
@@ -57,14 +62,15 @@ int32_t SrcBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
         auto mem = AVSharedMemory::Create(bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "appsrc");
         CHECK_AND_RETURN_RET(mem != nullptr, MSERR_NO_MEMORY);
 
-        GstBuffer *buffer = gst_buffer_new_allocate(nullptr, static_cast<gsize>(DEFAULT_BUFFER_SIZE), nullptr);
-        CHECK_AND_RETURN_RET(buffer != nullptr, MSERR_NO_MEMORY);
-
-        auto bufWrap = std::make_shared<BufferWrapper>(mem, buffer, bufferList_.size(), BufferWrapper::SERVER);
+        auto bufWrap = std::make_shared<BufferWrapper>(mem, nullptr, bufferList_.size(), BufferWrapper::SERVER);
         CHECK_AND_RETURN_RET(bufWrap != nullptr, MSERR_NO_MEMORY);
         bufferList_.push_back(bufWrap);
     }
-
+    needCodecData_ = config->needCodecData_;
+    if (needCodecData_) {
+        caps_ = config->caps_;
+        gst_caps_ref(caps_);
+    }
     return MSERR_OK;
 }
 
@@ -98,21 +104,39 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
     CHECK_AND_RETURN_RET(index < bufferCount_ && index <= bufferList_.size(), MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->mem_ != nullptr, MSERR_UNKNOWN);
-    CHECK_AND_RETURN_RET(bufferList_[index]->gstBuffer_ != nullptr, MSERR_UNKNOWN);
+
+    MEDIA_LOGD("QueueInputBuffer: size:%{public}d, offset:%{public}d", info.size, info.offset);
+
+    if (needCodecData_) {
+        if (HandleCodecBuffer(index, info, flag) == MSERR_OK) {
+            needCodecData_ = false;
+            bufferList_[index]->owner_ = BufferWrapper::SERVER;
+            auto obs = obs_.lock();
+            CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
+            obs->OnInputBufferAvailable(index);
+            return MSERR_OK;
+        }
+        return MSERR_UNKNOWN;
+    }
 
     uint8_t *address = bufferList_[index]->mem_->GetBase();
+    CHECK_AND_RETURN_RET(address != nullptr, MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET((info.offset + info.size) <= bufferList_[index]->mem_->GetSize(), MSERR_INVALID_VAL);
 
-    gsize size = gst_buffer_fill(bufferList_[index]->gstBuffer_, 0, (char *)address + info.offset, info.size);
+    GstBuffer *buffer = gst_buffer_new_allocate(nullptr, static_cast<gsize>(info.size), nullptr);
+    CHECK_AND_RETURN_RET(buffer != nullptr, MSERR_NO_MEMORY);
+
+    gsize size = gst_buffer_fill(buffer, 0, (char *)address + info.offset, info.size);
     CHECK_AND_RETURN_RET(size == static_cast<gsize>(info.size), MSERR_UNKNOWN);
 
-    GST_BUFFER_PTS(bufferList_[index]->gstBuffer_) = info.presentationTimeUs;
-    GST_BUFFER_OFFSET(bufferList_[index]->gstBuffer_) = 0;
-    GST_BUFFER_OFFSET_END(bufferList_[index]->gstBuffer_) = info.size;
+    GST_BUFFER_PTS(buffer) = info.presentationTimeUs;
+    GST_BUFFER_OFFSET(buffer) = 0;
+    GST_BUFFER_OFFSET_END(buffer) = info.size;
 
     int32_t ret = GST_FLOW_OK;
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
-    g_signal_emit_by_name(element_, "push-buffer", bufferList_[index]->gstBuffer_, &ret);
+    g_signal_emit_by_name(element_, "push-buffer", buffer, &ret);
+    gst_buffer_unref(buffer);
     bufferList_[index]->owner_ = BufferWrapper::SERVER;
 
     auto obs = obs_.lock();
@@ -126,6 +150,33 @@ int32_t SrcBytebufferImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &o
 {
     std::unique_lock<std::mutex> lock(mutex_);
     obs_ = obs;
+    return MSERR_OK;
+}
+
+int32_t SrcBytebufferImpl::HandleCodecBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
+{
+    bool hasCodecFlag = static_cast<int32_t>(flag) & static_cast<int32_t>(AVCODEC_BUFFER_FLAG_CODEDC_DATA);
+    CHECK_AND_RETURN_RET_LOG(hasCodecFlag == true, MSERR_INVALID_VAL, "First buffer must be codec buffer");
+
+    uint8_t *address = bufferList_[index]->mem_->GetBase();
+    CHECK_AND_RETURN_RET(address != nullptr, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET((info.offset + info.size) <= bufferList_[index]->mem_->GetSize(), MSERR_INVALID_VAL);
+
+    GstBuffer *codecBuffer = gst_buffer_new_allocate(nullptr, info.size, nullptr);
+    CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, MSERR_NO_MEMORY, "no memory");
+
+    ON_SCOPE_EXIT(0) { gst_buffer_unref(codecBuffer); };
+
+    gsize size = gst_buffer_fill(codecBuffer, 0, (char *)address + info.offset, info.size);
+    CHECK_AND_RETURN_RET(size == static_cast<gsize>(info.size), MSERR_UNKNOWN);
+
+    CHECK_AND_RETURN_RET(caps_ != nullptr, MSERR_UNKNOWN);
+    gst_caps_set_simple(caps_, "codec_data", GST_TYPE_BUFFER, codecBuffer, nullptr);
+
+    CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
+    g_object_set(G_OBJECT(element_), "caps", caps_, nullptr);
+
+    CHECK_AND_RETURN_RET(gst_base_src_set_caps(GST_BASE_SRC(element_), caps_) == TRUE, MSERR_UNKNOWN);
     return MSERR_OK;
 }
 } // Media

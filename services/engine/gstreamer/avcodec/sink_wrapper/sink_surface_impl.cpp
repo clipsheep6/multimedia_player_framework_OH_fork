@@ -65,6 +65,7 @@ int32_t SinkSurfaceImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 
     signalId_ = g_signal_connect(G_OBJECT(element_), "new_sample",
                                  G_CALLBACK(OutputAvailableCb), reinterpret_cast<gpointer>(this));
+    g_object_set(G_OBJECT(element_), "emit-signals", TRUE, nullptr);
     return MSERR_OK;
 }
 
@@ -111,6 +112,7 @@ int32_t SinkSurfaceImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs
 GstFlowReturn SinkSurfaceImpl::OutputAvailableCb(GstElement *sink, gpointer userData)
 {
     (void)sink;
+    MEDIA_LOGD("OutputAvailableCb");
     auto impl = static_cast<SinkSurfaceImpl *>(userData);
     CHECK_AND_RETURN_RET(impl != nullptr, GST_FLOW_ERROR);
     std::unique_lock<std::mutex> lock(impl->mutex_);

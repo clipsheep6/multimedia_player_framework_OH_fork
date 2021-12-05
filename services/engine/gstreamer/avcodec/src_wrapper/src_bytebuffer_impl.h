@@ -36,6 +36,10 @@ public:
     int32_t SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs) override;
 
 private:
+    int32_t HandleCodecBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag);
+
+    bool needCodecData_ = false;
+    GstCaps *caps_ = nullptr;
     std::mutex mutex_;
     std::vector<std::shared_ptr<BufferWrapper>> bufferList_;
     uint32_t bufferCount_ = 0;
