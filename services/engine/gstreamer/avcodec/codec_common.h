@@ -179,6 +179,7 @@ struct ProcessorConfig {
         }
     }
     GstCaps *caps_ = nullptr;
+    bool needCodecData_ = false;
 };
 
 __attribute__((visibility("default"))) int32_t MapVideoPixelFormat(int32_t number, VideoPixelFormat &pixel);

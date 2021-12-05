@@ -212,6 +212,7 @@ int32_t AVCodecEngineCtrl::SetOutputSurface(sptr<Surface> surface)
         sink_ = AVCodecEngineFactory::CreateSink(SinkType::SINK_TYPE_SURFACE);
         CHECK_AND_RETURN_RET_LOG(sink_ != nullptr, MSERR_NO_MEMORY, "No memory");
         CHECK_AND_RETURN_RET(sink_->Init() == MSERR_OK, MSERR_UNKNOWN);
+        CHECK_AND_RETURN_RET(sink_->SetCallback(obs_) == MSERR_OK, MSERR_UNKNOWN);
     }
     if (sink_->SetOutputSurface(surface) == MSERR_OK) {
         useSurfaceRender_ = true;

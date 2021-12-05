@@ -95,6 +95,10 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
         gst_caps_unref(caps);
         return nullptr;
     }
+
+    if (codecName_ == CODEC_NAME_VIDEO_AVC) {
+        config->needCodecData_ = true;
+    }
     return config;
 }
 
