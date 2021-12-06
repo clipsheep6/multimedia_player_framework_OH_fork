@@ -20,10 +20,10 @@
 
 namespace OHOS {
 namespace Media {
-class VideoEncorder : public RecorderElement {
+class VideoEncoder : public RecorderElement {
 public:
     using RecorderElement::RecorderElement;
-    ~VideoEncorder() = default;
+    ~VideoEncoder() = default;
 
     int32_t Init() override;
     int32_t Configure(const RecorderParam &recParam) override;

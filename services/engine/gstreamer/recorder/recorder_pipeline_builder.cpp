@@ -117,7 +117,7 @@ int32_t RecorderPipelineBuilder::SetVideoSource(const RecorderSourceDesc &desc)
 
     // check yuv
     if (desc.type_ == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV) {
-        videoEncElem_ = CreateElement("VideoEncorder", desc, false);
+        videoEncElem_ = CreateElement("VideoEncoder", desc, false);
         CHECK_AND_RETURN_RET(videoEncElem_ != nullptr, MSERR_INVALID_VAL);
 
         // for the second video source, the sinkpad name should be video_aux_%u
@@ -242,7 +242,7 @@ std::shared_ptr<RecorderPipeline> RecorderPipelineBuilder::Build()
         CHECK_AND_RETURN_RET(videoParseElem_ != nullptr, nullptr);
 
         for (auto iter = pipelineDesc_->allLinkDescs.begin(); iter != pipelineDesc_->allLinkDescs.end();) {
-            if (iter->first->GetName() == "VideoEncorder") {
+            if (iter->first->GetName() == "VideoEncoder") {
                 pipelineDesc_->allLinkDescs.erase(iter++);
                 break;
             } else {

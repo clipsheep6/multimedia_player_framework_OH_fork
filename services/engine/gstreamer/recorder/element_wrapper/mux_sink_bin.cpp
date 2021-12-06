@@ -207,7 +207,6 @@ int32_t MuxSinkBin::ConfigureGeoLocation(const RecorderParam &recParam)
     int32_t latitudex10000 = param.latitude * 10000;
     int32_t longitudex10000 = param.longitude * 10000;
     if (setLocationToMux) {
-        g_object_set(gstMuxer_, "enable-geolocation", TRUE, nullptr);
         g_object_set(gstMuxer_, "set-latitude", latitudex10000, nullptr);
         g_object_set(gstMuxer_, "set-longitude", longitudex10000, nullptr);
         MEDIA_LOGI("set GeoLocation x 10000, latitude %{public}d, longitude %{public}d",
