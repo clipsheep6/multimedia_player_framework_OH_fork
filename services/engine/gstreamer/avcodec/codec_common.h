@@ -23,9 +23,40 @@
 
 namespace OHOS {
 namespace Media {
-static const GstAudioChannelPosition CHANNEL_POSITION[2][2] = {
-    {GST_AUDIO_CHANNEL_POSITION_MONO},
-    {GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT},
+static const GstAudioChannelPosition CHANNEL_POSITION[6][6] = {
+    {
+        GST_AUDIO_CHANNEL_POSITION_MONO
+    },
+    {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+    },
+    {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+    },
+    {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER
+    },
+    {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
+    },
+    {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_LFE1
+    },
 };
 
 enum CodecName : int32_t {
@@ -165,6 +196,7 @@ struct BufferWrapper {
     GstBuffer *gstBuffer_ = nullptr;
     uint32_t index_ = 0;
     Owner owner_ = DOWNSTREAM;
+    GstSample *sample_ = nullptr;
 };
 
 struct ProcessorConfig {
@@ -187,6 +219,8 @@ __attribute__((visibility("default"))) std::string PixelFormatToString(VideoPixe
 __attribute__((visibility("default"))) int32_t MapPCMFormat(int32_t number, AudioRawFormat &format);
 __attribute__((visibility("default"))) std::string PCMFormatToString(AudioRawFormat format);
 __attribute__((visibility("default"))) int32_t MapBitrateMode(int32_t number, VideoEncoderBitrateMode &mode);
+__attribute__((visibility("default"))) int32_t MapCodecMime(const std::string &mime, CodecName &name);
+__attribute__((visibility("default"))) int32_t MapProfile(int32_t number, AVCProfile &profile);
 } // Media
 } // OHOS
 #endif // CODEC_COMMON_H

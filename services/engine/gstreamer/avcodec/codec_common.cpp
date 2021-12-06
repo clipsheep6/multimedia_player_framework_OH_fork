@@ -74,6 +74,31 @@ const std::map<int32_t, VideoEncoderBitrateMode> NUMBER_TO_BITRATE_MODE = {
     {2, VIDEO_ENCODER_BITRATE_MODE_CQ},
 };
 
+const std::map<std::string, CodecName> MIME_TO_CODEC_NAME = {
+    {"video/3gpp", CODEC_NAME_VIDEO_H263},
+    {"video/avc", CODEC_NAME_VIDEO_AVC},
+    {"video/hevc", CODEC_NAME_VIDEO_HEVC},
+    {"video/mpeg", CODEC_NAME_VIDEO_MPEG},
+    {"video/mpeg2", CODEC_NAME_VIDEO_MPEG2},
+    {"video/mp4v-es", CODEC_NAME_VIDEO_MPEG4},
+    {"audio/vorbis", CODEC_NAME_AUDIO_VORBIS},
+    {"audio/mpeg", CODEC_NAME_AUDIO_MP3},
+    {"audio/mp4a-latm", CODEC_NAME_AUDIO_AAC},
+    {"audio/flac", CODEC_NAME_AUDIO_FLAC},
+};
+
+const std::map<int32_t, AVCProfile> NUMBER_TO_PROFILE = {
+    {0, AVC_PROFILE_BASELINE},
+    {1, AVC_PROFILE_CONSTRAINED_BASELINE},
+    {2, AVC_PROFILE_CONSTRAINED_HIGH},
+    {3, AVC_PROFILE_EXTENDED},
+    {4, AVC_PROFILE_HIGH},
+    {5, AVC_PROFILE_HIGH_10},
+    {6, AVC_PROFILE_HIGH_422},
+    {7, AVC_PROFILE_HIGH_444},
+    {8, AVC_PROFILE_MAIN},
+};
+
 int32_t MapVideoPixelFormat(int32_t number, VideoPixelFormat &pixel)
 {
     if (NUMBER_TO_PIEXEL.count(number) != 0) {
@@ -112,6 +137,24 @@ int32_t MapBitrateMode(int32_t number, VideoEncoderBitrateMode &mode)
 {
     if (NUMBER_TO_BITRATE_MODE.count(number) != 0) {
         mode =  NUMBER_TO_BITRATE_MODE.at(number);
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t MapCodecMime(const std::string &mime, CodecName &name)
+{
+    if (MIME_TO_CODEC_NAME.count(mime) != 0) {
+        name =  MIME_TO_CODEC_NAME.at(mime);
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t MapProfile(int32_t number, AVCProfile &profile)
+{
+    if (NUMBER_TO_PROFILE.count(number) != 0) {
+        profile =  NUMBER_TO_PROFILE.at(number);
         return MSERR_OK;
     }
     return MSERR_INVALID_VAL;

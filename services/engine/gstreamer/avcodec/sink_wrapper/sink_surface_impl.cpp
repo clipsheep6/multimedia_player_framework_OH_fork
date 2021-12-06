@@ -96,11 +96,15 @@ int32_t SinkSurfaceImpl::ReleaseOutputBuffer(uint32_t index, bool render)
     CHECK_AND_RETURN_RET(index < bufferCount_ && index < bufferList_.size(), MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->gstBuffer_ != nullptr, MSERR_UNKNOWN);
+    int32_t ret = MSERR_OK;
     if (render) {
-        CHECK_AND_RETURN_RET(UpdateSurfaceBuffer(*(bufferList_[index]->gstBuffer_)) == MSERR_OK, MSERR_UNKNOWN);
+        ret = UpdateSurfaceBuffer(*(bufferList_[index]->gstBuffer_));
     }
     bufferList_[index]->owner_ = BufferWrapper::DOWNSTREAM;
-    return MSERR_OK;
+    if (bufferList_[index]->sample_ != nullptr) {
+        gst_sample_unref(bufferList_[index]->sample_);
+    }
+    return ret;
 }
 
 int32_t SinkSurfaceImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs)
@@ -139,6 +143,7 @@ int32_t SinkSurfaceImpl::HandleOutputCb()
         if ((*it)->owner_ == BufferWrapper::DOWNSTREAM) {
             (*it)->owner_ = BufferWrapper::APP;
             (*it)->gstBuffer_ = buf;
+            (*it)->sample_ = sample;
             break;
         }
         index++;

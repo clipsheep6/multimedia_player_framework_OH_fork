@@ -37,7 +37,7 @@ protected:
 private:
     int32_t channels_ = 0;
     int32_t sampleRate_ = 0;
-    int32_t pcmFormat_ = 0;
+    std::string audioRawFormat_ = "";
     int32_t profile_ = 0;
     CodecName codecName_ = CODEC_NAME_AUDIO_AAC;
 };

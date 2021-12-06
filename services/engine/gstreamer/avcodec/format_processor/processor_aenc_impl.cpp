@@ -35,8 +35,13 @@ int32_t ProcessorAencImpl::ProcessMandatory(const Format &format)
 {
     CHECK_AND_RETURN_RET(format.GetIntValue("channels", channels_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("sampleRate", sampleRate_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("pcmFormat", pcmFormat_) == true, MSERR_INVALID_VAL);
-    MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d", channels_, sampleRate_, pcmFormat_);
+    int32_t audioRawFormat = 0;
+    CHECK_AND_RETURN_RET(format.GetIntValue("audio_raw_format", audioRawFormat) == true, MSERR_INVALID_VAL);
+    MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d", channels_, sampleRate_, audioRawFormat);
+
+    AudioRawFormat rawFormat = AUDIO_PCM_S8;
+    CHECK_AND_RETURN_RET(MapPCMFormat(audioRawFormat, rawFormat) == MSERR_OK, MSERR_INVALID_VAL);
+    audioRawFormat_ = PCMFormatToString(rawFormat);
     return MSERR_OK;
 }
 
@@ -57,7 +62,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetInputPortConfig()
     GstCaps *caps = gst_caps_new_simple("audio/x-raw",
         "rate", G_TYPE_INT, sampleRate_,
         "channels", G_TYPE_INT, channels_,
-        "format", G_TYPE_STRING, "S16LE",
+        "format", G_TYPE_STRING, audioRawFormat_.c_str(),
         "channel-mask", GST_TYPE_BITMASK, channelMask,
         "layout", G_TYPE_STRING, "interleaved", nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
@@ -80,8 +85,8 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
                 "rate", G_TYPE_INT, sampleRate_,
                 "channels", G_TYPE_INT, channels_,
                 "mpegversion", G_TYPE_INT, 4,
-                "base-profile", G_TYPE_STRING, "lc",
-                "stream-format", G_TYPE_STRING, "adts", nullptr);
+                "stream-format", G_TYPE_STRING, "raw",
+                "base-profile", G_TYPE_STRING, "lc", nullptr);
             break;
         default :
             MEDIA_LOGE("Unsupported format");

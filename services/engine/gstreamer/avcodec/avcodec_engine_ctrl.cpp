@@ -179,6 +179,15 @@ int32_t AVCodecEngineCtrl::Flush()
     event = gst_event_new_flush_stop(FALSE);
     CHECK_AND_RETURN_RET(event != nullptr, MSERR_NO_MEMORY);
     (void)gst_element_send_event(codecBin_, event);
+
+    if (needInputCallback_) {
+        auto obs = obs_.lock();
+        CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
+        uint32_t bufferCount = src_->GetBufferCount();
+        for (uint32_t i = 0; i < bufferCount; i ++) {
+            obs->OnInputBufferAvailable(i);
+        }
+    }
     return MSERR_OK;
 }
 
@@ -233,10 +242,6 @@ int32_t AVCodecEngineCtrl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
 {
     MEDIA_LOGD("Enter QueueInputBuffer");
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
-    if (static_cast<int32_t>(flag) & static_cast<int32_t>(AVCODEC_BUFFER_FLAG_EOS)) {
-        MEDIA_LOGE("Unsupport flush");
-        //return Flush;
-    }
     return src_->QueueInputBuffer(index, info, flag);
 }
 

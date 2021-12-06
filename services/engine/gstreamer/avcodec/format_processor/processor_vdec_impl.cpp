@@ -60,15 +60,15 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
             caps = gst_caps_new_simple("video/mpeg",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
-                "systemstream", G_TYPE_BOOLEAN, FALSE,
-                "mpegversion", G_TYPE_INT, 2, nullptr);
+                "mpegversion", G_TYPE_INT, 2,
+                "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
         case CODEC_NAME_VIDEO_MPEG4:
             caps = gst_caps_new_simple("video/mpeg",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
                 "mpegversion", G_TYPE_INT, 4,
-                "stream-format", G_TYPE_STRING, "adts", nullptr);
+                "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
         case CODEC_NAME_VIDEO_H263:
             caps = gst_caps_new_simple("video/x-h263",
@@ -80,8 +80,9 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
             caps = gst_caps_new_simple("video/x-h264",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
-                "alignment", G_TYPE_STRING, "au",
-                "stream-format", G_TYPE_STRING, "byte-stream", nullptr);
+                "alignment", G_TYPE_STRING, "nal",
+                "stream-format", G_TYPE_STRING, "byte-stream",
+                "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
         default :
             MEDIA_LOGE("Unsupported format");
@@ -105,6 +106,8 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
 std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
 {
     GstCaps *caps = gst_caps_new_simple("video/x-raw",
+        "width", G_TYPE_INT, width_,
+        "height", G_TYPE_INT, height_,
         "format", G_TYPE_STRING, pixelFormat_.c_str(), nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
