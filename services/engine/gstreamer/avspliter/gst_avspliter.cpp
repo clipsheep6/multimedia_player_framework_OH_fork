@@ -15,23 +15,8 @@
 
 #include "config.h"
 #include "gst_avspliter.h"
-#include "gst_shared_mem_sink.h"
-
-#define CHECK_AND_BREAK_LOG(obj, cond, fmt, ...)       \
-    if (1) {                                           \
-        if (!(cond)) {                                 \
-            GST_ERROR_OBJECT(obj, fmt, ##__VA_ARGS__); \
-            break;                                     \
-        }                                              \
-    } else void (0)
-
-#define SAMPLE_LOCK(avspliter) g_mutex_lock(&avspliter->sampleLock)
-#define SAMPLE_UNLOCK(avspliter) g_mutex_unlock(&avspliter->sampleLock);
-#define WAIT_SAMPLE_COND(avspliter) g_cond_wait(&avspliter->sampleCond, &avspliter->sampleLock);
-#define SIGNAL_SAMPLE_COND(avspliter) g_cond_signal(&avspliter->sampleCond)
-
-static const guint INVALID_TRACK_ID = UINT_MAX;
-
+#include "gst_avspliter_priv.h"
+#include "gst_mem_sink.h"
 
 enum {
     PROP_0,
@@ -45,6 +30,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_avspliter_debug);
 G_DEFINE_TYPE(GstAVSpliter, gst_avspliter, GST_TYPE_PIPELINE);
 
 G_DEFINE_TYPE(GstAVSpliterMediaInfo, gst_avspliter_media_info, G_TYPE_OBJECT);
+G_DEFINE_TYPE(GstAVSpliterSample, gst_avspliter_sample, G_TYPE_OBJECT);
 
 static void gst_avspliter_dispose(GObject *object);
 static void gst_avspliter_finalize(GObject *object);
@@ -53,7 +39,7 @@ static void gst_avspliter_get_property(GObject *object, guint propId, GValue *va
 static GstStateChangeReturn gst_avspliter_change_state(GstElement *element, GstStateChange transition);
 static void gst_avspliter_handle_message(GstBin *bin, GstMessage *message);
 static gboolean activate_avspliter(GstAVSpliter *avspliter);
-static gboolean deactivate_avspliter(GstAVSpliter *avspliter);
+static void deactivate_avspliter(GstAVSpliter *avspliter);
 static gboolean build_urisourcebin(GstAVSpliter *avspliter);
 static void free_urisourcebin(GstAVSpliter *avspliter);
 static void urisrcbin_pad_added_cb(GstElement *element, GstPad *pad, GstAVSpliter *avspliter);
@@ -64,6 +50,8 @@ static void avspliter_bin_no_more_pads_cb(GstElement *element, GstAVSpliter *avs
 static void avspliter_bin_pad_removed_cb(GstElement *element, GstPad *pad, GstAVSpliter *avspliter);
 static void avspliter_bin_have_type_cb(GstElement *element, guint probability,
     GstCaps *caps, GstAVSpliter *avspliter);
+static void do_async_start(GstAVSpliter *avspliter);
+static void do_async_done(GstAVSpliter *avspliter);
 static GstPadProbeReturn sink_pad_probe_cb(GstPad *pad, GstPadProbeInfo *info, gpointer data);
 static gboolean try_add_sink(GstAVSpliter *avspliter, GstPad *pad, GstAVSpliterStream *stream);
 static void update_stream_media_info(GstAVSpliter *avspliter, GstAVSpliterStream *stream, GstEvent *event);
@@ -73,11 +61,11 @@ static void set_stream_cache_limit(GstAVSpliter *avspliter, GstAVSpliterStream *
 static GstFlowReturn new_sample_cb(GstMemSink *sink, GstBuffer *sample, gpointer userdata);
 static GstFlowReturn new_preroll_cb(GstMemSink *sink, GstBuffer *sample, gpointer userdata);
 static void eos_cb(GstMemSink *sink, gpointer userdata);
+static void do_flush(GstAVSpliter *avspliter, GstAVSpliterStream *stream, gboolean flushStart);
 static GstAVSpliterStream *add_avspliter_stream(GstAVSpliter *avspliter);
 static void free_avspliter_stream(GstAVSpliter *avspliter, GstAVSpliterStream *stream, guint index);
 static GstAVSpliterStream *find_avspliter_stream_by_sinkpad(GstAVSpliter *avspliter, GstPad *sinkpad);
 static GstAVSpliterStream *find_avspliter_stream_by_sink(GstAVSpliter *avspliter, GstElement *sink);
-
 static GstAVSpliterMediaInfo *gst_avspliter_media_info_copy(GstAVSpliterMediaInfo *mediaInfo);
 
 static GstMemSinkCallbacks g_sinkCallbacks = {
@@ -132,6 +120,7 @@ static void gst_avspliter_init(GstAVSpliter *avspliter)
     avspliter->mediaInfo = nullptr;
     avspliter->hasAudio = FALSE;
     avspliter->hasVideo = FALSE;
+    g_mutex_init(&avspliter->dynLock);
 }
 
 static void gst_avspliter_dispose(GObject *object)
@@ -151,6 +140,8 @@ static void gst_avspliter_finalize(GObject *object)
 {
     GstAVSpliter *avspliter = GST_AVSPLITER_CAST(object);
     g_return_if_fail(avspliter != nullptr);
+
+    g_mutex_clear(&avspliter->dynLock);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
@@ -205,6 +196,19 @@ static GstStateChangeReturn gst_avspliter_change_state(GstElement *element, GstS
             }
             do_async_start(avspliter);
             break;
+        case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
+            g_mutex_lock(&avspliter->dynLock);
+            avspliter->shutdown = FALSE;
+            g_mutex_unlock(&avspliter->dynLock);
+            break;
+        }
+        case GST_STATE_CHANGE_PLAYING_TO_PLAYING: {
+            GST_DEBUG_OBJECT(avspliter, "playing to playing, seek completed");
+            g_cond_signal(&avspliter->seekCond);
+            break;
+        }
+        default:
+            break;
     }
 
     GstStateChangeReturn ret = GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
@@ -216,10 +220,15 @@ static GstStateChangeReturn gst_avspliter_change_state(GstElement *element, GstS
 
     switch (transition) {
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+            g_mutex_lock(&avspliter->dynLock);
+            avspliter->shutdown = TRUE;
+            g_mutex_unlock(&avspliter->dynLock);
             do_async_done(avspliter);
            break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             deactivate_avspliter(avspliter);
+            break;
+        default:
             break;
     }
 
@@ -227,6 +236,45 @@ static GstStateChangeReturn gst_avspliter_change_state(GstElement *element, GstS
         do_async_done(avspliter);
     }
     return ret;
+}
+
+static void gst_avspliter_handle_message(GstBin *bin, GstMessage *message)
+{
+    g_return_if_fail(bin != nullptr && message != nullptr);
+    GstAVSpliter *avspliter = GST_AVSPLITER_CAST(bin);
+
+    switch (GST_MESSAGE_TYPE(message)) {
+        case GST_MESSAGE_ERROR: {
+            GError *error = nullptr;
+            gchar *debug = nullptr;
+            gchar *fullMsg = nullptr;
+            gst_message_parse_error(message, &error, &debug);
+            if (error == nullptr) {
+                if (debug != nullptr) {
+                    g_free(debug);
+                }
+                break;
+            }
+            gchar *errMsg = gst_error_get_message(error->domain, error->code);
+            if (debug != nullptr) {
+                fullMsg = g_strdup_printf("%s\n%s\n%s", errMsg, error->message, debug);
+            } else {
+                fullMsg = g_strdup_printf("%s\n%s", errMsg, error->message);
+            }
+            if (fullMsg != nullptr) {
+                GST_ERROR_OBJECT(avspliter, "error happended, %s", fullMsg);
+            }
+            g_free(errMsg);
+            g_free(debug);
+            g_clear_error(&error);
+            g_free(fullMsg);
+            break;
+        }
+        default:
+            break;
+    }
+
+    GST_BIN_CLASS(parent_class)->handle_message(bin, message);
 }
 
 GstAVSpliterMediaInfo *gst_avspliter_get_media_info(GstAVSpliter *avspliter)
@@ -252,141 +300,245 @@ gboolean gst_avspliter_select_track(GstAVSpliter *avspliter, guint trackIdx, gbo
 
     for (guint i = 0; i < avspliter->streams->len; i++) {
         GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, i);
-        if (stream->id == trackIdx) {
-            stream->selected = select;
-            GST_INFO_OBJECT(avspliter, "%s track(%u)", select ? "select" : "unselect", trackIdx);
-            return TRUE;
+        if (stream->id != trackIdx) {
+            continue;
         }
+        stream->selected = select;
+        GST_INFO_OBJECT(avspliter, "%s track(%u)", select ? "select" : "unselect", trackIdx);
+
+        if (select && stream->needSeekBack) {
+            gst_avspliter_seek(avspliter, stream->lastPos, GstSeekFlags::GST_SEEK_FLAG_ACCURATE);
+            stream->needSeekBack = FALSE;
+        }
+        return TRUE;
     }
 
     GST_ERROR_OBJECT(avspliter, "track id %u is invalid", trackIdx);
     return FALSE;
 }
 
-GstBuffer *try_pull_one_sample(GstAVSpliter *avspliter, GstAVSpliterStream *stream, GstClockTime endtime)
+gboolean try_wait_one_track_sample(GstAVSpliter *avspliter, GstAVSpliterStream *stream)
 {
+    do {
+        if (avspliter->shutdown) {
+            return FALSE;
+        }
 
+        if (stream->needSeekBack) {
+            gst_avspliter_seek(avspliter, stream->lastPos, GstSeekFlags::GST_SEEK_FLAG_ACCURATE);
+            stream->needSeekBack = FALSE;
+        }
+
+        if (stream->cacheSize > 0 || stream->eos) {
+            return TRUE;
+        }
+
+        for (guint i = 0; i < avspliter->streams->len; i++) {
+            GstAVSpliterStream *otherStream = &g_array_index(avspliter->streams, GstAVSpliterStream, i);
+            if (otherStream->cacheSize > 0) {
+                GstBuffer *buf = GST_BUFFER_CAST(gst_queue_array_peek_head(otherStream->sampleQueue));
+                while (GST_BUFFER_PTS(buf) < otherStream->lastPos) {
+                    gst_queue_array_pop_head(otherStream->sampleQueue);
+                    gst_buffer_unref(buf);
+                    buf = GST_BUFFER_CAST(gst_queue_array_peek_head(otherStream->sampleQueue));
+                }
+            }
+
+            if (otherStream->eos) {
+                continue;
+            }
+
+            if (otherStream->cacheSize < otherStream->cacheLimit) {
+                continue;
+            }
+
+            gst_queue_array_clear(otherStream->sampleQueue);
+            otherStream->needSeekBack = TRUE;
+        }
+
+        if (!avspliter->shutdown && stream->cacheSize == 0) { // 需要先加锁, 这里需要判断是否shutdow
+            WAIT_SAMPLE_COND(avspliter);
+        }
+    } while (stream->cacheSize == 0);
+
+    return TRUE;
 }
 
-GList *insert_sample_by_pts(GList *list, GstBuffer *newSample)
+TrackPullReturn try_pull_one_track_sample(GstAVSpliter *avspliter,
+    GstAVSpliterStream *stream, GstClockTime endtime, GList **allSamples)
 {
-    if (list == nullptr) {
-        return g_list_append(list, newSample);
+    do {
+        if (stream->cacheSize == 0) {
+            if (!stream->selected) {
+                return TRACK_PULL_UNSELECTED;
+            }
+
+            if (!try_wait_one_track_sample(avspliter, stream)) {
+                if (stream->eos) {
+                    GST_INFO_OBJECT(avspliter, "track(%u) is eos, skip it.", stream->id);
+                    return TRACK_PULL_EOS;
+                }
+                GST_ERROR_OBJECT(avspliter, "track(%u) not eos, but pull sample failed.", stream->id);
+                return TRACK_PULL_FAILED;
+            }
+        }
+
+        GstBuffer *buf = GST_BUFFER_CAST(gst_queue_array_peek_head(stream->sampleQueue));
+        if (GST_BUFFER_PTS(buf) < stream->lastPos) {
+            gst_queue_array_pop_head(stream->sampleQueue);
+            gst_buffer_unref(buf);
+            stream->cacheSize -= 1;
+            continue;
+        }
+
+        if (!stream->selected) {
+            return TRACK_PULL_UNSELECTED;
+        }
+
+        if (stream->needSeekBack) {
+            gst_avspliter_seek(avspliter, stream->lastPos, GstSeekFlags::GST_SEEK_FLAG_ACCURATE);
+            stream->needSeekBack = FALSE;
+            continue;
+        }
+
+        if (GST_CLOCK_TIME_IS_VALID(endtime) && GST_BUFFER_PTS(buf) >= endtime) {
+            return TRACK_PULL_ENDTIME;
+        }
+
+        GstAVSpliterSample *sample = GST_AVSPLITER_SAMPLE_CAST(g_object_new(GST_TYPE_AVSPLITER_SAMPLE, nullptr));
+        g_return_val_if_fail(sample != nullptr, TRACK_PULL_FAILED);
+
+        sample->buffer = gst_buffer_ref(buf);
+        sample->trackId = stream->id;
+        *allSamples = g_list_append(*allSamples, sample);
+        stream->cacheSize -= 1;
+
+        if (!try_wait_one_track_sample(avspliter, stream)) {
+            if (stream->eos) {
+                GST_INFO_OBJECT(avspliter, "track(%u) is eos, mark sample is eos.", stream->id);
+                sample->eosFrame = TRUE;
+            }
+            GST_ERROR_OBJECT(avspliter, "track(%u) not eos, but pull sample failed.", stream->id);
+            return TRACK_PULL_FAILED;
+        }
+
+        break;
+    } while (TRUE);
+
+    return TRACK_PULL_SUCCESS;
+}
+
+AVSpliterPullReturn try_pull_one_sample(GstAVSpliter *avspliter, GstClockTime endtime, GstAVSpliterSample **out)
+{
+    gboolean allSelectedTrackEOS = TRUE;
+    gboolean allSelectedTrackEndTime = TRUE;
+    GList *allSelectedTrackSample = nullptr;
+
+    for (guint i = 0; i < avspliter->streams->len; i++) {
+        GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, i);
+        TrackPullReturn ret = try_pull_one_track_sample(avspliter, stream, endtime, &allSelectedTrackSample);
+        if (ret == TRACK_PULL_UNSELECTED || ret == TRACK_PULL_SUCCESS) {
+            continue;
+        }
+        if (ret == TRACK_PULL_EOS) {
+            allSelectedTrackEndTime = FALSE;
+        }
+        if (ret == TRACK_PULL_ENDTIME) {
+            allSelectedTrackEOS = FALSE;
+        }
+        if (ret == TRACK_PULL_FAILED) {
+            GST_ERROR_OBJECT(avspliter, "pull sample from track(%u) failed", stream->id);
+            g_list_free_full(allSelectedTrackSample, (GDestroyNotify)gst_object_unref);
+            return AVS_PULL_FAILED;
+        }
     }
 
-    gboolean insertPrev = FALSE; // false means append, true means prepend
-    GList *insertPos = list;
-    gint lastCmpRst = 0; // 0 means no compare, -1 means less than, 1 means greater than
+    if (allSelectedTrackEndTime || allSelectedTrackEOS) { // allSelectedTrackSample must be nullptr
+        GST_INFO_OBJECT(avspliter, "all selected track reach %s", allSelectedTrackEOS ? "eos" : "end of time");
+        return allSelectedTrackEOS ? AVS_PULL_REACH_EOS : AVS_PULL_REACH_ENDTIME;
+    }
 
-    while (TRUE) {
-        GstBuffer *cur = GST_BUFFER_CAST(insertPos);
-        if (GST_BUFFER_PTS(cur) > GST_BUFFER_PTS(newSample)) {
-            if (lastCmpRst == -1 || insertPos->prev == nullptr) {
-                insertPrev = TRUE;
-                break;
+    GstAVSpliterSample *minPtsSample = nullptr;
+    GList *minPtsNode = nullptr;
+    for (GList *node = allSelectedTrackSample; node != nullptr; node = node->next) {
+        GstAVSpliterSample *sample = reinterpret_cast<GstAVSpliterSample *>(node->data);
+        if (minPtsSample == nullptr) {
+            minPtsSample = sample;
+            minPtsNode = node;
+        } else if (GST_BUFFER_PTS(minPtsSample->buffer) > GST_BUFFER_PTS(sample->buffer)) {
+            minPtsSample = sample;
+            minPtsNode = node;
+        }
+    }
+
+    *out = minPtsSample;
+    GstAVSpliterStream *minPtsStream = &g_array_index(avspliter->streams, GstAVSpliterStream, minPtsSample->trackId);
+    gst_queue_array_pop_head(minPtsStream->sampleQueue);
+
+    for (GList *node = allSelectedTrackSample; node != nullptr; node = node->next) {
+        GstAVSpliterSample *sample = reinterpret_cast<GstAVSpliterSample *>(node->data);
+        GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, sample->trackId);
+        if (node != minPtsNode) {
+            if (!stream->needSeekBack) {
+                stream->cacheSize += 1;
             }
-            lastCmpRst = 1;
-            insertPos = insertPos->prev;
-        } else if (GST_BUFFER_PTS(cur) < GST_BUFFER_PTS(newSample)) {
-            if (lastCmpRst == 1 || insertPos->next == nullptr) {
-                insertPrev = FALSE;
-                break;
-            }
-            lastCmpRst = -1;
-            insertPos = insertPos->next;
-        } else {
-            insertPrev = FALSE;
+            gst_object_unref(sample);
+        }
+    }
+
+    g_list_free(allSelectedTrackSample);
+    return AVS_PULL_SUCCESS;
+}
+
+GList *try_pull_samples(GstAVSpliter *avspliter, GstClockTime endtime, guint bufcnt)
+{
+    GST_DEBUG_OBJECT(avspliter, "start pull samples...");
+    GList *result = nullptr;
+
+    gboolean noSelected = TRUE;
+    for (guint i = 0; i < avspliter->streams->len; i++) {
+        GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, i);
+        if (stream->selected) {
+            noSelected = FALSE;
             break;
         }
     }
 
-    if (insertPrev) {
-        list = g_list_prepend(insertPos, newSample);
-    } else {
-        list = g_list_append(insertPos, newSample);
-        list = g_list_last(list);
+    if (noSelected) {
+        gst_avspliter_select_track(avspliter, avspliter->defaultTrackId, TRUE);
     }
 
-    return list;
-}
-
-/**
- * 加锁，防止被选择的轨道发生变化
- *
- *   以下逻辑能够处理同步和独立两种模式，不需要客户端做适配处理，客户端唯一的区别时，在取数据时，给不给时间戳
- *
- *   new_sample_arrived:
- *       检查当前sample是否小于lastPos，是的话，直接drop掉，否则加入队列，并唤醒waiters
- *       可以优化一下，避免无效唤醒，以减少线程调度的开销
- *
- *   eos_arrived:
- *       标记该轨道已经eos了，唤醒waiters
- *
- *   select_track:
- *       检查该轨道是否需要seek回原位置，是的话，指定以精准seek到指定位置（会收到flush事件，清空所有缓存）
- *       标记该轨道为select。
- *
- *   try_wait_one_track_sample:
- *       确认当前轨道没有帧，也不是EOS，也没有shutdown，执行以下操作，否则直接退出。
- *       遍历所有轨道，如果存在某个未被选择的轨道，看:
- *           1. 是否cache full，是的话，
- *               先尝试drop掉该track所有的小于lastPos的帧；
- *               再检查是否该轨道eos达到，达到了的话，跳过该轨道
- *               检查该轨道是否仍然cache full，不是的话，跳过该轨道
- *               是的话，drop掉该轨道所有帧，记录该轨道下次被选择时，需要seek回到原位置
- *           2. 没有full的话，直接跳过
- *       进行wait，直到被唤醒，唤醒后。检查是否期望轨道的帧已经有了，没有的话，重复以上操作。
- *
- *
- *   try_pull_one_sample:
- *       遍历所有的轨道（记录每个轨道的查询结果：TrackPullReturn）
- *         1. 从该轨道的缓存中peek出一帧，确认：
- *             1. cacheSize为0，检查是否被选择，没有被选择直接返回UNSELECTED，否则检查是否EOS，若是EOS，返回EOS，
- *                否则则是CACHE_EMPTY，需要进行wait，进入wait流程，wait结束后，如果EOS，返回结果
- *             2. 如果该帧的时间戳小于该轨道的lastPos，则直接丢弃，重新peek新帧
- *             3. 若该轨道没有被选择，则退出对轨道的操作，返回UNSELECTED
- *             4. 若帧的时间戳超过了endtime，则退出对该轨道的操作，返回ENDTIME
- *             5. 到这说明该帧满足要求，取出该帧，记录该帧所属的轨道，并退出对该轨道的操作，返回SUCCESS
- *       检查所有被选择的轨道所取出来的这一帧，留下时间戳最小的帧，剩下的还回各自的队列，并将那一帧作为结果返回，AVSpliterReturn::SUCCESS
- *       若没有任何帧，则：
- *           1. 检查是否所有被选择的轨道都已经EOS了或者EndTime，是则直接返回AVSpliterPullReturn::EOS或者EndTime
- *
- *   try_pull_samples:
- *      如果没有任何轨道被选择，则临时设置defaultTrack为被选择
- *      循环调用try_pull_one_sample，并检查返回结果：
- *          1. SUCCESS，将该帧append到结果链表，并确认是否帧数已经满足要求了，不是的话继续循环，否则退出
- *          2. EOS或者EndTime，退出循环
- *      如果之前设置了defaultTrack为被选择，则这是unselect它。
- */
-
-GList *try_pull_samples(GstAVSpliter *avspliter, GstClockTime endtime, guint bufcnt)
-{
-    GList *result = nullptr;
+    AVSpliterPullReturn ret;
     guint accum = 0;
-
+    GstAVSpliterSample *outSample = nullptr;
     do {
-        guint lastAccum = accum;
-
-        for (guint i = 0; i < avspliter->streams->len; i++) {
-            GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, i);
-            GstBuffer *buffer = try_pull_one_sample(avspliter, stream, endtime);
-            if (buffer != nullptr) {
-                result = insert_sample_by_pts(result, buffer);
-                accum ++ 1;
+        ret = try_pull_one_sample(avspliter, endtime, &outSample);
+        if (ret == AVS_PULL_SUCCESS) {
+            if (outSample == nullptr) {
+                GST_ERROR_OBJECT(avspliter, "some error happend, outSample is null");
+                break;
             }
+            result = g_list_append(result, outSample);
+            accum += 1;
         }
 
-        if (accum > lastAccum) {
-            if (accum >= bufcnt) {
-
-            }
+        if (ret == AVS_PULL_REACH_ENDTIME) {
+            GST_INFO_OBJECT(avspliter, "reach endtime: %" GST_TIME_FORMAT
+                " for all selected tracks, pull %u samples", GST_TIME_ARGS(endtime), accum);
         }
-    } while (TRUE)
+
+        if (ret == AVS_PULL_REACH_EOS) {
+            GST_INFO_OBJECT(avspliter, "reach eos for all selected tracks, pull %u samples", accum);
+        }
+    } while (ret == AVS_PULL_SUCCESS && accum < bufcnt);
+
+    if (noSelected) {
+        gst_avspliter_select_track(avspliter, avspliter->defaultTrackId, FALSE);
+    }
+
+    GST_DEBUG_OBJECT(avspliter, "finish pull %u samples...", accum);
+    return result;
 }
-
-/**
- *
- */
 
 GList *gst_avspliter_pull_samples(GstAVSpliter *avspliter,
     GstClockTime starttime, GstClockTime endtime, guint bufcnt)
@@ -404,23 +556,46 @@ GList *gst_avspliter_pull_samples(GstAVSpliter *avspliter,
         gst_mem_sink_app_render(GST_MEM_SINK_CAST(stream->shmemSink), nullptr);
     }
 
-    if (bufcnt == 0 && endtime == GST_CLOCK_TIME_NONE) {
+    if ((bufcnt == 0 && !GST_CLOCK_TIME_IS_VALID(endtime)) ||
+        (GST_CLOCK_TIME_IS_VALID(starttime) && endtime <= starttime)) {
         GST_ERROR_OBJECT(avspliter, "invalid param");
         return nullptr;
     }
 
     GST_DEBUG_OBJECT(avspliter, "pull sample, starttime: %" GST_TIME_FORMAT
-        ", endtime: " GST_TIME_FORMAT " , bufcnt: %u",
+        ", endtime: %" GST_TIME_FORMAT " , bufcnt: %u",
         GST_TIME_ARGS(starttime), GST_TIME_ARGS(endtime), bufcnt);
 
-    if (starttime != GST_CLOCK_TIME_NONE) {
+    if (GST_CLOCK_TIME_IS_VALID(starttime)) {
         for (guint trackId = 0; trackId < avspliter->streams->len; trackId++) {
             GstAVSpliterStream *stream = &g_array_index(avspliter->streams, GstAVSpliterStream, trackId);
             stream->lastPos = (stream->lastPos > starttime) ? stream->lastPos : starttime;
         }
     }
 
-    GList *result = nullptr;
+    GList *result = try_pull_samples(avspliter, endtime, bufcnt);
+    return result;
+}
+
+gboolean gst_avspliter_seek(GstAVSpliter *avspliter, GstClockTime pos, GstSeekFlags flags)
+{
+    g_return_val_if_fail(avspliter != nullptr, FALSE);
+    g_return_val_if_fail(GST_CLOCK_TIME_IS_VALID(pos), FALSE);
+
+    flags = (GstSeekFlags)(flags | GST_SEEK_FLAG_FLUSH);
+
+    GstEvent *event = gst_event_new_seek(1, GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET,
+        pos, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
+    g_return_val_if_fail(event != nullptr, FALSE);
+
+    GST_DEBUG_OBJECT(avspliter, "seek to %" GST_TIME_FORMAT, GST_TIME_ARGS(pos));
+
+    g_mutex_lock(&avspliter->dynLock);
+    gst_element_send_event(GST_ELEMENT_CAST(avspliter), event);
+    g_cond_wait(&avspliter->seekCond, &avspliter->dynLock);
+
+    GST_DEBUG_OBJECT(avspliter, "seek to %" GST_TIME_FORMAT " finished", GST_TIME_ARGS(pos));
+    return TRUE;
 }
 
 static gboolean activate_avspliter(GstAVSpliter *avspliter)
@@ -451,11 +626,13 @@ static gboolean activate_avspliter(GstAVSpliter *avspliter)
     ret = build_avspliter_bin(avspliter);
     g_return_val_if_fail(ret, FALSE);
 
-    g_object_set(avspliter->urisourcebin, "uri", avspliter->uri);
+    GST_OBJECT_LOCK(avspliter);
+    g_object_set(avspliter->urisourcebin, "uri", avspliter->uri, nullptr);
+    GST_OBJECT_UNLOCK(avspliter);
     return TRUE;
 }
 
-static gboolean deactivate_avspliter(GstAVSpliter *avspliter)
+static void deactivate_avspliter(GstAVSpliter *avspliter)
 {
     if (avspliter->streams != nullptr) {
         for (guint i = 0; i < avspliter->streams->len; i++) {
@@ -721,7 +898,7 @@ static gboolean try_add_sink(GstAVSpliter *avspliter, GstPad *pad, GstAVSpliterS
 {
     stream->avsBinPad = pad;
     stream->shmemSink = gst_element_factory_make("sharedmemsink", "shmemsink");
-    (avspliter, stream->shmemSink != nullptr, "failed to create shmemsink");
+    g_return_val_if_fail(stream->shmemSink != nullptr, FALSE);
 
     gst_element_set_locked_state(stream->shmemSink, TRUE);
 
@@ -744,18 +921,18 @@ static gboolean try_add_sink(GstAVSpliter *avspliter, GstPad *pad, GstAVSpliterS
         sink_pad_probe_cb, avspliter, nullptr);
     if (stream->sinkPadProbeId == 0) {
         GST_ERROR_OBJECT(avspliter, "add pad probe failed");
-        return;
+        return FALSE;
     }
 
     if (gst_pad_link(pad, stream->sinkpad) != GST_PAD_LINK_OK) {
         GST_ERROR_OBJECT(avspliter, "link pad %s:%s to pad %s:%s failed",
             GST_DEBUG_PAD_NAME(pad), GST_DEBUG_PAD_NAME(stream->sinkpad));
-        return;
+        return FALSE;
     }
 
     if (gst_element_set_state(stream->shmemSink, GST_STATE_PAUSED) == GST_STATE_CHANGE_FAILURE) {
         GST_ERROR_OBJECT(avspliter, "change shmemsink to paused failed");
-        return;
+        return FALSE;
     }
 
     gst_mem_sink_set_callback(GST_MEM_SINK(stream->shmemSink), &g_sinkCallbacks, avspliter, nullptr);
@@ -821,7 +998,7 @@ static void free_avspliter_stream(GstAVSpliter *avspliter, GstAVSpliterStream *s
 
     if (stream->sampleQueue != nullptr) {
         gst_queue_array_free(stream->sampleQueue);
-        stream->sampleQueue;
+        stream->sampleQueue = nullptr;
     }
     stream->cacheLimit = 0;
     stream->cacheSize = 0;
@@ -855,6 +1032,12 @@ static GstPadProbeReturn sink_pad_probe_cb(GstPad *pad, GstPadProbeInfo *info, g
             case GST_EVENT_CAPS: /* fall-through */
             case GST_EVENT_TAG:
                 update_stream_media_info(avspliter, stream, event);
+                break;
+            case GST_EVENT_FLUSH_START:
+                do_flush(avspliter, stream, TRUE);
+                break;
+            case GST_EVENT_FLUSH_STOP:
+                do_flush(avspliter, stream, FALSE);
                 break;
             default:
                 break;
@@ -941,6 +1124,7 @@ static void update_stream_media_info(GstAVSpliter *avspliter, GstAVSpliterStream
                 gst_stream_set_tags(stream->info, tagList);
             }
             GST_DEBUG_OBJECT(avspliter, "got taglist: %" GST_PTR_FORMAT, tagList);
+            break;
         }
         default:
             break;
@@ -1062,11 +1246,22 @@ static GstFlowReturn new_sample_cb(GstMemSink *sink, GstBuffer *sample, gpointer
         return GST_FLOW_ERROR;
     }
 
-    GST_DEBUG_OBJECT(avspliter, "trackId(%u) new sample arrived, pts: %" GST_TIME_FORMAT, ", cache size: %u/%u",
+    GST_DEBUG_OBJECT(avspliter, "trackId(%u) new sample arrived, pts: %" GST_TIME_FORMAT ", cache size: %u/%u",
         stream->id, GST_TIME_ARGS(GST_BUFFER_PTS(sample)), stream->cacheSize, stream->cacheLimit);
 
-    gst_queue_array_push_tail(stream->sampleQueue, gst_buffer_ref(sample));
+    if (stream->isFlushing) {
+        GST_DEBUG_OBJECT(avspliter, "is flushing, drop it");
+        return GST_FLOW_FLUSHING;
+    }
 
+    if (GST_BUFFER_PTS(sample) < stream->lastPos) {
+        GST_DEBUG_OBJECT(avspliter, "sample pts is less than lastPos: %" GST_TIME_FORMAT ", drop it.",
+            GST_TIME_ARGS(stream->lastPos));
+        return GST_FLOW_OK;
+    }
+
+    gst_queue_array_push_tail(stream->sampleQueue, gst_buffer_ref(sample));
+    SIGNAL_SAMPLE_COND(avspliter);
     return GST_FLOW_OK;
 }
 
@@ -1093,7 +1288,26 @@ static void eos_cb(GstMemSink *sink, gpointer userdata)
     g_return_if_fail(stream != nullptr);
 
     GST_DEBUG_OBJECT(avspliter, "trackId(%u) eos arrived", stream->id);
+
+    if (stream->isFlushing) {
+        GST_DEBUG_OBJECT(avspliter, "is flushing, drop it");
+        return;
+    }
+
     stream->eos = TRUE;
+    SIGNAL_SAMPLE_COND(avspliter);
+}
+
+static void do_flush(GstAVSpliter *avspliter, GstAVSpliterStream *stream, gboolean flushStart)
+{
+    GST_DEBUG_OBJECT(avspliter, "received flush event, flush %s", flushStart ? "start" : "stop");
+
+    stream->isFlushing = flushStart;
+    if (flushStart) {
+        gst_queue_array_clear(stream->sampleQueue);
+        stream->cacheSize = 0;
+        stream->eos = FALSE;
+    }
 }
 
 static GstAVSpliterStream *find_avspliter_stream_by_sinkpad(GstAVSpliter *avspliter, GstPad *sinkpad)
@@ -1125,6 +1339,8 @@ static GstAVSpliterStream *find_avspliter_stream_by_sink(GstAVSpliter *avspliter
 
 static void gst_avspliter_media_info_init(GstAVSpliterMediaInfo *mediaInfo)
 {
+    g_return_if_fail(mediaInfo != nullptr);
+
     mediaInfo->globalTags = nullptr;
     mediaInfo->containerCaps = nullptr;
     mediaInfo->streams = nullptr;
@@ -1184,6 +1400,34 @@ static GstAVSpliterMediaInfo *gst_avspliter_media_info_copy(GstAVSpliterMediaInf
     }
 
     return newInfo;
+}
+
+static void gst_avspliter_sample_init(GstAVSpliterSample *sample)
+{
+    sample->buffer = nullptr;
+    sample->eosFrame = FALSE;
+    sample->trackId = INVALID_TRACK_ID;
+}
+
+static void gst_avspliter_sample_finalize(GObject *object)
+{
+    GstAVSpliterSample *sample = GST_AVSPLITER_SAMPLE_CAST(object);
+    g_return_if_fail(sample != nullptr);
+
+    if (sample->buffer != nullptr) {
+        gst_buffer_unref(sample->buffer);
+        sample->buffer = nullptr;
+    }
+
+    G_OBJECT_CLASS(gst_avspliter_sample_parent_class)->finalize(object);
+}
+
+static void gst_avspliter_sample_class_init(GstAVSpliterSampleClass *klass)
+{
+    GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
+    g_return_if_fail(gobjectClass != nullptr);
+
+    gobjectClass->finalize = gst_avspliter_sample_finalize;
 }
 
 gboolean plugin_init(GstPlugin * plugin)

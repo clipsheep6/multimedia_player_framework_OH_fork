@@ -544,7 +544,7 @@ GList *gst_avspliter_bin_find_elem_factories(GstAVSpliterBin *avspliter, GstCaps
         }
         avspliter->factories = gst_element_factory_list_get_elements(
             GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
-        avspliter->factories = g_list_sort(avspliter->factories, gst_playback_utils_compare_factories_func);
+        avspliter->factories = g_list_sort(avspliter->factories, compare_factories_func);
         avspliter->factoriesCookie = cookie;
     }
     GList *list = gst_element_factory_list_filter(avspliter->factories,

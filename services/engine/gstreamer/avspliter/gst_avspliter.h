@@ -17,13 +17,13 @@
 #define GST_AVSPLITER_H
 
 #include <gst/gst.h>
-#include "gst/base/gstqueuearray.h"
 
 typedef struct _GstAVSpliter GstAVSpliter;
 typedef struct _GstAVSpliterClass GstAVSpliterClass;
-typedef struct _GstAVSpliterStream GstAVSpliterStream;
 typedef struct _GstAVSpliterMediaInfo GstAVSpliterMediaInfo;
 typedef struct _GstAVSpliterMediaInfoClass GstAVSpliterMediaInfoClass;
+typedef struct _GstAVSpliterSample GstAVSpliterSample;
+typedef struct _GstAVSpliterSampleClass GstAVSpliterSampleClass;
 
 #define GST_TYPE_AVSPLITER (gst_element_get_type ())
 #define GST_IS_AVSPLITER(obj) \
@@ -37,35 +37,6 @@ typedef struct _GstAVSpliterMediaInfoClass GstAVSpliterMediaInfoClass;
 #define GST_AVSPLITER_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AVSPLITER, GstAVSpliterClass))
 #define GST_AVSPLITER_CAST(obj) ((GstAVSpliter *)(obj))
-
-#define GST_AVSPLITER_STREAM(obj) ((GstAVSpliterStream *)(obj))
-
-enum TrackPullReturn {
-    TRACK_PULL_UNSELECTED,
-    TRACK_PULL_ENDTIME,
-    TRACK_PULL_EOS,
-    TRACK_PULL_CACHE_EMPTY,
-    TRACK_PULL_SUCCESS,
-};
-
-struct _GstAVSpliterStream {
-    guint id;
-    GstPad *avsBinPad; // not ref
-    GstElement *shmemSink; // not ref
-    gboolean inBin;
-    GstPad *sinkpad;
-    gulong sinkPadProbeId;
-    GstStream *info;
-
-    // cache sample info
-    guint cacheLimit;
-    GstQueueArray *sampleQueue;
-    guint cacheSize;
-    gboolean eos;
-    GstClockTime lastPos;
-    gboolean selected;
-    TrackPullReturn lastPullRet;
-};
 
 struct _GstAVSpliter {
     GstPipeline parent;
@@ -85,7 +56,10 @@ struct _GstAVSpliter {
     gboolean hasAudio;
     GMutex sampleLock;
     GCond sampleCond;
+    GCond seekCond;
+    GMutex dynLock;
     GstAVSpliterMediaInfo *mediaInfo;
+    gboolean shutdown;
 };
 
 struct _GstAVSpliterClass {
@@ -101,8 +75,6 @@ GST_EXPORT gboolean gst_avspliter_select_track(GstAVSpliter *avspliter, guint tr
 GST_EXPORT GList *gst_avspliter_pull_samples(GstAVSpliter *avspliter,
     GstClockTime starttime, GstClockTime endtime, guint bufcnt);
 
-GST_EXPORT gboolean gst_avspliter_track_is_eos(GstAVSpliter *avspliter, guint trackIdx);
-
 GST_EXPORT gboolean gst_avspliter_seek(GstAVSpliter *avspliter, GstClockTime pos, GstSeekFlags flags);
 
 #define GST_TYPE_AVSPLITER_MEDIA_INFO (gst_avspliter_media_info_get_type())
@@ -114,6 +86,7 @@ GST_EXPORT gboolean gst_avspliter_seek(GstAVSpliter *avspliter, GstClockTime pos
   (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AVSPLITER_MEDIA_INFO))
 #define GST_IS_AVSPLITER_MEDIA_INFO_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AVSPLITER_MEDIA_INFO))
+#define GST_AVSPLITER_MEDIA_INFO_CAST(obj) ((GstAVSpliterMediaInfo *)(obj))
 
 struct _GstAVSpliterMediaInfo {
     GObject parent;
@@ -127,5 +100,30 @@ struct _GstAVSpliterMediaInfoClass {
 };
 
 GST_EXPORT GType gst_avspliter_media_info_get_type(void);
+
+#define GST_TYPE_AVSPLITER_SAMPLE (gst_avspliter_sample_get_type())
+#define GST_AVSPLITER_SAMPLE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_AVSPLITER_SAMPLE, GstAVSpliterSample))
+#define GST_AVSPLITER_SAMPLE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_AVSPLITER_SAMPLE, GstAVSpliterSampleClass))
+#define GST_IS_AVSPLITER_SAMPLE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_AVSPLITER_SAMPLE))
+#define GST_IS_AVSPLITER_SAMPLE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_AVSPLITER_SAMPLE))
+#define GST_AVSPLITER_SAMPLE_CAST(obj) ((GstAVSpliterSample *)(obj))
+
+struct _GstAVSpliterSample {
+    GObject parent;
+    // include sample data, sync frame flag
+    GstBuffer *buffer;
+    guint trackId;
+    gboolean eosFrame;
+};
+
+struct _GstAVSpliterSampleClass {
+    GObjectClass parent_class;
+};
+
+GST_EXPORT GType gst_avspliter_sample_get_type(void);
 
 #endif
