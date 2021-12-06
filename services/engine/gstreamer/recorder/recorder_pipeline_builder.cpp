@@ -192,7 +192,7 @@ int32_t RecorderPipelineBuilder::Configure(int32_t sourceId, const RecorderParam
         return MSERR_INVALID_OPERATION;
     }
 
-    if(param.type == RecorderPublicParamType::VID_ENC_FMT) {
+    if (param.type == RecorderPublicParamType::VID_ENC_FMT) {
         const VidEnc &tempParam = static_cast<const VidEnc &>(param);
         currentCodecFortmat_ = tempParam.encFmt;
     }
@@ -253,7 +253,6 @@ std::shared_ptr<RecorderPipeline> RecorderPipelineBuilder::Build()
         ADD_LINK_DESC(videoEncElem_, videoParseElem_, "src", "sink", true, true);
         ADD_LINK_DESC(videoParseElem_, muxSink_, "src", "video", true, false);
     }
-
 
     int32_t ret;
     for (auto &elem : pipelineDesc_->allElems) {
