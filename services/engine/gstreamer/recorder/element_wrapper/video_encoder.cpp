@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "video_encorder.h"
+#include "video_encoder.h"
 #include <gst/gst.h>
 #include "media_errors.h"
 #include "media_log.h"

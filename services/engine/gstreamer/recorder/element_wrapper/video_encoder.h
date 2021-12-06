@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef VIDEO_ENCORDER_H
-#define VIDEO_ENCORDER_H
+#ifndef VIDEO_ENCODER_H
+#define VIDEO_ENCODER_H
 
 #include "recorder_element.h"
 
