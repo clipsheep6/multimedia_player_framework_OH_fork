@@ -1,0 +1,42 @@
+/*
+ * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef VIDEO_ENCODER_CALLBACK_NAPI_H
+#define VIDEO_ENCODER_CALLBACK_NAPI_H
+
+#include "video_encoder_napi.h"
+#include "avcodec_video_encoder.h"
+#include "napi/native_api.h"
+#include "napi/native_node_api.h"
+
+namespace OHOS {
+namespace Media {
+class VideoEncoderCallbackNapi : public AVCodecCallback {
+public:
+    explicit VideoEncoderCallbackNapi(napi_env env);
+    virtual ~VideoEncoderCallbackNapi();
+
+protected:
+    void OnError(AVCodecErrorType errorType, int32_t errorCode) override;
+    void OnOutputFormatChanged(const Format &format) override;
+    void OnInputBufferAvailable(uint32_t index) override;
+    void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
+
+private:
+    napi_env env_ = nullptr;
+};
+}  // namespace Media
+}  // namespace OHOS
+#endif // VIDEO_ENCODER_CALLBACK_NAPI_H
