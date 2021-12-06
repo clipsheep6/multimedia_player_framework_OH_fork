@@ -39,7 +39,6 @@ private:
     int32_t sampleRate_ = 0;
     std::string audioRawFormat_ = "";
     int32_t profile_ = 0;
-    CodecName codecName_ = CODEC_NAME_AUDIO_AAC;
 };
 } // Media
 } // OHOS

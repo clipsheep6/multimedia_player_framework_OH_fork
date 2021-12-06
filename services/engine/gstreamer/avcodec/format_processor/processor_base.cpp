@@ -23,6 +23,12 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+int32_t ProcessorBase::Init(const CodecName &name)
+{
+    codecName_ = name;
+    return MSERR_OK;
+}
+
 int32_t ProcessorBase::DoProcess(const Format &format)
 {
     CHECK_AND_RETURN_RET(ProcessMandatory(format) == MSERR_OK, MSERR_INVALID_VAL);
