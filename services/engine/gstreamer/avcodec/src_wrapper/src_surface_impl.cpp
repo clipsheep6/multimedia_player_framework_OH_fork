@@ -14,6 +14,7 @@
  */
 
 #include "src_surface_impl.h"
+#include "common_utils.h"
 #include "media_log.h"
 
 namespace {
@@ -44,6 +45,7 @@ int32_t SrcSurfaceImpl::Init()
 int32_t SrcSurfaceImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 {
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
+    g_object_set(element_, "stream-type", VideoStreamType::VIDEO_STREAM_TYPE_YUV_420, nullptr);
     return MSERR_OK;
 }
 

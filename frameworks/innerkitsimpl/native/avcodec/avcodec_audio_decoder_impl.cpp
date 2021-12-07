@@ -24,18 +24,18 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-std::shared_ptr<AudioDecoder> AudioDecoderFactory::CreateByMimeType(const std::string &type)
+std::shared_ptr<AudioDecoder> AudioDecoderFactory::CreateByMime(const std::string &mime)
 {
     std::shared_ptr<AudioDecoderImpl> impl = std::make_shared<AudioDecoderImpl>();
     CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new AudioDecoderImpl");
 
-    int32_t ret = impl->Init(AVCODEC_TYPE_AUDIO_DECODER, true, type);
+    int32_t ret = impl->Init(AVCODEC_TYPE_AUDIO_DECODER, true, mime);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init AudioDecoderImpl");
 
     return impl;
 }
 
-std::shared_ptr<AudioDecoder> AudioDecoderFactory::CreateByDecoderName(const std::string &name)
+std::shared_ptr<AudioDecoder> AudioDecoderFactory::CreateByName(const std::string &name)
 {
     std::shared_ptr<AudioDecoderImpl> impl = std::make_shared<AudioDecoderImpl>();
     CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new AudioDecoderImpl");

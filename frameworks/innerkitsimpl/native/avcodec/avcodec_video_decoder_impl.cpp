@@ -24,18 +24,18 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-std::shared_ptr<VideoDecoder> VideoDecoderFactory::CreateByMimeType(const std::string &type)
+std::shared_ptr<VideoDecoder> VideoDecoderFactory::CreateByMime(const std::string &mime)
 {
     std::shared_ptr<VideoDecoderImpl> impl = std::make_shared<VideoDecoderImpl>();
     CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new VideoDecoderImpl");
 
-    int32_t ret = impl->Init(AVCODEC_TYPE_VIDEO_DECODER, true, type);
+    int32_t ret = impl->Init(AVCODEC_TYPE_VIDEO_DECODER, true, mime);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init VideoDecoderImpl");
 
     return impl;
 }
 
-std::shared_ptr<VideoDecoder> VideoDecoderFactory::CreateByDecoderName(const std::string &name)
+std::shared_ptr<VideoDecoder> VideoDecoderFactory::CreateByName(const std::string &name)
 {
     std::shared_ptr<VideoDecoderImpl> impl = std::make_shared<VideoDecoderImpl>();
     CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new VideoDecoderImpl");
