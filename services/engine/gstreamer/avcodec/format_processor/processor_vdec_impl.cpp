@@ -85,10 +85,9 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
                 "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
         default :
-            MEDIA_LOGE("Unsupported format");
             break;
     }
-    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
+    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
     auto config = std::make_shared<ProcessorConfig>(caps);
     if (config == nullptr) {

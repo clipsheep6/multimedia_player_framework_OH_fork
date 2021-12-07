@@ -233,28 +233,24 @@ int32_t AVCodecEngineCtrl::SetOutputSurface(sptr<Surface> surface)
 
 std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetInputBuffer(uint32_t index)
 {
-    MEDIA_LOGD("Enter GetInputBuffer");
     CHECK_AND_RETURN_RET(src_ != nullptr, nullptr);
     return src_->GetInputBuffer(index);
 }
 
 int32_t AVCodecEngineCtrl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
-    MEDIA_LOGD("Enter QueueInputBuffer");
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
     return src_->QueueInputBuffer(index, info, flag);
 }
 
 std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetOutputBuffer(uint32_t index)
 {
-    MEDIA_LOGD("Enter GetOutputBuffer");
     CHECK_AND_RETURN_RET(sink_ != nullptr, nullptr);
     return sink_->GetOutputBuffer(index);
 }
 
 int32_t AVCodecEngineCtrl::ReleaseOutputBuffer(uint32_t index, bool render)
 {
-    MEDIA_LOGD("Enter ReleaseOutputBuffer");
     CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
     return sink_->ReleaseOutputBuffer(index, render);
 }

@@ -33,7 +33,7 @@ protected:
     virtual int32_t ProcessMandatory(const Format &format) = 0;
     virtual int32_t ProcessOptional(const Format &format) = 0;
 
-    CodecName codecName_ = CODEC_NAME_AUDIO_AAC;
+    CodecName codecName_ = CODEC_NAME_VIDEO_AVC;
 private:
     int32_t ProcessVendor(const Format &format);
 };
