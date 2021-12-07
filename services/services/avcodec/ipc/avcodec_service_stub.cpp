@@ -68,6 +68,7 @@ int32_t AVCodecServiceStub::Init()
     recFuncs_[QUEUE_INPUT_BUFFER] = &AVCodecServiceStub::QueueInputBuffer;
     recFuncs_[GET_OUTPUT_BUFFER] = &AVCodecServiceStub::GetOutputBuffer;
     recFuncs_[RELEASE_OUTPUT_BUFFER] = &AVCodecServiceStub::ReleaseOutputBuffer;
+    recFuncs_[GET_OUTPUT_FORMAT] = &AVCodecServiceStub::GetOutputFormat;
     recFuncs_[SET_PARAMETER] = &AVCodecServiceStub::SetParameter;
     recFuncs_[DESTROY] = &AVCodecServiceStub::DestroyStub;
     return MSERR_OK;
@@ -193,6 +194,12 @@ std::shared_ptr<AVSharedMemory> AVCodecServiceStub::GetOutputBuffer(uint32_t ind
 {
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, nullptr, "avcodec server is nullptr");
     return codecServer_->GetOutputBuffer(index);
+}
+
+int32_t AVCodecServiceStub::GetOutputFormat(Format &format)
+{
+    CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
+    return codecServer_->GetOutputFormat(format);
 }
 
 int32_t AVCodecServiceStub::ReleaseOutputBuffer(uint32_t index, bool render)
@@ -332,6 +339,15 @@ int32_t AVCodecServiceStub::GetOutputBuffer(MessageParcel &data, MessageParcel &
     if (buffer != nullptr) {
         (void)WriteAVSharedMemoryToParcel(buffer, reply);
     }
+    return MSERR_OK;
+}
+
+int32_t AVCodecServiceStub::GetOutputFormat(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    Format format;
+    (void)GetOutputFormat(format);
+    (void)MediaParcel::Marshalling(reply, format);
     return MSERR_OK;
 }
 

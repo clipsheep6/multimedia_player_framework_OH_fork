@@ -134,6 +134,12 @@ std::shared_ptr<AVSharedMemory> VideoDecoderImpl::GetOutputBuffer(uint32_t index
     return codecService_->GetOutputBuffer(index);
 }
 
+int32_t VideoDecoderImpl::GetOutputFormat(Format &format)
+{
+    CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_INVALID_OPERATION, "service died");
+    return codecService_->GetOutputFormat(format);
+}
+
 int32_t VideoDecoderImpl::ReleaseOutputBuffer(uint32_t index, bool render)
 {
     CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_INVALID_OPERATION, "service died");

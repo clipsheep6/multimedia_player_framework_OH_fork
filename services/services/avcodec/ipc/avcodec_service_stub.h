@@ -47,6 +47,7 @@ public:
     std::shared_ptr<AVSharedMemory> GetInputBuffer(uint32_t index) override;
     int32_t QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
     std::shared_ptr<AVSharedMemory> GetOutputBuffer(uint32_t index) override;
+    int32_t GetOutputFormat(Format &format) override;
     int32_t ReleaseOutputBuffer(uint32_t index, bool render) override;
     int32_t SetParameter(const Format &format) override;
     int32_t DestroyStub() override;
@@ -68,6 +69,7 @@ private:
     int32_t GetInputBuffer(MessageParcel &data, MessageParcel &reply);
     int32_t QueueInputBuffer(MessageParcel &data, MessageParcel &reply);
     int32_t GetOutputBuffer(MessageParcel &data, MessageParcel &reply);
+    int32_t GetOutputFormat(MessageParcel &data, MessageParcel &reply);
     int32_t ReleaseOutputBuffer(MessageParcel &data, MessageParcel &reply);
     int32_t SetParameter(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);

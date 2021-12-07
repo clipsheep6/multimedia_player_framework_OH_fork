@@ -181,6 +181,18 @@ std::shared_ptr<AVSharedMemory> AVCodecServer::GetOutputBuffer(uint32_t index)
     return codecEngine_->GetOutputBuffer(index);
 }
 
+int32_t AVCodecServer::GetOutputFormat(Format &format)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(status_ == AVCODEC_RUNNING, MSERR_INVALID_OPERATION, "invalid state");
+    CHECK_AND_RETURN_RET_LOG(codecEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    int32_t ret = codecEngine_->GetOutputFormat(format);
+    if (ret != MSERR_OK) {
+        status_ = AVCODEC_ERROR;
+    }
+    return ret;
+}
+
 int32_t AVCodecServer::ReleaseOutputBuffer(uint32_t index, bool render)
 {
     std::lock_guard<std::mutex> lock(mutex_);

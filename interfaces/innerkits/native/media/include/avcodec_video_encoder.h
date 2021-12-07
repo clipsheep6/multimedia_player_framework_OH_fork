@@ -147,6 +147,18 @@ public:
     virtual std::shared_ptr<AVSharedMemory> GetOutputBuffer(uint32_t index) = 0;
 
     /**
+     * @brief Gets the format of the output data.
+     *
+     * This function must be called after {@link Configure}
+     *
+     * @param format
+     * @return Returns {@link MSERR_OK} if success; returns an error code otherwise.
+     * @since 3.0
+     * @version 1.0
+     */
+    virtual int32_t GetOutputFormat(Format &format) = 0;
+
+    /**
      * @brief Returns the output buffer to the encoder.
      *
      * This function must be called during running
