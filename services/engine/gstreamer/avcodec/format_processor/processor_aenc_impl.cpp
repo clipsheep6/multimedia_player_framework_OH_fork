@@ -89,10 +89,9 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
                 "base-profile", G_TYPE_STRING, "lc", nullptr);
             break;
         default :
-            MEDIA_LOGE("Unsupported format");
             break;
     }
-    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
+    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
     auto config = std::make_shared<ProcessorConfig>(caps);
     if (config == nullptr) {

@@ -105,8 +105,6 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->mem_ != nullptr, MSERR_UNKNOWN);
 
-    MEDIA_LOGD("QueueInputBuffer: size:%{public}d, offset:%{public}d", info.size, info.offset);
-
     if (needCodecData_) {
         if (HandleCodecBuffer(index, info, flag) == MSERR_OK) {
             needCodecData_ = false;

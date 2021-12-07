@@ -92,7 +92,6 @@ int32_t SinkSurfaceImpl::SetOutputSurface(sptr<Surface> surface)
 int32_t SinkSurfaceImpl::ReleaseOutputBuffer(uint32_t index, bool render)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGD("ReleaseOutputBuffer index:%{public}d", index);
     CHECK_AND_RETURN_RET(index < bufferCount_ && index < bufferList_.size(), MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->gstBuffer_ != nullptr, MSERR_UNKNOWN);
@@ -117,7 +116,6 @@ int32_t SinkSurfaceImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &obs
 GstFlowReturn SinkSurfaceImpl::OutputAvailableCb(GstElement *sink, gpointer userData)
 {
     (void)sink;
-    MEDIA_LOGD("OutputAvailableCb");
     auto impl = static_cast<SinkSurfaceImpl *>(userData);
     CHECK_AND_RETURN_RET(impl != nullptr, GST_FLOW_ERROR);
     std::unique_lock<std::mutex> lock(impl->mutex_);
