@@ -104,9 +104,9 @@ napi_value AudioEncoderNapi::Constructor(napi_env env, napi_callback_info info)
     status = napi_get_value_bool(env, args[1], &useMime);
     CHECK_AND_RETURN_RET(status == napi_ok, undefined);
     if (useMime) {
-        adecNapi->aenc_ = AudioEncoderFactory::CreateByMimeType(name);
+        adecNapi->aenc_ = AudioEncoderFactory::CreateByMime(name);
     } else {
-        adecNapi->aenc_ = AudioEncoderFactory::CreateByEncoderName(name);
+        adecNapi->aenc_ = AudioEncoderFactory::CreateByName(name);
     }
     CHECK_AND_RETURN_RET(adecNapi->aenc_ != nullptr, undefined);
 

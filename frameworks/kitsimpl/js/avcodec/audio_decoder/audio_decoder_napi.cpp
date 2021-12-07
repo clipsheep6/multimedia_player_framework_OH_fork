@@ -104,9 +104,9 @@ napi_value AudioDecoderNapi::Constructor(napi_env env, napi_callback_info info)
     status = napi_get_value_bool(env, args[1], &useMime);
     CHECK_AND_RETURN_RET(status == napi_ok, undefined);
     if (useMime) {
-        adecNapi->adec_ = AudioDecoderFactory::CreateByMimeType(name);
+        adecNapi->adec_ = AudioDecoderFactory::CreateByMime(name);
     } else {
-        adecNapi->adec_ = AudioDecoderFactory::CreateByDecoderName(name);
+        adecNapi->adec_ = AudioDecoderFactory::CreateByName(name);
     }
     CHECK_AND_RETURN_RET(adecNapi->adec_ != nullptr, undefined);
 

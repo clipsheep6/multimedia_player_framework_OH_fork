@@ -105,9 +105,9 @@ napi_value VideoEncoderNapi::Constructor(napi_env env, napi_callback_info info)
     status = napi_get_value_bool(env, args[1], &useMime);
     CHECK_AND_RETURN_RET(status == napi_ok, undefined);
     if (useMime) {
-        adecNapi->venc_ = VideoEncoderFactory::CreateByMimeType(name);
+        adecNapi->venc_ = VideoEncoderFactory::CreateByMime(name);
     } else {
-        adecNapi->venc_ = VideoEncoderFactory::CreateByEncoderName(name);
+        adecNapi->venc_ = VideoEncoderFactory::CreateByName(name);
     }
     CHECK_AND_RETURN_RET(adecNapi->venc_ != nullptr, undefined);
 

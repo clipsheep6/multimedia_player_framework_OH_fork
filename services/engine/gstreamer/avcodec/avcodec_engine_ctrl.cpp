@@ -282,12 +282,14 @@ GstBusSyncReply AVCodecEngineCtrl::BusSyncHandler(GstBus *bus, GstMessage *messa
             if (err->domain == GST_CORE_ERROR) {
                 errCode = MSERR_UNKNOWN;
             } else if (err->domain == GST_LIBRARY_ERROR) {
-                errCode = MSERR_OPEN_FILE_FAILED;
-            } else if (err->domain == GST_RESOURCE_ERROR) {
+                errCode = MSERR_UNSUPPORT;
+            } else
+            if (err->domain == GST_RESOURCE_ERROR) {
                 errCode = MSERR_INVALID_VAL;
             } else if (err->domain == GST_STREAM_ERROR) {
                 errCode = MSERR_DATA_SOURCE_ERROR_UNKNOWN;
             }
+
             auto obs = self->obs_.lock();
             CHECK_AND_RETURN_RET(obs != nullptr, GST_BUS_DROP);
             obs->OnError(AVCODEC_ERROR_INTERNAL, errCode);
