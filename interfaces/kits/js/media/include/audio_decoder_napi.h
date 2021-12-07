@@ -23,6 +23,8 @@
 
 namespace OHOS {
 namespace Media {
+struct AudioDecoderAsyncContext;
+
 class AudioDecoderNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -45,6 +47,10 @@ private:
     static napi_value GetAudioDecoderCaps(napi_env env, napi_callback_info info);
 
     static napi_value On(napi_env env, napi_callback_info info);
+
+    static void SyncCallback(napi_env env, AudioDecoderAsyncContext *asyncCtx);
+    static void CompleteAsyncFunc(napi_env env, napi_status status, void *data);
+    static void AsyncCreator(napi_env env, void *data);
     AudioDecoderNapi();
     ~AudioDecoderNapi();
 
@@ -52,7 +58,26 @@ private:
     napi_env env_ = nullptr;
     napi_ref wrap_ = nullptr;
     std::shared_ptr<AudioDecoder> adec_ = nullptr;
-    std::shared_ptr<AVCodecCallback> cbNapi_ = nullptr;
+    std::shared_ptr<AVCodecCallback> callback_ = nullptr;
+};
+
+struct AudioDecoderAsyncContext {
+    void SignError(int32_t code, std::string message) {
+        success = false;
+        errCode = code;
+        errMessage = message;
+    }
+    napi_env env;
+    napi_async_work work;
+    napi_deferred deferred;
+    napi_ref callbackRef;
+    AudioDecoderNapi *napi = nullptr;
+    napi_value asyncRet;
+    bool success = false;
+    int32_t errCode = 0;
+    std::string errMessage = "";
+    std::string pluginName = "";
+    int32_t createByMime = 1;
 };
 }  // namespace Media
 }  // namespace OHOS

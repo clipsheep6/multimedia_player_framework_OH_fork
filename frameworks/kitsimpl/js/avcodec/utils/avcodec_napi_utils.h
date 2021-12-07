@@ -13,13 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef COMMON_NAPI_H
-#define COMMON_NAPI_H
+#ifndef AVCODEC_NAPI_UTILS_H
+#define AVCODEC_NAPI_UTILS_H
 
 #include "avcodec_common.h"
 #include "avsharedmemory.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+
+#define NAPI_CREATE_PROMISE(env, callbackRef, deferred, result)     \
+    do {                                                            \
+        if ((callbackRef) == nullptr) {                             \
+            napi_create_promise(env, &(deferred), &(result));       \
+        }                                                           \
+    } while (0)
+
+#define NAPI_CREATE_RESOURCE_NAME(env, resource, resourceName)                      \
+    do {                                                                            \
+        napi_create_string_utf8(env, resourceName, NAPI_AUTO_LENGTH, &(resource));  \
+    } while (0)
 
 namespace OHOS {
 namespace Media {
