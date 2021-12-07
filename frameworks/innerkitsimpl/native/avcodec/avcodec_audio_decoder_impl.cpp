@@ -128,6 +128,12 @@ std::shared_ptr<AVSharedMemory> AudioDecoderImpl::GetOutputBuffer(uint32_t index
     return codecService_->GetOutputBuffer(index);
 }
 
+int32_t AudioDecoderImpl::GetOutputFormat(Format &format)
+{
+    CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_INVALID_OPERATION, "service died");
+    return codecService_->GetOutputFormat(format);
+}
+
 int32_t AudioDecoderImpl::ReleaseOutputBuffer(uint32_t index)
 {
     CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_INVALID_OPERATION, "service died");

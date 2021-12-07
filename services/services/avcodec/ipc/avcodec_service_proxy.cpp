@@ -267,6 +267,21 @@ std::shared_ptr<AVSharedMemory> AVCodecServiceProxy::GetOutputBuffer(uint32_t in
     return memory;
 }
 
+int32_t AVCodecServiceProxy::GetOutputFormat(Format &format)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    int32_t ret = Remote()->SendRequest(GET_OUTPUT_FORMAT, data, reply, option);
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("GetOutputFormat failed, error: %{public}d", ret);
+        return ret;
+    }
+
+    (void)MediaParcel::Unmarshalling(reply, format);
+    return MSERR_OK;
+}
+
 int32_t AVCodecServiceProxy::ReleaseOutputBuffer(uint32_t index, bool render)
 {
     MessageParcel data;

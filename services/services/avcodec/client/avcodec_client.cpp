@@ -192,6 +192,15 @@ std::shared_ptr<AVSharedMemory> AVCodecClient::GetOutputBuffer(uint32_t index)
     return codecProxy_->GetOutputBuffer(index);
 }
 
+int32_t AVCodecClient::GetOutputFormat(Format &format)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(codecProxy_ != nullptr, MSERR_NO_MEMORY, "codec service does not exist.");
+
+    MEDIA_LOGD("GetOutputFormat");
+    return codecProxy_->GetOutputFormat(format);
+}
+
 int32_t AVCodecClient::ReleaseOutputBuffer(uint32_t index, bool render)
 {
     std::lock_guard<std::mutex> lock(mutex_);

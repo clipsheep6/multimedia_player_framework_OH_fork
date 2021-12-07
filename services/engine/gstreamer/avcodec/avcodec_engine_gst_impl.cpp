@@ -130,6 +130,11 @@ std::shared_ptr<AVSharedMemory> AVCodecEngineGstImpl::GetOutputBuffer(uint32_t i
     return ctrl_->GetOutputBuffer(index);
 }
 
+int32_t AVCodecEngineGstImpl::GetOutputFormat(Format &format)
+{
+    return MSERR_OK;
+}
+
 int32_t AVCodecEngineGstImpl::ReleaseOutputBuffer(uint32_t index, bool render)
 {
     std::unique_lock<std::mutex> lock(mutex_);
