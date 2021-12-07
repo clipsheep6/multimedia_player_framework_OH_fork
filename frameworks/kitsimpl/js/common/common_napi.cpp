@@ -93,5 +93,41 @@ napi_status CommonNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, napi_invalid_arg, "set error name property fail");
     return napi_ok;
 }
+
+napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal)
+{
+    napi_get_undefined(env, &errVal);
+
+    napi_value msgValStr = nullptr;
+    napi_status status = napi_create_string_utf8(env, errMsg.c_str(), NAPI_AUTO_LENGTH, &msgValStr);
+    CHECK_AND_RETURN_RET(status == napi_ok && msgValStr != nullptr, napi_invalid_arg);
+
+    status = napi_create_error(env, nullptr, msgValStr, &errVal);
+    CHECK_AND_RETURN_RET(status == napi_ok && errVal != nullptr, napi_invalid_arg);
+
+    napi_value codeStr = nullptr;
+    status = napi_create_string_utf8(env, "code", NAPI_AUTO_LENGTH, &codeStr);
+    CHECK_AND_RETURN_RET(status == napi_ok && codeStr != nullptr, napi_invalid_arg);
+
+    napi_value errCodeVal = nullptr;
+    status = napi_create_int32(env, errCode - MS_ERR_OFFSET, &errCodeVal);
+    CHECK_AND_RETURN_RET(status == napi_ok && errCodeVal != nullptr, napi_invalid_arg);
+
+    status = napi_set_property(env, errVal, codeStr, errCodeVal);
+    CHECK_AND_RETURN_RET(status == napi_ok, napi_invalid_arg);
+
+    napi_value nameStr = nullptr;
+    status = napi_create_string_utf8(env, "name", NAPI_AUTO_LENGTH, &nameStr);
+    CHECK_AND_RETURN_RET(status == napi_ok && nameStr != nullptr, napi_invalid_arg);
+
+    napi_value errNameVal = nullptr;
+    status = napi_create_string_utf8(env, "BusinessError", NAPI_AUTO_LENGTH, &errNameVal);
+    CHECK_AND_RETURN_RET(status == napi_ok && errNameVal != nullptr, napi_invalid_arg);
+
+    status = napi_set_property(env, errVal, nameStr, errNameVal);
+    CHECK_AND_RETURN_RET(status == napi_ok, napi_invalid_arg);
+
+    return napi_ok;
+}
 }
 }
