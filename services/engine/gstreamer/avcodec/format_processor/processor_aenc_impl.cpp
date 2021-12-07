@@ -80,7 +80,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
 {
     GstCaps *caps = nullptr;
     switch (codecName_) {
-        case CODEC_NAME_AUDIO_AAC:
+        case CODEC_MIMIE_TYPE_AUDIO_AAC:
             caps = gst_caps_new_simple("audio/mpeg",
                 "rate", G_TYPE_INT, sampleRate_,
                 "channels", G_TYPE_INT, channels_,

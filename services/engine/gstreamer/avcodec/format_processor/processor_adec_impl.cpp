@@ -55,12 +55,12 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
     GstCaps *caps = nullptr;
     guint64 channelMask = 0;
     switch (codecName_) {
-        case CODEC_NAME_AUDIO_VORBIS:
+        case CODEC_MIMIE_TYPE_AUDIO_VORBIS:
             caps = gst_caps_new_simple("audio/x-vorbis",
                 "rate", G_TYPE_INT, sampleRate_,
                 "channels", G_TYPE_INT, channels_, nullptr);
             break;
-        case CODEC_NAME_AUDIO_MP3:
+        case CODEC_MIMIE_TYPE_AUDIO_MP3:
             (void)gst_audio_channel_positions_to_mask(CHANNEL_POSITION[channels_], channels_, FALSE, &channelMask);
             caps = gst_caps_new_simple("audio/mpeg",
                 "rate", G_TYPE_INT, sampleRate_,
@@ -69,7 +69,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
                 "mpegversion", G_TYPE_INT, 1,
                 "layer", G_TYPE_INT, 3, nullptr);
             break;
-        case CODEC_NAME_AUDIO_AAC:
+        case CODEC_MIMIE_TYPE_AUDIO_AAC:
             caps = gst_caps_new_simple("audio/mpeg",
                 "rate", G_TYPE_INT, sampleRate_,
                 "channels", G_TYPE_INT, channels_,
@@ -77,7 +77,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
                 "stream-format", G_TYPE_STRING, "raw",
                 "base-profile", G_TYPE_STRING, "lc", nullptr);
             break;
-        case CODEC_NAME_AUDIO_FLAC:
+        case CODEC_MIMIE_TYPE_AUDIO_FLAC:
             caps = gst_caps_new_simple("audio/x-flac",
                 "rate", G_TYPE_INT, sampleRate_,
                 "channels", G_TYPE_INT, channels_,
