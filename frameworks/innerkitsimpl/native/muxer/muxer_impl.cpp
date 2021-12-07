@@ -97,8 +97,10 @@ int32_t MuxerImpl::Start()
 int32_t MuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo& info)
 {
     CHECK_AND_RETURN_RET_LOG(muxerService_ != nullptr, MSERR_NO_MEMORY, "Muxer Service does not exist");
+    MEDIA_LOGD("sampleData->Capacity() is: %{public}u", sampleData->Capacity());
     // std::shared_ptr<AVSharedMemory> avSharedMem = AVSharedMemoryBase::Create(sampleData->Capacity(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
-    std::shared_ptr<AVSharedMemory> avSharedMem = std::make_shared<AVSharedMemoryBase>(sampleData->Capacity(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
+    std::shared_ptr<AVSharedMemoryBase> avSharedMem = std::make_shared<AVSharedMemoryBase>(sampleData->Capacity(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
+    avSharedMem->Init();
     return muxerService_->WriteTrackSample(avSharedMem, info);
 }
 

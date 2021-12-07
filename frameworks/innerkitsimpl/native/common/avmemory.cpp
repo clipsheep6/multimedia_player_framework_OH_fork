@@ -21,10 +21,13 @@ namespace OHOS {
 namespace Media {
 AVMemory::AVMemory(size_t capacity)
 {
+    capacity_ = capacity;
 }
 
 AVMemory::AVMemory(uint8_t *base, size_t capacity)
 {
+    base_ = base;
+    capacity_ = capacity;
 }
 
 AVMemory::~AVMemory()
