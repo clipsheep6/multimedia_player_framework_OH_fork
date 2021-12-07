@@ -50,16 +50,15 @@ struct _GstAVSpliter {
     gulong avsbinHaveTypeId;
     gboolean noMorePads;
     gboolean asyncPending;
+    GstAVSpliterMediaInfo *mediaInfo;
     GArray *streams;
     guint defaultTrackId;
     gboolean hasVideo;
     gboolean hasAudio;
-    GMutex sampleLock;
-    GCond sampleCond;
     GCond seekCond;
-    GMutex dynLock;
-    GstAVSpliterMediaInfo *mediaInfo;
+    GMutex lock;
     gboolean shutdown;
+    gboolean isPlaying;
 };
 
 struct _GstAVSpliterClass {
