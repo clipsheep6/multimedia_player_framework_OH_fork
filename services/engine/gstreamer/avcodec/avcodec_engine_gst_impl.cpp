@@ -36,7 +36,7 @@ AVCodecEngineGstImpl::~AVCodecEngineGstImpl()
 int32_t AVCodecEngineGstImpl::Init(AVCodecType type, bool isMimeType, const std::string &name)
 {
     MEDIA_LOGD("Init AVCodecEngine with type:%{public}d, %{public}d, name:%{public}s", type, isMimeType, name.c_str());
-    // CodecName codecName = CODEC_NAME_VIDEO_H263;
+    // CodecMimeType codecName = CODEC_MIMIE_TYPE_VIDEO_H263;
     // if (isMimeType) {
     //     CHECK_AND_RETURN_RET(HandleMimeType(type, name, codecName) == MSERR_OK, MSERR_UNKNOWN);
     // } else {
@@ -151,7 +151,7 @@ int32_t AVCodecEngineGstImpl::SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs
     return MSERR_OK;
 }
 
-// int32_t AVCodecEngineGstImpl::HandleMimeType(AVCodecType type, const std::string &name, CodecName &codecName)
+// int32_t AVCodecEngineGstImpl::HandleMimeType(AVCodecType type, const std::string &name, CodecMimeType &codecName)
 // {
 //     CHECK_AND_RETURN_RET(MapCodecMime(name, codecName) = MSERR_OK, MSERR_UNKNOWN);
 //     int32_t ret = MSERR_OK;
@@ -185,7 +185,7 @@ int32_t AVCodecEngineGstImpl::SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs
 //     return ctrl_->Init(type, isSoftware, pluginName);
 // }
 
-// int32_t AVCodecEngineGstImpl::HandlePluginName(AVCodecType type, const std::string &name, CodecName &codecName)
+// int32_t AVCodecEngineGstImpl::HandlePluginName(AVCodecType type, const std::string &name, CodecMimeType &codecName)
 // {
 //     CHECK_AND_RETURN_RET(MapCodecMime(name, codecName) = MSERR_OK, MSERR_UNKNOWN);
 //     bool isSoftware = true;

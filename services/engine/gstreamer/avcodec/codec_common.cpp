@@ -74,17 +74,17 @@ const std::map<int32_t, VideoEncoderBitrateMode> NUMBER_TO_BITRATE_MODE = {
     {2, VIDEO_ENCODER_BITRATE_MODE_CQ},
 };
 
-const std::map<std::string, CodecName> MIME_TO_CODEC_NAME = {
-    {"video/3gpp", CODEC_NAME_VIDEO_H263},
-    {"video/avc", CODEC_NAME_VIDEO_AVC},
-    {"video/hevc", CODEC_NAME_VIDEO_HEVC},
-    {"video/mpeg", CODEC_NAME_VIDEO_MPEG},
-    {"video/mpeg2", CODEC_NAME_VIDEO_MPEG2},
-    {"video/mp4v-es", CODEC_NAME_VIDEO_MPEG4},
-    {"audio/vorbis", CODEC_NAME_AUDIO_VORBIS},
-    {"audio/mpeg", CODEC_NAME_AUDIO_MP3},
-    {"audio/mp4a-latm", CODEC_NAME_AUDIO_AAC},
-    {"audio/flac", CODEC_NAME_AUDIO_FLAC},
+const std::map<std::string, CodecMimeType> MIME_TO_CODEC_NAME = {
+    {"video/3gpp", CODEC_MIMIE_TYPE_VIDEO_H263},
+    {"video/avc", CODEC_MIMIE_TYPE_VIDEO_AVC},
+    {"video/hevc", CODEC_MIMIE_TYPE_VIDEO_HEVC},
+    {"video/mpeg", CODEC_MIMIE_TYPE_VIDEO_MPEG},
+    {"video/mpeg2", CODEC_MIMIE_TYPE_VIDEO_MPEG2},
+    {"video/mp4v-es", CODEC_MIMIE_TYPE_VIDEO_MPEG4},
+    {"audio/vorbis", CODEC_MIMIE_TYPE_AUDIO_VORBIS},
+    {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_MP3},
+    {"audio/mp4a-latm", CODEC_MIMIE_TYPE_AUDIO_AAC},
+    {"audio/flac", CODEC_MIMIE_TYPE_AUDIO_FLAC},
 };
 
 const std::map<int32_t, AVCProfile> NUMBER_TO_PROFILE = {
@@ -142,7 +142,7 @@ int32_t MapBitrateMode(int32_t number, VideoEncoderBitrateMode &mode)
     return MSERR_INVALID_VAL;
 }
 
-int32_t MapCodecMime(const std::string &mime, CodecName &name)
+int32_t MapCodecMime(const std::string &mime, CodecMimeType &name)
 {
     if (MIME_TO_CODEC_NAME.count(mime) != 0) {
         name =  MIME_TO_CODEC_NAME.at(mime);

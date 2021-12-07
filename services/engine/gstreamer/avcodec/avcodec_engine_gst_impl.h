@@ -48,8 +48,8 @@ public:
     DISALLOW_COPY_AND_MOVE(AVCodecEngineGstImpl);
 
 private:
-    // int32_t HandleMimeType(AVCodecType type, const std::string &name, CodecName &codecName);
-    // int32_t HandlePluginName(AVCodecType type, const std::string &name, CodecName &codecName);
+    // int32_t HandleMimeType(AVCodecType type, const std::string &name, CodecMimeType &codecName);
+    // int32_t HandlePluginName(AVCodecType type, const std::string &name, CodecMimeType &codecName);
     // int32_t IsSoftPlugin(AVCodecType type, const std::string &name, bool &isSoftware);
     std::unique_ptr<AVCodecEngineCtrl> ctrl_ = nullptr;
     std::unique_ptr<ProcessorBase> processor_ = nullptr;

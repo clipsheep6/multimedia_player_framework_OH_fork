@@ -56,27 +56,27 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
 {
     GstCaps *caps = nullptr;
     switch (codecName_) {
-        case CODEC_NAME_VIDEO_MPEG2:
+        case CODEC_MIMIE_TYPE_VIDEO_MPEG2:
             caps = gst_caps_new_simple("video/mpeg",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
                 "mpegversion", G_TYPE_INT, 2,
                 "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
-        case CODEC_NAME_VIDEO_MPEG4:
+        case CODEC_MIMIE_TYPE_VIDEO_MPEG4:
             caps = gst_caps_new_simple("video/mpeg",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
                 "mpegversion", G_TYPE_INT, 4,
                 "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
-        case CODEC_NAME_VIDEO_H263:
+        case CODEC_MIMIE_TYPE_VIDEO_H263:
             caps = gst_caps_new_simple("video/x-h263",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
                 "variant", G_TYPE_STRING, "itu", nullptr);
             break;
-        case CODEC_NAME_VIDEO_AVC:
+        case CODEC_MIMIE_TYPE_VIDEO_AVC:
             caps = gst_caps_new_simple("video/x-h264",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
@@ -96,7 +96,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
         return nullptr;
     }
 
-    if (codecName_ == CODEC_NAME_VIDEO_AVC) {
+    if (codecName_ == CODEC_MIMIE_TYPE_VIDEO_AVC) {
         config->needCodecData_ = true;
     }
     return config;

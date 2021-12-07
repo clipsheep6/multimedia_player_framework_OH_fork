@@ -59,17 +59,17 @@ static const GstAudioChannelPosition CHANNEL_POSITION[6][6] = {
     },
 };
 
-enum CodecName : int32_t {
-    CODEC_NAME_VIDEO_H263 = 0,
-    CODEC_NAME_VIDEO_AVC,
-    CODEC_NAME_VIDEO_HEVC,
-    CODEC_NAME_VIDEO_MPEG,
-    CODEC_NAME_VIDEO_MPEG2,
-    CODEC_NAME_VIDEO_MPEG4,
-    CODEC_NAME_AUDIO_VORBIS,
-    CODEC_NAME_AUDIO_MP3,
-    CODEC_NAME_AUDIO_AAC,
-    CODEC_NAME_AUDIO_FLAC,
+enum CodecMimeType : int32_t {
+    CODEC_MIMIE_TYPE_VIDEO_H263 = 0,
+    CODEC_MIMIE_TYPE_VIDEO_AVC,
+    CODEC_MIMIE_TYPE_VIDEO_HEVC,
+    CODEC_MIMIE_TYPE_VIDEO_MPEG,
+    CODEC_MIMIE_TYPE_VIDEO_MPEG2,
+    CODEC_MIMIE_TYPE_VIDEO_MPEG4,
+    CODEC_MIMIE_TYPE_AUDIO_VORBIS,
+    CODEC_MIMIE_TYPE_AUDIO_MP3,
+    CODEC_MIMIE_TYPE_AUDIO_AAC,
+    CODEC_MIMIE_TYPE_AUDIO_FLAC,
 };
 
 enum VideoEncoderBitrateMode : int32_t {
@@ -219,7 +219,7 @@ __attribute__((visibility("default"))) std::string PixelFormatToString(VideoPixe
 __attribute__((visibility("default"))) int32_t MapPCMFormat(int32_t number, AudioRawFormat &format);
 __attribute__((visibility("default"))) std::string PCMFormatToString(AudioRawFormat format);
 __attribute__((visibility("default"))) int32_t MapBitrateMode(int32_t number, VideoEncoderBitrateMode &mode);
-__attribute__((visibility("default"))) int32_t MapCodecMime(const std::string &mime, CodecName &name);
+__attribute__((visibility("default"))) int32_t MapCodecMime(const std::string &mime, CodecMimeType &name);
 __attribute__((visibility("default"))) int32_t MapProfile(int32_t number, AVCProfile &profile);
 } // Media
 } // OHOS
