@@ -44,14 +44,9 @@ ohos_shared_library("media_service_utils") {
     "time_monitor.cpp",
     "time_perf.cpp",
     "uri_helper.cpp",
+    "avsharedmemorybase.cpp",
     "avsharedmemorypool.cpp"
   ]
-
-  if (defined(ohos_lite)) {
-    sources += [ "avsharedmemorylocal.cpp" ]
-  } else {
-    sources += [ "avsharedmemorybase.cpp" ]
-  }
 
   include_dirs = [
     "//utils/native/base/include",
@@ -75,6 +70,12 @@ ohos_shared_library("media_service_utils") {
     "-Wfloat-equal",
     "-Wdate-time",
   ]
+
+  if (defined(ohos_lite)) {
+    cflags += []
+  } else {
+    cflags += [ "-DUSE_SHARED_MEM" ]
+  }
 
   configs = [ ":media_service_utils_public_config" ]
 

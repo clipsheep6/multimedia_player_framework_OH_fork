@@ -15,6 +15,7 @@
 
 #include "avsharedmemorypool.h"
 #include "avsharedmemorybase.h"
+#include "refcnt_shared_memory.h"
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -68,6 +69,8 @@ AVSharedMemory *AVSharedMemoryPool::AllocMemory(int32_t size)
 
     if (!option_.enableRemoteRefCnt) {
         memory = new (std::nothrow) AVSharedMemoryBase(size, option_.flags, "AVShMemPool");
+    } else {
+        memory = new (std::nothrow) RefCntSharedMemory(size, option_.flags, "AVShMemPool");
     }
     CHECK_AND_RETURN_RET_LOG(memory != nullptr, nullptr, "create object failed");
 
@@ -103,6 +106,12 @@ bool AVSharedMemoryPool::DoAcquireMemory(int32_t size, AVSharedMemory **outMemor
     int32_t minIdleSize = std::numeric_limits<int32_t>::max();
 
     for (auto iter = idleList_.begin(); iter != idleList_.end(); ++iter) {
+        if (option_.enableRemoteRefCnt) {
+            auto refCntMem = static_cast<RefCntSharedMemory *>(*iter);
+            if (refCntMem->GetRefCount() != 0) {
+                continue;
+            }
+        }
         if ((*iter)->GetSize() >= size) {
             result = *iter;
             idleList_.erase(iter);

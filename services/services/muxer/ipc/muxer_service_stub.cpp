@@ -161,7 +161,7 @@ int32_t MuxerServiceStub::Start(MessageParcel& data, MessageParcel& reply)
 
 int32_t MuxerServiceStub::WriteTrackSample(MessageParcel& data, MessageParcel& reply)
 {
-    std::shared_ptr<AVSharedMemory> sampleData = AVShMemIPCStatic::ReadFromParcel(data);
+    std::shared_ptr<AVSharedMemory> sampleData = ReadAVSharedMemoryFromParcel(data);
     TrackSampleInfo sampleInfo = {{data.ReadInt64(), data.ReadInt32(), data.ReadInt32(),
         static_cast<FrameFlags>(data.ReadInt32())}, data.ReadInt32()};
     reply.WriteInt32(WriteTrackSample(sampleData, sampleInfo));
