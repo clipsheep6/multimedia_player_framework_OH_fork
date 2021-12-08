@@ -14,12 +14,39 @@
  */
 
 #include "avcodec_napi_utils.h"
+#include <map>
 #include "common_napi.h"
 #include "media_log.h"
 #include "media_errors.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecNapiUtil"};
+    const std::map<std::string, OHOS::Media::FormatDataType> FORMAT = {
+        {"codec_mime", OHOS::Media::FORMAT_TYPE_STRING},
+        {"bitrate", OHOS::Media::FORMAT_TYPE_INT32},
+        {"max_input_size", OHOS::Media::FORMAT_TYPE_INT32},
+        {"max_encoder_fps", OHOS::Media::FORMAT_TYPE_INT32},
+        {"width", OHOS::Media::FORMAT_TYPE_INT32},
+        {"height", OHOS::Media::FORMAT_TYPE_INT32},
+        {"pixelformat", OHOS::Media::FORMAT_TYPE_INT32},
+        {"framerate", OHOS::Media::FORMAT_TYPE_INT32},
+        {"capture_rate", OHOS::Media::FORMAT_TYPE_INT32},
+        {"i_frame_interval", OHOS::Media::FORMAT_TYPE_INT32},
+        {"req_i_frame", OHOS::Media::FORMAT_TYPE_INT32},
+        {"repeate_frame_after", OHOS::Media::FORMAT_TYPE_INT32},
+        {"suspend_input_surface", OHOS::Media::FORMAT_TYPE_INT32},
+        {"video_encode_bitrate_mode", OHOS::Media::FORMAT_TYPE_INT32},
+        {"codec_profile", OHOS::Media::FORMAT_TYPE_INT32},
+        {"codec_quality", OHOS::Media::FORMAT_TYPE_INT32},
+        {"rect_top", OHOS::Media::FORMAT_TYPE_INT32},
+        {"rect_bottom", OHOS::Media::FORMAT_TYPE_INT32},
+        {"rect_left", OHOS::Media::FORMAT_TYPE_INT32},
+        {"rect_right", OHOS::Media::FORMAT_TYPE_INT32},
+        {"color_standard", OHOS::Media::FORMAT_TYPE_INT32},
+        {"channel_count", OHOS::Media::FORMAT_TYPE_INT32},
+        {"sample_rate", OHOS::Media::FORMAT_TYPE_INT32},
+        {"vendor.custom", OHOS::Media::FORMAT_TYPE_ADDR},
+    };
 }
 
 namespace OHOS {
@@ -96,6 +123,22 @@ bool AVCodecNapiUtil::ExtractCodecBuffer(napi_env env, napi_value buffer, int32_
 bool AVCodecNapiUtil::ExtractMediaFormat(napi_env env, napi_value mediaFormat, Format &format)
 {
     CHECK_AND_RETURN_RET(mediaFormat != nullptr, false);
+
+    for (auto it = FORMAT.begin(); it != FORMAT.end(); it ++) {
+        if (it->second == FORMAT_TYPE_STRING) {
+            std::string ret = CommonNapi::GetPropertyString(env, mediaFormat, it->first);
+            if (ret == "") {
+                continue;
+            } else {
+                format.PutStringValue(it->first, ret);
+            }
+        } else if (it->second == FORMAT_TYPE_INT32) {
+            int32_t ret = 0;
+            if (CommonNapi::GetPropertyInt32(env, mediaFormat, it->first, ret) == true) {
+                format.PutIntValue(it->first, ret);
+            }
+        }
+    }
 
     return true;
 }
