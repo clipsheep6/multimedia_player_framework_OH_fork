@@ -37,6 +37,7 @@ static GstStaticPadTemplate g_avspliterSrcTemplate = GST_STATIC_PAD_TEMPLATE ("s
     GST_STATIC_CAPS_ANY);
 
 enum {
+    SIGNAL_HAVE_TYPE,
     SIGNAL_AUTOPLUG_CONTINUE,
     LAST_SIGNAL
 };
@@ -106,6 +107,12 @@ static void gst_avspliter_bin_class_init(GstAVSpliterBinClass *klass)
         G_STRUCT_OFFSET(GstAVSpliterBinClass, autoplug_continue),
         gst_avspliter_bin_boolean_accumulator, nullptr, g_cclosure_marshal_generic,
         G_TYPE_BOOLEAN, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
+
+    gst_avspliter_bin_signals[SIGNAL_HAVE_TYPE] = g_signal_new("have-type",
+        G_TYPE_FROM_CLASS(klass), G_SIGNAL_RUN_LAST,
+        G_STRUCT_OFFSET(GstAVSpliterBinClass, have_type),
+        nullptr, nullptr, g_cclosure_marshal_generic, G_TYPE_NONE, 2,
+        G_TYPE_UINT, GST_TYPE_CAPS | G_SIGNAL_TYPE_STATIC_SCOPE);
 
     gst_element_class_add_pad_template(elementClass, gst_static_pad_template_get(&g_avspliterSinkTemplate));
     gst_element_class_add_pad_template(elementClass, gst_static_pad_template_get(&g_avspliterSrcTemplate));
@@ -385,6 +392,8 @@ static void found_type_callback(GstElement *typefind, guint probability, GstCaps
     }
     avspliter->haveType = TRUE;
 
+    g_signal_emit(avspliter, gst_avspliter_bin_signals[SIGNAL_HAVE_TYPE], 0, probability, caps);
+
     GstPad *srcpad = gst_element_get_static_pad(typefind, "src");
     GstPad *sinkpad = gst_element_get_static_pad(typefind, "sink");
 
@@ -451,6 +460,7 @@ gboolean gst_avspliter_bin_expose(GstAVSpliterBin *avspliter)
 
     g_list_free(endpads);
     endpads = nullptr;
+    gst_element_no_more_pads(GST_ELEMENT_CAST(avspliter));
 
     GST_DEBUG_OBJECT(avspliter, "Exposed everything");
     return TRUE;
@@ -534,7 +544,7 @@ GList *gst_avspliter_bin_find_elem_factories(GstAVSpliterBin *avspliter, GstCaps
         }
         avspliter->factories = gst_element_factory_list_get_elements(
             GST_ELEMENT_FACTORY_TYPE_DECODABLE, GST_RANK_MARGINAL);
-        avspliter->factories = g_list_sort(avspliter->factories, gst_playback_utils_compare_factories_func);
+        avspliter->factories = g_list_sort(avspliter->factories, compare_factories_func);
         avspliter->factoriesCookie = cookie;
     }
     GList *list = gst_element_factory_list_filter(avspliter->factories,
@@ -672,3 +682,10 @@ gboolean plugin_init(GstPlugin *plugin)
     GST_DEBUG_CATEGORY_INIT(gst_avspliter_bin_debug, "avspliterbin", 0, "avspliter bin");
     return gst_element_register(plugin, "avspliterbin", GST_RANK_NONE, GST_TYPE_AVSPLITER_BIN);
 }
+
+GST_PLUGIN_DEFINE(GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    _avspliter_bin,
+    "Gstreamer AVSpliter Bin",
+    plugin_init,
+    PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

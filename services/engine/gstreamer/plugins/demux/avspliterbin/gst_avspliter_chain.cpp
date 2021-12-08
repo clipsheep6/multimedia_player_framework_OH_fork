@@ -93,9 +93,9 @@ struct ConnectPadParams {
 static void init_connect_pad_param(AnalyzeParams *params, ConnectPadParams *connParams);
 static gboolean check_parser_repeat_in_chain(GstElementFactory *factory,
     GstAVSpliterChain *chain, ConnectPadParams *params);
-static gboolean add_new_demux_element(GstAVSpliterChain *chain, ConnectPadParams *params);
+static gboolean add_new_avspliter_element(GstAVSpliterChain *chain, ConnectPadParams *params);
 static void cleanup_add_new_element(GstAVSpliterChain *chain, ConnectPadParams *params, gboolean ret);
-static void free_demux_element(GstAVSpliterChain *chain, GstAVSpliterElement *element);
+static void free_avspliter_element(GstAVSpliterChain *chain, GstAVSpliterElement *element);
 static gboolean try_add_new_element(GstAVSpliterChain *chain,
     ConnectPadParams *params, GstElementFactory *factory);
 static void collect_new_element_srcpads(GstAVSpliterChain *chain, ConnectPadParams *params);
@@ -159,7 +159,7 @@ void gst_avspliter_chain_free(GstAVSpliterChain *chain)
 
     for (GList *node = chain->elements; node != nullptr; node = node->next) {
         GstAVSpliterElement *delem = reinterpret_cast<GstAVSpliterElement *>(node->data);
-        free_demux_element(chain, delem);
+        free_avspliter_element(chain, delem);
     }
     g_list_free(chain->elements);
     chain->elements = nullptr;
@@ -876,7 +876,7 @@ static gboolean check_parser_repeat_in_chain(GstElementFactory *factory,
     return FALSE;
 }
 
-static gboolean add_new_demux_element(GstAVSpliterChain *chain, ConnectPadParams *params)
+static gboolean add_new_avspliter_element(GstAVSpliterChain *chain, ConnectPadParams *params)
 {
     GstAVSpliterElement *avspliterElem = g_slice_new0(GstAVSpliterElement);
     if (avspliterElem == nullptr) {
@@ -927,7 +927,7 @@ static void cleanup_add_new_element(GstAVSpliterChain *chain, ConnectPadParams *
 }
 
 /* need remove the demux element from chain's elements by the caller. */
-static void free_demux_element(GstAVSpliterChain *chain, GstAVSpliterElement *element)
+static void free_avspliter_element(GstAVSpliterChain *chain, GstAVSpliterElement *element)
 {
     if (element->padAddedSignalId != 0) {
         g_signal_handler_disconnect(element->element, element->padAddedSignalId);
@@ -1024,7 +1024,7 @@ static gboolean try_add_new_element(GstAVSpliterChain *chain, ConnectPadParams *
         ret = TRUE;
     } while (0);
 
-    ret = ret && add_new_demux_element(chain, params);
+    ret = ret && add_new_avspliter_element(chain, params);
     cleanup_add_new_element(chain, params, ret);
     return ret;
 }
@@ -1242,7 +1242,7 @@ static gboolean change_new_element_to_pause(GstAVSpliterChain *chain, ConnectPad
 
         GstAVSpliterElement *tmpAVSpliterElem = GST_AVSPLITER_ELEMENT(chain->elements->data);
         tmpElem = tmpAVSpliterElem->element;
-        free_demux_element(chain, tmpAVSpliterElem);
+        free_avspliter_element(chain, tmpAVSpliterElem);
         chain->elements = g_list_delete_link(chain->elements, chain->elements);
     } while (tmpElem != params->nextElem);
 

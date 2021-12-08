@@ -59,5 +59,6 @@ G_GNUC_INTERNAL gboolean print_sticky_event(GstPad *pad, GstEvent **event, gpoin
 G_GNUC_INTERNAL GstStreamType guess_stream_type_from_caps(GstCaps *caps);
 G_GNUC_INTERNAL gboolean check_caps_is_factory_subset(
     GstElement *elem, GstCaps *caps, GstElementFactory *factory);
+G_GNUC_INTERNAL gint compare_factories_func(gconstpointer p1, gconstpointer p2);
 
 #endif

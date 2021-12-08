@@ -56,8 +56,8 @@ struct _GstAVSpliterBin {
 struct _GstAVSpliterBinClass {
     GstBinClass parent_class;
 
+    void (*have_type)(GstElement *element);
     gboolean (*autoplug_continue)(GstElement *element, GstPad *pad, GstCaps *caps);
-    void (*Drained)(GstElement *element);
 };
 
 #define DYN_LOCK(avspliter)                                                             \

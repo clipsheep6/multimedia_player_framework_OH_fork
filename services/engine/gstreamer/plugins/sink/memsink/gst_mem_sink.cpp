@@ -98,7 +98,7 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
             0, G_MAXUINT, DEFAULT_PROP_MAX_POOL_CAPACITY,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobjectClass, PROP_MAX_POOL_CAPACITY,
+    g_object_class_install_property(gobjectClass, PROP_WAIT_TIME,
         g_param_spec_uint("wait-time", "Wait Time",
             "The longest waiting time for single try to acquire buffer from buffer pool (0 == meanlessly)",
             0, G_MAXUINT, DEFAULT_PROP_MAX_POOL_CAPACITY,

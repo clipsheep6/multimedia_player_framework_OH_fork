@@ -71,7 +71,7 @@ int32_t MediaDataSourceProxy::ReadAt(int64_t pos, uint32_t length, const std::sh
     MessageOption option(MessageOption::TF_SYNC);
     data.WriteInt64(pos);
     data.WriteUint32(length);
-    CHECK_AND_RETURN_RET_LOG(AVShMemIPCStatic::WriteToParcel(mem, data) == MSERR_OK, 0, "write parcel failed");
+    CHECK_AND_RETURN_RET_LOG(WriteAVSharedMemoryToParcel(mem, data) == MSERR_OK, 0, "write parcel failed");
     int error = Remote()->SendRequest(ListenerMsg::READ_AT_POS, data, reply, option);
     if (error != MSERR_OK) {
         MEDIA_LOGE("ReadAt failed, error: %{public}d", error);
@@ -86,7 +86,7 @@ int32_t MediaDataSourceProxy::ReadAt(uint32_t length, const std::shared_ptr<AVSh
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     data.WriteUint32(length);
-    CHECK_AND_RETURN_RET_LOG(AVShMemIPCStatic::WriteToParcel(mem, data) == MSERR_OK, 0, "write parcel failed");
+    CHECK_AND_RETURN_RET_LOG(WriteAVSharedMemoryToParcel(mem, data) == MSERR_OK, 0, "write parcel failed");
     int error = Remote()->SendRequest(ListenerMsg::READ_AT, data, reply, option);
     if (error != MSERR_OK) {
         MEDIA_LOGE("ReadAt failed, error: %{public}d", error);

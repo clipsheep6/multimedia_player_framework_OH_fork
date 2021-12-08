@@ -50,7 +50,7 @@ int32_t MuxerServiceProxy::SetLocation(float latitude, float longitude)
     MessageOption option;
     (void)data.WriteFloat(latitude);
     (void)data.WriteFloat(longitude);
-    int error = Remote()->SendRequest(SET_LOCATION, data, reply, option); 
+    int error = Remote()->SendRequest(SET_LOCATION, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call SetLocation, error: %{public}d", error);
     return reply.ReadInt32();
 }
@@ -61,7 +61,7 @@ int32_t MuxerServiceProxy::SetOrientationHint(int degrees)
     MessageParcel reply;
     MessageOption option;
     (void)data.WriteInt32(degrees);
-    int error = Remote()->SendRequest(SET_ORIENTATION_HINT, data, reply, option); 
+    int error = Remote()->SendRequest(SET_ORIENTATION_HINT, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call SetOrientationHint, error: %{public}d", error);
     return reply.ReadInt32();
 }
@@ -72,7 +72,7 @@ int32_t MuxerServiceProxy::AddTrack(const MediaDescription& trackDesc, int32_t& 
     MessageParcel reply;
     MessageOption option;
     (void)MediaParcel::Marshalling(data, trackDesc);
-    int error = Remote()->SendRequest(ADD_TRACK, data, reply, option); 
+    int error = Remote()->SendRequest(ADD_TRACK, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call AddTrack, error: %{public}d", error);
     trackId = reply.ReadInt32();
     return reply.ReadInt32();
@@ -83,7 +83,7 @@ int32_t MuxerServiceProxy::Start()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    int error = Remote()->SendRequest(START, data, reply, option); 
+    int error = Remote()->SendRequest(START, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call Start, error: %{public}d", error);
     return reply.ReadInt32();
 }
@@ -93,7 +93,7 @@ int32_t MuxerServiceProxy::WriteTrackSample(std::shared_ptr<AVSharedMemory> samp
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    AVShMemIPCStatic::WriteToParcel(sampleData, data);
+    WriteAVSharedMemoryToParcel(sampleData, data);
     (void)data.WriteInt64(sampleInfo.timeUs);
     (void)data.WriteInt32(sampleInfo.size);
     (void)data.WriteInt32(sampleInfo.offset);
@@ -109,7 +109,7 @@ int32_t MuxerServiceProxy::Stop()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    int error = Remote()->SendRequest(STOP, data, reply, option); 
+    int error = Remote()->SendRequest(STOP, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call Stop, error: %{public}d", error);
     return reply.ReadInt32();
 }
@@ -119,7 +119,7 @@ void MuxerServiceProxy::Release()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    int error = Remote()->SendRequest(RELEASE, data, reply, option); 
+    int error = Remote()->SendRequest(RELEASE, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "Failed to call Release, error: %{public}d", error);
 }
 }  // namespace Media
