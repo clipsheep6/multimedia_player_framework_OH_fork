@@ -224,6 +224,55 @@ napi_value AudioDecoderNapi::Configure(napi_env env, napi_callback_info info)
 {
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
+
+    napi_value jsThis = nullptr;
+    napi_value args[2] = {nullptr};
+    size_t argCount = 2;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
+
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
+    napi_get_undefined(env, &asyncCtx->asyncRet);
+
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
+    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefined);
+
+    napi_valuetype valueType = napi_undefined;
+    CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
+        valueType == napi_object, undefined);
+    CHECK_AND_RETURN_RET(AVCodecNapiUtil::ExtractMediaFormat(env, args[0], asyncCtx->format) == true, undefined);
+
+    valueType = napi_undefined;
+    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
+        napi_create_reference(env, args[1], 1, &asyncCtx->callbackRef);
+    }
+
+    if (asyncCtx->callbackRef == nullptr) {
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "Configure", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void* data) {
+            auto asyncCtx = reinterpret_cast<AudioDecoderAsyncContext *>(data);
+            if (asyncCtx == nullptr || asyncCtx->napi == nullptr || asyncCtx->napi->adec_ == nullptr) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+                return;
+            }
+            if (asyncCtx->napi->adec_->Configure(asyncCtx->format) != MSERR_OK) {
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+            } else {
+                asyncCtx->success = true;
+            }
+        },
+        AudioDecoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+
     return undefined;
 }
 
@@ -497,6 +546,10 @@ napi_value AudioDecoderNapi::QueueInput(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
+    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefined);
+
     napi_valuetype valueType = napi_undefined;
     CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
         valueType == napi_object, undefined);
@@ -551,6 +604,10 @@ napi_value AudioDecoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
     CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
+    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefined);
+
     napi_valuetype valueType = napi_undefined;
     CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
         valueType == napi_object, undefined);
@@ -593,6 +650,55 @@ napi_value AudioDecoderNapi::SetParameter(napi_env env, napi_callback_info info)
 {
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
+
+    napi_value jsThis = nullptr;
+    napi_value args[2] = {nullptr};
+    size_t argCount = 2;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
+
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
+    napi_get_undefined(env, &asyncCtx->asyncRet);
+
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
+    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefined);
+
+    napi_valuetype valueType = napi_undefined;
+    CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
+        valueType == napi_object, undefined);
+    CHECK_AND_RETURN_RET(AVCodecNapiUtil::ExtractMediaFormat(env, args[0], asyncCtx->format) == true, undefined);
+
+    valueType = napi_undefined;
+    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
+        napi_create_reference(env, args[1], 1, &asyncCtx->callbackRef);
+    }
+
+    if (asyncCtx->callbackRef == nullptr) {
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "SetParameter", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void* data) {
+            auto asyncCtx = reinterpret_cast<AudioDecoderAsyncContext *>(data);
+            if (asyncCtx == nullptr || asyncCtx->napi == nullptr || asyncCtx->napi->adec_ == nullptr) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+                return;
+            }
+            if (asyncCtx->napi->adec_->SetParameter(asyncCtx->format) != MSERR_OK) {
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+            } else {
+                asyncCtx->success = true;
+            }
+        },
+        AudioDecoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+
     return undefined;
 }
 
@@ -600,6 +706,52 @@ napi_value AudioDecoderNapi::GetOutputMediaDescription(napi_env env, napi_callba
 {
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
+
+    napi_value jsThis = nullptr;
+    napi_value args[1] = {nullptr};
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
+
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
+    napi_get_undefined(env, &asyncCtx->asyncRet);
+
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
+    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefined);
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
+        napi_create_reference(env, args[0], 1, &asyncCtx->callbackRef);
+    }
+
+    if (asyncCtx->callbackRef == nullptr) {
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "GetOutputMediaDescription", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void* data) {
+            auto asyncCtx = reinterpret_cast<AudioDecoderAsyncContext *>(data);
+            if (asyncCtx == nullptr || asyncCtx->napi == nullptr || asyncCtx->napi->adec_ == nullptr) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+                return;
+            }
+            Format format;
+            if (asyncCtx->napi->adec_->GetOutputFormat(format) != MSERR_OK) {
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+            } else {
+                asyncCtx->success = true;
+                asyncCtx->asyncRet = AVCodecNapiUtil::CompressMediaFormat(env, format);
+            }
+        },
+        AudioDecoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+
     return undefined;
 }
 
