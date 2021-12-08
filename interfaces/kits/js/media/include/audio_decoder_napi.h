@@ -86,6 +86,8 @@ struct AudioDecoderAsyncContext {
     int32_t index;
     AVCodecBufferInfo info;
     AVCodecBufferFlag flag;
+    // used by format
+    Format format;
 };
 }  // namespace Media
 }  // namespace OHOS

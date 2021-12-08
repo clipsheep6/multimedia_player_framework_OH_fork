@@ -92,5 +92,20 @@ bool AVCodecNapiUtil::ExtractCodecBuffer(napi_env env, napi_value buffer, int32_
 
     return true;
 }
+
+bool AVCodecNapiUtil::ExtractMediaFormat(napi_env env, napi_value mediaFormat, Format &format)
+{
+    CHECK_AND_RETURN_RET(mediaFormat != nullptr, false);
+
+    return true;
+}
+
+napi_value AVCodecNapiUtil::CompressMediaFormat(napi_env env, Format format)
+{
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+
+    return undefined;
+}
 }
 }
