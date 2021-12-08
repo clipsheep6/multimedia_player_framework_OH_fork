@@ -89,6 +89,27 @@ int32_t SinkSurfaceImpl::SetOutputSurface(sptr<Surface> surface)
     return MSERR_OK;
 }
 
+int32_t SinkSurfaceImpl::SetParameter(const Format &format)
+{
+    int32_t value = 0;
+    if (format.GetIntValue("rect_top", value) == true) {
+        g_object_set(element_, "rect-top", value, nullptr);
+    }
+
+    if (format.GetIntValue("rect_bottom", value) == true) {
+        g_object_set(element_, "rect-top", value, nullptr);
+    }
+
+    if (format.GetIntValue("rect_left", value) == true) {
+        g_object_set(element_, "rect-top", value, nullptr);
+    }
+
+    if (format.GetIntValue("rect_right", value) == true) {
+        g_object_set(element_, "rect-top", value, nullptr);
+    }
+    return MSERR_OK;
+}
+
 int32_t SinkSurfaceImpl::ReleaseOutputBuffer(uint32_t index, bool render)
 {
     std::unique_lock<std::mutex> lock(mutex_);
