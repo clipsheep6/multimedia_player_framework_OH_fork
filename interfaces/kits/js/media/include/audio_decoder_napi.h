@@ -51,6 +51,8 @@ private:
     static void SyncCallback(napi_env env, AudioDecoderAsyncContext *asyncCtx);
     static void CompleteAsyncFunc(napi_env env, napi_status status, void *data);
     static void AsyncCreator(napi_env env, void *data);
+    void ErrorCallback(MediaServiceExtErrCode errCode);
+
     AudioDecoderNapi();
     ~AudioDecoderNapi();
 
@@ -67,6 +69,7 @@ struct AudioDecoderAsyncContext {
         errCode = code;
         errMessage = message;
     }
+    // general variable
     napi_env env;
     napi_async_work work;
     napi_deferred deferred;
@@ -76,8 +79,13 @@ struct AudioDecoderAsyncContext {
     bool success = false;
     int32_t errCode = 0;
     std::string errMessage = "";
+    // used by constructor
     std::string pluginName = "";
     int32_t createByMime = 1;
+    // used by buffer function
+    int32_t index;
+    AVCodecBufferInfo info;
+    AVCodecBufferFlag flag;
 };
 }  // namespace Media
 }  // namespace OHOS

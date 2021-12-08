@@ -14,11 +14,12 @@
  */
 
 #include "avcodec_napi_utils.h"
+#include "common_napi.h"
 #include "media_log.h"
 #include "media_errors.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecNapiUtil"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecNapiUtil"};
 }
 
 namespace OHOS {
@@ -26,15 +27,18 @@ namespace Media {
 napi_value AVCodecNapiUtil::CreateCodecBuffer(napi_env env, uint32_t index,
     std::shared_ptr<AVSharedMemory> memory, const AVCodecBufferInfo &info, AVCodecBufferFlag flag)
 {
+    CHECK_AND_RETURN_RET(memory != nullptr, nullptr);
+
     napi_value buffer = nullptr;
     napi_status status = napi_create_object(env, &buffer);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
+    const int32_t MsToUs = 1000;
+    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "timeMs", info.presentationTimeUs / MsToUs) == true, nullptr);
     CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "index", static_cast<int32_t>(index)) == true, nullptr);
     CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "offset", info.offset) == true, nullptr);
     CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "length", info.size) == true, nullptr);
     CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "flags", static_cast<int32_t>(flag)) == true, nullptr);
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "timeMs", info.presentationTimeUs / 1000) == true, nullptr);
 
     napi_value dataStr = nullptr;
     status = napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &dataStr);
@@ -52,6 +56,8 @@ napi_value AVCodecNapiUtil::CreateCodecBuffer(napi_env env, uint32_t index,
 
 bool AVCodecNapiUtil::AddNumberProperty(napi_env env, napi_value obj, const std::string &key, int32_t value)
 {
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
     napi_value keyNapi = nullptr;
     napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
     CHECK_AND_RETURN_RET(status == napi_ok, false);
@@ -62,6 +68,27 @@ bool AVCodecNapiUtil::AddNumberProperty(napi_env env, napi_value obj, const std:
 
     status = napi_set_property(env, obj, keyNapi, valueNapi);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "Failed to set property");
+
+    return true;
+}
+
+bool AVCodecNapiUtil::ExtractCodecBuffer(napi_env env, napi_value buffer, int32_t &index,
+    AVCodecBufferInfo &info, AVCodecBufferFlag &flag)
+{
+    CHECK_AND_RETURN_RET(buffer != nullptr, false);
+
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, buffer, "index", index) == true, false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, buffer, "offset", info.offset) == true, false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, buffer, "length", info.size) == true, false);
+
+    int32_t tmpFlag = 0;
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, buffer, "flag", tmpFlag) == true, false);
+    flag = static_cast<AVCodecBufferFlag>(tmpFlag);
+
+    int32_t timeMs = 0;
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, buffer, "timeMs", timeMs) == true, false);
+    const int32_t MsToUs = 1000;
+    info.presentationTimeUs = MsToUs * timeMs;
 
     return true;
 }
