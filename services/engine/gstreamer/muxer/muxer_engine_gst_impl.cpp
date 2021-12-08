@@ -63,6 +63,8 @@ int32_t MuxerEngineGstImpl::Init()
     int32_t ret = SetupMsgProcessor();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to setup message processor");
 
+    allocator_ = gst_shmem_wrap_allocator_new();
+
     return MSERR_OK;
 }
 
@@ -124,12 +126,16 @@ int32_t MuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_t 
     int32_t width;
     int32_t height;
     trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
-    trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height); 
+    trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
+    MEDIA_LOGI("width is: %{public}d", width);
+    MEDIA_LOGI("height is: %{public}d", height);
     GstCaps* src_caps = nullptr;
     if (audioEncodeType.find(mimeType) == audioEncodeType.end()) {
         src_caps = gst_caps_new_simple(mimeType.c_str(),
             "width", G_TYPE_INT, width,
             "height", G_TYPE_INT, height,
+            "alignment", G_TYPE_STRING, "au",
+            "stream-format", G_TYPE_STRING, "avc",
             nullptr);
         CHECK_AND_RETURN_RET_LOG(videoTrackNum < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION, "Only 1 video Tracks can be added");
         addTrack(muxBin_, VIDEO, name.c_str());
@@ -145,15 +151,17 @@ int32_t MuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_t 
 int32_t MuxerEngineGstImpl::Start()
 {
     MEDIA_LOGI("Start");
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_UNKNOWN, "Muxbin does not exist");
-
     gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_READY);
+
     GstAppSrcCallbacks callbacks = {&start_feed, &stop_feed, NULL};
     for (int32_t i : trackIdSet) {
         std::string name = "src_";
         name += static_cast<char>('0' + i);
-        GstElement* src = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str());
-        gst_app_src_set_callbacks(GST_APP_SRC(src), &callbacks, reinterpret_cast<gpointer*>(&needData_), NULL);
+        GstAppSrc* src = GST_APP_SRC_CAST(gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str()));
+        CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_UNKNOWN, "src does not exist");
+        gst_app_src_set_callbacks(src, &callbacks, reinterpret_cast<gpointer*>(&needData_), NULL);
     }
     return MSERR_OK; 
 }
@@ -161,48 +169,52 @@ int32_t MuxerEngineGstImpl::Start()
 int32_t MuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo)
 {
     MEDIA_LOGI("WriteTrackSample");
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_UNKNOWN, "Muxbin does not exist");
 
     std::string name = "src_";
     name += static_cast<char>('0' + sampleInfo.trackIdx);
     GstElement* src = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str());
     if (hasCaps.find(sampleInfo.trackIdx) == hasCaps.end() && sampleInfo.flags == CODEC_DATA) {
-        std::shared_ptr<ConvertCodecData> convertImpl;
-        GstBuffer* codecData = convertImpl->GetCodecBuffer(sampleData);
-        CHECK_AND_RETURN_RET_LOG(codecData != nullptr, MSERR_UNKNOWN, "Failed to get codec data");
-        // GstPad* pad = gst_element_get_static_pad (src, "src");
-        // GstCaps *caps = gst_pad_get_current_caps (pad);
-        gst_caps_set_simple(CapsMat[sampleInfo.trackIdx], "codec_data", GST_TYPE_BUFFER, codecData, nullptr);
+        // std::shared_ptr<ConvertCodecData> convertImpl = std::make_shared<ConvertCodecData>();
+        // GstBuffer* codecData = convertImpl->GetCodecBuffer(sampleData);
+        // CHECK_AND_RETURN_RET_LOG(codecData != nullptr, MSERR_UNKNOWN, "Failed to get codec data");
+        GstMemory* mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
+        GstBuffer* buffer = gst_buffer_new();
+        gst_buffer_append_memory(buffer, mem);
+        gst_caps_set_simple(CapsMat[sampleInfo.trackIdx], "codec_data", GST_TYPE_BUFFER, buffer, nullptr);
         g_object_set (src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
         hasCaps.insert(sampleInfo.trackIdx);
-        if (hasCaps == trackIdSet) {
+        if (hasCaps == trackIdSet && !isPause_) {
             gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
+            cond_.wait(lock, [this]() { return isPause_ || errHappened_; });
+            MEDIA_LOGI("Current state is Pause");
         }
     } else {
         CHECK_AND_RETURN_RET_LOG(needData_[sampleInfo.trackIdx] == true, MSERR_UNKNOWN, "Failed to push data, the queue is full");
         GstFlowReturn ret;
-        GstMapInfo map;
-        // GstBuffer* buffer = gst_buffer_new_and_alloc(sampleData->GetSize());  // 包装成对应的buffer
-        // gst_buffer_map(buffer, &map, GST_MAP_WRITE);
-        // map.data = sampleData->GetBase();
-        // gst_buffer_unmap (buffer, &map);
-        GstBuffer* buffer = nullptr;
-        GstMemory* mem = nullptr;
-        GST_BUFFER_PTS(buffer) = sampleInfo.timeUs;
+        GstMemory* mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
+        GstBuffer* buffer = gst_buffer_new();
+        gst_buffer_append_memory(buffer, mem);
+        MEDIA_LOGI("sampleInfo.timeUs is: %{public}lld", sampleInfo.timeUs);
+        if (sampleInfo.timeUs < 0) {
+            GST_BUFFER_PTS(buffer) = GST_CLOCK_TIME_NONE;
+        } else {
+            GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
+        }
         if (sampleInfo.flags == SYNC_FRAME) {
             gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
         }
-        gst_memory_map(mem, &map, GST_MAP_WRITE);
-        map.data = sampleData->GetBase();
-        gst_buffer_append_memory(buffer, mem);
-        // g_signal_emit_by_name (src, "push-buffer", buffer, &ret);
         ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
-        gst_memory_unmap(mem, &map);
-        gst_buffer_unref (buffer);
+        MEDIA_LOGI("ret is: %{public}d", ret);
         CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_UNKNOWN, "Failed to push data");
-        if (hasBuffer == trackIdSet) {
+        hasBuffer.insert(sampleInfo.trackIdx);
+        if (hasBuffer == trackIdSet && !isPlay_) {
             gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
+            cond_.wait(lock, [this]() { return isPlay_ || errHappened_; });
+            MEDIA_LOGI("Current state is Play");
         }
+
     }
     return MSERR_OK;
 }
@@ -213,8 +225,17 @@ int32_t MuxerEngineGstImpl::Stop()
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_UNKNOWN, "Muxbin does not exist");
 
-    CHECK_AND_RETURN_RET_LOG(hasCaps == trackIdSet && hasBuffer == trackIdSet, MSERR_UNKNOWN, "Not all track has cpas or buffer");
-    g_signal_emit_by_name(muxBin_, "end-of-stream", NULL);
+    GstFlowReturn ret;
+    // CHECK_AND_RETURN_RET_LOG(hasCaps == trackIdSet && hasBuffer == trackIdSet, MSERR_UNKNOWN, "Not all track has cpas or buffer");
+    // g_signal_emit_by_name(GST_BIN_CAST(muxBin_), "end-of-stream", NULL);
+    for (int32_t i : trackIdSet) {
+        std::string name = "src_";
+        name += static_cast<char>('0' + i);
+        GstAppSrc* src = GST_APP_SRC_CAST(gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str()));
+        CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_UNKNOWN, "src does not exist");
+        ret = gst_app_src_end_of_stream(src);
+        CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_UNKNOWN, "Failed to push end of stream");
+    }
     cond_.wait(lock, [this]() { return endFlag_ || errHappened_; });
     gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_NULL);
     clear();
@@ -243,7 +264,7 @@ void MuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
 {
     switch (msg.type) {
         case InnerMsgType::INNER_MSG_EOS: {
-            MEDIA_LOGE("End of stream");
+            MEDIA_LOGI("End of stream");
             endFlag_ = true;
             cond_.notify_all();
             break;
@@ -257,7 +278,16 @@ void MuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
             break;
         }
         case InnerMsgType::INNER_MSG_STATE_CHANGED: {
-            MEDIA_LOGE("State change");
+            MEDIA_LOGI("State change");
+            GstState currState = static_cast<GstState>(msg.detail2);
+            if (currState == GST_STATE_READY) {
+                isReady_ = true;
+            } else if (currState == GST_STATE_PAUSED) {
+                isPause_ = true;
+            } else if (currState == GST_STATE_PLAYING) {
+                isPlay_ = true;
+            }
+            cond_.notify_all();
             break;
         }
         default:

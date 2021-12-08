@@ -22,6 +22,7 @@
 #include "i_muxer_engine.h"
 #include "gst_mux_bin.h"
 #include "gst_msg_processor.h"
+#include "gst_shmem_wrap_allocator.h"
 
 namespace OHOS {
 namespace Media {
@@ -29,9 +30,9 @@ constexpr uint32_t MAX_VIDEO_TRACK_NUM = 1;
 constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
 
 const std::set<std::string> videoEncodeType {
-    "video/h264",
+    "video/x-h264",
     "video/mpeg4",
-    "video/h263",
+    "video/x-h263",
     "video/mpeg2"
 };
 
@@ -46,7 +47,7 @@ const std::map<std::string, std::string> formatToMux {
 };
 
 const std::map<std::string, std::set<std::string>> formatToEncode {
-    {"mp4", {"video/h264", "video/mpeg4", "video/h263", "video/mpeg2"}},
+    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2"}},
     {"m4a", {"audio/aac"}}
 };
 
@@ -84,6 +85,10 @@ private:
     uint32_t videoTrackNum = 0;
     uint32_t audioTrackNum = 0;
     std::string format_;
+    bool isReady_ = false;
+    bool isPause_ = false;
+    bool isPlay_ = false;
+    GstShMemWrapAllocator* allocator_;
 };
 }  // namespace Media
 }  // namespace OHOS

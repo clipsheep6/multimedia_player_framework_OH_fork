@@ -17,6 +17,7 @@
 #include "gst_mux_bin.h"
 #include <fcntl.h>
 #include <unistd.h>
+#include "gstappsrc.h"
 
 enum
 {
@@ -146,7 +147,12 @@ static GstStateChangeReturn cerate_splitmuxsink(GstMuxBin *mux_bin)
 
     GstElement* fdsink = gst_element_factory_make("fdsink", "fdsink");
     g_return_val_if_fail(fdsink != nullptr, GST_STATE_CHANGE_FAILURE);
-    mux_bin->outFd_ = open(mux_bin->path_, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+    mux_bin->outFd_ = open(mux_bin->path_, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+    if (mux_bin->outFd_ < 0) {
+        GST_ERROR_OBJECT(mux_bin, "Open file failed! filePath");
+        return GST_STATE_CHANGE_FAILURE;
+    }
+
     g_object_set(fdsink, "fd", mux_bin->outFd_, nullptr);
     g_object_set(mux_bin->splitMuxSink_, "sink", fdsink, nullptr);
 
@@ -163,6 +169,7 @@ static GstStateChangeReturn create_video_src(GstMuxBin *mux_bin)
 
     mux_bin->videoSrc_ = gst_element_factory_make("appsrc", mux_bin->videoTrack_);
     g_return_val_if_fail(mux_bin->videoSrc_ != nullptr, GST_STATE_CHANGE_FAILURE);
+    g_object_set(mux_bin->videoSrc_, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
 
     return GST_STATE_CHANGE_SUCCESS;
 }
@@ -173,6 +180,7 @@ static GstStateChangeReturn create_audio_src(GstMuxBin *mux_bin)
     while(iter != nullptr) {
         GstElement* appSrc = gst_element_factory_make("appsrc", (gchar*)(iter->data));
         g_return_val_if_fail(appSrc != nullptr, GST_STATE_CHANGE_FAILURE);
+        g_object_set(appSrc, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
         mux_bin->audioSrcList_ = g_slist_append(mux_bin->audioSrcList_, appSrc);
     }
 
@@ -200,8 +208,8 @@ static GstStateChangeReturn create_element(GstMuxBin *mux_bin)
 
 static GstStateChangeReturn add_element_to_bin(GstMuxBin *mux_bin)
 {
-    g_return_val_if_fail(mux_bin != nullptr && mux_bin->videoSrc_ != nullptr &&
-        mux_bin->audioSrcList_ != nullptr && mux_bin->splitMuxSink_ != nullptr, GST_STATE_CHANGE_FAILURE);
+    // g_return_val_if_fail(mux_bin != nullptr && mux_bin->videoSrc_ != nullptr &&
+    //     mux_bin->audioSrcList_ != nullptr && mux_bin->splitMuxSink_ != nullptr, GST_STATE_CHANGE_FAILURE);
 
     gst_bin_add(GST_BIN(mux_bin), mux_bin->videoSrc_);
     GSList* iter = mux_bin->audioSrcList_;
@@ -215,8 +223,8 @@ static GstStateChangeReturn add_element_to_bin(GstMuxBin *mux_bin)
 
 static GstStateChangeReturn connect_element(GstMuxBin *mux_bin)
 {
-    g_return_val_if_fail(mux_bin != nullptr && mux_bin->videoSrc_ != nullptr &&
-        mux_bin->audioSrcList_ != nullptr && mux_bin->splitMuxSink_ != nullptr, GST_STATE_CHANGE_FAILURE);
+    // g_return_val_if_fail(mux_bin != nullptr && mux_bin->videoSrc_ != nullptr &&
+    //     mux_bin->audioSrcList_ != nullptr && mux_bin->splitMuxSink_ != nullptr, GST_STATE_CHANGE_FAILURE);
     
     GstPad* video_src_pad = gst_element_get_static_pad(mux_bin->videoSrc_, "src");
     GstPad* split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->splitMuxSink_, "video");
@@ -248,12 +256,12 @@ static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstSta
                 GST_ERROR_OBJECT(mux_bin, "Failed to create element");
                 return GST_STATE_CHANGE_FAILURE;
             }
-            break;
-        case GST_STATE_CHANGE_READY_TO_PAUSED:
             if (add_element_to_bin(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
                 GST_ERROR_OBJECT(mux_bin, "Failed to add element to bin");
                 return GST_STATE_CHANGE_FAILURE;
             }
+            break;
+        case GST_STATE_CHANGE_READY_TO_PAUSED:
             if (connect_element(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
                 GST_ERROR_OBJECT(mux_bin, "Failed to connect element");
                 return GST_STATE_CHANGE_FAILURE;

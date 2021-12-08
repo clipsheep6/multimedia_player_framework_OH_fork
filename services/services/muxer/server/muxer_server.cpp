@@ -38,6 +38,9 @@ int32_t MuxerServer::Init()
     CHECK_AND_RETURN_RET_LOG(muxerEngine_ != nullptr, MSERR_NO_MEMORY, "Failed to create muxer engine");
     int32_t ret = muxerEngine_->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to init muxer engine");
+
+    fd_ = fopen("frame.txt", "w");
+    CHECK_AND_RETURN_RET_LOG(fd_ != nullptr, ret, "Failed to open file");
     return MSERR_OK;
 }
 
@@ -123,6 +126,7 @@ int32_t MuxerServer::WriteTrackSample(std::shared_ptr<AVSharedMemory> data, cons
     CHECK_AND_RETURN_RET_LOG(muxerEngine_ != nullptr, MSERR_INVALID_OPERATION, "Muxer engine does not exist");
     int32_t ret = muxerEngine_->WriteTrackSample(data, info);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteTrackSample");
+    fwrite(data->GetBase(), data->GetSize(), 1, fd_);
     curState_ = MUXER_SAMPLE_WRITING;
     return MSERR_OK;
 }
@@ -143,6 +147,7 @@ void MuxerServer::Release()
     if (curState_ != MUXER_IDEL) {
         Stop();
     }
+    fclose(fd_);
     muxerEngine_ = nullptr;
 }
 }  // namespace Media

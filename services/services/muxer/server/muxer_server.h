@@ -37,6 +37,7 @@ private:
     std::shared_ptr<IMuxerEngine> muxerEngine_ = nullptr;
     MuxerStates curState_ = MUXER_IDEL;
     uint32_t trackNum_ = 0;
+    FILE* fd_;
 };
 }  // namespace Media
 }  // namespace OHOS

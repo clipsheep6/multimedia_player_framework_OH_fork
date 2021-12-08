@@ -94,6 +94,7 @@ config("gst_media_mux_bin_config") {
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base",
     "//third_party/gstreamer/gstplugins_base/gst-libs",
+    "//third_party/gstreamer/gstplugins_base/gst-libs/gst/app",
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/glib/gmodule",
@@ -105,6 +106,7 @@ ohos_static_library("media_engine_gst_muxer_impl") {
   sources = [
     "convert_codec_data.cpp",
     "muxer_engine_gst_impl.cpp",
+    "gst_shmem_wrap_allocator.cpp"
   ]
 
   configs = [ ":media_engine_gst_muxer_impl_config" ]

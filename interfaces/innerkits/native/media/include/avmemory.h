@@ -44,7 +44,10 @@ public:
     size_t Capacity() { return capacity_; }
     size_t Size() { return size_; }
     size_t Offset() { return offset_; }
-    void SetRange(size_t offset, size_t size);
+    void SetRange(size_t offset, size_t size) {
+        offset_ = offset;
+        size_ = size;
+    }
 
     DISALLOW_COPY_AND_MOVE(AVMemory);
 

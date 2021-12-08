@@ -24,6 +24,16 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+ConvertCodecData::ConvertCodecData()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+}
+
+ConvertCodecData::~ConvertCodecData()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
 GstBuffer* ConvertCodecData::GetCodecBuffer(std::shared_ptr<AVSharedMemory> sampleData)
 {
     std::vector<uint8_t> sps;
@@ -31,10 +41,20 @@ GstBuffer* ConvertCodecData::GetCodecBuffer(std::shared_ptr<AVSharedMemory> samp
     std::vector<uint8_t> sei;
     uint8_t* data = sampleData->GetBase();
     int32_t len = sampleData->GetSize();
+    MEDIA_LOGD("data is: %{public}p", data);
+    MEDIA_LOGD("len is: %{public}d", len);
+    MEDIA_LOGD("begin GetCodecData");
     GetCodecData(data, len, sps, pps, sei);
     CHECK_AND_RETURN_RET_LOG(nalSize_ > 0 && sps.size() > 0 && pps.size() > 0 && sei.size() > 0,
         nullptr, "illegal codec buffer");
+    MEDIA_LOGD("sps.size() is: %{public}u", sps.size());
+    MEDIA_LOGD("pps.size() is: %{public}u", pps.size());
+    MEDIA_LOGD("sei.size() is: %{public}u", sei.size());
+    MEDIA_LOGD("nalSize_ is: %{public}u", nalSize_);
+    // CHECK_AND_RETURN_RET_LOG(nalSize_ > 0, nullptr, "illegal codec buffer");
+    MEDIA_LOGD("begin AVCDecoderConfiguration");
     AVCDecoderConfiguration(sps, pps);
+    MEDIA_LOGD("end AVCDecoderConfiguration");
     return configBuffer_;
 }
 
@@ -98,14 +118,14 @@ void ConvertCodecData::AVCDecoderConfiguration(std::vector<uint8_t> &sps, std::v
     ON_SCOPE_EXIT(1) {
         gst_buffer_unmap(codec, &map);
     };
-
+    MEDIA_LOGD("begin ++");
     uint32_t offset = 0;
     map.data[offset++] = 0x01; // configurationVersion
     map.data[offset++] = sps[1]; // AVCProfileIndication
     map.data[offset++] = sps[2]; // profile_compatibility
     map.data[offset++] = sps[3]; // AVCLevelIndication
     map.data[offset++] = 0xff; // lengthSizeMinusOne
-
+    MEDIA_LOGD("begin ++1");
     map.data[offset++] = 0xe0 | 0x01; // numOfSequenceParameterSets
     map.data[offset++] = (sps.size() >> 8) & 0xff; // sequenceParameterSetLength high 8 bits
     map.data[offset++] = sps.size() & 0xff; // sequenceParameterSetLength low 8 bits
@@ -113,7 +133,7 @@ void ConvertCodecData::AVCDecoderConfiguration(std::vector<uint8_t> &sps, std::v
     CHECK_AND_RETURN_LOG(memcpy_s(map.data + offset, codecBufferSize - offset, &sps[0], sps.size()) == EOK,
                             "memcpy_s fail");
     offset += sps.size();
-
+    MEDIA_LOGD("begin ++2");
     map.data[offset++] = 0x01; // numOfPictureParameterSets
     map.data[offset++] = (pps.size() >> 8) & 0xff; // pictureParameterSetLength  high 8 bits
     map.data[offset++] = pps.size() & 0xff; // pictureParameterSetLength  low 8 bits
