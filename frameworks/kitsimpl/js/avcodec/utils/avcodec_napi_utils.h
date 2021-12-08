@@ -21,18 +21,6 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
-#define NAPI_CREATE_PROMISE(env, callbackRef, deferred, result)     \
-    do {                                                            \
-        if ((callbackRef) == nullptr) {                             \
-            napi_create_promise(env, &(deferred), &(result));       \
-        }                                                           \
-    } while (0)
-
-#define NAPI_CREATE_RESOURCE_NAME(env, resource, resourceName)                      \
-    do {                                                                            \
-        napi_create_string_utf8(env, resourceName, NAPI_AUTO_LENGTH, &(resource));  \
-    } while (0)
-
 namespace OHOS {
 namespace Media {
 class AVCodecNapiUtil {
@@ -42,6 +30,8 @@ public:
     static napi_value CreateCodecBuffer(napi_env env, uint32_t index, std::shared_ptr<AVSharedMemory> memory,
         const AVCodecBufferInfo &info, AVCodecBufferFlag flag);
     static bool AddNumberProperty(napi_env env, napi_value obj, const std::string &key, int32_t value);
+    static bool ExtractCodecBuffer(napi_env env, napi_value buffer, int32_t &index, AVCodecBufferInfo &info,
+        AVCodecBufferFlag &flag);
 };
 }
 }

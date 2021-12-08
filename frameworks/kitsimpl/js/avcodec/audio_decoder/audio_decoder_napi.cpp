@@ -112,7 +112,7 @@ napi_value AudioDecoderNapi::Constructor(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET(adecNapi->adec_ != nullptr, undefined);
 
     if (adecNapi->callback_ == nullptr) {
-        adecNapi->callback_ = std::make_shared<AudioDecoderCallbackNapi>(env);
+        adecNapi->callback_ = std::make_shared<AudioDecoderCallbackNapi>(env, adecNapi->adec_);
         (void)adecNapi->adec_->SetCallback(adecNapi->callback_);
     }
 
@@ -140,22 +140,22 @@ void AudioDecoderNapi::Destructor(napi_env env, void *nativeObject, void *finali
 
 napi_value AudioDecoderNapi::CreateAudioDecoderByMime(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
 
     auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
     napi_valuetype valueType = napi_undefined;
     CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
-        valueType == napi_string, undefinedResult);
+        valueType == napi_string, undefined);
     asyncCtx->pluginName = CommonNapi::GetStringArgument(env, args[0]);
     asyncCtx->createByMime = 1;
 
@@ -165,7 +165,7 @@ napi_value AudioDecoderNapi::CreateAudioDecoderByMime(napi_env env, napi_callbac
     }
 
     if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefinedResult);
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
     }
 
     napi_value resource = nullptr;
@@ -176,27 +176,27 @@ napi_value AudioDecoderNapi::CreateAudioDecoderByMime(napi_env env, napi_callbac
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefinedResult;
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::CreateAudioDecoderByName(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
 
     auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
     napi_valuetype valueType = napi_undefined;
     CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
-        valueType == napi_string, undefinedResult);
+        valueType == napi_string, undefined);
     asyncCtx->pluginName = CommonNapi::GetStringArgument(env, args[0]);
     asyncCtx->createByMime = 0;
 
@@ -206,7 +206,7 @@ napi_value AudioDecoderNapi::CreateAudioDecoderByName(napi_env env, napi_callbac
     }
 
     if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefinedResult);
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
     }
 
     napi_value resource = nullptr;
@@ -217,34 +217,34 @@ napi_value AudioDecoderNapi::CreateAudioDecoderByName(napi_env env, napi_callbac
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefinedResult;
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::Configure(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-    return undefinedResult;
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::Prepare(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
 
     auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefinedResult);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefined);
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
@@ -252,7 +252,7 @@ napi_value AudioDecoderNapi::Prepare(napi_env env, napi_callback_info info)
     }
 
     if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefinedResult);
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
     }
 
     napi_value resource = nullptr;
@@ -275,27 +275,27 @@ napi_value AudioDecoderNapi::Prepare(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefinedResult;
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::Start(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
 
     auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefinedResult);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefined);
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
@@ -303,7 +303,7 @@ napi_value AudioDecoderNapi::Start(napi_env env, napi_callback_info info)
     }
 
     if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefinedResult);
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
     }
 
     napi_value resource = nullptr;
@@ -326,27 +326,27 @@ napi_value AudioDecoderNapi::Start(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefinedResult;
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::Stop(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
 
     auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefinedResult);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefined);
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
@@ -354,7 +354,7 @@ napi_value AudioDecoderNapi::Stop(napi_env env, napi_callback_info info)
     }
 
     if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefinedResult);
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
     }
 
     napi_value resource = nullptr;
@@ -377,27 +377,27 @@ napi_value AudioDecoderNapi::Stop(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefinedResult;
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::Flush(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
 
     auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefinedResult);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefined);
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
@@ -405,7 +405,7 @@ napi_value AudioDecoderNapi::Flush(napi_env env, napi_callback_info info)
     }
 
     if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefinedResult);
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
     }
 
     napi_value resource = nullptr;
@@ -428,27 +428,27 @@ napi_value AudioDecoderNapi::Flush(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefinedResult;
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::Reset(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
 
     auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefinedResult);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefinedResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(asyncCtx->napi->adec_ != nullptr, undefined);
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
@@ -456,7 +456,7 @@ napi_value AudioDecoderNapi::Reset(napi_env env, napi_callback_info info)
     }
 
     if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefinedResult);
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
     }
 
     napi_value resource = nullptr;
@@ -479,49 +479,171 @@ napi_value AudioDecoderNapi::Reset(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefinedResult;
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::QueueInput(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-    return undefinedResult;
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+
+    napi_value jsThis = nullptr;
+    napi_value args[2] = {nullptr};
+    size_t argCount = 2;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
+
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
+    napi_get_undefined(env, &asyncCtx->asyncRet);
+
+    napi_valuetype valueType = napi_undefined;
+    CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
+        valueType == napi_object, undefined);
+    CHECK_AND_RETURN_RET(AVCodecNapiUtil::ExtractCodecBuffer(env, args[0], asyncCtx->index,
+        asyncCtx->info, asyncCtx->flag) == true, undefined);
+
+    valueType = napi_undefined;
+    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
+        napi_create_reference(env, args[1], 1, &asyncCtx->callbackRef);
+    }
+
+    if (asyncCtx->callbackRef == nullptr) {
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "QueueInput", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void* data) {
+            auto asyncCtx = reinterpret_cast<AudioDecoderAsyncContext *>(data);
+            if (asyncCtx == nullptr || asyncCtx->napi == nullptr || asyncCtx->napi->adec_ == nullptr) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+                return;
+            }
+            CHECK_AND_RETURN(asyncCtx->index > 0);
+            if (asyncCtx->napi->adec_->QueueInputBuffer(asyncCtx->index, asyncCtx->info, asyncCtx->flag) != MSERR_OK) {
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to QueueInputBuffer");
+            } else {
+                asyncCtx->success = true;
+            }
+        },
+        AudioDecoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::ReleaseOutput(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-    return undefinedResult;
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+
+    napi_value jsThis = nullptr;
+    napi_value args[2] = {nullptr};
+    size_t argCount = 2;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
+
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>();
+    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
+    napi_get_undefined(env, &asyncCtx->asyncRet);
+
+    napi_valuetype valueType = napi_undefined;
+    CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
+        valueType == napi_object, undefined);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args[0], "index", asyncCtx->index) == true, undefined);
+
+    valueType = napi_undefined;
+    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
+        napi_create_reference(env, args[1], 1, &asyncCtx->callbackRef);
+    }
+
+    if (asyncCtx->callbackRef == nullptr) {
+        napi_create_promise(env, &asyncCtx->deferred, &undefined);
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "ReleaseOutput", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void* data) {
+            auto asyncCtx = reinterpret_cast<AudioDecoderAsyncContext *>(data);
+            if (asyncCtx == nullptr || asyncCtx->napi == nullptr || asyncCtx->napi->adec_ == nullptr) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+                return;
+            }
+            CHECK_AND_RETURN(asyncCtx->index > 0);
+            if (asyncCtx->napi->adec_->ReleaseOutputBuffer(asyncCtx->index) != MSERR_OK) {
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to ReleaseOutputBuffer");
+            } else {
+                asyncCtx->success = true;
+            }
+        },
+        AudioDecoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::SetParameter(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-    return undefinedResult;
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::GetOutputMediaDescription(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-    return undefinedResult;
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::GetAudioDecoderCaps(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-    return undefinedResult;
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+    return undefined;
 }
 
 napi_value AudioDecoderNapi::On(napi_env env, napi_callback_info info)
 {
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-    return undefinedResult;
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+
+    static const size_t MIN_REQUIRED_ARG_COUNT = 2;
+    size_t argCount = MIN_REQUIRED_ARG_COUNT;
+    napi_value args[MIN_REQUIRED_ARG_COUNT] = { nullptr };
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefined;
+    }
+
+    AudioDecoderNapi *audioDecoderNapi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&audioDecoderNapi));
+    CHECK_AND_RETURN_RET(status == napi_ok && audioDecoderNapi != nullptr, undefined);
+
+    napi_valuetype valueType0 = napi_undefined;
+    napi_valuetype valueType1 = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
+        napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
+        audioDecoderNapi->ErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefined;
+    }
+
+    std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+    MEDIA_LOGD("callbackName: %{public}s", callbackName.c_str());
+
+    CHECK_AND_RETURN_RET(audioDecoderNapi->callback_ != nullptr, undefined);
+    auto cb = std::static_pointer_cast<AudioDecoderCallbackNapi>(audioDecoderNapi->callback_);
+    cb->SaveCallbackReference(callbackName, args[1]);
+    return undefined;
 }
 
 void AudioDecoderNapi::SyncCallback(napi_env env, AudioDecoderAsyncContext *asyncCtx)
@@ -595,6 +717,14 @@ void AudioDecoderNapi::AsyncCreator(napi_env env, void *data)
         return;
     }
     asyncCtx->success = true;
+}
+
+void AudioDecoderNapi::ErrorCallback(MediaServiceExtErrCode errCode)
+{
+    if (callback_ != nullptr) {
+        auto napiCb = std::static_pointer_cast<AudioDecoderCallbackNapi>(callback_);
+        napiCb->SendErrorCallback(errCode);
+    }
 }
 }  // namespace Media
 }  // namespace OHOS
