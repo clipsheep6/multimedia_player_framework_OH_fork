@@ -58,5 +58,19 @@ sptr<Surface> SrcSurfaceImpl::CreateInputSurface()
     sptr<Surface> surface = (Surface *)surfaceObj;
     return surface;
 }
+
+int32_t SrcSurfaceImpl::SetParameter(const Format &format)
+{
+    int32_t value = 0;
+    if (format.GetIntValue("repeat_frame_after", value) == true) {
+        g_object_set(element_, "repeat-frame-after", value, nullptr);
+    }
+
+    if (format.GetIntValue("suspend_input_surface", value) == true) {
+        g_object_set(element_, "suspend-input-surface", value, nullptr);
+    }
+
+    return MSERR_OK;
+}
 } // Media
 } // OHOS

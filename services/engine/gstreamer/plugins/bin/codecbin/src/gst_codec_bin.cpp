@@ -25,7 +25,8 @@ enum {
     PROP_SRC,
     PROP_SINK,
     PROP_SRC_CONVERT,
-    PROP_SINK_CONVERT
+    PROP_SINK_CONVERT,
+    PROP_FORCE_I_FRAME
 };
 
 #define gst_codec_bin_parent_class parent_class
@@ -95,6 +96,10 @@ static void gst_codec_bin_class_init(GstCodecBinClass *klass)
         g_param_spec_boolean("sink-convert", "Need sink convert", "Need convert for output data",
             FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_FORCE_I_FRAME,
+        g_param_spec_int("req-i-frame", "Request I frame", "Request I frame for video encoder",
+            -1, 1, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Codec Bin", "Bin/Decoder&Encoder",
         "Auto construct codec pipeline", "OpenHarmony");
@@ -155,6 +160,11 @@ static void gst_codec_bin_set_property(GObject *object, guint prop_id,
             break;
         case PROP_SINK_CONVERT:
             bin->need_sink_convert = g_value_get_boolean(value);
+            break;
+        case PROP_FORCE_I_FRAME:
+            if (bin->coder != nullptr) {
+                g_object_set(bin->coder, "req-i-frame", g_value_get_int(value), nullptr);
+            }
             break;
         default:
             break;

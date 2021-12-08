@@ -53,6 +53,7 @@ private:
     GstPipeline *gstPipeline_ = nullptr;
     GstBus *bus_ = nullptr;
     GstElement *codecBin_ = nullptr;
+    bool useSurfaceInput_ = false;
     bool useSurfaceRender_ = false;
     bool needInputCallback_ = true;
     std::condition_variable gstPipeCond_;
