@@ -30,6 +30,7 @@ AVCodecEngineGstImpl::AVCodecEngineGstImpl()
 
 AVCodecEngineGstImpl::~AVCodecEngineGstImpl()
 {
+    (void)Reset();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -95,7 +96,11 @@ int32_t AVCodecEngineGstImpl::Flush()
 int32_t AVCodecEngineGstImpl::Reset()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(ctrl_->Reset() == MSERR_OK, MSERR_UNKNOWN);
+    (void)Stop();
+    ctrl_ = nullptr;
+    ctrl_ = std::make_unique<AVCodecEngineCtrl>();
+    CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_NO_MEMORY);
+    CHECK_AND_RETURN_RET(ctrl_->Init(type_, uswSoftWare_, pluginName_) == MSERR_OK, MSERR_UNKNOWN);
     return MSERR_OK;
 }
 
