@@ -67,7 +67,6 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
 
     g_object_set(codecBin_, "use-software", static_cast<gboolean>(useSoftware), nullptr);
     g_object_set(codecBin_, "type", static_cast<int32_t>(type), nullptr);
-    g_object_set(codecBin_, "stream-input", static_cast<gboolean>(false), nullptr);
     g_object_set(codecBin_, "sink-convert", static_cast<gboolean>(true), nullptr);
     g_object_set(codecBin_, "coder-name", name.c_str(), nullptr);
     return MSERR_OK;
@@ -191,12 +190,18 @@ int32_t AVCodecEngineCtrl::Flush()
     return MSERR_OK;
 }
 
+int32_t AVCodecEngineCtrl::Reset()
+{
+    //todo
+    return MSERR_OK;
+}
+
 void AVCodecEngineCtrl::SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs)
 {
     obs_ = obs;
 }
 
-sptr<Surface> AVCodecEngineCtrl::CreateInputSurface()
+sptr<Surface> AVCodecEngineCtrl::CreateInputSurface(std::shared_ptr<ProcessorConfig> inputConfig)
 {
     MEDIA_LOGD("Enter CreateInputSurface");
     CHECK_AND_RETURN_RET(codecType_ == AVCODEC_TYPE_VIDEO_ENCODER, nullptr);
@@ -206,7 +211,7 @@ sptr<Surface> AVCodecEngineCtrl::CreateInputSurface()
         CHECK_AND_RETURN_RET_LOG(src_ != nullptr, nullptr, "No memory");
         CHECK_AND_RETURN_RET_LOG(src_->Init() == MSERR_OK, nullptr, "Failed to create input surface");
     }
-    auto surface =  src_->CreateInputSurface();
+    auto surface =  src_->CreateInputSurface(inputConfig);
     CHECK_AND_RETURN_RET(surface != nullptr, nullptr);
     needInputCallback_ = false;
     useSurfaceInput_ = true;

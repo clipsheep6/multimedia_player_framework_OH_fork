@@ -29,7 +29,7 @@ public:
 
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
-    sptr<Surface> CreateInputSurface() override;
+    sptr<Surface> CreateInputSurface(std::shared_ptr<ProcessorConfig> inputConfig) override;
     int32_t SetParameter(const Format &format) override;
 };
 } // Media
