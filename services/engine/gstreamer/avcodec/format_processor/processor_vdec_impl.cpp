@@ -84,6 +84,14 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
                 "stream-format", G_TYPE_STRING, "byte-stream",
                 "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
+        case CODEC_MIMIE_TYPE_VIDEO_HEVC:
+            caps = gst_caps_new_simple("video/x-h265",
+                "width", G_TYPE_INT, width_,
+                "height", G_TYPE_INT, height_,
+                "alignment", G_TYPE_STRING, "nal",
+                "stream-format", G_TYPE_STRING, "byte-stream",
+                "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
+            break;
         default :
             break;
     }
