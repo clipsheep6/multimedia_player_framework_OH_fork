@@ -40,7 +40,7 @@ public:
     virtual int32_t Init() = 0;
     virtual int32_t Configure(std::shared_ptr<ProcessorConfig> config) = 0;
 
-    virtual sptr<Surface> CreateInputSurface()
+    virtual sptr<Surface> CreateInputSurface(std::shared_ptr<ProcessorConfig> inputConfig)
     {
         return nullptr;
     }

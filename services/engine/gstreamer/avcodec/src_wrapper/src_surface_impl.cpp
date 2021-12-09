@@ -49,8 +49,25 @@ int32_t SrcSurfaceImpl::Configure(std::shared_ptr<ProcessorConfig> config)
     return MSERR_OK;
 }
 
-sptr<Surface> SrcSurfaceImpl::CreateInputSurface()
+sptr<Surface> SrcSurfaceImpl::CreateInputSurface(std::shared_ptr<ProcessorConfig> inputConfig)
 {
+    CHECK_AND_RETURN_RET(inputConfig != nullptr, nullptr);
+    CHECK_AND_RETURN_RET(inputConfig->caps_ != nullptr, nullptr);
+
+    GstStructure *structure = gst_caps_get_structure(inputConfig->caps_, 0);;
+    CHECK_AND_RETURN_RET(structure != nullptr, nullptr);
+
+    gint width = 0;
+    CHECK_AND_RETURN_RET(gst_structure_get(structure, "width", G_TYPE_INT, &width, nullptr) == TRUE, nullptr);
+    CHECK_AND_RETURN_RET(width > 0, nullptr);
+
+    gint height = 0;
+    CHECK_AND_RETURN_RET(gst_structure_get(structure, "height", G_TYPE_INT, &height, nullptr) == TRUE, nullptr);
+    CHECK_AND_RETURN_RET(height > 0, nullptr);
+
+    g_object_set(element_, "surface-width", width, nullptr);
+    g_object_set(element_, "surface-height", height, nullptr);
+
     GValue val = G_VALUE_INIT;
     g_object_get_property((GObject *)element_, "surface", &val);
     gpointer surfaceObj = g_value_get_pointer(&val);

@@ -95,15 +95,19 @@ int32_t AVCodecEngineGstImpl::Flush()
 int32_t AVCodecEngineGstImpl::Reset()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    ctrl_ = nullptr;
-    processor_ = nullptr;
+    CHECK_AND_RETURN_RET(ctrl_->Reset() == MSERR_OK, MSERR_UNKNOWN);
     return MSERR_OK;
 }
 
 sptr<Surface> AVCodecEngineGstImpl::CreateInputSurface()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    return ctrl_->CreateInputSurface();
+    CHECK_AND_RETURN_RET(processor_ != nullptr, nullptr);
+
+    auto inputConfig = processor_->GetInputPortConfig();
+    CHECK_AND_RETURN_RET(inputConfig != nullptr, nullptr);
+
+    return ctrl_->CreateInputSurface(inputConfig);
 }
 
 int32_t AVCodecEngineGstImpl::SetOutputSurface(sptr<Surface> surface)
