@@ -35,7 +35,6 @@ public:
     int32_t Start();
     int32_t Stop();
     int32_t Flush();
-    int32_t Reset();
     void SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs);
     sptr<Surface> CreateInputSurface(std::shared_ptr<ProcessorConfig> inputConfig);
     int32_t SetOutputSurface(sptr<Surface> surface);

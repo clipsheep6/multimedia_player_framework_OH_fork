@@ -203,7 +203,6 @@ struct ProcessorConfig {
     ProcessorConfig(GstCaps *caps)
     : caps_(caps)
     {
-        gst_caps_ref(caps_);
     }
     ~ProcessorConfig()
     {

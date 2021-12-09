@@ -190,12 +190,6 @@ int32_t AVCodecEngineCtrl::Flush()
     return MSERR_OK;
 }
 
-int32_t AVCodecEngineCtrl::Reset()
-{
-    //todo
-    return MSERR_OK;
-}
-
 void AVCodecEngineCtrl::SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs)
 {
     obs_ = obs;
