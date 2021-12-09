@@ -13,13 +13,13 @@
 
 import("//build/ohos.gni")
 
-group("media_engine_gst_muxer") {
+group("media_engine_gst_avmuxer") {
   deps = [ 
-    ":media_engine_gst_muxer_impl",
+    ":media_engine_gst_avmuxer_impl",
   ]
 }
 
-config("media_engine_gst_muxer_impl_config") {
+config("media_engine_gst_avmuxer_impl_config") {
   visibility = [ ":*" ]
 
   cflags = [
@@ -102,14 +102,14 @@ config("gst_media_mux_bin_config") {
 }
 
 
-ohos_static_library("media_engine_gst_muxer_impl") {
+ohos_static_library("media_engine_gst_avmuxer_impl") {
   sources = [
     "convert_codec_data.cpp",
-    "muxer_engine_gst_impl.cpp",
+    "avmuxer_engine_gst_impl.cpp",
     "gst_shmem_wrap_allocator.cpp"
   ]
 
-  configs = [ ":media_engine_gst_muxer_impl_config" ]
+  configs = [ ":media_engine_gst_avmuxer_impl_config" ]
 
   deps = [
     ":gst_media_mux_bin",

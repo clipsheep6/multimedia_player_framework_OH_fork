@@ -1,27 +1,27 @@
-#include "muxer_service_proxy.h"
+#include "avmuxer_service_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "avsharedmemory_ipc.h"
 #include "media_parcel.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MuxerServiceProxy"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerServiceProxy"};
 }
 
 namespace OHOS {
 namespace Media {
-MuxerServiceProxy::MuxerServiceProxy(const sptr<IRemoteObject> &impl)
-    : IRemoteProxy<IStandardMuxerService>(impl)
+AVMuxerServiceProxy::AVMuxerServiceProxy(const sptr<IRemoteObject> &impl)
+    : IRemoteProxy<IStandardAVMuxerService>(impl)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
-MuxerServiceProxy::~MuxerServiceProxy()
+AVMuxerServiceProxy::~AVMuxerServiceProxy()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-int32_t MuxerServiceProxy::DestroyStub()
+int32_t AVMuxerServiceProxy::DestroyStub()
 {
     MessageParcel data;
     MessageParcel reply;
@@ -31,7 +31,7 @@ int32_t MuxerServiceProxy::DestroyStub()
     return reply.ReadInt32();
 }
 
-int32_t MuxerServiceProxy::SetOutput(const std::string& path, const std::string& format)
+int32_t AVMuxerServiceProxy::SetOutput(const std::string& path, const std::string& format)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -43,7 +43,7 @@ int32_t MuxerServiceProxy::SetOutput(const std::string& path, const std::string&
     return reply.ReadInt32();
 }
 
-int32_t MuxerServiceProxy::SetLocation(float latitude, float longitude)
+int32_t AVMuxerServiceProxy::SetLocation(float latitude, float longitude)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -55,7 +55,7 @@ int32_t MuxerServiceProxy::SetLocation(float latitude, float longitude)
     return reply.ReadInt32();
 }
 
-int32_t MuxerServiceProxy::SetOrientationHint(int degrees)
+int32_t AVMuxerServiceProxy::SetOrientationHint(int degrees)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -66,7 +66,7 @@ int32_t MuxerServiceProxy::SetOrientationHint(int degrees)
     return reply.ReadInt32();
 }
 
-int32_t MuxerServiceProxy::AddTrack(const MediaDescription& trackDesc, int32_t& trackId)
+int32_t AVMuxerServiceProxy::AddTrack(const MediaDescription& trackDesc, int32_t& trackId)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -78,7 +78,7 @@ int32_t MuxerServiceProxy::AddTrack(const MediaDescription& trackDesc, int32_t& 
     return reply.ReadInt32();
 }
 
-int32_t MuxerServiceProxy::Start()
+int32_t AVMuxerServiceProxy::Start()
 {
     MessageParcel data;
     MessageParcel reply;
@@ -88,7 +88,7 @@ int32_t MuxerServiceProxy::Start()
     return reply.ReadInt32();
 }
 
-int32_t MuxerServiceProxy::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo& sampleInfo)
+int32_t AVMuxerServiceProxy::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo& sampleInfo)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -104,7 +104,7 @@ int32_t MuxerServiceProxy::WriteTrackSample(std::shared_ptr<AVSharedMemory> samp
     return reply.ReadInt32();
 }
 
-int32_t MuxerServiceProxy::Stop()
+int32_t AVMuxerServiceProxy::Stop()
 {
     MessageParcel data;
     MessageParcel reply;
@@ -114,7 +114,7 @@ int32_t MuxerServiceProxy::Stop()
     return reply.ReadInt32();
 }
 
-void MuxerServiceProxy::Release()
+void AVMuxerServiceProxy::Release()
 {
     MessageParcel data;
     MessageParcel reply;

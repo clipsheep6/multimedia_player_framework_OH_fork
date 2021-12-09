@@ -1,0 +1,95 @@
+#include "avmuxer_client.h"
+#include "media_errors.h"
+#include "media_log.h"
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerClient"};
+}
+
+namespace OHOS {
+namespace Media {
+std::shared_ptr<AVMuxerClient> AVMuxerClient::Create(const sptr<IStandardAVMuxerService>& ipcProxy)
+{
+    std::shared_ptr<AVMuxerClient> avmuxerClient = std::make_shared<AVMuxerClient>(ipcProxy);
+    CHECK_AND_RETURN_RET_LOG(avmuxerClient != nullptr, nullptr, "Failed to create avmuxer client");
+    return avmuxerClient;
+}
+
+AVMuxerClient::AVMuxerClient(const sptr<IStandardAVMuxerService>& ipcProxy)
+    : avmuxerProxy_(ipcProxy)
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+}
+
+AVMuxerClient::~AVMuxerClient()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (avmuxerProxy_ != nullptr) {
+        (void)avmuxerProxy_->DestroyStub();
+    }
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+void AVMuxerClient::MediaServerDied()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    avmuxerProxy_ = nullptr;
+}
+
+int32_t AVMuxerClient::SetOutput(const std::string& path, const std::string& format)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    return avmuxerProxy_->SetOutput(path, format);
+}
+
+int32_t AVMuxerClient::SetLocation(float latitude, float longitude)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    return avmuxerProxy_->SetLocation(latitude, longitude);
+}
+
+int32_t AVMuxerClient::SetOrientationHint(int degrees)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    return avmuxerProxy_->SetOrientationHint(degrees);
+}
+
+int32_t AVMuxerClient::AddTrack(const MediaDescription& trackDesc, int32_t& trackId)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    return avmuxerProxy_->AddTrack(trackDesc, trackId);
+}
+
+int32_t AVMuxerClient::Start()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    return avmuxerProxy_->Start();
+}
+
+int32_t AVMuxerClient::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    return avmuxerProxy_->WriteTrackSample(sampleData, sampleInfo);
+}
+
+int32_t AVMuxerClient::Stop()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    return avmuxerProxy_->Stop();
+}
+
+void AVMuxerClient::Release()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(avmuxerProxy_ != nullptr, "AVMuxer Service does not exist");
+    avmuxerProxy_->Release();
+}
+}  // namespace Media
+}  // namespace OHOS

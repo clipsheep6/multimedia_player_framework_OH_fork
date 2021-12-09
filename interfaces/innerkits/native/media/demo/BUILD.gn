@@ -20,7 +20,7 @@ ohos_executable("media_demo") {
     "./player/data_source",
     "./recorder",
     "./avmetadatahelper",
-    "./muxer",
+    "./avmuxer",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//graphic/standard/interfaces/innerkits/surface",
@@ -53,7 +53,7 @@ ohos_executable("media_demo") {
 
   sources = [
     "./avmetadatahelper/avmetadatahelper_demo.cpp",
-    "./muxer/muxer_demo.cpp",
+    "./avmuxer/avmuxer_demo.cpp",
     "./media_demo.cpp",
     "./player/data_source/media_data_source_demo_noseek.cpp",
     "./player/data_source/media_data_source_demo_seekable.cpp",

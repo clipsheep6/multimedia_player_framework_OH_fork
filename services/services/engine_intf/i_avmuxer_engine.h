@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef I_MUXER_ENGINE_H
-#define I_MUXER_ENGINE_H
+#ifndef I_AVMUXER_ENGINE_H
+#define I_AVMUXER_ENGINE_H
 
 #include <string>
 #include <vector>
@@ -25,9 +25,9 @@
 
 namespace OHOS {
 namespace Media {
-class IMuxerEngine {
+class IAVMuxerEngine {
 public:
-    virtual ~IMuxerEngine() = default;
+    virtual ~IAVMuxerEngine() = default;
 
     static std::vector<std::string> GetSupportedFormats();
 

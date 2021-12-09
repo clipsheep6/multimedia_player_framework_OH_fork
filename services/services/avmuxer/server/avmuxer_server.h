@@ -1,27 +1,27 @@
-#ifndef MUXER_SERVER_H
-#define MUXER_SERVER_H
+#ifndef AVMUXER_SERVER_H
+#define AVMUXER_SERVER_H
 
 #include <mutex>
-#include "i_muxer_service.h"
-#include "i_muxer_engine.h"
+#include "i_avmuxer_service.h"
+#include "i_avmuxer_engine.h"
 #include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
-enum MuxerStates : int32_t {
-    MUXER_IDEL = 0,
-    MUXER_OUTPUT_SET,
-    MUXER_PARAMETER_SET,
-    MUXER_STARTED,
-    MUXER_SAMPLE_WRITING,
+enum AVMuxerStates : int32_t {
+    AVMUXER_IDEL = 0,
+    AVMUXER_OUTPUT_SET,
+    AVMUXER_PARAMETER_SET,
+    AVMUXER_STARTED,
+    AVMUXER_SAMPLE_WRITING,
 };
     
-class MuxerServer : public IMuxerService {
+class AVMuxerServer : public IAVMuxerService {
 public:
-    static std::shared_ptr<IMuxerService> Create();
-    MuxerServer();
-    ~MuxerServer();
-    DISALLOW_COPY_AND_MOVE(MuxerServer);
+    static std::shared_ptr<IAVMuxerService> Create();
+    AVMuxerServer();
+    ~AVMuxerServer();
+    DISALLOW_COPY_AND_MOVE(AVMuxerServer);
 
     int32_t SetOutput(const std::string& path, const std::string& format) override;
     int32_t SetLocation(float latitude, float longitude) override;
@@ -34,10 +34,10 @@ public:
 private:
     int32_t Init();
     std::mutex mutex_;
-    std::shared_ptr<IMuxerEngine> muxerEngine_ = nullptr;
-    MuxerStates curState_ = MUXER_IDEL;
+    std::shared_ptr<IAVMuxerEngine> avmuxerEngine_ = nullptr;
+    AVMuxerStates curState_ = AVMUXER_IDEL;
     uint32_t trackNum_ = 0;
-    FILE* fd_;
+    // FILE* fd_;
 };
 }  // namespace Media
 }  // namespace OHOS

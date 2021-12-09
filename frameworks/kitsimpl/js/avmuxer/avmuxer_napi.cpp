@@ -1,16 +1,16 @@
-#include "muxer_napi.h"
+#include "avmuxer_napi.h"
 #include "media_errors.h"
 #include "media_log.h"
 #include "common_napi.h"
 
 namespace {
-	constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MuxerNapi"};
+	constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerNapi"};
 }
 
 namespace OHOS {
 namespace Media {
-napi_ref MuxerNapi::constructor_ = nullptr;
-const std::string CLASS_NAME = "Muxer";
+napi_ref AVMuxerNapi::constructor_ = nullptr;
+const std::string CLASS_NAME = "AVMuxer";
 const std::string PROPERTY_KEY_SIZE = "size";
 const std::string PROPERTY_KEY_OFFSET = "offset";
 const std::string PROPERTY_KEY_TYPE = "type";
@@ -18,12 +18,13 @@ const std::string PROPERTY_KEY_FLAG = "flag";
 const std::string PROPERTY_KEY_TIMEUS = "timeUs";
 const std::string PROPERTY_KEY_TRACK_ID = "trackId";
 
-struct MuxerNapiAsyncContext {
+struct AVMuxerNapiAsyncContext {
 	napi_env env_;
 	napi_async_work work_;
 	napi_deferred deferred_;
 	napi_ref callbackRef_ = nullptr;
-	MuxerNapi* objectInfo_ = nullptr;
+	AVMuxerNapi* objectInfo_ = nullptr;
+	napi_value instance_;
 	std::string path_;
 	std::string format_;
 	int32_t setOutputFlag_;
@@ -76,21 +77,21 @@ static int64_t GetNamedPropertyInt64(napi_env env, napi_value obj, const std::st
 	return ret;
 }
 
-MuxerNapi::MuxerNapi()
+AVMuxerNapi::AVMuxerNapi()
 {
 	MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
-MuxerNapi::~MuxerNapi()
+AVMuxerNapi::~AVMuxerNapi()
 {
 	if (wrapper_ != nullptr) {
 		napi_delete_reference(env_, wrapper_);
 	}
-	muxerImpl_ = nullptr;
+	avmuxerImpl_ = nullptr;
 	MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-napi_value MuxerNapi::Init(napi_env env, napi_value exports)
+napi_value AVMuxerNapi::Init(napi_env env, napi_value exports)
 {
 	napi_property_descriptor properties[] = {
 		DECLARE_NAPI_FUNCTION("setOutput", SetOutput),
@@ -107,13 +108,13 @@ napi_value MuxerNapi::Init(napi_env env, napi_value exports)
 	
 	napi_property_descriptor staticProperties[] = {
 		DECLARE_NAPI_STATIC_FUNCTION("getSupportedFormats", GetSupportedFormats),
-		DECLARE_NAPI_STATIC_FUNCTION("createMuxer", CreateMuxer)
+		DECLARE_NAPI_STATIC_FUNCTION("createAVMuxer", CreateAVMuxer)
 	};
 	
 	napi_value constructor = nullptr;
-	napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, MuxerNapi::Constructor,
+	napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor,
 		nullptr, sizeof(properties) / sizeof(properties[0]), properties, &constructor);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define muxer class");
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define avmuxer class");
 	
 	status = napi_create_reference(env, constructor, 1, &constructor_);
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
@@ -128,7 +129,7 @@ napi_value MuxerNapi::Init(napi_env env, napi_value exports)
 	return exports;
 }
 
-napi_value MuxerNapi::Constructor(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::Constructor(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
@@ -139,21 +140,21 @@ napi_value MuxerNapi::Constructor(napi_env env, napi_callback_info info)
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, result,
 		"Failed to retrieve details about the callback");
 	
-	MuxerNapi* muxerNapi = new(std::nothrow) MuxerNapi();
-	CHECK_AND_RETURN_RET_LOG(muxerNapi != nullptr, result, "Failed to create muxerNapi");
+	AVMuxerNapi* avmuxerNapi = new(std::nothrow) AVMuxerNapi();
+	CHECK_AND_RETURN_RET_LOG(avmuxerNapi != nullptr, result, "Failed to create avmuxerNapi");
 	
-	muxerNapi->env_ = env;
-	muxerNapi->muxerImpl_ = MuxerFactory::CreateMuxer();
-	if (muxerNapi->muxerImpl_ == nullptr) {
-		delete muxerNapi;
-		MEDIA_LOGE("Failed to create muxerImpl");
+	avmuxerNapi->env_ = env;
+	avmuxerNapi->avmuxerImpl_ = AVMuxerFactory::CreateAVMuxer();
+	if (avmuxerNapi->avmuxerImpl_ == nullptr) {
+		delete avmuxerNapi;
+		MEDIA_LOGE("Failed to create avmuxerImpl");
 		return result;
 	}
 	
-	status = napi_wrap(env, jsThis, reinterpret_cast<void*>(muxerNapi),
-		MuxerNapi::Destructor, nullptr, &(muxerNapi->wrapper_));
+	status = napi_wrap(env, jsThis, reinterpret_cast<void*>(avmuxerNapi),
+		AVMuxerNapi::Destructor, nullptr, &(avmuxerNapi->wrapper_));
 	if (status != napi_ok) {
-		delete muxerNapi;
+		delete avmuxerNapi;
 		MEDIA_LOGE("Failed to wrap native instance");
 		return result;
 	}
@@ -162,46 +163,142 @@ napi_value MuxerNapi::Constructor(napi_env env, napi_callback_info info)
 	return jsThis;
 }
 
-void MuxerNapi::Destructor(napi_env env, void* nativeObject, void* finalize)
+void AVMuxerNapi::Destructor(napi_env env, void* nativeObject, void* finalize)
 {
 	(void)env;
 	(void)finalize;
 	if (nativeObject != nullptr) {
-		delete reinterpret_cast<MuxerNapi*>(nativeObject);
+		delete reinterpret_cast<AVMuxerNapi*>(nativeObject);
 	}
 	MEDIA_LOGD("Destructor success");
 }
 
-napi_value MuxerNapi::CreateMuxer(napi_env env, napi_callback_info info)
+// napi_value MuxerNapi::CreateMuxer(napi_env env, napi_callback_info info)
+// {
+// 	napi_value result = nullptr;
+// 	napi_get_undefined(env, &result);
+// 	napi_value constructor = nullptr;
+// 	napi_status status = napi_get_reference_value(env, constructor_, &constructor);
+// 	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get reference of constructor");
+	
+// 	status = napi_new_instance(env, constructor, 0, nullptr, &result);
+// 	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to create new instance");
+	
+// 	MEDIA_LOGD("Create muxer success");
+// 	return result;
+// }
+
+static void CreateAVMuxerAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-	napi_value result = nullptr;
-	napi_get_undefined(env, &result);
-	napi_value constructor = nullptr;
-	napi_status status = napi_get_reference_value(env, constructor_, &constructor);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get reference of constructor");
-	
-	status = napi_new_instance(env, constructor, 0, nullptr, &result);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to create new instance");
-	
-	MEDIA_LOGD("Create muxer success");
-	return result;
+	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
+
+	napi_value result[2] = {nullptr, nullptr};
+	napi_value retVal;
+	napi_get_undefined(env, &result[0]);
+	napi_get_undefined(env, &result[1]);
+
+	napi_value instance_ = asyncContext->instance_;
+	if (instance_ == nullptr) {
+		napi_value msgValStr = nullptr;
+		napi_create_string_utf8(env, "invalid argument", NAPI_AUTO_LENGTH, &msgValStr);
+		napi_create_error(env, nullptr, msgValStr, &result[0]);
+		CommonNapi::FillErrorArgs(env, static_cast<int32_t>(MSERR_EXT_INVALID_VAL), result[0]);
+	} else {
+		result[1] = instance_;
+	}
+
+	if (asyncContext->deferred_) {
+		if (instance_ == nullptr) {
+			napi_reject_deferred(env, asyncContext->deferred_, result[0]);
+			MEDIA_LOGD("instance_ == nullptr");
+		} else {
+			napi_resolve_deferred(env, asyncContext->deferred_, result[1]);
+			MEDIA_LOGD("instance_ != nullptr");
+		}
+	} else {
+		napi_value callback = nullptr;
+		napi_get_reference_value(env, asyncContext->callbackRef_, &callback);
+		napi_call_function(env, nullptr, callback, 2, result, &retVal);
+		napi_delete_reference(env, asyncContext->callbackRef_);
+	}
+	napi_delete_async_work(env, asyncContext->work_);
+	delete asyncContext;
 }
 
-napi_value MuxerNapi::GetSupportedFormats(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::CreateAVMuxer(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
-	MuxerNapi* muxer = nullptr;
+	napi_value args[1] = {nullptr};
+	size_t argCount = 1;
+
+	napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
+		result, "Failed to retrieve details about the callback");
+
+	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
+	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
+
+	for (size_t i = 0; i < argCount; ++i) {
+		napi_valuetype valueType = napi_undefined;
+		napi_typeof(env, args[i], &valueType);
+		if (i == 0 && valueType == napi_function) {
+			napi_create_reference(env, args[i], 1, &asyncContext->callbackRef_);
+		} else {
+			MEDIA_LOGE("Failed to check argument value type");
+			return result;
+		}
+	}
+
+	if (asyncContext->callbackRef_ == nullptr) {
+		napi_create_promise(env, &asyncContext->deferred_, &result);
+	}
+
+	napi_value resource = nullptr;
+	napi_create_string_utf8(env, "CreateAVMuxer", NAPI_AUTO_LENGTH, &resource);
+
+	status = napi_create_async_work(env, nullptr, resource,
+		[](napi_env env, void* data) {
+			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+			CHECK_AND_RETURN_LOG(context != nullptr, "AVMuxerNapiAsyncContext is nullptr!");
+			
+			napi_value constructor = nullptr;
+			napi_status status = napi_get_reference_value(env, constructor_, &constructor);
+			CHECK_AND_RETURN_LOG(status == napi_ok, "Failed to get reference of constructor");
+	
+			status = napi_new_instance(env, constructor, 0, nullptr, &(context->instance_));
+			CHECK_AND_RETURN_LOG(status == napi_ok, "Failed to create new instance");
+	
+			MEDIA_LOGD("Create avmuxer success");
+		},
+		CreateAVMuxerAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
+	if (status != napi_ok) {
+		MEDIA_LOGE("Failed to create async work");
+		napi_get_undefined(env, &result);
+	} else {
+		napi_queue_async_work(env, asyncContext->work_);
+		asyncContext.release();
+	}
+	return result;
+}
+
+napi_value AVMuxerNapi::GetSupportedFormats(napi_env env, napi_callback_info info)
+{
+	napi_value result = nullptr;
+	napi_get_undefined(env, &result);
+	napi_value jsThis = nullptr;
+	AVMuxerNapi* avmuxer = nullptr;
 	size_t argCount = 0;
 	
 	napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, result, "Failed to retrieve details about the callbacke");
 	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&muxer));
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && muxer != nullptr, result, "Failed to retrieve instance");
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&avmuxer));
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
 	
-	// std::vector<std::string> formats = muxer->muxerImpl_->GetSupportedFormats();
+	// std::vector<std::string> formats = avmuxer->avmuxerImpl_->GetSupportedFormats();
 	std::vector<std::string> formats = {};
 	size_t size = formats.size();
 	napi_create_array_with_length(env, size, &result);
@@ -219,8 +316,8 @@ napi_value MuxerNapi::GetSupportedFormats(napi_env env, napi_callback_info info)
 
 static void SetOutputAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-	MuxerNapiAsyncContext* asyncContext = static_cast<MuxerNapiAsyncContext*>(data);
-	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get MuxerNapiAsyncContext instance");
+	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
 	napi_value retVal;
@@ -251,8 +348,9 @@ static void SetOutputAsyncCallbackComplete(napi_env env, napi_status status, voi
 	delete asyncContext;
 }
 
-napi_value MuxerNapi::SetOutput(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
 {
+	MEDIA_LOGD("begin SetOutput");
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
@@ -260,11 +358,11 @@ napi_value MuxerNapi::SetOutput(napi_env env, napi_callback_info info)
 	size_t argCount = 3;
 
 	napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr &&
-		args[1] != nullptr && args[2] == nullptr, result, "Failed to retrieve details about the callback");
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
+		result, "Failed to retrieve details about the callback");
 	
-	std::unique_ptr<MuxerNapiAsyncContext> asyncContext = std::make_unique<MuxerNapiAsyncContext>();
-	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create MuxerNapiAsyncContext instance");
+	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
+	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
 	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
@@ -293,8 +391,8 @@ napi_value MuxerNapi::SetOutput(napi_env env, napi_callback_info info)
 	
 	status = napi_create_async_work(env, nullptr, resource,
 		[](napi_env env, void* data) {
-			MuxerNapiAsyncContext* context = static_cast<MuxerNapiAsyncContext*>(data);
-			context->setOutputFlag_ = context->objectInfo_->muxerImpl_->SetOutput(context->path_, context->format_);
+			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+			context->setOutputFlag_ = context->objectInfo_->avmuxerImpl_->SetOutput(context->path_, context->format_);
 		},
 		SetOutputAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
@@ -304,15 +402,17 @@ napi_value MuxerNapi::SetOutput(napi_env env, napi_callback_info info)
 		napi_queue_async_work(env, asyncContext->work_);
 		asyncContext.release();
 	}
+
+	MEDIA_LOGD("SetOutput success");
 	return result;
 }
 
-napi_value MuxerNapi::Setlatitude(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::Setlatitude(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
-	MuxerNapi* muxer = nullptr;
+	AVMuxerNapi* avmuxer = nullptr;
 	napi_value args[1] = {nullptr};
 	size_t argCount = 1;
 	
@@ -320,8 +420,8 @@ napi_value MuxerNapi::Setlatitude(napi_env env, napi_callback_info info)
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
 		result, "Failed to retrieve details about the callbacke");
 	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&muxer));
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && muxer != nullptr, result, "Failed to retrieve instance");
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&avmuxer));
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
 	
 	napi_valuetype valueType = napi_undefined;
 	status = napi_typeof(env, args[0], &valueType);
@@ -332,19 +432,19 @@ napi_value MuxerNapi::Setlatitude(napi_env env, napi_callback_info info)
 	status = napi_get_value_double(env, args[0], &latitude);
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get latitude");
 	
-	int ret = muxer->muxerImpl_->SetLocation(latitude, 0);
+	int ret = avmuxer->avmuxerImpl_->SetLocation(latitude, 0);
 	CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call SetLocation");
 
 	MEDIA_LOGD("SetLocation success");
 	return result;
 }
 
-napi_value MuxerNapi::SetLongitude(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::SetLongitude(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
-	MuxerNapi* muxer = nullptr;
+	AVMuxerNapi* avmuxer = nullptr;
 	napi_value args[1] = {nullptr};
 	size_t argCount = 1;
 	
@@ -352,8 +452,8 @@ napi_value MuxerNapi::SetLongitude(napi_env env, napi_callback_info info)
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
 		result, "Failed to retrieve details about the callbacke");
 	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&muxer));
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && muxer != nullptr, result, "Failed to retrieve instance");
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&avmuxer));
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
 	
 	napi_valuetype valueType = napi_undefined;
 	status = napi_typeof(env, args[0], &valueType);
@@ -364,19 +464,19 @@ napi_value MuxerNapi::SetLongitude(napi_env env, napi_callback_info info)
 	status = napi_get_value_double(env, args[0], &longitude);
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get longitude");
 	
-	int ret = muxer->muxerImpl_->SetLocation(0, longitude);
+	int ret = avmuxer->avmuxerImpl_->SetLocation(0, longitude);
 	CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call SetLocation");
 
 	MEDIA_LOGD("SetLocation success");
 	return result;
 }
 
-napi_value MuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
-	MuxerNapi* muxer = nullptr;
+	AVMuxerNapi* avmuxer = nullptr;
 	napi_value args[1] = {nullptr};
 	size_t argCount = 1;
 	
@@ -384,8 +484,8 @@ napi_value MuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info)
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
 		result, "Failed to retrieve details about the callbacke");
 	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&muxer));
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && muxer != nullptr, result, "Failed to retrieve instance");
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&avmuxer));
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
 	
 	napi_valuetype valueType = napi_undefined;
 	status = napi_typeof(env, args[0], &valueType);
@@ -396,7 +496,7 @@ napi_value MuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info)
 	status = napi_get_value_int32(env, args[0], &degrees);
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get degrees");
 	
-	int32_t ret = muxer->muxerImpl_->SetOrientationHint(degrees);
+	int32_t ret = avmuxer->avmuxerImpl_->SetOrientationHint(degrees);
 	CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call SetOrientationHint");
 
 	MEDIA_LOGD("SetOrientationHint success");
@@ -405,8 +505,8 @@ napi_value MuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info)
 
 static void AddTrackAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-	MuxerNapiAsyncContext* asyncContext = static_cast<MuxerNapiAsyncContext*>(data);
-	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get MuxerNapiAsyncContext instance");
+	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
 	napi_value retVal;
@@ -439,7 +539,7 @@ static void AddTrackAsyncCallbackComplete(napi_env env, napi_status status, void
 	delete asyncContext;
 }
 
-napi_value MuxerNapi::AddTrack(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
@@ -448,11 +548,11 @@ napi_value MuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 	size_t argCount = 2;
 
 	napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr &&
-		args[1] != nullptr, result, "Failed to retrieve details about the callback");
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
+		result, "Failed to retrieve details about the callback");
 
-	std::unique_ptr<MuxerNapiAsyncContext> asyncContext = std::make_unique<MuxerNapiAsyncContext>();
-	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create MuxerNapiAsyncContext instance");
+	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
+	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 	
 	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
@@ -495,8 +595,8 @@ napi_value MuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 	
 	status = napi_create_async_work(env, nullptr, resource,
 		[](napi_env env, void* data) {
-			MuxerNapiAsyncContext* context = static_cast<MuxerNapiAsyncContext*>(data);
-			context->isAdd_ = context->objectInfo_->muxerImpl_->AddTrack(context->trackDesc_, context->trackId_);
+			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+			context->isAdd_ = context->objectInfo_->avmuxerImpl_->AddTrack(context->trackDesc_, context->trackId_);
 		},
 		AddTrackAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
@@ -511,8 +611,8 @@ napi_value MuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 
 static void StartAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-	MuxerNapiAsyncContext* asyncContext = static_cast<MuxerNapiAsyncContext*>(data);
-	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get MuxerNapiAsyncContext instance");
+	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
 	napi_value retVal;
@@ -543,7 +643,7 @@ static void StartAsyncCallbackComplete(napi_env env, napi_status status, void* d
 	delete asyncContext;
 }
 
-napi_value MuxerNapi::Start(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::Start(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
@@ -552,11 +652,11 @@ napi_value MuxerNapi::Start(napi_env env, napi_callback_info info)
 	size_t argCount = 1;
 
 	napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
 		result, "Failed to retrieve details about the callback");
 
-	std::unique_ptr<MuxerNapiAsyncContext> asyncContext = std::make_unique<MuxerNapiAsyncContext>();
-	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create MuxerNapiAsyncContext instance");
+	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
+	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 	
 	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
@@ -581,8 +681,8 @@ napi_value MuxerNapi::Start(napi_env env, napi_callback_info info)
 	
 	status = napi_create_async_work(env, nullptr, resource,
 		[](napi_env env, void* data) {
-			MuxerNapiAsyncContext* context = static_cast<MuxerNapiAsyncContext*>(data);
-			context->isStart_ = context->objectInfo_->muxerImpl_->Start();
+			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+			context->isStart_ = context->objectInfo_->avmuxerImpl_->Start();
 		},
 		StartAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
@@ -597,8 +697,8 @@ napi_value MuxerNapi::Start(napi_env env, napi_callback_info info)
 
 static void WriteTrackSampleAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-	MuxerNapiAsyncContext* asyncContext = static_cast<MuxerNapiAsyncContext*>(data);
-	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get MuxerNapiAsyncContext instance");
+	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
 	napi_value retVal;
@@ -629,7 +729,7 @@ static void WriteTrackSampleAsyncCallbackComplete(napi_env env, napi_status stat
 	delete asyncContext;
 }
 
-napi_value MuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
@@ -638,11 +738,11 @@ napi_value MuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 	size_t argCount = 3;
 
 	napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr && args[1] != nullptr &&
-		args[2] != nullptr, result, "Failed to retrieve details about the callback");
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
+		result, "Failed to retrieve details about the callback");
 	
-	std::unique_ptr<MuxerNapiAsyncContext> asyncContext = std::make_unique<MuxerNapiAsyncContext>();
-	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create MuxerNapiAsyncContext instance");
+	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
+	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
 	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
@@ -684,10 +784,10 @@ napi_value MuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 	
 	status = napi_create_async_work(env, nullptr, resource,
 		[](napi_env env, void* data) {
-			MuxerNapiAsyncContext* context = static_cast<MuxerNapiAsyncContext*>(data);
+			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
 			std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(static_cast<uint8_t*>(context->arrayBuffer_), context->arrayBufferSize_);
 			avMem->SetRange(context->trackSampleInfo_.offset, context->trackSampleInfo_.size);
-			context->writeSampleFlag_ = context->objectInfo_->muxerImpl_->WriteTrackSample(avMem, context->trackSampleInfo_);
+			context->writeSampleFlag_ = context->objectInfo_->avmuxerImpl_->WriteTrackSample(avMem, context->trackSampleInfo_);
 		},
 		WriteTrackSampleAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
@@ -702,8 +802,8 @@ napi_value MuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 
 static void StopSampleAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-	MuxerNapiAsyncContext* asyncContext = static_cast<MuxerNapiAsyncContext*>(data);
-	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get MuxerNapiAsyncContext instance");
+	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
 	napi_value retVal;
@@ -734,7 +834,7 @@ static void StopSampleAsyncCallbackComplete(napi_env env, napi_status status, vo
 	delete asyncContext;
 }
 
-napi_value MuxerNapi::Stop(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
@@ -743,11 +843,11 @@ napi_value MuxerNapi::Stop(napi_env env, napi_callback_info info)
 	size_t argCount = 1;
 
 	napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
 		result, "Failed to retrieve details about the callback");
 	
-	std::unique_ptr<MuxerNapiAsyncContext> asyncContext = std::make_unique<MuxerNapiAsyncContext>();
-	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create MuxerNapiAsyncContext instance");
+	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
+	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
 	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
@@ -772,8 +872,8 @@ napi_value MuxerNapi::Stop(napi_env env, napi_callback_info info)
 	
 	status = napi_create_async_work(env, nullptr, resource,
 		[](napi_env env, void* data) {
-			MuxerNapiAsyncContext* context = static_cast<MuxerNapiAsyncContext*>(data);
-			context->isStop_ = context->objectInfo_->muxerImpl_->Stop();
+			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+			context->isStop_ = context->objectInfo_->avmuxerImpl_->Stop();
 		},
 		StopSampleAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
@@ -788,8 +888,8 @@ napi_value MuxerNapi::Stop(napi_env env, napi_callback_info info)
 
 static void ReleaseAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
-	MuxerNapiAsyncContext* asyncContext = static_cast<MuxerNapiAsyncContext*>(data);
-	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get MuxerNapiAsyncContext instance");
+	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 	napi_value result[2] = {nullptr, nullptr};
 	napi_value retVal;
 	napi_get_undefined(env, &result[0]);
@@ -807,7 +907,7 @@ static void ReleaseAsyncCallbackComplete(napi_env env, napi_status status, void*
 	delete asyncContext;
 }
 
-napi_value MuxerNapi::Release(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
@@ -816,11 +916,11 @@ napi_value MuxerNapi::Release(napi_env env, napi_callback_info info)
 	size_t argCount = 1;
 
 	napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
 		result, "Failed to retrieve details about the callback");
 	
-	std::unique_ptr<MuxerNapiAsyncContext> asyncContext = std::make_unique<MuxerNapiAsyncContext>();
-	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create MuxerNapiAsyncContext instance");
+	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
+	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 	
 	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
@@ -845,8 +945,8 @@ napi_value MuxerNapi::Release(napi_env env, napi_callback_info info)
 	
 	status = napi_create_async_work(env, nullptr, resource,
 		[](napi_env env, void* data) {
-			MuxerNapiAsyncContext* context = static_cast<MuxerNapiAsyncContext*>(data);
-			context->objectInfo_->muxerImpl_->Release();
+			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+			context->objectInfo_->avmuxerImpl_->Release();
 		},
 		ReleaseAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {

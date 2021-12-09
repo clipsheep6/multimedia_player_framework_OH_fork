@@ -1,17 +1,17 @@
-#ifndef MUXER_CLIENT_H
-#define MUXER_CLIENT_H
+#ifndef AVMUXER_CLIENT_H
+#define AVMUXER_CLIENT_H
 
-#include "i_muxer_service.h"
-#include "i_standard_muxer_service.h"
+#include "i_avmuxer_service.h"
+#include "i_standard_avmuxer_service.h"
 
 namespace OHOS {
 namespace Media {
-class MuxerClient : public IMuxerService {
+class AVMuxerClient : public IAVMuxerService {
 public:
-    static std::shared_ptr<MuxerClient> Create(const sptr<IStandardMuxerService>& ipcProxy);
-    explicit MuxerClient(const sptr<IStandardMuxerService>& ipcProxy);
-    ~MuxerClient();
-    DISALLOW_COPY_AND_MOVE(MuxerClient);
+    static std::shared_ptr<AVMuxerClient> Create(const sptr<IStandardAVMuxerService>& ipcProxy);
+    explicit AVMuxerClient(const sptr<IStandardAVMuxerService>& ipcProxy);
+    ~AVMuxerClient();
+    DISALLOW_COPY_AND_MOVE(AVMuxerClient);
 
     int32_t SetOutput(const std::string& path, const std::string& format) override;
     int32_t SetLocation(float latitude, float longitude) override;
@@ -25,8 +25,8 @@ public:
     void MediaServerDied();
 private:
     std::mutex mutex_;
-    sptr<IStandardMuxerService> muxerProxy_ = nullptr;
+    sptr<IStandardAVMuxerService> avmuxerProxy_ = nullptr;
 };
 }  // namespace Media
 }  // namespace OHOS
-#endif  // MUXER_CLIENT_H
+#endif  // AVMUXER_CLIENT_H

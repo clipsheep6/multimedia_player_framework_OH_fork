@@ -1,15 +1,15 @@
-#ifndef I_STANDARD_MUXER_SERVICE_H
-#define I_STANDARD_MUXER_SERVICE_H
+#ifndef I_STANDARD_AVMUXER_SERVICE_H
+#define I_STANDARD_AVMUXER_SERVICE_H
 
-#include "i_muxer_service.h"
+#include "i_avmuxer_service.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 
 namespace OHOS {
 namespace Media {
-class IStandardMuxerService : public IRemoteBroker {
+class IStandardAVMuxerService : public IRemoteBroker {
 public:
-    virtual ~IStandardMuxerService() = default;
+    virtual ~IStandardAVMuxerService() = default;
     static std::vector<std::string> GetSupportedFormats();
     virtual int32_t SetOutput(const std::string& path, const std::string& format) = 0;
     virtual int32_t SetLocation(float latitude, float longitude) = 0;
@@ -21,7 +21,7 @@ public:
     virtual void Release() = 0;
     virtual int32_t DestroyStub() = 0;
 
-    enum MuxerServiceMsg {
+    enum AVMuxerServiceMsg {
         SET_OUTPUT = 0,
         SET_LOCATION,
         SET_ORIENTATION_HINT,
@@ -33,8 +33,8 @@ public:
         DESTROY,
     };
 
-    DECLARE_INTERFACE_DESCRIPTOR(u"IStandardMuxerServiceq1a");
+    DECLARE_INTERFACE_DESCRIPTOR(u"IStandardAVMuxerServiceq1a");
 };
 }  // namespace Media
 }  // namespace OHOS
-#endif  // I_STANDARD_MUXER_SERVICE_H
+#endif  // I_STANDARD_AVMUXER_SERVICE_H

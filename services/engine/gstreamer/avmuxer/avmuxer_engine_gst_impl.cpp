@@ -14,7 +14,7 @@
  */
 
 #include <iostream>
-#include "muxer_engine_gst_impl.h"
+#include "avmuxer_engine_gst_impl.h"
 #include "gst_utils.h"
 #include "gstappsrc.h"
 #include "media_errors.h"
@@ -22,7 +22,7 @@
 #include "convert_codec_data.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MuxerEngineGstImpl"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerEngineGstImpl"};
 }
 
 namespace OHOS {
@@ -41,12 +41,12 @@ static void stop_feed(GstAppSrc *src, gpointer user_data)
     (*reinterpret_cast<std::map<int32_t, bool>*>(user_data))[trackID] = false;
 }
 
-MuxerEngineGstImpl::MuxerEngineGstImpl()
+AVMuxerEngineGstImpl::AVMuxerEngineGstImpl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
-MuxerEngineGstImpl::~MuxerEngineGstImpl()
+AVMuxerEngineGstImpl::~AVMuxerEngineGstImpl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     if (muxBin_ != nullptr) {
@@ -55,7 +55,7 @@ MuxerEngineGstImpl::~MuxerEngineGstImpl()
     }
 }
 
-int32_t MuxerEngineGstImpl::Init()
+int32_t AVMuxerEngineGstImpl::Init()
 {
     muxBin_ = GST_MUX_BIN(gst_element_factory_make("muxbin", "muxbin"));
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_UNKNOWN, "Failed to create muxbin");
@@ -68,7 +68,7 @@ int32_t MuxerEngineGstImpl::Init()
     return MSERR_OK;
 }
 
-int32_t MuxerEngineGstImpl::SetOutput(const std::string &path, const std::string &format)
+int32_t AVMuxerEngineGstImpl::SetOutput(const std::string &path, const std::string &format)
 {
     MEDIA_LOGI("SetOutput");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_UNKNOWN, "Muxbin does not exist");
@@ -80,7 +80,7 @@ int32_t MuxerEngineGstImpl::SetOutput(const std::string &path, const std::string
     
 }
 
-int32_t MuxerEngineGstImpl::SetLocation(float latitude, float longitude)
+int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
 {
     MEDIA_LOGI("SetLocation");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_UNKNOWN, "Muxbin does not exist");
@@ -95,7 +95,7 @@ int32_t MuxerEngineGstImpl::SetLocation(float latitude, float longitude)
     return MSERR_OK;
 }
 
-int32_t MuxerEngineGstImpl::SetOrientationHint(int degrees)
+int32_t AVMuxerEngineGstImpl::SetOrientationHint(int degrees)
 {
     MEDIA_LOGI("SetOrientationHint");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_UNKNOWN, "Muxbin does not exist");
@@ -107,7 +107,7 @@ int32_t MuxerEngineGstImpl::SetOrientationHint(int degrees)
     return MSERR_OK;
 }
 
-int32_t MuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
+int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
 {
     MEDIA_LOGI("AddTrack");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_UNKNOWN, "Muxbin does not exist");
@@ -148,7 +148,7 @@ int32_t MuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_t 
     return MSERR_OK;
 }
 
-int32_t MuxerEngineGstImpl::Start()
+int32_t AVMuxerEngineGstImpl::Start()
 {
     MEDIA_LOGI("Start");
     std::unique_lock<std::mutex> lock(mutex_);
@@ -166,7 +166,7 @@ int32_t MuxerEngineGstImpl::Start()
     return MSERR_OK; 
 }
 
-int32_t MuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo)
+int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo)
 {
     MEDIA_LOGI("WriteTrackSample");
     std::unique_lock<std::mutex> lock(mutex_);
@@ -219,7 +219,7 @@ int32_t MuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sam
     return MSERR_OK;
 }
 
-int32_t MuxerEngineGstImpl::Stop()
+int32_t AVMuxerEngineGstImpl::Stop()
 {
     MEDIA_LOGI("Stop");
     std::unique_lock<std::mutex> lock(mutex_);
@@ -242,12 +242,12 @@ int32_t MuxerEngineGstImpl::Stop()
     return MSERR_OK;
 }
 
-int32_t MuxerEngineGstImpl::SetupMsgProcessor()
+int32_t AVMuxerEngineGstImpl::SetupMsgProcessor()
 {
     GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE_CAST(muxBin_));
     CHECK_AND_RETURN_RET_LOG(bus != nullptr, MSERR_UNKNOWN, "Failed to create GstBus");
 
-    auto msgNotifier = std::bind(&MuxerEngineGstImpl::OnNotifyMessage, this, std::placeholders::_1);
+    auto msgNotifier = std::bind(&AVMuxerEngineGstImpl::OnNotifyMessage, this, std::placeholders::_1);
     msgProcessor_ = std::make_unique<GstMsgProcessor>(*bus, msgNotifier);
     gst_object_unref(bus);
     bus = nullptr;
@@ -260,7 +260,7 @@ int32_t MuxerEngineGstImpl::SetupMsgProcessor()
     return MSERR_OK;
 }
 
-void MuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
+void AVMuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
 {
     switch (msg.type) {
         case InnerMsgType::INNER_MSG_EOS: {
@@ -295,7 +295,7 @@ void MuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
     }
 }
 
-void MuxerEngineGstImpl::clear()
+void AVMuxerEngineGstImpl::clear()
 {
     trackIdSet.clear();
     hasCaps.clear();

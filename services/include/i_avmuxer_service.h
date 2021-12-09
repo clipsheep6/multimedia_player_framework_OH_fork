@@ -13,38 +13,32 @@
  * limitations under the License.
  */
 
-#ifndef MUXER_H
-#define MUXER_H
+#ifndef I_AVMUXER_SERVICE_H
+#define I_AVMUXER_SERVICE_H
 
 #include <string>
-#include <memory>
 #include <vector>
-#include "avmemory.h"
+#include <memory>
+#include "avsharedmemory.h"
 #include "media_types.h"
 #include "media_description.h"
 
 namespace OHOS {
 namespace Media {
-class Muxer {
+class IAVMuxerService {
 public:
-    virtual ~Muxer() = default;
+    virtual ~IAVMuxerService() = default;
+
+    static std::vector<std::string> GetSupportedFormats();
 
     virtual int32_t SetOutput(const std::string &path, const std::string &format) = 0;
     virtual int32_t SetLocation(float latitude, float longtitude) = 0;
-    virtual int32_t SetOrientationHint(int degrees) = 0;
+    virtual int32_t SetOrientationHint(int32_t degrees) = 0;
     virtual int32_t AddTrack(const MediaDescription &trackDesc, int32_t &trackIdx) = 0;
     virtual int32_t Start() = 0;
-    virtual int32_t WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo &info) = 0;
+    virtual int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) = 0;
     virtual int32_t Stop() = 0;
     virtual void Release() = 0;
-};
-
-class __attribute__((visibility("default"))) MuxerFactory {
-public:
-    static std::shared_ptr<Muxer> CreateMuxer();
-private:
-    MuxerFactory() = default;
-    ~MuxerFactory() = default;
 };
 }
 }

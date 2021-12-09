@@ -21,7 +21,7 @@
 #include "i_player_engine.h"
 #include "i_recorder_engine.h"
 #include "i_avmetadatahelper_engine.h"
-#include "i_muxer_engine.h"
+#include "i_avmuxer_engine.h"
 
 namespace OHOS {
 namespace Media {
@@ -31,7 +31,7 @@ public:
         SCENE_PLAYBACK,
         SCENE_AVMETADATA,
         SCENE_RECORDER,
-        SCENE_MUXER,
+        SCENE_AVMUXER,
     };
 
     virtual ~IEngineFactory() = default;
@@ -39,7 +39,7 @@ public:
     virtual std::unique_ptr<IPlayerEngine> CreatePlayerEngine() = 0;
     virtual std::unique_ptr<IRecorderEngine> CreateRecorderEngine() = 0;
     virtual std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine() = 0;
-    virtual std::unique_ptr<IMuxerEngine> CreateMuxerEngine() = 0;
+    virtual std::unique_ptr<IAVMuxerEngine> CreateAVMuxerEngine() = 0;
 
 protected:
     static constexpr int32_t MAX_SCORE = 100;

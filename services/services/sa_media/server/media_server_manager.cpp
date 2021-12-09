@@ -17,7 +17,7 @@
 #include "recorder_service_stub.h"
 #include "player_service_stub.h"
 #include "avmetadatahelper_service_stub.h"
-#include "muxer_service_stub.h"
+#include "avmuxer_service_stub.h"
 #include "media_log.h"
 
 namespace {
@@ -56,8 +56,8 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         case AVMETADATAHELPER: {
             return CreateAVMetadataHelperStubObject();
         }
-        case MUXER: {
-            return CreateMuxerStubObject();
+        case AVMUXER: {
+            return CreateAVMuxerStubObject();
         }
         default: {
             MEDIA_LOGE("default case, media server manager failed");
@@ -129,23 +129,23 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMetadataHelperStubObject()
     return object;
 }
 
-sptr<IRemoteObject> MediaServerManager::CreateMuxerStubObject()
+sptr<IRemoteObject> MediaServerManager::CreateAVMuxerStubObject()
 {
-    if (muxerStubMap_.size() >= SERVER_MAX_NUMBER) {
-        MEDIA_LOGE("The number of muxer services(%{public}zu) has reached the upper limit."
-            "Please release the applied resources.", muxerStubMap_.size());
+    if (avmuxerStubMap_.size() >= SERVER_MAX_NUMBER) {
+        MEDIA_LOGE("The number of avmuxer services(%{public}zu) has reached the upper limit."
+            "Please release the applied resources.", avmuxerStubMap_.size());
         return nullptr;
     }
-    sptr<MuxerServiceStub> muxerStub = MuxerServiceStub::Create();
-    if (muxerStub == nullptr) {
-        MEDIA_LOGE("failed to create MuxerServiceStub");
+    sptr<AVMuxerServiceStub> avmuxerStub = AVMuxerServiceStub::Create();
+    if (avmuxerStub == nullptr) {
+        MEDIA_LOGE("failed to create AVMuxerServiceStub");
         return nullptr;
     }
-    sptr<IRemoteObject> object = muxerStub->AsObject();
+    sptr<IRemoteObject> object = avmuxerStub->AsObject();
     if (object != nullptr) {
         pid_t pid = IPCSkeleton::GetCallingPid();
-        muxerStubMap_[object] = pid;
-        MEDIA_LOGD("The number of muxer services(%{public}zu).", muxerStubMap_.size());
+        avmuxerStubMap_[object] = pid;
+        MEDIA_LOGD("The number of avmuxer services(%{public}zu).", avmuxerStubMap_.size());
     }
     return object;
 }
@@ -191,16 +191,16 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             MEDIA_LOGE("find avmetadatahelper object failed, pid(%{public}d).", pid);
             break;
         }
-        case MUXER: {
-            for (auto it = muxerStubMap_.begin(); it != muxerStubMap_.end(); it++) {
+        case AVMUXER: {
+            for (auto it = avmuxerStubMap_.begin(); it != avmuxerStubMap_.end(); it++) {
                 if (it->first ==  object) {
-                    MEDIA_LOGD("destory muxer stub services(%{public}zu) pid(%{public}d).",
-                        muxerStubMap_.size(), pid);
-                    (void)muxerStubMap_.erase(it);
+                    MEDIA_LOGD("destory avmuxer stub services(%{public}zu) pid(%{public}d).",
+                        avmuxerStubMap_.size(), pid);
+                    (void)avmuxerStubMap_.erase(it);
                     return;
                 }
             }
-            MEDIA_LOGE("find muxer object failed, pid(%{public}d).", pid);
+            MEDIA_LOGE("find avmuxer object failed, pid(%{public}d).", pid);
             break;
         }
         default: {
@@ -243,15 +243,15 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     }
     MEDIA_LOGD("avmetadatahelper stub services(%{public}zu).", avMetadataHelperStubMap_.size());
 
-    MEDIA_LOGD("muxer stub services(%{public}zu) pid(%{public}d).", muxerStubMap_.size(), pid);
-    for (auto itMuxer = muxerStubMap_.begin(); itMuxer != muxerStubMap_.end();) {
-        if (itMuxer->second ==  pid) {
-            itMuxer = muxerStubMap_.erase(itMuxer);
+    MEDIA_LOGD("avmuxer stub services(%{public}zu) pid(%{public}d).", avmuxerStubMap_.size(), pid);
+    for (auto itAVMuxer = avmuxerStubMap_.begin(); itAVMuxer != avmuxerStubMap_.end();) {
+        if (itAVMuxer->second ==  pid) {
+            itAVMuxer = avmuxerStubMap_.erase(itAVMuxer);
         } else {
-            itMuxer++;
+            itAVMuxer++;
         }
     }
-    MEDIA_LOGD("muxer stub services(%{public}zu).", muxerStubMap_.size());
+    MEDIA_LOGD("avmuxer stub services(%{public}zu).", avmuxerStubMap_.size());
 }
 } // Media
 } // OHOS

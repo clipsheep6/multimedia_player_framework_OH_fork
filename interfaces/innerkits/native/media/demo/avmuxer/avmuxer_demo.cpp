@@ -1,4 +1,4 @@
-#include "muxer_demo.h"
+#include "avmuxer_demo.h"
 #include <iostream>
 #include <cstdio>
 #include <securec.h>
@@ -25,7 +25,7 @@ std::vector<std::string> MDKey = {
     // "vendor."
 };
 
-void MuxerDemo::ReadTrackInfo() {
+void AVMuxerDemo::ReadTrackInfo() {
     uint32_t i;
     fmt_ctx_ = avformat_alloc_context();
     avformat_open_input(&fmt_ctx_, url_, nullptr,nullptr);
@@ -43,7 +43,7 @@ void MuxerDemo::ReadTrackInfo() {
     }
 }
 
-void MuxerDemo::WriteTrackSample() {
+void AVMuxerDemo::WriteTrackSample() {
     AVPacket pkt;
     memset_s(&pkt, sizeof(pkt), 0, sizeof(pkt));
 
@@ -59,7 +59,7 @@ void MuxerDemo::WriteTrackSample() {
 	avMem1->SetRange(info1.offset, info1.size);
     std::cout << "avMem1->Capacity() is: " << avMem1->Capacity() << std::endl;
     std::cout << "avMem1->Size() is: " << avMem1->Size() << std::endl;
-    muxer_->WriteTrackSample(avMem1, info1);
+    avmuxer_->WriteTrackSample(avMem1, info1);
 
     while(1) {
         av_init_packet(&pkt);
@@ -83,17 +83,17 @@ void MuxerDemo::WriteTrackSample() {
 		    avMem->SetRange(info.offset, pkt.size);
             std::cout << "avMem->Capacity() is: " << avMem->Capacity() << std::endl;
             std::cout << "avMem->Size() is: " << avMem->Size() << std::endl;
-            muxer_->WriteTrackSample(avMem, info);
+            avmuxer_->WriteTrackSample(avMem, info);
         }
     }
     avformat_close_input(&fmt_ctx_);
 }
 
-void MuxerDemo::DoNext()
+void AVMuxerDemo::DoNext()
 {
     std::string path = "/data/media/output.mp4";
     std::string format = "mp4";
-    muxer_->SetOutput(path, format);
+    avmuxer_->SetOutput(path, format);
     ReadTrackInfo();
     MediaDescription trackDesc;
     trackDesc.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/x-h264");
@@ -102,12 +102,12 @@ void MuxerDemo::DoNext()
     std::cout << "width is: " << width_ << std::endl;
     std::cout << "height is: " << height_ << std:: endl;
     int32_t trackId;
-    muxer_->AddTrack(trackDesc, trackId);
+    avmuxer_->AddTrack(trackDesc, trackId);
     std::cout << "trackId is: " << trackId << std::endl;
-    muxer_->Start();
+    avmuxer_->Start();
     WriteTrackSample();
-    muxer_->Stop();
-    muxer_->Release();
+    avmuxer_->Stop();
+    avmuxer_->Release();
     // std::string cmd;
     // do {
     //     std::cout << "Enter your step:" << std::endl;
@@ -120,7 +120,7 @@ void MuxerDemo::DoNext()
     //         // std::cin >> path;
     //         // std::cout << "Enter format:" << std::endl;
     //         // std::cin >> format;
-    //         muxer_->SetOutput(path, format);
+    //         avmuxer_->SetOutput(path, format);
     //         continue;
     //     } else if (cmd == "SetLocation") {
     //         float latitude = 1;
@@ -129,13 +129,13 @@ void MuxerDemo::DoNext()
     //         // std::cin >> latitude;
     //         // std::cout << "Enter longitude:" << std::endl;
     //         // std::cin >> longitude;
-    //         muxer_->SetLocation(latitude, longitude);
+    //         avmuxer_->SetLocation(latitude, longitude);
     //         continue;
     //     } else if (cmd == "SetOrientationHint") {                                                    
     //         int degrees = 180;
     //         // std::cout << "Enter degrees:" << std::endl;
     //         // std::cin >> degrees;
-    //         muxer_->SetOrientationHint(degrees);
+    //         avmuxer_->SetOrientationHint(degrees);
     //         continue;
     //     } else if (cmd == "AddTrack") {
     //         ReadTrackInfo();
@@ -158,20 +158,20 @@ void MuxerDemo::DoNext()
     //         std::cout << "width is: " << width_ << std::endl;
     //         std::cout << "height is: " << height_ << std:: endl;
     //         int32_t trackId;
-    //         muxer_->AddTrack(trackDesc, trackId);
+    //         avmuxer_->AddTrack(trackDesc, trackId);
     //         std::cout << "trackId is: " << trackId << std::endl;
     //         continue;
     //     } else if (cmd == "Start") {
-    //         muxer_->Start();
+    //         avmuxer_->Start();
     //         continue;
     //     } else if (cmd == "WriteTrackSample") {
     //         WriteTrackSample();
     //         continue;
     //     } else if (cmd == "Stop") {
-    //         muxer_->Stop();
+    //         avmuxer_->Stop();
     //         continue;
     //     } else if (cmd == "Release") {
-    //         muxer_->Release();
+    //         avmuxer_->Release();
     //         break;
     //     } else {
     //         std::cout << "Unknow cmd, try again" << std::endl;
@@ -180,11 +180,11 @@ void MuxerDemo::DoNext()
     // } while (1);
 }
 
-void MuxerDemo::RunCase()
+void AVMuxerDemo::RunCase()
 {
-    muxer_ = OHOS::Media::MuxerFactory::CreateMuxer();
-    if (muxer_ == nullptr) {
-        std::cout << "muxer_ is null" << std::endl;
+    avmuxer_ = OHOS::Media::AVMuxerFactory::CreateAVMuxer();
+    if (avmuxer_ == nullptr) {
+        std::cout << "avmuxer_ is null" << std::endl;
         return;
     }
     DoNext();
