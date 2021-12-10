@@ -38,13 +38,13 @@ VideoCaptureSfImpl::VideoCaptureSfImpl()
       timestamp_(0),
       damage_ {0},
       surfaceBuffer_(nullptr),
-      started_(false),
-      paused_(false),
       streamType_(VIDEO_STREAM_TYPE_UNKNOWN),
       streamTypeUnknown_(true),
       dataConSurface_(nullptr),
       producerSurface_(nullptr)
 {
+    started_.store(false);
+    paused_.store(false);
 }
 
 VideoCaptureSfImpl::~VideoCaptureSfImpl()
@@ -86,6 +86,7 @@ int32_t VideoCaptureSfImpl::Start()
 
 int32_t VideoCaptureSfImpl::Pause()
 {
+    paused_.store(true);
     pauseTime_ = pts_;
     pauseCount_++;
     return MSERR_OK;
@@ -93,6 +94,7 @@ int32_t VideoCaptureSfImpl::Pause()
 
 int32_t VideoCaptureSfImpl::Resume()
 {
+    paused_.store(false);
     resumeTime_ = pts_;
     if (resumeTime_ < pauseTime_) {
         MEDIA_LOGW("get wrong timestamp from HDI!");
@@ -102,8 +104,8 @@ int32_t VideoCaptureSfImpl::Resume()
 
     totalPauseTime_ += persistTime_;
 
-    MEDIA_LOGI("video capture has %{public}d times paused, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}"
-    PRIu64 "", pauseCount_, persistTime_, totalPauseTime_);
+    MEDIA_LOGI("video capture has %{public}d times paused, persistTime: %{public}" PRIu64 ", totalPauseTime: %{public}"
+        PRIu64 "", pauseCount_, persistTime_, totalPauseTime_);
     return MSERR_OK;
 }
 
@@ -220,7 +222,7 @@ void VideoCaptureSfImpl::SetSurfaceUserData()
     }
 }
 
-int32_t VideoCaptureSfImpl::GetSufferExtraData()
+int32_t VideoCaptureSfImpl::GetBufferExtraData()
 {
     CHECK_AND_RETURN_RET_LOG(surfaceBuffer_ != nullptr, MSERR_INVALID_OPERATION, "surfacebuffer is null");
 
@@ -248,7 +250,7 @@ int32_t VideoCaptureSfImpl::GetSufferExtraData()
 int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (!started_ || (dataConSurface_ == nullptr)) {
+    if (started_.load() == false || (dataConSurface_ == nullptr)) {
         return MSERR_INVALID_OPERATION;
     }
 
@@ -258,14 +260,14 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
         return MSERR_NO_MEMORY;
     }
 
-    if (!started_ || (dataConSurface_ == nullptr)) {
+    if (started_.load() == false || (dataConSurface_ == nullptr)) {
         return MSERR_INVALID_OPERATION;
     }
     if (dataConSurface_->AcquireBuffer(surfaceBuffer_, fence_, timestamp_, damage_) != SURFACE_ERROR_OK) {
         return MSERR_UNKNOWN;
     }
 
-    int32_t ret = GetSufferExtraData();
+    int32_t ret = GetBufferExtraData();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "get ExtraData fail");
 
     pts_ = pts_ - totalPauseTime_;
