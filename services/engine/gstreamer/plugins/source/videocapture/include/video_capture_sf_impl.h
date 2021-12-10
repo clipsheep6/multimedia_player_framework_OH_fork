@@ -57,7 +57,7 @@ protected:
         VideoCaptureSfImpl &owner_;
     };
     void OnBufferAvailable();
-    int32_t GetSufferExtraData();
+    int32_t GetBufferExtraData();
 
     uint32_t videoWidth_;
     uint32_t videoHeight_;
@@ -67,7 +67,7 @@ protected:
     Rect damage_;
     sptr<SurfaceBuffer> surfaceBuffer_;
     std::atomic<bool> started_;
-    bool paused_;
+    std::atomic<bool> paused_;
     std::mutex mutex_;
     std::condition_variable bufferAvailableCondition_;
     VideoStreamType streamType_;
