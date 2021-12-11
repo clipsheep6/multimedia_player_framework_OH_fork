@@ -85,7 +85,7 @@ private:
     void OnEndOfStream();
     void OnMessage(int32_t extra) const;
     void OnBufferingUpdate(const std::string Message) const;
-    void OnResolutionChange(int32_t width, int32_t height) const;
+    void OnVideoSizeChangedCb(int32_t width, int32_t height) const;
     void InitDuration();
     void PlaySync();
     void SeekSync(uint64_t position, const PlayerSeekMode mode);
