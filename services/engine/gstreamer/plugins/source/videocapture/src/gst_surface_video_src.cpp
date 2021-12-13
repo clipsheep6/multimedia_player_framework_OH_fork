@@ -138,6 +138,8 @@ static void gst_surface_video_src_init(GstSurfaceVideoSrc *src)
     src->is_start = FALSE;
     src->need_codec_data = TRUE;
     src->is_eos = FALSE;
+    src->enable_cache = FALSE;
+    src->cache_frame = nullptr;
 }
 
 static void gst_surface_video_src_finalize(GObject *object)
@@ -152,6 +154,8 @@ static void gst_surface_video_src_finalize(GObject *object)
         gst_caps_unref(src->src_caps);
         src->src_caps = nullptr;
     }
+
+    src->cache_frame = nullptr;
 }
 
 static void gst_surface_video_src_set_property(GObject *object, guint prop_id,
@@ -178,6 +182,11 @@ static void gst_surface_video_src_set_property(GObject *object, guint prop_id,
             break;
         case PROP_REPEAT_FRAME:
             g_return_if_fail(src->capture != nullptr);
+            if (g_value_get_uint64(value) == 0) {
+                src->enable_cache = FALSE;
+            } else {
+                src->enable_cache = TRUE;
+            }
             src->capture->SetRepeat(g_value_get_uint64(value));
             break;
         default:
@@ -398,12 +407,19 @@ static GstFlowReturn gst_surface_video_src_create(GstPushSrc *psrc, GstBuffer **
         GST_INFO_OBJECT(src, "eos...");
         return GST_FLOW_EOS;
     }
+
+    if (src->enable_cache == TRUE && frame_buffer == nullptr) {
+        frame_buffer = src->cache_frame;
+    }
+
     g_return_val_if_fail(frame_buffer != nullptr, GST_FLOW_ERROR);
 
     gst_base_src_set_blocksize(GST_BASE_SRC_CAST(src), static_cast<guint>(frame_buffer->size));
 
     *outbuf = frame_buffer->gstBuffer;
     GST_BUFFER_PTS(*outbuf) = frame_buffer->timeStamp;
+
+    src->cache_frame = frame_buffer;
 
     GST_DEBUG_OBJECT(src, "end create...");
     return GST_FLOW_OK;

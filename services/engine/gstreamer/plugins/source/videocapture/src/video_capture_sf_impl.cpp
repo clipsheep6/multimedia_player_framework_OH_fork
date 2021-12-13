@@ -14,6 +14,7 @@
  */
 
 #include "video_capture_sf_impl.h"
+#include <chrono>
 #include <map>
 #include <cmath>
 #include "media_log.h"
@@ -141,7 +142,7 @@ void VideoCaptureSfImpl::SetSuspend(bool suspend)
 
 void VideoCaptureSfImpl::SetRepeat(uint64_t time)
 {
-    repeatFrame_ = time;
+    repeatFrameAfterUs_ = time;
 }
 
 void VideoCaptureSfImpl::UnLock(bool start)
@@ -204,6 +205,13 @@ std::shared_ptr<VideoFrameBuffer> VideoCaptureSfImpl::GetFrameBuffer()
         return GetFrameBufferInner();
     } else {
         if (AcquireSurfaceBuffer() == MSERR_OK) {
+            {
+                std::unique_lock<std::mutex> lock(mutex_);
+                if (repeatFrameAfterUs_ > 0 && needRepeatFrame_ == true) {
+                    needRepeatFrame_ = false;
+                    return nullptr;
+                }
+            }
             return GetFrameBufferInner();
         }
     }
@@ -266,7 +274,20 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
         return MSERR_INVALID_OPERATION;
     }
 
-    bufferAvailableCondition_.wait(lock, [this]() { return bufferAvailableCount_ > 0 || resourceLock_; });
+    if (repeatFrameAfterUs_ > 0) {
+        bufferAvailableCondition_.wait_for(lock, std::chrono::microseconds(repeatFrameAfterUs_), [this]() {
+            return bufferAvailableCount_ > 0 || resourceLock_;
+        });
+        if (bufferAvailableCount_ == 0) {
+            needRepeatFrame_ = true;
+            return MSERR_OK;
+        } else {
+            needRepeatFrame_ = false;
+        }
+    } else {
+        bufferAvailableCondition_.wait(lock, [this]() { return bufferAvailableCount_ > 0 || resourceLock_; });
+    }
+
     if (resourceLock_) {
         MEDIA_LOGI("flush start / eos, skip acquire buffer");
         return MSERR_NO_MEMORY;
