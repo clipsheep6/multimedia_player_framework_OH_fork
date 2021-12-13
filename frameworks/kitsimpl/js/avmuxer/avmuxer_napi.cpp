@@ -341,7 +341,7 @@ static void SetOutputAsyncCallbackComplete(napi_env env, napi_status status, voi
 	} else {
 		napi_value callback = nullptr;
 		napi_get_reference_value(env, asyncContext->callbackRef_, &callback);
-		napi_call_function(env, nullptr, callback, 2, result, &retVal);
+		napi_call_function(env, nullptr, callback, 1, &result[0], &retVal);
 		napi_delete_reference(env, asyncContext->callbackRef_);
 	}
 	napi_delete_async_work(env, asyncContext->work_);
@@ -570,7 +570,7 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_WIDTH)));
 			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_HEIGHT)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_PIXEL_FORMAT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_PIXEL_FORMAT)));
-			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_FRAME_RATE)));
+			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_FRAME_RATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CAPTURE_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CAPTURE_RATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_I_FRAME_INTERVAL), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_I_FRAME_INTERVAL)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_REQUEST_I_FRAME), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_REQUEST_I_FRAME)));

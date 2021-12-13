@@ -24,7 +24,9 @@ private:
     AVFormatContext* fmt_ctx_ = nullptr;
     int32_t width_;
     int32_t height_;
+    int32_t frameRate_;
     int32_t index_;
+    std::map<int64_t, std::tuple<uint8_t*, size_t, uint32_t>> frames_;
 };
 }  // namespace Media
 }  // namespace OHOS

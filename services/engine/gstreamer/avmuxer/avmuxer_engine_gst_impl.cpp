@@ -29,15 +29,15 @@ namespace OHOS {
 namespace Media {
 static void start_feed(GstAppSrc* src, guint length, gpointer user_data)
 {
-    char* name = gst_element_get_name(src);
-    int32_t trackID = name[0] - '0';
+    std::string name = gst_element_get_name(src);
+    int32_t trackID = name.back() - '0';
     (*reinterpret_cast<std::map<int32_t, bool>*>(user_data))[trackID] = true;
 }
 
 static void stop_feed(GstAppSrc *src, gpointer user_data)
 {
-    char* name = gst_element_get_name(src);
-    int32_t trackID = name[0] - '0';
+    std::string name = gst_element_get_name(src);
+    int32_t trackID = name.back() - '0';
     (*reinterpret_cast<std::map<int32_t, bool>*>(user_data))[trackID] = false;
 }
 
@@ -125,10 +125,13 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
 
     int32_t width;
     int32_t height;
+    int32_t frameRate;
     trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
     trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
+    trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
     MEDIA_LOGI("width is: %{public}d", width);
     MEDIA_LOGI("height is: %{public}d", height);
+    MEDIA_LOGI("frameRate is: %{public}d", frameRate);
     GstCaps* src_caps = nullptr;
     if (audioEncodeType.find(mimeType) == audioEncodeType.end()) {
         src_caps = gst_caps_new_simple(mimeType.c_str(),
@@ -136,6 +139,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
             "height", G_TYPE_INT, height,
             "alignment", G_TYPE_STRING, "au",
             "stream-format", G_TYPE_STRING, "avc",
+            "framerate", GST_TYPE_FRACTION, frameRate, 1,
             nullptr);
         CHECK_AND_RETURN_RET_LOG(videoTrackNum < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION, "Only 1 video Tracks can be added");
         addTrack(muxBin_, VIDEO, name.c_str());
@@ -192,16 +196,15 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
         }
     } else {
         CHECK_AND_RETURN_RET_LOG(needData_[sampleInfo.trackIdx] == true, MSERR_UNKNOWN, "Failed to push data, the queue is full");
+        CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_UNKNOWN, "Failed to check dts, dts muxt >= 0");
         GstFlowReturn ret;
         GstMemory* mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
         GstBuffer* buffer = gst_buffer_new();
         gst_buffer_append_memory(buffer, mem);
         MEDIA_LOGI("sampleInfo.timeUs is: %{public}lld", sampleInfo.timeUs);
-        if (sampleInfo.timeUs < 0) {
-            GST_BUFFER_PTS(buffer) = GST_CLOCK_TIME_NONE;
-        } else {
-            GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
-        }
+
+        GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
+        GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
         if (sampleInfo.flags == SYNC_FRAME) {
             gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
         }
@@ -214,7 +217,6 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
             cond_.wait(lock, [this]() { return isPlay_ || errHappened_; });
             MEDIA_LOGI("Current state is Play");
         }
-
     }
     return MSERR_OK;
 }

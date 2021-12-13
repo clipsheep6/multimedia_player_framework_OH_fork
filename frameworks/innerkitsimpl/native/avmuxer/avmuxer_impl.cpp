@@ -14,6 +14,7 @@
  */
 
 #include "avmuxer_impl.h"
+#include "securec.h"
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -99,8 +100,11 @@ int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, cons
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     MEDIA_LOGD("sampleData->Capacity() is: %{public}u", sampleData->Capacity());
     // std::shared_ptr<AVSharedMemory> avSharedMem = AVSharedMemoryBase::Create(sampleData->Capacity(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
-    std::shared_ptr<AVSharedMemoryBase> avSharedMem = std::make_shared<AVSharedMemoryBase>(sampleData->Capacity(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
-    avSharedMem->Init();
+    std::shared_ptr<AVSharedMemoryBase> avSharedMem = std::make_shared<AVSharedMemoryBase>(sampleData->Size(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
+    int32_t ret = avSharedMem->Init();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_NO_MEMORY, "Failed to create AVSharedMemoryBase");
+    errno_t rc = memcpy_s(avSharedMem->GetBase(), avSharedMem->GetSize(), sampleData->Data(), sampleData->Size());
+    CHECK_AND_RETURN_RET_LOG(rc == EOK, MSERR_UNKNOWN, "memcpy_s failed");
     return avmuxerService_->WriteTrackSample(avSharedMem, info);
 }
 

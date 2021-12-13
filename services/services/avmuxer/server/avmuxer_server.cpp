@@ -39,8 +39,6 @@ int32_t AVMuxerServer::Init()
     int32_t ret = avmuxerEngine_->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to init avmuxer engine");
 
-    // fd_ = fopen("frame.txt", "w");
-    // CHECK_AND_RETURN_RET_LOG(fd_ != nullptr, ret, "Failed to open file");
     return MSERR_OK;
 }
 
@@ -126,7 +124,6 @@ int32_t AVMuxerServer::WriteTrackSample(std::shared_ptr<AVSharedMemory> data, co
     CHECK_AND_RETURN_RET_LOG(avmuxerEngine_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer engine does not exist");
     int32_t ret = avmuxerEngine_->WriteTrackSample(data, info);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteTrackSample");
-    // fwrite(data->GetBase(), data->GetSize(), 1, fd_);
     curState_ = AVMUXER_SAMPLE_WRITING;
     return MSERR_OK;
 }
