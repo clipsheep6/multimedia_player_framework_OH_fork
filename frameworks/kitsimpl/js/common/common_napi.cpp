@@ -113,7 +113,7 @@ napi_status CommonNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_
     return napi_ok;
 }
 
-napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal)
+napi_status CommonNapi::CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal)
 {
     napi_get_undefined(env, &errVal);
 
