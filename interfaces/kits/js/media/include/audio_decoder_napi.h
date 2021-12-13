@@ -48,7 +48,7 @@ private:
 
     static napi_value On(napi_env env, napi_callback_info info);
 
-    static void SyncCallback(napi_env env, AudioDecoderAsyncContext *asyncCtx);
+    static void AsyncCallback(napi_env env, AudioDecoderAsyncContext *asyncCtx);
     static void CompleteAsyncFunc(napi_env env, napi_status status, void *data);
     static void AsyncCreator(napi_env env, void *data);
     void ErrorCallback(MediaServiceExtErrCode errCode);
