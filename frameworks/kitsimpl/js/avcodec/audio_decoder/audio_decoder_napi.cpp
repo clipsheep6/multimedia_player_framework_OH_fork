@@ -806,26 +806,27 @@ napi_value AudioDecoderNapi::On(napi_env env, napi_callback_info info)
     return undefined;
 }
 
-void AudioDecoderNapi::SyncCallback(napi_env env, AudioDecoderAsyncContext *asyncCtx)
+void AudioDecoderNapi::AsyncCallback(napi_env env, AudioDecoderAsyncContext *asyncCtx)
 {
-    napi_value args[1] = {nullptr};
-    napi_get_undefined(env, &args[0]);
+    napi_value args[2] = {nullptr};
 
-    if (asyncCtx->success) {
+    if (!asyncCtx->success) {
         args[0] = asyncCtx->asyncRet;
+    } else {
+        args[1] = asyncCtx->asyncRet;
     }
 
     if (asyncCtx->deferred) {
         if (!asyncCtx->success) {
             napi_reject_deferred(env, asyncCtx->deferred, args[0]);
         } else {
-            napi_resolve_deferred(env, asyncCtx->deferred, args[0]);
+            napi_resolve_deferred(env, asyncCtx->deferred, args[1]);
         }
     } else {
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncCtx->callbackRef, &callback);
         CHECK_AND_RETURN(callback != nullptr);
-        const size_t argCount = 1;
+        const size_t argCount = 2;
         napi_value retVal;
         napi_get_undefined(env, &retVal);
         napi_call_function(env, nullptr, callback, argCount, args, &retVal);
@@ -845,7 +846,7 @@ void AudioDecoderNapi::CompleteAsyncFunc(napi_env env, napi_status status, void 
     } else {
         (void)CommonNapi::CreateError(env, -1, "status != napi_ok", asyncCtx->asyncRet);
     }
-    AudioDecoderNapi::SyncCallback(env, asyncCtx);
+    AudioDecoderNapi::AsyncCallback(env, asyncCtx);
 }
 
 void AudioDecoderNapi::AsyncCreator(napi_env env, void *data)

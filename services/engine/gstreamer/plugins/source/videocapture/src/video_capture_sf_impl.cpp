@@ -136,7 +136,7 @@ void VideoCaptureSfImpl::SetSuspend(bool suspend)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     suspend_ = suspend;
-    MEDIA_LOGI("Suspend input surface");
+    MEDIA_LOGI("Suspend input surface: %{public}d", suspend);
 }
 
 void VideoCaptureSfImpl::UnLock(bool start)
