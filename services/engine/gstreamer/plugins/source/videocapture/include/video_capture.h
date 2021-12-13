@@ -156,6 +156,8 @@ public:
      */
     virtual std::shared_ptr<VideoFrameBuffer> GetFrameBuffer() = 0;
 
+    virtual void SetSuspend(bool suspend) = 0;
+
     /**
      * @brief Lock or UnLock any pending access to the resource.
      *

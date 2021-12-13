@@ -36,6 +36,7 @@ enum {
     PROP_SURFACE_WIDTH,
     PROP_SURFACE_HEIGHT,
     PROP_SURFACE,
+    PROP_SUSPEND,
 };
 
 using namespace OHOS::Media;
@@ -101,6 +102,10 @@ static void gst_surface_video_src_class_init(GstSurfaceVideoSrcClass *klass)
         g_param_spec_pointer("surface", "Surface", "Surface for recording",
             (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_SUSPEND,
+        g_param_spec_boolean("suspend", "Suspend input surface", "Suspend input surface",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Surface video source", "Source/Video",
         "Retrieve video frame from surface buffer queue", "OpenHarmony");
@@ -160,6 +165,10 @@ static void gst_surface_video_src_set_property(GObject *object, guint prop_id,
             break;
         case PROP_SURFACE_HEIGHT:
             src->video_height = g_value_get_uint(value);
+            break;
+        case PROP_SUSPEND:
+            g_return_if_fail(src->capture != nullptr);
+            src->capture->SetSuspend(g_value_get_boolean(value));
             break;
         default:
             break;
