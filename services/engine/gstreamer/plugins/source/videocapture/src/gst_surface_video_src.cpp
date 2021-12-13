@@ -37,6 +37,7 @@ enum {
     PROP_SURFACE_HEIGHT,
     PROP_SURFACE,
     PROP_SUSPEND,
+    PROP_REPEAT_FRAME,
 };
 
 using namespace OHOS::Media;
@@ -106,6 +107,11 @@ static void gst_surface_video_src_class_init(GstSurfaceVideoSrcClass *klass)
         g_param_spec_boolean("suspend", "Suspend input surface", "Suspend input surface",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_REPEAT_FRAME,
+        g_param_spec_uint64("repeat-frame", "Repeat frame",
+            "Repeat previous frame if no new frame became available after given microseconds",
+            0, G_MAXUINT64, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Surface video source", "Source/Video",
         "Retrieve video frame from surface buffer queue", "OpenHarmony");
@@ -169,6 +175,10 @@ static void gst_surface_video_src_set_property(GObject *object, guint prop_id,
         case PROP_SUSPEND:
             g_return_if_fail(src->capture != nullptr);
             src->capture->SetSuspend(g_value_get_boolean(value));
+            break;
+        case PROP_REPEAT_FRAME:
+            g_return_if_fail(src->capture != nullptr);
+            src->capture->SetRepeat(g_value_get_uint64(value));
             break;
         default:
             break;

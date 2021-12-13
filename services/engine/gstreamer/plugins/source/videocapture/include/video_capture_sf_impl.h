@@ -42,6 +42,7 @@ public:
     std::shared_ptr<EsAvcCodecBuffer> GetCodecBuffer() override;
     std::shared_ptr<VideoFrameBuffer> GetFrameBuffer() override;
     void SetSuspend(bool suspend) override;
+    void SetRepeat(uint64_t time) override;
     void UnLock(bool start) override;
 
 protected:
@@ -93,6 +94,7 @@ private:
     int64_t persistTime_ = 0;
     uint32_t pauseCount_ = 0;
     int64_t totalPauseTime_ = 0;
+    uint64_t repeatFrame_ = 0;
     bool suspend_ = false;
     bool resourceLock_ = false;
 };
