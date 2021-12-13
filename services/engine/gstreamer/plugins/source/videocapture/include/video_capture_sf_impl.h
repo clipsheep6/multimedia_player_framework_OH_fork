@@ -94,7 +94,8 @@ private:
     int64_t persistTime_ = 0;
     uint32_t pauseCount_ = 0;
     int64_t totalPauseTime_ = 0;
-    uint64_t repeatFrame_ = 0;
+    uint64_t repeatFrameAfterUs_ = 0;
+    bool needRepeatFrame_ = false;
     bool suspend_ = false;
     bool resourceLock_ = false;
 };
