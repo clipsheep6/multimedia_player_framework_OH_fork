@@ -32,8 +32,8 @@ struct VideoRecorderConfig {
     int32_t audioEncodingBitRate = 48000;
     int32_t channelCount = 2;
     int32_t duration = 60;
-    int32_t width = 1280;
-    int32_t height = 720;
+    int32_t width = 480;
+    int32_t height = 360;
     int32_t frameRate = 30;
     int32_t videoEncodingBitRate = 48000;
     int32_t sampleRate = 48000;
@@ -42,8 +42,11 @@ struct VideoRecorderConfig {
     AudioCodecFormat audioFormat = AAC_LC;
     AudioSourceType aSource = AUDIO_MIC;
     OutputFormatType outPutFormat = FORMAT_MPEG_4;
-    VideoSourceType vSource = VIDEO_SOURCE_SURFACE_ES;
-    VideoCodecFormat videoFormat = H264;
+    VideoSourceType vSource = VIDEO_SOURCE_SURFACE_YUV; // VIDEO_SOURCE_SURFACE_ES;
+    VideoCodecFormat videoFormat = MPEG4; // H264;
+    float latitude = 30.3880;
+    float longitude = 140.2480;
+    int32_t rotation = 180;
 };
 
 struct AudioRecorderConfig {

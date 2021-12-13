@@ -13,30 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef VIDEO_ENCORDER_H
-#define VIDEO_ENCORDER_H
+#include "video_parse.h"
+#include <gst/gst.h>
+#include "media_errors.h"
+#include "media_log.h"
 
-#include "recorder_element.h"
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoParse"};
+}
 
 namespace OHOS {
 namespace Media {
-class VideoEncorder : public RecorderElement {
-public:
-    using RecorderElement::RecorderElement;
-    ~VideoEncorder() = default;
+int32_t VideoParse::Init()
+{
+    gstElem_ = gst_element_factory_make("h264parse", name_.c_str());
+    if (gstElem_ == nullptr) {
+        MEDIA_LOGE("Create video parse gst element failed! sourceId: %{public}d", desc_.handle_);
+        return MSERR_INVALID_OPERATION;
+    }
 
-    int32_t Init() override;
-    int32_t Configure(const RecorderParam &recParam) override;
-    int32_t CheckConfigReady() override;
-    void Dump() override;
-protected:
-    RecorderMsgProcResult DoProcessMessage(GstMessage &rawMsg, RecorderMessage &prettyMsg) override;
+    return MSERR_OK;
+}
 
-private:
-    int32_t CreateElement();
-    int32_t encoderFormat_;
-    int32_t bitRate_;
-};
+REGISTER_RECORDER_ELEMENT(VideoParse);
 }
 }
-#endif
