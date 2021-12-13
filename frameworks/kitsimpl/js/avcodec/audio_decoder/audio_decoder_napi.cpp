@@ -140,6 +140,7 @@ void AudioDecoderNapi::Destructor(napi_env env, void *nativeObject, void *finali
 
 napi_value AudioDecoderNapi::CreateAudioDecoderByMime(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Enter CreateAudioDecoderByMime");
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
 
@@ -181,6 +182,7 @@ napi_value AudioDecoderNapi::CreateAudioDecoderByMime(napi_env env, napi_callbac
 
 napi_value AudioDecoderNapi::CreateAudioDecoderByName(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Enter CreateAudioDecoderByName");
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
 
@@ -222,6 +224,7 @@ napi_value AudioDecoderNapi::CreateAudioDecoderByName(napi_env env, napi_callbac
 
 napi_value AudioDecoderNapi::Configure(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Enter Configure");
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
 
@@ -263,7 +266,7 @@ napi_value AudioDecoderNapi::Configure(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->adec_->Configure(asyncCtx->format) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Configure");
             } else {
                 asyncCtx->success = true;
             }
@@ -278,6 +281,7 @@ napi_value AudioDecoderNapi::Configure(napi_env env, napi_callback_info info)
 
 napi_value AudioDecoderNapi::Prepare(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Enter Prepare");
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
 
@@ -314,7 +318,7 @@ napi_value AudioDecoderNapi::Prepare(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->adec_->Prepare() != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Prepare");
             } else {
                 asyncCtx->success = true;
             }
@@ -329,6 +333,7 @@ napi_value AudioDecoderNapi::Prepare(napi_env env, napi_callback_info info)
 
 napi_value AudioDecoderNapi::Start(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Enter Start");
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
 
@@ -365,7 +370,7 @@ napi_value AudioDecoderNapi::Start(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->adec_->Start() != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Start");
             } else {
                 asyncCtx->success = true;
             }
@@ -380,6 +385,7 @@ napi_value AudioDecoderNapi::Start(napi_env env, napi_callback_info info)
 
 napi_value AudioDecoderNapi::Stop(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Enter Stop");
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
 
@@ -416,7 +422,7 @@ napi_value AudioDecoderNapi::Stop(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->adec_->Stop() != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Stop");
             } else {
                 asyncCtx->success = true;
             }
@@ -431,6 +437,7 @@ napi_value AudioDecoderNapi::Stop(napi_env env, napi_callback_info info)
 
 napi_value AudioDecoderNapi::Flush(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Enter Flush");
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
 
@@ -467,7 +474,7 @@ napi_value AudioDecoderNapi::Flush(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->adec_->Flush() != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Flush");
             } else {
                 asyncCtx->success = true;
             }
@@ -482,6 +489,7 @@ napi_value AudioDecoderNapi::Flush(napi_env env, napi_callback_info info)
 
 napi_value AudioDecoderNapi::Reset(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Enter Reset");
     napi_value undefined = nullptr;
     napi_get_undefined(env, &undefined);
 
@@ -518,7 +526,7 @@ napi_value AudioDecoderNapi::Reset(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->adec_->Reset() != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Reset");
             } else {
                 asyncCtx->success = true;
             }
@@ -576,7 +584,7 @@ napi_value AudioDecoderNapi::QueueInput(napi_env env, napi_callback_info info)
             }
             CHECK_AND_RETURN(asyncCtx->index > 0);
             if (asyncCtx->napi->adec_->QueueInputBuffer(asyncCtx->index, asyncCtx->info, asyncCtx->flag) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to QueueInputBuffer");
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to QueueInput");
             } else {
                 asyncCtx->success = true;
             }
@@ -633,7 +641,7 @@ napi_value AudioDecoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
             }
             CHECK_AND_RETURN(asyncCtx->index > 0);
             if (asyncCtx->napi->adec_->ReleaseOutputBuffer(asyncCtx->index) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to ReleaseOutputBuffer");
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to ReleaseOutput");
             } else {
                 asyncCtx->success = true;
             }
@@ -689,7 +697,7 @@ napi_value AudioDecoderNapi::SetParameter(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->adec_->SetParameter(asyncCtx->format) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to SetParameter");
             } else {
                 asyncCtx->success = true;
             }
@@ -741,7 +749,7 @@ napi_value AudioDecoderNapi::GetOutputMediaDescription(napi_env env, napi_callba
             }
             Format format;
             if (asyncCtx->napi->adec_->GetOutputFormat(format) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to prepare");
+                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to GetOutputMediaDescription");
             } else {
                 asyncCtx->success = true;
                 asyncCtx->asyncRet = AVCodecNapiUtil::CompressMediaFormat(env, format);
