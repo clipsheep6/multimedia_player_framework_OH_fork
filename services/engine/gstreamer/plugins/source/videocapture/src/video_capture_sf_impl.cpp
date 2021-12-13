@@ -132,6 +132,13 @@ int32_t VideoCaptureSfImpl::Stop()
     return MSERR_OK;
 }
 
+void VideoCaptureSfImpl::SetSuspend(bool suspend)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    suspend_ = suspend;
+    MEDIA_LOGI("Suspend input surface");
+}
+
 void VideoCaptureSfImpl::UnLock(bool start)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -286,6 +293,12 @@ void VideoCaptureSfImpl::OnBufferAvailable()
         return;
     }
     std::unique_lock<std::mutex> lock(mutex_);
+
+    if (suspend_ == true) {
+        HandleSuspendBuffer();
+        return;
+    }
+
     if (bufferAvailableCount_ == 0) {
         bufferAvailableCondition_.notify_all();
     }
@@ -296,6 +309,13 @@ void VideoCaptureSfImpl::ProbeStreamType()
 {
     streamTypeUnknown_ = false;
     // Identify whether it is an ES stream or a YUV stream from the code stream or from the buffer.
+}
+
+void VideoCaptureSfImpl::HandleSuspendBuffer()
+{
+    if (dataConSurface_->AcquireBuffer(surfaceBuffer_, fence_, timestamp_, damage_) == SURFACE_ERROR_OK) {
+        (void)dataConSurface_->ReleaseBuffer(surfaceBuffer_, fence_);
+    }
 }
 }  // namespace Media
 }  // namespace OHOS
