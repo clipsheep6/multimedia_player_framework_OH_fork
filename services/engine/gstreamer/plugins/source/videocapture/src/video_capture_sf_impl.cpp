@@ -139,6 +139,11 @@ void VideoCaptureSfImpl::SetSuspend(bool suspend)
     MEDIA_LOGI("Suspend input surface: %{public}d", suspend);
 }
 
+void VideoCaptureSfImpl::SetRepeat(uint64_t time)
+{
+    repeatFrame_ = time;
+}
+
 void VideoCaptureSfImpl::UnLock(bool start)
 {
     std::unique_lock<std::mutex> lock(mutex_);

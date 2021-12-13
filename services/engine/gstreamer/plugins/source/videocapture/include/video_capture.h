@@ -158,6 +158,8 @@ public:
 
     virtual void SetSuspend(bool suspend) = 0;
 
+    virtual void SetRepeat(uint64_t time) = 0;
+
     /**
      * @brief Lock or UnLock any pending access to the resource.
      *

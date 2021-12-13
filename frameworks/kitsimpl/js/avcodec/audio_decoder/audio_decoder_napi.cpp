@@ -63,7 +63,7 @@ napi_value AudioDecoderNapi::Init(napi_env env, napi_value exports)
     };
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("createAudioDecoderByMime", CreateAudioDecoderByMime),
-        DECLARE_NAPI_STATIC_FUNCTION("createAudioDecoderByName", CreateAudioDecoderByName)
+        DECLARE_NAPI_STATIC_FUNCTION("createAudioDecoderByName", CreateAudioDecoderByName),
     };
 
     napi_value constructor = nullptr;
