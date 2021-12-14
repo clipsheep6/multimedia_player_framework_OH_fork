@@ -843,7 +843,7 @@ void AudioDecoderNapi::CompleteAsyncFunc(napi_env env, napi_status status, void 
     CHECK_AND_RETURN(asyncCtx != nullptr);
     if (status == napi_ok && asyncCtx->success == false) {
         (void)CommonNapi::CreateError(env, asyncCtx->errCode, asyncCtx->errMessage, asyncCtx->asyncRet);
-    } else {
+    } else if (status != napi_ok) {
         (void)CommonNapi::CreateError(env, -1, "status != napi_ok", asyncCtx->asyncRet);
     }
     AudioDecoderNapi::AsyncCallback(env, asyncCtx);
