@@ -39,6 +39,8 @@ public:
     static constexpr std::string_view PLAYER_CACHED_DURATION = "cached_duration";
 };
 
+using VideoTrackInfo = Format;
+using AudioTrackInfo = Format;
 enum BufferingInfoType : int32_t {
     /* begin to b buffering */
     BUFFERING_START = 1,

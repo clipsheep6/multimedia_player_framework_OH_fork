@@ -764,17 +764,17 @@ void GstPlayerCtrl::OnResolutionChanegdCb(const GstPlayer *player,
     CHECK_AND_RETURN_LOG(player != nullptr, "player is null");
     CHECK_AND_RETURN_LOG(playerGst != nullptr, "playerGst is null");
 
-    playerGst->OnResolutionChange(width, height);
+    playerGst->OnVideoSizeChangedCb(width, height);
 }
 
-void GstPlayerCtrl::OnResolutionChange(int32_t width, int32_t height) const
+void GstPlayerCtrl::OnVideoSizeChangedCb(int32_t width, int32_t height) const
 {
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_WIDTH), width);
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_HEIGHT), height);
     std::shared_ptr<IPlayerEngineObs> tempObs = obs_.lock();
     if (tempObs != nullptr) {
-        MEDIA_LOGD("OnResolutionChange width:%{public}d, height:%{public}d", width, height);
+        MEDIA_LOGD("OnVideoSizeChangedCb width:%{public}d, height:%{public}d", width, height);
         tempObs->OnInfo(INFO_TYPE_RESOLUTION_CHANGE, 0, format);
     }
 }
