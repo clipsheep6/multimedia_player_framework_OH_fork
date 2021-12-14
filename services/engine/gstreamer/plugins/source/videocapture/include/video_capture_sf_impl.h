@@ -43,6 +43,7 @@ public:
     std::shared_ptr<VideoFrameBuffer> GetFrameBuffer() override;
     void SetSuspend(bool suspend) override;
     void SetRepeat(uint64_t time) override;
+    void SetMaxFrameRate(uint32_t rate) override;
     void UnLock(bool start) override;
 
 protected:
@@ -86,6 +87,8 @@ private:
     std::shared_ptr<VideoFrameBuffer> GetFrameBufferInner();
     void ProbeStreamType();
     void HandleSuspendBuffer();
+    void CalculateFrameInterval();
+    bool ShouldDropFrame();
 
     uint32_t bufferNumber_ = 0;
     int64_t previousTimestamp_ = 0;
@@ -98,6 +101,9 @@ private:
     bool needRepeatFrame_ = false;
     bool suspend_ = false;
     bool resourceLock_ = false;
+    uint32_t maxFrameRate_ = 0;
+    int64_t desireTime_ = 0;
+    int64_t minInterval_ = 0;
 };
 }  // namespace Media
 }  // namespace OHOS
