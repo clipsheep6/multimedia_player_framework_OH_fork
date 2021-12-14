@@ -18,6 +18,7 @@
 
 #include "napi/native_node_api.h"
 #include "audio_player_napi.h"
+#include "video_player_napi.h"
 #include "audio_recorder_napi.h"
 #include "media_data_source_napi.h"
 
