@@ -38,6 +38,7 @@ enum {
     PROP_SURFACE,
     PROP_SUSPEND,
     PROP_REPEAT_FRAME,
+    PROP_MAX_FRAME_RATE,
 };
 
 using namespace OHOS::Media;
@@ -111,6 +112,10 @@ static void gst_surface_video_src_class_init(GstSurfaceVideoSrcClass *klass)
         g_param_spec_uint64("repeat-frame", "Repeat frame",
             "Repeat previous frame if no new frame became available after given microseconds",
             0, G_MAXUINT64, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_MAX_FRAME_RATE,
+        g_param_spec_uint("max-framerate", "Max farmerate", "Max farmerate",
+            0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     gst_element_class_set_static_metadata(gstelement_class,
         "Surface video source", "Source/Video",
@@ -188,6 +193,10 @@ static void gst_surface_video_src_set_property(GObject *object, guint prop_id,
                 src->enable_cache = TRUE;
             }
             src->capture->SetRepeat(g_value_get_uint64(value));
+            break;
+        case PROP_MAX_FRAME_RATE:
+            g_return_if_fail(src->capture != nullptr);
+            src->capture->SetMaxFrameRate(g_value_get_uint(value));
             break;
         default:
             break;

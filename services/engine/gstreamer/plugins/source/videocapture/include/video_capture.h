@@ -160,6 +160,8 @@ public:
 
     virtual void SetRepeat(uint64_t time) = 0;
 
+    virtual void SetMaxFrameRate(uint32_t rate) = 0;
+
     /**
      * @brief Lock or UnLock any pending access to the resource.
      *
