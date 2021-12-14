@@ -123,8 +123,6 @@ void PlayerCallbackNapi::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
         case INFO_TYPE_SEEKDONE:
             OnSeekDoneCb(extra);
             break;
-        case INFO_TYPE_SPEEDDONE:
-            break;
         case INFO_TYPE_EOS:
             OnEosCb(extra);
             break;
