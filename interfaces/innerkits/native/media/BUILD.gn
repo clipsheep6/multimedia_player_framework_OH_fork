@@ -194,9 +194,7 @@ ohos_shared_library("media_surface") {
     "-Wdate-time",
   ]
 
-  sources = [
-    "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/media_surface/media_surface_impl.cpp",
-  ]
+  sources = [ "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/media_surface/media_surface_impl.cpp" ]
 
   deps = [
     "//foundation/graphic/standard:libsurface",
