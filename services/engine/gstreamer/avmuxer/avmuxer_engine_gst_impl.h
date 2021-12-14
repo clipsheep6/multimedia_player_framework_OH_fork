@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef MUXER_ENGINE_GST_IMPL_H
-#define MUXER_ENGINE_GST_IMPL_H
+#ifndef AVMUXER_ENGINE_GST_IMPL_H
+#define AVMUXER_ENGINE_GST_IMPL_H
 
 #include <set>
 #include <map>
 #include "nocopyable.h"
-#include "i_muxer_engine.h"
+#include "i_avmuxer_engine.h"
 #include "gst_mux_bin.h"
 #include "gst_msg_processor.h"
 #include "gst_shmem_wrap_allocator.h"
@@ -51,12 +51,12 @@ const std::map<std::string, std::set<std::string>> formatToEncode {
     {"m4a", {"audio/aac"}}
 };
 
-class MuxerEngineGstImpl : public IMuxerEngine {
+class AVMuxerEngineGstImpl : public IAVMuxerEngine {
 public:
-    MuxerEngineGstImpl();
-    ~MuxerEngineGstImpl();
+    AVMuxerEngineGstImpl();
+    ~AVMuxerEngineGstImpl();
 
-    DISALLOW_COPY_AND_MOVE(MuxerEngineGstImpl);
+    DISALLOW_COPY_AND_MOVE(AVMuxerEngineGstImpl);
 
     int32_t Init() override;
     int32_t SetOutput(const std::string &path, const std::string &format) override;

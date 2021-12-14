@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef MUXER_IMPL_H
-#define MUXER_IMPL_H
+#ifndef AVMUXER_IMPL_H
+#define AVMUXER_IMPL_H
 
-#include "muxer.h"
+#include "avmuxer.h"
 #include "nocopyable.h"
-#include "i_muxer_service.h"
+#include "i_avmuxer_service.h"
 
 namespace OHOS {
 namespace Media {
-class MuxerImpl : public Muxer {
+class AVMuxerImpl : public AVMuxer {
 public:
-    MuxerImpl();
-    ~MuxerImpl();
-    DISALLOW_COPY_AND_MOVE(MuxerImpl);
+    AVMuxerImpl();
+    ~AVMuxerImpl();
+    DISALLOW_COPY_AND_MOVE(AVMuxerImpl);
 
     static std::vector<std::string> GetSupportedFormats();
 
@@ -40,8 +40,8 @@ public:
 	void Release() override;
 	int32_t Init();
 private:
-    std::shared_ptr<IMuxerService> muxerService_ = nullptr;
+    std::shared_ptr<IAVMuxerService> avmuxerService_ = nullptr;
 };
 }  // namespace Media
-}  // namespace OHOSes 2.add muxer_demo 3.add state change check for muxer server
-#endif  // MUXER_IMPL_H
+}  // namespace OHOSes
+#endif  // AVMUXER_IMPL_H

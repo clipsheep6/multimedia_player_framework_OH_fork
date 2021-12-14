@@ -158,6 +158,7 @@ static GstStateChangeReturn cerate_splitmuxsink(GstMuxBin *mux_bin)
 
     GstElement* qtmux = gst_element_factory_make(mux_bin->mux_, mux_bin->mux_);
     g_return_val_if_fail(qtmux != nullptr, GST_STATE_CHANGE_FAILURE);
+    g_object_set(qtmux, "streamable", true, nullptr);
     g_object_set(mux_bin->splitMuxSink_, "muxer", qtmux, nullptr);
 
     return GST_STATE_CHANGE_SUCCESS;

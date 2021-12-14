@@ -18,7 +18,7 @@
 #include "player_demo.h"
 #include "recorder_demo.h"
 #include "avmetadatahelper_demo.h"
-#include "muxer_demo.h"
+#include "avmuxer_demo.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -61,15 +61,15 @@ static int RunAVMetadataHelper(const string &path)
     return 0;
 }
 
-static int RunMuxer()
+static int RunAVMuxer()
 {
-    auto muxer = std::make_unique<MuxerDemo>();
-    if (muxer == nullptr) {
-        cout << "muxer is null" << endl;
+    auto avmuxer = std::make_unique<AVMuxerDemo>();
+    if (avmuxer == nullptr) {
+        cout << "avmuxer is null" << endl;
         return 0;
     }
-    muxer->RunCase();
-    cout << "demo muxer end" << endl;
+    avmuxer->RunCase();
+    cout << "demo avmuxer end" << endl;
     return 0;
 }
 
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     cout << "0:player" << endl;
     cout << "1:recorder" << endl;
     cout << "2:avmetadatahelper" << endl;
-    cout << "3:muxer" << endl;
+    cout << "3:avmuxer" << endl;
     string mode;
     (void)getline(cin, mode);
     if (mode == "" || mode == "0") {
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     } else if (mode == "2") {
         (void)RunAVMetadataHelper(path);
     } else if (mode == "3") {
-        (void)RunMuxer();
+        (void)RunAVMuxer();
     } else {
         cout << "no that selection" << endl;
     }

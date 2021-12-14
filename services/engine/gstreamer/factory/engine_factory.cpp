@@ -20,7 +20,7 @@
 #include "player_engine_gst_impl.h"
 #include "recorder_engine_gst_impl.h"
 #include "avmetadatahelper_engine_gst_impl.h"
-#include "muxer_engine_gst_impl.h"
+#include "avmuxer_engine_gst_impl.h"
 #include "gst_loader.h"
 
 namespace {
@@ -38,7 +38,7 @@ public:
     std::unique_ptr<IPlayerEngine> CreatePlayerEngine() override;
     std::unique_ptr<IRecorderEngine> CreateRecorderEngine() override;
     std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine() override;
-    std::unique_ptr<IMuxerEngine> CreateMuxerEngine() override;
+    std::unique_ptr<IAVMuxerEngine> CreateAVMuxerEngine() override;
 
     DISALLOW_COPY_AND_MOVE(GstEngineFactory);
 };
@@ -74,10 +74,10 @@ std::unique_ptr<IRecorderEngine> GstEngineFactory::CreateRecorderEngine()
     return engine;
 }
 
-std::unique_ptr<IMuxerEngine> GstEngineFactory::CreateMuxerEngine()
+std::unique_ptr<IAVMuxerEngine> GstEngineFactory::CreateAVMuxerEngine()
 {
     GstLoader::Instance().UpdateLogLevel();
-    return std::make_unique<MuxerEngineGstImpl>();
+    return std::make_unique<AVMuxerEngineGstImpl>();
 }
 }
 }

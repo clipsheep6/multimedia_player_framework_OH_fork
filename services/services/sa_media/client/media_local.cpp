@@ -17,7 +17,7 @@
 #include "media_log.h"
 #include "recorder_server.h"
 #include "player_server.h"
-#include "muxer_server.h"
+#include "avmuxer_server.h"
 #include "media_errors.h"
 #include "avmetadatahelper_server.h"
 
@@ -44,9 +44,9 @@ std::shared_ptr<IAVMetadataHelperService> MediaLocal::CreateAVMetadataHelperServ
     return AVMetadataHelperServer::Create();
 }
 
-std::shared_ptr<IMuxerService> MediaLocal::CreateMuxerService()
+std::shared_ptr<IAVMuxerService> MediaLocal::CreateAVMuxerService()
 {
-    return MuxerServer::Create();
+    return AVMuxerServer::Create();
 }
 
 int32_t MediaLocal::DestroyRecorderService(std::shared_ptr<IRecorderService> recorder)
@@ -67,9 +67,9 @@ int32_t MediaLocal::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHe
     return MSERR_OK;
 }
 
-int32_t MediaLocal::DestroyMuxerService(std::shared_ptr<IMuxerService> muxer)
+int32_t MediaLocal::DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer)
 {
-    (void)muxer;
+    (void)avmuxer;
     return MSERR_OK;
 }
 } // Media

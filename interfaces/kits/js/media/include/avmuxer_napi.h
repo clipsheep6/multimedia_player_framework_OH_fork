@@ -1,19 +1,19 @@
-#ifndef MUXER_NAPI_H
-#define MUXER_NAPI_H
+#ifndef AVMUXER_NAPI_H
+#define AVMUXER_NAPI_H
 
-#include "muxer.h"
+#include "avmuxer.h"
 #include "media_errors.h"
 #include "napi/native_api.h"
 
 namespace OHOS {
 namespace Media {
-class MuxerNapi {
+class AVMuxerNapi {
 public:
 	static napi_value Init(napi_env env, napi_value exports);
 private:
 	static napi_value Constructor(napi_env env, napi_callback_info info);
 	static void Destructor(napi_env env, void* nativeObject, void* finalize);
-	static napi_value CreateMuxer(napi_env env, napi_callback_info info);
+	static napi_value CreateAVMuxer(napi_env env, napi_callback_info info);
 	static napi_value GetSupportedFormats(napi_env env, napi_callback_info info);
 	static napi_value SetOutput(napi_env env, napi_callback_info info);
 	static napi_value Setlatitude(napi_env env, napi_callback_info info);
@@ -25,14 +25,14 @@ private:
 	static napi_value Stop(napi_env env, napi_callback_info info);
 	static napi_value Release(napi_env env, napi_callback_info info);
 
-	MuxerNapi();
-	~MuxerNapi();
+	AVMuxerNapi();
+	~AVMuxerNapi();
 	
 	static napi_ref constructor_;
 	napi_env env_ = nullptr;
 	napi_ref wrapper_ = nullptr;
-	std::shared_ptr<Muxer> muxerImpl_ = nullptr;
+	std::shared_ptr<AVMuxer> avmuxerImpl_ = nullptr;
 };
 }  // Media
 }  // OHOS
-#endif /* MUXER_NAPI_H */
+#endif /* AVMUXER_NAPI_H */

@@ -1,15 +1,15 @@
-#ifndef MUXER_SERVICE_PROXY_H
-#define MUXER_SERVICE_PROXY_H
+#ifndef AVMUXER_SERVICE_PROXY_H
+#define AVMUXER_SERVICE_PROXY_H
 
-#include "i_standard_muxer_service.h"
+#include "i_standard_avmuxer_service.h"
 
 namespace OHOS {
 namespace Media {
-class MuxerServiceProxy : public IRemoteProxy<IStandardMuxerService> {
+class AVMuxerServiceProxy : public IRemoteProxy<IStandardAVMuxerService> {
 public:
-    explicit MuxerServiceProxy(const sptr<IRemoteObject>& impl);
-    virtual ~MuxerServiceProxy();
-    DISALLOW_COPY_AND_MOVE(MuxerServiceProxy);
+    explicit AVMuxerServiceProxy(const sptr<IRemoteObject>& impl);
+    virtual ~AVMuxerServiceProxy();
+    DISALLOW_COPY_AND_MOVE(AVMuxerServiceProxy);
 
     int32_t SetOutput(const std::string& path, const std::string& format) override;
     int32_t SetLocation(float latitude, float longitude) override;
@@ -21,8 +21,8 @@ public:
     void Release() override;
     int32_t DestroyStub() override;
 private:
-    static inline BrokerDelegator<MuxerServiceProxy> delegator_;
+    static inline BrokerDelegator<AVMuxerServiceProxy> delegator_;
 };
 }  // namespace Media
 }  // namespace OHOS
-#endif  // MUXER_SERVICE_PROXY_H
+#endif  // AVMUXER_SERVICE_PROXY_H

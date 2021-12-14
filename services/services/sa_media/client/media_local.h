@@ -29,11 +29,11 @@ public:
     std::shared_ptr<IRecorderService> CreateRecorderService() override;
     std::shared_ptr<IPlayerService> CreatePlayerService() override;
     std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() override;
-    std::shared_ptr<IMuxerService> CreateMuxerService() override;
+    std::shared_ptr<IAVMuxerService> CreateAVMuxerService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
     int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) override;
     int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;
-    int32_t DestroyMuxerService(std::shared_ptr<IMuxerService> muxer) override;
+    int32_t DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer) override;
 };
 } // namespace Media
 } // namespace OHOS

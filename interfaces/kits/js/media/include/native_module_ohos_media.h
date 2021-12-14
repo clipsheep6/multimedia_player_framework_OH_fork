@@ -20,5 +20,6 @@
 #include "audio_player_napi.h"
 #include "audio_recorder_napi.h"
 #include "media_data_source_napi.h"
+#include "avmuxer_napi.h"
 
 #endif /* NATIVE_MODULE_OHOS_MEDIA_H_ */
