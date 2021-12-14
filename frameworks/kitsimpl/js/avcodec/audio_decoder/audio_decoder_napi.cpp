@@ -69,7 +69,7 @@ napi_value AudioDecoderNapi::Init(napi_env env, napi_value exports)
     napi_value constructor = nullptr;
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AudioDecoder class");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AudioDecodeProcessor class");
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
@@ -872,7 +872,7 @@ void AudioDecoderNapi::AsyncCreator(napi_env env, void *data)
         return;
     }
 
-    status = napi_new_instance(env, constructor, 0, args, &asyncCtx->asyncRet);
+    status = napi_new_instance(env, constructor, 2, args, &asyncCtx->asyncRet);
     if (status != napi_ok || asyncCtx->asyncRet == nullptr) {
         asyncCtx->SignError(MSERR_UNKNOWN, "Failed to new instance");
         return;
