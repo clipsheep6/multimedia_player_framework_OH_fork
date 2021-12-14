@@ -85,7 +85,7 @@ int32_t AVMuxerServer::SetOrientationHint(int degrees)
     return MSERR_OK;
 }
 
-int32_t AVMuxerServer::AddTrack(const Format& trackFormat, int32_t &trackId)
+int32_t AVMuxerServer::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (curState_ != AVMUXER_OUTPUT_SET && curState_ != AVMUXER_PARAMETER_SET) {
@@ -93,7 +93,7 @@ int32_t AVMuxerServer::AddTrack(const Format& trackFormat, int32_t &trackId)
        return MSERR_INVALID_OPERATION;
     }
     CHECK_AND_RETURN_RET_LOG(avmuxerEngine_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer engine does not exist");
-    int32_t ret = avmuxerEngine_->AddTrack(trackFormat, trackId);
+    int32_t ret = avmuxerEngine_->AddTrack(trackDesc, trackId);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call AddTrack");
     curState_ = AVMUXER_PARAMETER_SET;
     trackNum_ += 1;

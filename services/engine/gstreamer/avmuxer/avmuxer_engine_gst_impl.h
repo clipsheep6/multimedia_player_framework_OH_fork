@@ -47,7 +47,7 @@ const std::map<std::string, std::string> formatToMux {
 };
 
 const std::map<std::string, std::set<std::string>> formatToEncode {
-    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2"}},
+    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2", "audio/aac", "audio/mp3"}},
     {"m4a", {"audio/aac"}}
 };
 

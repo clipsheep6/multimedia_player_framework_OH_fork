@@ -123,17 +123,17 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     std::string name = "src_";
     name += static_cast<char>('0' + trackId);
 
-    int32_t width;
-    int32_t height;
-    int32_t frameRate;
-    trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
-    trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
-    trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
-    MEDIA_LOGI("width is: %{public}d", width);
-    MEDIA_LOGI("height is: %{public}d", height);
-    MEDIA_LOGI("frameRate is: %{public}d", frameRate);
     GstCaps* src_caps = nullptr;
     if (audioEncodeType.find(mimeType) == audioEncodeType.end()) {
+        int32_t width;
+        int32_t height;
+        int32_t frameRate;
+        trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
+        trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
+        trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
+        MEDIA_LOGI("width is: %{public}d", width);
+        MEDIA_LOGI("height is: %{public}d", height);
+        MEDIA_LOGI("frameRate is: %{public}d", frameRate);
         src_caps = gst_caps_new_simple(mimeType.c_str(),
             "width", G_TYPE_INT, width,
             "height", G_TYPE_INT, height,
@@ -144,6 +144,18 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
         CHECK_AND_RETURN_RET_LOG(videoTrackNum < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION, "Only 1 video Tracks can be added");
         addTrack(muxBin_, VIDEO, name.c_str());
     } else {
+        int32_t channels;
+        int32_t rate;
+        trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels);
+        trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), rate);
+        MEDIA_LOGI("channels is: %{public}d", channels);
+        MEDIA_LOGI("rate is: %{public}d", rate);
+        src_caps = gst_caps_new_simple("audio/mpeg",
+            "mpegversion", G_TYPE_INT, 4,
+            "stream-format", G_TYPE_STRING, "raw",
+            "channels", G_TYPE_INT, channels,
+            "rate", G_TYPE_INT, rate,
+            nullptr);
         CHECK_AND_RETURN_RET_LOG(audioTrackNum < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION, "Only 16 audio Tracks can be added");
         addTrack(muxBin_, AUDIO, name.c_str());
     }

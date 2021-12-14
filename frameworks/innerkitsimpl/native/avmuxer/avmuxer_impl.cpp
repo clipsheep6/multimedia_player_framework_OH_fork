@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "avsharedmemorybase.h"
+#include "uri_helper.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerImpl"};
@@ -68,7 +69,18 @@ int32_t AVMuxerImpl::SetOutput(const std::string& path, const std::string& forma
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     CHECK_AND_RETURN_RET_LOG(!path.empty(), MSERR_INVALID_VAL, "Path is empty");
     CHECK_AND_RETURN_RET_LOG(!format.empty(), MSERR_INVALID_VAL, "Format is empty");
-    return avmuxerService_->SetOutput(path, format);
+    std::string rawUri;
+    UriHelper uriHelper(path);
+    uriHelper.FormatMe();
+    if (uriHelper.UriType() == UriHelper::URI_TYPE_FILE) {
+        rawUri = path.substr(strlen("file://"));
+    } else if (uriHelper.UriType() == UriHelper::URI_TYPE_FD) {
+        rawUri = path.substr(strlen("fd://"));
+    } else {
+        MEDIA_LOGE("Failed to check output path");
+    }
+
+    return avmuxerService_->SetOutput(rawUri, format);
 }
 
 int32_t AVMuxerImpl::SetLocation(float latitude, float longitude)

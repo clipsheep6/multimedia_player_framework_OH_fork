@@ -41,7 +41,7 @@ void addTrack(GstMuxBin* mux_bin, TrackType type, const char* name)
             mux_bin->videoTrack_ = g_strdup(name);
             break;
         case AUDIO:
-            mux_bin->audioTrack_ = g_slist_append(mux_bin->audioTrack_, (gpointer*)name);
+            mux_bin->audioTrack_ = g_slist_append(mux_bin->audioTrack_, g_strdup(name));
             break;
         default:
             break;
@@ -183,6 +183,7 @@ static GstStateChangeReturn create_audio_src(GstMuxBin *mux_bin)
         g_return_val_if_fail(appSrc != nullptr, GST_STATE_CHANGE_FAILURE);
         g_object_set(appSrc, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
         mux_bin->audioSrcList_ = g_slist_append(mux_bin->audioSrcList_, appSrc);
+        iter = iter->next;
     }
 
     return GST_STATE_CHANGE_SUCCESS;
@@ -216,6 +217,7 @@ static GstStateChangeReturn add_element_to_bin(GstMuxBin *mux_bin)
     GSList* iter = mux_bin->audioSrcList_;
     while (iter != nullptr) {
         gst_bin_add(GST_BIN(mux_bin), GST_ELEMENT_CAST(iter->data));
+        iter = iter->next;
     }
     gst_bin_add(GST_BIN(mux_bin), mux_bin->splitMuxSink_);
 

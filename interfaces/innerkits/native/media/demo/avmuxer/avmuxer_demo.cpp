@@ -7,23 +7,23 @@
 namespace OHOS {
 namespace Media {
 std::vector<std::string> MDKey = {
-    // "track_index",
-    // "track_type",
-    // "codec_mime",
-    // "duration",
-    // "bitrate",
-    // "max-input-size",
+    "track_index",
+    "track_type",
+    "codec_mime",
+    "duration",
+    "bitrate",
+    "max-input-size",
     "width",
     "height",
-    // "pixel-format",
+    "pixel-format",
     "frame-rate",
-    // "capture-rate",
-    // "i_frame_interval",
-    // "req_i_frame"
-    // "channel-count",
-    // "sample-rate",
-    // "track-count",
-    // "vendor."
+    "capture-rate",
+    "i_frame_interval",
+    "req_i_frame"
+    "channel-count",
+    "sample-rate",
+    "track-count",
+    "vendor."
 };
 
 void AVMuxerDemo::ReadTrackInfo() {
@@ -33,14 +33,18 @@ void AVMuxerDemo::ReadTrackInfo() {
     avformat_find_stream_info(fmt_ctx_, NULL);
 
     for (i = 0; i < fmt_ctx_->nb_streams; i++) {
-        if (fmt_ctx_->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
-            index_ = i;
-            std::cout << "index_ is: " << index_ << std::endl;
+        if(fmt_ctx_->streams[i]->codec->codec_type == AVMEDIA_TYPE_VIDEO) {
+            videoIndex_ = i;
+            std::cout << "videoIndex_ is: " << videoIndex_ << std::endl;
             std::cout << "fmt_ctx_->nb_streams is: " << fmt_ctx_->nb_streams << std::endl;
             width_ = fmt_ctx_->streams[i]->codec->width;
             height_ = fmt_ctx_->streams[i]->codec->height;
             frameRate_ = fmt_ctx_->streams[i]->avg_frame_rate.num/fmt_ctx_->streams[i]->avg_frame_rate.den;
-            break;
+        } else if (fmt_ctx_->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+            std::cout << "audioIndex_ is: " << i << std::endl;
+            sampleRate_ = fmt_ctx_->streams[i]->codec->sample_rate;
+            channels_ = fmt_ctx_->streams[i]->codec->channels;
+            audioIndex_ = i;
         }
     }
 }
@@ -49,51 +53,21 @@ void AVMuxerDemo::WriteTrackSample() {
     AVPacket pkt;
     memset_s(&pkt, sizeof(pkt), 0, sizeof(pkt));
 
-    AVCodecContext* pCodecContext = fmt_ctx_->streams[index_]->codec;
-    TrackSampleInfo info1;
-    info1.timeUs = 0;
-    info1.size = pCodecContext->extradata_size;
-    info1.offset = 0;
-    info1.flags = CODEC_DATA;
-    info1.trackIdx = 1;
-    std::cout << "pCodecContext->extradata_size: " << pCodecContext->extradata_size << std::endl;
-    std::shared_ptr<AVMemory> avMem1 = std::make_shared<AVMemory>(pCodecContext->extradata, info1.size);
-	avMem1->SetRange(info1.offset, info1.size);
-    std::cout << "avMem1->Capacity() is: " << avMem1->Capacity() << std::endl;
-    std::cout << "avMem1->Size() is: " << avMem1->Size() << std::endl;
-    avmuxer_->WriteTrackSample(avMem1, info1);
-
-    // while(1) {
-    //     av_init_packet(&pkt);
-    //     if (av_read_frame(fmt_ctx_, &pkt) < 0) {
-    //         av_packet_unref(&pkt);
-    //         break;
-    //     }
-    //     if (pkt.stream_index == index_) {
-    //         std::cout << pkt.flags << std::endl;
-    //         int64_t pts = static_cast<int64_t>(av_rescale_q(pkt.pts, fmt_ctx_->streams[pkt.stream_index]->time_base, AV_TIME_BASE_Q));
-    //         frames_.emplace(std::make_pair(pts, std::make_tuple(pkt.data, pkt.size, pkt.flags)));
-    //     }
-    // }
-
-    // for (auto iter = frames_.begin(); iter != frames_.end(); iter++) {
-    //     TrackSampleInfo info;
-    //     info.timeUs = iter->first;
-    //     info.size = std::get<1>(iter->second);
-    //     info.offset = 0;
-    //     if (std::get<2>(iter->second) == 1) {
-    //         std::cout << "std::get<2>(iter->second) is: " << std::get<2>(iter->second) << std::endl;
-    //         info.flags = SYNC_FRAME;
-    //     } else {
-    //         info.flags = PARTIAL_FRAME;
-    //     }
-    //     info.trackIdx = 1;
-    //     std::cout << "pkt.pts is: " << info.timeUs << " pkt.size is: " << info.size << " pkt.flag is: " << info.flags << std::endl;
-    //     std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(std::get<0>(iter->second), info.size);
-	// 	avMem->SetRange(info.offset, info.size);
-    //     avmuxer_->WriteTrackSample(avMem, info);
-    //     usleep(50000);
-    // }
+    for (int i = 0; i <= 1; i++) {
+        AVCodecContext* pCodecContext = fmt_ctx_->streams[i]->codec;
+        TrackSampleInfo infoCodec;
+        infoCodec.timeUs = 0;
+        infoCodec.size = pCodecContext->extradata_size;
+        infoCodec.offset = 0;
+        infoCodec.flags = CODEC_DATA;
+        infoCodec.trackIdx = i + 1;
+        std::cout << "pCodecContext->extradata_size: " << pCodecContext->extradata_size << std::endl;
+        std::shared_ptr<AVMemory> avMem1 = std::make_shared<AVMemory>(pCodecContext->extradata, infoCodec.size);
+	    avMem1->SetRange(infoCodec.offset, infoCodec.size);
+        std::cout << "avMem1->Capacity() is: " << avMem1->Capacity() << std::endl;
+        std::cout << "avMem1->Size() is: " << avMem1->Size() << std::endl;
+        avmuxer_->WriteTrackSample(avMem1, infoCodec);
+    }
 
     while(1) {
         av_init_packet(&pkt);
@@ -101,23 +75,27 @@ void AVMuxerDemo::WriteTrackSample() {
             av_packet_unref(&pkt);
             break;
         }
-        if (pkt.stream_index == index_) {
-            TrackSampleInfo info;
-            info.timeUs = static_cast<int64_t>(av_rescale_q(pkt.dts, fmt_ctx_->streams[pkt.stream_index]->time_base, AV_TIME_BASE_Q));
-            if (info.timeUs < 0) {
-                info.timeUs = 0;
-            }
-            info.size = pkt.size;
-            info.offset = 0;
-            if (pkt.flags == AV_PKT_FLAG_KEY) {
-                info.flags = SYNC_FRAME;
-            }
-            info.trackIdx = 1;
-            std::cout << "pkt.dts is: " << info.timeUs << ", pkt.size is: " << pkt.size << std::endl;
-            std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(pkt.data, pkt.size);
-		    avMem->SetRange(info.offset, pkt.size);
-            avmuxer_->WriteTrackSample(avMem, info);
+        TrackSampleInfo info;
+        info.timeUs = static_cast<int64_t>(av_rescale_q(pkt.dts, fmt_ctx_->streams[pkt.stream_index]->time_base, AV_TIME_BASE_Q));
+        if (info.timeUs < 0) {
+            info.timeUs = 0;
         }
+        info.size = pkt.size;
+        info.offset = 0;
+        if (pkt.flags == AV_PKT_FLAG_KEY) {
+            info.flags = SYNC_FRAME;
+        }
+        std::cout << "pkt.dts is: " << info.timeUs << ", pkt.size is: " << pkt.size << std::endl;
+        std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(pkt.data, pkt.size);
+		avMem->SetRange(info.offset, pkt.size);
+        if (pkt.stream_index == videoIndex_) {  
+            info.trackIdx = 1;
+            std::cout << "info.trackIdx is: " << info.trackIdx << std::endl;
+        } else if(pkt.stream_index == audioIndex_) {
+            info.trackIdx = 2;
+            std::cout << "info.trackIdx is: " << info.trackIdx << std::endl;
+        }
+        avmuxer_->WriteTrackSample(avMem, info);
         usleep(50000);
     }
     avformat_close_input(&fmt_ctx_);
@@ -125,10 +103,13 @@ void AVMuxerDemo::WriteTrackSample() {
 
 void AVMuxerDemo::DoNext()
 {
-    std::string path = "/data/media/output.mp4";
+    std::string path = "file:///data/media/output.mp4";
     std::string format = "mp4";
     avmuxer_->SetOutput(path, format);
+    avmuxer_->SetLocation(0, 0);
+    avmuxer_->SetOrientationHint(0);
     ReadTrackInfo();
+
     MediaDescription trackDesc;
     trackDesc.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/x-h264");
     trackDesc.PutIntValue(std::string(MD_KEY_WIDTH), width_);
@@ -140,6 +121,16 @@ void AVMuxerDemo::DoNext()
     int32_t trackId;
     avmuxer_->AddTrack(trackDesc, trackId);
     std::cout << "trackId is: " << trackId << std::endl;
+
+    MediaDescription trackDesc1;
+    trackDesc1.PutStringValue(std::string(MD_KEY_CODEC_MIME), "audio/aac");
+    trackDesc1.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels_);
+    trackDesc1.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), sampleRate_);
+    std::cout << "channels_ is: " << channels_ << std::endl;
+    std::cout << "sampleRate_ is: " << sampleRate_ << std:: endl;
+    avmuxer_->AddTrack(trackDesc1, trackId);
+    std::cout << "trackId is: " << trackId << std::endl;
+
     avmuxer_->Start();
     WriteTrackSample();
     avmuxer_->Stop();
