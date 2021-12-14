@@ -28,7 +28,6 @@ enum class AsyncWorkType : int32_t {
     ASYNC_WORK_PAUSE,
     ASYNC_WORK_STOP,
     ASYNC_WORK_RESET,
-    ASYNC_WORK_RELEASE,
     ASYNC_WORK_SEEK,
     ASYNC_WORK_SPEED,
     ASYNC_WORK_VOLUME,
@@ -36,14 +35,17 @@ enum class AsyncWorkType : int32_t {
 };
 
 struct VideoPlayerAsyncContext : public MediaAsyncContext {
+    explicit VideoPlayerAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    virtual ~VideoPlayerAsyncContext() = default;
     static void AsyncCallback(napi_env env, VideoPlayerAsyncContext *&asyncContext);
     VideoPlayerNapi *playerNapi = nullptr;
-    bool needAsyncCallback = false;
+    VideoPlayerNapi *jsPlayer = nullptr;
     AsyncWorkType asyncWorkType = AsyncWorkType::ASYNC_WORK_INVALID;
     double volume = 1.0f; // default volume level
     int32_t seekPosition = 0;
     int32_t seekMode = SEEK_PREVIOUS_SYNC;
     int32_t speedMode = SPEED_FORWARD_1_00_X;
+    std::string surface = "none";
 };
 
 class VideoCallbackNapi : public PlayerCallbackNapi {
@@ -57,6 +59,7 @@ public:
     int32_t GetVideoWidth() const { return width_; }
     int32_t GetVideoHeight() const { return height_; }
     void QueueAsyncWork(VideoPlayerAsyncContext *context);
+    void ClearAsyncWork();
 
 private:
     void OnStartRenderFrameCb() const;

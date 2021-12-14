@@ -158,8 +158,8 @@ void MediaAsyncContext::SignError(int32_t code, std::string message)
 {
     errMessage = message;
     errCode = code;
-    success = false;
-    MEDIA_LOGE("ErrorInfo: %{public}s", message.c_str());
+    errFlag = true;
+    MEDIA_LOGE("SignError: %{public}s", message.c_str());
 }
 }
 }

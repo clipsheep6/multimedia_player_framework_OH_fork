@@ -30,23 +30,31 @@ namespace Media {
 void VideoPlayerAsyncContext::AsyncCallback(napi_env env, VideoPlayerAsyncContext *&asyncContext)
 {
     MEDIA_LOGD("AsyncCallback In");
-    napi_value args[1] = { nullptr };
-    args[0] = asyncContext->asyncRet;
+    napi_value args[2] = { nullptr };
+    napi_get_undefined(env, &args[0]);
+    napi_get_undefined(env, &args[1]);
+    if (asyncContext->errFlag) {
+        MEDIA_LOGE("async callback error");
+        args[0] = asyncContext->asyncResult;
+    } else {
+        MEDIA_LOGI("async callback success");
+        args[1] = asyncContext->asyncResult;
+    }
 
     if (asyncContext->deferred) {
-        if (!asyncContext->success) {
-            MEDIA_LOGD("asycn deferred failed");
+        if (asyncContext->errFlag) {
+            MEDIA_LOGD("napi_reject_deferred");
             napi_reject_deferred(env, asyncContext->deferred, args[0]);
         } else {
-            MEDIA_LOGD("asycn deferred success");
-            napi_resolve_deferred(env, asyncContext->deferred, args[0]);
+            MEDIA_LOGD("napi_resolve_deferred");
+            napi_resolve_deferred(env, asyncContext->deferred, args[1]);
         }
     } else {
-        MEDIA_LOGD("asycn callback");
+        MEDIA_LOGD("napi_call_function callback");
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
         CHECK_AND_RETURN_LOG(callback != nullptr, "callbackRef is nullptr!"); 
-        const size_t argCount = 1;
+        const size_t argCount = 2;
         napi_value retVal;
         napi_get_undefined(env, &retVal);
         napi_call_function(env, nullptr, callback, argCount, args, &retVal);
@@ -61,13 +69,14 @@ void VideoCallbackNapi::ContextCallback(napi_env env, napi_status status, void *
 {
     auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
     CHECK_AND_RETURN_LOG(asyncContext != nullptr, "VideoPlayerAsyncContext is nullptr!");
+
     if (status == napi_ok) {
-        if (!asyncContext->success) {
+        if (asyncContext->errFlag) {
             (void)CommonNapi::CreateError(env,
-                asyncContext->errCode, asyncContext->errMessage, asyncContext->asyncRet);
+                asyncContext->errCode, asyncContext->errMessage, asyncContext->asyncResult);
         }
     } else {
-        (void)CommonNapi::CreateError(env, -1, "status != napi_ok", asyncContext->asyncRet);
+        (void)CommonNapi::CreateError(env, -1, "status != napi_ok", asyncContext->asyncResult);
     }
 
     VideoPlayerAsyncContext::AsyncCallback(env, asyncContext);
@@ -137,6 +146,23 @@ void VideoCallbackNapi::QueueAsyncWork(VideoPlayerAsyncContext *context)
     }
 }
 
+void VideoCallbackNapi::ClearAsyncWork()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    while (!contextStateQue_.empty()) {
+        contextStateQue_.pop();
+    }
+    while (!contextSeekQue_.empty()) {
+        contextSeekQue_.pop();
+    }
+    while (!contextSpeedQue_.empty()) {
+        contextSpeedQue_.pop();
+    }
+    while (!contextVolumeQue_.empty()) {
+        contextVolumeQue_.pop();
+    }
+}
+
 void VideoCallbackNapi::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -181,7 +207,7 @@ void VideoCallbackNapi::OnSeekDoneCb(int32_t positon)
     CHECK_AND_RETURN_LOG(context != nullptr, "context is nullptr");
     contextSeekQue_.pop();
 
-    napi_status status = napi_create_int32(context->env, positon, &context->asyncRet);
+    napi_status status = napi_create_int32(context->env, positon, &context->asyncResult);
     if (status != napi_ok) {
         context->SignError(MSERR_EXT_UNKNOWN, "failed to napi_create_int32");
     }
@@ -210,7 +236,7 @@ void VideoCallbackNapi::OnSpeedDoneCb(int32_t speedMode)
         context->SignError(MSERR_EXT_UNKNOWN, "speed callback mode error!");
     }
 
-    napi_status status = napi_create_int32(context->env, speedMode, &context->asyncRet);
+    napi_status status = napi_create_int32(context->env, speedMode, &context->asyncResult);
     if (status != napi_ok) {
         context->SignError(MSERR_EXT_UNKNOWN, "failed to napi_create_int32");
     }
