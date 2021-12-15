@@ -20,6 +20,7 @@ ohos_executable("media_demo") {
     "./player/data_source",
     "./recorder",
     "./avmetadatahelper",
+    "./avmuxer",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//graphic/standard/interfaces/innerkits/surface",
@@ -27,6 +28,7 @@ ohos_executable("media_demo") {
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//third_party/libjpeg",
+    "//third_party/ffmpeg/",
   ]
 
   cflags = [
@@ -51,6 +53,7 @@ ohos_executable("media_demo") {
 
   sources = [
     "./avmetadatahelper/avmetadatahelper_demo.cpp",
+    "./avmuxer/avmuxer_demo.cpp",
     "./media_demo.cpp",
     "./player/data_source/media_data_source_demo_noseek.cpp",
     "./player/data_source/media_data_source_demo_seekable.cpp",
@@ -65,6 +68,7 @@ ohos_executable("media_demo") {
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
     "//third_party/libjpeg:libjpeg_static",
     "//utils/native/base:utils",
+    "//third_party/ffmpeg:libohosffmpeg",
   ]
 
   external_deps = [
