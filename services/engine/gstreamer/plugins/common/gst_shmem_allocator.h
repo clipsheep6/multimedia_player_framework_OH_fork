@@ -17,8 +17,6 @@
 #define GST_SHMEM_ALLOCATOR_H
 
 #include <gst/gst.h>
-#include "gst_shmem_memory.h"
-#include "avsharedmemorypool.h"
 
 G_BEGIN_DECLS
 
@@ -38,7 +36,6 @@ typedef struct _GstShMemAllocatorClass GstShMemAllocatorClass;
 
 struct _GstShMemAllocator {
     GstAllocator parent;
-    std::shared_ptr<OHOS::Media::AVSharedMemoryPool> avShmemPool;
 };
 
 struct _GstShMemAllocatorClass {
@@ -47,10 +44,7 @@ struct _GstShMemAllocatorClass {
 
 GType gst_shmem_allocator_get_type(void);
 
-GstShMemAllocator *gst_shmem_allocator_new();
-
-void gst_shmem_allocator_set_pool(GstShMemAllocator *allocator,
-                                  std::shared_ptr<OHOS::Media::AVSharedMemoryPool> pool);
+GstAllocator *gst_shmem_allocator_new();
 
 G_END_DECLS
 
