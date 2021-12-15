@@ -13,24 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef GST_SHMEM_MEMORY_H
-#define GST_SHMEM_MEMORY_H
+#include "avmemory.h"
+#include "media_errors.h"
+#include "media_log.h"
 
-#include <gst/gst.h>
-#include "avsharedmemory.h"
-
-typedef struct _GstShMemMemory GstShMemMemory;
-
-struct _GstShMemMemory {
-    GstMemory parent;
-    std::shared_ptr<OHOS::Media::AVSharedMemory> mem;
-};
-
-static const char GST_SHMEM_MEMORY_TYPE[] = "SharedMemory";
-
-static inline gboolean gst_is_shmem_memory(GstMemory *mem)
+namespace OHOS {
+namespace Media {
+AVMemory::AVMemory(size_t capacity)
 {
-    return gst_memory_is_type(mem, GST_SHMEM_MEMORY_TYPE);
+    capacity_ = capacity;
 }
 
-#endif
+AVMemory::AVMemory(uint8_t *base, size_t capacity)
+{
+    base_ = base;
+    capacity_ = capacity;
+}
+
+AVMemory::~AVMemory()
+{
+}
+}
+}
