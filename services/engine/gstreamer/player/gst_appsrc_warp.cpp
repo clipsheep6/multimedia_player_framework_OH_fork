@@ -18,7 +18,6 @@
 #include "media_errors.h"
 #include "player.h"
 #include "securec.h"
-#include "avsharedmemorybase.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstAppsrcWarp"};

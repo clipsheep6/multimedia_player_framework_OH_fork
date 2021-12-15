@@ -23,7 +23,6 @@ group("media_engine_gst_packages") {
 ohos_shared_library("media_engine_gst") {
   deps = [
     "avmetadatahelper:media_engine_gst_avmeta",
-    "avspliter:media_engine_gst_avspliter",
     "common:media_engine_gst_common",
     "factory:media_engine_gst_factory",
     "loader:media_engine_gst_loader",
