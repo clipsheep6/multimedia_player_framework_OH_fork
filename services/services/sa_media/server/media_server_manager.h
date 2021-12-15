@@ -35,6 +35,7 @@ public:
         RECORDER = 0,
         PLAYER,
         AVMETADATAHELPER,
+        AVMUXER,
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -45,10 +46,12 @@ private:
     sptr<IRemoteObject> CreatePlayerStubObject();
     sptr<IRemoteObject> CreateRecorderStubObject();
     sptr<IRemoteObject> CreateAVMetadataHelperStubObject();
+    sptr<IRemoteObject> CreateAVMuxerStubObject();
 
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
+    std::map<sptr<IRemoteObject>, pid_t> avmuxerStubMap_;
 
     std::mutex mutex_;
 };

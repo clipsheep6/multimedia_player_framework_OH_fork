@@ -18,17 +18,10 @@
 #include "gst_shmem_memory.h"
 #include "media_log.h"
 
-constexpr char GST_SHMEM_MEMORY_TYPE[] = "ShMemMemory";
-
 #define gst_shmem_allocator_parent_class parent_class
 G_DEFINE_TYPE(GstShMemAllocator, gst_shmem_allocator, GST_TYPE_ALLOCATOR);
 
 static const uint32_t ALIGN_BYTES = 4;
-
-gboolean gst_is_shmem_memory(GstMemory *mem)
-{
-    return gst_memory_is_type(mem, GST_SHMEM_MEMORY_TYPE);
-}
 
 static GstMemory *gst_shmem_allocator_alloc(GstAllocator *allocator, gsize size, GstAllocationParams *params)
 {
