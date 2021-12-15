@@ -13,13 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef NATIVE_MODULE_OHOS_MEDIA_H_
-#define NATIVE_MODULE_OHOS_MEDIA_H_
+#include "avmemory.h"
+#include "media_errors.h"
+#include "media_log.h"
 
-#include "napi/native_node_api.h"
-#include "audio_player_napi.h"
-#include "audio_recorder_napi.h"
-#include "media_data_source_napi.h"
-#include "avmuxer_napi.h"
+namespace OHOS {
+namespace Media {
+AVMemory::AVMemory(size_t capacity)
+{
+    capacity_ = capacity;
+}
 
-#endif /* NATIVE_MODULE_OHOS_MEDIA_H_ */
+AVMemory::AVMemory(uint8_t *base, size_t capacity)
+{
+    base_ = base;
+    capacity_ = capacity;
+}
+
+AVMemory::~AVMemory()
+{
+}
+}
+}
