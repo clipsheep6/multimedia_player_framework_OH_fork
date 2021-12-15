@@ -77,6 +77,15 @@ static int64_t GetNamedPropertyInt64(napi_env env, napi_value obj, const std::st
 	return ret;
 }
 
+static std::string GetNamedPropertystring(napi_env env, napi_value obj, const std::string& keyStr)
+{
+	napi_value value;
+	napi_get_named_property(env, obj, keyStr.c_str(), &value);
+	std::string ret;
+	GetStringArgument(env, value);
+	return ret;
+}
+
 AVMuxerNapi::AVMuxerNapi()
 {
 	MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
@@ -172,21 +181,6 @@ void AVMuxerNapi::Destructor(napi_env env, void* nativeObject, void* finalize)
 	}
 	MEDIA_LOGD("Destructor success");
 }
-
-// napi_value MuxerNapi::CreateMuxer(napi_env env, napi_callback_info info)
-// {
-// 	napi_value result = nullptr;
-// 	napi_get_undefined(env, &result);
-// 	napi_value constructor = nullptr;
-// 	napi_status status = napi_get_reference_value(env, constructor_, &constructor);
-// 	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get reference of constructor");
-	
-// 	status = napi_new_instance(env, constructor, 0, nullptr, &result);
-// 	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to create new instance");
-	
-// 	MEDIA_LOGD("Create muxer success");
-// 	return result;
-// }
 
 static void CreateAVMuxerAsyncCallbackComplete(napi_env env, napi_status status, void* data)
 {
@@ -563,7 +557,7 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 		if (i == 0 && valueType == napi_object) {
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_INDEX), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_TRACK_INDEX)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_TYPE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_TRACK_TYPE)));
-			// asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), GetNamedPropertystring(env, args[i], std::string(MD_KEY_CODEC_MIME)));
+			asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), GetNamedPropertystring(env, args[i], std::string(MD_KEY_CODEC_MIME)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_DURATION), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_DURATION)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_BITRATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_BITRATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_MAX_INPUT_SIZE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_MAX_INPUT_SIZE)));
@@ -574,8 +568,8 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CAPTURE_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CAPTURE_RATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_I_FRAME_INTERVAL), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_I_FRAME_INTERVAL)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_REQUEST_I_FRAME), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_REQUEST_I_FRAME)));
-			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CHANNEL_COUNT)));
-			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_SAMPLE_RATE)));
+			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CHANNEL_COUNT)));
+			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_SAMPLE_RATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_COUNT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_TRACK_COUNT)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CUSTOM_PREFIX), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CUSTOM_PREFIX)));
 		} else if (i == 1 && valueType == napi_function) {

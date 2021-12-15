@@ -241,7 +241,6 @@ int32_t AVMuxerEngineGstImpl::Stop()
 
     GstFlowReturn ret;
     // CHECK_AND_RETURN_RET_LOG(hasCaps == trackIdSet && hasBuffer == trackIdSet, MSERR_UNKNOWN, "Not all track has cpas or buffer");
-    // g_signal_emit_by_name(GST_BIN_CAST(muxBin_), "end-of-stream", NULL);
     for (int32_t i : trackIdSet) {
         std::string name = "src_";
         name += static_cast<char>('0' + i);

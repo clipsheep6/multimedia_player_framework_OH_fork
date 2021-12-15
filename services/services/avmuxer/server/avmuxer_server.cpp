@@ -144,7 +144,6 @@ void AVMuxerServer::Release()
     if (curState_ != AVMUXER_IDEL) {
         Stop();
     }
-    // fclose(fd_);
     avmuxerEngine_ = nullptr;
 }
 }  // namespace Media

@@ -60,7 +60,6 @@ AVMuxerImpl::~AVMuxerImpl()
 
 std::vector<std::string> AVMuxerImpl::GetSupportedFormats()
 {
-    // CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     return IAVMuxerService::GetSupportedFormats();
 }
 
