@@ -69,6 +69,7 @@ int32_t SinkBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 
     signalId_ = g_signal_connect(G_OBJECT(element_), "new_sample",
                                  G_CALLBACK(OutputAvailableCb), reinterpret_cast<gpointer>(this));
+    g_object_set(G_OBJECT(element_), "emit-signals", TRUE, nullptr);
     return MSERR_OK;
 }
 
@@ -137,6 +138,7 @@ int32_t SinkBytebufferImpl::HandleOutputCb()
         if ((*it)->owner_ == BufferWrapper::DOWNSTREAM) {
             (*it)->owner_ = BufferWrapper::SERVER;
             (*it)->gstBuffer_ = buf;
+            break;
         }
         index++;
     }
