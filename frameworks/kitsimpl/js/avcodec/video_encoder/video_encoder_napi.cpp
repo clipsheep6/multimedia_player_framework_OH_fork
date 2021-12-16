@@ -156,10 +156,12 @@ napi_value VideoEncoderNapi::CreateVideoEncoderByMime(napi_env env, napi_callbac
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
     napi_valuetype valueType = napi_undefined;
-    CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
-        valueType == napi_string, undefined);
-    asyncCtx->pluginName = CommonNapi::GetStringArgument(env, args[0]);
-    asyncCtx->createByMime = 1;
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
+        asyncCtx->pluginName = CommonNapi::GetStringArgument(env, args[0]);
+        asyncCtx->createByMime = 1;
+    } else {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
+    }
 
     valueType = napi_undefined;
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
@@ -198,10 +200,12 @@ napi_value VideoEncoderNapi::CreateVideoEncoderByName(napi_env env, napi_callbac
     napi_get_undefined(env, &asyncCtx->asyncRet);
 
     napi_valuetype valueType = napi_undefined;
-    CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
-        valueType == napi_string, undefined);
-    asyncCtx->pluginName = CommonNapi::GetStringArgument(env, args[0]);
-    asyncCtx->createByMime = 0;
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
+        asyncCtx->pluginName = CommonNapi::GetStringArgument(env, args[0]);
+        asyncCtx->createByMime = 0;
+    } else {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
+    }
 
     valueType = napi_undefined;
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
@@ -244,9 +248,11 @@ napi_value VideoEncoderNapi::Configure(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
 
     napi_valuetype valueType = napi_undefined;
-    CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
-        valueType == napi_object, undefined);
-    CHECK_AND_RETURN_RET(AVCodecNapiUtil::ExtractMediaFormat(env, args[0], asyncCtx->format) == true, undefined);
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
+        (void)AVCodecNapiUtil::ExtractMediaFormat(env, args[0], asyncCtx->format);
+    } else {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
+    }
 
     valueType = napi_undefined;
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
@@ -560,10 +566,11 @@ napi_value VideoEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
 
     napi_valuetype valueType = napi_undefined;
-    CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
-        valueType == napi_object, undefined);
-    CHECK_AND_RETURN_RET(AVCodecNapiUtil::ExtractCodecBuffer(env, args[0], asyncCtx->index,
-        asyncCtx->info, asyncCtx->flag) == true, undefined);
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
+        (void)AVCodecNapiUtil::ExtractCodecBuffer(env, args[0], asyncCtx->index, asyncCtx->info, asyncCtx->flag);
+    } else {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
+    }
 
     valueType = napi_undefined;
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
@@ -618,9 +625,11 @@ napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
     CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
 
     napi_valuetype valueType = napi_undefined;
-    CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
-        valueType == napi_object, undefined);
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args[0], "index", asyncCtx->index) == true, undefined);
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
+        (void)CommonNapi::GetPropertyInt32(env, args[0], "index", asyncCtx->index);
+    } else {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
+    }
 
     valueType = napi_undefined;
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
@@ -682,9 +691,11 @@ napi_value VideoEncoderNapi::SetParameter(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
 
     napi_valuetype valueType = napi_undefined;
-    CHECK_AND_RETURN_RET(args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok &&
-        valueType == napi_object, undefined);
-    CHECK_AND_RETURN_RET(AVCodecNapiUtil::ExtractMediaFormat(env, args[0], asyncCtx->format) == true, undefined);
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
+        (void)AVCodecNapiUtil::ExtractMediaFormat(env, args[0], asyncCtx->format);
+    } else {
+        asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
+    }
 
     valueType = napi_undefined;
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
