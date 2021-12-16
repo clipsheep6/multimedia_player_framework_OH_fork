@@ -86,9 +86,8 @@ std::shared_ptr<AVSharedMemory> SinkBytebufferImpl::GetOutputBuffer(uint32_t ind
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index < bufferCount_ && index <= bufferList_.size(), nullptr);
-    CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::SERVER, nullptr);
+    CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::APP, nullptr);
 
-    bufferList_[index]->owner_ = BufferWrapper::APP;
     return bufferList_[index]->mem_;
 }
 
@@ -136,7 +135,7 @@ int32_t SinkBytebufferImpl::HandleOutputCb()
     uint32_t index = 0;
     for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
         if ((*it)->owner_ == BufferWrapper::DOWNSTREAM) {
-            (*it)->owner_ = BufferWrapper::SERVER;
+            (*it)->owner_ = BufferWrapper::APP;
             (*it)->gstBuffer_ = buf;
             break;
         }
