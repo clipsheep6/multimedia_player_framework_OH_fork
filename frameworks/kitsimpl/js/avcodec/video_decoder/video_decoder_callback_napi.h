@@ -18,15 +18,24 @@
 
 #include "video_decoder_napi.h"
 #include "avcodec_video_decoder.h"
+#include "common_napi.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
 namespace OHOS {
 namespace Media {
+const std::string ERROR_CALLBACK_NAME = "error";
+const std::string FORMAT_CHANGED_CALLBACK_NAME = "outputFormatChanged";
+const std::string INPUT_CALLBACK_NAME = "inputBufferAvailable";
+const std::string OUTPUT_CALLBACK_NAME = "outputBufferAvailable";
+
 class VideoDecoderCallbackNapi : public AVCodecCallback {
 public:
-    explicit VideoDecoderCallbackNapi(napi_env env);
+    explicit VideoDecoderCallbackNapi(napi_env env, std::weak_ptr<VideoDecoder> vdec);
     virtual ~VideoDecoderCallbackNapi();
+
+    void SaveCallbackReference(const std::string &callbackName, napi_value callback);
+    void SendErrorCallback(MediaServiceExtErrCode errCode);
 
 protected:
     void OnError(AVCodecErrorType errorType, int32_t errorCode) override;
@@ -35,7 +44,26 @@ protected:
     void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
 
 private:
+    struct VideoDecoderJsCallback {
+        std::shared_ptr<AutoRef> callback = nullptr;
+        std::string callbackName = "unknown";
+        std::string errorMsg = "unknown";
+        MediaServiceExtErrCode errorCode = MSERR_EXT_UNKNOWN;
+        uint32_t index = 0;
+        AVCodecBufferInfo info;
+        AVCodecBufferFlag flag;
+        std::shared_ptr<AVSharedMemory> memory = nullptr;
+    };
+    void OnJsErrorCallBack(VideoDecoderJsCallback *jsCb) const;
+    void OnJsBufferCallBack(VideoDecoderJsCallback *jsCb) const;
+
+    std::mutex mutex_;
     napi_env env_ = nullptr;
+    std::weak_ptr<VideoDecoder> vdec_;
+    std::shared_ptr<AutoRef> errorCallback_ = nullptr;
+    std::shared_ptr<AutoRef> formatChangedCallback_ = nullptr;
+    std::shared_ptr<AutoRef> inputCallback_ = nullptr;
+    std::shared_ptr<AutoRef> outputCallback_ = nullptr;
 };
 }  // namespace Media
 }  // namespace OHOS
