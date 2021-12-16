@@ -57,6 +57,7 @@ int32_t SrcBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 {
     CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
     g_object_set(G_OBJECT(element_), "caps", config->caps_, nullptr);
+    g_object_set(G_OBJECT(element_), "format", GST_FORMAT_TIME, nullptr);
 
     for (uint32_t i = 0; i < bufferCount_; i++) {
         auto mem = AVSharedMemory::Create(bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "appsrc");
