@@ -58,6 +58,7 @@ private:
     std::unique_ptr<AVCodecEngineCtrl> ctrl_ = nullptr;
     std::unique_ptr<ProcessorBase> processor_ = nullptr;
     std::mutex mutex_;
+    std::weak_ptr<IAVCodecEngineObs> obs_;
 };
 } // Media
 } // OHOS
