@@ -11,12 +11,13 @@ namespace OHOS {
 namespace Media {
 napi_ref AVMuxerNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVMuxer";
+const std::string PROPERTY_KEY_SAMPLEINFO = "sampleInfo";
 const std::string PROPERTY_KEY_SIZE = "size";
 const std::string PROPERTY_KEY_OFFSET = "offset";
 const std::string PROPERTY_KEY_TYPE = "type";
-const std::string PROPERTY_KEY_FLAG = "flag";
-const std::string PROPERTY_KEY_TIMEUS = "timeUs";
-const std::string PROPERTY_KEY_TRACK_ID = "trackId";
+const std::string PROPERTY_KEY_FLAG = "flags";
+const std::string PROPERTY_KEY_TIMEUS = "timeMs";
+const std::string PROPERTY_KEY_TRACK_ID = "trackIndex";
 
 struct AVMuxerNapiAsyncContext {
 	napi_env env_;
@@ -77,6 +78,15 @@ static int64_t GetNamedPropertyInt64(napi_env env, napi_value obj, const std::st
 	return ret;
 }
 
+static double GetNamedPropertydouble(napi_env env, napi_value obj, const std::string& keyStr)
+{
+	napi_value value;
+	napi_get_named_property(env, obj, keyStr.c_str(), &value);
+	double ret;
+	napi_get_value_double(env, value, &ret);
+	return ret;
+}
+
 static std::string GetNamedPropertystring(napi_env env, napi_value obj, const std::string& keyStr)
 {
 	napi_value value;
@@ -110,9 +120,8 @@ napi_value AVMuxerNapi::Init(napi_env env, napi_value exports)
 		DECLARE_NAPI_FUNCTION("stop", Stop),
 		DECLARE_NAPI_FUNCTION("release", Release),
 
-		DECLARE_NAPI_SETTER("latitude", Setlatitude),
-		DECLARE_NAPI_SETTER("longitude", SetLongitude),
-		DECLARE_NAPI_SETTER("degrees", SetOrientationHint),
+		DECLARE_NAPI_SETTER("location", SetLocation),
+		DECLARE_NAPI_SETTER("orientationHint", SetOrientationHint),
 	};
 	
 	napi_property_descriptor staticProperties[] = {
@@ -401,7 +410,8 @@ napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
 	return result;
 }
 
-napi_value AVMuxerNapi::Setlatitude(napi_env env, napi_callback_info info)
+
+napi_value AVMuxerNapi::SetLocation(napi_env env, napi_callback_info info)
 {
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
@@ -419,46 +429,15 @@ napi_value AVMuxerNapi::Setlatitude(napi_env env, napi_callback_info info)
 	
 	napi_valuetype valueType = napi_undefined;
 	status = napi_typeof(env, args[0], &valueType);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_number, result,
+	CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_object, result,
 		"Failed to check argument type");
 	
 	double latitude;
-	status = napi_get_value_double(env, args[0], &latitude);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get latitude");
-	
-	int ret = avmuxer->avmuxerImpl_->SetLocation(latitude, 0);
-	CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call SetLocation");
-
-	MEDIA_LOGD("SetLocation success");
-	return result;
-}
-
-napi_value AVMuxerNapi::SetLongitude(napi_env env, napi_callback_info info)
-{
-	napi_value result = nullptr;
-	napi_get_undefined(env, &result);
-	napi_value jsThis = nullptr;
-	AVMuxerNapi* avmuxer = nullptr;
-	napi_value args[1] = {nullptr};
-	size_t argCount = 1;
-	
-	napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
-		result, "Failed to retrieve details about the callbacke");
-	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&avmuxer));
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
-	
-	napi_valuetype valueType = napi_undefined;
-	status = napi_typeof(env, args[0], &valueType);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_number, result,
-		"Failed to check argument type");
-	
 	double longitude;
-	status = napi_get_value_double(env, args[0], &longitude);
-	CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get longitude");
+	latitude = GetNamedPropertydouble(env, args[0], "latitude");
+	longitude = GetNamedPropertydouble(env, args[0], "longitude");
 	
-	int ret = avmuxer->avmuxerImpl_->SetLocation(0, longitude);
+	int ret = avmuxer->avmuxerImpl_->SetLocation(latitude, longitude);
 	CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call SetLocation");
 
 	MEDIA_LOGD("SetLocation success");
@@ -467,6 +446,7 @@ napi_value AVMuxerNapi::SetLongitude(napi_env env, napi_callback_info info)
 
 napi_value AVMuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info)
 {
+	MEDIA_LOGD("SetOrientationHint begin");
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
@@ -514,6 +494,7 @@ static void AddTrackAsyncCallbackComplete(napi_env env, napi_status status, void
 		napi_create_error(env, nullptr, msgValStr, &result[0]);
 		CommonNapi::FillErrorArgs(env, static_cast<int32_t>(MSERR_EXT_INVALID_VAL), result[0]);
 	} else {
+		MEDIA_LOGD("trackId_ is: %{public}d", asyncContext->trackId_);
 		napi_create_int32(env, asyncContext->trackId_, &result[1]);
 	}
 
@@ -535,6 +516,7 @@ static void AddTrackAsyncCallbackComplete(napi_env env, napi_status status, void
 
 napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 {
+	MEDIA_LOGD("AddTrack begin");
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
@@ -555,6 +537,7 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 		napi_valuetype valueType = napi_undefined;
 		napi_typeof(env, args[i], &valueType);
 		if (i == 0 && valueType == napi_object) {
+		// if (i == 0) {
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_INDEX), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_TRACK_INDEX)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_TYPE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_TRACK_TYPE)));
 			asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), GetNamedPropertystring(env, args[i], std::string(MD_KEY_CODEC_MIME)));
@@ -572,6 +555,12 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_SAMPLE_RATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_COUNT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_TRACK_COUNT)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CUSTOM_PREFIX), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CUSTOM_PREFIX)));
+			// asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/x-h264");
+			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), 480);
+			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), 270);
+			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), 30);
+			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), 2);
+			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), 10000);
 		} else if (i == 1 && valueType == napi_function) {
 			napi_create_reference(env, args[i], 1, &asyncContext->callbackRef_);
 		} else {
@@ -591,6 +580,7 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 		[](napi_env env, void* data) {
 			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
 			context->isAdd_ = context->objectInfo_->avmuxerImpl_->AddTrack(context->trackDesc_, context->trackId_);
+			MEDIA_LOGD("trackId_ is: %{public}d", context->trackId_);
 		},
 		AddTrackAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
@@ -600,6 +590,7 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 		napi_queue_async_work(env, asyncContext->work_);
 		asyncContext.release();
 	}
+	MEDIA_LOGD("AddTrack success");
 	return result;
 }
 
@@ -630,7 +621,7 @@ static void StartAsyncCallbackComplete(napi_env env, napi_status status, void* d
 	} else {
 		napi_value callback = nullptr;
 		napi_get_reference_value(env, asyncContext->callbackRef_, &callback);
-		napi_call_function(env, nullptr, callback, 2, result, &retVal);
+		napi_call_function(env, nullptr, callback, 1, &result[0], &retVal);
 		napi_delete_reference(env, asyncContext->callbackRef_);
 	}
 	napi_delete_async_work(env, asyncContext->work_);
@@ -716,7 +707,7 @@ static void WriteTrackSampleAsyncCallbackComplete(napi_env env, napi_status stat
 	} else {
 		napi_value callback = nullptr;
 		napi_get_reference_value(env, asyncContext->callbackRef_, &callback);
-		napi_call_function(env, nullptr, callback, 2, result, &retVal);
+		napi_call_function(env, nullptr, callback, 1, &result[0], &retVal);
 		napi_delete_reference(env, asyncContext->callbackRef_);
 	}
 	napi_delete_async_work(env, asyncContext->work_);
@@ -755,10 +746,12 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 		} else {
 			napi_typeof(env, args[i], &valueType);
 			if (i == 1 && valueType == napi_object) {
-				asyncContext->trackSampleInfo_.size = GetNamedPropertyInt32(env, args[i], PROPERTY_KEY_SIZE);
-				asyncContext->trackSampleInfo_.offset = GetNamedPropertyInt32(env, args[i], PROPERTY_KEY_OFFSET);
-				asyncContext->trackSampleInfo_.flags = static_cast<FrameFlags>(GetNamedPropertyInt32(env, args[i], PROPERTY_KEY_FLAG));
-				asyncContext->trackSampleInfo_.timeUs = GetNamedPropertyInt64(env, args[i], PROPERTY_KEY_TIMEUS);
+				napi_value trackSampleInfo;
+				napi_get_named_property(env, args[i], PROPERTY_KEY_SAMPLEINFO.c_str(), &trackSampleInfo);
+				asyncContext->trackSampleInfo_.size = GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_SIZE);
+				asyncContext->trackSampleInfo_.offset = GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_OFFSET);
+				asyncContext->trackSampleInfo_.flags = static_cast<FrameFlags>(GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG));
+				asyncContext->trackSampleInfo_.timeUs = GetNamedPropertyInt64(env, trackSampleInfo, PROPERTY_KEY_TIMEUS);
 				asyncContext->trackSampleInfo_.trackIdx = GetNamedPropertyInt32(env, args[i], PROPERTY_KEY_TRACK_ID);
 			} else if (i == 2 && valueType == napi_function) {
 				napi_create_reference(env, args[i], 1, &asyncContext->callbackRef_);
@@ -821,7 +814,7 @@ static void StopSampleAsyncCallbackComplete(napi_env env, napi_status status, vo
 	} else {
 		napi_value callback = nullptr;
 		napi_get_reference_value(env, asyncContext->callbackRef_, &callback);
-		napi_call_function(env, nullptr, callback, 2, result, &retVal);
+		napi_call_function(env, nullptr, callback, 1, &result[0], &retVal);
 		napi_delete_reference(env, asyncContext->callbackRef_);
 	}
 	napi_delete_async_work(env, asyncContext->work_);
@@ -830,6 +823,7 @@ static void StopSampleAsyncCallbackComplete(napi_env env, napi_status status, vo
 
 napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
 {
+	MEDIA_LOGD("Stop begin");
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
@@ -878,6 +872,7 @@ napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
 		asyncContext.release();
 	}
 	return result;
+	MEDIA_LOGD("Stop success");
 }
 
 static void ReleaseAsyncCallbackComplete(napi_env env, napi_status status, void* data)
@@ -894,7 +889,7 @@ static void ReleaseAsyncCallbackComplete(napi_env env, napi_status status, void*
 	} else {
 		napi_value callback = nullptr;
 		napi_get_reference_value(env, asyncContext->callbackRef_, &callback);
-		napi_call_function(env, nullptr, callback, 2, result, &retVal);
+		napi_call_function(env, nullptr, callback, 1, &result[0], &retVal);
 		napi_delete_reference(env, asyncContext->callbackRef_);
 	}
 	napi_delete_async_work(env, asyncContext->work_);
@@ -903,6 +898,7 @@ static void ReleaseAsyncCallbackComplete(napi_env env, napi_status status, void*
 
 napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
 {
+	MEDIA_LOGD("Release begin");
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
@@ -951,6 +947,7 @@ napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
 		asyncContext.release();
 	}
 	return result;
+	MEDIA_LOGD("Release end");
 }
 
 }  // namespace Media

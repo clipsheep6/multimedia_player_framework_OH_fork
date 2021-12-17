@@ -185,7 +185,7 @@ void TimePerf::TimeVal2USec(const struct timeval &time, int64_t &usec)
     if ((static_cast<int64_t>(time.tv_sec) > MAX_SEC) ||
         (static_cast<int64_t>(time.tv_sec) == MAX_SEC && time.tv_usec > 0) ||
         (time.tv_usec > MICRO_SEC_PER_SEC)) {
-        MEDIA_LOGW("time overflow, sec: %{public}ld, usec: %{public}ld", time.tv_sec, time.tv_usec);
+        MEDIA_LOGW("time overflow, sec: %{public}lld, usec: %{public}lld", time.tv_sec, time.tv_usec);
         usec = 0;
         return;
     }

@@ -199,7 +199,7 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
         GstBuffer* buffer = gst_buffer_new();
         gst_buffer_append_memory(buffer, mem);
         gst_caps_set_simple(CapsMat[sampleInfo.trackIdx], "codec_data", GST_TYPE_BUFFER, buffer, nullptr);
-        g_object_set (src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
+        g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
         hasCaps.insert(sampleInfo.trackIdx);
         if (hasCaps == trackIdSet && !isPause_) {
             gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
@@ -241,15 +241,17 @@ int32_t AVMuxerEngineGstImpl::Stop()
 
     GstFlowReturn ret;
     // CHECK_AND_RETURN_RET_LOG(hasCaps == trackIdSet && hasBuffer == trackIdSet, MSERR_UNKNOWN, "Not all track has cpas or buffer");
-    for (int32_t i : trackIdSet) {
-        std::string name = "src_";
-        name += static_cast<char>('0' + i);
-        GstAppSrc* src = GST_APP_SRC_CAST(gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str()));
-        CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_UNKNOWN, "src does not exist");
-        ret = gst_app_src_end_of_stream(src);
-        CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_UNKNOWN, "Failed to push end of stream");
+    if (isPlay_) {
+        for (int32_t i : trackIdSet) {
+            std::string name = "src_";
+            name += static_cast<char>('0' + i);
+            GstAppSrc* src = GST_APP_SRC_CAST(gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str()));
+            CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_UNKNOWN, "src does not exist");
+            ret = gst_app_src_end_of_stream(src);
+            CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_UNKNOWN, "Failed to push end of stream");
+        }
+        cond_.wait(lock, [this]() { return endFlag_ || errHappened_; });
     }
-    cond_.wait(lock, [this]() { return endFlag_ || errHappened_; });
     gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_NULL);
     clear();
     return MSERR_OK;
@@ -317,6 +319,9 @@ void AVMuxerEngineGstImpl::clear()
     CapsMat.clear();
     endFlag_ = false;
     errHappened_ = false;
+    isReady_ = false;
+    isPause_ = false;
+    isPlay_ = false;
     msgProcessor_->Reset();
 }
 }  // namespace Media
