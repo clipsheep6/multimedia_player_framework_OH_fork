@@ -249,7 +249,7 @@ napi_status MediaJsResultArray::GetJsResult(napi_env env, napi_value &result)
     }
 
     auto vecSize = value_.size();
-    MEDIA_LOGD("MediaJsResultArray array size:%{public}lu", vecSize);
+    MEDIA_LOGD("MediaJsResultArray vec size:%{public}lu", vecSize);
     for (size_t index = 0; index < vecSize; ++index) {
         napi_value description = nullptr;
         description = CommonNapi::CreateFormatBuffer(env, value_[index]);
