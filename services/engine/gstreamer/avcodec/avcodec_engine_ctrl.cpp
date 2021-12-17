@@ -32,6 +32,7 @@ AVCodecEngineCtrl::AVCodecEngineCtrl()
 AVCodecEngineCtrl::~AVCodecEngineCtrl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    (void)Release();
     src_ = nullptr;
     sink_ = nullptr;
     if (codecBin_ != nullptr) {
@@ -186,6 +187,14 @@ int32_t AVCodecEngineCtrl::Flush()
         for (uint32_t i = 0; i < bufferCount; i ++) {
             obs->OnInputBufferAvailable(i);
         }
+    }
+    return MSERR_OK;
+}
+
+int32_t AVCodecEngineCtrl::Release()
+{
+    if (gstPipeline_ != nullptr) {
+        (void)gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_NULL);
     }
     return MSERR_OK;
 }
