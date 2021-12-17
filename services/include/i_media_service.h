@@ -121,7 +121,7 @@ public:
     virtual int32_t DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCodec) = 0;
 };
 
-class __attribute__((visibility("default"))) MeidaServiceFactory {
+class __attribute__((visibility("default"))) MediaServiceFactory {
 public:
     /**
      * @brief IMediaService singleton
@@ -134,8 +134,8 @@ public:
      */
     static IMediaService &GetInstance();
 private:
-    MeidaServiceFactory() = delete;
-    ~MeidaServiceFactory() = delete;
+    MediaServiceFactory() = delete;
+    ~MediaServiceFactory() = delete;
 };
 } // namespace Media
 } // namespace OHOS
