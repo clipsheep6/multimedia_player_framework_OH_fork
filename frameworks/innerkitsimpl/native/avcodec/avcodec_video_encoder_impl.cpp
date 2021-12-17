@@ -48,7 +48,7 @@ std::shared_ptr<VideoEncoder> VideoEncoderFactory::CreateByName(const std::strin
 
 int32_t VideoEncoderImpl::Init(AVCodecType type, bool isMimeType, const std::string &name)
 {
-    codecService_ = MeidaServiceFactory::GetInstance().CreateAVCodecService();
+    codecService_ = MediaServiceFactory::GetInstance().CreateAVCodecService();
     CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_UNKNOWN, "failed to create avcodec service");
 
     return codecService_->InitParameter(type, isMimeType, name);
@@ -62,7 +62,7 @@ VideoEncoderImpl::VideoEncoderImpl()
 VideoEncoderImpl::~VideoEncoderImpl()
 {
     if (codecService_ != nullptr) {
-        (void)MeidaServiceFactory::GetInstance().DestroyAVCodecService(codecService_);
+        (void)MediaServiceFactory::GetInstance().DestroyAVCodecService(codecService_);
         codecService_ = nullptr;
     }
     MEDIA_LOGD("VideoEncoderImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));

@@ -55,7 +55,7 @@ std::shared_ptr<Recorder> RecorderFactory::CreateRecorder()
 
 int32_t RecorderImpl::Init()
 {
-    recorderService_ = MeidaServiceFactory::GetInstance().CreateRecorderService();
+    recorderService_ = MediaServiceFactory::GetInstance().CreateRecorderService();
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NO_MEMORY, "failed to create recorder service");
     return MSERR_OK;
 }
@@ -68,7 +68,7 @@ RecorderImpl::RecorderImpl()
 RecorderImpl::~RecorderImpl()
 {
     if (recorderService_ != nullptr) {
-        (void)MeidaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
+        (void)MediaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
         recorderService_ = nullptr;
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
@@ -188,6 +188,20 @@ int32_t RecorderImpl::SetMaxFileSize(int64_t size)
     return recorderService_->SetMaxFileSize(size);
 }
 
+void RecorderImpl::SetLocation(float latitude, float longitude)
+{
+    CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist..");
+    recorderService_->SetLocation(latitude, longitude);
+    return;
+}
+
+void RecorderImpl::SetOrientationHint(int32_t rotation)
+{
+    CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist..");
+    recorderService_->SetOrientationHint(rotation);
+    return;
+}
+
 int32_t RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "input callback is nullptr.");
@@ -235,7 +249,7 @@ int32_t RecorderImpl::Release()
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     (void)recorderService_->Release();
-    (void)MeidaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
+    (void)MediaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
     recorderService_ = nullptr;
     return MSERR_OK;
 }
