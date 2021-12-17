@@ -20,6 +20,7 @@
 #include "common_napi.h"
 #include "directory_ex.h"
 #include "string_ex.h"
+#include "media_surface.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoRecorderNapi"};
@@ -195,7 +196,7 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     }
 
     // set param
-    if (asyncCtx->napi->SetVideoRecorderProperties(urlPath, videoProperties) != MSERR_OK) {
+    if (asyncCtx->napi->SetVideoRecorderProperties(asyncCtx, videoProperties) != MSERR_OK) {
         asyncCtx->SignError(MSERR_EXT_UNKNOWN, "set properties failed!");
     }
     if (asyncCtx->napi->SetUrl(urlPath) != MSERR_OK) {
@@ -209,8 +210,60 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Prepare", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        CompleteAsyncWork, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
+        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            return;
+        }
+        if (threadCtx->napi->recorder_->Prepare() != MSERR_OK) {
+            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Prepare");
+        }
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+    return result;
+}
+
+napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[1] = {nullptr};
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "GetInputSurface", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
+        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            return;
+        }
+        auto mediaSurface = MediaSurfaceFactory::CreateMediaSurface();
+        if (mediaSurface == nullptr) {
+            threadCtx->SignError(MSERR_EXT_NO_MEMORY, "mediaSurface is nullptr");
+        }
+        threadCtx->surface = threadCtx->napi->recorder_->GetSurface(threadCtx->videoSourceID); // source id
+        if (threadCtx->surface != nullptr) {
+            auto surfaceId = mediaSurface->GetSurfaceId(threadCtx->surface);
+            threadCtx->JsResult = std::make_unique<MediaJsResultString>(surfaceId);
+        } else {
+            threadCtx->SignError(MSERR_EXT_NO_MEMORY, "failed to get surface");
+        }
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
     return result;
@@ -222,7 +275,6 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
-    asyncCtx->asyncWorkType = AsyncWorkType::ASYNC_WORK_START;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -243,8 +295,16 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Start", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        CompleteAsyncWork, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
+        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            return;
+        }
+        if (threadCtx->napi->recorder_->Start() != MSERR_OK) {
+            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Start");
+        }
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
     return result;
@@ -256,7 +316,6 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
-    asyncCtx->asyncWorkType = AsyncWorkType::ASYNC_WORK_PAUSE;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -277,8 +336,16 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Pause", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        CompleteAsyncWork, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
+        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            return;
+        }
+        if (threadCtx->napi->recorder_->Pause() != MSERR_OK) {
+            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Pause");
+        }
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
     return result;
@@ -290,7 +357,6 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
-    asyncCtx->asyncWorkType = AsyncWorkType::ASYNC_WORK_START;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -311,8 +377,16 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Resume", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        CompleteAsyncWork, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
+        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            return;
+        }
+        if (threadCtx->napi->recorder_->Resume() != MSERR_OK) {
+            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Resume");
+        }
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
     return result;
@@ -324,7 +398,6 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
-    asyncCtx->asyncWorkType = AsyncWorkType::ASYNC_WORK_STOP;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -345,8 +418,16 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Stop", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        CompleteAsyncWork, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
+        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            return;
+        }
+        if (threadCtx->napi->recorder_->Stop(false) != MSERR_OK) {
+            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Stop");
+        }
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
     return result;
@@ -358,7 +439,6 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
-    asyncCtx->asyncWorkType = AsyncWorkType::ASYNC_WORK_RESET;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -379,8 +459,16 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Reset", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        CompleteAsyncWork, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
+        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            return;
+        }
+        if (threadCtx->napi->recorder_->Reset() != MSERR_OK) {
+            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Reset");
+        }
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
     return result;
@@ -392,7 +480,6 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
-    asyncCtx->asyncWorkType = AsyncWorkType::ASYNC_WORK_RELEASE;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -413,8 +500,16 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Release", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
-        CompleteAsyncWork, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
+        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            return;
+        }
+        if (threadCtx->napi->recorder_->Release() != MSERR_OK) {
+            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Release");
+        }
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
     return result;
@@ -499,17 +594,15 @@ int32_t VideoRecorderNapi::GetVideoRecorderProperties(napi_env env, napi_value a
     return MSERR_OK;
 }
 
-int32_t VideoRecorderNapi::SetVideoRecorderProperties(const std::string urlPath, const VideoRecorderProperties &properties)
+int32_t VideoRecorderNapi::SetVideoRecorderProperties(std::unique_ptr<VideoRecorderAsyncContext> &ctx,
+    const VideoRecorderProperties &properties)
 {
     CHECK_AND_RETURN_RET(recorder_ != nullptr, MSERR_INVALID_OPERATION);
-    int32_t audioSourceId = 0;
-    int32_t videoSourceId = 0;
 
-
-    int32_t ret = recorder_->SetVideoSource(properties.videoSourceType, videoSourceId);
+    int32_t ret = recorder_->SetVideoSource(properties.videoSourceType, ctx->videoSourceID);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set VideoSource");
 
-    ret = recorder_->SetAudioSource(properties.audioSourceType, audioSourceId);
+    ret = recorder_->SetAudioSource(properties.audioSourceType, ctx->audioSourceID);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set AudioSource");
 
     OutputFormatType outputFile;
@@ -519,31 +612,31 @@ int32_t VideoRecorderNapi::SetVideoRecorderProperties(const std::string urlPath,
 
     VideoCodecFormat videoCodec;
     MapVideoCodec(properties.profile.videoCodec, videoCodec);
-    ret = recorder_->SetVideoEncoder(videoSourceId, videoCodec);
+    ret = recorder_->SetVideoEncoder(ctx->videoSourceID, videoCodec);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set videoCodec");
 
-    ret = recorder_->SetVideoSize(videoSourceId, properties.profile.videoFrameWidth,
+    ret = recorder_->SetVideoSize(ctx->videoSourceID, properties.profile.videoFrameWidth,
         properties.profile.videoFrameHeight);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set videoSize");
 
-    ret = recorder_->SetVideoFrameRate(videoSourceId, properties.profile.videoFrameRate);
+    ret = recorder_->SetVideoFrameRate(ctx->videoSourceID, properties.profile.videoFrameRate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set videoFrameRate");
 
-    ret = recorder_->SetVideoEncodingBitRate(videoSourceId, properties.profile.videoBitrate);
+    ret = recorder_->SetVideoEncodingBitRate(ctx->videoSourceID, properties.profile.videoBitrate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set videoBitrate");
 
     AudioCodecFormat audioCodec;
     MapAudioCodec(properties.profile.audioCodec, audioCodec);
-    ret = recorder_->SetAudioEncoder(audioSourceId, audioCodec);
+    ret = recorder_->SetAudioEncoder(ctx->audioSourceID, audioCodec);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set audioCodec");
 
-    ret = recorder_->SetAudioSampleRate(audioSourceId, properties.profile.auidoSampleRate);
+    ret = recorder_->SetAudioSampleRate(ctx->audioSourceID, properties.profile.auidoSampleRate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set auidoSampleRate");
 
-    ret = recorder_->SetAudioChannels(audioSourceId, properties.profile.audioChannels);
+    ret = recorder_->SetAudioChannels(ctx->audioSourceID, properties.profile.audioChannels);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set audioChannels");
 
-    ret = recorder_->SetAudioEncodingBitRate(audioSourceId, properties.profile.audioBitrate);
+    ret = recorder_->SetAudioEncodingBitRate(ctx->audioSourceID, properties.profile.audioBitrate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set audioBitrate");
 
     recorder_->SetLocation(properties.location.latitude, properties.location.longitude);
@@ -576,53 +669,53 @@ int32_t VideoRecorderNapi::SetUrl(const std::string &urlPath)
     return MSERR_OK;
 }
 
-void VideoRecorderNapi::CompleteAsyncWork(napi_env env, napi_status status, void *data)
-{
-    MEDIA_LOGD("CompleteAsyncFunc In");
-    auto asyncCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
-    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "VideoRecorderAsyncContext is nullptr!");
+// void VideoRecorderNapi::CompleteAsyncWork(napi_env env, napi_status status, void *data)
+// {
+//     MEDIA_LOGD("CompleteAsyncFunc In");
+//     auto asyncCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
+//     CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "VideoRecorderAsyncContext is nullptr!");
 
-    if (status != napi_ok) {
-        return MediaAsyncContext::CompleteCallback(env, status, data);
-    }
+//     if (status != napi_ok) {
+//         return MediaAsyncContext::CompleteCallback(env, status, data);
+//     }
 
-    if (asyncCtx->napi == nullptr || asyncCtx->napi->recorder_ == nullptr ||
-        asyncCtx->napi->callbackNapi_ == nullptr) {
-        asyncCtx->SignError(MSERR_EXT_NO_MEMORY, "recorderNapi or nativeRecorder is nullptr");
-        return MediaAsyncContext::CompleteCallback(env, status, data);;
-    }
+//     if (asyncCtx->napi == nullptr || asyncCtx->napi->recorder_ == nullptr ||
+//         asyncCtx->napi->callbackNapi_ == nullptr) {
+//         asyncCtx->SignError(MSERR_EXT_NO_MEMORY, "recorderNapi or nativeRecorder is nullptr");
+//         return MediaAsyncContext::CompleteCallback(env, status, data);;
+//     }
 
-    int32_t ret = MSERR_OK;
-    auto recorder = asyncCtx->napi->recorder_;
-    if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_PREPARE) {
-        ret = recorder->Prepare();
-    } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_GET_SURFACE) {
-        // asyncCtx->surface = recorder->GetSurface(); //
-    } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_START) {
-        ret = recorder->Start();
-    } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_PAUSE) {
-        ret = recorder->Pause();
-    } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_PAUSE) {
-        ret = recorder->Pause();
-    } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_RESUME) {
-        ret = recorder->Resume();
-    } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_STOP) {
-        ret = recorder->Stop(false);
-    } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_RESET) {
-        ret = recorder->Reset();
-    } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_RELEASE) {
-        ret = recorder->Release();
-        asyncCtx->napi->callbackNapi_ = nullptr;
-    }  else {
-        asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "asyncWorkType is error");
-        return MediaAsyncContext::CompleteCallback(env, status, data);
-    }
+//     int32_t ret = MSERR_OK;
+//     auto recorder = asyncCtx->napi->recorder_;
+//     if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_PREPARE) {
+//         ret = recorder->Prepare();
+//     } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_GET_SURFACE) {
+//         // asyncCtx->surface = recorder->GetSurface(); //
+//     } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_START) {
+//         ret = recorder->Start();
+//     } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_PAUSE) {
+//         ret = recorder->Pause();
+//     } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_PAUSE) {
+//         ret = recorder->Pause();
+//     } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_RESUME) {
+//         ret = recorder->Resume();
+//     } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_STOP) {
+//         ret = recorder->Stop(false);
+//     } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_RESET) {
+//         ret = recorder->Reset();
+//     } else if (asyncCtx->asyncWorkType == AsyncWorkType::ASYNC_WORK_RELEASE) {
+//         ret = recorder->Release();
+//         asyncCtx->napi->callbackNapi_ = nullptr;
+//     }  else {
+//         asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "asyncWorkType is error");
+//         return MediaAsyncContext::CompleteCallback(env, status, data);
+//     }
 
-    if (ret != MSERR_OK) {
-        asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "asyncWorkType is error");
-        return MediaAsyncContext::CompleteCallback(env, status, data);
-    }
-}
+//     if (ret != MSERR_OK) {
+//         asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "asyncWorkType is error");
+//         return MediaAsyncContext::CompleteCallback(env, status, data);
+//     }
+// }
 
 napi_value VideoRecorderNapi::GetState(napi_env env, napi_callback_info info)
 {

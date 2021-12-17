@@ -118,10 +118,11 @@ private:
     // static void SyncCallback(napi_env env, VideoRecorderAsyncContext *asyncCtx);
     // static void CompleteAsyncFunc(napi_env env, napi_status status, void *data);
     // static void AsyncCreator(napi_env env, void *data);
-    static void CompleteAsyncWork(napi_env env, napi_status status, void *data);
+    // static void CompleteAsyncWork(napi_env env, napi_status status, void *data);
 
     int32_t GetVideoRecorderProperties(napi_env env, napi_value args, VideoRecorderProperties &properties);
-    int32_t SetVideoRecorderProperties(const std::string urlPath, const VideoRecorderProperties &properties);
+    int32_t SetVideoRecorderProperties(std::unique_ptr<VideoRecorderAsyncContext> &ctx,
+        const VideoRecorderProperties &properties);
     void GetConfig(napi_env env, napi_value args, VideoRecorderProperties &properties);
     int32_t SetUrl(const std::string &UrlPath);
     int32_t CheckValidPath(const std::string &filePath, std::string &realPath);
@@ -141,7 +142,9 @@ struct VideoRecorderAsyncContext : public MediaAsyncContext {
     VideoRecorderNapi *napi = nullptr;
     AsyncWorkType asyncWorkType = AsyncWorkType::ASYNC_WORK_INVALID;
 
-    // std:：string surface = "invalide surface id";
+    sptr<Surface> surface;
+    int32_t videoSourceID;
+    int32_t audioSourceID;
 };
 } // namespace Media
 } // namespace OHOS
