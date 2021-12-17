@@ -74,7 +74,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
                 "rate", G_TYPE_INT, sampleRate_,
                 "channels", G_TYPE_INT, channels_,
                 "mpegversion", G_TYPE_INT, 4,
-                "stream-format", G_TYPE_STRING, "raw",
+                "stream-format", G_TYPE_STRING, "adts",
                 "base-profile", G_TYPE_STRING, "lc", nullptr);
             break;
         case CODEC_MIMIE_TYPE_AUDIO_FLAC:
@@ -99,17 +99,10 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
 
 std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetOutputPortConfig()
 {
-    guint64 channelMask = 0;
-    if (!gst_audio_channel_positions_to_mask(CHANNEL_POSITION[channels_], channels_, FALSE, &channelMask)) {
-        MEDIA_LOGE("Invalid channel positions");
-        return nullptr;
-    }
-
     GstCaps *caps = gst_caps_new_simple("audio/x-raw",
         "rate", G_TYPE_INT, sampleRate_,
         "channels", G_TYPE_INT, channels_,
         "format", G_TYPE_STRING, audioRawFormat_.c_str(),
-        "channel-mask", GST_TYPE_BITMASK, channelMask,
         "layout", G_TYPE_STRING, "interleaved", nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
