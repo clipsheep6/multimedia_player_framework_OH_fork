@@ -37,13 +37,13 @@ static bool PathToRealPath(const std::string_view &path, std::string &realPath)
         return false;
     }
 
-    char tmpPath[PATH_MAX] = {0};
-    if (realpath(path.data(), tmpPath) == nullptr) {
-        MEDIA_LOGE("path to realpath error, %{public}s", path.data());
-        return false;
-    }
+    // char tmpPath[PATH_MAX] = {0};
+    // if (realpath(path.data(), tmpPath) == nullptr) {
+    //     MEDIA_LOGE("path to realpath error, %{public}s", path.data());
+    //     return false;
+    // }
 
-    realPath = tmpPath;
+    // realPath = tmpPath;
     if (access(realPath.c_str(), F_OK) != 0) {
         MEDIA_LOGE("check realpath (%{private}s) error", realPath.c_str());
         return false;

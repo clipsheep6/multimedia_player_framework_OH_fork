@@ -16,8 +16,7 @@ private:
 	static napi_value CreateAVMuxer(napi_env env, napi_callback_info info);
 	static napi_value GetSupportedFormats(napi_env env, napi_callback_info info);
 	static napi_value SetOutput(napi_env env, napi_callback_info info);
-	static napi_value Setlatitude(napi_env env, napi_callback_info info);
-	static napi_value SetLongitude(napi_env env, napi_callback_info info);
+	static napi_value SetLocation(napi_env env, napi_callback_info info);
 	static napi_value SetOrientationHint(napi_env env, napi_callback_info info);
 	static napi_value AddTrack(napi_env env, napi_callback_info info);
 	static napi_value Start(napi_env env, napi_callback_info info);
