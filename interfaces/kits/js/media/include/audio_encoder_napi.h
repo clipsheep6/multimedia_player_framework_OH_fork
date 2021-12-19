@@ -17,6 +17,7 @@
 #define AUDIO_ENCODER_NAPI_H
 
 #include "avcodec_audio_encoder.h"
+#include "common_napi.h"
 #include "media_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -45,12 +46,8 @@ private:
     static napi_value SetParameter(napi_env env, napi_callback_info info);
     static napi_value GetOutputMediaDescription(napi_env env, napi_callback_info info);
     static napi_value GetAudioEncoderCaps(napi_env env, napi_callback_info info);
-
     static napi_value On(napi_env env, napi_callback_info info);
 
-    static void AsyncCallback(napi_env env, AudioEncoderAsyncContext *asyncCtx);
-    static void CompleteAsyncFunc(napi_env env, napi_status status, void *data);
-    static void AsyncCreator(napi_env env, void *data);
     void ErrorCallback(MediaServiceExtErrCode errCode);
 
     AudioEncoderNapi();
@@ -63,27 +60,16 @@ private:
     std::shared_ptr<AVCodecCallback> callback_ = nullptr;
 };
 
-struct AudioEncoderAsyncContext {
-    void SignError(int32_t code, std::string message) {
-        success = false;
-        errCode = code;
-        errMessage = message;
-    }
+struct AudioEncoderAsyncContext : public MediaAsyncContext {
+    explicit AudioEncoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    ~AudioEncoderAsyncContext() = default;
     // general variable
-    napi_env env;
-    napi_async_work work;
-    napi_deferred deferred;
-    napi_ref callbackRef;
     AudioEncoderNapi *napi = nullptr;
-    napi_value asyncRet;
-    bool success = false;
-    int32_t errCode = 0;
-    std::string errMessage = "";
     // used by constructor
     std::string pluginName = "";
     int32_t createByMime = 1;
     // used by buffer function
-    int32_t index;
+    int32_t index = 0;
     AVCodecBufferInfo info;
     AVCodecBufferFlag flag;
     // used by format

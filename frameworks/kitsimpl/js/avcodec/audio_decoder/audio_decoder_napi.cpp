@@ -534,7 +534,9 @@ napi_value AudioDecoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
     napi_value args[2] = {nullptr};
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, result);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
+    }
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
@@ -581,7 +583,9 @@ napi_value AudioDecoderNapi::SetParameter(napi_env env, napi_callback_info info)
     napi_value args[2] = {nullptr};
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, result);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
+    }
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
@@ -627,7 +631,9 @@ napi_value AudioDecoderNapi::GetOutputMediaDescription(napi_env env, napi_callba
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, result);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
+    }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);

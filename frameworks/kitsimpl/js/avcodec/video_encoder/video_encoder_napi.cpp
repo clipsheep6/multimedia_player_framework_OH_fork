@@ -19,7 +19,6 @@
 #include "avcodec_napi_utils.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "common_napi.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoEncoderNapi"};
@@ -87,30 +86,30 @@ napi_value VideoEncoderNapi::Init(napi_env env, napi_value exports)
 
 napi_value VideoEncoderNapi::Constructor(napi_env env, napi_callback_info info)
 {
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
 
     napi_value jsThis = nullptr;
     size_t argCount = 2;
     napi_value args[2] = {0};
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && args[0] != nullptr && args[1] != nullptr, undefined);
+    CHECK_AND_RETURN_RET(status == napi_ok && args[0] != nullptr && args[1] != nullptr, result);
 
     VideoEncoderNapi *vencNapi = new(std::nothrow) VideoEncoderNapi();
-    CHECK_AND_RETURN_RET(vencNapi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(vencNapi != nullptr, result);
 
     vencNapi->env_ = env;
     std::string name = CommonNapi::GetStringArgument(env, args[0]);
 
     bool useMime = false;
     status = napi_get_value_bool(env, args[1], &useMime);
-    CHECK_AND_RETURN_RET(status == napi_ok, undefined);
+    CHECK_AND_RETURN_RET(status == napi_ok, result);
     if (useMime) {
         vencNapi->venc_ = VideoEncoderFactory::CreateByMime(name);
     } else {
         vencNapi->venc_ = VideoEncoderFactory::CreateByName(name);
     }
-    CHECK_AND_RETURN_RET(vencNapi->venc_ != nullptr, undefined);
+    CHECK_AND_RETURN_RET(vencNapi->venc_ != nullptr, result);
 
     if (vencNapi->callback_ == nullptr) {
         vencNapi->callback_ = std::make_shared<VideoEncoderCallbackNapi>(env, vencNapi->venc_);
@@ -122,7 +121,7 @@ napi_value VideoEncoderNapi::Constructor(napi_env env, napi_callback_info info)
     if (status != napi_ok) {
         delete vencNapi;
         MEDIA_LOGE("Failed to wrap native instance");
-        return undefined;
+        return result;
     }
 
     MEDIA_LOGD("Constructor success");
@@ -142,110 +141,96 @@ void VideoEncoderNapi::Destructor(napi_env env, void *nativeObject, void *finali
 napi_value VideoEncoderNapi::CreateVideoEncoderByMime(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Enter CreateVideoEncoderByMime");
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
     size_t argCount = 2;
+
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
+    if (status != napi_ok) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
+    std::string name;
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
-        asyncCtx->pluginName = CommonNapi::GetStringArgument(env, args[0]);
-        asyncCtx->createByMime = 1;
+        name = CommonNapi::GetStringArgument(env, args[0]);
     } else {
         asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
     }
 
-    valueType = napi_undefined;
-    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[1], 1, &asyncCtx->callbackRef);
-    }
-
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    asyncCtx->JsResult = std::make_unique<AVCodecJsResultCtor>(constructor_, 1, name);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "CreateVideoEncoderByMime", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, VideoEncoderNapi::AsyncCreator,
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::CreateVideoEncoderByName(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Enter CreateVideoEncoderByName");
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
     size_t argCount = 2;
+
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
+    if (status != napi_ok) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
+    std::string name;
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
-        asyncCtx->pluginName = CommonNapi::GetStringArgument(env, args[0]);
-        asyncCtx->createByMime = 0;
+        name = CommonNapi::GetStringArgument(env, args[0]);
     } else {
         asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
     }
 
-    valueType = napi_undefined;
-    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[1], 1, &asyncCtx->callbackRef);
-    }
-
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    asyncCtx->JsResult = std::make_unique<AVCodecJsResultCtor>(constructor_, 0, name);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "CreateVideoEncoderByName", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, VideoEncoderNapi::AsyncCreator,
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::Configure(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Enter Configure");
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
-
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
+    }
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
@@ -254,14 +239,10 @@ napi_value VideoEncoderNapi::Configure(napi_env env, napi_callback_info info)
         asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
     }
 
-    valueType = napi_undefined;
-    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[1], 1, &asyncCtx->callbackRef);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Configure", NAPI_AUTO_LENGTH, &resource);
@@ -274,46 +255,36 @@ napi_value VideoEncoderNapi::Configure(napi_env env, napi_callback_info info)
             }
             if (asyncCtx->napi->venc_->Configure(asyncCtx->format) != MSERR_OK) {
                 asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Configure");
-            } else {
-                asyncCtx->success = true;
             }
         },
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::Prepare(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Enter Prepare");
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
-
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
-
-    napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[0], 1, &asyncCtx->callbackRef);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
 
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Prepare", NAPI_AUTO_LENGTH, &resource);
@@ -326,46 +297,36 @@ napi_value VideoEncoderNapi::Prepare(napi_env env, napi_callback_info info)
             }
             if (asyncCtx->napi->venc_->Prepare() != MSERR_OK) {
                 asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Prepare");
-            } else {
-                asyncCtx->success = true;
             }
         },
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::Start(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Enter Start");
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
-
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
-
-    napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[0], 1, &asyncCtx->callbackRef);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
 
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Start", NAPI_AUTO_LENGTH, &resource);
@@ -378,46 +339,36 @@ napi_value VideoEncoderNapi::Start(napi_env env, napi_callback_info info)
             }
             if (asyncCtx->napi->venc_->Start() != MSERR_OK) {
                 asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Start");
-            } else {
-                asyncCtx->success = true;
             }
         },
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::Stop(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Enter Stop");
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
-
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
-
-    napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[0], 1, &asyncCtx->callbackRef);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
 
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Stop", NAPI_AUTO_LENGTH, &resource);
@@ -430,46 +381,36 @@ napi_value VideoEncoderNapi::Stop(napi_env env, napi_callback_info info)
             }
             if (asyncCtx->napi->venc_->Stop() != MSERR_OK) {
                 asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Stop");
-            } else {
-                asyncCtx->success = true;
             }
         },
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::Flush(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Enter Flush");
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
-
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
-
-    napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[0], 1, &asyncCtx->callbackRef);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
 
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Flush", NAPI_AUTO_LENGTH, &resource);
@@ -482,46 +423,36 @@ napi_value VideoEncoderNapi::Flush(napi_env env, napi_callback_info info)
             }
             if (asyncCtx->napi->venc_->Flush() != MSERR_OK) {
                 asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Flush");
-            } else {
-                asyncCtx->success = true;
             }
         },
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::Reset(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Enter Reset");
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
-
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
-
-    napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[0], 1, &asyncCtx->callbackRef);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
 
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Reset", NAPI_AUTO_LENGTH, &resource);
@@ -534,36 +465,30 @@ napi_value VideoEncoderNapi::Reset(napi_env env, napi_callback_info info)
             }
             if (asyncCtx->napi->venc_->Reset() != MSERR_OK) {
                 asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Reset");
-            } else {
-                asyncCtx->success = true;
             }
         },
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
 {
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
-
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
+    }
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
@@ -572,14 +497,10 @@ napi_value VideoEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
         asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
     }
 
-    valueType = napi_undefined;
-    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[1], 1, &asyncCtx->callbackRef);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "QueueInput", NAPI_AUTO_LENGTH, &resource);
@@ -593,36 +514,30 @@ napi_value VideoEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN(asyncCtx->index > 0);
             if (asyncCtx->napi->venc_->QueueInputBuffer(asyncCtx->index, asyncCtx->info, asyncCtx->flag) != MSERR_OK) {
                 asyncCtx->SignError(MSERR_UNKNOWN, "Failed to QueueInput");
-            } else {
-                asyncCtx->success = true;
             }
         },
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info)
 {
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
-
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
+    }
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
@@ -631,14 +546,10 @@ napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
         asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
     }
 
-    valueType = napi_undefined;
-    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[1], 1, &asyncCtx->callbackRef);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "ReleaseOutput", NAPI_AUTO_LENGTH, &resource);
@@ -652,43 +563,30 @@ napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
             CHECK_AND_RETURN(asyncCtx->index > 0);
             if (asyncCtx->napi->venc_->ReleaseOutputBuffer(asyncCtx->index) != MSERR_OK) {
                 asyncCtx->SignError(MSERR_UNKNOWN, "Failed to ReleaseOutput");
-            } else {
-                asyncCtx->success = true;
             }
         },
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
-}
-
-napi_value VideoEncoderNapi::GetInputSurface(napi_env env, napi_callback_info info)
-{
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-    return undefinedResult;
+    return result;
 }
 
 napi_value VideoEncoderNapi::SetParameter(napi_env env, napi_callback_info info)
 {
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
-
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
+    }
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
@@ -697,14 +595,10 @@ napi_value VideoEncoderNapi::SetParameter(napi_env env, napi_callback_info info)
         asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
     }
 
-    valueType = napi_undefined;
-    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[1], 1, &asyncCtx->callbackRef);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "SetParameter", NAPI_AUTO_LENGTH, &resource);
@@ -717,45 +611,35 @@ napi_value VideoEncoderNapi::SetParameter(napi_env env, napi_callback_info info)
             }
             if (asyncCtx->napi->venc_->SetParameter(asyncCtx->format) != MSERR_OK) {
                 asyncCtx->SignError(MSERR_UNKNOWN, "Failed to SetParameter");
-            } else {
-                asyncCtx->success = true;
             }
         },
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::GetOutputMediaDescription(napi_env env, napi_callback_info info)
 {
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET(status == napi_ok && jsThis != nullptr, undefined);
-
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>();
-    CHECK_AND_RETURN_RET(asyncCtx != nullptr, undefined);
-    napi_get_undefined(env, &asyncCtx->asyncRet);
-
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
-    CHECK_AND_RETURN_RET(status == napi_ok && asyncCtx->napi != nullptr, undefined);
-    CHECK_AND_RETURN_RET(asyncCtx->napi->venc_ != nullptr, undefined);
-
-    napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
-        napi_create_reference(env, args[0], 1, &asyncCtx->callbackRef);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
 
-    if (asyncCtx->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCtx->deferred, &undefined);
-    }
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "GetOutputMediaDescription", NAPI_AUTO_LENGTH, &resource);
@@ -769,30 +653,29 @@ napi_value VideoEncoderNapi::GetOutputMediaDescription(napi_env env, napi_callba
             Format format;
             if (asyncCtx->napi->venc_->GetOutputFormat(format) != MSERR_OK) {
                 asyncCtx->SignError(MSERR_UNKNOWN, "Failed to GetOutputMediaDescription");
-            } else {
-                asyncCtx->success = true;
-                asyncCtx->asyncRet = AVCodecNapiUtil::CompressMediaFormat(env, format);
+                return;
             }
+            asyncCtx->JsResult = std::make_unique<AVCodecJsResultFormat>(format);
         },
-        VideoEncoderNapi::CompleteAsyncFunc, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
-    return undefined;
+    return result;
 }
 
 napi_value VideoEncoderNapi::GetVideoEncoderCaps(napi_env env, napi_callback_info info)
 {
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
-    return undefined;
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
 }
 
 napi_value VideoEncoderNapi::On(napi_env env, napi_callback_info info)
 {
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
 
     static const size_t MIN_REQUIRED_ARG_COUNT = 2;
     size_t argCount = MIN_REQUIRED_ARG_COUNT;
@@ -801,102 +684,28 @@ napi_value VideoEncoderNapi::On(napi_env env, napi_callback_info info)
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {
         MEDIA_LOGE("Failed to retrieve details about the callback");
-        return undefined;
+        return result;
     }
 
     VideoEncoderNapi *VideoEncoderNapi = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&VideoEncoderNapi));
-    CHECK_AND_RETURN_RET(status == napi_ok && VideoEncoderNapi != nullptr, undefined);
+    CHECK_AND_RETURN_RET(status == napi_ok && VideoEncoderNapi != nullptr, result);
 
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
     if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
         napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
         VideoEncoderNapi->ErrorCallback(MSERR_EXT_INVALID_VAL);
-        return undefined;
+        return result;
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     MEDIA_LOGD("callbackName: %{public}s", callbackName.c_str());
 
-    CHECK_AND_RETURN_RET(VideoEncoderNapi->callback_ != nullptr, undefined);
+    CHECK_AND_RETURN_RET(VideoEncoderNapi->callback_ != nullptr, result);
     auto cb = std::static_pointer_cast<VideoEncoderCallbackNapi>(VideoEncoderNapi->callback_);
     cb->SaveCallbackReference(callbackName, args[1]);
-    return undefined;
-}
-
-void VideoEncoderNapi::AsyncCallback(napi_env env, VideoEncoderAsyncContext *asyncCtx)
-{
-    napi_value args[2] = {nullptr};
-
-    if (!asyncCtx->success) {
-        args[0] = asyncCtx->asyncRet;
-    } else {
-        args[1] = asyncCtx->asyncRet;
-    }
-
-    if (asyncCtx->deferred) {
-        if (!asyncCtx->success) {
-            napi_reject_deferred(env, asyncCtx->deferred, args[0]);
-        } else {
-            napi_resolve_deferred(env, asyncCtx->deferred, args[1]);
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_get_reference_value(env, asyncCtx->callbackRef, &callback);
-        CHECK_AND_RETURN(callback != nullptr);
-        const size_t argCount = 2;
-        napi_value retVal;
-        napi_get_undefined(env, &retVal);
-        napi_call_function(env, nullptr, callback, argCount, args, &retVal);
-        napi_delete_reference(env, asyncCtx->callbackRef);
-    }
-    napi_delete_async_work(env, asyncCtx->work);
-    delete asyncCtx;
-    asyncCtx = nullptr;
-}
-
-void VideoEncoderNapi::CompleteAsyncFunc(napi_env env, napi_status status, void *data)
-{
-    auto asyncCtx = reinterpret_cast<VideoEncoderAsyncContext *>(data);
-    CHECK_AND_RETURN(asyncCtx != nullptr);
-    if (status == napi_ok && asyncCtx->success == false) {
-        (void)CommonNapi::CreateError(env, asyncCtx->errCode, asyncCtx->errMessage, asyncCtx->asyncRet);
-    } else if (status != napi_ok) {
-        (void)CommonNapi::CreateError(env, -1, "status != napi_ok", asyncCtx->asyncRet);
-    }
-    VideoEncoderNapi::AsyncCallback(env, asyncCtx);
-}
-
-void VideoEncoderNapi::AsyncCreator(napi_env env, void *data)
-{
-    auto asyncCtx = reinterpret_cast<VideoEncoderAsyncContext *>(data);
-    CHECK_AND_RETURN(asyncCtx != nullptr);
-    napi_value constructor = nullptr;
-    napi_status status = napi_get_reference_value(env, constructor_, &constructor);
-    if (status != napi_ok || constructor == nullptr) {
-        asyncCtx->SignError(MSERR_UNKNOWN, "Failed to new instance");
-        return;
-    }
-    napi_value args[2] = { nullptr };
-    status = napi_create_string_utf8(env, asyncCtx->pluginName.c_str(), NAPI_AUTO_LENGTH, &args[0]);
-    if (status != napi_ok) {
-        asyncCtx->SignError(MSERR_UNKNOWN, "No memory");
-        return;
-    }
-
-    status = napi_create_int32(env, asyncCtx->createByMime, &args[1]);
-    if (status != napi_ok) {
-        asyncCtx->SignError(MSERR_UNKNOWN, "No memory");
-        return;
-    }
-
-    status = napi_new_instance(env, constructor, 2, args, &asyncCtx->asyncRet);
-    if (status != napi_ok || asyncCtx->asyncRet == nullptr) {
-        asyncCtx->SignError(MSERR_UNKNOWN, "Failed to new instance");
-        return;
-    }
-    asyncCtx->success = true;
+    return result;
 }
 
 void VideoEncoderNapi::ErrorCallback(MediaServiceExtErrCode errCode)
