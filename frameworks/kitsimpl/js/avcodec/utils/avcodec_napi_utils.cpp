@@ -142,13 +142,5 @@ bool AVCodecNapiUtil::ExtractMediaFormat(napi_env env, napi_value mediaFormat, F
 
     return true;
 }
-
-napi_value AVCodecNapiUtil::CompressMediaFormat(napi_env env, Format format)
-{
-    napi_value undefined = nullptr;
-    napi_get_undefined(env, &undefined);
-
-    return undefined;
-}
 }
 }

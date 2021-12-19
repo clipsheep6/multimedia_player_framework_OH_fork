@@ -34,7 +34,6 @@ public:
     static bool ExtractCodecBuffer(napi_env env, napi_value buffer, int32_t &index, AVCodecBufferInfo &info,
         AVCodecBufferFlag &flag);
     static bool ExtractMediaFormat(napi_env env, napi_value mediaFormat, Format &format);
-    static napi_value CompressMediaFormat(napi_env env, Format format);
 };
 }
 }
