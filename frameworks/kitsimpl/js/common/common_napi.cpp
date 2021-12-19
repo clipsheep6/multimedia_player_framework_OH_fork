@@ -195,6 +195,64 @@ napi_deferred CommonNapi::CreatePromise(napi_env env, napi_ref ref, napi_value &
     return deferred;
 }
 
+bool CommonNapi::AddRangeProperty(napi_env env, napi_value obj, const std::string &name, int32_t min, int32_t max)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value range = nullptr;
+    napi_status status = napi_create_object(env, &range);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value minStr = nullptr;
+    status = napi_create_string_utf8(env, "min", NAPI_AUTO_LENGTH, &minStr);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value minVal = nullptr;
+    status = napi_create_int32(env, min, &minVal);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, range, minStr, minVal);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value maxStr = nullptr;
+    status = napi_create_string_utf8(env, "max", NAPI_AUTO_LENGTH, &maxStr);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value maxVal = nullptr;
+    status = napi_create_int32(env, max, &maxVal);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, range, maxStr, maxVal);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value nameStr = nullptr;
+    status = napi_create_string_utf8(env, name.c_str(), NAPI_AUTO_LENGTH, &nameStr);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, nameStr, range);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    return true;
+}
+
+bool CommonNapi::AddArrayProperty(napi_env env, napi_value obj, const std::string &name,
+    const std::vector<int32_t> &vec)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value array = nullptr;
+    napi_status status = napi_create_array_with_length(env, vec.size(), &array);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    for (uint32_t i = 0; i < vec.size(); i++) {
+        napi_value tmp = nullptr;
+        (void)napi_create_int32(env, vec.at(i), &tmp);
+        (void)napi_set_element(env, array, i, tmp);
+    }
+
+    return true;
+}
+
 void MediaAsyncContext::SignError(int32_t code, std::string message)
 {
     errMessage = message;
@@ -252,6 +310,46 @@ void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void 
     napi_delete_async_work(env, asyncContext->work);
     delete asyncContext;
     asyncContext = nullptr;
+}
+
+napi_status MediaCapsJsResultAudio::GetJsResult(napi_env env, napi_value &result)
+{
+    napi_status status = napi_create_object(env, &result);
+    CHECK_AND_RETURN_RET(status == napi_ok, status);
+
+    napi_value formatsArray = nullptr;
+    status = napi_create_array_with_length(env, 1, &formatsArray);
+    CHECK_AND_RETURN_RET(status == napi_ok, status);
+
+    for (int32_t i = 0; i < 1; i++) {
+        napi_set_element(env, formatsArray, i, nullptr);
+    }
+
+    napi_value sampleRatesArray = nullptr;
+    status = napi_create_array_with_length(env, 1, &sampleRatesArray);
+    CHECK_AND_RETURN_RET(status == napi_ok, status);
+
+    for (int32_t i = 0; i < 1; i++) {
+        napi_set_element(env, sampleRatesArray, i, nullptr);
+    }
+
+    napi_value profilesArray = nullptr;
+    status = napi_create_array_with_length(env, 1, &profilesArray);
+    CHECK_AND_RETURN_RET(status == napi_ok, status);
+
+    for (int32_t i = 0; i < 1; i++) {
+        napi_set_element(env, profilesArray, i, nullptr);
+    }
+
+    napi_value levelsArray = nullptr;
+    status = napi_create_array_with_length(env, 1, &levelsArray);
+    CHECK_AND_RETURN_RET(status == napi_ok, status);
+
+    for (int32_t i = 0; i < 1; i++) {
+        napi_set_element(env, levelsArray, i, nullptr);
+    }
+
+    return napi_ok;
 }
 }
 }
