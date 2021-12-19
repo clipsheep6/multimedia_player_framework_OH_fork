@@ -69,7 +69,7 @@ struct AudioDecoderAsyncContext : public MediaAsyncContext {
     std::string pluginName = "";
     int32_t createByMime = 1;
     // used by buffer function
-    int32_t index;
+    int32_t index = 0;
     AVCodecBufferInfo info;
     AVCodecBufferFlag flag;
     // used by format
