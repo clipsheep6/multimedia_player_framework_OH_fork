@@ -17,6 +17,7 @@
 #define COMMON_NAPI_H
 
 #include <string>
+#include <vector>
 #include "format.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -137,6 +138,15 @@ private:
     Format format_;
 };
 
+class MediaCapsJsResultAudio : public MediaJsResult {
+public:
+    explicit MediaCapsJsResultAudio()
+    {
+    }
+    ~MediaCapsJsResultAudio() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override;
+};
+
 struct MediaAsyncContext {
     explicit MediaAsyncContext(napi_env env) : env(env) {}
     virtual ~MediaAsyncContext() = default;
@@ -178,6 +188,9 @@ public:
     static napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal);
     static napi_ref CreateReference(napi_env env, napi_value arg);
     static napi_deferred CreatePromise(napi_env env, napi_ref ref, napi_value &result);
+    static bool AddRangeProperty(napi_env env, napi_value obj, const std::string &name, int32_t min, int32_t max);
+    static bool AddArrayProperty(napi_env env, napi_value obj, const std::string &name,
+        const std::vector<int32_t> &vec);
 };
 }
 }

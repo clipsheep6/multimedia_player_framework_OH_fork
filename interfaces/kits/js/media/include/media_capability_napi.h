@@ -17,14 +17,15 @@
 #define MEDIA_CAPABILITY_NAPI_H
 
 #include "media_errors.h"
+#include "common_napi.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
 namespace OHOS {
 namespace Media {
-struct MediaDescAsyncContext;
+struct MediaCapsAsyncContext;
 
-class MediaDescNapi {
+class MediaCapsNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
 
@@ -37,34 +38,21 @@ private:
     static napi_value GetAudioEncoderCaps(napi_env env, napi_callback_info info);
     static napi_value FindAudioEncoder(napi_env env, napi_callback_info info);
 
-    static void AsyncCallback(napi_env env, MediaDescAsyncContext *asyncCtx);
-    static void CompleteAsyncFunc(napi_env env, napi_status status, void *data);
-    static void AsyncCreator(napi_env env, void *data);
-
-    MediaDescNapi();
-    ~MediaDescNapi();
+    MediaCapsNapi();
+    ~MediaCapsNapi();
 
     static napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrap_ = nullptr;
 };
 
-struct MediaDescAsyncContext {
-    void SignError(int32_t code, std::string message) {
-        success = false;
-        errCode = code;
-        errMessage = message;
-    }
-    // general variable
-    napi_env env;
-    napi_async_work work;
-    napi_deferred deferred;
-    napi_ref callbackRef;
-    MediaDescNapi *napi = nullptr;
-    napi_value asyncRet;
-    bool success = false;
-    int32_t errCode = 0;
-    std::string errMessage = "";
+struct MediaCapsAsyncContext : public MediaAsyncContext {
+    explicit MediaCapsAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    ~MediaCapsAsyncContext() = default;
+
+    MediaCapsNapi *napi = nullptr;
+    std::string pluginName = "";
+    Format format;
 };
 }  // namespace Media
 }  // namespace OHOS
