@@ -17,6 +17,7 @@
 #define COMMON_NAPI_H
 
 #include <string>
+#include "format.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 
@@ -78,6 +79,62 @@ public:
 
 private:
     napi_ref constructor_;
+};
+
+class AVCodecJsResultCtor : public MediaJsResult {
+public:
+    explicit AVCodecJsResultCtor(const napi_ref &constructor, int32_t isMimeType, const std::string &name)
+        : constructor_(constructor),
+          isMimeType_(isMimeType),
+          name_(name)
+    {
+    }
+    ~AVCodecJsResultCtor() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override
+    {
+        napi_value constructor = nullptr;
+        napi_status ret = napi_get_reference_value(env, constructor_, &constructor);
+        if (ret != napi_ok || constructor == nullptr) {
+            return ret;
+        }
+
+        napi_value args[2] = { nullptr };
+        ret = napi_create_string_utf8(env, name_.c_str(), NAPI_AUTO_LENGTH, &args[0]);
+        if (ret != napi_ok) {
+            return ret;
+        }
+
+        ret = napi_create_int32(env, isMimeType_, &args[1]);
+        if (ret != napi_ok) {
+            return ret;
+        }
+
+        return napi_new_instance(env, constructor, 2, args, &result);
+    }
+
+private:
+    napi_ref constructor_;
+    int32_t isMimeType_ = 0;
+    std::string name_ = "";
+};
+
+class AVCodecJsResultFormat : public MediaJsResult {
+public:
+    explicit AVCodecJsResultFormat(const Format &format)
+        : format_(format)
+    {
+    }
+    ~AVCodecJsResultFormat() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override
+    {
+        (void)format_;
+        (void)env;
+        (void)result;
+        return napi_ok;
+    }
+
+private:
+    Format format_;
 };
 
 struct MediaAsyncContext {
