@@ -573,6 +573,13 @@ napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
     return result;
 }
 
+napi_value VideoEncoderNapi::GetInputSurface(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
 napi_value VideoEncoderNapi::SetParameter(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
