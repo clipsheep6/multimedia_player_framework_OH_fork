@@ -50,6 +50,7 @@ config("media_client_public_config") {
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper",
     "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec",
+    "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist",
     "$MEIDA_ROOT_DIR/interfaces/innerkits/native/media/include",
     "$MEIDA_ROOT_DIR/services/include",
     "$MEIDA_ROOT_DIR/services/utils/include",
@@ -125,6 +126,8 @@ ohos_shared_library("media_client") {
     ]
   } else {
     sources = [
+      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist/avcodec_info.cpp",
+      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist/avcodec_list_impl.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
