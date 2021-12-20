@@ -43,6 +43,7 @@ private:
     int32_t ConfigureGeoLocation(const RecorderParam &recParm);
     int32_t ConfigureRotationAngle(const RecorderParam &recParm);
     int32_t SetOutFilePath();
+    int32_t SetFdToFdsink(const std::string &path);
     int32_t CreateMuxerElement(const std::string &name);
 
     GstElement *gstMuxer_ = nullptr;
