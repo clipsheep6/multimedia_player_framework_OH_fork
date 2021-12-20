@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <string>
+#include "av_common.h"
 #include "format.h"
 
 namespace OHOS {
@@ -27,17 +28,6 @@ enum AVCodecErrorType : int32_t {
     /* extend error start. The extension error code agreed upon by the plug-in and
        the application will be transparently transmitted by the service. */
     AVCODEC_ERROR_EXTEND_START = 0X10000,
-};
-
-enum AVCodecType : int32_t {
-    /* Video encoder */
-    AVCODEC_TYPE_VIDEO_ENCODER = 0,
-    /* Video decoder */
-    AVCODEC_TYPE_VIDEO_DECODER,
-    /* Audio encoder */
-    AVCODEC_TYPE_AUDIO_ENCODER,
-    /* Audio decoder */
-    AVCODEC_TYPE_AUDIO_DECODER
 };
 
 enum AVCodecBufferFlag : int32_t {
