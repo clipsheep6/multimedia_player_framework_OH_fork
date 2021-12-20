@@ -31,22 +31,22 @@ const std::map<VideoPixelFormat, std::string> PIEXEL_TO_STRING = {
 };
 
 const std::map<int32_t, AudioRawFormat> NUMBER_TO_PCM = {
-    {0, AUDIO_PCM_S8},
-    {1, AUDIO_PCM_8},
-    {2, AUDIO_PCM_S16_BE},
-    {3, AUDIO_PCM_S16_LE},
-    {4, AUDIO_PCM_16_BE},
-    {5, AUDIO_PCM_16_LE},
-    {6, AUDIO_PCM_S24_BE},
-    {7, AUDIO_PCM_S24_LE},
-    {8, AUDIO_PCM_24_BE},
-    {9, AUDIO_PCM_24_LE},
-    {10, AUDIO_PCM_S32_BE},
-    {11, AUDIO_PCM_S32_LE},
-    {12, AUDIO_PCM_32_BE},
-    {13, AUDIO_PCM_32_LE},
-    {14, AUDIO_PCM_F32_BE},
-    {15, AUDIO_PCM_F32_LE},
+    {1, AUDIO_PCM_S8},
+    {2, AUDIO_PCM_8},
+    {3, AUDIO_PCM_S16_BE},
+    {4, AUDIO_PCM_S16_LE},
+    {5, AUDIO_PCM_16_BE},
+    {6, AUDIO_PCM_16_LE},
+    {7, AUDIO_PCM_S24_BE},
+    {8, AUDIO_PCM_S24_LE},
+    {9, AUDIO_PCM_24_BE},
+    {10, AUDIO_PCM_24_LE},
+    {11, AUDIO_PCM_S32_BE},
+    {12, AUDIO_PCM_S32_LE},
+    {13, AUDIO_PCM_32_BE},
+    {14, AUDIO_PCM_32_LE},
+    {15, AUDIO_PCM_F32_BE},
+    {16, AUDIO_PCM_F32_LE},
 };
 
 const std::map<AudioRawFormat, std::string> PCM_TO_STRING = {
