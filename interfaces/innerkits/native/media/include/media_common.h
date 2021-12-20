@@ -55,7 +55,8 @@ enum ContainerFormatType : int32_t {
 
 __attribute__((visibility("default"))) int32_t MapCodecMime(const std::string &mime, CodecMimeType &name);
 __attribute__((visibility("default"))) int32_t MapContainerFormat(const std::string &format, ContainerFormatType &cft);
-__attribute__((visibility("default"))) int32_t MapOutputFormatType(const ContainerFormatType &cft, OutputFormatType &opf);
+__attribute__((visibility("default"))) int32_t MapOutputFormatType(const ContainerFormatType &cft, 
+    OutputFormatType &opf);
 __attribute__((visibility("default"))) int32_t MapAudioCodec(const CodecMimeType &mime, AudioCodecFormat &audio);
 __attribute__((visibility("default"))) int32_t MapVideoCodec(const CodecMimeType &mime, VideoCodecFormat &video);
 } // namespace Media

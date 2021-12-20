@@ -29,11 +29,6 @@ enum JSAudioEncoder : int32_t {
     JS_AAC_LC = 3,
 };
 
-struct Location {
-    float latitude = 0;
-    float longitude = 0;
-};
-
 enum JSFileFormat : int32_t {
     JS_DEFAULT_FILE_FORMAT = 0,
     JS_MPEG_4 = 2,
