@@ -146,6 +146,7 @@ GstFlowReturn SinkSurfaceImpl::OutputAvailableCb(GstElement *sink, gpointer user
 
 int32_t SinkSurfaceImpl::HandleOutputCb()
 {
+    MEDIA_LOGD("OutputBuffer Available");
     GstSample *sample = nullptr;
     g_signal_emit_by_name(G_OBJECT(element_), "pull-sample", &sample);
     CHECK_AND_RETURN_RET(sample != nullptr, MSERR_UNKNOWN);

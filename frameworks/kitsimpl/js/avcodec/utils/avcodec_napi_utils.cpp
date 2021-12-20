@@ -71,7 +71,8 @@ napi_value AVCodecNapiUtil::CreateInputCodecBuffer(napi_env env, uint32_t index,
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
     napi_value dataVal = nullptr;
-    status = napi_create_arraybuffer(env, mem->GetSize(), reinterpret_cast<void **>(mem->GetBase()), &dataVal);
+    status = napi_create_external_arraybuffer(env, mem->GetBase(), static_cast<size_t>(mem->GetSize()),
+        [](napi_env env, void *data, void *hint) {}, nullptr, &dataVal);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
     status = napi_set_property(env, buffer, dataStr, dataVal);
@@ -102,8 +103,8 @@ napi_value AVCodecNapiUtil::CreateOutputCodecBuffer(napi_env env, uint32_t index
 
     CHECK_AND_RETURN_RET(memory->GetSize() > (info.offset + info.size), nullptr);
     napi_value dataVal = nullptr;
-    status = napi_create_arraybuffer(env, info.size,
-        reinterpret_cast<void **>(memory->GetBase() + info.offset), &dataVal);
+    status = napi_create_external_arraybuffer(env, memory->GetBase() + info.offset, info.size,
+        [](napi_env env, void *data, void *hint) {}, nullptr, &dataVal);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
     status = napi_set_property(env, buffer, dataStr, dataVal);
@@ -140,7 +141,7 @@ bool AVCodecNapiUtil::ExtractCodecBuffer(napi_env env, napi_value buffer, int32_
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, buffer, "length", info.size) == true, false);
 
     int32_t tmpFlag = 0;
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, buffer, "flag", tmpFlag) == true, false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, buffer, "flags", tmpFlag) == true, false);
     flag = static_cast<AVCodecBufferFlag>(tmpFlag);
 
     int32_t timeMs = 0;

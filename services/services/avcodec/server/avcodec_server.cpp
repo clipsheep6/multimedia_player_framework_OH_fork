@@ -176,7 +176,7 @@ int32_t AVCodecServer::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, 
 std::shared_ptr<AVSharedMemory> AVCodecServer::GetOutputBuffer(uint32_t index)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(status_ != AVCODEC_RUNNING, nullptr, "invalid state");
+    CHECK_AND_RETURN_RET_LOG(status_ == AVCODEC_RUNNING, nullptr, "invalid state");
     CHECK_AND_RETURN_RET_LOG(codecEngine_ != nullptr, nullptr, "engine is nullptr");
     return codecEngine_->GetOutputBuffer(index);
 }
