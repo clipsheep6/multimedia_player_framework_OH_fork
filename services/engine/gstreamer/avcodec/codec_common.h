@@ -85,7 +85,7 @@ enum VideoPixelFormat : int32_t {
 };
 
 enum AudioRawFormat : int32_t {
-    AUDIO_PCM_S8 = 0,
+    AUDIO_PCM_S8 = 1,
     AUDIO_PCM_8,
     AUDIO_PCM_S16_BE,
     AUDIO_PCM_S16_LE,
