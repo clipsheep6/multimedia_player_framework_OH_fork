@@ -50,22 +50,22 @@ AVCodecListImpl::~AVCodecListImpl()
 
 std::string AVCodecListImpl::FindVideoDecoder(const Format &format)
 {
-    return "a";
+    return "avdec_h264";
 }
 
 std::string AVCodecListImpl::FindVideoEncoder(const Format &format)
 {
-    return "a";
+    return "";
 }
 
 std::string AVCodecListImpl::FindAudioDecoder(const Format &format)
 {
-    return "a";
+    return "avdec_aac";
 }
 
 std::string AVCodecListImpl::FindAudioEncoder(const Format &format)
 {
-    return "a";
+    return "avenc_aac";
 }
 
 std::vector<CapabilityData> AVCodecListImpl::GetCodecCapabilityInfos()
