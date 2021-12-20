@@ -29,6 +29,11 @@ enum JSAudioEncoder : int32_t {
     JS_AAC_LC = 3,
 };
 
+struct Location {
+    float latitude = 0;
+    float longitude = 0;
+};
+
 enum JSFileFormat : int32_t {
     JS_DEFAULT_FILE_FORMAT = 0,
     JS_MPEG_4 = 2,
@@ -63,6 +68,7 @@ private:
         int32_t encodeBitRate;
         int32_t audioSampleRate;
         int32_t numberOfChannels;
+        Location location;
     };
     int32_t GetAudioProperties(napi_env env, napi_value args, AudioRecorderProperties &properties);
     int32_t GetAudioUriPath(napi_env env, napi_value args, std::string &uriPath);
