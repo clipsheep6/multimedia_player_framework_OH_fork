@@ -171,6 +171,7 @@ int32_t SinkSurfaceImpl::HandleOutputCb()
     auto obs = obs_.lock();
     CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
     AVCodecBufferInfo info;
+    info.presentationTimeUs = GST_BUFFER_PTS(buf);
     obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
     return MSERR_OK;

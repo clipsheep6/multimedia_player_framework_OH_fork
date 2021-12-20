@@ -15,6 +15,7 @@
 
 #include "sink_bytebuffer_impl.h"
 #include "media_log.h"
+#include "securec.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SinkBytebufferImpl"};
@@ -132,11 +133,23 @@ int32_t SinkBytebufferImpl::HandleOutputCb()
         return MSERR_UNKNOWN;
     }
 
+    uint32_t bufSize = 0;
     uint32_t index = 0;
+    uint64_t timeStamp = 0;
     for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
         if ((*it)->owner_ == BufferWrapper::DOWNSTREAM) {
             (*it)->owner_ = BufferWrapper::APP;
             (*it)->gstBuffer_ = buf;
+            CHECK_AND_RETURN_RET((*it)->mem_ != nullptr, MSERR_UNKNOWN);
+            GstMapInfo map = GST_MAP_INFO_INIT;
+            CHECK_AND_RETURN_RET(gst_buffer_map(buf, &map, GST_MAP_READ) == TRUE, MSERR_UNKNOWN);
+            bufSize = map.size;
+            if (memcpy_s((*it)->mem_->GetBase(), (*it)->mem_->GetSize(), map.data, map.size) != EOK) {
+                gst_buffer_unmap(buf, &map);
+                return MSERR_UNKNOWN;
+            }
+            timeStamp = GST_BUFFER_PTS(buf);
+            gst_buffer_unmap(buf, &map);
             break;
         }
         index++;
@@ -144,10 +157,11 @@ int32_t SinkBytebufferImpl::HandleOutputCb()
 
     auto obs = obs_.lock();
     CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
+
     AVCodecBufferInfo info;
-    info.offset = GST_BUFFER_OFFSET(buf);
-    info.size = GST_BUFFER_OFFSET_END(buf) - GST_BUFFER_OFFSET(buf);
-    info.presentationTimeUs = GST_BUFFER_PTS(buf);
+    info.offset = 0;
+    info.size = bufSize;
+    info.presentationTimeUs = timeStamp;
     obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
     return MSERR_OK;
