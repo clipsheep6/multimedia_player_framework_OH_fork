@@ -113,7 +113,7 @@ void VideoDecoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
     cb->callbackName = INPUT_CALLBACK_NAME;
     cb->index = index;
     cb->memory = buffer;
-    return OnJsBufferCallBack(cb);
+    return OnJsBufferCallBack(cb, true);
 }
 
 void VideoDecoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
@@ -136,7 +136,7 @@ void VideoDecoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBu
     cb->index = index;
     cb->info = info;
     cb->flag = flag;
-    return OnJsBufferCallBack(cb);
+    return OnJsBufferCallBack(cb, false);
 }
 
 void VideoDecoderCallbackNapi::OnJsErrorCallBack(VideoDecoderJsCallback *jsCb) const
@@ -197,7 +197,7 @@ void VideoDecoderCallbackNapi::OnJsErrorCallBack(VideoDecoderJsCallback *jsCb) c
     }
 }
 
-void VideoDecoderCallbackNapi::OnJsBufferCallBack(VideoDecoderJsCallback *jsCb) const
+void VideoDecoderCallbackNapi::OnJsBufferCallBack(VideoDecoderJsCallback *jsCb, bool isInput) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -214,6 +214,7 @@ void VideoDecoderCallbackNapi::OnJsBufferCallBack(VideoDecoderJsCallback *jsCb) 
         return;
     }
 
+    jsCb->isInput = isInput;
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -229,7 +230,12 @@ void VideoDecoderCallbackNapi::OnJsBufferCallBack(VideoDecoderJsCallback *jsCb) 
             CHECK_AND_BREAK(nstatus == napi_ok && jsCallback != nullptr);
 
             napi_value args[1] = { nullptr };
-            args[0] = AVCodecNapiUtil::CreateCodecBuffer(env, event->index, event->memory, event->info, event->flag);
+            if (event->isInput) {
+                args[0] = AVCodecNapiUtil::CreateInputCodecBuffer(env, event->index, event->memory);
+            } else {
+                args[0] = AVCodecNapiUtil::CreateOutputCodecBuffer(env, event->index,
+                    event->memory, event->info, event->flag);
+            }
             CHECK_AND_BREAK(args[0] != nullptr);
 
             const size_t argCount = 1;
