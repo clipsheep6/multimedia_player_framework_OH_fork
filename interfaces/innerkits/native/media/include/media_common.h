@@ -22,6 +22,10 @@
 
 namespace OHOS {
 namespace Media {
+struct Location {
+    float latitude = 0;
+    float longitude = 0;
+};    
 enum CodecMimeType : int32_t {
     CODEC_MIMIE_TYPE_DEFAULT = -1,
     CODEC_MIMIE_TYPE_VIDEO_H263 = 0,
@@ -55,7 +59,7 @@ enum ContainerFormatType : int32_t {
 
 __attribute__((visibility("default"))) int32_t MapCodecMime(const std::string &mime, CodecMimeType &name);
 __attribute__((visibility("default"))) int32_t MapContainerFormat(const std::string &format, ContainerFormatType &cft);
-__attribute__((visibility("default"))) int32_t MapOutputFormatType(const ContainerFormatType &cft, 
+__attribute__((visibility("default"))) int32_t MapOutputFormatType(const ContainerFormatType &cft,
     OutputFormatType &opf);
 __attribute__((visibility("default"))) int32_t MapAudioCodec(const CodecMimeType &mime, AudioCodecFormat &audio);
 __attribute__((visibility("default"))) int32_t MapVideoCodec(const CodecMimeType &mime, VideoCodecFormat &video);

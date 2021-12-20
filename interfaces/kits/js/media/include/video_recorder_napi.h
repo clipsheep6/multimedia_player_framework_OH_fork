@@ -61,11 +61,6 @@ constexpr int32_t DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t DEFAULT_FRAME_WIDTH = -1;
 constexpr int32_t DEFAULT_FRAME_RATE = 30;
 
-struct Location {
-    float latitude = 0;
-    float longitude = 0;
-};
-
 class VideoRecorderNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);

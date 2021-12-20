@@ -21,6 +21,7 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "task_queue.h"
+#include "media_common.h"
 
 namespace OHOS {
 namespace Media {
