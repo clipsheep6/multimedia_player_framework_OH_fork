@@ -61,12 +61,13 @@ public:
     ~CommonNapi() = delete;
     static std::string GetStringArgument(napi_env env, napi_value value);
     static bool GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
+    static bool GetPropertyDouble(napi_env env, napi_value configObj, const std::string &type, double &result);
+    static std::string GetPropertyString(napi_env env, napi_value configObj, const std::string &type);
     static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
     static napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal);
     static napi_ref CreateReference(napi_env env, napi_value arg);
     static napi_deferred CreatePromise(napi_env env, napi_ref ref, napi_value &result);
-    static bool SetPropertyInt32(napi_env env, napi_value &obj, const std::string &key, int32_t value);
-    static bool GetPropertyDouble(napi_env env, napi_value configObj, const std::string &type, double &result); 
+    static bool SetPropertyInt32(napi_env env, napi_value &obj, const std::string &key, int32_t value); 
     static bool SetPropertyString(napi_env env, napi_value &obj, const std::string &key, const std::string &value);
     static napi_value CreateFormatBuffer(napi_env env, Format &format);
 };
