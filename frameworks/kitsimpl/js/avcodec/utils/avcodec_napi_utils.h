@@ -31,7 +31,7 @@ public:
     static napi_value CreateInputCodecBuffer(napi_env env, uint32_t index, std::shared_ptr<AVSharedMemory> mem);
     static napi_value CreateOutputCodecBuffer(napi_env env, uint32_t index, std::shared_ptr<AVSharedMemory> memory,
         const AVCodecBufferInfo &info, AVCodecBufferFlag flag);
-    static bool AddNumberProperty(napi_env env, napi_value obj, const std::string &key, int32_t value);
+    static bool AddNumberProp(napi_env env, napi_value obj, const std::string &key, int32_t value);
     static bool ExtractCodecBuffer(napi_env env, napi_value buffer, int32_t &index, AVCodecBufferInfo &info,
         AVCodecBufferFlag &flag);
     static bool ExtractMediaFormat(napi_env env, napi_value mediaFormat, Format &format);

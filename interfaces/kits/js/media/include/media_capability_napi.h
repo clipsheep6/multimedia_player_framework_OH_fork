@@ -51,7 +51,6 @@ struct MediaCapsAsyncContext : public MediaAsyncContext {
     ~MediaCapsAsyncContext() = default;
 
     MediaCapsNapi *napi = nullptr;
-    std::string pluginName = "";
     Format format;
 };
 }  // namespace Media
