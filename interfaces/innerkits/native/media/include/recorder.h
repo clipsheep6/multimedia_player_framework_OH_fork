@@ -33,9 +33,6 @@ enum VideoSourceType : int32_t {
     /** Unsupported App Usage. */
     /** YUV video data provided through {@link Surface} */
     VIDEO_SOURCE_SURFACE_YUV = 0,
-    /** Unsupported App Usage. */
-    /** RGB video data provided through {@link Surface} */
-    VIDEO_SOURCE_SURFACE_RGB,
     /** Raw encoded data provided through {@link Surface} */
     VIDEO_SOURCE_SURFACE_ES,
     /** Invalid value */
