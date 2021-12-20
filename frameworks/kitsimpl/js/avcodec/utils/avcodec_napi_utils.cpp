@@ -51,7 +51,35 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-napi_value AVCodecNapiUtil::CreateCodecBuffer(napi_env env, uint32_t index,
+napi_value AVCodecNapiUtil::CreateInputCodecBuffer(napi_env env, uint32_t index, std::shared_ptr<AVSharedMemory> mem)
+{
+    CHECK_AND_RETURN_RET(mem != nullptr, nullptr);
+
+    napi_value buffer = nullptr;
+    napi_status status = napi_create_object(env, &buffer);
+    CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
+
+    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "timeMs", 0) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "index", static_cast<int32_t>(index)) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "offset", 0) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "length", mem->GetSize()) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "flags", 0) == true, nullptr);
+
+    napi_value dataStr = nullptr;
+    status = napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &dataStr);
+    CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
+
+    napi_value dataVal = nullptr;
+    status = napi_create_arraybuffer(env, mem->GetSize(), reinterpret_cast<void **>(mem->GetBase()), &dataVal);
+    CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
+
+    status = napi_set_property(env, buffer, dataStr, dataVal);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set property");
+
+    return buffer;
+}
+
+napi_value AVCodecNapiUtil::CreateOutputCodecBuffer(napi_env env, uint32_t index,
     std::shared_ptr<AVSharedMemory> memory, const AVCodecBufferInfo &info, AVCodecBufferFlag flag)
 {
     CHECK_AND_RETURN_RET(memory != nullptr, nullptr);
@@ -63,7 +91,7 @@ napi_value AVCodecNapiUtil::CreateCodecBuffer(napi_env env, uint32_t index,
     const int32_t MsToUs = 1000;
     CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "timeMs", info.presentationTimeUs / MsToUs) == true, nullptr);
     CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "index", static_cast<int32_t>(index)) == true, nullptr);
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "offset", info.offset) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "offset", 0) == true, nullptr);
     CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "length", info.size) == true, nullptr);
     CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "flags", static_cast<int32_t>(flag)) == true, nullptr);
 
@@ -71,8 +99,10 @@ napi_value AVCodecNapiUtil::CreateCodecBuffer(napi_env env, uint32_t index,
     status = napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &dataStr);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
+    CHECK_AND_RETURN_RET(memory->GetSize() > (info.offset + info.size), nullptr);
     napi_value dataVal = nullptr;
-    status = napi_create_arraybuffer(env, info.size, reinterpret_cast<void **>(memory->GetBase()), &dataVal);
+    status = napi_create_arraybuffer(env, info.size,
+        reinterpret_cast<void **>(memory->GetBase() + info.offset), &dataVal);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
     status = napi_set_property(env, buffer, dataStr, dataVal);

@@ -145,6 +145,9 @@ int32_t SinkBytebufferImpl::HandleOutputCb()
     auto obs = obs_.lock();
     CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
     AVCodecBufferInfo info;
+    info.offset = GST_BUFFER_OFFSET(buf);
+    info.size = GST_BUFFER_OFFSET_END(buf) - GST_BUFFER_OFFSET(buf);
+    info.presentationTimeUs = GST_BUFFER_PTS(buf);
     obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
     return MSERR_OK;
