@@ -140,11 +140,15 @@ private:
 
 class MediaCapsJsResultAudio : public MediaJsResult {
 public:
-    explicit MediaCapsJsResultAudio()
+    explicit MediaCapsJsResultAudio(bool isDecoder)
+        : isDecoder_(isDecoder)
     {
     }
     ~MediaCapsJsResultAudio() = default;
     napi_status GetJsResult(napi_env env, napi_value &result) override;
+
+private:
+    bool isDecoder_;
 };
 
 struct MediaAsyncContext {
@@ -191,6 +195,8 @@ public:
     static bool AddRangeProperty(napi_env env, napi_value obj, const std::string &name, int32_t min, int32_t max);
     static bool AddArrayProperty(napi_env env, napi_value obj, const std::string &name,
         const std::vector<int32_t> &vec);
+    static bool AddNumberProperty(napi_env env, napi_value obj, const std::string &key, int32_t value);
+    static bool AddStringProperty(napi_env env, napi_value obj, const std::string &key, const std::string & value);
 };
 }
 }

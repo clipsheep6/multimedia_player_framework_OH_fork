@@ -15,6 +15,7 @@
 
 #include "media_capability_napi.h"
 #include <climits>
+#include "avcodec_list.h"
 #include "avcodec_napi_utils.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -168,12 +169,7 @@ napi_value MediaCapsNapi::GetAudioDecoderCaps(napi_env env, napi_callback_info i
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
                 return;
             }
-            // todo
-            // if (asyncCtx->napi->adec_->GetOutputFormat(format) != MSERR_OK) {
-            //     asyncCtx->SignError(MSERR_UNKNOWN, "Failed to GetAudioDecoderCaps");
-            //     return;
-            // }
-            asyncCtx->JsResult = std::make_unique<MediaCapsJsResultAudio>();
+            asyncCtx->JsResult = std::make_unique<MediaCapsJsResultAudio>(true);
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
@@ -219,8 +215,13 @@ napi_value MediaCapsNapi::FindAudioDecoder(napi_env env, napi_callback_info info
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
                 return;
             }
-            // todo format
-            asyncCtx->JsResult = std::make_unique<MediaJsResultString>("todo");
+            auto codecList = AVCodecListFactory::CreateAVCodecList();
+            if (codecList == nullptr) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "No memory");
+                return;
+            }
+            std::string decoder = codecList->FindAudioDecoder(asyncCtx->format);
+            asyncCtx->JsResult = std::make_unique<MediaJsResultString>(decoder);
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
@@ -259,12 +260,7 @@ napi_value MediaCapsNapi::GetAudioEncoderCaps(napi_env env, napi_callback_info i
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
                 return;
             }
-            // todo
-            // if (asyncCtx->napi->adec_->GetOutputFormat(format) != MSERR_OK) {
-            //     asyncCtx->SignError(MSERR_UNKNOWN, "Failed to GetAudioEncoderCaps");
-            //     return;
-            // }
-            asyncCtx->JsResult = std::make_unique<MediaCapsJsResultAudio>();
+            asyncCtx->JsResult = std::make_unique<MediaCapsJsResultAudio>(false);
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
@@ -302,7 +298,7 @@ napi_value MediaCapsNapi::FindAudioEncoder(napi_env env, napi_callback_info info
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "FindAudioDecoder", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "FindAudioEncoder", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void* data) {
             auto asyncCtx = reinterpret_cast<MediaCapsAsyncContext *>(data);
@@ -310,8 +306,13 @@ napi_value MediaCapsNapi::FindAudioEncoder(napi_env env, napi_callback_info info
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
                 return;
             }
-            // todo format
-            asyncCtx->JsResult = std::make_unique<MediaJsResultString>("todo");
+            auto codecList = AVCodecListFactory::CreateAVCodecList();
+            if (codecList == nullptr) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "No memory");
+                return;
+            }
+            std::string encoder = codecList->FindAudioEncoder(asyncCtx->format);
+            asyncCtx->JsResult = std::make_unique<MediaJsResultString>(encoder);
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 

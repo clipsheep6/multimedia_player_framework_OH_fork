@@ -60,11 +60,11 @@ napi_value AVCodecNapiUtil::CreateInputCodecBuffer(napi_env env, uint32_t index,
     napi_status status = napi_create_object(env, &buffer);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "timeMs", 0) == true, nullptr);
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "index", static_cast<int32_t>(index)) == true, nullptr);
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "offset", 0) == true, nullptr);
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "length", mem->GetSize()) == true, nullptr);
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "flags", 0) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "timeMs", 0) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "index", static_cast<int32_t>(index)) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "offset", 0) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "length", mem->GetSize()) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "flags", 0) == true, nullptr);
 
     napi_value dataStr = nullptr;
     status = napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &dataStr);
@@ -90,11 +90,11 @@ napi_value AVCodecNapiUtil::CreateOutputCodecBuffer(napi_env env, uint32_t index
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
     const int32_t MsToUs = 1000;
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "timeMs", info.presentationTimeUs / MsToUs) == true, nullptr);
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "index", static_cast<int32_t>(index)) == true, nullptr);
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "offset", 0) == true, nullptr);
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "length", info.size) == true, nullptr);
-    CHECK_AND_RETURN_RET(AddNumberProperty(env, buffer, "flags", static_cast<int32_t>(flag)) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "timeMs", info.presentationTimeUs / MsToUs) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "index", static_cast<int32_t>(index)) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "offset", 0) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "length", info.size) == true, nullptr);
+    CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "flags", static_cast<int32_t>(flag)) == true, nullptr);
 
     napi_value dataStr = nullptr;
     status = napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &dataStr);
@@ -112,7 +112,7 @@ napi_value AVCodecNapiUtil::CreateOutputCodecBuffer(napi_env env, uint32_t index
     return buffer;
 }
 
-bool AVCodecNapiUtil::AddNumberProperty(napi_env env, napi_value obj, const std::string &key, int32_t value)
+bool AVCodecNapiUtil::AddNumberProp(napi_env env, napi_value obj, const std::string &key, int32_t value)
 {
     CHECK_AND_RETURN_RET(obj != nullptr, false);
 
