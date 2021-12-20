@@ -25,7 +25,8 @@ namespace Media {
 struct Location {
     float latitude = 0;
     float longitude = 0;
-};    
+};
+
 enum CodecMimeType : int32_t {
     CODEC_MIMIE_TYPE_DEFAULT = -1,
     CODEC_MIMIE_TYPE_VIDEO_H263 = 0,
