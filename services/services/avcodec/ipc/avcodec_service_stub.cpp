@@ -223,7 +223,6 @@ int32_t AVCodecServiceStub::SetListenerObject(MessageParcel &data, MessageParcel
 
 int32_t AVCodecServiceStub::InitParameter(MessageParcel &data, MessageParcel &reply)
 {
-
     AVCodecType type = static_cast<AVCodecType>(data.ReadInt32());
     bool isMimeType = data.ReadBool();
     std::string name = data.ReadString();

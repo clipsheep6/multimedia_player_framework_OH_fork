@@ -101,7 +101,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
                 "alignment", G_TYPE_STRING, "nal",
                 "stream-format", G_TYPE_STRING, "byte-stream", nullptr);
             break;
-        default :
+        default:
             break;
     }
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");

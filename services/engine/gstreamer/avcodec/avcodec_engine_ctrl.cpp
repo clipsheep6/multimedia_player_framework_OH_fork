@@ -139,7 +139,7 @@ int32_t AVCodecEngineCtrl::Start()
         CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
         CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
         uint32_t bufferCount = src_->GetBufferCount();
-        for (uint32_t i = 0; i < bufferCount; i ++) {
+        for (uint32_t i = 0; i < bufferCount; i++) {
             obs->OnInputBufferAvailable(i);
         }
     }
@@ -184,7 +184,7 @@ int32_t AVCodecEngineCtrl::Flush()
         auto obs = obs_.lock();
         CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
         uint32_t bufferCount = src_->GetBufferCount();
-        for (uint32_t i = 0; i < bufferCount; i ++) {
+        for (uint32_t i = 0; i < bufferCount; i++) {
             obs->OnInputBufferAvailable(i);
         }
     }

@@ -15,10 +15,10 @@
 
 #include "video_encoder_napi.h"
 #include <climits>
-#include "video_encoder_callback_napi.h"
 #include "avcodec_napi_utils.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "video_encoder_callback_napi.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoEncoderNapi"};

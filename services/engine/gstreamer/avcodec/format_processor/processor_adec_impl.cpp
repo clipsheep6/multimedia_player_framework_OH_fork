@@ -83,7 +83,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
                 "channels", G_TYPE_INT, channels_,
                 "framed", G_TYPE_BOOLEAN, TRUE, nullptr);
             break;
-        default :
+        default:
             break;
     }
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");

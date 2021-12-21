@@ -17,10 +17,10 @@
 #define AVCODEC_SERVICE_STUB_H
 
 #include <map>
-#include "i_standard_avcodec_service.h"
 #include "i_standard_avcodec_listener.h"
-#include "media_death_recipient.h"
+#include "i_standard_avcodec_service.h"
 #include "avcodec_server.h"
+#include "media_death_recipient.h"
 #include "nocopyable.h"
 
 namespace OHOS {
