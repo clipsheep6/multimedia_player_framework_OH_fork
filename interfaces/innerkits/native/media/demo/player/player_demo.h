@@ -23,6 +23,8 @@
 #include "window_manager.h"
 #include "nocopyable.h"
 #include "media_data_source_demo.h"
+#include "rs_node.h"
+#include "rs_surface_node.h"
 
 namespace MediaDemo {
     const int32_t HEIGHT = 360;
@@ -69,6 +71,7 @@ private:
     int32_t ChangeSpeedToMode(const double &rate, PlaybackRateMode &mode) const;
     void RegisterTable();
     sptr<Window> mwindow_ = nullptr;
+    std::shared_ptr<OHOS::Rosen::RSSurfaceNode> surfaceNode_ = nullptr;
     std::map<std::string, std::function<int32_t()>> playerTable_;
     std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<MediaDataSourceDemo> dataSrc_ = nullptr;
