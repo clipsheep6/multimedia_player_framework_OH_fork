@@ -21,6 +21,7 @@
 #include "media_errors.h"
 #include "media_data_source_napi.h"
 #include "media_data_source_callback.h"
+#include "media_description_napi.h"
 #include "common_napi.h"
 #include "media_surface.h"
 
@@ -821,7 +822,7 @@ void VideoPlayerNapi::AsyncGetTrackDescription(napi_env env, void *data)
     }
 
     auto player = asyncContext->jsPlayer->nativePlayer_;
-    std::vector<Format> &videoInfo = asyncContext->jsPlayer->videoTrackInfoVec_;
+    std::vector<Format> &videoInfo = asyncContext->jsPlayer->videoTranckInfoVec_;
     videoInfo.clear();
     int32_t ret = player->GetVideoTrackInfo(videoInfo);
     if (ret != MSERR_OK) {
@@ -840,8 +841,24 @@ void VideoPlayerNapi::AsyncGetTrackDescription(napi_env env, void *data)
         return;
     }
 
-    asyncContext->JsResult = std::make_unique<MediaJsResultArray>(videoInfo);
-    MEDIA_LOGD("AsyncGetTrackDescription Out");
+    // create Description
+    napi_value videoArray = nullptr;
+    napi_status status = napi_create_array(env, &videoArray);
+    if (status != napi_ok) {
+        asyncContext->SignError(MSERR_EXT_UNKNOWN, "failed to napi_create_array");
+        return;
+    }
+
+    auto vecSize = videoInfo.size();
+    for (size_t index = 0; index < vecSize; ++index) {
+        napi_value description = nullptr;
+        description = MediaDescriptionNapi::CreateMediaDescription(env, videoInfo[index]);
+        if (description == nullptr || napi_set_element(env, videoArray, index, description) != napi_ok) {
+            asyncContext->SignError(MSERR_EXT_UNKNOWN, "failed to CreateMediaDescription");
+            return;
+        }
+    }
+    // reture videoArray
 }
 
 napi_value VideoPlayerNapi::GetTrackDescription(napi_env env, napi_callback_info info)

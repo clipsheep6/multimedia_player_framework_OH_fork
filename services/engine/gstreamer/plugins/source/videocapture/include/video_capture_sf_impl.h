@@ -41,6 +41,9 @@ public:
     sptr<Surface> GetSurface() override;
     std::shared_ptr<EsAvcCodecBuffer> GetCodecBuffer() override;
     std::shared_ptr<VideoFrameBuffer> GetFrameBuffer() override;
+    void SetSuspend(bool suspend) override;
+    void SetRepeat(uint64_t time) override;
+    void SetMaxFrameRate(uint32_t rate) override;
     void UnLock(bool start) override;
 
 protected:
@@ -57,7 +60,7 @@ protected:
         VideoCaptureSfImpl &owner_;
     };
     void OnBufferAvailable();
-    int32_t GetSufferExtraData();
+    int32_t GetBufferExtraData();
 
     uint32_t videoWidth_;
     uint32_t videoHeight_;
@@ -67,7 +70,7 @@ protected:
     Rect damage_;
     sptr<SurfaceBuffer> surfaceBuffer_;
     std::atomic<bool> started_;
-    bool paused_;
+    std::atomic<bool> paused_;
     std::mutex mutex_;
     std::condition_variable bufferAvailableCondition_;
     VideoStreamType streamType_;
@@ -83,6 +86,10 @@ private:
     int32_t AcquireSurfaceBuffer();
     std::shared_ptr<VideoFrameBuffer> GetFrameBufferInner();
     void ProbeStreamType();
+    void HandleSuspendBuffer();
+    void CalculateFrameInterval();
+    bool ShouldDropFrame();
+
     uint32_t bufferNumber_ = 0;
     int64_t previousTimestamp_ = 0;
     int64_t pauseTime_ = 0;
@@ -90,7 +97,13 @@ private:
     int64_t persistTime_ = 0;
     uint32_t pauseCount_ = 0;
     int64_t totalPauseTime_ = 0;
+    uint64_t repeatFrameAfterUs_ = 0;
+    bool needRepeatFrame_ = false;
+    bool suspend_ = false;
     bool resourceLock_ = false;
+    uint32_t maxFrameRate_ = 0;
+    int64_t desireTime_ = 0;
+    int64_t minInterval_ = 0;
 };
 }  // namespace Media
 }  // namespace OHOS

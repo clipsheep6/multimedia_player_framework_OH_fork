@@ -52,6 +52,8 @@ struct _GstSurfaceVideoSrc {
     gboolean is_start;
     gboolean need_codec_data;
     gboolean is_eos;
+    gboolean enable_cache;
+    std::shared_ptr<VideoFrameBuffer> cache_frame;
 };
 
 struct _GstSurfaceVideoSrcClass {
