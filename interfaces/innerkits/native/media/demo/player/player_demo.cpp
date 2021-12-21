@@ -163,7 +163,7 @@ sptr<Surface> PlayerDemo::GetVideoSurface()
         producerSurface = mwindow_->GetSurface();
     } else if (mode == "2") {
         OHOS::Rosen::RSSurfaceNodeConfig surfaceNodeConfig = { .SurfaceNodeName = "media_player_demo"};
-        surfaceNode_ OHOS::Rosen::RSSurfaceNode::Create(surfaceNodeConfig,false);
+        surfaceNode_ = OHOS::Rosen::RSSurfaceNode::Create(surfaceNodeConfig,false);
         if (surfaceNode_ == nullptr) {
             cout << "surfaceNode_ is nullptr" << endl;
             return nullptr;
@@ -171,7 +171,7 @@ sptr<Surface> PlayerDemo::GetVideoSurface()
 
         producerSurface = surfaceNode_->GetSurface();
     }
-    
+
     if (producerSurface == nullptr) {
         cout << "producerSurface is nullptr" << endl;
         return nullptr;
