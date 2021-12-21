@@ -36,6 +36,9 @@ enum {
     PROP_SURFACE_WIDTH,
     PROP_SURFACE_HEIGHT,
     PROP_SURFACE,
+    PROP_SUSPEND,
+    PROP_REPEAT_FRAME,
+    PROP_MAX_FRAME_RATE,
 };
 
 using namespace OHOS::Media;
@@ -101,6 +104,19 @@ static void gst_surface_video_src_class_init(GstSurfaceVideoSrcClass *klass)
         g_param_spec_pointer("surface", "Surface", "Surface for recording",
             (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_SUSPEND,
+        g_param_spec_boolean("suspend", "Suspend input surface", "Suspend input surface",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_REPEAT_FRAME,
+        g_param_spec_uint64("repeat-frame", "Repeat frame",
+            "Repeat previous frame if no new frame became available after given microseconds",
+            0, G_MAXUINT64, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_MAX_FRAME_RATE,
+        g_param_spec_uint("max-framerate", "Max farmerate", "Max farmerate",
+            0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Surface video source", "Source/Video",
         "Retrieve video frame from surface buffer queue", "OpenHarmony");
@@ -127,6 +143,8 @@ static void gst_surface_video_src_init(GstSurfaceVideoSrc *src)
     src->is_start = FALSE;
     src->need_codec_data = TRUE;
     src->is_eos = FALSE;
+    src->enable_cache = FALSE;
+    src->cache_frame = nullptr;
 }
 
 static void gst_surface_video_src_finalize(GObject *object)
@@ -141,6 +159,8 @@ static void gst_surface_video_src_finalize(GObject *object)
         gst_caps_unref(src->src_caps);
         src->src_caps = nullptr;
     }
+
+    src->cache_frame = nullptr;
 }
 
 static void gst_surface_video_src_set_property(GObject *object, guint prop_id,
@@ -160,6 +180,23 @@ static void gst_surface_video_src_set_property(GObject *object, guint prop_id,
             break;
         case PROP_SURFACE_HEIGHT:
             src->video_height = g_value_get_uint(value);
+            break;
+        case PROP_SUSPEND:
+            g_return_if_fail(src->capture != nullptr);
+            src->capture->SetSuspend(g_value_get_boolean(value));
+            break;
+        case PROP_REPEAT_FRAME:
+            g_return_if_fail(src->capture != nullptr);
+            if (g_value_get_uint64(value) == 0) {
+                src->enable_cache = FALSE;
+            } else {
+                src->enable_cache = TRUE;
+            }
+            src->capture->SetRepeat(g_value_get_uint64(value));
+            break;
+        case PROP_MAX_FRAME_RATE:
+            g_return_if_fail(src->capture != nullptr);
+            src->capture->SetMaxFrameRate(g_value_get_uint(value));
             break;
         default:
             break;
@@ -351,7 +388,7 @@ static gboolean gst_surface_video_src_negotiate(GstBaseSrc *basesrc)
     g_return_val_if_fail(basesrc != nullptr, FALSE);
     GstSurfaceVideoSrc *src = GST_SURFACE_VIDEO_SRC(basesrc);
     g_return_val_if_fail(src != nullptr, FALSE);
-    
+
     // no need to wait playing when yuv source
     if (src->need_codec_data) {
         (void)gst_base_src_wait_playing(basesrc);
@@ -379,12 +416,19 @@ static GstFlowReturn gst_surface_video_src_create(GstPushSrc *psrc, GstBuffer **
         GST_INFO_OBJECT(src, "eos...");
         return GST_FLOW_EOS;
     }
+
+    if (src->enable_cache == TRUE && frame_buffer == nullptr) {
+        frame_buffer = src->cache_frame;
+    }
+
     g_return_val_if_fail(frame_buffer != nullptr, GST_FLOW_ERROR);
 
     gst_base_src_set_blocksize(GST_BASE_SRC_CAST(src), static_cast<guint>(frame_buffer->size));
 
     *outbuf = frame_buffer->gstBuffer;
     GST_BUFFER_PTS(*outbuf) = frame_buffer->timeStamp;
+
+    src->cache_frame = frame_buffer;
 
     GST_DEBUG_OBJECT(src, "end create...");
     return GST_FLOW_OK;
