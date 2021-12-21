@@ -31,7 +31,7 @@ ohos_executable("media_demo") {
     "//foundation/graphic/standard/rosen/modules/render_service_client/core/ui",
     "//foundation/graphic/standard/rosen/modules/render_service_base/include",
     "//foundation/graphic/standard/rosen/modules/render_service_client/core",
-    "//third_party/flutter/skia"
+    "//third_party/flutter/skia",
   ]
 
   cflags = [
@@ -65,10 +65,10 @@ ohos_executable("media_demo") {
 
   deps = [
     "//foundation/graphic/standard:libsurface",
-    "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
-    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
     "//foundation/graphic/standard:libwmclient",
     "//foundation/graphic/standard/frameworks/surface:surface",
+    "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
     "//third_party/libjpeg:libjpeg_static",
     "//utils/native/base:utils",
