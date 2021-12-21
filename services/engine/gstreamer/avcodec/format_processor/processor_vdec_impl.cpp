@@ -38,12 +38,14 @@ int32_t ProcessorVdecImpl::ProcessMandatory(const Format &format)
     int32_t pixel = 0;
     CHECK_AND_RETURN_RET(format.GetIntValue("pixel_format", pixel) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("frame_rate", frameRate_) == true, MSERR_INVALID_VAL);
+
     MEDIA_LOGD("width:%{public}d, height:%{public}d, pixel:%{public}d, frameRate:%{public}d",
         width_, height_, pixel, frameRate_);
 
     VideoPixelFormat pixelFormat = VIDEO_PIXEL_FORMAT_YUVI420;
     CHECK_AND_RETURN_RET(MapVideoPixelFormat(pixel, pixelFormat) == MSERR_OK, MSERR_INVALID_VAL);
     pixelFormat_ = PixelFormatToString(pixelFormat);
+
     return MSERR_OK;
 }
 

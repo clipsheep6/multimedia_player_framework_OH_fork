@@ -38,7 +38,7 @@ private:
     int32_t width_ = 0;
     int32_t height_ = 0;
     std::string pixelFormat_ = "";
-    int32_t framerate_ = 0;
+    int32_t frameRate_ = 0;
 };
 } // Media
 } // OHOS

@@ -169,6 +169,7 @@ int32_t SinkSurfaceImpl::HandleOutputCb()
         index++;
     }
     CHECK_AND_RETURN_RET(index < bufferCount_ && index < bufferList_.size(), MSERR_UNKNOWN);
+
     auto obs = obs_.lock();
     CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
     AVCodecBufferInfo info;

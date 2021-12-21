@@ -37,11 +37,13 @@ int32_t ProcessorAdecImpl::ProcessMandatory(const Format &format)
     CHECK_AND_RETURN_RET(format.GetIntValue("sample_rate", sampleRate_) == true, MSERR_INVALID_VAL);
     int32_t audioRawFormat = 0;
     CHECK_AND_RETURN_RET(format.GetIntValue("audio_raw_format", audioRawFormat) == true, MSERR_INVALID_VAL);
+
     MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d", channels_, sampleRate_, audioRawFormat);
 
     AudioRawFormat rawFormat = AUDIO_PCM_S8;
     CHECK_AND_RETURN_RET(MapPCMFormat(audioRawFormat, rawFormat) == MSERR_OK, MSERR_INVALID_VAL);
     audioRawFormat_ = PCMFormatToString(rawFormat);
+
     return MSERR_OK;
 }
 
