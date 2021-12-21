@@ -16,9 +16,9 @@
 #ifndef VIDEO_DECODER_CALLBACK_NAPI_H
 #define VIDEO_DECODER_CALLBACK_NAPI_H
 
-#include "video_decoder_napi.h"
 #include "avcodec_video_decoder.h"
 #include "common_napi.h"
+#include "video_decoder_napi.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 

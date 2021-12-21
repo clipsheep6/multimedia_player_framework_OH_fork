@@ -16,8 +16,8 @@
 #ifndef AVCODEC_ENGINE_CTRL_H
 #define AVCODEC_ENGINE_CTRL_H
 
-#include <cstdint>
 #include <condition_variable>
+#include <cstdint>
 #include <mutex>
 #include "avcodec_engine_factory.h"
 #include "i_avcodec_engine.h"

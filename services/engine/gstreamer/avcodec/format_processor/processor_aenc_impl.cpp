@@ -88,7 +88,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
                 "stream-format", G_TYPE_STRING, "raw",
                 "base-profile", G_TYPE_STRING, "lc", nullptr);
             break;
-        default :
+        default:
             break;
     }
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");

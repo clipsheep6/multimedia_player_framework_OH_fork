@@ -16,11 +16,11 @@
 #ifndef I_STANDARD_AVCODEC_LISTENER_H
 #define I_STANDARD_AVCODEC_LISTENER_H
 
-#include "avcodec_common.h"
 #include "ipc_types.h"
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
+#include "avcodec_common.h"
 
 namespace OHOS {
 namespace Media {

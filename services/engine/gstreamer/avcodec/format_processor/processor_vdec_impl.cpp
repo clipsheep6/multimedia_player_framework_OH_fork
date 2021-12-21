@@ -92,7 +92,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
                 "stream-format", G_TYPE_STRING, "byte-stream",
                 "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
-        default :
+        default:
             break;
     }
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
