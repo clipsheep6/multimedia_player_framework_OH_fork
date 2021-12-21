@@ -57,7 +57,7 @@ int32_t SinkBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
     g_object_set(G_OBJECT(element_), "caps", config->caps_, nullptr);
 
     for (uint32_t i = 0; i < bufferCount_; i++) {
-        auto mem = AVSharedMemory::Create(bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "appsink");
+        auto mem = AVSharedMemory::Create(bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "output");
         CHECK_AND_RETURN_RET(mem != nullptr, MSERR_NO_MEMORY);
 
         GstBuffer *buffer = gst_buffer_new_allocate(nullptr, static_cast<gsize>(DEFAULT_BUFFER_SIZE), nullptr);
