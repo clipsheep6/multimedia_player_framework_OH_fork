@@ -14,6 +14,7 @@
  */
 
 #include "video_capture_sf_impl.h"
+#include <chrono>
 #include <map>
 #include <cmath>
 #include "media_log.h"
@@ -38,13 +39,13 @@ VideoCaptureSfImpl::VideoCaptureSfImpl()
       timestamp_(0),
       damage_ {0},
       surfaceBuffer_(nullptr),
-      started_(false),
-      paused_(false),
       streamType_(VIDEO_STREAM_TYPE_UNKNOWN),
       streamTypeUnknown_(true),
       dataConSurface_(nullptr),
       producerSurface_(nullptr)
 {
+    started_.store(false);
+    paused_.store(false);
 }
 
 VideoCaptureSfImpl::~VideoCaptureSfImpl()
@@ -86,6 +87,7 @@ int32_t VideoCaptureSfImpl::Start()
 
 int32_t VideoCaptureSfImpl::Pause()
 {
+    paused_.store(true);
     pauseTime_ = pts_;
     pauseCount_++;
     return MSERR_OK;
@@ -93,6 +95,7 @@ int32_t VideoCaptureSfImpl::Pause()
 
 int32_t VideoCaptureSfImpl::Resume()
 {
+    paused_.store(false);
     resumeTime_ = pts_;
     if (resumeTime_ < pauseTime_) {
         MEDIA_LOGW("get wrong timestamp from HDI!");
@@ -102,8 +105,8 @@ int32_t VideoCaptureSfImpl::Resume()
 
     totalPauseTime_ += persistTime_;
 
-    MEDIA_LOGI("video capture has %{public}d times paused, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}"
-    PRIu64 "", pauseCount_, persistTime_, totalPauseTime_);
+    MEDIA_LOGI("video capture has %{public}d times paused, persistTime: %{public}" PRIu64 ", totalPauseTime: %{public}"
+        PRIu64 "", pauseCount_, persistTime_, totalPauseTime_);
     return MSERR_OK;
 }
 
@@ -128,6 +131,26 @@ int32_t VideoCaptureSfImpl::Stop()
     totalPauseTime_ = 0;
     pauseCount_ = 0;
     return MSERR_OK;
+}
+
+void VideoCaptureSfImpl::SetSuspend(bool suspend)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    suspend_ = suspend;
+    MEDIA_LOGI("Suspend input surface: %{public}d", suspend);
+}
+
+void VideoCaptureSfImpl::SetMaxFrameRate(uint32_t rate)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    maxFrameRate_ = rate;
+    CalculateFrameInterval();
+}
+
+void VideoCaptureSfImpl::SetRepeat(uint64_t time)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    repeatFrameAfterUs_ = time;
 }
 
 void VideoCaptureSfImpl::UnLock(bool start)
@@ -190,6 +213,13 @@ std::shared_ptr<VideoFrameBuffer> VideoCaptureSfImpl::GetFrameBuffer()
         return GetFrameBufferInner();
     } else {
         if (AcquireSurfaceBuffer() == MSERR_OK) {
+            {
+                std::unique_lock<std::mutex> lock(mutex_);
+                if (repeatFrameAfterUs_ > 0 && needRepeatFrame_ == true) {
+                    needRepeatFrame_ = false;
+                    return nullptr;
+                }
+            }
             return GetFrameBufferInner();
         }
     }
@@ -220,7 +250,7 @@ void VideoCaptureSfImpl::SetSurfaceUserData()
     }
 }
 
-int32_t VideoCaptureSfImpl::GetSufferExtraData()
+int32_t VideoCaptureSfImpl::GetBufferExtraData()
 {
     CHECK_AND_RETURN_RET_LOG(surfaceBuffer_ != nullptr, MSERR_INVALID_OPERATION, "surfacebuffer is null");
 
@@ -240,6 +270,12 @@ int32_t VideoCaptureSfImpl::GetSufferExtraData()
     if (pts_ < previousTimestamp_) {
         MEDIA_LOGW("get error timestamp from surfaceBuffer");
     }
+
+    if (maxFrameRate_ > 0 && ShouldDropFrame() == true) {
+        (void)dataConSurface_->ReleaseBuffer(surfaceBuffer_, fence_);
+        return AcquireSurfaceBuffer();
+    }
+
     previousTimestamp_ = pts_;
 
     return MSERR_OK;
@@ -248,24 +284,37 @@ int32_t VideoCaptureSfImpl::GetSufferExtraData()
 int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (!started_ || (dataConSurface_ == nullptr)) {
+    if (started_.load() == false || (dataConSurface_ == nullptr)) {
         return MSERR_INVALID_OPERATION;
     }
 
-    bufferAvailableCondition_.wait(lock, [this]() { return bufferAvailableCount_ > 0 || resourceLock_; });
+    if (repeatFrameAfterUs_ > 0) {
+        bufferAvailableCondition_.wait_for(lock, std::chrono::microseconds(repeatFrameAfterUs_), [this]() {
+            return bufferAvailableCount_ > 0 || resourceLock_;
+        });
+        if (bufferAvailableCount_ == 0) {
+            needRepeatFrame_ = true;
+            return MSERR_OK;
+        } else {
+            needRepeatFrame_ = false;
+        }
+    } else {
+        bufferAvailableCondition_.wait(lock, [this]() { return bufferAvailableCount_ > 0 || resourceLock_; });
+    }
+
     if (resourceLock_) {
         MEDIA_LOGI("flush start / eos, skip acquire buffer");
         return MSERR_NO_MEMORY;
     }
 
-    if (!started_ || (dataConSurface_ == nullptr)) {
+    if (started_.load() == false || (dataConSurface_ == nullptr)) {
         return MSERR_INVALID_OPERATION;
     }
     if (dataConSurface_->AcquireBuffer(surfaceBuffer_, fence_, timestamp_, damage_) != SURFACE_ERROR_OK) {
         return MSERR_UNKNOWN;
     }
 
-    int32_t ret = GetSufferExtraData();
+    int32_t ret = GetBufferExtraData();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "get ExtraData fail");
 
     pts_ = pts_ - totalPauseTime_;
@@ -284,6 +333,12 @@ void VideoCaptureSfImpl::OnBufferAvailable()
         return;
     }
     std::unique_lock<std::mutex> lock(mutex_);
+
+    if (suspend_ == true) {
+        HandleSuspendBuffer();
+        return;
+    }
+
     if (bufferAvailableCount_ == 0) {
         bufferAvailableCondition_.notify_all();
     }
@@ -294,6 +349,38 @@ void VideoCaptureSfImpl::ProbeStreamType()
 {
     streamTypeUnknown_ = false;
     // Identify whether it is an ES stream or a YUV stream from the code stream or from the buffer.
+}
+
+void VideoCaptureSfImpl::HandleSuspendBuffer()
+{
+    if (dataConSurface_->AcquireBuffer(surfaceBuffer_, fence_, timestamp_, damage_) == SURFACE_ERROR_OK) {
+        (void)dataConSurface_->ReleaseBuffer(surfaceBuffer_, fence_);
+    }
+}
+
+void VideoCaptureSfImpl::CalculateFrameInterval()
+{
+    CHECK_AND_RETURN(maxFrameRate_ > 0);
+    const float oneSecToUs = 1000000;
+    minInterval_ = static_cast<int64_t>(oneSecToUs / maxFrameRate_);
+}
+
+bool VideoCaptureSfImpl::ShouldDropFrame()
+{
+    CHECK_AND_RETURN_RET(maxFrameRate_ > 0, false);
+
+    if (desireTime_ == 0) {
+        desireTime_ = pts_;
+        return false;
+    }
+
+    const int64_t jitter = 5000;
+    if (pts_ < (desireTime_ - jitter)) {
+        return true;
+    }
+
+    desireTime_ += minInterval_;
+    return false;
 }
 }  // namespace Media
 }  // namespace OHOS

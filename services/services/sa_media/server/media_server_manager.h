@@ -21,6 +21,7 @@
 #include "ipc_skeleton.h"
 #include "recorder_service_stub.h"
 #include "player_service_stub.h"
+#include "avcodec_service_stub.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -35,6 +36,7 @@ public:
         RECORDER = 0,
         PLAYER,
         AVMETADATAHELPER,
+        AVCODEC,
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -45,10 +47,12 @@ private:
     sptr<IRemoteObject> CreatePlayerStubObject();
     sptr<IRemoteObject> CreateRecorderStubObject();
     sptr<IRemoteObject> CreateAVMetadataHelperStubObject();
+    sptr<IRemoteObject> CreateAVCodecStubObject();
 
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
+    std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
 
     std::mutex mutex_;
 };
