@@ -172,7 +172,7 @@ int32_t SrcBytebufferImpl::HandleCodecBuffer(uint32_t index, AVCodecBufferInfo i
     CHECK_AND_RETURN_RET((info.offset + info.size) <= bufferList_[index]->mem_->GetSize(), MSERR_INVALID_VAL);
 
     GstBuffer *codecBuffer = gst_buffer_new_allocate(nullptr, info.size, nullptr);
-    CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, MSERR_NO_MEMORY, "no memory");
+    CHECK_AND_RETURN_RET(codecBuffer != nullptr, MSERR_NO_MEMORY);
 
     ON_SCOPE_EXIT(0) { gst_buffer_unref(codecBuffer); };
 
