@@ -37,13 +37,15 @@ int32_t ProcessorVencImpl::ProcessMandatory(const Format &format)
     CHECK_AND_RETURN_RET(format.GetIntValue("height", height_) == true, MSERR_INVALID_VAL);
     int32_t pixel = 0;
     CHECK_AND_RETURN_RET(format.GetIntValue("pixel_format", pixel) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("frame_rate", framerate_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("frame_rate", frameRate_) == true, MSERR_INVALID_VAL);
+
     MEDIA_LOGD("width:%{public}d, height:%{public}d, pixel:%{public}d, framerate:%{public}d",
-        width_, height_, pixel, framerate_);
+        width_, height_, pixel, frameRate_);
 
     VideoPixelFormat pixelFormat = VIDEO_PIXEL_FORMAT_YUVI420;
     CHECK_AND_RETURN_RET(MapVideoPixelFormat(pixel, pixelFormat) == MSERR_OK, MSERR_INVALID_VAL);
     pixelFormat_ = PixelFormatToString(pixelFormat);
+
     return MSERR_OK;
 }
 
@@ -67,7 +69,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetInputPortConfig()
         "width", G_TYPE_INT, width_,
         "height", G_TYPE_INT, height_,
         "format", G_TYPE_STRING, pixelFormat_.c_str(),
-        "framerate", G_TYPE_INT, framerate_, nullptr);
+        "framerate", G_TYPE_INT, frameRate_, nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
     auto config = std::make_shared<ProcessorConfig>(caps);
@@ -87,14 +89,14 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
             caps = gst_caps_new_simple("video/mpeg",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
-                "framerate", G_TYPE_INT, framerate_,
+                "framerate", G_TYPE_INT, frameRate_,
                 "mpegversion", G_TYPE_INT, 1, nullptr);
             break;
         case CODEC_MIMIE_TYPE_VIDEO_AVC:
             caps = gst_caps_new_simple("video/x-h264",
                 "width", G_TYPE_INT, width_,
                 "height", G_TYPE_INT, height_,
-                "framerate", G_TYPE_INT, framerate_,
+                "framerate", G_TYPE_INT, frameRate_,
                 "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
                 "level", G_TYPE_STRING, "2",
                 "profile", G_TYPE_STRING, "high",

@@ -136,33 +136,30 @@ int32_t SinkBytebufferImpl::HandleOutputCb()
 
     uint32_t bufSize = 0;
     uint32_t index = 0;
-    uint64_t timeStamp = 0;
     for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
         if ((*it)->owner_ == BufferWrapper::DOWNSTREAM) {
             (*it)->owner_ = BufferWrapper::APP;
             (*it)->gstBuffer_ = buf;
-            CHECK_AND_RETURN_RET((*it)->mem_ != nullptr, MSERR_UNKNOWN);
+            CHECK_AND_CONTINUE((*it)->mem_ != nullptr);
             GstMapInfo map = GST_MAP_INFO_INIT;
-            CHECK_AND_RETURN_RET(gst_buffer_map(buf, &map, GST_MAP_READ) == TRUE, MSERR_UNKNOWN);
+            CHECK_AND_CONTINUE(gst_buffer_map(buf, &map, GST_MAP_READ) == TRUE);
             bufSize = map.size;
             if (memcpy_s((*it)->mem_->GetBase(), (*it)->mem_->GetSize(), map.data, map.size) != EOK) {
-                gst_buffer_unmap(buf, &map);
-                return MSERR_UNKNOWN;
+                MEDIA_LOGE("Failed to memcpy_s");
             }
-            timeStamp = GST_BUFFER_PTS(buf);
             gst_buffer_unmap(buf, &map);
             break;
         }
         index++;
     }
+    CHECK_AND_RETURN_RET(index < bufferCount_ && index < bufferList_.size(), MSERR_UNKNOWN);
 
     auto obs = obs_.lock();
     CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
-
     AVCodecBufferInfo info;
     info.offset = 0;
     info.size = bufSize;
-    info.presentationTimeUs = timeStamp;
+    info.presentationTimeUs = GST_BUFFER_PTS(buf);
     obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
     return MSERR_OK;
