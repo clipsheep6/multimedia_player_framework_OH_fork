@@ -28,6 +28,10 @@ ohos_executable("media_demo") {
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//third_party/libjpeg",
+    "//foundation/graphic/standard/rosen/modules/render_service_client/core/ui",
+    "//foundation/graphic/standard/rosen/modules/render_service_base/include",
+    "//foundation/graphic/standard/rosen/modules/render_service_client/core",
+    "//third_party/flutter/skia"
   ]
 
   cflags = [
@@ -46,7 +50,6 @@ ohos_executable("media_demo") {
     "-D_FORTIFY_SOURCE=2",
     "-fvisibility=hidden",
     "-Wformat=2",
-    "-Wfloat-equal",
     "-Wdate-time",
   ]
 
@@ -62,6 +65,8 @@ ohos_executable("media_demo") {
 
   deps = [
     "//foundation/graphic/standard:libsurface",
+    "//foundation/graphic/standard/rosen/modules/render_service_base:librender_service_base",
+    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
     "//foundation/graphic/standard:libwmclient",
     "//foundation/graphic/standard/frameworks/surface:surface",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
