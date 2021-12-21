@@ -145,7 +145,7 @@ int32_t SinkBytebufferImpl::HandleOutputCb()
             CHECK_AND_CONTINUE(gst_buffer_map(buf, &map, GST_MAP_READ) == TRUE);
             bufSize = map.size;
             if (memcpy_s((*it)->mem_->GetBase(), (*it)->mem_->GetSize(), map.data, map.size) != EOK) {
-                MEDIA_LOGE("Failed to memcpy_s");
+                MEDIA_LOGE("Failed to copy output buffer");
             }
             gst_buffer_unmap(buf, &map);
             break;
