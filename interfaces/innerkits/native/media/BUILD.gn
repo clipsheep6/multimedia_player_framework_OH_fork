@@ -85,6 +85,7 @@ ohos_shared_library("media_client") {
   if (defined(ohos_lite)) {
     sources = [
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
+      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_common.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder/recorder_impl.cpp",
@@ -117,6 +118,7 @@ ohos_shared_library("media_client") {
   } else {
     sources = [
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
+      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_common.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
       "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder/recorder_impl.cpp",
