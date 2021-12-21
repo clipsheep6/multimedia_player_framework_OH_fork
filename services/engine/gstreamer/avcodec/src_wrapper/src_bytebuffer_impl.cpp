@@ -60,7 +60,7 @@ int32_t SrcBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
     g_object_set(G_OBJECT(element_), "format", GST_FORMAT_TIME, nullptr);
 
     for (uint32_t i = 0; i < bufferCount_; i++) {
-        auto mem = AVSharedMemory::Create(bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "appsrc");
+        auto mem = AVSharedMemory::Create(bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "input");
         CHECK_AND_RETURN_RET(mem != nullptr, MSERR_NO_MEMORY);
 
         auto bufWrap = std::make_shared<BufferWrapper>(mem, nullptr, bufferList_.size(), BufferWrapper::SERVER);
