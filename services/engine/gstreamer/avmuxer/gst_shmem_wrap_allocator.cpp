@@ -14,6 +14,7 @@
  */
 
 #include "gst_shmem_wrap_allocator.h"
+#include "gstmemory.h"
 #include "media_log.h"
 
 #define gst_shmem_wrap_allocator_parent_class parent_class
@@ -84,6 +85,27 @@ static void gst_shmem_wrap_allocator_mem_unmap(GstMemory *mem)
     (void)mem;
 }
 
+static GstMemory * gst_shmem_wrap_allocator_mem_share (GstMemory * mem, gssize offset, gsize size)
+{
+    GstShMemMemory *sub;
+    GstMemory *parent;
+    GST_DEBUG("offset is: %d, size is: %d", offset, size);
+    /* find the real parent */
+    if ((parent = mem->parent) == NULL)
+        parent = (GstMemory *)mem;
+
+    if (size == -1)
+        size = mem->size - offset;
+
+    sub = g_slice_new0(GstShMemMemory);
+    /* the shared memory is always readonly */
+    gst_memory_init(GST_MEMORY_CAST(sub), (GstMemoryFlags)(GST_MINI_OBJECT_FLAGS(parent) | GST_MINI_OBJECT_FLAG_LOCK_READONLY),
+        mem->allocator, GST_MEMORY_CAST(parent), mem->maxsize, mem->align, mem->offset + offset, size);
+    
+    sub->mem = reinterpret_cast<GstShMemMemory *>(mem)->mem;
+    return GST_MEMORY_CAST(sub);
+}
+
 static void gst_shmem_wrap_allocator_init(GstShMemWrapAllocator *allocator)
 {
     GstAllocator *bAllocator = GST_ALLOCATOR_CAST(allocator);
@@ -94,6 +116,7 @@ static void gst_shmem_wrap_allocator_init(GstShMemWrapAllocator *allocator)
     bAllocator->mem_type = GST_SHMEM_MEMORY_TYPE;
     bAllocator->mem_map = (GstMemoryMapFunction)gst_shmem_wrap_allocator_mem_map;
     bAllocator->mem_unmap = (GstMemoryUnmapFunction)gst_shmem_wrap_allocator_mem_unmap;
+    bAllocator->mem_share = (GstMemoryShareFunction)gst_shmem_wrap_allocator_mem_share;
 }
 
 static void gst_shmem_wrap_allocator_finalize(GObject *obj)

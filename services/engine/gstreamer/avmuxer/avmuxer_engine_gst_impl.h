@@ -89,6 +89,7 @@ private:
     bool isPause_ = false;
     bool isPlay_ = false;
     GstShMemWrapAllocator* allocator_;
+    // FILE *fp;
 };
 }  // namespace Media
 }  // namespace OHOS

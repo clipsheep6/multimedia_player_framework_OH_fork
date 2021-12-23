@@ -110,6 +110,9 @@ int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, cons
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     MEDIA_LOGD("sampleData->Capacity() is: %{public}u", sampleData->Capacity());
+    MEDIA_LOGD("sampleData->Capacity() is: %{public}u", sampleData->Size());
+    MEDIA_LOGD("sampleData->Capacity() is: %{public}s", sampleData->Data());
+    MEDIA_LOGD("sampleData->Capacity() is: %{public}s", sampleData->Base());
     // std::shared_ptr<AVSharedMemory> avSharedMem = AVSharedMemoryBase::Create(sampleData->Capacity(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
     std::shared_ptr<AVSharedMemoryBase> avSharedMem = std::make_shared<AVSharedMemoryBase>(sampleData->Size(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
     int32_t ret = avSharedMem->Init();

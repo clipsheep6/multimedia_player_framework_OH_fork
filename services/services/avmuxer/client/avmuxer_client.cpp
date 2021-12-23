@@ -19,6 +19,10 @@ AVMuxerClient::AVMuxerClient(const sptr<IStandardAVMuxerService>& ipcProxy)
     : avmuxerProxy_(ipcProxy)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    // fp = fopen("out1.txt", "wb");
+    // if (fp == nullptr) {
+    //     MEDIA_LOGD("open out1.txt failed");
+    // }
 }
 
 AVMuxerClient::~AVMuxerClient()

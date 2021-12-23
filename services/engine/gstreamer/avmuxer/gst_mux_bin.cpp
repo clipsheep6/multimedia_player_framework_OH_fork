@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "gstappsrc.h"
+#include "gstbaseparse.h"
 
 enum
 {
@@ -80,6 +81,7 @@ static void gst_mux_bin_init(GstMuxBin *mux_bin)
     g_return_if_fail(mux_bin != nullptr);
     GST_INFO_OBJECT(mux_bin, "gst_mux_bin_init");
     mux_bin->audioSrcList_ = nullptr;
+    mux_bin->h264parse_ = nullptr;
     mux_bin->videoSrc_ = nullptr;
     mux_bin->splitMuxSink_ = nullptr;
     mux_bin->path_ = nullptr;
@@ -160,6 +162,17 @@ static GstStateChangeReturn cerate_splitmuxsink(GstMuxBin *mux_bin)
     g_return_val_if_fail(qtmux != nullptr, GST_STATE_CHANGE_FAILURE);
     g_object_set(qtmux, "streamable", true, nullptr);
     g_object_set(mux_bin->splitMuxSink_, "muxer", qtmux, nullptr);
+    // g_object_set(mux_bin->splitMuxSink_, "muxer", qtmux, "use-robust-muxing", true, nullptr);
+
+    return GST_STATE_CHANGE_SUCCESS;
+}
+
+static GstStateChangeReturn create_h264parse(GstMuxBin *mux_bin)
+{
+    mux_bin->h264parse_ = gst_element_factory_make("h264parse", "h264parse");
+    g_return_val_if_fail(mux_bin->h264parse_ != nullptr, GST_STATE_CHANGE_FAILURE);
+    // g_object_set(GST_BASE_PARSE_CAST(mux_bin->h264parse_), "disable-passthrough", false, nullptr);
+    // gst_base_parse_set_passthrough(GST_BASE_PARSE_CAST(mux_bin->h264parse_), true);
 
     return GST_STATE_CHANGE_SUCCESS;
 }
@@ -170,8 +183,8 @@ static GstStateChangeReturn create_video_src(GstMuxBin *mux_bin)
 
     mux_bin->videoSrc_ = gst_element_factory_make("appsrc", mux_bin->videoTrack_);
     g_return_val_if_fail(mux_bin->videoSrc_ != nullptr, GST_STATE_CHANGE_FAILURE);
-    g_object_set(mux_bin->videoSrc_, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
-    // g_object_set(mux_bin->videoSrc_, "format", GST_FORMAT_TIME, nullptr);
+    // g_object_set(mux_bin->videoSrc_, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
+    g_object_set(mux_bin->videoSrc_, "format", GST_FORMAT_TIME, nullptr);
 
     return GST_STATE_CHANGE_SUCCESS;
 }
@@ -199,6 +212,10 @@ static GstStateChangeReturn create_element(GstMuxBin *mux_bin)
         return GST_STATE_CHANGE_FAILURE;
     }
 
+    if (create_h264parse(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
+        return GST_STATE_CHANGE_FAILURE;
+    }
+
     if (create_video_src(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
         return GST_STATE_CHANGE_FAILURE;
     }
@@ -215,6 +232,7 @@ static GstStateChangeReturn add_element_to_bin(GstMuxBin *mux_bin)
     // g_return_val_if_fail(mux_bin != nullptr && mux_bin->videoSrc_ != nullptr &&
     //     mux_bin->audioSrcList_ != nullptr && mux_bin->splitMuxSink_ != nullptr, GST_STATE_CHANGE_FAILURE);
 
+    gst_bin_add(GST_BIN(mux_bin), mux_bin->h264parse_);
     gst_bin_add(GST_BIN(mux_bin), mux_bin->videoSrc_);
     GSList* iter = mux_bin->audioSrcList_;
     while (iter != nullptr) {
@@ -232,8 +250,14 @@ static GstStateChangeReturn connect_element(GstMuxBin *mux_bin)
     //     mux_bin->audioSrcList_ != nullptr && mux_bin->splitMuxSink_ != nullptr, GST_STATE_CHANGE_FAILURE);
     
     GstPad* video_src_pad = gst_element_get_static_pad(mux_bin->videoSrc_, "src");
+    GstPad* parse_sink_pad = gst_element_get_static_pad(mux_bin->h264parse_, "sink");
+    if (gst_pad_link(video_src_pad, parse_sink_pad) != GST_PAD_LINK_OK) {
+        return GST_STATE_CHANGE_FAILURE;
+    }
+
+    GstPad* parse_src_pad = gst_element_get_static_pad(mux_bin->h264parse_, "src");
     GstPad* split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->splitMuxSink_, "video");
-    if (gst_pad_link(video_src_pad, split_mux_sink_sink_pad) != GST_PAD_LINK_OK) {
+    if (gst_pad_link(parse_src_pad, split_mux_sink_sink_pad) != GST_PAD_LINK_OK) {
         return GST_STATE_CHANGE_FAILURE;
     }
 

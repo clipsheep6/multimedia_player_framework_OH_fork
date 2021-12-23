@@ -536,31 +536,31 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 	for (size_t i = 0; i < argCount; ++i) {
 		napi_valuetype valueType = napi_undefined;
 		napi_typeof(env, args[i], &valueType);
-		if (i == 0 && valueType == napi_object) {
-		// if (i == 0) {
+		// if (i == 0 && valueType == napi_object) {
+		if (i == 0) {
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_INDEX), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_TRACK_INDEX)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_TYPE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_TRACK_TYPE)));
-			asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), GetNamedPropertystring(env, args[i], std::string(MD_KEY_CODEC_MIME)));
+			// asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), GetNamedPropertystring(env, args[i], std::string(MD_KEY_CODEC_MIME)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_DURATION), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_DURATION)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_BITRATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_BITRATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_MAX_INPUT_SIZE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_MAX_INPUT_SIZE)));
-			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_WIDTH)));
-			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_HEIGHT)));
+			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_WIDTH)));
+			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_HEIGHT)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_PIXEL_FORMAT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_PIXEL_FORMAT)));
-			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_FRAME_RATE)));
+			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_FRAME_RATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CAPTURE_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CAPTURE_RATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_I_FRAME_INTERVAL), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_I_FRAME_INTERVAL)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_REQUEST_I_FRAME), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_REQUEST_I_FRAME)));
-			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CHANNEL_COUNT)));
-			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_SAMPLE_RATE)));
+			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CHANNEL_COUNT)));
+			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_SAMPLE_RATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_COUNT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_TRACK_COUNT)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CUSTOM_PREFIX), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CUSTOM_PREFIX)));
-			// asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/x-h264");
-			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), 480);
-			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), 270);
-			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), 30);
-			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), 2);
-			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), 10000);
+			asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/x-h264");
+			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), 480);
+			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), 270);
+			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), 30);
+			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), 2);
+			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), 10000);
 		} else if (i == 1 && valueType == napi_function) {
 			napi_create_reference(env, args[i], 1, &asyncContext->callbackRef_);
 		} else {
@@ -738,6 +738,7 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 			bool isArrayBuffer;
 			napi_is_arraybuffer(env, args[i], &isArrayBuffer);
 			if (isArrayBuffer) {
+				MEDIA_LOGI("isArrayBuffer");
 				napi_get_arraybuffer_info(env, args[i], &(asyncContext->arrayBuffer_), &(asyncContext->arrayBufferSize_));
 			} else {
 				MEDIA_LOGE("Failed to check argument value type");
@@ -753,6 +754,11 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 				asyncContext->trackSampleInfo_.flags = static_cast<FrameFlags>(GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG));
 				asyncContext->trackSampleInfo_.timeUs = GetNamedPropertyInt64(env, trackSampleInfo, PROPERTY_KEY_TIMEUS);
 				asyncContext->trackSampleInfo_.trackIdx = GetNamedPropertyInt32(env, args[i], PROPERTY_KEY_TRACK_ID);
+				MEDIA_LOGD("size is: %{public}d", asyncContext->trackSampleInfo_.size);
+				MEDIA_LOGD("offset is: %{public}d", asyncContext->trackSampleInfo_.offset);
+				MEDIA_LOGD("flags is: %{public}d", asyncContext->trackSampleInfo_.flags);
+				MEDIA_LOGD("timeUs is: %{public}lld", asyncContext->trackSampleInfo_.timeUs);
+				MEDIA_LOGD("trackIdx is: %{public}d", asyncContext->trackSampleInfo_.trackIdx);
 			} else if (i == 2 && valueType == napi_function) {
 				napi_create_reference(env, args[i], 1, &asyncContext->callbackRef_);
 			} else {

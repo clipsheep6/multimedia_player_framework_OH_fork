@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "convert_codec_data.h"
+#include <unistd.h>
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerEngineGstImpl"};
@@ -53,6 +54,7 @@ AVMuxerEngineGstImpl::~AVMuxerEngineGstImpl()
         gst_object_unref(muxBin_);
         muxBin_ = nullptr;
     }
+    // fp = nullptr;
 }
 
 int32_t AVMuxerEngineGstImpl::Init()
@@ -64,6 +66,10 @@ int32_t AVMuxerEngineGstImpl::Init()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to setup message processor");
 
     allocator_ = gst_shmem_wrap_allocator_new();
+    // fp = fopen("out.txt", "wb");
+    // if (fp == nullptr) {
+    //     MEDIA_LOGI("open txt failed");
+    // }
 
     return MSERR_OK;
 }
@@ -137,8 +143,8 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
         src_caps = gst_caps_new_simple(mimeType.c_str(),
             "width", G_TYPE_INT, width,
             "height", G_TYPE_INT, height,
-            "alignment", G_TYPE_STRING, "au",
-            "stream-format", G_TYPE_STRING, "avc",
+            "alignment", G_TYPE_STRING, "nal",
+            "stream-format", G_TYPE_STRING, "byte-stream",
             "framerate", GST_TYPE_FRACTION, frameRate, 1,
             nullptr);
         CHECK_AND_RETURN_RET_LOG(videoTrackNum < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION, "Only 1 video Tracks can be added");
@@ -183,7 +189,8 @@ int32_t AVMuxerEngineGstImpl::Start()
 }
 
 int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo)
-{
+{   
+    // fwrite(sampleData->GetBase(), sampleData->GetSize(), 1, fp);
     MEDIA_LOGI("WriteTrackSample");
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_UNKNOWN, "Muxbin does not exist");
@@ -191,21 +198,82 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     std::string name = "src_";
     name += static_cast<char>('0' + sampleInfo.trackIdx);
     GstElement* src = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str());
+    // if (hasCaps.find(sampleInfo.trackIdx) == hasCaps.end() && sampleInfo.flags == CODEC_DATA) {
+    //     // std::shared_ptr<ConvertCodecData> convertImpl = std::make_shared<ConvertCodecData>();
+    //     // GstBuffer* codecData = convertImpl->GetCodecBuffer(sampleData);
+    //     // CHECK_AND_RETURN_RET_LOG(codecData != nullptr, MSERR_UNKNOWN, "Failed to get codec data");
+    //     GstMemory* mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
+    //     GstBuffer* buffer = gst_buffer_new();
+    //     gst_buffer_append_memory(buffer, mem);
+    //     gst_caps_set_simple(CapsMat[sampleInfo.trackIdx], "codec_data", GST_TYPE_BUFFER, buffer, nullptr);
+    //     g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
+    //     hasCaps.insert(sampleInfo.trackIdx);
+    //     if (hasCaps == trackIdSet && !isPause_) {
+    //         gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
+    //         cond_.wait(lock, [this]() { return isPause_ || errHappened_; });
+    //         MEDIA_LOGI("Current state is Pause");
+    //     }
+    // } else {
+    //     CHECK_AND_RETURN_RET_LOG(needData_[sampleInfo.trackIdx] == true, MSERR_UNKNOWN, "Failed to push data, the queue is full");
+    //     CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_UNKNOWN, "Failed to check dts, dts muxt >= 0");
+    //     GstFlowReturn ret;
+    //     GstMemory* mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
+    //     GstBuffer* buffer = gst_buffer_new();
+    //     gst_buffer_append_memory(buffer, mem);
+    //     MEDIA_LOGI("sampleInfo.timeUs is: %{public}lld", sampleInfo.timeUs);
+
+    //     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
+    //     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
+    //     if (sampleInfo.flags == SYNC_FRAME) {
+    //         gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+    //     }
+    //     ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
+    //     MEDIA_LOGI("ret is: %{public}d", ret);
+    //     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_UNKNOWN, "Failed to push data");
+    //     hasBuffer.insert(sampleInfo.trackIdx);
+    //     if (hasBuffer == trackIdSet && !isPlay_) {
+    //         gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
+    //         cond_.wait(lock, [this]() { return isPlay_ || errHappened_; });
+    //         MEDIA_LOGI("Current state is Play");
+    //     }
+    // }
     if (hasCaps.find(sampleInfo.trackIdx) == hasCaps.end() && sampleInfo.flags == CODEC_DATA) {
-        // std::shared_ptr<ConvertCodecData> convertImpl = std::make_shared<ConvertCodecData>();
-        // GstBuffer* codecData = convertImpl->GetCodecBuffer(sampleData);
-        // CHECK_AND_RETURN_RET_LOG(codecData != nullptr, MSERR_UNKNOWN, "Failed to get codec data");
-        GstMemory* mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
-        GstBuffer* buffer = gst_buffer_new();
-        gst_buffer_append_memory(buffer, mem);
-        gst_caps_set_simple(CapsMat[sampleInfo.trackIdx], "codec_data", GST_TYPE_BUFFER, buffer, nullptr);
+        // CHECK_AND_RETURN_RET_LOG(needData_[sampleInfo.trackIdx] == true, MSERR_UNKNOWN, "Failed to push data, the queue is full");
+        // CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_UNKNOWN, "Failed to check dts, dts muxt >= 0");
+        // g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
+        // GstFlowReturn ret;
+        // GstMemory* mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
+        // GstBuffer* buffer = gst_buffer_new();
+        // gst_buffer_append_memory(buffer, mem);
+        // MEDIA_LOGI("sampleInfo.timeUs is: %{public}lld", sampleInfo.timeUs);
+
+        // GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
+        // GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
+
+        // ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
+        // MEDIA_LOGI("ret is: %{public}d", ret);
+        // CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_UNKNOWN, "Failed to push data");
+        // hasCaps.insert(sampleInfo.trackIdx);
+        // if (hasCaps == trackIdSet && !isPause_) {
+        //     gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
+        //     cond_.wait(lock, [this]() { return isPause_ || errHappened_; });
+        //     MEDIA_LOGI("Current state is Pause");
+        // }
+        
+        std::shared_ptr<ConvertCodecData> convertImpl = std::make_shared<ConvertCodecData>();
+        GstBuffer* codecData = convertImpl->GetCodecBuffer(sampleData);
+        CHECK_AND_RETURN_RET_LOG(codecData != nullptr, MSERR_UNKNOWN, "Failed to get codec data");
+        // GstMemory* mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
+        // GstBuffer* buffer = gst_buffer_new();
+        // gst_buffer_append_memory(buffer, mem);
+        gst_caps_set_simple(CapsMat[sampleInfo.trackIdx], "codec_data", GST_TYPE_BUFFER, codecData, nullptr);
         g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
         hasCaps.insert(sampleInfo.trackIdx);
-        if (hasCaps == trackIdSet && !isPause_) {
-            gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
-            cond_.wait(lock, [this]() { return isPause_ || errHappened_; });
-            MEDIA_LOGI("Current state is Pause");
-        }
+        // if (hasCaps == trackIdSet && !isPause_) {
+        //     gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
+        //     cond_.wait(lock, [this]() { return isPause_ || errHappened_; });
+        //     MEDIA_LOGI("Current state is Pause");
+        // }
     } else {
         CHECK_AND_RETURN_RET_LOG(needData_[sampleInfo.trackIdx] == true, MSERR_UNKNOWN, "Failed to push data, the queue is full");
         CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_UNKNOWN, "Failed to check dts, dts muxt >= 0");
@@ -226,7 +294,8 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
         hasBuffer.insert(sampleInfo.trackIdx);
         if (hasBuffer == trackIdSet && !isPlay_) {
             gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
-            cond_.wait(lock, [this]() { return isPlay_ || errHappened_; });
+            // cond_.wait(lock, [this]() { return isPlay_ || errHappened_; });
+            isPlay_ = true;
             MEDIA_LOGI("Current state is Play");
         }
     }
@@ -313,7 +382,7 @@ void AVMuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
 void AVMuxerEngineGstImpl::clear()
 {
     trackIdSet.clear();
-    hasCaps.clear();
+    // hasCaps.clear();
     hasBuffer.clear();
     needData_.clear();
     CapsMat.clear();

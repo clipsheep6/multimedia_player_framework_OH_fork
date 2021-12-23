@@ -26,6 +26,7 @@ public:
 private:
     std::mutex mutex_;
     sptr<IStandardAVMuxerService> avmuxerProxy_ = nullptr;
+    // FILE *fp;
 };
 }  // namespace Media
 }  // namespace OHOS

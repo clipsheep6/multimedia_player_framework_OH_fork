@@ -39,6 +39,7 @@ struct _GstMuxBin {
 
     /* private */
     GSList* audioSrcList_;
+    GstElement* h264parse_;
     GstElement* videoSrc_;
     GstElement* splitMuxSink_;
 
