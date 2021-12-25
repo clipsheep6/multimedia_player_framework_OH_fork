@@ -272,7 +272,7 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
             GstMemory* mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
             GstBuffer* buffer = gst_buffer_new();
             gst_buffer_append_memory(buffer, mem);
-            gst_caps_set_simple(CapsMat[sampleInfo.trackIdx], "codec_data", GST_TYPE_BUFFER, buffer, "alignment", G_TYPE_STRING, "nu", "stream-format", G_TYPE_STRING, "avc", nullptr);
+            gst_caps_set_simple(CapsMat[sampleInfo.trackIdx], "codec_data", GST_TYPE_BUFFER, buffer, "alignment", G_TYPE_STRING, "au", "stream-format", G_TYPE_STRING, "avc", nullptr);
             g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
             hasCaps.insert(sampleInfo.trackIdx);
             if (hasCaps == trackIdSet && !isPause_) {

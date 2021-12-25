@@ -740,6 +740,8 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 			if (isArrayBuffer) {
 				MEDIA_LOGI("isArrayBuffer");
 				napi_get_arraybuffer_info(env, args[i], &(asyncContext->arrayBuffer_), &(asyncContext->arrayBufferSize_));
+				MEDIA_LOGD("asyncContext->arrayBufferSize_ is: %{public}d", asyncContext->arrayBufferSize_);
+				MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,", ((uint8_t*)(asyncContext->arrayBuffer_))[0], ((uint8_t*)(asyncContext->arrayBuffer_))[1], ((uint8_t*)(asyncContext->arrayBuffer_))[2], ((uint8_t*)(asyncContext->arrayBuffer_))[3]);
 			} else {
 				MEDIA_LOGE("Failed to check argument value type");
 				return result;
@@ -774,13 +776,29 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 	
 	napi_value resource = nullptr;
 	napi_create_string_utf8(env, "WriteTrackSample", NAPI_AUTO_LENGTH, &resource);
+
+	std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(static_cast<uint8_t*>(asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
+	avMem->SetRange(asyncContext->trackSampleInfo_.offset, asyncContext->trackSampleInfo_.size);
+	MEDIA_LOGD("size is: %{public}d", asyncContext->trackSampleInfo_.size);
+	MEDIA_LOGD("offset is: %{public}d", asyncContext->trackSampleInfo_.offset);
+	MEDIA_LOGD("flags is: %{public}d", asyncContext->trackSampleInfo_.flags);
+	MEDIA_LOGD("timeUs is: %{public}lld", asyncContext->trackSampleInfo_.timeUs);
+	MEDIA_LOGD("trackIdx is: %{public}d", asyncContext->trackSampleInfo_.trackIdx);
+	MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,", ((uint8_t*)(asyncContext->arrayBuffer_))[0], ((uint8_t*)(asyncContext->arrayBuffer_))[1], ((uint8_t*)(asyncContext->arrayBuffer_))[2], ((uint8_t*)(asyncContext->arrayBuffer_))[3]);
+	asyncContext->writeSampleFlag_ = asyncContext->objectInfo_->avmuxerImpl_->WriteTrackSample(avMem, asyncContext->trackSampleInfo_);
 	
 	status = napi_create_async_work(env, nullptr, resource,
 		[](napi_env env, void* data) {
-			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
-			std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(static_cast<uint8_t*>(context->arrayBuffer_), context->arrayBufferSize_);
-			avMem->SetRange(context->trackSampleInfo_.offset, context->trackSampleInfo_.size);
-			context->writeSampleFlag_ = context->objectInfo_->avmuxerImpl_->WriteTrackSample(avMem, context->trackSampleInfo_);
+			// AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+			// std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(static_cast<uint8_t*>(context->arrayBuffer_), context->arrayBufferSize_);
+			// avMem->SetRange(context->trackSampleInfo_.offset, context->trackSampleInfo_.size);
+			// MEDIA_LOGD("size is: %{public}d", context->trackSampleInfo_.size);
+			// MEDIA_LOGD("offset is: %{public}d", context->trackSampleInfo_.offset);
+			// MEDIA_LOGD("flags is: %{public}d", context->trackSampleInfo_.flags);
+			// MEDIA_LOGD("timeUs is: %{public}lld", context->trackSampleInfo_.timeUs);
+			// MEDIA_LOGD("trackIdx is: %{public}d", context->trackSampleInfo_.trackIdx);
+			// MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,", ((uint8_t*)(context->arrayBuffer_))[0], ((uint8_t*)(context->arrayBuffer_))[1], ((uint8_t*)(context->arrayBuffer_))[2], ((uint8_t*)(context->arrayBuffer_))[3]);
+			// context->writeSampleFlag_ = context->objectInfo_->avmuxerImpl_->WriteTrackSample(avMem, context->trackSampleInfo_);
 		},
 		WriteTrackSampleAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
