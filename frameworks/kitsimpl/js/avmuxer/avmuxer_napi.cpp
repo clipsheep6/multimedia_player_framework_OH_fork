@@ -557,10 +557,10 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CUSTOM_PREFIX), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CUSTOM_PREFIX)));
 			asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/x-h264");
 			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), 480);
-			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), 270);
+			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), 640);
 			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), 30);
 			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), 2);
-			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), 10000);
+			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), 441000);
 		} else if (i == 1 && valueType == napi_function) {
 			napi_create_reference(env, args[i], 1, &asyncContext->callbackRef_);
 		} else {

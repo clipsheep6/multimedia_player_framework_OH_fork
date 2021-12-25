@@ -45,6 +45,7 @@ struct _GstMuxBin {
 
     gchar* path_;
     gchar* mux_;
+    gboolean parse_;
     gchar* videoTrack_;
     GSList* audioTrack_;
     gint outFd_;

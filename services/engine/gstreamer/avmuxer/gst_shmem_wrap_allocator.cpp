@@ -77,7 +77,9 @@ static gpointer gst_shmem_wrap_allocator_mem_map(GstMemory *mem, gsize maxsize, 
     g_return_val_if_fail(avSharedMem->mem != nullptr, nullptr);
 
     GST_INFO("mem_map, maxsize: %" G_GSIZE_FORMAT ", size: %" G_GSIZE_FORMAT, mem->maxsize, mem->size);
-    return avSharedMem->mem->GetBase() + (mem->maxsize - mem->size);
+    // GST_INFO("map.data[0] is: %d" *avSharedMem->mem->GetBase());
+    // return avSharedMem->mem->GetBase() + (mem->maxsize - mem->size);
+    return avSharedMem->mem->GetBase();
 }
 
 static void gst_shmem_wrap_allocator_mem_unmap(GstMemory *mem)
@@ -101,6 +103,7 @@ static GstMemory * gst_shmem_wrap_allocator_mem_share (GstMemory * mem, gssize o
     /* the shared memory is always readonly */
     gst_memory_init(GST_MEMORY_CAST(sub), (GstMemoryFlags)(GST_MINI_OBJECT_FLAGS(parent) | GST_MINI_OBJECT_FLAG_LOCK_READONLY),
         mem->allocator, GST_MEMORY_CAST(parent), mem->maxsize, mem->align, mem->offset + offset, size);
+    GST_DEBUG("mem->offset is: %d", mem->offset + offset);
     
     sub->mem = reinterpret_cast<GstShMemMemory *>(mem)->mem;
     return GST_MEMORY_CAST(sub);

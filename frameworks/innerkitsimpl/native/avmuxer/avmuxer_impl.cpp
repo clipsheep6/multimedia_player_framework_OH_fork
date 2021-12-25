@@ -68,6 +68,10 @@ int32_t AVMuxerImpl::SetOutput(const std::string& path, const std::string& forma
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     CHECK_AND_RETURN_RET_LOG(!path.empty(), MSERR_INVALID_VAL, "Path is empty");
     CHECK_AND_RETURN_RET_LOG(!format.empty(), MSERR_INVALID_VAL, "Format is empty");
+    // fp = fopen("out.txt", "wb");
+    // if (fp == nullptr) {
+    //     MEDIA_LOGD("open out1.txt failed");
+    // }
     std::string rawUri;
     UriHelper uriHelper(path);
     uriHelper.FormatMe();
@@ -109,6 +113,7 @@ int32_t AVMuxerImpl::Start()
 int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo& info)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    // fwrite(sampleData->Base(), sampleData->Size(), 1, fp);
     MEDIA_LOGD("sampleData->Capacity() is: %{public}u", sampleData->Capacity());
     MEDIA_LOGD("sampleData->Capacity() is: %{public}u", sampleData->Size());
     MEDIA_LOGD("sampleData->Capacity() is: %{public}s", sampleData->Data());

@@ -41,6 +41,7 @@ public:
 	int32_t Init();
 private:
     std::shared_ptr<IAVMuxerService> avmuxerService_ = nullptr;
+	// FILE *fp;
 };
 }  // namespace Media
 }  // namespace OHOSes
