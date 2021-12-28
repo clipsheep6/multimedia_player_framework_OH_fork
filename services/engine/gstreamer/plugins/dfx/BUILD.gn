@@ -13,11 +13,10 @@
 
 import("//build/ohos.gni")
 
-config("media_engine_gst_loader_config") {
+config("gst_ohos_dfx_config") {
   visibility = [ ":*" ]
 
   cflags = [
-    "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",
     "-Wall",
@@ -31,35 +30,47 @@ config("media_engine_gst_loader_config") {
     "-Wformat=2",
     "-Wfloat-equal",
     "-Wdate-time",
+    "-DGST_USE_UNSTABLE_API"
   ]
 
   include_dirs = [
+    "include",
     "//utils/native/base/include",
-    "//third_party/glib/glib",
-    "//third_party/glib",
-    "//third_party/gstreamer/gstreamer",
-    "//third_party/gstreamer/gstreamer/libs",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
-    "//foundation/multimedia/media_standard/services/engine/gstreamer/common/dfx",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
+    "//developtools/bytrace_standard/interfaces/innerkits/native/include",
+    "//third_party/gstreamer/gstreamer",
+    "//third_party/gstreamer/gstreamer/libs",
+    "//third_party/glib/glib",
+    "//third_party/glib",
+    "//third_party/glib/gmodule",
   ]
 }
 
-ohos_static_library("media_engine_gst_loader") {
-  sources = [ "gst_loader.cpp" ]
+ohos_shared_library("gst_ohos_dfx") {
+  install_enable = true
 
-  configs = [ ":media_engine_gst_loader_config" ]
-
-  deps = [
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
-    "//third_party/glib:glib",
-    "//third_party/glib:gobject",
-    "//third_party/gstreamer/gstreamer:gstreamer",
-    "//utils/native/base:utils",
+  sources = [
+    "gst_bytrace_tracer.cpp",
+    "gst_ohos_dfx.cpp",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  configs = [ ":gst_ohos_dfx_config" ]
 
+  deps = [
+    "//third_party/glib:glib",
+    "//third_party/glib:gmodule",
+    "//third_party/glib:gobject",
+    "//third_party/gstreamer/gstreamer:gstreamer",
+  ]
+
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "bytrace_standard:bytrace_core",
+  ]
+
+  relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
   part_name = "multimedia_media_standard"
 }
