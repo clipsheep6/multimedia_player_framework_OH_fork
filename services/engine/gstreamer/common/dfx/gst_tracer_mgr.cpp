@@ -18,7 +18,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 
-#define ENABLE_TRACE
+#define ENABLE_GST_TRACE
 
 namespace {
     [[maybe_unused]] constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstTracerMgr"};
@@ -26,7 +26,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-#ifdef ENABLE_TRACE
+#ifdef ENABLE_GST_TRACE
 static GstTracer *MakeTracer(const std::string_view &factoryName, const std::string_view &name)
 {
     CHECK_AND_RETURN_RET(!factoryName.empty(), nullptr);
