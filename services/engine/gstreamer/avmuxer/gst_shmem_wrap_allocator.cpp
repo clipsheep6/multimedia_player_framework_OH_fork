@@ -87,7 +87,7 @@ static void gst_shmem_wrap_allocator_mem_unmap(GstMemory *mem)
     (void)mem;
 }
 
-static GstMemory * gst_shmem_wrap_allocator_mem_share (GstMemory * mem, gssize offset, gsize size)
+static GstMemory *gst_shmem_wrap_allocator_mem_share (GstMemory *mem, gssize offset, gsize size)
 {
     GstShMemMemory *sub;
     GstMemory *parent;

@@ -37,7 +37,7 @@ const std::set<std::string> videoEncodeType {
 };
 
 const std::set<std::string> audioEncodeType {
-    "audio/aac",
+    "audio/mpeg",
     "audio/mp3"
 };
 
@@ -47,8 +47,8 @@ const std::map<std::string, std::string> formatToMux {
 };
 
 const std::map<std::string, std::set<std::string>> formatToEncode {
-    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2", "audio/aac", "audio/mp3"}},
-    {"m4a", {"audio/aac"}}
+    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2", "audio/mpeg", "audio/mp3"}},
+    {"m4a", {"audio/mpeg"}}
 };
 
 class AVMuxerEngineGstImpl : public IAVMuxerEngine {
@@ -71,12 +71,13 @@ private:
     void OnNotifyMessage(const InnerMessage &msg);
     void clear();
 
-    GstMuxBin* muxBin_ = nullptr;
+    GstMuxBin *muxBin_ = nullptr;
     std::set<int32_t> trackIdSet;
+    std::map<int32_t, std::string> trackId2EncodeType;
     std::set<int32_t> hasCaps;
     std::set<int32_t> hasBuffer;
     std::map<int32_t, bool> needData_; 
-    std::map<int32_t, GstCaps*> CapsMat;
+    std::map<int32_t, GstCaps *> CapsMat;
     std::mutex mutex_;
     std::condition_variable cond_;
     bool endFlag_ = false;
@@ -88,7 +89,7 @@ private:
     bool isReady_ = false;
     bool isPause_ = false;
     bool isPlay_ = false;
-    GstShMemWrapAllocator* allocator_;
+    GstShMemWrapAllocator *allocator_;
     // FILE *fp;
 };
 }  // namespace Media

@@ -90,7 +90,7 @@ void AVMuxerDemo::WriteTrackSampleAVC() {
     memset_s(&pkt, sizeof(pkt), 0, sizeof(pkt));
 
     for (int i = 0; i <= 1; i++) {
-        AVCodecContext* pCodecContext = fmt_ctx_->streams[i]->codec;
+        AVCodecContext *pCodecContext = fmt_ctx_->streams[i]->codec;
         TrackSampleInfo infoCodec;
         infoCodec.timeUs = 0;
         infoCodec.size = pCodecContext->extradata_size;
@@ -126,8 +126,8 @@ void AVMuxerDemo::WriteTrackSampleAVC() {
 		avMem->SetRange(info.offset, pkt.size);
         std::cout << "avMem->Capacity() is: " << avMem->Capacity() << std::endl;
         std::cout << "avMem->Size() is: " << avMem->Size() << std::endl;
-        std::cout << "avMem->Data() is: " << (int*)(avMem->Data()) << std::endl;
-        std::cout << "avMem->Base() is: " << (int*)(avMem->Base()) << std::endl;
+        std::cout << "avMem->Data() is: " << (int *)(avMem->Data()) << std::endl;
+        std::cout << "avMem->Base() is: " << (int *)(avMem->Base()) << std::endl;
         if (pkt.stream_index == videoIndex_) {  
             info.trackIdx = 1;
             std::cout << "info.trackIdx is: " << info.trackIdx << std::endl;
@@ -179,8 +179,8 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
         } 
         std::cout << "avMem->Capacity() is: " << avMem->Capacity() << std::endl;
         std::cout << "avMem->Size() is: " << avMem->Size() << std::endl;
-        std::cout << "avMem->Data() is: " << (int*)(avMem->Data()) << std::endl;
-        std::cout << "avMem->Base() is: " << (int*)(avMem->Base()) << std::endl;
+        std::cout << "avMem->Data() is: " << (int *)(avMem->Data()) << std::endl;
+        std::cout << "avMem->Base() is: " << (int *)(avMem->Base()) << std::endl;
         TrackSampleInfo info;
         info.size = *frameLenArray_;
         info.offset = 0;
@@ -271,7 +271,7 @@ void AVMuxerDemo::AddTrackVideo()
 void AVMuxerDemo::AddTrackAudio()
 {
     MediaDescription trackDesc;
-    trackDesc.PutStringValue(std::string(MD_KEY_CODEC_MIME), "audio/aac");
+    trackDesc.PutStringValue(std::string(MD_KEY_CODEC_MIME), "audio/mpeg");
     trackDesc.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels_);
     trackDesc.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), sampleRate_);
     std::cout << "channels_ is: " << channels_ << std::endl;

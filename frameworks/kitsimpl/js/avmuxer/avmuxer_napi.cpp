@@ -18,13 +18,14 @@ const std::string PROPERTY_KEY_TYPE = "type";
 const std::string PROPERTY_KEY_FLAG = "flags";
 const std::string PROPERTY_KEY_TIMEUS = "timeMs";
 const std::string PROPERTY_KEY_TRACK_ID = "trackIndex";
+static int32_t num = 0;
 
 struct AVMuxerNapiAsyncContext {
 	napi_env env_;
 	napi_async_work work_;
 	napi_deferred deferred_;
 	napi_ref callbackRef_ = nullptr;
-	AVMuxerNapi* objectInfo_ = nullptr;
+	AVMuxerNapi *objectInfo_ = nullptr;
 	napi_value instance_;
 	std::string path_;
 	std::string format_;
@@ -33,7 +34,8 @@ struct AVMuxerNapiAsyncContext {
 	int32_t trackId_;
 	int32_t isAdd_;
 	int32_t isStart_;
-	void* arrayBuffer_ = nullptr;
+	// napi_ref sample_;
+	void *arrayBuffer_ = nullptr;
 	size_t arrayBufferSize_;
 	int32_t writeSampleFlag_;
 	TrackSampleInfo trackSampleInfo_;
@@ -46,7 +48,7 @@ static std::string GetStringArgument(napi_env env, napi_value value)
     size_t bufLength = 0;
     napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &bufLength);
     if (status == napi_ok && bufLength > 0 && bufLength < PATH_MAX) {
-        char* buffer = (char*)malloc((bufLength + 1) * sizeof(char));
+        char *buffer = (char *)malloc((bufLength + 1) * sizeof(char));
 		CHECK_AND_RETURN_RET_LOG(buffer != nullptr, strValue, "Failed to create buffer");
 
         status = napi_get_value_string_utf8(env, value, buffer, bufLength + 1, &bufLength);
@@ -158,7 +160,7 @@ napi_value AVMuxerNapi::Constructor(napi_env env, napi_callback_info info)
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, result,
 		"Failed to retrieve details about the callback");
 	
-	AVMuxerNapi* avmuxerNapi = new(std::nothrow) AVMuxerNapi();
+	AVMuxerNapi *avmuxerNapi = new(std::nothrow) AVMuxerNapi();
 	CHECK_AND_RETURN_RET_LOG(avmuxerNapi != nullptr, result, "Failed to create avmuxerNapi");
 	
 	avmuxerNapi->env_ = env;
@@ -169,7 +171,7 @@ napi_value AVMuxerNapi::Constructor(napi_env env, napi_callback_info info)
 		return result;
 	}
 	
-	status = napi_wrap(env, jsThis, reinterpret_cast<void*>(avmuxerNapi),
+	status = napi_wrap(env, jsThis, reinterpret_cast<void *>(avmuxerNapi),
 		AVMuxerNapi::Destructor, nullptr, &(avmuxerNapi->wrapper_));
 	if (status != napi_ok) {
 		delete avmuxerNapi;
@@ -181,19 +183,19 @@ napi_value AVMuxerNapi::Constructor(napi_env env, napi_callback_info info)
 	return jsThis;
 }
 
-void AVMuxerNapi::Destructor(napi_env env, void* nativeObject, void* finalize)
+void AVMuxerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 {
 	(void)env;
 	(void)finalize;
 	if (nativeObject != nullptr) {
-		delete reinterpret_cast<AVMuxerNapi*>(nativeObject);
+		delete reinterpret_cast<AVMuxerNapi *>(nativeObject);
 	}
 	MEDIA_LOGD("Destructor success");
 }
 
-static void CreateAVMuxerAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void CreateAVMuxerAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	AVMuxerNapiAsyncContext *asyncContext = static_cast<AVMuxerNapiAsyncContext *>(data);
 	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
@@ -263,8 +265,8 @@ napi_value AVMuxerNapi::CreateAVMuxer(napi_env env, napi_callback_info info)
 	napi_create_string_utf8(env, "CreateAVMuxer", NAPI_AUTO_LENGTH, &resource);
 
 	status = napi_create_async_work(env, nullptr, resource,
-		[](napi_env env, void* data) {
-			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+		[](napi_env env, void *data) {
+			AVMuxerNapiAsyncContext *context = static_cast<AVMuxerNapiAsyncContext *>(data);
 			CHECK_AND_RETURN_LOG(context != nullptr, "AVMuxerNapiAsyncContext is nullptr!");
 			
 			napi_value constructor = nullptr;
@@ -276,7 +278,7 @@ napi_value AVMuxerNapi::CreateAVMuxer(napi_env env, napi_callback_info info)
 	
 			MEDIA_LOGD("Create avmuxer success");
 		},
-		CreateAVMuxerAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
+		CreateAVMuxerAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
 		MEDIA_LOGE("Failed to create async work");
 		napi_get_undefined(env, &result);
@@ -292,13 +294,13 @@ napi_value AVMuxerNapi::GetSupportedFormats(napi_env env, napi_callback_info inf
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
-	AVMuxerNapi* avmuxer = nullptr;
+	AVMuxerNapi *avmuxer = nullptr;
 	size_t argCount = 0;
 	
 	napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, result, "Failed to retrieve details about the callbacke");
 	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&avmuxer));
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&avmuxer));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
 	
 	// std::vector<std::string> formats = avmuxer->avmuxerImpl_->GetSupportedFormats();
@@ -317,9 +319,9 @@ napi_value AVMuxerNapi::GetSupportedFormats(napi_env env, napi_callback_info inf
 	return result;
 }
 
-static void SetOutputAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void SetOutputAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	AVMuxerNapiAsyncContext *asyncContext = static_cast<AVMuxerNapiAsyncContext *>(data);
 	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
@@ -367,7 +369,7 @@ napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
 	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
 	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
 	
 	for (size_t i = 0; i < argCount; ++i) {
@@ -393,11 +395,11 @@ napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
 	napi_create_string_utf8(env, "SetOutput", NAPI_AUTO_LENGTH, &resource);
 	
 	status = napi_create_async_work(env, nullptr, resource,
-		[](napi_env env, void* data) {
-			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+		[](napi_env env, void *data) {
+			AVMuxerNapiAsyncContext *context = static_cast<AVMuxerNapiAsyncContext *>(data);
 			context->setOutputFlag_ = context->objectInfo_->avmuxerImpl_->SetOutput(context->path_, context->format_);
 		},
-		SetOutputAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
+		SetOutputAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
 		MEDIA_LOGE("Failed to create async work");
 		napi_get_undefined(env, &result);
@@ -416,7 +418,7 @@ napi_value AVMuxerNapi::SetLocation(napi_env env, napi_callback_info info)
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
-	AVMuxerNapi* avmuxer = nullptr;
+	AVMuxerNapi *avmuxer = nullptr;
 	napi_value args[1] = {nullptr};
 	size_t argCount = 1;
 	
@@ -424,7 +426,7 @@ napi_value AVMuxerNapi::SetLocation(napi_env env, napi_callback_info info)
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
 		result, "Failed to retrieve details about the callbacke");
 	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&avmuxer));
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&avmuxer));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
 	
 	napi_valuetype valueType = napi_undefined;
@@ -450,7 +452,7 @@ napi_value AVMuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info
 	napi_value result = nullptr;
 	napi_get_undefined(env, &result);
 	napi_value jsThis = nullptr;
-	AVMuxerNapi* avmuxer = nullptr;
+	AVMuxerNapi *avmuxer = nullptr;
 	napi_value args[1] = {nullptr};
 	size_t argCount = 1;
 	
@@ -458,7 +460,7 @@ napi_value AVMuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
 		result, "Failed to retrieve details about the callbacke");
 	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&avmuxer));
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&avmuxer));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
 	
 	napi_valuetype valueType = napi_undefined;
@@ -477,9 +479,9 @@ napi_value AVMuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info
 	return result;
 }
 
-static void AddTrackAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void AddTrackAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	AVMuxerNapiAsyncContext *asyncContext = static_cast<AVMuxerNapiAsyncContext *>(data);
 	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
@@ -530,7 +532,7 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
 	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
 	
 	for (size_t i = 0; i < argCount; ++i) {
@@ -555,7 +557,11 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_SAMPLE_RATE)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_COUNT), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_TRACK_COUNT)));
 			// asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CUSTOM_PREFIX), GetNamedPropertyInt32(env, args[i], std::string(MD_KEY_CUSTOM_PREFIX)));
-			asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/x-h264");
+			if (num == 0) {
+				asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/x-h264");
+			} else {
+				asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "audio/mpeg");
+			}
 			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), 480);
 			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), 640);
 			asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), 30);
@@ -577,12 +583,12 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 	napi_create_string_utf8(env, "AddTrack", NAPI_AUTO_LENGTH, &resource);
 	
 	status = napi_create_async_work(env, nullptr, resource,
-		[](napi_env env, void* data) {
-			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+		[](napi_env env, void *data) {
+			AVMuxerNapiAsyncContext *context = static_cast<AVMuxerNapiAsyncContext *>(data);
 			context->isAdd_ = context->objectInfo_->avmuxerImpl_->AddTrack(context->trackDesc_, context->trackId_);
 			MEDIA_LOGD("trackId_ is: %{public}d", context->trackId_);
 		},
-		AddTrackAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
+		AddTrackAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
 		MEDIA_LOGE("Failed to create async work");
 		napi_get_undefined(env, &result);
@@ -590,13 +596,14 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 		napi_queue_async_work(env, asyncContext->work_);
 		asyncContext.release();
 	}
+	num++;
 	MEDIA_LOGD("AddTrack success");
 	return result;
 }
 
-static void StartAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void StartAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	AVMuxerNapiAsyncContext *asyncContext = static_cast<AVMuxerNapiAsyncContext *>(data);
 	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
@@ -643,7 +650,7 @@ napi_value AVMuxerNapi::Start(napi_env env, napi_callback_info info)
 	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
 	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
 	
 	for (size_t i = 0; i < argCount; ++i) {
@@ -665,11 +672,11 @@ napi_value AVMuxerNapi::Start(napi_env env, napi_callback_info info)
 	napi_create_string_utf8(env, "Start", NAPI_AUTO_LENGTH, &resource);
 	
 	status = napi_create_async_work(env, nullptr, resource,
-		[](napi_env env, void* data) {
-			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+		[](napi_env env, void *data) {
+			AVMuxerNapiAsyncContext *context = static_cast<AVMuxerNapiAsyncContext *>(data);
 			context->isStart_ = context->objectInfo_->avmuxerImpl_->Start();
 		},
-		StartAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
+		StartAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
 		MEDIA_LOGE("Failed to create async work");
 		napi_get_undefined(env, &result);
@@ -680,9 +687,9 @@ napi_value AVMuxerNapi::Start(napi_env env, napi_callback_info info)
 	return result;
 }
 
-static void WriteTrackSampleAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void WriteTrackSampleAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	AVMuxerNapiAsyncContext *asyncContext = static_cast<AVMuxerNapiAsyncContext *>(data);
 	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
@@ -729,10 +736,11 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
 	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
 	
 	for (size_t i = 0; i < argCount; ++i) {
+		MEDIA_LOGD("begin for");
 		napi_valuetype valueType = napi_undefined;
 		if (i == 0) {
 			bool isArrayBuffer;
@@ -740,8 +748,9 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 			if (isArrayBuffer) {
 				MEDIA_LOGI("isArrayBuffer");
 				napi_get_arraybuffer_info(env, args[i], &(asyncContext->arrayBuffer_), &(asyncContext->arrayBufferSize_));
-				MEDIA_LOGD("asyncContext->arrayBufferSize_ is: %{public}d", asyncContext->arrayBufferSize_);
-				MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,", ((uint8_t*)(asyncContext->arrayBuffer_))[0], ((uint8_t*)(asyncContext->arrayBuffer_))[1], ((uint8_t*)(asyncContext->arrayBuffer_))[2], ((uint8_t*)(asyncContext->arrayBuffer_))[3]);
+				// napi_create_reference(env, args[i], 1, &asyncContext->sample_);
+				// MEDIA_LOGD("asyncContext->arrayBufferSize_ is: %{public}d", asyncContext->arrayBufferSize_);
+				MEDIA_LOGI("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,", ((uint8_t*)(asyncContext->arrayBuffer_))[0], ((uint8_t*)(asyncContext->arrayBuffer_))[1], ((uint8_t*)(asyncContext->arrayBuffer_))[2], ((uint8_t*)(asyncContext->arrayBuffer_))[3]);
 			} else {
 				MEDIA_LOGE("Failed to check argument value type");
 				return result;
@@ -777,19 +786,24 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 	napi_value resource = nullptr;
 	napi_create_string_utf8(env, "WriteTrackSample", NAPI_AUTO_LENGTH, &resource);
 
-	std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(static_cast<uint8_t*>(asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
+	std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(static_cast<uint8_t *>(asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
 	avMem->SetRange(asyncContext->trackSampleInfo_.offset, asyncContext->trackSampleInfo_.size);
-	MEDIA_LOGD("size is: %{public}d", asyncContext->trackSampleInfo_.size);
-	MEDIA_LOGD("offset is: %{public}d", asyncContext->trackSampleInfo_.offset);
-	MEDIA_LOGD("flags is: %{public}d", asyncContext->trackSampleInfo_.flags);
-	MEDIA_LOGD("timeUs is: %{public}lld", asyncContext->trackSampleInfo_.timeUs);
-	MEDIA_LOGD("trackIdx is: %{public}d", asyncContext->trackSampleInfo_.trackIdx);
-	MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,", ((uint8_t*)(asyncContext->arrayBuffer_))[0], ((uint8_t*)(asyncContext->arrayBuffer_))[1], ((uint8_t*)(asyncContext->arrayBuffer_))[2], ((uint8_t*)(asyncContext->arrayBuffer_))[3]);
+	// MEDIA_LOGD("size is: %{public}d", asyncContext->trackSampleInfo_.size);
+	// MEDIA_LOGD("offset is: %{public}d", asyncContext->trackSampleInfo_.offset);
+	// MEDIA_LOGD("flags is: %{public}d", asyncContext->trackSampleInfo_.flags);
+	// MEDIA_LOGD("timeUs is: %{public}lld", asyncContext->trackSampleInfo_.timeUs);
+	// MEDIA_LOGD("trackIdx is: %{public}d", asyncContext->trackSampleInfo_.trackIdx);
+	MEDIA_LOGI("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,", ((uint8_t*)(asyncContext->arrayBuffer_))[0], ((uint8_t*)(asyncContext->arrayBuffer_))[1], ((uint8_t*)(asyncContext->arrayBuffer_))[2], ((uint8_t*)(asyncContext->arrayBuffer_))[3]);
 	asyncContext->writeSampleFlag_ = asyncContext->objectInfo_->avmuxerImpl_->WriteTrackSample(avMem, asyncContext->trackSampleInfo_);
 	
 	status = napi_create_async_work(env, nullptr, resource,
-		[](napi_env env, void* data) {
+		[](napi_env env, void *data) {
 			// AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+			// napi_value sampleData = nullptr;
+			// MEDIA_LOGD("begin arraybuffer");
+			// napi_get_reference_value(env, context->sample_, &sampleData);
+			// MEDIA_LOGD("begin arraybuffer1");
+			// napi_get_arraybuffer_info(env, sampleData, &(context->arrayBuffer_), &(context->arrayBufferSize_));
 			// std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(static_cast<uint8_t*>(context->arrayBuffer_), context->arrayBufferSize_);
 			// avMem->SetRange(context->trackSampleInfo_.offset, context->trackSampleInfo_.size);
 			// MEDIA_LOGD("size is: %{public}d", context->trackSampleInfo_.size);
@@ -799,8 +813,9 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 			// MEDIA_LOGD("trackIdx is: %{public}d", context->trackSampleInfo_.trackIdx);
 			// MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,", ((uint8_t*)(context->arrayBuffer_))[0], ((uint8_t*)(context->arrayBuffer_))[1], ((uint8_t*)(context->arrayBuffer_))[2], ((uint8_t*)(context->arrayBuffer_))[3]);
 			// context->writeSampleFlag_ = context->objectInfo_->avmuxerImpl_->WriteTrackSample(avMem, context->trackSampleInfo_);
+			// napi_delete_reference(env, context->sample_);
 		},
-		WriteTrackSampleAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
+		WriteTrackSampleAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
 		MEDIA_LOGE("Failed to create async work");
 		napi_get_undefined(env, &result);
@@ -811,9 +826,9 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 	return result;
 }
 
-static void StopSampleAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void StopSampleAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	AVMuxerNapiAsyncContext *asyncContext = static_cast<AVMuxerNapiAsyncContext *>(data);
 	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 
 	napi_value result[2] = {nullptr, nullptr};
@@ -861,7 +876,7 @@ napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
 	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
 	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
 	
 	for (size_t i = 0; i < argCount; ++i) {
@@ -883,11 +898,11 @@ napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
 	napi_create_string_utf8(env, "Stop", NAPI_AUTO_LENGTH, &resource);
 	
 	status = napi_create_async_work(env, nullptr, resource,
-		[](napi_env env, void* data) {
-			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+		[](napi_env env, void *data) {
+			AVMuxerNapiAsyncContext *context = static_cast<AVMuxerNapiAsyncContext *>(data);
 			context->isStop_ = context->objectInfo_->avmuxerImpl_->Stop();
 		},
-		StopSampleAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
+		StopSampleAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
 		MEDIA_LOGE("Failed to create async work");
 		napi_get_undefined(env, &result);
@@ -899,9 +914,9 @@ napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
 	MEDIA_LOGD("Stop success");
 }
 
-static void ReleaseAsyncCallbackComplete(napi_env env, napi_status status, void* data)
+static void ReleaseAsyncCallbackComplete(napi_env env, napi_status status, void *data)
 {
-	AVMuxerNapiAsyncContext* asyncContext = static_cast<AVMuxerNapiAsyncContext*>(data);
+	AVMuxerNapiAsyncContext *asyncContext = static_cast<AVMuxerNapiAsyncContext *>(data);
 	CHECK_AND_RETURN_LOG(asyncContext != nullptr, "Failed to get AVMuxerNapiAsyncContext instance");
 	napi_value result[2] = {nullptr, nullptr};
 	napi_value retVal;
@@ -936,7 +951,7 @@ napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
 	std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>();
 	CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 	
-	status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&asyncContext->objectInfo_));
+	status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->objectInfo_));
 	CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo_ != nullptr, result, "Failed to retrieve instance");
 	
 	for (size_t i = 0; i < argCount; ++i) {
@@ -958,11 +973,11 @@ napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
 	napi_create_string_utf8(env, "Release", NAPI_AUTO_LENGTH, &resource);
 	
 	status = napi_create_async_work(env, nullptr, resource,
-		[](napi_env env, void* data) {
-			AVMuxerNapiAsyncContext* context = static_cast<AVMuxerNapiAsyncContext*>(data);
+		[](napi_env env, void *data) {
+			AVMuxerNapiAsyncContext *context = static_cast<AVMuxerNapiAsyncContext *>(data);
 			context->objectInfo_->avmuxerImpl_->Release();
 		},
-		ReleaseAsyncCallbackComplete, static_cast<void*>(asyncContext.get()), &asyncContext->work_);
+		ReleaseAsyncCallbackComplete, static_cast<void *>(asyncContext.get()), &asyncContext->work_);
 	if (status != napi_ok) {
 		MEDIA_LOGE("Failed to create async work");
 		napi_get_undefined(env, &result);

@@ -24,8 +24,8 @@ private:
     void AddTrackAudio();
     void DoNext();
     std::shared_ptr<AVMuxer> avmuxer_;
-    const char* url_ = "/data/media/test.mp4";
-    AVFormatContext* fmt_ctx_ = nullptr;
+    const char *url_ = "/data/media/test.mp4";
+    AVFormatContext *fmt_ctx_ = nullptr;
     int32_t width_;
     int32_t height_;
     int32_t frameRate_;
