@@ -25,19 +25,6 @@
 
 namespace OHOS {
 namespace Media {
-enum CodecMimeType : int32_t {
-    CODEC_MIMIE_TYPE_VIDEO_H263 = 0,
-    CODEC_MIMIE_TYPE_VIDEO_AVC,
-    CODEC_MIMIE_TYPE_VIDEO_HEVC,
-    CODEC_MIMIE_TYPE_VIDEO_MPEG,
-    CODEC_MIMIE_TYPE_VIDEO_MPEG2,
-    CODEC_MIMIE_TYPE_VIDEO_MPEG4,
-    CODEC_MIMIE_TYPE_AUDIO_VORBIS,
-    CODEC_MIMIE_TYPE_AUDIO_MP3,
-    CODEC_MIMIE_TYPE_AUDIO_AAC,
-    CODEC_MIMIE_TYPE_AUDIO_FLAC,
-};
-
 enum VideoEncoderBitrateMode : int32_t {
     VIDEO_ENCODER_BITRATE_MODE_CBR = 0,
     VIDEO_ENCODER_BITRATE_MODE_VBR,
@@ -77,8 +64,9 @@ struct BufferWrapper {
 };
 
 struct ProcessorConfig {
-    explicit ProcessorConfig(GstCaps *caps)
-        : caps_(caps)
+    explicit ProcessorConfig(GstCaps *caps, bool isEncoder)
+        : caps_(caps),
+          isEncoder_(isEncoder)
     {
     }
     ~ProcessorConfig()
@@ -89,6 +77,8 @@ struct ProcessorConfig {
     }
     GstCaps *caps_ = nullptr;
     bool needCodecData_ = false;
+    bool needParser_ = false;
+    bool isEncoder_ = false;
 };
 
 __attribute__((visibility("default"))) int32_t MapVideoPixelFormat(int32_t number, VideoPixelFormat &pixel);
@@ -98,7 +88,7 @@ __attribute__((visibility("default"))) std::string PCMFormatToString(AudioRawFor
 __attribute__((visibility("default"))) int32_t MapBitrateMode(int32_t number, VideoEncoderBitrateMode &mode);
 __attribute__((visibility("default"))) int32_t MapCodecMime(const std::string &mime, CodecMimeType &name);
 __attribute__((visibility("default"))) int32_t MapProfile(int32_t number, AVCProfile &profile);
-__attribute__((visibility("default"))) int32_t ParseCaps(GstCaps *caps, Format &format);
+__attribute__((visibility("default"))) int32_t CapsToFormat(GstCaps *caps, Format &format);
 } // Media
 } // OHOS
 #endif // CODEC_COMMON_H

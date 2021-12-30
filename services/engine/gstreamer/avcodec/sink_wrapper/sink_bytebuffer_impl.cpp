@@ -31,19 +31,21 @@ SinkBytebufferImpl::SinkBytebufferImpl()
 
 SinkBytebufferImpl::~SinkBytebufferImpl()
 {
-    g_signal_handler_disconnect(G_OBJECT(element_), signalId_);
+    std::unique_lock<std::mutex> lock(mutex_);
+    g_signal_handler_disconnect(G_OBJECT(sink_), signalSample_);
+    g_signal_handler_disconnect(G_OBJECT(sink_), signalEOS_);
     bufferList_.clear();
-    if (element_ != nullptr) {
-        gst_object_unref(element_);
-        element_ = nullptr;
+    if (sink_ != nullptr) {
+        gst_object_unref(sink_);
+        sink_ = nullptr;
     }
 }
 
 int32_t SinkBytebufferImpl::Init()
 {
-    element_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("appsink", "sink")));
-    CHECK_AND_RETURN_RET(element_ != nullptr, MSERR_UNKNOWN);
-    gst_base_sink_set_async_enabled(GST_BASE_SINK(element_), FALSE);
+    sink_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("appsink", "sink")));
+    CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
+    gst_base_sink_set_async_enabled(GST_BASE_SINK(sink_), FALSE);
 
     bufferCount_ = DEFAULT_BUFFER_COUNT;
     bufferSize_ = DEFAULT_BUFFER_SIZE;
@@ -53,9 +55,9 @@ int32_t SinkBytebufferImpl::Init()
 
 int32_t SinkBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 {
-    CHECK_AND_RETURN_RET(element_ != nullptr && config->caps_ != nullptr, MSERR_UNKNOWN);
-    g_object_set(G_OBJECT(element_), "caps", config->caps_, nullptr);
-    (void)ParseCaps(config->caps_, format_);
+    CHECK_AND_RETURN_RET(sink_ != nullptr && config->caps_ != nullptr, MSERR_UNKNOWN);
+    g_object_set(G_OBJECT(sink_), "caps", config->caps_, nullptr);
+    (void)CapsToFormat(config->caps_, bufferFormat_);
 
     for (uint32_t i = 0; i < bufferCount_; i++) {
         auto mem = AVSharedMemory::Create(bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "output");
@@ -69,9 +71,11 @@ int32_t SinkBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
         bufferList_.push_back(bufWrap);
     }
 
-    signalId_ = g_signal_connect(G_OBJECT(element_), "new_sample",
-                                 G_CALLBACK(OutputAvailableCb), reinterpret_cast<gpointer>(this));
-    g_object_set(G_OBJECT(element_), "emit-signals", TRUE, nullptr);
+    signalSample_ = g_signal_connect(G_OBJECT(sink_), "new_sample",
+        G_CALLBACK(OutputAvailableCb), reinterpret_cast<gpointer>(this));
+    signalEOS_ = g_signal_connect(G_OBJECT(sink_), "eos", G_CALLBACK(EosCb), reinterpret_cast<gpointer>(this));
+    g_object_set(G_OBJECT(sink_), "emit-signals", TRUE, nullptr);
+
     return MSERR_OK;
 }
 
@@ -81,6 +85,7 @@ int32_t SinkBytebufferImpl::Flush()
     for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
         (*it)->owner_ = BufferWrapper::DOWNSTREAM;
     }
+    isFirstFrame_ = true;
     return MSERR_OK;
 }
 
@@ -111,12 +116,6 @@ int32_t SinkBytebufferImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &
     return MSERR_OK;
 }
 
-void SinkBytebufferImpl::SetEOS(uint32_t count)
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    finishCount_ = count;
-}
-
 GstFlowReturn SinkBytebufferImpl::OutputAvailableCb(GstElement *sink, gpointer userData)
 {
     (void)sink;
@@ -127,10 +126,26 @@ GstFlowReturn SinkBytebufferImpl::OutputAvailableCb(GstElement *sink, gpointer u
     return GST_FLOW_OK;
 }
 
+void SinkBytebufferImpl::EosCb(GstElement *sink, gpointer userData)
+{
+    (void)sink;
+    MEDIA_LOGI("EOS reached");
+    auto impl = static_cast<SinkBytebufferImpl *>(userData);
+    CHECK_AND_RETURN(impl != nullptr);
+    std::unique_lock<std::mutex> lock(impl->mutex_);
+
+    auto obs = impl->obs_.lock();
+    CHECK_AND_RETURN(obs != nullptr);
+
+    AVCodecBufferInfo info;
+    const uint32_t invalidIndex = 1000;
+    obs->OnOutputBufferAvailable(invalidIndex, info, AVCODEC_BUFFER_FLAG_EOS);
+}
+
 int32_t SinkBytebufferImpl::HandleOutputCb()
 {
     GstSample *sample = nullptr;
-    g_signal_emit_by_name(G_OBJECT(element_), "pull-sample", &sample);
+    g_signal_emit_by_name(G_OBJECT(sink_), "pull-sample", &sample);
     CHECK_AND_RETURN_RET(sample != nullptr, MSERR_UNKNOWN);
 
     GstBuffer *buf = gst_sample_get_buffer(sample);
@@ -144,7 +159,6 @@ int32_t SinkBytebufferImpl::HandleOutputCb()
     uint32_t index = 0;
     HandleOutputBuffer(bufSize, index, buf);
 
-    bufferCount_++;
     gst_sample_unref(sample);
 
     if (index == bufferCount_ || index == bufferList_.size()) {
@@ -152,29 +166,21 @@ int32_t SinkBytebufferImpl::HandleOutputCb()
         return MSERR_OK;
     }
 
-    CHECK_AND_RETURN_RET(isEos == false, MSERR_OK);
-
     auto obs = obs_.lock();
     CHECK_AND_RETURN_RET_LOG(obs != nullptr, MSERR_UNKNOWN, "obs is nullptr");
 
-    if (isFirstFrame_ == true) {
+    if (isFirstFrame_) {
         isFirstFrame_ = false;
-        obs->OnOutputFormatChanged(format_);
+        obs->OnOutputFormatChanged(bufferFormat_);
     }
 
     AVCodecBufferInfo info;
     info.offset = 0;
     info.size = bufSize;
     info.presentationTimeUs = GST_BUFFER_PTS(buf);
+    obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
-    if (bufferCount_ >= finishCount_ && isEos == false) {
-        MEDIA_LOGD("EOS reach");
-        isEos = true;
-        obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_EOS);
-    } else {
-        obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
-    }
-    MEDIA_LOGD("OutputBuffer available, index:%{public}d, bufferCount:%{public}d", index, bufferCount_);
+    MEDIA_LOGD("OutputBufferAvailable, index:%{public}d", index);
 
     return MSERR_OK;
 }

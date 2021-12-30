@@ -62,7 +62,7 @@ private:
     std::weak_ptr<IAVCodecEngineObs> obs_;
     std::unique_ptr<SrcBase> src_;
     std::unique_ptr<SinkBase> sink_;
-    uint32_t bufferCount_ = 0;
+    bool isEncoder_ = false;
 };
 } // Media
 } // OHOS

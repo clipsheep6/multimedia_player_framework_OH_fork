@@ -39,16 +39,19 @@ struct _GstCodecBin {
 
     /* private */
     GstElement *src;
+    GstElement *parser;
     GstElement *src_convert;
     GstElement *coder;
     GstElement *sink_convert;
     GstElement *sink;
 
     CodecBinType type;
+    gboolean is_start;
     gboolean use_software;
     gchar *coder_name;
     gboolean need_src_convert;
     gboolean need_sink_convert;
+    gboolean need_parser;
 };
 
 struct _GstCodecBinClass {

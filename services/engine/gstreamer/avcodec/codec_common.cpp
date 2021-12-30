@@ -78,11 +78,10 @@ const std::map<std::string, CodecMimeType> MIME_TO_CODEC_NAME = {
     {"video/3gpp", CODEC_MIMIE_TYPE_VIDEO_H263},
     {"video/avc", CODEC_MIMIE_TYPE_VIDEO_AVC},
     {"video/hevc", CODEC_MIMIE_TYPE_VIDEO_HEVC},
-    {"video/mpeg", CODEC_MIMIE_TYPE_VIDEO_MPEG},
     {"video/mpeg2", CODEC_MIMIE_TYPE_VIDEO_MPEG2},
     {"video/mp4v-es", CODEC_MIMIE_TYPE_VIDEO_MPEG4},
     {"audio/vorbis", CODEC_MIMIE_TYPE_AUDIO_VORBIS},
-    {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_MP3},
+    {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_MPEG},
     {"audio/mp4a-latm", CODEC_MIMIE_TYPE_AUDIO_AAC},
     {"audio/flac", CODEC_MIMIE_TYPE_AUDIO_FLAC},
 };
@@ -160,7 +159,7 @@ int32_t MapProfile(int32_t number, AVCProfile &profile)
     return MSERR_INVALID_VAL;
 }
 
-int32_t ParseCaps(GstCaps *caps, Format &format)
+int32_t CapsToFormat(GstCaps *caps, Format &format)
 {
     GstStructure *structure = gst_caps_get_structure(caps, 0);
     if (structure == nullptr) {
