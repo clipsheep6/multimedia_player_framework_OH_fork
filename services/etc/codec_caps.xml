@@ -111,7 +111,7 @@
                 <Item bitrate="1-3000000"/>
                 <Item frameRate="1-30"/>
                 <Item format="YUVI420"/>
-                <Item profiles="H263Baseline,H263ISWV2,H263HighCompression,"/>
+                <Item profiles="H263Baseline,H263ISWV2,H263HighCompression"/>
             </VideoDecoder>
             <VideoDecoder>
                 <Item codecName="avdec_mpeg2video"/>
