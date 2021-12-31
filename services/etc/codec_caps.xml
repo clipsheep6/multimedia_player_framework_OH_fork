@@ -139,7 +139,7 @@
                 <Item bitrate="1-3000000"/>
                 <Item frameRate="1-30"/>
                 <Item format="YUVI420"/>
-                <Item profiles="MPEG4Simple,MPEG4AdvancedSimple,"/>
+                <Item profiles="MPEG4Simple,MPEG4AdvancedSimple"/>
             </VideoDecoder>
             <VideoDecoder>
                 <Item codecName="avdec_vp8"/>
