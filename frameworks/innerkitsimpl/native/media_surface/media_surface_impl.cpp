@@ -50,7 +50,7 @@ std::string MediaSurfaceImpl::GetSurfaceId(const sptr<Surface> &surface)
     return uniqueIdStr;
 }
 
-bool MediaSurfaceImpl::StrToUint64(const std::string &str, int64_t &value)
+bool MediaSurfaceImpl::StrToUint64(const std::string &str, uint64_t &value)
 {
     if (str.empty() || (!isdigit(str.front()))) {
         return false;
