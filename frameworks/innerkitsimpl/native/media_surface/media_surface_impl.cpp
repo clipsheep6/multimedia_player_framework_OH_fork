@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "display_type.h"
+#include "surface_utils.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaSurface"};
@@ -43,33 +44,42 @@ MediaSurfaceImpl::~MediaSurfaceImpl()
 std::string MediaSurfaceImpl::GetSurfaceId(const sptr<Surface> &surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = surfaceMap_.begin();
-    while (it != surfaceMap_.end()) {
-        if (it->second.promote() == surface) {
-            return it->first;
-        }
-        if (it->second.promote() == nullptr) {
-            it = surfaceMap_.erase(it);
-        } else {
-            ++it;
-        }
+    uint64_t uniqueId = surface->GetUniqueId;
+    std::string uniqueIdStr = std::to_string(uniqueId);
+    MEDIA_LOGE("Get surface id, surfaceId:%{public}s", uniqueIdStr.c_str());
+    return uniqueIdStr;
+}
+
+bool MediaSurfaceImpl::StrToUint64(const std::string &str, int64_t &value)
+{
+    if (str.empty() || (!isdigit(str.front()))) {
+        return false;
     }
-    wptr<Surface> wpSurface = surface;
-    ++idCount;
-    std::string idKey = std::to_string(idCount);
-    (void)surfaceMap_.insert(std::make_pair(idKey, wpSurface));
-    MEDIA_LOGD("create surface id, surfaceId:%{public}s", idKey.c_str());
-    return idKey;
+
+    char *end = nullptr;
+    errno = 0;
+    auto addr = str.data();
+    auto result = std::strtoull(addr, &end, 10); /* 10 means decimal */
+    if ((end == addr) || (end[0] != '\0') || (errno == ERANGE)) {
+        MEDIA_LOGE("failed convert string to uint64");
+        return false;
+    }
+
+    value = result;
+    return true;
 }
 
 sptr<Surface> MediaSurfaceImpl::GetSurface(const std::string &id)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    auto it = surfaceMap_.find(id);
-    if (it != surfaceMap_.end()) {
-        return it->second.promote();
+    uint64_t surfaceId = 0;
+    if (!StrToUint64(id, surfaceId)) {
+        MEDIA_LOGE("failed to get surface id");
+        return nullptr;
     }
-    MEDIA_LOGE("failed to get surface, surfaceId:%{public}s", id.c_str());
+
+    MEDIA_LOGD("get surface, surfaceId:%{public}s, id = (%{public}" PRIu64 ")", id.c_str(), surfaceId);
+    sptr<Surface> surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
     return nullptr;
 }
 
@@ -94,6 +104,12 @@ sptr<Surface> MediaSurfaceImpl::GetSurface()
 
     sptr<Surface> producerSurface = mwindow_->GetSurface();
     CHECK_AND_RETURN_RET_LOG(producerSurface != nullptr, nullptr, "producerSurface is nullptr!");
+
+    SurfaceError error = SurfaceUtils::GetInstance()->Add(producerSurface->GetUniqueId(), producerSurface);
+    if (error != SURFACE_ERROR_OK) {
+        MEDIA_LOGE("add producerSurface error");
+        return nullptr;
+    }
 
     const std::string format = "SURFACE_FORMAT";
     (void)producerSurface->SetUserData(format, std::to_string(static_cast<int>(PIXEL_FMT_RGBA_8888)));

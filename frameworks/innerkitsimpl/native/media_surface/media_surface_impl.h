@@ -33,6 +33,7 @@ public:
     virtual sptr<Surface> GetSurface(const std::string &id) override;
 
 private:
+    bool StrToUint64(const std::string &str, int64_t &value);
     std::mutex mutex_;
     int32_t idCount = 0;
     sptr<Window> mwindow_ = nullptr;
