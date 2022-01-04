@@ -35,7 +35,6 @@ public:
 private:
     bool StrToUint64(const std::string &str, uint64_t &value);
     std::mutex mutex_;
-    int32_t idCount = 0;
     sptr<Window> mwindow_ = nullptr;
     std::map<std::string, wptr<Surface>> surfaceMap_;
 };
