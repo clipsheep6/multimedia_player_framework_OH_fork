@@ -29,26 +29,35 @@ namespace Media {
 constexpr uint32_t MAX_VIDEO_TRACK_NUM = 1;
 constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
 
-const std::set<std::string> videoEncodeType {
+const std::set<std::string> VIDEO_MIME_TYPE {
     "video/x-h264",
     "video/mpeg4",
     "video/x-h263",
     "video/mpeg2"
 };
 
-const std::set<std::string> audioEncodeType {
-    "audio/mpeg",
+const std::set<std::string> AUDIO_MIME_TYPE {
+    "audio/aac",
     "audio/mp3"
 };
 
-const std::map<std::string, std::string> formatToMux {
+const std::map<const std::string, const std::string> MIME_MAP_ENCODE {
+    {"video/x-h264", "video/x-h264"},
+    {"video/mpeg4", "video/mpeg"},
+    {"video/x-h263", "video/x-h263"},
+    {"video/mpeg2", "video/mpeg2"},
+    {"audio/aac", "audio/mpeg"},
+    {"audio/mp3", "audio/mpeg"}
+};
+
+const std::map<std::string, std::string> FORMAT_TO_MUXBIN {
     {"mp4", "qtmux"},
     {"m4a", "qtmux"}
 };
 
-const std::map<std::string, std::set<std::string>> formatToEncode {
-    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2", "audio/mpeg", "audio/mp3"}},
-    {"m4a", {"audio/mpeg"}}
+const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
+    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2", "audio/aac", "audio/mp3"}},
+    {"m4a", {"audio/aac"}}
 };
 
 class AVMuxerEngineGstImpl : public IAVMuxerEngine {
@@ -67,6 +76,17 @@ public:
     int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) override;
     int32_t Stop() override;
 private:
+    int32_t Seth264Caps(const MediaDescription &trackDesc, const std::string mimeType, int32_t trackId);
+    int32_t Seth263Caps(const MediaDescription &trackDesc, const std::string mimeType, int32_t trackId);
+    int32_t SetMPEG4Caps(const MediaDescription &trackDesc, const std::string mimeType, int32_t trackId);
+    int32_t SetaacCaps(const MediaDescription &trackDesc, const std::string mimeType, int32_t trackId);
+    int32_t Setmp3Caps(const MediaDescription &trackDesc, const std::string mimeType, int32_t trackId);
+    int32_t Writeh264CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t Writeh263CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t WriteMPEG4CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t WriteaacCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t Writemp3CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
     int32_t SetupMsgProcessor();
     void OnNotifyMessage(const InnerMessage &msg);
     void clear();

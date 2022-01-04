@@ -40,6 +40,7 @@ struct _GstMuxBin {
     /* private */
     GSList *audioSrcList_;
     GstElement *h264parse_;
+    GstElement *mpeg4parse_;
     GstElement *aacparse_;
     GstElement *videoSrc_;
     GstElement *splitMuxSink_;
@@ -47,6 +48,7 @@ struct _GstMuxBin {
     gchar *path_;
     gchar *mux_;
     gboolean h264parseFlag_;
+    gboolean mpeg4parseFlag_;
     gboolean aacparseFlag_;
     gchar *videoTrack_ = nullptr;
     GSList *audioTrack_;
