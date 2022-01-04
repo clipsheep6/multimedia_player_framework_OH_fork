@@ -217,6 +217,7 @@ static GstStateChangeReturn create_mpeg4parse(GstMuxBin *mux_bin)
 {
     mux_bin->mpeg4parse_ = gst_element_factory_make("mpeg4videoparse", "mpeg4parse");
     g_return_val_if_fail(mux_bin->mpeg4parse_ != nullptr, GST_STATE_CHANGE_FAILURE);
+    g_object_set(mux_bin->mpeg4parse_, "config-interval", -1, "drop", false, nullptr);
 
     return GST_STATE_CHANGE_SUCCESS;
 }
