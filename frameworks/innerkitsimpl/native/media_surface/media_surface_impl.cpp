@@ -44,7 +44,7 @@ MediaSurfaceImpl::~MediaSurfaceImpl()
 std::string MediaSurfaceImpl::GetSurfaceId(const sptr<Surface> &surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    uint64_t uniqueId = surface->GetUniqueId;
+    uint64_t uniqueId = surface->GetUniqueId();
     std::string uniqueIdStr = std::to_string(uniqueId);
     MEDIA_LOGE("Get surface id, surfaceId:%{public}s", uniqueIdStr.c_str());
     return uniqueIdStr;
