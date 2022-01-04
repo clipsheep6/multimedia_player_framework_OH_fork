@@ -30,18 +30,18 @@ public:
 
     static std::vector<std::string> GetSupportedFormats();
 
-	int32_t SetOutput(const std::string& path, const std::string& format) override;
-	int32_t SetLocation(float latitude, float longtitude) override;
-	int32_t SetOrientationHint(int degrees) override;
-	int32_t AddTrack(const MediaDescription& trackDesc, int32_t& trackId) override;
-	int32_t Start() override;
-	int32_t WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo& info) override;
-	int32_t Stop() override;
-	void Release() override;
-	int32_t Init();
+    int32_t SetOutput(const std::string& path, const std::string& format) override;
+    int32_t SetLocation(float latitude, float longtitude) override;
+    int32_t SetOrientationHint(int degrees) override;
+    int32_t AddTrack(const MediaDescription& trackDesc, int32_t& trackId) override;
+    int32_t Start() override;
+    int32_t WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo& info) override;
+    int32_t Stop() override;
+    void Release() override;
+    int32_t Init();
 private:
     std::shared_ptr<IAVMuxerService> avmuxerService_ = nullptr;
-	// FILE *fp;
+    // FILE *fp;
 };
 }  // namespace Media
 }  // namespace OHOSes

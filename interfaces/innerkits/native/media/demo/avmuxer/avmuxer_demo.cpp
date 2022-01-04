@@ -202,7 +202,7 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
             avmuxer_->WriteTrackSample(avMem, info);
         }
         frameLenArray_++;
-        // free(tempBuffer);
+        free(tempBuffer);
         i++;
         usleep(200000);
     }

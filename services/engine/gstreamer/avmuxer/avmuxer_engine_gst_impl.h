@@ -76,17 +76,23 @@ public:
     int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) override;
     int32_t Stop() override;
 private:
-    int32_t Seth264Caps(const MediaDescription &trackDesc, const std::string mimeType, int32_t trackId);
-    int32_t Seth263Caps(const MediaDescription &trackDesc, const std::string mimeType, int32_t trackId);
-    int32_t SetMPEG4Caps(const MediaDescription &trackDesc, const std::string mimeType, int32_t trackId);
-    int32_t SetaacCaps(const MediaDescription &trackDesc, const std::string mimeType, int32_t trackId);
-    int32_t Setmp3Caps(const MediaDescription &trackDesc, const std::string mimeType, int32_t trackId);
-    int32_t Writeh264CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
-    int32_t Writeh263CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
-    int32_t WriteMPEG4CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
-    int32_t WriteaacCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
-    int32_t Writemp3CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
-    int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t Seth264Caps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId);
+    int32_t Seth263Caps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId);
+    int32_t SetMPEG4Caps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId);
+    int32_t SetaacCaps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId);
+    int32_t Setmp3Caps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId);
+    int32_t Writeh264CodecData(std::shared_ptr<AVSharedMemory> sampleData,
+        const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t Writeh263CodecData(std::shared_ptr<AVSharedMemory> sampleData,
+        const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t WriteMPEG4CodecData(std::shared_ptr<AVSharedMemory> sampleData,
+        const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t WriteaacCodecData(std::shared_ptr<AVSharedMemory> sampleData,
+        const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t Writemp3CodecData(std::shared_ptr<AVSharedMemory> sampleData,
+        const TrackSampleInfo &sampleInfo, GstElement *src);
+    int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData,
+        const TrackSampleInfo &sampleInfo, GstElement *src);
     int32_t SetupMsgProcessor();
     void OnNotifyMessage(const InnerMessage &msg);
     void clear();

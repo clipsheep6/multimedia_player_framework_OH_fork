@@ -101,7 +101,8 @@ int32_t AVMuxerServiceStub::Start()
     return avmuxerServer_->Start();
 }
 
-int32_t AVMuxerServiceStub::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo& sampleInfo)
+int32_t AVMuxerServiceStub::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
+    const TrackSampleInfo& sampleInfo)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     return avmuxerServer_->WriteTrackSample(sampleData, sampleInfo);

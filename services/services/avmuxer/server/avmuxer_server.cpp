@@ -33,7 +33,8 @@ AVMuxerServer::~AVMuxerServer()
 int32_t AVMuxerServer::Init()
 {
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_AVMUXER);
-    CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_AVMUXER_ENGINE_FAILED, "Failed to get engine factory");
+    CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_AVMUXER_ENGINE_FAILED,
+        "Failed to get engine factory");
     avmuxerEngine_ = engineFactory->CreateAVMuxerEngine();
     CHECK_AND_RETURN_RET_LOG(avmuxerEngine_ != nullptr, MSERR_NO_MEMORY, "Failed to create avmuxer engine");
     int32_t ret = avmuxerEngine_->Init();

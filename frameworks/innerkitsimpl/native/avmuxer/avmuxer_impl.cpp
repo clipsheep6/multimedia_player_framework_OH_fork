@@ -119,7 +119,8 @@ int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, cons
     MEDIA_LOGD("sampleData->Capacity() is: %{public}s", sampleData->Data());
     MEDIA_LOGD("sampleData->Capacity() is: %{public}s", sampleData->Base());
     // std::shared_ptr<AVSharedMemory> avSharedMem = AVSharedMemoryBase::Create(sampleData->Capacity(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
-    std::shared_ptr<AVSharedMemoryBase> avSharedMem = std::make_shared<AVSharedMemoryBase>(sampleData->Size(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
+    std::shared_ptr<AVSharedMemoryBase> avSharedMem = 
+        td::make_shared<AVSharedMemoryBase>(sampleData->Size(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
     int32_t ret = avSharedMem->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_NO_MEMORY, "Failed to create AVSharedMemoryBase");
     errno_t rc = memcpy_s(avSharedMem->GetBase(), avSharedMem->GetSize(), sampleData->Data(), sampleData->Size());

@@ -13,7 +13,7 @@ public:
     static std::vector<std::string> GetSupportedFormats();
     virtual int32_t SetOutput(const std::string& path, const std::string& format) = 0;
     virtual int32_t SetLocation(float latitude, float longitude) = 0;
-	virtual int32_t SetOrientationHint(int degrees) = 0;
+    virtual int32_t SetOrientationHint(int degrees) = 0;
     virtual int32_t AddTrack(const MediaDescription& trackDesc, int32_t& trackId) = 0;
     virtual int32_t Start() = 0;
     virtual int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo& sampleInfo) = 0;

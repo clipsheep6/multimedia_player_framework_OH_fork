@@ -20,7 +20,6 @@
 #define gst_shmem_wrap_allocator_parent_class parent_class
 G_DEFINE_TYPE(GstShMemWrapAllocator, gst_shmem_wrap_allocator, GST_TYPE_ALLOCATOR);
 
-
 GstShMemWrapAllocator *gst_shmem_wrap_allocator_new()
 {
     GstShMemWrapAllocator *alloc = GST_SHMEM_WRAP_ALLOCATOR_CAST(g_object_new(
@@ -89,20 +88,29 @@ static void gst_shmem_wrap_allocator_mem_unmap(GstMemory *mem)
 
 static GstMemory *gst_shmem_wrap_allocator_mem_share (GstMemory *mem, gssize offset, gsize size)
 {
-    GstShMemMemory *sub;
-    GstMemory *parent;
+    GstShMemMemory *sub = nullptr;
+    GstMemory *parent = nullptr;
     GST_DEBUG("offset is: %d, size is: %d", offset, size);
     /* find the real parent */
-    if ((parent = mem->parent) == NULL)
+    if ((parent = mem->parent) == NULL) {
         parent = (GstMemory *)mem;
+    }
 
-    if (size == -1)
+    if (size == -1) {
         size = mem->size - offset;
+    }
 
     sub = g_slice_new0(GstShMemMemory);
     /* the shared memory is always readonly */
-    gst_memory_init(GST_MEMORY_CAST(sub), (GstMemoryFlags)(GST_MINI_OBJECT_FLAGS(parent) | GST_MINI_OBJECT_FLAG_LOCK_READONLY),
-        mem->allocator, GST_MEMORY_CAST(parent), mem->maxsize, mem->align, mem->offset + offset, size);
+    gst_memory_init(
+        GST_MEMORY_CAST(sub),
+        (GstMemoryFlags)(GST_MINI_OBJECT_FLAGS(parent) | GST_MINI_OBJECT_FLAG_LOCK_READONLY),
+        mem->allocator,
+        GST_MEMORY_CAST(parent),
+        mem->maxsize,
+        mem->align,
+        mem->offset + offset,
+        size);
     GST_DEBUG("mem->offset is: %d", mem->offset + offset);
     
     sub->mem = reinterpret_cast<GstShMemMemory *>(mem)->mem;

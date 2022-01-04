@@ -44,7 +44,7 @@ static int GetNamedPropertyInt32(napi_env env, napi_value obj, const std::string
 {
     napi_value value;
     napi_get_named_property(env, obj, keyStr.c_str(), &value);
-    int ret;
+    int ret = 0;
     napi_get_value_int32(env, value, &ret);
     return ret;
 }
@@ -53,7 +53,7 @@ static int64_t GetNamedPropertyInt64(napi_env env, napi_value obj, const std::st
 {
     napi_value value;
     napi_get_named_property(env, obj, keyStr.c_str(), &value);
-    int64_t ret;
+    int64_t ret = 0;
     napi_get_value_int64(env, value, &ret);
     return ret;
 }
@@ -62,7 +62,7 @@ static double GetNamedPropertydouble(napi_env env, napi_value obj, const std::st
 {
     napi_value value;
     napi_get_named_property(env, obj, keyStr.c_str(), &value);
-    double ret;
+    double ret = 0;
     napi_get_value_double(env, value, &ret);
     return ret;
 }
@@ -120,7 +120,8 @@ napi_value AVMuxerNapi::Init(napi_env env, napi_value exports)
     status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
     
-    status = napi_define_properties(env, exports, sizeof(staticProperties) / sizeof(staticProperties[0]), staticProperties);
+    status = napi_define_properties(env, exports,
+        sizeof(staticProperties) / sizeof(staticProperties[0]), staticProperties);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static properties");
     
     MEDIA_LOGD("Init success");
@@ -211,7 +212,8 @@ napi_value AVMuxerNapi::GetSupportedFormats(napi_env env, napi_callback_info inf
     size_t argCount = 0;
     
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, result, "Failed to retrieve details about the callbacke");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, result,
+        "Failed to retrieve details about the callbacke");
     
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&avmuxer));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
@@ -282,7 +284,8 @@ napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
 
     // get jsPlayer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr,
+        result, "Failed to retrieve instance");
     
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "SetOutput", NAPI_AUTO_LENGTH, &resource);
@@ -295,7 +298,6 @@ napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
     MEDIA_LOGD("SetOutput Out");
     return result;
 }
-
 
 napi_value AVMuxerNapi::SetLocation(napi_env env, napi_callback_info info)
 {
@@ -318,8 +320,8 @@ napi_value AVMuxerNapi::SetLocation(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_object, result,
         "Failed to check argument type");
     
-    double latitude;
-    double longitude;
+    double latitude = 0;
+    double longitude = 0;
     latitude = GetNamedPropertydouble(env, args[0], "latitude");
     longitude = GetNamedPropertydouble(env, args[0], "longitude");
     
@@ -438,7 +440,8 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
     
     // get jsPlayer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result,
+        "Failed to retrieve instance");
     
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "AddTrack", NAPI_AUTO_LENGTH, &resource);
@@ -493,7 +496,8 @@ napi_value AVMuxerNapi::Start(napi_env env, napi_callback_info info)
     
     // get jsAVMuxer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result,
+        "Failed to retrieve instance");
     
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Start", NAPI_AUTO_LENGTH, &resource);
@@ -555,7 +559,7 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         result, "Failed to retrieve details about the callback");
     
     napi_valuetype valueType = napi_undefined;
-    bool isArrayBuffer;
+    bool isArrayBuffer = false;
     if (args[0] != nullptr && napi_is_arraybuffer(env, args[0], &isArrayBuffer) == napi_ok && isArrayBuffer == true) {
         napi_get_arraybuffer_info(env, args[0], &(asyncContext->arrayBuffer_), &(asyncContext->arrayBufferSize_));
         // napi_create_reference(env, args[0], 1, &asyncContext->sample_);
@@ -565,7 +569,8 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         napi_get_named_property(env, args[1], PROPERTY_KEY_SAMPLEINFO.c_str(), &trackSampleInfo);
         asyncContext->trackSampleInfo_.size = GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_SIZE);
         asyncContext->trackSampleInfo_.offset = GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_OFFSET);
-        asyncContext->trackSampleInfo_.flags = static_cast<FrameFlags>(GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG));
+        asyncContext->trackSampleInfo_.flags =
+            static_cast<FrameFlags>(GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG));
         asyncContext->trackSampleInfo_.timeUs = GetNamedPropertyInt64(env, trackSampleInfo, PROPERTY_KEY_TIMEUS);
         asyncContext->trackSampleInfo_.trackIdx = GetNamedPropertyInt32(env, args[1], PROPERTY_KEY_TRACK_ID);
         MEDIA_LOGD("size is: %{public}d", asyncContext->trackSampleInfo_.size);
@@ -579,19 +584,24 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 
     // get jsAVMuxer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result,
+        "Failed to retrieve instance");
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "WriteTrackSample", NAPI_AUTO_LENGTH, &resource);
-    std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(static_cast<uint8_t *>(asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
+    std::shared_ptr<AVMemory> avMem =
+        std::make_shared<AVMemory>(static_cast<uint8_t *>(asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
     avMem->SetRange(asyncContext->trackSampleInfo_.offset, asyncContext->trackSampleInfo_.size);
     // MEDIA_LOGD("size is: %{public}d", asyncContext->trackSampleInfo_.size);
     // MEDIA_LOGD("offset is: %{public}d", asyncContext->trackSampleInfo_.offset);
     // MEDIA_LOGD("flags is: %{public}d", asyncContext->trackSampleInfo_.flags);
     // MEDIA_LOGD("timeUs is: %{public}lld", asyncContext->trackSampleInfo_.timeUs);
     // MEDIA_LOGD("trackIdx is: %{public}d", asyncContext->trackSampleInfo_.trackIdx);
-    MEDIA_LOGI("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,", ((uint8_t*)(asyncContext->arrayBuffer_))[0], ((uint8_t*)(asyncContext->arrayBuffer_))[1], ((uint8_t*)(asyncContext->arrayBuffer_))[2], ((uint8_t*)(asyncContext->arrayBuffer_))[3]);
-    asyncContext->writeSampleFlag_ = asyncContext->jsAVMuxer->avmuxerImpl_->WriteTrackSample(avMem, asyncContext->trackSampleInfo_);
+    MEDIA_LOGI("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,",
+        ((uint8_t*)(asyncContext->arrayBuffer_))[0], ((uint8_t*)(asyncContext->arrayBuffer_))[1],
+        ((uint8_t*)(asyncContext->arrayBuffer_))[2], ((uint8_t*)(asyncContext->arrayBuffer_))[3]);
+    asyncContext->writeSampleFlag_ =
+        asyncContext->jsAVMuxer->avmuxerImpl_->WriteTrackSample(avMem, asyncContext->trackSampleInfo_);
 
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, AVMuxerNapi::AsyncWriteTrackSample,
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
@@ -643,7 +653,8 @@ napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
 
     // get jsPlayer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result,
+        "Failed to retrieve instance");
     
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Stop", NAPI_AUTO_LENGTH, &resource);
@@ -693,7 +704,8 @@ napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
 
     // get jsAVMuxer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result,
+        "Failed to retrieve instance");
     
     asyncContext->jsAVMuxer->avmuxerImpl_->Release();
 

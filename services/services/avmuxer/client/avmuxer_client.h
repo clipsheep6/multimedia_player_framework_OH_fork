@@ -15,7 +15,7 @@ public:
 
     int32_t SetOutput(const std::string& path, const std::string& format) override;
     int32_t SetLocation(float latitude, float longitude) override;
-	int32_t SetOrientationHint(int degrees) override;
+    int32_t SetOrientationHint(int degrees) override;
     int32_t AddTrack(const MediaDescription& trackDesc, int32_t& trackId) override;
     int32_t Start() override;
     int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) override;

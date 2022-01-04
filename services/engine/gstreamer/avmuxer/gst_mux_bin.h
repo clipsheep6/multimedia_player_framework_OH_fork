@@ -68,7 +68,7 @@ using GstMuxBin = struct _GstMuxBin;
 using GstMuxBinClass = struct _GstMuxBinClass;
 using TrackType = enum _TrackType;
 
-__attribute__((visibility("default"))) void addTrack(GstMuxBin *mux_bin, TrackType type, const char *name);
+__attribute__((visibility("default"))) void AddTrack(GstMuxBin *mux_bin, TrackType type, const char *name);
 
 __attribute__((visibility("default"))) GType gst_mux_bin_get_type (void);
 

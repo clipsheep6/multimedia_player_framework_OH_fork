@@ -38,7 +38,7 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id, const GValu
 static void gst_mux_bin_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *param_spec);
 static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstStateChange transition);
 
-void addTrack(GstMuxBin* mux_bin, TrackType type, const char *name)
+void AddTrack(GstMuxBin* mux_bin, TrackType type, const char *name)
 {
     switch (type) {
         case VIDEO:
@@ -372,7 +372,7 @@ static GstStateChangeReturn connect_element(GstMuxBin *mux_bin)
 static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstStateChange transition)
 {
     GstMuxBin *mux_bin = GST_MUX_BIN(element);
-	GST_INFO_OBJECT(mux_bin, "gst_mux_bin_change_state");
+    GST_INFO_OBJECT(mux_bin, "gst_mux_bin_change_state");
     g_return_val_if_fail(mux_bin != nullptr, GST_STATE_CHANGE_FAILURE);
 
     switch (transition) {

@@ -88,7 +88,8 @@ int32_t AVMuxerServiceProxy::Start()
     return reply.ReadInt32();
 }
 
-int32_t AVMuxerServiceProxy::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo& sampleInfo)
+int32_t AVMuxerServiceProxy::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
+    const TrackSampleInfo& sampleInfo)
 {
     MessageParcel data;
     MessageParcel reply;
