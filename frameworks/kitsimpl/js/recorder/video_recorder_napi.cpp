@@ -105,7 +105,7 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "No memory!");
 
     if (recorderNapi->callbackNapi_ == nullptr) {
-        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env); // jhp1
+        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
         (void)recorderNapi->recorder_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
 
