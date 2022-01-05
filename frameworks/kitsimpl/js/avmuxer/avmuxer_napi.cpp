@@ -34,42 +34,6 @@ struct AVMuxerNapiAsyncContext : public MediaAsyncContext {
     TrackSampleInfo trackSampleInfo_;
 };
 
-static int GetNamedPropertyInt32(napi_env env, napi_value obj, const std::string& keyStr)
-{
-    napi_value value;
-    napi_get_named_property(env, obj, keyStr.c_str(), &value);
-    int ret = 0;
-    napi_get_value_int32(env, value, &ret);
-    return ret;
-}
-
-static int64_t GetNamedPropertyInt64(napi_env env, napi_value obj, const std::string& keyStr)
-{
-    napi_value value;
-    napi_get_named_property(env, obj, keyStr.c_str(), &value);
-    int64_t ret = 0;
-    napi_get_value_int64(env, value, &ret);
-    return ret;
-}
-
-static double GetNamedPropertydouble(napi_env env, napi_value obj, const std::string& keyStr)
-{
-    napi_value value;
-    napi_get_named_property(env, obj, keyStr.c_str(), &value);
-    double ret = 0;
-    napi_get_value_double(env, value, &ret);
-    return ret;
-}
-
-static std::string GetNamedPropertystring(napi_env env, napi_value obj, const std::string& keyStr)
-{
-	napi_value value;
-	napi_get_named_property(env, obj, keyStr.c_str(), &value);
-	std::string ret;
-	ret = CommonNapi::GetStringArgument(env, value);
-	return ret;
-}
-
 AVMuxerNapi::AVMuxerNapi()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
@@ -313,10 +277,9 @@ napi_value AVMuxerNapi::SetLocation(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_object, result,
         "Failed to check argument type");
     
-    double latitude = 0;
-    double longitude = 0;
-    latitude = GetNamedPropertydouble(env, args[0], "latitude");
-    longitude = GetNamedPropertydouble(env, args[0], "longitude");
+    double latitude = 0, longitude = 0;
+    CommonNapi::GetPropertyDouble(env, args[0], "latitude", latitude);
+    CommonNapi::GetPropertyDouble(env, args[0], "longitude", longitude);
     
     int ret = avmuxer->avmuxerImpl_->SetLocation(latitude, longitude);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call SetLocation");
@@ -398,40 +361,24 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
     }
     
     // get surface id from js
-    // napi_valuetype valueType = napi_undefined;
     if (args[0] != nullptr) {
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_INDEX), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_TRACK_INDEX)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_TYPE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_TRACK_TYPE)));
-        std::string mime = GetNamedPropertystring(env, args[0], std::string(MD_KEY_CODEC_MIME));
-        MEDIA_LOGD("mime is: %{public}s", mime.c_str());
-        asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), mime);
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_DURATION), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_DURATION)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_BITRATE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_BITRATE)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_MAX_INPUT_SIZE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_MAX_INPUT_SIZE)));
-        int width = GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_WIDTH));
-        MEDIA_LOGD("width is: %{public}d", width);
+        std::string codecMime = CommonNapi::GetPropertyString(env, args[0], std::string(MD_KEY_CODEC_MIME));
+        asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), codecMime);
+        int width;
+        CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_WIDTH), width);
         asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), width);
-        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_HEIGHT)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_PIXEL_FORMAT), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_PIXEL_FORMAT)));
-        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_FRAME_RATE)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CAPTURE_RATE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_CAPTURE_RATE)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_I_FRAME_INTERVAL), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_I_FRAME_INTERVAL)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_REQUEST_I_FRAME), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_REQUEST_I_FRAME)));
-        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_CHANNEL_COUNT)));
-        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_SAMPLE_RATE)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_COUNT), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_TRACK_COUNT)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CUSTOM_PREFIX), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_CUSTOM_PREFIX)));
-
-        // if (num == 0) {
-        //     asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/mpeg4");
-        // } else {
-        //     asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "audio/aac");
-        // }
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), 720);
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), 480);
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), 60);
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), 2);
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), 44100);
+        int height;
+        CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_HEIGHT), height);
+        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), height);
+        int frameRate;
+        CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_FRAME_RATE), frameRate);
+        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
+        int channelCount;
+        CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_CHANNEL_COUNT), channelCount);
+        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), channelCount);
+        int sampleRate;
+        CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_SAMPLE_RATE), sampleRate);
+        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), sampleRate);
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
@@ -565,12 +512,13 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_object) {
         napi_value trackSampleInfo;
         napi_get_named_property(env, args[1], PROPERTY_KEY_SAMPLEINFO.c_str(), &trackSampleInfo);
-        asyncContext->trackSampleInfo_.size = GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_SIZE);
-        asyncContext->trackSampleInfo_.offset = GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_OFFSET);
-        asyncContext->trackSampleInfo_.flags =
-            static_cast<FrameFlags>(GetNamedPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG));
-        asyncContext->trackSampleInfo_.timeUs = GetNamedPropertyInt64(env, trackSampleInfo, PROPERTY_KEY_TIMEUS);
-        asyncContext->trackSampleInfo_.trackIdx = GetNamedPropertyInt32(env, args[1], PROPERTY_KEY_TRACK_ID);
+        CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_SIZE, asyncContext->trackSampleInfo_.size);
+        CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_OFFSET, asyncContext->trackSampleInfo_.offset);
+        int32_t flags;
+        CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG, flags);
+        asyncContext->trackSampleInfo_.flags = static_cast<FrameFlags>(flags);
+        CommonNapi::GetPropertyInt64(env, trackSampleInfo, PROPERTY_KEY_TIMEUS, asyncContext->trackSampleInfo_.timeUs);
+        CommonNapi::GetPropertyInt32(env, args[1], PROPERTY_KEY_TRACK_ID, asyncContext->trackSampleInfo_.trackIdx);
         MEDIA_LOGD("size is: %{public}d", asyncContext->trackSampleInfo_.size);
         MEDIA_LOGD("offset is: %{public}d", asyncContext->trackSampleInfo_.offset);
         MEDIA_LOGD("flags is: %{public}d", asyncContext->trackSampleInfo_.flags);

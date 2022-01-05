@@ -15,8 +15,8 @@ import("//build/ohos.gni")
 
 group("media_engine_gst_packages") {
   deps = [
-    "plugins:media_engine_gst_plugins",
     ":media_engine_gst",
+    "plugins:media_engine_gst_plugins",
   ]
 }
 
@@ -25,12 +25,12 @@ ohos_shared_library("media_engine_gst") {
     "avcodec:media_engine_gst_avcodec",
     "avcodeclist:media_engine_gst_avcodeclist",
     "avmetadatahelper:media_engine_gst_avmeta",
+    "avmuxer:media_engine_gst_avmuxer",
     "common:media_engine_gst_common",
     "factory:media_engine_gst_factory",
     "loader:media_engine_gst_loader",
     "player:media_engine_gst_player",
     "recorder:media_engine_gst_recorder",
-    "avmuxer:media_engine_gst_avmuxer",
     "//third_party/glib:glib_packages",
     "//third_party/gstreamer/gst_libav:gst_libav_packages",
     "//third_party/gstreamer/gstplugins_bad:gstplugins_bad_packages",

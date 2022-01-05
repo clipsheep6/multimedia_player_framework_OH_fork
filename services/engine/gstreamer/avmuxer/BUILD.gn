@@ -14,9 +14,7 @@
 import("//build/ohos.gni")
 
 group("media_engine_gst_avmuxer") {
-  deps = [ 
-    ":media_engine_gst_avmuxer_impl",
-  ]
+  deps = [ ":media_engine_gst_avmuxer_impl" ]
 }
 
 config("media_engine_gst_avmuxer_impl_config") {
@@ -104,12 +102,11 @@ config("gst_media_mux_bin_config") {
   ]
 }
 
-
 ohos_static_library("media_engine_gst_avmuxer_impl") {
   sources = [
-    "convert_codec_data.cpp",
     "avmuxer_engine_gst_impl.cpp",
-    "gst_shmem_wrap_allocator.cpp"
+    "convert_codec_data.cpp",
+    "gst_shmem_wrap_allocator.cpp",
   ]
 
   configs = [ ":media_engine_gst_avmuxer_impl_config" ]
@@ -128,9 +125,7 @@ ohos_static_library("media_engine_gst_avmuxer_impl") {
 ohos_shared_library("gst_media_mux_bin") {
   install_enable = true
 
-  sources = [
-    "gst_mux_bin.cpp",
-  ]
+  sources = [ "gst_mux_bin.cpp" ]
 
   configs = [ ":gst_media_mux_bin_config" ]
 
@@ -148,4 +143,3 @@ ohos_shared_library("gst_media_mux_bin") {
   subsystem_name = "multimedia"
   part_name = "multimedia_media_standard"
 }
-

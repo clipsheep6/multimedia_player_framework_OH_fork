@@ -75,42 +75,6 @@ struct TrackSampleInfo : public SampleInfo {
      */
     int32_t trackIdx;
 };
-
-// /**
-//  * @brief Enumetates the media track type
-//  */
-// enum MediaTrackType : uint8_t {
-//     /**
-//      * @brief Track is audio
-//      */
-//     MEDIA_TYPE_AUDIO = 0,
-//     /**
-//      * @brief Track is video
-//      */
-//     MEDIA_TYPE_VIDEO = 1,
-//     /**
-//      * @brief Track is subtitle
-//      */
-//     // MEDIA_TYPE_SUBTITLE = 2,
-// };
-
-/**
- * @brief Enumerates the video or image pixel format supported by media service
- */
-// enum MediaPixelFormat : uint32_t {
-//     /**
-//      * @brief YUV 420 planar.
-//      */
-//     YUVI420 = 0,
-//     /**
-//      * @brief NV12. yuv 420 semiplanar
-//      */
-//     NV12 = 1,
-//     /**
-//      * @brief NV21. yuv 420 semiplanar
-//      */
-//     NV21 = 2,
-// };
 }
 }
 #endif
