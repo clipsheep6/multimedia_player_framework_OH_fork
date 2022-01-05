@@ -79,7 +79,6 @@ sptr<Surface> MediaSurfaceImpl::GetSurface(const std::string &id)
     }
 
     MEDIA_LOGD("get surface, surfaceId:%{public}s, id = (%{public}" PRIu64 ")", id.c_str(), surfaceId);
-
     sptr<Surface> surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
     return nullptr;
 }
