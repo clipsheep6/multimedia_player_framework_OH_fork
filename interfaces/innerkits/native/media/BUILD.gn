@@ -97,8 +97,6 @@ ohos_shared_library("media_client") {
 
   if (defined(ohos_lite)) {
     sources = [
-<<<<<<< HEAD
-
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_audio_decoder_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_audio_encoder_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_video_decoder_impl.cpp",
@@ -119,19 +117,6 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/player/server/player_server.cpp",
       "$MEDIA_ROOT_DIR/services/services/recorder/server/recorder_server.cpp",
       "$MEDIA_ROOT_DIR/services/services/sa_media/client/media_local.cpp",
-=======
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmuxer/avmuxer_impl.cpp",
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder/recorder_impl.cpp",
-      "$MEIDA_ROOT_DIR/services/services/avmetadatahelper/server/avmetadatahelper_server.cpp",
-      "$MEIDA_ROOT_DIR/services/services/avmuxer/server/avmuxer_server.cpp",
-      "$MEIDA_ROOT_DIR/services/services/factory/engine_factory_repo.cpp",
-      "$MEIDA_ROOT_DIR/services/services/player/server/player_server.cpp",
-      "$MEIDA_ROOT_DIR/services/services/recorder/server/recorder_server.cpp",
-      "$MEIDA_ROOT_DIR/services/services/sa_media/client/media_local.cpp",
->>>>>>> fit issues
     ]
 
     public_configs = [
@@ -155,7 +140,6 @@ ohos_shared_library("media_client") {
     ]
   } else {
     sources = [
-<<<<<<< HEAD
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_audio_decoder_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_audio_encoder_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_video_decoder_impl.cpp",
@@ -192,30 +176,6 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_parcel.cpp",
       "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_service_proxy.cpp",
       "$MEDIA_ROOT_DIR/services/utils/avsharedmemorybase.cpp",
-=======
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/avmuxer/avmuxer_impl.cpp",
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
-      "$MEIDA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder/recorder_impl.cpp",
-      "$MEIDA_ROOT_DIR/services/services/avmetadatahelper/client/avmetadatahelper_client.cpp",
-      "$MEIDA_ROOT_DIR/services/services/avmetadatahelper/ipc/avmetadatahelper_service_proxy.cpp",
-      "$MEIDA_ROOT_DIR/services/services/avmuxer/client/avmuxer_client.cpp",
-      "$MEIDA_ROOT_DIR/services/services/avmuxer/ipc/avmuxer_service_proxy.cpp",
-      "$MEIDA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
-      "$MEIDA_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
-      "$MEIDA_ROOT_DIR/services/services/player/client/player_client.cpp",
-      "$MEIDA_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
-      "$MEIDA_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
-      "$MEIDA_ROOT_DIR/services/services/recorder/client/recorder_client.cpp",
-      "$MEIDA_ROOT_DIR/services/services/recorder/ipc/recorder_listener_stub.cpp",
-      "$MEIDA_ROOT_DIR/services/services/recorder/ipc/recorder_service_proxy.cpp",
-      "$MEIDA_ROOT_DIR/services/services/sa_media/client/media_client.cpp",
-      "$MEIDA_ROOT_DIR/services/services/sa_media/ipc/media_listener_stub.cpp",
-      "$MEIDA_ROOT_DIR/services/services/sa_media/ipc/media_parcel.cpp",
-      "$MEIDA_ROOT_DIR/services/services/sa_media/ipc/media_service_proxy.cpp",
-      "$MEIDA_ROOT_DIR/services/utils/avsharedmemorybase.cpp",
->>>>>>> fit issues
     ]
 
     public_configs = [

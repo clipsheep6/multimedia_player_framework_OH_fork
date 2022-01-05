@@ -418,7 +418,6 @@ void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void 
     napi_delete_async_work(env, asyncContext->work);
     delete asyncContext;
     asyncContext = nullptr;
-<<<<<<< HEAD
 }
 
 napi_status AddCodecInfo(napi_env env, napi_value &result, std::shared_ptr<AVCodecInfo> info)
@@ -544,9 +543,6 @@ napi_status MediaCapsJsResultAudioDynamic::GetJsResult(napi_env env, napi_value 
     }
 
     return napi_ok;
-=======
-    MEDIA_LOGD("CompleteCallback Out");
->>>>>>> 1.optimization for avmuxer_napi.cpp; 2.fix bugs in napi and support promis
 }
 }
 }

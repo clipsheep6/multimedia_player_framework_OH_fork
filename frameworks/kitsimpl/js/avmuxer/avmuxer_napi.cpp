@@ -66,11 +66,7 @@ static std::string GetNamedPropertystring(napi_env env, napi_value obj, const st
 	napi_value value;
 	napi_get_named_property(env, obj, keyStr.c_str(), &value);
 	std::string ret;
-<<<<<<< HEAD
-	ret = GetStringArgument(env, value);
-=======
 	ret = CommonNapi::GetStringArgument(env, value);
->>>>>>> fit issues
 	return ret;
 }
 
