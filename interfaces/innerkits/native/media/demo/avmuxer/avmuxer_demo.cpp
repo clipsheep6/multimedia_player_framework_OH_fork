@@ -105,7 +105,7 @@ void AVMuxerDemo::WriteTrackSampleAVC() {
         avmuxer_->WriteTrackSample(avMem1, infoCodec);
     }
 
-    while(1) {
+    while (1) {
         av_init_packet(&pkt);
         if (av_read_frame(fmt_ctx_, &pkt) < 0) {
             av_packet_unref(&pkt);

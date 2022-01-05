@@ -38,7 +38,7 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id, const GValu
 static void gst_mux_bin_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *param_spec);
 static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstStateChange transition);
 
-void AddTrack(GstMuxBin* mux_bin, TrackType type, const char *name)
+void add_track(GstMuxBin* mux_bin, TrackType type, const char *name)
 {
     switch (type) {
         case VIDEO:
@@ -346,7 +346,7 @@ static GstStateChangeReturn connect_element(GstMuxBin *mux_bin)
     // }
 
     GSList *iter = mux_bin->audioSrcList_;
-    while(iter != nullptr) {
+    while (iter != nullptr) {
         GstPad *audio_src_pad = gst_element_get_static_pad(GST_ELEMENT_CAST(iter->data), "src");
         GstPad *split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->splitMuxSink_, "audio_%u");
         if (mux_bin->aacparseFlag_ == true) {

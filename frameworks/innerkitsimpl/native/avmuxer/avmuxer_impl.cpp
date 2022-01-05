@@ -63,15 +63,12 @@ std::vector<std::string> AVMuxerImpl::GetSupportedFormats()
     return IAVMuxerService::GetSupportedFormats();
 }
 
-int32_t AVMuxerImpl::SetOutput(const std::string& path, const std::string& format)
+int32_t AVMuxerImpl::SetOutput(const std::string &path, const std::string &format)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     CHECK_AND_RETURN_RET_LOG(!path.empty(), MSERR_INVALID_VAL, "Path is empty");
     CHECK_AND_RETURN_RET_LOG(!format.empty(), MSERR_INVALID_VAL, "Format is empty");
-    // fp = fopen("out.txt", "wb");
-    // if (fp == nullptr) {
-    //     MEDIA_LOGD("open out1.txt failed");
-    // }
+
     std::string rawUri;
     UriHelper uriHelper(path);
     uriHelper.FormatMe();
@@ -92,13 +89,13 @@ int32_t AVMuxerImpl::SetLocation(float latitude, float longitude)
     return avmuxerService_->SetLocation(latitude, longitude);
 }
 
-int32_t AVMuxerImpl::SetOrientationHint(int degrees)
+int32_t AVMuxerImpl::SetOrientationHint(int32_t degrees)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     return avmuxerService_->SetOrientationHint(degrees);
 }
 
-int32_t AVMuxerImpl::AddTrack(const MediaDescription& trackDesc, int32_t &trackId)
+int32_t AVMuxerImpl::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     return avmuxerService_->AddTrack(trackDesc, trackId);
@@ -110,17 +107,14 @@ int32_t AVMuxerImpl::Start()
     return avmuxerService_->Start();
 }
 
-int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo& info)
+int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo &info)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
-    // fwrite(sampleData->Base(), sampleData->Size(), 1, fp);
-    MEDIA_LOGD("sampleData->Capacity() is: %{public}u", sampleData->Capacity());
-    MEDIA_LOGD("sampleData->Capacity() is: %{public}u", sampleData->Size());
-    MEDIA_LOGD("sampleData->Capacity() is: %{public}s", sampleData->Data());
-    MEDIA_LOGD("sampleData->Capacity() is: %{public}s", sampleData->Base());
-    // std::shared_ptr<AVSharedMemory> avSharedMem = AVSharedMemoryBase::Create(sampleData->Capacity(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
+    MEDIA_LOGD("sampleData->Capacity is: %{public}u, sampleData->Size is: %{public}u,"
+               "sampleData->Data is: %{public}s, sampleData->Base is: %{public}s",
+                sampleData->Capacity(), sampleData->Size(), sampleData->Data(), sampleData->Base());
     std::shared_ptr<AVSharedMemoryBase> avSharedMem = 
-        td::make_shared<AVSharedMemoryBase>(sampleData->Size(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
+        std::make_shared<AVSharedMemoryBase>(sampleData->Size(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
     int32_t ret = avSharedMem->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_NO_MEMORY, "Failed to create AVSharedMemoryBase");
     errno_t rc = memcpy_s(avSharedMem->GetBase(), avSharedMem->GetSize(), sampleData->Data(), sampleData->Size());

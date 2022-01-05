@@ -24,20 +24,14 @@ struct AVMuxerNapiAsyncContext : public MediaAsyncContext {
     explicit AVMuxerNapiAsyncContext(napi_env env) : MediaAsyncContext(env) {}
     ~AVMuxerNapiAsyncContext() = default;
     AVMuxerNapi *jsAVMuxer = nullptr;
-    // napi_value instance_;
     std::string path_;
     std::string format_;
-    // int32_t setOutputFlag_;
     MediaDescription trackDesc_;
     int32_t trackId_;
-    // int32_t isAdd_;
-    // int32_t isStart_;
-    // napi_ref sample_;
     void *arrayBuffer_ = nullptr;
     size_t arrayBufferSize_;
     int32_t writeSampleFlag_;
     TrackSampleInfo trackSampleInfo_;
-    // int32_t isStop_;
 };
 
 static int GetNamedPropertyInt32(napi_env env, napi_value obj, const std::string& keyStr)
@@ -72,7 +66,11 @@ static std::string GetNamedPropertystring(napi_env env, napi_value obj, const st
 	napi_value value;
 	napi_get_named_property(env, obj, keyStr.c_str(), &value);
 	std::string ret;
+<<<<<<< HEAD
 	ret = GetStringArgument(env, value);
+=======
+	ret = CommonNapi::GetStringArgument(env, value);
+>>>>>>> fit issues
 	return ret;
 }
 
@@ -99,7 +97,6 @@ napi_value AVMuxerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("writeTrackSample", WriteTrackSample),
         DECLARE_NAPI_FUNCTION("stop", Stop),
         DECLARE_NAPI_FUNCTION("release", Release),
-
         DECLARE_NAPI_SETTER("location", SetLocation),
         DECLARE_NAPI_SETTER("orientationHint", SetOrientationHint),
     };
@@ -409,31 +406,36 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
     if (args[0] != nullptr) {
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_INDEX), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_TRACK_INDEX)));
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_TYPE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_TRACK_TYPE)));
-        // asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), GetNamedPropertystring(env, args[0], std::string(MD_KEY_CODEC_MIME)));
+        std::string mime = GetNamedPropertystring(env, args[0], std::string(MD_KEY_CODEC_MIME));
+        MEDIA_LOGD("mime is: %{public}s", mime.c_str());
+        asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), mime);
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_DURATION), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_DURATION)));
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_BITRATE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_BITRATE)));
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_MAX_INPUT_SIZE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_MAX_INPUT_SIZE)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_WIDTH)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_HEIGHT)));
+        int width = GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_WIDTH));
+        MEDIA_LOGD("width is: %{public}d", width);
+        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), width);
+        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_HEIGHT)));
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_PIXEL_FORMAT), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_PIXEL_FORMAT)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_FRAME_RATE)));
+        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_FRAME_RATE)));
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CAPTURE_RATE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_CAPTURE_RATE)));
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_I_FRAME_INTERVAL), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_I_FRAME_INTERVAL)));
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_REQUEST_I_FRAME), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_REQUEST_I_FRAME)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_CHANNEL_COUNT)));
-        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_SAMPLE_RATE)));
+        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_CHANNEL_COUNT)));
+        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_SAMPLE_RATE)));
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_TRACK_COUNT), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_TRACK_COUNT)));
         // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CUSTOM_PREFIX), GetNamedPropertyInt32(env, args[0], std::string(MD_KEY_CUSTOM_PREFIX)));
-        if (num == 0) {
-            asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/mpeg4");
-        } else {
-            asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "audio/aac");
-        }
-        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), 720);
-        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), 480);
-        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), 60);
-        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), 2);
-        asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), 44100);
+
+        // if (num == 0) {
+        //     asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/mpeg4");
+        // } else {
+        //     asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), "audio/aac");
+        // }
+        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), 720);
+        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), 480);
+        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), 60);
+        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), 2);
+        // asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), 44100);
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);

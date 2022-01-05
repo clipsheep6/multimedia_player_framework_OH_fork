@@ -30,14 +30,14 @@ public:
     /**
      * @brief Construct a new AVMemory object with specified capacity, the raw buffer will be allocated.
      */
-    explicit AVMemory(size_t capacity);
+    explicit AVMemory(size_t capacity) : capacity_(capacity) {};
 
     /**
      * @brief Construct a new AVMemory object with specified raw buffer address and capacity.
      */
-    AVMemory(uint8_t *base, size_t capacity);
+    AVMemory(uint8_t *base, size_t capacity) : base_(base), capacity_(capacity) {};
 
-    ~AVMemory();
+    ~AVMemory() {};
 
     uint8_t *Base() { return base_; }
     uint8_t *Data() { return base_ + offset_; }

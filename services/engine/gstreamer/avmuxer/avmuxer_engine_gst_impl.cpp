@@ -22,6 +22,7 @@
 #include "convert_codec_data.h"
 #include <unistd.h>
 #include "gstbaseparse.h"
+#include "gst_mux_bin.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerEngineGstImpl"};
@@ -124,9 +125,8 @@ int32_t AVMuxerEngineGstImpl::Seth264Caps(const MediaDescription &trackDesc,
     trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
     trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
     trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
-    MEDIA_LOGI("width is: %{public}d", width);
-    MEDIA_LOGI("height is: %{public}d", height);
-    MEDIA_LOGI("frameRate is: %{public}d", frameRate);
+    MEDIA_LOGI("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
+        width, height, frameRate);
     GstCaps *src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
@@ -149,9 +149,8 @@ int32_t AVMuxerEngineGstImpl::Seth263Caps(const MediaDescription &trackDesc,
     trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
     trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
     trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
-    MEDIA_LOGI("width is: %{public}d", width);
-    MEDIA_LOGI("height is: %{public}d", height);
-    MEDIA_LOGI("frameRate is: %{public}d", frameRate);
+    MEDIA_LOGI("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
+        width, height, frameRate);
     GstCaps *src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
@@ -174,9 +173,8 @@ int32_t AVMuxerEngineGstImpl::SetMPEG4Caps(const MediaDescription &trackDesc,
     trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
     trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
     trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
-    MEDIA_LOGI("width is: %{public}d", width);
-    MEDIA_LOGI("height is: %{public}d", height);
-    MEDIA_LOGI("frameRate is: %{public}d", frameRate);
+    MEDIA_LOGI("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
+        width, height, frameRate);
     GstCaps *src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "mpegversion", G_TYPE_INT, 4,
         "systemstream", G_TYPE_BOOLEAN, FALSE,
@@ -198,8 +196,7 @@ int32_t AVMuxerEngineGstImpl::SetaacCaps(const MediaDescription &trackDesc, cons
     int32_t rate;
     trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels);
     trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), rate);
-    MEDIA_LOGI("channels is: %{public}d", channels);
-    MEDIA_LOGI("rate is: %{public}d", rate);
+    MEDIA_LOGI("channels is: %{public}d, rate is: %{public}d", channels, rate);
     GstCaps *src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "mpegversion", G_TYPE_INT, 4,
         "stream-format", G_TYPE_STRING, "adts",
@@ -220,8 +217,7 @@ int32_t AVMuxerEngineGstImpl::Setmp3Caps(const MediaDescription &trackDesc, cons
     int32_t rate;
     trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels);
     trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), rate);
-    MEDIA_LOGI("channels is: %{public}d", channels);
-    MEDIA_LOGI("rate is: %{public}d", rate);
+    MEDIA_LOGI("channels is: %{public}d, rate is: %{public}d", channels, rate);
     GstCaps *src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "mpegversion", G_TYPE_INT, 1,
         "layer", G_TYPE_INT, 3,
@@ -269,7 +265,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
         ret = Setmp3Caps(trackDesc, mimeType, trackId);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "Failed to call SetaacCaps");
     }
-    AddTrack(muxBin_, AUDIO_MIME_TYPE.find(mimeType) == AUDIO_MIME_TYPE.end() ? VIDEO : AUDIO, name.c_str());
+    add_track(muxBin_, AUDIO_MIME_TYPE.find(mimeType) == AUDIO_MIME_TYPE.end() ? VIDEO : AUDIO, name.c_str());
 
     return MSERR_OK;
 }
