@@ -46,7 +46,7 @@ std::string MediaSurfaceImpl::GetSurfaceId(const sptr<Surface> &surface)
     std::lock_guard<std::mutex> lock(mutex_);
     uint64_t uniqueId = surface->GetUniqueId();
     std::string uniqueIdStr = std::to_string(uniqueId);
-    MEDIA_LOGE("Get surface id, surfaceId:%{public}s", uniqueIdStr.c_str());
+    MEDIA_LOGD("Get surface id, surfaceId:%{public}s", uniqueIdStr.c_str());
     return uniqueIdStr;
 }
 
@@ -80,7 +80,7 @@ sptr<Surface> MediaSurfaceImpl::GetSurface(const std::string &id)
 
     MEDIA_LOGD("get surface, surfaceId:%{public}s, id = (%{public}" PRIu64 ")", id.c_str(), surfaceId);
     sptr<Surface> surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
-    return nullptr;
+    return surface;
 }
 
 sptr<Surface> MediaSurfaceImpl::GetSurface()
@@ -110,6 +110,8 @@ sptr<Surface> MediaSurfaceImpl::GetSurface()
         MEDIA_LOGE("add producerSurface error");
         return nullptr;
     }
+
+    MEDIA_LOGD("Create Surface id = (%{public}" PRIu64 ")", producerSurface->GetUniqueId());
 
     const std::string format = "SURFACE_FORMAT";
     (void)producerSurface->SetUserData(format, std::to_string(static_cast<int>(PIXEL_FMT_RGBA_8888)));
