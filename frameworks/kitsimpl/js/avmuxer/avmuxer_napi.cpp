@@ -62,7 +62,6 @@ napi_value AVMuxerNapi::Init(napi_env env, napi_value exports)
     };
     
     napi_property_descriptor staticProperties[] = {
-        DECLARE_NAPI_STATIC_FUNCTION("getSupportedFormats", GetSupportedFormats),
         DECLARE_NAPI_STATIC_FUNCTION("createAVMuxer", CreateAVMuxer)
     };
     
@@ -157,37 +156,6 @@ napi_value AVMuxerNapi::CreateAVMuxer(napi_env env, napi_callback_info info)
     asyncContext.release();
     MEDIA_LOGD("success CreateAVMuxer");
 
-    return result;
-}
-
-napi_value AVMuxerNapi::GetSupportedFormats(napi_env env, napi_callback_info info)
-{
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-    napi_value jsThis = nullptr;
-    AVMuxerNapi *avmuxer = nullptr;
-    size_t argCount = 0;
-    
-    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, result,
-        "Failed to retrieve details about the callbacke");
-    
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&avmuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
-    
-    // std::vector<std::string> formats = avmuxer->avmuxerImpl_->GetSupportedFormats();
-    std::vector<std::string> formats = {};
-    size_t size = formats.size();
-    napi_create_array_with_length(env, size, &result);
-    for (unsigned int i = 0; i < size; ++i) {
-        std::string format = formats[i];
-        napi_value value = nullptr;
-        status = napi_create_string_utf8(env, format.c_str(), NAPI_AUTO_LENGTH, &value);
-        if (status != napi_ok) {
-            continue;
-        }
-        napi_set_element(env, result, i, value);
-    }
     return result;
 }
 

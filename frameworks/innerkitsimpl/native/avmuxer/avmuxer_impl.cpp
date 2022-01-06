@@ -58,9 +58,10 @@ AVMuxerImpl::~AVMuxerImpl()
     MEDIA_LOGD("AVMuxerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-std::vector<std::string> AVMuxerImpl::GetSupportedFormats()
+std::vector<std::string> AVMuxerImpl::GetMuxerFormatList()
 {
-    return IAVMuxerService::GetSupportedFormats();
+    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, std::vector<std::string>(), "AVMuxer Service does not exist");
+    return avmuxerService_->GetMuxerFormatList();
 }
 
 int32_t AVMuxerImpl::SetOutput(const std::string &path, const std::string &format)
@@ -78,6 +79,7 @@ int32_t AVMuxerImpl::SetOutput(const std::string &path, const std::string &forma
         rawUri = path.substr(strlen("fd://"));
     } else {
         MEDIA_LOGE("Failed to check output path");
+        return MSERR_INVALID_VAL;
     }
 
     return avmuxerService_->SetOutput(rawUri, format);

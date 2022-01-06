@@ -10,7 +10,7 @@ namespace Media {
 class IStandardAVMuxerService : public IRemoteBroker {
 public:
     virtual ~IStandardAVMuxerService() = default;
-    static std::vector<std::string> GetSupportedFormats();
+    virtual std::vector<std::string> GetMuxerFormatList() = 0;
     virtual int32_t SetOutput(const std::string& path, const std::string& format) = 0;
     virtual int32_t SetLocation(float latitude, float longitude) = 0;
     virtual int32_t SetOrientationHint(int degrees) = 0;
@@ -22,7 +22,8 @@ public:
     virtual int32_t DestroyStub() = 0;
 
     enum AVMuxerServiceMsg {
-        SET_OUTPUT = 0,
+        GET_MUXER_FORMAT_LIST = 0,
+        SET_OUTPUT,
         SET_LOCATION,
         SET_ORIENTATION_HINT,
         ADD_TRACK,

@@ -28,8 +28,7 @@ public:
     ~AVMuxerImpl();
     DISALLOW_COPY_AND_MOVE(AVMuxerImpl);
 
-    static std::vector<std::string> GetSupportedFormats();
-
+    std::vector<std::string> GetMuxerFormatList() override;
     int32_t SetOutput(const std::string &path, const std::string &format) override;
     int32_t SetLocation(float latitude, float longtitude) override;
     int32_t SetOrientationHint(int degrees) override;

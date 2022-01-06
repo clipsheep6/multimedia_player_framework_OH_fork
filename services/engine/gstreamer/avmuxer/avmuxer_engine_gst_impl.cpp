@@ -76,6 +76,13 @@ int32_t AVMuxerEngineGstImpl::Init()
     return MSERR_OK;
 }
 
+std::vector<std::string> AVMuxerEngineGstImpl::GetMuxerFormatList()
+{
+    MEDIA_LOGI("GetMuxerFormatList");
+    CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, std::vector<std::string>(), "Muxbin does not exist");
+    return std::vector<std::string>(FORMAT_TYPE.begin(), FORMAT_TYPE.end());
+}
+
 int32_t AVMuxerEngineGstImpl::SetOutput(const std::string &path, const std::string &format)
 {
     MEDIA_LOGI("SetOutput");

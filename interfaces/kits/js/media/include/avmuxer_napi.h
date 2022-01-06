@@ -14,7 +14,6 @@ private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void* nativeObject, void* finalize);
     static napi_value CreateAVMuxer(napi_env env, napi_callback_info info);
-    static napi_value GetSupportedFormats(napi_env env, napi_callback_info info);
     static void AsyncSetOutput(napi_env env, void *data);
     static napi_value SetOutput(napi_env env, napi_callback_info info);
     static napi_value SetLocation(napi_env env, napi_callback_info info);

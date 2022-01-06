@@ -29,9 +29,8 @@ class IAVMuxerEngine {
 public:
     virtual ~IAVMuxerEngine() = default;
 
-    static std::vector<std::string> GetSupportedFormats();
-
     virtual int32_t Init() = 0;
+    virtual std::vector<std::string> GetMuxerFormatList() = 0;
     virtual int32_t SetOutput(const std::string &path, const std::string &format) = 0;
     virtual int32_t SetLocation(float latitude, float longitude) = 0;
     virtual int32_t SetOrientationHint(int32_t degrees) = 0;

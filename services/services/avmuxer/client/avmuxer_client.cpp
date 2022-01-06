@@ -40,6 +40,13 @@ void AVMuxerClient::MediaServerDied()
     avmuxerProxy_ = nullptr;
 }
 
+std::vector<std::string> AVMuxerClient::GetMuxerFormatList()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, std::vector<std::string>(), "AVMuxer Service does not exist");
+    return avmuxerProxy_->GetMuxerFormatList();
+}
+
 int32_t AVMuxerClient::SetOutput(const std::string& path, const std::string& format)
 {
     std::lock_guard<std::mutex> lock(mutex_);

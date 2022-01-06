@@ -36,6 +36,7 @@ int32_t AVMuxerServiceStub::Init()
     avmuxerServer_ = AVMuxerServer::Create();
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, MSERR_NO_MEMORY, "Failed to create muxer server");
 
+    avmuxerFuncs_[GET_MUXER_FORMAT_LIST] = &AVMuxerServiceStub::GetMuxerFormatList;
     avmuxerFuncs_[SET_OUTPUT] = &AVMuxerServiceStub::SetOutput;
     avmuxerFuncs_[SET_LOCATION] = &AVMuxerServiceStub::SetLocation;
     avmuxerFuncs_[SET_ORIENTATION_HINT] = &AVMuxerServiceStub::SetOrientationHint;
@@ -69,6 +70,12 @@ int AVMuxerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel& data, Mess
     }
     MEDIA_LOGW("Failed to find corresponding function");
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+}
+
+std::vector<std::string> AVMuxerServiceStub::GetMuxerFormatList()
+{
+    CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, std::vector<std::string>(), "AVMuxer Service does not exist");
+    return avmuxerServer_->GetMuxerFormatList();
 }
 
 int32_t AVMuxerServiceStub::SetOutput(const std::string& path, const std::string& format)
@@ -118,6 +125,12 @@ void AVMuxerServiceStub::Release()
 {
     CHECK_AND_RETURN_LOG(avmuxerServer_ != nullptr, "AVMuxer Service does not exist");
     avmuxerServer_->Release();
+}
+
+int32_t AVMuxerServiceStub::GetMuxerFormatList(MessageParcel& data, MessageParcel& reply)
+{
+    reply.WriteStringVector(GetMuxerFormatList());
+    return MSERR_OK;
 }
 
 int32_t AVMuxerServiceStub::SetOutput(MessageParcel& data, MessageParcel& reply)

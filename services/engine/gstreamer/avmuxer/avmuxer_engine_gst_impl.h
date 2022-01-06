@@ -41,6 +41,11 @@ const std::set<std::string> AUDIO_MIME_TYPE {
     "audio/mp3"
 };
 
+const std::set<std::string> FORMAT_TYPE {
+    "mp4",
+    "m4a"
+};
+
 const std::map<const std::string, const std::string> MIME_MAP_ENCODE {
     {"video/x-h264", "video/x-h264"},
     {"video/mpeg4", "video/mpeg"},
@@ -66,7 +71,7 @@ public:
     ~AVMuxerEngineGstImpl();
 
     DISALLOW_COPY_AND_MOVE(AVMuxerEngineGstImpl);
-
+    std::vector<std::string> GetMuxerFormatList() override;
     int32_t Init() override;
     int32_t SetOutput(const std::string &path, const std::string &format) override;
     int32_t SetLocation(float latitude, float longitude) override;

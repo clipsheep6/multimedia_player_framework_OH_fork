@@ -14,6 +14,7 @@ public:
     int OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
     using AVMuxerStubFunc = int32_t(AVMuxerServiceStub::*)(MessageParcel& data, MessageParcel& reply);
 
+    std::vector<std::string> GetMuxerFormatList() override;
     int32_t SetOutput(const std::string& path, const std::string& format) override;
     int32_t SetLocation(float latitude, float longitude) override;
     int32_t SetOrientationHint(int degrees) override;
@@ -26,7 +27,7 @@ public:
 private:
     AVMuxerServiceStub();
     int32_t Init();
-    std::vector<std::string> GetSupportedFormats(MessageParcel& data, MessageParcel& reply);
+    int32_t GetMuxerFormatList(MessageParcel& data, MessageParcel& reply);
     int32_t SetOutput(MessageParcel& data, MessageParcel& reply);
     int32_t SetLocation(MessageParcel& data, MessageParcel& reply);
     int32_t SetOrientationHint(MessageParcel& data, MessageParcel& reply);
