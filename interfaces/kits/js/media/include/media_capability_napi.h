@@ -37,7 +37,7 @@ private:
     static napi_value FindAudioDecoder(napi_env env, napi_callback_info info);
     static napi_value GetAudioEncoderCaps(napi_env env, napi_callback_info info);
     static napi_value FindAudioEncoder(napi_env env, napi_callback_info info);
-    static napi_value GetMuxerFormatList(napi_env env, napi_callback_info info);
+    static napi_value GetAVMuxerFormatList(napi_env env, napi_callback_info info);
 
     MediaCapsNapi();
     ~MediaCapsNapi();

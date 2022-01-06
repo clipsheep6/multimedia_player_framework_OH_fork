@@ -58,15 +58,15 @@ AVMuxerImpl::~AVMuxerImpl()
     MEDIA_LOGD("AVMuxerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-std::vector<std::string> AVMuxerImpl::GetMuxerFormatList()
+std::vector<std::string> AVMuxerImpl::GetAVMuxerFormatList()
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, std::vector<std::string>(), "AVMuxer Service does not exist");
-    return avmuxerService_->GetMuxerFormatList();
+    return avmuxerService_->GetAVMuxerFormatList();
 }
 
 int32_t AVMuxerImpl::SetOutput(const std::string &path, const std::string &format)
 {
-    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
     CHECK_AND_RETURN_RET_LOG(!path.empty(), MSERR_INVALID_VAL, "Path is empty");
     CHECK_AND_RETURN_RET_LOG(!format.empty(), MSERR_INVALID_VAL, "Format is empty");
 
@@ -87,31 +87,31 @@ int32_t AVMuxerImpl::SetOutput(const std::string &path, const std::string &forma
 
 int32_t AVMuxerImpl::SetLocation(float latitude, float longitude)
 {
-    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
     return avmuxerService_->SetLocation(latitude, longitude);
 }
 
 int32_t AVMuxerImpl::SetOrientationHint(int32_t degrees)
 {
-    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
     return avmuxerService_->SetOrientationHint(degrees);
 }
 
 int32_t AVMuxerImpl::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
 {
-    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
     return avmuxerService_->AddTrack(trackDesc, trackId);
 }
 
 int32_t AVMuxerImpl::Start()
 {
-    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
     return avmuxerService_->Start();
 }
 
 int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo &info)
 {
-    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
     MEDIA_LOGD("sampleData->Capacity is: %{public}u, sampleData->Size is: %{public}u,"
                "sampleData->Data is: %{public}s, sampleData->Base is: %{public}s",
                 sampleData->Capacity(), sampleData->Size(), sampleData->Data(), sampleData->Base());
@@ -126,7 +126,7 @@ int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, cons
 
 int32_t AVMuxerImpl::Stop()
 {
-    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
+    CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
     return avmuxerService_->Stop();
 }
 
@@ -137,5 +137,5 @@ void AVMuxerImpl::Release()
     (void)MediaServiceFactory::GetInstance().DestroyAVMuxerService(avmuxerService_);
     avmuxerService_ = nullptr;
 }
-}  // Media
-}  // OHOS
+}  // namespace Media
+}  // namespace OHOS

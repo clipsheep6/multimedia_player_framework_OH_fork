@@ -19,10 +19,6 @@ AVMuxerClient::AVMuxerClient(const sptr<IStandardAVMuxerService>& ipcProxy)
     : avmuxerProxy_(ipcProxy)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    // fp = fopen("out1.txt", "wb");
-    // if (fp == nullptr) {
-    //     MEDIA_LOGD("open out1.txt failed");
-    // }
 }
 
 AVMuxerClient::~AVMuxerClient()
@@ -40,11 +36,11 @@ void AVMuxerClient::MediaServerDied()
     avmuxerProxy_ = nullptr;
 }
 
-std::vector<std::string> AVMuxerClient::GetMuxerFormatList()
+std::vector<std::string> AVMuxerClient::GetAVMuxerFormatList()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, std::vector<std::string>(), "AVMuxer Service does not exist");
-    return avmuxerProxy_->GetMuxerFormatList();
+    return avmuxerProxy_->GetAVMuxerFormatList();
 }
 
 int32_t AVMuxerClient::SetOutput(const std::string& path, const std::string& format)

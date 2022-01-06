@@ -28,7 +28,8 @@ public:
     ~AVMuxerImpl();
     DISALLOW_COPY_AND_MOVE(AVMuxerImpl);
 
-    std::vector<std::string> GetMuxerFormatList() override;
+    int32_t Init();
+    std::vector<std::string> GetAVMuxerFormatList() override;
     int32_t SetOutput(const std::string &path, const std::string &format) override;
     int32_t SetLocation(float latitude, float longtitude) override;
     int32_t SetOrientationHint(int degrees) override;
@@ -37,10 +38,9 @@ public:
     int32_t WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo &info) override;
     int32_t Stop() override;
     void Release() override;
-    int32_t Init();
 private:
     std::shared_ptr<IAVMuxerService> avmuxerService_ = nullptr;
 };
 }  // namespace Media
-}  // namespace OHOSes
+}  // namespace OHOS
 #endif  // AVMUXER_IMPL_H

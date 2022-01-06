@@ -13,7 +13,7 @@ public:
     ~AVMuxerClient();
     DISALLOW_COPY_AND_MOVE(AVMuxerClient);
 
-    std::vector<std::string> GetMuxerFormatList() override;
+    std::vector<std::string> GetAVMuxerFormatList() override;
     int32_t SetOutput(const std::string& path, const std::string& format) override;
     int32_t SetLocation(float latitude, float longitude) override;
     int32_t SetOrientationHint(int degrees) override;
@@ -27,7 +27,6 @@ public:
 private:
     std::mutex mutex_;
     sptr<IStandardAVMuxerService> avmuxerProxy_ = nullptr;
-    // FILE *fp;
 };
 }  // namespace Media
 }  // namespace OHOS

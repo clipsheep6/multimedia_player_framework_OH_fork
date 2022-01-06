@@ -29,7 +29,7 @@ class AVMuxer {
 public:
     virtual ~AVMuxer() = default;
 
-    virtual std::vector<std::string> GetMuxerFormatList() = 0;
+    virtual std::vector<std::string> GetAVMuxerFormatList() = 0;
     virtual int32_t SetOutput(const std::string &path, const std::string &format) = 0;
     virtual int32_t SetLocation(float latitude, float longtitude) = 0;
     virtual int32_t SetOrientationHint(int degrees) = 0;
@@ -47,6 +47,6 @@ private:
     AVMuxerFactory() = default;
     ~AVMuxerFactory() = default;
 };
-}
-}
+}  // namespace Media
+}  // namespace OHOS
 #endif

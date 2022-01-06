@@ -43,11 +43,11 @@ int32_t AVMuxerServer::Init()
     return MSERR_OK;
 }
 
-std::vector<std::string> AVMuxerServer::GetMuxerFormatList()
+std::vector<std::string> AVMuxerServer::GetAVMuxerFormatList()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avmuxerEngine_ != nullptr, std::vector<std::string>(), "AVMuxer engine does not exist");
-    std::vector<std::string> formatList = avmuxerEngine_->GetMuxerFormatList();
+    std::vector<std::string> formatList = avmuxerEngine_->GetAVMuxerFormatList();
     return formatList;
 }
 

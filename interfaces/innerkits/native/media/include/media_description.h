@@ -116,7 +116,7 @@ inline constexpr std::string_view MD_KEY_CONTAINER_FORMAT = "container-format";
  * custom key prefix, media service will pass through to HAL.
  */
 inline constexpr std::string_view MD_KEY_CUSTOM_PREFIX = "vendor.";
-}
-}
+}  // namespace Media
+}  // namespace OHOS
 
 #endif

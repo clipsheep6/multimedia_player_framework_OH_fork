@@ -200,7 +200,6 @@ static GstStateChangeReturn cerate_splitmuxsink(GstMuxBin *mux_bin)
     g_return_val_if_fail(qtmux != nullptr, GST_STATE_CHANGE_FAILURE);
     g_object_set(qtmux, "streamable", true, nullptr);
     g_object_set(mux_bin->splitMuxSink_, "muxer", qtmux, nullptr);
-    // g_object_set(mux_bin->splitMuxSink_, "muxer", qtmux, "use-robust-muxing", true, nullptr);
 
     return GST_STATE_CHANGE_SUCCESS;
 }
@@ -234,10 +233,12 @@ static GstStateChangeReturn create_video_src(GstMuxBin *mux_bin)
 {
     g_return_val_if_fail(mux_bin->videoTrack_ != nullptr, GST_STATE_CHANGE_FAILURE);
 
+    if (mux_bin->videoTrack_ == nullptr) {
+        return GST_STATE_CHANGE_SUCCESS;
+    }
     mux_bin->videoSrc_ = gst_element_factory_make("appsrc", mux_bin->videoTrack_);
     g_return_val_if_fail(mux_bin->videoSrc_ != nullptr, GST_STATE_CHANGE_FAILURE);
     g_object_set(mux_bin->videoSrc_, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
-    // g_object_set(mux_bin->videoSrc_, "format", GST_FORMAT_TIME, nullptr);
 
     return GST_STATE_CHANGE_SUCCESS;
 }
@@ -249,7 +250,6 @@ static GstStateChangeReturn create_audio_src(GstMuxBin *mux_bin)
         GstElement *appSrc = gst_element_factory_make("appsrc", (gchar *)(iter->data));
         g_return_val_if_fail(appSrc != nullptr, GST_STATE_CHANGE_FAILURE);
         g_object_set(appSrc, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
-        // g_object_set(appSrc, "format", GST_FORMAT_TIME, nullptr);
         mux_bin->audioSrcList_ = g_slist_append(mux_bin->audioSrcList_, appSrc);
         iter = iter->next;
     }
@@ -265,14 +265,8 @@ static GstStateChangeReturn create_element(GstMuxBin *mux_bin)
         return GST_STATE_CHANGE_FAILURE;
     }
 
-    // if (create_h264parse(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
-    //     return GST_STATE_CHANGE_FAILURE;
-    // }
-
-    if (mux_bin->videoTrack_ != nullptr) {
-        if (create_video_src(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
-            return GST_STATE_CHANGE_FAILURE;
-        }
+    if (create_video_src(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
+        return GST_STATE_CHANGE_FAILURE;
     }
 
     if (create_audio_src(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
@@ -284,9 +278,6 @@ static GstStateChangeReturn create_element(GstMuxBin *mux_bin)
 
 static GstStateChangeReturn add_element_to_bin(GstMuxBin *mux_bin)
 {
-    // g_return_val_if_fail(mux_bin != nullptr && mux_bin->videoSrc_ != nullptr &&
-    //     mux_bin->audioSrcList_ != nullptr && mux_bin->splitMuxSink_ != nullptr, GST_STATE_CHANGE_FAILURE);
-    // gst_bin_add(GST_BIN(mux_bin), mux_bin->h264parse_);
     if (mux_bin->videoTrack_ != nullptr) {
         gst_bin_add(GST_BIN(mux_bin), mux_bin->videoSrc_);
     }
@@ -302,8 +293,6 @@ static GstStateChangeReturn add_element_to_bin(GstMuxBin *mux_bin)
 
 static GstStateChangeReturn connect_element(GstMuxBin *mux_bin)
 {
-    // g_return_val_if_fail(mux_bin != nullptr && mux_bin->videoSrc_ != nullptr &&
-    //     mux_bin->audioSrcList_ != nullptr && mux_bin->splitMuxSink_ != nullptr, GST_STATE_CHANGE_FAILURE);
     if (mux_bin->videoTrack_ != nullptr) {
         GstPad *video_src_pad = gst_element_get_static_pad(mux_bin->videoSrc_, "src");
         GstPad *split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->splitMuxSink_, "video");
@@ -333,17 +322,6 @@ static GstStateChangeReturn connect_element(GstMuxBin *mux_bin)
             }
         }
     }
-    // GstPad* video_src_pad = gst_element_get_static_pad(mux_bin->videoSrc_, "src");
-    // GstPad* parse_sink_pad = gst_element_get_static_pad(mux_bin->h264parse_, "sink");
-    // if (gst_pad_link(video_src_pad, parse_sink_pad) != GST_PAD_LINK_OK) {
-    //     return GST_STATE_CHANGE_FAILURE;
-    // }
-
-    // GstPad* parse_src_pad = gst_element_get_static_pad(mux_bin->h264parse_, "src");
-    // GstPad* split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->splitMuxSink_, "video");
-    // if (gst_pad_link(parse_src_pad, split_mux_sink_sink_pad) != GST_PAD_LINK_OK) {
-    //     return GST_STATE_CHANGE_FAILURE;
-    // }
 
     GSList *iter = mux_bin->audioSrcList_;
     while (iter != nullptr) {

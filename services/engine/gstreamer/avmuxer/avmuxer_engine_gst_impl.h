@@ -55,7 +55,7 @@ const std::map<const std::string, const std::string> MIME_MAP_ENCODE {
     {"audio/mp3", "audio/mpeg"}
 };
 
-const std::map<std::string, std::string> FORMAT_TO_MUXBIN {
+const std::map<std::string, std::string> FORMAT_TO_MUX {
     {"mp4", "qtmux"},
     {"m4a", "qtmux"}
 };
@@ -71,7 +71,7 @@ public:
     ~AVMuxerEngineGstImpl();
 
     DISALLOW_COPY_AND_MOVE(AVMuxerEngineGstImpl);
-    std::vector<std::string> GetMuxerFormatList() override;
+    std::vector<std::string> GetAVMuxerFormatList() override;
     int32_t Init() override;
     int32_t SetOutput(const std::string &path, const std::string &format) override;
     int32_t SetLocation(float latitude, float longitude) override;
@@ -114,14 +114,13 @@ private:
     bool endFlag_ = false;
     bool errHappened_ = false;
     std::unique_ptr<GstMsgProcessor> msgProcessor_;
-    uint32_t videoTrackNum = 0;
-    uint32_t audioTrackNum = 0;
+    uint32_t videoTrackNum_ = 0;
+    uint32_t audioTrackNum_ = 0;
     std::string format_;
     bool isReady_ = false;
     bool isPause_ = false;
     bool isPlay_ = false;
     GstShMemWrapAllocator *allocator_;
-    // FILE *fp;
 };
 }  // namespace Media
 }  // namespace OHOS

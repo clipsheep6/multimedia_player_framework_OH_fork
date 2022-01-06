@@ -57,6 +57,6 @@ private:
     size_t size_ = 0;
     size_t capacity_ = 0;
 };
-}
-}
+}  // namespace Media
+}  // namespace OHOS
 #endif

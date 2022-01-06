@@ -76,8 +76,8 @@ static gpointer gst_shmem_wrap_allocator_mem_map(GstMemory *mem, gsize maxsize, 
     g_return_val_if_fail(avSharedMem->mem != nullptr, nullptr);
 
     GST_INFO("mem_map, maxsize: %" G_GSIZE_FORMAT ", size: %" G_GSIZE_FORMAT, mem->maxsize, mem->size);
-    // GST_INFO("map.data[0] is: %d" *avSharedMem->mem->GetBase());
-    // return avSharedMem->mem->GetBase() + (mem->maxsize - mem->size);
+    
+    // Only need return GetBase, not GetBase + offset
     return avSharedMem->mem->GetBase();
 }
 

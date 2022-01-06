@@ -51,7 +51,7 @@ napi_value MediaCapsNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("findAudioDecoder", FindAudioDecoder),
         DECLARE_NAPI_FUNCTION("getAudioEncoderCaps", GetAudioEncoderCaps),
         DECLARE_NAPI_FUNCTION("findAudioEncoder", FindAudioEncoder),
-        DECLARE_NAPI_FUNCTION("getMuxerFormatList", GetMuxerFormatList),
+        DECLARE_NAPI_FUNCTION("getAVMuxerFormatList", GetAVMuxerFormatList),
     };
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("getMediaCapability", GetMediaCapability),
@@ -324,11 +324,11 @@ napi_value MediaCapsNapi::FindAudioEncoder(napi_env env, napi_callback_info info
     return result;
 }
 
-napi_value MediaCapsNapi::GetMuxerFormatList(napi_env env, napi_callback_info info)
+napi_value MediaCapsNapi::GetAVMuxerFormatList(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGD("GetMuxerFormatList In");
+    MEDIA_LOGD("GetAVMuxerFormatList In");
 
     auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env);
 
@@ -346,7 +346,7 @@ napi_value MediaCapsNapi::GetMuxerFormatList(napi_env env, napi_callback_info in
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "GetMuxerFormatList", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "GetAVMuxerFormatList", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void* data) {
             auto asyncCtx = reinterpret_cast<MediaCapsAsyncContext *>(data);
@@ -354,13 +354,12 @@ napi_value MediaCapsNapi::GetMuxerFormatList(napi_env env, napi_callback_info in
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
                 return;
             }
-            // auto codecList = AVCodecListFactory::CreateAVCodecList();
             auto avmuxer = AVMuxerFactory::CreateAVMuxer();
             if (avmuxer == nullptr) {
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "No memory");
                 return;
             }
-            std::vector<std::string> formatList = avmuxer->GetMuxerFormatList();
+            std::vector<std::string> formatList = avmuxer->GetAVMuxerFormatList();
             asyncCtx->JsResult = std::make_unique<MediaJsResultStringVector>(formatList);
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));

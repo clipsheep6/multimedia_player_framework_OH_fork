@@ -31,14 +31,14 @@ int32_t AVMuxerServiceProxy::DestroyStub()
     return reply.ReadInt32();
 }
 
-std::vector<std::string> AVMuxerServiceProxy::GetMuxerFormatList()
+std::vector<std::string> AVMuxerServiceProxy::GetAVMuxerFormatList()
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
     std::vector<std::string> formatList;
     int error = Remote()->SendRequest(GET_MUXER_FORMAT_LIST, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, formatList, "Failed to call GetMuxerFormatList, error: %{public}d", error);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, formatList, "Failed to call GetAVMuxerFormatList, error: %{public}d", error);
     reply.ReadStringVector(&formatList);
     return formatList;
 }

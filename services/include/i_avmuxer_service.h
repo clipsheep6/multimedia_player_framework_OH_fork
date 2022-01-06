@@ -29,7 +29,7 @@ class IAVMuxerService {
 public:
     virtual ~IAVMuxerService() = default;
 
-    virtual std::vector<std::string> GetMuxerFormatList() = 0;
+    virtual std::vector<std::string> GetAVMuxerFormatList() = 0;
     virtual int32_t SetOutput(const std::string &path, const std::string &format) = 0;
     virtual int32_t SetLocation(float latitude, float longtitude) = 0;
     virtual int32_t SetOrientationHint(int32_t degrees) = 0;
@@ -39,6 +39,6 @@ public:
     virtual int32_t Stop() = 0;
     virtual void Release() = 0;
 };
-}
-}
+}  // namespace Media
+}  // namespace OHOS
 #endif

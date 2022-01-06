@@ -36,7 +36,7 @@ int32_t AVMuxerServiceStub::Init()
     avmuxerServer_ = AVMuxerServer::Create();
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, MSERR_NO_MEMORY, "Failed to create muxer server");
 
-    avmuxerFuncs_[GET_MUXER_FORMAT_LIST] = &AVMuxerServiceStub::GetMuxerFormatList;
+    avmuxerFuncs_[GET_MUXER_FORMAT_LIST] = &AVMuxerServiceStub::GetAVMuxerFormatList;
     avmuxerFuncs_[SET_OUTPUT] = &AVMuxerServiceStub::SetOutput;
     avmuxerFuncs_[SET_LOCATION] = &AVMuxerServiceStub::SetLocation;
     avmuxerFuncs_[SET_ORIENTATION_HINT] = &AVMuxerServiceStub::SetOrientationHint;
@@ -72,10 +72,10 @@ int AVMuxerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel& data, Mess
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
-std::vector<std::string> AVMuxerServiceStub::GetMuxerFormatList()
+std::vector<std::string> AVMuxerServiceStub::GetAVMuxerFormatList()
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, std::vector<std::string>(), "AVMuxer Service does not exist");
-    return avmuxerServer_->GetMuxerFormatList();
+    return avmuxerServer_->GetAVMuxerFormatList();
 }
 
 int32_t AVMuxerServiceStub::SetOutput(const std::string& path, const std::string& format)
@@ -127,9 +127,9 @@ void AVMuxerServiceStub::Release()
     avmuxerServer_->Release();
 }
 
-int32_t AVMuxerServiceStub::GetMuxerFormatList(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::GetAVMuxerFormatList(MessageParcel& data, MessageParcel& reply)
 {
-    reply.WriteStringVector(GetMuxerFormatList());
+    reply.WriteStringVector(GetAVMuxerFormatList());
     return MSERR_OK;
 }
 
@@ -175,7 +175,6 @@ int32_t AVMuxerServiceStub::Start(MessageParcel& data, MessageParcel& reply)
 
 int32_t AVMuxerServiceStub::WriteTrackSample(MessageParcel& data, MessageParcel& reply)
 {
-    // std::shared_ptr<AVSharedMemory> sampleData = AVShMemIPCStatic::ReadFromParcel(data);
     std::shared_ptr<AVSharedMemory> sampleData = ReadAVSharedMemoryFromParcel(data);
     TrackSampleInfo sampleInfo = {{data.ReadInt64(), data.ReadInt32(), data.ReadInt32(),
         static_cast<FrameFlags>(data.ReadInt32())}, data.ReadInt32()};
