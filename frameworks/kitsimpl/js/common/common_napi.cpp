@@ -369,8 +369,7 @@ napi_status MediaJsResultStringVector::GetJsResult(napi_env env, napi_value &res
     napi_status status;
     size_t size = value_.size();
     napi_create_array_with_length(env, size, &result);
-    for (unsigned int i = 0; i < size; ++i)
-    {
+    for (unsigned int i = 0; i < size; ++i) {
         std::string format = value_[i];
         napi_value value = nullptr;
         status = napi_create_string_utf8(env, format.c_str(), NAPI_AUTO_LENGTH, &value);

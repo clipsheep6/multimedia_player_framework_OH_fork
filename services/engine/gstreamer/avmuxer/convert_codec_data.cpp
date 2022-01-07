@@ -34,12 +34,12 @@ ConvertCodecData::~ConvertCodecData()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-GstBuffer* ConvertCodecData::GetCodecBuffer(std::shared_ptr<AVSharedMemory> sampleData)
+GstBuffer *ConvertCodecData::GetCodecBuffer(std::shared_ptr<AVSharedMemory> sampleData)
 {
     std::vector<uint8_t> sps;
     std::vector<uint8_t> pps;
     std::vector<uint8_t> sei;
-    uint8_t* data = sampleData->GetBase();
+    uint8_t *data = sampleData->GetBase();
     int32_t len = sampleData->GetSize();
     GetCodecData(data, len, sps, pps, sei);
     CHECK_AND_RETURN_RET_LOG(nalSize_ > 0 && sps.size() > 0 && pps.size() > 0 && sei.size() > 0,

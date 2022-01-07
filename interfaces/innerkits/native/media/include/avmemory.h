@@ -17,7 +17,6 @@
 #define AVMEMORY_H
 
 #include <cstdint>
-#include <cstring>
 #include "nocopyable.h"
 
 namespace OHOS {

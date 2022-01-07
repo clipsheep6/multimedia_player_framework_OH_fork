@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <iostream>
 #include "avmuxer_engine_gst_impl.h"
+#include <iostream>
 #include "gst_utils.h"
 #include "gstappsrc.h"
 #include "media_errors.h"
@@ -30,14 +30,14 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-static void start_feed(GstAppSrc *src, guint length, gpointer user_data)
+static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
 {
     std::string name = gst_element_get_name(src);
     int32_t trackID = name.back() - '0';
     (*reinterpret_cast<std::map<int32_t, bool> *>(user_data))[trackID] = true;
 }
 
-static void stop_feed(GstAppSrc *src, gpointer user_data)
+static void StopFeed(GstAppSrc *src, gpointer user_data)
 {
     std::string name = gst_element_get_name(src);
     int32_t trackID = name.back() - '0';
@@ -67,6 +67,7 @@ int32_t AVMuxerEngineGstImpl::Init()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to setup message processor");
 
     allocator_ = gst_shmem_wrap_allocator_new();
+    CHECK_AND_RETURN_RET_LOG(allocator_ != nullptr, MSERR_NO_MEMORY, "Failed to create allocator");
 
     return MSERR_OK;
 }
@@ -87,7 +88,6 @@ int32_t AVMuxerEngineGstImpl::SetOutput(const std::string &path, const std::stri
     format_ = format;
 
     return MSERR_OK;
-    
 }
 
 int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
@@ -95,7 +95,7 @@ int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
     MEDIA_LOGD("SetLocation");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
 
-    GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), "splitmuxsink");
+    GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
     GstTagSetter *tagsetter = GST_TAG_SETTER(element);
     gst_tag_setter_add_tags(tagsetter, GST_TAG_MERGE_REPLACE_ALL,
         "geo-location-latitude", latitude,
@@ -110,7 +110,7 @@ int32_t AVMuxerEngineGstImpl::SetOrientationHint(int degrees)
     MEDIA_LOGD("SetOrientationHint");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
 
-    GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), "splitmuxsink");
+    GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
     GstTagSetter *tagsetter = GST_TAG_SETTER(element);
     gst_tag_setter_add_tags(tagsetter, GST_TAG_MERGE_REPLACE_ALL, "image-orientation", degrees, nullptr);
 
@@ -121,12 +121,16 @@ int32_t AVMuxerEngineGstImpl::Seth264Caps(const MediaDescription &trackDesc,
     const std::string &mimeType, int32_t trackId)
 {
     MEDIA_LOGD("Seth264Caps");
+    bool ret;
     int32_t width;
     int32_t height;
     int32_t frameRate;
-    trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
-    trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
-    trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
     MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
         width, height, frameRate);
     GstCaps *src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
@@ -136,7 +140,7 @@ int32_t AVMuxerEngineGstImpl::Seth264Caps(const MediaDescription &trackDesc,
         nullptr);
     CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
         "Only 1 video Tracks can be added");
-    CapsMat[trackId] = src_caps;
+    CapsMap_[trackId] = src_caps;
     videoTrackNum_++;
     
     return MSERR_OK;
@@ -146,12 +150,16 @@ int32_t AVMuxerEngineGstImpl::Seth263Caps(const MediaDescription &trackDesc,
     const std::string &mimeType, int32_t trackId)
 {
     MEDIA_LOGD("Seth263Caps");
+    bool ret;
     int32_t width;
     int32_t height;
     int32_t frameRate;
-    trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
-    trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
-    trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
     MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
         width, height, frameRate);
     GstCaps *src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
@@ -161,7 +169,7 @@ int32_t AVMuxerEngineGstImpl::Seth263Caps(const MediaDescription &trackDesc,
         nullptr);
     CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
         "Only 1 video Tracks can be added");
-    CapsMat[trackId] = src_caps;
+    CapsMap_[trackId] = src_caps;
     videoTrackNum_++;
     
     return MSERR_OK;
@@ -171,12 +179,16 @@ int32_t AVMuxerEngineGstImpl::SetMPEG4Caps(const MediaDescription &trackDesc,
     const std::string &mimeType, int32_t trackId)
 {
     MEDIA_LOGD("SetMEPG4Caps");
+    bool ret;
     int32_t width;
     int32_t height;
     int32_t frameRate;
-    trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
-    trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
-    trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
     MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
         width, height, frameRate);
     GstCaps *src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
@@ -188,7 +200,7 @@ int32_t AVMuxerEngineGstImpl::SetMPEG4Caps(const MediaDescription &trackDesc,
         nullptr);
     CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
         "Only 1 video Tracks can be added");
-    CapsMat[trackId] = src_caps;
+    CapsMap_[trackId] = src_caps;
     videoTrackNum_++;
     
     return MSERR_OK;
@@ -197,10 +209,13 @@ int32_t AVMuxerEngineGstImpl::SetMPEG4Caps(const MediaDescription &trackDesc,
 int32_t AVMuxerEngineGstImpl::SetaacCaps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId)
 {
     MEDIA_LOGD("SetaacCaps");
+    bool ret;
     int32_t channels;
     int32_t rate;
-    trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels);
-    trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), rate);
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), rate);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
     MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", channels, rate);
     GstCaps *src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "mpegversion", G_TYPE_INT, 4,
@@ -210,7 +225,7 @@ int32_t AVMuxerEngineGstImpl::SetaacCaps(const MediaDescription &trackDesc, cons
         nullptr);
     CHECK_AND_RETURN_RET_LOG(audioTrackNum_ < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION,
         "Only 16 audio Tracks can be added");
-    CapsMat[trackId] = src_caps;
+    CapsMap_[trackId] = src_caps;
     audioTrackNum_++;
 
     return MSERR_OK;
@@ -219,10 +234,13 @@ int32_t AVMuxerEngineGstImpl::SetaacCaps(const MediaDescription &trackDesc, cons
 int32_t AVMuxerEngineGstImpl::Setmp3Caps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId)
 {
     MEDIA_LOGD("Setmp3Caps");
+    bool ret;
     int32_t channels;
     int32_t rate;
-    trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels);
-    trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), rate);
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
+    ret = trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), rate);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
     MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", channels, rate);
     GstCaps *src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "mpegversion", G_TYPE_INT, 1,
@@ -232,7 +250,7 @@ int32_t AVMuxerEngineGstImpl::Setmp3Caps(const MediaDescription &trackDesc, cons
         nullptr);
     CHECK_AND_RETURN_RET_LOG(audioTrackNum_ < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION,
         "Only 16 audio Tracks can be added");
-    CapsMat[trackId] = src_caps;
+    CapsMap_[trackId] = src_caps;
     audioTrackNum_++;
 
     return MSERR_OK;
@@ -245,31 +263,31 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
 
     std::string mimeType;
     bool val = trackDesc.GetStringValue(std::string(MD_KEY_CODEC_MIME), mimeType);
-    CHECK_AND_RETURN_RET_LOG(val = true, MSERR_INVALID_VAL, "Failed to call GetStringValue");
+    CHECK_AND_RETURN_RET_LOG(val = true, MSERR_INVALID_VAL, "Failed to get MD_KEY_CODEC_MIME");
     CHECK_AND_RETURN_RET_LOG(FORMAT_TO_MIME.at(format_).find(mimeType) != FORMAT_TO_MIME.at(format_).end(),
         MSERR_INVALID_OPERATION, "The mime type can not be added in current container format");
 
-    trackId = trackIdSet.size() + 1;
-    trackIdSet.insert(trackId);
-    trackId2EncodeType.insert(std::make_pair(trackId, mimeType));
+    trackId = trackIdSet_.size() + 1;
+    trackIdSet_.insert(trackId);
+    trackId2EncodeType_.insert(std::make_pair(trackId, mimeType));
     needData_[trackId] = true;
     std::string name = "src_";
     name += static_cast<char>('0' + trackId);
 
     int32_t ret;
-    if (trackId2EncodeType[trackId] == std::string("video/x-h264")) {
+    if (trackId2EncodeType_[trackId] == std::string("video/x-h264")) {
         ret = Seth264Caps(trackDesc, mimeType, trackId);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Seth264Caps");
-    } else if (trackId2EncodeType[trackId] == std::string("video/x-h263")) {
+    } else if (trackId2EncodeType_[trackId] == std::string("video/x-h263")) {
         ret = Seth263Caps(trackDesc, mimeType, trackId);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Seth263Caps");
-    } else if (trackId2EncodeType[trackId] == std::string("video/mpeg4")) {
+    } else if (trackId2EncodeType_[trackId] == std::string("video/mpeg4")) {
         ret = SetMPEG4Caps(trackDesc, mimeType, trackId);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetMPEG4Caps");
-    } else if (trackId2EncodeType[trackId] == std::string("audio/aac")) {
+    } else if (trackId2EncodeType_[trackId] == std::string("audio/aac")) {
         ret = SetaacCaps(trackDesc, mimeType, trackId);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetaacCaps");
-    } else if (trackId2EncodeType[trackId] == std::string("audio/mp3")) {
+    } else if (trackId2EncodeType_[trackId] == std::string("audio/mp3")) {
         ret = Setmp3Caps(trackDesc, mimeType, trackId);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetaacCaps");
     }
@@ -285,8 +303,8 @@ int32_t AVMuxerEngineGstImpl::Start()
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
     gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_READY);
 
-    GstAppSrcCallbacks callbacks = {&start_feed, &stop_feed, NULL};
-    for (int32_t i : trackIdSet) {
+    GstAppSrcCallbacks callbacks = {&StartFeed, &StopFeed, NULL};
+    for (int32_t i : trackIdSet_) {
         std::string name = "src_";
         name += static_cast<char>('0' + i);
         GstAppSrc *src = GST_APP_SRC_CAST(gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str()));
@@ -304,11 +322,11 @@ int32_t AVMuxerEngineGstImpl::Writeh264CodecData(std::shared_ptr<AVSharedMemory>
     if ((start[0] == 0x00 && start[1] == 0x00 && start[2] == 0x01) ||
         (start[0] == 0x00 && start[1] == 0x00 && start[2] == 0x00 && start[3] == 0x01)) {
         g_object_set(muxBin_, "h264parse", true, nullptr);
-        gst_caps_set_simple(CapsMat[sampleInfo.trackIdx],
+        gst_caps_set_simple(CapsMap_[sampleInfo.trackIdx],
             "alignment", G_TYPE_STRING, "nal",
             "stream-format", G_TYPE_STRING, "byte-stream",
             nullptr);
-        g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
+        g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
         GstFlowReturn ret;
         GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
         GstBuffer *buffer = gst_buffer_new();
@@ -323,12 +341,12 @@ int32_t AVMuxerEngineGstImpl::Writeh264CodecData(std::shared_ptr<AVSharedMemory>
         GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
         GstBuffer *buffer = gst_buffer_new();
         gst_buffer_append_memory(buffer, mem);
-        gst_caps_set_simple(CapsMat[sampleInfo.trackIdx],
+        gst_caps_set_simple(CapsMap_[sampleInfo.trackIdx],
             "codec_data", GST_TYPE_BUFFER, buffer,
             "alignment", G_TYPE_STRING, "au",
             "stream-format", G_TYPE_STRING, "avc",
             nullptr);
-        g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
+        g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
     }
     return MSERR_OK;
 }
@@ -337,7 +355,7 @@ int32_t AVMuxerEngineGstImpl::Writeh263CodecData(std::shared_ptr<AVSharedMemory>
     const TrackSampleInfo &sampleInfo, GstElement *src)
 {
     MEDIA_LOGD("Writeh263CodecData");
-    g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
+    g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
     GstFlowReturn ret;
     GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
     GstBuffer *buffer = gst_buffer_new();
@@ -358,7 +376,7 @@ int32_t AVMuxerEngineGstImpl::WriteMPEG4CodecData(std::shared_ptr<AVSharedMemory
 {
     MEDIA_LOGD("WriteMPEG4CodecData");
     g_object_set(muxBin_, "mpeg4parse", true, nullptr);
-    g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
+    g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
     GstFlowReturn ret;
     GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
     GstBuffer *buffer = gst_buffer_new();
@@ -382,7 +400,7 @@ int32_t AVMuxerEngineGstImpl::WriteaacCodecData(std::shared_ptr<AVSharedMemory> 
     GstBuffer *buffer = gst_buffer_new();
     gst_buffer_append_memory(buffer, mem);
     g_object_set(muxBin_, "aacparse", true, nullptr);
-    g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
+    g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
 
     GstFlowReturn ret;
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
@@ -401,7 +419,7 @@ int32_t AVMuxerEngineGstImpl::Writemp3CodecData(std::shared_ptr<AVSharedMemory> 
     GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
     GstBuffer *buffer = gst_buffer_new();
     gst_buffer_append_memory(buffer, mem);
-    g_object_set(src, "caps", CapsMat[sampleInfo.trackIdx], nullptr);
+    g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
 
     GstFlowReturn ret;
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
@@ -450,25 +468,25 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,",
         ((uint8_t*)(sampleData->GetBase()))[0], ((uint8_t*)(sampleData->GetBase()))[1],
         ((uint8_t*)(sampleData->GetBase()))[2], ((uint8_t*)(sampleData->GetBase()))[3]);
-    if (hasCaps.find(sampleInfo.trackIdx) == hasCaps.end() && sampleInfo.flags == CODEC_DATA) {
-        if (trackId2EncodeType[sampleInfo.trackIdx] == std::string("video/x-h264")) {
+    if (hasCaps_.find(sampleInfo.trackIdx) == hasCaps_.end() && sampleInfo.flags == CODEC_DATA) {
+        if (trackId2EncodeType_[sampleInfo.trackIdx] == std::string("video/x-h264")) {
             ret = Writeh264CodecData(sampleData, sampleInfo, src);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Writeh264CodecData");
-        } else if (trackId2EncodeType[sampleInfo.trackIdx] == std::string("video/x-h263")) {
+        } else if (trackId2EncodeType_[sampleInfo.trackIdx] == std::string("video/x-h263")) {
             ret = Writeh263CodecData(sampleData, sampleInfo, src);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Writeh263CodecData");
-        } else if (trackId2EncodeType[sampleInfo.trackIdx] == std::string("video/mpeg4")) {
+        } else if (trackId2EncodeType_[sampleInfo.trackIdx] == std::string("video/mpeg4")) {
             ret = WriteMPEG4CodecData(sampleData, sampleInfo, src);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteMPEG4CodecData");
-        } else if (trackId2EncodeType[sampleInfo.trackIdx] == std::string("audio/aac")) {
+        } else if (trackId2EncodeType_[sampleInfo.trackIdx] == std::string("audio/aac")) {
             ret = WriteaacCodecData(sampleData, sampleInfo, src);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteaacData");
-        } else if (trackId2EncodeType[sampleInfo.trackIdx] == std::string("audio/mp3")) {
+        } else if (trackId2EncodeType_[sampleInfo.trackIdx] == std::string("audio/mp3")) {
             ret = Writemp3CodecData(sampleData, sampleInfo, src);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Writemp3Data");
         }
-        hasCaps.insert(sampleInfo.trackIdx);
-        if (hasCaps == trackIdSet && !isPause_) {
+        hasCaps_.insert(sampleInfo.trackIdx);
+        if (hasCaps_ == trackIdSet_ && !isPause_) {
             gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
             isPause_ = true;
             MEDIA_LOGD("Current state is Pause");
@@ -476,8 +494,8 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     } else {
         ret = WriteData(sampleData, sampleInfo, src);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteData");
-        hasBuffer.insert(sampleInfo.trackIdx);
-        if (hasBuffer == trackIdSet && !isPlay_) {
+        hasBuffer_.insert(sampleInfo.trackIdx);
+        if (hasBuffer_ == trackIdSet_ && !isPlay_) {
             gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
             isPlay_ = true;
             MEDIA_LOGD("Current state is Play");
@@ -494,7 +512,7 @@ int32_t AVMuxerEngineGstImpl::Stop()
 
     GstFlowReturn ret;
     if (isPlay_) {
-        for (int32_t i : trackIdSet) {
+        for (int32_t i : trackIdSet_) {
             std::string name = "src_";
             name += static_cast<char>('0' + i);
             GstAppSrc *src = GST_APP_SRC_CAST(gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str()));
@@ -566,11 +584,11 @@ void AVMuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
 
 void AVMuxerEngineGstImpl::clear()
 {
-    trackIdSet.clear();
-    hasCaps.clear();
-    hasBuffer.clear();
+    trackIdSet_.clear();
+    hasCaps_.clear();
+    hasBuffer_.clear();
     needData_.clear();
-    CapsMat.clear();
+    CapsMap_.clear();
     endFlag_ = false;
     errHappened_ = false;
     isReady_ = false;

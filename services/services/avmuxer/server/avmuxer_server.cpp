@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "avmuxer_server.h"
 #include "media_errors.h"
 #include "media_log.h"
@@ -51,7 +66,7 @@ std::vector<std::string> AVMuxerServer::GetAVMuxerFormatList()
     return formatList;
 }
 
-int32_t AVMuxerServer::SetOutput(const std::string& path, const std::string& format)
+int32_t AVMuxerServer::SetOutput(const std::string &path, const std::string &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (curState_ != AVMUXER_IDEL && curState_ != AVMUXER_OUTPUT_SET) {
@@ -123,7 +138,7 @@ int32_t AVMuxerServer::Start()
     return MSERR_OK;
 }
 
-int32_t AVMuxerServer::WriteTrackSample(std::shared_ptr<AVSharedMemory> data, const TrackSampleInfo& info)
+int32_t AVMuxerServer::WriteTrackSample(std::shared_ptr<AVSharedMemory> data, const TrackSampleInfo &info)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (curState_ != AVMUXER_STARTED && curState_ != AVMUXER_SAMPLE_WRITING) {

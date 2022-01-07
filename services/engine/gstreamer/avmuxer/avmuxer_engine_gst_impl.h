@@ -103,12 +103,12 @@ private:
     void clear();
 
     GstMuxBin *muxBin_ = nullptr;
-    std::set<int32_t> trackIdSet;
-    std::map<int32_t, std::string> trackId2EncodeType;
-    std::set<int32_t> hasCaps;
-    std::set<int32_t> hasBuffer;
+    std::set<int32_t> trackIdSet_;
+    std::map<int32_t, std::string> trackId2EncodeType_;
+    std::set<int32_t> hasCaps_;
+    std::set<int32_t> hasBuffer_;
     std::map<int32_t, bool> needData_; 
-    std::map<int32_t, GstCaps *> CapsMat;
+    std::map<int32_t, GstCaps *> CapsMap_;
     std::mutex mutex_;
     std::condition_variable cond_;
     bool endFlag_ = false;

@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "avmuxer_service_stub.h"
 #include "media_server_manager.h"
 #include "media_errors.h"
@@ -56,7 +71,7 @@ int32_t AVMuxerServiceStub::DestroyStub()
     return MSERR_OK;
 }
 
-int AVMuxerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
+int AVMuxerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}u is received", code);
     auto itFunc = avmuxerFuncs_.find(code);
@@ -78,7 +93,7 @@ std::vector<std::string> AVMuxerServiceStub::GetAVMuxerFormatList()
     return avmuxerServer_->GetAVMuxerFormatList();
 }
 
-int32_t AVMuxerServiceStub::SetOutput(const std::string& path, const std::string& format)
+int32_t AVMuxerServiceStub::SetOutput(const std::string &path, const std::string &format)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     return avmuxerServer_->SetOutput(path, format);
@@ -96,7 +111,7 @@ int32_t AVMuxerServiceStub::SetOrientationHint(int degrees)
     return avmuxerServer_->SetOrientationHint(degrees);
 }
 
-int32_t AVMuxerServiceStub::AddTrack(const MediaDescription& trackDesc, int32_t& trackId)
+int32_t AVMuxerServiceStub::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     return avmuxerServer_->AddTrack(trackDesc, trackId);
@@ -109,7 +124,7 @@ int32_t AVMuxerServiceStub::Start()
 }
 
 int32_t AVMuxerServiceStub::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
-    const TrackSampleInfo& sampleInfo)
+    const TrackSampleInfo &sampleInfo)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     return avmuxerServer_->WriteTrackSample(sampleData, sampleInfo);
@@ -127,13 +142,13 @@ void AVMuxerServiceStub::Release()
     avmuxerServer_->Release();
 }
 
-int32_t AVMuxerServiceStub::GetAVMuxerFormatList(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::GetAVMuxerFormatList(MessageParcel &data, MessageParcel &reply)
 {
     reply.WriteStringVector(GetAVMuxerFormatList());
     return MSERR_OK;
 }
 
-int32_t AVMuxerServiceStub::SetOutput(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::SetOutput(MessageParcel &data, MessageParcel &reply)
 {
     std::string path = data.ReadString();
     std::string format = data.ReadString();
@@ -141,7 +156,7 @@ int32_t AVMuxerServiceStub::SetOutput(MessageParcel& data, MessageParcel& reply)
     return MSERR_OK;
 }
 
-int32_t AVMuxerServiceStub::SetLocation(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::SetLocation(MessageParcel &data, MessageParcel &reply)
 {
     float latitude = data.ReadFloat();
     float longitude = data.ReadFloat();
@@ -149,14 +164,14 @@ int32_t AVMuxerServiceStub::SetLocation(MessageParcel& data, MessageParcel& repl
     return MSERR_OK;
 }
 
-int32_t AVMuxerServiceStub::SetOrientationHint(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::SetOrientationHint(MessageParcel &data, MessageParcel &reply)
 {
     int32_t degrees = data.ReadInt32();
     reply.WriteInt32(SetOrientationHint(degrees));
     return MSERR_OK;
 }
 
-int32_t AVMuxerServiceStub::AddTrack(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::AddTrack(MessageParcel &data, MessageParcel &reply)
 {
     MediaDescription trackDesc;
     (void)MediaParcel::Unmarshalling(data, trackDesc);
@@ -167,13 +182,13 @@ int32_t AVMuxerServiceStub::AddTrack(MessageParcel& data, MessageParcel& reply)
     return MSERR_OK;
 }
 
-int32_t AVMuxerServiceStub::Start(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::Start(MessageParcel &data, MessageParcel &reply)
 {
     reply.WriteInt32(Start());
     return MSERR_OK;
 }
 
-int32_t AVMuxerServiceStub::WriteTrackSample(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::WriteTrackSample(MessageParcel &data, MessageParcel &reply)
 {
     std::shared_ptr<AVSharedMemory> sampleData = ReadAVSharedMemoryFromParcel(data);
     TrackSampleInfo sampleInfo = {{data.ReadInt64(), data.ReadInt32(), data.ReadInt32(),
@@ -182,19 +197,19 @@ int32_t AVMuxerServiceStub::WriteTrackSample(MessageParcel& data, MessageParcel&
     return MSERR_OK;
 }
 
-int32_t AVMuxerServiceStub::Stop(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::Stop(MessageParcel &data, MessageParcel &reply)
 {
     reply.WriteInt32(Stop());
     return MSERR_OK;
 }
 
-int32_t AVMuxerServiceStub::Release(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::Release(MessageParcel &data, MessageParcel &reply)
 {
     Release();
     return MSERR_OK;
 }
 
-int32_t AVMuxerServiceStub::DestroyStub(MessageParcel& data, MessageParcel& reply)
+int32_t AVMuxerServiceStub::DestroyStub(MessageParcel &data, MessageParcel &reply)
 {
     reply.WriteInt32(DestroyStub());
     return MSERR_OK;

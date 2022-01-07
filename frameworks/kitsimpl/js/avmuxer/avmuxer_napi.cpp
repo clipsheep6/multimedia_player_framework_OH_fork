@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 #include "avmuxer_napi.h"
 #include "media_errors.h"
 #include "media_log.h"
@@ -141,7 +156,7 @@ napi_value AVMuxerNapi::CreateAVMuxer(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "failed to napi_get_cb_info");
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "Failed to call napi_get_cb_info");
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -149,7 +164,7 @@ napi_value AVMuxerNapi::CreateAVMuxer(napi_env env, napi_callback_info info)
     asyncContext->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "CreateAVMuxer", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {},
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
     asyncContext.release();
@@ -172,7 +187,7 @@ void AVMuxerNapi::AsyncSetOutput(napi_env env, void *data)
 
     int32_t ret = asyncContext->jsAVMuxer->avmuxerImpl_->SetOutput(asyncContext->path_, asyncContext->format_);
     if (ret != MSERR_OK) {
-        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetVideoSurface");
+        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to call SetOutput");
     }
     MEDIA_LOGD("Success AsyncSetOutput");
 }
@@ -192,7 +207,7 @@ napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
     size_t argCount = 3;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "failed to napi_get_cb_info");
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "Failed to call napi_get_cb_info");
     }
  
     napi_valuetype valueType = napi_undefined;
@@ -242,11 +257,12 @@ napi_value AVMuxerNapi::SetLocation(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_object, result,
         "Failed to check argument type");
     
-    double latitude = 0, longitude = 0;
+    double latitude = 0;
+    double longitude = 0;
     CommonNapi::GetPropertyDouble(env, args[0], "latitude", latitude);
     CommonNapi::GetPropertyDouble(env, args[0], "longitude", longitude);
     
-    int ret = avmuxer->avmuxerImpl_->SetLocation(latitude, longitude);
+    int ret = avmuxer->avmuxerImpl_->SetLocation(static_cast<float>(latitude), static_cast<float>(longitude));
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call SetLocation");
 
     MEDIA_LOGD("Success SetLocation");
@@ -299,10 +315,10 @@ void AVMuxerNapi::AsyncAddTrack(napi_env env, void *data)
     }
 
     int32_t ret = asyncContext->jsAVMuxer->avmuxerImpl_->AddTrack(asyncContext->trackDesc_, asyncContext->trackId_);
-    MEDIA_LOGD("asyncContext->trackId_ is: %d", asyncContext->trackId_);
+    MEDIA_LOGD("asyncContext->trackId_ is: %{public}d", asyncContext->trackId_);
     asyncContext->JsResult = std::make_unique<MediaJsResultInt>(asyncContext->trackId_);
     if (ret != MSERR_OK) {
-        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to AsyncAddTrack");
+        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to call AddTrack");
     }
     MEDIA_LOGD("Success AsyncAddTrack");
 }
@@ -322,7 +338,7 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "failed to napi_get_cb_info");
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "Failed to call napi_get_cb_info");
     }
     
     if (args[0] != nullptr) {
@@ -332,32 +348,32 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
 
         codecMime = CommonNapi::GetPropertyString(env, args[0], std::string(MD_KEY_CODEC_MIME));
         ret = asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), codecMime);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call PutStringValue");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_CODEC_MIME");
 
         ret = CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_WIDTH), width);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call GetPropertyInt32");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get MD_KEY_WIDTH");
         ret = asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), width);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call PutIntValue");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_WIDTH");
 
         ret = CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_HEIGHT), height);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call GetPropertyInt32");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get MD_KEY_HEIGHT");
         ret = asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), height);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call PutIntValue");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_HEIGHT");
 
         ret = CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_FRAME_RATE), frameRate);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call GetPropertyInt32");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get MD_KEY_FRAME_RATE");
         ret = asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call PutIntValue");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_FRAME_RATE");
 
         ret = CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_CHANNEL_COUNT), channelCount);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call GetPropertyInt32");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get MD_KEY_CHANNEL_COUNT");
         ret = asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), channelCount);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call PutIntValue");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_CHANNEL_COUNT");
 
         ret = CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_SAMPLE_RATE), sampleRate);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call GetPropertyInt32");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get MD_KEY_SAMPLE_RATE");
         ret = asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), sampleRate);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call PutIntValue");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_SAMPLE_RATE");
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
@@ -392,7 +408,7 @@ void AVMuxerNapi::AsyncStart(napi_env env, void *data)
 
     int32_t ret = asyncContext->jsAVMuxer->avmuxerImpl_->Start();
     if (ret != MSERR_OK) {
-        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to AsyncStart");
+        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to call Start");
     }
     MEDIA_LOGD("Success AsyncStart");
 }
@@ -412,7 +428,7 @@ napi_value AVMuxerNapi::Start(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "failed to napi_get_cb_info");
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "Failed to call napi_get_cb_info");
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -486,20 +502,22 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
     }
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_object) {
         bool ret;
+        napi_status state;
         napi_value trackSampleInfo;
-        napi_get_named_property(env, args[1], PROPERTY_KEY_SAMPLEINFO.c_str(), &trackSampleInfo);
+        state = napi_get_named_property(env, args[1], PROPERTY_KEY_SAMPLEINFO.c_str(), &trackSampleInfo);
+        CHECK_AND_RETURN_RET_LOG(state == napi_ok, result, "Failed to call napi_get_named_property");
         ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_SIZE, asyncContext->trackSampleInfo_.size);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call GetPropertyInt32");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_SIZE");
         ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_OFFSET, asyncContext->trackSampleInfo_.offset);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call GetPropertyInt32");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_OFFSET");
         int32_t flags;
         ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG, flags);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call GetPropertyInt32");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_FLAG");
         asyncContext->trackSampleInfo_.flags = static_cast<FrameFlags>(flags);
         ret = CommonNapi::GetPropertyInt64(env, trackSampleInfo, PROPERTY_KEY_TIMEUS, asyncContext->trackSampleInfo_.timeUs);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call GetPropertyInt64");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TIMEUS");
         ret = CommonNapi::GetPropertyInt32(env, args[1], PROPERTY_KEY_TRACK_ID, asyncContext->trackSampleInfo_.trackIdx);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to call GetPropertyInt32");
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TRACK_ID");
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[2]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
@@ -539,7 +557,7 @@ void AVMuxerNapi::AsyncStop(napi_env env, void *data)
 
     int32_t ret = asyncContext->jsAVMuxer->avmuxerImpl_->Stop();
     if (ret != MSERR_OK) {
-        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to AsyncStop");
+        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to call Stop");
     }
     MEDIA_LOGD("Success AsyncStop");
 }
@@ -559,7 +577,7 @@ napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "failed to napi_get_cb_info");
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "Failed to call napi_get_cb_info");
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -595,7 +613,7 @@ napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "failed to napi_get_cb_info");
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "Failed to call napi_get_cb_info");
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -610,7 +628,7 @@ napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Release", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {},
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
     asyncContext.release();

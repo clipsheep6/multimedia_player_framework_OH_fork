@@ -27,7 +27,7 @@ class ConvertCodecData {
 public:
     ConvertCodecData();
     ~ConvertCodecData();
-    GstBuffer* GetCodecBuffer(std::shared_ptr<AVSharedMemory> sampleData);
+    GstBuffer *GetCodecBuffer(std::shared_ptr<AVSharedMemory> sampleData);
     DISALLOW_COPY_AND_MOVE(ConvertCodecData);
 private:
     const uint8_t *FindNextNal(const uint8_t *start, const uint8_t *end);
@@ -35,7 +35,7 @@ private:
             std::vector<uint8_t> &sei);
     void AVCDecoderConfiguration(std::vector<uint8_t> &sps, std::vector<uint8_t> &pps);
     uint32_t nalSize_ = 0;
-    GstBuffer* configBuffer_ = nullptr;
+    GstBuffer *configBuffer_ = nullptr;
 };
 }  // namespace Media
 }  // namespace OHOS

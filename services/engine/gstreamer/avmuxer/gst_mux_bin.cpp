@@ -38,7 +38,7 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id, const GValu
 static void gst_mux_bin_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *param_spec);
 static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstStateChange transition);
 
-void add_track(GstMuxBin* mux_bin, TrackType type, const char *name)
+void add_track(GstMuxBin *mux_bin, TrackType type, const char *name)
 {
     switch (type) {
         case VIDEO:
