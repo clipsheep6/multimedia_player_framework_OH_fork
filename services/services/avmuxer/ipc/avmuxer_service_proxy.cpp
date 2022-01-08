@@ -118,6 +118,7 @@ int32_t AVMuxerServiceProxy::Start()
 int32_t AVMuxerServiceProxy::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
     const TrackSampleInfo &sampleInfo)
 {
+    CHECK_AND_RETURN_RET_LOG(sampleData != nullptr, MSERR_INVALID_VAL, "sampleData is nullptr");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

@@ -100,7 +100,7 @@ private:
         const TrackSampleInfo &sampleInfo, GstElement *src);
     int32_t SetupMsgProcessor();
     void OnNotifyMessage(const InnerMessage &msg);
-    void clear();
+    void Clear();
 
     GstMuxBin *muxBin_ = nullptr;
     std::set<int32_t> trackIdSet_;

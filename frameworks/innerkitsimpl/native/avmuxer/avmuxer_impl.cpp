@@ -112,9 +112,9 @@ int32_t AVMuxerImpl::Start()
 int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo &info)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
-    CHECK_AND_RETURN_RET_LOG(sampleData->Offset() + sampleData->Size() <= sampleData->Capacity() &&
+    CHECK_AND_RETURN_RET_LOG(sampleData != nullptr && sampleData->Offset() + sampleData->Size() <= sampleData->Capacity() &&
                              sampleData->Offset() + sampleData->Size() >= sampleData->Size(),
-                             MSERR_INVALID_VAL, "Invalid memory size or offset");
+                             MSERR_INVALID_VAL, "Invalid memory");
     MEDIA_LOGD("sampleData->Capacity is: %{public}u, sampleData->Size is: %{public}u,"
                "sampleData->Data is: %{public}s, sampleData->Base is: %{public}s",
                 sampleData->Capacity(), sampleData->Size(), sampleData->Data(), sampleData->Base());

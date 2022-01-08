@@ -138,15 +138,16 @@ int32_t AVMuxerServer::Start()
     return MSERR_OK;
 }
 
-int32_t AVMuxerServer::WriteTrackSample(std::shared_ptr<AVSharedMemory> data, const TrackSampleInfo &info)
+int32_t AVMuxerServer::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &info)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(sampleData != nullptr, MSERR_INVALID_VAL, "sampleData is nullptr");
     if (curState_ != AVMUXER_STARTED && curState_ != AVMUXER_SAMPLE_WRITING) {
        MEDIA_LOGE("Failed to call Start, currentState is %{public}d", curState_);
        return MSERR_INVALID_OPERATION;
     }
     CHECK_AND_RETURN_RET_LOG(avmuxerEngine_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer engine does not exist");
-    int32_t ret = avmuxerEngine_->WriteTrackSample(data, info);
+    int32_t ret = avmuxerEngine_->WriteTrackSample(sampleData, info);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteTrackSample");
     curState_ = AVMUXER_SAMPLE_WRITING;
     return MSERR_OK;

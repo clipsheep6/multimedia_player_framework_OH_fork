@@ -327,15 +327,14 @@ int32_t AVMuxerEngineGstImpl::Writeh264CodecData(std::shared_ptr<AVSharedMemory>
             "stream-format", G_TYPE_STRING, "byte-stream",
             nullptr);
         g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
-        GstFlowReturn ret;
+
         GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
         GstBuffer *buffer = gst_buffer_new();
         gst_buffer_append_memory(buffer, mem);
-
         GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
         GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
 
-        ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
+        GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
         CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
     } else {
         GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
@@ -356,16 +355,15 @@ int32_t AVMuxerEngineGstImpl::Writeh263CodecData(std::shared_ptr<AVSharedMemory>
 {
     MEDIA_LOGD("Writeh263CodecData");
     g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
-    GstFlowReturn ret;
+
     GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
     GstBuffer *buffer = gst_buffer_new();
     gst_buffer_append_memory(buffer, mem);
-
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
     gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
-    ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
+    GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
 
     return MSERR_OK;
@@ -377,16 +375,15 @@ int32_t AVMuxerEngineGstImpl::WriteMPEG4CodecData(std::shared_ptr<AVSharedMemory
     MEDIA_LOGD("WriteMPEG4CodecData");
     g_object_set(muxBin_, "mpeg4parse", true, nullptr);
     g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
-    GstFlowReturn ret;
+
     GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
     GstBuffer *buffer = gst_buffer_new();
     gst_buffer_append_memory(buffer, mem);
-
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
     gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
-    ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
+    GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
 
     return MSERR_OK;
@@ -402,11 +399,10 @@ int32_t AVMuxerEngineGstImpl::WriteaacCodecData(std::shared_ptr<AVSharedMemory> 
     g_object_set(muxBin_, "aacparse", true, nullptr);
     g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
 
-    GstFlowReturn ret;
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
 
-    ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
+    GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
 
     return MSERR_OK;
@@ -421,11 +417,10 @@ int32_t AVMuxerEngineGstImpl::Writemp3CodecData(std::shared_ptr<AVSharedMemory> 
     gst_buffer_append_memory(buffer, mem);
     g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
 
-    GstFlowReturn ret;
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
 
-    ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
+    GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
 
     return MSERR_OK;
@@ -438,17 +433,17 @@ int32_t AVMuxerEngineGstImpl::WriteData(std::shared_ptr<AVSharedMemory> sampleDa
     CHECK_AND_RETURN_RET_LOG(needData_[sampleInfo.trackIdx] == true, MSERR_INVALID_OPERATION,
         "Failed to push data, the queue is full");
     CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
-    GstFlowReturn ret;
+
     GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
     GstBuffer *buffer = gst_buffer_new();
     gst_buffer_append_memory(buffer, mem);
-
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
     if (sampleInfo.flags == SYNC_FRAME) {
         gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
-    ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
+
+    GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
     return MSERR_OK;
 }
@@ -456,6 +451,7 @@ int32_t AVMuxerEngineGstImpl::WriteData(std::shared_ptr<AVSharedMemory> sampleDa
 int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
     const TrackSampleInfo &sampleInfo)
 {   
+    CHECK_AND_RETURN_RET_LOG(sampleData != nullptr, MSERR_INVALID_VAL, "sampleData is nullptr");
     MEDIA_LOGD("WriteTrackSample, sampleInfo.trackIdx is %{public}d", sampleInfo.trackIdx);
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
@@ -525,7 +521,7 @@ int32_t AVMuxerEngineGstImpl::Stop()
         });
     }
     gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_NULL);
-    clear();
+    Clear();
     return MSERR_OK;
 }
 
@@ -582,7 +578,7 @@ void AVMuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
     }
 }
 
-void AVMuxerEngineGstImpl::clear()
+void AVMuxerEngineGstImpl::Clear()
 {
     trackIdSet_.clear();
     hasCaps_.clear();
