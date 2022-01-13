@@ -14,7 +14,6 @@
  */
 
 #include "buffer_log.h"
-#include "surface_buffer_impl.h"
 #include "videodisplaymanager.h"
 
 #include <iremote_proxy.h>
@@ -56,7 +55,6 @@ namespace {
     void Listener::OnBufferAvailable()
     {
         sptr<SurfaceBuffer> buffer;
-        sptr<SurfaceBufferImpl> bufferImpl;
         int32_t fence;
         SurfaceError ret;
 
@@ -71,9 +69,8 @@ namespace {
             BLOGFE("acquire buffer fail, ret=%{public}d", ret);
             return;
         }
-        bufferImpl = SurfaceBufferImpl::FromBase(buffer);
         if (g_layerService != nullptr) {
-            auto bufferHandle = bufferImpl->GetBufferHandle();
+            auto bufferHandle = buffer->GetBufferHandle();
             g_layerService->SetLayerBuffer(0, layerId_, *bufferHandle, fence);
         }
         if (preBuffer != nullptr) {
