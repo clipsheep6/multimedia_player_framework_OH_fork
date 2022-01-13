@@ -23,6 +23,7 @@
 #include "param_wrapper.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "gst_tracer_mgr.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstLoader"};
@@ -259,8 +260,9 @@ int32_t GstLoader::SetUp()
     DestroyGstInitArgv(argv);
     isInit_ = true;
 
-    MEDIA_LOGI("SetUp GstLoader finished!");
+    GstTracerMgr::Instance().SetUp();
 
+    MEDIA_LOGI("SetUp GstLoader finished!");
     return MSERR_OK;
 }
 
