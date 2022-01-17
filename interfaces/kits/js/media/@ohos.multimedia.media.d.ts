@@ -666,7 +666,7 @@ declare namespace media {
   /**
    * Describes audio playback states.
    */
-  type AudioState = 'idle' | 'playing' | 'paused' | 'stopped';
+  type AudioState = 'idle' | 'playing' | 'paused' | 'stopped' | 'error';
 
   /**
    * Manages and plays audio. Before calling an AudioPlayer method, you must use createAudioPlayer() to create an AudioPlayer instance.
@@ -757,7 +757,7 @@ declare namespace media {
      * @param callback Callback used to listen for the buffering update event, return BufferingInfoType and the value.
      */
     on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
-    
+
     /**
      * Audio media URI. Mainstream audio formats are supported.
      * @devices phone, tablet, tv, wearable
