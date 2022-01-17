@@ -731,6 +731,34 @@ declare namespace media {
     release(): void;
 
     /**
+    * get all track infos in MediaDescription, should be called after dataloaded callback.
+    * @devices phone, tablet, tv, wearable, car
+    * @since 8
+    * @SysCap SystemCapability.Multimedia.Media
+    * @param callback async callback return track info in MediaDescription.
+    */
+    getTrackDescription(callback: AsyncCallback<Array<MediaDescription>>): void;
+
+    /**
+    * get all track infos in MediaDescription, should be called after dataloaded callback..
+    * @devices phone, tablet, tv, wearable, car
+    * @since 8
+    * @SysCap SystemCapability.Multimedia.Media
+    * @param index  track index.
+    * @return A Promise instance used to return the trackinfo in MediaDescription.
+    */
+    getTrackDescription() : Promise<Array<MediaDescription>>;
+    /**
+     * Listens for audio playback buffering events.
+     * @devices phone, tablet, tv, wearable
+     * @since 6
+     * @SysCap SystemCapability.Multimedia.Media
+     * @param type Type of the playback buffering update event to listen for.
+     * @param callback Callback used to listen for the buffering update event, return BufferingInfoType and the value.
+     */
+    on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
+    
+    /**
      * Audio media URI. Mainstream audio formats are supported.
      * @devices phone, tablet, tv, wearable
      * @since 6
