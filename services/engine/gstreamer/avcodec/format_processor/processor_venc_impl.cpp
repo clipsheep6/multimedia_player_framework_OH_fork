@@ -19,7 +19,8 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ProcessorVencImpl"};
-    const uint32_t DEFAULT_BUFFER_SIZE = 30000;
+    const uint32_t MAX_WIDTH = 8000;
+    const uint32_t MAX_HEIGHT = 5000;
 }
 
 namespace OHOS {
@@ -48,15 +49,23 @@ int32_t ProcessorVencImpl::ProcessMandatory(const Format &format)
 
 int32_t ProcessorVencImpl::ProcessOptional(const Format &format)
 {
-    (void)format.GetIntValue("video_encode_bitrate_mode", bitrateMode_);
-    (void)format.GetIntValue("codec_profile", profile_);
+    auto formatMap = format.GetFormatMap();
+    if (formatMap.find("video_encode_bitrate_mode") != formatMap.end()) {
+        (void)format.GetIntValue("video_encode_bitrate_mode", bitrateMode_);
+    }
+
+    if (formatMap.find("codec_profile") != formatMap.end()) {
+        (void)format.GetIntValue("codec_profile", profile_);
+    }
 
     return MSERR_OK;
 }
 
+
 std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetInputPortConfig()
 {
-    CHECK_AND_RETURN_RET(width_ > 0 && height_ > 0, nullptr);
+    CHECK_AND_RETURN_RET(width_ > 0 && width_ < MAX_WIDTH, nullptr);
+    CHECK_AND_RETURN_RET(height_ > 0 && height_ < MAX_HEIGHT, nullptr);
 
     GstCaps *caps = gst_caps_new_simple("video/x-raw",
         "width", G_TYPE_INT, width_,
@@ -81,7 +90,8 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetInputPortConfig()
 
 std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
 {
-    CHECK_AND_RETURN_RET(width_ > 0 && height_ > 0, nullptr);
+    CHECK_AND_RETURN_RET(width_ > 0 && width_ < MAX_WIDTH, nullptr);
+    CHECK_AND_RETURN_RET(height_ > 0 && height_ < MAX_HEIGHT, nullptr);
 
     GstCaps *caps = nullptr;
     switch (codecName_) {
@@ -115,7 +125,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
         return nullptr;
     }
 
-    config->bufferSize_ = DEFAULT_BUFFER_SIZE;
+    config->bufferSize_ = EncodedBufSize(width_, height_);
 
     return config;
 }
