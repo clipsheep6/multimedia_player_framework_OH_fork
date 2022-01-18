@@ -81,7 +81,11 @@ int32_t ProcessorAencImpl::ProcessMandatory(const Format &format)
 
 int32_t ProcessorAencImpl::ProcessOptional(const Format &format)
 {
-    (void)format.GetIntValue("profile", profile_);
+    auto formatMap = format.GetFormatMap();
+    if (formatMap.find("profile") != formatMap.end()) {
+        (void)format.GetIntValue("profile", profile_);
+    }
+
     return MSERR_OK;
 }
 
