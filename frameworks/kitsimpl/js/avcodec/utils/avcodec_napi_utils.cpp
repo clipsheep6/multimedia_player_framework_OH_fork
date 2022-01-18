@@ -207,7 +207,7 @@ bool AVCodecNapiUtil::ExtractMediaFormat(napi_env env, napi_value mediaFormat, F
     for (auto it = FORMAT.begin(); it != FORMAT.end(); it++) {
         if (it->second == FORMAT_TYPE_STRING) {
             bool exist = false;
-            if (napi_has_named_property(env, mediaFormat, it->first.c_str(), &exist) == napi_ok && exist)) {
+            if (napi_has_named_property(env, mediaFormat, it->first.c_str(), &exist) == napi_ok && exist) {
                 napi_value item = nullptr;
                 if (napi_get_named_property(env, mediaFormat, it->first.c_str(), &item) == napi_ok) {
                     format.PutStringValue(it->first, CommonNapi::GetStringArgument(env, item));
@@ -215,7 +215,7 @@ bool AVCodecNapiUtil::ExtractMediaFormat(napi_env env, napi_value mediaFormat, F
             }
         } else if (it->second == FORMAT_TYPE_INT32) {
             bool exist = false;
-            if (napi_has_named_property(env, mediaFormat, it->first.c_str(), &exist) == napi_ok && exist)) {
+            if (napi_has_named_property(env, mediaFormat, it->first.c_str(), &exist) == napi_ok && exist) {
                 napi_value item = nullptr;
                 if (napi_get_named_property(env, mediaFormat, it->first.c_str(), &item) == napi_ok) {
                     int32_t result = 0;
