@@ -19,7 +19,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecInfo"};
-constexpr int32_t INT32MAX = 2147483647; // 2^31 -1
+constexpr int32_t INT32MAX = 2147483647;
 }
 namespace OHOS {
 namespace Media {

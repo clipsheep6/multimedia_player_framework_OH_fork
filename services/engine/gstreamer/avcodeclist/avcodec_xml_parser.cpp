@@ -153,16 +153,11 @@ bool AVCodecXmlParser::Parse()
         return false;
     }
     if (!ParseInternal(root)) {
-        // this->isParsered_ = false;
         return false;
     }
-    // this->isParsered_ = true;
     return true;
 }
 
-// bool AVCodecXmlParser::IsParsered() {
-//     return this->isParsered_;
-// }
 
 void AVCodecXmlParser::Destroy()
 {
