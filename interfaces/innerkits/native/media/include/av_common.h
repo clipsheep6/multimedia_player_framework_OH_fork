@@ -93,7 +93,7 @@ struct ImgSize {
         this->width = width;
         this->height = height;
     }
-    
+
     bool operator<(const ImgSize &p) const
     {
         return (width < p.width) || (width == p.width && height < p.height);
@@ -346,7 +346,7 @@ enum MPEG4Level {
  * @since 3.1
  * @version 3.1
  */
-enum VideoPixelformat {
+enum VideoPixelFormat {
     /**
      * yuv 420 planar.
     */
