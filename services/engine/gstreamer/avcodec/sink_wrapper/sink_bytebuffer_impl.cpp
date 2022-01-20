@@ -20,7 +20,6 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SinkBytebufferImpl"};
     const uint32_t DEFAULT_BUFFER_COUNT = 5;
-    const uint32_t DEFAULT_BUFFER_SIZE = 30000;
 }
 
 namespace OHOS {
@@ -46,16 +45,16 @@ int32_t SinkBytebufferImpl::Init()
     sink_ = GST_ELEMENT_CAST(gst_object_ref(gst_element_factory_make("appsink", "sink")));
     CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
     gst_base_sink_set_async_enabled(GST_BASE_SINK(sink_), FALSE);
-
-    bufferCount_ = DEFAULT_BUFFER_COUNT;
-    bufferSize_ = DEFAULT_BUFFER_SIZE;
-
     return MSERR_OK;
 }
 
 int32_t SinkBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 {
     CHECK_AND_RETURN_RET(sink_ != nullptr && config->caps_ != nullptr, MSERR_UNKNOWN);
+
+    bufferSize_ = config->bufferSize_;
+    bufferCount_ = DEFAULT_BUFFER_COUNT;
+
     g_object_set(G_OBJECT(sink_), "caps", config->caps_, nullptr);
     (void)CapsToFormat(config->caps_, bufferFormat_);
 
@@ -63,10 +62,7 @@ int32_t SinkBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
         auto mem = AVSharedMemory::Create(bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "output");
         CHECK_AND_RETURN_RET(mem != nullptr, MSERR_NO_MEMORY);
 
-        GstBuffer *buffer = gst_buffer_new_allocate(nullptr, static_cast<gsize>(DEFAULT_BUFFER_SIZE), nullptr);
-        CHECK_AND_RETURN_RET(buffer != nullptr, MSERR_NO_MEMORY);
-
-        auto bufWrap = std::make_shared<BufferWrapper>(mem, buffer, bufferList_.size(), BufferWrapper::DOWNSTREAM);
+        auto bufWrap = std::make_shared<BufferWrapper>(mem, nullptr, bufferList_.size(), BufferWrapper::DOWNSTREAM);
         CHECK_AND_RETURN_RET(bufWrap != nullptr, MSERR_NO_MEMORY);
         bufferList_.push_back(bufWrap);
     }
@@ -104,7 +100,6 @@ int32_t SinkBytebufferImpl::ReleaseOutputBuffer(uint32_t index, bool render)
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index < bufferCount_ && index < bufferList_.size(), MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(bufferList_[index]->gstBuffer_ != nullptr, MSERR_UNKNOWN);
     bufferList_[index]->owner_ = BufferWrapper::DOWNSTREAM;
     return MSERR_OK;
 }
@@ -195,7 +190,6 @@ void SinkBytebufferImpl::HandleOutputBuffer(uint32_t &bufSize, uint32_t &index, 
                 continue;
             }
             (*it)->owner_ = BufferWrapper::APP;
-            (*it)->gstBuffer_ = buf;
             bufSize = map.size;
             if (memcpy_s((*it)->mem_->GetBase(), (*it)->mem_->GetSize(), map.data, map.size) != EOK) {
                 MEDIA_LOGE("Failed to copy output buffer");

@@ -85,7 +85,7 @@ void VideoDecoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCo
     CHECK_AND_RETURN(cb != nullptr);
     cb->callback = errorCallback_;
     cb->callbackName = ERROR_CALLBACK_NAME;
-    cb->errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errCode));
+    cb->errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
     cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
     return OnJsErrorCallBack(cb);
 }
@@ -133,7 +133,9 @@ void VideoDecoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBu
     CHECK_AND_RETURN(vdec != nullptr);
 
     auto buffer = vdec->GetOutputBuffer(index);
-    if (buffer == nullptr && flag != AVCODEC_BUFFER_FLAG_EOS) {
+    bool isEos = flag & AVCODEC_BUFFER_FLAG_EOS;
+    if (buffer == nullptr && !isEos) {
+        MEDIA_LOGW("Failed to get output buffer");
         return;
     }
 

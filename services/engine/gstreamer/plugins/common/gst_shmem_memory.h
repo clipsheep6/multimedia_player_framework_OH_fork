@@ -26,6 +26,14 @@ struct _GstShMemMemory {
     std::shared_ptr<OHOS::Media::AVSharedMemory> mem;
 };
 
-gboolean gst_is_shmem_memory(GstMemory *mem);
+inline const char *gst_shmem_memory_type(void)
+{
+    return "SharedMemory";
+}
+
+inline gboolean gst_is_shmem_memory(GstMemory *mem)
+{
+    return gst_memory_is_type(mem, gst_shmem_memory_type());
+}
 
 #endif

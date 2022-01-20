@@ -20,7 +20,7 @@
 #include "common_napi.h"
 #include "directory_ex.h"
 #include "string_ex.h"
-#include "media_surface.h"
+#include "surface_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoRecorderNapi"};
@@ -81,6 +81,7 @@ napi_value VideoRecorderNapi::Init(napi_env env, napi_value exports)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
 
     MEDIA_LOGD("Init success");
+
     return exports;
 }
 
@@ -105,7 +106,7 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "No memory!");
 
     if (recorderNapi->callbackNapi_ == nullptr) {
-        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env); // jhp1
+        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
         (void)recorderNapi->recorder_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
 
@@ -126,7 +127,14 @@ void VideoRecorderNapi::Destructor(napi_env env, void *nativeObject, void *final
     (void)env;
     (void)finalize;
     if (nativeObject != nullptr) {
-        delete reinterpret_cast<VideoRecorderNapi *>(nativeObject);
+        VideoRecorderNapi *napi = reinterpret_cast<VideoRecorderNapi *>(nativeObject);
+        if (napi->surface_ != nullptr) {
+            auto id = napi->surface_->GetUniqueId();
+            if (napi->isSurfaceIdVaild(id)) {
+                (void)SurfaceUtils::GetInstance()->Remove(id);
+            }
+        }
+        delete napi;
     }
     MEDIA_LOGD("Destructor success");
 }
@@ -184,11 +192,12 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
         asyncCtx->SignError(MSERR_EXT_UNKNOWN, "set properties failed!");
     }
 
-    std::string urlPath = "invalid url";
+    std::string urlPath = CommonNapi::GetPropertyString(env, args[0], "url");
 
     VideoRecorderProperties videoProperties;
-    urlPath = CommonNapi::GetPropertyString(env, args[0], "url");
-    asyncCtx->napi->GetConfig(env, args[0], videoProperties);
+
+    asyncCtx->napi->GetConfig(env, args[0], asyncCtx, videoProperties);
+
     if (asyncCtx->napi->GetVideoRecorderProperties(env, args[0], videoProperties) != MSERR_OK) {
         asyncCtx->SignError(MSERR_EXT_UNKNOWN, "get properties failed!");
     }
@@ -215,7 +224,7 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
             return;
         }
         if (threadCtx->napi->recorder_->Prepare() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Prepare");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Prepare");
         }
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
@@ -252,13 +261,15 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
-        auto mediaSurface = MediaSurfaceFactory::CreateMediaSurface();
-        if (mediaSurface == nullptr) {
-            threadCtx->SignError(MSERR_EXT_NO_MEMORY, "mediaSurface is nullptr");
-        }
-        threadCtx->surface = threadCtx->napi->recorder_->GetSurface(threadCtx->napi->videoSourceID); // source id
-        if (threadCtx->surface != nullptr) {
-            auto surfaceId = mediaSurface->GetSurfaceId(threadCtx->surface);
+
+        threadCtx->napi->surface_ = threadCtx->napi->recorder_->GetSurface(threadCtx->napi->videoSourceID); // source id
+        if (threadCtx->napi->surface_ != nullptr) {
+            SurfaceError error = SurfaceUtils::GetInstance()->Add(threadCtx->napi->surface_->GetUniqueId(),
+                threadCtx->napi->surface_);
+            if (error != SURFACE_ERROR_OK) {
+                threadCtx->SignError(MSERR_EXT_NO_MEMORY, "add surface error");
+            }
+            auto surfaceId = std::to_string(threadCtx->napi->surface_->GetUniqueId());
             threadCtx->JsResult = std::make_unique<MediaJsResultString>(surfaceId);
         } else {
             threadCtx->SignError(MSERR_EXT_NO_MEMORY, "failed to get surface");
@@ -300,7 +311,7 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
             return;
         }
         if (threadCtx->napi->recorder_->Start() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Start");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Start");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_PLAYING;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -340,7 +351,7 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
             return;
         }
         if (threadCtx->napi->recorder_->Pause() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Pause");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Pause");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_PAUSED;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -380,7 +391,7 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
             return;
         }
         if (threadCtx->napi->recorder_->Resume() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Resume");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Resume");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_PLAYING;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -420,7 +431,7 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
             return;
         }
         if (threadCtx->napi->recorder_->Stop(false) != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Stop");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Stop");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_STOPPED;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -459,8 +470,15 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
+        if (threadCtx->napi->surface_ != nullptr) {
+            auto id = threadCtx->napi->surface_->GetUniqueId();
+            if (threadCtx->napi->isSurfaceIdVaild(id)) {
+                (void)SurfaceUtils::GetInstance()->Remove(id);
+            }
+            threadCtx->napi->surface_ = nullptr;
+        }
         if (threadCtx->napi->recorder_->Reset() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Reset");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Reset");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_IDLE;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -499,8 +517,15 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
+        if (threadCtx->napi->surface_ != nullptr) {
+            auto id = threadCtx->napi->surface_->GetUniqueId();
+            if (threadCtx->napi->isSurfaceIdVaild(id)) {
+                (void)SurfaceUtils::GetInstance()->Remove(id);
+            }
+            threadCtx->napi->surface_ = nullptr;
+        }
         if (threadCtx->napi->recorder_->Release() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Release");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Release");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_IDLE;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -546,18 +571,30 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
 }
 
 
-void VideoRecorderNapi::GetConfig(napi_env env, napi_value args, VideoRecorderProperties &properties)
+void VideoRecorderNapi::GetConfig(napi_env env, napi_value args,
+    std::unique_ptr<VideoRecorderAsyncContext> &ctx, VideoRecorderProperties &properties)
 {
     int32_t audioSource, videoSource;
-    (void)CommonNapi::GetPropertyInt32(env, args, "audioSourceType", audioSource);
+
+    bool ret = CommonNapi::GetPropertyInt32(env, args, "audioSourceType", audioSource);
+    if (ret == true) {
+        // audio + video
+        properties.audioSourceType = static_cast<AudioSourceType>(audioSource);
+    } else {
+        // pure video
+        ctx->napi->isPureVideo = true;
+        MEDIA_LOGI("No audioSource Type input!");
+    }
+
     (void)CommonNapi::GetPropertyInt32(env, args, "videoSourceType", videoSource);
-    properties.audioSourceType = static_cast<AudioSourceType>(audioSource);
     properties.videoSourceType = static_cast<VideoSourceType>(videoSource);
+
     (void)CommonNapi::GetPropertyInt32(env, args, "orientationHint", properties.orientationHint);
 
     napi_value geoLocation = nullptr;
     napi_get_named_property(env, args, "location", &geoLocation);
-    double tempLatitude, tempLongitude;
+    double tempLatitude = 0;
+    double tempLongitude = 0;
     (void)CommonNapi::GetPropertyDouble(env, geoLocation, "latitude", tempLatitude);
     (void)CommonNapi::GetPropertyDouble(env, geoLocation, "longitude", tempLongitude);
     properties.location.latitude = static_cast<float>(tempLatitude);
@@ -591,19 +628,43 @@ int32_t VideoRecorderNapi::GetVideoRecorderProperties(napi_env env, napi_value a
 int32_t VideoRecorderNapi::SetVideoRecorderProperties(std::unique_ptr<VideoRecorderAsyncContext> &ctx,
     const VideoRecorderProperties &properties)
 {
+    int32_t ret;
     CHECK_AND_RETURN_RET(recorder_ != nullptr, MSERR_INVALID_OPERATION);
+    if (ctx->napi->isPureVideo != true) {
+        // audio + video
+        ret = recorder_->SetAudioSource(properties.audioSourceType, ctx->napi->audioSourceID);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set AudioSource");
 
-    int32_t ret = recorder_->SetVideoSource(properties.videoSourceType, ctx->napi->videoSourceID);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set VideoSource");
+        ret = recorder_->SetVideoSource(properties.videoSourceType, ctx->napi->videoSourceID);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set VideoSource");
 
-    ret = recorder_->SetAudioSource(properties.audioSourceType, ctx->napi->audioSourceID);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set AudioSource");
+        OutputFormatType outputFile;
+        MapContainerFormatToOutputFormat(properties.profile.fileFormat, outputFile);
+        ret = recorder_->SetOutputFormat(outputFile);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set OutputFormat");
 
-    OutputFormatType outputFile;
-    MapContainerFormatToOutputFormat(properties.profile.fileFormat, outputFile);
-    ret = recorder_->SetOutputFormat(outputFile);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set OutputFormat");
+        AudioCodecFormat audioCodec;
+        MapCodecMimeToAudioCodec(properties.profile.audioCodec, audioCodec);
+        ret = recorder_->SetAudioEncoder(ctx->napi->audioSourceID, audioCodec);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set audioCodec");
 
+        ret = recorder_->SetAudioSampleRate(ctx->napi->audioSourceID, properties.profile.auidoSampleRate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set auidoSampleRate");
+
+        ret = recorder_->SetAudioChannels(ctx->napi->audioSourceID, properties.profile.audioChannels);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set audioChannels");
+
+        ret = recorder_->SetAudioEncodingBitRate(ctx->napi->audioSourceID, properties.profile.audioBitrate);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set audioBitrate");
+    } else {
+        ret = recorder_->SetVideoSource(properties.videoSourceType, ctx->napi->videoSourceID);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set VideoSource");
+
+        OutputFormatType outputFile;
+        MapContainerFormatToOutputFormat(properties.profile.fileFormat, outputFile);
+        ret = recorder_->SetOutputFormat(outputFile);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set OutputFormat");
+    }
     VideoCodecFormat videoCodec;
     MapCodecMimeToVideoCodec(properties.profile.videoCodec, videoCodec);
     ret = recorder_->SetVideoEncoder(ctx->napi->videoSourceID, videoCodec);
@@ -618,20 +679,6 @@ int32_t VideoRecorderNapi::SetVideoRecorderProperties(std::unique_ptr<VideoRecor
 
     ret = recorder_->SetVideoEncodingBitRate(ctx->napi->videoSourceID, properties.profile.videoBitrate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set videoBitrate");
-
-    AudioCodecFormat audioCodec;
-    MapCodecMimeToAudioCodec(properties.profile.audioCodec, audioCodec);
-    ret = recorder_->SetAudioEncoder(ctx->napi->audioSourceID, audioCodec);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set audioCodec");
-
-    ret = recorder_->SetAudioSampleRate(ctx->napi->audioSourceID, properties.profile.auidoSampleRate);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set auidoSampleRate");
-
-    ret = recorder_->SetAudioChannels(ctx->napi->audioSourceID, properties.profile.audioChannels);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set audioChannels");
-
-    ret = recorder_->SetAudioEncodingBitRate(ctx->napi->audioSourceID, properties.profile.audioBitrate);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set audioBitrate");
 
     recorder_->SetLocation(properties.location.latitude, properties.location.longitude);
     recorder_->SetOrientationHint(properties.orientationHint);
@@ -663,6 +710,15 @@ int32_t VideoRecorderNapi::SetUrl(const std::string &urlPath)
     return MSERR_OK;
 }
 
+bool VideoRecorderNapi::isSurfaceIdVaild(uint64_t surfaceID)
+{
+    auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceID);
+    if (surface == nullptr) {
+        return false;
+    }
+    return true;
+}
+
 napi_value VideoRecorderNapi::GetState(napi_env env, napi_callback_info info)
 {
     napi_value jsThis = nullptr;
@@ -690,7 +746,7 @@ napi_value VideoRecorderNapi::GetState(napi_env env, napi_callback_info info)
     return jsResult;
 }
 
-// 同步的 不带 promise callback 的属性接口 可以通过这个上报，比如getstates
+// Synchronous interface can use this to report error
 void VideoRecorderNapi::ErrorCallback(MediaServiceExtErrCode errCode)
 {
     if (callbackNapi_ != nullptr) {
