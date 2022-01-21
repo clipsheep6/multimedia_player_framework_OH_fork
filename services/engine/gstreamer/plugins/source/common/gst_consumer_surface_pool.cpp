@@ -34,6 +34,13 @@ struct _GstConsumerSurfacePoolPrivate {
     gboolean start;
 };
 
+enum {
+    PROP_0,
+    PROP_SUSPEND,
+    PROP_REPEAT,
+    PROP_MAX_FRAME_RATE,
+};
+
 G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfacePool, gst_consumer_surface_pool, GST_TYPE_VIDEO_BUFFER_POOL);
 
 class ConsumerListenerProxy : public IBufferConsumerListener {
@@ -46,6 +53,7 @@ private:
     GstConsumerSurfacePool &owner_;
 };
 
+static void gst_consumer_surface_pool_set_property(GObject *object, guint id, const GValue *value, GParamSpec *pspec);
 static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool);
 static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *pool);
 static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *pool, GstBuffer **buffer,
@@ -106,7 +114,22 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
     GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS (klass);
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
     GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_pool_debug_category, "surfacepool", 0, "surface pool");
+
+    gobjectClass->set_property = gst_consumer_surface_pool_set_property;
     gobjectClass->finalize = gst_consumer_surface_pool_finalize;
+
+    g_object_class_install_property(gobject_class, PROP_SUSPEND,
+        g_param_spec_boolean("suspend", "Suspend surface", "Suspend surface",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_REPEAT,
+        g_param_spec_uint64("repeat", "Repeat frame", "Repeat previous frame after given microseconds",
+            0, G_MAXUINT64, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_MAX_FRAME_RATE,
+        g_param_spec_uint("max-framerate", "Max frame rate", "Max frame rate",
+            0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     poolClass->get_options = gst_consumer_surface_pool_get_options;
     poolClass->set_config = gst_consumer_surface_pool_set_config;
     poolClass->release_buffer = gst_consumer_surface_pool_release_buffer;
@@ -115,6 +138,24 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
     poolClass->stop = gst_consumer_surface_pool_stop;
     poolClass->flush_start = gst_consumer_surface_pool_flush_start;
     poolClass->flush_stop = gst_consumer_surface_pool_flush_stop;
+}
+
+static void gst_consumer_surface_pool_set_property(GObject *object, guint id, const GValue *value, GParamSpec *pspec)
+{
+    (void)pspec;
+    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(object);
+    g_return_if_fail(surfacepool != nullptr && value != nullptr);
+
+    switch (prop_id) {
+        case PROP_SUSPEND:
+            break;
+        case PROP_REPEAT:
+            break;
+        case PROP_MAX_FRAME_RATE:
+            break;
+        default:
+            break;
+    }
 }
 
 static void gst_consumer_surface_pool_flush_start(GstBufferPool *pool)
