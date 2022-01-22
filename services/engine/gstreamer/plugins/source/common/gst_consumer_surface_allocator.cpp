@@ -51,6 +51,7 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
     GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
     g_return_val_if_fail(sallocator != nullptr && sallocator->priv != nullptr, nullptr);
     g_return_val_if_fail(sallocator->priv->csurface != nullptr, nullptr);
+
     GstConsumerSurfaceMemory *mem =
         reinterpret_cast<GstConsumerSurfaceMemory *>(g_slice_alloc0(sizeof(GstConsumerSurfaceMemory)));
     g_return_val_if_fail(mem != nullptr, nullptr);
@@ -120,7 +121,7 @@ static void gst_consumer_surface_allocator_init(GstConsumerSurfaceAllocator *sal
     GstAllocator *allocator = GST_ALLOCATOR_CAST(sallocator);
     g_return_if_fail(allocator != nullptr);
     auto priv = reinterpret_cast<GstConsumerSurfaceAllocatorPrivate *>(
-                gst_consumer_surface_allocator_get_instance_private(sallocator));
+        gst_consumer_surface_allocator_get_instance_private(sallocator));
     g_return_if_fail(priv != nullptr);
     sallocator->priv = priv;
 
