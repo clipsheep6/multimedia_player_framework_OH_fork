@@ -141,10 +141,16 @@ static void gst_surface_pool_src_set_property(GObject *object, guint prop_id, co
             src->stride = g_value_get_uint(value);
             break;
         case PROP_SUSPEND:
+            g_return_if_fail(src->pool != nullptr);
+            g_object_set(src->pool, "suspend", value, nullptr);
             break;
         case PROP_REPEAT:
+            g_return_if_fail(src->pool != nullptr);
+            g_object_set(src->pool, "repeat", value, nullptr);
             break;
         case PROP_MAX_FRAME_RATE:
+            g_return_if_fail(src->pool != nullptr);
+            g_object_set(src->pool, "max-framerate", value, nullptr);
             break;
         default:
             break;

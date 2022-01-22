@@ -31,8 +31,15 @@ struct _GstConsumerSurfaceAllocatorPrivate {
     sptr<Surface> csurface;
 };
 
+enum {
+    PROP_0,
+    PROP_REPEAT,
+};
+
 G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfaceAllocator, gst_consumer_surface_allocator, GST_TYPE_ALLOCATOR);
 
+static void gst_consumer_surface_allocator_set_property(GObject *object, guint id,
+    const GValue *value, GParamSpec *pspec);
 static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocatorClass *klass);
 static void gst_consumer_surface_allocator_free(GstAllocator *allocator, GstMemory *mem);
 static gpointer gst_consumer_surface_allocator_mem_map(GstMemory *mem, gsize maxsize, GstMapFlags flags);
@@ -145,13 +152,34 @@ static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocato
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
     g_return_if_fail(gobjectClass != nullptr);
     GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_allocator_debug_category, "surfaceallocator", 0, "surface allocator");
+
+    gobjectClass->set_property = gst_consumer_surface_allocator_set_property;
     gobjectClass->finalize = gst_consumer_surface_allocator_finalize;
+
+    g_object_class_install_property(gobjectClass, PROP_REPEAT,
+        g_param_spec_uint64("repeat", "Repeat frame", "Repeat previous frame after given microseconds",
+            0, G_MAXUINT64, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     GstAllocatorClass *allocatorClass = GST_ALLOCATOR_CLASS(klass);
     g_return_if_fail(allocatorClass != nullptr);
 
     allocatorClass->alloc = gst_consumer_surface_allocator_alloc;
     allocatorClass->free = gst_consumer_surface_allocator_free;
+}
+
+static void gst_consumer_surface_allocator_set_property(GObject *object, guint id,
+    const GValue *value, GParamSpec *pspec)
+{
+    (void)pspec;
+    GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(object);
+    g_return_if_fail(sallocator != nullptr && value != nullptr);
+
+    switch (id) {
+        case PROP_REPEAT:
+            break;
+        default:
+            break;
+    }
 }
 
 void gst_consumer_surface_allocator_set_surface(GstAllocator *allocator, sptr<Surface> &consumerSurface)

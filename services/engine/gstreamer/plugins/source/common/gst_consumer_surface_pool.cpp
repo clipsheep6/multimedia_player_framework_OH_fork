@@ -32,6 +32,7 @@ struct _GstConsumerSurfacePoolPrivate {
     GCond buffer_available_con;
     gboolean flushing;
     gboolean start;
+    gboolean suspend;
 };
 
 enum {
@@ -118,15 +119,15 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
     gobjectClass->set_property = gst_consumer_surface_pool_set_property;
     gobjectClass->finalize = gst_consumer_surface_pool_finalize;
 
-    g_object_class_install_property(gobject_class, PROP_SUSPEND,
+    g_object_class_install_property(gobjectClass, PROP_SUSPEND,
         g_param_spec_boolean("suspend", "Suspend surface", "Suspend surface",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobject_class, PROP_REPEAT,
+    g_object_class_install_property(gobjectClass, PROP_REPEAT,
         g_param_spec_uint64("repeat", "Repeat frame", "Repeat previous frame after given microseconds",
             0, G_MAXUINT64, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobject_class, PROP_MAX_FRAME_RATE,
+    g_object_class_install_property(gobjectClass, PROP_MAX_FRAME_RATE,
         g_param_spec_uint("max-framerate", "Max frame rate", "Max frame rate",
             0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
@@ -146,8 +147,11 @@ static void gst_consumer_surface_pool_set_property(GObject *object, guint id, co
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(object);
     g_return_if_fail(surfacepool != nullptr && value != nullptr);
 
-    switch (prop_id) {
+    switch (id) {
         case PROP_SUSPEND:
+            g_mutex_lock(&surfacepool->priv->pool_lock);
+            surfacepool->priv->suspend = g_value_get_boolean(value);
+            g_mutex_unlock(&surfacepool->priv->pool_lock);
             break;
         case PROP_REPEAT:
             break;
@@ -260,6 +264,7 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
     priv->available_buf_count = 0;
     priv->flushing = FALSE;
     priv->start = FALSE;
+    priv->suspend = FALSE;
     g_mutex_init(&priv->pool_lock);
     g_cond_init(&priv->buffer_available_con);
 }
