@@ -31,15 +31,8 @@ struct _GstConsumerSurfaceAllocatorPrivate {
     sptr<Surface> csurface;
 };
 
-enum {
-    PROP_0,
-    PROP_REPEAT,
-};
-
 G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfaceAllocator, gst_consumer_surface_allocator, GST_TYPE_ALLOCATOR);
 
-static void gst_consumer_surface_allocator_set_property(GObject *object, guint id,
-    const GValue *value, GParamSpec *pspec);
 static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocatorClass *klass);
 static void gst_consumer_surface_allocator_free(GstAllocator *allocator, GstMemory *mem);
 static gpointer gst_consumer_surface_allocator_mem_map(GstMemory *mem, gsize maxsize, GstMapFlags flags);
@@ -59,18 +52,11 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
     g_return_val_if_fail(sallocator != nullptr && sallocator->priv != nullptr, nullptr);
     g_return_val_if_fail(sallocator->priv->csurface != nullptr, nullptr);
 
-    g_mutex_lock(&sallocator->lock);
-    if (sallocator->repeat) {
-        g_mutex_unlock(&sallocator->lock);
-        return nullptr;
-    }
-    g_mutex_unlock(&sallocator->lock);
-
     GstConsumerSurfaceMemory *mem =
         reinterpret_cast<GstConsumerSurfaceMemory *>(g_slice_alloc0(sizeof(GstConsumerSurfaceMemory)));
     g_return_val_if_fail(mem != nullptr, nullptr);
 
-    ON_SCOPE_EXIT(0) { g_slice_free(GstConsumerSurfaceMemory, mem); };
+    ON_SCOPE_EXIT(1) { g_slice_free(GstConsumerSurfaceMemory, mem); };
     // shorten code
     sptr<Surface> surface = sallocator->priv->csurface;
     sptr<SurfaceBuffer> surface_buffer = nullptr;
@@ -83,7 +69,7 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
         return nullptr;
     }
     g_return_val_if_fail(surface_buffer != nullptr, nullptr);
-    ON_SCOPE_EXIT(1) { surface->ReleaseBuffer(surface_buffer, -1); };
+    ON_SCOPE_EXIT(2) { surface->ReleaseBuffer(surface_buffer, -1); };
     (void)surface_buffer->ExtraGet("timeStamp", timestamp);
 
     gst_memory_init(GST_MEMORY_CAST(mem), GST_MEMORY_FLAG_NO_SHARE,
@@ -96,8 +82,8 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
     mem->buffer_handle = reinterpret_cast<intptr_t>(surface_buffer->GetBufferHandle());
     GST_INFO_OBJECT(allocator, "acquire surface buffer");
 
-    CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
+    CANCEL_SCOPE_EXIT_GUARD(2);
     return GST_MEMORY_CAST(mem);
 }
 
@@ -109,11 +95,10 @@ static void gst_consumer_surface_allocator_free(GstAllocator *allocator, GstMemo
     g_return_if_fail(sallocator->priv != nullptr && sallocator->priv->csurface != nullptr);
 
     g_mutex_lock(&sallocator->lock);
+    ON_SCOPE_EXIT(0) { g_mutex_unlock(&sallocator->lock); };
     if (sallocator->repeat) {
-        g_mutex_unlock(&sallocator->lock);
         return;
     }
-    g_mutex_unlock(&sallocator->lock);
 
     GstConsumerSurfaceMemory *surfacemem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
     (void)sallocator->priv->csurface->ReleaseBuffer(surfacemem->surface_buffer, surfacemem->fencefd);
@@ -145,8 +130,6 @@ static void gst_consumer_surface_allocator_init(GstConsumerSurfaceAllocator *sal
         gst_consumer_surface_allocator_get_instance_private(sallocator));
     g_return_if_fail(priv != nullptr);
     sallocator->priv = priv;
-    sallocator->repeat = FALSE;
-    g_mutex_init(&sallocator->lock);
 
     GST_DEBUG_OBJECT(allocator, "init allocator 0x%06" PRIXPTR "", FAKE_POINTER(allocator));
 
@@ -160,8 +143,6 @@ static void gst_consumer_surface_allocator_finalize(GObject *obj)
     GstConsumerSurfaceAllocator *allocator = GST_CONSUMER_SURFACE_ALLOCATOR(obj);
     g_return_if_fail(allocator != nullptr);
 
-    g_mutex_clear(&allocator->lock);
-
     GST_DEBUG_OBJECT(allocator, "finalize allocator 0x%06" PRIXPTR "", FAKE_POINTER(allocator));
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
@@ -172,36 +153,13 @@ static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocato
     g_return_if_fail(gobjectClass != nullptr);
     GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_allocator_debug_category, "surfaceallocator", 0, "surface allocator");
 
-    gobjectClass->set_property = gst_consumer_surface_allocator_set_property;
     gobjectClass->finalize = gst_consumer_surface_allocator_finalize;
-
-    g_object_class_install_property(gobjectClass, PROP_REPEAT,
-        g_param_spec_boolean("repeat", "Repeat frame", "Repeat previous frame",
-            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     GstAllocatorClass *allocatorClass = GST_ALLOCATOR_CLASS(klass);
     g_return_if_fail(allocatorClass != nullptr);
 
     allocatorClass->alloc = gst_consumer_surface_allocator_alloc;
     allocatorClass->free = gst_consumer_surface_allocator_free;
-}
-
-static void gst_consumer_surface_allocator_set_property(GObject *object, guint id,
-    const GValue *value, GParamSpec *pspec)
-{
-    (void)pspec;
-    GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(object);
-    g_return_if_fail(sallocator != nullptr && value != nullptr);
-
-    switch (id) {
-        case PROP_REPEAT:
-            g_mutex_lock(&sallocator->lock);
-            sallocator->repeat = g_value_get_boolean(value);
-            g_mutex_unlock(&sallocator->lock);
-            break;
-        default:
-            break;
-    }
 }
 
 void gst_consumer_surface_allocator_set_surface(GstAllocator *allocator, sptr<Surface> &consumerSurface)
