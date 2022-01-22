@@ -56,7 +56,7 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
         reinterpret_cast<GstConsumerSurfaceMemory *>(g_slice_alloc0(sizeof(GstConsumerSurfaceMemory)));
     g_return_val_if_fail(mem != nullptr, nullptr);
 
-    ON_SCOPE_EXIT(1) { g_slice_free(GstConsumerSurfaceMemory, mem); };
+    ON_SCOPE_EXIT(0) { g_slice_free(GstConsumerSurfaceMemory, mem); };
     // shorten code
     sptr<Surface> surface = sallocator->priv->csurface;
     sptr<SurfaceBuffer> surface_buffer = nullptr;
@@ -69,7 +69,7 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
         return nullptr;
     }
     g_return_val_if_fail(surface_buffer != nullptr, nullptr);
-    ON_SCOPE_EXIT(2) { surface->ReleaseBuffer(surface_buffer, -1); };
+    ON_SCOPE_EXIT(1) { surface->ReleaseBuffer(surface_buffer, -1); };
     (void)surface_buffer->ExtraGet("timeStamp", timestamp);
 
     gst_memory_init(GST_MEMORY_CAST(mem), GST_MEMORY_FLAG_NO_SHARE,
@@ -82,8 +82,8 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
     mem->buffer_handle = reinterpret_cast<intptr_t>(surface_buffer->GetBufferHandle());
     GST_INFO_OBJECT(allocator, "acquire surface buffer");
 
+    CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
-    CANCEL_SCOPE_EXIT_GUARD(2);
     return GST_MEMORY_CAST(mem);
 }
 
@@ -93,12 +93,6 @@ static void gst_consumer_surface_allocator_free(GstAllocator *allocator, GstMemo
     g_return_if_fail(gst_is_consumer_surface_memory(mem));
     GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
     g_return_if_fail(sallocator->priv != nullptr && sallocator->priv->csurface != nullptr);
-
-    g_mutex_lock(&sallocator->lock);
-    ON_SCOPE_EXIT(0) { g_mutex_unlock(&sallocator->lock); };
-    if (sallocator->repeat) {
-        return;
-    }
 
     GstConsumerSurfaceMemory *surfacemem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
     (void)sallocator->priv->csurface->ReleaseBuffer(surfacemem->surface_buffer, surfacemem->fencefd);
@@ -152,7 +146,6 @@ static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocato
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
     g_return_if_fail(gobjectClass != nullptr);
     GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_allocator_debug_category, "surfaceallocator", 0, "surface allocator");
-
     gobjectClass->finalize = gst_consumer_surface_allocator_finalize;
 
     GstAllocatorClass *allocatorClass = GST_ALLOCATOR_CLASS(klass);
