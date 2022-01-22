@@ -154,19 +154,26 @@ static void gst_consumer_surface_pool_set_property(GObject *object, guint id, co
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(object);
     g_return_if_fail(surfacepool != nullptr && value != nullptr);
 
+    g_mutex_lock(&surfacepool->priv->pool_lock);
+    ON_SCOPE_EXIT(0) { g_mutex_unlock(&surfacepool->priv->pool_lock; };
+
     switch (id) {
         case PROP_SUSPEND:
-            g_mutex_lock(&surfacepool->priv->pool_lock);
             surfacepool->priv->suspend = g_value_get_boolean(value);
-            g_mutex_unlock(&surfacepool->priv->pool_lock);
             break;
         case PROP_REPEAT:
             break;
         case PROP_MAX_FRAME_RATE:
-            g_return_if_fail(g_value_get_uint(value) > 0);
-            g_mutex_lock(&surfacepool->priv->pool_lock);
+            // support dynamic disabling
+            if (g_value_get_uint(value) == 0) {
+                if (surfacepool->priv->cache_buffer != nullptr) {
+                    gst_buffer_unref(surfacepool->priv->cache_buffer);
+                    surfacepool->priv->cache_buffer = nullptr;
+                }
+                surfacepool->priv->min_interval = 0;
+                break;
+            }
             surfacepool->priv->min_interval = 1000000 / g_value_get_uint(value); // 1s = 1000000us
-            g_mutex_unlock(&surfacepool->priv->pool_lock);
             break;
         default:
             break;
