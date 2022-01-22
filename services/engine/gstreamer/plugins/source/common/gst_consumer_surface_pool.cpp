@@ -33,6 +33,7 @@ struct _GstConsumerSurfacePoolPrivate {
     gboolean flushing;
     gboolean start;
     gboolean suspend;
+    guint64 min_interval;
 };
 
 enum {
@@ -64,6 +65,7 @@ static gboolean gst_consumer_surface_pool_stop(GstBufferPool *pool);
 static gboolean gst_consumer_surface_pool_start(GstBufferPool *pool);
 static void gst_consumer_surface_pool_flush_start(GstBufferPool *pool);
 static void gst_consumer_surface_pool_flush_stop(GstBufferPool *pool);
+static gboolean drop_this_fame(guint64 new_timestamp, guint64 old_timestamp, guint64 min_interval);
 
 void ConsumerListenerProxy::OnBufferAvailable()
 {
@@ -156,6 +158,10 @@ static void gst_consumer_surface_pool_set_property(GObject *object, guint id, co
         case PROP_REPEAT:
             break;
         case PROP_MAX_FRAME_RATE:
+            g_return_if_fail(g_value_get_uint(value) > 0);
+            g_mutex_lock(&surfacepool->priv->pool_lock);
+            surfacepool->priv->min_interval = 1000000 / g_value_get_uint(value); // 1s = 1000000us
+            g_mutex_unlock(&surfacepool->priv->pool_lock);
             break;
         default:
             break;
@@ -242,6 +248,7 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
     if (surfacepool->priv->flushing || !surfacepool->priv->start) {
         return GST_FLOW_FLUSHING;
     }
+    (void)drop_this_fame(0, 0, 0);
     GstFlowReturn result = pclass->alloc_buffer(pool, buffer, params);
     g_return_val_if_fail(result == GST_FLOW_OK && *buffer != nullptr, GST_FLOW_ERROR);
     GstMemory *mem = gst_buffer_peek_memory(*buffer, 0);
@@ -265,6 +272,7 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
     priv->flushing = FALSE;
     priv->start = FALSE;
     priv->suspend = FALSE;
+    priv->min_interval = 0;
     g_mutex_init(&priv->pool_lock);
     g_cond_init(&priv->buffer_available_con);
 }
@@ -274,6 +282,21 @@ static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *p
     g_return_if_fail(pool != nullptr && pool->priv != nullptr);
     auto priv = pool->priv;
     g_mutex_lock(&priv->pool_lock);
+
+    if (priv->suspend) {
+        sptr<SurfaceBuffer> buffer = nullptr;
+        gint32 fencefd = -1;
+        gint64 timestamp = 0;
+        Rect damage = {0, 0, 0, 0};
+        if (priv->consumer_surface->AcquireBuffer(buffer, fencefd, timestamp, damage) != SURFACE_ERROR_OK) {
+            g_mutex_unlock(&priv->pool_lock);
+            return;
+        }
+        (void)priv->consumer_surface->ReleaseBuffer(buffer, fencefd);
+        g_mutex_unlock(&priv->pool_lock);
+        return;
+    }
+
     if (priv->available_buf_count == 0) {
         g_cond_signal(&priv->buffer_available_con);
     }
@@ -303,4 +326,16 @@ GstBufferPool *gst_consumer_surface_pool_new()
     (void)gst_object_ref_sink(pool);
 
     return pool;
+}
+
+static gboolean drop_this_fame(guint64 new_timestamp, guint64 old_timestamp, guint64 min_interval)
+{
+    g_return_val_if_fail(new_timestamp > 0 && old_timestamp > 0 && min_interval > 0, TRUE);
+    g_return_val_if_fail(new_timestamp > old_timestamp, TRUE);
+
+    const guint64 deviations = 3000; // 3ms = 3000us
+    if (new_timestamp < (old_timestamp + min_interval - deviations)) {
+        return TRUE;
+    }
+    return FALSE;
 }
