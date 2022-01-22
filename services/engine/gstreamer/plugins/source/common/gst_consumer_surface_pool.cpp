@@ -33,7 +33,9 @@ struct _GstConsumerSurfacePoolPrivate {
     gboolean flushing;
     gboolean start;
     gboolean suspend;
-    guint64 min_interval;
+    guint64 repeat_interval;
+    guint32 max_frame_rate;
+    guint64 previous_timestamp;
     GstBuffer *cache_buffer;
 };
 
@@ -66,7 +68,7 @@ static gboolean gst_consumer_surface_pool_stop(GstBufferPool *pool);
 static gboolean gst_consumer_surface_pool_start(GstBufferPool *pool);
 static void gst_consumer_surface_pool_flush_start(GstBufferPool *pool);
 static void gst_consumer_surface_pool_flush_stop(GstBufferPool *pool);
-static gboolean drop_this_fame(guint64 new_timestamp, guint64 old_timestamp, guint64 min_interval);
+static gboolean drop_this_fame(guint64 new_timestamp, guint64 old_timestamp, guint32 frame_rate);
 
 void ConsumerListenerProxy::OnBufferAvailable()
 {
@@ -153,27 +155,29 @@ static void gst_consumer_surface_pool_set_property(GObject *object, guint id, co
     (void)pspec;
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(object);
     g_return_if_fail(surfacepool != nullptr && value != nullptr);
+    auto priv = surfacepool->priv;
 
-    g_mutex_lock(&surfacepool->priv->pool_lock);
-    ON_SCOPE_EXIT(0) { g_mutex_unlock(&surfacepool->priv->pool_lock; };
+    g_mutex_lock(&priv->pool_lock);
+    ON_SCOPE_EXIT(0) { g_mutex_unlock(&priv->pool_lock); };
 
     switch (id) {
         case PROP_SUSPEND:
-            surfacepool->priv->suspend = g_value_get_boolean(value);
+            priv->suspend = g_value_get_boolean(value);
             break;
         case PROP_REPEAT:
-            break;
-        case PROP_MAX_FRAME_RATE:
             // support dynamic disabling
             if (g_value_get_uint(value) == 0) {
-                if (surfacepool->priv->cache_buffer != nullptr) {
-                    gst_buffer_unref(surfacepool->priv->cache_buffer);
-                    surfacepool->priv->cache_buffer = nullptr;
+                if (priv->cache_buffer != nullptr) {
+                    gst_buffer_unref(priv->cache_buffer);
+                    priv->cache_buffer = nullptr;
                 }
-                surfacepool->priv->min_interval = 0;
+                priv->repeat_interval = 0;
                 break;
             }
-            surfacepool->priv->min_interval = 1000000 / g_value_get_uint(value); // 1s = 1000000us
+            priv->repeat_interval = 1000000 / g_value_get_uint(value); // 1s = 1000000us
+            break;
+        case PROP_MAX_FRAME_RATE:
+            priv->max_frame_rate = g_value_get_uint(value);
             break;
         default:
             break;
@@ -190,7 +194,7 @@ static void gst_consumer_surface_pool_flush_start(GstBufferPool *pool)
         gst_buffer_unref(priv->cache_buffer);
         priv->cache_buffer = nullptr;
     }
-    surfacepool->priv->flushing = TRUE;
+    priv->flushing = TRUE;
     g_cond_signal(&priv->buffer_available_con);
     g_mutex_unlock(&priv->pool_lock);
 }
@@ -201,7 +205,7 @@ static void gst_consumer_surface_pool_flush_stop(GstBufferPool *pool)
     g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);
     auto priv = surfacepool->priv;
     g_mutex_lock(&priv->pool_lock);
-    surfacepool->priv->flushing = FALSE;
+    priv->flushing = FALSE;
     g_mutex_unlock(&priv->pool_lock);
 }
 
@@ -212,7 +216,7 @@ static gboolean gst_consumer_surface_pool_start(GstBufferPool *pool)
     g_return_val_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr, FALSE);
     auto priv = surfacepool->priv;
     g_mutex_lock(&priv->pool_lock);
-    surfacepool->priv->start = TRUE;
+    priv->start = TRUE;
     g_mutex_unlock(&priv->pool_lock);
     return TRUE;
 }
@@ -224,7 +228,7 @@ static gboolean gst_consumer_surface_pool_stop(GstBufferPool *pool)
     g_return_val_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr, FALSE);
     auto priv = surfacepool->priv;
     g_mutex_lock(&priv->pool_lock);
-    surfacepool->priv->start = FALSE;
+    priv->start = FALSE;
     g_cond_signal(&priv->buffer_available_con);
     g_mutex_unlock(&priv->pool_lock);
     return TRUE;
@@ -244,7 +248,7 @@ static void gst_consumer_surface_pool_release_buffer(GstBufferPool *pool, GstBuf
 
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
     g_mutex_lock(&surfacepool->priv->pool_lock);
-    if (surfacepool->priv->min_interval > 0) {
+    if (surfacepool->priv->repeat_interval > 0) {
         if (surfacepool->priv->cache_buffer != nullptr) {
             gst_buffer_unref(surfacepool->priv->cache_buffer);
         }
@@ -270,30 +274,43 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
     auto priv = surfacepool->priv;
     g_mutex_lock(&priv->pool_lock);
     ON_SCOPE_EXIT(0) { g_mutex_unlock(&priv->pool_lock); };
+
+retry:
     while (priv->available_buf_count == 0 && !priv->flushing && priv->start) {
-        if (priv->min_interval == 0 || priv->cache_buffer == nullptr) {
+        if (priv->repeat_interval == 0 || priv->cache_buffer == nullptr) {
             g_cond_wait(&priv->buffer_available_con, &priv->pool_lock);
-        } else {
-            gboolean timeout = g_cond_wait_until(&priv->buffer_available_con, &priv->pool_lock, priv->min_interval);
-            if (timeout && priv->cache_buffer != nullptr) {
-                *buffer = priv->cache_buffer;
-                return GST_FLOW_OK;
-            }
+        } else if (g_cond_wait_until(&priv->buffer_available_con, &priv->pool_lock, priv->repeat_interval)) {
+            *buffer = priv->cache_buffer;
+            return GST_FLOW_OK;
         }
     }
-    if (surfacepool->priv->flushing || !surfacepool->priv->start) {
+    if (priv->flushing || !priv->start) {
         return GST_FLOW_FLUSHING;
     }
-    (void)drop_this_fame(0, 0, 0);
+
     GstFlowReturn result = pclass->alloc_buffer(pool, buffer, params);
     g_return_val_if_fail(result == GST_FLOW_OK && *buffer != nullptr, GST_FLOW_ERROR);
     GstMemory *mem = gst_buffer_peek_memory(*buffer, 0);
+    GstConsumerSurfaceMemory *surfacemem = nullptr;
     if (gst_is_consumer_surface_memory(mem)) {
-        GstConsumerSurfaceMemory *surfacemem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
+        surfacemem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
         gst_buffer_add_buffer_handle_meta(*buffer, surfacemem->buffer_handle, surfacemem->fencefd, 0);
         GST_BUFFER_PTS(*buffer) = surfacemem->timestamp;
     }
-    surfacepool->priv->available_buf_count--;
+    priv->available_buf_count--;
+
+    // check whether needs to dropp frame to ensure the maximum frame rate
+    if (surfacemem != nullptr && priv->max_frame_rate > 0) {
+        if (drop_this_fame(surfacemem->timestamp, priv->previous_timestamp, priv->max_frame_rate)) {
+            priv->previous_timestamp = surfacemem->timestamp;
+            (void)priv->consumer_surface->ReleaseBuffer(surfacemem->surface_buffer, surfacemem->fencefd);
+            if (!priv->flushing && priv->start) {
+                goto retry;
+            }
+        }
+    }
+    priv->previous_timestamp = surfacemem->timestamp;
+
     return result;
 }
 
@@ -308,8 +325,10 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
     priv->flushing = FALSE;
     priv->start = FALSE;
     priv->suspend = FALSE;
-    priv->min_interval = 0;
-    priv->cache_buffer = nullptr
+    priv->repeat_interval = 0;
+    priv->max_frame_rate = 0;
+    priv->previous_timestamp = 0;
+    priv->cache_buffer = nullptr;
     g_mutex_init(&priv->pool_lock);
     g_cond_init(&priv->buffer_available_con);
 }
@@ -332,9 +351,9 @@ static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *p
         }
     }
 
-    if (surfacepool->priv->cache_buffer != nullptr) {
-        gst_buffer_unref(surfacepool->priv->cache_buffer);
-        surfacepool->priv->cache_buffer = nullptr;
+    if (priv->cache_buffer != nullptr) {
+        gst_buffer_unref(priv->cache_buffer);
+        priv->cache_buffer = nullptr;
     }
 
     if (priv->available_buf_count == 0) {
@@ -367,13 +386,20 @@ GstBufferPool *gst_consumer_surface_pool_new()
     return pool;
 }
 
-static gboolean drop_this_fame(guint64 new_timestamp, guint64 old_timestamp, guint64 min_interval)
+static gboolean drop_this_fame(guint64 new_timestamp, guint64 old_timestamp, guint32 frame_rate)
 {
-    g_return_val_if_fail(new_timestamp > 0 && old_timestamp > 0 && min_interval > 0, TRUE);
+    g_return_val_if_fail(new_timestamp > 0 && old_timestamp > 0 && frame_rate > 0, TRUE);
     g_return_val_if_fail(new_timestamp > old_timestamp, TRUE);
 
+    guint64 min_interval = 1000000 / frame_rate; // 1s = 1000000us
     const guint64 deviations = 3000; // 3ms = 3000us
-    if (new_timestamp < (old_timestamp + min_interval - deviations)) {
+    if ((UINT64_MAX - min_interval) < old_timestamp) {
+        GST_WARNING("Invalid timestamp");
+        return TRUE;
+    }
+
+    if (new_timestamp < (old_timestamp - deviations + min_interval)) {
+        GST_INFO("Drop this frame to make sure maximum frame rate");
         return TRUE;
     }
     return FALSE;
