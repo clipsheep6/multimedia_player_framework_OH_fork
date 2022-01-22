@@ -41,6 +41,8 @@ struct _GstConsumerSurfaceAllocator {
 
     /* < private > */
     GstConsumerSurfaceAllocatorPrivate *priv;
+    gboolean repeat;
+    GMutex lock;
 };
 
 struct _GstConsumerSurfaceAllocatorClass {
