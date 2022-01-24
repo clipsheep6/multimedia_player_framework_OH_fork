@@ -278,6 +278,9 @@ static void gst_shmem_pool_flush_start(GstBufferPool *pool)
 {
     g_return_if_fail(pool != nullptr);
     GstShMemPool *spool = GST_SHMEM_POOL_CAST(pool);
+    if (spool->end) {
+        return TRUE;
+    }
 
     GST_DEBUG("pool flush");
     GST_BUFFER_POOL_LOCK(spool);
