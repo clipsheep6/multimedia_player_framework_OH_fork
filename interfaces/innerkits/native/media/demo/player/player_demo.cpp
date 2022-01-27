@@ -298,7 +298,7 @@ int32_t PlayerDemo::GetVideoTrackInfo()
         int32_t bitrate = -1;
         int32_t width = -1;
         int32_t height = -1;
-        int32_t framerate = -1;
+        double framerate = -1.0;
         int32_t type = -1;
         int32_t index = -1;
         for (auto iter = videoTrack.begin(); iter != videoTrack.end(); iter++) {

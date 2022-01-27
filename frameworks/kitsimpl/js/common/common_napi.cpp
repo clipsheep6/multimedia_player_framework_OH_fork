@@ -300,7 +300,7 @@ bool CommonNapi::SetPropertyString(napi_env env, napi_value &obj, const std::str
     return true;
 }
 
-bool SetPropertyDouble(napi_env env, napi_value &obj, const std::string &key, double value)
+bool CommonNapi::SetPropertyDouble(napi_env env, napi_value &obj, const std::string &key, double value)
 {
     CHECK_AND_RETURN_RET(obj != nullptr, false);
 
