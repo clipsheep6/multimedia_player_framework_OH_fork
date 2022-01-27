@@ -2609,7 +2609,7 @@ declare namespace media {
      * @param callback Callback used to listen for the audio decoder event, return the input codecbuffer.
      * usualy contain the width and height.
      */
-    on(type: 'inputBufferAvailable', callback: Callback<CodecBuffer>): void;
+    on(type: 'inputAvailable', callback: Callback<CodecBuffer>): void;
 
     /**
      * Listens for audio decoder output buffer.
@@ -2619,7 +2619,7 @@ declare namespace media {
      * @param type Type of the audio decoder event to listen for.
      * @param callback Callback used to listen for the audio decoder event, return the output codecbuffer.
      */
-    on(type: 'outputBufferAvailable', callback: Callback<CodecBuffer>): void;
+    on(type: 'outputAvailable', callback: Callback<CodecBuffer>): void;
 
     /**
      * get the supported audio decoder capabilities.
