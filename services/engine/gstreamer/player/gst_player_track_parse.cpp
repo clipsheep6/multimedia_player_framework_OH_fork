@@ -68,14 +68,13 @@ int32_t GstPlayerTrackParse::GetVideoTrackInfo(std::vector<Format> &videoTrack)
             }
             int32_t num = std::stoi(framerate.substr(0, delimPos));
             int32_t den = std::stoi(framerate.substr(delimPos + 1, framerate.length()));
+            double info = 0.0;
             if (den != 0) {
-                /* 100: float to int ratio */
-                value = (static_cast<float>(num) / den) * 100;
+                info = static_cast<double>(num) / den;
             } else {
-                value = num;
+                info = num;
             }
-
-            (void)trackInfo.PutIntValue(std::string(PlayerKeys::PLAYER_FRAMERATE), value);
+            (void)trackInfo.PutDoubleValue(std::string(PlayerKeys::PLAYER_FRAMERATE), info);
         }
         if (trackInfoMap.count(std::string(PlayerKeys::PLAYER_TRACK_INDEX)) > 0) {
             value = std::stoi(trackInfoMap.at(std::string(PlayerKeys::PLAYER_TRACK_INDEX)));

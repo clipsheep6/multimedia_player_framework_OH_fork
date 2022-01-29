@@ -300,11 +300,30 @@ bool CommonNapi::SetPropertyString(napi_env env, napi_value &obj, const std::str
     return true;
 }
 
+bool CommonNapi::SetPropertyDouble(napi_env env, napi_value &obj, const std::string &key, double value)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value valueNapi = nullptr;
+    status = napi_create_double(env, value, &valueNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, keyNapi, valueNapi);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "faile to set property");
+
+    return true;
+}
+
 napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
 {
     napi_value buffer = nullptr;
     int32_t intValue = 0;
     std::string strValue;
+    double doubleValue = 0.0;
     napi_status status = napi_create_object(env, &buffer);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
@@ -320,6 +339,10 @@ napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
                     CHECK_AND_RETURN_RET(SetPropertyString(env, buffer, iter.first, strValue) == true, nullptr);
                 }
                 break;
+            case FORMAT_TYPE_DOUBLE:
+                if (format.GetDoubleValue(iter.first, doubleValue) == true) {
+                    CHECK_AND_RETURN_RET(SetPropertyDouble(env, buffer, iter.first, doubleValue) == true, nullptr);
+                }
             default:
                 MEDIA_LOGE("format key: %{public}s", iter.first.c_str());
                 break;

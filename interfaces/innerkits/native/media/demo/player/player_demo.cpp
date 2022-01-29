@@ -298,7 +298,7 @@ int32_t PlayerDemo::GetVideoTrackInfo()
         int32_t bitrate = -1;
         int32_t width = -1;
         int32_t height = -1;
-        int32_t framerate = -1;
+        double framerate = -1.0;
         int32_t type = -1;
         int32_t index = -1;
         for (auto iter = videoTrack.begin(); iter != videoTrack.end(); iter++) {
@@ -306,7 +306,7 @@ int32_t PlayerDemo::GetVideoTrackInfo()
             iter->GetIntValue(std::string(PlayerKeys::PLAYER_BITRATE), bitrate);
             iter->GetIntValue(std::string(PlayerKeys::PLAYER_WIDTH), width);
             iter->GetIntValue(std::string(PlayerKeys::PLAYER_HEIGHT), height);
-            iter->GetIntValue(std::string(PlayerKeys::PLAYER_FRAMERATE), framerate);
+            iter->GetDoubleValue(std::string(PlayerKeys::PLAYER_FRAMERATE), framerate);
             iter->GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_TYPE), type);
             iter->GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
             cout << "mime: " << mime.c_str() << ", bitrate: " << bitrate << ", width: " << width << ", height: " <<
