@@ -16,7 +16,6 @@
 #include "video_encoder_callback_napi.h"
 #include <uv.h>
 #include "avcodec_napi_utils.h"
-#include "avcodec_napi_helper.h"
 #include "media_errors.h"
 #include "media_log.h"
 

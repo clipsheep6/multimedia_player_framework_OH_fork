@@ -553,21 +553,23 @@ napi_value VideoDecoderNapi::QueueInput(napi_env env, napi_callback_info info)
     } else {
         asyncCtx->SignError(MSERR_INVALID_VAL, "Illegal argument");
     }
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->index >= 0, result, "Failed to check index");
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
     if (asyncCtx->napi->codecHelper_->IsEos() || asyncCtx->napi->codecHelper_->IsStop()) {
-        MEDIA_LOGD("Eos or stop, queue buffer failed");
-        return result;
-    }
-    if (asyncCtx->flag & AVCODEC_BUFFER_FLAG_EOS) {
-        asyncCtx->napi->codecHelper_->SetEos(true);
-    }
-    if (asyncCtx->napi->vdec_->QueueInputBuffer(asyncCtx->index, asyncCtx->info, asyncCtx->flag) != MSERR_OK) {
-        asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to QueueInput");
+        asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Eos or stop, queue buffer failed");
+    } else {
+        if (asyncCtx->flag & AVCODEC_BUFFER_FLAG_EOS) {
+            asyncCtx->napi->codecHelper_->SetEos(true);
+        }
+        if (asyncCtx->index < 0) {
+            asyncCtx->SignError(MSERR_EXT_UNKNOWN, "invalid index");
+        } else if (asyncCtx->napi->vdec_->QueueInputBuffer(asyncCtx->index,
+            asyncCtx->info, asyncCtx->flag) != MSERR_OK) {
+            asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to QueueInput");
+        }
     }
 
     napi_value resource = nullptr;
