@@ -25,9 +25,11 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-VideoEncoderCallbackNapi::VideoEncoderCallbackNapi(napi_env env, std::weak_ptr<VideoEncoder> venc)
+VideoEncoderCallbackNapi::VideoEncoderCallbackNapi(napi_env env, std::weak_ptr<VideoEncoder> venc,
+    const std::shared_ptr<AVCodecNapiHelper> &codecHelper)
     : env_(env),
-      venc_(venc)
+      venc_(venc),
+      codecHelper_(codecHelper)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -111,6 +113,10 @@ void VideoEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
 
     auto adec = venc_.lock();
     CHECK_AND_RETURN(adec != nullptr);
+    if (codecHelper_->IsEos() || codecHelper_->IsStop()) {
+        MEDIA_LOGD("At eos or Stop, no buffer available");
+        return;
+    }
 
     auto buffer = adec->GetInputBuffer(index);
     CHECK_AND_RETURN(buffer != nullptr);
