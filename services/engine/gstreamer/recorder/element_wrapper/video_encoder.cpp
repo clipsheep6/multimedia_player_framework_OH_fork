@@ -33,7 +33,7 @@ int32_t VideoEncoder::Init()
     return MSERR_OK;
 }
 
-std::string GetEncorderName(std::string mimeType)
+std::string VideoEncoder::GetEncorderName(std::string mimeType)
 {
     auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
     CHECK_AND_RETURN_RET(codecList != nullptr, "");
