@@ -386,20 +386,20 @@ static gboolean reset_src_caps(GstSurfaceVideoSrc *src, uint32_t pixelFormat)
     std::string format = "NV21";
 
     switch (pixelFormat) {
-    case 25:
-        GST_INFO("input pixel foramt is nv21");
-        format = "NV21";
-        return TRUE;
-    case 28:
-        GST_INFO("input pixel foramt is I420");
-        format = "I420";
-        break;
-    case 24:
-        GST_INFO("input pixel foramt is nv12");
-        format = "NV12";
-        break;
-    default:
-        break;
+        case 25:  // means PIXEL_FMT_YCRCB_420SP
+            GST_INFO("input pixel foramt is nv21");
+            format = "NV21";
+            return TRUE;
+        case 28: // means PIXEL_FMT_YCBCR_420_P
+            GST_INFO("input pixel foramt is I420");
+            format = "I420";
+            break;
+        case 24: // means PIXEL_FMT_YCBCR_420SP
+            GST_INFO("input pixel foramt is nv12");
+            format = "NV12";
+            break;
+        default:
+            break;
     }
 
     src->src_caps = gst_caps_new_simple("video/x-raw",

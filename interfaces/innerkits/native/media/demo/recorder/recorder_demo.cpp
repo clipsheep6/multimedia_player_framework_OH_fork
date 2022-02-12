@@ -17,7 +17,7 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
-#include <time.h>
+#include <ctime>
 #include "display_type.h"
 #include "securec.h"
 #include "demo_log.h"
@@ -109,13 +109,13 @@ void RecorderDemo::HDICreateBuffer()
             break;
         }
 
-        memset(tempBuffer, color_, YUV_BUFFER_SIZE);
-        srand(time(0));
-        for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += 100) {
+        memset_s(tempBuffer, color_, YUV_BUFFER_SIZE);
+        (void)srand(time(0));
+        for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += 100) {  // 100 is the steps between noise
             if (i >= YUV_BUFFER_SIZE - 1) {
                 break;
             }
-            tempBuffer[i] = (unsigned char)(rand() % 255);
+            tempBuffer[i] = (unsigned char)(rand() % 255); // add noise
         }
 
         color_--;
