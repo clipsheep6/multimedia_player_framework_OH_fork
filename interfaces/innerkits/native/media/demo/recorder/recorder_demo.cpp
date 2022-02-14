@@ -109,8 +109,8 @@ void RecorderDemo::HDICreateBuffer()
             break;
         }
 
-        memset_s(tempBuffer, sizeof(tempBuffer), color_, YUV_BUFFER_SIZE);
-        (void)srand(time(0));
+        (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color_, YUV_BUFFER_SIZE);
+        srand(time(0));
         for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += 100) {  // 100 is the steps between noise
             if (i >= YUV_BUFFER_SIZE - 1) {
                 break;
