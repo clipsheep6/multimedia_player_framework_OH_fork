@@ -58,6 +58,8 @@ public:
     bool AccessCheck(uint8_t flag) const;
 
 private:
+    int GetFdFromUri(std::string_view rawUri) const;
+
     std::string_view uri_;
     std::string formattedUri_ = "";
     uint8_t type_ = 0;
