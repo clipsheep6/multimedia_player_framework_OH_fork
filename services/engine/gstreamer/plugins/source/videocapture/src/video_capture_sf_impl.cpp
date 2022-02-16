@@ -127,6 +127,7 @@ int32_t VideoCaptureSfImpl::Stop()
     persistTime_ = 0;
     totalPauseTime_ = 0;
     pauseCount_ = 0;
+    isFirstBuffer_ = true;
     return MSERR_OK;
 }
 
@@ -263,6 +264,12 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
     }
     if (dataConSurface_->AcquireBuffer(surfaceBuffer_, fence_, timestamp_, damage_) != SURFACE_ERROR_OK) {
         return MSERR_UNKNOWN;
+    }
+
+    if (isFirstBuffer_) {
+        isFirstBuffer_ = false;
+        pixelFormat_ = surfaceBuffer_->GetFormat();
+        MEDIA_LOGI("the input pixel format is %{public}d", pixelFormat_);
     }
 
     int32_t ret = GetSufferExtraData();

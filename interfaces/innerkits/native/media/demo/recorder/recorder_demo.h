@@ -33,7 +33,7 @@ struct VideoRecorderConfig {
     int32_t channelCount = 2;
     int32_t duration = 60;
     int32_t width = 1280;
-    int32_t height = 720;
+    int32_t height = 768;
     int32_t frameRate = 30;
     int32_t videoEncodingBitRate = 48000;
     int32_t sampleRate = 48000;
@@ -42,7 +42,7 @@ struct VideoRecorderConfig {
     AudioCodecFormat audioFormat = AAC_LC;
     AudioSourceType aSource = AUDIO_MIC;
     OutputFormatType outPutFormat = FORMAT_MPEG_4;
-    VideoSourceType vSource = VIDEO_SOURCE_SURFACE_ES;
+    VideoSourceType vSource = VIDEO_SOURCE_SURFACE_YUV;
     VideoCodecFormat videoFormat = H264;
 };
 
@@ -68,17 +68,18 @@ public:
     int32_t CameraServicesForVideo() const;
     int32_t CameraServicesForAudio() const;
     int32_t SetFormat(const std::string &type) const;
-    int32_t GetStubFile();
+    uint64_t GetPts();
 
 private:
     int64_t pts_ = 0;
     int32_t isKeyFrame_ = 1;
     OHOS::sptr<OHOS::Surface> producerSurface_ = nullptr;
-    std::shared_ptr<std::ifstream> file_ = nullptr;
     std::atomic<bool> isExit_{ false };
     std::shared_ptr<Recorder> recorder_ = nullptr;
     std::unique_ptr<std::thread> camereHDIThread_;
     uint32_t count_ = 0;
+    unsigned char color_ = 0xFF;
+    std::atomic<bool> isStart_{ true };
 };
 
 class RecorderCallbackDemo : public RecorderCallback {
