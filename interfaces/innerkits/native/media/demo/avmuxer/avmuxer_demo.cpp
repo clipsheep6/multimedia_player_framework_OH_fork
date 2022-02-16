@@ -17,7 +17,6 @@
 #include <iostream>
 #include <fstream>
 #include <cstdio>
-#include <securec.h>
 #include <unistd.h>
 #include "securec.h"
 namespace OHOS {

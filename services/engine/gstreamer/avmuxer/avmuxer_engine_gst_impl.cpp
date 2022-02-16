@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include "gstbaseparse.h"
 #include "gst_mux_bin.h"
+#include "uri_helper.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerEngineGstImpl"};
@@ -32,6 +33,7 @@ namespace OHOS {
 namespace Media {
 static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
 {
+    CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
     std::string name = gst_element_get_name(src);
     int32_t trackID = name.back() - '0';
     (*reinterpret_cast<std::map<int32_t, bool> *>(user_data))[trackID] = true;
@@ -39,6 +41,7 @@ static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
 
 static void StopFeed(GstAppSrc *src, gpointer user_data)
 {
+    CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
     std::string name = gst_element_get_name(src);
     int32_t trackID = name.back() - '0';
     (*reinterpret_cast<std::map<int32_t, bool> *>(user_data))[trackID] = false;
@@ -84,7 +87,19 @@ int32_t AVMuxerEngineGstImpl::SetOutput(const std::string &path, const std::stri
     MEDIA_LOGD("SetOutput");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
 
-    g_object_set(muxBin_, "path", path.c_str(), "mux", FORMAT_TO_MUX.at(format).c_str(), nullptr);
+    std::string rawUri;
+    UriHelper uriHelper(path);
+    uriHelper.FormatMe();
+    if (uriHelper.UriType() == UriHelper::URI_TYPE_FILE) {
+        rawUri = path.substr(strlen("file://"));
+    } else if (uriHelper.UriType() == UriHelper::URI_TYPE_FD) {
+        rawUri = path.substr(strlen("fd://"));
+    } else {
+        MEDIA_LOGE("Failed to check output path");
+        return MSERR_INVALID_VAL;
+    }
+
+    g_object_set(muxBin_, "path", rawUri.c_str(), "mux", FORMAT_TO_MUX.at(format).c_str(), nullptr);
     format_ = format;
 
     return MSERR_OK;
@@ -291,7 +306,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
         ret = Setmp3Caps(trackDesc, mimeType, trackId);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetaacCaps");
     }
-    add_track(muxBin_, AUDIO_MIME_TYPE.find(mimeType) == AUDIO_MIME_TYPE.end() ? VIDEO : AUDIO, name.c_str());
+    gst_mux_bin_add_track(muxBin_, AUDIO_MIME_TYPE.find(mimeType) == AUDIO_MIME_TYPE.end() ? VIDEO : AUDIO, name.c_str());
 
     return MSERR_OK;
 }

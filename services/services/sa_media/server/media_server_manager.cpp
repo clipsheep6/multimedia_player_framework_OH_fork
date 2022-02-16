@@ -267,7 +267,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
         }
         case AVMUXER: {
             for (auto it = avmuxerStubMap_.begin(); it != avmuxerStubMap_.end(); it++) {
-                if (it->first ==  object) {
+                if (it->first == object) {
                     MEDIA_LOGD("destory avmuxer stub services(%{public}zu) pid(%{public}d).",
                         avmuxerStubMap_.size(), pid);
                     (void)avmuxerStubMap_.erase(it);
@@ -339,7 +339,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 
     MEDIA_LOGD("avmuxer stub services(%{public}zu) pid(%{public}d).", avmuxerStubMap_.size(), pid);
     for (auto itAVMuxer = avmuxerStubMap_.begin(); itAVMuxer != avmuxerStubMap_.end();) {
-        if (itAVMuxer->second ==  pid) {
+        if (itAVMuxer->second == pid) {
             itAVMuxer = avmuxerStubMap_.erase(itAVMuxer);
         } else {
             itAVMuxer++;

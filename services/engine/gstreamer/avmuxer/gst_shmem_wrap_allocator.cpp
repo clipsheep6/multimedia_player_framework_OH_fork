@@ -95,12 +95,12 @@ static GstMemory *gst_shmem_wrap_allocator_mem_share (GstMemory *mem, gssize off
     if ((parent = mem->parent) == NULL) {
         parent = (GstMemory *)mem;
     }
-
     if (size == -1) {
         size = mem->size - offset;
     }
 
     sub = g_slice_new0(GstShMemMemory);
+    g_return_val_if_fail(sub != nullptr, nullptr);
     /* the shared memory is always readonly */
     gst_memory_init(
         GST_MEMORY_CAST(sub),
