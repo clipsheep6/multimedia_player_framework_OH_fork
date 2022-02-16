@@ -14,6 +14,10 @@
  */
 
 #include "player_server.h"
+#include <sstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
@@ -75,6 +79,33 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
         looping_ = false;
         speedMode_ = SPEED_FORWARD_1_00_X;
     }
+    return ret;
+}
+
+int32_t PlayerServer::SetSource(int32_t fd, int32_t offset, int32_t size)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    ResetFdSource();
+    fd_ = dup(fd);
+    if (fd_ < 0) {
+        return MSERR_UNKNOWN;
+    }
+
+    if (size < 0) {
+        struct stat buffer;
+        fstat(fd_, &buffer);
+        size = static_cast<int32_t>(buffer.st_size);
+    }
+
+    if (offset < 0 || offset > size) {
+        offset = 0;
+    }
+
+    std::stringstream fmt;
+    fmt << "fd://" << fd_ << "?offset=" << offset << "&size=" << size;
+    std::string url = fmt.str();
+    int32_t ret = InitPlayEngine(url);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     return ret;
 }
 
@@ -265,6 +296,7 @@ int32_t PlayerServer::OnReset()
     playerEngine_ = nullptr;
     dataSrc_ = nullptr;
     looping_ = false;
+    ResetFdSource();
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
     stopTimeMonitor_.FinishTime();
@@ -280,6 +312,14 @@ int32_t PlayerServer::Release()
     }
     (void)OnReset();
     return MSERR_OK;
+}
+
+void PlayerServer::ResetFdSource()
+{
+    if (fd_ >= 0) {
+        close(fd_);
+        fd_ = -1;
+    }
 }
 
 int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)

@@ -107,6 +107,15 @@ std::string CommonNapi::GetPropertyString(napi_env env, napi_value configObj, co
     return GetStringArgument(env, item);
 }
 
+bool CommonNapi::GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd)
+{
+    CHECK_AND_RETURN_RET(GetPropertyInt32(env, value, "fd", rawFd.fd) == true, false);
+    CHECK_AND_RETURN_RET(GetPropertyInt32(env, value, "offset", rawFd.offset) == true, false);
+    CHECK_AND_RETURN_RET(GetPropertyInt32(env, value, "length", rawFd.length) == true, false);
+
+    return true;
+}
+
 napi_status CommonNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args)
 {
     napi_value codeStr = nullptr;
@@ -353,6 +362,24 @@ bool CommonNapi::CreateFormatBufferByRef(napi_env env, Format &format, napi_valu
                 break;
         }
     }
+
+    return true;
+}
+
+bool CommonNapi::AddNumberProp(napi_env env, napi_value obj, const std::string &key, int32_t value)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value valueNapi = nullptr;
+    status = napi_create_int32(env, value, &valueNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, keyNapi, valueNapi);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "Failed to set property");
 
     return true;
 }

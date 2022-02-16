@@ -25,6 +25,8 @@
 
 namespace OHOS {
 namespace Media {
+struct AVFileDescriptor;
+
 class CommonNapi {
 public:
     CommonNapi() = delete;
@@ -33,6 +35,7 @@ public:
     static bool GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static bool GetPropertyDouble(napi_env env, napi_value configObj, const std::string &type, double &result);
     static std::string GetPropertyString(napi_env env, napi_value configObj, const std::string &type);
+    static bool GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd);
     static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
     static napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal);
     static napi_ref CreateReference(napi_env env, napi_value arg);
@@ -44,6 +47,7 @@ public:
     static bool AddRangeProperty(napi_env env, napi_value obj, const std::string &name, int32_t min, int32_t max);
     static bool AddArrayProperty(napi_env env, napi_value obj, const std::string &name,
         const std::vector<int32_t> &vec);
+    static bool AddNumberProp(napi_env env, napi_value obj, const std::string &key, int32_t value);
 };
 
 class MediaJsResult {
@@ -230,6 +234,12 @@ struct AutoRef {
     }
     napi_env env_;
     napi_ref cb_;
+};
+
+struct AVFileDescriptor {
+    int32_t fd = 0;
+    int32_t offset = 0;
+    int32_t length = 0;
 };
 }
 }
