@@ -26,44 +26,6 @@
 
 namespace OHOS {
 namespace Media {
-constexpr uint32_t MAX_VIDEO_TRACK_NUM = 1;
-constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
-
-const std::set<std::string> VIDEO_MIME_TYPE {
-    "video/x-h264",
-    "video/mpeg4",
-    "video/x-h263",
-    "video/mpeg2"
-};
-
-const std::set<std::string> AUDIO_MIME_TYPE {
-    "audio/aac",
-    "audio/mp3"
-};
-
-const std::set<std::string> FORMAT_TYPE {
-    "mp4",
-    "m4a"
-};
-
-const std::map<const std::string, const std::string> MIME_MAP_ENCODE {
-    {"video/x-h264", "video/x-h264"},
-    {"video/mpeg4", "video/mpeg"},
-    {"video/x-h263", "video/x-h263"},
-    {"video/mpeg2", "video/mpeg2"},
-    {"audio/aac", "audio/mpeg"},
-    {"audio/mp3", "audio/mpeg"}
-};
-
-const std::map<std::string, std::string> FORMAT_TO_MUX {
-    {"mp4", "qtmux"},
-    {"m4a", "qtmux"}
-};
-
-const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
-    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2", "audio/aac", "audio/mp3"}},
-    {"m4a", {"audio/aac"}}
-};
 
 class AVMuxerEngineGstImpl : public IAVMuxerEngine {
 public:

@@ -79,7 +79,7 @@ static const uint32_t TIME_STAMP = 33333;
 void AVMuxerDemo::ReadTrackInfoAVC() {
     uint32_t i;
     fmt_ctx_ = avformat_alloc_context();
-    avformat_open_input(&fmt_ctx_, url_, nullptr,nullptr);
+    avformat_open_input(&fmt_ctx_, url_.c_str(), nullptr,nullptr);
     avformat_find_stream_info(fmt_ctx_, NULL);
 
     for (i = 0; i < fmt_ctx_->nb_streams; i++) {

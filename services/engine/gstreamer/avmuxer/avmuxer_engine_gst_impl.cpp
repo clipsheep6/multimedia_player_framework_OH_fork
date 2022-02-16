@@ -31,6 +31,45 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+static constexpr uint32_t MAX_VIDEO_TRACK_NUM = 1;
+static constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
+
+static const std::set<std::string> VIDEO_MIME_TYPE {
+    "video/x-h264",
+    "video/mpeg4",
+    "video/x-h263",
+    "video/mpeg2"
+};
+
+static const std::set<std::string> AUDIO_MIME_TYPE {
+    "audio/aac",
+    "audio/mp3"
+};
+
+static const std::set<std::string> FORMAT_TYPE {
+    "mp4",
+    "m4a"
+};
+
+static const std::map<const std::string, const std::string> MIME_MAP_ENCODE {
+    {"video/x-h264", "video/x-h264"},
+    {"video/mpeg4", "video/mpeg"},
+    {"video/x-h263", "video/x-h263"},
+    {"video/mpeg2", "video/mpeg2"},
+    {"audio/aac", "audio/mpeg"},
+    {"audio/mp3", "audio/mpeg"}
+};
+
+static const std::map<std::string, std::string> FORMAT_TO_MUX {
+    {"mp4", "qtmux"},
+    {"m4a", "qtmux"}
+};
+
+static const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
+    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2", "audio/aac", "audio/mp3"}},
+    {"m4a", {"audio/aac"}}
+};
+
 static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
@@ -63,7 +102,7 @@ AVMuxerEngineGstImpl::~AVMuxerEngineGstImpl()
 
 int32_t AVMuxerEngineGstImpl::Init()
 {
-    muxBin_ = GST_MUX_BIN(gst_element_factory_make("muxbin", "muxbin"));
+    muxBin_ = GST_MUX_BIN(gst_element_factory_make("muxbin", "avmuxerbin"));
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_UNKNOWN, "Failed to create muxbin");
 
     int32_t ret = SetupMsgProcessor();

@@ -38,11 +38,11 @@ public:
 
     ~AVMemory() {};
 
-    uint8_t *Base() { return base_; }
-    uint8_t *Data() { return base_ + offset_; }
-    size_t Capacity() { return capacity_; }
-    size_t Size() { return size_; }
-    size_t Offset() { return offset_; }
+    uint8_t *Base() const { return base_; }
+    uint8_t *Data() const { return base_ + offset_; }
+    size_t Capacity() const { return capacity_; }
+    size_t Size() const { return size_; }
+    size_t Offset() const { return offset_; }
     void SetRange(size_t offset, size_t size) {
         offset_ = offset;
         size_ = size;
