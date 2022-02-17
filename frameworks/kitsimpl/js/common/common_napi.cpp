@@ -136,11 +136,12 @@ bool CommonNapi::GetFdArgument(napi_env env, napi_value value, AVFileDescriptor 
     CHECK_AND_RETURN_RET(GetPropertyInt32(env, value, "fd", rawFd.fd) == true, false);
 
     if (GetPropertyInt64(env, value, "offset", rawFd.offset) == false) {
-        rawFd.offset = 0;
+        rawFd.offset = 0; // use default value
     }
 
     if (rawFd.offset < 0) {
         MEDIA_LOGE("get rawfd argument invalid, offset = %{public}" PRIi64, rawFd.offset);
+        return false;
     }
 
     struct stat64 buffer;
@@ -148,12 +149,13 @@ bool CommonNapi::GetFdArgument(napi_env env, napi_value value, AVFileDescriptor 
     int64_t fdSize = static_cast<int64_t>(buffer.st_size);
 
     if (GetPropertyInt64(env, value, "length", rawFd.length) == false) {
-        rawFd.length = fdSize - rawFd.offset;
+        rawFd.length = fdSize - rawFd.offset; // use default value
     }
 
     if ((rawFd.length < 0) || (rawFd.length > fdSize - rawFd.offset)) {
         MEDIA_LOGE("get rawfd argument invalid, length = %{public}" PRIi64 ", offset = %{public}" PRIi64 ","
             "fdSize = %{public}" PRIi64 "", rawFd.length, rawFd.offset, fdSize);
+        return false;
     }
 
     return true;
