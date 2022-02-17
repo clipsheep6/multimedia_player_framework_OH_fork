@@ -75,9 +75,9 @@ static PixelMapMemHolder *CreatePixelMapData(const std::shared_ptr<AVSharedMemor
         return holder;
     }
 
-    static const int64_t maxAllowedSize = 100 * 1024 * 1024;
+    static const int64_t MAX_SIZE = 100 * 1024 * 1024;
     int64_t memSize = static_cast<int64_t>(minStride) * frame.height_;
-    CHECK_AND_RETURN_RET_LOG(memSize <= maxAllowedSize, nullptr, "alloc heap size too large");
+    CHECK_AND_RETURN_RET_LOG(memSize <= MAX_SIZE, nullptr, "alloc heap size too large");
 
     uint8_t *heap = new (std::nothrow) uint8_t[memSize];
     CHECK_AND_RETURN_RET_LOG(heap != nullptr, nullptr, "alloc heap failed");

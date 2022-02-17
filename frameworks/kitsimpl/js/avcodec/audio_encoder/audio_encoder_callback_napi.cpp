@@ -18,7 +18,6 @@
 #include "avcodec_napi_utils.h"
 #include "media_errors.h"
 #include "media_log.h"
-#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioEncoderCallbackNapi"};
@@ -45,8 +44,7 @@ void AudioEncoderCallbackNapi::SaveCallbackReference(const std::string &callback
     std::lock_guard<std::mutex> lock(mutex_);
 
     napi_ref callback = nullptr;
-    const int32_t refCount = 1;
-    napi_status status = napi_create_reference(env_, args, refCount, &callback);
+    napi_status status = napi_create_reference(env_, args, 1, &callback);
     CHECK_AND_RETURN_LOG(status == napi_ok && callback != nullptr, "Failed to create callback reference");
 
     std::shared_ptr<AutoRef> cb = std::make_shared<AutoRef>(env_, callback);
@@ -75,7 +73,8 @@ void AudioEncoderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
     cb->callbackName = ERROR_CALLBACK_NAME;
     cb->errorMsg = MSExtErrorToString(errCode);
     cb->errorCode = errCode;
-    return OnJsErrorCallBack(cb);
+    OnJsErrorCallBack(cb);
+    delete cb;
 }
 
 void AudioEncoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCode)
@@ -90,7 +89,8 @@ void AudioEncoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCo
     cb->callbackName = ERROR_CALLBACK_NAME;
     cb->errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
     cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
-    return OnJsErrorCallBack(cb);
+    OnJsErrorCallBack(cb);
+    delete cb;
 }
 
 void AudioEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
@@ -104,7 +104,8 @@ void AudioEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
     cb->callback = formatChangedCallback_;
     cb->callbackName = FORMAT_CHANGED_CALLBACK_NAME;
     cb->format = format;
-    return OnJsFormatCallBack(cb);
+    OnJsFormatCallBack(cb);
+    delete cb;
 }
 
 void AudioEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
@@ -139,7 +140,8 @@ void AudioEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
     cb->callbackName = INPUT_CALLBACK_NAME;
     cb->index = index;
     cb->memory = buffer;
-    return OnJsBufferCallBack(cb, true);
+    OnJsFormatCallBack(cb);
+    delete cb;
 }
 
 void AudioEncoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
@@ -180,25 +182,18 @@ void AudioEncoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBu
     cb->index = index;
     cb->info = info;
     cb->flag = flag;
-    return OnJsBufferCallBack(cb, false);
+    OnJsBufferCallBack(cb, false);
+    delete cb;
 }
 
 void AudioEncoderCallbackNapi::OnJsErrorCallBack(AudioEncoderJsCallback *jsCb) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        MEDIA_LOGE("Fail to get uv event loop");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN(loop != nullptr);
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN(work != nullptr);
 
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
@@ -226,9 +221,8 @@ void AudioEncoderCallbackNapi::OnJsErrorCallBack(AudioEncoderJsCallback *jsCb) c
             nstatus = CommonNapi::FillErrorArgs(env, static_cast<int32_t>(event->errorCode), args[0]);
             CHECK_AND_RETURN(nstatus == napi_ok);
 
-            const size_t argCount = 1;
             napi_value result = nullptr;
-            nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
+            nstatus = napi_call_function(env, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_BREAK(nstatus == napi_ok);
         } while (0);
         delete event;
@@ -236,15 +230,12 @@ void AudioEncoderCallbackNapi::OnJsErrorCallBack(AudioEncoderJsCallback *jsCb) c
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
-        delete jsCb;
         delete work;
     }
 }
 
 void AudioEncoderCallbackNapi::OnJsBufferCallBack(AudioEncoderJsCallback *jsCb, bool isInput) const
 {
-    ON_SCOPE_EXIT(0) { delete jsCb; };
-
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
@@ -278,9 +269,8 @@ void AudioEncoderCallbackNapi::OnJsBufferCallBack(AudioEncoderJsCallback *jsCb, 
             }
             CHECK_AND_BREAK(args[0] != nullptr);
 
-            const size_t argCount = 1;
             napi_value result = nullptr;
-            nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
+            nstatus = napi_call_function(env, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_BREAK(nstatus == napi_ok);
         } while (0);
         auto codecHelper = event->codecHelper.lock();
@@ -293,28 +283,18 @@ void AudioEncoderCallbackNapi::OnJsBufferCallBack(AudioEncoderJsCallback *jsCb, 
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
         codecHelper_->RemoveWork(jsCb);
-        delete jsCb;
         delete work;
     }
-    CANCEL_SCOPE_EXIT_GUARD(0);
 }
 
 void AudioEncoderCallbackNapi::OnJsFormatCallBack(AudioEncoderJsCallback *jsCb) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        MEDIA_LOGE("Fail to get uv event loop");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN(loop != nullptr);
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN(work != nullptr);
 
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
@@ -334,9 +314,8 @@ void AudioEncoderCallbackNapi::OnJsFormatCallBack(AudioEncoderJsCallback *jsCb) 
             args[0] = CommonNapi::CreateFormatBuffer(env, event->format);
             CHECK_AND_BREAK(args[0] != nullptr);
 
-            const size_t argCount = 1;
             napi_value result = nullptr;
-            nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
+            nstatus = napi_call_function(env, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_BREAK(nstatus == napi_ok);
         } while (0);
         delete event;
@@ -344,7 +323,6 @@ void AudioEncoderCallbackNapi::OnJsFormatCallBack(AudioEncoderJsCallback *jsCb) 
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
-        delete jsCb;
         delete work;
     }
 }

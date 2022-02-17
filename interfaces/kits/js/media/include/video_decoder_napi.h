@@ -68,7 +68,12 @@ private:
 
 struct VideoDecoderAsyncContext : public MediaAsyncContext {
     explicit VideoDecoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~VideoDecoderAsyncContext() = default;
+    ~VideoDecoderAsyncContext() {
+        if (thisRef != nullptr) {
+            napi_delete_reference(env, thisRef);
+            thisRef = nullptr;
+        }
+    }
     // general variable
     VideoDecoderNapi *napi = nullptr;
     sptr<Surface> surface;

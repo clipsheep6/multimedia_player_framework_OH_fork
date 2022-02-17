@@ -244,6 +244,7 @@ napi_value VideoDecoderNapi::Configure(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -286,6 +287,7 @@ napi_value VideoDecoderNapi::Prepare(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -332,6 +334,7 @@ napi_value VideoDecoderNapi::Start(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -375,6 +378,7 @@ napi_value VideoDecoderNapi::Stop(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -419,6 +423,7 @@ napi_value VideoDecoderNapi::Flush(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -462,6 +467,7 @@ napi_value VideoDecoderNapi::Reset(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -506,6 +512,7 @@ napi_value VideoDecoderNapi::Release(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -557,6 +564,7 @@ napi_value VideoDecoderNapi::QueueInput(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(asyncCtx->index >= 0, result, "Failed to check index");
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -620,6 +628,7 @@ napi_value VideoDecoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
     CHECK_AND_RETURN_RET_LOG(asyncCtx->index >= 0, result, "Failed to check index");
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[2]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -680,6 +689,7 @@ napi_value VideoDecoderNapi::SetOutputSurface(napi_env env, napi_callback_info i
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[2]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -731,6 +741,7 @@ napi_value VideoDecoderNapi::SetParameter(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -771,6 +782,7 @@ napi_value VideoDecoderNapi::GetOutputMediaDescription(napi_env env, napi_callba
     if (status != napi_ok || jsThis == nullptr) {
         asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
 
     VideoDecoderNapi *napi = nullptr;
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&napi));
@@ -810,6 +822,7 @@ napi_value VideoDecoderNapi::GetVideoDecoderCaps(napi_env env, napi_callback_inf
     if (status != napi_ok || jsThis == nullptr) {
         asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
 
     VideoDecoderNapi *napi = nullptr;
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&napi));

@@ -65,7 +65,12 @@ private:
 
 struct AudioEncoderAsyncContext : public MediaAsyncContext {
     explicit AudioEncoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~AudioEncoderAsyncContext() = default;
+    ~AudioEncoderAsyncContext() {
+        if (thisRef != nullptr) {
+            napi_delete_reference(env, thisRef);
+            thisRef = nullptr;
+        }
+    }
     // general variable
     AudioEncoderNapi *napi = nullptr;
     // used by constructor

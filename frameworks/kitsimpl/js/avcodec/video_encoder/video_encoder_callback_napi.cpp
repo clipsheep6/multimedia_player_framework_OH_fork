@@ -42,8 +42,7 @@ void VideoEncoderCallbackNapi::SaveCallbackReference(const std::string &callback
     std::lock_guard<std::mutex> lock(mutex_);
 
     napi_ref callback = nullptr;
-    const int32_t refCount = 1;
-    napi_status status = napi_create_reference(env_, args, refCount, &callback);
+    napi_status status = napi_create_reference(env_, args, 1, &callback);
     CHECK_AND_RETURN_LOG(status == napi_ok && callback != nullptr, "Failed to create callback reference");
 
     std::shared_ptr<AutoRef> cb = std::make_shared<AutoRef>(env_, callback);
@@ -72,7 +71,8 @@ void VideoEncoderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
     cb->callbackName = ERROR_CALLBACK_NAME;
     cb->errorMsg = MSExtErrorToString(errCode);
     cb->errorCode = errCode;
-    return OnJsErrorCallBack(cb);
+    OnJsErrorCallBack(cb);
+    delete cb;
 }
 
 void VideoEncoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCode)
@@ -87,7 +87,8 @@ void VideoEncoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCo
     cb->callbackName = ERROR_CALLBACK_NAME;
     cb->errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
     cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
-    return OnJsErrorCallBack(cb);
+    OnJsErrorCallBack(cb);
+    delete cb;
 }
 
 void VideoEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
@@ -101,7 +102,8 @@ void VideoEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
     cb->callback = formatChangedCallback_;
     cb->callbackName = FORMAT_CHANGED_CALLBACK_NAME;
     cb->format = format;
-    return OnJsFormatCallBack(cb);
+    OnJsFormatCallBack(cb);
+    delete cb;
 }
 
 void VideoEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
@@ -122,7 +124,8 @@ void VideoEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
     cb->callbackName = INPUT_CALLBACK_NAME;
     cb->index = index;
     cb->memory = buffer;
-    return OnJsBufferCallBack(cb, true);
+    OnJsFormatCallBack(cb);
+    delete cb;
 }
 
 void VideoEncoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
@@ -149,25 +152,18 @@ void VideoEncoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBu
     cb->index = index;
     cb->info = info;
     cb->flag = flag;
-    return OnJsBufferCallBack(cb, false);
+    OnJsBufferCallBack(cb, false);
+    delete cb;
 }
 
 void VideoEncoderCallbackNapi::OnJsErrorCallBack(VideoEncoderJsCallback *jsCb) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        MEDIA_LOGE("Fail to get uv event loop");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN(loop != nullptr);
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN(work != nullptr);
 
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
@@ -195,9 +191,8 @@ void VideoEncoderCallbackNapi::OnJsErrorCallBack(VideoEncoderJsCallback *jsCb) c
             nstatus = CommonNapi::FillErrorArgs(env, static_cast<int32_t>(event->errorCode), args[0]);
             CHECK_AND_RETURN(nstatus == napi_ok);
 
-            const size_t argCount = 1;
             napi_value result = nullptr;
-            nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
+            nstatus = napi_call_function(env, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_BREAK(nstatus == napi_ok);
         } while (0);
         delete event;
@@ -205,7 +200,6 @@ void VideoEncoderCallbackNapi::OnJsErrorCallBack(VideoEncoderJsCallback *jsCb) c
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
-        delete jsCb;
         delete work;
     }
 }
@@ -214,18 +208,10 @@ void VideoEncoderCallbackNapi::OnJsBufferCallBack(VideoEncoderJsCallback *jsCb, 
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        MEDIA_LOGE("Fail to get uv event loop");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN(loop != nullptr);
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN(work != nullptr);
 
     jsCb->isInput = isInput;
     work->data = reinterpret_cast<void *>(jsCb);
@@ -251,9 +237,8 @@ void VideoEncoderCallbackNapi::OnJsBufferCallBack(VideoEncoderJsCallback *jsCb, 
             }
             CHECK_AND_BREAK(args[0] != nullptr);
 
-            const size_t argCount = 1;
             napi_value result = nullptr;
-            nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
+            nstatus = napi_call_function(env, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_BREAK(nstatus == napi_ok);
         } while (0);
         delete event;
@@ -261,7 +246,6 @@ void VideoEncoderCallbackNapi::OnJsBufferCallBack(VideoEncoderJsCallback *jsCb, 
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
-        delete jsCb;
         delete work;
     }
 }
@@ -270,18 +254,10 @@ void VideoEncoderCallbackNapi::OnJsFormatCallBack(VideoEncoderJsCallback *jsCb) 
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        MEDIA_LOGE("Fail to get uv event loop");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN(loop != nullptr);
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN(work != nullptr);
 
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
@@ -301,9 +277,8 @@ void VideoEncoderCallbackNapi::OnJsFormatCallBack(VideoEncoderJsCallback *jsCb) 
             args[0] = CommonNapi::CreateFormatBuffer(env, event->format);
             CHECK_AND_BREAK(args[0] != nullptr);
 
-            const size_t argCount = 1;
             napi_value result = nullptr;
-            nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
+            nstatus = napi_call_function(env, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_BREAK(nstatus == napi_ok);
         } while (0);
         delete event;
@@ -311,7 +286,6 @@ void VideoEncoderCallbackNapi::OnJsFormatCallBack(VideoEncoderJsCallback *jsCb) 
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
-        delete jsCb;
         delete work;
     }
 }
