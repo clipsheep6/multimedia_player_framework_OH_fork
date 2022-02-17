@@ -56,8 +56,11 @@ public:
     uint8_t UriType() const;
     std::string FormattedUri() const;
     bool AccessCheck(uint8_t flag) const;
+    static std::string FormatFdToUri(int32_t fd, int32_t offset, int32_t size);
 
 private:
+    int GetFdFromUri(std::string rawUri) const;
+
     std::string_view uri_;
     std::string formattedUri_ = "";
     uint8_t type_ = 0;
