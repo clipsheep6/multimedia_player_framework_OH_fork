@@ -149,7 +149,7 @@ bool UriHelper::AccessCheck(uint8_t flag) const
     return false; // Not implemented
 }
 
-std::string UriHelper::FormatFdToUri(int32_t fd, int32_t offset, int32_t size)
+std::string UriHelper::FormatFdToUri(int32_t fd, int64_t offset, int64_t size)
 {
     std::stringstream fmt;
     fmt << "fd://" << fd << "?offset=" << offset << "&size=" << size;
