@@ -74,7 +74,7 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
 {
     g_return_if_fail(klass != nullptr);
 
-    GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GstBaseSinkClass *baseSinkClass = GST_BASE_SINK_CLASS(klass);
     GstElementClass *elementClass = GST_ELEMENT_CLASS(klass);
 
@@ -85,23 +85,23 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
         "Output to memory and allow the application to get access to the memory",
         "OpenHarmony");
 
-    gobjectClass->dispose = gst_mem_sink_dispose;
-    gobjectClass->finalize = gst_mem_sink_finalize;
-    gobjectClass->set_property = gst_mem_sink_set_property;
-    gobjectClass->get_property = gst_mem_sink_get_property;
+    gobject_class->dispose = gst_mem_sink_dispose;
+    gobject_class->finalize = gst_mem_sink_finalize;
+    gobject_class->set_property = gst_mem_sink_set_property;
+    gobject_class->get_property = gst_mem_sink_get_property;
 
-    g_object_class_install_property(gobjectClass, PROP_CAPS,
+    g_object_class_install_property(gobject_class, PROP_CAPS,
         g_param_spec_boxed ("caps", "Caps",
             "The allowed caps for the sink pad", GST_TYPE_CAPS,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobjectClass, PROP_MAX_POOL_CAPACITY,
+    g_object_class_install_property(gobject_class, PROP_MAX_POOL_CAPACITY,
         g_param_spec_uint("max-pool-capacity", "Max Pool Capacity",
             "The maximum capacity of the buffer pool (0 == meanlessly)",
             0, G_MAXUINT, DEFAULT_PROP_MAX_POOL_CAPACITY,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobjectClass, PROP_WAIT_TIME,
+    g_object_class_install_property(gobject_class, PROP_WAIT_TIME,
         g_param_spec_uint("wait-time", "Wait Time",
             "The longest waiting time for single try to acquire buffer from buffer pool (0 == meanlessly)",
             0, G_MAXUINT, DEFAULT_PROP_MAX_POOL_CAPACITY,
