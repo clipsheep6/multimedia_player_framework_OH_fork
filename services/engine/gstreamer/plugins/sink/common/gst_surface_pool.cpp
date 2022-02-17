@@ -162,13 +162,13 @@ static gboolean gst_surface_pool_set_config(GstBufferPool *pool, GstStructure *c
 
     GstCaps *caps = nullptr;
     guint size; // ignore the size
-    guint min_buffers;
-    guint max_buffers;
-    if (!gst_buffer_pool_config_get_params(config, &caps, &size, &min_buffers, &max_buffers)) {
+    guint minBuffers;
+    guint maxBuffers;
+    if (!gst_buffer_pool_config_get_params(config, &caps, &size, &minBuffers, &maxBuffers)) {
         GST_ERROR("wrong config");
         return FALSE;
     }
-    g_return_val_if_fail(min_buffers <= max_buffers, FALSE);
+    g_return_val_if_fail(minBuffers <= maxBuffers, FALSE);
 
     GstVideoInfo info;
     PixelFormat format;
@@ -182,11 +182,11 @@ static gboolean gst_surface_pool_set_config(GstBufferPool *pool, GstStructure *c
 
     spool->info = info;
     spool->format = format;
-    spool->minBuffers = min_buffers;
-    spool->maxBuffers = max_buffers;
+    spool->minBuffers = minBuffers;
+    spool->maxBuffers = maxBuffers;
 
     GST_INFO("set config, width: %d, height: %d, format: %d, min_bufs: %u, max_bufs: %u",
-        GST_VIDEO_INFO_WIDTH(&info), GST_VIDEO_INFO_HEIGHT(&info), format, min_buffers, max_buffers);
+        GST_VIDEO_INFO_WIDTH(&info), GST_VIDEO_INFO_HEIGHT(&info), format, minBuffers, maxBuffers);
 
     GstAllocator *allocator = nullptr;
     GstAllocationParams params;
@@ -224,8 +224,8 @@ gboolean gst_surface_pool_set_surface(GstSurfacePool *pool, OHOS::sptr<OHOS::Sur
         return FALSE;
     }
 
-    static const guint max_wait_time = 5000; // microsecond
-    pool->waittime = (waittime == 0) ? max_wait_time : waittime;
+    static const guint maxWaitTime = 5000; // microsecond
+    pool->waittime = (waittime == 0) ? maxWaitTime : waittime;
     pool->surface = surface;
     GST_DEBUG("set waittime: %u", pool->waittime);
 
@@ -456,14 +456,14 @@ static void gst_surface_pool_release_buffer(GstBufferPool *pool, GstBuffer *buff
         GST_WARNING("buffer is not writable, 0x%06" PRIXPTR, FAKE_POINTER(buffer));
     }
 
-    gboolean need_notify = FALSE;
+    gboolean needNotify = FALSE;
     for (guint i = 0; i < gst_buffer_n_memory(buffer); i++) {
         GstMemory *memory = gst_buffer_peek_memory(buffer, i);
         if (gst_is_surface_memory(memory)) {
             GstSurfaceMemory *surfaceMem = reinterpret_cast<GstSurfaceMemory *>(memory);
             // the needRender is set by the surface sink
             if (!surfaceMem->needRender) {
-                need_notify = TRUE;
+                needNotify = TRUE;
             }
         }
     }
@@ -478,7 +478,7 @@ static void gst_surface_pool_release_buffer(GstBufferPool *pool, GstBuffer *buff
 
     // if there is GstSurfaceMemory that does not need to be rendered, we can
     // notify the waiters to wake up and retry to acquire buffer.
-    if (need_notify) {
+    if (needNotify) {
         GST_BUFFER_POOL_NOTIFY(spool);
     }
 }
