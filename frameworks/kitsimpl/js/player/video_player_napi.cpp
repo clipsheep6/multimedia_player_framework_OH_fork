@@ -394,8 +394,10 @@ napi_value VideoPlayerNapi::GetFdSrc(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "create jsResult object error");
 
     CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt32(env, jsResult, "fd", jsPlayer->rawFd_.fd) == true, nullptr);
-    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt64(env, jsResult, "offset", jsPlayer->rawFd_.offset) == true, nullptr);
-    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt64(env, jsResult, "length", jsPlayer->rawFd_.length) == true, nullptr);
+    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt64(env, jsResult, "offset", jsPlayer->rawFd_.offset) == true,
+        nullptr);
+    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt64(env, jsResult, "length", jsPlayer->rawFd_.length) == true,
+        nullptr);
 
     MEDIA_LOGD("GetFdSrc success");
     return jsResult;

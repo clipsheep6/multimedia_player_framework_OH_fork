@@ -102,7 +102,8 @@ napi_value AVCodecNapiUtil::CreateOutputCodecBuffer(napi_env env, uint32_t index
         static_cast<int32_t>(index)) == true, nullptr);
     CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt32(env, buffer, "offset", 0) == true, nullptr);
     CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt32(env, buffer, "length", info.size) == true, nullptr);
-    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt32(env, buffer, "flags", static_cast<int32_t>(flag)) == true, nullptr);
+    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt32(env, buffer, "flags", static_cast<int32_t>(flag)) == true,
+        nullptr);
 
     if (memory != nullptr) {
         napi_value dataStr = nullptr;
