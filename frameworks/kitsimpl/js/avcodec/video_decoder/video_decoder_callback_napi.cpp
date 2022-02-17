@@ -130,7 +130,7 @@ void VideoDecoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
     cb->callbackName = INPUT_CALLBACK_NAME;
     cb->index = index;
     cb->memory = buffer;
-    OnJsFormatCallBack(cb);
+    OnJsBufferCallBack(cb, true);
     delete cb;
 }
 
