@@ -26,7 +26,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_consumer_surface_pool_debug_category);
 #define GST_CAT_DEFAULT gst_consumer_surface_pool_debug_category
 
 struct _GstConsumerSurfacePoolPrivate {
-    sptr<Surface> consumer_surface;
+    sptr<Surface> consumer_Surface;
     guint available_buf_count;
     GMutex pool_lock;
     GCond buffer_available_con;
@@ -103,12 +103,12 @@ static gboolean gst_consumer_surface_pool_set_config(GstBufferPool *pool, GstStr
 static void gst_consumer_surface_pool_finalize(GObject *obj)
 {
     g_return_if_fail(obj != nullptr);
-    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL_CAST(obj);
-    g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);
-    auto priv = surfacepool->priv;
+    GstConsumerSurfacePool *surface_pool = GST_CONSUMER_SURFACE_POOL_CAST(obj);
+    g_return_if_fail(surface_pool != nullptr && surface_pool->priv != nullptr);
+    auto priv = surface_pool->priv;
     if (priv->consumer_surface != nullptr) {
         if (priv->consumer_surface->UnregisterConsumerListener() != SURFACE_ERROR_OK) {
-            GST_WARNING_OBJECT(surfacepool, "deregister consumer listener fail");
+            GST_WARNING_OBJECT(surface_pool, "deregister consumer listener fail");
         }
         priv->consumer_surface = nullptr;
     }
@@ -120,40 +120,40 @@ static void gst_consumer_surface_pool_finalize(GObject *obj)
 static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *klass)
 {
     g_return_if_fail(klass != nullptr);
-    GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS (klass);
-    GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
+    GstBufferPoolClass *pool_class = GST_BUFFER_POOL_CLASS (klass);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_pool_debug_category, "surfacepool", 0, "surface pool");
-    gobjectClass->set_property = gst_consumer_surface_pool_set_property;
-    gobjectClass->finalize = gst_consumer_surface_pool_finalize;
+    gobject_class->set_property = gst_consumer_surface_pool_set_property;
+    gobject_class->finalize = gst_consumer_surface_pool_finalize;
 
-    g_object_class_install_property(gobjectClass, PROP_SUSPEND,
+    g_object_class_install_property(gobject_class, PROP_SUSPEND,
         g_param_spec_boolean("suspend", "Suspend surface", "Suspend surface",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobjectClass, PROP_REPEAT,
+    g_object_class_install_property(gobject_class, PROP_REPEAT,
         g_param_spec_uint("repeat", "Repeat frame", "Repeat previous frame after given milliseconds",
             0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobjectClass, PROP_MAX_FRAME_RATE,
+    g_object_class_install_property(gobject_class, PROP_MAX_FRAME_RATE,
         g_param_spec_uint("max-framerate", "Max frame rate", "Max frame rate",
             0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
-    poolClass->get_options = gst_consumer_surface_pool_get_options;
-    poolClass->set_config = gst_consumer_surface_pool_set_config;
-    poolClass->release_buffer = gst_consumer_surface_pool_release_buffer;
-    poolClass->acquire_buffer = gst_consumer_surface_pool_acquire_buffer;
-    poolClass->start = gst_consumer_surface_pool_start;
-    poolClass->stop = gst_consumer_surface_pool_stop;
-    poolClass->flush_start = gst_consumer_surface_pool_flush_start;
-    poolClass->flush_stop = gst_consumer_surface_pool_flush_stop;
+    pool_class->get_options = gst_consumer_surface_pool_get_options;
+    pool_class->set_config = gst_consumer_surface_pool_set_config;
+    pool_class->release_buffer = gst_consumer_surface_pool_release_buffer;
+    pool_class->acquire_buffer = gst_consumer_surface_pool_acquire_buffer;
+    pool_class->start = gst_consumer_surface_pool_start;
+    pool_class->stop = gst_consumer_surface_pool_stop;
+    pool_class->flush_start = gst_consumer_surface_pool_flush_start;
+    pool_class->flush_stop = gst_consumer_surface_pool_flush_stop;
 }
 
 static void gst_consumer_surface_pool_set_property(GObject *object, guint id, const GValue *value, GParamSpec *pspec)
 {
     (void)pspec;
-    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(object);
-    g_return_if_fail(surfacepool != nullptr && value != nullptr);
-    auto priv = surfacepool->priv;
+    GstConsumerSurfacePool *surface_pool = GST_CONSUMER_SURFACE_POOL(object);
+    g_return_if_fail(surface_pool != nullptr && value != nullptr);
+    auto priv = surface_pool->priv;
 
     g_mutex_lock(&priv->pool_lock);
     ON_SCOPE_EXIT(0) { g_mutex_unlock(&priv->pool_lock); };
@@ -179,37 +179,37 @@ static void gst_consumer_surface_pool_set_property(GObject *object, guint id, co
 
 static void gst_consumer_surface_pool_flush_start(GstBufferPool *pool)
 {
-    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
-    g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);
-    auto priv = surfacepool->priv;
+    GstConsumerSurfacePool *surface_pool = GST_CONSUMER_SURFACE_POOL(pool);
+    g_return_if_fail(surface_pool != nullptr && surface_pool->priv != nullptr);
+    auto priv = surface_pool->priv;
     g_mutex_lock(&priv->pool_lock);
     if (priv->cache_buffer != nullptr) {
         gst_buffer_unref(priv->cache_buffer);
         priv->cache_buffer = nullptr;
     }
-    surfacepool->priv->flushing = TRUE;
+    surface_pool->priv->flushing = TRUE;
     g_cond_signal(&priv->buffer_available_con);
     g_mutex_unlock(&priv->pool_lock);
 }
 
 static void gst_consumer_surface_pool_flush_stop(GstBufferPool *pool)
 {
-    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
-    g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);
-    auto priv = surfacepool->priv;
+    GstConsumerSurfacePool *surface_pool = GST_CONSUMER_SURFACE_POOL(pool);
+    g_return_if_fail(surface_pool != nullptr && surface_pool->priv != nullptr);
+    auto priv = surface_pool->priv;
     g_mutex_lock(&priv->pool_lock);
-    surfacepool->priv->flushing = FALSE;
+    surface_pool->priv->flushing = FALSE;
     g_mutex_unlock(&priv->pool_lock);
 }
 
 // Disable pre-caching
 static gboolean gst_consumer_surface_pool_start(GstBufferPool *pool)
 {
-    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
-    g_return_val_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr, FALSE);
-    auto priv = surfacepool->priv;
+    GstConsumerSurfacePool *surface_pool = GST_CONSUMER_SURFACE_POOL(pool);
+    g_return_val_if_fail(surface_pool != nullptr && surface_pool->priv != nullptr, FALSE);
+    auto priv = surface_pool->priv;
     g_mutex_lock(&priv->pool_lock);
-    surfacepool->priv->start = TRUE;
+    surface_pool->priv->start = TRUE;
     g_mutex_unlock(&priv->pool_lock);
     return TRUE;
 }
@@ -217,11 +217,11 @@ static gboolean gst_consumer_surface_pool_start(GstBufferPool *pool)
 // Disable release buffers
 static gboolean gst_consumer_surface_pool_stop(GstBufferPool *pool)
 {
-    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
-    g_return_val_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr, FALSE);
-    auto priv = surfacepool->priv;
+    GstConsumerSurfacePool *surface_pool = GST_CONSUMER_SURFACE_POOL(pool);
+    g_return_val_if_fail(surface_pool != nullptr && surface_pool->priv != nullptr, FALSE);
+    auto priv = surface_pool->priv;
     g_mutex_lock(&priv->pool_lock);
-    surfacepool->priv->start = FALSE;
+    surface_pool->priv->start = FALSE;
     g_cond_signal(&priv->buffer_available_con);
     g_mutex_unlock(&priv->pool_lock);
     return TRUE;
@@ -245,14 +245,14 @@ static void gst_consumer_surface_pool_release_buffer(GstBufferPool *pool, GstBuf
 static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *pool, GstBuffer **buffer,
     GstBufferPoolAcquireParams *params)
 {
-    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
-    g_return_val_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr, GST_FLOW_ERROR);
-    GstBufferPoolClass *pclass = GST_BUFFER_POOL_GET_CLASS(pool);
-    g_return_val_if_fail(pclass != nullptr, GST_FLOW_ERROR);
-    if (!pclass->alloc_buffer) {
+    GstConsumerSurfacePool *surface_pool = GST_CONSUMER_SURFACE_POOL(pool);
+    g_return_val_if_fail(surface_pool != nullptr && surface_pool->priv != nullptr, GST_FLOW_ERROR);
+    GstBufferPoolClass *buffer_pool_class = GST_BUFFER_POOL_GET_CLASS(pool);
+    g_return_val_if_fail(buffer_pool_class != nullptr, GST_FLOW_ERROR);
+    if (!buffer_pool_class->alloc_buffer) {
         return GST_FLOW_NOT_SUPPORTED;
     }
-    auto priv = surfacepool->priv;
+    auto priv = surface_pool->priv;
     g_mutex_lock(&priv->pool_lock);
     ON_SCOPE_EXIT(0) { g_mutex_unlock(&priv->pool_lock); };
 
@@ -262,7 +262,7 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
             if (priv->repeat_interval == 0 || priv->cache_buffer == nullptr) {
                 g_cond_wait(&priv->buffer_available_con, &priv->pool_lock);
             } else if (g_cond_wait_until(&priv->buffer_available_con, &priv->pool_lock, priv->repeat_interval)) {
-                GST_INFO_OBJECT(surfacepool, "Repeat previous frame after waiting given microseconds");
+                GST_INFO_OBJECT(surface_pool, "Repeat previous frame after waiting given microseconds");
                 repeat = TRUE;
             }
         }
@@ -278,25 +278,25 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
             break;
         }
 
-        GstFlowReturn result = pclass->alloc_buffer(pool, buffer, params);
+        GstFlowReturn result = buffer_pool_class->alloc_buffer(pool, buffer, params);
         g_return_val_if_fail(result == GST_FLOW_OK && *buffer != nullptr, GST_FLOW_ERROR);
         GstMemory *mem = gst_buffer_peek_memory(*buffer, 0);
-        GstConsumerSurfaceMemory *surfacemem = nullptr;
+        GstConsumerSurfaceMemory *surface_mem = nullptr;
         if (gst_is_consumer_surface_memory(mem)) {
-            surfacemem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
-            add_buffer_info(surfacepool, surfacemem, *buffer);
+            surface_mem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
+            add_buffer_info(surface_pool, surface_mem, *buffer);
         }
         priv->available_buf_count--;
 
         // check whether needs to dropp frame to ensure the maximum frame rate
-        if (surfacemem != nullptr && priv->max_frame_rate > 0 &&
-            drop_this_frame(surfacepool, surfacemem->timestamp, priv->pre_timestamp, priv->max_frame_rate)) {
-            (void)priv->consumer_surface->ReleaseBuffer(surfacemem->surface_buffer, surfacemem->fencefd);
+        if (surface_mem != nullptr && priv->max_frame_rate > 0 &&
+            drop_this_frame(surface_pool, surface_mem->timestamp, priv->pre_timestamp, priv->max_frame_rate)) {
+            (void)priv->consumer_surface->ReleaseBuffer(surface_mem->surface_buffer, surface_mem->fencefd);
             if (!priv->flushing && priv->start) {
                 continue;
             }
         }
-        cache_frame_if_necessary(surfacepool, surfacemem, *buffer);
+        cache_frame_if_necessary(surface_pool, surface_mem, *buffer);
     } while (0);
 
     return GST_FLOW_OK;
@@ -349,15 +349,15 @@ static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *p
 
 void gst_consumer_surface_pool_set_surface(GstBufferPool *pool, sptr<Surface> &consumer_surface)
 {
-    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
-    g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);
-    g_return_if_fail(consumer_surface != nullptr && surfacepool->priv->consumer_surface == nullptr);
-    surfacepool->priv->consumer_surface = consumer_surface;
-    sptr<IBufferConsumerListener> listenerProxy = new (std::nothrow) ConsumerListenerProxy(*surfacepool);
+    GstConsumerSurfacePool *surface_pool = GST_CONSUMER_SURFACE_POOL(pool);
+    g_return_if_fail(surface_pool != nullptr && surface_pool->priv != nullptr);
+    g_return_if_fail(consumer_surface != nullptr && surface_pool->priv->consumer_surface == nullptr);
+    surface_pool->priv->consumer_surface = consumer_surface;
+    sptr<IBufferConsumerListener> listenerProxy = new (std::nothrow) ConsumerListenerProxy(*surface_pool);
     g_return_if_fail(listenerProxy != nullptr);
 
     if (consumer_surface->RegisterConsumerListener(listenerProxy) != SURFACE_ERROR_OK) {
-        GST_WARNING_OBJECT(surfacepool, "register consumer listener fail");
+        GST_WARNING_OBJECT(surface_pool, "register consumer listener fail");
     }
 }
 
