@@ -280,9 +280,9 @@ void AVMetadataHelperDemo::DoFetchFrame(int64_t timeUs, int32_t queryOption, con
         return;
     }
 
-    const uint8_t maxFilePathLength = 255;
-    char filePath[maxFilePathLength];
-    auto ret = sprintf_s(filePath, maxFilePathLength,
+    constexpr uint8_t MAX_LENGTH = 255;
+    char filePath[MAX_LENGTH];
+    auto ret = sprintf_s(filePath, MAX_LENGTH,
         "/data/media/test/time_%" PRIi64 "_option_%d_width_%d_height_%d_color_%d.jpg",
         timeUs, queryOption, param.dstWidth, param.dstHeight, param.colorFormat);
     if (ret <= 0) {
