@@ -93,6 +93,23 @@ int32_t AudioSinkSvImpl::SetVolume(float volume)
     return MSERR_OK;
 }
 
+int32_t AudioSinkSvImpl::SetParameter(int32_t &param)
+{
+    int32_t contentType = (param & 0x0000FFFF);
+    int32_t streamUsage = param >> AudioStandard::RENDERER_STREAM_USAGE_SHIFT;
+
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audioRenderer_ is nullptr");
+
+    AudioStandard::AudioRendererDesc audioRendererDesc;
+    audioRendererDesc.contentType = static_cast<AudioStandard::ContentType>(contentType);
+    audioRendererDesc.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
+
+    int32_t ret = audioRenderer_->SetAudioRendererDesc(audioRendererDesc);
+    CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_UNKNOWN, "audio server SetParameter failed!");
+
+    return MSERR_OK;
+}
+
 int32_t AudioSinkSvImpl::GetVolume(float &volume)
 {
     MEDIA_LOGD("GetVolume");
@@ -128,7 +145,7 @@ int32_t AudioSinkSvImpl::Start()
 {
     MEDIA_LOGD("audioRenderer Start In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(audioRenderer_->Start() == true, MSERR_UNKNOWN);
+    (void)audioRenderer_->Start();
     MEDIA_LOGD("audioRenderer Start Out");
     return MSERR_OK;
 }
@@ -137,7 +154,7 @@ int32_t AudioSinkSvImpl::Stop()
 {
     MEDIA_LOGD("audioRenderer Stop In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(audioRenderer_->Stop() == true, MSERR_UNKNOWN);
+    (void)audioRenderer_->Stop();
     MEDIA_LOGD("audioRenderer Stop Out");
     return MSERR_OK;
 }
@@ -171,7 +188,7 @@ int32_t AudioSinkSvImpl::Release()
 {
     MEDIA_LOGD("audioRenderer Release In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(audioRenderer_->Release() == true, MSERR_UNKNOWN);
+    (void)audioRenderer_->Release();
     audioRenderer_ = nullptr;
     MEDIA_LOGD("audioRenderer Release Out");
     return MSERR_OK;

@@ -18,6 +18,7 @@
 #include "avcodec_napi_utils.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioEncoderCallbackNapi"};
@@ -25,9 +26,11 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-AudioEncoderCallbackNapi::AudioEncoderCallbackNapi(napi_env env, std::weak_ptr<AudioEncoder> aenc)
+AudioEncoderCallbackNapi::AudioEncoderCallbackNapi(napi_env env, std::weak_ptr<AudioEncoder> aenc,
+    const std::shared_ptr<AVCodecNapiHelper>& codecHelper)
     : env_(env),
-      aenc_(aenc)
+      aenc_(aenc),
+      codecHelper_(codecHelper)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -85,7 +88,7 @@ void AudioEncoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCo
     CHECK_AND_RETURN(cb != nullptr);
     cb->callback = errorCallback_;
     cb->callbackName = ERROR_CALLBACK_NAME;
-    cb->errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errCode));
+    cb->errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
     cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
     return OnJsErrorCallBack(cb);
 }
@@ -94,6 +97,7 @@ void AudioEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("OnOutputFormatChanged is called");
+    CHECK_AND_RETURN(formatChangedCallback_ != nullptr);
 
     AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback();
     CHECK_AND_RETURN(cb != nullptr);
@@ -111,8 +115,22 @@ void AudioEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
     auto aenc = aenc_.lock();
     CHECK_AND_RETURN(aenc != nullptr);
 
+    if (codecHelper_->IsEos() || codecHelper_->IsStop()) {
+        MEDIA_LOGD("At eos or stop, no buffer available");
+        return;
+    }
+
     auto buffer = aenc->GetInputBuffer(index);
     CHECK_AND_RETURN(buffer != nullptr);
+
+    // cache this buffer for this index to make sure that this buffer is valid until when it be
+    // obtained to response to OnInputBufferAvailable at next time.
+    auto iter = inputBufferCaches_.find(index);
+    if (iter == inputBufferCaches_.end()) {
+        inputBufferCaches_.emplace(index, buffer);
+    } else {
+        iter->second = buffer;
+    }
 
     AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback();
     CHECK_AND_RETURN(cb != nullptr);
@@ -127,14 +145,30 @@ void AudioEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
 void AudioEncoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN(inputCallback_ != nullptr);
+    CHECK_AND_RETURN(outputCallback_ != nullptr);
 
     auto aenc = aenc_.lock();
     CHECK_AND_RETURN(aenc != nullptr);
 
-    auto buffer = aenc->GetOutputBuffer(index);
-    if (buffer == nullptr && flag != AVCODEC_BUFFER_FLAG_EOS) {
+    if (codecHelper_->IsStop()) {
+        MEDIA_LOGD("At stop state, ignore");
         return;
+    }
+
+    auto buffer = aenc->GetOutputBuffer(index);
+    bool isEos = flag & AVCODEC_BUFFER_FLAG_EOS;
+    if (buffer == nullptr && !isEos) {
+        MEDIA_LOGW("Failed to get output buffer");
+        return;
+    }
+
+    // cache this buffer for this index to make sure that this buffer is valid until the buffer of this index
+    // obtained to response to OnInputBufferAvailable at next time.
+    auto iter = outputBufferCaches_.find(index);
+    if (iter == outputBufferCaches_.end()) {
+        outputBufferCaches_.emplace(index, buffer);
+    } else {
+        iter->second = buffer;
     }
 
     AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback();
@@ -209,22 +243,18 @@ void AudioEncoderCallbackNapi::OnJsErrorCallBack(AudioEncoderJsCallback *jsCb) c
 
 void AudioEncoderCallbackNapi::OnJsBufferCallBack(AudioEncoderJsCallback *jsCb, bool isInput) const
 {
+    ON_SCOPE_EXIT(0) { delete jsCb; };
+
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        MEDIA_LOGE("Fail to get uv event loop");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(work != nullptr, "No memory");
 
+    codecHelper_->PushWork(jsCb);
     jsCb->isInput = isInput;
+    jsCb->codecHelper = codecHelper_;
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -234,7 +264,7 @@ void AudioEncoderCallbackNapi::OnJsBufferCallBack(AudioEncoderJsCallback *jsCb, 
         napi_env env = event->callback->env_;
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", event->callbackName.c_str());
         do {
-            CHECK_AND_BREAK(status != UV_ECANCELED);
+            CHECK_AND_BREAK(!event->cancelled && status != UV_ECANCELED);
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, event->callback->cb_, &jsCallback);
             CHECK_AND_BREAK(nstatus == napi_ok && jsCallback != nullptr);
@@ -253,14 +283,20 @@ void AudioEncoderCallbackNapi::OnJsBufferCallBack(AudioEncoderJsCallback *jsCb, 
             nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK(nstatus == napi_ok);
         } while (0);
+        auto codecHelper = event->codecHelper.lock();
+        if (codecHelper != nullptr) {
+            codecHelper->RemoveWork(event);
+        }
         delete event;
         delete work;
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
+        codecHelper_->RemoveWork(jsCb);
         delete jsCb;
         delete work;
     }
+    CANCEL_SCOPE_EXIT_GUARD(0);
 }
 
 void AudioEncoderCallbackNapi::OnJsFormatCallBack(AudioEncoderJsCallback *jsCb) const

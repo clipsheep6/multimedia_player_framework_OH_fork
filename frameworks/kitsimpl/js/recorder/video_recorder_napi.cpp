@@ -20,7 +20,7 @@
 #include "common_napi.h"
 #include "directory_ex.h"
 #include "string_ex.h"
-#include "media_surface.h"
+#include "surface_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoRecorderNapi"};
@@ -81,6 +81,7 @@ napi_value VideoRecorderNapi::Init(napi_env env, napi_value exports)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
 
     MEDIA_LOGD("Init success");
+
     return exports;
 }
 
@@ -105,7 +106,7 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "No memory!");
 
     if (recorderNapi->callbackNapi_ == nullptr) {
-        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env); // jhp1
+        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
         (void)recorderNapi->recorder_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
 
@@ -126,7 +127,14 @@ void VideoRecorderNapi::Destructor(napi_env env, void *nativeObject, void *final
     (void)env;
     (void)finalize;
     if (nativeObject != nullptr) {
-        delete reinterpret_cast<VideoRecorderNapi *>(nativeObject);
+        VideoRecorderNapi *napi = reinterpret_cast<VideoRecorderNapi *>(nativeObject);
+        if (napi->surface_ != nullptr) {
+            auto id = napi->surface_->GetUniqueId();
+            if (napi->isSurfaceIdVaild(id)) {
+                (void)SurfaceUtils::GetInstance()->Remove(id);
+            }
+        }
+        delete napi;
     }
     MEDIA_LOGD("Destructor success");
 }
@@ -216,7 +224,7 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
             return;
         }
         if (threadCtx->napi->recorder_->Prepare() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Prepare");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Prepare");
         }
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
@@ -253,13 +261,15 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
-        auto mediaSurface = MediaSurfaceFactory::CreateMediaSurface();
-        if (mediaSurface == nullptr) {
-            threadCtx->SignError(MSERR_EXT_NO_MEMORY, "mediaSurface is nullptr");
-        }
-        threadCtx->surface = threadCtx->napi->recorder_->GetSurface(threadCtx->napi->videoSourceID); // source id
-        if (threadCtx->surface != nullptr) {
-            auto surfaceId = mediaSurface->GetSurfaceId(threadCtx->surface);
+
+        threadCtx->napi->surface_ = threadCtx->napi->recorder_->GetSurface(threadCtx->napi->videoSourceID); // source id
+        if (threadCtx->napi->surface_ != nullptr) {
+            SurfaceError error = SurfaceUtils::GetInstance()->Add(threadCtx->napi->surface_->GetUniqueId(),
+                threadCtx->napi->surface_);
+            if (error != SURFACE_ERROR_OK) {
+                threadCtx->SignError(MSERR_EXT_NO_MEMORY, "add surface error");
+            }
+            auto surfaceId = std::to_string(threadCtx->napi->surface_->GetUniqueId());
             threadCtx->JsResult = std::make_unique<MediaJsResultString>(surfaceId);
         } else {
             threadCtx->SignError(MSERR_EXT_NO_MEMORY, "failed to get surface");
@@ -301,7 +311,7 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
             return;
         }
         if (threadCtx->napi->recorder_->Start() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Start");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Start");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_PLAYING;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -341,7 +351,7 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
             return;
         }
         if (threadCtx->napi->recorder_->Pause() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Pause");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Pause");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_PAUSED;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -381,7 +391,7 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
             return;
         }
         if (threadCtx->napi->recorder_->Resume() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Resume");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Resume");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_PLAYING;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -421,7 +431,7 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
             return;
         }
         if (threadCtx->napi->recorder_->Stop(false) != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Stop");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Stop");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_STOPPED;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -460,8 +470,15 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
+        if (threadCtx->napi->surface_ != nullptr) {
+            auto id = threadCtx->napi->surface_->GetUniqueId();
+            if (threadCtx->napi->isSurfaceIdVaild(id)) {
+                (void)SurfaceUtils::GetInstance()->Remove(id);
+            }
+            threadCtx->napi->surface_ = nullptr;
+        }
         if (threadCtx->napi->recorder_->Reset() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Reset");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Reset");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_IDLE;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -500,8 +517,15 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
+        if (threadCtx->napi->surface_ != nullptr) {
+            auto id = threadCtx->napi->surface_->GetUniqueId();
+            if (threadCtx->napi->isSurfaceIdVaild(id)) {
+                (void)SurfaceUtils::GetInstance()->Remove(id);
+            }
+            threadCtx->napi->surface_ = nullptr;
+        }
         if (threadCtx->napi->recorder_->Release() != MSERR_OK) {
-            threadCtx->SignError(MSERR_UNKNOWN, "Failed to Release");
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Release");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_IDLE;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -569,7 +593,8 @@ void VideoRecorderNapi::GetConfig(napi_env env, napi_value args,
 
     napi_value geoLocation = nullptr;
     napi_get_named_property(env, args, "location", &geoLocation);
-    double tempLatitude, tempLongitude;
+    double tempLatitude = 0;
+    double tempLongitude = 0;
     (void)CommonNapi::GetPropertyDouble(env, geoLocation, "latitude", tempLatitude);
     (void)CommonNapi::GetPropertyDouble(env, geoLocation, "longitude", tempLongitude);
     properties.location.latitude = static_cast<float>(tempLatitude);
@@ -683,6 +708,15 @@ int32_t VideoRecorderNapi::SetUrl(const std::string &urlPath)
     }
 
     return MSERR_OK;
+}
+
+bool VideoRecorderNapi::isSurfaceIdVaild(uint64_t surfaceID)
+{
+    auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceID);
+    if (surface == nullptr) {
+        return false;
+    }
+    return true;
 }
 
 napi_value VideoRecorderNapi::GetState(napi_env env, napi_callback_info info)

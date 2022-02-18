@@ -22,6 +22,7 @@
 #include "av_common.h"
 #include "avsharedmemory.h"
 #include "format.h"
+#include "surface.h"
 
 namespace OHOS {
 namespace Media {
@@ -31,40 +32,32 @@ enum VideoEncoderBitrateMode : int32_t {
     VIDEO_ENCODER_BITRATE_MODE_CQ,
 };
 
-enum VideoPixelFormat : int32_t {
-    VIDEO_PIXEL_FORMAT_YUVI420 = 0,
-    VIDEO_PIXEL_FORMAT_NV12 = 1,
-    VIDEO_PIXEL_FORMAT_NV21 = 2,
-};
-
 struct BufferWrapper {
     enum Owner : int32_t {
         APP = 0,
         SERVER,
         DOWNSTREAM
     };
-    BufferWrapper(std::shared_ptr<AVSharedMemory> mem, GstBuffer *gstBuffer, uint32_t index, Owner owner)
-        : mem_(mem),
-          gstBuffer_(gstBuffer),
-          index_(index),
-          owner_(owner)
+    explicit BufferWrapper(Owner owner)
+        : owner_(owner)
     {
     }
+
     ~BufferWrapper()
     {
         if (gstBuffer_ != nullptr) {
             gst_buffer_unref(gstBuffer_);
         }
     }
-    std::shared_ptr<AVSharedMemory> mem_ = nullptr;
+
     GstBuffer *gstBuffer_ = nullptr;
-    uint32_t index_ = 0;
+    AVSharedMemory *mem_ = nullptr;
+    sptr<SurfaceBuffer> surfaceBuffer_ = nullptr;
     Owner owner_ = DOWNSTREAM;
-    GstSample *sample_ = nullptr;
 };
 
 struct ProcessorConfig {
-    explicit ProcessorConfig(GstCaps *caps, bool isEncoder)
+    ProcessorConfig(GstCaps *caps, bool isEncoder)
         : caps_(caps),
           isEncoder_(isEncoder)
     {
@@ -79,16 +72,15 @@ struct ProcessorConfig {
     bool needCodecData_ = false;
     bool needParser_ = false;
     bool isEncoder_ = false;
+    uint32_t bufferSize_ = 0;
 };
 
-__attribute__((visibility("default"))) int32_t MapVideoPixelFormat(int32_t number, VideoPixelFormat &pixel);
-__attribute__((visibility("default"))) std::string PixelFormatToString(VideoPixelFormat pixel);
-__attribute__((visibility("default"))) int32_t MapPCMFormat(int32_t number, AudioRawFormat &format);
-__attribute__((visibility("default"))) std::string PCMFormatToString(AudioRawFormat format);
-__attribute__((visibility("default"))) int32_t MapBitrateMode(int32_t number, VideoEncoderBitrateMode &mode);
-__attribute__((visibility("default"))) int32_t MapCodecMime(const std::string &mime, CodecMimeType &name);
-__attribute__((visibility("default"))) int32_t MapProfile(int32_t number, AVCProfile &profile);
-__attribute__((visibility("default"))) int32_t CapsToFormat(GstCaps *caps, Format &format);
+std::string PixelFormatToGst(VideoPixelFormat pixel);
+std::string RawAudioFormatToGst(AudioRawFormat format);
+int32_t MapCodecMime(const std::string &mime, CodecMimeType &name);
+int32_t CapsToFormat(GstCaps *caps, Format &format);
+uint32_t PixelBufferSize(VideoPixelFormat pixel, uint32_t width, uint32_t height, uint32_t alignment);
+uint32_t CompressedBufSize(uint32_t width, uint32_t height, bool isEncoder, CodecMimeType type);
 } // Media
 } // OHOS
 #endif // CODEC_COMMON_H

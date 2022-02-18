@@ -15,6 +15,7 @@
 
 #include "avcodec_ability_singleton.h"
 #include "avcodec_xml_parser.h"
+#include "codec_plugins_capability.h"
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -44,11 +45,35 @@ bool AVCodecAbilitySingleton::ParseCodecXml()
 {
     AVCodecXmlParser xmlParser;
     bool ret = xmlParser.LoadConfiguration();
-    CHECK_AND_RETURN_RET_LOG(ret != false, false, "AVCodecList LoadConfiguration failed.");
+    if (!ret) {
+        this->isParsered_ = false;
+        MEDIA_LOGE("AVCodecList LoadConfiguration failed");
+        return false;
+    }
     ret = xmlParser.Parse();
-    CHECK_AND_RETURN_RET_LOG(ret != false, false, "AVCodecList Parse failed.");
-    capabilityDataArray_ = xmlParser.GetCapabilityDataArray();
+    if (!ret) {
+        isParsered_ = false;
+        MEDIA_LOGE("AVCodecList Parse failed.");
+        return false;
+    }
+    std::vector<CapabilityData> data = xmlParser.GetCapabilityDataArray();
+    capabilityDataArray_.insert(capabilityDataArray_.end(), data.begin(), data.end());
+    isParsered_ = true;
     return true;
+}
+
+bool AVCodecAbilitySingleton::ParseHardwareCapability()
+{
+    MEDIA_LOGD("ParseHardwareCapability start");
+    std::vector<CapabilityData> data = CodecPluginsCapability::GetInstance().GetCodecPluginsCapability();
+    capabilityDataArray_.insert(capabilityDataArray_.end(), data.begin(), data.end());
+    MEDIA_LOGD("ParseHardwareCapability end");
+    return true;
+}
+
+bool AVCodecAbilitySingleton::IsParsered()
+{
+    return this->isParsered_;
 }
 }
 }

@@ -41,6 +41,7 @@ private:
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value Flush(napi_env env, napi_callback_info info);
     static napi_value Reset(napi_env env, napi_callback_info info);
+    static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value QueueInput(napi_env env, napi_callback_info info);
     static napi_value ReleaseOutput(napi_env env, napi_callback_info info);
     static napi_value GetInputSurface(napi_env env, napi_callback_info info);
@@ -48,6 +49,7 @@ private:
     static napi_value GetOutputMediaDescription(napi_env env, napi_callback_info info);
     static napi_value GetVideoEncoderCaps(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
+    bool IsSurfaceIdValid(uint64_t surfaceId);
 
     void ErrorCallback(MediaServiceExtErrCode errCode);
 
@@ -57,8 +59,10 @@ private:
     static napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrap_ = nullptr;
+    sptr<Surface> surface_;
     std::shared_ptr<VideoEncoder> venc_ = nullptr;
     std::shared_ptr<AVCodecCallback> callback_ = nullptr;
+    bool isSurfaceMode_ = false;
 };
 
 struct VideoEncoderAsyncContext : public MediaAsyncContext {
@@ -67,12 +71,12 @@ struct VideoEncoderAsyncContext : public MediaAsyncContext {
     // general variable
     VideoEncoderNapi *napi = nullptr;
     // used by constructor
-    std::string pluginName = "";
+    std::string pluginName;
     int32_t createByMime = 1;
     // used by buffer function
     int32_t index = 0;
     AVCodecBufferInfo info;
-    AVCodecBufferFlag flag;
+    AVCodecBufferFlag flag = AVCODEC_BUFFER_FLAG_NONE;
     // used by format
     Format format;
 };

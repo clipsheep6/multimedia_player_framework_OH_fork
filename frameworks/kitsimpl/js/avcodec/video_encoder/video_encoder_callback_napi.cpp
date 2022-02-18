@@ -85,7 +85,7 @@ void VideoEncoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCo
     CHECK_AND_RETURN(cb != nullptr);
     cb->callback = errorCallback_;
     cb->callbackName = ERROR_CALLBACK_NAME;
-    cb->errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errCode));
+    cb->errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
     cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
     return OnJsErrorCallBack(cb);
 }
@@ -94,6 +94,7 @@ void VideoEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("OnOutputFormatChanged is called");
+    CHECK_AND_RETURN(formatChangedCallback_ != nullptr);
 
     VideoEncoderJsCallback *cb = new(std::nothrow) VideoEncoderJsCallback();
     CHECK_AND_RETURN(cb != nullptr);
@@ -127,13 +128,15 @@ void VideoEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
 void VideoEncoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN(inputCallback_ != nullptr);
+    CHECK_AND_RETURN(outputCallback_ != nullptr);
 
     auto adec = venc_.lock();
     CHECK_AND_RETURN(adec != nullptr);
 
     auto buffer = adec->GetOutputBuffer(index);
-    if (buffer == nullptr && flag != AVCODEC_BUFFER_FLAG_EOS) {
+    bool isEos = flag & AVCODEC_BUFFER_FLAG_EOS;
+    if (buffer == nullptr && !isEos) {
+        MEDIA_LOGW("Failed to get output buffer");
         return;
     }
 

@@ -49,15 +49,16 @@ public:
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
-    virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack);
-    virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack);
-    virtual int32_t GetVideoWidth();
-    virtual int32_t GetVideoHeight();
+    virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
+    virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
+    virtual int32_t GetVideoWidth() = 0;
+    virtual int32_t GetVideoHeight() = 0;
     virtual int32_t GetDuration(int32_t &duration) = 0;
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
     virtual int32_t SetLooping(bool loop) = 0;
+    virtual int32_t SetParameter(const Format &param) = 0;
     virtual int32_t SetObs(const std::weak_ptr<IPlayerEngineObs> &obs) = 0;
 };
 } // Media

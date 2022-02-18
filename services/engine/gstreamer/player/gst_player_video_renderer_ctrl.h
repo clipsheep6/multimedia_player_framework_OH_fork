@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +35,8 @@ public:
     int32_t InitAudioSink(const GstElement *playbin);
     const GstElement *GetVideoSink() const;
     int32_t PullVideoBuffer();
-    sptr<SurfaceBuffer> RequestBuffer(const GstVideoMeta *videoMeta) const;
+    int32_t PrerollVideoBuffer();
+    sptr<SurfaceBuffer> RequestBuffer(const GstVideoMeta *videoMeta);
     int32_t UpdateSurfaceBuffer(const GstBuffer &buffer);
     int32_t SetCallbacks(const std::weak_ptr<IPlayerEngineObs> &obs);
 
@@ -44,7 +46,11 @@ private:
     void SetSurfaceTimeFromSysPara();
     void SetDumpFrameFromSysPara();
     void SetDumpFrameInternalFromSysPara();
-    void SaveFrameToFile(const unsigned char *buffer, size_t size) const;
+    void SaveFrameToFile(const unsigned char *buffer, size_t size);
+    void CopyToSurfaceBuffer(sptr<SurfaceBuffer> surfaceBuffer, const GstBuffer &buffer, bool &needFlush);
+    int32_t CopyDefault(sptr<SurfaceBuffer> surfaceBuffer, const GstBuffer &buffer);
+    int32_t CopyRgba(sptr<SurfaceBuffer> surfaceBuffer, const GstBuffer &buffer,
+        const GstMapInfo &map, int32_t stride);
 
     sptr<Surface> producerSurface_ = nullptr;
     GstElement *videoSink_ = nullptr;
@@ -56,8 +62,9 @@ private:
     bool firstRenderFrame_ = true;
     uint32_t dumpFrameNum_ = 0;
     uint32_t dumpFrameInternal_ = 1;
+    uint32_t queueSize_ = 0;
     TimeMonitor surfaceTimeMonitor_;
-    gulong signalId_ = 0;
+    std::vector<gulong> signalIds_;
     std::weak_ptr<IPlayerEngineObs> obs_;
 };
 

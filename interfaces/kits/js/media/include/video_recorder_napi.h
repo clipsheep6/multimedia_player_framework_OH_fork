@@ -100,13 +100,14 @@ private:
     void GetConfig(napi_env env, napi_value args, std::unique_ptr<VideoRecorderAsyncContext> &ctx,
         VideoRecorderProperties &properties);
     int32_t SetUrl(const std::string &UrlPath);
-    int32_t CheckValidPath(const std::string &filePath, std::string &realPath);
+    bool isSurfaceIdVaild(uint64_t surfaceID);
 
     static napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Recorder> recorder_ = nullptr;
     std::shared_ptr<RecorderCallback> callbackNapi_ = nullptr;
+    sptr<Surface> surface_;
     std::string currentStates_ = VideoRecorderState::STATE_IDLE;
     bool isPureVideo = false;
     int32_t videoSourceID;
@@ -118,8 +119,6 @@ struct VideoRecorderAsyncContext : public MediaAsyncContext {
     ~VideoRecorderAsyncContext() = default;
 
     VideoRecorderNapi *napi = nullptr;
-
-    sptr<Surface> surface;
 };
 } // namespace Media
 } // namespace OHOS

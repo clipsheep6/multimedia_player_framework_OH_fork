@@ -25,9 +25,11 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-VideoDecoderCallbackNapi::VideoDecoderCallbackNapi(napi_env env, std::weak_ptr<VideoDecoder> vdec)
+VideoDecoderCallbackNapi::VideoDecoderCallbackNapi(napi_env env, std::weak_ptr<VideoDecoder> vdec,
+    const std::shared_ptr<AVCodecNapiHelper>& codecHelper)
     : env_(env),
-      vdec_(vdec)
+      vdec_(vdec),
+      codecHelper_(codecHelper)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -85,7 +87,7 @@ void VideoDecoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCo
     CHECK_AND_RETURN(cb != nullptr);
     cb->callback = errorCallback_;
     cb->callbackName = ERROR_CALLBACK_NAME;
-    cb->errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errCode));
+    cb->errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
     cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
     return OnJsErrorCallBack(cb);
 }
@@ -94,6 +96,7 @@ void VideoDecoderCallbackNapi::OnOutputFormatChanged(const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("OnOutputFormatChanged is called");
+    CHECK_AND_RETURN(formatChangedCallback_ != nullptr);
 
     VideoDecoderJsCallback *cb = new(std::nothrow) VideoDecoderJsCallback();
     CHECK_AND_RETURN(cb != nullptr);
@@ -110,6 +113,10 @@ void VideoDecoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
 
     auto vdec = vdec_.lock();
     CHECK_AND_RETURN(vdec != nullptr);
+    if (codecHelper_->IsEos() || codecHelper_->IsStop()) {
+        MEDIA_LOGD("At eos or Stop, no buffer available");
+        return;
+    }
 
     auto buffer = vdec->GetInputBuffer(index);
     CHECK_AND_RETURN(buffer != nullptr);
@@ -127,22 +134,16 @@ void VideoDecoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
 void VideoDecoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN(inputCallback_ != nullptr);
+    CHECK_AND_RETURN(outputCallback_ != nullptr);
 
     auto vdec = vdec_.lock();
     CHECK_AND_RETURN(vdec != nullptr);
-
-    auto buffer = vdec->GetOutputBuffer(index);
-    if (buffer == nullptr && flag != AVCODEC_BUFFER_FLAG_EOS) {
-        return;
-    }
 
     VideoDecoderJsCallback *cb = new(std::nothrow) VideoDecoderJsCallback();
     CHECK_AND_RETURN(cb != nullptr);
 
     cb->callback = outputCallback_;
     cb->callbackName = OUTPUT_CALLBACK_NAME;
-    cb->memory = buffer;
     cb->index = index;
     cb->info = info;
     cb->flag = flag;
@@ -244,7 +245,7 @@ void VideoDecoderCallbackNapi::OnJsBufferCallBack(VideoDecoderJsCallback *jsCb, 
                 args[0] = AVCodecNapiUtil::CreateInputCodecBuffer(env, event->index, event->memory);
             } else {
                 args[0] = AVCodecNapiUtil::CreateOutputCodecBuffer(env, event->index,
-                    event->memory, event->info, event->flag);
+                    nullptr, event->info, event->flag);
             }
             CHECK_AND_BREAK(args[0] != nullptr);
 

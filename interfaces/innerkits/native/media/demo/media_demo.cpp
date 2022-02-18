@@ -19,6 +19,8 @@
 #include "recorder_demo.h"
 #include "avmetadatahelper_demo.h"
 #include "avcodeclist_demo.h"
+#include "avcodec_venc_demo.h"
+#include "avcodec_vdec_demo.h"
 #include "avmuxer_demo.h"
 
 using namespace OHOS;
@@ -37,6 +39,7 @@ static int RunPlayer(const string &path)
     cout << "demo player end" << endl;
     return 0;
 }
+
 static int RunCodecList(const string &path)
 {
     auto avCodecList = std::make_unique<AVCodecListDemo>();
@@ -48,6 +51,7 @@ static int RunCodecList(const string &path)
     cout << "demo avCodecList end" << endl;
     return 0;
 }
+
 static int RunRecorder()
 {
     auto recorder = std::make_unique<RecorderDemo>();
@@ -69,6 +73,30 @@ static int RunAVMetadataHelper(const string &path)
     }
     avMetadataHelper->RunCase(path);
     cout << "demo avMetadataHelper end" << endl;
+    return 0;
+}
+
+static int RunVideoEncoder(bool enableProp)
+{
+    auto venc = std::make_unique<VEncDemo>();
+    if (venc == nullptr) {
+        cout << "videoencoder is null" << endl;
+        return 0;
+    }
+    venc->RunCase(enableProp);
+    cout << "demo videoencoder end" << endl;
+    return 0;
+}
+
+static int RunVideoDecoder()
+{
+    auto vdec = std::make_unique<VDecDemo>();
+    if (vdec == nullptr) {
+        cout << "videodecoder is null" << endl;
+        return 0;
+    }
+    vdec->RunCase();
+    cout << "demo videodecoder end" << endl;
     return 0;
 }
 
@@ -96,7 +124,10 @@ int main(int argc, char *argv[])
     cout << "1:recorder" << endl;
     cout << "2:avmetadatahelper" << endl;
     cout << "3:codeclist" << endl;
-    cout << "4:avmuxer" << endl;
+    cout << "4:video-encoder-prop-disable" << endl;
+    cout << "5:video-encoder-prop-enable" << endl;
+    cout << "6:video-decoder" << endl;
+    cout << "7:avmuxer" << endl;
     string mode;
     (void)getline(cin, mode);
     if (mode == "" || mode == "0") {
@@ -108,6 +139,12 @@ int main(int argc, char *argv[])
     } else if (mode == "3") {
         (void)RunCodecList(path);
     } else if (mode == "4") {
+        (void)RunVideoEncoder(false);
+    } else if (mode == "5") {
+        (void)RunVideoEncoder(true);
+    } else if (mode == "6") {
+        (void)RunVideoDecoder();
+    } else if (mode == "7") {
         (void)RunAVMuxer();
     } else {
         cout << "no that selection" << endl;

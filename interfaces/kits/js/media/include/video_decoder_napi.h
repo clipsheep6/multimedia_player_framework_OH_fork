@@ -16,11 +16,13 @@
 #ifndef VIDEO_DECODER_NAPI_H
 #define VIDEO_DECODER_NAPI_H
 
+#include <atomic>
 #include "avcodec_video_decoder.h"
 #include "common_napi.h"
 #include "media_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "avcodec_napi_helper.h"
 
 namespace OHOS {
 namespace Media {
@@ -41,6 +43,7 @@ private:
     static napi_value Stop(napi_env env, napi_callback_info info);
     static napi_value Flush(napi_env env, napi_callback_info info);
     static napi_value Reset(napi_env env, napi_callback_info info);
+    static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value QueueInput(napi_env env, napi_callback_info info);
     static napi_value ReleaseOutput(napi_env env, napi_callback_info info);
     static napi_value SetOutputSurface(napi_env env, napi_callback_info info);
@@ -59,6 +62,8 @@ private:
     napi_ref wrap_ = nullptr;
     std::shared_ptr<VideoDecoder> vdec_ = nullptr;
     std::shared_ptr<AVCodecCallback> callback_ = nullptr;
+    bool isSurfaceMode_ = false;
+    std::shared_ptr<AVCodecNapiHelper> codecHelper_ = nullptr;
 };
 
 struct VideoDecoderAsyncContext : public MediaAsyncContext {
@@ -66,14 +71,15 @@ struct VideoDecoderAsyncContext : public MediaAsyncContext {
     ~VideoDecoderAsyncContext() = default;
     // general variable
     VideoDecoderNapi *napi = nullptr;
+    sptr<Surface> surface;
     // used by constructor
-    std::string pluginName = "";
+    std::string pluginName;
     int32_t createByMime = 1;
     // used by buffer function
     int32_t index = 0;
     bool isRender = false;
     AVCodecBufferInfo info;
-    AVCodecBufferFlag flag;
+    AVCodecBufferFlag flag = AVCODEC_BUFFER_FLAG_NONE;
     // used by format
     Format format;
 };

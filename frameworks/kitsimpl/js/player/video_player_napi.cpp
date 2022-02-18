@@ -23,6 +23,7 @@
 #include "media_data_source_callback.h"
 #include "common_napi.h"
 #include "media_surface.h"
+#include "surface_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoPlayerNapi"};
@@ -345,13 +346,16 @@ void VideoPlayerNapi::AsyncSetDisplaySurface(napi_env env, void *data)
         return;
     }
 
-    auto mediaSurface = MediaSurfaceFactory::CreateMediaSurface();
-    if (mediaSurface == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "mediaSurface is nullptr");
+    uint64_t surfaceId = 0;
+    MEDIA_LOGD("get surface, surfaceStr = %{public}s", asyncContext->surface.c_str());
+    if (asyncContext->surface.empty() || (asyncContext->surface[0] < '0' && asyncContext->surface[0] > '9')) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "input surface id is invalid");
         return;
     }
+    surfaceId = std::stoull(asyncContext->surface);
+    MEDIA_LOGD("get surface, surfaceId = (%{public}" PRIu64 ")", surfaceId);
 
-    auto surface = mediaSurface->GetSurface(asyncContext->surface);
+    auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
     if (surface != nullptr) {
         int32_t ret = asyncContext->jsPlayer->nativePlayer_->SetVideoSurface(surface);
         if (ret != MSERR_OK) {
@@ -468,7 +472,7 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
     asyncContext->env = env;
     auto cb = std::static_pointer_cast<VideoCallbackNapi>(asyncContext->jsPlayer->jsCallback_);
     cb->QueueAsyncWork(asyncContext);
-
+    
     int32_t ret = MSERR_OK;
     auto player = asyncContext->jsPlayer->nativePlayer_;
     if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_PREPARE) {
@@ -493,15 +497,16 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
         PlaybackRateMode speedMode = static_cast<PlaybackRateMode>(asyncContext->speedMode);
         ret = player->SetPlaybackSpeed(speedMode);
     } else {
-        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to operate playback");
+        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to operate playback", false);
+        MediaAsyncContext::CompleteCallback(env, status, data);
         cb->ClearAsyncWork();
-        return MediaAsyncContext::CompleteCallback(env, status, data);
+        return;
     }
 
     if (ret != MSERR_OK) {
-        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to operate playback");
+        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to operate playback", false);
+        MediaAsyncContext::CompleteCallback(env, status, data);
         cb->ClearAsyncWork();
-        return MediaAsyncContext::CompleteCallback(env, status, data);
     }
 }
 
@@ -697,9 +702,15 @@ napi_value VideoPlayerNapi::Release(napi_env env, napi_callback_info info)
     if (ret != MSERR_OK) {
         asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to release");
     }
+    
     asyncContext->jsPlayer->jsCallback_ = nullptr;
     asyncContext->jsPlayer->url_.clear();
-    
+
+    auto mediaSurface = MediaSurfaceFactory::CreateMediaSurface();
+    if (mediaSurface != nullptr) {
+        mediaSurface->Release();
+    }
+
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Release", NAPI_AUTO_LENGTH, &resource);

@@ -315,6 +315,20 @@ void MediaClient::MediaServerDied(pid_t pid)
         }
     }
 
+    for (auto &it : avCodecClientList_) {
+        auto avCodecClient = std::static_pointer_cast<AVCodecClient>(it);
+        if (avCodecClient != nullptr) {
+            avCodecClient->MediaServerDied();
+        }
+    }
+
+    for (auto &it : avCodecListClientList_) {
+        auto avCodecListClient = std::static_pointer_cast<AVCodecListClient>(it);
+        if (avCodecListClient != nullptr) {
+            avCodecListClient->MediaServerDied();
+        }
+    }
+
     for (auto &it : avmuxerClientList_) {
         auto avmuxer = std::static_pointer_cast<AVMuxerClient>(it);
         if (avmuxer != nullptr) {

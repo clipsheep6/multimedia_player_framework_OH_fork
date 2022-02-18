@@ -21,6 +21,8 @@ ohos_executable("media_demo") {
     "./recorder",
     "./avmetadatahelper",
     "./avcodeclist",
+    "./avcodecvenc",
+    "./avcodecvdec",
     "./avmuxer",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
     "//foundation/multimedia/media_standard/services/utils/include",
@@ -48,12 +50,13 @@ ohos_executable("media_demo") {
     "-D_FORTIFY_SOURCE=2",
     "-fvisibility=hidden",
     "-Wformat=2",
-    "-Wfloat-equal",
     "-Wdate-time",
   ]
 
   sources = [
     "./avcodeclist/avcodeclist_demo.cpp",
+    "./avcodecvdec/avcodec_vdec_demo.cpp",
+    "./avcodecvenc/avcodec_venc_demo.cpp",
     "./avmetadatahelper/avmetadatahelper_demo.cpp",
     "./avmuxer/avmuxer_demo.cpp",
     "./media_demo.cpp",
@@ -67,8 +70,10 @@ ohos_executable("media_demo") {
     "//foundation/graphic/standard:libsurface",
     "//foundation/graphic/standard:libwmclient",
     "//foundation/graphic/standard/frameworks/surface:surface",
+    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
     "//third_party/ffmpeg:libohosffmpeg",
+    "//foundation/windowmanager/wm:libwm",
     "//third_party/libjpeg:libjpeg_static",
     "//utils/native/base:utils",
   ]

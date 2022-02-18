@@ -51,18 +51,21 @@ public:
     DISALLOW_COPY_AND_MOVE(AVCodecEngineGstImpl);
 
 private:
+    std::string FindMimeTypeByName(AVCodecType type, const std::string &name);
     int32_t HandleMimeType(AVCodecType type, const std::string &name);
     int32_t HandlePluginName(AVCodecType type, const std::string &name);
     int32_t QueryIsSoftPlugin(const std::string &name, bool &isSoftware);
+    void CheckSurfaceFormat(Format &format);
 
     AVCodecType type_ = AVCODEC_TYPE_VIDEO_ENCODER;
-    bool uswSoftWare_ = false;
+    bool useSoftWare_ = false;
     std::string pluginName_ = "";
     std::unique_ptr<AVCodecEngineCtrl> ctrl_ = nullptr;
     std::unique_ptr<ProcessorBase> processor_ = nullptr;
     std::mutex mutex_;
     std::weak_ptr<IAVCodecEngineObs> obs_;
     Format format_;
+    CapabilityData capData_;
 };
 } // Media
 } // OHOS

@@ -110,7 +110,7 @@ void PlayerCallbackNapi::OnError(PlayerErrorType errorType, int32_t errorCode)
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = errorCallback_;
     cb->callbackName = ERROR_CALLBACK_NAME;
-    cb->errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
+    cb->errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
     return OnJsCallBackError(cb);
 }
@@ -172,13 +172,13 @@ void PlayerCallbackNapi::OnBufferingUpdateCb(const Format &infoBody) const
 
     int32_t value = 0;
     int32_t bufferingType = -1;
-    if (infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), value)) {
+    if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_BUFFERING_START))) {
         bufferingType = BUFFERING_START;
-    } else if (infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), value)) {
+    } else if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_BUFFERING_END))) {
         bufferingType = BUFFERING_END;
-    } else if (infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_PERCENT), value)) {
+    } else if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_BUFFERING_PERCENT))) {
         bufferingType = BUFFERING_PERCENT;
-    } else if (infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION), value)) {
+    } else if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_CACHED_DURATION))) {
         bufferingType = CACHED_DURATION;
     } else {
         return;
@@ -188,7 +188,7 @@ void PlayerCallbackNapi::OnBufferingUpdateCb(const Format &infoBody) const
 
     cb->valueVec.push_back(bufferingType);
     cb->valueVec.push_back(value);
-    return OnJsCallBackBufferingUpdate(cb);
+    return OnJsCallBackIntVec(cb);
 }
 
 void PlayerCallbackNapi::OnEosCb(int32_t isLooping) const
@@ -424,7 +424,7 @@ void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
     }
 }
 
-void PlayerCallbackNapi::OnJsCallBackBufferingUpdate(PlayerJsCallback *jsCb) const
+void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);

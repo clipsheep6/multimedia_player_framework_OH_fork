@@ -45,12 +45,27 @@ public:
         return nullptr;
     }
 
+    virtual int32_t Start()
+    {
+        return MSERR_OK;
+    }
+
+    virtual int32_t Stop()
+    {
+        return MSERR_OK;
+    }
+
     virtual int32_t Flush()
     {
         return MSERR_OK;
     }
 
-    virtual GstElement *GetElement()
+    virtual bool Needflush()
+    {
+        return true;
+    }
+
+    virtual const GstElement *GetElement()
     {
         return src_;
     }
@@ -58,11 +73,6 @@ public:
     virtual std::shared_ptr<AVSharedMemory> GetInputBuffer(uint32_t index)
     {
         return nullptr;
-    }
-
-    virtual uint32_t GetBufferCount()
-    {
-        return 0;
     }
 
     virtual int32_t QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)

@@ -19,6 +19,9 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ProcessorVdecImpl"};
+    const uint32_t MAX_SIZE = 3150000; // 3MB
+    const uint32_t MAX_WIDTH = 8000;
+    const uint32_t MAX_HEIGHT = 5000;
 }
 
 namespace OHOS {
@@ -35,65 +38,58 @@ int32_t ProcessorVdecImpl::ProcessMandatory(const Format &format)
 {
     CHECK_AND_RETURN_RET(format.GetIntValue("width", width_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("height", height_) == true, MSERR_INVALID_VAL);
-    int32_t pixel = 0;
-    CHECK_AND_RETURN_RET(format.GetIntValue("pixel_format", pixel) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("pixel_format", pixelFormat_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("frame_rate", frameRate_) == true, MSERR_INVALID_VAL);
-
     MEDIA_LOGD("width:%{public}d, height:%{public}d, pixel:%{public}d, frameRate:%{public}d",
-        width_, height_, pixel, frameRate_);
+        width_, height_, pixelFormat_, frameRate_);
 
-    VideoPixelFormat pixelFormat = VIDEO_PIXEL_FORMAT_YUVI420;
-    CHECK_AND_RETURN_RET(MapVideoPixelFormat(pixel, pixelFormat) == MSERR_OK, MSERR_INVALID_VAL);
-    pixelFormat_ = PixelFormatToString(pixelFormat);
+    gstPixelFormat_ = PixelFormatToGst(static_cast<VideoPixelFormat>(pixelFormat_));
 
     return MSERR_OK;
 }
 
 int32_t ProcessorVdecImpl::ProcessOptional(const Format &format)
 {
+    if (format.GetValueType(std::string_view("max_input_size")) == FORMAT_TYPE_INT32) {
+        (void)format.GetIntValue("max_input_size", maxInputSize_);
+    }
+
     return MSERR_OK;
 }
 
 std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
 {
-    CHECK_AND_RETURN_RET(width_ > 0 && height_ > 0, nullptr);
+    CHECK_AND_RETURN_RET(width_ > 0 && width_ < MAX_WIDTH, nullptr);
+    CHECK_AND_RETURN_RET(height_ > 0 && height_ < MAX_HEIGHT, nullptr);
 
     GstCaps *caps = nullptr;
     switch (codecName_) {
         case CODEC_MIMIE_TYPE_VIDEO_MPEG2:
             caps = gst_caps_new_simple("video/mpeg",
-                "width", G_TYPE_INT, width_,
-                "height", G_TYPE_INT, height_,
-                "mpegversion", G_TYPE_INT, 2,
-                "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
+                "width", G_TYPE_INT, width_, "height", G_TYPE_INT, height_,
+                "mpegversion", G_TYPE_INT, 2, "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
         case CODEC_MIMIE_TYPE_VIDEO_MPEG4:
             caps = gst_caps_new_simple("video/mpeg",
-                "width", G_TYPE_INT, width_,
-                "height", G_TYPE_INT, height_,
-                "mpegversion", G_TYPE_INT, 4,
-                "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
+                "width", G_TYPE_INT, width_, "height", G_TYPE_INT, height_,
+                "mpegversion", G_TYPE_INT, 4, "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
         case CODEC_MIMIE_TYPE_VIDEO_H263:
             caps = gst_caps_new_simple("video/x-h263",
-                "width", G_TYPE_INT, width_,
-                "height", G_TYPE_INT, height_,
+                "width", G_TYPE_INT, width_, "height", G_TYPE_INT, height_,
                 "variant", G_TYPE_STRING, "itu", nullptr);
             break;
         case CODEC_MIMIE_TYPE_VIDEO_AVC:
             caps = gst_caps_new_simple("video/x-h264",
-                "width", G_TYPE_INT, width_,
-                "height", G_TYPE_INT, height_,
-                "alignment", G_TYPE_STRING, "nal",
-                "stream-format", G_TYPE_STRING, "byte-stream",
+                "width", G_TYPE_INT, width_, "height", G_TYPE_INT, height_,
+                "framerate", GST_TYPE_FRACTION, frameRate_, 1,
+                "alignment", G_TYPE_STRING, "nal", "stream-format", G_TYPE_STRING, "byte-stream",
                 "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
         case CODEC_MIMIE_TYPE_VIDEO_HEVC:
             caps = gst_caps_new_simple("video/x-h265",
-                "width", G_TYPE_INT, width_,
-                "height", G_TYPE_INT, height_,
-                "alignment", G_TYPE_STRING, "nal",
-                "stream-format", G_TYPE_STRING, "byte-stream",
+                "width", G_TYPE_INT, width_, "height", G_TYPE_INT, height_,
+                "alignment", G_TYPE_STRING, "nal", "stream-format", G_TYPE_STRING, "byte-stream",
                 "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
         default:
@@ -107,18 +103,23 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
         return nullptr;
     }
 
-    config->needCodecData_ = (codecName_ == CODEC_MIMIE_TYPE_VIDEO_AVC) ? true : false;
+    config->needCodecData_ = (codecName_ == CODEC_MIMIE_TYPE_VIDEO_AVC && isSoftWare_) ? true : false;
+    if (maxInputSize_ > 0) {
+        config->bufferSize_ = (maxInputSize_ > MAX_SIZE) ? MAX_SIZE : static_cast<uint32_t>(maxInputSize_);
+    } else {
+        config->bufferSize_ = CompressedBufSize(width_, height_, false, codecName_);
+    }
+
     return config;
 }
 
 std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
 {
-    CHECK_AND_RETURN_RET(width_ > 0 && height_ > 0, nullptr);
+    CHECK_AND_RETURN_RET(width_ > 0 && width_ < MAX_WIDTH, nullptr);
+    CHECK_AND_RETURN_RET(height_ > 0 && height_ < MAX_HEIGHT, nullptr);
 
     GstCaps *caps = gst_caps_new_simple("video/x-raw",
-        "width", G_TYPE_INT, width_,
-        "height", G_TYPE_INT, height_,
-        "format", G_TYPE_STRING, pixelFormat_.c_str(), nullptr);
+        "format", G_TYPE_STRING, gstPixelFormat_.c_str(), nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
     auto config = std::make_shared<ProcessorConfig>(caps, false);
@@ -127,6 +128,11 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
         gst_caps_unref(caps);
         return nullptr;
     }
+
+    const uint32_t alignment = 16;
+    config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_),
+        static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), alignment);
+
     return config;
 }
 } // Media

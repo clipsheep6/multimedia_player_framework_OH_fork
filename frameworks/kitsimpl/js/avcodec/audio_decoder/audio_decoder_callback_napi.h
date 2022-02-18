@@ -21,6 +21,8 @@
 #include "common_napi.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "avcodec_napi_helper.h"
+#include "avcodec_napi_utils.h"
 
 namespace OHOS {
 namespace Media {
@@ -31,7 +33,8 @@ const std::string OUTPUT_CALLBACK_NAME = "outputBufferAvailable";
 
 class AudioDecoderCallbackNapi : public AVCodecCallback {
 public:
-    explicit AudioDecoderCallbackNapi(napi_env env, std::weak_ptr<AudioDecoder> adec);
+    explicit AudioDecoderCallbackNapi(napi_env env, std::weak_ptr<AudioDecoder> adec,
+        const std::shared_ptr<AVCodecNapiHelper>& codecHelper);
     virtual ~AudioDecoderCallbackNapi();
 
     void SaveCallbackReference(const std::string &callbackName, napi_value callback);
@@ -44,7 +47,7 @@ protected:
     void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
 
 private:
-    struct AudioDecoderJsCallback {
+    struct AudioDecoderJsCallback : public AVCodecJSCallback  {
         std::shared_ptr<AutoRef> callback = nullptr;
         std::string callbackName = "unknown";
         std::string errorMsg = "unknown";
@@ -55,6 +58,7 @@ private:
         std::shared_ptr<AVSharedMemory> memory = nullptr;
         bool isInput = false;
         Format format;
+        std::weak_ptr<AVCodecNapiHelper> codecHelper;
     };
     void OnJsErrorCallBack(AudioDecoderJsCallback *jsCb) const;
     void OnJsBufferCallBack(AudioDecoderJsCallback *jsCb, bool isInput) const;
@@ -67,6 +71,9 @@ private:
     std::shared_ptr<AutoRef> formatChangedCallback_ = nullptr;
     std::shared_ptr<AutoRef> inputCallback_ = nullptr;
     std::shared_ptr<AutoRef> outputCallback_ = nullptr;
+    std::shared_ptr<AVCodecNapiHelper> codecHelper_ = nullptr;
+    std::unordered_map<uint32_t, std::shared_ptr<AVSharedMemory>> inputBufferCaches_;
+    std::unordered_map<uint32_t, std::shared_ptr<AVSharedMemory>> outputBufferCaches_;
 };
 }  // namespace Media
 }  // namespace OHOS

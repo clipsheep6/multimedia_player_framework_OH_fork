@@ -15,6 +15,7 @@
 
 #include "avcodec_napi_utils.h"
 #include <map>
+#include <cmath>
 #include "common_napi.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -30,7 +31,7 @@ namespace {
         {"width", OHOS::Media::FORMAT_TYPE_INT32},
         {"height", OHOS::Media::FORMAT_TYPE_INT32},
         {"pixel_format", OHOS::Media::FORMAT_TYPE_INT32},
-        {"frame_rate", OHOS::Media::FORMAT_TYPE_INT32},
+        {"frame_rate", OHOS::Media::FORMAT_TYPE_DOUBLE},
         {"capture_rate", OHOS::Media::FORMAT_TYPE_INT32},
         {"i_frame_interval", OHOS::Media::FORMAT_TYPE_INT32},
         {"req_i_frame", OHOS::Media::FORMAT_TYPE_INT32},
@@ -52,18 +53,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-struct AvMemNapiWarp {
-    explicit AvMemNapiWarp(const std::shared_ptr<AVSharedMemory> &mem) : mem_(mem)
-    {
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " AvMemNapiWarp Instances create", FAKE_POINTER(this));
-    };
-    ~AvMemNapiWarp()
-    {
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " AvMemNapiWarp Instances destroy", FAKE_POINTER(this));
-    };
-    std::shared_ptr<AVSharedMemory> mem_;
-};
-
 napi_value AVCodecNapiUtil::CreateInputCodecBuffer(napi_env env, uint32_t index, std::shared_ptr<AVSharedMemory> mem)
 {
     CHECK_AND_RETURN_RET(mem != nullptr, nullptr);
@@ -82,16 +71,9 @@ napi_value AVCodecNapiUtil::CreateInputCodecBuffer(napi_env env, uint32_t index,
     status = napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &dataStr);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
-    AvMemNapiWarp *memWarp = new(std::nothrow) AvMemNapiWarp(mem);
-    CHECK_AND_RETURN_RET(memWarp != nullptr, nullptr);
     napi_value dataVal = nullptr;
     status = napi_create_external_arraybuffer(env, mem->GetBase(), static_cast<size_t>(mem->GetSize()),
-        [](napi_env env, void *data, void *hint) {
-            (void)env;
-            (void)data;
-            AvMemNapiWarp *memWarp = reinterpret_cast<AvMemNapiWarp *>(hint);
-            delete memWarp;
-        }, reinterpret_cast<void *>(memWarp), &dataVal);
+        [](napi_env env, void *data, void *hint) {}, nullptr, &dataVal);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
     status = napi_set_property(env, buffer, dataStr, dataVal);
@@ -103,7 +85,7 @@ napi_value AVCodecNapiUtil::CreateInputCodecBuffer(napi_env env, uint32_t index,
 napi_value AVCodecNapiUtil::CreateOutputCodecBuffer(napi_env env, uint32_t index,
     std::shared_ptr<AVSharedMemory> memory, const AVCodecBufferInfo &info, AVCodecBufferFlag flag)
 {
-    if (memory == nullptr && flag == AVCODEC_BUFFER_FLAG_EOS) {
+    if (flag & AVCODEC_BUFFER_FLAG_EOS) {
         MEDIA_LOGI("Return empty buffer with eos flag");
         return CreateEmptyEOSBuffer(env);
     }
@@ -119,25 +101,20 @@ napi_value AVCodecNapiUtil::CreateOutputCodecBuffer(napi_env env, uint32_t index
     CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "length", info.size) == true, nullptr);
     CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "flags", static_cast<int32_t>(flag)) == true, nullptr);
 
-    napi_value dataStr = nullptr;
-    status = napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &dataStr);
-    CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
+    if (memory != nullptr) {
+        napi_value dataStr = nullptr;
+        status = napi_create_string_utf8(env, "data", NAPI_AUTO_LENGTH, &dataStr);
+        CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
-    CHECK_AND_RETURN_RET(memory->GetSize() > (info.offset + info.size), nullptr);
-    napi_value dataVal = nullptr;
-    AvMemNapiWarp *memWarp = new(std::nothrow) AvMemNapiWarp(memory);
-    CHECK_AND_RETURN_RET(memWarp != nullptr, nullptr);
-    status = napi_create_external_arraybuffer(env, memory->GetBase() + info.offset, info.size,
-        [](napi_env env, void *data, void *hint) {
-            (void)env;
-            (void)data;
-            AvMemNapiWarp *memWarp = reinterpret_cast<AvMemNapiWarp *>(hint);
-            delete memWarp;
-        }, reinterpret_cast<void *>(memWarp), &dataVal);
-    CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
+        CHECK_AND_RETURN_RET(memory->GetSize() > (info.offset + info.size), nullptr);
+        napi_value dataVal = nullptr;
+        status = napi_create_external_arraybuffer(env, memory->GetBase() + info.offset, info.size,
+            [](napi_env env, void *data, void *hint) {}, nullptr, &dataVal);
+        CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
-    status = napi_set_property(env, buffer, dataStr, dataVal);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set property");
+        status = napi_set_property(env, buffer, dataStr, dataVal);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set property");
+    }
 
     return buffer;
 }
@@ -203,18 +180,28 @@ bool AVCodecNapiUtil::ExtractMediaFormat(napi_env env, napi_value mediaFormat, F
 {
     CHECK_AND_RETURN_RET(mediaFormat != nullptr, false);
 
+    bool exist = false;
+    napi_value item = nullptr;
     for (auto it = FORMAT.begin(); it != FORMAT.end(); it++) {
+        if (napi_has_named_property(env, mediaFormat, it->first.c_str(), &exist) != napi_ok || !exist) {
+            continue;
+        }
+        CHECK_AND_CONTINUE(napi_get_named_property(env, mediaFormat, it->first.c_str(), &item) == napi_ok);
+
         if (it->second == FORMAT_TYPE_STRING) {
-            std::string ret = CommonNapi::GetPropertyString(env, mediaFormat, it->first);
-            if (ret == "") {
-                continue;
-            } else {
-                format.PutStringValue(it->first, ret);
-            }
+            format.PutStringValue(it->first, CommonNapi::GetStringArgument(env, item));
         } else if (it->second == FORMAT_TYPE_INT32) {
-            int32_t ret = 0;
-            if (CommonNapi::GetPropertyInt32(env, mediaFormat, it->first, ret) == true) {
-                format.PutIntValue(it->first, ret);
+            int32_t result = 0;
+            (void)napi_get_value_int32(env, item, &result);
+            format.PutIntValue(it->first, result);
+        } else if (it->second == FORMAT_TYPE_DOUBLE) {
+            double result = 0;
+            (void)napi_get_value_double(env, item, &result);
+            if (it->first == "frame_rate") {
+                double frameRate = round(result);
+                format.PutIntValue(it->first, static_cast<int32_t>(frameRate));
+            } else {
+                format.PutDoubleValue(it->first, result);
             }
         }
     }

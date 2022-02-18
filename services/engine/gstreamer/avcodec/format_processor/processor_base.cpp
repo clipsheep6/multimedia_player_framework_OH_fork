@@ -23,9 +23,10 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-int32_t ProcessorBase::Init(const CodecMimeType &name)
+int32_t ProcessorBase::Init(const CodecMimeType &name, bool isSoftWare)
 {
     codecName_ = name;
+    isSoftWare_ = isSoftWare;
     return MSERR_OK;
 }
 
@@ -39,7 +40,6 @@ int32_t ProcessorBase::DoProcess(const Format &format)
 
 int32_t ProcessorBase::ProcessVendor(const Format &format)
 {
-    // todo hdi interface dertermine
     return MSERR_OK;
 }
 } // Media

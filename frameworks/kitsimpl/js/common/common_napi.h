@@ -25,37 +25,6 @@
 
 namespace OHOS {
 namespace Media {
-const std::unordered_map<std::string, FormatDataType> FORMAT_DATA = {
-    {"track_index", FORMAT_TYPE_INT32},
-    {"track_type", FORMAT_TYPE_INT32},
-    {"codec_mime", FORMAT_TYPE_STRING},
-    {"duration", FORMAT_TYPE_INT32},
-    {"bitrate", FORMAT_TYPE_INT32},
-    {"max_input_size", FORMAT_TYPE_INT32},
-    {"max_encoder_fps", FORMAT_TYPE_INT32},
-    {"width", FORMAT_TYPE_INT32},
-    {"height", FORMAT_TYPE_INT32},
-    {"pixel_format", FORMAT_TYPE_INT32},
-    {"audio_raw_format", FORMAT_TYPE_INT32},
-    {"frame_rate", FORMAT_TYPE_INT32},
-    {"capture_rate", FORMAT_TYPE_INT32},
-    {"i_frame_interval", FORMAT_TYPE_INT32},
-    {"req_i_frame", FORMAT_TYPE_INT32},
-    {"repeat_frame_after", FORMAT_TYPE_INT32},
-    {"suspend_input_surface", FORMAT_TYPE_INT32},
-    {"video_encode_bitrate_mode", FORMAT_TYPE_INT32},
-    {"codec_profile", FORMAT_TYPE_INT32},
-    {"codec_quality", FORMAT_TYPE_INT32},
-    {"rect_top", FORMAT_TYPE_INT32},
-    {"rect_bottom", FORMAT_TYPE_INT32},
-    {"rect_left", FORMAT_TYPE_INT32},
-    {"rect_right", FORMAT_TYPE_INT32},
-    {"color_standard", FORMAT_TYPE_INT32},
-    {"channel_count", FORMAT_TYPE_INT32},
-    {"sample_rate", FORMAT_TYPE_INT32},
-    {"vendor.custom", FORMAT_TYPE_ADDR},
-};
-
 class CommonNapi {
 public:
     CommonNapi() = delete;
@@ -141,6 +110,36 @@ private:
     std::vector<Format> value_;
 };
 
+class MediaJsResultRange : public MediaJsResult {
+public:
+    explicit MediaJsResultRange(int32_t min, int32_t max)
+        : min_(min),
+          max_(max)
+    {
+    }
+    ~MediaJsResultRange() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override
+    {
+        napi_status status = napi_create_object(env, &result);
+        if (status != napi_ok) {
+            return status;
+        }
+
+        if (!CommonNapi::SetPropertyInt32(env, result, "min", min_)) {
+            return napi_invalid_arg;
+        }
+
+        if (!CommonNapi::SetPropertyInt32(env, result, "max", max_)) {
+            return napi_invalid_arg;
+        }
+
+        return napi_ok;
+    }
+private:
+    int32_t min_;
+    int32_t max_;
+};
+
 class MediaJsResultInstance : public MediaJsResult {
 public:
     explicit MediaJsResultInstance(const napi_ref &constructor)
@@ -216,39 +215,11 @@ private:
     Format format_;
 };
 
-class MediaCapsJsResultAudio : public MediaJsResult {
-public:
-    explicit MediaCapsJsResultAudio(bool isDecoder)
-        : isDecoder_(isDecoder)
-    {
-    }
-    ~MediaCapsJsResultAudio() = default;
-    napi_status GetJsResult(napi_env env, napi_value &result) override;
-
-private:
-    bool isDecoder_;
-};
-
-class MediaCapsJsResultAudioDynamic : public MediaJsResult {
-public:
-    explicit MediaCapsJsResultAudioDynamic(std::string name, bool isDecoder)
-        : name_(name),
-          isDecoder_(isDecoder)
-    {
-    }
-    ~MediaCapsJsResultAudioDynamic() = default;
-    napi_status GetJsResult(napi_env env, napi_value &result) override;
-
-private:
-    std::string name_;
-    bool isDecoder_;
-};
-
 struct MediaAsyncContext {
     explicit MediaAsyncContext(napi_env env) : env(env) {}
     virtual ~MediaAsyncContext() = default;
     static void CompleteCallback(napi_env env, napi_status status, void *data);
-    void SignError(int32_t code, std::string message);
+    void SignError(int32_t code, std::string message, bool del = true);
     napi_env env;
     napi_async_work work = nullptr;
     napi_deferred deferred = nullptr;
@@ -257,6 +228,7 @@ struct MediaAsyncContext {
     bool errFlag = false;
     int32_t errCode = 0;
     std::string errMessage = "";
+    bool delFlag = true;
 };
 
 struct AutoRef {

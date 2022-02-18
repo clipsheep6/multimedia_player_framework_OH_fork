@@ -16,8 +16,10 @@
 #include "video_encoder_napi.h"
 #include <climits>
 #include "avcodec_napi_utils.h"
+#include "media_capability_utils.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "surface_utils.h"
 #include "video_encoder_callback_napi.h"
 
 namespace {
@@ -53,6 +55,7 @@ napi_value VideoEncoderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("stop", Stop),
         DECLARE_NAPI_FUNCTION("flush", Flush),
         DECLARE_NAPI_FUNCTION("reset", Reset),
+        DECLARE_NAPI_FUNCTION("release", Release),
         DECLARE_NAPI_FUNCTION("queueInput", QueueInput),
         DECLARE_NAPI_FUNCTION("releaseOutput", ReleaseOutput),
         DECLARE_NAPI_FUNCTION("getInputSurface", GetInputSurface),
@@ -133,7 +136,14 @@ void VideoEncoderNapi::Destructor(napi_env env, void *nativeObject, void *finali
     (void)env;
     (void)finalize;
     if (nativeObject != nullptr) {
-        delete reinterpret_cast<VideoEncoderNapi *>(nativeObject);
+        VideoEncoderNapi *napi = reinterpret_cast<VideoEncoderNapi *>(nativeObject);
+        if (napi->surface_ != nullptr) {
+            auto id = napi->surface_->GetUniqueId();
+            if (napi->IsSurfaceIdValid(id)) {
+                (void)SurfaceUtils::GetInstance()->Remove(id);
+            }
+        }
+        delete napi;
     }
     MEDIA_LOGD("Destructor success");
 }
@@ -254,7 +264,7 @@ napi_value VideoEncoderNapi::Configure(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->venc_->Configure(asyncCtx->format) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Configure");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Configure");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -295,8 +305,12 @@ napi_value VideoEncoderNapi::Prepare(napi_env env, napi_callback_info info)
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
                 return;
             }
+            if (!asyncCtx->napi->isSurfaceMode_) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Need to getInputSurface before prepare");
+                return;
+            }
             if (asyncCtx->napi->venc_->Prepare() != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Prepare");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Prepare");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -338,7 +352,7 @@ napi_value VideoEncoderNapi::Start(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->venc_->Start() != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Start");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Start");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -380,7 +394,7 @@ napi_value VideoEncoderNapi::Stop(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->venc_->Stop() != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Stop");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Stop");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -422,7 +436,7 @@ napi_value VideoEncoderNapi::Flush(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->venc_->Flush() != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Flush");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Flush");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -463,8 +477,58 @@ napi_value VideoEncoderNapi::Reset(napi_env env, napi_callback_info info)
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
                 return;
             }
+            if (asyncCtx->napi->surface_ != nullptr) {
+                auto id = asyncCtx->napi->surface_->GetUniqueId();
+                if (asyncCtx->napi->IsSurfaceIdValid(id)) {
+                    (void)SurfaceUtils::GetInstance()->Remove(id);
+                }
+                asyncCtx->napi->surface_ = nullptr;
+            }
             if (asyncCtx->napi->venc_->Reset() != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to Reset");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Reset");
+            }
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+
+    return result;
+}
+
+
+napi_value VideoEncoderNapi::Release(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGD("Enter Release");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+
+    napi_value jsThis = nullptr;
+    napi_value args[1] = {nullptr};
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
+    }
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "Release", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void* data) {
+            auto asyncCtx = reinterpret_cast<VideoEncoderAsyncContext *>(data);
+            if (asyncCtx == nullptr || asyncCtx->napi == nullptr || asyncCtx->napi->venc_ == nullptr) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+                return;
+            }
+            if (asyncCtx->napi->venc_->Release() != MSERR_OK) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Release");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -513,7 +577,7 @@ napi_value VideoEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
             }
             CHECK_AND_RETURN(asyncCtx->index >= 0);
             if (asyncCtx->napi->venc_->QueueInputBuffer(asyncCtx->index, asyncCtx->info, asyncCtx->flag) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to QueueInput");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to QueueInput");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -562,7 +626,7 @@ napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
             }
             CHECK_AND_RETURN(asyncCtx->index >= 0);
             if (asyncCtx->napi->venc_->ReleaseOutputBuffer(asyncCtx->index) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to ReleaseOutput");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to ReleaseOutput");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -575,8 +639,54 @@ napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
 
 napi_value VideoEncoderNapi::GetInputSurface(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Enter GetInputSurface");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+
+    napi_value jsThis = nullptr;
+    napi_value args[1] = {nullptr};
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
+    }
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "GetInputSurface", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void* data) {
+            auto asyncCtx = reinterpret_cast<VideoEncoderAsyncContext *>(data);
+            if (asyncCtx == nullptr || asyncCtx->napi == nullptr || asyncCtx->napi->venc_ == nullptr) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+                return;
+            }
+            asyncCtx->napi->surface_ = asyncCtx->napi->venc_->CreateInputSurface();
+            if (asyncCtx->napi->surface_ == nullptr) {
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to GetInputSurface");
+            } else {
+                SurfaceError error = SurfaceUtils::GetInstance()->Add(asyncCtx->napi->surface_->GetUniqueId(),
+                    asyncCtx->napi->surface_);
+                if (error != SURFACE_ERROR_OK) {
+                    asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to add surface");
+                } else {
+                    auto surfaceId = std::to_string(asyncCtx->napi->surface_->GetUniqueId());
+                    asyncCtx->JsResult = std::make_unique<MediaJsResultString>(surfaceId);
+                    asyncCtx->napi->isSurfaceMode_ = true;
+                }
+            }
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+
     return result;
 }
 
@@ -617,7 +727,7 @@ napi_value VideoEncoderNapi::SetParameter(napi_env env, napi_callback_info info)
                 return;
             }
             if (asyncCtx->napi->venc_->SetParameter(asyncCtx->format) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to SetParameter");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to SetParameter");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -683,23 +793,25 @@ napi_value VideoEncoderNapi::GetVideoEncoderCaps(napi_env env, napi_callback_inf
         asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
 
+    VideoEncoderNapi *napi = nullptr;
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&napi));
+    std::string name = "";
+    if (napi->venc_ != nullptr) {
+        Format format;
+        (void)napi->venc_->GetOutputFormat(format);
+        (void)format.GetStringValue("plugin_name", name);
+    } else {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to unwrap");
+    }
+
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
-
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
+    asyncCtx->JsResult = std::make_unique<MediaJsVideoCapsDynamic>(name, false);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "GetVideoEncoderCaps", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
-        [](napi_env env, void* data) {
-            auto asyncCtx = reinterpret_cast<VideoEncoderAsyncContext *>(data);
-            if (asyncCtx == nullptr || asyncCtx->napi == nullptr || asyncCtx->napi->venc_ == nullptr) {
-                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
-                return;
-            }
-        },
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
 
@@ -740,6 +852,15 @@ napi_value VideoEncoderNapi::On(napi_env env, napi_callback_info info)
     auto cb = std::static_pointer_cast<VideoEncoderCallbackNapi>(VideoEncoderNapi->callback_);
     cb->SaveCallbackReference(callbackName, args[1]);
     return result;
+}
+
+bool VideoEncoderNapi::IsSurfaceIdValid(uint64_t surfaceId)
+{
+    auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
+    if (surface == nullptr) {
+        return false;
+    }
+    return true;
 }
 
 void VideoEncoderNapi::ErrorCallback(MediaServiceExtErrCode errCode)

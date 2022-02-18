@@ -17,6 +17,7 @@
 #include <vector>
 #include "media_errors.h"
 #include "media_log.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecEngineCtrl"};
@@ -33,20 +34,6 @@ AVCodecEngineCtrl::~AVCodecEngineCtrl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     (void)Release();
-    src_ = nullptr;
-    sink_ = nullptr;
-    if (codecBin_ != nullptr) {
-        gst_object_unref(codecBin_);
-        codecBin_ = nullptr;
-    }
-    if (gstPipeline_ != nullptr) {
-        gst_object_unref(gstPipeline_);
-        gstPipeline_ = nullptr;
-    }
-    if (bus_ != nullptr) {
-        g_clear_object(&bus_);
-        bus_ = nullptr;
-    }
 }
 
 int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::string &name)
@@ -103,21 +90,10 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
     if (inputConfig->needParser_) {
         g_object_set(codecBin_, "parser", static_cast<gboolean>(true), nullptr);
     }
-    g_object_set(codecBin_, "src", static_cast<gpointer>(src_->GetElement()), nullptr);
+    g_object_set(codecBin_, "src", static_cast<gpointer>(const_cast<GstElement *>(src_->GetElement())), nullptr);
     CHECK_AND_RETURN_RET(src_->Configure(inputConfig) == MSERR_OK, MSERR_UNKNOWN);
 
-    if (useSurfaceRender_) {
-        MEDIA_LOGD("In surface mode, we need to overwrite pixel format, using RGBA instead");
-        GstCaps *caps = outputConfig->caps_;
-        CHECK_AND_RETURN_RET(caps != nullptr, MSERR_UNKNOWN);
-        GValue value = G_VALUE_INIT;
-        g_value_init (&value, G_TYPE_STRING);
-        g_value_set_string (&value, "RGBA");
-        gst_caps_set_value(caps, "format", &value);
-        g_value_unset(&value);
-    }
-
-    g_object_set(codecBin_, "sink", static_cast<gpointer>(sink_->GetElement()), nullptr);
+    g_object_set(codecBin_, "sink", static_cast<gpointer>(const_cast<GstElement *>(sink_->GetElement())), nullptr);
     CHECK_AND_RETURN_RET(sink_->Configure(outputConfig) == MSERR_OK, MSERR_UNKNOWN);
 
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
@@ -136,6 +112,14 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
 int32_t AVCodecEngineCtrl::Start()
 {
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
+
+    CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
+    if (flushAtStart_ || sink_->IsEos()) {
+        CHECK_AND_RETURN_RET(Flush() == MSERR_OK, MSERR_INVALID_OPERATION);
+        flushAtStart_ = false;
+    }
+
+    CHECK_AND_RETURN_RET(src_->Start() == MSERR_OK, MSERR_INVALID_OPERATION);
     GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PLAYING);
     CHECK_AND_RETURN_RET(ret != GST_STATE_CHANGE_FAILURE, MSERR_UNKNOWN);
     if (ret == GST_STATE_CHANGE_ASYNC) {
@@ -143,37 +127,30 @@ int32_t AVCodecEngineCtrl::Start()
         std::unique_lock<std::mutex> lock(gstPipeMutex_);
         gstPipeCond_.wait(lock);
     }
-    if (needInputCallback_) {
-        auto obs = obs_.lock();
-        CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
-        CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
-        uint32_t bufferCount = src_->GetBufferCount();
-        for (uint32_t i = 0; i < bufferCount; i++) {
-            MEDIA_LOGD("OnInputBufferAvailable, index:%{public}d", i);
-            obs->OnInputBufferAvailable(i);
-        }
-    }
 
+    isStart_ = true;
     MEDIA_LOGD("Start success");
     return MSERR_OK;
 }
 
 int32_t AVCodecEngineCtrl::Stop()
 {
-    GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_READY);
+    if (!isStart_) {
+        return MSERR_OK;
+    }
+
+    CHECK_AND_RETURN_RET(src_->Stop() == MSERR_OK, MSERR_INVALID_OPERATION);
+    GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED);
     CHECK_AND_RETURN_RET(ret != GST_STATE_CHANGE_FAILURE, MSERR_UNKNOWN);
     if (ret == GST_STATE_CHANGE_ASYNC) {
         std::unique_lock<std::mutex> lock(gstPipeMutex_);
         gstPipeCond_.wait(lock);
     }
 
-    CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
-    CHECK_AND_RETURN_RET(src_->Flush() == MSERR_OK, MSERR_UNKNOWN);
-
-    CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
-    CHECK_AND_RETURN_RET(sink_->Flush() == MSERR_OK, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET(Flush() == MSERR_OK, MSERR_UNKNOWN);
 
     MEDIA_LOGD("Stop success");
+    isStart_ = false;
     return MSERR_OK;
 }
 
@@ -182,6 +159,10 @@ int32_t AVCodecEngineCtrl::Flush()
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
 
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
+    if (!src_->Needflush()) {
+        MEDIA_LOGD("Flush success, src is empty.");
+        return MSERR_OK;
+    }
     CHECK_AND_RETURN_RET(src_->Flush() == MSERR_OK, MSERR_UNKNOWN);
 
     CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
@@ -196,16 +177,6 @@ int32_t AVCodecEngineCtrl::Flush()
     CHECK_AND_RETURN_RET(event != nullptr, MSERR_NO_MEMORY);
     (void)gst_element_send_event(codecBin_, event);
 
-    if (needInputCallback_) {
-        auto obs = obs_.lock();
-        CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
-        uint32_t bufferCount = src_->GetBufferCount();
-        for (uint32_t i = 0; i < bufferCount; i++) {
-            MEDIA_LOGD("OnInputBufferAvailable, index:%{public}d", i);
-            obs->OnInputBufferAvailable(i);
-        }
-    }
-
     MEDIA_LOGD("Flush success");
     return MSERR_OK;
 }
@@ -213,8 +184,26 @@ int32_t AVCodecEngineCtrl::Flush()
 int32_t AVCodecEngineCtrl::Release()
 {
     if (gstPipeline_ != nullptr) {
+        CHECK_AND_RETURN_RET(Stop() == MSERR_OK, MSERR_UNKNOWN);
         (void)gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_NULL);
     }
+
+    src_ = nullptr;
+    sink_ = nullptr;
+    if (codecBin_ != nullptr) {
+        gst_object_unref(codecBin_);
+        codecBin_ = nullptr;
+    }
+    if (gstPipeline_ != nullptr) {
+        gst_object_unref(gstPipeline_);
+        gstPipeline_ = nullptr;
+    }
+    if (bus_ != nullptr) {
+        g_clear_object(&bus_);
+        bus_ = nullptr;
+    }
+
+    MEDIA_LOGD("Release success");
     return MSERR_OK;
 }
 
@@ -232,11 +221,12 @@ sptr<Surface> AVCodecEngineCtrl::CreateInputSurface(std::shared_ptr<ProcessorCon
         CHECK_AND_RETURN_RET_LOG(src_ != nullptr, nullptr, "No memory");
         CHECK_AND_RETURN_RET_LOG(src_->Init() == MSERR_OK, nullptr, "Failed to create input surface");
     }
+
     auto surface =  src_->CreateInputSurface(inputConfig);
     CHECK_AND_RETURN_RET(surface != nullptr, nullptr);
-    needInputCallback_ = false;
     useSurfaceInput_ = true;
-
+    CHECK_AND_RETURN_RET(codecBin_ != nullptr, nullptr);
+    g_object_set(codecBin_, "use-surface-input", TRUE, nullptr);
     MEDIA_LOGD("CreateInputSurface success");
     return surface;
 }
@@ -269,14 +259,14 @@ std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetInputBuffer(uint32_t index
 
 int32_t AVCodecEngineCtrl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
-    MEDIA_LOGD("QueueInputBuffer, index:%{public}d", index);
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
     int32_t ret = src_->QueueInputBuffer(index, info, flag);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-    if (flag == AVCODEC_BUFFER_FLAG_EOS) {
+    if (flag & AVCODEC_BUFFER_FLAG_EOS) {
         GstEvent *event = gst_event_new_eos();
         CHECK_AND_RETURN_RET(event != nullptr, MSERR_NO_MEMORY);
         (void)gst_element_send_event(codecBin_, event);
+        flushAtStart_ = true;
     }
     return MSERR_OK;
 }
@@ -302,9 +292,33 @@ int32_t AVCodecEngineCtrl::SetParameter(const Format &format)
     CHECK_AND_RETURN_RET(sink_->SetParameter(format) == MSERR_OK, MSERR_UNKNOWN);
 
     CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_UNKNOWN);
+
     int32_t value = 0;
-    if (format.GetIntValue("req_i_frame", value) == true) {
-        g_object_set(codecBin_, "req-i-frame", value, nullptr);
+    if (format.GetValueType(std::string_view("req_i_frame")) == FORMAT_TYPE_INT32) {
+        if (format.GetIntValue("req_i_frame", value) && value >= 0) {
+            g_object_set(codecBin_, "req-i-frame", static_cast<uint32_t>(value), nullptr);
+        }
+    }
+
+    if (format.GetValueType(std::string_view("bitrate")) == FORMAT_TYPE_INT32) {
+        if (format.GetIntValue("bitrate", value) && value > 0) {
+            g_object_set(codecBin_, "bitrate", static_cast<uint32_t>(value), nullptr);
+        }
+    }
+
+    if (format.GetValueType(std::string_view("vendor.custom")) == FORMAT_TYPE_ADDR) {
+        uint8_t *addr = nullptr;
+        size_t size = 0;
+        if (format.GetBuffer("vendor.custom", &addr, size) && addr != nullptr) {
+            GstBuffer *buffer = gst_buffer_new_allocate(nullptr, size, nullptr);
+            CHECK_AND_RETURN_RET(buffer != nullptr, MSERR_NO_MEMORY);
+
+            ON_SCOPE_EXIT(0) { gst_buffer_unref(buffer); };
+
+            gsize ret = gst_buffer_fill(buffer, 0, (char *)addr, size);
+            CHECK_AND_RETURN_RET(ret == static_cast<gsize>(size), MSERR_UNKNOWN);
+            g_object_set(codecBin_, "vendor", static_cast<gpointer>(buffer), nullptr);
+        }
     }
 
     MEDIA_LOGD("SetParameter success");
