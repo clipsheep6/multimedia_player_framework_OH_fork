@@ -91,8 +91,7 @@ void PlayerCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode, const
     cb->callbackName = info.c_str();
     cb->errorMsg = MSExtErrorToString(errCode);
     cb->errorCode = errCode;
-    OnJsCallBackError(cb);
-    delete cb;
+    return OnJsCallBackError(cb);
 }
 
 PlayerStates PlayerCallbackNapi::GetCurrentState() const
@@ -112,8 +111,7 @@ void PlayerCallbackNapi::OnError(PlayerErrorType errorType, int32_t errorCode)
     cb->callbackName = ERROR_CALLBACK_NAME;
     cb->errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
-    OnJsCallBackError(cb);
-    delete cb;
+    return OnJsCallBackError(cb);
 }
 
 void PlayerCallbackNapi::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -158,8 +156,7 @@ void PlayerCallbackNapi::OnSeekDoneCb(int32_t currentPositon) const
     cb->callback = timeUpdateCallback_;
     cb->callbackName = TIME_UPDATE_CALLBACK_NAME;
     cb->valueVec.push_back(currentPositon);
-    OnJsCallBackInt(cb);
-    delete cb;
+    return OnJsCallBackInt(cb);
 }
 
 void PlayerCallbackNapi::OnBufferingUpdateCb(const Format &infoBody) const
@@ -190,8 +187,7 @@ void PlayerCallbackNapi::OnBufferingUpdateCb(const Format &infoBody) const
 
     cb->valueVec.push_back(bufferingType);
     cb->valueVec.push_back(value);
-    OnJsCallBackIntVec(cb);
-    delete cb;
+    return OnJsCallBackIntVec(cb);
 }
 
 void PlayerCallbackNapi::OnEosCb(int32_t isLooping) const
@@ -241,8 +237,7 @@ void PlayerCallbackNapi::OnStateChangeCb(PlayerStates state)
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = callback;
     cb->callbackName = callbackName;
-    OnJsCallBack(cb);
-    delete cb;
+    return OnJsCallBack(cb);
 }
 
 void PlayerCallbackNapi::OnPositionUpdateCb(int32_t postion) const
@@ -264,18 +259,24 @@ void PlayerCallbackNapi::OnVolumeChangeCb()
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = volumeChangeCallback_;
     cb->callbackName = VOL_CHANGE_CALLBACK_NAME;
-    delete cb;
+    return OnJsCallBack(cb);
 }
 
 void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN(loop != nullptr);
+    if (loop == nullptr) {
+        delete jsCb;
+        return;
+    }
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN(work != nullptr);
-
+    if (work == nullptr) {
+        MEDIA_LOGE("No memory");
+        delete jsCb;
+        return;
+    }
     work->data = reinterpret_cast<void *>(jsCb);
 
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -303,6 +304,7 @@ void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb) const
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
+        delete jsCb;
         delete work;
     }
 }
@@ -311,11 +313,17 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN(loop != nullptr);
+    if (loop == nullptr) {
+        delete jsCb;
+        return;
+    }
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN(work != nullptr);
-
+    if (work == nullptr) {
+        MEDIA_LOGE("No memory");
+        delete jsCb;
+        return;
+    }
     work->data = reinterpret_cast<void *>(jsCb);
 
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -354,6 +362,7 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
+        delete jsCb;
         delete work;
     }
 }
@@ -362,11 +371,17 @@ void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN(loop != nullptr);
+    if (loop == nullptr) {
+        delete jsCb;
+        return;
+    }
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN(work != nullptr);
-
+    if (work == nullptr) {
+        MEDIA_LOGE("No memory");
+        delete jsCb;
+        return;
+    }
     work->data = reinterpret_cast<void *>(jsCb);
 
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -401,6 +416,7 @@ void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
+        delete jsCb;
         delete work;
     }
 }
@@ -409,11 +425,17 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN(loop != nullptr);
+    if (loop == nullptr) {
+        delete jsCb;
+        return;
+    }
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN(work != nullptr);
-
+    if (work == nullptr) {
+        MEDIA_LOGE("No memory");
+        delete jsCb;
+        return;
+    }
     work->data = reinterpret_cast<void *>(jsCb);
 
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -443,9 +465,9 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[1] != nullptr,
                 "%{public}s fail to create callback", request.c_str());
 
-            const size_t ARG_COUNT = 2;
+            const size_t argCount = 2;
             napi_value result = nullptr;
-            nstatus = napi_call_function(env, nullptr, jsCallback, ARG_COUNT, args, &result);
+            nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to call seekDone callback", request.c_str());
         } while (0);
         delete event;
@@ -453,6 +475,7 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
+        delete jsCb;
         delete work;
     }
 }

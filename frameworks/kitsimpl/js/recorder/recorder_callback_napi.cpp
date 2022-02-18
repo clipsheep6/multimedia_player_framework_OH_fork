@@ -77,8 +77,7 @@ void RecorderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
     cb->callbackName = ERROR_CALLBACK_NAME;
     cb->errorMsg = MSExtErrorToString(errCode);
     cb->errorCode = errCode;
-    OnJsErrorCallBack(cb);
-    delete cb;
+    return OnJsErrorCallBack(cb);
 }
 
 std::shared_ptr<AutoRef> RecorderCallbackNapi::StateCallbackSelect(const std::string &callbackName) const
@@ -113,8 +112,7 @@ void RecorderCallbackNapi::SendStateCallback(const std::string &callbackName)
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->callback = callbackRef;
     cb->callbackName = callbackName;
-    OnJsStateCallBack(cb);
-    delete cb;
+    return OnJsStateCallBack(cb);
 }
 
 void RecorderCallbackNapi::OnError(RecorderErrorType errorType, int32_t errCode)
@@ -129,8 +127,7 @@ void RecorderCallbackNapi::OnError(RecorderErrorType errorType, int32_t errCode)
     cb->callbackName = ERROR_CALLBACK_NAME;
     cb->errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
     cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
-    OnJsErrorCallBack(cb);
-    delete cb;
+    return OnJsErrorCallBack(cb);
 }
 
 void RecorderCallbackNapi::OnInfo(int32_t type, int32_t extra)
@@ -142,10 +139,18 @@ void RecorderCallbackNapi::OnJsStateCallBack(RecordJsCallback *jsCb) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN(loop != nullptr);
+    if (loop == nullptr) {
+        MEDIA_LOGE("fail to get uv event loop");
+        delete jsCb;
+        return;
+    }
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN(work != nullptr);
+    if (work == nullptr) {
+        MEDIA_LOGE("fail to new uv_work_t");
+        delete jsCb;
+        return;
+    }
 
     work->data = reinterpret_cast<void *>(jsCb);
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -172,6 +177,7 @@ void RecorderCallbackNapi::OnJsStateCallBack(RecordJsCallback *jsCb) const
     });
     if (ret != 0) {
         MEDIA_LOGE("fail to uv_queue_work task");
+        delete jsCb;
         delete work;
     }
 }
@@ -180,11 +186,13 @@ void RecorderCallbackNapi::OnJsErrorCallBack(RecordJsCallback *jsCb) const
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    CHECK_AND_RETURN(loop != nullptr);
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN(work != nullptr);
-
+    if (work == nullptr) {
+        MEDIA_LOGE("No memory");
+        delete jsCb;
+        return;
+    }
     work->data = reinterpret_cast<void *>(jsCb);
 
     // async callback, jsWork and jsWork->data should be heap object.
@@ -226,6 +234,7 @@ void RecorderCallbackNapi::OnJsErrorCallBack(RecordJsCallback *jsCb) const
     });
     if (ret != 0) {
         MEDIA_LOGE("Failed to execute libuv work queue");
+        delete jsCb;
         delete work;
     }
 }
