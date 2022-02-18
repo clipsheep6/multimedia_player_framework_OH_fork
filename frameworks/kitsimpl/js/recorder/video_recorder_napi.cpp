@@ -547,7 +547,7 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    static const size_t MIN_REQUIRED_ARG_COUNT = 2;
+    static constexpr size_t MIN_REQUIRED_ARG_COUNT = 2;
     size_t argCount = MIN_REQUIRED_ARG_COUNT;
     napi_value args[MIN_REQUIRED_ARG_COUNT] = { nullptr, nullptr };
     napi_value jsThis = nullptr;

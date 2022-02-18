@@ -301,8 +301,8 @@ static bool ImageMetaSetter(const GValue &gval, const std::string_view &key, For
         return false;
     }
 
-    static const gsize minImageSize = 32;
-    CHECK_AND_RETURN_RET(mapInfo.data != nullptr && mapInfo.size > minImageSize, false);
+    static constexpr gsize MIN_SIZE = 32;
+    CHECK_AND_RETURN_RET(mapInfo.data != nullptr && mapInfo.size > MIN_SIZE, false);
 
     bool ret = true;
     if (metadata.ContainKey(key)) {

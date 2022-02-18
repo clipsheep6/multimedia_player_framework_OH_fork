@@ -465,7 +465,7 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[1] != nullptr,
                 "%{public}s fail to create callback", request.c_str());
 
-            const size_t argCount = 2;
+            constexpr size_t argCount = 2;
             napi_value result = nullptr;
             nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to call seekDone callback", request.c_str());

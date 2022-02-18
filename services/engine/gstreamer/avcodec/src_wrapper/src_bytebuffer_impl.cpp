@@ -144,8 +144,8 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
     CHECK_AND_RETURN_RET(address != nullptr, MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET((info.offset + info.size) <= bufWrapper->mem_->GetSize(), MSERR_INVALID_VAL);
 
-    const int32_t usToNs = 1000;
-    GST_BUFFER_PTS(bufWrapper->gstBuffer_) = info.presentationTimeUs * usToNs;
+    constexpr int32_t US_TO_NS = 1000;
+    GST_BUFFER_PTS(bufWrapper->gstBuffer_) = info.presentationTimeUs * US_TO_NS;
 
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
     (void)gst_mem_pool_src_push_buffer(GST_MEM_POOL_SRC(src_), bufWrapper->gstBuffer_);

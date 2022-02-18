@@ -49,16 +49,16 @@ static bool CheckFrameFetchParam(int64_t timeUsOrIndex, int32_t option, const Ou
         return false;
     }
 
-    static const int32_t maxDstWidth = 7680;
-    static const int32_t minDstWidth = 32;
-    if (param.dstWidth > maxDstWidth || (param.dstWidth < minDstWidth && param.dstWidth != -1)) {
+    static constexpr int32_t MAX_DST_WIDTH = 7680;
+    static constexpr int32_t MIN_DST_WIDTH = 32;
+    if (param.dstWidth > MAX_DST_WIDTH || (param.dstWidth < MIN_DST_WIDTH && param.dstWidth != -1)) {
         MEDIA_LOGE("Invalid dstWidth: %{public}d", param.dstWidth);
         return false;
     }
 
-    static const int32_t maxDstHeight = 4320;
-    static const int32_t minDstHeight = 32;
-    if (param.dstHeight > maxDstHeight || (param.dstHeight < minDstHeight && param.dstHeight != -1)) {
+    static constexpr int32_t MAX_DST_HEIGHT = 4320;
+    static constexpr int32_t MIN_DST_HEIGHT = 32;
+    if (param.dstHeight > MAX_DST_HEIGHT || (param.dstHeight < MIN_DST_HEIGHT && param.dstHeight != -1)) {
         MEDIA_LOGE("Invalid dstHeight: %{public}d", param.dstHeight);
         return false;
     }

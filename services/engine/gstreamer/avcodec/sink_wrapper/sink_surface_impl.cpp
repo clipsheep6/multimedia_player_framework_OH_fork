@@ -150,8 +150,8 @@ void SinkSurfaceImpl::EosCb(GstMemSink *memSink, gpointer userData)
     CHECK_AND_RETURN(obs != nullptr);
 
     AVCodecBufferInfo info;
-    const uint32_t invalidIndex = 1000;
-    obs->OnOutputBufferAvailable(invalidIndex, info, AVCODEC_BUFFER_FLAG_EOS);
+    constexpr uint32_t INVALID_INDEX = 1000;
+    obs->OnOutputBufferAvailable(INVALID_INDEX, info, AVCODEC_BUFFER_FLAG_EOS);
 }
 
 int32_t SinkSurfaceImpl::HandleNewSampleCb(GstBuffer *buffer)
@@ -180,8 +180,8 @@ int32_t SinkSurfaceImpl::HandleNewSampleCb(GstBuffer *buffer)
     AVCodecBufferInfo info;
     info.offset = 0;
     info.size = 0;
-    const uint64_t nsToUs = 1000;
-    info.presentationTimeUs = GST_BUFFER_PTS(buffer) / nsToUs;
+    constexpr uint64_t NS_TO_US = 1000;
+    info.presentationTimeUs = GST_BUFFER_PTS(buffer) / NS_TO_US;
     obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
     MEDIA_LOGD("OutputBufferAvailable, index:%{public}d", index);
