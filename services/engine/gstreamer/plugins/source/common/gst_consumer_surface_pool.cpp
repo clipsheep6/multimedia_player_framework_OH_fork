@@ -26,7 +26,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_consumer_surface_pool_debug_category);
 #define GST_CAT_DEFAULT gst_consumer_surface_pool_debug_category
 
 struct _GstConsumerSurfacePoolPrivate {
-    sptr<Surface> consumer_Surface;
+    sptr<Surface> consumer_surface;
     guint available_buf_count;
     GMutex pool_lock;
     GCond buffer_available_con;

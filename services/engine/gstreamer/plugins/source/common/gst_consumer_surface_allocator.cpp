@@ -159,9 +159,9 @@ static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocato
 
 void gst_consumer_surface_allocator_set_surface(GstAllocator *allocator, sptr<Surface> &consumerSurface)
 {
-    GstConsumerSurfaceAllocator *allocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
-    g_return_if_fail(allocator != nullptr && allocator->priv != nullptr);
-    allocator->priv->csurface = consumerSurface;
+    GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
+    g_return_if_fail(allocator != nullptr && sallocator->priv != nullptr);
+    sallocator->priv->csurface = consumerSurface;
 }
 
 GstAllocator *gst_consumer_surface_allocator_new()
