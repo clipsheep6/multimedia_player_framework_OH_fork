@@ -125,7 +125,7 @@ static void gst_surface_pool_src_get_property(GObject *object, guint prop_id, GV
     (void)pspec;
     switch (prop_id) {
         case PROP_SURFACE:
-            g_value_set_pointer(value, src->producerSurface.GetRefPtr());
+            g_value_set_pointer(value, src->producer_surface.GetRefPtr());
             break;
         case PROP_SURFACE_STRIDE:
             g_value_set_uint(value, src->stride);
@@ -211,14 +211,14 @@ static GstStateChangeReturn gst_surface_pool_src_change_state(GstElement *elemen
 static gboolean gst_surface_pool_src_create_surface(GstSurfacePoolSrc *surfacesrc)
 {
     g_return_val_if_fail(surfacesrc != nullptr, FALSE);
-    sptr<Surface> consumerSurface = Surface::CreateSurfaceAsConsumer();
-    g_return_val_if_fail(consumerSurface != nullptr, FALSE);
-    sptr<IBufferProducer> producer = consumerSurface->GetProducer();
+    sptr<Surface> consumer_surface = Surface::CreateSurfaceAsConsumer();
+    g_return_val_if_fail(consumer_surface != nullptr, FALSE);
+    sptr<IBufferProducer> producer = consumer_surface->GetProducer();
     g_return_val_if_fail(producer != nullptr, FALSE);
-    sptr<Surface> producerSurface = Surface::CreateSurfaceAsProducer(producer);
-    g_return_val_if_fail(producerSurface != nullptr, FALSE);
-    surfacesrc->consumerSurface = consumerSurface;
-    surfacesrc->producerSurface = producerSurface;
+    sptr<Surface> producer_surface = Surface::CreateSurfaceAsProducer(producer);
+    g_return_val_if_fail(producer_surface != nullptr, FALSE);
+    surfacesrc->consumer_surface = consumer_surface;
+    surfacesrc->producer_surface = producer_surface;
 
     GST_DEBUG_OBJECT(surfacesrc, "create surface");
     return TRUE;
@@ -263,8 +263,8 @@ static gboolean gst_surface_pool_src_create_pool(GstSurfacePoolSrc *surfacesrc)
     ON_SCOPE_EXIT(0) { gst_object_unref(pool); };
     GstAllocator *allocator = gst_consumer_surface_allocator_new();
     g_return_val_if_fail(allocator != nullptr, FALSE);
-    gst_consumer_surface_pool_set_surface(pool, surfacesrc->consumerSurface);
-    gst_consumer_surface_allocator_set_surface(allocator, surfacesrc->consumerSurface);
+    gst_consumer_surface_pool_set_surface(pool, surfacesrc->consumer_surface);
+    gst_consumer_surface_allocator_set_surface(allocator, surfacesrc->consumer_surface);
     // init pool config
     GstStructure *config = gst_buffer_pool_get_config(pool);
     gst_buffer_pool_config_set_allocator(config, allocator, &params);
@@ -283,15 +283,15 @@ static void gst_surface_pool_src_destroy_pool(GstSurfacePoolSrc *src)
 
 static void gst_surface_pool_src_destroy_surface(GstSurfacePoolSrc *src)
 {
-    src->consumerSurface = nullptr;
-    src->producerSurface = nullptr;
+    src->consumer_surface = nullptr;
+    src->producer_surface = nullptr;
 }
 
 static void gst_surface_pool_src_init_surface(GstSurfacePoolSrc *src)
 {
     // The internal function do not need judge whether it is empty
     GstMemPoolSrc *memsrc = GST_MEM_POOL_SRC(src);
-    sptr<Surface> surface = src->consumerSurface;
+    sptr<Surface> surface = src->consumer_surface;
     guint width = DEFAULT_VIDEO_WIDTH;
     guint height = DEFAULT_VIDEO_HEIGHT;
     GST_OBJECT_LOCK(memsrc);
@@ -363,21 +363,21 @@ static void gst_surface_pool_src_init_surface_buffer(GstSurfacePoolSrc *surfaces
     g_requestConfig.format = format;
     g_requestConfig.usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
     g_requestConfig.timeout = 0;
-    for (uint32_t i = 0; i < surfacesrc->producerSurface->GetQueueSize(); ++i) {
+    for (uint32_t i = 0; i < surfacesrc->producer_surface->GetQueueSize(); ++i) {
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
-        (void)surfacesrc->producerSurface->RequestBuffer(buffer, releaseFence, g_requestConfig);
+        (void)surfacesrc->producer_surface->RequestBuffer(buffer, releaseFence, g_requestConfig);
         buffers.push_back(buffer);
     }
     for (uint32_t i = 0; i < buffers.size(); ++i) {
-        surfacesrc->producerSurface->CancelBuffer(buffers[i]);
+        surfacesrc->producer_surface->CancelBuffer(buffers[i]);
     }
 }
 
 static gboolean gst_surface_pool_src_get_pool(GstSurfacePoolSrc *surfacesrc, GstQuery *query, GstCaps *outcaps,
     guint min_buf, guint max_buf)
 {
-    g_return_val_if_fail(surfacesrc != nullptr && query != nullptr && surfacesrc->consumerSurface != nullptr, FALSE);
+    g_return_val_if_fail(surfacesrc != nullptr && query != nullptr && surfacesrc->consumer_surface != nullptr, FALSE);
     if (surfacesrc->pool == nullptr) {
         return FALSE;
     }
@@ -392,7 +392,7 @@ static gboolean gst_surface_pool_src_get_pool(GstSurfacePoolSrc *surfacesrc, Gst
         memsrc->buffer_size = info.size;
     }
     GST_INFO_OBJECT(surfacesrc, "update buffer num %u", memsrc->buffer_num);
-    SurfaceError ret = surfacesrc->consumerSurface->SetQueueSize(memsrc->buffer_num);
+    SurfaceError ret = surfacesrc->consumer_surface->SetQueueSize(memsrc->buffer_num);
     if (ret != SURFACE_ERROR_OK) {
         GST_WARNING_OBJECT(surfacesrc, "set queue size fail");
     }

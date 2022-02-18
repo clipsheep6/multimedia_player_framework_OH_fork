@@ -145,10 +145,10 @@ static void gst_consumer_surface_allocator_finalize(GObject *obj)
 
 static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocatorClass *klass)
 {
-    GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
-    g_return_if_fail(gobjectClass != nullptr);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
+    g_return_if_fail(gobject_class != nullptr);
     GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_allocator_debug_category, "surfaceallocator", 0, "surface allocator");
-    gobjectClass->finalize = gst_consumer_surface_allocator_finalize;
+    gobject_class->finalize = gst_consumer_surface_allocator_finalize;
 
     GstAllocatorClass *allocatorClass = GST_ALLOCATOR_CLASS(klass);
     g_return_if_fail(allocatorClass != nullptr);
@@ -160,7 +160,7 @@ static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocato
 void gst_consumer_surface_allocator_set_surface(GstAllocator *allocator, sptr<Surface> &consumerSurface)
 {
     GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
-    g_return_if_fail(sallocator != nullptr && sallocator->priv != nullptr);
+    g_return_if_fail(allocator != nullptr && sallocator->priv != nullptr);
     sallocator->priv->csurface = consumerSurface;
 }
 

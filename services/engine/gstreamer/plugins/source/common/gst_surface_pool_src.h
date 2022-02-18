@@ -37,8 +37,8 @@ typedef struct _GstSurfacePoolSrcClass GstSurfacePoolSrcClass;
 
 struct _GstSurfacePoolSrc {
     GstMemPoolSrc memsrc;
-    OHOS::sptr<OHOS::Surface> consumerSurface;
-    OHOS::sptr<OHOS::Surface> producerSurface;
+    OHOS::sptr<OHOS::Surface> consumer_surface;
+    OHOS::sptr<OHOS::Surface> producer_surface;
     GstBufferPool *pool;
     guint stride;
     gboolean need_flush;
