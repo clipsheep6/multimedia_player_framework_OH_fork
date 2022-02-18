@@ -65,7 +65,8 @@ private:
 
 struct AudioDecoderAsyncContext : public MediaAsyncContext {
     explicit AudioDecoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~AudioDecoderAsyncContext() {
+    ~AudioDecoderAsyncContext()
+    {
         if (thisRef != nullptr) {
             napi_delete_reference(env, thisRef);
             thisRef = nullptr;

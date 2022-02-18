@@ -698,16 +698,15 @@ napi_value VideoDecoderNapi::SetOutputSurface(napi_env env, napi_callback_info i
     napi_create_string_utf8(env, "SetOutputSurface", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void* data) {
-            auto asyncCtx = reinterpret_cast<VideoDecoderAsyncContext *>(data);
-            if (asyncCtx == nullptr || asyncCtx->napi == nullptr || asyncCtx->napi->vdec_ == nullptr ||
-                asyncCtx->surface == nullptr) {
-                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            auto ctx = reinterpret_cast<VideoDecoderAsyncContext *>(data);
+            if (ctx == nullptr || ctx->napi == nullptr || ctx->napi->vdec_ == nullptr || ctx->surface == nullptr) {
+                ctx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
                 return;
             }
-            if (asyncCtx->napi->vdec_->SetOutputSurface(asyncCtx->surface) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_UNKNOWN, "Failed to SetOutputSurface");
+            if (ctx->napi->vdec_->SetOutputSurface(ctx->surface) != MSERR_OK) {
+                ctx->SignError(MSERR_UNKNOWN, "Failed to SetOutputSurface");
             } else {
-                asyncCtx->napi->isSurfaceMode_ = true;
+                ctx->napi->isSurfaceMode_ = true;
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));

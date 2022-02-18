@@ -67,7 +67,8 @@ private:
 
 struct VideoEncoderAsyncContext : public MediaAsyncContext {
     explicit VideoEncoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~VideoEncoderAsyncContext() {
+    ~VideoEncoderAsyncContext()
+    {
         if (thisRef != nullptr) {
             napi_delete_reference(env, thisRef);
             thisRef = nullptr;
