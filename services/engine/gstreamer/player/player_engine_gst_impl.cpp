@@ -33,7 +33,7 @@ constexpr float SPEED_1_25_X = 1.25;
 constexpr float SPEED_1_75_X = 1.75;
 constexpr float SPEED_2_00_X = 2.00;
 constexpr size_t MAX_URI_SIZE = 4096;
-constexpr uint64_t RING_BUFFER_MAX_SIZE = 5242880; // 5 * 1024 * 1024
+constexpr uint64_t RING_BUFFER_MAX_SIZE = 0; // 5 * 1024 * 1024
 
 PlayerEngineGstImpl::PlayerEngineGstImpl()
 {
