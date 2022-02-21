@@ -84,8 +84,8 @@ static int32_t Rgb888ToJpeg(const std::string_view &filename, const uint8_t *rgb
     jpeg.in_color_space = JCS_RGB;
     jpeg_set_defaults(&jpeg);
 
-    static constexpr int32_t QUALITY = 100;
-    jpeg_set_quality(&jpeg, QUALITY, TRUE);
+    static constexpr int32_t quality = 100;
+    jpeg_set_quality(&jpeg, quality, TRUE);
 
     FILE *file = fopen(filename.data(), "wb");
     if (file == nullptr) {
