@@ -62,11 +62,11 @@ public:
         MEDIA_LOGI("mq curr maxBytes: %{public}u, maxBuffers: %{public}u, maxTimes: %{public}" PRIu64,
             maxBytes_, maxBytes_, maxTimes_);
 
-        static constexpr uint32_t MAX_BYTES = 20 * 1024;
-        static constexpr uint32_t MAX_BUFFERS = 5;
-        static constexpr uint64_t MAX_TIME = 200 * GST_MSECOND;
-        g_object_set(mq_, "max-size-bytes", MAX_BYTES, "max-size-buffers",
-            MAX_BUFFERS, "max-size-time", MAX_TIME, nullptr);
+        static constexpr uint32_t maxBytes = 20 * 1024;
+        static constexpr uint32_t maxBuffers = 5;
+        static constexpr uint64_t maxTimes = 200 * GST_MSECOND;
+        g_object_set(mq_, "max-size-bytes", maxBytes, "max-size-buffers",
+            maxBuffers, "max-size-time", maxTimes, nullptr);
     }
 
     ~MultiQueueCutOut()

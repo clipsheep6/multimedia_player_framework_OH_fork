@@ -171,8 +171,8 @@ std::shared_ptr<AVSharedMemory> AVMetaElemMetaCollector::DoFetchArtPicture(const
     size_t size = 0;
     (void)innerMeta.GetBuffer(INNER_META_KEY_IMAGE, &addr, size);
 
-    static constexpr size_t MAX_SIZE = 1 * 1024 * 1024;
-    if (addr == nullptr || size == 0 || size > MAX_SIZE) {
+    static constexpr size_t maxImageSize = 1 * 1024 * 1024;
+    if (addr == nullptr || size == 0 || size > maxImageSize) {
         MEDIA_LOGW("invalid param, size = %{public}zu", size);
         return nullptr;
     }

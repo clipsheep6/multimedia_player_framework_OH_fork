@@ -129,9 +129,9 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
         return nullptr;
     }
 
-    constexpr uint32_t ALIGNMENT = 16;
+    constexpr uint32_t alignment = 16;
     config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_),
-        static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), ALIGNMENT);
+        static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), alignment);
 
     return config;
 }
