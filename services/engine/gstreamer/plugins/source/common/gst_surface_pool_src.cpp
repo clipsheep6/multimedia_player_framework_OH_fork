@@ -365,7 +365,7 @@ static void gst_surface_pool_src_init_surface_buffer(GstSurfacePoolSrc *surfaces
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         (void)surfacesrc->producerSurface->RequestBuffer(buffer, releaseFence, g_requestConfig);
-        sptr<SyncFence> autoFence = new(std::nothrow) SyncFence(releaseFence);
+        sptr<OHOS::SyncFence> autoFence = new(std::nothrow) OHOS::SyncFence(releaseFence);
         if (autoFence != nullptr) {
             autoFence->Wait(100); // 100ms
         }
