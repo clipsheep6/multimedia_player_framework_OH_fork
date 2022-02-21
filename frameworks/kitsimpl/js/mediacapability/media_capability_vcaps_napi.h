@@ -53,7 +53,7 @@ private:
     MediaVideoCapsNapi();
     ~MediaVideoCapsNapi();
 
-    static napi_ref constructor_;
+    static thread_local napi_ref constructor_;
     std::shared_ptr<VideoCaps> caps_;
     napi_env env_ = nullptr;
     napi_ref wrap_ = nullptr;
@@ -66,7 +66,13 @@ private:
 
 struct MediaVideoCapsAsyncCtx : public MediaAsyncContext {
     explicit MediaVideoCapsAsyncCtx(napi_env env) : MediaAsyncContext(env) {}
-    ~MediaVideoCapsAsyncCtx() = default;
+    ~MediaVideoCapsAsyncCtx()
+    {
+        if (thisRef != nullptr) {
+            napi_delete_reference(env, thisRef);
+            thisRef = nullptr;
+        }
+    }
 
     MediaVideoCapsNapi *napi_ = nullptr;
     int32_t width_ = 0;

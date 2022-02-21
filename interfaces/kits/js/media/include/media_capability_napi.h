@@ -45,14 +45,20 @@ private:
     MediaCapsNapi();
     ~MediaCapsNapi();
 
-    static napi_ref constructor_;
+    static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrap_ = nullptr;
 };
 
 struct MediaCapsAsyncContext : public MediaAsyncContext {
     explicit MediaCapsAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~MediaCapsAsyncContext() = default;
+    ~MediaCapsAsyncContext()
+    {
+        if (thisRef != nullptr) {
+            napi_delete_reference(env, thisRef);
+            thisRef = nullptr;
+        }
+    }
 
     MediaCapsNapi *napi = nullptr;
     Format format;

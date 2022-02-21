@@ -102,7 +102,7 @@ private:
     int32_t SetUrl(const std::string &UrlPath);
     bool isSurfaceIdVaild(uint64_t surfaceID);
 
-    static napi_ref constructor_;
+    static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Recorder> recorder_ = nullptr;
@@ -116,7 +116,13 @@ private:
 
 struct VideoRecorderAsyncContext : public MediaAsyncContext {
     explicit VideoRecorderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~VideoRecorderAsyncContext() = default;
+    ~VideoRecorderAsyncContext()
+    {
+        if (thisRef != nullptr) {
+            napi_delete_reference(env, thisRef);
+            thisRef = nullptr;
+        }
+    }
 
     VideoRecorderNapi *napi = nullptr;
 };

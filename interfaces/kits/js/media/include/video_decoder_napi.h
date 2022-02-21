@@ -57,7 +57,7 @@ private:
     VideoDecoderNapi();
     ~VideoDecoderNapi();
 
-    static napi_ref constructor_;
+    static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrap_ = nullptr;
     std::shared_ptr<VideoDecoder> vdec_ = nullptr;
@@ -68,7 +68,13 @@ private:
 
 struct VideoDecoderAsyncContext : public MediaAsyncContext {
     explicit VideoDecoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~VideoDecoderAsyncContext() = default;
+    ~VideoDecoderAsyncContext()
+    {
+        if (thisRef != nullptr) {
+            napi_delete_reference(env, thisRef);
+            thisRef = nullptr;
+        }
+    }
     // general variable
     VideoDecoderNapi *napi = nullptr;
     sptr<Surface> surface;

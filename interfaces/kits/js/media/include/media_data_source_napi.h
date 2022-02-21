@@ -21,11 +21,11 @@
 
 namespace OHOS {
 namespace Media {
-class MediaDataSourceNapi {
+class MediaDataSourceNapi : public NoCopyable {
 public:
     MediaDataSourceNapi();
     ~MediaDataSourceNapi();
-    DISALLOW_COPY_AND_MOVE(MediaDataSourceNapi);
+
     static napi_value Init(napi_env env, napi_value exports);
     int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem);
     int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem);
@@ -42,7 +42,7 @@ private:
     static napi_value GetSize(napi_env env, napi_callback_info info);
     void SaveCallbackReference(napi_env env, const std::string &callbackName, napi_value callback);
     int32_t CheckCallbackWorks();
-    static napi_ref constructor_;
+    static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<CallbackWorks> callbackWorks_ = nullptr;

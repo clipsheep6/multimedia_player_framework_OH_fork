@@ -56,7 +56,7 @@ private:
     VideoEncoderNapi();
     ~VideoEncoderNapi();
 
-    static napi_ref constructor_;
+    static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrap_ = nullptr;
     sptr<Surface> surface_;
@@ -67,7 +67,13 @@ private:
 
 struct VideoEncoderAsyncContext : public MediaAsyncContext {
     explicit VideoEncoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~VideoEncoderAsyncContext() = default;
+    ~VideoEncoderAsyncContext()
+    {
+        if (thisRef != nullptr) {
+            napi_delete_reference(env, thisRef);
+            thisRef = nullptr;
+        }
+    }
     // general variable
     VideoEncoderNapi *napi = nullptr;
     // used by constructor

@@ -199,11 +199,9 @@ napi_status CommonNapi::CreateError(napi_env env, int32_t errCode, const std::st
 napi_ref CommonNapi::CreateReference(napi_env env, napi_value arg)
 {
     napi_ref ref = nullptr;
-    napi_valuetype valueType = napi_undefined;
-    if (arg != nullptr && napi_typeof(env, arg, &valueType) == napi_ok && valueType == napi_function) {
-        const size_t refCount = 1;
+    if (arg != nullptr) {
         MEDIA_LOGD("napi_create_reference");
-        napi_create_reference(env, arg, refCount, &ref);
+        napi_create_reference(env, arg, 1, &ref);
     }
     return ref;
 }
@@ -425,9 +423,9 @@ void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void 
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
         CHECK_AND_RETURN_LOG(callback != nullptr, "callbackRef is nullptr!");
-        const size_t argCount = 2;
         napi_value retVal;
         napi_get_undefined(env, &retVal);
+        constexpr size_t argCount = 2;
         napi_call_function(env, nullptr, callback, argCount, args, &retVal);
         napi_delete_reference(env, asyncContext->callbackRef);
     }

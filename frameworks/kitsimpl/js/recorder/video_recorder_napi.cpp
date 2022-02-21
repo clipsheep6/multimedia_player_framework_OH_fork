@@ -28,7 +28,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-napi_ref VideoRecorderNapi::constructor_ = nullptr;
+thread_local napi_ref VideoRecorderNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "VideoRecorder";
 
 VideoRecorderNapi::VideoRecorderNapi()
@@ -184,6 +184,7 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     // get param
@@ -248,6 +249,7 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -296,6 +298,7 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -336,6 +339,7 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -376,6 +380,7 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -416,6 +421,7 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -456,6 +462,7 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -503,6 +510,7 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -539,9 +547,9 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    static const size_t MIN_REQUIRED_ARG_COUNT = 2;
-    size_t argCount = MIN_REQUIRED_ARG_COUNT;
-    napi_value args[MIN_REQUIRED_ARG_COUNT] = { nullptr, nullptr };
+    static constexpr size_t minArgumentCount = 2;
+    size_t argCount = minArgumentCount;
+    napi_value args[minArgumentCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {

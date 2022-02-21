@@ -94,7 +94,7 @@ napi_value AVCodecNapiUtil::CreateOutputCodecBuffer(napi_env env, uint32_t index
     napi_status status = napi_create_object(env, &buffer);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
-    const int32_t msToUs = 1000;
+    constexpr int32_t msToUs = 1000;
     CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "timeMs", info.presentationTimeUs / msToUs) == true, nullptr);
     CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "index", static_cast<int32_t>(index)) == true, nullptr);
     CHECK_AND_RETURN_RET(AddNumberProp(env, buffer, "offset", 0) == true, nullptr);
@@ -170,7 +170,7 @@ bool AVCodecNapiUtil::ExtractCodecBuffer(napi_env env, napi_value buffer, int32_
 
     int32_t timeMs = 0;
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, buffer, "timeMs", timeMs) == true, false);
-    const int32_t msToUs = 1000;
+    constexpr int32_t msToUs = 1000;
     info.presentationTimeUs = msToUs * timeMs;
 
     return true;

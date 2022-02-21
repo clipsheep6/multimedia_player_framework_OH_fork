@@ -55,7 +55,7 @@ private:
     AudioDecoderNapi();
     ~AudioDecoderNapi();
 
-    static napi_ref constructor_;
+    static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrap_ = nullptr;
     std::shared_ptr<AudioDecoder> adec_ = nullptr;
@@ -65,7 +65,13 @@ private:
 
 struct AudioDecoderAsyncContext : public MediaAsyncContext {
     explicit AudioDecoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~AudioDecoderAsyncContext() = default;
+    ~AudioDecoderAsyncContext()
+    {
+        if (thisRef != nullptr) {
+            napi_delete_reference(env, thisRef);
+            thisRef = nullptr;
+        }
+    }
     // general variable
     AudioDecoderNapi *napi = nullptr;
     // used by constructor
