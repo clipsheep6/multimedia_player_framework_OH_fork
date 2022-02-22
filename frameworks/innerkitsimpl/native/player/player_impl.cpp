@@ -135,7 +135,7 @@ int32_t PlayerImpl::Stop()
 int32_t PlayerImpl::Reset()
 {
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
-    MEDIA_LOGW("KPI-TRACE: PlayerImpl Stop in");
+    MEDIA_LOGW("KPI-TRACE: PlayerImpl Reset in");
     return playerService_->Reset();
 }
 

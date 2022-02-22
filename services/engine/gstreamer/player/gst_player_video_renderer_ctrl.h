@@ -70,7 +70,7 @@ private:
     std::weak_ptr<IPlayerEngineObs> obs_;
     uint64_t flushBufferNums_ = 0;
     uint64_t lastFlushBufferNums_ = 0;
-    uint64_t lastFlushBuffertime_ = 0;
+    uint64_t lastFlushBufferTime_ = 0;
 };
 
 class GstPlayerVideoRendererFactory {

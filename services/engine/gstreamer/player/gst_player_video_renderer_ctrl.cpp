@@ -615,17 +615,17 @@ void GstPlayerVideoRendererCtrl::KpiFpsLog()
     uint64_t curTime = g_get_monotonic_time();
     if (flushBufferNums_ == 1) {
         lastFlushBufferNums_ = flushBufferNums_;
-        lastFlushBuffertime_ = curTime;
+        lastFlushBufferTime_ = curTime;
         return;
     }
-    uint64_t diff = curTime > lastFlushBuffertime_ ? curTime - lastFlushBuffertime_ : 0;
+    uint64_t diff = curTime > lastFlushBufferTime_ ? curTime - lastFlushBufferTime_ : 0;
     if (diff >= GST_MSECOND) {
         double timeSec = static_cast<double>(diff) / GST_MSECOND;
         double fps = (flushBufferNums_ - lastFlushBufferNums_) / timeSec;
         MEDIA_LOGW("KPI-TRACE: fps=%{public}f, timeSec=%{public}f, render nums=%{public}" PRIu64 "",
             fps, timeSec, flushBufferNums_);
         lastFlushBufferNums_ = flushBufferNums_;
-        lastFlushBuffertime_ = curTime;
+        lastFlushBufferTime_ = curTime;
     }
 }
 
