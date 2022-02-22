@@ -294,6 +294,10 @@ int32_t GstPlayerCtrl::ChangeSeekModeToGstFlag(const PlayerSeekMode mode) const
 
 int32_t GstPlayerCtrl::Seek(uint64_t position, const PlayerSeekMode mode)
 {
+    if (sourceDuration_ == 0) {
+        InitDuration();
+    }
+
     std::unique_lock<std::mutex> lock(mutex_);
     if (IsLiveMode()) {
         return MSERR_INVALID_OPERATION;
@@ -984,8 +988,11 @@ void GstPlayerCtrl::OnVolumeChange() const
 
 void GstPlayerCtrl::OnStateChanged(PlayerStates state)
 {
-    if (state == PLAYER_PREPARED) {
+    if (state >= PLAYER_PREPARED) {
         InitDuration();
+    }
+
+    if (state == PLAYER_PREPARED) {
         GetAudioSink();
     }
 
@@ -1121,11 +1128,18 @@ PlayerStates GstPlayerCtrl::ProcessPausedState()
 void GstPlayerCtrl::InitDuration()
 {
     CHECK_AND_RETURN_LOG(gstPlayer_ != nullptr, "gstPlayer_ is nullptr");
+    if (IsLiveMode()) {
+        sourceDuration_ = GST_CLOCK_TIME_NONE;
+        return;
+    }
+
+    if (sourceDuration_ != 0) {
+        return;
+    }
+
     GstClockTime time = gst_player_get_duration(gstPlayer_);
     if (time != GST_CLOCK_TIME_NONE) {
         sourceDuration_ = static_cast<uint64_t>(time) / MICRO;
-    } else {
-        sourceDuration_ = GST_CLOCK_TIME_NONE;
     }
 
     MEDIA_LOGD("InitDuration duration(%{public}" PRIu64 ")", sourceDuration_);
