@@ -41,6 +41,7 @@ public:
     sptr<Surface> GetSurface() override;
     std::shared_ptr<EsAvcCodecBuffer> GetCodecBuffer() override;
     std::shared_ptr<VideoFrameBuffer> GetFrameBuffer() override;
+    int32_t SetFrameRate(uint32_t frameRate) override;
     void UnLock(bool start) override;
 
 protected:

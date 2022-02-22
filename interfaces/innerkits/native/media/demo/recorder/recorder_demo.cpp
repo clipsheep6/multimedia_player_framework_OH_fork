@@ -226,7 +226,7 @@ void RecorderDemo::HDICreateYUVBuffer()
             (void)producerSurface_->CancelBuffer(buffer);
             break;
         }
-        char *tempBuffer = static_cast<char *>(malloc(sizeof(char) * YUV_BUFFER_SIZE);
+        char *tempBuffer = static_cast<char *>(malloc(sizeof(char) * YUV_BUFFER_SIZE));
         if (tempBuffer == nullptr) {
             (void)producerSurface_->CancelBuffer(buffer);
             break;
