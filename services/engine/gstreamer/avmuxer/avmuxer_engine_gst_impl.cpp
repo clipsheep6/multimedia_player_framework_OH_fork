@@ -175,7 +175,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     } else if (trackInfo_[trackId].mimeType_ == std::string("video/mpeg4")) {
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 1 video Tracks can be added");
-        ret = std::get<0>(funcMap_[MUX_MPEG4]((trackDesc, mimeType, trackId, src_caps);
+        ret = std::get<0>(funcMap_[MUX_MPEG4])(trackDesc, mimeType, trackId, src_caps);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetMPEG4Caps");
         videoTrackNum_++;
     } else if (trackInfo_[trackId].mimeType_ == std::string("audio/aac")) {

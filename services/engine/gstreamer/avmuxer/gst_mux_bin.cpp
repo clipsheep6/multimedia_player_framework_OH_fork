@@ -73,7 +73,7 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
             nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_FD,
-        g_param_spec_string("fd", "FD", "fd of the output file",
+        g_param_spec_int("fd", "FD", "fd of the output file",
             0, G_MAXINT32, -1, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_MUX,
@@ -145,7 +145,7 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id,
             mux_bin->path_ = g_strdup(g_value_get_string(value));
             break;
         case PROP_FD:
-            mux_bin->path_ = g_value_get_int(value);
+            mux_bin->outFd_ = g_value_get_int(value);
             break;
         case PROP_MUX:
             mux_bin->mux_ = g_strdup(g_value_get_string(value));
@@ -176,7 +176,7 @@ static void gst_mux_bin_get_property(GObject *object, guint prop_id,
         case PROP_PATH:
             g_value_set_string(value, mux_bin->path_);
             break;
-        case PROP_PATH:
+        case PROP_FD:
             g_value_set_int(value, mux_bin->outFd_);
             break;
         case PROP_MUX:

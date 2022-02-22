@@ -33,8 +33,8 @@ class AVMuxerEngineGstImpl : public IAVMuxerEngine {
 public:
     using SetCaps = std::function<int32_t(const MediaDescription &trackDesc, const std::string &mimeType,
         int32_t trackId, GstCaps *src_caps)>;
-    using WriteCodecData = std::function<std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType> &trackInfo, GstShMemWrapAllocatorClass *allocator>;
+    using WriteCodecData = std::function<int32_t(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
+        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType> &trackInfo, GstShMemWrapAllocatorClass *allocator)>;
     AVMuxerEngineGstImpl();
     ~AVMuxerEngineGstImpl();
 

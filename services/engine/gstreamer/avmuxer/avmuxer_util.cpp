@@ -166,24 +166,24 @@ int32_t AVMuxerUtil::Writeh264CodecData(std::shared_ptr<AVSharedMemory> sampleDa
     if ((start[0] == 0x00 && start[1] == 0x00 && start[2] == 0x01) ||
         (start[0] == 0x00 && start[1] == 0x00 && start[2] == 0x00 && start[3] == 0x01)) {
         g_object_set(muxBin_, "h264parse", true, nullptr);
-        gst_caps_set_simple(CapsMap_[sampleInfo.trackIdx],
+        gst_caps_set_simple(trackInfo[sampleInfo.trackIdx].caps,
             "alignment", G_TYPE_STRING, "nal",
             "stream-format", G_TYPE_STRING, "byte-stream",
             nullptr);
-        g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
+        g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps, nullptr);
 
-        Gstbuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
+        GstBuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
 
         GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
         CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
     } else {
-        Gstbuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
-        gst_caps_set_simple(CapsMap_[sampleInfo.trackIdx],
+        GstBuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
+        gst_caps_set_simple(trackInfo[sampleInfo.trackIdx].caps_,
             "codec_data", GST_TYPE_BUFFER, buffer,
             "alignment", G_TYPE_STRING, "au",
             "stream-format", G_TYPE_STRING, "avc",
             nullptr);
-        g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
+        g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps, nullptr);
 
         GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
         CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
@@ -192,12 +192,12 @@ int32_t AVMuxerUtil::Writeh264CodecData(std::shared_ptr<AVSharedMemory> sampleDa
 }
 
 int32_t AVMuxerUtil::Writeh263CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocatorClass *allocator)
+        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
 {
     MEDIA_LOGD("Writeh263CodecData");
-    g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
+    g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
 
-    Gstbuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
+    GstBuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
     gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
     GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
@@ -207,13 +207,13 @@ int32_t AVMuxerUtil::Writeh263CodecData(std::shared_ptr<AVSharedMemory> sampleDa
 }
 
 int32_t AVMuxerUtil::WriteMPEG4CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocatorClass *allocator)
+        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
 {
     MEDIA_LOGD("WriteMPEG4CodecData");
     g_object_set(muxBin_, "mpeg4parse", true, nullptr);
-    g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
+    g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps, nullptr);
 
-    Gstbuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
+    GstBuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
     gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
     GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
@@ -223,13 +223,13 @@ int32_t AVMuxerUtil::WriteMPEG4CodecData(std::shared_ptr<AVSharedMemory> sampleD
 }
 
 int32_t AVMuxerUtil::WriteaacCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocatorClass *allocator)
+        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
 {
     MEDIA_LOGD("WriteaacCodecData");
     g_object_set(muxBin_, "aacparse", true, nullptr);
-    g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
+    g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
 
-    Gstbuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
+    GstBuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
 
     GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
@@ -238,12 +238,12 @@ int32_t AVMuxerUtil::WriteaacCodecData(std::shared_ptr<AVSharedMemory> sampleDat
 }
 
 int32_t AVMuxerUtil::Writemp3CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocatorClass *allocator)
+        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
 {
     MEDIA_LOGD("Writemp3CodecData");
-    g_object_set(src, "caps", CapsMap_[sampleInfo.trackIdx], nullptr);
+    g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
 
-    Gstbuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
+    GstBuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
 
     GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
