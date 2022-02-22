@@ -103,7 +103,7 @@ int32_t AVMuxerEngineGstImpl::SetOutput(const std::string &path, const std::stri
         g_object_set(muxBin_, "path", rawUri.c_str(), "mux", FORMAT_TO_MUX.at(format).c_str(), nullptr);
     } else if (uriHelper.UriType() == UriHelper::URI_TYPE_FD) {
         rawUri = path.substr(strlen("fd://"));
-        g_object_set(muxBin_, "FD", std::stoi(rawUri), "mux", FORMAT_TO_MUX.at(format).c_str(), nullptr);
+        g_object_set(muxBin_, "fd", std::stoi(rawUri), "mux", FORMAT_TO_MUX.at(format).c_str(), nullptr);
     } else {
         MEDIA_LOGE("Failed to check output path");
         return MSERR_INVALID_VAL;
@@ -163,31 +163,31 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     if (trackInfo_[trackId].mimeType_ == std::string("video/x-h264")) {
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 1 video Tracks can be added");
-        ret = std::get<0>(funcMap_[MUX_H264](trackDesc, mimeType, trackId, src_caps));
+        ret = std::get<0>(funcMap_[MUX_H264])(trackDesc, mimeType, trackId, src_caps);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Seth264Caps");
         videoTrackNum_++;
     } else if (trackInfo_[trackId].mimeType_ == std::string("video/x-h263")) {
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 1 video Tracks can be added");
-        ret = std::get<0>(funcMap_[MUX_H263](trackDesc, mimeType, trackId, src_caps));
+        ret = std::get<0>(funcMap_[MUX_H263])(trackDesc, mimeType, trackId, src_caps);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Seth263Caps");
         videoTrackNum_++;
     } else if (trackInfo_[trackId].mimeType_ == std::string("video/mpeg4")) {
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 1 video Tracks can be added");
-        ret = std::get<0>(funcMap_[MUX_MPEG4](trackDesc, mimeType, trackId, src_caps));
+        ret = std::get<0>(funcMap_[MUX_MPEG4]((trackDesc, mimeType, trackId, src_caps);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetMPEG4Caps");
         videoTrackNum_++;
     } else if (trackInfo_[trackId].mimeType_ == std::string("audio/aac")) {
         CHECK_AND_RETURN_RET_LOG(audioTrackNum_ < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 16 audio Tracks can be added");
-        ret = std::get<0>(funcMap_[MUX_AAC](trackDesc, mimeType, trackId, src_caps));
+        ret = std::get<0>(funcMap_[MUX_AAC])(trackDesc, mimeType, trackId, src_caps);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetaacCaps");
         audioTrackNum_++;
     } else if (trackInfo_[trackId].mimeType_ == std::string("audio/mp3")) {
         CHECK_AND_RETURN_RET_LOG(audioTrackNum_ < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 16 audio Tracks can be added");
-        ret = std::get<0>(funcMap_[MUX_MP3](trackDesc, mimeType, trackId, src_caps));
+        ret = std::get<0>(funcMap_[MUX_MP3])(trackDesc, mimeType, trackId, src_caps);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetaacCaps");
         audioTrackNum_++;
     }
@@ -237,7 +237,7 @@ int32_t AVMuxerEngineGstImpl::WriteData(std::shared_ptr<AVSharedMemory> sampleDa
     return MSERR_OK;
 }
 
-bool isAllHasCaps(std::map<int, MyType& trackInfo)
+bool isAllHasCaps(std::map<int, MyType>& trackInfo)
 {
     for (auto& info : trackInfo) {
         if (info.second.hasCodecData_ == false) {
@@ -247,7 +247,7 @@ bool isAllHasCaps(std::map<int, MyType& trackInfo)
     return true;
 }
 
-bool isAllHasBuffer(std::map<int, MyType& trackInfo)
+bool isAllHasBuffer(std::map<int, MyType>& trackInfo)
 {
     for (auto& info : trackInfo) {
         if (info.second.hasBuffer_ == false) {
@@ -274,19 +274,19 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
         ((uint8_t*)(sampleData->GetBase()))[0], ((uint8_t*)(sampleData->GetBase()))[1],
         ((uint8_t*)(sampleData->GetBase()))[2], ((uint8_t*)(sampleData->GetBase()))[3]);
     if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == false && sampleInfo.flags == CODEC_DATA) {
-        if (trackInfo_[sampleInfo.trackIdx].mimeType == std::string("video/x-h264")) {
+        if (trackInfo_[sampleInfo.trackIdx].mimeType_ == std::string("video/x-h264")) {
             ret = std::get<1>(funcMap_[MUX_H264])(sampleData, sampleInfo, src, muxBin_, trackInfo_, allocator_);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Writeh264CodecData");
-        } else if (trackInfo_[sampleInfo.trackIdx].mimeType == std::string("video/x-h263")) {
+        } else if (trackInfo_[sampleInfo.trackIdx].mimeType_ == std::string("video/x-h263")) {
             ret = std::get<1>(funcMap_[MUX_H263])(sampleData, sampleInfo, src, muxBin_, trackInfo_, allocator_);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Writeh263CodecData");
-        } else if (trackInfo_[sampleInfo.trackIdx].mimeType == std::string("video/mpeg4")) {
+        } else if (trackInfo_[sampleInfo.trackIdx].mimeType_ == std::string("video/mpeg4")) {
             ret = std::get<1>(funcMap_[MUX_MPEG4])(sampleData, sampleInfo, src, muxBin_, trackInfo_, allocator_);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteMPEG4CodecData");
-        } else if (trackInfo_[sampleInfo.trackIdx].mimeType == std::string("audio/aac")) {
+        } else if (trackInfo_[sampleInfo.trackIdx].mimeType_ == std::string("audio/aac")) {
             ret = std::get<1>(funcMap_[MUX_AAC])(sampleData, sampleInfo, src, muxBin_, trackInfo_, allocator_);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteaacData");
-        } else if (trackInfo_[sampleInfo.trackIdx].mimeType == std::string("audio/mp3")) {
+        } else if (trackInfo_[sampleInfo.trackIdx].mimeType_ == std::string("audio/mp3")) {
             ret = std::get<1>(funcMap_[MUX_MP3])(sampleData, sampleInfo, src, muxBin_, trackInfo_, allocator_);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Writemp3Data");
         }

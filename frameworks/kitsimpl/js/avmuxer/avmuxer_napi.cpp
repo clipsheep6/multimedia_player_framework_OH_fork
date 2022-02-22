@@ -346,7 +346,7 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
     if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
         (void)AVCodecNapiUtil::ExtractMediaFormat(env, args[0], asyncContext->trackDesc_);
     } else {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "Illegal argument");
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "Illegal argument");
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);

@@ -28,24 +28,24 @@
 namespace OHOS {
 namespace Media {
 
-static const std::set<std::string> VIDEO_MIME_TYPE {
+const std::set<std::string> VIDEO_MIME_TYPE {
     "video/x-h264",
     "video/mpeg4",
     "video/x-h263",
     "video/mpeg2"
 };
 
-static const std::set<std::string> AUDIO_MIME_TYPE {
+const std::set<std::string> AUDIO_MIME_TYPE {
     "audio/aac",
     "audio/mp3"
 };
 
-static const std::set<std::string> FORMAT_TYPE {
+const std::set<std::string> FORMAT_TYPE {
     "mp4",
     "m4a"
 };
 
-static const std::map<const std::string, const std::string> MIME_MAP_ENCODE {
+const std::map<const std::string, const std::string> MIME_MAP_ENCODE {
     {"video/x-h264", "video/x-h264"},
     {"video/mpeg4", "video/mpeg"},
     {"video/x-h263", "video/x-h263"},
@@ -54,12 +54,12 @@ static const std::map<const std::string, const std::string> MIME_MAP_ENCODE {
     {"audio/mp3", "audio/mpeg"}
 };
 
-static const std::map<std::string, std::string> FORMAT_TO_MUX {
+const std::map<std::string, std::string> FORMAT_TO_MUX {
     {"mp4", "qtmux"},
     {"m4a", "qtmux"}
 };
 
-static const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
+const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
     {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2", "audio/aac", "audio/mp3"}},
     {"m4a", {"audio/aac"}}
 };
@@ -79,7 +79,7 @@ public:
     bool hasBuffer_ = false;
     bool needData_ = false;
     std::string mimeType_;
-    GstCaps * caps_ = nullptr;
+    GstCaps *caps_ = nullptr;
 };
 
 class AVMuxerUtil {
