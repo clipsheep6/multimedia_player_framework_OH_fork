@@ -389,7 +389,7 @@ static gboolean reset_src_caps(GstSurfaceVideoSrc *src, uint32_t pixelFormat)
     std::string format = "NV21";
 
     switch (pixelFormat) {
-        case PIXEL_FMT_YCRCB_420SP:
+        case PIXEL_FMT_YCRCB_420_SP:
             GST_INFO("input pixel foramt is nv21");
             format = "NV21";
             break;
@@ -397,7 +397,7 @@ static gboolean reset_src_caps(GstSurfaceVideoSrc *src, uint32_t pixelFormat)
             GST_INFO("input pixel foramt is I420");
             format = "I420";
             return TRUE;
-        case PIXEL_FMT_YCBCR_420SP:
+        case PIXEL_FMT_YCBCR_420_SP:
             GST_INFO("input pixel foramt is nv12");
             format = "NV12";
             break;
