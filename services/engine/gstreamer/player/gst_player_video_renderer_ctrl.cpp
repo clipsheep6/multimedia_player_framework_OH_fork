@@ -358,7 +358,7 @@ int32_t GstPlayerVideoRendererCtrl::PrerollVideoBuffer()
 
     if (firstRenderFrame_) {
         MEDIA_LOGI("first frame, do not render it when preroll");
-        return;
+        return MSERR_OK;
     }
 
     GstSample *sample = nullptr;
@@ -614,7 +614,7 @@ void GstPlayerVideoRendererCtrl::KpiFpsLog()
 {
     uint64_t curTime = g_get_monotonic_time();
     if (flushBufferNums_ == 1) {
-        lastFlushBufferNums_ == flushBufferNums_;
+        lastFlushBufferNums_ = flushBufferNums_;
         lastFlushBuffertime_ = curTime;
         return;
     }
