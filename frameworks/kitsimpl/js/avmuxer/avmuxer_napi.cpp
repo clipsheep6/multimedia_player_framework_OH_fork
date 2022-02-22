@@ -17,6 +17,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "common_napi.h"
+#include "avcodec_napi_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerNapi"};
@@ -341,39 +342,11 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
         asyncContext->SignError(MSERR_EXT_NO_MEMORY, "Failed to call napi_get_cb_info");
     }
     
-    if (args[0] != nullptr) {
-        bool ret;
-        std::string codecMime;
-        int width, height, frameRate, channelCount, sampleRate;
-
-        codecMime = CommonNapi::GetPropertyString(env, args[0], std::string(MD_KEY_CODEC_MIME));
-        ret = asyncContext->trackDesc_.PutStringValue(std::string(MD_KEY_CODEC_MIME), codecMime);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_CODEC_MIME");
-
-        ret = CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_WIDTH), width);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get MD_KEY_WIDTH");
-        ret = asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_WIDTH), width);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_WIDTH");
-
-        ret = CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_HEIGHT), height);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get MD_KEY_HEIGHT");
-        ret = asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_HEIGHT), height);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_HEIGHT");
-
-        ret = CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_FRAME_RATE), frameRate);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get MD_KEY_FRAME_RATE");
-        ret = asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_FRAME_RATE");
-
-        ret = CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_CHANNEL_COUNT), channelCount);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get MD_KEY_CHANNEL_COUNT");
-        ret = asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_CHANNEL_COUNT), channelCount);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_CHANNEL_COUNT");
-
-        ret = CommonNapi::GetPropertyInt32(env, args[0], std::string(MD_KEY_SAMPLE_RATE), sampleRate);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get MD_KEY_SAMPLE_RATE");
-        ret = asyncContext->trackDesc_.PutIntValue(std::string(MD_KEY_SAMPLE_RATE), sampleRate);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to put MD_KEY_SAMPLE_RATE");
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
+        (void)AVCodecNapiUtil::ExtractMediaFormat(env, args[0], asyncContext->trackDesc_);
+    } else {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "Illegal argument");
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);

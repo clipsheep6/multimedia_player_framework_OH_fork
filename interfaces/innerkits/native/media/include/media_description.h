@@ -66,19 +66,19 @@ inline constexpr std::string_view MD_KEY_HEIGHT = "height";
 /**
  * Key for video pixelformat, value type is int32_t, see {link @MediaPixelFormat}
  */
-inline constexpr std::string_view MD_KEY_PIXEL_FORMAT = "pixel-format";
+inline constexpr std::string_view MD_KEY_PIXEL_FORMAT = "pixel_format";
 
 /**
  * Key for video frame rate, value type is uint32_t. The value is 100 times the
  * actual frame rate, i.e. the real frame rate is 23.99, so this value is 2399.
  */
-inline constexpr std::string_view MD_KEY_FRAME_RATE = "frame-rate";
+inline constexpr std::string_view MD_KEY_FRAME_RATE = "frame_rate";
 
 /**
  * Key for video capture rate, value type is uint32_t. The value is 100 times the
  * actual frame rate, i.e. the real capture rate is 23.99, so this value is 2399.
  */
-inline constexpr std::string_view MD_KEY_CAPTURE_RATE = "capture-rate";
+inline constexpr std::string_view MD_KEY_CAPTURE_RATE = "capture_rate";
 
 /**
  * Key for the interval of key frame. value type is int32_t, the unit is milliseconds.
@@ -95,22 +95,22 @@ inline constexpr std::string_view MD_KEY_REQUEST_I_FRAME = "req_i_frame";
 /**
  * Key for audio channel count, value type is uint32_t
  */
-inline constexpr std::string_view MD_KEY_CHANNEL_COUNT = "channel-count";
+inline constexpr std::string_view MD_KEY_CHANNEL_COUNT = "channel_count";
 
 /**
  * Key for audio sample rate, value type is uint32_t
  */
-inline constexpr std::string_view MD_KEY_SAMPLE_RATE = "sample-rate";
+inline constexpr std::string_view MD_KEY_SAMPLE_RATE = "sample_rate";
 
 /**
  * Key for track count in the container, value type is uint32_t
  */
-inline constexpr std::string_view MD_KEY_TRACK_COUNT = "track-count";
+inline constexpr std::string_view MD_KEY_TRACK_COUNT = "track_count";
 
 /**
  * Key for container format type, value type is string
  */
-inline constexpr std::string_view MD_KEY_CONTAINER_FORMAT = "container-format";
+inline constexpr std::string_view MD_KEY_CONTAINER_FORMAT = "container_format";
 
 /**
  * custom key prefix, media service will pass through to HAL.

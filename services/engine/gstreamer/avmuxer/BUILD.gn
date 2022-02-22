@@ -49,8 +49,6 @@ config("media_engine_gst_avmuxer_impl_config") {
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/utils",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
-    "//drivers/peripheral/base",
-    "//drivers/peripheral/display/interfaces/include",
     "//utils/native/base/include",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
@@ -104,6 +102,7 @@ config("gst_avmuxer_bin_config") {
 
 ohos_static_library("media_engine_gst_avmuxer_impl") {
   sources = [
+    "avmuxer_util.cpp",
     "avmuxer_engine_gst_impl.cpp",
     "convert_codec_data.cpp",
     "gst_shmem_wrap_allocator.cpp",

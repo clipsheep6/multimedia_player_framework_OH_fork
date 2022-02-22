@@ -29,14 +29,21 @@ public:
     /**
      * @brief Construct a new AVMemory object with specified capacity, the raw buffer will be allocated.
      */
-    explicit AVMemory(size_t capacity) : capacity_(capacity) {};
+    explicit AVMemory(size_t capacity) : capacity_(capacity) {
+        base_ = new(std::nothrow) uint8_t[capacity];
+        needDelete_ = true;
+    }
 
     /**
      * @brief Construct a new AVMemory object with specified raw buffer address and capacity.
      */
     AVMemory(uint8_t *base, size_t capacity) : base_(base), capacity_(capacity) {};
 
-    ~AVMemory() {};
+    ~AVMemory() {
+        if (needDelete_ && base_ != nullptr) {
+            delete [] base_;
+        }
+    }
 
     uint8_t *Base() const { return base_; }
     uint8_t *Data() const { return base_ + offset_; }
@@ -55,6 +62,7 @@ private:
     size_t offset_ = 0;
     size_t size_ = 0;
     size_t capacity_ = 0;
+    bool needDelete_ = false;
 };
 }  // namespace Media
 }  // namespace OHOS

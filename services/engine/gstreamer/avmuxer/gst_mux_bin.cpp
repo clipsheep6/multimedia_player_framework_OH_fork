@@ -24,6 +24,7 @@ enum
 {
   PROP_0,
   PROP_PATH,
+  PROP_FD,
   PROP_MUX,
   PROP_H264PARSE,
   PROP_MPEG4PARSE,
@@ -68,8 +69,12 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
     gobject_class->get_property = gst_mux_bin_get_property;
 
     g_object_class_install_property(gobject_class, PROP_PATH,
-        g_param_spec_string("path", "Path", "Path of the output",
+        g_param_spec_string("path", "Path", "Path of the output file",
             nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_FD,
+        g_param_spec_string("fd", "FD", "fd of the output file",
+            0, G_MAXINT32, -1, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_MUX,
         g_param_spec_string("mux", "Mux", "type of the mux",
@@ -105,13 +110,13 @@ static void gst_mux_bin_init(GstMuxBin *mux_bin)
     mux_bin->videoSrc_ = nullptr;
     mux_bin->splitMuxSink_ = nullptr;
     mux_bin->path_ = nullptr;
+    mux_bin->outFd_ = -1;
     mux_bin->mux_ = nullptr;
     mux_bin->h264parseFlag_ = false;
     mux_bin->mpeg4parseFlag_ = false;
     mux_bin->aacparseFlag_ = false;
     mux_bin->videoTrack_ = nullptr;
     mux_bin->audioTrack_ = nullptr;
-    mux_bin->outFd_ = -1;
 }
 
 static void gst_mux_bin_finalize(GObject *object)
@@ -138,6 +143,9 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id,
     switch (prop_id) {
         case PROP_PATH:
             mux_bin->path_ = g_strdup(g_value_get_string(value));
+            break;
+        case PROP_FD:
+            mux_bin->path_ = g_value_get_int(value);
             break;
         case PROP_MUX:
             mux_bin->mux_ = g_strdup(g_value_get_string(value));
@@ -168,6 +176,9 @@ static void gst_mux_bin_get_property(GObject *object, guint prop_id,
         case PROP_PATH:
             g_value_set_string(value, mux_bin->path_);
             break;
+        case PROP_PATH:
+            g_value_set_int(value, mux_bin->outFd_);
+            break;
         case PROP_MUX:
             g_value_set_string(value, mux_bin->mux_);
             break;
@@ -187,7 +198,7 @@ static void gst_mux_bin_get_property(GObject *object, guint prop_id,
 
 static bool create_splitmuxsink(GstMuxBin *mux_bin)
 {
-    g_return_val_if_fail(mux_bin->path_ != nullptr, false);
+    g_return_val_if_fail(mux_bin->path_ != nullptr || mux_bin->outFd_ >= 0, false);
     g_return_val_if_fail(mux_bin->mux_ != nullptr, false);
 
     mux_bin->splitMuxSink_ = gst_element_factory_make("splitmuxsink", "splitmuxsink");
@@ -195,10 +206,13 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 
     GstElement *fdsink = gst_element_factory_make("fdsink", "fdsink");
     g_return_val_if_fail(fdsink != nullptr, false);
-    mux_bin->outFd_ = open(mux_bin->path_, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-    if (mux_bin->outFd_ < 0) {
-        GST_ERROR_OBJECT(mux_bin, "Open file failed! filePath is: %s", mux_bin->path_);
-        return GST_STATE_CHANGE_FAILURE;
+
+    if (mux_bin->outFd_ < 0 && mux_bin->path_ != nullptr) {
+        mux_bin->outFd_ = open(mux_bin->path_, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+        if (mux_bin->outFd_ < 0) {
+            GST_ERROR_OBJECT(mux_bin, "Open file failed! filePath is: %s", mux_bin->path_);
+            return GST_STATE_CHANGE_FAILURE;
+        }
     }
 
     g_object_set(fdsink, "fd", mux_bin->outFd_, nullptr);
@@ -419,7 +433,7 @@ static gboolean plugin_init(GstPlugin *plugin)
 
 GST_PLUGIN_DEFINE(GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    _media_mux_bin,
+    _avmuxer_bin,
     "GStreamer Mux Bin",
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

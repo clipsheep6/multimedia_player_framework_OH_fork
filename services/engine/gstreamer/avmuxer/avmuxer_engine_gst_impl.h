@@ -18,17 +18,23 @@
 
 #include <set>
 #include <map>
+#include <tuple>
 #include "nocopyable.h"
 #include "i_avmuxer_engine.h"
 #include "gst_mux_bin.h"
 #include "gst_msg_processor.h"
 #include "gst_shmem_wrap_allocator.h"
+#include "avmuxer_util.h"
 
 namespace OHOS {
 namespace Media {
 
 class AVMuxerEngineGstImpl : public IAVMuxerEngine {
 public:
+    using SetCaps = std::function<int32_t(const MediaDescription &trackDesc, const std::string &mimeType,
+        int32_t trackId, GstCaps *src_caps)>;
+    using WriteSample = std::function<std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
+        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocatorClass *allocator>;
     AVMuxerEngineGstImpl();
     ~AVMuxerEngineGstImpl();
 
@@ -43,21 +49,6 @@ public:
     int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) override;
     int32_t Stop() override;
 private:
-    int32_t Seth264Caps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId);
-    int32_t Seth263Caps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId);
-    int32_t SetMPEG4Caps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId);
-    int32_t SetaacCaps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId);
-    int32_t Setmp3Caps(const MediaDescription &trackDesc, const std::string &mimeType, int32_t trackId);
-    int32_t Writeh264CodecData(std::shared_ptr<AVSharedMemory> sampleData,
-        const TrackSampleInfo &sampleInfo, GstElement *src);
-    int32_t Writeh263CodecData(std::shared_ptr<AVSharedMemory> sampleData,
-        const TrackSampleInfo &sampleInfo, GstElement *src);
-    int32_t WriteMPEG4CodecData(std::shared_ptr<AVSharedMemory> sampleData,
-        const TrackSampleInfo &sampleInfo, GstElement *src);
-    int32_t WriteaacCodecData(std::shared_ptr<AVSharedMemory> sampleData,
-        const TrackSampleInfo &sampleInfo, GstElement *src);
-    int32_t Writemp3CodecData(std::shared_ptr<AVSharedMemory> sampleData,
-        const TrackSampleInfo &sampleInfo, GstElement *src);
     int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData,
         const TrackSampleInfo &sampleInfo, GstElement *src);
     int32_t SetupMsgProcessor();
@@ -65,12 +56,7 @@ private:
     void Clear();
 
     GstMuxBin *muxBin_ = nullptr;
-    std::set<int32_t> trackIdSet_;
-    std::map<int32_t, std::string> trackId2EncodeType_;
-    std::set<int32_t> hasCaps_;
-    std::set<int32_t> hasBuffer_;
-    std::map<int32_t, bool> needData_; 
-    std::map<int32_t, GstCaps *> CapsMap_;
+    std::map<int, MyType> trackInfo_;
     std::mutex mutex_;
     std::condition_variable cond_;
     bool endFlag_ = false;
@@ -83,6 +69,7 @@ private:
     bool isPause_ = false;
     bool isPlay_ = false;
     GstShMemWrapAllocator *allocator_;
+    std::map<MimeType, std::tuple<SetCaps, WriteCodecData>> funcMap_;
 };
 }  // namespace Media
 }  // namespace OHOS
