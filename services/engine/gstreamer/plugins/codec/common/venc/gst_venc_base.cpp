@@ -199,8 +199,8 @@ static void gst_venc_base_init(GstVencBase *self)
     self->coding_outbuf_cnt = 0;
     self->first_in_frame = TRUE;
     self->first_out_frame = TRUE;
-    self->last_pts = 0;
-    self->first_frame_pts = 0;
+    self->last_pts = GST_CLOCK_TIME_NONE;
+    self->first_frame_pts = GST_CLOCK_TIME_NONE;
 }
 
 static void gst_venc_base_finalize(GObject *object)
