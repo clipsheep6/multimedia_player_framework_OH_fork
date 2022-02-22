@@ -149,7 +149,7 @@ int32_t AVMuxerUtil::Setmp3Caps(const MediaDescription &trackDesc, const std::st
 GstBuffer *CreateBuffer(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
     GstShMemWrapAllocator *allocator)
 {
-    GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
+    GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator), sampleData);
     GstBuffer *buffer = gst_buffer_new();
     gst_buffer_append_memory(buffer, mem);
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
@@ -159,18 +159,18 @@ GstBuffer *CreateBuffer(std::shared_ptr<AVSharedMemory> sampleData, const TrackS
 }
 
 int32_t AVMuxerUtil::Writeh264CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocatorClass *allocator)
+        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
 {
     MEDIA_LOGD("Writeh264CodecData");
     uint8_t *start = sampleData->GetBase();
     if ((start[0] == 0x00 && start[1] == 0x00 && start[2] == 0x01) ||
         (start[0] == 0x00 && start[1] == 0x00 && start[2] == 0x00 && start[3] == 0x01)) {
-        g_object_set(muxBin_, "h264parse", true, nullptr);
-        gst_caps_set_simple(trackInfo[sampleInfo.trackIdx].caps,
+        g_object_set(muxBin, "h264parse", true, nullptr);
+        gst_caps_set_simple(trackInfo[sampleInfo.trackIdx].caps_,
             "alignment", G_TYPE_STRING, "nal",
             "stream-format", G_TYPE_STRING, "byte-stream",
             nullptr);
-        g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps, nullptr);
+        g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
 
         GstBuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
 
@@ -183,7 +183,7 @@ int32_t AVMuxerUtil::Writeh264CodecData(std::shared_ptr<AVSharedMemory> sampleDa
             "alignment", G_TYPE_STRING, "au",
             "stream-format", G_TYPE_STRING, "avc",
             nullptr);
-        g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps, nullptr);
+        g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
 
         GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
         CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to push data");
@@ -210,8 +210,8 @@ int32_t AVMuxerUtil::WriteMPEG4CodecData(std::shared_ptr<AVSharedMemory> sampleD
         GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
 {
     MEDIA_LOGD("WriteMPEG4CodecData");
-    g_object_set(muxBin_, "mpeg4parse", true, nullptr);
-    g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps, nullptr);
+    g_object_set(muxBin, "mpeg4parse", true, nullptr);
+    g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
 
     GstBuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
     gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
@@ -226,7 +226,7 @@ int32_t AVMuxerUtil::WriteaacCodecData(std::shared_ptr<AVSharedMemory> sampleDat
         GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
 {
     MEDIA_LOGD("WriteaacCodecData");
-    g_object_set(muxBin_, "aacparse", true, nullptr);
+    g_object_set(muxBin, "aacparse", true, nullptr);
     g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
 
     GstBuffer *buffer = CreateBuffer(sampleData, sampleInfo, allocator);
