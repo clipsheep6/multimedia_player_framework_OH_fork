@@ -276,7 +276,7 @@ bool VideoCaptureSfImpl::DropThisFrame(uint32_t fps, int64_t oldTimeStamp, int64
 int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    do {
+    while (1) {
         if (!started_ || (dataConSurface_ == nullptr)) {
             return MSERR_INVALID_OPERATION;
         }
@@ -312,8 +312,9 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
             continue;
         } else {
             previousTimestamp_ = pts_;
+            break;
         }
-    } while (0);
+    };
     return MSERR_OK;
 }
 

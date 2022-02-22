@@ -37,6 +37,7 @@ namespace {
     constexpr uint32_t FRAME_DURATION = 40000000;
     constexpr uint32_t RECORDER_TIME = 5;
     constexpr uint32_t YUV_BUFFER_SIZE = 1474560; // 1280 * 768 * 3 / 2
+    constexpr uint32_t SEC_TO_NS = 1000000000;
     const string PURE_VIDEO = "1";
     const string PURE_AUDIO = "2";
     const string AUDIO_VIDEO = "3";
@@ -146,7 +147,7 @@ uint64_t RecorderDemo::GetPts()
 {
     struct timespec timestamp = {0, 0};
     clock_gettime(CLOCK_MONOTONIC, &timestamp);
-    uint64_t time = (uint64_t)timestamp.tv_sec * 1000000000 + (uint64_t)timestamp.tv_nsec;
+    uint64_t time = (uint64_t)timestamp.tv_sec * SEC_TO_NS + (uint64_t)timestamp.tv_nsec;
     return time;
 }
 
@@ -189,6 +190,11 @@ void RecorderDemo::HDICreateESBuffer()
             free(tempBuffer);
             break;
         }
+        if (isStart_.load()) {
+            pts_= GetPts();
+            isStart_.store(false);
+        }
+
         (void)buffer->ExtraSet("dataSize", static_cast<int32_t>(*frameLenArray));
         (void)buffer->ExtraSet("timeStamp", pts_);
         (void)buffer->ExtraSet("isKeyFrame", isKeyFrame_);
@@ -231,7 +237,12 @@ void RecorderDemo::HDICreateYUVBuffer()
             (void)producerSurface_->CancelBuffer(buffer);
             break;
         }
-        (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color_, YUV_BUFFER_SIZE);
+        errno_t mRet memset_s(tempBuffer, YUV_BUFFER_SIZE, color_, YUV_BUFFER_SIZE);
+        if (mRet != EOK) {
+            (void)producerSurface_->CancelBuffer(buffer);
+            free(tempBuffer);
+            break;
+        }
         srand(time(0));
         for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += 100) {  // 100 is the steps between noise
             if (i >= YUV_BUFFER_SIZE - 1) {
@@ -240,7 +251,8 @@ void RecorderDemo::HDICreateYUVBuffer()
             tempBuffer[i] = (unsigned char)(rand() % 255); // add noise
         }
 
-        color_ = color_ - 3;
+        color_ = color_ - 3; // 3 is the step of the pic change
+
         if (color_ <= 0) {
             color_ = 0xFF;
         }
@@ -252,8 +264,7 @@ void RecorderDemo::HDICreateYUVBuffer()
             break;
         }
         // get time
-        uint64_t start = GetPts();
-        pts_ = start;
+        pts_= GetPts();
 
         (void)buffer->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
         (void)buffer->ExtraSet("timeStamp", pts_);

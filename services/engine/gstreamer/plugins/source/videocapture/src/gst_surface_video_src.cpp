@@ -442,7 +442,7 @@ static GstFlowReturn gst_surface_video_src_create(GstPushSrc *psrc, GstBuffer **
     }
     g_return_val_if_fail(frame_buffer != nullptr, GST_FLOW_ERROR);
 
-    if (src->reset_caps == TRUE) {
+    if (src->reset_caps && !src->need_codec_data) {
         (void)reset_src_caps(src, frame_buffer->pixelFormat);
         src->reset_caps = FALSE;
     }
