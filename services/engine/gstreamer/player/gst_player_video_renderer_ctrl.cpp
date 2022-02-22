@@ -624,7 +624,7 @@ void GstPlayerVideoRendererCtrl::KpiFpsLog()
         double fps = (flushBufferNums_ - lastFlushBufferNums_) / timeSec;
         MEDIA_LOGW("KPI-TRACE: fps=%{public}f, timeSec=%{public}f, render nums=%{public}" PRIu64 "",
             fps, timeSec, flushBufferNums_);
-        lastFlushBufferNums_ == flushBufferNums_;
+        lastFlushBufferNums_ = flushBufferNums_;
         lastFlushBuffertime_ = curTime; 
     }
 }
