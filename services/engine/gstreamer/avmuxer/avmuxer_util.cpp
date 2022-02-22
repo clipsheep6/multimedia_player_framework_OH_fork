@@ -32,111 +32,81 @@ static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc,
         CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
         ret = trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), param.height);
         CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
-        ret = trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), pram.frameRate);
+        ret = trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), param.frameRate);
         CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
+        MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
+            param.width, param.height, param.frameRate);
     } else {
         ret = trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), param.channels);
         CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
         ret = trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), param.rate);
         CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
+        MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", param.channels, param.rate);
     }
 
     return MSERR_OK;
 }
 
-int32_t AVMuxerUtil::Seth264Caps(const MediaDescription &trackDesc, const std::string &mimeType,
-        int32_t trackId, GstCaps *src_caps)
+int32_t AVMuxerUtil::SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
+    GstCaps *src_caps, MimeType type)
 {
-    MEDIA_LOGD("Seth264Caps");
+    MEDIA_LOGD("Set %s cpas", mimeType.c_str());
     bool ret;
     FormatParam param;
-    ret = parseParam(param, trackDesc, true);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
-    MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
-        param.width, param.height, param.frameRate);
-    src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, frameRate, 1,
-        nullptr);
-    
-    return MSERR_OK;
-}
-
-int32_t AVMuxerUtil::Seth263Caps(const MediaDescription &trackDesc, const std::string &mimeType,
-        int32_t trackId, GstCaps *src_caps)
-{
-    MEDIA_LOGD("Seth263Caps");
-    bool ret;
-    FormatParam param;
-    ret = parseParam(param, trackDesc, true);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
-    MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
-        param.width, param.height, param.frameRate);
-    src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, frameRate, 1,
-        nullptr);
-    
-    return MSERR_OK;
-}
-
-int32_t AVMuxerUtil::SetMPEG4Caps(const MediaDescription &trackDesc, const std::string &mimeType,
-        int32_t trackId, GstCaps *src_caps)
-{
-    MEDIA_LOGD("SetMEPG4Caps");
-    bool ret;
-    FormatParam param;
-    ret = parseParam(param, trackDesc, true);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
-    MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
-        param.width, param.height, param.frameRate);
-    src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
-        "mpegversion", G_TYPE_INT, 4,
-        "systemstream", G_TYPE_BOOLEAN, FALSE,
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        "framerate", GST_TYPE_FRACTION, frameRate, 1,
-        nullptr);
-    
-    return MSERR_OK;
-}
-
-int32_t AVMuxerUtil::SetaacCaps(const MediaDescription &trackDesc, const std::string &mimeType,
-        int32_t trackId, GstCaps *src_caps)
-{
-    MEDIA_LOGD("SetaacCaps");
-    bool ret;
-    FormatParam param;
-    ret = parseParam(param, trackDesc, false);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
-    MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", param.channels, param.rate);
-    src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
-        "mpegversion", G_TYPE_INT, 4,
-        "stream-format", G_TYPE_STRING, "adts",
-        "channels", G_TYPE_INT, channels,
-        "rate", G_TYPE_INT, rate,
-        nullptr);
-
-    return MSERR_OK;
-}
-
-int32_t AVMuxerUtil::Setmp3Caps(const MediaDescription &trackDesc, const std::string &mimeType,
-        int32_t trackId, GstCaps *src_caps)
-{
-    MEDIA_LOGD("Setmp3Caps");
-    bool ret;
-    FormatParam param;
-    ret = parseParam(param, trackDesc, false);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
-    MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", param.channels, param.rate);
-    src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
-        "mpegversion", G_TYPE_INT, 1,
-        "layer", G_TYPE_INT, 3,
-        "channels", G_TYPE_INT, channels,
-        "rate", G_TYPE_INT, rate,
-        nullptr);
+    if (type <= MUX_MPEG4) {
+        ret = parseParam(param, trackDesc, true);
+        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
+        switch(type) {
+            case MUX_H264:
+                src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
+                    "width", G_TYPE_INT, param.width,
+                    "height", G_TYPE_INT, param.height,
+                    "framerate", GST_TYPE_FRACTION, param.frameRate, 1,
+                    nullptr);
+                break;
+            case MUX_H263:
+                src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
+                    "width", G_TYPE_INT, param.width,
+                    "height", G_TYPE_INT, param.height,
+                    "framerate", GST_TYPE_FRACTION, param.frameRate, 1,
+                    nullptr);
+                break;
+            case MUX_MPEG4:
+                src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
+                    "mpegversion", G_TYPE_INT, 4,
+                    "systemstream", G_TYPE_BOOLEAN, FALSE,
+                    "width", G_TYPE_INT, param.width,
+                    "height", G_TYPE_INT, param.height,
+                    "framerate", GST_TYPE_FRACTION, param.frameRate, 1,
+                    nullptr);
+                break;
+            default:
+                break;
+        }
+    } else {
+        ret = parseParam(param, trackDesc, false);
+        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
+        switch(type) {
+            case MUX_AAC:
+                src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
+                    "mpegversion", G_TYPE_INT, 4,
+                    "stream-format", G_TYPE_STRING, "adts",
+                    "channels", G_TYPE_INT, param.channels,
+                    "rate", G_TYPE_INT, param.rate,
+                    nullptr);
+                break;
+            case MUX_MP3:
+                src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
+                    "mpegversion", G_TYPE_INT, 1,
+                    "layer", G_TYPE_INT, 3,
+                    "channels", G_TYPE_INT, param.channels,
+                    "rate", G_TYPE_INT, param.rate,
+                    nullptr);
+                break;
+            default:
+                break;
+        }
+    }
 
     return MSERR_OK;
 }

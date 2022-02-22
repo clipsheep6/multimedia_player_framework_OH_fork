@@ -98,7 +98,7 @@ public:
     int32_t frameRate;
     int32_t channels;
     int32_t rate;
-}
+};
 
 class AVMuxerUtil {
 public:
@@ -106,16 +106,8 @@ public:
     ~AVMuxerUtil() = delete;
     DISALLOW_COPY_AND_MOVE(AVMuxerUtil);
 
-    static int32_t Seth264Caps(const MediaDescription &trackDesc, const std::string &mimeType,
-        int32_t trackId, GstCaps *src_caps);
-    static int32_t Seth263Caps(const MediaDescription &trackDesc, const std::string &mimeType,
-        int32_t trackId, GstCaps *src_caps);
-    static int32_t SetMPEG4Caps(const MediaDescription &trackDesc, const std::string &mimeType,
-        int32_t trackId, GstCaps *src_caps);
-    static int32_t SetaacCaps(const MediaDescription &trackDesc, const std::string &mimeType,
-        int32_t trackId, GstCaps *src_caps);
-    static int32_t Setmp3Caps(const MediaDescription &trackDesc, const std::string &mimeType,
-        int32_t trackId, GstCaps *src_caps);
+    static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
+        GstCaps *src_caps, MimeType type)
 
     static int32_t Writeh264CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
         GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator);

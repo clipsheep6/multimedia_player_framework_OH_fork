@@ -53,11 +53,11 @@ static void StopFeed(GstAppSrc *src, gpointer user_data)
 AVMuxerEngineGstImpl::AVMuxerEngineGstImpl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    funcMap_[MUX_H264] = {AVMuxerUtil::Seth264Caps, AVMuxerUtil::Writeh264CodecData};
-    funcMap_[MUX_H263] = {AVMuxerUtil::Seth263Caps, AVMuxerUtil::Writeh263CodecData};
-    funcMap_[MUX_MPEG4] = {AVMuxerUtil::SetMPEG4Caps, AVMuxerUtil::WriteMPEG4CodecData};
-    funcMap_[MUX_AAC] = {AVMuxerUtil::SetaacCaps, AVMuxerUtil::WriteaacCodecData};
-    funcMap_[MUX_MP3] = {AVMuxerUtil::Setmp3Caps, AVMuxerUtil::Writemp3CodecData};
+    funcMap_[MUX_H264] = AVMuxerUtil::Writeh264CodecData;
+    funcMap_[MUX_H263] = AVMuxerUtil::Writeh263CodecData;
+    funcMap_[MUX_MPEG4] = AVMuxerUtil::WriteMPEG4CodecData;
+    funcMap_[MUX_AAC] = AVMuxerUtil::WriteaacCodecData;
+    funcMap_[MUX_MP3] = AVMuxerUtil::Writemp3CodecData;
 }
 
 AVMuxerEngineGstImpl::~AVMuxerEngineGstImpl()
@@ -163,13 +163,13 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     if (trackInfo_[trackId].type_ <= MUX_MPEG4) {
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 1 video Tracks can be added");
-        ret = std::get<0>(funcMap_[trackInfo_[trackId].type_])(trackDesc, mimeType, trackId, src_caps);
+        ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps, trackInfo_[trackId].type_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Seth264Caps");
         videoTrackNum_++;
     } else {
         CHECK_AND_RETURN_RET_LOG(audioTrackNum_ < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 16 audio Tracks can be added");
-        ret = std::get<0>(funcMap_[trackInfo_[trackId].type_])(trackDesc, mimeType, trackId, src_caps);
+        ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps, trackInfo_[trackId].type_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetaacCaps");
         audioTrackNum_++;
     }
