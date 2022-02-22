@@ -583,7 +583,7 @@ static GstFlowReturn gst_venc_base_handle_frame(GstVideoEncoder *encoder, GstVid
     frame->input_buffer = nullptr;
     self->last_pts = frame->pts;
     if (self->first_in_frame) {
-        self->firsst_in_frame = FALSE;
+        self->first_in_frame = FALSE;
         self->first_frame_pts = frame->pts;
     }
     return ret;
