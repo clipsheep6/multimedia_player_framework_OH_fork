@@ -80,7 +80,7 @@ private:
     OHOS::sptr<OHOS::Surface> producerSurface_ = nullptr;
     std::shared_ptr<std::ifstream> file_ = nullptr;
     std::atomic<bool> isExit_{ false };
-    std::atmoic<bool> isStart_{ true };
+    std::atomic<bool> isStart_{ true };
     std::shared_ptr<Recorder> recorder_ = nullptr;
     std::unique_ptr<std::thread> camereHDIThread_;
     uint32_t count_ = 0;
