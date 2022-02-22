@@ -153,7 +153,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
 
     trackId = trackInfo_.size() + 1;
     trackInfo_[trackId] = MyType();
-    trackInfo_[trackId].type_ = MIME_MAP_TYPE[mimeType];
+    trackInfo_[trackId].type_ = MIME_MAP_TYPE.at(mimeType);
     trackInfo_[trackId].needData_ = true;
     std::string name = "src_";
     name += static_cast<char>('0' + trackId);
@@ -257,7 +257,7 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
         ((uint8_t*)(sampleData->GetBase()))[0], ((uint8_t*)(sampleData->GetBase()))[1],
         ((uint8_t*)(sampleData->GetBase()))[2], ((uint8_t*)(sampleData->GetBase()))[3]);
     if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == false && sampleInfo.flags == CODEC_DATA) {
-        ret = std::get<1>(funcMap_[trackInfo_[trackId].type_])(sampleData, sampleInfo, src, muxBin_, trackInfo_, allocator_);
+        ret = std::get<1>(funcMap_[trackInfo_[sampleInfo.trackIdx].type_])(sampleData, sampleInfo, src, muxBin_, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to write CodecData");
 
         trackInfo_[sampleInfo.trackIdx].hasCodecData_ = true;

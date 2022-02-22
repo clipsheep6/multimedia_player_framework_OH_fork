@@ -64,15 +64,6 @@ const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
     {"m4a", {"audio/aac"}}
 };
 
-const std::map<const std::string, MimeType> MIME_MAP_TYPE {
-    {"video/x-h264", MUX_H264},
-    {"video/mpeg4", MUX_MPEG4},
-    {"video/x-h263", MUX_H263},
-    {"video/mpeg2", MUX_MPEG2},
-    {"audio/aac", MUX_AAC},
-    {"audio/mp3", MUX_MP3}
-};
-
 enum MimeType {
     MUX_H264,
     MUX_H263,
@@ -80,6 +71,15 @@ enum MimeType {
     MUX_MPEG4,
     MUX_AAC,
     MUX_MP3,
+};
+
+const std::map<const std::string, MimeType> MIME_MAP_TYPE {
+    {"video/x-h264", MUX_H264},
+    {"video/mpeg4", MUX_MPEG4},
+    {"video/x-h263", MUX_H263},
+    {"video/mpeg2", MUX_MPEG2},
+    {"audio/aac", MUX_AAC},
+    {"audio/mp3", MUX_MP3}
 };
 
 class MyType {
@@ -90,6 +90,15 @@ public:
     GstCaps *caps_ = nullptr;
     MimeType type_ ;
 };
+
+class FormatParam {
+public:
+    int32_t width;
+    int32_t height;
+    int32_t frameRate;
+    int32_t channels;
+    int32_t rate;
+}
 
 class AVMuxerUtil {
 public:

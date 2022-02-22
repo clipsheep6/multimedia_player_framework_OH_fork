@@ -25,22 +25,35 @@ namespace {
 namespace OHOS {
 namespace Media {
 
+static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, bool isVideo) {
+    bool ret;
+    if (isVideo) {
+        ret = trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), param.width);
+        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
+        ret = trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), param.height);
+        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
+        ret = trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), pram.frameRate);
+        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
+    } else {
+        ret = trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), param.channels);
+        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
+        ret = trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), param.rate);
+        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
+    }
+
+    return MSERR_OK;
+}
+
 int32_t AVMuxerUtil::Seth264Caps(const MediaDescription &trackDesc, const std::string &mimeType,
         int32_t trackId, GstCaps *src_caps)
 {
     MEDIA_LOGD("Seth264Caps");
     bool ret;
-    int32_t width;
-    int32_t height;
-    int32_t frameRate;
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
+    FormatParam param;
+    ret = parseParam(param, trackDesc, true);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
     MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
-        width, height, frameRate);
+        param.width, param.height, param.frameRate);
     src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
@@ -55,17 +68,11 @@ int32_t AVMuxerUtil::Seth263Caps(const MediaDescription &trackDesc, const std::s
 {
     MEDIA_LOGD("Seth263Caps");
     bool ret;
-    int32_t width;
-    int32_t height;
-    int32_t frameRate;
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
+    FormatParam param;
+    ret = parseParam(param, trackDesc, true);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
     MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
-        width, height, frameRate);
+        param.width, param.height, param.frameRate);
     src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "width", G_TYPE_INT, width,
         "height", G_TYPE_INT, height,
@@ -80,17 +87,11 @@ int32_t AVMuxerUtil::SetMPEG4Caps(const MediaDescription &trackDesc, const std::
 {
     MEDIA_LOGD("SetMEPG4Caps");
     bool ret;
-    int32_t width;
-    int32_t height;
-    int32_t frameRate;
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), width);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), height);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), frameRate);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
+    FormatParam param;
+    ret = parseParam(param, trackDesc, true);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
     MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
-        width, height, frameRate);
+        param.width, param.height, param.frameRate);
     src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "mpegversion", G_TYPE_INT, 4,
         "systemstream", G_TYPE_BOOLEAN, FALSE,
@@ -107,13 +108,10 @@ int32_t AVMuxerUtil::SetaacCaps(const MediaDescription &trackDesc, const std::st
 {
     MEDIA_LOGD("SetaacCaps");
     bool ret;
-    int32_t channels;
-    int32_t rate;
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), rate);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
-    MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", channels, rate);
+    FormatParam param;
+    ret = parseParam(param, trackDesc, false);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
+    MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", param.channels, param.rate);
     src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "mpegversion", G_TYPE_INT, 4,
         "stream-format", G_TYPE_STRING, "adts",
@@ -129,13 +127,10 @@ int32_t AVMuxerUtil::Setmp3Caps(const MediaDescription &trackDesc, const std::st
 {
     MEDIA_LOGD("Setmp3Caps");
     bool ret;
-    int32_t channels;
-    int32_t rate;
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), channels);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
-    ret = trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), rate);
-    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
-    MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", channels, rate);
+    FormatParam param;
+    ret = parseParam(param, trackDesc, false);
+    CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to call parseParam");
+    MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", param.channels, param.rate);
     src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
         "mpegversion", G_TYPE_INT, 1,
         "layer", G_TYPE_INT, 3,
