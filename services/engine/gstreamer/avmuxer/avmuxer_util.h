@@ -107,7 +107,7 @@ public:
     DISALLOW_COPY_AND_MOVE(AVMuxerUtil);
 
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
-        GstCaps *src_caps, MimeType type)
+        GstCaps *src_caps, MimeType type);
 
     static int32_t Writeh264CodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
         GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator);
