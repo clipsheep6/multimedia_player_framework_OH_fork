@@ -27,8 +27,12 @@ namespace OHOS {
 namespace Media {
 
 struct MyClass {
-    explicit MyClass(int32_t val) : val_.intVal(val) {}
-    explicit MyClass(const char *val) : val_.stringVal(val) {}
+    explicit MyClass(int32_t val) {
+        val_.intVal = val;
+    }
+    explicit MyClass(const char *val) {
+        val_.stringVal = val;
+    }
     union MyGType {
         int32_t    intVal;
         const char *stringVal;
@@ -45,7 +49,7 @@ std::map<MimeType, std::vector<std::tuple<std::string, GType, MyClass>>> capsMap
 
 static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, MimeType type) {
     bool ret;
-    if (type <= MUX_MPEG4) {
+    if (type < VIDEO_TYPE_END) {
         ret = trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), param.width);
         CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
         ret = trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), param.height);
@@ -72,12 +76,12 @@ static void AddCaps(GstCaps *src_caps, MimeType type)
             case G_TYPE_BOOLEAN:
             case G_TYPE_INT:
                 gst_caps_set_simple(src_caps,
-                    std::get<0>(elements), std::get<1>(elements), std::get<2>(elements).val_.intVal,
+                    std::get<0>(elements).c_str(), std::get<1>(elements), std::get<2>(elements).val_.intVal,
                     nullptr);
                 break;
             case G_TYPE_STRING:
                 gst_caps_set_simple(src_caps,
-                    std::get<0>(elements), std::get<1>(elements), std::get<2>(elements).val_.stringVal,
+                    std::get<0>(elements).c_str(), std::get<1>(elements), std::get<2>(elements).val_.stringVal,
                     nullptr);
                 break;
             default:
@@ -88,14 +92,14 @@ static void AddCaps(GstCaps *src_caps, MimeType type)
 
 static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps *src_caps, MimeType type)
 {
-    if (type <= MUX_MPEG4) {
-        src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
+    if (type < VIDEO_TYPE_END) {
+        src_caps = gst_caps_new_simple(std::get<0>(MIME_MAP_TYPE.at(mimeType)).c_str(),
             "width", G_TYPE_INT, param.width,
             "height", G_TYPE_INT, param.height,
             "framerate", GST_TYPE_FRACTION, param.frameRate, 1,
             nullptr);
     } else {
-        src_caps = gst_caps_new_simple(MIME_MAP_ENCODE.at(mimeType).c_str(),
+        src_caps = gst_caps_new_simple(std::get<0>(MIME_MAP_TYPE.at(mimeType)).c_str(),
             "channels", G_TYPE_INT, param.channels,
             "rate", G_TYPE_INT, param.rate,
             nullptr);
@@ -124,6 +128,9 @@ int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSam
     gst_buffer_append_memory(buffer, mem);
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
+    if (sampleInfo.flags == SYNC_FRAME) {
+        gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+    }
 
     GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call gst_app_src_push_buffer");
@@ -131,31 +138,25 @@ int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSam
     return MSERR_OK;
 }
 
-static void SetParse(GstMuxBin *muxBin, MimeType type)
-{
-    switch(type) {
-        case MUX_H264:
-            g_object_set(muxBin, "h264parse", true, nullptr);
-            break;
-        case MUX_MPEG4:
-            g_object_set(muxBin, "mpeg4parse", true, nullptr);
-            break;
-        case MUX_AAC:
-            g_object_set(muxBin, "aacparse", true, nullptr);
-            break;
-        default:
-            break;
-    }
-}
-
 int32_t AVMuxerUtil::WriteCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-    GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
+    GstElement *src, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
 {
-    SetParse(muxBin, trackInfo[sampleInfo.trackIdx].type_);
     g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
     int32_t ret = PushCodecData(sampleData, sampleInfo, src, allocator);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call PushCodecData");
 
+    return MSERR_OK;
+}
+
+int32_t AVMuxerUtil::WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
+    GstElement *src)
+{
+    CHECK_AND_RETURN_RET_LOG(trackInfo_[sampleInfo.trackIdx].needData_ == true, MSERR_INVALID_OPERATION,
+        "Failed to push data, the queue is full");
+    CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
+
+    int32_t ret = PushCodecData(sampleData, sampleInfo, src, allocator);
+    CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call PushCodecData");
     return MSERR_OK;
 }
 }

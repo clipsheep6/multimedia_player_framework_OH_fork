@@ -45,8 +45,6 @@ public:
     int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) override;
     int32_t Stop() override;
 private:
-    int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData,
-        const TrackSampleInfo &sampleInfo, GstElement *src);
     int32_t SetupMsgProcessor();
     void OnNotifyMessage(const InnerMessage &msg);
     void Clear();

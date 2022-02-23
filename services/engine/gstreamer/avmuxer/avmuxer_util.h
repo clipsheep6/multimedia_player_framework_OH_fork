@@ -29,32 +29,6 @@
 namespace OHOS {
 namespace Media {
 
-const std::set<std::string> VIDEO_MIME_TYPE {
-    "video/x-h264",
-    "video/mpeg4",
-    "video/x-h263",
-    "video/mpeg2"
-};
-
-const std::set<std::string> AUDIO_MIME_TYPE {
-    "audio/aac",
-    "audio/mp3"
-};
-
-const std::set<std::string> FORMAT_TYPE {
-    "mp4",
-    "m4a"
-};
-
-const std::map<const std::string, const std::string> MIME_MAP_ENCODE {
-    {"video/x-h264", "video/x-h264"},
-    {"video/mpeg4", "video/mpeg"},
-    {"video/x-h263", "video/x-h263"},
-    {"video/mpeg2", "video/mpeg2"},
-    {"audio/aac", "audio/mpeg"},
-    {"audio/mp3", "audio/mpeg"}
-};
-
 const std::map<std::string, std::string> FORMAT_TO_MUX {
     {"mp4", "qtmux"},
     {"m4a", "qtmux"}
@@ -70,17 +44,18 @@ enum MimeType {
     MUX_H263,
     MUX_MPEG2,
     MUX_MPEG4,
+    VIDEO_TYPE_END,
     MUX_AAC,
     MUX_MP3,
 };
 
-const std::map<const std::string, MimeType> MIME_MAP_TYPE {
-    {"video/x-h264", MUX_H264},
-    {"video/mpeg4", MUX_MPEG4},
-    {"video/x-h263", MUX_H263},
-    {"video/mpeg2", MUX_MPEG2},
-    {"audio/aac", MUX_AAC},
-    {"audio/mp3", MUX_MP3}
+const std::map<const std::string, std::tuple<const std::string, MimeType>> MIME_MAP_TYPE {
+    {"video/x-h264", {"video/x-h264", MUX_H264}},
+    {"video/mpeg4", {"video/mpeg", MUX_MPEG4}},
+    {"video/x-h263", {"video/x-h263", MUX_H263}},
+    {"video/mpeg2", {"video/mpeg2", MUX_MPEG2}},
+    {"audio/aac", {"audio/mpeg", MUX_AAC}},
+    {"audio/mp3", {"audio/mpeg", MUX_MP3}}
 };
 
 class MyType {
@@ -110,7 +85,9 @@ public:
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
         GstCaps *src_caps, MimeType type);
     static int32_t WriteCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator);
+        GstElement *src, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator);
+    static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData,
+        const TrackSampleInfo &sampleInfo, GstElement *src);
 };
 }
 }
