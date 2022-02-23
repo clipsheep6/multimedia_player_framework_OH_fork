@@ -65,7 +65,6 @@ private:
     bool isPause_ = false;
     bool isPlay_ = false;
     GstShMemWrapAllocator *allocator_;
-    std::map<MimeType, WriteCodecData> funcMap_;
 };
 }  // namespace Media
 }  // namespace OHOS
