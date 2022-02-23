@@ -31,8 +31,6 @@ namespace Media {
 
 class AVMuxerEngineGstImpl : public IAVMuxerEngine {
 public:
-    using WriteCodecData = std::function<int32_t(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, GstMuxBin *muxBin, std::map<int, MyType> &trackInfo, GstShMemWrapAllocator *allocator)>;
     AVMuxerEngineGstImpl();
     ~AVMuxerEngineGstImpl();
 

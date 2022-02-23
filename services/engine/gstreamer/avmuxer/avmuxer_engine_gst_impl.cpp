@@ -53,11 +53,6 @@ static void StopFeed(GstAppSrc *src, gpointer user_data)
 AVMuxerEngineGstImpl::AVMuxerEngineGstImpl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    funcMap_[MUX_H264] = AVMuxerUtil::Writeh264CodecData;
-    funcMap_[MUX_H263] = AVMuxerUtil::Writeh263CodecData;
-    funcMap_[MUX_MPEG4] = AVMuxerUtil::WriteMPEG4CodecData;
-    funcMap_[MUX_AAC] = AVMuxerUtil::WriteaacCodecData;
-    funcMap_[MUX_MP3] = AVMuxerUtil::Writemp3CodecData;
 }
 
 AVMuxerEngineGstImpl::~AVMuxerEngineGstImpl()
