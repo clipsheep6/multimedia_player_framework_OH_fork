@@ -19,6 +19,7 @@
 #include <functional>
 #include <set>
 #include <map>
+#include <vector>
 #include <gst/gst.h>
 #include "i_avmuxer_engine.h"
 #include "nocopyable.h"
