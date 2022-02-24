@@ -56,7 +56,7 @@ const std::map<const std::string, std::tuple<const std::string, MimeType>> MIME_
     {"audio/mp3", {"audio/mpeg", MUX_MP3}}
 };
 
-class MyType {
+class TrackInfo {
 public:
     bool hasCodecData_ = false;
     bool hasBuffer_ = false;
@@ -84,7 +84,7 @@ public:
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
         GstCaps *src_caps, MimeType type);
     static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator);
+        GstElement *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator);
 };
 }
 }

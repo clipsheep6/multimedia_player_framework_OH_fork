@@ -80,12 +80,12 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
             nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_VIDEOPARSE_FLAG,
-        g_param_spec_boolean("videoParse", "video_parse", "whether need videoParse",
-            false, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+        g_param_spec_string("videoParse", "video_parse", "whether need videoParse",
+            nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
     
     g_object_class_install_property(gobject_class, PROP_AUDIOPARSE_FLAG,
-        g_param_spec_boolean("audioParse", "audio_parse", "whether need audioParse",
-            false, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+        g_param_spec_string("audioParse", "audio_parse", "whether need audioParse",
+            nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     gst_element_class_set_static_metadata(gstelement_class,
         "Mux Bin", "Generic/Bin/Mux",
@@ -238,6 +238,26 @@ static bool create_audio_parse(GstMuxBin *mux_bin)
         GST_ERROR_OBJECT(mux_bin, "Invalid audioParse");
     }
     
+    return true;
+}
+
+static bool create_parse(GstMuxBin *mux_bin)
+{
+    if (mux_bin->videoParseFlag_ != nullptr) {
+        if (!create_video_parse(mux_bin)) {
+            GST_ERROR_OBJECT(mux_bin, "Failed to create vidioparse");
+            return false;
+        }
+        gst_bin_add(GST_BIN(mux_bin), mux_bin->videoParse_);
+    }
+    if (mux_bin->audioParseFlag_ != nullptr) {
+        if (!create_audio_parse(mux_bin)) {
+            GST_ERROR_OBJECT(mux_bin, "Failed to create audioparse");
+            return false;
+        }
+        gst_bin_add(GST_BIN(mux_bin), mux_bin->audioParse_);
+    }
+
     return true;
 }
 
@@ -394,19 +414,9 @@ static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstSta
             }
             break;
         case GST_STATE_CHANGE_READY_TO_PAUSED:
-            if (mux_bin->videoParseFlag_ != nullptr) {
-                if (!create_video_parse(mux_bin)) {
-                    GST_ERROR_OBJECT(mux_bin, "Failed to create vidioparse");
-                    return GST_STATE_CHANGE_FAILURE;
-                }
-                gst_bin_add(GST_BIN(mux_bin), mux_bin->videoParse_);
-            }
-            if (mux_bin->audioParseFlag_ != nullptr) {
-                if (!create_audio_parse(mux_bin)) {
-                    GST_ERROR_OBJECT(mux_bin, "Failed to create audioparse");
-                    return GST_STATE_CHANGE_FAILURE;
-                }
-                gst_bin_add(GST_BIN(mux_bin), mux_bin->audioParse_);
+            if (!create_parse(mux_bin)) {
+                GST_ERROR_OBJECT(mux_bin, "Failed to call create_parse");
+                return GST_STATE_CHANGE_FAILURE;
             }
             if (!connect_element(mux_bin)) {
                 GST_ERROR_OBJECT(mux_bin, "Failed to connect element");

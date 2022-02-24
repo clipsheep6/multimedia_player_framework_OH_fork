@@ -26,43 +26,42 @@ namespace {
 namespace OHOS {
 namespace Media {
 
-struct MyClass {
-    explicit MyClass(int32_t val) {
+struct MultiValue {
+    explicit MultiValue(int32_t val) {
         val_.intVal = val;
     }
-    explicit MyClass(const char *val) {
+    explicit MultiValue(const char *val) {
         val_.stringVal = val;
     }
-    union MyGType {
+    union Val {
         int32_t    intVal;
         const char *stringVal;
     } val_;
 };
 
-std::map<MimeType, std::vector<std::tuple<std::string, GType, MyClass>>> capsMap = {
-    {MUX_H264, {{"alignment", G_TYPE_STRING, MyClass("nal")}, {"stream-format", G_TYPE_STRING, MyClass("byte-stream")}}},
+std::map<MimeType, std::vector<std::tuple<std::string, GType, MultiValue>>> capsMap = {
+    {MUX_H264, {{"alignment", G_TYPE_STRING, MultiValue("nal")}, {"stream-format", G_TYPE_STRING, MultiValue("byte-stream")}}},
     {MUX_H263, {}},
-    {MUX_MPEG4, {{"mpegversion", G_TYPE_INT, MyClass(4)}, {"systemstream", G_TYPE_BOOLEAN, MyClass(FALSE)}}},
-    {MUX_AAC, {{"mpegversion", G_TYPE_INT, MyClass(4)}, {"stream-format", G_TYPE_STRING, MyClass("adts")}}},
-    {MUX_MP3, {{"mpegversion", G_TYPE_INT, MyClass(1)}, {"layer", G_TYPE_INT, MyClass(3)}}}
+    {MUX_MPEG4, {{"mpegversion", G_TYPE_INT, MultiValue(4)}, {"systemstream", G_TYPE_BOOLEAN, MultiValue(FALSE)}}},
+    {MUX_AAC, {{"mpegversion", G_TYPE_INT, MultiValue(4)}, {"stream-format", G_TYPE_STRING, MultiValue("adts")}}},
+    {MUX_MP3, {{"mpegversion", G_TYPE_INT, MultiValue(1)}, {"layer", G_TYPE_INT, MultiValue(3)}}}
 };
 
 static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, MimeType type) {
-    bool ret;
     if (type < VIDEO_TYPE_END) {
-        ret = trackDesc.GetIntValue(std::string(MD_KEY_WIDTH), param.width);
-        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
-        ret = trackDesc.GetIntValue(std::string(MD_KEY_HEIGHT), param.height);
-        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
-        ret = trackDesc.GetIntValue(std::string(MD_KEY_FRAME_RATE), param.frameRate);
-        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
+        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_WIDTH, param.width) == true,
+            MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
+        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_HEIGHT, param.height) == true,
+            MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
+        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_FRAME_RATE, param.frameRate) == true,
+            MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
         MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
             param.width, param.height, param.frameRate);
     } else {
-        ret = trackDesc.GetIntValue(std::string(MD_KEY_CHANNEL_COUNT), param.channels);
-        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
-        ret = trackDesc.GetIntValue(std::string(MD_KEY_SAMPLE_RATE), param.rate);
-        CHECK_AND_RETURN_RET_LOG(ret == true, MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
+        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_CHANNEL_COUNT, param.channels) == true,
+            MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
+        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_SAMPLE_RATE, param.rate) == true,
+            MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
         MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", param.channels, param.rate);
     }
 
@@ -139,7 +138,7 @@ int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSam
 }
 
 int32_t AVMuxerUtil::WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-    GstElement *src, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
+    GstElement *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator)
 {
     int32_t ret = PushCodecData(sampleData, sampleInfo, src, allocator);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call PushCodecData");

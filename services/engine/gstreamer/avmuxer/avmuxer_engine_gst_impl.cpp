@@ -37,7 +37,8 @@ static constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
 static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
-    std::map<int32_t, MyType> trackInfo = *reinterpret_cast<std::map<int32_t, MyType> *>(user_data);
+    CHECK_AND_RETURN_LOG(user_data != nullptr, "User data does not exist");
+    std::map<int32_t, TrackInfo> trackInfo = *reinterpret_cast<std::map<int32_t, TrackInfo> *>(user_data);
     for (auto& info : trackInfo) {
         if (info.second.src_ == src) {
             info.second.needData_ = true;
@@ -49,7 +50,8 @@ static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
 static void StopFeed(GstAppSrc *src, gpointer user_data)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
-    std::map<int32_t, MyType> trackInfo = *reinterpret_cast<std::map<int32_t, MyType> *>(user_data);
+    CHECK_AND_RETURN_LOG(user_data != nullptr, "User data does not exist");
+    std::map<int32_t, TrackInfo> trackInfo = *reinterpret_cast<std::map<int32_t, TrackInfo> *>(user_data);
     for (auto& info : trackinfo) {
         if (info.second.src_ == src) {
             info.second.needData_ = false;
@@ -127,6 +129,7 @@ int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
 
     GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
+    CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
     GstTagSetter *tagsetter = GST_TAG_SETTER(element);
     gst_tag_setter_add_tags(tagsetter, GST_TAG_MERGE_REPLACE_ALL,
         "geo-location-latitude", latitude,
@@ -142,6 +145,7 @@ int32_t AVMuxerEngineGstImpl::SetOrientationHint(int degrees)
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
 
     GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
+    CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
     GstTagSetter *tagsetter = GST_TAG_SETTER(element);
     gst_tag_setter_add_tags(tagsetter, GST_TAG_MERGE_REPLACE_ALL, "image-orientation", degrees, nullptr);
 
@@ -160,11 +164,9 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
         MSERR_INVALID_OPERATION, "The mime type can not be added in current container format");
 
     trackId = trackInfo_.size() + 1;
-    trackInfo_[trackId] = MyType();
+    trackInfo_[trackId] = TrackInfo();
     trackInfo_[trackId].type_ = std::get<1>(MIME_MAP_TYPE.at(mimeType));
     trackInfo_[trackId].needData_ = true;
-    std::string name = "src_";
-    name += static_cast<char>('0' + trackId);
 
     int32_t ret;
     GstCaps *src_caps = nullptr;
@@ -172,17 +174,19 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 1 video Tracks can be added");
         ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps, trackInfo_[trackId].type_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call Seth264Caps");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetCaps");
         videoTrackNum_++;
     } else {
         CHECK_AND_RETURN_RET_LOG(audioTrackNum_ < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 16 audio Tracks can be added");
         ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps, trackInfo_[trackId].type_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetaacCaps");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetCaps");
         audioTrackNum_++;
     }
 
     trackInfo_[trackId].caps_ = src_caps;
+    std::string name = "src_";
+    name += static_cast<char>('0' + trackId);
     gst_mux_bin_add_track(muxBin_, trackInfo_[trackId].type_ < VIDEO_TYPE_END ? VIDEO : AUDIO, name.c_str());
 
     return MSERR_OK;
@@ -207,7 +211,7 @@ int32_t AVMuxerEngineGstImpl::Start()
     return MSERR_OK; 
 }
 
-static bool isAllHasCaps(std::map<int, MyType>& trackInfo)
+static bool isAllHasCaps(std::map<int, TrackInfo>& trackInfo)
 {
     for (auto& info : trackInfo) {
         if (info.second.hasCodecData_ == false) {
@@ -217,7 +221,7 @@ static bool isAllHasCaps(std::map<int, MyType>& trackInfo)
     return true;
 }
 
-static bool isAllHasBuffer(std::map<int, MyType>& trackInfo)
+static bool isAllHasBuffer(std::map<int, TrackInfo>& trackInfo)
 {
     for (auto& info : trackInfo) {
         if (info.second.hasBuffer_ == false) {
@@ -246,19 +250,19 @@ void AVMuxerEngineGstImpl::SetParse(MimeType type)
 
 int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
     const TrackSampleInfo &sampleInfo)
-{   
+{
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(sampleData != nullptr, MSERR_INVALID_VAL, "sampleData is nullptr");
     MEDIA_LOGD("WriteTrackSample, sampleInfo.trackIdx is %{public}d", sampleInfo.trackIdx);
-    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
     CHECK_AND_RETURN_RET_LOG(trackInfo_[sampleInfo.trackIdx].needData_ == true, MSERR_INVALID_OPERATION,
         "Failed to push data, the queue is full");
     CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
     int32_t ret;
 
-    std::string name = "src_";
-    name += static_cast<char>('0' + sampleInfo.trackIdx);
     GstElement *src = trackInfo_[sampleInfo.trackIdx].src_;
+    CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_VAL, "Failed to get AppSrc of trackid: %{public}d",
+        sampleInfo.trackIdx);
     MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,",
         ((uint8_t*)(sampleData->GetBase()))[0], ((uint8_t*)(sampleData->GetBase()))[1],
         ((uint8_t*)(sampleData->GetBase()))[2], ((uint8_t*)(sampleData->GetBase()))[3]);
@@ -267,22 +271,22 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
         ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to write CodecData");
         SetParse(trackInfo_[sampleInfo.trackIdx].type_);
-
         trackInfo_[sampleInfo.trackIdx].hasCodecData_ = true;
-        if (isAllHasCaps(trackInfo_) && !isPause_) {
-            gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
-            isPause_ = true;
-            MEDIA_LOGD("Current state is Pause");
-        }
     } else {
         ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteData");
         trackInfo_[sampleInfo.trackIdx].hasBuffer_ = true;
-        if (isAllHasBuffer(trackInfo_) && !isPlay_) {
-            gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
-            isPlay_ = true;
-            MEDIA_LOGD("Current state is Play");
-        }
+    }
+
+    if (isAllHasCaps(trackInfo_) && !isPause_) {
+        gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
+        isPause_ = true;
+        MEDIA_LOGD("Current state is Pause");
+    }
+    if (isAllHasBuffer(trackInfo_) && !isPlay_) {
+        gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
+        isPlay_ = true;
+        MEDIA_LOGD("Current state is Play");
     }
     return MSERR_OK;
 }
@@ -330,12 +334,14 @@ void AVMuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
 {
     switch (msg.type) {
         case InnerMsgType::INNER_MSG_EOS: {
+            std::unique_lock<std::mutex> lock(mutex_);
             MEDIA_LOGD("End of stream");
             endFlag_ = true;
             cond_.notify_all();
             break;
         }
         case InnerMsgType::INNER_MSG_ERROR: {
+            std::unique_lock<std::mutex> lock(mutex_);
             MEDIA_LOGE("Error happened");
             msgProcessor_->FlushBegin();
             msgProcessor_->Reset();
@@ -344,6 +350,7 @@ void AVMuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
             break;
         }
         case InnerMsgType::INNER_MSG_STATE_CHANGED: {
+            std::unique_lock<std::mutex> lock(mutex_);
             MEDIA_LOGD("State change");
             GstState currState = static_cast<GstState>(msg.detail2);
             if (currState == GST_STATE_READY) {

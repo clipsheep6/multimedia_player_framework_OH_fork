@@ -51,7 +51,7 @@ private:
     void Clear();
 
     GstMuxBin *muxBin_ = nullptr;
-    std::map<int32_t, MyType> trackInfo_;
+    std::map<int32_t, TrackInfo> trackInfo_;
     std::mutex mutex_;
     std::condition_variable cond_;
     bool endFlag_ = false;
