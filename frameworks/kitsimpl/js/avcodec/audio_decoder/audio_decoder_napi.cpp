@@ -242,6 +242,7 @@ napi_value AudioDecoderNapi::Configure(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -284,6 +285,7 @@ napi_value AudioDecoderNapi::Prepare(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -326,6 +328,7 @@ napi_value AudioDecoderNapi::Start(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -369,6 +372,7 @@ napi_value AudioDecoderNapi::Stop(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -414,6 +418,7 @@ napi_value AudioDecoderNapi::Flush(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -462,6 +467,7 @@ napi_value AudioDecoderNapi::Reset(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -507,6 +513,7 @@ napi_value AudioDecoderNapi::Release(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -558,6 +565,7 @@ napi_value AudioDecoderNapi::QueueInput(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -614,6 +622,7 @@ napi_value AudioDecoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -665,6 +674,7 @@ napi_value AudioDecoderNapi::SetParameter(napi_env env, napi_callback_info info)
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
@@ -706,6 +716,7 @@ napi_value AudioDecoderNapi::GetOutputMediaDescription(napi_env env, napi_callba
     if (status != napi_ok || jsThis == nullptr) {
         asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
 
     AudioDecoderNapi *napi = nullptr;
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&napi));
@@ -746,6 +757,7 @@ napi_value AudioDecoderNapi::GetAudioDecoderCaps(napi_env env, napi_callback_inf
     if (status != napi_ok || jsThis == nullptr) {
         asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
 
     AudioDecoderNapi *napi = nullptr;
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&napi));

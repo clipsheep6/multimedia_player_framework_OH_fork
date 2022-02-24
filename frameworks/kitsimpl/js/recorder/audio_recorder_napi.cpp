@@ -22,6 +22,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "string_ex.h"
+#include "scope_guard.h"
 #include "common_napi.h"
 
 namespace {
@@ -219,6 +220,8 @@ napi_value AudioRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && recorderNapi != nullptr, undefinedResult,
         "Failed to retrieve instance");
+    napi_ref thisRef = CommonNapi::CreateReference(env, jsThis);
+    ON_SCOPE_EXIT(0) { napi_delete_reference(env, thisRef); };
 
     napi_valuetype valueType = napi_undefined;
     if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
@@ -239,7 +242,7 @@ napi_value AudioRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     }
 
     CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
-    auto task = std::make_shared<TaskHandler<void>>([recorderNapi, uriPath, audioProperties]() {
+    auto task = std::make_shared<TaskHandler<void>>([recorderNapi, uriPath, audioProperties, env, thisRef]() {
         int32_t ret = recorderNapi->OnPrepare(uriPath, audioProperties);
         if (ret == MSERR_OK) {
             recorderNapi->StateCallback(PREPARE_CALLBACK_NAME);
@@ -247,9 +250,11 @@ napi_value AudioRecorderNapi::Prepare(napi_env env, napi_callback_info info)
             recorderNapi->ErrorCallback(MSERR_EXT_INVALID_VAL);
         }
         MEDIA_LOGD("Prepare success");
+        napi_delete_reference(env, thisRef);
     });
     (void)recorderNapi->taskQue_->EnqueueTask(task);
 
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return undefinedResult;
 }
 
@@ -398,10 +403,12 @@ napi_value AudioRecorderNapi::Start(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && recorderNapi != nullptr, undefinedResult,
         "Failed to retrieve instance");
+    napi_ref thisRef = CommonNapi::CreateReference(env, jsThis);
+    ON_SCOPE_EXIT(0) { napi_delete_reference(env, thisRef); };
 
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorderImpl_ != nullptr, undefinedResult, "No memory");
     CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
-    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi]() {
+    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi, env, thisRef]() {
         int32_t ret = napi->recorderImpl_->Start();
         if (ret == MSERR_OK) {
             napi->StateCallback(START_CALLBACK_NAME);
@@ -409,9 +416,11 @@ napi_value AudioRecorderNapi::Start(napi_env env, napi_callback_info info)
             napi->ErrorCallback(MSERR_EXT_UNKNOWN);
         }
         MEDIA_LOGD("Start success");
+        napi_delete_reference(env, thisRef);
     });
     (void)recorderNapi->taskQue_->EnqueueTask(task);
 
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return undefinedResult;
 }
 
@@ -432,10 +441,12 @@ napi_value AudioRecorderNapi::Pause(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && recorderNapi != nullptr, undefinedResult,
         "Failed to retrieve instance");
+    napi_ref thisRef = CommonNapi::CreateReference(env, jsThis);
+    ON_SCOPE_EXIT(0) { napi_delete_reference(env, thisRef); };
 
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorderImpl_ != nullptr, undefinedResult, "No memory");
     CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
-    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi]() {
+    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi, env, thisRef]() {
         int32_t ret = napi->recorderImpl_->Pause();
         if (ret == MSERR_OK) {
             napi->StateCallback(PAUSE_CALLBACK_NAME);
@@ -443,8 +454,11 @@ napi_value AudioRecorderNapi::Pause(napi_env env, napi_callback_info info)
             napi->ErrorCallback(MSERR_EXT_UNKNOWN);
         }
         MEDIA_LOGD("Pause success");
+        napi_delete_reference(env, thisRef);
     });
     (void)recorderNapi->taskQue_->EnqueueTask(task);
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return undefinedResult;
 }
 
@@ -465,10 +479,12 @@ napi_value AudioRecorderNapi::Resume(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && recorderNapi != nullptr, undefinedResult,
         "Failed to retrieve instance");
+    napi_ref thisRef = CommonNapi::CreateReference(env, jsThis);
+    ON_SCOPE_EXIT(0) { napi_delete_reference(env, thisRef); };
 
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorderImpl_ != nullptr, undefinedResult, "No memory");
     CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
-    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi]() {
+    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi, env, thisRef]() {
         int32_t ret = napi->recorderImpl_->Resume();
         if (ret == MSERR_OK) {
             napi->StateCallback(RESUME_CALLBACK_NAME);
@@ -476,8 +492,11 @@ napi_value AudioRecorderNapi::Resume(napi_env env, napi_callback_info info)
             napi->ErrorCallback(MSERR_EXT_UNKNOWN);
         }
         MEDIA_LOGD("Resume success");
+        napi_delete_reference(env, thisRef);
     });
     (void)recorderNapi->taskQue_->EnqueueTask(task);
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return undefinedResult;
 }
 
@@ -498,10 +517,12 @@ napi_value AudioRecorderNapi::Stop(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && recorderNapi != nullptr, undefinedResult,
         "Failed to retrieve instance");
+    napi_ref thisRef = CommonNapi::CreateReference(env, jsThis);
+    ON_SCOPE_EXIT(0) { napi_delete_reference(env, thisRef); };
 
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorderImpl_ != nullptr, undefinedResult, "No memory");
     CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
-    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi]() {
+    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi, env, thisRef]() {
         int32_t ret = napi->recorderImpl_->Stop(false);
         if (ret == MSERR_OK) {
             napi->StateCallback(STOP_CALLBACK_NAME);
@@ -509,8 +530,11 @@ napi_value AudioRecorderNapi::Stop(napi_env env, napi_callback_info info)
             napi->ErrorCallback(MSERR_EXT_UNKNOWN);
         }
         MEDIA_LOGD("Stop success");
+        napi_delete_reference(env, thisRef);
     });
     (void)recorderNapi->taskQue_->EnqueueTask(task);
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return undefinedResult;
 }
 
@@ -531,10 +555,12 @@ napi_value AudioRecorderNapi::Reset(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && recorderNapi != nullptr, undefinedResult,
         "Failed to retrieve instance");
+    napi_ref thisRef = CommonNapi::CreateReference(env, jsThis);
+    ON_SCOPE_EXIT(0) { napi_delete_reference(env, thisRef); };
 
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorderImpl_ != nullptr, undefinedResult, "No memory");
     CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
-    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi]() {
+    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi, env, thisRef]() {
         int32_t ret = napi->recorderImpl_->Reset();
         if (ret == MSERR_OK) {
             napi->StateCallback(RESET_CALLBACK_NAME);
@@ -542,8 +568,11 @@ napi_value AudioRecorderNapi::Reset(napi_env env, napi_callback_info info)
             napi->ErrorCallback(MSERR_EXT_UNKNOWN);
         }
         MEDIA_LOGD("Reset success");
+        napi_delete_reference(env, thisRef);
     });
     (void)recorderNapi->taskQue_->EnqueueTask(task);
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return undefinedResult;
 }
 
@@ -564,10 +593,12 @@ napi_value AudioRecorderNapi::Release(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && recorderNapi != nullptr, undefinedResult,
         "Failed to retrieve instance");
+    napi_ref thisRef = CommonNapi::CreateReference(env, jsThis);
+    ON_SCOPE_EXIT(0) { napi_delete_reference(env, thisRef); };
 
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorderImpl_ != nullptr, undefinedResult, "No memory");
     CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, undefinedResult, "No TaskQue");
-    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi]() {
+    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi, env, thisRef]() {
         int32_t ret = napi->recorderImpl_->Release();
         if (ret == MSERR_OK) {
             napi->StateCallback(RELEASE_CALLBACK_NAME);
@@ -575,8 +606,11 @@ napi_value AudioRecorderNapi::Release(napi_env env, napi_callback_info info)
             napi->ErrorCallback(MSERR_EXT_UNKNOWN);
         }
         MEDIA_LOGD("Release success");
+        napi_delete_reference(env, thisRef);
     });
     (void)recorderNapi->taskQue_->EnqueueTask(task);
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return undefinedResult;
 }
 

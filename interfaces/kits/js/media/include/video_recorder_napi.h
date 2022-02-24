@@ -116,7 +116,13 @@ private:
 
 struct VideoRecorderAsyncContext : public MediaAsyncContext {
     explicit VideoRecorderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~VideoRecorderAsyncContext() = default;
+    ~VideoRecorderAsyncContext()
+    {
+        if (thisRef != nullptr) {
+            napi_delete_reference(env, thisRef);
+            thisRef = nullptr;
+        }
+    }
 
     VideoRecorderNapi *napi = nullptr;
 };
