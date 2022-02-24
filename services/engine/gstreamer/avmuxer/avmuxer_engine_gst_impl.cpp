@@ -37,17 +37,25 @@ static constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
 static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
-    std::string name = gst_element_get_name(src);
-    int32_t trackID = name.back() - '0';
-    (*reinterpret_cast<std::map<int32_t, MyType> *>(user_data))[trackID].needData_ = true;
+    std::map<int32_t, MyType> trackInfo = *reinterpret_cast<std::map<int32_t, MyType> *>(user_data);
+    for (auto& info : trackInfo) {
+        if (info.second.src_ == src) {
+            info.second.needData_ = true;
+            break;
+        }
+    }
 }
 
 static void StopFeed(GstAppSrc *src, gpointer user_data)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
-    std::string name = gst_element_get_name(src);
-    int32_t trackID = name.back() - '0';
-    (*reinterpret_cast<std::map<int32_t, MyType> *>(user_data))[trackID].needData_ = false;
+    std::map<int32_t, MyType> trackInfo = *reinterpret_cast<std::map<int32_t, MyType> *>(user_data);
+    for (auto& info : trackinfo) {
+        if (info.second.src_ == src) {
+            info.second.needData_ = false;
+            break;
+        }
+    }
 }
 
 AVMuxerEngineGstImpl::AVMuxerEngineGstImpl()
@@ -194,6 +202,7 @@ int32_t AVMuxerEngineGstImpl::Start()
         GstAppSrc *src = GST_APP_SRC_CAST(gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str()));
         CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_OPERATION, "src does not exist");
         gst_app_src_set_callbacks(src, &callbacks, reinterpret_cast<gpointer *>(&trackInfo_), NULL);
+        info.second.src_ = src;
     }
     return MSERR_OK; 
 }
@@ -242,19 +251,19 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     MEDIA_LOGD("WriteTrackSample, sampleInfo.trackIdx is %{public}d", sampleInfo.trackIdx);
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
-    CHECK_AND_RETURN_RET_LOG(trackInfo[sampleInfo.trackIdx].needData_ == true, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(trackInfo_[sampleInfo.trackIdx].needData_ == true, MSERR_INVALID_OPERATION,
         "Failed to push data, the queue is full");
     CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
     int32_t ret;
 
     std::string name = "src_";
     name += static_cast<char>('0' + sampleInfo.trackIdx);
-    GstElement *src = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str());
+    GstElement *src = trackInfo_[sampleInfo.trackIdx].src_;
     MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,",
         ((uint8_t*)(sampleData->GetBase()))[0], ((uint8_t*)(sampleData->GetBase()))[1],
         ((uint8_t*)(sampleData->GetBase()))[2], ((uint8_t*)(sampleData->GetBase()))[3]);
     if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == false && sampleInfo.flags == CODEC_DATA) {
-        g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
+        g_object_set(src, "caps", trackInfo_[sampleInfo.trackIdx].caps_, nullptr);
         ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to write CodecData");
         SetParse(trackInfo_[sampleInfo.trackIdx].type_);
@@ -287,11 +296,7 @@ int32_t AVMuxerEngineGstImpl::Stop()
     GstFlowReturn ret;
     if (isPlay_) {
         for (auto& info : trackInfo_) {
-            std::string name = "src_";
-            name += static_cast<char>('0' + info.first);
-            GstAppSrc *src = GST_APP_SRC_CAST(gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str()));
-            CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_OPERATION, "src does not exist");
-            ret = gst_app_src_end_of_stream(src);
+            ret = gst_app_src_end_of_stream(info.second.src_);
             CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, ret, "Failed to push end of stream");
         }
         cond_.wait(lock, [this]() {

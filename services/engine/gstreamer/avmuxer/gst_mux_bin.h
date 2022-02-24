@@ -47,9 +47,9 @@ struct _GstMuxBin {
     gchar *path_;
     gint outFd_;
     gchar *mux_;
-    gchar *videoParseFlag_ = nullptr;
-    gchar *audioParseFlag_ = nullptr;
-    gchar *videoTrack_ = nullptr;
+    gchar *videoParseFlag_;
+    gchar *audioParseFlag_;
+    gchar *videoTrack_;
     GSList *audioTrack_;
 };
 

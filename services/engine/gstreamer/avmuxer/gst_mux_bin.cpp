@@ -144,7 +144,7 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id,
             mux_bin->mux_ = g_strdup(g_value_get_string(value));
             break;
         case PROP_VIDEOPARSE_FLAG:
-            mux_bin->vidioParseFlag_ = g_strdup(g_value_get_string(value));
+            mux_bin->videoParseFlag_ = g_strdup(g_value_get_string(value));
             break;
         case PROP_AUDIOPARSE_FLAG:
             mux_bin->audioParseFlag_ = g_strdup(g_value_get_string(value));
@@ -195,7 +195,7 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
     g_return_val_if_fail(fdsink != nullptr, false);
 
     if (mux_bin->outFd_ < 0 && mux_bin->path_ != nullptr) {
-        mux_bin->outFd_ = open(mux_bin->path_, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+        mux_bin->outFd_ = open(mux_bin->path_, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
         if (mux_bin->outFd_ < 0) {
             GST_ERROR_OBJECT(mux_bin, "Open file failed! filePath is: %s", mux_bin->path_);
             return GST_STATE_CHANGE_FAILURE;
@@ -215,10 +215,10 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 
 static bool create_video_parse(GstMuxBin *mux_bin)
 {
-    if (mux_bin->videoParseFlag_ == "h264parse") {
+    if (strcmp(mux_bin->videoParseFlag_, "h264parse") == 0) {
         mux_bin->videoParse_ = gst_element_factory_make("h264parse", "h264parse");
         g_return_val_if_fail(mux_bin->videoParse_ != nullptr, false);
-    } else if (mux_bin->videoParseFlag_ == "mpeg4videoparse") {
+    } else if (strcmp(mux_bin->videoParseFlag_, "mpeg4videoparse") == 0) {
         mux_bin->videoParse_ = gst_element_factory_make("mpeg4videoparse", "mpeg4parse");
         g_return_val_if_fail(mux_bin->videoParse_ != nullptr, false);
         g_object_set(mux_bin->videoParse_, "config-interval", -1, "drop", false, nullptr);
@@ -231,7 +231,7 @@ static bool create_video_parse(GstMuxBin *mux_bin)
 
 static bool create_audio_parse(GstMuxBin *mux_bin)
 {
-    if (mux_bin->audioParseFlag_ == "aacparse") {
+    if (strcmp(mux_bin->audioParseFlag_, "aacparse") == 0) {
         mux_bin->audioParse_ = gst_element_factory_make("aacparse", "aacparse");
         g_return_val_if_fail(mux_bin->audioParse_ != nullptr, false);
     } else {
@@ -245,9 +245,6 @@ static bool create_video_src(GstMuxBin *mux_bin)
 {
     g_return_val_if_fail(mux_bin->videoTrack_ != nullptr, false);
 
-    if (mux_bin->videoTrack_ == nullptr) {
-        return GST_STATE_CHANGE_SUCCESS;
-    }
     mux_bin->videoSrc_ = gst_element_factory_make("appsrc", mux_bin->videoTrack_);
     g_return_val_if_fail(mux_bin->videoSrc_ != nullptr, false);
     g_object_set(mux_bin->videoSrc_, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
@@ -271,15 +268,18 @@ static bool create_audio_src(GstMuxBin *mux_bin)
 
 static bool create_element(GstMuxBin *mux_bin)
 {
-    if (create_splitmuxsink(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
+    if (!create_splitmuxsink(mux_bin)) {
+        GST_ERROR_OBJECT(mux_bin, "Failed to call create_splitmuxsink");
         return false;
     }
 
-    if (create_video_src(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
+    if (!create_video_src(mux_bin)) {
+        GST_ERROR_OBJECT(mux_bin, "Failed to call create_video_src");
         return false;
     }
 
-    if (create_audio_src(mux_bin) != GST_STATE_CHANGE_SUCCESS) {
+    if (!create_audio_src(mux_bin)) {
+        GST_ERROR_OBJECT(mux_bin, "Failed to call create_audio_src");
         return false;
     }
 
@@ -288,15 +288,19 @@ static bool create_element(GstMuxBin *mux_bin)
 
 static bool add_element_to_bin(GstMuxBin *mux_bin)
 {
+    bool ret;
     if (mux_bin->videoTrack_ != nullptr) {
-        gst_bin_add(GST_BIN(mux_bin), mux_bin->videoSrc_);
+        ret = gst_bin_add(GST_BIN(mux_bin), mux_bin->videoSrc_);
+        g_return_val_if_fail(ret == TRUE, false);
     }
     GSList *iter = mux_bin->audioSrcList_;
     while (iter != nullptr) {
-        gst_bin_add(GST_BIN(mux_bin), GST_ELEMENT_CAST(iter->data));
+        ret = gst_bin_add(GST_BIN(mux_bin), GST_ELEMENT_CAST(iter->data);
+        g_return_val_if_fail(ret == TRUE, false);
         iter = iter->next;
     }
-    gst_bin_add(GST_BIN(mux_bin), mux_bin->splitMuxSink_);
+    ret = gst_bin_add(GST_BIN(mux_bin), mux_bin->splitMuxSink_);
+    g_return_val_if_fail(ret == TRUE, false);
 
     return true;
 }
@@ -339,7 +343,7 @@ static bool connect_element(GstMuxBin *mux_bin)
         GstPad *video_src_pad = gst_element_get_static_pad(mux_bin->videoSrc_, "src");
         GstPad *split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->splitMuxSink_, "video");
         if (mux_bin->videoParseFlag_ != nullptr) {
-            if (!connect_video_parse(video_src_pad, split_mux_sink_sink_pad)) {
+            if (!connect_video_parse(mux_bin, video_src_pad, split_mux_sink_sink_pad)) {
                 GST_ERROR_OBJECT(mux_bin, "Failed to call connect_video_parse");
                 return false;
             }
@@ -355,9 +359,8 @@ static bool connect_element(GstMuxBin *mux_bin)
     while (iter != nullptr) {
         GstPad *audio_src_pad = gst_element_get_static_pad(GST_ELEMENT_CAST(iter->data), "src");
         GstPad *split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->splitMuxSink_, "audio_%u");
-        if (mux_bin->videoParseFlag_ != nullptr)
-        if (mux_bin->audioParseFlag_ == true) {
-            if (!connect_audio_parse(audio_src_pad, split_mux_sink_sink_pad)) {
+        if (mux_bin->audioParseFlag_ != nullptr) {
+            if (!connect_audio_parse(mux_bin, audio_src_pad, split_mux_sink_sink_pad)) {
                 GST_ERROR_OBJECT(mux_bin, "Failed to call connect_audio_parse");
                 return false;
             }
@@ -398,7 +401,7 @@ static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstSta
                 }
                 gst_bin_add(GST_BIN(mux_bin), mux_bin->videoParse_);
             }
-            if (mux_bin->audioParseFlag_ != nullpre) {
+            if (mux_bin->audioParseFlag_ != nullptr) {
                 if (!create_audio_parse(mux_bin)) {
                     GST_ERROR_OBJECT(mux_bin, "Failed to create audioparse");
                     return GST_STATE_CHANGE_FAILURE;

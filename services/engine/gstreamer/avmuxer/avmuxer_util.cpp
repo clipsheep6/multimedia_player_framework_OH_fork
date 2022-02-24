@@ -110,7 +110,7 @@ static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps 
 int32_t AVMuxerUtil::SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
     GstCaps *src_caps, MimeType type)
 {
-    MEDIA_LOGD("Set %s cpas", mimeType.c_str());
+    MEDIA_LOGD("Set %{public}s cpas", mimeType.c_str());
     bool ret;
     FormatParam param;
     ret = parseParam(param, trackDesc, type);

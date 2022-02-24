@@ -62,6 +62,7 @@ public:
     bool hasBuffer_ = false;
     bool needData_ = false;
     GstCaps *caps_ = nullptr;
+    GstAppSrc *src_ = nullptr;
     MimeType type_ ;
 };
 
@@ -82,8 +83,8 @@ public:
 
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
         GstCaps *src_caps, MimeType type);
-    static int32_t AVMuxerUtil::WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
+    static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
+        GstElement *src, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator);
 };
 }
 }
