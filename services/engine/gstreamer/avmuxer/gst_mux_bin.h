@@ -38,21 +38,19 @@ struct _GstMuxBin {
     GstPipeline parent_;
 
     /* private */
-    GSList *audioSrcList_;
-    GstElement *h264parse_;
-    GstElement *mpeg4parse_;
-    GstElement *aacparse_;
     GstElement *videoSrc_;
+    GSList *audioSrcList_;
+    GstElement *videoParse_;
+    GstElement *audioParse_;
     GstElement *splitMuxSink_;
 
     gchar *path_;
+    gint outFd_;
     gchar *mux_;
-    gboolean h264parseFlag_;
-    gboolean mpeg4parseFlag_;
-    gboolean aacparseFlag_;
+    gchar *videoParseFlag_ = nullptr;
+    gchar *audioParseFlag_ = nullptr;
     gchar *videoTrack_ = nullptr;
     GSList *audioTrack_;
-    gint outFd_;
 };
 
 struct _GstMuxBinClass {

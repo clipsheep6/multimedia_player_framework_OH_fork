@@ -45,6 +45,7 @@ public:
     int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) override;
     int32_t Stop() override;
 private:
+    void SetParse(MimeType type);
     int32_t SetupMsgProcessor();
     void OnNotifyMessage(const InnerMessage &msg);
     void Clear();

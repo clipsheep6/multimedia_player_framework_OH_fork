@@ -138,23 +138,9 @@ int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSam
     return MSERR_OK;
 }
 
-int32_t AVMuxerUtil::WriteCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
+int32_t AVMuxerUtil::WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
     GstElement *src, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
 {
-    g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
-    int32_t ret = PushCodecData(sampleData, sampleInfo, src, allocator);
-    CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call PushCodecData");
-
-    return MSERR_OK;
-}
-
-int32_t AVMuxerUtil::WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-    GstElement *src)
-{
-    CHECK_AND_RETURN_RET_LOG(trackInfo_[sampleInfo.trackIdx].needData_ == true, MSERR_INVALID_OPERATION,
-        "Failed to push data, the queue is full");
-    CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
-
     int32_t ret = PushCodecData(sampleData, sampleInfo, src, allocator);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call PushCodecData");
     return MSERR_OK;

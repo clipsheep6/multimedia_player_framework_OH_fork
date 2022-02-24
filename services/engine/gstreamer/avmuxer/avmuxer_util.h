@@ -35,14 +35,13 @@ const std::map<std::string, std::string> FORMAT_TO_MUX {
 };
 
 const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
-    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "video/mpeg2", "audio/aac", "audio/mp3"}},
+    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "audio/aac", "audio/mp3"}},
     {"m4a", {"audio/aac"}}
 };
 
 enum MimeType {
     MUX_H264,
     MUX_H263,
-    MUX_MPEG2,
     MUX_MPEG4,
     VIDEO_TYPE_END,
     MUX_AAC,
@@ -51,9 +50,8 @@ enum MimeType {
 
 const std::map<const std::string, std::tuple<const std::string, MimeType>> MIME_MAP_TYPE {
     {"video/x-h264", {"video/x-h264", MUX_H264}},
-    {"video/mpeg4", {"video/mpeg", MUX_MPEG4}},
     {"video/x-h263", {"video/x-h263", MUX_H263}},
-    {"video/mpeg2", {"video/mpeg2", MUX_MPEG2}},
+    {"video/mpeg4", {"video/mpeg", MUX_MPEG4}},
     {"audio/aac", {"audio/mpeg", MUX_AAC}},
     {"audio/mp3", {"audio/mpeg", MUX_MP3}}
 };
@@ -84,10 +82,8 @@ public:
 
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
         GstCaps *src_caps, MimeType type);
-    static int32_t WriteCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator);
-    static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData,
-        const TrackSampleInfo &sampleInfo, GstElement *src);
+    static int32_t AVMuxerUtil::WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
+        GstElement *src, std::map<int, MyType>& trackInfo, GstShMemWrapAllocator *allocator)
 };
 }
 }

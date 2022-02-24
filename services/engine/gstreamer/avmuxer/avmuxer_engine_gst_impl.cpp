@@ -218,17 +218,17 @@ static bool isAllHasBuffer(std::map<int, MyType>& trackInfo)
     return true;
 }
 
-static void SetParse(MimeType type)
+void AVMuxerEngineGstImpl::SetParse(MimeType type)
 {
     switch(type) {
         case MUX_H264:
-            g_object_set(muxBin_, "h264parse", true, nullptr);
+            g_object_set(muxBin_, "videoParse", "h264parse", nullptr);
             break;
         case MUX_MPEG4:
-            g_object_set(muxBin_, "mpeg4parse", true, nullptr);
+            g_object_set(muxBin_, "videoParse", "mpeg4parse", nullptr);
             break;
         case MUX_AAC:
-            g_object_set(muxBin_, "aacparse", true, nullptr);
+            g_object_set(muxBin_, "audioParse", "aacparse", nullptr);
             break;
         default:
             break;
@@ -242,6 +242,8 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     MEDIA_LOGD("WriteTrackSample, sampleInfo.trackIdx is %{public}d", sampleInfo.trackIdx);
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
+    CHECK_AND_RETURN_RET_LOG(trackInfo[sampleInfo.trackIdx].needData_ == true, MSERR_INVALID_OPERATION,
+        "Failed to push data, the queue is full");
     CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
     int32_t ret;
 
@@ -252,9 +254,10 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
         ((uint8_t*)(sampleData->GetBase()))[0], ((uint8_t*)(sampleData->GetBase()))[1],
         ((uint8_t*)(sampleData->GetBase()))[2], ((uint8_t*)(sampleData->GetBase()))[3]);
     if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == false && sampleInfo.flags == CODEC_DATA) {
-        ret = AVMuxerUtil::WriteCodecData(sampleData, sampleInfo, src, trackInfo_, allocator_);
+        g_object_set(src, "caps", trackInfo[sampleInfo.trackIdx].caps_, nullptr);
+        ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to write CodecData");
-        SetParse(muxBin_, trackInfo[sampleInfo.trackIdx].type_);
+        SetParse(trackInfo_[sampleInfo.trackIdx].type_);
 
         trackInfo_[sampleInfo.trackIdx].hasCodecData_ = true;
         if (isAllHasCaps(trackInfo_) && !isPause_) {
@@ -263,7 +266,7 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
             MEDIA_LOGD("Current state is Pause");
         }
     } else {
-        ret = WriteData(sampleData, sampleInfo, src);
+        ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteData");
         trackInfo_[sampleInfo.trackIdx].hasBuffer_ = true;
         if (isAllHasBuffer(trackInfo_) && !isPlay_) {
