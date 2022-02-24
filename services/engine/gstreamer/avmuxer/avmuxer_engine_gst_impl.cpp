@@ -52,7 +52,7 @@ static void StopFeed(GstAppSrc *src, gpointer user_data)
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
     CHECK_AND_RETURN_LOG(user_data != nullptr, "User data does not exist");
     std::map<int32_t, TrackInfo> trackInfo = *reinterpret_cast<std::map<int32_t, TrackInfo> *>(user_data);
-    for (auto& info : trackinfo) {
+    for (auto& info : trackInfo) {
         if (info.second.src_ == src) {
             info.second.needData_ = false;
             break;
@@ -126,15 +126,15 @@ int32_t AVMuxerEngineGstImpl::SetOutput(const std::string &path, const std::stri
 int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
 {
     MEDIA_LOGD("SetLocation");
-    CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
+    // CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
 
-    GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
-    CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
-    GstTagSetter *tagsetter = GST_TAG_SETTER(element);
-    gst_tag_setter_add_tags(tagsetter, GST_TAG_MERGE_REPLACE_ALL,
-        "geo-location-latitude", latitude,
-        "geo-location-longitude", longitude,
-        nullptr);
+    // GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
+    // CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
+    // GstTagSetter *tagsetter = GST_TAG_SETTER(element);
+    // gst_tag_setter_add_tags(tagsetter, GST_TAG_MERGE_REPLACE_ALL,
+    //     "geo-location-latitude", latitude,
+    //     "geo-location-longitude", longitude,
+    //     nullptr);
 
     return MSERR_OK;
 }
@@ -142,12 +142,7 @@ int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
 int32_t AVMuxerEngineGstImpl::SetOrientationHint(int degrees)
 {
     MEDIA_LOGD("SetOrientationHint");
-    CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
-
-    GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
-    CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
-    GstTagSetter *tagsetter = GST_TAG_SETTER(element);
-    gst_tag_setter_add_tags(tagsetter, GST_TAG_MERGE_REPLACE_ALL, "image-orientation", degrees, nullptr);
+    //  
 
     return MSERR_OK;
 }
@@ -260,7 +255,7 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
     int32_t ret;
 
-    GstElement *src = trackInfo_[sampleInfo.trackIdx].src_;
+    GstAppSrc *src = trackInfo_[sampleInfo.trackIdx].src_;
     CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_VAL, "Failed to get AppSrc of trackid: %{public}d",
         sampleInfo.trackIdx);
     MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,",

@@ -315,7 +315,7 @@ static bool add_element_to_bin(GstMuxBin *mux_bin)
     }
     GSList *iter = mux_bin->audioSrcList_;
     while (iter != nullptr) {
-        ret = gst_bin_add(GST_BIN(mux_bin), GST_ELEMENT_CAST(iter->data);
+        ret = gst_bin_add(GST_BIN(mux_bin), GST_ELEMENT_CAST(iter->data));
         g_return_val_if_fail(ret == TRUE, false);
         iter = iter->next;
     }

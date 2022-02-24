@@ -21,6 +21,7 @@
 #include <map>
 #include <vector>
 #include <gst/gst.h>
+#include "gstappsrc.h"
 #include "i_avmuxer_engine.h"
 #include "nocopyable.h"
 #include "gst_shmem_wrap_allocator.h"
@@ -84,7 +85,7 @@ public:
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
         GstCaps *src_caps, MimeType type);
     static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstElement *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator);
+        GstAppSrc *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator);
 };
 }
 }

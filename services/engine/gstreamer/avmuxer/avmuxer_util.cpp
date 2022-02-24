@@ -15,7 +15,6 @@
 
 #include "avmuxer_util.h"
 #include <tuple>
-#include "gstappsrc.h"
 #include "media_errors.h"
 #include "media_log.h"
 
@@ -120,7 +119,7 @@ int32_t AVMuxerUtil::SetCaps(const MediaDescription &trackDesc, const std::strin
 }
 
 int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-    GstElement *src, GstShMemWrapAllocator *allocator)
+    GstAppSrc *src, GstShMemWrapAllocator *allocator)
 {
     GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator), sampleData);
     GstBuffer *buffer = gst_buffer_new();
@@ -131,14 +130,14 @@ int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSam
         gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
 
-    GstFlowReturn ret = gst_app_src_push_buffer(GST_APP_SRC(src), buffer);
+    GstFlowReturn ret = gst_app_src_push_buffer(src, buffer);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call gst_app_src_push_buffer");
 
     return MSERR_OK;
 }
 
 int32_t AVMuxerUtil::WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-    GstElement *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator)
+    GstAppSrc *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator)
 {
     int32_t ret = PushCodecData(sampleData, sampleInfo, src, allocator);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call PushCodecData");
