@@ -60,6 +60,10 @@ int32_t AVMetadataHelperServiceStub::Init()
     avMetadataHelperFuncs_[DESTROY] = &AVMetadataHelperServiceStub::DestroyStub;
     return MSERR_OK;
 }
+void AVMetadataHelperServiceStub::GetAvMetadataHelperServer()
+{
+    avMetadataHelperServer = avMetadataHelperServer_;
+}
 
 int32_t AVMetadataHelperServiceStub::DestroyStub()
 {

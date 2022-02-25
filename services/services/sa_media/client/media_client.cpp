@@ -222,6 +222,14 @@ int32_t MediaClient::DestroyAVCodecListService(std::shared_ptr<IAVCodecListServi
     return MSERR_OK;
 }
 
+void MediaClient::GetClientLists()
+{
+    recorderClientList = recorderClientList_;
+    playerClientList = playerClientList_;
+    avMetadataHelperClientList = avMetadataHelperClientList_;
+    avCodecClientList = avCodecClientList_;
+}
+
 sptr<IStandardMediaService> MediaClient::GetMediaProxy()
 {
     MEDIA_LOGD("enter");

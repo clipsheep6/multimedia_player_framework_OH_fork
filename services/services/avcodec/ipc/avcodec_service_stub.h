@@ -53,6 +53,9 @@ public:
     int32_t ReleaseOutputBuffer(uint32_t index, bool render) override;
     int32_t SetParameter(const Format &format) override;
     int32_t DestroyStub() override;
+    std::shared_ptr<IAVCodecService> avcodecServer = nullptr;
+    void GetAvcodecServer();
+
 
 private:
     AVCodecServiceStub();
@@ -77,11 +80,9 @@ private:
     int32_t ReleaseOutputBuffer(MessageParcel &data, MessageParcel &reply);
     int32_t SetParameter(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
-
-    std::shared_ptr<IAVCodecService> codecServer_ = nullptr;
     std::map<uint32_t, AVCodecStubFunc> recFuncs_;
     std::mutex mutex_;
-
+    std::shared_ptr<IAVCodecService> codecServer_ = nullptr;
     class AVCodecBufferCache;
     std::unique_ptr<AVCodecBufferCache> inputBufferCache_;
     std::unique_ptr<AVCodecBufferCache> outputBufferCache_;

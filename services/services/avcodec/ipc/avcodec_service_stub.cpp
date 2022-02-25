@@ -138,6 +138,11 @@ int32_t AVCodecServiceStub::DestroyStub()
     return MSERR_OK;
 }
 
+void AVCodecServiceStub::GetAvcodecServer()
+{
+    avcodecServer = codecServer_;
+}
+
 int AVCodecServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

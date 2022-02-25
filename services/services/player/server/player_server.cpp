@@ -12,8 +12,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <sys/time.h>
 #include "player_server.h"
+#include "player.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
@@ -30,8 +31,9 @@ std::shared_ptr<IPlayerService> PlayerServer::Create()
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "failed to new PlayerServer");
-
     (void)server->Init();
+    pid = IPCSkeleton::GetCallingPid();
+    uid = IPCSkeleton::GetCallingUid();
     return server;
 }
 
@@ -56,6 +58,7 @@ int32_t PlayerServer::Init()
 int32_t PlayerServer::SetSource(const std::string &url)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    playerSourceUrl = url;
     int32_t ret = InitPlayEngine(url);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     return ret;
@@ -67,6 +70,7 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
     dataSrc_ = dataSrc;
     std::string url = "MediaDataSource";
+    playerSourceUrl = "MediaDataSource";
     int32_t ret = InitPlayEngine(url);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetObs Failed!");
     int64_t size = 0;
@@ -106,6 +110,11 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
     status_ = PLAYER_INITIALIZED;
     return MSERR_OK;
+}
+
+void PlayerServer::GetPlayerStatus()
+{
+    status=status_;
 }
 
 int32_t PlayerServer::Prepare()
@@ -174,10 +183,16 @@ int32_t PlayerServer::Play()
         OnInfo(INFO_TYPE_STATE_CHANGE, status_, format);
         return MSERR_OK;
     }
-
+    struct timeval play_begin;
+    struct timeval play_end;
+    long time; // ms
+    gettimeoftoday(&play_begin, nullptr);
     int32_t ret = playerEngine_->Play();
+    gettimeoftoday(&play_end, nullptr);
+    time = (play_end.tv_sec-play_begin.tv_sec)*1000 + (play_end.tv_usec-play_begin.tv_usec)/1000
+            // *1000: s to ms    /1000: us to ms
+    startPlayTimesList.push_back(time);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Play Failed!");
-
     startTimeMonitor_.FinishTime();
     status_ = PLAYER_STARTED;
     return MSERR_OK;
@@ -345,7 +360,15 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 
     MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
     mSeconds = std::max(0, mSeconds);
+    struct timeval play_begin;
+    struct timeval play_end;
+    long time; // ms
+    gettimeoftoday(&play_begin, nullptr);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
+    gettimeoftoday(&play_end, nullptr);
+    time = (play_end.tv_sec-play_begin.tv_sec)*1000 + (play_end.tv_usec-play_begin.tv_usec)/1000
+    // *1000: s to ms    /1000: us to ms
+    seekTimesList.push_back(time);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");
     return ret;
 }
@@ -599,15 +622,26 @@ void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
-
     if (type == INFO_TYPE_STATE_CHANGE) {
         status_ = static_cast<PlayerStates>(extra);
         MEDIA_LOGI("Callback State change, currentState is %{public}d", status_);
+    }
+
+    if (type == INFO_TYPE_BUFFERING_UPDATE) {
+        if (infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_PERCENT), bufferPercentValue_)) {
+            MEDIA_LOGI("OnBufferingPercent update is %{public}d", bufferPercentValue_);
+    }
     }
 
     if (playerCb_ != nullptr) {
         playerCb_->OnInfo(type, extra, infoBody);
     }
 }
+
+void PlayerServer::GetBufferPercentValue()
+{
+    bufferPercentValue = bufferPercentValue_;
+}
+
 } // Media
 } // OHOS

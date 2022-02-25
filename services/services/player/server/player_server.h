@@ -16,6 +16,7 @@
 #ifndef PLAYER_SERVICE_SERVER_H
 #define PLAYER_SERVICE_SERVER_H
 
+#include "ipc_skeleton.h"
 #include "i_player_service.h"
 #include "i_player_engine.h"
 #include "time_monitor.h"
@@ -29,6 +30,26 @@ public:
     PlayerServer();
     virtual ~PlayerServer();
     DISALLOW_COPY_AND_MOVE(PlayerServer);
+    enum PlayerStates : int32_t {
+        /* error states */
+        PLAYER_STATE_ERROR = 0,
+        /* idle states */
+        PLAYER_IDLE = 1,
+        /* initialized states(Internal states) */
+        PLAYER_INITIALIZED = 2,
+        /* preparing states(Internal states) */
+        PLAYER_PREPARING = 3,
+        /* prepared states */
+        PLAYER_PREPARED = 4,
+        /* started states */
+        PLAYER_STARTED = 5,
+        /* paused states */
+        PLAYER_PAUSED = 6,
+        /* stopped states */
+        PLAYER_STOPPED = 7,
+        /* Play to the end states */
+        PLAYER_PLAYBACK_COMPLETE = 8,
+    };
 
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
@@ -59,6 +80,15 @@ public:
     // IPlayerEngineObs override
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void GetPlayerStatus();
+    void GetBufferPercentValue();
+    PlayerStates status;
+    std::string  playerSourceUrl=nullptr;
+    pid_t pid;
+    pid_t uid;
+    std::list<long>  startPlayTimesList;
+    std::list<long>  seekTimesList;
+    int32_t bufferPercentValue;
 
 private:
     int32_t Init();
@@ -66,13 +96,12 @@ private:
     int32_t OnReset();
     int32_t InitPlayEngine(const std::string &url);
     int32_t OnPrepare(bool async);
-
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
     sptr<Surface> surface_ = nullptr;
-    PlayerStates status_ = PLAYER_IDLE;
     std::mutex mutex_;
     std::mutex mutexCb_;
+    PlayerStates status_ = PLAYER_IDLE;
     bool looping_ = false;
     TimeMonitor startTimeMonitor_;
     TimeMonitor stopTimeMonitor_;
@@ -80,6 +109,7 @@ private:
     float leftVolume_ = 1.0f; // audiotrack volume range [0, 1]
     float rightVolume_ = 1.0f; // audiotrack volume range [0, 1]
     PlaybackRateMode speedMode_ = SPEED_FORWARD_1_00_X;
+    int32_t bufferPercentValue_;
 };
 } // namespace Media
 } // namespace OHOS

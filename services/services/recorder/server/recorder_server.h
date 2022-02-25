@@ -16,6 +16,7 @@
 #ifndef RECORDER_SERVICE_SERVER_H
 #define RECORDER_SERVICE_SERVER_H
 
+#include "ipc_skeleton.h"
 #include "i_recorder_service.h"
 #include "i_recorder_engine.h"
 #include "time_monitor.h"
@@ -23,6 +24,17 @@
 
 namespace OHOS {
 namespace Media {
+struct  RecorderParameter {
+    int32_t videoWidth;
+    int32_t videoHeight;
+    int32_t videoFrameRate;
+    int32_t videoEncodingBitRate;
+    double  captureRate;
+    int32_t audioSampleRate;
+    int32_t audioChannelsQuantity;
+    int32_t audioEncodingBitRate;
+};
+
 class RecorderServer : public IRecorderService, public IRecorderEngineObs {
 public:
     static std::shared_ptr<IRecorderService> Create();
@@ -75,17 +87,23 @@ public:
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
     void OnInfo(InfoType type, int32_t extra) override;
+    void GetRecorderStatus();
+    RecStatus status;
+    pid_t pid;
+    pid_t uid;
+    std::string outPutPath;
+    RecorderParameter recParameter;
+
 
 private:
     int32_t Init();
     bool CheckPermission();
     bool GetSystemParam();
-
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
-    RecStatus status_ = REC_INITIALIZED;
     std::mutex mutex_;
     std::mutex cbMutex_;
+    RecStatus status_ = REC_INITIALIZED;
     TimeMonitor startTimeMonitor_;
     TimeMonitor stopTimeMonitor_;
 };

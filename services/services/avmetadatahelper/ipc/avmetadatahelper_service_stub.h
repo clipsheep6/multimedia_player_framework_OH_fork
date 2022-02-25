@@ -38,6 +38,8 @@ public:
         int32_t option, const OutputConfiguration &param) override;
     void Release() override;
     int32_t DestroyStub() override;
+    std::shared_ptr<IAVMetadataHelperService> avMetadataHelperServer = nullptr;
+    void GetAvMetadataHelperServer();
 
 private:
     AVMetadataHelperServiceStub();
@@ -49,9 +51,8 @@ private:
     int32_t FetchFrameAtTime(MessageParcel &data, MessageParcel &reply);
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
-
+    std::shared_ptr<IAVMetadataHelperService> avMetadataHelperServer_ = nullptr;
     std::mutex mutex_;
-    std::shared_ptr<IAVMetadataHelperService> avMetadateHelperServer_ = nullptr;
     using AVMetadataHelperStubFunc = int32_t(AVMetadataHelperServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, AVMetadataHelperStubFunc> avMetadataHelperFuncs_;
 };

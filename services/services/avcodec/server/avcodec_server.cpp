@@ -28,6 +28,8 @@ std::shared_ptr<IAVCodecService> AVCodecServer::Create()
 {
     std::shared_ptr<AVCodecServer> server = std::make_shared<AVCodecServer>();
     int32_t ret = server->Init();
+    pid = IPCSkeleton::GetCallingPid();
+    uid = IPCSkeleton::GetCallingUid();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("failed to init AVCodecServer");
         return nullptr;
@@ -61,9 +63,15 @@ int32_t AVCodecServer::InitParameter(AVCodecType type, bool isMimeType, const st
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     int32_t ret = codecEngine_->Init(type, isMimeType, name);
+    avcodecType = type;
+    mimeType = isMimeType;
     return ret;
+void AVCodecServer::GetAvcodecStatus()
+{
+    status = status_;
 }
 
+}
 int32_t AVCodecServer::Configure(const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -64,6 +64,8 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t DestroyStub() override;
+    std::shared_ptr<IRecorderService> recorderServer = nullptr;
+    void GetRecorderServer();
 
 private:
     RecorderServiceStub();
@@ -99,7 +101,6 @@ private:
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t SetFileSplitDuration(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
-
     std::shared_ptr<IRecorderService> recorderServer_ = nullptr;
     std::map<uint32_t, RecorderStubFunc> recFuncs_;
     std::mutex mutex_;

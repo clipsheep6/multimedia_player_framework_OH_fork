@@ -16,6 +16,7 @@
 #ifndef AVCODEC_SERVER_H
 #define AVCODEC_SERVER_H
 
+#include "ipc_skeleton.h"
 #include "i_avcodec_engine.h"
 #include "i_avcodec_service.h"
 #include "time_monitor.h"
@@ -65,15 +66,21 @@ public:
     void OnOutputFormatChanged(const Format &format) override;
     void OnInputBufferAvailable(uint32_t index) override;
     void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
+    void GetAvcodecStatus();
+
+    AVCodecStatus status;
+    pid_t pid;
+    pid_t uid;
+    AVCodecType avcodecType;
+    bool mimeType;
 
 private:
     int32_t Init();
-
-    AVCodecStatus status_ = AVCODEC_UNINITIALIZED;
     std::unique_ptr<IAVCodecEngine> codecEngine_;
     std::shared_ptr<AVCodecCallback> codecCb_;
     std::mutex mutex_;
     std::mutex cbMutex_;
+    AVCodecStatus status_ = AVCODEC_UNINITIALIZED;
 };
 } // namespace Media
 } // namespace OHOS

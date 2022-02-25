@@ -22,6 +22,8 @@
 #include "recorder_service_stub.h"
 #include "player_service_stub.h"
 #include "avcodec_service_stub.h"
+#includ  "avmetadatahelper_service_stub.h"
+#include "avcodeclist_service_stub.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -42,6 +44,12 @@ public:
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
     void DestroyStubObjectForPid(pid_t pid);
+    std::map<sptr<IRemoteObject>, pid_t> recorderStubMap;
+    std::map<sptr<IRemoteObject>, pid_t> playerStubMap;
+    std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap;
+    std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap;
+    void GetServiceStubMaps();
+
 
 private:
     MediaServerManager();
@@ -53,9 +61,8 @@ private:
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
-
+    std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
     std::mutex mutex_;
 };
 } // namespace Media
