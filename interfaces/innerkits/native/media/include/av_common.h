@@ -549,6 +549,39 @@ enum AudioCodecFormat : int32_t {
     AUDIO_CODEC_FORMAT_BUTT,
 };
 
+/**
+ * @brief Description information of a sample.
+ */
+struct SampleInfo {
+    /**
+     * @brief the presentation timestamp in microseconds.
+     */
+    int64_t timeUs;
+    /**
+     * @brief the amount of data (in bytes) in the sample.
+     */
+    int32_t size;
+    /**
+     * @brief the start-offset of the sample data in the buffer.
+     */
+    int32_t offset;
+    /**
+     * @brief the frame flags associated with the sample, this
+     * maybe be a combination of multiple {@link AVCodecBufferFlag}.
+     */
+    AVCodecBufferFlag flags;
+};
+
+/**
+ * @brief Description information of a sample associated a media track.
+ */
+struct TrackSampleInfo : public SampleInfo {
+    /**
+     * @brief the id of track that this sample belongs to.
+     */
+    int32_t trackIdx;
+};
+
 __attribute__((visibility("default"))) int32_t MapStringToCodecMime(const std::string &mime, CodecMimeType &name);
 __attribute__((visibility("default"))) int32_t MapStringToContainerFormat(const std::string &format,
     ContainerFormatType &cft);

@@ -82,15 +82,15 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
         g_param_spec_string("mux", "Mux", "type of the mux",
             nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobject_class, PROP_FD,
+    g_object_class_install_property(gobject_class, PROP_DEGREES,
         g_param_spec_int("degrees", "Degrees", "rotation angle of the output file",
             0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobject_class, PROP_FD,
+    g_object_class_install_property(gobject_class, PROP_LATITUDE,
         g_param_spec_int("latitude", "Latitude", "latitude of the output file",
             G_MININT32, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobject_class, PROP_FD,
+    g_object_class_install_property(gobject_class, PROP_LONGITUDE,
         g_param_spec_int("longitude", "Longitude", "longitude of the output file",
             G_MININT32, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 

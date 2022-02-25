@@ -38,16 +38,25 @@ struct MultiValue {
     } val_;
 };
 
-std::map<MimeType, std::vector<std::tuple<std::string, GType, MultiValue>>> capsMap = {
-    {MUX_H264, {{"alignment", G_TYPE_STRING, MultiValue("nal")}, {"stream-format", G_TYPE_STRING, MultiValue("byte-stream")}}},
-    {MUX_H263, {}},
-    {MUX_MPEG4, {{"mpegversion", G_TYPE_INT, MultiValue(4)}, {"systemstream", G_TYPE_BOOLEAN, MultiValue(FALSE)}}},
-    {MUX_AAC, {{"mpegversion", G_TYPE_INT, MultiValue(4)}, {"stream-format", G_TYPE_STRING, MultiValue("adts")}}},
-    {MUX_MP3, {{"mpegversion", G_TYPE_INT, MultiValue(1)}, {"layer", G_TYPE_INT, MultiValue(3)}}}
+static bool isVideo(CodecMimeType type) {
+    if (type == CODEC_MIMIE_TYPE_VIDEO_H263 || type == CODEC_MIMIE_TYPE_VIDEO_AVC ||
+        type ==CODEC_MIMIE_TYPE_VIDEO_MPEG2 || type ==CODEC_MIMIE_TYPE_VIDEO_HEVC || 
+        type == CODEC_MIMIE_TYPE_VIDEO_MPEG4) {
+        return true;
+    }
+    return false;
+}
+
+std::map<CodecMimeType, std::vector<std::tuple<std::string, GType, MultiValue>>> capsMap = {
+    {CODEC_MIMIE_TYPE_VIDEO_AVC, {{"alignment", G_TYPE_STRING, MultiValue("nal")}, {"stream-format", G_TYPE_STRING, MultiValue("byte-stream")}}},
+    {CODEC_MIMIE_TYPE_VIDEO_H263, {}},
+    {CODEC_MIMIE_TYPE_VIDEO_MPEG4, {{"mpegversion", G_TYPE_INT, MultiValue(4)}, {"systemstream", G_TYPE_BOOLEAN, MultiValue(FALSE)}}},
+    {CODEC_MIMIE_TYPE_AUDIO_AAC, {{"mpegversion", G_TYPE_INT, MultiValue(4)}, {"stream-format", G_TYPE_STRING, MultiValue("adts")}}},
+    {CODEC_MIMIE_TYPE_AUDIO_MPEG, {{"mpegversion", G_TYPE_INT, MultiValue(1)}, {"layer", G_TYPE_INT, MultiValue(3)}}}
 };
 
-static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, MimeType type) {
-    if (type < VIDEO_TYPE_END) {
+static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, CodecMimeType type) {
+    if (isVideo(type)) {
         CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_WIDTH, param.width) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
         CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_HEIGHT, param.height) == true,
@@ -67,7 +76,7 @@ static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc,
     return MSERR_OK;
 }
 
-static void AddCaps(GstCaps *src_caps, MimeType type)
+static void AddCaps(GstCaps *src_caps, CodecMimeType type)
 {
     for (auto& elements : capsMap[type]) {
         switch(std::get<1>(elements)) {
@@ -88,9 +97,9 @@ static void AddCaps(GstCaps *src_caps, MimeType type)
     }
 }
 
-static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps *src_caps, MimeType type)
+static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps *src_caps, CodecMimeType type)
 {
-    if (type < VIDEO_TYPE_END) {
+    if (isVideo(type)) {
         src_caps = gst_caps_new_simple(std::get<0>(MIME_MAP_TYPE.at(mimeType)).c_str(),
             "width", G_TYPE_INT, param.width,
             "height", G_TYPE_INT, param.height,
@@ -106,7 +115,7 @@ static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps 
 }
 
 int32_t AVMuxerUtil::SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
-    GstCaps *src_caps, MimeType type)
+    GstCaps *src_caps, CodecMimeType type)
 {
     MEDIA_LOGD("Set %{public}s cpas", mimeType.c_str());
     bool ret;

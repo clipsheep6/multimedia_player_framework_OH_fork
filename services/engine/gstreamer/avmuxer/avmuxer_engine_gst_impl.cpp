@@ -189,7 +189,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
 
     int32_t ret;
     GstCaps *src_caps = nullptr;
-    if (trackInfo_[trackId].type_ < VIDEO_TYPE_END) {
+    if (AVMuxerUtil::isVideo(trackInfo_[trackId].type_)) {
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 1 video Tracks can be added");
         ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps, trackInfo_[trackId].type_);
@@ -206,7 +206,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     trackInfo_[trackId].caps_ = src_caps;
     std::string name = "src_";
     name += static_cast<char>('0' + trackId);
-    gst_mux_bin_add_track(muxBin_, trackInfo_[trackId].type_ < VIDEO_TYPE_END ? VIDEO : AUDIO, name.c_str());
+    gst_mux_bin_add_track(muxBin_, AVMuxerUtil::isVideo(trackInfo_[trackId].type_) ? VIDEO : AUDIO, name.c_str());
 
     return MSERR_OK;
 }
@@ -227,11 +227,7 @@ int32_t AVMuxerEngineGstImpl::Start()
         gst_app_src_set_callbacks(src, &callbacks, reinterpret_cast<gpointer *>(&trackInfo_), NULL);
         info.second.src_ = src;
     }
-    GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
-    CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
-    g_object_set(element, "orientation-hint", degrees_, nullptr);
-    g_object_set(element, "set-latitude", latitude_, nullptr);
-    g_object_set(element, "set-longitude", longitude_, nullptr);
+
     return MSERR_OK; 
 }
 
@@ -255,16 +251,16 @@ static bool isAllHasBuffer(std::map<int, TrackInfo>& trackInfo)
     return true;
 }
 
-void AVMuxerEngineGstImpl::SetParse(MimeType type)
+void AVMuxerEngineGstImpl::SetParse(CodecMimeType type)
 {
     switch(type) {
-        case MUX_H264:
+        case CODEC_MIMIE_TYPE_VIDEO_AVC:
             g_object_set(muxBin_, "videoParse", "h264parse", nullptr);
             break;
-        case MUX_MPEG4:
+        case CODEC_MIMIE_TYPE_VIDEO_MPEG4:
             g_object_set(muxBin_, "videoParse", "mpeg4parse", nullptr);
             break;
-        case MUX_AAC:
+        case CODEC_MIMIE_TYPE_AUDIO_AAC:
             g_object_set(muxBin_, "audioParse", "aacparse", nullptr);
             break;
         default:

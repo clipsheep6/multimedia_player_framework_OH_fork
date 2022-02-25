@@ -45,7 +45,7 @@ public:
     int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) override;
     int32_t Stop() override;
 private:
-    void SetParse(MimeType type);
+    void SetParse(CodecMimeType type);
     int32_t SetupMsgProcessor();
     void OnNotifyMessage(const InnerMessage &msg);
     void Clear();
@@ -57,9 +57,6 @@ private:
     bool endFlag_ = false;
     bool errHappened_ = false;
     std::unique_ptr<GstMsgProcessor> msgProcessor_;
-    int32_t degrees_;
-    float latitude_;
-    float longitude_;
     uint32_t videoTrackNum_ = 0;
     uint32_t audioTrackNum_ = 0;
     std::string format_;

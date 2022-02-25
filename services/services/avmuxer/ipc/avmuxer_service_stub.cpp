@@ -193,7 +193,7 @@ int32_t AVMuxerServiceStub::WriteTrackSample(MessageParcel &data, MessageParcel 
 {
     std::shared_ptr<AVSharedMemory> sampleData = ReadAVSharedMemoryFromParcel(data);
     TrackSampleInfo sampleInfo = {{data.ReadInt64(), data.ReadInt32(), data.ReadInt32(),
-        static_cast<FrameFlags>(data.ReadInt32())}, data.ReadInt32()};
+        static_cast<AVCodecBufferFlag>(data.ReadInt32())}, data.ReadInt32()};
     reply.WriteInt32(WriteTrackSample(sampleData, sampleInfo));
     return MSERR_OK;
 }

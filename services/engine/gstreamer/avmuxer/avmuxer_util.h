@@ -36,25 +36,16 @@ const std::map<std::string, std::string> FORMAT_TO_MUX {
 };
 
 const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
-    {"mp4", {"video/x-h264", "video/mpeg4", "video/x-h263", "audio/aac", "audio/mp3"}},
-    {"m4a", {"audio/aac"}}
+    {"mp4", {"video/avc", "video/mp4v-es", "video/h263", "audio/mp4a-latm", "audio/mpeg"}},
+    {"m4a", {"audio/mp4a-latm"}}
 };
 
-enum MimeType {
-    MUX_H264,
-    MUX_H263,
-    MUX_MPEG4,
-    VIDEO_TYPE_END,
-    MUX_AAC,
-    MUX_MP3,
-};
-
-const std::map<const std::string, std::tuple<const std::string, MimeType>> MIME_MAP_TYPE {
-    {"video/x-h264", {"video/x-h264", MUX_H264}},
-    {"video/x-h263", {"video/x-h263", MUX_H263}},
-    {"video/mpeg4", {"video/mpeg", MUX_MPEG4}},
-    {"audio/aac", {"audio/mpeg", MUX_AAC}},
-    {"audio/mp3", {"audio/mpeg", MUX_MP3}}
+const std::map<const std::string, std::tuple<const std::string, CodecMimeType>> MIME_MAP_TYPE {
+    {"video/avc", {"video/x-h264", CODEC_MIMIE_TYPE_VIDEO_AVC}},
+    {"video/h263", {"video/x-h263", CODEC_MIMIE_TYPE_VIDEO_H263}},
+    {"video/mp4v-es", {"video/mpeg", CODEC_MIMIE_TYPE_VIDEO_MPEG4}},
+    {"audio/mp4a-latm", {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_AAC}},
+    {"audio/mpeg", {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_MPEG}}
 };
 
 class TrackInfo {
@@ -64,7 +55,7 @@ public:
     bool needData_ = false;
     GstCaps *caps_ = nullptr;
     GstAppSrc *src_ = nullptr;
-    MimeType type_ ;
+    CodecMimeType type_ ;
 };
 
 class FormatParam {
@@ -83,7 +74,7 @@ public:
     DISALLOW_COPY_AND_MOVE(AVMuxerUtil);
 
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
-        GstCaps *src_caps, MimeType type);
+        GstCaps *src_caps, CodecMimeType type);
     static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
         GstAppSrc *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator);
 };

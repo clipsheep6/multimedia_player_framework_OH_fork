@@ -222,7 +222,7 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
 void AVMuxerDemo::AddTrackVideo()
 {
     MediaDescription trackDesc;
-    trackDesc.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/x-h264");
+    trackDesc.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/avc");
     trackDesc.PutIntValue(std::string(MD_KEY_WIDTH), width_);
     trackDesc.PutIntValue(std::string(MD_KEY_HEIGHT), height_);
     trackDesc.PutIntValue(std::string(MD_KEY_FRAME_RATE), frameRate_);
