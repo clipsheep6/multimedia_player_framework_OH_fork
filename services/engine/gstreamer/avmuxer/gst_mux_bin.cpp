@@ -26,6 +26,9 @@ enum
   PROP_PATH,
   PROP_FD,
   PROP_MUX,
+  PROP_DEGREES,
+  PROP_LATITUDE,
+  PROP_LONGITUDE,
   PROP_VIDEOPARSE_FLAG,
   PROP_AUDIOPARSE_FLAG,
 };
@@ -79,6 +82,18 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
         g_param_spec_string("mux", "Mux", "type of the mux",
             nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_FD,
+        g_param_spec_int("degrees", "Degrees", "rotation angle of the output file",
+            0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_FD,
+        g_param_spec_int("latitude", "Latitude", "latitude of the output file",
+            G_MININT32, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_FD,
+        g_param_spec_int("longitude", "Longitude", "longitude of the output file",
+            G_MININT32, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
     g_object_class_install_property(gobject_class, PROP_VIDEOPARSE_FLAG,
         g_param_spec_string("videoParse", "video_parse", "whether need videoParse",
             nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
@@ -106,6 +121,9 @@ static void gst_mux_bin_init(GstMuxBin *mux_bin)
     mux_bin->path_ = nullptr;
     mux_bin->outFd_ = -1;
     mux_bin->mux_ = nullptr;
+    mux_bin->degrees_ = 0;
+    mux_bin->latitude_ = 0;
+    mux_bin->longitude_ = 0;
     mux_bin->videoParseFlag_ = nullptr;
     mux_bin->audioParseFlag_ = nullptr;
     mux_bin->videoTrack_ = nullptr;
@@ -143,6 +161,15 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id,
         case PROP_MUX:
             mux_bin->mux_ = g_strdup(g_value_get_string(value));
             break;
+        case PROP_DEGREES:
+            mux_bin->degrees_ = g_value_get_int(value);
+            break;
+        case PROP_LATITUDE:
+            mux_bin->latitude_ = g_value_get_int(value);
+            break;
+        case PROP_LONGITUDE:
+            mux_bin->longitude_ = g_value_get_int(value);
+            break;
         case PROP_VIDEOPARSE_FLAG:
             mux_bin->videoParseFlag_ = g_strdup(g_value_get_string(value));
             break;
@@ -171,6 +198,15 @@ static void gst_mux_bin_get_property(GObject *object, guint prop_id,
             break;
         case PROP_MUX:
             g_value_set_string(value, mux_bin->mux_);
+            break;
+        case PROP_DEGREES:
+            g_value_set_int(value, mux_bin->degrees_);
+            break;
+        case PROP_LATITUDE:
+            g_value_set_int(value, mux_bin->latitude_);
+            break;
+        case PROP_LONGITUDE:
+            g_value_set_int(value, mux_bin->longitude_);
             break;
         case PROP_VIDEOPARSE_FLAG:
             g_value_set_string(value, mux_bin->videoParseFlag_);
@@ -207,7 +243,8 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 
     GstElement *qtmux = gst_element_factory_make(mux_bin->mux_, mux_bin->mux_);
     g_return_val_if_fail(qtmux != nullptr, false);
-    g_object_set(qtmux, "streamable", true, nullptr);
+    g_object_set(qtmux, "streamable", true, "orientation-hint", mux_bin->degrees_,
+        "set-latitude", mux_bin->latitude_, "set-longitude", mux_bin->longitude_, nullptr);
     g_object_set(mux_bin->splitMuxSink_, "muxer", qtmux, nullptr);
 
     return true;

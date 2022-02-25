@@ -147,8 +147,7 @@ int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
     int32_t latitudex10000 = latitude * MULTIPLY10000;
     int32_t longitudex10000 = longitude * MULTIPLY10000;
     if (setLocationToMux) {
-        latitude_ = latitudex10000;
-        longitude_ = longitudex10000
+        g_object_set(muxBin_, "latitude", latitudex10000, "longitude", longitudex10000, nullptr);
     }
 
     return MSERR_OK;
@@ -166,7 +165,7 @@ int32_t AVMuxerEngineGstImpl::SetOrientationHint(int degrees)
     }
 
     if (setRotationToMux) {
-        degress_ = degress;
+        g_object_set(muxBin_, "degrees", degrees, nullptr);
     }
 
     return MSERR_OK;

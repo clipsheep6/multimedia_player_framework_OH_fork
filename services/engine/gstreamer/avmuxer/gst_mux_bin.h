@@ -47,6 +47,9 @@ struct _GstMuxBin {
     gchar *path_;
     gint outFd_;
     gchar *mux_;
+    gint degrees_;
+    gint latitude_;
+    gint longitude_;
     gchar *videoParseFlag_;
     gchar *audioParseFlag_;
     gchar *videoTrack_;
