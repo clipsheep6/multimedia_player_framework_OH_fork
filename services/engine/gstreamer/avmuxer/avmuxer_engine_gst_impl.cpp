@@ -27,6 +27,14 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerEngineGstImpl"};
+    constexpr uint32_t ROTATION_90 = 90;
+    constexpr uint32_t ROTATION_180 = 180;
+    constexpr uint32_t ROTATION_270 = 270;
+    constexpr int32_t MAX_LATITUDE = 90;
+    constexpr int32_t MIN_LATITUDE = -90;
+    constexpr int32_t MAX_LONGITUDE = 180;
+    constexpr int32_t MIN_LONGITUDE = -180;
+    constexpr uint32_t MULTIPLY10000 = 10000;
 }
 
 namespace OHOS {
@@ -126,15 +134,26 @@ int32_t AVMuxerEngineGstImpl::SetOutput(const std::string &path, const std::stri
 int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
 {
     MEDIA_LOGD("SetLocation");
-    // CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
+    CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
 
-    // GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
-    // CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
-    // GstTagSetter *tagsetter = GST_TAG_SETTER(element);
-    // gst_tag_setter_add_tags(tagsetter, GST_TAG_MERGE_REPLACE_ALL,
-    //     "geo-location-latitude", latitude,
-    //     "geo-location-longitude", longitude,
-    //     nullptr);
+    bool setLocationToMux = true;
+    if (latitude < MIN_LATITUDE || latitude > MAX_LATITUDE || longitude < MIN_LONGITUDE
+        || longitude > MAX_LONGITUDE) {
+        setLocationToMux = false;
+        MEDIA_LOGE("Invalid GeoLocation, latitude: %{public}f, longitude: %{public}f",
+            latitude, longitude);
+    }
+
+    int32_t latitudex10000 = latitude * MULTIPLY10000;
+    int32_t longitudex10000 = longitude * MULTIPLY10000;
+    if (setLocationToMux) {
+        GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
+        CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
+        g_object_set(element, "set-latitude", latitudex10000, nullptr);
+        g_object_set(element, "set-longitude", longitudex10000, nullptr);
+        MEDIA_LOGI("set GeoLocation x 10000, latitude %{public}d, longitude %{public}d",
+            latitudex10000, longitudex10000);
+    }
 
     return MSERR_OK;
 }
@@ -142,7 +161,20 @@ int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
 int32_t AVMuxerEngineGstImpl::SetOrientationHint(int degrees)
 {
     MEDIA_LOGD("SetOrientationHint");
-    //  
+    CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
+
+    bool setRotationToMux = true;
+    if (degrees != ROTATION_90 && degrees != ROTATION_180 && degrees != ROTATION_270) {
+        setRotationToMux = false;
+        MEDIA_LOGE("Invalid rotation: %{public}d, keep default 0", degrees);
+    }
+
+    if (setRotationToMux) {
+        GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
+        CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
+        g_object_set(element, "orientation-hint", degrees, nullptr);
+        MEDIA_LOGI("set rotation: %{public}d", degrees);
+    }
 
     return MSERR_OK;
 }
@@ -247,9 +279,10 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     const TrackSampleInfo &sampleInfo)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(errHappened_ != true, MSERR_INVALID_OPERATION, "Error happend");
+    CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
     CHECK_AND_RETURN_RET_LOG(sampleData != nullptr, MSERR_INVALID_VAL, "sampleData is nullptr");
     MEDIA_LOGD("WriteTrackSample, sampleInfo.trackIdx is %{public}d", sampleInfo.trackIdx);
-    CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
     CHECK_AND_RETURN_RET_LOG(trackInfo_[sampleInfo.trackIdx].needData_ == true, MSERR_INVALID_OPERATION,
         "Failed to push data, the queue is full");
     CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
@@ -371,7 +404,9 @@ void AVMuxerEngineGstImpl::Clear()
     isReady_ = false;
     isPause_ = false;
     isPlay_ = false;
+    mutex_.unlock();
     msgProcessor_->Reset();
+    mutex_.lock();
 }
 }  // namespace Media
 }  // namespace OHOS
