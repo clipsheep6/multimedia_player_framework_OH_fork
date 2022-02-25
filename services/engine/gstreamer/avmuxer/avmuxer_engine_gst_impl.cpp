@@ -147,12 +147,8 @@ int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
     int32_t latitudex10000 = latitude * MULTIPLY10000;
     int32_t longitudex10000 = longitude * MULTIPLY10000;
     if (setLocationToMux) {
-        GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
-        CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
-        g_object_set(element, "set-latitude", latitudex10000, nullptr);
-        g_object_set(element, "set-longitude", longitudex10000, nullptr);
-        MEDIA_LOGI("set GeoLocation x 10000, latitude %{public}d, longitude %{public}d",
-            latitudex10000, longitudex10000);
+        latitude_ = latitudex10000;
+        longitude_ = longitudex10000
     }
 
     return MSERR_OK;
@@ -170,10 +166,7 @@ int32_t AVMuxerEngineGstImpl::SetOrientationHint(int degrees)
     }
 
     if (setRotationToMux) {
-        GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
-        CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
-        g_object_set(element, "orientation-hint", degrees, nullptr);
-        MEDIA_LOGI("set rotation: %{public}d", degrees);
+        degress_ = degress;
     }
 
     return MSERR_OK;
@@ -235,6 +228,11 @@ int32_t AVMuxerEngineGstImpl::Start()
         gst_app_src_set_callbacks(src, &callbacks, reinterpret_cast<gpointer *>(&trackInfo_), NULL);
         info.second.src_ = src;
     }
+    GstElement *element = gst_bin_get_by_name(GST_BIN_CAST(muxBin_), FORMAT_TO_MUX.at(format_).c_str());
+    CHECK_AND_RETURN_RET_LOG(element != nullptr, MSERR_INVALID_OPERATION, "Fail to call gst_bin_get_by_name");
+    g_object_set(element, "orientation-hint", degrees_, nullptr);
+    g_object_set(element, "set-latitude", latitude_, nullptr);
+    g_object_set(element, "set-longitude", longitude_, nullptr);
     return MSERR_OK; 
 }
 

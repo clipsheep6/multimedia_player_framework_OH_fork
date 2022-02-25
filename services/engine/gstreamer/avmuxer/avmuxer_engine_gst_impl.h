@@ -57,6 +57,9 @@ private:
     bool endFlag_ = false;
     bool errHappened_ = false;
     std::unique_ptr<GstMsgProcessor> msgProcessor_;
+    int32_t degrees_;
+    float latitude_;
+    float longitude_;
     uint32_t videoTrackNum_ = 0;
     uint32_t audioTrackNum_ = 0;
     std::string format_;
