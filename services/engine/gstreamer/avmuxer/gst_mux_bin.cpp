@@ -136,10 +136,22 @@ static void gst_mux_bin_finalize(GObject *object)
     GstMuxBin *mux_bin = GST_MUX_BIN(object);
     GST_INFO_OBJECT(mux_bin, "gst_mux_bin_finalize");
     g_return_if_fail(mux_bin != nullptr);
+
     if (mux_bin->outFd_ > 0) {
         (void)::close(mux_bin->outFd_);
         mux_bin->outFd_ = -1;
     }
+
+    g_free(mux_bin->path_);
+    g_free(mux_bin->mux_);
+    g_free(mux_bin->videoParseFlag_);
+    g_free(mux_bin->audioParseFlag_);
+    g_free(mux_bin->videoTrack_);
+    GSList *iter = mux_bin->audioTrack_;
+    while (iter != nullptr) {
+        g_free(*iter);
+    }
+
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -312,7 +324,7 @@ static bool create_video_src(GstMuxBin *mux_bin)
 static bool create_audio_src(GstMuxBin *mux_bin)
 {
     GSList *iter = mux_bin->audioTrack_;
-    while(iter != nullptr) {
+    while (iter != nullptr) {
         GstElement *appSrc = gst_element_factory_make("appsrc", (gchar *)(iter->data));
         g_return_val_if_fail(appSrc != nullptr, false);
         g_object_set(appSrc, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
