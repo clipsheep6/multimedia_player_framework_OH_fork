@@ -262,7 +262,7 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     MEDIA_LOGD("WriteTrackSample, sampleInfo.trackIdx is %{public}d", sampleInfo.trackIdx);
     CHECK_AND_RETURN_RET_LOG(trackInfo_[sampleInfo.trackIdx].needData_ == true, MSERR_INVALID_OPERATION,
         "Failed to push data, the queue is full");
-    CHECK_AND_RETURN_RET_LOG(sampleInfo.timeUs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
+    CHECK_AND_RETURN_RET_LOG(sampleInfo.timeMs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
     int32_t ret;
 
     GstAppSrc *src = trackInfo_[sampleInfo.trackIdx].src_;

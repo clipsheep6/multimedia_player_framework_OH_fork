@@ -566,9 +566,9 @@ enum AVCodecBufferFlag : uint32_t {
  */
 struct SampleInfo {
     /**
-     * @brief the presentation timestamp in microseconds.
+     * @brief the presentation timestamp in milliseconds.
      */
-    int64_t timeUs;
+    int64_t timeMs;
     /**
      * @brief the amount of data (in bytes) in the sample.
      */

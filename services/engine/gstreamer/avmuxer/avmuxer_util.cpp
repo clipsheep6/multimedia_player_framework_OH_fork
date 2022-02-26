@@ -20,6 +20,7 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerUtil"};
+    constexpr MSTONS = 1000000;
 }
 
 namespace OHOS {
@@ -146,8 +147,8 @@ int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSam
     GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator), sampleData);
     GstBuffer *buffer = gst_buffer_new();
     gst_buffer_append_memory(buffer, mem);
-    GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
-    GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
+    GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * MSTONS);
+    GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * MSTONS);
     if (sampleInfo.flags == AVCODEC_BUFFER_FLAG_SYNC_FRAME) {
         gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }

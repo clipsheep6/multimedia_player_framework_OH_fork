@@ -123,7 +123,7 @@ int32_t AVMuxerServiceProxy::WriteTrackSample(std::shared_ptr<AVSharedMemory> sa
     MessageParcel reply;
     MessageOption option;
     WriteAVSharedMemoryToParcel(sampleData, data);
-    (void)data.WriteInt64(sampleInfo.timeUs);
+    (void)data.WriteInt64(sampleInfo.timeMs);
     (void)data.WriteInt32(sampleInfo.size);
     (void)data.WriteInt32(sampleInfo.offset);
     (void)data.WriteInt32(sampleInfo.flags);

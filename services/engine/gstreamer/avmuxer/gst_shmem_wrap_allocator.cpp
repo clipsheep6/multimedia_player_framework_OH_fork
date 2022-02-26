@@ -29,7 +29,7 @@ GstShMemWrapAllocator *gst_shmem_wrap_allocator_new(void)
     return alloc;
 }
 
-static GstMemory *gst_shmem_wrap(GstAllocator *allocator, std::shared_ptr<OHOS::Media::AVSharedMemory> shmem)
+GstMemory *gst_shmem_wrap(GstAllocator *allocator, std::shared_ptr<OHOS::Media::AVSharedMemory> shmem)
 {
     g_return_val_if_fail(allocator != nullptr, nullptr);
     g_return_val_if_fail(shmem != nullptr, nullptr);

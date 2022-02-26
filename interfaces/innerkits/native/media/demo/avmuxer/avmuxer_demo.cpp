@@ -74,7 +74,7 @@ static const int32_t ES[501] =
       4248, 4019, 4407, 4217, 2913, 5106 };
 
 static const uint32_t SLEEP_UTIME = 100000;
-static const uint32_t TIME_STAMP = 33333;
+static const uint32_t TIME_STAMP = 33;
 
 void AVMuxerDemo::ReadTrackInfoAVC() {
     uint32_t i;
@@ -106,7 +106,7 @@ void AVMuxerDemo::WriteTrackSampleAVC() {
     for (int i = 0; i <= 1; i++) {
         AVCodecContext *pCodecContext = fmt_ctx_->streams[i]->codec;
         TrackSampleInfo infoCodec;
-        infoCodec.timeUs = 0;
+        infoCodec.timeMs = 0;
         infoCodec.size = pCodecContext->extradata_size;
         infoCodec.offset = 0;
         infoCodec.flags = AVCODEC_BUFFER_FLAG_CODEDC_DATA;
@@ -126,16 +126,16 @@ void AVMuxerDemo::WriteTrackSampleAVC() {
             break;
         }
         TrackSampleInfo info;
-        info.timeUs = static_cast<int64_t>(av_rescale_q(pkt.dts, fmt_ctx_->streams[pkt.stream_index]->time_base, AV_TIME_BASE_Q));
-        if (info.timeUs < 0) {
-            info.timeUs = 0;
+        info.timeMs = static_cast<int64_t>(av_rescale_q(pkt.dts, fmt_ctx_->streams[pkt.stream_index]->time_base, AV_TIME_BASE_Q));
+        if (info.timeMs < 0) {
+            info.timeMs = 0;
         }
         info.size = pkt.size;
         info.offset = 0;
         if (pkt.flags == AV_PKT_FLAG_KEY) {
             info.flags = AVCODEC_BUFFER_FLAG_SYNC_FRAME;
         }
-        std::cout << "pkt.dts is: " << info.timeUs << ", pkt.size is: " << pkt.size << std::endl;
+        std::cout << "pkt.dts is: " << info.timeMs << ", pkt.size is: " << pkt.size << std::endl;
         std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(pkt.data, pkt.size);
 		avMem->SetRange(info.offset, pkt.size);
         std::cout << "avMem->Capacity() is: " << avMem->Capacity() << std::endl;
@@ -197,12 +197,12 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
         info.offset = 0;
         info.trackIdx = 1;
         if (isFirstStream) {
-            info.timeUs = 0;
+            info.timeMs = 0;
             info.flags = AVCODEC_BUFFER_FLAG_CODEDC_DATA;
             isFirstStream = false;
             avmuxer_->WriteTrackSample(avMem, info);
         } else {
-            info.timeUs = timeStamp;
+            info.timeMs = timeStamp;
             if (isSecondStream) {
                 info.flags = AVCODEC_BUFFER_FLAG_SYNC_FRAME;
                 isSecondStream = false;
