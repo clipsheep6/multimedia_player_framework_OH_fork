@@ -38,8 +38,8 @@ ohos_shared_library("mediademo") {
   ]
 
   sources = [
-    "//foundation/multimedia/media_standard/interfaces/kits/js/media/media_demo_js/src/media_demo_napi.cpp",
     "//foundation/multimedia/media_standard/interfaces/kits/js/media/media_demo_js/src/native_module_ohos_mediademo.cpp",
+    "//foundation/multimedia/media_standard/interfaces/kits/js/media/media_demo_js/src/media_demo_napi.cpp",
   ]
 
   cflags = [
@@ -65,12 +65,12 @@ ohos_shared_library("mediademo") {
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/ace/napi:ace_napi",
     "//foundation/graphic/standard/frameworks/surface:surface",
-    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media:media_client",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media:media_surface",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
     "//utils/native/base:utils",
     "//utils/native/base:utilsecurec",
+    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
   ]
 
   external_deps = [
