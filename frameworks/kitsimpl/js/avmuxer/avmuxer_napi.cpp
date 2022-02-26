@@ -223,8 +223,10 @@ napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
 
     // get jsAVMuxer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr,
-        result, "Failed to retrieve instance");
+    if (status != napi_ok || asyncContext->jsAVMuxer == nullptr ||
+        asyncContext->jsAVMuxer->avmuxerImpl_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsAVMuxer or avmuxerImpl_ is nullptr");
+    }
     
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "SetOutput", NAPI_AUTO_LENGTH, &resource);
@@ -353,8 +355,10 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
     
     // get jsAVMuxer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result,
-        "Failed to retrieve instance");
+    if (status != napi_ok || asyncContext->jsAVMuxer == nullptr ||
+        asyncContext->jsAVMuxer->avmuxerImpl_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsAVMuxer or avmuxerImpl_ is nullptr");
+    }
     
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "AddTrack", NAPI_AUTO_LENGTH, &resource);
@@ -409,8 +413,10 @@ napi_value AVMuxerNapi::Start(napi_env env, napi_callback_info info)
     
     // get jsAVMuxer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result,
-        "Failed to retrieve instance");
+    if (status != napi_ok || asyncContext->jsAVMuxer == nullptr ||
+        asyncContext->jsAVMuxer->avmuxerImpl_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsAVMuxer or avmuxerImpl_ is nullptr");
+    }
     
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Start", NAPI_AUTO_LENGTH, &resource);
@@ -497,17 +503,19 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
 
     // get jsAVMuxer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result,
-        "Failed to retrieve instance");
+    if (status != napi_ok || asyncContext->jsAVMuxer == nullptr ||
+        asyncContext->jsAVMuxer->avmuxerImpl_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsAVMuxer or avmuxerImpl_ is nullptr");
+    } else {
+        std::shared_ptr<AVMemory> avMem =
+            std::make_shared<AVMemory>(static_cast<uint8_t *>(asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
+        avMem->SetRange(asyncContext->trackSampleInfo_.offset, asyncContext->trackSampleInfo_.size);
+        asyncContext->writeSampleFlag_ =
+            asyncContext->jsAVMuxer->avmuxerImpl_->WriteTrackSample(avMem, asyncContext->trackSampleInfo_);
+    }
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "WriteTrackSample", NAPI_AUTO_LENGTH, &resource);
-    std::shared_ptr<AVMemory> avMem =
-        std::make_shared<AVMemory>(static_cast<uint8_t *>(asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
-    avMem->SetRange(asyncContext->trackSampleInfo_.offset, asyncContext->trackSampleInfo_.size);
-    asyncContext->writeSampleFlag_ =
-        asyncContext->jsAVMuxer->avmuxerImpl_->WriteTrackSample(avMem, asyncContext->trackSampleInfo_);
-
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, AVMuxerNapi::AsyncWriteTrackSample,
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
@@ -558,8 +566,10 @@ napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
 
     // get jsAVMuxer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result,
-        "Failed to retrieve instance");
+    if (status != napi_ok || asyncContext->jsAVMuxer == nullptr ||
+        asyncContext->jsAVMuxer->avmuxerImpl_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsAVMuxer or avmuxerImpl_ is nullptr");
+    }
     
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Stop", NAPI_AUTO_LENGTH, &resource);
@@ -594,10 +604,12 @@ napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
 
     // get jsAVMuxer
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsAVMuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->jsAVMuxer != nullptr, result,
-        "Failed to retrieve instance");
-    
-    asyncContext->jsAVMuxer->avmuxerImpl_->Release();
+    if (status != napi_ok || asyncContext->jsAVMuxer == nullptr ||
+        asyncContext->jsAVMuxer->avmuxerImpl_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsAVMuxer or avmuxerImpl_ is nullptr");
+    } else {
+        asyncContext->jsAVMuxer->avmuxerImpl_->Release();
+    }
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Release", NAPI_AUTO_LENGTH, &resource);

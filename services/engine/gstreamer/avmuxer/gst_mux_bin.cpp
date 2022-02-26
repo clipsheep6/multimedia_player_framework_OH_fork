@@ -20,17 +20,16 @@
 #include "gstappsrc.h"
 #include "gstbaseparse.h"
 
-enum
-{
-  PROP_0,
-  PROP_PATH,
-  PROP_FD,
-  PROP_MUX,
-  PROP_DEGREES,
-  PROP_LATITUDE,
-  PROP_LONGITUDE,
-  PROP_VIDEOPARSE_FLAG,
-  PROP_AUDIOPARSE_FLAG,
+enum {
+    PROP_0,
+    PROP_PATH,
+    PROP_FD,
+    PROP_MUX,
+    PROP_DEGREES,
+    PROP_LATITUDE,
+    PROP_LONGITUDE,
+    PROP_VIDEOPARSE_FLAG,
+    PROP_AUDIOPARSE_FLAG,
 };
 
 #define gst_mux_bin_parent_class parent_class
@@ -143,13 +142,19 @@ static void gst_mux_bin_finalize(GObject *object)
     }
 
     g_free(mux_bin->path_);
+    mux_bin->path_ = nullptr;
     g_free(mux_bin->mux_);
+    mux_bin->mux_ = nullptr;
     g_free(mux_bin->videoParseFlag_);
+    mux_bin->videoParseFlag_ = nullptr;
     g_free(mux_bin->audioParseFlag_);
+    mux_bin->audioParseFlag_ = nullptr;
     g_free(mux_bin->videoTrack_);
+    mux_bin->videoTrack_ = nullptr;
     GSList *iter = mux_bin->audioTrack_;
-    while (iter != nullptr) {
-        g_free(*iter);
+    while (iter != nullptr && iter->data != nullptr) {
+        g_free(iter->data);
+        iter->data = nullptr;
     }
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
