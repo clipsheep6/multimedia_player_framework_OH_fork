@@ -20,7 +20,7 @@
 #include <memory>
 #include <vector>
 #include "avmemory.h"
-#include "avcodec_common.h"
+#include "av_common.h"
 #include "media_description.h"
 
 namespace OHOS {

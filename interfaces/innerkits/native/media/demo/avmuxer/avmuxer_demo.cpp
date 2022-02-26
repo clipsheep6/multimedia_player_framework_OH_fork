@@ -109,7 +109,7 @@ void AVMuxerDemo::WriteTrackSampleAVC() {
         infoCodec.timeUs = 0;
         infoCodec.size = pCodecContext->extradata_size;
         infoCodec.offset = 0;
-        infoCodec.flags = CODEC_DATA;
+        infoCodec.flags = AVCODEC_BUFFER_FLAG_CODEDC_DATA;
         infoCodec.trackIdx = i + 1;
         std::cout << "pCodecContext->extradata_size: " << pCodecContext->extradata_size << std::endl;
         std::shared_ptr<AVMemory> avMem1 = std::make_shared<AVMemory>(pCodecContext->extradata, infoCodec.size);
@@ -133,7 +133,7 @@ void AVMuxerDemo::WriteTrackSampleAVC() {
         info.size = pkt.size;
         info.offset = 0;
         if (pkt.flags == AV_PKT_FLAG_KEY) {
-            info.flags = SYNC_FRAME;
+            info.flags = AVCODEC_BUFFER_FLAG_SYNC_FRAME;
         }
         std::cout << "pkt.dts is: " << info.timeUs << ", pkt.size is: " << pkt.size << std::endl;
         std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(pkt.data, pkt.size);
@@ -198,16 +198,16 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
         info.trackIdx = 1;
         if (isFirstStream) {
             info.timeUs = 0;
-            info.flags = CODEC_DATA;
+            info.flags = AVCODEC_BUFFER_FLAG_CODEDC_DATA;
             isFirstStream = false;
             avmuxer_->WriteTrackSample(avMem, info);
         } else {
             info.timeUs = timeStamp;
             if (isSecondStream) {
-                info.flags = SYNC_FRAME;
+                info.flags = AVCODEC_BUFFER_FLAG_SYNC_FRAME;
                 isSecondStream = false;
             } else {
-                info.flags = PARTIAL_FRAME;
+                info.flags = AVCODEC_BUFFER_FLAG_PARTIAL_FRAME;
             }
             timeStamp += TIME_STAMP;
             avmuxer_->WriteTrackSample(avMem, info);

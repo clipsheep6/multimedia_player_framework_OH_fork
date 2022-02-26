@@ -207,6 +207,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     std::string name = "src_";
     name += static_cast<char>('0' + trackId);
     gst_mux_bin_add_track(muxBin_, AVMuxerUtil::isVideo(trackInfo_[trackId].type_) ? VIDEO : AUDIO, name.c_str());
+    SetParse(trackInfo_[sampleInfo.trackIdx].type_);
 
     return MSERR_OK;
 }
@@ -251,23 +252,6 @@ static bool isAllHasBuffer(std::map<int, TrackInfo>& trackInfo)
     return true;
 }
 
-void AVMuxerEngineGstImpl::SetParse(CodecMimeType type)
-{
-    switch(type) {
-        case CODEC_MIMIE_TYPE_VIDEO_AVC:
-            g_object_set(muxBin_, "videoParse", "h264parse", nullptr);
-            break;
-        case CODEC_MIMIE_TYPE_VIDEO_MPEG4:
-            g_object_set(muxBin_, "videoParse", "mpeg4parse", nullptr);
-            break;
-        case CODEC_MIMIE_TYPE_AUDIO_AAC:
-            g_object_set(muxBin_, "audioParse", "aacparse", nullptr);
-            break;
-        default:
-            break;
-    }
-}
-
 int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
     const TrackSampleInfo &sampleInfo)
 {
@@ -287,11 +271,10 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,",
         ((uint8_t*)(sampleData->GetBase()))[0], ((uint8_t*)(sampleData->GetBase()))[1],
         ((uint8_t*)(sampleData->GetBase()))[2], ((uint8_t*)(sampleData->GetBase()))[3]);
-    if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == false && sampleInfo.flags == CODEC_DATA) {
+    if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == false && sampleInfo.flags == AVCODEC_BUFFER_FLAG_CODEDC_DATA) {
         g_object_set(src, "caps", trackInfo_[sampleInfo.trackIdx].caps_, nullptr);
         ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to write CodecData");
-        SetParse(trackInfo_[sampleInfo.trackIdx].type_);
         trackInfo_[sampleInfo.trackIdx].hasCodecData_ = true;
     } else {
         ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
@@ -331,6 +314,23 @@ int32_t AVMuxerEngineGstImpl::Stop()
     gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_NULL);
     Clear();
     return MSERR_OK;
+}
+
+void AVMuxerEngineGstImpl::SetParse(CodecMimeType type)
+{
+    switch(type) {
+        case CODEC_MIMIE_TYPE_VIDEO_AVC:
+            g_object_set(muxBin_, "videoParse", "h264parse", nullptr);
+            break;
+        case CODEC_MIMIE_TYPE_VIDEO_MPEG4:
+            g_object_set(muxBin_, "videoParse", "mpeg4parse", nullptr);
+            break;
+        case CODEC_MIMIE_TYPE_AUDIO_AAC:
+            g_object_set(muxBin_, "audioParse", "aacparse", nullptr);
+            break;
+        default:
+            break;
+    }
 }
 
 int32_t AVMuxerEngineGstImpl::SetupMsgProcessor()

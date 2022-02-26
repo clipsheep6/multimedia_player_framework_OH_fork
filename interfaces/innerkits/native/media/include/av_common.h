@@ -549,6 +549,18 @@ enum AudioCodecFormat : int32_t {
     AUDIO_CODEC_FORMAT_BUTT,
 };
 
+enum AVCodecBufferFlag : uint32_t {
+    AVCODEC_BUFFER_FLAG_NONE = 0,
+    /* This signals the end of stream */
+    AVCODEC_BUFFER_FLAG_EOS = 1 << 0,
+    /* This indicates that the buffer contains the data for a sync frame */
+    AVCODEC_BUFFER_FLAG_SYNC_FRAME = 1 << 1,
+    /* This indicates that the buffer only contains part of a frame */
+    AVCODEC_BUFFER_FLAG_PARTIAL_FRAME = 1 << 2,
+    /* This indicated that the buffer contains codec specific data */
+    AVCODEC_BUFFER_FLAG_CODEDC_DATA = 1 << 3,
+};
+
 /**
  * @brief Description information of a sample.
  */

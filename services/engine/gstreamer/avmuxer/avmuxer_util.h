@@ -73,6 +73,7 @@ public:
     ~AVMuxerUtil() = delete;
     DISALLOW_COPY_AND_MOVE(AVMuxerUtil);
 
+    static bool isVideo(CodecMimeType type);
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
         GstCaps *src_caps, CodecMimeType type);
     static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,

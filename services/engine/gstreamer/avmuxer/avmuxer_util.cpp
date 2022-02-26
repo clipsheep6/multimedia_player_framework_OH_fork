@@ -25,6 +25,26 @@ namespace {
 namespace OHOS {
 namespace Media {
 
+std::map<CodecMimeType, std::vector<std::tuple<std::string, GType, MultiValue>>> optionCapsMap = {
+    {CODEC_MIMIE_TYPE_VIDEO_AVC, {
+        {"alignment", G_TYPE_STRING, MultiValue("nal")},
+        {"stream-format", G_TYPE_STRING, MultiValue("byte-stream")}
+    }},
+    {CODEC_MIMIE_TYPE_VIDEO_H263, {
+    }},
+    {CODEC_MIMIE_TYPE_VIDEO_MPEG4, {
+        {"mpegversion", G_TYPE_INT, MultiValue(4)},
+        {"systemstream", G_TYPE_BOOLEAN, MultiValue(FALSE)}
+    }},
+    {CODEC_MIMIE_TYPE_AUDIO_AAC, {
+        {"mpegversion", G_TYPE_INT, MultiValue(4)},
+        {"stream-format", G_TYPE_STRING, MultiValue("adts")}
+    }},
+    {CODEC_MIMIE_TYPE_AUDIO_MPEG, {
+        {"mpegversion", G_TYPE_INT, MultiValue(1)},
+        {"layer", G_TYPE_INT, MultiValue(3)}
+    }}
+};
 struct MultiValue {
     explicit MultiValue(int32_t val) {
         val_.intVal = val;
@@ -38,7 +58,7 @@ struct MultiValue {
     } val_;
 };
 
-static bool isVideo(CodecMimeType type) {
+bool AVMuxerUtil::isVideo(CodecMimeType type) {
     if (type == CODEC_MIMIE_TYPE_VIDEO_H263 || type == CODEC_MIMIE_TYPE_VIDEO_AVC ||
         type ==CODEC_MIMIE_TYPE_VIDEO_MPEG2 || type ==CODEC_MIMIE_TYPE_VIDEO_HEVC || 
         type == CODEC_MIMIE_TYPE_VIDEO_MPEG4) {
@@ -47,16 +67,8 @@ static bool isVideo(CodecMimeType type) {
     return false;
 }
 
-std::map<CodecMimeType, std::vector<std::tuple<std::string, GType, MultiValue>>> capsMap = {
-    {CODEC_MIMIE_TYPE_VIDEO_AVC, {{"alignment", G_TYPE_STRING, MultiValue("nal")}, {"stream-format", G_TYPE_STRING, MultiValue("byte-stream")}}},
-    {CODEC_MIMIE_TYPE_VIDEO_H263, {}},
-    {CODEC_MIMIE_TYPE_VIDEO_MPEG4, {{"mpegversion", G_TYPE_INT, MultiValue(4)}, {"systemstream", G_TYPE_BOOLEAN, MultiValue(FALSE)}}},
-    {CODEC_MIMIE_TYPE_AUDIO_AAC, {{"mpegversion", G_TYPE_INT, MultiValue(4)}, {"stream-format", G_TYPE_STRING, MultiValue("adts")}}},
-    {CODEC_MIMIE_TYPE_AUDIO_MPEG, {{"mpegversion", G_TYPE_INT, MultiValue(1)}, {"layer", G_TYPE_INT, MultiValue(3)}}}
-};
-
 static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, CodecMimeType type) {
-    if (isVideo(type)) {
+    if (AVMuxerUtil::isVideo(type)) {
         CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_WIDTH, param.width) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
         CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_HEIGHT, param.height) == true,
@@ -76,9 +88,9 @@ static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc,
     return MSERR_OK;
 }
 
-static void AddCaps(GstCaps *src_caps, CodecMimeType type)
+static void AddOptionCaps(GstCaps *src_caps, CodecMimeType type)
 {
-    for (auto& elements : capsMap[type]) {
+    for (auto& elements : optionCapsMap[type]) {
         switch(std::get<1>(elements)) {
             case G_TYPE_BOOLEAN:
             case G_TYPE_INT:
@@ -99,7 +111,7 @@ static void AddCaps(GstCaps *src_caps, CodecMimeType type)
 
 static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps *src_caps, CodecMimeType type)
 {
-    if (isVideo(type)) {
+    if (AVMuxerUtil::isVideo(type)) {
         src_caps = gst_caps_new_simple(std::get<0>(MIME_MAP_TYPE.at(mimeType)).c_str(),
             "width", G_TYPE_INT, param.width,
             "height", G_TYPE_INT, param.height,
@@ -111,7 +123,7 @@ static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps 
             "rate", G_TYPE_INT, param.rate,
             nullptr);
     }
-    AddCaps(src_caps, type);
+    AddOptionCaps(src_caps, type);
 }
 
 int32_t AVMuxerUtil::SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
@@ -135,7 +147,7 @@ int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSam
     gst_buffer_append_memory(buffer, mem);
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeUs * 1000);
-    if (sampleInfo.flags == SYNC_FRAME) {
+    if (sampleInfo.flags == AVCODEC_BUFFER_FLAG_SYNC_FRAME) {
         gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
 
