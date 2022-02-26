@@ -25,6 +25,19 @@ namespace {
 namespace OHOS {
 namespace Media {
 
+struct MultiValue {
+    explicit MultiValue(int32_t val) {
+        val_.intVal = val;
+    }
+    explicit MultiValue(const char *val) {
+        val_.stringVal = val;
+    }
+    union Val {
+        int32_t    intVal;
+        const char *stringVal;
+    } val_;
+};
+
 std::map<CodecMimeType, std::vector<std::tuple<std::string, GType, MultiValue>>> optionCapsMap = {
     {CODEC_MIMIE_TYPE_VIDEO_AVC, {
         {"alignment", G_TYPE_STRING, MultiValue("nal")},
@@ -44,18 +57,6 @@ std::map<CodecMimeType, std::vector<std::tuple<std::string, GType, MultiValue>>>
         {"mpegversion", G_TYPE_INT, MultiValue(1)},
         {"layer", G_TYPE_INT, MultiValue(3)}
     }}
-};
-struct MultiValue {
-    explicit MultiValue(int32_t val) {
-        val_.intVal = val;
-    }
-    explicit MultiValue(const char *val) {
-        val_.stringVal = val;
-    }
-    union Val {
-        int32_t    intVal;
-        const char *stringVal;
-    } val_;
 };
 
 bool AVMuxerUtil::isVideo(CodecMimeType type) {

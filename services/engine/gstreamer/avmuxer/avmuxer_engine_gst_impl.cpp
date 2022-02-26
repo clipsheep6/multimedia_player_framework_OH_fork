@@ -207,7 +207,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     std::string name = "src_";
     name += static_cast<char>('0' + trackId);
     gst_mux_bin_add_track(muxBin_, AVMuxerUtil::isVideo(trackInfo_[trackId].type_) ? VIDEO : AUDIO, name.c_str());
-    SetParse(trackInfo_[sampleInfo.trackIdx].type_);
+    SetParse(trackInfo_[trackId].type_);
 
     return MSERR_OK;
 }
