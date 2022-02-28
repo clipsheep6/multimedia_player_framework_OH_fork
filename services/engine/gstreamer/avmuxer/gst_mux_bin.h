@@ -56,8 +56,6 @@ struct _GstMuxBin {
     gint degrees_;
     gint latitude_;
     gint longitude_;
-    gchar *videoParseName_;
-    gchar *audioParseName_;
 };
 
 struct _GstMuxBinClass {
