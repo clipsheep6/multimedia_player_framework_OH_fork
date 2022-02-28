@@ -68,8 +68,8 @@ using GstMuxBin = struct _GstMuxBin;
 using GstMuxBinClass = struct _GstMuxBinClass;
 using GstTrackInfo = struct _GstTrackInfo;
 
-__attribute__((visibility("default"))) gst_mux_bin_add_track(GstMuxBin *mux_bin, char *type,
-    char *name, bool isVideo);
+__attribute__((visibility("default"))) void gst_mux_bin_add_track(GstMuxBin *mux_bin, const char *srcName,
+    const char *parseName, bool isVideo);
 
 __attribute__((visibility("default"))) GType gst_mux_bin_get_type (void);
 

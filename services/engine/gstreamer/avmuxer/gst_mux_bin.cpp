@@ -38,14 +38,14 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id, const GValu
 static void gst_mux_bin_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *param_spec);
 static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstStateChange transition);
 
-void gst_mux_bin_add_track(GstMuxBin *mux_bin, char *srcName, char *parseName, bool isVideo)
+void gst_mux_bin_add_track(GstMuxBin *mux_bin, const char *srcName, const char *parseName, bool isVideo)
 {
     g_return_if_fail(mux_bin != nullptr);
     g_return_if_fail(srcName != nullptr);
     g_return_if_fail(parseName != nullptr);
     GstTrackInfo *info = g_new(GstTrackInfo, 1);
-    info->srcName_ = srcName;
-    info->parseName = parseName;
+    info->srcName_ = (char *)srcName;
+    info->parseName = (char *)parseName;
     if (isVideo) {
         mux_bin->videoSrcList_ = g_slist_append(mux_bin->videoSrcList_, info);
     } else {
