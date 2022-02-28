@@ -481,7 +481,11 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         napi_get_arraybuffer_info(env, args[0], &(asyncContext->arrayBuffer_), &(asyncContext->arrayBufferSize_));
         // napi_create_reference(env, args[0], 1, &asyncContext->sample_);
     }
-    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_object) {
+    uint32_t offset;
+    if (args[0] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number) {
+        status = napi_get_value_uint32(env, args[1], &offset);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get degrees");
+    } if (args[2] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_object) {
         bool ret;
         napi_status state;
         napi_value trackSampleInfo;
@@ -489,8 +493,6 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         CHECK_AND_RETURN_RET_LOG(state == napi_ok, result, "Failed to call napi_get_named_property");
         ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_SIZE, asyncContext->trackSampleInfo_.size);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_SIZE");
-        ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_OFFSET, asyncContext->trackSampleInfo_.offset);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_OFFSET");
         int32_t flags;
         ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG, flags);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_FLAG");
@@ -511,7 +513,7 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
     } else {
         std::shared_ptr<AVMemory> avMem =
             std::make_shared<AVMemory>(static_cast<uint8_t *>(asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
-        avMem->SetRange(asyncContext->trackSampleInfo_.offset, asyncContext->trackSampleInfo_.size);
+        avMem->SetRange(offset, asyncContext->trackSampleInfo_.size);
         asyncContext->writeSampleFlag_ =
             asyncContext->jsAVMuxer->avmuxerImpl_->WriteTrackSample(avMem, asyncContext->trackSampleInfo_);
     }

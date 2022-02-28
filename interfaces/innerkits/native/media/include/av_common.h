@@ -573,10 +573,7 @@ struct SampleInfo {
      * @brief the amount of data (in bytes) in the sample.
      */
     int32_t size;
-    /**
-     * @brief the start-offset of the sample data in the buffer.
-     */
-    int32_t offset;
+
     /**
      * @brief the frame flags associated with the sample, this
      * maybe be a combination of multiple {@link AVCodecBufferFlag}.
