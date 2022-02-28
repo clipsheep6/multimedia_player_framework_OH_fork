@@ -131,14 +131,14 @@ static void gst_mux_bin_finalize(GObject *object)
     GSList *iter = mux_bin->videoSrcList_;
     while (iter != nullptr && iter->data != nullptr) {
         g_free(((GstTrackInfo *)(iter->data))->srcName_);
-        g_free(((GstTrackInfo *)(iter->data))->parseName);
+        g_free(((GstTrackInfo *)(iter->data))->parseName_);
         iter->data = nullptr;
     }
 
-    GSList *iter = mux_bin->audioSrcList_;
+    iter = mux_bin->audioSrcList_;
     while (iter != nullptr && iter->data != nullptr) {
         g_free(((GstTrackInfo *)(iter->data))->srcName_);
-        g_free(((GstTrackInfo *)(iter->data))->parseName);
+        g_free(((GstTrackInfo *)(iter->data))->parseName_);
         iter->data = nullptr;
     }
 
@@ -254,7 +254,7 @@ static GstElement *create_parse(GstMuxBin *mux_bin, const char* parseName)
         g_object_set(parse, "config-interval", -1, "drop", false, nullptr);
     } else if (strcmp(parseName, "aacparse") == 0) {
         parse = gst_element_factory_make("aacparse", "aacparse");
-        g_return_val_if_fail(GstElement *parse != nullptr, nullptr);
+        g_return_val_if_fail(parse != nullptr, nullptr);
     } else {
         GST_ERROR_OBJECT(mux_bin, "Invalid videoParse");
     }
@@ -361,8 +361,8 @@ static bool connect_element(GstMuxBin *mux_bin)
     while (iter != nullptr) {
         GstPad *video_src_pad = gst_element_get_static_pad(((GstTrackInfo *)(iter->data))->src_, "src");
         GstPad *split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->splitMuxSink_, "video");
-        if ((GstTrackInfo *)(iter->data))->parseName != nullptr) {
-            GstElement *parse = create_parse(mux_bin, (GstTrackInfo *)(iter->data))->parseName);
+        if ((GstTrackInfo *)(iter->data))->parseName_ != nullptr) {
+            GstElement *parse = create_parse(mux_bin, (GstTrackInfo *)(iter->data))->parseName_);
             g_return_val_if_fail(parse != nullptr, false);
             if (!connect_parse(mux_bin, parse, video_src_pad, split_mux_sink_sink_pad)) {
                 GST_ERROR_OBJECT(mux_bin, "Failed to call connect_audio_parse");
@@ -381,8 +381,8 @@ static bool connect_element(GstMuxBin *mux_bin)
     while (iter != nullptr) {
         GstPad *audio_src_pad = gst_element_get_static_pad(((GstTrackInfo *)(iter->data))->src_, "src");
         GstPad *split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->splitMuxSink_, "audio_%u");
-        if (((GstTrackInfo *)(iter->data))->parseName != nullptr) {
-            GstElement *parse = create_parse(mux_bin, ((GstTrackInfo *)(iter->data))->parseName);
+        if (((GstTrackInfo *)(iter->data))->parseName_ != nullptr) {
+            GstElement *parse = create_parse(mux_bin, ((GstTrackInfo *)(iter->data))->parseName_);
             g_return_val_if_fail(parse != nullptr, false);
             if (!connect_parse(mux_bin, parse, audio_src_pad, split_mux_sink_sink_pad)) {
                 GST_ERROR_OBJECT(mux_bin, "Failed to call connect_audio_parse");
