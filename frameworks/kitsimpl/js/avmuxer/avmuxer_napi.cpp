@@ -253,7 +253,8 @@ napi_value AVMuxerNapi::SetLocation(napi_env env, napi_callback_info info)
         result, "Failed to retrieve details about the callbacke");
     
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&avmuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr && avmuxer->avmuxerImpl_ != nullptr,
+        result, "Failed to retrieve instance");
     
     napi_valuetype valueType = napi_undefined;
     status = napi_typeof(env, args[0], &valueType);
@@ -287,7 +288,8 @@ napi_value AVMuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info
         result, "Failed to retrieve details about the callbacke");
     
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&avmuxer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && avmuxer != nullptr && avmuxer->avmuxerImpl_ != nullptr,
+        result, "Failed to retrieve instance");
     
     napi_valuetype valueType = napi_undefined;
     status = napi_typeof(env, args[0], &valueType);

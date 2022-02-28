@@ -238,7 +238,7 @@ static void gst_mux_bin_get_property(GObject *object, guint prop_id,
 
 static bool create_splitmuxsink(GstMuxBin *mux_bin)
 {
-    g_return_if_fail(mux_bin != nullptr);
+    g_return_val_if_fail(mux_bin != nullptr, false);
     g_return_val_if_fail(mux_bin->path_ != nullptr || mux_bin->outFd_ >= 0, false);
     g_return_val_if_fail(mux_bin->mux_ != nullptr, false);
 
@@ -270,7 +270,7 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 
 static bool create_video_parse(GstMuxBin *mux_bin)
 {
-    g_return_if_fail(mux_bin != nullptr);
+    g_return_val_if_fail(mux_bin != nullptr, false);
     if (strcmp(mux_bin->videoParseName_, "h264parse") == 0) {
         mux_bin->videoParse_ = gst_element_factory_make("h264parse", "h264parse");
         g_return_val_if_fail(mux_bin->videoParse_ != nullptr, false);
@@ -287,7 +287,7 @@ static bool create_video_parse(GstMuxBin *mux_bin)
 
 static bool create_audio_parse(GstMuxBin *mux_bin)
 {
-    g_return_if_fail(mux_bin != nullptr);
+    g_return_val_if_fail(mux_bin != nullptr, false);
     if (strcmp(mux_bin->audioParseName_, "aacparse") == 0) {
         mux_bin->audioParse_ = gst_element_factory_make("aacparse", "aacparse");
         g_return_val_if_fail(mux_bin->audioParse_ != nullptr, false);
@@ -300,7 +300,7 @@ static bool create_audio_parse(GstMuxBin *mux_bin)
 
 static bool create_parse(GstMuxBin *mux_bin)
 {
-    g_return_if_fail(mux_bin != nullptr);
+    g_return_val_if_fail(mux_bin != nullptr, false);
     if (mux_bin->videoParseName_ != nullptr) {
         if (!create_video_parse(mux_bin)) {
             GST_ERROR_OBJECT(mux_bin, "Failed to create vidioparse");
@@ -321,7 +321,7 @@ static bool create_parse(GstMuxBin *mux_bin)
 
 static bool create_video_src(GstMuxBin *mux_bin)
 {
-    g_return_if_fail(mux_bin != nullptr);
+    g_return_val_if_fail(mux_bin != nullptr, false);
     g_return_val_if_fail(mux_bin->videoTrack_ != nullptr, false);
 
     mux_bin->videoSrc_ = gst_element_factory_make("appsrc", mux_bin->videoTrack_);
@@ -333,7 +333,7 @@ static bool create_video_src(GstMuxBin *mux_bin)
 
 static bool create_audio_src(GstMuxBin *mux_bin)
 {
-    g_return_if_fail(mux_bin != nullptr);
+    g_return_val_if_fail(mux_bin != nullptr, false);
     GSList *iter = mux_bin->audioTrack_;
     while (iter != nullptr) {
         GstElement *appSrc = gst_element_factory_make("appsrc", (gchar *)(iter->data));
@@ -348,7 +348,7 @@ static bool create_audio_src(GstMuxBin *mux_bin)
 
 static bool create_element(GstMuxBin *mux_bin)
 {
-    g_return_if_fail(mux_bin != nullptr);
+    g_return_val_if_fail(mux_bin != nullptr, false);
     if (!create_splitmuxsink(mux_bin)) {
         GST_ERROR_OBJECT(mux_bin, "Failed to call create_splitmuxsink");
         return false;
@@ -369,7 +369,7 @@ static bool create_element(GstMuxBin *mux_bin)
 
 static bool add_element_to_bin(GstMuxBin *mux_bin)
 {
-    g_return_if_fail(mux_bin != nullptr);
+    g_return_val_if_fail(mux_bin != nullptr, false);
     bool ret;
     if (mux_bin->videoTrack_ != nullptr) {
         ret = gst_bin_add(GST_BIN(mux_bin), mux_bin->videoSrc_);
@@ -389,9 +389,9 @@ static bool add_element_to_bin(GstMuxBin *mux_bin)
 
 static bool connect_video_parse(GstMuxBin *mux_bin, GstPad *upstream_pad, GstPad *downstream_pad)
 {
-    g_return_if_fail(mux_bin != nullptr);
-    g_return_if_fail(upstream_pad != nullptr);
-    g_return_if_fail(downstream_pad != nullptr);
+    g_return_val_if_fail(mux_bin != nullptr, false);
+    g_return_val_if_fail(upstream_pad != nullptr, false);
+    g_return_val_if_fail(downstream_pad != nullptr, false);
     GstPad *parse_sink_pad = gst_element_get_static_pad(mux_bin->videoParse_, "sink");
     if (gst_pad_link(upstream_pad, parse_sink_pad) != GST_PAD_LINK_OK) {
         GST_ERROR_OBJECT(mux_bin, "Failed to link video_src_pad and parse_sink_pad");
@@ -408,9 +408,9 @@ static bool connect_video_parse(GstMuxBin *mux_bin, GstPad *upstream_pad, GstPad
 
 static bool connect_audio_parse(GstMuxBin *mux_bin, GstPad *upstream_pad, GstPad *downstream_pad)
 {
-    g_return_if_fail(mux_bin != nullptr);
-    g_return_if_fail(upstream_pad != nullptr);
-    g_return_if_fail(downstream_pad != nullptr);
+    g_return_val_if_fail(mux_bin != nullptr, false);
+    g_return_val_if_fail(upstream_pad != nullptr, false);
+    g_return_val_if_fail(downstream_pad != nullptr, false);
     GstPad *parse_sink_pad = gst_element_get_static_pad(mux_bin->audioParse_, "sink");
     if (gst_pad_link(upstream_pad, parse_sink_pad) != GST_PAD_LINK_OK) {
         GST_ERROR_OBJECT(mux_bin, "Failed to link video_src_pad and parse_sink_pad");
