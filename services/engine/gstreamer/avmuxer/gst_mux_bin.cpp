@@ -361,7 +361,7 @@ static bool connect_element(GstMuxBin *mux_bin)
     while (iter != nullptr) {
         GstPad *video_src_pad = gst_element_get_static_pad(((GstTrackInfo *)(iter->data))->src_, "src");
         GstPad *split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->splitMuxSink_, "video");
-        if ((GstTrackInfo *)(iter->data))->parseName_ != nullptr) {
+        if (((GstTrackInfo *)(iter->data))->parseName_ != nullptr) {
             GstElement *parse = create_parse(mux_bin, (GstTrackInfo *)(iter->data))->parseName_);
             g_return_val_if_fail(parse != nullptr, false);
             if (!connect_parse(mux_bin, parse, video_src_pad, split_mux_sink_sink_pad)) {
