@@ -190,6 +190,7 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     // get param
@@ -256,6 +257,7 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -306,6 +308,7 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -348,6 +351,7 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -390,6 +394,7 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -432,6 +437,7 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -474,6 +480,7 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
@@ -523,6 +530,7 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
     }
 
     // get recordernapi
+    asyncCtx->thisRef = CommonNapi::CreateReference(env, jsThis);
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);

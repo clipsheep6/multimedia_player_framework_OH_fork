@@ -933,6 +933,10 @@ void AudioPlayerNapi::AsyncGetTrackDescription(napi_env env, void *data)
     }
 
     asyncContext->JsResult = std::make_unique<MediaJsResultArray>(audioInfo);
+    if (asyncContext->thisRef != nullptr) {
+        napi_delete_reference(env, asyncContext->thisRef);
+        asyncContext->thisRef = nullptr;
+    }
     MEDIA_LOGD("AsyncGetTrackDescription Out");
 }
 
@@ -955,6 +959,7 @@ napi_value AudioPlayerNapi::GetTrackDescription(napi_env env, napi_callback_info
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     // get jsPlayer
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
     // async work

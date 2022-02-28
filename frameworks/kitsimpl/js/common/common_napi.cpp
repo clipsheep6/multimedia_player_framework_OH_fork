@@ -239,8 +239,7 @@ napi_status CommonNapi::CreateError(napi_env env, int32_t errCode, const std::st
 napi_ref CommonNapi::CreateReference(napi_env env, napi_value arg)
 {
     napi_ref ref = nullptr;
-    napi_valuetype valueType = napi_undefined;
-    if (arg != nullptr && napi_typeof(env, arg, &valueType) == napi_ok && valueType == napi_function) {
+    if (arg != nullptr) {
         MEDIA_LOGD("napi_create_reference");
         napi_create_reference(env, arg, 1, &ref);
     }

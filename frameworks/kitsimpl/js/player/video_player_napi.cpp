@@ -486,6 +486,7 @@ napi_value VideoPlayerNapi::SetDisplaySurface(napi_env env, napi_callback_info i
         asyncContext->surface = CommonNapi::GetStringArgument(env, args[0]);
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     // get jsPlayer
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
@@ -625,6 +626,7 @@ napi_value VideoPlayerNapi::Prepare(napi_env env, napi_callback_info info)
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
 
     // get jsPlayer
@@ -657,6 +659,7 @@ napi_value VideoPlayerNapi::Play(napi_env env, napi_callback_info info)
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     // get jsPlayer
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
@@ -689,6 +692,7 @@ napi_value VideoPlayerNapi::Pause(napi_env env, napi_callback_info info)
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
 
     // get jsPlayer
@@ -722,6 +726,7 @@ napi_value VideoPlayerNapi::Stop(napi_env env, napi_callback_info info)
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     // get jsPlayer
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
@@ -754,6 +759,7 @@ napi_value VideoPlayerNapi::Reset(napi_env env, napi_callback_info info)
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
 
     // get jsPlayer
@@ -786,6 +792,7 @@ napi_value VideoPlayerNapi::Release(napi_env env, napi_callback_info info)
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
 
     // get jsPlayer
@@ -865,6 +872,7 @@ napi_value VideoPlayerNapi::Seek(napi_env env, napi_callback_info info)
         asyncContext->callbackRef = CommonNapi::CreateReference(env, args[argFunc]);
     }
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     // get jsPlayer
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
     // async work
@@ -907,6 +915,7 @@ napi_value VideoPlayerNapi::SetSpeed(napi_env env, napi_callback_info info)
         asyncContext->SignError(MSERR_EXT_INVALID_VAL, "speed mode invalid");
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
 
     // get jsPlayer
@@ -973,6 +982,7 @@ napi_value VideoPlayerNapi::GetTrackDescription(napi_env env, napi_callback_info
     }
 
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     // get jsPlayer
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
@@ -1015,6 +1025,7 @@ napi_value VideoPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
         }
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncContext->thisRef = CommonNapi::CreateReference(env, jsThis);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     // get jsPlayer
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
