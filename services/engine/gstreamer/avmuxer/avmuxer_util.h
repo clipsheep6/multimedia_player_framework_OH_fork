@@ -41,11 +41,11 @@ const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
 };
 
 const std::map<const std::string, std::tuple<const std::string, CodecMimeType>> MIME_MAP_TYPE {
-    {"video/avc", {"video/x-h264", CODEC_MIMIE_TYPE_VIDEO_AVC}},
-    {"video/h263", {"video/x-h263", CODEC_MIMIE_TYPE_VIDEO_H263}},
-    {"video/mp4v-es", {"video/mpeg", CODEC_MIMIE_TYPE_VIDEO_MPEG4}},
-    {"audio/mp4a-latm", {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_AAC}},
-    {"audio/mpeg", {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_MPEG}}
+    {"video/avc", {"video/x-h264", CODEC_MIMIE_TYPE_VIDEO_AVC, "h264parse"}},
+    {"video/h263", {"video/x-h263", CODEC_MIMIE_TYPE_VIDEO_H263, ""}},
+    {"video/mp4v-es", {"video/mpeg", CODEC_MIMIE_TYPE_VIDEO_MPEG4, "mpeg4parse"}},
+    {"audio/mp4a-latm", {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_AAC, "aacparse"}},
+    {"audio/mpeg", {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_MPEG, ""}}
 };
 
 class TrackInfo {

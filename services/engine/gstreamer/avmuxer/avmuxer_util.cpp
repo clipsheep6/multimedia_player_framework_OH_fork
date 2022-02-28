@@ -145,7 +145,9 @@ int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSam
     GstAppSrc *src, GstShMemWrapAllocator *allocator)
 {
     GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator), sampleData);
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "Failed to call gst_shmem_wrap");
     GstBuffer *buffer = gst_buffer_new();
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "Failed to call gst_buffer_new");
     gst_buffer_append_memory(buffer, mem);
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * MSTONS);
     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * MSTONS);
@@ -162,6 +164,9 @@ int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSam
 int32_t AVMuxerUtil::WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
     GstAppSrc *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator)
 {
+    CHECK_AND_RETURN_RET_LOG(sampleData != nullptr, MSERR_INVALID_VAL, "sampleData is nullptr");
+    CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_VAL, "src is nullptr");
+    CHECK_AND_RETURN_RET_LOG(allocator != nullptr, MSERR_INVALID_VAL, "allocator is nullptr");
     int32_t ret = PushCodecData(sampleData, sampleInfo, src, allocator);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call PushCodecData");
     return MSERR_OK;

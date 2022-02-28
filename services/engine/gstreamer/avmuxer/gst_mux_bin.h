@@ -34,14 +34,20 @@ GType gst_mux_bin_get_type(void);
 #define GST_MUX_BIN_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_MUX_BIN, GstMuxBinClass))
 
+typedef _GstTrackInfo
+{
+    gchar *name_;
+    GstElement *src_;
+    GstElement *parse_;
+    gchar *type_;
+};
+
 struct _GstMuxBin {
     GstPipeline parent_;
 
     /* private */
-    GstElement *videoSrc_;
+    GSList *videoSrcList_;
     GSList *audioSrcList_;
-    GstElement *videoParse_;
-    GstElement *audioParse_;
     GstElement *splitMuxSink_;
 
     gchar *path_;
@@ -52,8 +58,6 @@ struct _GstMuxBin {
     gint longitude_;
     gchar *videoParseName_;
     gchar *audioParseName_;
-    gchar *videoTrack_;
-    GSList *audioTrack_;
 };
 
 struct _GstMuxBinClass {
@@ -68,8 +72,9 @@ enum _TrackType {
 using GstMuxBin = struct _GstMuxBin;
 using GstMuxBinClass = struct _GstMuxBinClass;
 using TrackType = enum _TrackType;
+using GstTrackInfo = struct _GstTrackInfo;
 
-__attribute__((visibility("default"))) void gst_mux_bin_add_track(GstMuxBin *mux_bin, TrackType type, const char *name);
+__attribute__((visibility("default"))) void gst_mux_bin_add_track(GstMuxBin *mux_bin, TrackType type, char *name);
 
 __attribute__((visibility("default"))) GType gst_mux_bin_get_type (void);
 
