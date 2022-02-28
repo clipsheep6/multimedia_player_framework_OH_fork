@@ -40,7 +40,7 @@ const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
     {"m4a", {"audio/mp4a-latm"}}
 };
 
-const std::map<const std::string, std::tuple<const std::string, CodecMimeType>> MIME_MAP_TYPE {
+const std::map<const std::string, std::tuple<const std::string, CodecMimeType, std::string>> MIME_MAP_TYPE {
     {"video/avc", {"video/x-h264", CODEC_MIMIE_TYPE_VIDEO_AVC, "h264parse"}},
     {"video/h263", {"video/x-h263", CODEC_MIMIE_TYPE_VIDEO_H263, ""}},
     {"video/mp4v-es", {"video/mpeg", CODEC_MIMIE_TYPE_VIDEO_MPEG4, "mpeg4parse"}},
