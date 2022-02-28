@@ -15,6 +15,7 @@
 
 #include "gst_surface_mem_sink.h"
 #include <cinttypes>
+#include <gst/base/gstqueuearray.h>
 #include "surface.h"
 #include "gst_surface_pool.h"
 #include "buffer_type_meta.h"
@@ -27,11 +28,19 @@ namespace {
 struct _GstSurfaceMemSinkPrivate {
     OHOS::sptr<OHOS::Surface> surface;
     GstSurfacePool *pool;
+    gboolean render_async;  // defualt false. if true, we flush buffer to surface async
+    GThread *render_async_task;
+    GstQueueArray *queue;
+    GCond queue_cond;
+    GMutex queue_mutex;
+    gboolean exit_loop;
 };
 
 enum {
     PROP_0,
     PROP_SURFACE,
+    PROP_RENDER_ASYNC,
+    PROP_LAST,
 };
 
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
@@ -45,6 +54,11 @@ static void gst_surface_mem_sink_set_property(GObject *object, guint prop_id, co
 static void gst_surface_mem_sink_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, GstQuery *query);
 static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer);
+static gboolean gst_surface_mem_sink_event(GstBaseSink *basesink, GstEvent *event);
+static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *element, GstStateChange transaction);
+static GstFlowReturn gst_surface_mem_sink_render_handle(GstMemSink *memsink, GstBuffer *buffer);
+static GstBuffer *render_buffer_dequeue(GstSurfaceMemSink *surface_sink);
+static void gst_surface_mem_sink_render_buffer_loop(GstMemSink *memsink);
 
 #define gst_surface_mem_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE(GstSurfaceMemSink, gst_surface_mem_sink,
@@ -57,6 +71,7 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GstMemSinkClass *mem_sink_class = GST_MEM_SINK_CLASS(klass);
     GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
+    GstBaseSinkClass *basesink_class = GST_BASE_SINK_CLASS(klass);
 
     gst_element_class_add_static_pad_template (element_class, &g_sinktemplate);
 
@@ -75,8 +90,88 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
             "Surface for rendering output",
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_RENDER_ASYNC,
+        g_param_spec_boolean("render-async", "Render Async", "if true, sink render buffer async",
+            FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
     mem_sink_class->do_propose_allocation = gst_surface_mem_sink_do_propose_allocation;
     mem_sink_class->do_app_render = gst_surface_mem_sink_do_app_render;
+    basesink_class->event = gst_surface_mem_sink_event;
+    element_class->change_state = gst_surface_mem_sink_change_state;
+}
+
+static void gst_surface_mem_sink_join_render_async_task(GstSurfaceMemSink *surface_sink)
+{
+    GstSurfaceMemSinkPrivate *priv = surface_sink->priv;
+    if (priv->render_async_task) {
+        g_atomic_int_set(&priv->exit_loop, 1);
+        g_cond_signal(&priv->queue_cond);
+        g_thread_join(priv->render_async_task);
+        priv->render_async_task = nullptr;
+    }
+}
+
+static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *element, GstStateChange transaction)
+{
+    GstSurfaceMemSink *surface_sink = GST_SURFACE_MEM_SINK_CAST(element);
+    GstSurfaceMemSinkPrivate *priv = surface_sink->priv;
+
+    switch (transaction) {
+        case GST_STATE_CHANGE_NULL_TO_READY:
+            GST_INFO_OBJECT(surface_sink, "NULL->READY");
+            if (priv->render_async) {
+                priv->queue = gst_queue_array_new(10);
+                if (priv->queue == nullptr) {
+                    break;
+                }
+                priv->render_async_task =
+                    g_thread_new("render async task",
+                        (GThreadFunc)gst_surface_mem_sink_render_buffer_loop, surface_sink);
+            }
+            break;
+        case GST_STATE_CHANGE_READY_TO_NULL:
+            GST_INFO_OBJECT(surface_sink, "READY->NULL");
+            gst_surface_mem_sink_join_render_async_task(surface_sink);
+            if (priv->queue != nullptr) {
+                gst_queue_array_free(priv->queue);
+                priv->queue = nullptr;
+            }
+            break;
+        default:
+            break;
+    }
+
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element, transaction);
+}
+
+static void gst_surface_mem_sink_clear_buffer_queue(GstSurfaceMemSink *surface_sink)
+{
+    GstSurfaceMemSinkPrivate *priv = surface_sink->priv;
+
+    g_mutex_lock(&priv->queue_mutex);
+    while (true) {
+        GstBuffer *buf = static_cast<GstBuffer *>(gst_queue_array_pop_head(priv->queue));
+        if (buf == nullptr) {
+            break;
+        }
+        gst_buffer_unref(buf);
+    }
+    g_mutex_unlock(&priv->queue_mutex);
+}
+
+static gboolean gst_surface_mem_sink_event(GstBaseSink *basesink, GstEvent *event)
+{
+    g_return_val_if_fail(basesink != nullptr, false);
+    g_return_val_if_fail(event != nullptr, false);
+
+    switch (GST_EVENT_TYPE (event)) {
+        case GST_EVENT_FLUSH_START:
+            gst_surface_mem_sink_clear_buffer_queue(GST_SURFACE_MEM_SINK_CAST(basesink));
+            break;
+        default:
+            break;
+    }
+    return GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
 }
 
 static void gst_surface_mem_sink_init(GstSurfaceMemSink *sink)
@@ -90,6 +185,12 @@ static void gst_surface_mem_sink_init(GstSurfaceMemSink *sink)
     sink->priv->pool = GST_SURFACE_POOL_CAST(gst_surface_pool_new());
     GstMemSink *memSink = GST_MEM_SINK_CAST(sink);
     memSink->max_pool_capacity = DEFAULT_SURFACE_MAX_POOL_CAPACITY;
+    priv->render_async = false;
+    priv->render_async_task = nullptr;
+    priv->queue = nullptr;
+    priv->exit_loop = 0;
+    g_mutex_init(&priv->queue_mutex);
+    g_cond_init(&priv->queue_cond);
 }
 
 static void gst_surface_mem_sink_dispose(GObject *obj)
@@ -107,6 +208,14 @@ static void gst_surface_mem_sink_dispose(GObject *obj)
         priv->pool = nullptr;
     }
     GST_OBJECT_UNLOCK(surface_sink);
+
+    g_mutex_clear(&priv->queue_mutex);
+    g_cond_clear(&priv->queue_cond);
+    gst_surface_mem_sink_join_render_async_task(surface_sink);
+    if (priv->queue) {
+        gst_queue_array_free(priv->queue);
+        priv->queue = nullptr;
+    }
 
     G_OBJECT_CLASS(parent_class)->dispose(obj);
 }
@@ -135,6 +244,10 @@ static void gst_surface_mem_sink_set_property(GObject *object, guint propId, con
             GST_OBJECT_UNLOCK(surface_sink);
             break;
         }
+        case PROP_RENDER_ASYNC:
+            priv->render_async = g_value_get_boolean(value);
+            GST_INFO_OBJECT(surface_sink, "render_async=%d", priv->render_async);
+            break;
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, pspec);
             break;
@@ -163,12 +276,59 @@ static void gst_surface_mem_sink_get_property(GObject *object, guint propId, GVa
     }
 }
 
-static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer)
+static void gst_surface_mem_sink_render_buffer_loop(GstMemSink *memsink)
 {
-    g_return_val_if_fail(memsink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
     GstSurfaceMemSink *surface_sink = GST_SURFACE_MEM_SINK_CAST(memsink);
-    g_return_val_if_fail(surface_sink != nullptr, GST_FLOW_ERROR);
     GstSurfaceMemSinkPrivate *priv = surface_sink->priv;
+    GST_INFO_OBJECT(surface_sink, "render buffer loop begin");
+    while (!g_atomic_int_get(&priv->exit_loop)) {
+        GstBuffer *buffer = render_buffer_dequeue(surface_sink);
+        if (g_atomic_int_get(&priv->exit_loop)) {
+            if (buffer != nullptr) {
+                gst_buffer_unref(buffer);
+            }
+            break;
+        }
+
+        gst_surface_mem_sink_render_handle(memsink, buffer);
+        if (buffer != nullptr) {
+            gst_buffer_unref(buffer);
+        }
+    }
+
+    gst_surface_mem_sink_clear_buffer_queue(surface_sink);
+    GST_INFO_OBJECT(surface_sink, "render buffer loop end");
+}
+
+static GstBuffer *render_buffer_dequeue(GstSurfaceMemSink *surface_sink)
+{
+    GstSurfaceMemSinkPrivate *priv = surface_sink->priv;
+    g_mutex_lock(&priv->queue_mutex);
+    if (gst_queue_array_is_empty(priv->queue)) {
+        g_cond_wait(&priv->queue_cond, &priv->queue_mutex);
+    }
+
+    GstBuffer *buffer = static_cast<GstBuffer *>(gst_queue_array_pop_head(priv->queue));
+    g_mutex_unlock(&priv->queue_mutex);
+    return buffer;
+}
+
+static void render_buffer_enqueue(GstSurfaceMemSink *surface_sink, GstBuffer *buffer)
+{
+    GstSurfaceMemSinkPrivate *priv = surface_sink->priv;
+    g_mutex_lock(&priv->queue_mutex);
+    gst_queue_array_push_tail(priv->queue, gst_buffer_ref(buffer));
+    if (gst_queue_array_get_length(priv->queue) == 1) {
+        g_cond_signal(&priv->queue_cond);
+    }
+    g_mutex_unlock(&priv->queue_mutex);
+}
+
+static GstFlowReturn gst_surface_mem_sink_render_handle(GstMemSink *memsink, GstBuffer *buffer)
+{
+    GstSurfaceMemSink *surface_sink = GST_SURFACE_MEM_SINK_CAST(memsink);
+    GstSurfaceMemSinkPrivate *priv = surface_sink->priv;
+
     GST_OBJECT_LOCK(surface_sink);
     for (guint i = 0; i < gst_buffer_n_memory(buffer); i++) {
         GstMemory *memory = gst_buffer_peek_memory(buffer, i);
@@ -194,6 +354,22 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
     GST_OBJECT_UNLOCK(surface_sink);
     GST_DEBUG_OBJECT(surface_sink, "End gst_surface_mem_sink_do_app_render");
     return GST_FLOW_OK;
+}
+
+static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer)
+{
+    g_return_val_if_fail(memsink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
+    GstSurfaceMemSink *surface_sink = GST_SURFACE_MEM_SINK_CAST(memsink);
+    g_return_val_if_fail(surface_sink != nullptr, GST_FLOW_ERROR);
+    GstSurfaceMemSinkPrivate *priv = surface_sink->priv;
+
+    if (priv->render_async && priv->render_async_task != nullptr) {
+        /* we push buffer to queue. render async task will pop it and send to surface */
+        render_buffer_enqueue(surface_sink, buffer);
+        return GST_FLOW_OK;
+    }
+
+    return gst_surface_mem_sink_render_handle(memsink, buffer);
 }
 
 static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, GstQuery *query)
