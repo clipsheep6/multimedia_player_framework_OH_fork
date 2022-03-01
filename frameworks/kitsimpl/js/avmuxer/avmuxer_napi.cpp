@@ -469,8 +469,8 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     napi_value jsThis = nullptr;
-    napi_value args[3] = {nullptr,};
-    size_t argCount = 3;
+    napi_value args[4] = {nullptr,};
+    size_t argCount = 4;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
         result, "Failed to retrieve details about the callback");
@@ -482,14 +482,15 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         // napi_create_reference(env, args[0], 1, &asyncContext->sample_);
     }
     uint32_t offset;
-    if (args[0] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number) {
+    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number) {
         status = napi_get_value_uint32(env, args[1], &offset);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get degrees");
-    } if (args[2] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_object) {
+    }
+    if (args[2] != nullptr && napi_typeof(env, args[2], &valueType) == napi_ok && valueType == napi_object) {
         bool ret;
         napi_status state;
         napi_value trackSampleInfo;
-        state = napi_get_named_property(env, args[1], PROPERTY_KEY_SAMPLEINFO.c_str(), &trackSampleInfo);
+        state = napi_get_named_property(env, args[2], PROPERTY_KEY_SAMPLEINFO.c_str(), &trackSampleInfo);
         CHECK_AND_RETURN_RET_LOG(state == napi_ok, result, "Failed to call napi_get_named_property");
         ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_SIZE, asyncContext->trackSampleInfo_.size);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_SIZE");
@@ -502,7 +503,7 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         ret = CommonNapi::GetPropertyInt32(env, args[1], PROPERTY_KEY_TRACK_ID, asyncContext->trackSampleInfo_.trackIdx);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TRACK_ID");
     }
-    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[2]);
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[3]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
 
     // get jsAVMuxer

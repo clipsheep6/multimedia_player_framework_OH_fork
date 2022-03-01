@@ -125,7 +125,6 @@ int32_t AVMuxerServiceProxy::WriteTrackSample(std::shared_ptr<AVSharedMemory> sa
     WriteAVSharedMemoryToParcel(sampleData, data);
     (void)data.WriteInt64(sampleInfo.timeMs);
     (void)data.WriteInt32(sampleInfo.size);
-    (void)data.WriteInt32(sampleInfo.offset);
     (void)data.WriteInt32(sampleInfo.flags);
     (void)data.WriteInt32(sampleInfo.trackIdx);
     int error = Remote()->SendRequest(WRITE_TRACK_SAMPLE, data, reply, option);
