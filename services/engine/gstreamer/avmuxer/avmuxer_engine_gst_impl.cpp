@@ -320,6 +320,7 @@ int32_t AVMuxerEngineGstImpl::Stop()
 
 int32_t AVMuxerEngineGstImpl::SetupMsgProcessor()
 {
+    CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
     GstBus *bus = gst_pipeline_get_bus(GST_PIPELINE_CAST(muxBin_));
     CHECK_AND_RETURN_RET_LOG(bus != nullptr, MSERR_INVALID_OPERATION, "Failed to create GstBus");
 

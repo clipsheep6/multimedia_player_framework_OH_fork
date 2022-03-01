@@ -16,10 +16,6 @@
 #ifndef AVMUXER_DEMO_H
 #define AVMUXER_DEMO_H
 
-extern "C" {
-    #include "libavformat/avformat.h"
-    #include "libavutil/avutil.h"
-}
 #include "avmuxer.h"
 
 namespace OHOS {
@@ -31,23 +27,14 @@ public:
     DISALLOW_COPY_AND_MOVE(AVMuxerDemo);
     void RunCase();
 private:
-    void ReadTrackInfoAVC();
     void ReadTrackInfoByteStream();
-    void WriteTrackSampleAVC();
     void WriteTrackSampleByteStream();
     void AddTrackVideo();
-    void AddTrackAudio();
     void DoNext();
     std::shared_ptr<AVMuxer> avmuxer_;
-    std::string url_ = "/data/media/test.mp4";
-    AVFormatContext *fmt_ctx_ = nullptr;
-    int32_t width_;
-    int32_t height_;
-    int32_t frameRate_;
-    int32_t channels_;
-    int32_t sampleRate_;
-    int32_t videoIndex_;
-    int32_t audioIndex_;
+    int32_t width_ = 480;
+    int32_t height_ = 640;
+    int32_t frameRate_ = 30;
 };
 }  // namespace Media
 }  // namespace OHOS
