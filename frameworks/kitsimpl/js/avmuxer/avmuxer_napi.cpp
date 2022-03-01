@@ -500,7 +500,7 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         asyncContext->trackSampleInfo_.flags = static_cast<AVCodecBufferFlag>(flags);
         ret = CommonNapi::GetPropertyInt64(env, trackSampleInfo, PROPERTY_KEY_TIMEUS, asyncContext->trackSampleInfo_.timeMs);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TIMEUS");
-        ret = CommonNapi::GetPropertyInt32(env, args[1], PROPERTY_KEY_TRACK_ID, asyncContext->trackSampleInfo_.trackIdx);
+        ret = CommonNapi::GetPropertyInt32(env, args[2], PROPERTY_KEY_TRACK_ID, asyncContext->trackSampleInfo_.trackIdx);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TRACK_ID");
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[3]);
