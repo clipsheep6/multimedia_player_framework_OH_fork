@@ -38,11 +38,11 @@ public:
     std::shared_ptr<AVSharedMemory> FetchFrameAtTime(int64_t timeUs,
         int32_t option, const OutputConfiguration &param) override;
     void Release() override;
-    std::string  avMetaDataHelperSourceUrl;
+    std::string avMetaDataHelperSourceUrl;
     pid_t pid;
     pid_t uid;
-    std::list<long>  resolveMetaDataTimeList;
-    std::list<long>  fetchThumbnailTimeList;
+    std::list<long> resolveMetaDataTimeList;
+    std::list<long> fetchThumbnailTimeList;
 private:
     std::shared_ptr<IAVMetadataHelperEngine> avMetadataHelperEngine_ = nullptr;
     std::mutex mutex_;

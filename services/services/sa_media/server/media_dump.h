@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef MEDIA_STANDARD_MEDIA_DUMP_H
-#define MEDIA_STANDARD_MEDIA_DUMP_H
+#ifndef MEDIA_DUMP_H
+#define MEDIA_DUMP_H
 
 
 #include <fstream>
@@ -56,4 +56,4 @@ private:
 };
 }
 }
-# endif //MEDIA_STANDARD_MEDIA_DUMP_H
+# endif //MEDIA_DUMP_H

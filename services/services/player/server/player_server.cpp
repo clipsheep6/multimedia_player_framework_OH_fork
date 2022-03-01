@@ -114,7 +114,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
 void PlayerServer::GetPlayerStatus()
 {
-    status=status_;
+    status = status_;
 }
 
 int32_t PlayerServer::Prepare()
@@ -189,7 +189,7 @@ int32_t PlayerServer::Play()
     gettimeoftoday(&play_begin, nullptr);
     int32_t ret = playerEngine_->Play();
     gettimeoftoday(&play_end, nullptr);
-    time = (play_end.tv_sec-play_begin.tv_sec)*1000 + (play_end.tv_usec-play_begin.tv_usec)/1000
+    time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000
             // *1000: s to ms    /1000: us to ms
     startPlayTimesList.push_back(time);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Play Failed!");
@@ -630,7 +630,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     if (type == INFO_TYPE_BUFFERING_UPDATE) {
         if (infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_PERCENT), bufferPercentValue_)) {
             MEDIA_LOGI("OnBufferingPercent update is %{public}d", bufferPercentValue_);
-    }
+        }
     }
 
     if (playerCb_ != nullptr) {

@@ -71,9 +71,9 @@ std::string AVMetadataHelperServer::ResolveMetadata(int32_t key)
     struct timeval play_end;
     long time; // ms
     gettimeoftoday(&play_begin, nullptr);
-    std::string metaData=avMetadataHelperEngine_->ResolveMetadata(key);
+    std::string metaData = avMetadataHelperEngine_->ResolveMetadata(key);
     gettimeoftoday(&play_end, nullptr);
-    time = (play_end.tv_sec-play_begin.tv_sec)*1000 + (play_end.tv_usec-play_begin.tv_usec)/1000
+    time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000
           // *1000: s to ms    /1000: us to ms
     resolveMetaDataTimeList.push_back(time);
     return metaData;
@@ -89,8 +89,8 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperServer::ResolveMetadata
     gettimeoftoday(&play_begin, nullptr);
     std::string metaData = avMetadataHelperEngine_->ResolveMetadata();
     gettimeoftoday(&play_end, nullptr);
-    time = (play_end.tv_sec-play_begin.tv_sec)*1000 + (play_end.tv_usec-play_begin.tv_usec)/1000
-    // *1000: s to ms    /1000: us to ms
+    time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000
+            // *1000: s to ms    /1000: us to ms
     resolveMetaDataTimeList.push_back(time);
     return metaData;
 }
@@ -105,7 +105,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchArtPicture()
     gettimeoftoday(&play_begin, nullptr);
     std::shared_ptr<AVSharedMemory> artPicture = avMetadataHelperEngine_->FetchArtPicture();
     gettimeoftoday(&play_end, nullptr);
-    time = (play_end.tv_sec-play_begin.tv_sec)*1000 + (play_end.tv_usec-play_begin.tv_usec)/1000
+    time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000
           // *1000: s to ms    /1000: us to ms
     fetchThumbnailTimeList.push_back(time);
     return artPicture;
@@ -122,7 +122,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchFrameAtTime(int64_t
     gettimeoftoday(&play_begin, nullptr);
     std::shared_ptr<AVSharedMemory> frame = avMetadataHelperEngine_->FetchFrameAtTime(timeUs, option, param);
     gettimeoftoday(&play_end, nullptr);
-    time = (play_end.tv_sec-play_begin.tv_sec)*1000 + (play_end.tv_usec-play_begin.tv_usec)/1000
+    time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000
            // *1000: s to ms    /1000: us to ms
     fetchThumbnailTimeList.push_back(time);
     return frame;

@@ -64,14 +64,15 @@ int32_t AVCodecServer::InitParameter(AVCodecType type, bool isMimeType, const st
     CHECK_AND_RETURN_RET_LOG(codecEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     int32_t ret = codecEngine_->Init(type, isMimeType, name);
     avcodecType = type;
-    mimeType = isMimeType;
+    is_mimeType = isMimeType;
     return ret;
+}
+
 void AVCodecServer::GetAvcodecStatus()
 {
     status = status_;
 }
 
-}
 int32_t AVCodecServer::Configure(const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);

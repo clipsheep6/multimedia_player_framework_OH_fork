@@ -12,9 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include <ctime>
 #include "media_dump.h"
+#include <ctime>
 #include "format.h"
 #include "player_server.h"
 #include "recorder_server.h"
@@ -196,7 +195,9 @@ void MediaDump::DumpPlayerServerInfo(std::map<sptr<IRemoteObject>, pid_t> &playe
         playerServiceStub.GetPlayerServer();
         std::shared_ptr<IPlayerService> playerServer = playerServiceStub.playerServer;
         dumpFile << "Player Client " << i << "information : " << std::endl;
-        DumpPlayerInfo(playerServer);
+        if (playerServer != nullptr) {
+            DumpPlayerInfo(playerServer);
+        }
         i++;
     }
 }
@@ -209,11 +210,12 @@ void MediaDump::DumpRecorderServerInfo(std::map<sptr<IRemoteObject>, pid_t> &rec
         recorderServiceStub.GetRecoderServer();
         std::shared_ptr<IRecorderService> recorderServer = recorderServiceStub.recorderServer;
         dumpFile << "Recorde Client " << i << "information : " << std::endl;
-        DumpRecorderInfo(recorderServer);
+        if (recorderServer != nullptr) {
+            DumpRecorderInfo(recorderServer);
+        }
         i++;
     }
 }
-
 
 void MediaDump::DumpAvcodecServerInfo(std::map<sptr<IRemoteObject>, pid_t> &avCodecStubMap)
 {
@@ -223,7 +225,9 @@ void MediaDump::DumpAvcodecServerInfo(std::map<sptr<IRemoteObject>, pid_t> &avCo
         avcodecServiceStub.GetAvcodecServer();
         std::shared_ptr<IAVCodecService> avcodecServer = avcodecServiceStub.avcodecServer;
         dumpFile << "Avcodec Client " << i << "information : " << std::endl;
-        DumpAVCodecInfo(avcodecServer);
+        if (recorderServer != nullptr) {
+            DumpAVCodecInfo(avcodecServer);
+        }
         i++;
     }
 }
@@ -231,12 +235,14 @@ void MediaDump::DumpAvcodecServerInfo(std::map<sptr<IRemoteObject>, pid_t> &avCo
 void MediaDump::DumpAvMetaDataHelperServerInfo(std::map<sptr<IRemoteObject>, pid_t> &avMetadataHelperStubMap)
 {
     int i = 1;
-    for(auto iter =avMetadataHelperStubMap.begin(); iter !=avMetadataHelperStubMap.end(); iter++) {
+    for(auto iter = avMetadataHelperStubMap.begin(); iter !=avMetadataHelperStubMap.end(); iter++) {
         sptr<AVMetadataHelperServiceStub avMetadataHelperServiceStub = iter->first;
         avMetadataHelperServiceStub.GetAvMetadataHelperServer();
         std::shared_ptr<IAVMetadataHelperService> avMetadataHelperServer = avMetadataHelperServiceStub.avMetadateHelperServer;
         dumpFile << "AvMetaDataHelper Client " << i << "information : " << std::endl;
-        DumpAVMetadataHelperInfo(avMetadataHelperServer);
+        if (recorderServer != nullptr) {
+            DumpAVMetadataHelperInfo(avMetadataHelperServer);
+        }
         i++;
     }
 
@@ -246,15 +252,15 @@ void MediaDump::DumpFormatInfo(std::vector<Format> &formatData)
 {
     for(auto vectorIter = formatData.begin(); vectorIter != formatData.end(); vectorIter++) {
         Format data = *vectorIter;
-    for(auto mapIter = data.FormatDataMap.begin();  mapIter != data.FormatDataMap.end(); mapIter++) {
-        std::string string = data.FormatDataMap->first;
-        FormatData  formatData = data.FormatDataMap->second;
-        dumpFile << "Format type : " << string << std::endl;
-        dumpFile << "Format data : " << std::endl;
-        dumpFile <<  "    " << "Format data type : "  << formatData.type << " Format data stringVal : "
+        for(auto mapIter = data.FormatDataMap.begin(); mapIter != data.FormatDataMap.end(); mapIter++) {
+            std::string string = data.FormatDataMap->first;
+            FormatData  formatData = data.FormatDataMap->second;
+            dumpFile << "Format type : " << string << std::endl;
+            dumpFile << "Format data : " << std::endl;
+            dumpFile <<  "    " << "Format data type : "  << formatData.type << " Format data stringVal : "
             << formatData.stringVal << "Format data address : " << formatData.addr << " Format data size : "
             << formatData.size << std:: endl;
-    }
+        }
     }
 }
 
@@ -262,21 +268,23 @@ long MediaDump::MaxOfList(std::list<long> &list)
 {
     long max = 0;
     for(auto iter = list.begin(); iter != list.end(); iter++) {
-        if(*iter > max || *iter = max) {
+        if(*iter > max || *iter == max) {
             max = *iter;
-    }
+        }
     }
     return max;
 }
 
 long MediaDump::AverageOfList(std::list<long> &list)
 {
-    long sum=0;
-    int32_t num= list.size();
+    long sum = 0;
+    int32_t num = list.size();
     for(auto iter = list.begin(); iter != list.end(); iter++) {
        sum += *iter;
     }
-    long average = sum/num;
+    if(num != 0) {
+        long average = sum/num;
+    }
     return average;
 }
 

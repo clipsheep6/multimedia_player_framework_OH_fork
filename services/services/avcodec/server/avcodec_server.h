@@ -72,7 +72,7 @@ public:
     pid_t pid;
     pid_t uid;
     AVCodecType avcodecType;
-    bool mimeType;
+    bool is_mimeType;
 
 private:
     int32_t Init();
