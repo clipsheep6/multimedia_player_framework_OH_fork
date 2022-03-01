@@ -172,7 +172,7 @@ public:
     virtual ~Player() = default;
 
     /**
-     * @brief Sets the playback source for the player. The corresponding source can be local file url
+     * @brief Sets the playback source for the player. The corresponding source can be http url
      *
      * @param url Indicates the playback source.
      * @return Returns {@link MSERR_OK} if the url is set successfully; returns an error code defined
@@ -192,6 +192,19 @@ public:
      * @version 1.0
      */
     virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
+
+    /**
+     * @brief Sets the playback media file descriptor source for the player.
+     *
+     * @param fd Indicates the file descriptor of media source.
+     * @param offset Indicates the offset of media source in file descriptor.
+     * @param size Indicates the size of media source.
+     * @return Returns {@link MSERR_OK} if the fd source is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetSource(int32_t fd, int64_t offset = 0, int64_t size = 0) = 0;
 
     /**
      * @brief Start playback.

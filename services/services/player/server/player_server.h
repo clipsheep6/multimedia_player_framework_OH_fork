@@ -23,15 +23,15 @@
 
 namespace OHOS {
 namespace Media {
-class PlayerServer : public IPlayerService, public IPlayerEngineObs {
+class PlayerServer : public IPlayerService, public IPlayerEngineObs, public NoCopyable {
 public:
     static std::shared_ptr<IPlayerService> Create();
     PlayerServer();
     virtual ~PlayerServer();
-    DISALLOW_COPY_AND_MOVE(PlayerServer);
 
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t Play() override;
     int32_t Prepare() override;
     int32_t PrepareAsync() override;
@@ -66,6 +66,8 @@ private:
     int32_t OnReset();
     int32_t InitPlayEngine(const std::string &url);
     int32_t OnPrepare(bool async);
+    void ResetFdSource();
+    bool CheckFdArgument(int64_t &offset, int64_t &size);
 
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
@@ -80,6 +82,7 @@ private:
     float leftVolume_ = 1.0f; // audiotrack volume range [0, 1]
     float rightVolume_ = 1.0f; // audiotrack volume range [0, 1]
     PlaybackRateMode speedMode_ = SPEED_FORWARD_1_00_X;
+    int32_t fd_ = -1;
 };
 } // namespace Media
 } // namespace OHOS

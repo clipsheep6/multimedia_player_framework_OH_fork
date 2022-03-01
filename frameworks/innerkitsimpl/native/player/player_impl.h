@@ -21,14 +21,14 @@
 
 namespace OHOS {
 namespace Media {
-class PlayerImpl : public Player {
+class PlayerImpl : public Player, public NoCopyable {
 public:
     PlayerImpl();
     ~PlayerImpl();
-    DISALLOW_COPY_AND_MOVE(PlayerImpl);
 
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t Play() override;
     int32_t Prepare() override;
     int32_t PrepareAsync() override;

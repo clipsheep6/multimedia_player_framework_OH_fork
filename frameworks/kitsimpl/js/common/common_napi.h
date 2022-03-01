@@ -25,6 +25,8 @@
 
 namespace OHOS {
 namespace Media {
+struct AVFileDescriptor;
+
 class CommonNapi {
 public:
     CommonNapi() = delete;
@@ -34,17 +36,21 @@ public:
     static bool GetPropertyInt64(napi_env env, napi_value configObj, const std::string &type, int64_t &result);
     static bool GetPropertyDouble(napi_env env, napi_value configObj, const std::string &type, double &result);
     static std::string GetPropertyString(napi_env env, napi_value configObj, const std::string &type);
+    static bool GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd);
     static napi_status FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args);
     static napi_status CreateError(napi_env env, int32_t errCode, const std::string &errMsg, napi_value &errVal);
     static napi_ref CreateReference(napi_env env, napi_value arg);
     static napi_deferred CreatePromise(napi_env env, napi_ref ref, napi_value &result);
     static bool SetPropertyInt32(napi_env env, napi_value &obj, const std::string &key, int32_t value);
+    static bool SetPropertyInt64(napi_env env, napi_value &obj, const std::string &key, int64_t value);
     static bool SetPropertyString(napi_env env, napi_value &obj, const std::string &key, const std::string &value);
     static napi_value CreateFormatBuffer(napi_env env, Format &format);
     static bool CreateFormatBufferByRef(napi_env env, Format &format, napi_value &result);
     static bool AddRangeProperty(napi_env env, napi_value obj, const std::string &name, int32_t min, int32_t max);
     static bool AddArrayProperty(napi_env env, napi_value obj, const std::string &name,
         const std::vector<int32_t> &vec);
+    static bool AddNumberPropInt32(napi_env env, napi_value obj, const std::string &key, int32_t value);
+    static bool AddNumberPropInt64(napi_env env, napi_value obj, const std::string &key, int64_t value);
 };
 
 class MediaJsResult {
@@ -244,6 +250,12 @@ struct AutoRef {
     }
     napi_env env_;
     napi_ref cb_;
+};
+
+struct AVFileDescriptor {
+    int32_t fd = 0;
+    int64_t offset = 0;
+    int64_t length = 0;
 };
 }
 }

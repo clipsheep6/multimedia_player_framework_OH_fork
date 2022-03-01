@@ -129,6 +129,24 @@ std::string CommonNapi::GetPropertyString(napi_env env, napi_value configObj, co
     return GetStringArgument(env, item);
 }
 
+bool CommonNapi::GetFdArgument(napi_env env, napi_value value, AVFileDescriptor &rawFd)
+{
+    CHECK_AND_RETURN_RET(GetPropertyInt32(env, value, "fd", rawFd.fd) == true, false);
+
+    if (GetPropertyInt64(env, value, "offset", rawFd.offset) == false) {
+        rawFd.offset = 0; // use default value
+    }
+
+    if (GetPropertyInt64(env, value, "length", rawFd.length) == false) {
+        rawFd.length = -1; // -1 means use default value
+    }
+
+    MEDIA_LOGD("get fd argument, fd = %{public}d, offset = %{public}" PRIi64 ", size = %{public}" PRIi64 "",
+        rawFd.fd, rawFd.offset, rawFd.length);
+
+    return true;
+}
+
 napi_status CommonNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_value &args)
 {
     napi_value codeStr = nullptr;
@@ -223,9 +241,8 @@ napi_ref CommonNapi::CreateReference(napi_env env, napi_value arg)
     napi_ref ref = nullptr;
     napi_valuetype valueType = napi_undefined;
     if (arg != nullptr && napi_typeof(env, arg, &valueType) == napi_ok && valueType == napi_function) {
-        const size_t refCount = 1;
         MEDIA_LOGD("napi_create_reference");
-        napi_create_reference(env, arg, refCount, &ref);
+        napi_create_reference(env, arg, 1, &ref);
     }
     return ref;
 }
@@ -296,6 +313,24 @@ bool CommonNapi::SetPropertyInt32(napi_env env, napi_value &obj, const std::stri
 
     napi_value valueNapi = nullptr;
     status = napi_create_int32(env, value, &valueNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, keyNapi, valueNapi);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "faile to set property");
+
+    return true;
+}
+
+bool CommonNapi::SetPropertyInt64(napi_env env, napi_value &obj, const std::string &key, int64_t value)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value valueNapi = nullptr;
+    status = napi_create_int64(env, value, &valueNapi);
     CHECK_AND_RETURN_RET(status == napi_ok, false);
 
     status = napi_set_property(env, obj, keyNapi, valueNapi);
@@ -397,6 +432,42 @@ napi_status MediaJsResultStringVector::GetJsResult(napi_env env, napi_value &res
     return napi_ok;
 }
 
+bool CommonNapi::AddNumberPropInt32(napi_env env, napi_value obj, const std::string &key, int32_t value)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value valueNapi = nullptr;
+    status = napi_create_int32(env, value, &valueNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, keyNapi, valueNapi);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "Failed to set property");
+
+    return true;
+}
+
+bool CommonNapi::AddNumberPropInt64(napi_env env, napi_value obj, const std::string &key, int64_t value)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value valueNapi = nullptr;
+    status = napi_create_int64(env, value, &valueNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, keyNapi, valueNapi);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "Failed to set property");
+
+    return true;
+}
+
 napi_status MediaJsResultArray::GetJsResult(napi_env env, napi_value &result)
 {
     // create Description
@@ -465,7 +536,7 @@ void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void 
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
         CHECK_AND_RETURN_LOG(callback != nullptr, "callbackRef is nullptr!");
-        const size_t argCount = 2;
+        constexpr size_t argCount = 2;
         napi_value retVal;
         napi_get_undefined(env, &retVal);
         napi_call_function(env, nullptr, callback, argCount, args, &retVal);

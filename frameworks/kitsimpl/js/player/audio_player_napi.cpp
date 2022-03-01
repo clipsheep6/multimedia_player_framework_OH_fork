@@ -20,7 +20,7 @@
 #include "media_errors.h"
 #include "media_data_source_napi.h"
 #include "media_data_source_callback.h"
-#include "common_napi.h"
+#include "string_ex.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioPlayerNapi"};
@@ -113,9 +113,11 @@ napi_value AudioPlayerNapi::Constructor(napi_env env, napi_callback_info info)
 
     playerNapi->env_ = env;
     playerNapi->nativePlayer_ = PlayerFactory::CreatePlayer();
-    CHECK_AND_RETURN_RET_LOG(playerNapi->nativePlayer_ != nullptr, nullptr, "No memory");
+    if (playerNapi->nativePlayer_ == nullptr) {
+        MEDIA_LOGE("failed to CreatePlayer");
+    }
 
-    if (playerNapi->callbackNapi_ == nullptr) {
+    if (playerNapi->callbackNapi_ == nullptr && playerNapi->nativePlayer_ != nullptr) {
         playerNapi->callbackNapi_ = std::make_shared<PlayerCallbackNapi>(env);
         (void)playerNapi->nativePlayer_->SetPlayerCallback(playerNapi->callbackNapi_);
     }
@@ -222,8 +224,26 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
 
     player->uri_ = CommonNapi::GetStringArgument(env, args[0]);
     CHECK_AND_RETURN_RET_LOG(player->nativePlayer_ != nullptr, undefinedResult, "No memory");
-    int32_t ret = player->nativePlayer_->SetSource(player->uri_);
+
+    const std::string fdHead = "fd://";
+    const std::string httpHead = "http";
+    int32_t ret = MSERR_EXT_INVALID_VAL;
+    int32_t fd = -1;
+    MEDIA_LOGD("input url is %{public}s!", player->uri_.c_str());
+    if (player->uri_.find(fdHead) != std::string::npos) {
+        std::string inputFd = player->uri_.substr(fdHead.size());
+        if (!StrToInt(inputFd, fd) || fd < 0) {
+            player->ErrorCallback(MSERR_EXT_INVALID_VAL);
+            return undefinedResult;
+        }
+
+        ret = player->nativePlayer_->SetSource(fd, 0, -1);
+    } else if (player->uri_.find(httpHead) != std::string::npos) {
+        ret = player->nativePlayer_->SetSource(player->uri_);
+    }
+
     if (ret != MSERR_OK) {
+        MEDIA_LOGE("input url error!");
         player->ErrorCallback(MSERR_EXT_INVALID_VAL);
         return undefinedResult;
     }
@@ -339,6 +359,82 @@ napi_value AudioPlayerNapi::GetMediaDataSrc(napi_env env, napi_callback_info inf
     CHECK_AND_RETURN_RET_LOG(jsResult != nullptr, undefinedResult, "Failed to get the representation of src object");
 
     MEDIA_LOGD("GetMediaDataSrc success");
+    return jsResult;
+}
+
+napi_value AudioPlayerNapi::SetFdSrc(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
+        undefinedResult, "Failed to retrieve details about the callback");
+
+    AudioPlayerNapi *player = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&player));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && player != nullptr, undefinedResult, "Failed to retrieve instance");
+
+    napi_valuetype valueType = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        player->ErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    if (CommonNapi::GetFdArgument(env, args[0], player->rawFd_) == false) {
+        MEDIA_LOGE("get rawfd argument failed!");
+        player->ErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    CHECK_AND_RETURN_RET_LOG(player->nativePlayer_ != nullptr, undefinedResult, "No memory");
+    int32_t ret = player->nativePlayer_->SetSource(player->rawFd_.fd, player->rawFd_.offset, player->rawFd_.length);
+    if (ret != MSERR_OK) {
+        player->ErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    ret = player->nativePlayer_->PrepareAsync();
+    if (ret != MSERR_OK) {
+        player->ErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    MEDIA_LOGD("SetFdSrc success");
+    return undefinedResult;
+}
+
+napi_value AudioPlayerNapi::GetFdSrc(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    napi_value jsThis = nullptr;
+    napi_value jsResult = nullptr;
+    AudioPlayerNapi *player = nullptr;
+    size_t argCount = 0;
+
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&player));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && player != nullptr, undefinedResult, "get player napi error");
+
+    status = napi_create_object(env, &jsResult);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "create jsResult object error");
+
+    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt32(env, jsResult, "fd", player->rawFd_.fd) == true, nullptr);
+    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt64(env, jsResult, "offset", player->rawFd_.offset) == true,
+        nullptr);
+    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt64(env, jsResult, "length", player->rawFd_.length) == true,
+        nullptr);
+
+    MEDIA_LOGD("GetFdSrc success");
     return jsResult;
 }
 
@@ -578,9 +674,9 @@ napi_value AudioPlayerNapi::On(napi_env env, napi_callback_info info)
     napi_value undefinedResult = nullptr;
     napi_get_undefined(env, &undefinedResult);
 
-    static const size_t MIN_REQUIRED_ARG_COUNT = 2;
-    size_t argCount = MIN_REQUIRED_ARG_COUNT;
-    napi_value args[MIN_REQUIRED_ARG_COUNT] = { nullptr, nullptr };
+    static constexpr size_t minArgCount = 2;
+    size_t argCount = minArgCount;
+    napi_value args[minArgCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {

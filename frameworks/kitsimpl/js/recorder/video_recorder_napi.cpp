@@ -103,9 +103,11 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
 
     recorderNapi->env_ = env;
     recorderNapi->recorder_ = RecorderFactory::CreateRecorder();
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "No memory!");
+    if (recorderNapi->recorder_ == nullptr) {
+        MEDIA_LOGE("failed to CreateRecorder");
+    }
 
-    if (recorderNapi->callbackNapi_ == nullptr) {
+    if (recorderNapi->callbackNapi_ == nullptr && recorderNapi->recorder_ != nullptr) {
         recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
         (void)recorderNapi->recorder_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
@@ -141,6 +143,8 @@ void VideoRecorderNapi::Destructor(napi_env env, void *nativeObject, void *final
 
 napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("CreateVideoRecorder In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -169,6 +173,8 @@ napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_in
 
 napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Prepare In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     napi_value jsThis = nullptr;
@@ -234,6 +240,8 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("GetInputSurface In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -282,6 +290,8 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
 
 napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Start In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -322,6 +332,8 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Pause In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -362,6 +374,8 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Resume In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -402,6 +416,8 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Stop In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -442,6 +458,8 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Reset In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -489,6 +507,8 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Release In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -539,9 +559,9 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    static const size_t MIN_REQUIRED_ARG_COUNT = 2;
-    size_t argCount = MIN_REQUIRED_ARG_COUNT;
-    napi_value args[MIN_REQUIRED_ARG_COUNT] = { nullptr, nullptr };
+    static constexpr size_t minArgCount = 2;
+    size_t argCount = minArgCount;
+    napi_value args[minArgCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {

@@ -31,7 +31,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-class GstEngineFactory : public IEngineFactory {
+class GstEngineFactory : public IEngineFactory, public NoCopyable {
 public:
     GstEngineFactory() = default;
     ~GstEngineFactory() = default;
