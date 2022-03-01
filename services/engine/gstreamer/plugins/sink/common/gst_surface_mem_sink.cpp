@@ -120,7 +120,7 @@ static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *elemen
         case GST_STATE_CHANGE_NULL_TO_READY:
             GST_INFO_OBJECT(surface_sink, "NULL->READY");
             if (priv->render_async) {
-                priv->queue = gst_queue_array_new(10);
+                priv->queue = gst_queue_array_new(DEFAULT_SURFACE_MAX_POOL_CAPACITY);
                 if (priv->queue == nullptr) {
                     break;
                 }
