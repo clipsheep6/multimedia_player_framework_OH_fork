@@ -41,6 +41,12 @@ int32_t AVMuxerServiceProxy::DestroyStub()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
     int error = Remote()->SendRequest(DESTROY, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call DestroyStub, error: %{public}d", error);
     return reply.ReadInt32();
@@ -51,6 +57,12 @@ std::vector<std::string> AVMuxerServiceProxy::GetAVMuxerFormatList()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
     std::vector<std::string> formatList;
     int error = Remote()->SendRequest(GET_MUXER_FORMAT_LIST, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, formatList, "Failed to call GetAVMuxerFormatList, error: %{public}d", error);
@@ -63,6 +75,12 @@ int32_t AVMuxerServiceProxy::SetOutput(const std::string &path, const std::strin
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
     (void)data.WriteString(path);
     (void)data.WriteString(format);
     int error = Remote()->SendRequest(SET_OUTPUT, data, reply, option);
@@ -75,6 +93,12 @@ int32_t AVMuxerServiceProxy::SetLocation(float latitude, float longitude)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
     (void)data.WriteFloat(latitude);
     (void)data.WriteFloat(longitude);
     int error = Remote()->SendRequest(SET_LOCATION, data, reply, option);
@@ -87,6 +111,12 @@ int32_t AVMuxerServiceProxy::SetOrientationHint(int degrees)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
     (void)data.WriteInt32(degrees);
     int error = Remote()->SendRequest(SET_ORIENTATION_HINT, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call SetOrientationHint, error: %{public}d", error);
@@ -98,6 +128,12 @@ int32_t AVMuxerServiceProxy::AddTrack(const MediaDescription &trackDesc, int32_t
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
     (void)MediaParcel::Marshalling(data, trackDesc);
     int error = Remote()->SendRequest(ADD_TRACK, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call AddTrack, error: %{public}d", error);
@@ -110,6 +146,12 @@ int32_t AVMuxerServiceProxy::Start()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
     int error = Remote()->SendRequest(START, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call Start, error: %{public}d", error);
     return reply.ReadInt32();
@@ -122,6 +164,12 @@ int32_t AVMuxerServiceProxy::WriteTrackSample(std::shared_ptr<AVSharedMemory> sa
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
     WriteAVSharedMemoryToParcel(sampleData, data);
     (void)data.WriteInt64(sampleInfo.timeMs);
     (void)data.WriteInt32(sampleInfo.size);
@@ -137,6 +185,12 @@ int32_t AVMuxerServiceProxy::Stop()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
     int error = Remote()->SendRequest(STOP, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call Stop, error: %{public}d", error);
     return reply.ReadInt32();
@@ -147,6 +201,12 @@ void AVMuxerServiceProxy::Release()
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
     int error = Remote()->SendRequest(RELEASE, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "Failed to call Release, error: %{public}d", error);
 }

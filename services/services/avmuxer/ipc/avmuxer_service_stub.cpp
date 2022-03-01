@@ -74,6 +74,13 @@ int32_t AVMuxerServiceStub::DestroyStub()
 int AVMuxerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}u is received", code);
+
+    auto remoteDescriptor = data.ReadInterfaceToken();
+    if (AVMuxerServiceStub::GetDescriptor() != remoteDescriptor) {
+        MEDIA_LOGE("Invalid descriptor");
+        return MSERR_INVALID_OPERATION;
+    }
+
     auto itFunc = avmuxerFuncs_.find(code);
     if (itFunc != avmuxerFuncs_.end()) {
         auto memberFunc = itFunc->second;
