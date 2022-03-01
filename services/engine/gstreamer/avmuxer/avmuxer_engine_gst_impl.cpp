@@ -42,7 +42,7 @@ namespace Media {
 static constexpr uint32_t MAX_VIDEO_TRACK_NUM = 1;
 static constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
 
-static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
+static void StartFeed(GstAppSrc *src, gpointer user_data)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
     CHECK_AND_RETURN_LOG(user_data != nullptr, "User data does not exist");
@@ -141,13 +141,13 @@ int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
     if (latitude < MIN_LATITUDE || latitude > MAX_LATITUDE || longitude < MIN_LONGITUDE
         || longitude > MAX_LONGITUDE) {
         setLocationToMux = false;
-        MEDIA_LOGE("Invalid GeoLocation, latitude: %{public}f, longitude: %{public}f",
+        MEDIA_LOGW("Invalid GeoLocation, latitude: %{public}f, longitude: %{public}f",
             latitude, longitude);
     }
 
-    int32_t latitudex10000 = latitude * MULTIPLY10000;
-    int32_t longitudex10000 = longitude * MULTIPLY10000;
     if (setLocationToMux) {
+        int32_t latitudex10000 = latitude * MULTIPLY10000;
+        int32_t longitudex10000 = longitude * MULTIPLY10000;
         g_object_set(muxBin_, "latitude", latitudex10000, "longitude", longitudex10000, nullptr);
     }
 
@@ -162,7 +162,7 @@ int32_t AVMuxerEngineGstImpl::SetOrientationHint(int degrees)
     bool setRotationToMux = true;
     if (degrees != ROTATION_90 && degrees != ROTATION_180 && degrees != ROTATION_270) {
         setRotationToMux = false;
-        MEDIA_LOGE("Invalid rotation: %{public}d, keep default 0", degrees);
+        MEDIA_LOGW("Invalid rotation: %{public}d, keep default 0", degrees);
     }
 
     if (setRotationToMux) {
@@ -190,19 +190,19 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
 
     int32_t ret;
     GstCaps *src_caps = nullptr;
+    uint32_t *trackNum = nullptr;
     if (AVMuxerUtil::isVideo(trackInfo_[trackId].type_)) {
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 1 video Tracks can be added");
-        ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps, trackInfo_[trackId].type_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetCaps");
-        videoTrackNum_++;
+        trackNum = &videoTrackNum_;
     } else {
         CHECK_AND_RETURN_RET_LOG(audioTrackNum_ < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 16 audio Tracks can be added");
-        ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps, trackInfo_[trackId].type_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetCaps");
-        audioTrackNum_++;
+        trackNum = audioTrackNum_;
     }
+    ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps, trackInfo_[trackId].type_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetCaps");
+    (*trackNum)++;
 
     trackInfo_[trackId].caps_ = src_caps;
     std::string name = "src_";
@@ -233,7 +233,7 @@ int32_t AVMuxerEngineGstImpl::Start()
     return MSERR_OK; 
 }
 
-static bool isAllHasCaps(std::map<int, TrackInfo>& trackInfo)
+static bool isAllHasCodecData(std::map<int, TrackInfo>& trackInfo)
 {
     for (auto& info : trackInfo) {
         if (info.second.hasCodecData_ == false) {
@@ -256,7 +256,7 @@ static bool isAllHasBuffer(std::map<int, TrackInfo>& trackInfo)
 int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
     const TrackSampleInfo &sampleInfo)
 {
-    MEDIA_LOGD("WriteTrackSample");
+    MEDIA_LOGD("WriteTrackSample, sampleInfo.trackIdx is %{public}d", sampleInfo.trackIdx);
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(errHappened_ != true, MSERR_INVALID_OPERATION, "Error happend");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
@@ -264,27 +264,28 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     CHECK_AND_RETURN_RET_LOG(trackInfo_[sampleInfo.trackIdx].needData_ == true, MSERR_INVALID_OPERATION,
         "Failed to push data, the queue is full");
     CHECK_AND_RETURN_RET_LOG(sampleInfo.timeMs >= 0, MSERR_INVALID_VAL, "Failed to check dts, dts muxt >= 0");
-    MEDIA_LOGD("WriteTrackSample, sampleInfo.trackIdx is %{public}d", sampleInfo.trackIdx);
+    
     int32_t ret;
-
     GstAppSrc *src = trackInfo_[sampleInfo.trackIdx].src_;
-    CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_VAL, "Failed to get AppSrc of trackid: %{public}d",
-        sampleInfo.trackIdx);
+    CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_VAL, "Failed to get AppSrc");
     MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,",
         ((uint8_t*)(sampleData->GetBase()))[0], ((uint8_t*)(sampleData->GetBase()))[1],
         ((uint8_t*)(sampleData->GetBase()))[2], ((uint8_t*)(sampleData->GetBase()))[3]);
-    if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == false && sampleInfo.flags == AVCODEC_BUFFER_FLAG_CODEDC_DATA) {
+
+    if (sampleInfo.flags == AVCODEC_BUFFER_FLAG_CODEDC_DATA) {
         g_object_set(src, "caps", trackInfo_[sampleInfo.trackIdx].caps_, nullptr);
         ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteData");
         trackInfo_[sampleInfo.trackIdx].hasCodecData_ = true;
-    } else {
+    } else if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == true) {
         ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteData");
         trackInfo_[sampleInfo.trackIdx].hasBuffer_ = true;
+    } else {
+        MEDIA_LOGW("First frame must be code_data");
     }
 
-    if (isAllHasCaps(trackInfo_) && !isPause_) {
+    if (isAllHasCodecData(trackInfo_) && !isPause_) {
         gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
         isPause_ = true;
         MEDIA_LOGD("Current state is Pause");
