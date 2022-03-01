@@ -273,7 +273,7 @@ void AVCodecListDemo::RunCase(const string &path)
         cout << "avCodecList_ is null" << endl;
         return;
     }
-    
+
     DoNext();
 }
 }
