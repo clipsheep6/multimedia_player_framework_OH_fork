@@ -42,7 +42,7 @@ namespace Media {
 static constexpr uint32_t MAX_VIDEO_TRACK_NUM = 1;
 static constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
 
-static void StartFeed(GstAppSrc *src, gpointer user_data)
+static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
     CHECK_AND_RETURN_LOG(user_data != nullptr, "User data does not exist");
@@ -198,7 +198,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     } else {
         CHECK_AND_RETURN_RET_LOG(audioTrackNum_ < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 16 audio Tracks can be added");
-        trackNum = audioTrackNum_;
+        trackNum = &audioTrackNum_;
     }
     ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps, trackInfo_[trackId].type_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetCaps");
