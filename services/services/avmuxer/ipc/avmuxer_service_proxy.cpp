@@ -60,7 +60,7 @@ std::vector<std::string> AVMuxerServiceProxy::GetAVMuxerFormatList()
 
     if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
         MEDIA_LOGE("Failed to write descriptor");
-        return MSERR_UNKNOWN;
+        return std::vector<std::string>();
     }
 
     std::vector<std::string> formatList;
@@ -204,7 +204,7 @@ void AVMuxerServiceProxy::Release()
 
     if (!data.WriteInterfaceToken(AVMuxerServiceProxy::GetDescriptor())) {
         MEDIA_LOGE("Failed to write descriptor");
-        return MSERR_UNKNOWN;
+        return;
     }
 
     int error = Remote()->SendRequest(RELEASE, data, reply, option);
