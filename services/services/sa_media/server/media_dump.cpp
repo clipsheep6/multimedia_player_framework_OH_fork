@@ -20,7 +20,6 @@
 #include "avcodec_server.h"
 #include "avmetadatahelper_server.h"
 
-
 namespace OHOS {
 namespace Media {
 MediaDump::MediaDump()
@@ -125,7 +124,7 @@ void MediaDump::DumpPlayerInfo( std::shared_ptr<IPlayerService> &playerServer)
     long maxTimeOfSeek = MaxOfList(seekTimesList);
     dumpFile << "UID : " << uid << "PID : " << pid << "player status : " << status << std::endl;
     dumpFile << "player url ： " <<  playerSourceUrl << "player location : " << currentTime
-             << std::endl;
+        << std::endl;
     dumpFile << "audio track Information : " << std::endl;
     DumpFormatInfo(audioTrack);
     dumpFile << "video track Information : " << std::endl;
@@ -133,9 +132,9 @@ void MediaDump::DumpPlayerInfo( std::shared_ptr<IPlayerService> &playerServer)
     dumpFile << "buffer Information : " <<  bufferPercentValue << "%" << std::endl;
     dumpFile << "the performance of start play: " << std::endl;
     dumpFile << "nearest time : " << nearestTimeOfStartPlay << "max time : " << maxTimeOfStartPlay <<
-             "average time : " << averageTimeOfStartPlay << std::endl;
+         "average time : " << averageTimeOfStartPlay << std::endl;
     dumpFile << "nearest time : " << nearestTimeOfSeek << "max time : " << maxTimeOfSeek <<
-             "average time : " << averageTimeOSeek << std::endl;
+         "average time : " << averageTimeOSeek << std::endl;
 }
 
 void MediaDump::DumpRecorderInfo(std::shared_ptr<IRecorderService> &recorderServer)
@@ -149,10 +148,10 @@ void MediaDump::DumpRecorderInfo(std::shared_ptr<IRecorderService> &recorderServ
     dumpFile << "Recorder outPut Path : " << outPutPath << std::endl;
     dumpFile << "Recoder parameter : " << std::endl;
     dumpFile <<  "video Width : " << recParameter.videoWidth << "video height" << recParameter.videoHeight
-             << "videoFrameRate ： " << recParameter.videoFrameRate << "videoEncodingBitRate : " <<
-             "captureRate ：" << recParameter.captureRate << "audioSampleRate : " << recParameter.audioSampleRate <<
-             "audioChannelsQuantity : " << recParameter.audioChannelsQuantity << "audioEncodingBitRate : "<<
-             recParameter.audioEncodingBitRate << std::endl;
+         << "videoFrameRate ： " << recParameter.videoFrameRate << "videoEncodingBitRate : " <<
+         "captureRate ：" << recParameter.captureRate << "audioSampleRate : " << recParameter.audioSampleRate <<
+         "audioChannelsQuantity : " << recParameter.audioChannelsQuantity << "audioEncodingBitRate : "<<
+          recParameter.audioEncodingBitRate << std::endl;
 }
 
 void MediaDump::DumpAVCodecInfo(std::shared_ptr<IAVCodecService> &avcodecServer)
@@ -183,9 +182,9 @@ void MediaDump::DumpAVMetadataHelperInfo(std::shared_ptr<IAVMetadataHelperServic
         << avMetaDataHelperSourceUrl << std::endl;
     dumpFile << "the performance of resolveMetaData : " << std::endl;
     dumpFile << "nearest time : " << nearestTimeOfResolveMetaData << "max time : " << maxTimeOfResolveMetaData <<
-             "average time : " << averageTimeOfResolveMetaData << std::endl;
+         "average time : " << averageTimeOfResolveMetaData << std::endl;
     dumpFile << "nearest time : " << nearestTimeOfFetchThumbnail << "max time : " << maxTimeOfFetchThumbnail <<
-             "average time : " << averageTimeOfFetchThumbnail << std::endl;
+         "average time : " << averageTimeOfFetchThumbnail << std::endl;
 }
 
 void MediaDump::DumpPlayerServerInfo(std::map<sptr<IRemoteObject>, pid_t> &playerStubMap)
