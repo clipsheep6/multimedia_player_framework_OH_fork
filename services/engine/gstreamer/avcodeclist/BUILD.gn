@@ -37,7 +37,7 @@ config("media_engine_gst_avcodec_config") {
   include_dirs = [
     "//foundation/multimedia/media_standard/services/engine/gstreamer/avcodeclist",
     "//foundation/multimedia/media_standard/services/utils/include",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native/avcommon",
     "//foundation/multimedia/media_standard/services/services/engine_intf",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/codec/common",
     "//utils/native/base/include",
@@ -61,6 +61,7 @@ ohos_static_library("media_engine_gst_avcodeclist") {
     ":media_engine_gst_avcodec_config",
     "//foundation/graphic/standard/frameworks/surface:surface_public_config",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils_public_config",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native:media_api_config",
   ]
 
   deps = [

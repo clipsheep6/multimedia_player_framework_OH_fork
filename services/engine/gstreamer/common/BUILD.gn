@@ -50,7 +50,7 @@ config("media_engine_gst_common_config") {
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/state_machine",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/utils",
     "//foundation/multimedia/media_standard/services/utils/include",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native/avcommon",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
   ]
 }
@@ -67,7 +67,10 @@ ohos_static_library("media_engine_gst_common") {
     "state_machine/state_machine.cpp",
   ]
 
-  configs = [ ":media_engine_gst_common_config" ]
+  configs = [
+    ":media_engine_gst_common_config",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native:media_api_config",
+  ]
 
   deps = [
     ":media_gst_dfx",
@@ -119,7 +122,7 @@ config("media_gst_dfx_config") {
     "//third_party/gstreamer/gstplugins_bad/gst-libs",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/utils",
     "//foundation/multimedia/media_standard/services/utils/include",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native/avcommon",
   ]
 }
 

@@ -38,7 +38,7 @@ config("media_engine_gst_recorder_config") {
     "element_wrapper",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/recorder",
     "//foundation/multimedia/media_standard/services/utils/include",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native/avcommon",
     "//foundation/multimedia/media_standard/services/services/engine_intf",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/avcodeclist",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
@@ -72,6 +72,7 @@ ohos_static_library("media_engine_gst_recorder") {
 
   configs = [
     ":media_engine_gst_recorder_config",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native:media_api_config",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils_public_config",
     "//foundation/graphic/standard/frameworks/surface:surface_public_config",
   ]

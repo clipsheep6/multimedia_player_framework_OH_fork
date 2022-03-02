@@ -48,7 +48,7 @@ config("media_engine_gst_factory_config") {
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/metadata",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/utils",
     "//foundation/multimedia/media_standard/services/utils/include",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native/avcommon",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//third_party/glib/glib",
     "//third_party/glib",
@@ -65,6 +65,7 @@ ohos_static_library("media_engine_gst_factory") {
   configs = [
     ":media_engine_gst_factory_config",
     "//foundation/graphic/standard/frameworks/surface:surface_public_config",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native:media_api_config",
   ]
 
   deps = [

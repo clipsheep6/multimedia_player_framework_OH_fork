@@ -28,7 +28,12 @@ ohos_copy("media_declaration") {
 
 ohos_shared_library("media") {
   include_dirs = [
-    "//foundation/multimedia/media_standard/interfaces/kits/js/media/include",
+    "//foundation/multimedia/media_standard/interfaces/kits/js/avcodec",
+    "//foundation/multimedia/media_standard/interfaces/kits/js/avdatasource",
+    "//foundation/multimedia/media_standard/interfaces/kits/js/avmuxer",
+    "//foundation/multimedia/media_standard/interfaces/kits/js/avplayer",
+    "//foundation/multimedia/media_standard/interfaces/kits/js/avrecorder",
+    "//foundation/multimedia/media_standard/interfaces/kits/js/media",
     "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/avcodec/audio_decoder",
     "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/avcodec/audio_encoder",
     "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/avcodec/utils",
@@ -100,8 +105,8 @@ ohos_shared_library("media") {
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/ace/napi:ace_napi",
     "//foundation/graphic/standard/frameworks/surface:surface",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media:media_client",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media:media_surface",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native:media_client",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native:media_surface",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
     "//utils/native/base:utils",
     "//utils/native/base:utilsecurec",
