@@ -29,7 +29,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServ
 
 namespace OHOS {
 namespace Media {
-const int32_t scale=1000;
+const int32_t scale = 1000;
 const std::string START_TAG = "PlayerCreate->Start";
 const std::string STOP_TAG = "PlayerStop->Destroy";
 std::shared_ptr<IPlayerService> PlayerServer::Create()

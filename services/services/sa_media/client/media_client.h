@@ -49,9 +49,6 @@ public:
     std::list<std::shared_ptr<IAVMetadataHelperService>> avMetadataHelperClientList;
     std::list<std::shared_ptr<IAVCodecService>> avCodecClientList;
     void GetClientLists();
-
-
-
 private:
     sptr<IStandardMediaService> GetMediaProxy();
     bool IsAlived();

@@ -49,7 +49,6 @@ public:
     std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap;
     void GetServiceStubMaps();
 
-
 private:
     MediaServerManager();
     sptr<IRemoteObject> CreatePlayerStubObject();

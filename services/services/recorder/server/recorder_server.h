@@ -82,7 +82,6 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
-
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
     void OnInfo(InfoType type, int32_t extra) override;
@@ -93,12 +92,10 @@ public:
     std::string outPutPath;
     RecorderParameter recParameter;
 
-
 private:
     int32_t Init();
     bool CheckPermission();
     bool GetSystemParam();
-
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
     std::mutex mutex_;

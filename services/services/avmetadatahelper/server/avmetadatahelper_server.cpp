@@ -14,10 +14,10 @@
  */
 
 #include <sys/time.h>
-#include "avmetadatahelper_server.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
+#include "avmetadatahelper_server.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadataHelperServer"};
@@ -25,7 +25,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadata
 
 namespace OHOS {
 namespace Media {
-const int32_t scale=1000;
+const int32_t scale = 1000;
 std::shared_ptr<IAVMetadataHelperService> AVMetadataHelperServer::Create()
 {
     std::shared_ptr<AVMetadataHelperServer> server = std::make_shared<AVMetadataHelperServer>();

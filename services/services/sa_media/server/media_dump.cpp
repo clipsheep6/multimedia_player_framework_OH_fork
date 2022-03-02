@@ -44,7 +44,7 @@ void MediaDump::GetServerManagers(std::shared_ptr<MediaServerManager> &mediaServ
 
 void MediaDump::DumpClientInfo()
 {
-    dumpFle.open(SetDumpFilename(),ios::out||ios::app);
+    dumpFle.open(SetDumpFilename(),ios::out || ios::app);
     mediaClient_.GetClientLists();
     dumpFile << "Current client information:" <<std::endl;
     dumpFile << "Player client quantity : " << mediaClient_.playerClientList.size()<<std::endl;
@@ -56,7 +56,7 @@ void MediaDump::DumpClientInfo()
 
 void MediaDump::DumpServerInfo()
 {
-    dumpFle.open(SetDumpFilename(),ios::out||ios::app);
+    dumpFle.open(SetDumpFilename(),ios::out || ios::app);
     mediaServerManager_.GetServiceStubMaps();
     DumpPlayerServerInfo(MediaServerManager_.playerStubMap);
     DumpRecorderServerInfo(MediaServerManager_.recorderStubMap);
@@ -67,30 +67,32 @@ void MediaDump::DumpServerInfo()
 
 void MediaDump::DumpLocalPlayerInfo( std::shared_ptr<IPlayerService> &playerServer)
 {
-    dumpFle.open(SetDumpFilename(),ios::out||ios::app);
+    dumpFle.open(SetDumpFilename(),ios::out || ios::app);
     dumpFile << "Dump local player information : " << std::endl;
     DumpPlayerInfo(playerServer);
     dumpFile.close();
 
 }
+
 void MediaDump::DumLocalRecorderInfo(std::shared_ptr<IRecorderService> &recorderServer)
 {
-    dumpFle.open(SetDumpFilename(),ios::out||ios::app);
+    dumpFle.open(SetDumpFilename(),ios::out || ios::app);
     dumpFile << "Dump local recorder information : " << std::endl;
     DumpRecorderInfo(recorderServer);
     dumpFile.close();
-
 }
+
 void MediaDump::DumpLocalAVCodecInfo(std::shared_ptr<IAVCodecService> &avcodecServer)
 {
-    dumpFle.open(SetDumpFilename(),ios::out||ios::app);
+    dumpFle.open(SetDumpFilename(),ios::out || ios::app);
     dumpFile << "Dump local avCodec information : " << std::endl;
     DumpAVCodecInfo(avcodecServer);
     dumpFile.close();
 }
+
 void MediaDump::DumpLocalAVMetadataHelperInfo(std::shared_ptr<IAVMetadataHelperService> &avMetadataHelper)
 {
-    dumpFle.open(SetDumpFilename(),ios::out||ios::app);
+    dumpFle.open(SetDumpFilename(),ios::out || ios::app);
     dumpFile << "Dump local aVMetadataHelper information : " << std::endl;
     DumpAVMetadataHelperInfo(avMetadataHelper);
     dumpFile.close();
@@ -136,7 +138,6 @@ void MediaDump::DumpPlayerInfo( std::shared_ptr<IPlayerService> &playerServer)
              "average time : " << averageTimeOSeek << std::endl;
 }
 
-
 void MediaDump::DumpRecorderInfo(std::shared_ptr<IRecorderService> &recorderServer)
 {
     pid_t pid = recorderServer.pid;
@@ -178,7 +179,8 @@ void MediaDump::DumpAVMetadataHelperInfo(std::shared_ptr<IAVMetadataHelperServic
     long nearestTimeOfFetchThumbnail = *fetchThumbnailTimeList.end();
     long averageTimeOfFetchThumbnail = AverageOfList(fetchThumbnailTimeList);
     long maxTimeOfFetchThumbnail = MaxOfList(fetchThumbnailTimeList);
-    dumpFile << "UID : " << uid << "PID : " << pid << "avMetaDataHelper SourceUrl : " << avMetaDataHelperSourceUrl << std::endl;
+    dumpFile << "UID : " << uid << "PID : " << pid << "avMetaDataHelper SourceUrl : "
+        << avMetaDataHelperSourceUrl << std::endl;
     dumpFile << "the performance of resolveMetaData : " << std::endl;
     dumpFile << "nearest time : " << nearestTimeOfResolveMetaData << "max time : " << maxTimeOfResolveMetaData <<
              "average time : " << averageTimeOfResolveMetaData << std::endl;
@@ -186,11 +188,10 @@ void MediaDump::DumpAVMetadataHelperInfo(std::shared_ptr<IAVMetadataHelperServic
              "average time : " << averageTimeOfFetchThumbnail << std::endl;
 }
 
-
 void MediaDump::DumpPlayerServerInfo(std::map<sptr<IRemoteObject>, pid_t> &playerStubMap)
 {
     int i = 1;
-    for(auto iter = playerStubMap.begin(); iter !=playerStubMap.end(); iter++) {
+    for (auto iter = playerStubMap.begin(); iter !=playerStubMap.end(); iter++) {
         sptr<PlayerServiceStub> playerServiceStub = iter->first;
         playerServiceStub.GetPlayerServer();
         std::shared_ptr<IPlayerService> playerServer = playerServiceStub.playerServer;
@@ -205,7 +206,7 @@ void MediaDump::DumpPlayerServerInfo(std::map<sptr<IRemoteObject>, pid_t> &playe
 void MediaDump::DumpRecorderServerInfo(std::map<sptr<IRemoteObject>, pid_t> &recorderStubMap)
 {
     int i = 1;
-    for(auto iter = recorderStubMap.begin(); iter !=recorderStubMap.end(); iter++) {
+    for (auto iter = recorderStubMap.begin(); iter !=recorderStubMap.end(); iter++) {
         sptr<RecorderServiceStub> recorderServiceStub = iter->first;
         recorderServiceStub.GetRecoderServer();
         std::shared_ptr<IRecorderService> recorderServer = recorderServiceStub.recorderServer;
@@ -220,7 +221,7 @@ void MediaDump::DumpRecorderServerInfo(std::map<sptr<IRemoteObject>, pid_t> &rec
 void MediaDump::DumpAvcodecServerInfo(std::map<sptr<IRemoteObject>, pid_t> &avCodecStubMap)
 {
     int i = 1;
-    for(auto iter =avCodecStubMap.begin(); iter !=avCodecStubMap.end(); iter++) {
+    for (auto iter =avCodecStubMap.begin(); iter !=avCodecStubMap.end(); iter++) {
         sptr<AVCodecServiceStub> avcodecServiceStub = iter->first;
         avcodecServiceStub.GetAvcodecServer();
         std::shared_ptr<IAVCodecService> avcodecServer = avcodecServiceStub.avcodecServer;
@@ -235,22 +236,22 @@ void MediaDump::DumpAvcodecServerInfo(std::map<sptr<IRemoteObject>, pid_t> &avCo
 void MediaDump::DumpAvMetaDataHelperServerInfo(std::map<sptr<IRemoteObject>, pid_t> &avMetadataHelperStubMap)
 {
     int i = 1;
-    for(auto iter = avMetadataHelperStubMap.begin(); iter !=avMetadataHelperStubMap.end(); iter++) {
+    for (auto iter = avMetadataHelperStubMap.begin(); iter !=avMetadataHelperStubMap.end(); iter++) {
         sptr<AVMetadataHelperServiceStub avMetadataHelperServiceStub = iter->first;
         avMetadataHelperServiceStub.GetAvMetadataHelperServer();
-        std::shared_ptr<IAVMetadataHelperService> avMetadataHelperServer = avMetadataHelperServiceStub.avMetadateHelperServer;
+        std::shared_ptr<IAVMetadataHelperService> avMetadataHelperServer =
+             avMetadataHelperServiceStub.avMetadateHelperServer;
         dumpFile << "AvMetaDataHelper Client " << i << "information : " << std::endl;
         if (recorderServer != nullptr) {
             DumpAVMetadataHelperInfo(avMetadataHelperServer);
         }
         i++;
     }
-
 }
 
 void MediaDump::DumpFormatInfo(std::vector<Format> &formatData)
 {
-    for(auto vectorIter = formatData.begin(); vectorIter != formatData.end(); vectorIter++) {
+    for (auto vectorIter = formatData.begin(); vectorIter != formatData.end(); vectorIter++) {
         Format data = *vectorIter;
         for(auto mapIter = data.FormatDataMap.begin(); mapIter != data.FormatDataMap.end(); mapIter++) {
             std::string string = data.FormatDataMap->first;
@@ -258,8 +259,8 @@ void MediaDump::DumpFormatInfo(std::vector<Format> &formatData)
             dumpFile << "Format type : " << string << std::endl;
             dumpFile << "Format data : " << std::endl;
             dumpFile <<  "    " << "Format data type : "  << formatData.type << " Format data stringVal : "
-            << formatData.stringVal << "Format data address : " << formatData.addr << " Format data size : "
-            << formatData.size << std:: endl;
+                << formatData.stringVal << "Format data address : " << formatData.addr << " Format data size : "
+                << formatData.size << std:: endl;
         }
     }
 }
@@ -267,7 +268,7 @@ void MediaDump::DumpFormatInfo(std::vector<Format> &formatData)
 long MediaDump::MaxOfList(std::list<long> &list)
 {
     long max = 0;
-    for(auto iter = list.begin(); iter != list.end(); iter++) {
+    for (auto iter = list.begin(); iter != list.end(); iter++) {
         if(*iter > max || *iter == max) {
             max = *iter;
         }
@@ -279,10 +280,10 @@ long MediaDump::AverageOfList(std::list<long> &list)
 {
     long sum = 0;
     int32_t num = list.size();
-    for(auto iter = list.begin(); iter != list.end(); iter++) {
+    for (auto iter = list.begin(); iter != list.end(); iter++) {
        sum += *iter;
     }
-    if(num != 0) {
+    if (num != 0) {
         long average = sum/num;
     }
     return average;
@@ -298,6 +299,5 @@ std::string MediaDump::SetDumpFilename();
                + ".log"
     return fileName;
 }
-
 } // Media
 } // OHOS

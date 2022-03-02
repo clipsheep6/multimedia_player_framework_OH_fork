@@ -31,7 +31,7 @@ public:
     void GetServerManagers(std::shared_ptr<MediaServerManager> &mediaServerManager);
     void DumpClientInfo();
     void DumpServerInfo();
-    void DumpLocalPlayerInfo( std::shared_ptr<IPlayerService> &playerServer) ;
+    void DumpLocalPlayerInfo(std::shared_ptr<IPlayerService> &playerServer) ;
     void DumLocalRecorderInfo(std::shared_ptr<IRecorderService> &recorderServer) ;
     void DumpLocalAVCodecInfo(std::shared_ptr<IAVCodecService> &avcodecServer) ;
     void DumpLocalAVMetadataHelperInfo(std::shared_ptr<IAVMetadataHelperService> &avMetadataHelper) ;
@@ -55,4 +55,4 @@ private:
 };
 }
 }
-# endif //MEDIA_DUMP_H
+# endif // MEDIA_DUMP_H

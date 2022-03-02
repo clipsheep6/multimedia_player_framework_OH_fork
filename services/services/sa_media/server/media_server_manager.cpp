@@ -307,10 +307,6 @@ void MediaServerManager::GetServiceStubMaps()
     playerStubMap = playerStubMap_;
     avMetadataHelperStubMap = avMetadataHelperStubMap_;
     avCodecStubMap = avCodecStubMap_;
-
 }
-
-
-
 } // Media
 } // OHOS

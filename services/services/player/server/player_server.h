@@ -65,7 +65,7 @@ public:
     void GetPlayerStatus();
     void GetBufferPercentValue();
     PlayerStates status;
-    std::string playerSourceUrl=nullptr;
+    std::string playerSourceUrl = nullptr;
     pid_t pid;
     pid_t uid;
     std::list<long> startPlayTimesList;
