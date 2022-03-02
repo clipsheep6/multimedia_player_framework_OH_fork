@@ -41,8 +41,6 @@ std::shared_ptr<IRecorderService> RecorderServer::Create()
 {
     std::shared_ptr<RecorderServer> server = std::make_shared<RecorderServer>();
     int32_t ret = server->Init();
-    pid = IPCSkeleton::GetCallingPid();
-    uid = IPCSkeleton::GetCallingUid();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("failed to init RecorderServer");
         return nullptr;
@@ -54,6 +52,8 @@ RecorderServer::RecorderServer()
     : startTimeMonitor_(START_TAG),
       stopTimeMonitor_(STOP_TAG)
 {
+    pid = IPCSkeleton::GetCallingPid();
+    uid = IPCSkeleton::GetCallingUid();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 

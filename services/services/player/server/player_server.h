@@ -30,27 +30,6 @@ public:
     PlayerServer();
     virtual ~PlayerServer();
     DISALLOW_COPY_AND_MOVE(PlayerServer);
-    enum PlayerStates : int32_t {
-        /* error states */
-        PLAYER_STATE_ERROR = 0,
-        /* idle states */
-        PLAYER_IDLE = 1,
-        /* initialized states(Internal states) */
-        PLAYER_INITIALIZED = 2,
-        /* preparing states(Internal states) */
-        PLAYER_PREPARING = 3,
-        /* prepared states */
-        PLAYER_PREPARED = 4,
-        /* started states */
-        PLAYER_STARTED = 5,
-        /* paused states */
-        PLAYER_PAUSED = 6,
-        /* stopped states */
-        PLAYER_STOPPED = 7,
-        /* Play to the end states */
-        PLAYER_PLAYBACK_COMPLETE = 8,
-    };
-
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     int32_t Play() override;

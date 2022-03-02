@@ -32,8 +32,6 @@ std::shared_ptr<IPlayerService> PlayerServer::Create()
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "failed to new PlayerServer");
     (void)server->Init();
-    pid = IPCSkeleton::GetCallingPid();
-    uid = IPCSkeleton::GetCallingUid();
     return server;
 }
 
@@ -41,6 +39,8 @@ PlayerServer::PlayerServer()
     : startTimeMonitor_(START_TAG),
       stopTimeMonitor_(STOP_TAG)
 {
+    pid = IPCSkeleton::GetCallingPid();
+    uid = IPCSkeleton::GetCallingUid();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
@@ -186,9 +186,9 @@ int32_t PlayerServer::Play()
     struct timeval play_begin;
     struct timeval play_end;
     long time; // ms
-    gettimeoftoday(&play_begin, nullptr);
+    gettimeofday(&play_begin, nullptr);
     int32_t ret = playerEngine_->Play();
-    gettimeoftoday(&play_end, nullptr);
+    gettimeofday(&play_end, nullptr);
     time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000
             // *1000: s to ms    /1000: us to ms
     startPlayTimesList.push_back(time);
@@ -363,9 +363,9 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     struct timeval play_begin;
     struct timeval play_end;
     long time; // ms
-    gettimeoftoday(&play_begin, nullptr);
+    gettimeofday(&play_begin, nullptr);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
-    gettimeoftoday(&play_end, nullptr);
+    gettimeofday(&play_end, nullptr);
     time = (play_end.tv_sec-play_begin.tv_sec)*1000 + (play_end.tv_usec-play_begin.tv_usec)/1000
     // *1000: s to ms    /1000: us to ms
     seekTimesList.push_back(time);

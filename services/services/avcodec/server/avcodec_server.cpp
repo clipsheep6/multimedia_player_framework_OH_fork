@@ -28,8 +28,6 @@ std::shared_ptr<IAVCodecService> AVCodecServer::Create()
 {
     std::shared_ptr<AVCodecServer> server = std::make_shared<AVCodecServer>();
     int32_t ret = server->Init();
-    pid = IPCSkeleton::GetCallingPid();
-    uid = IPCSkeleton::GetCallingUid();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("failed to init AVCodecServer");
         return nullptr;
@@ -39,6 +37,8 @@ std::shared_ptr<IAVCodecService> AVCodecServer::Create()
 
 AVCodecServer::AVCodecServer()
 {
+    pid = IPCSkeleton::GetCallingPid();
+    uid = IPCSkeleton::GetCallingUid();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 

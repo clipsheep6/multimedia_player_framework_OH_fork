@@ -17,6 +17,7 @@
 #define AVMETADATAHELPER_SERVICE_SERVER_H
 
 #include <mutex>
+#include <list>
 #include "ipc_skeleton.h"
 #include "i_avmetadatahelper_service.h"
 #include "i_avmetadatahelper_engine.h"
@@ -30,7 +31,6 @@ public:
     AVMetadataHelperServer();
     virtual ~AVMetadataHelperServer();
     DISALLOW_COPY_AND_MOVE(AVMetadataHelperServer);
-
     int32_t SetSource(const std::string &uri, int32_t usage) override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
