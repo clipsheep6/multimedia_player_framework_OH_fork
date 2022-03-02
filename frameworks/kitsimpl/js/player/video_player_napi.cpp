@@ -21,9 +21,9 @@
 #include "media_errors.h"
 #include "media_data_source_napi.h"
 #include "media_data_source_callback.h"
-#include "common_napi.h"
 #include "media_surface.h"
 #include "surface_utils.h"
+#include "string_ex.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoPlayerNapi"};
@@ -66,7 +66,6 @@ napi_value VideoPlayerNapi::Init(napi_env env, napi_value exports)
 
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("setDisplaySurface", SetDisplaySurface),
-        DECLARE_NAPI_FUNCTION("getDisplaySurface", GetDisplaySurface), // Informal external interface
         DECLARE_NAPI_FUNCTION("prepare", Prepare),
         DECLARE_NAPI_FUNCTION("play", Play),
         DECLARE_NAPI_FUNCTION("pause", Pause),
@@ -125,9 +124,11 @@ napi_value VideoPlayerNapi::Constructor(napi_env env, napi_callback_info info)
 
     jsPlayer->env_ = env;
     jsPlayer->nativePlayer_ = PlayerFactory::CreatePlayer();
-    CHECK_AND_RETURN_RET_LOG(jsPlayer->nativePlayer_ != nullptr, nullptr, "failed to CreatePlayer");
+    if (jsPlayer->nativePlayer_ == nullptr) {
+        MEDIA_LOGE("failed to CreatePlayer");
+    }
 
-    if (jsPlayer->jsCallback_ == nullptr) {
+    if (jsPlayer->jsCallback_ == nullptr && jsPlayer->nativePlayer_ != nullptr) {
         jsPlayer->jsCallback_ = std::make_shared<VideoCallbackNapi>(env);
         (void)jsPlayer->nativePlayer_->SetPlayerCallback(jsPlayer->jsCallback_);
     }
@@ -213,10 +214,26 @@ napi_value VideoPlayerNapi::SetUrl(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
     jsPlayer->url_ = CommonNapi::GetStringArgument(env, args[0]);
-    
-    // set url to server
-    int32_t ret = jsPlayer->nativePlayer_->SetSource(jsPlayer->url_);
+
+    const std::string fdHead = "fd://";
+    const std::string httpHead = "http";
+    int32_t ret = MSERR_EXT_INVALID_VAL;
+    int32_t fd = -1;
+    MEDIA_LOGD("input url is %{public}s!", jsPlayer->url_.c_str());
+    if (jsPlayer->url_.find(fdHead) != std::string::npos) {
+        std::string inputFd = jsPlayer->url_.substr(fdHead.size());
+        if (!StrToInt(inputFd, fd) || fd < 0) {
+            jsPlayer->OnErrorCallback(MSERR_EXT_INVALID_VAL);
+            return undefinedResult;
+        }
+
+        ret = jsPlayer->nativePlayer_->SetSource(fd, 0, -1);
+    } else if (jsPlayer->url_.find(httpHead) != std::string::npos) {
+        ret = jsPlayer->nativePlayer_->SetSource(jsPlayer->url_);
+    }
+
     if (ret != MSERR_OK) {
+        MEDIA_LOGE("input url error!");
         jsPlayer->OnErrorCallback(MSERR_EXT_INVALID_VAL);
         return undefinedResult;
     }
@@ -326,6 +343,84 @@ napi_value VideoPlayerNapi::GetDataSrc(napi_env env, napi_callback_info info)
     return jsResult;
 }
 
+napi_value VideoPlayerNapi::SetFdSrc(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    // get args and jsThis
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    // get VideoPlayerNapi
+    VideoPlayerNapi *jsPlayer = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&jsPlayer));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsPlayer != nullptr, undefinedResult, "Failed to retrieve instance");
+
+    // get url from js
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        jsPlayer->OnErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    if (CommonNapi::GetFdArgument(env, args[0], jsPlayer->rawFd_) == false) {
+        MEDIA_LOGE("get rawfd argument failed!");
+        jsPlayer->OnErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    // set url to server
+    int32_t ret = jsPlayer->nativePlayer_->SetSource(jsPlayer->rawFd_.fd, jsPlayer->rawFd_.offset,
+        jsPlayer->rawFd_.length);
+    if (ret != MSERR_OK) {
+        jsPlayer->OnErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    MEDIA_LOGD("SetFdSrc success");
+    return undefinedResult;
+}
+
+napi_value VideoPlayerNapi::GetFdSrc(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    // get jsThis
+    napi_value jsThis = nullptr;
+    size_t argCount = 0;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("failed to napi_get_cb_info");
+        return undefinedResult;
+    }
+
+    // get VideoPlayerNapi
+    VideoPlayerNapi *jsPlayer = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&jsPlayer));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsPlayer != nullptr, undefinedResult, "Failed to retrieve instance");
+
+    napi_value jsResult = nullptr;
+    status = napi_create_object(env, &jsResult);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "create jsResult object error");
+
+    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt32(env, jsResult, "fd", jsPlayer->rawFd_.fd) == true, nullptr);
+    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt64(env, jsResult, "offset", jsPlayer->rawFd_.offset) == true,
+        nullptr);
+    CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt64(env, jsResult, "length", jsPlayer->rawFd_.length) == true,
+        nullptr);
+
+    MEDIA_LOGD("GetFdSrc success");
+    return jsResult;
+}
+
 void VideoPlayerNapi::ReleaseDataSource(std::shared_ptr<MediaDataSourceCallback> dataSourceCb)
 {
     if (dataSourceCb != nullptr) {
@@ -339,7 +434,7 @@ void VideoPlayerNapi::AsyncSetDisplaySurface(napi_env env, void *data)
     MEDIA_LOGD("AsyncSetDisplaySurface In");
     auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
     CHECK_AND_RETURN_LOG(asyncContext != nullptr, "VideoPlayerAsyncContext is nullptr!");
- 
+
     if (asyncContext->jsPlayer == nullptr ||
         asyncContext->jsPlayer->nativePlayer_ == nullptr) {
         asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer or nativePlayer is nullptr");
@@ -348,6 +443,10 @@ void VideoPlayerNapi::AsyncSetDisplaySurface(napi_env env, void *data)
 
     uint64_t surfaceId = 0;
     MEDIA_LOGD("get surface, surfaceStr = %{public}s", asyncContext->surface.c_str());
+    if (asyncContext->surface.empty() || asyncContext->surface[0] < '0' || asyncContext->surface[0] > '9') {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "input surface id is invalid");
+        return;
+    }
     surfaceId = std::stoull(asyncContext->surface);
     MEDIA_LOGD("get surface, surfaceId = (%{public}" PRIu64 ")", surfaceId);
 
@@ -468,7 +567,7 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
     asyncContext->env = env;
     auto cb = std::static_pointer_cast<VideoCallbackNapi>(asyncContext->jsPlayer->jsCallback_);
     cb->QueueAsyncWork(asyncContext);
-    
+
     int32_t ret = MSERR_OK;
     auto player = asyncContext->jsPlayer->nativePlayer_;
     if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_PREPARE) {
@@ -692,19 +791,20 @@ napi_value VideoPlayerNapi::Release(napi_env env, napi_callback_info info)
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
     if (asyncContext->jsPlayer == nullptr || asyncContext->jsPlayer->nativePlayer_ == nullptr) {
         asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer or nativePlayer_ is nullptr");
-    }
-    asyncContext->jsPlayer->ReleaseDataSource(asyncContext->jsPlayer->dataSrcCallBack_);
-    int32_t ret = asyncContext->jsPlayer->nativePlayer_->Release();
-    if (ret != MSERR_OK) {
-        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to release");
-    }
-    
-    asyncContext->jsPlayer->jsCallback_ = nullptr;
-    asyncContext->jsPlayer->url_.clear();
+    } else {
+        asyncContext->jsPlayer->ReleaseDataSource(asyncContext->jsPlayer->dataSrcCallBack_);
+        int32_t ret = asyncContext->jsPlayer->nativePlayer_->Release();
+        if (ret != MSERR_OK) {
+            asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to release");
+        }
 
-    auto mediaSurface = MediaSurfaceFactory::CreateMediaSurface();
-    if (mediaSurface != nullptr) {
-        mediaSurface->Release();
+        asyncContext->jsPlayer->jsCallback_ = nullptr;
+        asyncContext->jsPlayer->url_.clear();
+
+        auto mediaSurface = MediaSurfaceFactory::CreateMediaSurface();
+        if (mediaSurface != nullptr) {
+            mediaSurface->Release();
+        }
     }
 
     // async work
@@ -749,7 +849,7 @@ napi_value VideoPlayerNapi::Seek(napi_env env, napi_callback_info info)
         if (valueType == napi_number) { // get seek mode
             status = napi_get_value_int32(env, args[1], &asyncContext->seekMode);
             if (status != napi_ok ||
-                asyncContext->seekMode < SEEK_PREVIOUS_SYNC ||
+                asyncContext->seekMode < SEEK_NEXT_SYNC ||
                 asyncContext->seekMode > SEEK_CLOSEST) {
                 asyncContext->SignError(MSERR_EXT_INVALID_VAL, "seek mode invalid");
             }
@@ -757,8 +857,11 @@ napi_value VideoPlayerNapi::Seek(napi_env env, napi_callback_info info)
             asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
         }
     }
-    if (args[2] != nullptr && napi_typeof(env, args[2], &valueType) == napi_ok && valueType == napi_function) {
-        asyncContext->callbackRef = CommonNapi::CreateReference(env, args[2]);
+
+    static constexpr size_t argFunc = 2;
+    if (args[argFunc] != nullptr &&
+        napi_typeof(env, args[argFunc], &valueType) == napi_ok && valueType == napi_function) {
+        asyncContext->callbackRef = CommonNapi::CreateReference(env, args[argFunc]);
     }
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     // get jsPlayer
@@ -929,9 +1032,9 @@ napi_value VideoPlayerNapi::On(napi_env env, napi_callback_info info)
     napi_value undefinedResult = nullptr;
     napi_get_undefined(env, &undefinedResult);
 
-    static const size_t MIN_REQUIRED_ARG_COUNT = 2;
-    size_t argCount = MIN_REQUIRED_ARG_COUNT;
-    napi_value args[MIN_REQUIRED_ARG_COUNT] = { nullptr, nullptr };
+    static constexpr size_t minArgCount = 2;
+    size_t argCount = minArgCount;
+    napi_value args[minArgCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {

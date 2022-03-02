@@ -18,7 +18,7 @@
 
 namespace OHOS {
 namespace Media {
-const std::map<VideoPixelFormat, std::string> PIEXEL_TO_STRING = {
+const std::map<VideoPixelFormat, std::string> PIXEL_TO_STRING = {
     {YUVI420, "I420"},
     {NV12, "NV12"},
     {NV21, "NV21"},
@@ -44,22 +44,69 @@ const std::map<AudioRawFormat, std::string> PCM_TO_STRING = {
     {AUDIO_PCM_F32_LE, "F32LE"},
 };
 
-const std::map<std::string, CodecMimeType> MIME_TO_CODEC_NAME = {
-    {"video/h263", CODEC_MIMIE_TYPE_VIDEO_H263},
-    {"video/avc", CODEC_MIMIE_TYPE_VIDEO_AVC},
-    {"video/hevc", CODEC_MIMIE_TYPE_VIDEO_HEVC},
-    {"video/mpeg2", CODEC_MIMIE_TYPE_VIDEO_MPEG2},
-    {"video/mp4v-es", CODEC_MIMIE_TYPE_VIDEO_MPEG4},
-    {"audio/vorbis", CODEC_MIMIE_TYPE_AUDIO_VORBIS},
-    {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_MPEG},
-    {"audio/mp4a-latm", CODEC_MIMIE_TYPE_AUDIO_AAC},
-    {"audio/flac", CODEC_MIMIE_TYPE_AUDIO_FLAC},
+const std::map<MPEG4Profile, std::string> MPEG4_PROFILE_TO_STRING = {
+    {MPEG4_PROFILE_ADVANCED_CODING, "advanced-coding-efficiency"},
+    {MPEG4_PROFILE_ADVANCED_CORE, "advanced-core"},
+    {MPEG4_PROFILE_ADVANCED_REAL_TIME, "advanced-real-time"},
+    {MPEG4_PROFILE_ADVANCED_SCALABLE, "advanced-scalable-texture"},
+    {MPEG4_PROFILE_ADVANCED_SIMPLE, "advanced-simple"},
+    {MPEG4_PROFILE_BASIC_ANIMATED, "basic-animated-texture"},
+    {MPEG4_PROFILE_CORE, "core"},
+    {MPEG4_PROFILE_CORE_SCALABLE, "core-scalable"},
+    {MPEG4_PROFILE_HYBRID, "hybrid"},
+    {MPEG4_PROFILE_MAIN, "main"},
+    {MPEG4_PROFILE_NBIT, "n-bit"},
+    {MPEG4_PROFILE_SCALABLE_TEXTURE, "scalable"},
+    {MPEG4_PROFILE_SIMPLE, "simple"},
+    {MPEG4_PROFILE_SIMPLE_FBA, "simple-fba"},
+    {MPEG4_PROFILE_SIMPLE_FACE, "simple-face"},
+    {MPEG4_PROFILE_SIMPLE_SCALABLE, "simple-scalable"},
+};
+
+const std::map<AVCProfile, std::string> AVC_PROFILE_TO_STRING = {
+    {AVC_PROFILE_BASELINE, "baseline"},
+    {AVC_PROFILE_CONSTRAINED_BASELINE, "constrained-baseline"},
+    {AVC_PROFILE_CONSTRAINED_HIGH, "constrained-high"},
+    {AVC_PROFILE_EXTENDED, "extended"},
+    {AVC_PROFILE_HIGH, "high"},
+    {AVC_PROFILE_HIGH_10, "high-10"},
+    {AVC_PROFILE_HIGH_422, "high-4:2:2"},
+    {AVC_PROFILE_HIGH_444, "high-4:4:4"},
+    {AVC_PROFILE_MAIN, "main"},
+};
+
+const std::map<std::string_view, InnerCodecMimeType> MIME_TO_CODEC_NAME = {
+    {CodecMimeType::VIDEO_H263, CODEC_MIMIE_TYPE_VIDEO_H263},
+    {CodecMimeType::VIDEO_AVC, CODEC_MIMIE_TYPE_VIDEO_AVC},
+    {CodecMimeType::VIDEO_HEVC, CODEC_MIMIE_TYPE_VIDEO_HEVC},
+    {CodecMimeType::VIDEO_MPEG2, CODEC_MIMIE_TYPE_VIDEO_MPEG2},
+    {CodecMimeType::VIDEO_MPEG4, CODEC_MIMIE_TYPE_VIDEO_MPEG4},
+    {CodecMimeType::AUDIO_VORBIS, CODEC_MIMIE_TYPE_AUDIO_VORBIS},
+    {CodecMimeType::AUDIO_MPEG, CODEC_MIMIE_TYPE_AUDIO_MPEG},
+    {CodecMimeType::AUDIO_AAC, CODEC_MIMIE_TYPE_AUDIO_AAC},
+    {CodecMimeType::AUDIO_FLAC, CODEC_MIMIE_TYPE_AUDIO_FLAC},
 };
 
 std::string PixelFormatToGst(VideoPixelFormat pixel)
 {
-    if (PIEXEL_TO_STRING.count(pixel) != 0) {
-        return PIEXEL_TO_STRING.at(pixel);
+    if (PIXEL_TO_STRING.count(pixel) != 0) {
+        return PIXEL_TO_STRING.at(pixel);
+    }
+    return "Invalid";
+}
+
+std::string MPEG4ProfileToGst(MPEG4Profile profile)
+{
+    if (MPEG4_PROFILE_TO_STRING.count(profile) != 0) {
+        return MPEG4_PROFILE_TO_STRING.at(profile);
+    }
+    return "Invalid";
+}
+
+std::string AVCProfileToGst(AVCProfile profile)
+{
+    if (AVC_PROFILE_TO_STRING.count(profile) != 0) {
+        return AVC_PROFILE_TO_STRING.at(profile);
     }
     return "Invalid";
 }
@@ -72,7 +119,7 @@ std::string RawAudioFormatToGst(AudioRawFormat format)
     return "Invalid";
 }
 
-int32_t MapCodecMime(const std::string &mime, CodecMimeType &name)
+int32_t MapCodecMime(const std::string &mime, InnerCodecMimeType &name)
 {
     if (MIME_TO_CODEC_NAME.count(mime) != 0) {
         name =  MIME_TO_CODEC_NAME.at(mime);
@@ -129,7 +176,7 @@ uint32_t PixelBufferSize(VideoPixelFormat pixel, uint32_t width, uint32_t height
     return size;
 }
 
-uint32_t CompressedBufSize(uint32_t width, uint32_t height, bool isEncoder, CodecMimeType type)
+uint32_t CompressedBufSize(uint32_t width, uint32_t height, bool isEncoder, InnerCodecMimeType type)
 {
     if (width == 0 || height == 0) {
         return 0;
@@ -141,7 +188,7 @@ uint32_t CompressedBufSize(uint32_t width, uint32_t height, bool isEncoder, Code
         compressRatio = 3;
     }
 
-    const uint32_t maxSize = 3150000; // 3MB
+    constexpr uint32_t maxSize = 3150000; // 3MB
     if ((UINT32_MAX / width) <= (height / compressRatio)) {
         return maxSize;
     }

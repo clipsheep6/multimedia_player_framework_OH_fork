@@ -31,14 +31,14 @@ using namespace std;
 namespace {
 const std::string SURFACE_STRIDE_ALIGNMENT = "SURFACE_STRIDE_ALIGNMENT";
 const std::string SURFACE_FORMAT_KEY = "SURFACE_FORMAT";
-const float EPSINON = 0.0001;
-const float SPEED_0_75_X = 0.75;
-const float SPEED_1_00_X = 1.00;
-const float SPEED_1_25_X = 1.25;
-const float SPEED_1_75_X = 1.75;
-const float SPEED_2_00_X = 2.00;
-const int32_t PERCENT = 1;
-const int32_t TIME = 2;
+constexpr float EPSINON = 0.0001;
+constexpr float SPEED_0_75_X = 0.75;
+constexpr float SPEED_1_00_X = 1.00;
+constexpr float SPEED_1_25_X = 1.25;
+constexpr float SPEED_1_75_X = 1.75;
+constexpr float SPEED_2_00_X = 2.00;
+constexpr int32_t PERCENT = 1;
+constexpr int32_t TIME = 2;
 }
 
 // PlayerCallback override
@@ -503,6 +503,28 @@ int32_t PlayerDemo::SetDataSrc(const string &path, bool seekable)
     return player_->SetSource(dataSrc_);
 }
 
+int32_t PlayerDemo::SetFdSource(const string &path)
+{
+    int32_t fd = open(path.c_str(), O_RDONLY);
+    if (fd < 0) {
+        cout << "Open file failed" << endl;
+        return -1;
+    }
+    int32_t offset = 0;
+
+    struct stat64 buffer;
+    if (fstat64(fd, &buffer) != 0) {
+        cout << "Get file state failed" << endl;
+        return -1;
+    }
+    int64_t length = static_cast<int64_t>(buffer.st_size);
+    cout << "fd = " << fd << ", offset = " << offset << ", length = " << length << endl;
+
+    int32_t ret = player_->SetSource(fd, offset, length);
+    (void)close(fd);
+    return ret;
+}
+
 int32_t PlayerDemo::SelectSource(const string &pathOuter)
 {
     string path;
@@ -519,6 +541,7 @@ int32_t PlayerDemo::SelectSource(const string &pathOuter)
     cout << "0:local file source" << endl;
     cout << "1:stream file source with no seek" << endl;
     cout << "2:stream file source with seekable" << endl;
+    cout << "3:file descriptor source" << endl;
     string srcMode;
     (void)getline(cin, srcMode);
     if (srcMode == "" || srcMode == "0") {
@@ -530,6 +553,9 @@ int32_t PlayerDemo::SelectSource(const string &pathOuter)
     } else if (srcMode == "2") {
         cout << "source mode is stream seekable" << endl;
         ret = SetDataSrc(path, true);
+    } else if (srcMode == "3") {
+        cout << "source mode is FD" << endl;
+        ret = SetFdSource(path);
     } else {
         cout << "unknow mode" << endl;
     }

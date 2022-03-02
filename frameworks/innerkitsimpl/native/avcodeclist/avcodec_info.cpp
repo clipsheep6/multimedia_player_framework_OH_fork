@@ -178,11 +178,11 @@ void VideoCaps::LoadLevelParams()
     if (this->GetCodecInfo()->IsSoftwareOnly() == true) {
         return;
     }
-    if (data_.mimeType == "video/avc") {
+    if (data_.mimeType == CodecMimeType::VIDEO_AVC) {
         LoadAVCLevelParams();
-    } else if (data_.mimeType == "video/mpeg2") {
+    } else if (data_.mimeType == CodecMimeType::VIDEO_MPEG2) {
         LoadMPEG2LevelParams();
-    } else if (data_.mimeType == "video/mp4v-es") {
+    } else if (data_.mimeType == CodecMimeType::VIDEO_MPEG4) {
         LoadMPEG4LevelParams();
     }
 }
@@ -332,6 +332,14 @@ void VideoCaps::InitParams()
 
 void VideoCaps::UpdateParams()
 {
+    if (data_.blockSize.width == 0 || data_.blockSize.height == 0 || blockWidth_ == 0 || blockHeight_ == 0 ||
+        verticalBlockRange_.maxVal == 0 || verticalBlockRange_.minVal == 0 ||
+        horizontalBlockRange_.maxVal == 0 || horizontalBlockRange_.minVal == 0 ||
+        blockPerFrameRange_.minVal == 0 || blockPerFrameRange_.maxVal == 0) {
+        MEDIA_LOGE("Invalid param");
+        return;
+    }
+
     int32_t factor = (blockWidth_ * blockHeight_) / (data_.blockSize.width * data_.blockSize.height);
 
     blockPerFrameRange_ = blockPerFrameRange_.Intersect(DivRange(data_.blockPerFrame, factor));
@@ -551,14 +559,12 @@ std::string AVCodecInfo::GetMimeType()
 
 bool AVCodecInfo::IsHardwareAccelerated()
 {
-    // get from hdi plugin
-    return false;
+    return data_.isVendor;
 }
 
 bool AVCodecInfo::IsSoftwareOnly()
 {
-    // get from hdi plugin
-    return true;
+    return !data_.isVendor;
 }
 
 bool AVCodecInfo::IsVendor()

@@ -28,7 +28,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-class AVCodecServiceStub::AVCodecBufferCache {
+class AVCodecServiceStub::AVCodecBufferCache : public NoCopyable {
 public:
     AVCodecBufferCache() = default;
     ~AVCodecBufferCache() = default;
@@ -69,8 +69,6 @@ public:
     }
 
 private:
-    DISALLOW_COPY_AND_MOVE(AVCodecBufferCache);
-
     enum CacheFlag : uint8_t {
         HIT_CACHE = 1,
         UPDATE_CACHE,
@@ -146,6 +144,12 @@ void AVCodecServiceStub::GetAvcodecServer()
 int AVCodecServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
+    auto remoteDescriptor = data.ReadInterfaceToken();
+    if (AVCodecServiceStub::GetDescriptor() != remoteDescriptor) {
+        MEDIA_LOGE("Invalid descriptor");
+        return MSERR_INVALID_OPERATION;
+    }
+
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {
         auto memberFunc = itFunc->second;

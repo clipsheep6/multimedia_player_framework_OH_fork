@@ -14,15 +14,15 @@
  */
 
 #include "i_engine_factory.h"
-#include "nocopyable.h"
-#include "media_errors.h"
-#include "media_log.h"
-#include "player_engine_gst_impl.h"
-#include "recorder_engine_gst_impl.h"
-#include "avmetadatahelper_engine_gst_impl.h"
 #include "avcodec_engine_gst_impl.h"
 #include "avcodeclist_engine_gst_impl.h"
+#include "avmetadatahelper_engine_gst_impl.h"
 #include "gst_loader.h"
+#include "media_errors.h"
+#include "media_log.h"
+#include "nocopyable.h"
+#include "player_engine_gst_impl.h"
+#include "recorder_engine_gst_impl.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstEngineFactory"};
@@ -30,7 +30,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-class GstEngineFactory : public IEngineFactory {
+class GstEngineFactory : public IEngineFactory, public NoCopyable {
 public:
     GstEngineFactory() = default;
     ~GstEngineFactory() = default;
@@ -41,8 +41,6 @@ public:
     std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine() override;
     std::unique_ptr<IAVCodecEngine> CreateAVCodecEngine() override;
     std::unique_ptr<IAVCodecListEngine> CreateAVCodecListEngine() override;
-
-    DISALLOW_COPY_AND_MOVE(GstEngineFactory);
 };
 
 int32_t GstEngineFactory::Score(Scene scene, const std::string &uri)

@@ -24,7 +24,7 @@ G_DEFINE_TYPE(GstShMemAllocator, gst_shmem_allocator, GST_TYPE_ALLOCATOR);
 GST_DEBUG_CATEGORY_STATIC(gst_shmem_allocator_debug_category);
 #define GST_CAT_DEFAULT gst_shmem_allocator_debug_category
 
-static const uint32_t ALIGN_BYTES = 4;
+static constexpr uint32_t ALIGN_BYTES = 4;
 
 GstShMemAllocator *gst_shmem_allocator_new()
 {
@@ -112,14 +112,29 @@ static GstMemory *gst_shmem_allocator_mem_copy(GstShMemMemory *mem, gssize offse
     g_return_val_if_fail(mem != nullptr && mem->mem != nullptr, nullptr);
     g_return_val_if_fail(mem->mem->GetBase() != nullptr, nullptr);
 
-    gssize realOffset = mem->parent.offset + offset;
+    gssize realOffset = 0;
+    if (((gint64)mem->parent.offset + offset) > INT32_MAX) {
+        GST_ERROR("invalid offset");
+        return nullptr;
+    } else {
+        realOffset = mem->parent.offset + offset;
+    }
     g_return_val_if_fail(realOffset >= 0, nullptr);
 
     if (size == -1) {
-        size = mem->parent.size - offset;
+        if (((gint64)mem->parent.size - offset) > INT32_MAX) {
+            GST_ERROR("invalid size");
+            return nullptr;
+        } else {
+            size = mem->parent.size - offset;
+        }
     }
     g_return_val_if_fail(size > 0, nullptr);
 
+    if ((UINT32_MAX - size) <= realOffset) {
+        GST_ERROR("invalid limit");
+        return nullptr;
+    }
     gsize realLimit = static_cast<gsize>(size) + static_cast<gsize>(realOffset);
     g_return_val_if_fail(realLimit <= static_cast<gsize>(mem->mem->GetSize()), nullptr);
 

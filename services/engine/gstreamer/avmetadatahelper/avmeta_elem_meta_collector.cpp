@@ -17,11 +17,12 @@
 #include <string_view>
 #include <limits>
 #include "avmetadatahelper.h"
-#include "media_errors.h"
-#include "media_log.h"
+#include "avsharedmemorybase.h"
 #include "av_common.h"
 #include "gst_meta_parser.h"
 #include "gst_utils.h"
+#include "media_errors.h"
+#include "media_log.h"
 #include "securec.h"
 
 namespace {
@@ -171,13 +172,13 @@ std::shared_ptr<AVSharedMemory> AVMetaElemMetaCollector::DoFetchArtPicture(const
     size_t size = 0;
     (void)innerMeta.GetBuffer(INNER_META_KEY_IMAGE, &addr, size);
 
-    static const size_t maxImageSize = 1 * 1024 * 1024;
+    static constexpr size_t maxImageSize = 1 * 1024 * 1024;
     if (addr == nullptr || size == 0 || size > maxImageSize) {
         MEDIA_LOGW("invalid param, size = %{public}zu", size);
         return nullptr;
     }
 
-    auto artPicMem = AVSharedMemory::Create(
+    auto artPicMem = AVSharedMemoryBase::CreateFromLocal(
         static_cast<int32_t>(size), AVSharedMemory::FLAGS_READ_ONLY, "artpic");
     CHECK_AND_RETURN_RET_LOG(artPicMem != nullptr, nullptr, "create art pic failed");
 
@@ -380,8 +381,8 @@ void AVMetaElemMetaCollector::QueryDuration(GstPad &pad)
         duration_ = streamDuration;
         MEDIA_LOGI("update duration to %{public}" PRIi64 "", duration_);
 
-        static const int32_t NASEC_PER_HALF_MILLISEC = 500000;
-        static const int32_t NASEC_PER_MILLISEC = 1000000;
+        static constexpr int32_t NASEC_PER_HALF_MILLISEC = 500000;
+        static constexpr int32_t NASEC_PER_MILLISEC = 1000000;
 
         int64_t milliSecond;
         if ((std::numeric_limits<int64_t>::max() - NASEC_PER_HALF_MILLISEC) < duration_) {

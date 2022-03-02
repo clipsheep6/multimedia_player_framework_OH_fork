@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Media {
-class AVMetadataHelperServer : public IAVMetadataHelperService {
+class AVMetadataHelperServer : public IAVMetadataHelperService, public NoCopyable {
 public:
     static std::shared_ptr<IAVMetadataHelperService> Create();
     AVMetadataHelperServer();

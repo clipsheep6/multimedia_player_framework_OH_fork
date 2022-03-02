@@ -100,7 +100,7 @@ static void gst_venc_base_class_init(GstVencBaseClass *klass)
 
     const gchar *sink_caps_string = GST_VIDEO_CAPS_MAKE(GST_VENC_BASE_SUPPORTED_FORMATS);
     GstCaps *sink_caps = gst_caps_from_string(sink_caps_string);
-    GST_DEBUG_OBJECT(klass, "Sink_caps %" GST_PTR_FORMAT, sink_caps);
+    GST_DEBUG_OBJECT(klass, "Sink_caps %s", gst_caps_to_string(sink_caps));
     if (sink_caps != nullptr) {
         GstPadTemplate *sink_templ = gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sink_caps);
         gst_element_class_add_pad_template(element_class, sink_templ);
@@ -197,6 +197,10 @@ static void gst_venc_base_init(GstVencBase *self)
     self->output.first_frame_time = 0;
     self->output.last_frame_time = 0;
     self->coding_outbuf_cnt = 0;
+    self->first_in_frame = TRUE;
+    self->first_out_frame = TRUE;
+    self->last_pts = GST_CLOCK_TIME_NONE;
+    self->first_frame_pts = GST_CLOCK_TIME_NONE;
 }
 
 static void gst_venc_base_finalize(GObject *object)
@@ -257,6 +261,7 @@ static gboolean gst_venc_base_close(GstVideoEncoder *encoder)
     GST_DEBUG_OBJECT(encoder, "Close");
     g_return_val_if_fail(encoder != nullptr, FALSE);
     GstVencBase *self = GST_VENC_BASE(encoder);
+    self->encoder->Deinit();
     self->encoder = nullptr;
 
     return TRUE;
@@ -272,6 +277,7 @@ static gboolean gst_venc_base_start(GstVideoEncoder *encoder)
     self->output.frame_cnt = 0;
     self->output.first_frame_time = 0;
     self->output.last_frame_time = 0;
+    self->first_out_frame = TRUE;
     return TRUE;
 }
 
@@ -575,6 +581,11 @@ static GstFlowReturn gst_venc_base_handle_frame(GstVideoEncoder *encoder, GstVid
     }
     gst_buffer_unref(frame->input_buffer);
     frame->input_buffer = nullptr;
+    self->last_pts = frame->pts;
+    if (self->first_in_frame) {
+        self->first_in_frame = FALSE;
+        self->first_frame_pts = frame->pts;
+    }
     return ret;
 }
 
@@ -585,12 +596,19 @@ static GstFlowReturn gst_venc_base_finish_output_buffer(GstVencBase *self, GstBu
     g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
     GstFlowReturn flow_ret = GST_FLOW_OK;
     gst_venc_debug_output_time(self);
+    if (self->first_out_frame) {
+        self->first_out_frame = FALSE;
+        GST_BUFFER_PTS(buffer) = self->first_frame_pts;
+        flow_ret = gst_pad_push(GST_VIDEO_ENCODER_SRC_PAD(self), buffer);
+        return flow_ret;
+    }
     GstVideoCodecFrame *frame = gst_video_encoder_get_oldest_frame(GST_VIDEO_ENCODER(self));
     if (frame != nullptr) {
         frame->output_buffer = buffer;
         flow_ret = gst_video_encoder_finish_frame(GST_VIDEO_ENCODER(self), frame);
     } else {
         GST_DEBUG_OBJECT(self, "No frame available");
+        GST_BUFFER_PTS(buffer) = self->last_pts;
         flow_ret = gst_pad_push(GST_VIDEO_ENCODER_SRC_PAD(self), buffer);
     }
     GST_DEBUG_OBJECT(self, "Finish output buffer end");
@@ -894,7 +912,7 @@ static gboolean gst_venc_base_decide_allocation(GstVideoEncoder *encoder, GstQue
     guint pool_num = gst_query_get_n_allocation_pools(query);
     if (pool_num > 0) {
         gst_query_parse_nth_allocation_pool(query, 0, &pool, &size, &min_buf, &max_buf);
-        GST_DEBUG_OBJECT(encoder, "Get bufferpool num %u query %p", pool_num, query);
+        GST_DEBUG_OBJECT(encoder, "Get bufferpool num %u", pool_num);
         if (!gst_query_find_allocation_meta(query, GST_BUFFER_TYPE_META_API_TYPE, &index)) {
             GST_INFO_OBJECT(encoder, "no meta api");
             gst_object_unref(pool);
@@ -947,7 +965,7 @@ static gboolean gst_venc_base_propose_allocation(GstVideoEncoder *encoder, GstQu
     gst_video_info_init(&vinfo);
     gst_query_parse_allocation(query, &incaps, nullptr);
     if (incaps != nullptr) {
-        GST_DEBUG_OBJECT(encoder, "Query caps %" GST_PTR_FORMAT, incaps);
+        GST_DEBUG_OBJECT(encoder, "Query caps %s", gst_caps_to_string(incaps));
         gst_video_info_from_caps(&vinfo, incaps);
     }
     size = vinfo.size;
