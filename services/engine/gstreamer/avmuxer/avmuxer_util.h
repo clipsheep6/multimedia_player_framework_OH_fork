@@ -31,8 +31,8 @@ namespace OHOS {
 namespace Media {
 
 const std::map<std::string, std::string> FORMAT_TO_MUX {
-    {"mp4", "qtmux"},
-    {"m4a", "qtmux"}
+    {"mp4", "mp4mux"},
+    {"m4a", "mp4mux"}
 };
 
 const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {

@@ -17,8 +17,9 @@
 #define AVMUXER_H
 
 #include <string>
-#include <memory>
+#include <string_view>
 #include <vector>
+#include <memory>
 #include "avmemory.h"
 #include "av_common.h"
 #include "media_description.h"
