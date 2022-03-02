@@ -16,7 +16,6 @@
 #ifndef MEDIA_DUMP_H
 #define MEDIA_DUMP_H
 
-
 #include <fstream>
 #include <iostream>
 #include <string>

@@ -25,6 +25,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadata
 
 namespace OHOS {
 namespace Media {
+const int32_t scale=1000;
 std::shared_ptr<IAVMetadataHelperService> AVMetadataHelperServer::Create()
 {
     std::shared_ptr<AVMetadataHelperServer> server = std::make_shared<AVMetadataHelperServer>();
@@ -70,11 +71,10 @@ std::string AVMetadataHelperServer::ResolveMetadata(int32_t key)
     struct timeval play_begin;
     struct timeval play_end;
     long time; // ms
-    gettimetoday(&play_begin, nullptr);
+    gettimeofday(&play_begin, nullptr);
     std::string metaData = avMetadataHelperEngine_->ResolveMetadata(key);
-    gettimetoday(&play_end, nullptr);
-    time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000;
-          // *1000: s to ms    /1000: us to ms
+    gettimeofday(&play_end, nullptr);
+    time = (play_end.tv_sec - play_begin.tv_sec) * scale + (play_end.tv_usec - play_begin.tv_usec) / scale;
     resolveMetaDataTimeList.push_back(time);
     return metaData;
 }
@@ -87,10 +87,9 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperServer::ResolveMetadata
     struct timeval play_end;
     long time; // ms
     gettimeofday(&play_begin, nullptr);
-    std::string metaData = avMetadataHelperEngine_->ResolveMetadata();
+    std::unordered_map<int32_t, std::string> metaData = avMetadataHelperEngine_->ResolveMetadata();
     gettimeofday(&play_end, nullptr);
-    time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000;
-            // *1000: s to ms    /1000: us to ms
+    time = (play_end.tv_sec - play_begin.tv_sec) * scale + (play_end.tv_usec - play_begin.tv_usec) / scale;
     resolveMetaDataTimeList.push_back(time);
     return metaData;
 }
@@ -105,8 +104,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchArtPicture()
     gettimeofday(&play_begin, nullptr);
     std::shared_ptr<AVSharedMemory> artPicture = avMetadataHelperEngine_->FetchArtPicture();
     gettimeofday(&play_end, nullptr);
-    time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000;
-          // *1000: s to ms    /1000: us to ms
+    time = (play_end.tv_sec - play_begin.tv_sec) * scale + (play_end.tv_usec - play_begin.tv_usec) / scale;
     fetchThumbnailTimeList.push_back(time);
     return artPicture;
 }
@@ -119,11 +117,10 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServer::FetchFrameAtTime(int64_t
     struct timeval play_begin;
     struct timeval play_end;
     long time; // ms
-    gettimeoftoday(&play_begin, nullptr);
+    gettimeofday(&play_begin, nullptr);
     std::shared_ptr<AVSharedMemory> frame = avMetadataHelperEngine_->FetchFrameAtTime(timeUs, option, param);
-    gettimeoftoday(&play_end, nullptr);
-    time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000;
-           // *1000: s to ms    /1000: us to ms
+    gettimeofday(&play_end, nullptr);
+    time = (play_end.tv_sec - play_begin.tv_sec) * scale + (play_end.tv_usec - play_begin.tv_usec) / scale;
     fetchThumbnailTimeList.push_back(time);
     return frame;
 }

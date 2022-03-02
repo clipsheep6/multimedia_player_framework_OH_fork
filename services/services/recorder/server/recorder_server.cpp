@@ -159,7 +159,7 @@ int32_t RecorderServer::SetCaptureRate(int32_t sourceId, double fps)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     CaptureRate captureRate(fps);
-    recParameter.captureRate = frameRate;
+    recParameter.captureRate = fps;
     return recorderEngine_->Configure(sourceId, captureRate);
 }
 
@@ -240,7 +240,7 @@ int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRat
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     AudBitRate audBitRate(bitRate);
-    recParameter.audioBitRate = bitRate;
+    recParameter.audioEncodingBitRate = bitRate;
     return recorderEngine_->Configure(sourceId, audBitRate);
 }
 

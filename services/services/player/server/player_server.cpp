@@ -25,6 +25,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServ
 
 namespace OHOS {
 namespace Media {
+const int32_t scale=1000;
 const std::string START_TAG = "PlayerCreate->Start";
 const std::string STOP_TAG = "PlayerStop->Destroy";
 std::shared_ptr<IPlayerService> PlayerServer::Create()
@@ -189,8 +190,7 @@ int32_t PlayerServer::Play()
     gettimeofday(&play_begin, nullptr);
     int32_t ret = playerEngine_->Play();
     gettimeofday(&play_end, nullptr);
-    time = (play_end.tv_sec - play_begin.tv_sec) * 1000 + (play_end.tv_usec - play_begin.tv_usec) / 1000
-            // *1000: s to ms    /1000: us to ms
+    time = (play_end.tv_sec - play_begin.tv_sec) * scale + (play_end.tv_usec - play_begin.tv_usec) / scale;
     startPlayTimesList.push_back(time);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Play Failed!");
     startTimeMonitor_.FinishTime();
@@ -366,7 +366,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     gettimeofday(&play_begin, nullptr);
     int32_t ret = playerEngine_->Seek(mSeconds, mode);
     gettimeofday(&play_end, nullptr);
-    time = (play_end.tv_sec-play_begin.tv_sec)*1000 + (play_end.tv_usec-play_begin.tv_usec)/1000
+    time = (play_end.tv_sec - play_begin.tv_sec) * scale + (play_end.tv_usec - play_begin.tv_usec) / scale;
     // *1000: s to ms    /1000: us to ms
     seekTimesList.push_back(time);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Seek Failed!");

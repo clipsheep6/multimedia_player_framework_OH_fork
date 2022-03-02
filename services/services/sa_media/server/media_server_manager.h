@@ -22,7 +22,7 @@
 #include "recorder_service_stub.h"
 #include "player_service_stub.h"
 #include "avcodec_service_stub.h"
-#includ  "avmetadatahelper_service_stub.h"
+#include "avmetadatahelper_service_stub.h"
 #include "avcodeclist_service_stub.h"
 #include "nocopyable.h"
 

@@ -16,6 +16,7 @@
 #ifndef PLAYER_SERVICE_SERVER_H
 #define PLAYER_SERVICE_SERVER_H
 
+#include <list>
 #include "ipc_skeleton.h"
 #include "i_player_service.h"
 #include "i_player_engine.h"
