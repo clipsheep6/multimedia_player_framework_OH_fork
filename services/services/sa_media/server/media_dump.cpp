@@ -21,8 +21,8 @@
 #include "avmetadatahelper_server.h"
 
 
-namespace OHOS{
-namespace Media{
+namespace OHOS {
+namespace Media {
 MediaDump::MediaDump()
 {
     MEDIA_LOGD("Media Information Dump");

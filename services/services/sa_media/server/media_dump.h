@@ -21,9 +21,9 @@
 #include <string>
 #include "media_server_manager.h"
 #include "media_client.h"
-namespace OHOS{
-namespace Media{
-class MediaDump{
+namespace OHOS {
+namespace Media {
+class MediaDump {
 public:
     MediaDump();
     ~MediaDump();
