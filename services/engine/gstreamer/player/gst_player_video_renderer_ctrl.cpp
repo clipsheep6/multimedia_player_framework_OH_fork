@@ -34,6 +34,7 @@ namespace {
     constexpr uint32_t DEFAULT_BUFFER_NUM = 8;
     constexpr uint32_t MAX_BUFFER_NUM = 10;
     constexpr uint32_t DEFAULT_STRIDE = 4;
+    constexpr bool     DEFAULT_RENDER_MODE = true;
 }
 
 namespace OHOS {
@@ -144,6 +145,7 @@ GstElement *GstPlayerVideoRendererCap::CreateVideoSink(const GstCaps *caps, cons
 
     g_object_set(G_OBJECT(sink), "caps", caps, nullptr);
     g_object_set(G_OBJECT(sink), "surface", static_cast<gpointer>(rendererCtrl->GetProducerSurface()), nullptr);
+    g_object_set(G_OBJECT(sink), "render-async", static_cast<gboolean>(DEFAULT_RENDER_MODE), nullptr);
 
     GstMemSinkCallbacks sinkCallbacks = { EosCb, nullptr, NewSampleCb };
     gst_mem_sink_set_callback(GST_MEM_SINK(sink), &sinkCallbacks, userData, nullptr);
