@@ -28,7 +28,6 @@
 
 namespace OHOS {
 namespace Media {
-
 class AVMuxerEngineGstImpl : public IAVMuxerEngine {
 public:
     AVMuxerEngineGstImpl();

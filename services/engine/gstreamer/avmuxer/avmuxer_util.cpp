@@ -21,6 +21,9 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerUtil"};
     constexpr uint32_t MSTONS = 1000000;
+    constexpr uint32_t NUM_ZERO = 0;
+    constexpr uint32_t NUM_ONE = 1;
+    constexpr uint32_t NUM_TWO = 2;
 }
 
 namespace OHOS {
@@ -64,7 +67,7 @@ std::map<CodecMimeType, std::vector<std::tuple<std::string, GType, MultiValue>>>
 bool AVMuxerUtil::isVideo(CodecMimeType type)
 {
     if (type == CODEC_MIMIE_TYPE_VIDEO_H263 || type == CODEC_MIMIE_TYPE_VIDEO_AVC ||
-        type == CODEC_MIMIE_TYPE_VIDEO_MPEG2 || type ==CODEC_MIMIE_TYPE_VIDEO_HEVC || 
+        type == CODEC_MIMIE_TYPE_VIDEO_MPEG2 || type ==CODEC_MIMIE_TYPE_VIDEO_HEVC ||
         type == CODEC_MIMIE_TYPE_VIDEO_MPEG4) {
         return true;
     }
