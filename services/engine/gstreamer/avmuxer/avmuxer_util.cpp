@@ -25,12 +25,13 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-
 struct MultiValue {
-    explicit MultiValue(int32_t val) {
+    explicit MultiValue(int32_t val)
+    {
         val_.intVal = val;
     }
-    explicit MultiValue(const char *val) {
+    explicit MultiValue(const char *val)
+    {
         val_.stringVal = val;
     }
     union Val {
@@ -60,16 +61,18 @@ std::map<CodecMimeType, std::vector<std::tuple<std::string, GType, MultiValue>>>
     }}
 };
 
-bool AVMuxerUtil::isVideo(CodecMimeType type) {
+bool AVMuxerUtil::isVideo(CodecMimeType type)
+{
     if (type == CODEC_MIMIE_TYPE_VIDEO_H263 || type == CODEC_MIMIE_TYPE_VIDEO_AVC ||
-        type ==CODEC_MIMIE_TYPE_VIDEO_MPEG2 || type ==CODEC_MIMIE_TYPE_VIDEO_HEVC || 
+        type == CODEC_MIMIE_TYPE_VIDEO_MPEG2 || type ==CODEC_MIMIE_TYPE_VIDEO_HEVC || 
         type == CODEC_MIMIE_TYPE_VIDEO_MPEG4) {
         return true;
     }
     return false;
 }
 
-static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, CodecMimeType type) {
+static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, CodecMimeType type)
+{
     if (AVMuxerUtil::isVideo(type)) {
         CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_WIDTH, param.width) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
@@ -93,16 +96,20 @@ static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc,
 static void AddOptionCaps(GstCaps *src_caps, CodecMimeType type)
 {
     for (auto& elements : optionCapsMap[type]) {
-        switch(std::get<1>(elements)) {
+        switch (std::get<1>(elements)) {
             case G_TYPE_BOOLEAN:
             case G_TYPE_INT:
                 gst_caps_set_simple(src_caps,
-                    std::get<0>(elements).c_str(), std::get<1>(elements), std::get<2>(elements).val_.intVal,
+                    std::get<NUM_ZERO>(elements).c_str(),
+                    std::get<NUM_ONE>(elements),
+                    std::get<NUM_TWO>(elements).val_.intVal,
                     nullptr);
                 break;
             case G_TYPE_STRING:
                 gst_caps_set_simple(src_caps,
-                    std::get<0>(elements).c_str(), std::get<1>(elements), std::get<2>(elements).val_.stringVal,
+                    std::get<NUM_ZERO>(elements).c_str(),
+                    std::get<NUM_ONE>(elements),
+                    std::get<NUM_TWO>(elements).val_.stringVal,
                     nullptr);
                 break;
             default:

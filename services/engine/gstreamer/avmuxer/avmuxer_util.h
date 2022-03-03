@@ -29,6 +29,9 @@
 
 namespace OHOS {
 namespace Media {
+constexpr uint32_t NUM_ZERO = 0;
+constexpr uint32_t NUM_ONE = 1;
+constexpr uint32_t NUM_TWO = 2;
 
 const std::map<std::string, std::string> FORMAT_TO_MUX {
     {"mp4", "mp4mux"},
