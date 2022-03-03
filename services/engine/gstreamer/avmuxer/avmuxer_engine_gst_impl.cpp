@@ -15,12 +15,12 @@
 
 #include "avmuxer_engine_gst_impl.h"
 #include <iostream>
+#include <unistd.h>
 #include "gst_utils.h"
 #include "gstappsrc.h"
 #include "media_errors.h"
 #include "media_log.h"
 #include "convert_codec_data.h"
-#include <unistd.h>
 #include "gstbaseparse.h"
 #include "gst_mux_bin.h"
 #include "uri_helper.h"
