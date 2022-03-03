@@ -47,12 +47,12 @@ int AVCodecListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         case AVCodecListenerMsg::ON_OUTPUT_FORMAT_CHANGED: {
             Format format;
             (void)MediaParcel::Unmarshalling(data, format);
-            OnOutputFormatChanged(format);
+            OnStreamChanged(format);
             return MSERR_OK;
         }
         case AVCodecListenerMsg::ON_INPUT_BUFFER_AVAILABLE: {
             uint32_t index = data.ReadUint32();
-            OnInputBufferAvailable(index);
+            OnNeedInputData(index);
             return MSERR_OK;
         }
         case AVCodecListenerMsg::ON_OUTPUT_BUFFER_AVAILABLE: {
@@ -62,7 +62,7 @@ int AVCodecListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
             info.size = data.ReadInt32();
             info.offset = data.ReadInt32();
             AVCodecBufferFlag flag = static_cast<AVCodecBufferFlag>(data.ReadInt32());
-            OnOutputBufferAvailable(index, info, flag);
+            OnNewOutputData(index, info, flag);
             return MSERR_OK;
         }
         default: {
@@ -79,24 +79,24 @@ void AVCodecListenerStub::OnError(AVCodecErrorType errorType, int32_t errorCode)
     }
 }
 
-void AVCodecListenerStub::OnOutputFormatChanged(const Format &format)
+void AVCodecListenerStub::OnStreamChanged(const Format &format)
 {
     if (callback_ != nullptr) {
-        callback_->OnOutputFormatChanged(format);
+        callback_->OnStreamChanged(format);
     }
 }
 
-void AVCodecListenerStub::OnInputBufferAvailable(uint32_t index)
+void AVCodecListenerStub::OnNeedInputData(uint32_t index)
 {
     if (callback_ != nullptr) {
-        callback_->OnInputBufferAvailable(index);
+        callback_->OnNeedInputData(index);
     }
 }
 
-void AVCodecListenerStub::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
+void AVCodecListenerStub::OnNewOutputData(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     if (callback_ != nullptr) {
-        callback_->OnOutputBufferAvailable(index, info, flag);
+        callback_->OnNewOutputData(index, info, flag);
     }
 }
 

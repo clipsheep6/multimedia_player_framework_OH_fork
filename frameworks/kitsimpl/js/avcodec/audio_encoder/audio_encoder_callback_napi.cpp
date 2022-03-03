@@ -92,10 +92,10 @@ void AudioEncoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCo
     return OnJsErrorCallBack(cb);
 }
 
-void AudioEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
+void AudioEncoderCallbackNapi::OnStreamChanged(const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGD("OnOutputFormatChanged is called");
+    MEDIA_LOGD("OnStreamChanged is called");
     CHECK_AND_RETURN(formatChangedCallback_ != nullptr);
 
     AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback();
@@ -106,7 +106,7 @@ void AudioEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
     return OnJsFormatCallBack(cb);
 }
 
-void AudioEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
+void AudioEncoderCallbackNapi::OnNeedInputData(uint32_t index)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN(inputCallback_ != nullptr);
@@ -123,7 +123,7 @@ void AudioEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
     CHECK_AND_RETURN(buffer != nullptr);
 
     // cache this buffer for this index to make sure that this buffer is valid until when it be
-    // obtained to response to OnInputBufferAvailable at next time.
+    // obtained to response to OnNeedInputData at next time.
     auto iter = inputBufferCaches_.find(index);
     if (iter == inputBufferCaches_.end()) {
         inputBufferCaches_.emplace(index, buffer);
@@ -141,7 +141,7 @@ void AudioEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
     return OnJsBufferCallBack(cb, true);
 }
 
-void AudioEncoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
+void AudioEncoderCallbackNapi::OnNewOutputData(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN(outputCallback_ != nullptr);
@@ -162,7 +162,7 @@ void AudioEncoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBu
     }
 
     // cache this buffer for this index to make sure that this buffer is valid until the buffer of this index
-    // obtained to response to OnInputBufferAvailable at next time.
+    // obtained to response to OnNeedInputData at next time.
     auto iter = outputBufferCaches_.find(index);
     if (iter == outputBufferCaches_.end()) {
         outputBufferCaches_.emplace(index, buffer);

@@ -55,8 +55,8 @@ napi_value AudioDecoderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("flush", Flush),
         DECLARE_NAPI_FUNCTION("reset", Reset),
         DECLARE_NAPI_FUNCTION("release", Release),
-        DECLARE_NAPI_FUNCTION("queueInput", QueueInput),
-        DECLARE_NAPI_FUNCTION("releaseOutput", ReleaseOutput),
+        DECLARE_NAPI_FUNCTION("pushInputData", PushInputData),
+        DECLARE_NAPI_FUNCTION("freeOutputBuffer", FreeOutputBuffer),
         DECLARE_NAPI_FUNCTION("setParameter", SetParameter),
         DECLARE_NAPI_FUNCTION("getOutputMediaDescription", GetOutputMediaDescription),
         DECLARE_NAPI_FUNCTION("getAudioDecoderCaps", GetAudioDecoderCaps),
@@ -535,7 +535,7 @@ napi_value AudioDecoderNapi::Release(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value AudioDecoderNapi::QueueInput(napi_env env, napi_callback_info info)
+napi_value AudioDecoderNapi::PushInputData(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -576,12 +576,12 @@ napi_value AudioDecoderNapi::QueueInput(napi_env env, napi_callback_info info)
         asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "nullptr");
     } else {
         if (asyncCtx->napi->adec_->QueueInputBuffer(asyncCtx->index, asyncCtx->info, asyncCtx->flag) != MSERR_OK) {
-            asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to QueueInput");
+            asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to PushInputData");
         }
     }
 
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "QueueInput", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "PushInputData", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
@@ -591,7 +591,7 @@ napi_value AudioDecoderNapi::QueueInput(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value AudioDecoderNapi::ReleaseOutput(napi_env env, napi_callback_info info)
+napi_value AudioDecoderNapi::FreeOutputBuffer(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -627,12 +627,12 @@ napi_value AudioDecoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
         asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "nullptr");
     } else {
         if (asyncCtx->napi->adec_->ReleaseOutputBuffer(asyncCtx->index) != MSERR_OK) {
-            asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to ReleaseOutput");
+            asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to FreeOutputBuffer");
         }
     }
 
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "ReleaseOutput", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "FreeOutputBuffer", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 

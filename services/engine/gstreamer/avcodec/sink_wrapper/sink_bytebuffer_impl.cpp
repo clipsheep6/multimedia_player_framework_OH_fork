@@ -142,7 +142,7 @@ void SinkBytebufferImpl::EosCb(GstMemSink *memSink, gpointer userData)
 
     AVCodecBufferInfo info;
     constexpr uint32_t invalidIndex = 1000;
-    obs->OnOutputBufferAvailable(invalidIndex, info, AVCODEC_BUFFER_FLAG_EOS);
+    obs->OnNewOutputData(invalidIndex, info, AVCODEC_BUFFER_FLAG_EOS);
 }
 
 int32_t SinkBytebufferImpl::HandleNewSampleCb(GstBuffer *buffer)
@@ -163,7 +163,7 @@ int32_t SinkBytebufferImpl::HandleNewSampleCb(GstBuffer *buffer)
 
     if (isFirstFrame_) {
         isFirstFrame_ = false;
-        obs->OnOutputFormatChanged(bufferFormat_);
+        obs->OnStreamChanged(bufferFormat_);
     }
 
     isEos_ = false;
@@ -176,9 +176,9 @@ int32_t SinkBytebufferImpl::HandleNewSampleCb(GstBuffer *buffer)
     info.size = map.size;
     constexpr uint64_t nsToUs = 1000;
     info.presentationTimeUs = GST_BUFFER_PTS(buffer) / nsToUs;
-    obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
+    obs->OnNewOutputData(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
-    MEDIA_LOGD("OutputBufferAvailable, index:%{public}d", index);
+    MEDIA_LOGD("OnNewOutputData, index:%{public}d", index);
     gst_buffer_unmap(buffer, &map);
     bufferList_[index]->owner_ = BufferWrapper::SERVER;
     bufferList_[index]->gstBuffer_ = gst_buffer_ref(buffer);

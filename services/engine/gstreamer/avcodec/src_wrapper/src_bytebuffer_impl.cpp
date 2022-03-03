@@ -133,8 +133,8 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
             bufWrapper->owner_ = BufferWrapper::SERVER;
             auto obs = obs_.lock();
             CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
-            obs->OnInputBufferAvailable(index);
-            MEDIA_LOGD("OnInputBufferAvailable, index:%{public}d", index);
+            obs->OnNeedInputData(index);
+            MEDIA_LOGD("OnNeedInputData, index:%{public}d", index);
             return MSERR_OK;
         }
         return MSERR_UNKNOWN;
@@ -233,9 +233,9 @@ int32_t SrcBytebufferImpl::HandleBufferAvailable(GstBuffer *buffer)
 
     auto obs = obs_.lock();
     CHECK_AND_RETURN_RET_LOG(obs != nullptr, MSERR_UNKNOWN, "obs is nullptr");
-    obs->OnInputBufferAvailable(index);
+    obs->OnNeedInputData(index);
 
-    MEDIA_LOGD("OnInputBufferAvailable, index:%{public}d", index);
+    MEDIA_LOGD("OnNeedInputData, index:%{public}d", index);
     bufferList_[index]->owner_ = BufferWrapper::SERVER;
     bufferList_[index]->gstBuffer_ = gst_buffer_ref(buffer);
 
