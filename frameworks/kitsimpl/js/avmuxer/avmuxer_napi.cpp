@@ -26,12 +26,12 @@ namespace {
 namespace OHOS {
 namespace Media {
 napi_ref AVMuxerNapi::constructor_ = nullptr;
-constexpr std::string CLASS_NAME = "AVMuxer";
-constexpr std::string PROPERTY_KEY_SAMPLEINFO = "sampleInfo";
-constexpr std::string PROPERTY_KEY_SIZE = "size";
-constexpr std::string PROPERTY_KEY_FLAG = "flags";
-constexpr std::string PROPERTY_KEY_TIMEUS = "timeMs";
-constexpr std::string PROPERTY_KEY_TRACK_ID = "trackIndex";
+const std::string CLASS_NAME = "AVMuxer";
+const std::string PROPERTY_KEY_SAMPLEINFO = "sampleInfo";
+const std::string PROPERTY_KEY_SIZE = "size";
+const std::string PROPERTY_KEY_FLAG = "flags";
+const std::string PROPERTY_KEY_TIMEUS = "timeMs";
+const std::string PROPERTY_KEY_TRACK_ID = "trackIndex";
 
 struct AVMuxerNapiAsyncContext : public MediaAsyncContext {
     explicit AVMuxerNapiAsyncContext(napi_env env) : MediaAsyncContext(env) {}

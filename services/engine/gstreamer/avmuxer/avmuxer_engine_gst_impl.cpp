@@ -230,7 +230,7 @@ int32_t AVMuxerEngineGstImpl::Start()
         info.second.src_ = src;
     }
 
-    return MSERR_OK; 
+    return MSERR_OK;
 }
 
 static bool isAllHasCodecData(std::map<int, TrackInfo>& trackInfo)
@@ -268,9 +268,6 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     int32_t ret;
     GstAppSrc *src = trackInfo_[sampleInfo.trackIdx].src_;
     CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_VAL, "Failed to get AppSrc");
-    MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,",
-        ((uint8_t*)(sampleData->GetBase()))[0], ((uint8_t*)(sampleData->GetBase()))[1],
-        ((uint8_t*)(sampleData->GetBase()))[2], ((uint8_t*)(sampleData->GetBase()))[3]);
 
     if (sampleInfo.flags == AVCODEC_BUFFER_FLAG_CODEDC_DATA) {
         g_object_set(src, "caps", trackInfo_[sampleInfo.trackIdx].caps_, nullptr);
