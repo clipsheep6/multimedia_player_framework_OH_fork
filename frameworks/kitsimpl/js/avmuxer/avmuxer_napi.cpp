@@ -14,6 +14,7 @@
  */
 
 #include "avmuxer_napi.h"
+#include "scope_guard.h"
 #include "media_errors.h"
 #include "media_log.h"
 #include "common_napi.h"
@@ -110,6 +111,8 @@ napi_value AVMuxerNapi::Constructor(napi_env env, napi_callback_info info)
     
     AVMuxerNapi *avmuxerNapi = new(std::nothrow) AVMuxerNapi();
     CHECK_AND_RETURN_RET_LOG(avmuxerNapi != nullptr, result, "Failed to create avmuxerNapi");
+
+    ON_SCOPE_EXIT(0) { delete avmuxerNapi; };
     
     avmuxerNapi->env_ = env;
     avmuxerNapi->avmuxerImpl_ = AVMuxerFactory::CreateAVMuxer();
@@ -121,11 +124,9 @@ napi_value AVMuxerNapi::Constructor(napi_env env, napi_callback_info info)
     
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(avmuxerNapi),
         AVMuxerNapi::Destructor, nullptr, &(avmuxerNapi->wrapper_));
-    if (status != napi_ok) {
-        delete avmuxerNapi;
-        MEDIA_LOGE("Failed to wrap native instance");
-        return result;
-    }
+    CHECK_AND_RETURN_RET(status == napi_ok, result);
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
     
     MEDIA_LOGD("Constructor success");
     return jsThis;
@@ -161,6 +162,8 @@ napi_value AVMuxerNapi::CreateAVMuxer(napi_env env, napi_callback_info info)
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     asyncContext->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
+    asyncContext->ctorFlag = true;
+
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "CreateAVMuxer", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {},
