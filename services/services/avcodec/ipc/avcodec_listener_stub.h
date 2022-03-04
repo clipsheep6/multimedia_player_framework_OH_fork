@@ -27,9 +27,9 @@ public:
     virtual ~AVCodecListenerStub();
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     void OnError(AVCodecErrorType errorType, int32_t errorCode) override;
-    void OnOutputFormatChanged(const Format &format) override;
-    void OnInputBufferAvailable(uint32_t index) override;
-    void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
+    void OnStreamChanged(const Format &format) override;
+    void OnNeedInputData(uint32_t index) override;
+    void OnNewOutputData(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
     void SetCallback(const std::shared_ptr<AVCodecCallback> &callback);
 
 private:

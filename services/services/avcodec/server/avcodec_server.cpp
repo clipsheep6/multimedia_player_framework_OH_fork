@@ -242,31 +242,31 @@ void AVCodecServer::OnError(int32_t errorType, int32_t errorCode)
     codecCb_->OnError(static_cast<AVCodecErrorType>(errorType), errorCode);
 }
 
-void AVCodecServer::OnOutputFormatChanged(const Format &format)
+void AVCodecServer::OnStreamChanged(const Format &format)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
     if (codecCb_ == nullptr) {
         return;
     }
-    codecCb_->OnOutputFormatChanged(format);
+    codecCb_->OnStreamChanged(format);
 }
 
-void AVCodecServer::OnInputBufferAvailable(uint32_t index)
+void AVCodecServer::OnNeedInputData(uint32_t index)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
     if (codecCb_ == nullptr) {
         return;
     }
-    codecCb_->OnInputBufferAvailable(index);
+    codecCb_->OnNeedInputData(index);
 }
 
-void AVCodecServer::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
+void AVCodecServer::OnNewOutputData(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
     if (codecCb_ == nullptr) {
         return;
     }
-    codecCb_->OnOutputBufferAvailable(index, info, flag);
+    codecCb_->OnNewOutputData(index, info, flag);
 }
 }
 }

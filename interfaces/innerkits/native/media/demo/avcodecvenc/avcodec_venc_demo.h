@@ -38,9 +38,9 @@ public:
     virtual ~VEncDemoCallback() = default;
 
     void OnError(AVCodecErrorType errorType, int32_t errorCode) override;
-    void OnOutputFormatChanged(const Format &format) override;
-    void OnInputBufferAvailable(uint32_t index) override;
-    void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
+    void OnStreamChanged(const Format &format) override;
+    void OnNeedInputData(uint32_t index) override;
+    void OnNewOutputData(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
 
 private:
     std::shared_ptr<VEncSignal> signal_;

@@ -57,8 +57,8 @@ napi_value VideoEncoderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("flush", Flush),
         DECLARE_NAPI_FUNCTION("reset", Reset),
         DECLARE_NAPI_FUNCTION("release", Release),
-        DECLARE_NAPI_FUNCTION("queueInput", QueueInput),
-        DECLARE_NAPI_FUNCTION("releaseOutput", ReleaseOutput),
+        DECLARE_NAPI_FUNCTION("pushInputData", PushInputData),
+        DECLARE_NAPI_FUNCTION("freeOutputBuffer", FreeOutputBuffer),
         DECLARE_NAPI_FUNCTION("getInputSurface", GetInputSurface),
         DECLARE_NAPI_FUNCTION("setParameter", SetParameter),
         DECLARE_NAPI_FUNCTION("getOutputMediaDescription", GetOutputMediaDescription),
@@ -542,7 +542,7 @@ napi_value VideoEncoderNapi::Release(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value VideoEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
+napi_value VideoEncoderNapi::PushInputData(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -570,7 +570,7 @@ napi_value VideoEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "QueueInput", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "PushInputData", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void* data) {
             auto asyncCtx = reinterpret_cast<VideoEncoderAsyncContext *>(data);
@@ -580,7 +580,7 @@ napi_value VideoEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
             }
             CHECK_AND_RETURN(asyncCtx->index >= 0);
             if (asyncCtx->napi->venc_->QueueInputBuffer(asyncCtx->index, asyncCtx->info, asyncCtx->flag) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to QueueInput");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to PushInputData");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -591,7 +591,7 @@ napi_value VideoEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info)
+napi_value VideoEncoderNapi::FreeOutputBuffer(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -619,7 +619,7 @@ napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "ReleaseOutput", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "FreeOutputBuffer", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void* data) {
             auto asyncCtx = reinterpret_cast<VideoEncoderAsyncContext *>(data);
@@ -629,7 +629,7 @@ napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
             }
             CHECK_AND_RETURN(asyncCtx->index >= 0);
             if (asyncCtx->napi->venc_->ReleaseOutputBuffer(asyncCtx->index) != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to ReleaseOutput");
+                asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to FreeOutputBuffer");
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));

@@ -76,7 +76,7 @@ public:
      * @since 3.1
      * @version 3.1
      */
-    virtual void OnOutputFormatChanged(const Format &format) = 0;
+    virtual void OnStreamChanged(const Format &format) = 0;
 
     /**
      * Called when an input buffer becomes available.
@@ -85,7 +85,7 @@ public:
      * @since 3.1
      * @version 3.1
      */
-    virtual void OnInputBufferAvailable(uint32_t index) = 0;
+    virtual void OnNeedInputData(uint32_t index) = 0;
 
     /**
      * Called when an output buffer becomes available.
@@ -96,7 +96,7 @@ public:
      * @since 3.1
      * @version 3.1
      */
-    virtual void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) = 0;
+    virtual void OnNewOutputData(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) = 0;
 };
 
 __attribute__((visibility("default"))) std::string AVCodecErrorTypeToString(AVCodecErrorType type);
