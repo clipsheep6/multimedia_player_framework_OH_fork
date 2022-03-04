@@ -50,7 +50,6 @@ const std::map<const std::string, std::tuple<const std::string, std::string>> MI
 class TrackInfo {
 public:
     bool hasCodecData_ = false;
-    bool hasBuffer_ = false;
     bool needData_ = false;
     GstCaps *caps_ = nullptr;
     GstAppSrc *src_ = nullptr;

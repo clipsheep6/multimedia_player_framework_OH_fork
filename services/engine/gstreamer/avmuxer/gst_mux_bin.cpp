@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "gstappsrc.h"
+#include "gstbasesink.h"
 #include "gstbaseparse.h"
 
 enum {
@@ -237,6 +238,7 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
     }
 
     g_object_set(fdsink, "fd", mux_bin->outFd_, nullptr);
+    gst_base_sink_set_async_enabled(GST_BASE_SINK(fdsink), FALSE);
     g_object_set(mux_bin->splitMuxSink_, "sink", fdsink, nullptr);
 
     GstElement *qtmux = gst_element_factory_make(mux_bin->mux_, mux_bin->mux_);

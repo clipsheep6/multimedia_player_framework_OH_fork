@@ -218,7 +218,7 @@ int32_t AVMuxerEngineGstImpl::Start()
     MEDIA_LOGD("Start");
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
-    gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_READY);
+    gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
 
     GstAppSrcCallbacks callbacks = {&StartFeed, &StopFeed, NULL};
     for (auto& info : trackInfo_) {
@@ -231,26 +231,6 @@ int32_t AVMuxerEngineGstImpl::Start()
     }
 
     return MSERR_OK;
-}
-
-static bool isAllHasCodecData(std::map<int, TrackInfo>& trackInfo)
-{
-    for (auto& info : trackInfo) {
-        if (info.second.hasCodecData_ == false) {
-            return false;
-        }
-    }
-    return true;
-}
-
-static bool isAllHasBuffer(std::map<int, TrackInfo>& trackInfo)
-{
-    for (auto& info : trackInfo) {
-        if (info.second.hasBuffer_ == false) {
-            return false;
-        }
-    }
-    return true;
 }
 
 int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
@@ -277,21 +257,10 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     } else if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == true) {
         ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteData");
-        trackInfo_[sampleInfo.trackIdx].hasBuffer_ = true;
     } else {
         MEDIA_LOGW("First frame must be code_data");
     }
 
-    if (isAllHasCodecData(trackInfo_) && !isPause_) {
-        gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
-        isPause_ = true;
-        MEDIA_LOGD("Current state is Pause");
-    }
-    if (isAllHasBuffer(trackInfo_) && !isPlay_) {
-        gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
-        isPlay_ = true;
-        MEDIA_LOGD("Current state is Play");
-    }
     return MSERR_OK;
 }
 
