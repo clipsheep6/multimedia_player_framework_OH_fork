@@ -111,7 +111,7 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
         info.trackIdx = 1;
         if (isFirstStream) {
             info.timeMs = 0;
-            info.flags = AVCODEC_BUFFER_FLAG_CODEDC_DATA;
+            info.flags = AVCODEC_BUFFER_FLAG_CODEC_DATA;
             isFirstStream = false;
         } else {
             info.timeMs = timeStamp;
@@ -134,10 +134,10 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
 void AVMuxerDemo::AddTrackVideo()
 {
     MediaDescription trackDesc;
-    trackDesc.PutStringValue(std::string(MD_KEY_CODEC_MIME), "video/avc");
-    trackDesc.PutIntValue(std::string(MD_KEY_WIDTH), width_);
-    trackDesc.PutIntValue(std::string(MD_KEY_HEIGHT), height_);
-    trackDesc.PutIntValue(std::string(MD_KEY_FRAME_RATE), frameRate_);
+    trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "video/avc");
+    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_WIDTH), width_);
+    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), height_);
+    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), frameRate_);
     std::cout << "width is: " << width_ << std::endl;
     std::cout << "height is: " << height_ << std:: endl;
     std::cout << "frameRate is: " << frameRate_ << std::endl;

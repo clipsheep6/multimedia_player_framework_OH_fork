@@ -490,7 +490,7 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         napi_value trackSampleInfo;
         state = napi_get_named_property(env, args[2], PROPERTY_KEY_SAMPLEINFO.c_str(), &trackSampleInfo);
         CHECK_AND_RETURN_RET_LOG(state == napi_ok, result, "Failed to call napi_get_named_property");
-        ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_SIZE, asyncContext->trackSampleInfo_.size);
+        ret = CommonNapi::GetPropertyUint32(env, trackSampleInfo, PROPERTY_KEY_SIZE, asyncContext->trackSampleInfo_.size);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_SIZE");
         int32_t flags;
         ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG, flags);
@@ -498,7 +498,7 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         asyncContext->trackSampleInfo_.flags = static_cast<AVCodecBufferFlag>(flags);
         ret = CommonNapi::GetPropertyInt64(env, trackSampleInfo, PROPERTY_KEY_TIMEUS, asyncContext->trackSampleInfo_.timeMs);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TIMEUS");
-        ret = CommonNapi::GetPropertyInt32(env, args[2], PROPERTY_KEY_TRACK_ID, asyncContext->trackSampleInfo_.trackIdx);
+        ret = CommonNapi::GetPropertyUint32(env, args[2], PROPERTY_KEY_TRACK_ID, asyncContext->trackSampleInfo_.trackIdx);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TRACK_ID");
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[3]);

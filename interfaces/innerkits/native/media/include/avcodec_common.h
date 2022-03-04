@@ -35,6 +35,18 @@ enum AVCodecErrorType : int32_t {
     AVCODEC_ERROR_EXTEND_START = 0X10000,
 };
 
+enum AVCodecBufferFlag : uint32_t {
+    AVCODEC_BUFFER_FLAG_NONE = 0,
+    /* This signals the end of stream */
+    AVCODEC_BUFFER_FLAG_EOS = 1 << 0,
+    /* This indicates that the buffer contains the data for a sync frame */
+    AVCODEC_BUFFER_FLAG_SYNC_FRAME = 1 << 1,
+    /* This indicates that the buffer only contains part of a frame */
+    AVCODEC_BUFFER_FLAG_PARTIAL_FRAME = 1 << 2,
+    /* This indicated that the buffer contains codec specific data */
+    AVCODEC_BUFFER_FLAG_CODEC_DATA = 1 << 3,
+};
+
 struct AVCodecBufferInfo {
     /* The presentation timestamp in microseconds for the buffer */
     int64_t presentationTimeUs = 0;

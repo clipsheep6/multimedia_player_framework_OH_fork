@@ -21,7 +21,7 @@
 #include <vector>
 #include <memory>
 #include "avmemory.h"
-#include "av_common.h"
+#include "avcontainer_types.h"
 #include "media_description.h"
 
 namespace OHOS {

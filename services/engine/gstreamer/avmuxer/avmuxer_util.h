@@ -39,12 +39,12 @@ const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
     {"m4a", {"audio/mp4a-latm"}}
 };
 
-const std::map<const std::string, std::tuple<const std::string, CodecMimeType, std::string>> MIME_MAP_TYPE {
-    {"video/avc", {"video/x-h264", CODEC_MIMIE_TYPE_VIDEO_AVC, "h264parse"}},
-    {"video/h263", {"video/x-h263", CODEC_MIMIE_TYPE_VIDEO_H263, ""}},
-    {"video/mp4v-es", {"video/mpeg", CODEC_MIMIE_TYPE_VIDEO_MPEG4, "mpeg4parse"}},
-    {"audio/mp4a-latm", {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_AAC, "aacparse"}},
-    {"audio/mpeg", {"audio/mpeg", CODEC_MIMIE_TYPE_AUDIO_MPEG, ""}}
+const std::map<const std::string, std::tuple<const std::string, std::string>> MIME_MAP_TYPE {
+    {"video/avc", {"video/x-h264", "h264parse"}},
+    {"video/h263", {"video/x-h263", ""}},
+    {"video/mp4v-es", {"video/mpeg", "mpeg4parse"}},
+    {"audio/mp4a-latm", {"audio/mpeg", "aacparse"}},
+    {"audio/mpeg", {"audio/mpeg", ""}}
 };
 
 class TrackInfo {
@@ -54,7 +54,7 @@ public:
     bool needData_ = false;
     GstCaps *caps_ = nullptr;
     GstAppSrc *src_ = nullptr;
-    CodecMimeType type_ ;
+    std::string mimeType_ ;
 };
 
 class FormatParam {
@@ -72,9 +72,9 @@ public:
     ~AVMuxerUtil() = delete;
     DISALLOW_COPY_AND_MOVE(AVMuxerUtil);
 
-    static bool isVideo(CodecMimeType type);
+    static bool isVideo(const std::string &mimeType);
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
-        GstCaps *src_caps, CodecMimeType type);
+        GstCaps *src_caps);
     static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
         GstAppSrc *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator);
 };

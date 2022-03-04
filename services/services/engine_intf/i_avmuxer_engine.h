@@ -20,7 +20,7 @@
 #include <vector>
 #include <memory>
 #include "avsharedmemory.h"
-#include "av_common.h"
+#include "avcontainer_types.h"
 #include "media_description.h"
 
 namespace OHOS {

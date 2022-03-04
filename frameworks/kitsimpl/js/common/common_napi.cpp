@@ -66,6 +66,28 @@ bool CommonNapi::GetPropertyInt32(napi_env env, napi_value configObj, const std:
     return true;
 }
 
+bool CommonNapi::GetPropertyUint32(napi_env env, napi_value configObj, const std::string &type, uint32_t &result)
+{
+    napi_value item = nullptr;
+    bool exist = false;
+    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        return false;
+    }
+
+    if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property fail", type.c_str());
+        return false;
+    }
+
+    if (napi_get_value_uint32(env, item, &result) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property value fail", type.c_str());
+        return false;
+    }
+    return true;
+}
+
 bool CommonNapi::GetPropertyInt64(napi_env env, napi_value configObj, const std::string &type, int64_t &result)
 {
     napi_value item = nullptr;
@@ -519,8 +541,11 @@ void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void 
         MEDIA_LOGD("async callback success");
         if (asyncContext->JsResult != nullptr) {
             asyncContext->JsResult->GetJsResult(env, result);
+            CheckCtorResult(env, result, asyncContext, args[0]);
         }
-        args[1] = result;
+        if (!asyncContext->errFlag) {
+            args[1] = result;
+        }
     }
 
     if (asyncContext->deferred) {
@@ -547,6 +572,20 @@ void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void 
     if (asyncContext->delFlag) {
         delete asyncContext;
         asyncContext = nullptr;
+    }
+}
+
+void MediaAsyncContext::CheckCtorResult(napi_env env, napi_value &result, MediaAsyncContext *ctx, napi_value &args)
+{
+    CHECK_AND_RETURN(ctx != nullptr);
+    if (ctx->ctorFlag) {
+        void *instance = nullptr;
+        if (napi_unwrap(env, result, reinterpret_cast<void **>(&instance)) != napi_ok || instance == nullptr) {
+            MEDIA_LOGE("Failed to create instance");
+            ctx->errFlag = true;
+            (void)CommonNapi::CreateError(env, MSERR_EXT_UNKNOWN, "Failed to create instance", result);
+            args = result;
+        }
     }
 }
 }
