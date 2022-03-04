@@ -43,52 +43,50 @@ struct MultiValue {
     } val_;
 };
 
-std::map<CodecMimeType, std::vector<std::tuple<std::string, GType, MultiValue>>> optionCapsMap = {
-    {CODEC_MIMIE_TYPE_VIDEO_AVC, {
+std::map<std::string, std::vector<std::tuple<std::string, GType, MultiValue>>> optionCapsMap = {
+    {"video/avc", {
         {"alignment", G_TYPE_STRING, MultiValue("nal")},
         {"stream-format", G_TYPE_STRING, MultiValue("byte-stream")}
     }},
-    {CODEC_MIMIE_TYPE_VIDEO_H263, {
+    {"video/h263", {
     }},
-    {CODEC_MIMIE_TYPE_VIDEO_MPEG4, {
+    {"video/mp4v-es", {
         {"mpegversion", G_TYPE_INT, MultiValue(4)},
         {"systemstream", G_TYPE_BOOLEAN, MultiValue(FALSE)}
     }},
-    {CODEC_MIMIE_TYPE_AUDIO_AAC, {
+    {"audio/mp4a-latm", {
         {"mpegversion", G_TYPE_INT, MultiValue(4)},
         {"stream-format", G_TYPE_STRING, MultiValue("adts")}
     }},
-    {CODEC_MIMIE_TYPE_AUDIO_MPEG, {
+    {"audio/mpeg", {
         {"mpegversion", G_TYPE_INT, MultiValue(1)},
         {"layer", G_TYPE_INT, MultiValue(3)}
     }}
 };
 
-bool AVMuxerUtil::isVideo(CodecMimeType type)
+bool AVMuxerUtil::isVideo(const std::string &mimeType)
 {
-    if (type == CODEC_MIMIE_TYPE_VIDEO_H263 || type == CODEC_MIMIE_TYPE_VIDEO_AVC ||
-        type == CODEC_MIMIE_TYPE_VIDEO_MPEG2 || type ==CODEC_MIMIE_TYPE_VIDEO_HEVC ||
-        type == CODEC_MIMIE_TYPE_VIDEO_MPEG4) {
+    if (mimeType.find("video") == 0) {
         return true;
     }
     return false;
 }
 
-static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, CodecMimeType type)
+static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, const std::string &mimeType)
 {
-    if (AVMuxerUtil::isVideo(type)) {
-        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_WIDTH, param.width) == true,
+    if (AVMuxerUtil::isVideo(mimeType)) {
+        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, param.width) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
-        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_HEIGHT, param.height) == true,
+        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, param.height) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_HEIGHT");
-        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_FRAME_RATE, param.frameRate) == true,
+        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_FRAME_RATE, param.frameRate) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
         MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
             param.width, param.height, param.frameRate);
     } else {
-        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_CHANNEL_COUNT, param.channels) == true,
+        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, param.channels) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
-        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MD_KEY_SAMPLE_RATE, param.rate) == true,
+        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_SAMPLE_RATE, param.rate) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
         MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", param.channels, param.rate);
     }
@@ -96,9 +94,9 @@ static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc,
     return MSERR_OK;
 }
 
-static void AddOptionCaps(GstCaps *src_caps, CodecMimeType type)
+static void AddOptionCaps(GstCaps *src_caps, const std::string &mimeType)
 {
-    for (auto& elements : optionCapsMap[type]) {
+    for (auto& elements : optionCapsMap[mimeType]) {
         switch (std::get<1>(elements)) {
             case G_TYPE_BOOLEAN:
             case G_TYPE_INT:
@@ -121,9 +119,9 @@ static void AddOptionCaps(GstCaps *src_caps, CodecMimeType type)
     }
 }
 
-static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps *src_caps, CodecMimeType type)
+static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps *src_caps)
 {
-    if (AVMuxerUtil::isVideo(type)) {
+    if (AVMuxerUtil::isVideo(mimeType)) {
         src_caps = gst_caps_new_simple(std::get<0>(MIME_MAP_TYPE.at(mimeType)).c_str(),
             "width", G_TYPE_INT, param.width,
             "height", G_TYPE_INT, param.height,
@@ -135,18 +133,18 @@ static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps 
             "rate", G_TYPE_INT, param.rate,
             nullptr);
     }
-    AddOptionCaps(src_caps, type);
+    AddOptionCaps(src_caps, mimeType);
 }
 
 int32_t AVMuxerUtil::SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
-    GstCaps *src_caps, CodecMimeType type)
+    GstCaps *src_caps)
 {
     MEDIA_LOGD("Set %{public}s cpas", mimeType.c_str());
     bool ret;
     FormatParam param;
-    ret = parseParam(param, trackDesc, type);
+    ret = parseParam(param, trackDesc, mimeType);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "Failed to call parseParam");
-    CreateCaps(param, mimeType, src_caps, type);
+    CreateCaps(param, mimeType, src_caps);
 
     return MSERR_OK;
 }
