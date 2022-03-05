@@ -86,7 +86,7 @@ private:
         AudioSourceType audioSourceType; // source type;
         VideoSourceType videoSourceType;
         VideoRecorderProfile profile;
-        int32_t orientationHint = 0; // Optional
+        int32_t rotation = 0; // Optional
         Location location; // Optional
         std::string url;
     };

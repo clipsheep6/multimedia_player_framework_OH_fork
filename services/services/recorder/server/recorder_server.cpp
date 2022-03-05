@@ -261,7 +261,7 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
     return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFileFd);
 }
 
-int32_t RecorderServer::SetNextOutputFile(int32_t fd)
+int32_t RecorderServer::SetSubsequentFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
@@ -291,7 +291,7 @@ void RecorderServer::SetLocation(float latitude, float longitude)
     return;
 }
 
-void RecorderServer::SetOrientationHint(int32_t rotation)
+void RecorderServer::SetRotation(int32_t rotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (status_ != REC_CONFIGURED) {

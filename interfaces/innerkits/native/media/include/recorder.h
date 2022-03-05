@@ -152,12 +152,12 @@ enum RecorderInfoType : int32_t {
     RECORDER_INFO_MAX_FILESIZE_APPROACHING,
     /**
      * The threshold specified by {@link SetMaxDuration} is reached, and the recording ends.
-     * Before calling {@link SetNextOutputFile}, you must close the file.
+     * Before calling {@link SetSubsequentFile}, you must close the file.
      */
     RECORDER_INFO_MAX_DURATION_REACHED,
     /**
      * The threshold specified by {@link SetMaxFileSize} is reached, and the recording ends.
-     * Before calling {@link SetNextOutputFile}, you must close the file.
+     * Before calling {@link SetSubsequentFile}, you must close the file.
      */
     RECORDER_INFO_MAX_FILESIZE_REACHED,
     /** Recording started for the next output file. */
@@ -429,7 +429,7 @@ public:
      * This function must be called after {@link SetOutputFormat} but before {@link Prepare}. If the setting is valid,
      * {@link RECORDER_INFO_MAX_DURATION_APPROACHING} is reported through {@link OnInfo} in the {@link RecorderCallback}
      * class when only one second or 10% is left to reach the allowed duration.
-     * If the recording output file is set by calling {@link SetOutputFile}, call {@link SetNextOutputFile} to set the
+     * If the recording output file is set by calling {@link SetOutputFile}, call {@link SetSubsequentFile} to set the
      * next output file. Otherwise, the current file will be overwritten when the allowed duration is reached.
      *
      * @param duration Indicates the maximum recording duration to set. If the value is <b>0</b> or a negative number,
@@ -447,7 +447,7 @@ public:
      * This function must be called after {@link SetOutputFormat} but before {@link Prepare}. If the setting is valid,
      * {@link RECORDER_INFO_MAX_DURATION_APPROACHING} is reported through {@link OnInfo} in the {@link RecorderCallback}
      * class when only 100 KB or 10% is left to reach the allowed size.
-     * If the recording output file is set by calling {@link SetOutputFile}, call {@link SetNextOutputFile} to set the
+     * If the recording output file is set by calling {@link SetOutputFile}, call {@link SetSubsequentFile} to set the
      * next output file. Otherwise, when the allowed size is reached, the current file will be overwritten. If
      * <b>MaxDuration</b> is also set by calling {@link SetMaxDuration}, <b>MaxDuration</b> or <b>MaxFileSize</b>
      * prevails depending on which of them is first satisfied.
@@ -499,7 +499,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetNextOutputFile(int32_t fd) = 0;
+    virtual int32_t SetSubsequentFile(int32_t fd) = 0;
 
     /**
      * @brief Set and store the geodata (latitude and longitude) in the output file.
@@ -522,7 +522,7 @@ public:
      * @since openharmony 3.1
      * @version 1.0
      */
-    virtual void SetOrientationHint(int32_t rotation) = 0;
+    virtual void SetRotation(int32_t rotation) = 0;
 
     /**
      * @brief Registers a recording listener.

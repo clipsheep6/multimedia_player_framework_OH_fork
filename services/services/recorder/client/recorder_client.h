@@ -45,10 +45,10 @@ public:
     int32_t SetOutputFormat(OutputFormatType format) override;
     int32_t SetOutputPath(const std::string &path) override;
     int32_t SetOutputFile(int32_t fd) override;
-    int32_t SetNextOutputFile(int32_t fd) override;
+    int32_t SetSubsequentFile(int32_t fd) override;
     int32_t SetMaxFileSize(int64_t size) override;
     void SetLocation(float latitude, float longitude) override;
-    void SetOrientationHint(int32_t rotation) override;
+    void SetRotation(int32_t rotation) override;
     int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback) override;
     int32_t Prepare() override;
     int32_t Start() override;

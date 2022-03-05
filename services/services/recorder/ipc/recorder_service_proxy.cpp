@@ -422,7 +422,7 @@ int32_t RecorderServiceProxy::SetOutputFile(int32_t fd)
     return reply.ReadInt32();
 }
 
-int32_t RecorderServiceProxy::SetNextOutputFile(int32_t fd)
+int32_t RecorderServiceProxy::SetSubsequentFile(int32_t fd)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -483,7 +483,7 @@ int32_t RecorderServiceProxy::SetLocation(float latitude, float longitude)
     return MSERR_OK;
 }
 
-int32_t RecorderServiceProxy::SetOrientationHint(int32_t rotation)
+int32_t RecorderServiceProxy::SetRotation(int32_t rotation)
 {
     MessageParcel data;
     MessageParcel reply;

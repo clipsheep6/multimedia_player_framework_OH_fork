@@ -50,10 +50,10 @@ public:
     int32_t SetOutputFormat(OutputFormatType format) override;
     int32_t SetOutputPath(const std::string &path) override;
     int32_t SetOutputFile(int32_t fd) override;
-    int32_t SetNextOutputFile(int32_t fd) override;
+    int32_t SetSubsequentFile(int32_t fd) override;
     int32_t SetMaxFileSize(int64_t size) override;
     int32_t SetLocation(float latitude, float longitude) override;
-    int32_t SetOrientationHint(int32_t rotation) override;
+    int32_t SetRotation(int32_t rotation) override;
     int32_t Prepare() override;
     int32_t Start() override;
     int32_t Pause() override;
@@ -85,10 +85,10 @@ private:
     int32_t SetOutputFormat(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutputPath(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutputFile(MessageParcel &data, MessageParcel &reply);
-    int32_t SetNextOutputFile(MessageParcel &data, MessageParcel &reply);
+    int32_t SetSubsequentFile(MessageParcel &data, MessageParcel &reply);
     int32_t SetMaxFileSize(MessageParcel &data, MessageParcel &reply);
     int32_t SetLocation(MessageParcel &data, MessageParcel &reply);
-    int32_t SetOrientationHint(MessageParcel &data, MessageParcel &reply);
+    int32_t SetRotation(MessageParcel &data, MessageParcel &reply);
     int32_t Prepare(MessageParcel &data, MessageParcel &reply);
     int32_t Start(MessageParcel &data, MessageParcel &reply);
     int32_t Pause(MessageParcel &data, MessageParcel &reply);

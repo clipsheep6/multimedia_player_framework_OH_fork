@@ -176,10 +176,10 @@ int32_t RecorderImpl::SetOutputFile(int32_t fd)
     return recorderService_->SetOutputFile(fd);
 }
 
-int32_t RecorderImpl::SetNextOutputFile(int32_t fd)
+int32_t RecorderImpl::SetSubsequentFile(int32_t fd)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
-    return recorderService_->SetNextOutputFile(fd);
+    return recorderService_->SetSubsequentFile(fd);
 }
 
 int32_t RecorderImpl::SetMaxFileSize(int64_t size)
@@ -195,10 +195,10 @@ void RecorderImpl::SetLocation(float latitude, float longitude)
     return;
 }
 
-void RecorderImpl::SetOrientationHint(int32_t rotation)
+void RecorderImpl::SetRotation(int32_t rotation)
 {
     CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist..");
-    recorderService_->SetOrientationHint(rotation);
+    recorderService_->SetRotation(rotation);
     return;
 }
 

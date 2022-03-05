@@ -69,10 +69,10 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[SET_OUTPUT_FORMAT] = &RecorderServiceStub::SetOutputFormat;
     recFuncs_[SET_OUTPUT_PATH] = &RecorderServiceStub::SetOutputPath;
     recFuncs_[SET_OUTPUT_FILE] = &RecorderServiceStub::SetOutputFile;
-    recFuncs_[SET_NEXT_OUTPUT_FILE] = &RecorderServiceStub::SetNextOutputFile;
+    recFuncs_[SET_NEXT_OUTPUT_FILE] = &RecorderServiceStub::SetSubsequentFile;
     recFuncs_[SET_MAX_FILE_SIZE] = &RecorderServiceStub::SetMaxFileSize;
     recFuncs_[SET_LOCATION] = &RecorderServiceStub::SetLocation;
-    recFuncs_[SET_ORIENTATION_HINT] = &RecorderServiceStub::SetOrientationHint;
+    recFuncs_[SET_ORIENTATION_HINT] = &RecorderServiceStub::SetRotation;
     recFuncs_[PREPARE] = &RecorderServiceStub::Prepare;
     recFuncs_[START] = &RecorderServiceStub::Start;
     recFuncs_[PAUSE] = &RecorderServiceStub::Pause;
@@ -237,10 +237,10 @@ int32_t RecorderServiceStub::SetOutputFile(int32_t fd)
     return recorderServer_->SetOutputFile(fd);
 }
 
-int32_t RecorderServiceStub::SetNextOutputFile(int32_t fd)
+int32_t RecorderServiceStub::SetSubsequentFile(int32_t fd)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->SetNextOutputFile(fd);
+    return recorderServer_->SetSubsequentFile(fd);
 }
 
 int32_t RecorderServiceStub::SetMaxFileSize(int64_t size)
@@ -256,10 +256,10 @@ int32_t RecorderServiceStub::SetLocation(float latitude, float longitude)
     return MSERR_OK;
 }
 
-int32_t RecorderServiceStub::SetOrientationHint(int32_t rotation)
+int32_t RecorderServiceStub::SetRotation(int32_t rotation)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    recorderServer_->SetOrientationHint(rotation);
+    recorderServer_->SetRotation(rotation);
     return MSERR_OK;
 }
 
@@ -467,10 +467,10 @@ int32_t RecorderServiceStub::SetOutputFile(MessageParcel &data, MessageParcel &r
     return MSERR_OK;
 }
 
-int32_t RecorderServiceStub::SetNextOutputFile(MessageParcel &data, MessageParcel &reply)
+int32_t RecorderServiceStub::SetSubsequentFile(MessageParcel &data, MessageParcel &reply)
 {
     int32_t fd = data.ReadFileDescriptor();
-    reply.WriteInt32(SetNextOutputFile(fd));
+    reply.WriteInt32(SetSubsequentFile(fd));
     (void)::close(fd);
     return MSERR_OK;
 }
@@ -490,10 +490,10 @@ int32_t RecorderServiceStub::SetLocation(MessageParcel &data, MessageParcel &rep
     return MSERR_OK;
 }
 
-int32_t RecorderServiceStub::SetOrientationHint(MessageParcel &data, MessageParcel &reply)
+int32_t RecorderServiceStub::SetRotation(MessageParcel &data, MessageParcel &reply)
 {
     int32_t rotation = data.ReadInt32();
-    SetOrientationHint(rotation);
+    SetRotation(rotation);
     return MSERR_OK;
 }
 
