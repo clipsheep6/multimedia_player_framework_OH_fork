@@ -15,6 +15,19 @@ import("//build/ohos.gni")
 
 MEDIA_ROOT_DIR = "//foundation/multimedia/media_standard"
 
+config("media_api_config") {
+  include_dirs = [
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native/avcommon",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native/avcodec",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native/avcodeclist",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native/avmetadatahelper",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native/avmuxer",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native/avplayer",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native/avrecorder",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native/avspliter",
+  ]
+}
+
 config("media_client_local_config") {
   include_dirs = [
     "$MEDIA_ROOT_DIR/services/services/sa_media/client",
@@ -54,12 +67,10 @@ config("media_client_public_config") {
     "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec",
     "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist",
     "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper",
-    "$MEDIA_ROOT_DIR/interfaces/innerkits/native/media/include",
     "$MEDIA_ROOT_DIR/services/include",
     "$MEDIA_ROOT_DIR/services/utils/include",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
     "//utils/system/safwk/native/include",
-    "//utils/native/base/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
   ]
 
@@ -111,6 +122,7 @@ ohos_shared_library("media_client") {
     ]
 
     public_configs = [
+      ":media_api_config",
       ":media_client_local_config",
       ":media_client_public_config",
       "//foundation/graphic/standard/frameworks/surface:surface_public_config",
@@ -165,6 +177,7 @@ ohos_shared_library("media_client") {
     ]
 
     public_configs = [
+      ":media_api_config",
       ":media_client_ipc_config",
       ":media_client_public_config",
       "//foundation/graphic/standard/frameworks/surface:surface_public_config",
@@ -193,10 +206,9 @@ ohos_shared_library("media_client") {
 ohos_shared_library("media_surface") {
   install_enable = true
   include_dirs = [
-    "//foundation/multimedia/media_standard/frameworks/innerkits/native/media_surface",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native/avcommon",
     "//foundation/multimedia/media_standard/services/utils/include",
-    "//graphic/standard/interfaces/innerkits/surface",
+    "//foundation/graphic/standard/interfaces/innerkits/surface",
     "//foundation/graphic/standard/interfaces/innerkits/wmclient",
     "//drivers/peripheral/display/interfaces/include",
   ]

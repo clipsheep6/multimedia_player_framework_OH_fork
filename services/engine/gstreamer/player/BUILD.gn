@@ -37,7 +37,7 @@ config("media_engine_gst_player_config") {
   include_dirs = [
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/sink/common",
     "//foundation/multimedia/media_standard/services/utils/include",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native/avcommon",
     "//foundation/multimedia/media_standard/services/services/engine_intf",
     "//foundation/multimedia/audio_standard/frameworks/innerkitsimpl/common/include",
     "//foundation/multimedia/audio_standard/interfaces/innerkits/native/audiocommon/include",
@@ -72,6 +72,7 @@ ohos_static_library("media_engine_gst_player") {
   configs = [
     ":media_engine_gst_player_config",
     "//foundation/graphic/standard/frameworks/surface:surface_public_config",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native:media_api_config",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils_public_config",
   ]
 
