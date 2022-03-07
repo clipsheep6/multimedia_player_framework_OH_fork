@@ -84,6 +84,10 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
     return MSERR_OK;
 }
+void RecorderServiceStub::GetRecorderServer()
+{
+    recorderServer = recorderServer_ ;
+}
 
 int32_t RecorderServiceStub::DestroyStub()
 {

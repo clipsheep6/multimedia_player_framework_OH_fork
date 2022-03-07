@@ -44,16 +44,19 @@ public:
     int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;
     int32_t DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCodec) override;
     int32_t DestroyAVCodecListService(std::shared_ptr<IAVCodecListService> avCodecList) override;
-
+    std::list<std::shared_ptr<IRecorderService>> recorderClientList;
+    std::list<std::shared_ptr<IPlayerService>> playerClientList;
+    std::list<std::shared_ptr<IAVMetadataHelperService>> avMetadataHelperClientList;
+    std::list<std::shared_ptr<IAVCodecService>> avCodecClientList;
+    void GetClientLists();
 private:
     sptr<IStandardMediaService> GetMediaProxy();
     bool IsAlived();
     void MediaServerDied(pid_t pid);
     int32_t CreateListenerObject();
-
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     sptr<MediaListenerStub> listenerStub_ = nullptr;
-    sptr<MediaDeathRecipient> deathRecipient_ = nullptr;
+    sptr<MediaDeathRecipient> deathRecipient_ = nullptr;;
     std::list<std::shared_ptr<IRecorderService>> recorderClientList_;
     std::list<std::shared_ptr<IPlayerService>> playerClientList_;
     std::list<std::shared_ptr<IAVMetadataHelperService>> avMetadataHelperClientList_;

@@ -52,6 +52,8 @@ RecorderServer::RecorderServer()
     : startTimeMonitor_(START_TAG),
       stopTimeMonitor_(STOP_TAG)
 {
+    pid = IPCSkeleton::GetCallingPid();
+    uid = IPCSkeleton::GetCallingUid();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
@@ -126,6 +128,8 @@ int32_t RecorderServer::SetVideoSize(int32_t sourceId, int32_t width, int32_t he
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     VidRectangle vidSize(width, height);
+    recParameter.videoWidth = width;
+    recParameter.videoHeight = height;
     return recorderEngine_->Configure(sourceId, vidSize);
 }
 
@@ -135,6 +139,7 @@ int32_t RecorderServer::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     VidFrameRate vidFrameRate(frameRate);
+    recParameter.videoFrameRate = frameRate;
     return recorderEngine_->Configure(sourceId, vidFrameRate);
 }
 
@@ -144,6 +149,7 @@ int32_t RecorderServer::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     VidBitRate vidBitRate(rate);
+    recParameter.videoEncodingBitRate = rate;
     return recorderEngine_->Configure(sourceId, vidBitRate);
 }
 
@@ -153,6 +159,7 @@ int32_t RecorderServer::SetCaptureRate(int32_t sourceId, double fps)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     CaptureRate captureRate(fps);
+    recParameter.captureRate = fps;
     return recorderEngine_->Configure(sourceId, captureRate);
 }
 
@@ -195,6 +202,7 @@ int32_t RecorderServer::SetAudioSampleRate(int32_t sourceId, int32_t rate)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     AudSampleRate audSampleRate(rate);
+    recParameter.audioSampleRate = rate;
     MEDIA_LOGD("set audio sampleRate sourceId:%{public}d, rate:%{public}d", sourceId, rate);
     return recorderEngine_->Configure(sourceId, audSampleRate);
 }
@@ -205,6 +213,7 @@ int32_t RecorderServer::SetAudioChannels(int32_t sourceId, int32_t num)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     AudChannel audChannel(num);
+    recParameter.audioChannelsQuantity = num;
     return recorderEngine_->Configure(sourceId, audChannel);
 }
 
@@ -214,6 +223,7 @@ int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRat
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     AudBitRate audBitRate(bitRate);
+    recParameter.audioEncodingBitRate = bitRate;
     return recorderEngine_->Configure(sourceId, audBitRate);
 }
 
@@ -249,6 +259,7 @@ int32_t RecorderServer::SetOutputPath(const std::string &path)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     OutFilePath outFilePath(path);
+    outPutPath = path;
     return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFilePath);
 }
 
@@ -318,7 +329,10 @@ int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallba
     (void)recorderEngine_->SetObs(obs);
     return MSERR_OK;
 }
-
+void RecorderServer::GetRecorderStatus()
+{
+    status=status_;
+}
 int32_t RecorderServer::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);

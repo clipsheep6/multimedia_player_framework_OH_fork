@@ -120,6 +120,11 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
+void PlayerServiceStub::GetPlayerServer()
+{
+    playerServer = playerServer_;
+}
+
 int32_t PlayerServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
 {
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set listener object is nullptr");

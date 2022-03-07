@@ -47,8 +47,8 @@ AVMetadataHelperServiceStub::~AVMetadataHelperServiceStub()
 
 int32_t AVMetadataHelperServiceStub::Init()
 {
-    avMetadateHelperServer_ = AVMetadataHelperServer::Create();
-    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY,
+    avMetadataHelperServer_ = AVMetadataHelperServer::Create();
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperServer_ != nullptr, MSERR_NO_MEMORY,
         "failed to create AVMetadataHelper Service");
 
     avMetadataHelperFuncs_[SET_SOURCE] = &AVMetadataHelperServiceStub::SetSource;
@@ -61,9 +61,14 @@ int32_t AVMetadataHelperServiceStub::Init()
     return MSERR_OK;
 }
 
+void AVMetadataHelperServiceStub::GetAvMetadataHelperServer()
+{
+    avMetadataHelperServer = avMetadataHelperServer_;
+}
+
 int32_t AVMetadataHelperServiceStub::DestroyStub()
 {
-    avMetadateHelperServer_ = nullptr;
+    avMetadataHelperServer_ = nullptr;
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVMETADATAHELPER, AsObject());
     return MSERR_OK;
 }
@@ -97,39 +102,39 @@ int AVMetadataHelperServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &d
 
 int32_t AVMetadataHelperServiceStub::SetSource(const std::string &uri, int32_t usage)
 {
-    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
-    return avMetadateHelperServer_->SetSource(uri, usage);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
+    return avMetadataHelperServer_->SetSource(uri, usage);
 }
 
 std::string AVMetadataHelperServiceStub::ResolveMetadata(int32_t key)
 {
-    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, "", "avmetadatahelper server is nullptr");
-    return avMetadateHelperServer_->ResolveMetadata(key);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperServer_ != nullptr, "", "avmetadatahelper server is nullptr");
+    return avMetadataHelperServer_->ResolveMetadata(key);
 }
 
 std::unordered_map<int32_t, std::string> AVMetadataHelperServiceStub::ResolveMetadataMap()
 {
-    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, {}, "avmetadatahelper server is nullptr");
-    return avMetadateHelperServer_->ResolveMetadata();
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperServer_ != nullptr, {}, "avmetadatahelper server is nullptr");
+    return avMetadataHelperServer_->ResolveMetadata();
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceStub::FetchArtPicture()
 {
-    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, nullptr, "avmetadatahelper server is nullptr");
-    return avMetadateHelperServer_->FetchArtPicture();
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperServer_ != nullptr, nullptr, "avmetadatahelper server is nullptr");
+    return avMetadataHelperServer_->FetchArtPicture();
 }
 
 std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceStub::FetchFrameAtTime(int64_t timeUs,
     int32_t option, const OutputConfiguration &param)
 {
-    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, nullptr, "avmetadatahelper server is nullptr");
-    return avMetadateHelperServer_->FetchFrameAtTime(timeUs, option, param);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperServer_ != nullptr, nullptr, "avmetadatahelper server is nullptr");
+    return avMetadataHelperServer_->FetchFrameAtTime(timeUs, option, param);
 }
 
 void AVMetadataHelperServiceStub::Release()
 {
-    CHECK_AND_RETURN_LOG(avMetadateHelperServer_ != nullptr, "avmetadatahelper server is nullptr");
-    return avMetadateHelperServer_->Release();
+    CHECK_AND_RETURN_LOG(avMetadataHelperServer_ != nullptr, "avmetadatahelper server is nullptr");
+    return avMetadataHelperServer_->Release();
 }
 
 int32_t AVMetadataHelperServiceStub::SetSource(MessageParcel &data, MessageParcel &reply)

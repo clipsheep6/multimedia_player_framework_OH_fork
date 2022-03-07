@@ -16,6 +16,8 @@
 #ifndef PLAYER_SERVICE_SERVER_H
 #define PLAYER_SERVICE_SERVER_H
 
+#include <list>
+#include "ipc_skeleton.h"
 #include "i_player_service.h"
 #include "i_player_engine.h"
 #include "time_monitor.h"
@@ -28,6 +30,7 @@ public:
     static std::shared_ptr<IPlayerService> Create();
     PlayerServer();
     virtual ~PlayerServer();
+    DISALLOW_COPY_AND_MOVE(PlayerServer);
 
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
@@ -59,6 +62,15 @@ public:
     // IPlayerEngineObs override
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void GetPlayerStatus();
+    void GetBufferPercentValue();
+    PlayerStates status;
+    std::string playerSourceUrl = nullptr;
+    pid_t pid;
+    pid_t uid;
+    std::list<long> startPlayTimesList;
+    std::list<long> seekTimesList;
+    int32_t bufferPercentValue;
 
 private:
     int32_t Init();
@@ -72,9 +84,9 @@ private:
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
     sptr<Surface> surface_ = nullptr;
-    PlayerStates status_ = PLAYER_IDLE;
     std::mutex mutex_;
     std::mutex mutexCb_;
+    PlayerStates status_ = PLAYER_IDLE;
     bool looping_ = false;
     TimeMonitor startTimeMonitor_;
     TimeMonitor stopTimeMonitor_;
@@ -82,6 +94,7 @@ private:
     float leftVolume_ = 1.0f; // audiotrack volume range [0, 1]
     float rightVolume_ = 1.0f; // audiotrack volume range [0, 1]
     PlaybackRateMode speedMode_ = SPEED_FORWARD_1_00_X;
+    int32_t bufferPercentValue_;
     int32_t fd_ = -1;
 };
 } // namespace Media
