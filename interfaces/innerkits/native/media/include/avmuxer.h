@@ -32,7 +32,7 @@ public:
     virtual std::vector<std::string> GetAVMuxerFormatList() = 0;
     virtual int32_t SetOutput(const std::string &path, const std::string &format) = 0;
     virtual int32_t SetLocation(float latitude, float longtitude) = 0;
-    virtual int32_t SetOrientationHint(int degrees) = 0;
+    virtual int32_t SetRotation(int degrees) = 0;
     virtual int32_t AddTrack(const MediaDescription &trackDesc, int32_t &trackIdx) = 0;
     virtual int32_t Start() = 0;
     virtual int32_t WriteTrackSample(std::shared_ptr<AVMemory> sampleData, const TrackSampleInfo &info) = 0;

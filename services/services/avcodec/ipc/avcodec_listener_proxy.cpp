@@ -48,7 +48,7 @@ void AVCodecListenerProxy::OnError(AVCodecErrorType errorType, int32_t errorCode
     }
 }
 
-void AVCodecListenerProxy::OnOutputFormatChanged(const Format &format)
+void AVCodecListenerProxy::OnStreamChanged(const Format &format)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -56,11 +56,11 @@ void AVCodecListenerProxy::OnOutputFormatChanged(const Format &format)
     (void)MediaParcel::Marshalling(data, format);
     int error = Remote()->SendRequest(AVCodecListenerMsg::ON_OUTPUT_FORMAT_CHANGED, data, reply, option);
     if (error != MSERR_OK) {
-        MEDIA_LOGE("OnOutputFormatChanged failed, error: %{public}d", error);
+        MEDIA_LOGE("OnStreamChanged failed, error: %{public}d", error);
     }
 }
 
-void AVCodecListenerProxy::OnInputBufferAvailable(uint32_t index)
+void AVCodecListenerProxy::OnNeedInputData(uint32_t index)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -68,11 +68,11 @@ void AVCodecListenerProxy::OnInputBufferAvailable(uint32_t index)
     data.WriteUint32(index);
     int error = Remote()->SendRequest(AVCodecListenerMsg::ON_INPUT_BUFFER_AVAILABLE, data, reply, option);
     if (error != MSERR_OK) {
-        MEDIA_LOGE("OnInputBufferAvailable failed, error: %{public}d", error);
+        MEDIA_LOGE("OnNeedInputData failed, error: %{public}d", error);
     }
 }
 
-void AVCodecListenerProxy::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
+void AVCodecListenerProxy::OnNewOutputData(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -84,7 +84,7 @@ void AVCodecListenerProxy::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
     data.WriteInt32(static_cast<int32_t>(flag));
     int error = Remote()->SendRequest(AVCodecListenerMsg::ON_OUTPUT_BUFFER_AVAILABLE, data, reply, option);
     if (error != MSERR_OK) {
-        MEDIA_LOGE("OnOutputBufferAvailable failed, error: %{public}d", error);
+        MEDIA_LOGE("OnNewOutputData failed, error: %{public}d", error);
     }
 }
 
@@ -106,24 +106,24 @@ void AVCodecListenerCallback::OnError(AVCodecErrorType errorType, int32_t errorC
     }
 }
 
-void AVCodecListenerCallback::OnOutputFormatChanged(const Format &format)
+void AVCodecListenerCallback::OnStreamChanged(const Format &format)
 {
     if (listener_ != nullptr) {
-        listener_->OnOutputFormatChanged(format);
+        listener_->OnStreamChanged(format);
     }
 }
 
-void AVCodecListenerCallback::OnInputBufferAvailable(uint32_t index)
+void AVCodecListenerCallback::OnNeedInputData(uint32_t index)
 {
     if (listener_ != nullptr) {
-        listener_->OnInputBufferAvailable(index);
+        listener_->OnNeedInputData(index);
     }
 }
 
-void AVCodecListenerCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
+void AVCodecListenerCallback::OnNewOutputData(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     if (listener_ != nullptr) {
-        listener_->OnOutputBufferAvailable(index, info, flag);
+        listener_->OnNewOutputData(index, info, flag);
     }
 }
 } // namespace Media

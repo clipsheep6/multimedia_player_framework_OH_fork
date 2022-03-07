@@ -216,7 +216,7 @@ public:
      * This method must be called before {@link Prepare}. If the setting is valid,
      * {@link RECORDER_INFO_MAX_DURATION_APPROACHING} is reported through {@link OnInfo} in the {@link RecorderCallback}
      * class when only one second or 10% is left to reach the allowed duration.
-     * If the recording output file is set by calling {@link SetOutputFile}, call {@link SetNextOutputFile} to set the
+     * If the recording output file is set by calling {@link SetOutputFile}, call {@link SetSubsequentFile} to set the
      * next output file. Otherwise, the current file will be overwritten when the allowed duration is reached.
      *
      * @param duration Indicates the maximum recording duration to set. If the value is <b>0</b> or a negative number,
@@ -279,7 +279,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t SetNextOutputFile(int32_t fd) = 0;
+    virtual int32_t SetSubsequentFile(int32_t fd) = 0;
 
     /**
      * @brief Sets the maximum size of a recorded file, in bytes.
@@ -287,7 +287,7 @@ public:
      * This function must be called before {@link Prepare}. If the setting is valid,
      * {@link RECORDER_INFO_MAX_DURATION_APPROACHING} is reported through {@link OnInfo} in the {@link RecorderCallback}
      * class when only 100 KB or 10% is left to reach the allowed size.
-     * If the recording output file is set by calling {@link SetOutputFile}, call {@link SetNextOutputFile} to set the
+     * If the recording output file is set by calling {@link SetOutputFile}, call {@link SetSubsequentFile} to set the
      * next output file. Otherwise, when the allowed size is reached, the current file will be overwritten. If
      * <b>MaxDuration</b> is also set by calling {@link SetMaxDuration}, <b>MaxDuration</b> or <b>MaxFileSize</b>
      * prevails depending on which of them is first satisfied.
@@ -323,7 +323,7 @@ public:
      * @since 1openharmony 3.1
      * @version 1.0
      */
-    virtual void SetOrientationHint(int32_t rotation) = 0;
+    virtual void SetRotation(int32_t rotation) = 0;
 
     /**
      * @brief Registers a recording listener.

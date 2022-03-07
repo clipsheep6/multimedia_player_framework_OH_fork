@@ -228,13 +228,13 @@ int32_t RecorderClient::SetOutputFile(int32_t fd)
     return recorderProxy_->SetOutputFile(fd);
 }
 
-int32_t RecorderClient::SetNextOutputFile(int32_t fd)
+int32_t RecorderClient::SetSubsequentFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
-    MEDIA_LOGD("SetNextOutputFile fd(%{public}d)", fd);
-    return recorderProxy_->SetNextOutputFile(fd);
+    MEDIA_LOGD("SetSubsequentFile fd(%{public}d)", fd);
+    return recorderProxy_->SetSubsequentFile(fd);
 }
 
 int32_t RecorderClient::SetMaxFileSize(int64_t size)
@@ -254,13 +254,13 @@ void RecorderClient::SetLocation(float latitude, float longitude)
     recorderProxy_->SetLocation(latitude, longitude);
 }
 
-void RecorderClient::SetOrientationHint(int32_t rotation)
+void RecorderClient::SetRotation(int32_t rotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(recorderProxy_ != nullptr, "recorder service does not exist.");
 
     MEDIA_LOGD ("SetLocation orientation hint: %{public}d", rotation);
-    recorderProxy_->SetOrientationHint(rotation);
+    recorderProxy_->SetRotation(rotation);
 }
 
 int32_t RecorderClient::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)

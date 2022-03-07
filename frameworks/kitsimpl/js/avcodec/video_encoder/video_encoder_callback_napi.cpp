@@ -89,10 +89,10 @@ void VideoEncoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCo
     return OnJsErrorCallBack(cb);
 }
 
-void VideoEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
+void VideoEncoderCallbackNapi::OnStreamChanged(const Format &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGD("OnOutputFormatChanged is called");
+    MEDIA_LOGD("OnStreamChanged is called");
     CHECK_AND_RETURN(formatChangedCallback_ != nullptr);
 
     VideoEncoderJsCallback *cb = new(std::nothrow) VideoEncoderJsCallback();
@@ -103,7 +103,7 @@ void VideoEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
     return OnJsFormatCallBack(cb);
 }
 
-void VideoEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
+void VideoEncoderCallbackNapi::OnNeedInputData(uint32_t index)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN(inputCallback_ != nullptr);
@@ -124,7 +124,7 @@ void VideoEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
     return OnJsBufferCallBack(cb, true);
 }
 
-void VideoEncoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
+void VideoEncoderCallbackNapi::OnNewOutputData(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN(outputCallback_ != nullptr);

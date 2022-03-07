@@ -252,22 +252,22 @@ void VDecDemoCallback::OnError(AVCodecErrorType errorType, int32_t errorCode)
     cout << "Error received, errorType:" << errorType << " errorCode:" << errorCode << endl;
 }
 
-void VDecDemoCallback::OnOutputFormatChanged(const Format &format)
+void VDecDemoCallback::OnStreamChanged(const Format &format)
 {
-    cout << "OnOutputFormatChanged received" << endl;
+    cout << "OnStreamChanged received" << endl;
 }
 
-void VDecDemoCallback::OnInputBufferAvailable(uint32_t index)
+void VDecDemoCallback::OnNeedInputData(uint32_t index)
 {
-    cout << "OnInputBufferAvailable received, index:" << index << endl;
+    cout << "OnNeedInputData received, index:" << index << endl;
     unique_lock<mutex> lock(signal_->inMutex_);
     signal_->inQueue_.push(index);
     signal_->inCond_.notify_all();
 }
 
-void VDecDemoCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
+void VDecDemoCallback::OnNewOutputData(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
-    cout << "OnOutputBufferAvailable received, index:" << index << endl;
+    cout << "OnNewOutputData received, index:" << index << endl;
     unique_lock<mutex> lock(signal_->outMutex_);
     signal_->outQueue_.push(index);
     signal_->outCond_.notify_all();

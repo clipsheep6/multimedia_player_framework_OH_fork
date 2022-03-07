@@ -151,7 +151,7 @@ void SinkSurfaceImpl::EosCb(GstMemSink *memSink, gpointer userData)
 
     AVCodecBufferInfo info;
     constexpr uint32_t invalidIndex = 1000;
-    obs->OnOutputBufferAvailable(invalidIndex, info, AVCODEC_BUFFER_FLAG_EOS);
+    obs->OnNewOutputData(invalidIndex, info, AVCODEC_BUFFER_FLAG_EOS);
 }
 
 int32_t SinkSurfaceImpl::HandleNewSampleCb(GstBuffer *buffer)
@@ -174,7 +174,7 @@ int32_t SinkSurfaceImpl::HandleNewSampleCb(GstBuffer *buffer)
 
     if (isFirstFrame_) {
         isFirstFrame_ = false;
-        obs->OnOutputFormatChanged(bufferFormat_);
+        obs->OnStreamChanged(bufferFormat_);
     }
 
     AVCodecBufferInfo info;
@@ -182,9 +182,9 @@ int32_t SinkSurfaceImpl::HandleNewSampleCb(GstBuffer *buffer)
     info.size = 0;
     constexpr uint64_t nsToUs = 1000;
     info.presentationTimeUs = static_cast<int64_t>(GST_BUFFER_PTS(buffer) / nsToUs);
-    obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
+    obs->OnNewOutputData(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
-    MEDIA_LOGD("OutputBufferAvailable, index:%{public}d", index);
+    MEDIA_LOGD("OnNewOutputData, index:%{public}d", index);
     bufferList_[index]->owner_ = BufferWrapper::SERVER;
     gst_buffer_ref(buffer);
     CANCEL_SCOPE_EXIT_GUARD(0);

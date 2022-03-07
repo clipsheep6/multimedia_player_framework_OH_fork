@@ -43,8 +43,8 @@ private:
     static napi_value Flush(napi_env env, napi_callback_info info);
     static napi_value Reset(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
-    static napi_value QueueInput(napi_env env, napi_callback_info info);
-    static napi_value ReleaseOutput(napi_env env, napi_callback_info info);
+    static napi_value PushInputData(napi_env env, napi_callback_info info);
+    static napi_value FreeOutputBuffer(napi_env env, napi_callback_info info);
     static napi_value SetParameter(napi_env env, napi_callback_info info);
     static napi_value GetOutputMediaDescription(napi_env env, napi_callback_info info);
     static napi_value GetAudioDecoderCaps(napi_env env, napi_callback_info info);
