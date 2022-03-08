@@ -36,6 +36,7 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "audio_server_sink"};
     constexpr float DEFAULT_VOLUME = 1.0f;
     constexpr uint32_t DEFAULT_BITS_PER_SAMPLE = 16;
+    constexpr uint64_t DEFAULT_ADDITIONAL_AUDIO_DELAY_US = 150000;
 }
 
 enum {
@@ -512,15 +513,19 @@ static GstFlowReturn gst_audio_server_sink_render(GstBaseSink *basesink, GstBuff
 
     g_mutex_lock(&sink->render_lock);
     if (sink->frame_after_segment) {
-        sink->frame_after_segment = FALSE;
-        uint64_t latency = 0;
         GST_INFO_OBJECT(basesink, "the first audio frame after segment has been sent to audio server");
-        if (sink->audio_sink->GetLatency(latency) != MSERR_OK) {
-            GST_INFO_OBJECT(basesink, "fail to get latency");
-        } else {
-            GST_INFO_OBJECT(basesink, "frame render latency is (%" PRIu64 ")", latency);
-        }
     }
+    uint64_t latency = 0;
+    if (sink->audio_sink->GetLatency(latency) != MSERR_OK) {
+        GST_INFO_OBJECT(basesink, "fail to get latency");
+    } else {
+        if (sink->frame_after_segment) {
+            GST_INFO_OBJECT(basesink, "frame render latency is (%" PRIu64 ") us", latency);
+        }
+        latency += DEFAULT_ADDITIONAL_AUDIO_DELAY_US;
+        gst_base_sink_set_render_delay(basesink, latency * GST_USECOND);
+    }
+    sink->frame_after_segment = FALSE;
     g_mutex_unlock(&sink->render_lock);
 
     return GST_FLOW_OK;
