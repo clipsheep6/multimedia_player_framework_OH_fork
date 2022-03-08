@@ -36,7 +36,7 @@ config("gst_mem_sink_plugins_config") {
     "include",
     "//utils/native/base/include",
     "//drivers/peripheral/display/interfaces/include",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native/avcommon",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//foundation/graphic/standard/utils/sync_fence/export",
@@ -59,7 +59,10 @@ ohos_static_library("gst_mem_sink_plugins_common") {
     "gst_surface_pool.cpp",
   ]
 
-  configs = [ ":gst_mem_sink_plugins_config" ]
+  configs = [
+    ":gst_mem_sink_plugins_config",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native:media_api_config",
+  ]
 
   deps = [
     "//foundation/graphic/standard:libsurface",

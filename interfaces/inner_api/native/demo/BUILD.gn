@@ -12,28 +12,34 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("//build/ohos/ace/ace.gni")
 
-js_declaration("media_demo_js") {
-  part_name = "multimedia_media_standard"
-}
-
-ohos_shared_library("mediademo") {
+ohos_executable("media_demo") {
   include_dirs = [
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
-    "//foundation/multimedia/media_standard/interfaces/kits/js/media/include",
-    "//foundation/multimedia/media_standard/frameworks/kitsimpl/js/common",
+    "./include",
+    "./player",
+    "./player/data_source",
+    "./recorder",
+    "./avmetadatahelper",
+    "./avcodeclist",
+    "./avcodecvenc",
+    "./avcodecvdec",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native/avcommon",
     "//foundation/multimedia/media_standard/services/utils/include",
+    "//graphic/standard/interfaces/innerkits/surface",
     "//foundation/graphic/standard/interfaces/innerkits/wmclient",
+    "//foundation/graphic/standard/utils/sync_fence/export",
     "//drivers/peripheral/display/interfaces/include",
+    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
+    "//third_party/libjpeg",
   ]
 
-  sources = [
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/napidemo/napi_demo.cpp",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/napidemo/native_module_ohos_napidemo.cpp",
+  configs = [
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native:media_api_config",
   ]
 
   cflags = [
+    "-Wall",
+    "-Werror",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",
@@ -46,31 +52,40 @@ ohos_shared_library("mediademo") {
     "-O2",
     "-D_FORTIFY_SOURCE=2",
     "-fvisibility=hidden",
-    "-Werror",
-    "-Wextra",
     "-Wformat=2",
-    "-Wfloat-equal",
     "-Wdate-time",
   ]
 
+  sources = [
+    "./avcodeclist/avcodeclist_demo.cpp",
+    "./avcodecvdec/avcodec_vdec_demo.cpp",
+    "./avcodecvenc/avcodec_venc_demo.cpp",
+    "./avmetadatahelper/avmetadatahelper_demo.cpp",
+    "./media_demo.cpp",
+    "./player/data_source/media_data_source_demo_noseek.cpp",
+    "./player/data_source/media_data_source_demo_seekable.cpp",
+    "./player/player_demo.cpp",
+    "./recorder/recorder_demo.cpp",
+  ]
+
   deps = [
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
-    "//foundation/ace/napi:ace_napi",
+    "//foundation/graphic/standard:libsurface",
+    "//foundation/graphic/standard:libwmclient",
     "//foundation/graphic/standard/frameworks/surface:surface",
     "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media:media_client",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media:media_surface",
-    "//foundation/multimedia/media_standard/services/utils:media_service_utils",
+    "//foundation/graphic/standard/utils:sync_fence",
+    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+    "//foundation/windowmanager/wm:libwm",
+    "//third_party/libjpeg:libjpeg_static",
     "//utils/native/base:utils",
-    "//utils/native/base:utilsecurec",
   ]
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "multimedia_media_standard:media_client",
   ]
 
-  relative_install_dir = "module/multimedia"
   part_name = "multimedia_media_standard"
   subsystem_name = "multimedia"
 }
