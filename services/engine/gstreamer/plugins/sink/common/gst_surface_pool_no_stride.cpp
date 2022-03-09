@@ -106,6 +106,7 @@ static void gst_surface_pool_init (GstSurfacePool *pool)
     gst_allocation_params_init(&pool->params);
     pool->task = nullptr;
     g_rec_mutex_init(&pool->taskLock);
+    pool->surfaceError = FALSE;
 }
 
 static void gst_surface_pool_finalize(GObject *obj)
@@ -258,7 +259,7 @@ static void gst_surface_pool_request_loop(GstSurfacePool *spool)
     GST_BUFFER_POOL_LOCK(spool);
     if (!spool->started) {
         GST_BUFFER_POOL_UNLOCK(spool);
-        GST_DEBUG_OBJECT(spool, "task is paused, exit");
+        GST_WARNING_OBJECT(spool, "task is paused, exit");
         gst_task_pause(spool->task);
         return;
     }
@@ -267,8 +268,10 @@ static void gst_surface_pool_request_loop(GstSurfacePool *spool)
     GstBuffer *buffer = nullptr;
     GstFlowReturn ret = gst_surface_pool_alloc_buffer(pool, &buffer, nullptr);
     if (ret != GST_FLOW_OK) {
-        GST_DEBUG_OBJECT(spool, "alloc bufer failed, exit");
+        GST_WARNING_OBJECT(spool, "alloc bufer failed, exit");
         gst_task_pause(spool->task);
+        spool->surfaceError = TRUE;
+        GST_BUFFER_POOL_NOTIFY(spool);
         return;
     }
 
@@ -439,7 +442,11 @@ static GstFlowReturn gst_surface_pool_acquire_buffer(GstBufferPool *pool,
             GST_INFO_OBJECT(spool, "pool is flushing");
             break;
         }
-
+        if (spool->surfaceError == TRUE) {
+            ret = GST_FLOW_ERROR;
+            GST_ERROR_OBJECT(spool, "surface is in error");
+            break;
+        }
         GList *node = g_list_first(spool->preAllocated);
         if (node != nullptr) {
             *buffer = GST_BUFFER_CAST(node->data);
