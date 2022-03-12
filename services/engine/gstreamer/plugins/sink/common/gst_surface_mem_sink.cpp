@@ -45,6 +45,7 @@ static void gst_surface_mem_sink_set_property(GObject *object, guint prop_id, co
 static void gst_surface_mem_sink_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, GstQuery *query);
 static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer);
+static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *element, GstStateChange transition);
 
 #define gst_surface_mem_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE(GstSurfaceMemSink, gst_surface_mem_sink,
@@ -77,6 +78,8 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
         g_param_spec_pointer("surface", "Surface",
             "Surface for rendering output",
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    element_class->change_state = gst_surface_mem_sink_change_state;
 
     mem_sink_class->do_propose_allocation = gst_surface_mem_sink_do_propose_allocation;
     mem_sink_class->do_app_render = gst_surface_mem_sink_do_app_render;
@@ -166,6 +169,48 @@ static void gst_surface_mem_sink_get_property(GObject *object, guint propId, GVa
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, pspec);
             break;
     }
+}
+
+static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *element, GstStateChange transition)
+{
+    g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
+
+    GstSurfaceMemSink *surface_sink = GST_SURFACE_MEM_SINK_CAST(element);
+    GstSurfaceMemSinkPrivate *priv = surface_sink->priv;
+    g_return_val_if_fail(priv != nullptr, GST_STATE_CHANGE_FAILURE);
+
+    switch (transition) {
+        case GST_STATE_CHANGE_READY_TO_PAUSED: {
+            GST_OBJECT_LOCK(surface_sink);
+            if (priv->pool != nullptr && gst_buffer_pool_is_active(GST_BUFFER_POOL_CAST(priv->pool))) {
+                gst_buffer_pool_set_flushing(GST_BUFFER_POOL_CAST(priv->pool), FALSE);
+            }
+            GST_OBJECT_UNLOCK(surface_sink);
+            break;
+        }
+        default:
+            break;
+    }
+
+    GstStateChangeReturn ret = GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+        return ret;
+    }
+
+    switch (transition) {
+        case GST_STATE_CHANGE_PAUSED_TO_READY: {
+            GST_OBJECT_LOCK(surface_sink);
+            if (priv->pool != nullptr && gst_buffer_pool_is_active(GST_BUFFER_POOL_CAST(priv->pool))) {
+                gst_buffer_pool_set_flushing(GST_BUFFER_POOL_CAST(priv->pool), TRUE);
+            }
+            GST_OBJECT_UNLOCK(surface_sink);
+            break;
+        }
+        default:
+            break;
+    }
+
+    return ret;
 }
 
 static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer)
