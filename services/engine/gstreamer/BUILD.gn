@@ -34,6 +34,8 @@ ohos_shared_library("media_engine_gst") {
     "//third_party/gstreamer/gstplugins_base:gstplugins_base_packages",
     "//third_party/gstreamer/gstplugins_good:gstplugins_good_packages",
     "//third_party/gstreamer/gstreamer:gstreamer_packages",
+    "//third_party/gstreamer/gst_omx:gst_omx_packages",
+    "//device/soc/allwinner/hardware/cedarc:cedarc",
     "//third_party/libffi:ffi",
   ]
 
