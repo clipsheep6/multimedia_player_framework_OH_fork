@@ -41,6 +41,12 @@ struct _GstTrackInfo {
     GstElement *parse_;
 };
 
+enum _TrackType {
+    VIDEO = 0,
+    AUDIO = 1,
+    UNKNOWN_TYPE = -1,
+};
+
 struct _GstMuxBin {
     GstPipeline parent_;
 
@@ -64,9 +70,10 @@ struct _GstMuxBinClass {
 using GstMuxBin = struct _GstMuxBin;
 using GstMuxBinClass = struct _GstMuxBinClass;
 using GstTrackInfo = struct _GstTrackInfo;
+using TrackType = enum _TrackType;
 
 __attribute__((visibility("default"))) void gst_mux_bin_add_track(GstMuxBin *mux_bin, const char *srcName,
-    const char *parseName, bool isVideo);
+    const char *parseName, TrackType trackType);
 
 __attribute__((visibility("default"))) GType gst_mux_bin_get_type (void);
 

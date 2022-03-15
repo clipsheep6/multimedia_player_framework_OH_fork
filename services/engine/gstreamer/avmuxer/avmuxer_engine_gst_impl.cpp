@@ -191,14 +191,17 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     int32_t ret;
     GstCaps *src_caps = nullptr;
     uint32_t *trackNum = nullptr;
-    if (AVMuxerUtil::isVideo(trackInfo_[trackId].mimeType_)) {
+    if (AVMuxerUtil::CheckType(trackInfo_[trackId].mimeType_) == VIDEO) {
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 1 video Tracks can be added");
         trackNum = &videoTrackNum_;
-    } else {
+    } else if (AVMuxerUtil::CheckType(trackInfo_[trackId].mimeType_) == AUDIO) {
         CHECK_AND_RETURN_RET_LOG(audioTrackNum_ < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 16 audio Tracks can be added");
         trackNum = &audioTrackNum_;
+    } else {
+        MEDIA_LOGE("Failed to check track type");
+        return MSERR_INVALID_VAL;
     }
     ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetCaps");
@@ -208,7 +211,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     std::string name = "src_";
     name += static_cast<char>('0' + trackId);
     gst_mux_bin_add_track(muxBin_, name.c_str(), std::get<1>(MIME_MAP_TYPE.at(mimeType)).c_str(),
-        AVMuxerUtil::isVideo(trackInfo_[trackId].mimeType_));
+        AVMuxerUtil::CheckType(trackInfo_[trackId].mimeType_));
 
     return MSERR_OK;
 }
@@ -218,7 +221,7 @@ int32_t AVMuxerEngineGstImpl::Start()
     MEDIA_LOGD("Start");
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
-    gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_READY);
+    gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
 
     GstAppSrcCallbacks callbacks = {&StartFeed, &StopFeed, NULL};
     for (auto& info : trackInfo_) {
@@ -231,26 +234,6 @@ int32_t AVMuxerEngineGstImpl::Start()
     }
 
     return MSERR_OK;
-}
-
-static bool isAllHasCodecData(std::map<int, TrackInfo>& trackInfo)
-{
-    for (auto& info : trackInfo) {
-        if (info.second.hasCodecData_ == false) {
-            return false;
-        }
-    }
-    return true;
-}
-
-static bool isAllHasBuffer(std::map<int, TrackInfo>& trackInfo)
-{
-    for (auto& info : trackInfo) {
-        if (info.second.hasBuffer_ == false) {
-            return false;
-        }
-    }
-    return true;
 }
 
 int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
@@ -277,21 +260,10 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     } else if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == true) {
         ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteData");
-        trackInfo_[sampleInfo.trackIdx].hasBuffer_ = true;
     } else {
         MEDIA_LOGW("First frame must be code_data");
     }
 
-    if (isAllHasCodecData(trackInfo_) && !isPause_) {
-        gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PAUSED);
-        isPause_ = true;
-        MEDIA_LOGD("Current state is Pause");
-    }
-    if (isAllHasBuffer(trackInfo_) && !isPlay_) {
-        gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
-        isPlay_ = true;
-        MEDIA_LOGD("Current state is Play");
-    }
     return MSERR_OK;
 }
 

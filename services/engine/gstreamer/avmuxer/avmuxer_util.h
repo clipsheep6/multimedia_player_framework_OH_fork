@@ -50,7 +50,6 @@ const std::map<const std::string, std::tuple<const std::string, std::string>> MI
 class TrackInfo {
 public:
     bool hasCodecData_ = false;
-    bool hasBuffer_ = false;
     bool needData_ = false;
     GstCaps *caps_ = nullptr;
     GstAppSrc *src_ = nullptr;
@@ -72,7 +71,7 @@ public:
     ~AVMuxerUtil() = delete;
     DISALLOW_COPY_AND_MOVE(AVMuxerUtil);
 
-    static bool isVideo(const std::string &mimeType);
+    static TrackType CheckType(const std::string &mimeType);
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
         GstCaps *src_caps);
     static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
