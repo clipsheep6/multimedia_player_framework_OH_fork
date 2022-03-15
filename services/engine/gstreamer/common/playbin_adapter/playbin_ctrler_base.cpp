@@ -106,17 +106,10 @@ int32_t PlayBinCtrlerBase::Init()
 
 int32_t PlayBinCtrlerBase::SetSource(const std::string &url)
 {
-    UriHelper uriHeper = UriHelper(url).FormatMe();
-    if (((uriHeper.UriType() != UriHelper::URI_TYPE_FILE) && (uriHeper.UriType() != UriHelper::URI_TYPE_FD)) ||
-        !uriHeper.AccessCheck(UriHelper::URI_READ)) {
-        MEDIA_LOGE("Invalid url : %{public}s", url.c_str());
-        return MSERR_UNSUPPORT;
-    }
-
     std::unique_lock<std::mutex> lock(mutex_);
-    uri_ = uriHeper.FormattedUri();
+    uri_ = url;
 
-    MEDIA_LOGI("Set source: %{public}s", uriHeper.FormattedUri().c_str());
+    MEDIA_LOGI("Set source: %{public}s", url.c_str());
     return MSERR_OK;
 }
 
@@ -479,7 +472,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
     MEDIA_LOGD("element setup: %{public}s", ELEM_NAME(&elem));
 
     // limit to the g-signal, send this notification at this thread, do not change the work thread.
-    // otherwise ,the avmetaengine will work inproperly.
+    // otherwise ,the avmetaengine will work improperly.
 
     decltype(elemSetupListener_) listener = nullptr;
     {
@@ -505,7 +498,7 @@ void PlayBinCtrlerBase::OnMessageReceived(const InnerMessage &msg)
 void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
 {
     if (msg.type == PlayBinMsgType::PLAYBIN_MSG_ERROR) {
-        MEDIA_LOGE("error happend, error code: %{public}d", msg.code);
+        MEDIA_LOGE("error happened, error code: %{public}d", msg.code);
 
         std::unique_lock<std::mutex> condLock(condMutex_);
         isErrorHappened_ = true;

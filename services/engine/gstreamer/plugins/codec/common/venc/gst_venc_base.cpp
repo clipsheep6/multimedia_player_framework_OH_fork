@@ -687,15 +687,17 @@ static void gst_venc_base_loop(GstVencBase *self)
 {
     g_return_if_fail(self != nullptr);
     g_return_if_fail(self->encoder != nullptr);
-
     GstBuffer *gst_buffer = nullptr;
+    GST_DEBUG_OBJECT(self, "coding buffers %u", self->coding_outbuf_cnt);
     gint codec_ret = self->encoder->PullOutputBuffer(&gst_buffer);
     gint flow_ret = GST_FLOW_OK;
     switch (codec_ret) {
         case GST_CODEC_OK:
+            self->coding_outbuf_cnt--;
             flow_ret = gst_venc_base_finish_output_buffer(self, gst_buffer);
             break;
         case GST_CODEC_EOS:
+            self->coding_outbuf_cnt--;
             flow_ret = gst_venc_base_codec_eos(self);
             break;
         case GST_CODEC_FLUSH:
@@ -712,7 +714,6 @@ static void gst_venc_base_loop(GstVencBase *self)
     GST_DEBUG_OBJECT(self, "Flow_ret %d", flow_ret);
     switch (flow_ret) {
         case GST_FLOW_OK:
-            self->coding_outbuf_cnt--;
             if (gst_venc_base_push_out_buffers(self)) {
                 return;
             }
