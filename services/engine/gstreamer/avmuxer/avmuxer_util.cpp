@@ -87,7 +87,8 @@ static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc,
         MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
             param.width, param.height, param.frameRate);
     } else if (AVMuxerUtil::CheckType(mimeType) == AUDIO) {
-        CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, param.channels) == true,
+        CHECK_AND_RETURN_RET_LOG(
+            trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, param.channels) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
         CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_SAMPLE_RATE, param.rate) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
