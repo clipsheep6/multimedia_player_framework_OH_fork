@@ -53,6 +53,7 @@ int32_t AVSharedMemoryPool::Init(const InitializeOption &option)
                "maxMemCnt = %{public}u, enableFixedSize = %{public}d",
                name_.c_str(), option_.preAllocMemCnt, option_.memSize, option_.maxMemCnt,
                option_.enableFixedSize);
+
     bool ret = true;
     for (uint32_t i = 0; i < option_.preAllocMemCnt; ++i) {
         auto memory = AllocMemory(option_.memSize);
@@ -64,6 +65,14 @@ int32_t AVSharedMemoryPool::Init(const InitializeOption &option)
         idleList_.push_back(memory);
     }
     
+    if (!ret) {
+        for (auto iter = idleList_.begin(); iter != idleList_.end(); ++iter) {
+            delete *iter;
+            *iter = nullptr;
+        }
+        return MSERR_NO_MEMORY;
+    }
+
     if (!ret) {
         for (auto iter = idleList_.begin(); iter != idleList_.end(); ++iter) {
             delete *iter;
