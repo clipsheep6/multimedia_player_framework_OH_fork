@@ -64,17 +64,20 @@ std::map<std::string, std::vector<std::tuple<std::string, GType, MultiValue>>> o
     }}
 };
 
-bool AVMuxerUtil::isVideo(const std::string &mimeType)
+TrackType AVMuxerUtil::CheckType(const std::string &mimeType)
 {
     if (mimeType.find("video") == 0) {
-        return true;
+        return VIDEO;
+    } else if (mimeType.find("audio") == 0) {
+        return AUDIO;
+    } else {
+        return UNKNOWN_TYPE;
     }
-    return false;
 }
 
 static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc, const std::string &mimeType)
 {
-    if (AVMuxerUtil::isVideo(mimeType)) {
+    if (AVMuxerUtil::CheckType(mimeType) == VIDEO) {
         CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_WIDTH, param.width) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_WIDTH");
         CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_HEIGHT, param.height) == true,
@@ -83,12 +86,15 @@ static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_FRAME_RATE");
         MEDIA_LOGD("width is: %{public}d, height is: %{public}d, frameRate is: %{public}d",
             param.width, param.height, param.frameRate);
-    } else {
+    } else if (AVMuxerUtil::CheckType(mimeType) == AUDIO) {
         CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, param.channels) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_CHANNEL_COUNT");
         CHECK_AND_RETURN_RET_LOG(trackDesc.GetIntValue(MediaDescriptionKey::MD_KEY_SAMPLE_RATE, param.rate) == true,
             MSERR_INVALID_VAL, "Failed to get MD_KEY_SAMPLE_RATE");
         MEDIA_LOGD("channels is: %{public}d, rate is: %{public}d", param.channels, param.rate);
+    } else {
+        MEDIA_LOGD("Faild to check track type");
+        return MSERR_INVALID_VAL;
     }
 
     return MSERR_OK;
@@ -121,17 +127,20 @@ static void AddOptionCaps(GstCaps *src_caps, const std::string &mimeType)
 
 static void CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps *src_caps)
 {
-    if (AVMuxerUtil::isVideo(mimeType)) {
+    if (AVMuxerUtil::CheckType(mimeType) == VIDEO) {
         src_caps = gst_caps_new_simple(std::get<0>(MIME_MAP_TYPE.at(mimeType)).c_str(),
             "width", G_TYPE_INT, param.width,
             "height", G_TYPE_INT, param.height,
             "framerate", GST_TYPE_FRACTION, param.frameRate, 1,
             nullptr);
-    } else {
+    } else if (AVMuxerUtil::CheckType(mimeType) == AUDIO) {
         src_caps = gst_caps_new_simple(std::get<0>(MIME_MAP_TYPE.at(mimeType)).c_str(),
             "channels", G_TYPE_INT, param.channels,
             "rate", G_TYPE_INT, param.rate,
             nullptr);
+    } else {
+        MEDIA_LOGE("Failed to check track type");
+        return;
     }
     AddOptionCaps(src_caps, mimeType);
 }

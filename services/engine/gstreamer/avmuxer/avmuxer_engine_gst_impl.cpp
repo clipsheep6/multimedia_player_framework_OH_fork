@@ -191,14 +191,17 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     int32_t ret;
     GstCaps *src_caps = nullptr;
     uint32_t *trackNum = nullptr;
-    if (AVMuxerUtil::isVideo(trackInfo_[trackId].mimeType_)) {
+    if (AVMuxerUtil::CheckType(trackInfo_[trackId].mimeType_) == VIDEO) {
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 1 video Tracks can be added");
         trackNum = &videoTrackNum_;
-    } else {
+    } else if (AVMuxerUtil::CheckType(trackInfo_[trackId].mimeType_) == AUDIO) {
         CHECK_AND_RETURN_RET_LOG(audioTrackNum_ < MAX_AUDIO_TRACK_NUM, MSERR_INVALID_OPERATION,
             "Only 16 audio Tracks can be added");
         trackNum = &audioTrackNum_;
+    } else {
+        MEDIA_LOGE("Failed to check track type");
+        return MSERR_INVALID_VAL;
     }
     ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetCaps");
@@ -208,7 +211,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     std::string name = "src_";
     name += static_cast<char>('0' + trackId);
     gst_mux_bin_add_track(muxBin_, name.c_str(), std::get<1>(MIME_MAP_TYPE.at(mimeType)).c_str(),
-        AVMuxerUtil::isVideo(trackInfo_[trackId].mimeType_));
+        AVMuxerUtil::CheckType(trackInfo_[trackId].mimeType_));
 
     return MSERR_OK;
 }
