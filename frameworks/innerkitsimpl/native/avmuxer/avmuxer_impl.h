@@ -22,11 +22,10 @@
 
 namespace OHOS {
 namespace Media {
-class AVMuxerImpl : public AVMuxer {
+class AVMuxerImpl : public AVMuxer, public NoCopyable {
 public:
     AVMuxerImpl();
     ~AVMuxerImpl();
-    DISALLOW_COPY_AND_MOVE(AVMuxerImpl);
 
     int32_t Init();
     std::vector<std::string> GetAVMuxerFormatList() override;

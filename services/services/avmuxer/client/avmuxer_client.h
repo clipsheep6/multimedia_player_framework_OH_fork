@@ -21,12 +21,11 @@
 
 namespace OHOS {
 namespace Media {
-class AVMuxerClient : public IAVMuxerService {
+class AVMuxerClient : public IAVMuxerService, public NoCopyable {
 public:
     static std::shared_ptr<AVMuxerClient> Create(const sptr<IStandardAVMuxerService> &ipcProxy);
     explicit AVMuxerClient(const sptr<IStandardAVMuxerService> &ipcProxy);
     ~AVMuxerClient();
-    DISALLOW_COPY_AND_MOVE(AVMuxerClient);
 
     std::vector<std::string> GetAVMuxerFormatList() override;
     int32_t SetOutput(const std::string &path, const std::string &format) override;

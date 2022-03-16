@@ -47,29 +47,26 @@ const std::map<const std::string, std::tuple<const std::string, std::string>> MI
     {"audio/mpeg", {"audio/mpeg", ""}}
 };
 
-class TrackInfo {
-public:
+struct TrackInfo {
     bool hasCodecData_ = false;
     bool needData_ = false;
     GstCaps *caps_ = nullptr;
     GstAppSrc *src_ = nullptr;
-    std::string mimeType_ ;
+    std::string mimeType_;
 };
 
-class FormatParam {
-public:
-    int32_t width;
-    int32_t height;
-    int32_t frameRate;
-    int32_t channels;
-    int32_t rate;
+struct FormatParam {
+    int32_t width = 0;
+    int32_t height = 0;
+    int32_t frameRate = 0;
+    int32_t channels = 0;
+    int32_t rate = 0;
 };
 
 class AVMuxerUtil {
 public:
     AVMuxerUtil() = delete;
     ~AVMuxerUtil() = delete;
-    DISALLOW_COPY_AND_MOVE(AVMuxerUtil);
 
     static TrackType CheckType(const std::string &mimeType);
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
@@ -77,6 +74,6 @@ public:
     static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
         GstAppSrc *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator);
 };
-}
-}
-#endif
+}  // namespace Media
+}  // namespace OHOS
+#endif  // AVMUXER_UTIL_H

@@ -21,27 +21,7 @@
 #include "securec.h"
 namespace OHOS {
 namespace Media {
-std::vector<std::string> MDKey = {
-    "track_index",
-    "track_type",
-    "codec_mime",
-    "duration",
-    "bitrate",
-    "max-input-size",
-    "width",
-    "height",
-    "pixel-format",
-    "frame-rate",
-    "capture-rate",
-    "i_frame_interval",
-    "req_i_frame"
-    "channel-count",
-    "sample-rate",
-    "track-count",
-    "vendor."
-};
-
-static const int32_t ES[501] =
+static const int32_t H264_FRAME_SIZE[] =
     { 646, 5855, 3185, 3797, 3055, 5204, 2620, 6262, 2272, 3702, 4108, 4356, 4975, 4590, 3083, 1930, 1801, 1945,
       3475, 4028, 1415, 1930, 2802, 2176, 1727, 2287, 2274, 2033, 2432, 4447, 4130, 5229, 5792, 4217, 5804,
       6586, 7506, 5128, 5549, 6685, 5248, 4819, 5385, 4818, 5239, 4148, 6980, 5124, 4255, 5666, 4756, 4975,
@@ -72,89 +52,147 @@ static const int32_t ES[501] =
       2684, 3449, 3621, 4363, 4216, 4913, 5026, 3336, 3057, 2782, 3716, 3036, 4438, 3904, 4823, 1761, 2045,
       1446, 3210, 1625, 2400, 3489, 4719, 3954, 3756, 4940, 2371, 4516, 3739, 3572, 2644, 3837, 4915, 2251,
       4248, 4019, 4407, 4217, 2913, 5106 };
+static const int32_t AAC_FRAME_SIZE[] = 
+    { 361, 368, 22, 20, 20, 20, 20, 20, 18, 198, 513, 499, 534, 522, 541, 608, 596, 613, 631, 543, 
+      563, 505, 411, 375, 402, 361, 396, 405, 372, 402, 382, 371, 363, 366, 401, 390, 519, 325, 367, 
+      365, 389, 358, 389, 413, 327, 493, 378, 360, 359, 387, 356, 391, 362, 360, 393, 408, 384, 348, 
+      361, 437, 494, 381, 397, 329, 365, 376, 354, 376, 347, 541, 366, 377, 370, 365, 368, 366, 358, 
+      366, 401, 395, 393, 385, 348, 365, 386, 375, 381, 371, 549, 335, 376, 362, 390, 391, 350, 380, 
+      368, 360, 387, 408, 392, 383, 390, 418, 353, 383, 375, 410, 355, 375, 437, 413, 393, 427, 397, 
+      397, 363, 418, 393, 412, 373, 433, 323, 381, 396, 391, 372, 400, 397, 294, 280, 391, 405, 378, 
+      410, 505, 411, 385, 380, 377, 345, 393, 375, 377, 378, 351, 401, 377, 404, 368, 370, 402, 386, 
+      398, 393, 392, 386, 403, 360, 393, 373, 386, 362, 344, 416, 355, 380, 353, 398, 422, 386, 365, 
+      335, 340, 383, 371, 386, 375, 399, 398, 352, 387, 380, 390, 391, 390, 385, 404, 384, 407, 365, 
+      348, 388, 388, 385, 392, 383, 462, 463, 466, 392, 351, 358, 385, 358, 389, 378, 359, 349, 424, 
+      335, 392, 347, 348, 379, 302, 295, 357, 458, 466, 460, 370, 390, 402, 405, 411, 378, 383, 351, 
+      413, 420, 362, 343, 369, 367, 378, 355, 385, 410, 420, 375, 398, 394, 384, 376, 400, 395, 389, 
+      395, 363, 422, 364, 365, 380, 395, 364, 395, 350, 319, 308, 374, 560, 503, 500, 438, 427, 445, 
+      416, 366, 424, 331, 354, 376, 381, 387, 369, 382, 343, 366, 442, 419, 348, 362, 354, 405, 419, 
+      332, 376, 388, 405, 365, 428, 379, 384, 387, 403, 385, 344, 366, 381, 366, 371, 286, 328, 470, 
+      413, 404, 409, 406, 376, 370, 380, 393, 345, 400, 386, 397, 376, 407, 364, 362, 351, 377, 345, 
+      375, 413, 353, 419, 382, 379, 383, 444, 392, 368, 374, 376, 349, 413, 405, 374, 355, 412, 385, 
+      356, 277, 361, 461, 398, 431, 381, 405, 389, 374, 392, 377, 407, 377, 389, 406, 391, 378, 420, 
+      388, 372, 372, 350, 373, 446, 399, 354, 368, 350, 373, 418, 390, 366, 367, 351, 414, 413, 362, 
+      373, 364, 312, 400, 391, 371, 384, 478, 391, 400, 344, 360, 383, 349, 370, 393, 369, 364, 366, 
+      401, 377, 360, 392, 398, 388, 358, 374, 386, 395, 374, 419, 376, 393, 376, 348, 416, 381, 363, 
+      376, 381, 369, 378, 416, 366, 379, 363, 430, 368, 358, 470, 296, 358};
 
+static const std::string VIDEO_CODEC_MIME = "video/avc";
+static const int32_t WIDTH = 480;
+static const int32_t HEIGHT = 640;
+static const int32_t FRAME_RATE = 30;
+static const std::string AUDIO_CODEC_MIME = "audio/mp4a-latm";
+static const int32_t SAMPLE_RATE = 44100;
+static const int32_t CHANNEL_COUNT = 2;
 static const uint32_t SLEEP_UTIME = 100000;
 static const uint32_t TIME_STAMP = 33;
 
+bool AVMuxerDemo::PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t *FrameArray,
+    int32_t i, int32_t TrakcId, int64_t stamp)
+{
+    if (FrameArray == nullptr) {
+        std::cout << "Frame array error" << std::endl;
+        return false;
+    }
+    uint8_t *buffer = (uint8_t *)malloc(sizeof(char) * (*FrameArray));
+    if (buffer == nullptr) {
+        std::cout << "no memory" << std::endl;
+        return false;
+    }
+    File->read((char *)buffer, *FrameArray);
+    std::shared_ptr<AVMemory> aVMem = std::make_shared<AVMemory>(buffer, *FrameArray);
+    aVMem->SetRange(0, *FrameArray);
+    TrackSampleInfo info;
+    info.size = *FrameArray;
+    info.trackIdx = TrakcId;
+    if (i == 0) {
+        info.timeMs = 0;
+        info.flags = AVCODEC_BUFFER_FLAG_CODEC_DATA;
+    } else if ((i == 1 && TrakcId == videoTrakcId_) || TrakcId == audioTrackId_) {
+        info.timeMs = stamp;
+        info.flags = AVCODEC_BUFFER_FLAG_SYNC_FRAME;
+    } else {
+        info.timeMs = stamp;
+        info.flags = AVCODEC_BUFFER_FLAG_PARTIAL_FRAME;
+    }
+
+    avmuxer_->WriteTrackSample(aVMem, info);
+    free(buffer);
+    usleep(SLEEP_UTIME);
+
+    return true;
+}
+
+std::shared_ptr<std::ifstream> openFile(const std::string filePath) {
+    auto file = std::make_unique<std::ifstream>();
+    file->open(filePath, std::ios::in | std::ios::binary);
+    return file;
+}
+
 void AVMuxerDemo::WriteTrackSampleByteStream()
 {
-    const int32_t *frameLenArray_ = ES;
-    const std::string filePath = "/data/media/test.h264";
-    auto testFile = std::make_unique<std::ifstream>();
-    testFile->open(filePath, std::ios::in | std::ios::binary);
-    bool isFirstStream = true;
-    bool isSecondStream = true;
-    int64_t timeStamp = 0;
+    const int32_t *videoFrameArray = H264_FRAME_SIZE;
+    const int32_t *audioFrameArray = AAC_FRAME_SIZE;
+    std::shared_ptr<std::ifstream> videoFile = openFile("/system/app/test.h264");
+    std::shared_ptr<std::ifstream> audioFile = openFile("/system/app/test.aac");
+
+    int64_t stamp = 0;
     int i = 0;
-    int len = sizeof(ES) / sizeof(int32_t);
-    while (i < len) {
-        uint8_t *tempBuffer = (uint8_t *)malloc(sizeof(char) * (*frameLenArray_));
-        if (tempBuffer == nullptr) {
-            std::cout << "no memory" << std::endl;
+    int videoLen = sizeof(H264_FRAME_SIZE) / sizeof(int32_t);
+    int audioLen = sizeof(AAC_FRAME_SIZE) / sizeof(int32_t);
+    while (i < videoLen && i < audioLen) {
+        if (!PushBuffer(videoFile, videoFrameArray, i, videoTrakcId_, stamp)) {
             break;
         }
-        size_t num = testFile->read((char *)tempBuffer, *frameLenArray_).gcount();
-        std::cout << "num is: " << num << std::endl;
-        std::cout << "tempBuffer is: " << tempBuffer << std::endl;
-        std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(tempBuffer, *frameLenArray_);
-        avMem->SetRange(0, *frameLenArray_);
-        if (avMem->Data() == nullptr || avMem->Base() == nullptr) {
-            std::cout << "no memory" << std::endl;
+        if (!PushBuffer(audioFile, audioFrameArray, i, audioTrackId_, stamp)) {
             break;
-        } 
-        std::cout << "avMem->Capacity() is: " << avMem->Capacity() << std::endl;
-        std::cout << "avMem->Size() is: " << avMem->Size() << std::endl;
-        std::cout << "avMem->Data() is: " << (int *)(avMem->Data()) << std::endl;
-        std::cout << "avMem->Base() is: " << (int *)(avMem->Base()) << std::endl;
-        TrackSampleInfo info;
-        info.size = *frameLenArray_;
-        info.trackIdx = 1;
-        if (isFirstStream) {
-            info.timeMs = 0;
-            info.flags = AVCODEC_BUFFER_FLAG_CODEC_DATA;
-            isFirstStream = false;
-        } else {
-            info.timeMs = timeStamp;
-            if (isSecondStream) {
-                info.flags = AVCODEC_BUFFER_FLAG_SYNC_FRAME;
-                isSecondStream = false;
-            } else {
-                info.flags = AVCODEC_BUFFER_FLAG_PARTIAL_FRAME;
-            }
-            timeStamp += TIME_STAMP;
         }
-        avmuxer_->WriteTrackSample(avMem, info);
-        frameLenArray_++;
-        free(tempBuffer);
         i++;
-        usleep(SLEEP_UTIME);
+        videoFrameArray++;
+        audioFrameArray++;
+        if (i != 0) {
+            stamp += TIME_STAMP;
+        }
     }
 }
 
-void AVMuxerDemo::AddTrackVideo()
+int32_t AVMuxerDemo::AddTrackVideo()
 {
     MediaDescription trackDesc;
-    trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "video/avc");
-    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_WIDTH), width_);
-    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), height_);
-    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), frameRate_);
-    std::cout << "width is: " << width_ << std::endl;
-    std::cout << "height is: " << height_ << std:: endl;
-    std::cout << "frameRate is: " << frameRate_ << std::endl;
+    trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), VIDEO_CODEC_MIME);
+    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_WIDTH), WIDTH);
+    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), HEIGHT);
+    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), FRAME_RATE);
     int32_t trackId;
     avmuxer_->AddTrack(trackDesc, trackId);
     std::cout << "trackId is: " << trackId << std::endl;
+
+    return trackId;
+}
+
+int32_t AVMuxerDemo::AddTrackAudio()
+{
+    MediaDescription trackDesc;
+    trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), AUDIO_CODEC_MIME);
+    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_SAMPLE_RATE), SAMPLE_RATE);
+    trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT), CHANNEL_COUNT);
+    int32_t trackId;
+    avmuxer_->AddTrack(trackDesc, trackId);
+    std::cout << "trackId is: " << trackId << std::endl;
+
+    return trackId;
 }
 
 void AVMuxerDemo::DoNext()
 {
-    std::string path = "file:///data/media/output.mp4";
+    std::string path = "file:///system/app/output.mp4";
     std::string format = "mp4";
     avmuxer_->SetOutput(path, format);
     avmuxer_->SetLocation(30.1111, 150.22222);
     avmuxer_->SetOrientationHint(90);
 
-    AddTrackVideo();
+    videoTrakcId_ = AddTrackVideo();
+    audioTrackId_ = AddTrackAudio();
     avmuxer_->Start();
     WriteTrackSampleByteStream();
 

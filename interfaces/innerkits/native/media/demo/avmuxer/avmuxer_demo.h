@@ -20,21 +20,21 @@
 
 namespace OHOS {
 namespace Media {
-class AVMuxerDemo {
+class AVMuxerDemo : public NoCopyable {
 public:
     AVMuxerDemo() = default;
     ~AVMuxerDemo() = default;
-    DISALLOW_COPY_AND_MOVE(AVMuxerDemo);
     void RunCase();
 private:
-    void ReadTrackInfoByteStream();
+    bool PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t *FrameArray,
+        int32_t i, int32_t TrakcId_, int64_t stamp);
     void WriteTrackSampleByteStream();
-    void AddTrackVideo();
+    int32_t AddTrackVideo();
+    int32_t AddTrackAudio();
     void DoNext();
     std::shared_ptr<AVMuxer> avmuxer_;
-    int32_t width_ = 480;
-    int32_t height_ = 640;
-    int32_t frameRate_ = 30;
+    int32_t videoTrakcId_ = 0;
+    int32_t audioTrackId_ = 0;
 };
 }  // namespace Media
 }  // namespace OHOS

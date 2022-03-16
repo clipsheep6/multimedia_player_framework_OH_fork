@@ -21,11 +21,10 @@
 
 namespace OHOS {
 namespace Media {
-class AVMuxerServiceStub : public IRemoteStub<IStandardAVMuxerService> {
+class AVMuxerServiceStub : public IRemoteStub<IStandardAVMuxerService>, public NoCopyable {
 public:
     static sptr<AVMuxerServiceStub> Create();
     virtual ~AVMuxerServiceStub();
-    DISALLOW_COPY_AND_MOVE(AVMuxerServiceStub);
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     using AVMuxerStubFunc = int32_t(AVMuxerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
 

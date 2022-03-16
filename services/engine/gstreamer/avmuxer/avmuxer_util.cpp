@@ -38,9 +38,9 @@ struct MultiValue {
         val_.stringVal = val;
     }
     union Val {
-        int32_t    intVal;
+        int32_t intVal;
         const char *stringVal;
-    } val_;
+    } val_ = {0};
 };
 
 std::map<std::string, std::vector<std::tuple<std::string, GType, MultiValue>>> optionCapsMap = {
@@ -169,7 +169,7 @@ int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSam
     gst_buffer_append_memory(buffer, mem);
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * MSTONS);
     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * MSTONS);
-    if (sampleInfo.flags == AVCODEC_BUFFER_FLAG_SYNC_FRAME) {
+    if (sampleInfo.flags & AVCODEC_BUFFER_FLAG_SYNC_FRAME) {
         gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }
 

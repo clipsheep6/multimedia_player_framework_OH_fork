@@ -31,12 +31,11 @@ enum AVMuxerStates : int32_t {
     AVMUXER_SAMPLE_WRITING,
 };
     
-class AVMuxerServer : public IAVMuxerService {
+class AVMuxerServer : public IAVMuxerService, public NoCopyable {
 public:
     static std::shared_ptr<IAVMuxerService> Create();
     AVMuxerServer();
     ~AVMuxerServer();
-    DISALLOW_COPY_AND_MOVE(AVMuxerServer);
 
     std::vector<std::string> GetAVMuxerFormatList() override;
     int32_t SetOutput(const std::string &path, const std::string &format) override;
