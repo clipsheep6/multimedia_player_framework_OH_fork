@@ -28,12 +28,11 @@
 
 namespace OHOS {
 namespace Media {
-class AVMuxerEngineGstImpl : public IAVMuxerEngine {
+class AVMuxerEngineGstImpl : public IAVMuxerEngine, public NoCopyable {
 public:
     AVMuxerEngineGstImpl();
     ~AVMuxerEngineGstImpl();
 
-    DISALLOW_COPY_AND_MOVE(AVMuxerEngineGstImpl);
     std::vector<std::string> GetAVMuxerFormatList() override;
     int32_t Init() override;
     int32_t SetOutput(const std::string &path, const std::string &format) override;
@@ -66,4 +65,4 @@ private:
 };
 }  // namespace Media
 }  // namespace OHOS
-#endif
+#endif // AVMUXER_ENGINE_GST_IMPL_H

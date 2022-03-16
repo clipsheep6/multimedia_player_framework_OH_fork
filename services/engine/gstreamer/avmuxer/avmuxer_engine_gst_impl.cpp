@@ -35,18 +35,18 @@ namespace {
     constexpr int32_t MAX_LONGITUDE = 180;
     constexpr int32_t MIN_LONGITUDE = -180;
     constexpr uint32_t MULTIPLY10000 = 10000;
+    constexpr uint32_t MAX_VIDEO_TRACK_NUM = 1;
+    constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
 }
 
 namespace OHOS {
 namespace Media {
-static constexpr uint32_t MAX_VIDEO_TRACK_NUM = 1;
-static constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
 
-static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
+static void StartFeed(GstAppSrc *src, guint length, gpointer userData)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
-    CHECK_AND_RETURN_LOG(user_data != nullptr, "User data does not exist");
-    std::map<int32_t, TrackInfo> trackInfo = *reinterpret_cast<std::map<int32_t, TrackInfo> *>(user_data);
+    CHECK_AND_RETURN_LOG(userData != nullptr, "User data does not exist");
+    std::map<int32_t, TrackInfo> trackInfo = *reinterpret_cast<std::map<int32_t, TrackInfo> *>(userData);
     for (auto& info : trackInfo) {
         if (info.second.src_ == src) {
             info.second.needData_ = true;
@@ -55,11 +55,11 @@ static void StartFeed(GstAppSrc *src, guint length, gpointer user_data)
     }
 }
 
-static void StopFeed(GstAppSrc *src, gpointer user_data)
+static void StopFeed(GstAppSrc *src, gpointer userData)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
-    CHECK_AND_RETURN_LOG(user_data != nullptr, "User data does not exist");
-    std::map<int32_t, TrackInfo> trackInfo = *reinterpret_cast<std::map<int32_t, TrackInfo> *>(user_data);
+    CHECK_AND_RETURN_LOG(userData != nullptr, "User data does not exist");
+    std::map<int32_t, TrackInfo> trackInfo = *reinterpret_cast<std::map<int32_t, TrackInfo> *>(userData);
     for (auto& info : trackInfo) {
         if (info.second.src_ == src) {
             info.second.needData_ = false;
@@ -141,8 +141,9 @@ int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
     if (latitude < MIN_LATITUDE || latitude > MAX_LATITUDE || longitude < MIN_LONGITUDE
         || longitude > MAX_LONGITUDE) {
         setLocationToMux = false;
-        MEDIA_LOGW("Invalid GeoLocation, latitude: %{public}f, longitude: %{public}f",
-            latitude, longitude);
+        MEDIA_LOGW("Invalid GeoLocation, latitude must be greater than %{public}d and less than %{public}d,"
+            "longitude must be greater than %{public}d and less than %{public}d",
+            MIN_LATITUDE, MAX_LATITUDE, MIN_LONGITUDE, MAX_LONGITUDE);
     }
 
     if (setLocationToMux) {
@@ -188,8 +189,7 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
     trackInfo_[trackId].mimeType_ = mimeType;
     trackInfo_[trackId].needData_ = true;
 
-    int32_t ret;
-    GstCaps *src_caps = nullptr;
+    GstCaps *srcCaps = nullptr;
     uint32_t *trackNum = nullptr;
     if (AVMuxerUtil::CheckType(trackInfo_[trackId].mimeType_) == VIDEO) {
         CHECK_AND_RETURN_RET_LOG(videoTrackNum_ < MAX_VIDEO_TRACK_NUM, MSERR_INVALID_OPERATION,
@@ -203,11 +203,11 @@ int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_
         MEDIA_LOGE("Failed to check track type");
         return MSERR_INVALID_VAL;
     }
-    ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, src_caps);
+    int32_t ret = AVMuxerUtil::SetCaps(trackDesc, mimeType, srcCaps);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetCaps");
     (*trackNum)++;
 
-    trackInfo_[trackId].caps_ = src_caps;
+    trackInfo_[trackId].caps_ = srcCaps;
     std::string name = "src_";
     name += static_cast<char>('0' + trackId);
     gst_mux_bin_add_track(muxBin_, name.c_str(), std::get<1>(MIME_MAP_TYPE.at(mimeType)).c_str(),
@@ -223,13 +223,13 @@ int32_t AVMuxerEngineGstImpl::Start()
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
     gst_element_set_state(GST_ELEMENT_CAST(muxBin_), GST_STATE_PLAYING);
 
-    GstAppSrcCallbacks callbacks = {&StartFeed, &StopFeed, NULL};
+    GstAppSrcCallbacks callbacks = {&StartFeed, &StopFeed, nullptr};
     for (auto& info : trackInfo_) {
         std::string name = "src_";
         name += static_cast<char>('0' + info.first);
         GstAppSrc *src = GST_APP_SRC_CAST(gst_bin_get_by_name(GST_BIN_CAST(muxBin_), name.c_str()));
         CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_OPERATION, "src does not exist");
-        gst_app_src_set_callbacks(src, &callbacks, reinterpret_cast<gpointer *>(&trackInfo_), NULL);
+        gst_app_src_set_callbacks(src, &callbacks, reinterpret_cast<gpointer *>(&trackInfo_), nullptr);
         info.second.src_ = src;
     }
 
@@ -252,7 +252,7 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     GstAppSrc *src = trackInfo_[sampleInfo.trackIdx].src_;
     CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_VAL, "Failed to get AppSrc");
 
-    if (sampleInfo.flags == AVCODEC_BUFFER_FLAG_CODEC_DATA) {
+    if (sampleInfo.flags & AVCODEC_BUFFER_FLAG_CODEC_DATA) {
         g_object_set(src, "caps", trackInfo_[sampleInfo.trackIdx].caps_, nullptr);
         ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteData");
