@@ -284,7 +284,7 @@ int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
     size_t bytesWritten = 0;
     size_t bytesSingle = 0;
     while (bytesWritten < size) {
-        bytesSingle = audioRenderer_->Write(buffer + bytesWritten, size - bytesWritten);
+        bytesSingle = static_cast<size_t>(audioRenderer_->Write(buffer + bytesWritten, size - bytesWritten));
         bytesWritten += bytesSingle;
         CHECK_AND_RETURN_RET(bytesSingle > 0 && bytesWritten >= bytesSingle, MSERR_UNKNOWN);
     }
