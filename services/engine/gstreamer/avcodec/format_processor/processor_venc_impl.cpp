@@ -130,7 +130,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
         return nullptr;
     }
 
-    config->bufferSize_ = CompressedBufSize(width_, height_, true, codecName_);
+    config->bufferSize_ = VideoEsBufferSize(width_, height_, codecName_);
 
     return config;
 }

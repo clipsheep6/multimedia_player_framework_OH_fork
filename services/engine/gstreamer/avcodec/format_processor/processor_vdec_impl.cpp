@@ -107,7 +107,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
     if (maxInputSize_ > 0) {
         config->bufferSize_ = (maxInputSize_ > MAX_SIZE) ? MAX_SIZE : static_cast<uint32_t>(maxInputSize_);
     } else {
-        config->bufferSize_ = CompressedBufSize(width_, height_, false, codecName_);
+        config->bufferSize_ = VideoEsBufferSize(width_, height_, codecName_);
     }
 
     return config;
