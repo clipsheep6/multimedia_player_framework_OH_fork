@@ -107,7 +107,7 @@ int32_t VDecDemo::Stop()
 
     if (inputLoop_ != nullptr && inputLoop_->joinable()) {
         unique_lock<mutex> lock(signal_->inMutex_);
-        signal_->inQueue_.push(10000); // wake up read loop thread
+        signal_->inQueue_.push(10000); // wake up loop thread
         signal_->inCond_.notify_all();
         lock.unlock();
         inputLoop_->join();
@@ -116,7 +116,7 @@ int32_t VDecDemo::Stop()
 
     if (outputLoop_ != nullptr && outputLoop_->joinable()) {
         unique_lock<mutex> lock(signal_->outMutex_);
-        signal_->outQueue_.push(10000); // wake up read loop thread
+        signal_->outQueue_.push(10000); // wake up loop thread
         signal_->outCond_.notify_all();
         lock.unlock();
         outputLoop_->join();
