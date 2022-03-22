@@ -20,8 +20,24 @@
 #include "demo_log.h"
 #include "media_errors.h"
 
-static const int32_t ES[1] =
-    { 0 };
+static const int32_t ES[300] =
+    { 407, 236, 233, 241, 236, 250, 268, 266, 258, 263, 258, 248, 267, 260, 263, 262, 259,
+    264, 262, 253, 403, 397, 290, 292, 305, 299, 294, 303, 299, 299, 296, 297, 296, 359,
+    300, 412, 286, 308, 305, 287, 289, 276, 266, 258, 255, 245, 245, 236, 221, 233, 230, 222,
+    218, 461, 239, 224, 239, 236, 241, 242, 231, 364, 257, 266, 262, 262, 277, 283, 304, 300,
+    330, 306, 300, 457, 280, 416, 306, 316, 310, 326, 315, 267, 261, 248, 246, 243, 256, 254,
+    271, 250, 255, 257, 255, 252, 251, 257, 263, 254, 252, 248, 331, 253, 259, 259, 260, 259,
+    254, 253, 262, 258, 269, 368, 254, 409, 258, 400, 271, 264, 262, 261, 252, 250, 247, 238,
+    229, 252, 248, 249, 247, 236, 238, 244, 245, 461, 230, 230, 228, 246, 257, 265, 303, 259,
+    251, 268, 266, 268, 269, 273, 287, 277, 277, 270, 281, 276, 275, 259, 244, 247, 244, 251,
+    413, 234, 244, 246, 250, 251, 252, 250, 257, 255, 265, 271, 267, 263, 276, 276, 263, 247,
+    243, 246, 332, 267, 255, 245, 250, 276, 293, 294, 280, 265, 253, 249, 261, 343, 251, 258,
+    252, 254, 276, 261, 248, 245, 245, 242, 242, 245, 260, 252, 255, 253, 254, 241, 237, 473,
+    231, 252, 259, 256, 260, 253, 367, 276, 285, 291, 291, 304, 307, 313, 310, 300, 293, 292,
+    287, 412, 275, 280, 278, 291, 303, 313, 389, 240, 239, 233, 235, 241, 236, 242, 242, 243,
+    247, 237, 237, 230, 223, 230, 239, 234, 237, 228, 280, 245, 246, 245, 250, 247, 248, 248,
+    256, 250, 238, 228, 220, 350, 247, 259, 245, 253, 254, 248, 234, 236, 235, 242, 233, 226,
+    228, 220, 228, 215, 235, 221, 211, 460, 221, 219, 223, 231, 237, 263 };
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -30,8 +46,8 @@ namespace {
     constexpr uint32_t DEFAULT_SAMPLE_RATE = 48000;
     constexpr uint32_t DEFAULT_CHANNELS = 2;
     constexpr uint32_t DEFAULT_AUDIO_RAW_FORMAT = 1; // SAMPLE_FORMAT_S16LE
-    constexpr uint32_t DEFAULT_SAMPLE_COUNT = 50;
-    constexpr uint32_t SAMPLE_DURATION_US = 0;
+    constexpr uint32_t DEFAULT_SAMPLE_COUNT = 300;
+    constexpr uint32_t SAMPLE_DURATION_US = 20000;
 }
 
 void ADecDemo::RunCase()
@@ -82,7 +98,7 @@ int32_t ADecDemo::Start()
 
     testFile_ = std::make_unique<std::ifstream>();
     DEMO_CHECK_AND_RETURN_RET_LOG(testFile_ != nullptr, MSERR_UNKNOWN, "Fatal: No memory");
-    testFile_->open("/data/media/opus.es", std::ios::in | std::ios::binary);
+    testFile_->open("/data/media/sample1.opus", std::ios::in | std::ios::binary);
 
     inputLoop_ = make_unique<thread>(&ADecDemo::InputFunc, this);
     DEMO_CHECK_AND_RETURN_RET_LOG(inputLoop_ != nullptr, MSERR_UNKNOWN, "Fatal: No memory");

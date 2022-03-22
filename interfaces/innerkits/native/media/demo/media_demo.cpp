@@ -19,6 +19,8 @@
 #include "recorder_demo.h"
 #include "avmetadatahelper_demo.h"
 #include "avcodeclist_demo.h"
+#include "avcodec_aenc_demo.h"
+#include "avcodec_adec_demo.h"
 #include "avcodec_venc_demo.h"
 #include "avcodec_vdec_demo.h"
 
@@ -99,6 +101,30 @@ static int RunVideoDecoder()
     return 0;
 }
 
+static int RunAudioEncoder()
+{
+    auto aenc = std::make_unique<AEncDemo>();
+    if (aenc == nullptr) {
+        cout << "audioencoder is null" << endl;
+        return 0;
+    }
+    aenc->RunCase();
+    cout << "demo audioencoder end" << endl;
+    return 0;
+}
+
+static int RunAudioDecoder()
+{
+    auto adec = std::make_unique<ADecDemo>();
+    if (adec == nullptr) {
+        cout << "audiodecoder is null" << endl;
+        return 0;
+    }
+    adec->RunCase();
+    cout << "demo audiodecoder end" << endl;
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     constexpr int minRequiredArgCount = 2;
@@ -114,6 +140,8 @@ int main(int argc, char *argv[])
     cout << "4:video-encoder-prop-disable" << endl;
     cout << "5:video-encoder-prop-enable" << endl;
     cout << "6:video-decoder" << endl;
+    cout << "7:audio-encoder" << endl;
+    cout << "8:audio-decoder" << endl;
     string mode;
     (void)getline(cin, mode);
     if (mode == "" || mode == "0") {
@@ -130,7 +158,11 @@ int main(int argc, char *argv[])
         (void)RunVideoEncoder(true);
     } else if (mode == "6") {
         (void)RunVideoDecoder();
-    } else {
+    } else if (mode == "7") {
+        (void)RunAudioEncoder();
+    } else if (mode == "8") {
+        (void)RunAudioDecoder();
+    }  else {
         cout << "no that selection" << endl;
     }
     return 0;
