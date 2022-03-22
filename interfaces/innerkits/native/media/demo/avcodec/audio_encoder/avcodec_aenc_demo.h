@@ -73,8 +73,8 @@ private:
     std::shared_ptr<AudioEncoder> aenc_;
     std::shared_ptr<AEncSignal> signal_;
     std::shared_ptr<AEncDemoCallback> cb_;
+    unsigned char sample_ = 0;
     int64_t timeStamp_ = 0;
-    uint32_t sampleCount_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

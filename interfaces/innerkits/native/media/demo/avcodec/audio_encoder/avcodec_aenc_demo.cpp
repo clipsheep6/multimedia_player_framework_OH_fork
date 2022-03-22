@@ -27,9 +27,8 @@ namespace {
     constexpr uint32_t DEFAULT_SAMPLE_RATE = 48000;
     constexpr uint32_t DEFAULT_CHANNELS = 2;
     constexpr uint32_t DEFAULT_AUDIO_RAW_FORMAT = 1; // SAMPLE_FORMAT_S16LE
-    constexpr uint32_t DEFAULT_SAMPLE_COUNT = 50;
-    constexpr uint32_t SAMPLE_DURATION_US = 0;
-    constexpr uint32_t SAMPLE_SIZE = 0;
+    constexpr uint32_t SAMPLE_DURATION_US = 20000;
+    constexpr uint32_t SAMPLE_SIZE = 3840; // 20ms
 }
 
 void AEncDemo::RunCase()
@@ -145,7 +144,7 @@ void AEncDemo::InputFunc()
         auto buffer = aenc_->GetInputBuffer(index);
         DEMO_CHECK_AND_BREAK_LOG(buffer != nullptr, "Fatal: GetInputBuffer fail");
 
-        if (memset_s(buffer->GetBase(), buffer->GetSize(), 0xff, SAMPLE_SIZE) != EOK) {
+        if (memset_s(buffer->GetBase(), buffer->GetSize(), sample_, SAMPLE_SIZE) != EOK) {
             cout << "Fatal: memset fail" << endl;
             break;
         }
@@ -157,14 +156,9 @@ void AEncDemo::InputFunc()
 
         int32_t ret = aenc_->QueueInputBuffer(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
+        sample_ = sample_ <= 0 ? 0xFF : (sample_ - 1);
         timeStamp_ += SAMPLE_DURATION_US;
         signal_->inQueue_.pop();
-
-        sampleCount_++;
-        if (sampleCount_ == DEFAULT_SAMPLE_COUNT) {
-            cout << "Finish encode, exit" << endl;
-            break;
-        }
 
         if (ret != MSERR_OK) {
             cout << "Fatal error, exit" << endl;
