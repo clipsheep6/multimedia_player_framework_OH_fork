@@ -171,24 +171,19 @@ uint32_t PixelBufferSize(VideoPixelFormat pixel, uint32_t width, uint32_t height
     return size;
 }
 
-uint32_t CompressedBufSize(uint32_t width, uint32_t height, bool isEncoder, InnerCodecMimeType type)
+uint32_t VideoEsBufferSize(uint32_t width, uint32_t height, InnerCodecMimeType type)
 {
+    (void)type;
     if (width == 0 || height == 0) {
         return 0;
     }
 
-    uint32_t compressRatio = 7;
-
-    if (isEncoder && type == CODEC_MIMIE_TYPE_VIDEO_MPEG4) {
-        compressRatio = 3;
-    }
-
     constexpr uint32_t maxSize = 3150000; // 3MB
-    if ((UINT32_MAX / width) <= (height / compressRatio)) {
+    if ((UINT32_MAX / width) <= height) {
         return maxSize;
     }
 
-    return height / compressRatio * width;
+    return height * width;
 }
 } // namespace Media
 } // namespace OHOS
