@@ -181,6 +181,11 @@ void VDecDemo::InputFunc()
         DEMO_CHECK_AND_BREAK_LOG(fileBuffer != nullptr, "Fatal: malloc fail");
 
         (void)testFile_->read(fileBuffer, *frameLen);
+        if (testFile_->eof()) {
+            free(fileBuffer);
+            cout << "Finish" << endl;
+            break;
+        }
         if (memcpy_s(buffer->GetBase(), buffer->GetSize(), fileBuffer, *frameLen) != EOK) {
             free(fileBuffer);
             cout << "Fatal: memcpy fail" << endl;
