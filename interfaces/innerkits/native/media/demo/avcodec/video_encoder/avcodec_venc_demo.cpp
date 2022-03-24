@@ -219,16 +219,21 @@ void VEncDemo::LoopFunc()
 
         uint32_t index = signal_->bufferQueue_.front();
         auto buffer = venc_->GetOutputBuffer(index);
-        if (!buffer) {
-            cout << "Fatal: GetOutputBuffer fail, exit" << endl;
+        if (buffer == nullptr) {
+            cout << "Fatal: GetOutputBuffer fail" << endl;
             break;
         }
 
+        uint32_t size = signal_->sizeQueue_.front();
+        cout << "GetOutputBuffer success, size: " << size << endl;
+
         if (venc_->ReleaseOutputBuffer(index) != MSERR_OK) {
-            cout << "Fatal: ReleaseOutputBuffer fail, exit" << endl;
+            cout << "Fatal: ReleaseOutputBuffer fail" << endl;
             break;
         }
+
         signal_->bufferQueue_.pop();
+        signal_->sizeQueue_.pop();
     }
 }
 
@@ -257,5 +262,6 @@ void VEncDemoCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo
     cout << "OnOutputBufferAvailable received, index:" << index << " timestamp:" << info.presentationTimeUs << endl;
     unique_lock<mutex> lock(signal_->mutex_);
     signal_->bufferQueue_.push(index);
+    signal_->sizeQueue_.push(info.size);
     signal_->cond_.notify_all();
 }

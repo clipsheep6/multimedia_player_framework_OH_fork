@@ -33,6 +33,7 @@ public:
     std::condition_variable outCond_;
     std::queue<uint32_t> inQueue_;
     std::queue<uint32_t> outQueue_;
+    std::queue<uint32_t> sizeQueue_;
 };
 
 class AEncDemoCallback : public AVCodecCallback, public NoCopyable {

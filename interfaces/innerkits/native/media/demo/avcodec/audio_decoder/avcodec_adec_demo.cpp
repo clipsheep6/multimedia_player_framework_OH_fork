@@ -225,12 +225,17 @@ void ADecDemo::OutputFunc()
             cout << "Fatal: GetOutputBuffer fail" << endl;
             break;
         }
+
+        uint32_t size = signal_->sizeQueue_.front();
+        cout << "GetOutputBuffer success, size: " << size << endl;
+
         if (adec_->ReleaseOutputBuffer(index) != MSERR_OK) {
             cout << "Fatal: ReleaseOutputBuffer fail" << endl;
             break;
         }
 
         signal_->outQueue_.pop();
+        signal_->sizeQueue_.pop();
     }
 }
 
@@ -262,5 +267,6 @@ void ADecDemoCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo
     cout << "OnOutputBufferAvailable received, index:" << index << endl;
     unique_lock<mutex> lock(signal_->outMutex_);
     signal_->outQueue_.push(index);
+    signal_->sizeQueue_.push(info.size);
     signal_->outCond_.notify_all();
 }

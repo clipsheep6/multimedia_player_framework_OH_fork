@@ -30,6 +30,7 @@ public:
     std::mutex mutex_;
     std::condition_variable cond_;
     std::queue<uint32_t> bufferQueue_;
+    std::queue<uint32_t> sizeQueue_;
 };
 
 class VEncDemoCallback : public AVCodecCallback, public NoCopyable {
