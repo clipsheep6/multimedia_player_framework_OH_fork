@@ -16,6 +16,7 @@
 #include "avcodec_adec_demo.h"
 #include <iostream>
 #include <unistd.h>
+#include "audio_info.h"
 #include "securec.h"
 #include "demo_log.h"
 #include "media_errors.h"
@@ -45,7 +46,6 @@ using namespace std;
 namespace {
     constexpr uint32_t DEFAULT_SAMPLE_RATE = 48000;
     constexpr uint32_t DEFAULT_CHANNELS = 2;
-    constexpr uint32_t DEFAULT_AUDIO_RAW_FORMAT = 1; // SAMPLE_FORMAT_S16LE
     constexpr uint32_t DEFAULT_SAMPLE_COUNT = 300;
     constexpr uint32_t SAMPLE_DURATION_US = 20000;
 }
@@ -57,7 +57,7 @@ void ADecDemo::RunCase()
     Format format;
     format.PutIntValue("channel_count", DEFAULT_CHANNELS);
     format.PutIntValue("sample_rate", DEFAULT_SAMPLE_RATE);
-    format.PutIntValue("audio_sample_format", DEFAULT_AUDIO_RAW_FORMAT);
+    format.PutIntValue("audio_sample_format", AudioStandard::SAMPLE_S16LE);
     DEMO_CHECK_AND_RETURN_LOG(Configure(format) == MSERR_OK, "Fatal: Configure fail");
 
     DEMO_CHECK_AND_RETURN_LOG(Prepare() == MSERR_OK, "Fatal: Prepare fail");
@@ -220,6 +220,11 @@ void ADecDemo::OutputFunc()
         }
 
         uint32_t index = signal_->outQueue_.front();
+        auto buffer = adec_->GetOutputBuffer(index);
+        if (buffer == nullptr) {
+            cout << "Fatal: GetOutputBuffer fail" << endl;
+            break;
+        }
         if (adec_->ReleaseOutputBuffer(index) != MSERR_OK) {
             cout << "Fatal: ReleaseOutputBuffer fail" << endl;
             break;

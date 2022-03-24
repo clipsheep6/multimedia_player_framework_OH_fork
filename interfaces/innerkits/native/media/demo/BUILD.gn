@@ -33,6 +33,7 @@ ohos_executable("media_demo") {
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//third_party/libjpeg",
+    "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiocommon/include",
   ]
 
   cflags = [

@@ -92,7 +92,7 @@
                 <Item bitrate="1-384000"/>
                 <Item channels="1-2"/>
                 <Item format="S16LE"/>
-                <Item sampleRate="8000,11025,12000,16000,22050,24000,32000,44100,48000,64000,88200,96000"/>
+                <Item sampleRate="48000"/>
             </AudioEncoder>
     </AudioCodecs>
     <VideoCodecs>
