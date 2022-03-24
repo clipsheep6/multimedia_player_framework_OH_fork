@@ -739,10 +739,6 @@ static GstFlowReturn gst_vdec_base_handle_frame(GstVideoDecoder *decoder, GstVid
     }
     gst_vdec_base_clean_all_frames(decoder);
     if (!self->prepared) {
-        if (!GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT(frame)) {
-            gst_video_decoder_drop_frame(GST_VIDEO_DECODER(self), frame);
-            return GST_FLOW_OK;
-        }
         if (!gst_vdec_base_prepare(self)) {
             GST_WARNING_OBJECT(self, "hdi video dec enable failed");
             return GST_FLOW_ERROR;
