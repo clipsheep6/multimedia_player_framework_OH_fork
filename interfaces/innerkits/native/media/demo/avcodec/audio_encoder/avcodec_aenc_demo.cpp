@@ -43,7 +43,7 @@ void AEncDemo::RunCase()
 
     DEMO_CHECK_AND_RETURN_LOG(Prepare() == MSERR_OK, "Fatal: Prepare fail");
     DEMO_CHECK_AND_RETURN_LOG(Start() == MSERR_OK, "Fatal: Start fail");
-    sleep(3); // start run 3s
+    sleep(10); // start run 10s
     DEMO_CHECK_AND_RETURN_LOG(Stop() == MSERR_OK, "Fatal: Stop fail");
     DEMO_CHECK_AND_RETURN_LOG(Release() == MSERR_OK, "Fatal: Release fail");
 }
@@ -76,6 +76,10 @@ int32_t AEncDemo::Prepare()
 int32_t AEncDemo::Start()
 {
     isRunning_.store(true);
+
+    testFile_ = std::make_unique<std::ifstream>();
+    DEMO_CHECK_AND_RETURN_RET_LOG(testFile_ != nullptr, MSERR_UNKNOWN, "Fatal: No memory");
+    testFile_->open("/data/media/opus.pcm", std::ios::in | std::ios::binary);
 
     inputLoop_ = make_unique<thread>(&AEncDemo::InputFunc, this);
     DEMO_CHECK_AND_RETURN_RET_LOG(inputLoop_ != nullptr, MSERR_UNKNOWN, "Fatal: No memory");
@@ -143,9 +147,15 @@ void AEncDemo::InputFunc()
         uint32_t index = signal_->inQueue_.front();
         auto buffer = aenc_->GetInputBuffer(index);
         DEMO_CHECK_AND_BREAK_LOG(buffer != nullptr, "Fatal: GetInputBuffer fail");
+        DEMO_CHECK_AND_BREAK_LOG(testFile_ != nullptr && testFile_->is_open(), "Fatal: open file fail");
 
-        if (memset_s(buffer->GetBase(), buffer->GetSize(), sample_, SAMPLE_SIZE) != EOK) {
-            cout << "Fatal: memset fail" << endl;
+        char *fileBuffer = (char *)malloc(sizeof(char) * SAMPLE_SIZE + 1);
+        DEMO_CHECK_AND_BREAK_LOG(fileBuffer != nullptr, "Fatal: malloc fail");
+
+        (void)testFile_->read(fileBuffer, SAMPLE_SIZE);
+        if (memcpy_s(buffer->GetBase(), buffer->GetSize(), fileBuffer, SAMPLE_SIZE) != EOK) {
+            free(fileBuffer);
+            cout << "Fatal: memcpy fail" << endl;
             break;
         }
 
@@ -156,7 +166,7 @@ void AEncDemo::InputFunc()
 
         int32_t ret = aenc_->QueueInputBuffer(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
-        sample_ = sample_ <= 0 ? 0xFF : (sample_ - 1);
+        free(fileBuffer);
         timeStamp_ += SAMPLE_DURATION_US;
         signal_->inQueue_.pop();
 

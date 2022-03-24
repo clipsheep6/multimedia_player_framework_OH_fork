@@ -17,6 +17,7 @@
 #define AVCODEC_AENC_DEMO_H
 
 #include <atomic>
+#include <fstream>
 #include <thread>
 #include <queue>
 #include <string>
@@ -69,12 +70,12 @@ private:
     void OutputFunc();
 
     std::atomic<bool> isRunning_ = false;
+    std::unique_ptr<std::ifstream> testFile_;
     std::unique_ptr<std::thread> inputLoop_;
     std::unique_ptr<std::thread> outputLoop_;
     std::shared_ptr<AudioEncoder> aenc_;
     std::shared_ptr<AEncSignal> signal_;
     std::shared_ptr<AEncDemoCallback> cb_;
-    unsigned char sample_ = 0;
     int64_t timeStamp_ = 0;
 };
 } // namespace Media

@@ -77,7 +77,6 @@ private:
     std::shared_ptr<ADecSignal> signal_;
     std::shared_ptr<ADecDemoCallback> cb_;
     int64_t timeStamp_ = 0;
-    uint32_t sampleCount_ = 0;
 };
 } // namespace Media
 } // namespace OHOS
