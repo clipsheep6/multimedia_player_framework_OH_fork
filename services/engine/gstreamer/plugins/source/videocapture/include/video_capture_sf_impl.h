@@ -69,6 +69,7 @@ protected:
     std::atomic<bool> started_;
     bool paused_;
     std::mutex mutex_;
+    std::mutex pauseMutex_;
     std::condition_variable bufferAvailableCondition_;
     VideoStreamType streamType_;
     bool streamTypeUnknown_;
@@ -81,7 +82,6 @@ protected:
 
 private:
     void SetSurfaceUserData();
-    uint64_t GetCurrentTime();
     int32_t AcquireSurfaceBuffer();
     std::shared_ptr<VideoFrameBuffer> GetFrameBufferInner();
     void ProbeStreamType();
@@ -96,6 +96,8 @@ private:
     int64_t minInterval_ = 0;
     bool resourceLock_ = false;
     bool isFirstBuffer_ = true;
+    bool isPause_ = false;
+    bool isResume_ = false;
 };
 } // namespace Media
 } // namespace OHOS
