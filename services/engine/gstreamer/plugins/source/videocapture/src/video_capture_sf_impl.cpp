@@ -84,35 +84,18 @@ int32_t VideoCaptureSfImpl::Start()
     return MSERR_OK;
 }
 
-uint64_t VideoCaptureSfImpl::GetCurrentTime()
-{
-    constexpr uint32_t SEC_TO_NS = 1000000000; // second to nano second
-    struct timespec timestamp = {0, 0};
-    clock_gettime(CLOCK_MONOTONIC, &timestamp);
-    uint64_t time = (uint64_t)timestamp.tv_sec * SEC_TO_NS + (uint64_t)timestamp.tv_nsec;
-    return time;
-}
-
 int32_t VideoCaptureSfImpl::Pause()
 {
-    pauseTime_ = GetCurrentTime();
+    std::lock_guard<std::mutex> lock1(pauseMutex_);
+    isPause_ = true;
     pauseCount_++;
     return MSERR_OK;
 }
 
 int32_t VideoCaptureSfImpl::Resume()
 {
-    resumeTime_ = GetCurrentTime();
-    if (resumeTime_ < pauseTime_) {
-        MEDIA_LOGW("get wrong timestamp from HDI!");
-    }
-
-    persistTime_ = std::fabs(resumeTime_ - pauseTime_);
-
-    totalPauseTime_ += persistTime_;
-
-    MEDIA_LOGI("video capture has %{public}d times paused, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}"
-    PRIu64 "", pauseCount_, persistTime_, totalPauseTime_);
+    std::lock_guard<std::mutex> lock1(pauseMutex_);
+    isResume_ = true;
     return MSERR_OK;
 }
 
@@ -312,15 +295,34 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
         int32_t ret = GetSufferExtraData();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "get ExtraData fail");
 
+        {
+            std::lock_guard<std::mutex> lock1(pauseMutex_);
+            if (isPause_) {
+                pauseTime_ = pts_;
+                isPause_ = false;
+                MEDIA_LOGD("video pause timestamp %{public}" PRIu64 "", pauseTime_);
+            }
+
+            if (isResume_) {
+                resumeTime_ = pts_;
+                MEDIA_LOGD("video resume timestamp %{public}" PRIu64 "", resumeTime_);
+                persistTime_ = std::fabs(resumeTime_ - pauseTime_);
+                totalPauseTime_ += persistTime_;
+                MEDIA_LOGD("video has %{public}d times pause, total PauseTime: %{public}" PRIu64 "",
+                    pauseCount_, totalPauseTime_);
+            }
+        }
+
         pts_ = pts_ - totalPauseTime_;
         bufferAvailableCount_--;
 
-        if (DropThisFrame(framerate_, previousTimestamp_, pts_)) {
+        if (!isResume_ && DropThisFrame(framerate_, previousTimestamp_, pts_)) {
             MEDIA_LOGI("drop this frame!");
             (void)dataConSurface_->ReleaseBuffer(surfaceBuffer_, fence_);
             continue;
         } else {
             previousTimestamp_ = pts_;
+            isResume_ = false;
             break;
         }
     };
