@@ -20,7 +20,6 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerUtil"};
-    constexpr uint32_t MSTONS = 1000000;
     constexpr uint32_t CAPS_FIELD_NAME_INDEX = 0;
     constexpr uint32_t CAPS_FIELD_TYPE_INDEX = 1;
     constexpr uint32_t CAPS_FIELD_VALUE_INDEX = 2;

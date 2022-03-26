@@ -37,6 +37,7 @@ namespace {
     constexpr uint32_t MULTIPLY10000 = 10000;
     constexpr uint32_t MAX_VIDEO_TRACK_NUM = 1;
     constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
+    constexpr uint32_t MSTONS = 1000000;
 }
 
 namespace OHOS {
@@ -116,7 +117,6 @@ int32_t AVMuxerEngineGstImpl::SetOutput(const std::string &path, const std::stri
 
     std::string rawUri;
     UriHelper uriHelper(path);
-    uriHelper.FormatMe();
     if (uriHelper.UriType() == UriHelper::URI_TYPE_FILE) {
         rawUri = path.substr(strlen("file://"));
         g_object_set(muxBin_, "path", rawUri.c_str(), "mux", FORMAT_TO_MUX.at(format).c_str(), nullptr);
