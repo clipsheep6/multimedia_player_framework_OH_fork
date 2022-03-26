@@ -298,15 +298,15 @@ int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
         {
             std::lock_guard<std::mutex> lock1(pauseMutex_);
             if (isPause_) {
-                pausedTime_ = pts_;
+                pauseTime_ = pts_;
                 isPause_ = false;
-                MEDIA_LOGD("video pause timestamp %{public}" PRIu64 "", pausedTime_);
+                MEDIA_LOGD("video pause timestamp %{public}" PRIu64 "", pauseTime_);
             }
 
             if (isResume_) {
                 resumeTime_ = pts_;
                 MEDIA_LOGD("video resume timestamp %{public}" PRIu64 "", resumeTime_);
-                persistTime_ = std::fabs(resumeTime_ - pausedTime_);
+                persistTime_ = std::fabs(resumeTime_ - pauseTime_);
                 totalPauseTime_ += persistTime_;
                 MEDIA_LOGD("video has %{public}d times pause, total PauseTime: %{public}" PRIu64 "",
                     pauseCount_, totalPauseTime_);
