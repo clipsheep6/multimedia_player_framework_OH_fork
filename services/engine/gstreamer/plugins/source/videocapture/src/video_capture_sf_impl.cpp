@@ -13,341 +13,92 @@
  * limitations under the License.
  */
 
-#include "video_capture_sf_impl.h"
-#include <map>
-#include <cmath>
-#include "media_log.h"
-#include "media_errors.h"
-#include "graphic_common.h"
+#ifndef VIDEO_CAPTURE_SF_IMPL_H
+#define VIDEO_CAPTURE_SF_IMPL_H
 
-namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoCaptureSfmpl"};
-    constexpr int32_t DEFAULT_SURFACE_QUEUE_SIZE = 6;
-    constexpr int32_t DEFAULT_SURFACE_SIZE = 1024 * 1024;
-    constexpr int32_t DEFAULT_VIDEO_WIDTH = 1920;
-    constexpr int32_t DEFAULT_VIDEO_HEIGHT = 1080;
-}
+#include <fstream>
+#include <atomic>
+#include <thread>
+#include "video_capture.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
-VideoCaptureSfImpl::VideoCaptureSfImpl()
-    : videoWidth_(DEFAULT_VIDEO_WIDTH),
-      videoHeight_(DEFAULT_VIDEO_HEIGHT),
-      fence_(-1),
-      bufferAvailableCount_(0),
-      timestamp_(0),
-      damage_ {0},
-      surfaceBuffer_(nullptr),
-      started_(false),
-      paused_(false),
-      streamType_(VIDEO_STREAM_TYPE_UNKNOWN),
-      streamTypeUnknown_(true),
-      dataConSurface_(nullptr),
-      producerSurface_(nullptr)
-{
-}
+class VideoCaptureSfImpl : public VideoCapture, public NoCopyable {
+public:
+    VideoCaptureSfImpl();
+    virtual ~VideoCaptureSfImpl();
 
-VideoCaptureSfImpl::~VideoCaptureSfImpl()
-{
-    (void)Stop();
-}
+    int32_t Prepare() override;
+    int32_t Start() override;
+    int32_t Pause() override;
+    int32_t Resume() override;
+    int32_t Stop() override;
+    int32_t SetVideoWidth(uint32_t width) override;
+    int32_t SetVideoHeight(uint32_t height) override;
+    int32_t SetStreamType(VideoStreamType streamType) override;
+    sptr<Surface> GetSurface() override;
+    std::shared_ptr<EsAvcCodecBuffer> GetCodecBuffer() override;
+    std::shared_ptr<VideoFrameBuffer> GetFrameBuffer() override;
+    int32_t SetFrameRate(uint32_t frameRate) override;
+    void UnLock(bool start) override;
 
-int32_t VideoCaptureSfImpl::Prepare()
-{
-    MEDIA_LOGI("videoWidth %{public}d, videoHeight %{public}d", videoWidth_, videoHeight_);
-    sptr<Surface> consumerSurface = Surface::CreateSurfaceAsConsumer();
-    CHECK_AND_RETURN_RET_LOG(consumerSurface != nullptr, MSERR_NO_MEMORY, "create surface fail");
+protected:
+    virtual std::shared_ptr<EsAvcCodecBuffer> DoGetCodecBuffer() = 0;
+    virtual std::shared_ptr<VideoFrameBuffer> DoGetFrameBuffer() = 0;
 
-    sptr<IBufferConsumerListener> listenerProxy = new (std::nothrow) ConsumerListenerProxy(*this);
-    CHECK_AND_RETURN_RET_LOG(listenerProxy != nullptr, MSERR_NO_MEMORY, "create consumer listener fail");
-
-    if (consumerSurface->RegisterConsumerListener(listenerProxy) != SURFACE_ERROR_OK) {
-        MEDIA_LOGW("register consumer listener fail");
-    }
-
-    sptr<IBufferProducer> producer = consumerSurface->GetProducer();
-    CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_NO_MEMORY, "get producer fail");
-    sptr<Surface> producerSurface = Surface::CreateSurfaceAsProducer(producer);
-    CHECK_AND_RETURN_RET_LOG(producerSurface != nullptr, MSERR_NO_MEMORY, "get producer fail");
-
-    dataConSurface_ = consumerSurface;
-    producerSurface_ = producerSurface;
-
-    SetSurfaceUserData();
-    return MSERR_OK;
-}
-
-int32_t VideoCaptureSfImpl::Start()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    started_.store(true);
-    return MSERR_OK;
-}
-
-uint64_t VideoCaptureSfImpl::GetCurrentTime()
-{
-    constexpr uint32_t SEC_TO_NS = 1000000000; // second to nano second
-    struct timespec timestamp = {0, 0};
-    clock_gettime(CLOCK_MONOTONIC, &timestamp);
-    uint64_t time = (uint64_t)timestamp.tv_sec * SEC_TO_NS + (uint64_t)timestamp.tv_nsec;
-    return time;
-}
-
-int32_t VideoCaptureSfImpl::Pause()
-{
-    pauseTime_ = GetCurrentTime();
-    pauseCount_++;
-    return MSERR_OK;
-}
-
-int32_t VideoCaptureSfImpl::Resume()
-{
-    resumeTime_ = GetCurrentTime();
-    if (resumeTime_ < pauseTime_) {
-        MEDIA_LOGW("get wrong timestamp from HDI!");
-    }
-
-    persistTime_ = std::fabs(resumeTime_ - pauseTime_);
-
-    totalPauseTime_ += persistTime_;
-
-    MEDIA_LOGI("video capture has %{public}d times paused, persistTime: %{public}" PRIu64 ",totalPauseTime: %{public}"
-    PRIu64 "", pauseCount_, persistTime_, totalPauseTime_);
-    return MSERR_OK;
-}
-
-int32_t VideoCaptureSfImpl::Stop()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    started_.store(false);
-    if (bufferAvailableCount_ == 0) {
-        bufferAvailableCount_++;
-    }
-    bufferAvailableCondition_.notify_all();
-    if (dataConSurface_ != nullptr) {
-        if (dataConSurface_->UnregisterConsumerListener() != SURFACE_ERROR_OK) {
-            MEDIA_LOGW("deregister consumer listener fail");
-        }
-        dataConSurface_ = nullptr;
-        producerSurface_ = nullptr;
-    }
-    pauseTime_ = 0;
-    resumeTime_ = 0;
-    persistTime_ = 0;
-    totalPauseTime_ = 0;
-    pauseCount_ = 0;
-    isFirstBuffer_ = true;
-    return MSERR_OK;
-}
-
-void VideoCaptureSfImpl::UnLock(bool start)
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    resourceLock_ = start;
-    bufferAvailableCondition_.notify_all();
-    MEDIA_LOGI("Unlock any pending access to the resource: %{public}d", resourceLock_);
-}
-
-int32_t VideoCaptureSfImpl::SetVideoWidth(uint32_t width)
-{
-    videoWidth_ = width;
-    return MSERR_OK;
-}
-
-int32_t VideoCaptureSfImpl::SetVideoHeight(uint32_t height)
-{
-    videoHeight_ = height;
-    return MSERR_OK;
-}
-
-int32_t VideoCaptureSfImpl::SetFrameRate(uint32_t frameRate)
-{
-    framerate_ = frameRate;
-    minInterval_ = 1000000000 / framerate_; // 1s = 1000000000ns
-    return MSERR_OK;
-}
-
-int32_t VideoCaptureSfImpl::SetStreamType(VideoStreamType streamType)
-{
-    streamTypeUnknown_ = false;
-    streamType_ = streamType;
-    return MSERR_OK;
-}
-
-sptr<Surface> VideoCaptureSfImpl::GetSurface()
-{
-    CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, nullptr, "surface not created");
-    return producerSurface_;
-}
-
-std::shared_ptr<EsAvcCodecBuffer> VideoCaptureSfImpl::GetCodecBuffer()
-{
-    if (AcquireSurfaceBuffer() == MSERR_OK) {
-        if (streamTypeUnknown_) {
-            ProbeStreamType();
-        }
-        return DoGetCodecBuffer();
-    }
-
-    return nullptr;
-}
-
-std::shared_ptr<VideoFrameBuffer> VideoCaptureSfImpl::GetFrameBufferInner()
-{
-    if (streamTypeUnknown_) {
-        ProbeStreamType();
-    }
-    bufferNumber_++;
-    return DoGetFrameBuffer();
-}
-
-std::shared_ptr<VideoFrameBuffer> VideoCaptureSfImpl::GetFrameBuffer()
-{
-    if (bufferNumber_  == 0 && streamType_ == VIDEO_STREAM_TYPE_ES_AVC) {
-        return GetFrameBufferInner();
-    } else {
-        if (AcquireSurfaceBuffer() == MSERR_OK) {
-            return GetFrameBufferInner();
-        }
-    }
-    return nullptr;
-}
-
-void VideoCaptureSfImpl::SetSurfaceUserData()
-{
-    SurfaceError ret = dataConSurface_->SetUserData("video_width", std::to_string(videoWidth_));
-    if (ret != SURFACE_ERROR_OK) {
-        MEDIA_LOGW("set video width fail");
-    }
-    ret = dataConSurface_->SetUserData("video_height", std::to_string(videoHeight_));
-    if (ret != SURFACE_ERROR_OK) {
-        MEDIA_LOGW("set video height fail");
-    }
-    ret = dataConSurface_->SetQueueSize(DEFAULT_SURFACE_QUEUE_SIZE);
-    if (ret != SURFACE_ERROR_OK) {
-        MEDIA_LOGW("set queue size fail");
-    }
-    ret = dataConSurface_->SetUserData("surface_size", std::to_string(DEFAULT_SURFACE_SIZE));
-    if (ret != SURFACE_ERROR_OK) {
-        MEDIA_LOGW("set surface size fail");
-    }
-    ret = dataConSurface_->SetDefaultWidthAndHeight(videoWidth_, videoHeight_);
-    if (ret != SURFACE_ERROR_OK) {
-        MEDIA_LOGW("set surface width and height fail");
-    }
-}
-
-int32_t VideoCaptureSfImpl::GetSufferExtraData()
-{
-    CHECK_AND_RETURN_RET_LOG(surfaceBuffer_ != nullptr, MSERR_INVALID_OPERATION, "surfacebuffer is null");
-
-    SurfaceError surfaceRet;
-
-    surfaceRet = surfaceBuffer_->ExtraGet("dataSize", dataSize_);
-    CHECK_AND_RETURN_RET_LOG(surfaceRet == SURFACE_ERROR_OK, MSERR_INVALID_OPERATION, "get dataSize fail");
-    CHECK_AND_RETURN_RET_LOG(dataSize_ > 0, MSERR_INVALID_OPERATION, "illegal dataSize");
-    surfaceRet = surfaceBuffer_->ExtraGet("timeStamp", pts_);
-    CHECK_AND_RETURN_RET_LOG(surfaceRet == SURFACE_ERROR_OK, MSERR_INVALID_OPERATION, "get timeStamp fail");
-    surfaceRet = surfaceBuffer_->ExtraGet("isKeyFrame", isCodecFrame_);
-    CHECK_AND_RETURN_RET_LOG(surfaceRet == SURFACE_ERROR_OK, MSERR_INVALID_OPERATION, "get isKeyFrame fail");
-
-    MEDIA_LOGI("surfaceBuffer extraData dataSize_: %{public}d, pts: (%{public}" PRId64 ")", dataSize_, pts_);
-    MEDIA_LOGI("is this surfaceBuffer keyFrame ? : %{public}d", isCodecFrame_);
-
-    return MSERR_OK;
-}
-
-bool VideoCaptureSfImpl::DropThisFrame(uint32_t fps, int64_t oldTimeStamp, int64_t newTimeStamp)
-{
-    if (newTimeStamp <= oldTimeStamp) {
-        MEDIA_LOGW("Invalid timestamp: not increased");
-        return TRUE;
-    }
-
-    if (fps == 0) {
-        MEDIA_LOGW("Invalid frame rate: 0");
-        return FALSE;
-    }
-
-    if ((INT64_MAX - minInterval_) < oldTimeStamp) {
-        MEDIA_LOGW("Invalid timestamp: too big");
-        return TRUE;
-    }
-
-    const int64_t deviations = 3000000; // 3ms
-    if (newTimeStamp < (oldTimeStamp - deviations + minInterval_)) {
-        MEDIA_LOGW("Drop this frame to make sure maximum frame rate");
-        return TRUE;
-    }
-    return FALSE;
-}
-
-int32_t VideoCaptureSfImpl::AcquireSurfaceBuffer()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    while (1) {
-        if (!started_ || (dataConSurface_ == nullptr)) {
-            return MSERR_INVALID_OPERATION;
-        }
-
-        bufferAvailableCondition_.wait(lock, [this]() { return bufferAvailableCount_ > 0 || resourceLock_; });
-        if (resourceLock_) {
-            MEDIA_LOGI("flush start / eos, skip acquire buffer");
-            return MSERR_NO_MEMORY;
-        }
-
-        if (!started_ || (dataConSurface_ == nullptr)) {
-            return MSERR_INVALID_OPERATION;
-        }
-        if (dataConSurface_->AcquireBuffer(surfaceBuffer_, fence_, timestamp_, damage_) != SURFACE_ERROR_OK) {
-            return MSERR_UNKNOWN;
-        }
-
-        if (isFirstBuffer_) {
-            isFirstBuffer_ = false;
-            pixelFormat_ = surfaceBuffer_->GetFormat();
-            MEDIA_LOGI("the input pixel format is %{public}d", pixelFormat_);
-        }
-
-        int32_t ret = GetSufferExtraData();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "get ExtraData fail");
-
-        pts_ = pts_ - totalPauseTime_;
-        bufferAvailableCount_--;
-
-        if (DropThisFrame(framerate_, previousTimestamp_, pts_)) {
-            MEDIA_LOGI("drop this frame!");
-            (void)dataConSurface_->ReleaseBuffer(surfaceBuffer_, fence_);
-            continue;
-        } else {
-            previousTimestamp_ = pts_;
-            break;
-        }
+    class ConsumerListenerProxy : public IBufferConsumerListener, public NoCopyable {
+    public:
+        explicit ConsumerListenerProxy(VideoCaptureSfImpl &owner) : owner_(owner) {}
+        ~ConsumerListenerProxy() = default;
+        void OnBufferAvailable() override;
+    private:
+        VideoCaptureSfImpl &owner_;
     };
-    return MSERR_OK;
-}
+    void OnBufferAvailable();
+    int32_t GetSufferExtraData();
+    bool DropThisFrame(uint32_t fps, int64_t oldTimeStamp, int64_t newTimeStamp);
 
-void VideoCaptureSfImpl::ConsumerListenerProxy::OnBufferAvailable()
-{
-    return owner_.OnBufferAvailable();
-}
+    uint32_t videoWidth_;
+    uint32_t videoHeight_;
+    int32_t fence_;
+    int32_t bufferAvailableCount_;
+    int64_t timestamp_;
+    Rect damage_;
+    sptr<SurfaceBuffer> surfaceBuffer_;
+    std::atomic<bool> started_;
+    bool paused_;
+    std::mutex mutex_;
+    std::mutex pauseMutex_;
+    std::condition_variable bufferAvailableCondition_;
+    VideoStreamType streamType_;
+    bool streamTypeUnknown_;
+    sptr<Surface> dataConSurface_;
+    sptr<Surface> producerSurface_;
+    int32_t dataSize_ = 0;
+    int64_t pts_ = 0;
+    int32_t isCodecFrame_ = 0;
+    uint32_t pixelFormat_ = 0;
 
-void VideoCaptureSfImpl::OnBufferAvailable()
-{
-    if (dataConSurface_ == nullptr) {
-        return;
-    }
-    std::unique_lock<std::mutex> lock(mutex_);
-    if (bufferAvailableCount_ == 0) {
-        bufferAvailableCondition_.notify_all();
-    }
-    bufferAvailableCount_++;
-}
-
-void VideoCaptureSfImpl::ProbeStreamType()
-{
-    streamTypeUnknown_ = false;
-    // Identify whether it is an ES stream or a YUV stream from the code stream or from the buffer.
-}
+private:
+    void SetSurfaceUserData();
+    int32_t AcquireSurfaceBuffer();
+    std::shared_ptr<VideoFrameBuffer> GetFrameBufferInner();
+    void ProbeStreamType();
+    uint32_t bufferNumber_ = 0;
+    int64_t previousTimestamp_ = 0;
+    int64_t pauseTime_ = 0;
+    int64_t resumeTime_ = 0;
+    int64_t persistTime_ = 0;
+    uint32_t pauseCount_ = 0;
+    int64_t totalPauseTime_ = 0;
+    uint32_t framerate_ = 0;
+    int64_t minInterval_ = 0;
+    bool resourceLock_ = false;
+    bool isFirstBuffer_ = true;
+    bool isPause_ = false;
+    bool isResume_ = false;
+};
 } // namespace Media
 } // namespace OHOS
+#endif // VIDEO_CAPTURE_AS_IMPL_H
