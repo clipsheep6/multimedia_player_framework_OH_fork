@@ -120,10 +120,6 @@ static void gst_mux_bin_finalize(GObject *object)
     GstMuxBin *mux_bin = GST_MUX_BIN(object);
     GST_INFO_OBJECT(mux_bin, "gst_mux_bin_finalize");
 
-    if (mux_bin->out_fd > 0) {
-        (void)::close(mux_bin->out_fd);
-        mux_bin->out_fd = -1;
-    }
     if (mux_bin->mux != nullptr) {
         g_free(mux_bin->mux);
         mux_bin->mux = nullptr;
