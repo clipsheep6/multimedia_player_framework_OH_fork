@@ -53,6 +53,7 @@ int32_t AVSharedMemoryPool::Init(const InitializeOption &option)
                "maxMemCnt = %{public}u, enableFixedSize = %{public}d",
                name_.c_str(), option_.preAllocMemCnt, option_.memSize, option_.maxMemCnt,
                option_.enableFixedSize);
+
     bool ret = true;
     for (uint32_t i = 0; i < option_.preAllocMemCnt; ++i) {
         auto memory = AllocMemory(option_.memSize);
