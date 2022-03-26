@@ -71,10 +71,11 @@ int32_t ProcessorAdecImpl::ProcessMandatory(const Format &format)
 {
     CHECK_AND_RETURN_RET(format.GetIntValue("channel_count", channels_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("sample_rate", sampleRate_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("audio_raw_format", audioRawFormat_) == true, MSERR_INVALID_VAL);
-    MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d", channels_, sampleRate_, audioRawFormat_);
+    CHECK_AND_RETURN_RET(format.GetIntValue("audio_sample_format", AudioSampleFormat_) == true, MSERR_INVALID_VAL);
+    MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d",
+        channels_, sampleRate_, AudioSampleFormat_);
 
-    gstRawFormat_ = RawAudioFormatToGst(static_cast<AudioRawFormat>(audioRawFormat_));
+    gstRawFormat_ = RawAudioFormatToGst(static_cast<AudioStandard::AudioSampleFormat>(AudioSampleFormat_));
 
     return MSERR_OK;
 }
@@ -129,8 +130,8 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
         return nullptr;
     }
 
-    config->needParser_ = (codecName_ == CODEC_MIMIE_TYPE_AUDIO_FLAC) ? true : false;
-    config->needCodecData_ = (codecName_ == CODEC_MIMIE_TYPE_AUDIO_VORBIS) ? true : false;
+    config->needParser_ = (codecName_ == CODEC_MIMIE_TYPE_AUDIO_FLAC);
+    config->needCodecData_ = (codecName_ == CODEC_MIMIE_TYPE_AUDIO_VORBIS);
     config->bufferSize_ = DEFAULT_BUFFER_SIZE;
 
     return config;
@@ -158,5 +159,5 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetOutputPortConfig()
 
     return config;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

@@ -19,8 +19,8 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ProcessorVencImpl"};
-    constexpr uint32_t MAX_WIDTH = 8000;
-    constexpr uint32_t MAX_HEIGHT = 5000;
+    constexpr int32_t MAX_WIDTH = 8000;
+    constexpr int32_t MAX_HEIGHT = 5000;
 }
 
 namespace OHOS {
@@ -122,12 +122,6 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
     }
 
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
-    
-    if (profile_ != -1) {
-        GstStructure *struc = gst_caps_get_structure(caps, 0);
-        gst_structure_set(struc, "profile", G_TYPE_STRING, gstProfile_.c_str(), nullptr);
-        gst_caps_append_structure(caps, struc);
-    }
 
     auto config = std::make_shared<ProcessorConfig>(caps, true);
     if (config == nullptr) {
@@ -136,9 +130,10 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
         return nullptr;
     }
 
-    config->bufferSize_ = CompressedBufSize(width_, height_, true, codecName_);
+    constexpr uint32_t alignment = 16;
+    config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_), width_, height_, alignment);
 
     return config;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

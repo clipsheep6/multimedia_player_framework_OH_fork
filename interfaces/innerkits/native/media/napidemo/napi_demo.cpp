@@ -14,7 +14,6 @@
  */
 
 #include "napi_demo.h"
-#include <random>
 #include <sync_fence.h>
 #include "scope_guard.h"
 #include "media_errors.h"
@@ -370,15 +369,6 @@ void NapiDemo::BufferLoop()
         CHECK_AND_BREAK(bufferSize <= buffer->GetSize());
         CHECK_AND_BREAK(memset_s(addr, buffer->GetSize(), color_, bufferSize) == EOK);
 
-        srand(static_cast<int32_t>(time(0)));
-        constexpr uint32_t len = 100;
-        for (uint32_t i = 0; i < bufferSize; i += len) {
-            if (i >= bufferSize) {
-                break;
-            }
-            addr[i] = (unsigned char)(rand() % 255); // 255 is the scope of RGB
-        }
-
         if (count_ == totalFrameCount_) {
             (void)buffer->ExtraSet("endOfStream", true);
         } else {
@@ -397,5 +387,5 @@ void NapiDemo::BufferLoop()
         (void)producerSurface_->FlushBuffer(buffer, -1, flushConfig_);
     }
 }
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS

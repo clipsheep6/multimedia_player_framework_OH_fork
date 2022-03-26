@@ -120,7 +120,7 @@ static void gst_consumer_surface_pool_finalize(GObject *obj)
 static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *klass)
 {
     g_return_if_fail(klass != nullptr);
-    GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS (klass);
+    GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS(klass);
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
     GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_pool_debug_category, "surfacepool", 0, "surface pool");
     gobjectClass->set_property = gst_consumer_surface_pool_set_property;
@@ -377,7 +377,7 @@ static void add_buffer_info(GstConsumerSurfacePool *pool, GstConsumerSurfaceMemo
         GST_WARNING_OBJECT(pool, "Invalid timestamp: < 0");
         GST_BUFFER_PTS(buffer) = 0;
     } else {
-        GST_BUFFER_PTS(buffer) = mem->timestamp;
+        GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(mem->timestamp);
     }
 }
 
@@ -385,7 +385,7 @@ static void cache_frame_if_necessary(GstConsumerSurfacePool *pool, GstConsumerSu
 {
     g_return_if_fail(pool != nullptr && pool->priv != nullptr && mem != nullptr && buffer != nullptr);
     auto priv = pool->priv;
-    priv->pre_timestamp = mem->timestamp;
+    priv->pre_timestamp = static_cast<uint64_t>(mem->timestamp);
     if (priv->is_first_buffer) {
         priv->is_first_buffer = FALSE;
     } else if (priv->repeat_interval > 0) {

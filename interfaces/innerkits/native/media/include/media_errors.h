@@ -94,4 +94,4 @@ __attribute__((visibility("default"))) std::string MSErrorToExtErrorString(Media
 __attribute__((visibility("default"))) MediaServiceExtErrCode MSErrorToExtError(MediaServiceErrCode code);
 } // namespace Media
 } // namespace OHOS
-#endif // define MEDIA_ERRORS_H
+#endif // MEDIA_ERRORS_H

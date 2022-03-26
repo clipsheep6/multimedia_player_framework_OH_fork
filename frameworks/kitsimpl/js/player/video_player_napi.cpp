@@ -1,4 +1,3 @@
-
 /*
  * Copyright (C) 2021 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -205,6 +204,7 @@ napi_value VideoPlayerNapi::SetUrl(napi_env env, napi_callback_info info)
     VideoPlayerNapi *jsPlayer = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&jsPlayer));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsPlayer != nullptr, undefinedResult, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(jsPlayer->nativePlayer_ != nullptr, undefinedResult, "nativePlayer_ is nullptr");
 
     // get url from js
     napi_valuetype valueType = napi_undefined;
@@ -362,6 +362,7 @@ napi_value VideoPlayerNapi::SetFdSrc(napi_env env, napi_callback_info info)
     VideoPlayerNapi *jsPlayer = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&jsPlayer));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsPlayer != nullptr, undefinedResult, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(jsPlayer->nativePlayer_ != nullptr, undefinedResult, "nativePlayer_ is nullptr");
 
     // get url from js
     napi_valuetype valueType = napi_undefined;
@@ -1314,5 +1315,5 @@ void VideoPlayerNapi::OnErrorCallback(MediaServiceExtErrCode errCode)
         cb->SendErrorCallback(errCode);
     }
 }
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS

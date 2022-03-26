@@ -69,7 +69,7 @@ GstPlayerCtrl::GstPlayerCtrl(GstPlayer *gstPlayer)
     (void)taskQue_.Start();
     trackParse_ = GstPlayerTrackParse::Create();
     if (trackParse_ == nullptr) {
-        MEDIA_LOGE("creat track parse fail");
+        MEDIA_LOGE("create track parse fail");
     }
 }
 
@@ -79,6 +79,7 @@ GstPlayerCtrl::~GstPlayerCtrl()
     condVarPauseSync_.notify_all();
     condVarStopSync_.notify_all();
     condVarSeekSync_.notify_all();
+    condVarPreparingSync_.notify_all();
     (void)taskQue_.Stop();
     for (auto &signalId : signalIds_) {
         g_signal_handler_disconnect(gstPlayer_, signalId);
@@ -166,6 +167,7 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
 {
     CHECK_AND_RETURN_LOG(player != nullptr, "player is null");
     CHECK_AND_RETURN_LOG(playerGst != nullptr, "playerGst is null");
+    CHECK_AND_RETURN_LOG(playerGst->trackParse_ != nullptr, "playerGst->trackParse_ is null");
     CHECK_AND_RETURN_LOG(src != nullptr, "src is null");
 
     const gchar *metadata = gst_element_get_metadata(src, GST_ELEMENT_METADATA_KLASS);
@@ -239,6 +241,10 @@ void GstPlayerCtrl::PauseSync()
         return;
     }
 
+    if (currentState_ == PLAYER_PREPARING) {
+        preparing_ = true;
+    }
+
     MEDIA_LOGD("Pause start!");
     CHECK_AND_RETURN_LOG(gstPlayer_ != nullptr, "gstPlayer_ is nullptr");
     gst_player_pause(gstPlayer_);
@@ -308,6 +314,11 @@ int32_t GstPlayerCtrl::Seek(uint64_t position, const PlayerSeekMode mode)
         return MSERR_INVALID_OPERATION;
     }
 
+    if ((position == 0) && (position == GetPositionInner())) {
+        MEDIA_LOGW("Seek to the inner position");
+        return MSERR_OK;
+    }
+
     position = (position > sourceDuration_) ? sourceDuration_ : position;
     auto task = std::make_shared<TaskHandler<void>>([this, position, mode] { SeekSync(position, mode); });
     if (taskQue_.EnqueueTask(task) != 0) {
@@ -353,10 +364,18 @@ void GstPlayerCtrl::SeekSync(uint64_t position, const PlayerSeekMode mode)
 void GstPlayerCtrl::Stop()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (currentState_ <= PLAYER_PREPARING) {
+    if (currentState_ <= PLAYER_PREPARING && !preparing_) {
         isExit_ = true;
         return;
     }
+
+    if (currentState_ == PLAYER_PREPARING && preparing_) {
+        MEDIA_LOGD("begin wait stop for current status is preparing!");
+        static constexpr int32_t timeout = 1;
+        condVarPreparingSync_.wait_for(lock, std::chrono::seconds(timeout));
+        MEDIA_LOGD("end wait stop for current status is preparing!");
+    }
+
     if (appsrcWarp_ != nullptr) {
         appsrcWarp_->Stop();
     }
@@ -1014,6 +1033,8 @@ void GstPlayerCtrl::OnNotify(PlayerStates state)
     switch (state) {
         case PLAYER_PREPARED:
             condVarPauseSync_.notify_all();
+            condVarPreparingSync_.notify_all();
+            preparing_ = false;
             break;
         case PLAYER_STARTED:
             condVarPlaySync_.notify_all();
@@ -1096,13 +1117,15 @@ PlayerStates GstPlayerCtrl::ProcessStoppedState()
     } else {
         if (currentState_ == PLAYER_STARTED) {
             newState = PLAYER_STARTED;
-            locatedInEos_ = enableLooping_ ? false : true;
+            locatedInEos_ = !enableLooping_;
         }
     }
 
     if (currentState_ == PLAYER_PREPARING) {
         // return stop when vidoe/audio prepare failed, notify pause finished
         condVarPauseSync_.notify_all();
+        condVarPreparingSync_.notify_all();
+        preparing_ = false;
     }
     return newState;
 }
@@ -1147,11 +1170,7 @@ bool GstPlayerCtrl::IsLiveMode() const
         return true;
     }
 
-    if (sourceDuration_ == GST_CLOCK_TIME_NONE) {
-        return true;
-    }
-
-    return false;
+    return sourceDuration_ == GST_CLOCK_TIME_NONE;
 }
 
 bool GstPlayerCtrl::SetAudioRendererInfo(const Format &param)
@@ -1174,5 +1193,5 @@ bool GstPlayerCtrl::SetAudioRendererInfo(const Format &param)
         return false;
     }
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

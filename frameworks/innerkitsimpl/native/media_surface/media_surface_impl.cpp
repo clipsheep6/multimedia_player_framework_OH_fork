@@ -81,7 +81,7 @@ void MediaSurfaceImpl::Release()
 {
     MEDIA_LOGD("Release");
     producerSurface_ = nullptr;
-    mwindow_ =nullptr;
+    mwindow_ = nullptr;
     if (previewWindow_ != nullptr) {
         previewWindow_->Destroy();
     }
@@ -114,5 +114,5 @@ sptr<Surface> MediaSurfaceImpl::GetSurface()
     MEDIA_LOGD("Create MediaSurfaceImpl Surface");
     return producerSurface_;
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

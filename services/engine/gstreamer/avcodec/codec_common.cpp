@@ -23,25 +23,14 @@ const std::map<VideoPixelFormat, std::string> PIXEL_TO_STRING = {
     {NV12, "NV12"},
     {NV21, "NV21"},
     {SURFACE_FORMAT, "NV21"},
+    {RGBA, "RGBA"},
 };
 
-const std::map<AudioRawFormat, std::string> PCM_TO_STRING = {
-    {AUDIO_PCM_S8, "S8"},
-    {AUDIO_PCM_8, "U8"},
-    {AUDIO_PCM_S16_BE, "S16BE"},
-    {AUDIO_PCM_S16_LE, "S16LE"},
-    {AUDIO_PCM_16_BE, "U16BE"},
-    {AUDIO_PCM_16_LE, "U16LE"},
-    {AUDIO_PCM_S24_BE, "S24BE"},
-    {AUDIO_PCM_S24_LE, "S24LE"},
-    {AUDIO_PCM_24_BE, "U24BE"},
-    {AUDIO_PCM_24_LE, "U24LE"},
-    {AUDIO_PCM_S32_BE, "S32BE"},
-    {AUDIO_PCM_S32_LE, "S32LE"},
-    {AUDIO_PCM_32_BE, "U32BE"},
-    {AUDIO_PCM_32_LE, "U32LE"},
-    {AUDIO_PCM_F32_BE, "F32BE"},
-    {AUDIO_PCM_F32_LE, "F32LE"},
+const std::map<AudioStandard::AudioSampleFormat, std::string> PCM_TO_STRING = {
+    {AudioStandard::SAMPLE_U8, "U8"},
+    {AudioStandard::SAMPLE_S16LE, "S16LE"},
+    {AudioStandard::SAMPLE_S24LE, "S24LE"},
+    {AudioStandard::SAMPLE_S32LE, "S32LE"},
 };
 
 const std::map<MPEG4Profile, std::string> MPEG4_PROFILE_TO_STRING = {
@@ -111,7 +100,7 @@ std::string AVCProfileToGst(AVCProfile profile)
     return "Invalid";
 }
 
-std::string RawAudioFormatToGst(AudioRawFormat format)
+std::string RawAudioFormatToGst(AudioStandard::AudioSampleFormat format)
 {
     if (PCM_TO_STRING.count(format) != 0) {
         return PCM_TO_STRING.at(format);
@@ -168,32 +157,18 @@ uint32_t PixelBufferSize(VideoPixelFormat pixel, uint32_t width, uint32_t height
             // fall-through
         case NV21:
             size = width * height * 3 / 2;
-            size = (size + alignment - 1) & ~(alignment - 1);
             break;
+        case RGBA:
+            size = width * height * 4;
         default:
             break;
     }
+
+    if (size > 0) {
+        size = (size + alignment - 1) & ~(alignment - 1);
+    }
+
     return size;
-}
-
-uint32_t CompressedBufSize(uint32_t width, uint32_t height, bool isEncoder, InnerCodecMimeType type)
-{
-    if (width == 0 || height == 0) {
-        return 0;
-    }
-
-    uint32_t compressRatio = 7;
-
-    if (isEncoder && type == CODEC_MIMIE_TYPE_VIDEO_MPEG4) {
-        compressRatio = 3;
-    }
-
-    constexpr uint32_t maxSize = 3150000; // 3MB
-    if ((UINT32_MAX / width) <= (height / compressRatio)) {
-        return maxSize;
-    }
-
-    return height / compressRatio * width;
 }
 } // namespace Media
 } // namespace OHOS

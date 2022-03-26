@@ -96,9 +96,7 @@ int32_t AVSharedMemoryBase::Init()
         int size = AshmemGetSize(fd_);
         CHECK_AND_RETURN_RET(size == size_, MSERR_INVALID_VAL);
         isRemote = true;
-    }
-
-    if (fd_ <= 0) {
+    } else {
         fd_ = AshmemCreate(name_.c_str(), static_cast<size_t>(size_));
         CHECK_AND_RETURN_RET(fd_ > 0, MSERR_INVALID_VAL);
     }
@@ -141,5 +139,5 @@ void AVSharedMemoryBase::Close() noexcept
         fd_ = -1;
     }
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

@@ -336,5 +336,5 @@ void MediaClient::MediaServerDied(pid_t pid)
         }
     }
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

@@ -52,6 +52,7 @@ int32_t SrcBytebufferImpl::Init()
 
 int32_t SrcBytebufferImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 {
+    CHECK_AND_RETURN_RET(config != nullptr, MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
 
     g_object_set(G_OBJECT(src_), "buffer-num", DEFAULT_BUFFER_NUM, nullptr);
@@ -85,6 +86,7 @@ int32_t SrcBytebufferImpl::Flush()
 {
     std::unique_lock<std::mutex> lock(mutex_);
     for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
+        CHECK_AND_RETURN_RET(*it != nullptr, MSERR_INVALID_VAL);
         if ((*it)->owner_ != BufferWrapper::DOWNSTREAM) {
             (*it)->owner_ = BufferWrapper::DOWNSTREAM;
             if ((*it)->gstBuffer_ != nullptr) {
@@ -106,6 +108,7 @@ std::shared_ptr<AVSharedMemory> SrcBytebufferImpl::GetInputBuffer(uint32_t index
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index <= bufferList_.size(), nullptr);
+    CHECK_AND_RETURN_RET(bufferList_[index] != nullptr, nullptr);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::SERVER, nullptr);
 
     GstMemory *memory = gst_buffer_peek_memory(bufferList_[index]->gstBuffer_, 0);
@@ -121,6 +124,7 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index <= bufferList_.size(), MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(bufferList_[index] != nullptr, MSERR_INVALID_VAL);
 
     auto &bufWrapper = bufferList_[index];
     CHECK_AND_RETURN_RET(bufWrapper->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
@@ -134,7 +138,7 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
             auto obs = obs_.lock();
             CHECK_AND_RETURN_RET(obs != nullptr, MSERR_UNKNOWN);
             obs->OnInputBufferAvailable(index);
-            MEDIA_LOGD("OnInputBufferAvailable, index:%{public}d", index);
+            MEDIA_LOGD("OnInputBufferAvailable, index:%{public}u", index);
             return MSERR_OK;
         }
         return MSERR_UNKNOWN;
@@ -174,6 +178,7 @@ int32_t SrcBytebufferImpl::SetCallback(const std::weak_ptr<IAVCodecEngineObs> &o
 int32_t SrcBytebufferImpl::HandleCodecBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     bool hasCodecFlag = static_cast<uint32_t>(flag) & static_cast<uint32_t>(AVCODEC_BUFFER_FLAG_CODEC_DATA);
+    CHECK_AND_RETURN_RET(bufferList_[index] != nullptr, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET_LOG(hasCodecFlag == true, MSERR_INVALID_VAL, "First buffer must be codec buffer");
 
     uint8_t *address = bufferList_[index]->mem_->GetBase();
@@ -235,7 +240,7 @@ int32_t SrcBytebufferImpl::HandleBufferAvailable(GstBuffer *buffer)
     CHECK_AND_RETURN_RET_LOG(obs != nullptr, MSERR_UNKNOWN, "obs is nullptr");
     obs->OnInputBufferAvailable(index);
 
-    MEDIA_LOGD("OnInputBufferAvailable, index:%{public}d", index);
+    MEDIA_LOGD("OnInputBufferAvailable, index:%{public}u", index);
     bufferList_[index]->owner_ = BufferWrapper::SERVER;
     bufferList_[index]->gstBuffer_ = gst_buffer_ref(buffer);
 
@@ -263,5 +268,5 @@ int32_t SrcBytebufferImpl::FindBufferIndex(uint32_t &index, std::shared_ptr<AVSh
 
     return MSERR_OK;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

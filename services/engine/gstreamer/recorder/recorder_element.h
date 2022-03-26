@@ -275,7 +275,7 @@ template<typename T,
          typename = std::enable_if_t<std::is_base_of_v<RecorderElement, std::decay_t<T>>>>
 class RecorderElementRegister : public NoCopyable {
 public:
-    RecorderElementRegister(const std::string &key)
+    explicit RecorderElementRegister(const std::string &key)
     {
         (void)RecorderElementFactory::GetInstance().RegisterElement(
             key, [](const RecorderElement::CreateParam &param) {
@@ -288,11 +288,11 @@ public:
 };
 
 /**
- * @brief Provides the RecorderElement register macro to simplify the registeration.
+ * @brief Provides the RecorderElement register macro to simplify the registration.
  */
 #define REGISTER_RECORDER_ELEMENT(__classname__) \
     static std::shared_ptr<RecorderElementRegister<__classname__>> g_##__classname__##register = \
         std::make_shared<RecorderElementRegister<__classname__>>(#__classname__)
-}
-}
+} // namespace Media
+} // namespace OHOS
 #endif

@@ -25,10 +25,10 @@
 #define GST_BUFFER_POOL_UNLOCK(pool) (g_mutex_unlock(&pool->lock))
 
 #define gst_shmem_pool_parent_class parent_class
-G_DEFINE_TYPE (GstShMemPool, gst_shmem_pool, GST_TYPE_BUFFER_POOL);
+G_DEFINE_TYPE(GstShMemPool, gst_shmem_pool, GST_TYPE_BUFFER_POOL);
 
 static void gst_shmem_pool_finalize(GObject *obj);
-static const gchar **gst_shmem_pool_get_options (GstBufferPool *pool);
+static const gchar **gst_shmem_pool_get_options(GstBufferPool *pool);
 static gboolean gst_shmem_pool_set_config(GstBufferPool *pool, GstStructure *config);
 static gboolean gst_shmem_pool_start(GstBufferPool *pool);
 static gboolean gst_shmem_pool_stop(GstBufferPool *pool);
@@ -43,10 +43,10 @@ static void gst_shmem_pool_memory_available(GstBufferPool *pool);
 GST_DEBUG_CATEGORY_STATIC(gst_shmem_pool_debug_category);
 #define GST_CAT_DEFAULT gst_shmem_pool_debug_category
 
-static void gst_shmem_pool_class_init (GstShMemPoolClass *klass)
+static void gst_shmem_pool_class_init(GstShMemPoolClass *klass)
 {
     g_return_if_fail(klass != nullptr);
-    GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS (klass);
+    GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS(klass);
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
 
     gobjectClass->finalize = gst_shmem_pool_finalize;
@@ -62,7 +62,7 @@ static void gst_shmem_pool_class_init (GstShMemPoolClass *klass)
     GST_DEBUG_CATEGORY_INIT(gst_shmem_pool_debug_category, "shmempool", 0, "shmempool class");
 }
 
-static void gst_shmem_pool_init (GstShMemPool *pool)
+static void gst_shmem_pool_init(GstShMemPool *pool)
 {
     g_return_if_fail(pool != nullptr);
 
@@ -117,7 +117,7 @@ GstShMemPool *gst_shmem_pool_new()
     return pool;
 }
 
-static const gchar **gst_shmem_pool_get_options (GstBufferPool *pool)
+static const gchar **gst_shmem_pool_get_options(GstBufferPool *pool)
 {
     // add buffer type meta option at here
     static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, nullptr };
@@ -161,7 +161,7 @@ static gboolean parse_caps_for_raw_video(GstShMemPool *spool, GstCaps *caps, gui
         GstVideoInfo info;
         gboolean ret = gst_video_info_from_caps(&info, caps);
         g_return_val_if_fail(ret, FALSE);
-        *size = info.size;
+        *size = info.size > *size ? info.size : *size;
         GST_INFO("this is video raw scene");
         spool->info = info;
         spool->addVideoMeta = TRUE;
@@ -275,10 +275,10 @@ static gboolean gst_shmem_pool_stop(GstBufferPool *pool)
 {
     g_return_val_if_fail(pool != nullptr, FALSE);
     GstShMemPool *spool = GST_SHMEM_POOL_CAST(pool);
-    if (spool->end) {
-        return TRUE;
-    }
     g_return_val_if_fail(spool != nullptr, FALSE);
+    if (spool->end) {
+        return GST_BUFFER_POOL_CLASS(parent_class)->stop(pool);
+    }
 
     GST_DEBUG("pool stop");
     GST_BUFFER_POOL_LOCK(spool);
@@ -386,7 +386,6 @@ static GstFlowReturn gst_shmem_pool_acquire_buffer(GstBufferPool *pool,
 static void gst_shmem_pool_release_buffer(GstBufferPool *pool, GstBuffer *buffer)
 {
     // The GstBufferPool has already cleared the GstBuffer's pool ref to this pool.
-
     GstShMemPool *spool = GST_SHMEM_POOL_CAST(pool);
     g_return_if_fail(spool != nullptr);
     GST_LOG("release buffer 0x%06" PRIXPTR " to pool 0x%06" PRIXPTR " %s",
@@ -407,7 +406,7 @@ static void gst_shmem_pool_memory_available(GstBufferPool *pool)
     GstFlowReturn ret = gst_shmem_pool_acquire_buffer(pool, &buffer, &params);
 
     GST_DEBUG("memory available, fake acquire ret: %s", gst_flow_get_name(ret));
-    // Get bufer maybe fail f there ary any others getting buffer concurringly.
+    // Get buffer maybe fail f there ary any others getting buffer concurringly.
     if (ret != GST_FLOW_OK) {
         return;
     }

@@ -86,7 +86,8 @@ int32_t AVMetadataHelperEngineGstImpl::SetSource(const std::string &uri, int32_t
         return MSERR_INVALID_VAL;
     }
 
-    if (UriHelper(uri).FormatMe().UriType() != UriHelper::URI_TYPE_FILE) {
+    UriHelper uriHelper(uri);
+    if (uriHelper.UriType() != UriHelper::URI_TYPE_FILE && uriHelper.UriType() != UriHelper::URI_TYPE_FD) {
         MEDIA_LOGE("Unsupported uri type : %{public}s", uri.c_str());
         return MSERR_UNSUPPORT;
     }
@@ -151,7 +152,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchFrameAtTime(
     MEDIA_LOGD("enter");
 
     if (usage_ != AVMetadataUsage::AV_META_USAGE_PIXEL_MAP) {
-        MEDIA_LOGE("current instance is unavaiable for fetch frame, check usage !");
+        MEDIA_LOGE("current instance is unavailable for fetch frame, check usage !");
         return nullptr;
     }
 
@@ -229,7 +230,10 @@ int32_t AVMetadataHelperEngineGstImpl::PrepareInternel(bool async)
 
     if (!async) {
         metaCollector_->Stop(true);
-        cond_.wait(lock, [this]() { return status_ == PLAYBIN_STATE_PREPARED || errHappened_; });
+        static constexpr int32_t timeout = 5;
+        cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
+            return status_ == PLAYBIN_STATE_PREPARED || errHappened_;
+        });
         CHECK_AND_RETURN_RET_LOG(!errHappened_, MSERR_UNKNOWN, "prepare failed");
     }
 
@@ -257,6 +261,11 @@ int32_t AVMetadataHelperEngineGstImpl::FetchFrameInternel(int64_t timeUsOrIndex,
         collectedMeta_[AV_KEY_HAS_VIDEO] != "yes") {
         MEDIA_LOGE("There is no video track in the current media source !");
         return MSERR_INVALID_OPERATION;
+    }
+
+    if (!metaCollector_->IsCollecteCompleted()) {
+        MEDIA_LOGE("extract meta failed, exit");
+        return MSERR_UNKNOWN;
     }
 
     ret = PrepareInternel(false);
@@ -351,7 +360,7 @@ void AVMetadataHelperEngineGstImpl::OnNotifyMessage(const PlayBinMessage &msg)
                 frameExtractor_->Reset();
             }
             cond_.notify_all();
-            MEDIA_LOGE("error happended, cancel inprocessing job");
+            MEDIA_LOGE("error happened, cancel inprocessing job");
             break;
         }
         case PLAYBIN_MSG_SEEKDONE: {
@@ -373,5 +382,5 @@ void AVMetadataHelperEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
         metaCollector_->AddMetaSource(elem);
     }
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

@@ -94,22 +94,10 @@ const std::unordered_map<std::string, int> VIDEO_FORMAT_MAP = {
 };
 
 const std::unordered_map<std::string, int> AUDIO_FORMAT_MAP = {
-    {"S8", AUDIO_PCM_S8},
-    {"8", AUDIO_PCM_8},
-    {"S16BE", AUDIO_PCM_S16_BE},
-    {"S16LE", AUDIO_PCM_S16_LE},
-    {"16BE", AUDIO_PCM_16_BE},
-    {"16LE", AUDIO_PCM_16_LE},
-    {"S24BE", AUDIO_PCM_S24_BE},
-    {"S24LE", AUDIO_PCM_S24_LE},
-    {"24BE", AUDIO_PCM_24_BE},
-    {"24LE", AUDIO_PCM_24_LE},
-    {"S32BE", AUDIO_PCM_S32_BE},
-    {"S32LE", AUDIO_PCM_S32_LE},
-    {"32BE", AUDIO_PCM_32_BE},
-    {"32LE", AUDIO_PCM_32_LE},
-    {"F32BE", AUDIO_PCM_F32_BE},
-    {"F32LE", AUDIO_PCM_F32_LE},
+    {"U8", AudioStandard::SAMPLE_U8},
+    {"S16LE", AudioStandard::SAMPLE_S16LE},
+    {"S24LE", AudioStandard::SAMPLE_S24LE},
+    {"S32LE", AudioStandard::SAMPLE_S32LE},
 };
 
 const std::unordered_map<std::string, int> BITRATE_MODE_MAP = {
@@ -153,10 +141,7 @@ bool AVCodecXmlParser::Parse()
         MEDIA_LOGE("AVCodec xmlDocGetRootElement failed");
         return false;
     }
-    if (!ParseInternal(root)) {
-        return false;
-    }
-    return true;
+    return ParseInternal(root);
 }
 
 
@@ -261,7 +246,7 @@ std::vector<int32_t> AVCodecXmlParser::TransMapAsIntegerArray(
     std::vector<int32_t> res;
     for (auto iter = spilt.begin(); iter != spilt.end(); iter++) {
         if (capabilityMap.find(*iter) != capabilityMap.end()) {
-            res.push_back(capabilityMap.at(*iter));
+            res.emplace_back(capabilityMap.at(*iter));
         } else {
             MEDIA_LOGD("can not find %{public}s in capabilityMap", iter->c_str());
         }
@@ -514,5 +499,5 @@ std::vector<CapabilityData> AVCodecXmlParser::GetCapabilityDataArray()
 {
     return this->capabilityDataArray_;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

@@ -62,9 +62,9 @@ public:
         MEDIA_LOGI("mq curr maxBytes: %{public}u, maxBuffers: %{public}u, maxTimes: %{public}" PRIu64,
             maxBytes_, maxBytes_, maxTimes_);
 
-        static constexpr uint32_t maxBytes = 20 * 1024;
+        static constexpr uint32_t maxBytes = 2 * 1024 * 1024;
         static constexpr uint32_t maxBuffers = 5;
-        static constexpr uint64_t maxTimes = 200 * GST_MSECOND;
+        static constexpr uint64_t maxTimes = 2 * GST_SECOND;
         g_object_set(mq_, "max-size-bytes", maxBytes, "max-size-buffers",
             maxBuffers, "max-size-time", maxTimes, nullptr);
     }
@@ -154,8 +154,11 @@ void AVMetaMetaCollector::Stop(bool unlock) /* false */
 
 std::unordered_map<int32_t, std::string> AVMetaMetaCollector::GetMetadata()
 {
+    static constexpr int32_t timeout = 2;
     std::unique_lock<std::mutex> lock(mutex_);
-    cond_.wait(lock, [this]() { return CheckCollectCompleted() || stopCollecting_; });
+    cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
+        return CheckCollectCompleted() || stopCollecting_;
+    });
 
     AdjustMimeType();
     PopulateMeta(allMeta_);
@@ -165,8 +168,9 @@ std::unordered_map<int32_t, std::string> AVMetaMetaCollector::GetMetadata()
 
 std::string AVMetaMetaCollector::GetMetadata(int32_t key)
 {
+    static constexpr int32_t timeout = 2;
     std::unique_lock<std::mutex> lock(mutex_);
-    cond_.wait(lock, [this, key]() {
+    cond_.wait_for(lock, std::chrono::seconds(timeout), [this, key]() {
         return stopCollecting_ || allMeta_.HasMeta(key) || CheckCollectCompleted();
     });
 
@@ -175,6 +179,12 @@ std::string AVMetaMetaCollector::GetMetadata(int32_t key)
     std::string result;
     (void)allMeta_.TryGetMeta(key, result);
     return result;
+}
+
+bool AVMetaMetaCollector::IsCollecteCompleted()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return collectCompleted_;
 }
 
 std::shared_ptr<AVSharedMemory> AVMetaMetaCollector::FetchArtPicture()
@@ -195,7 +205,7 @@ std::shared_ptr<AVSharedMemory> AVMetaMetaCollector::FetchArtPicture()
     return result;
 }
 
-bool AVMetaMetaCollector::CheckCollectCompleted() const
+bool AVMetaMetaCollector::CheckCollectCompleted()
 {
     if (elemCollectors_.size() == 0 || blockers_.size() == 0) {
         return false;
@@ -222,6 +232,7 @@ bool AVMetaMetaCollector::CheckCollectCompleted() const
         }
     }
 
+    collectCompleted_ = true;
     MEDIA_LOGI("collect metadata finished !");
     return true;
 }
@@ -324,7 +335,7 @@ void AVMetaMetaCollector::AddElemBlocker(GstElement &source, uint8_t type)
     /**
      * After the demuxer or parser plugin of gstreamer complete the metadata resolve work,
      * them will send one frame buffer to downstream. If there is decoder at the downstream,
-     * the decode will happened, which is unneccesary and wastefully for metadata resolving.
+     * the decode will happened, which is unnecessary and wastefully for metadata resolving.
      * We can block the downstream pads of demuxer to prevent the decode process happened.
      *
      * One kind of possible sequence of element setuped to the pipeline is :
@@ -377,7 +388,7 @@ void AVMetaMetaCollector::AddElemBlocker(GstElement &source, uint8_t type)
     if (type == GstElemType::PARSER) {
         /**
          * If there is a demuxer, we can not add blocker at the parser's srcpad, the parser
-         * maybe need to wait serveral packets of buffer to autoplug the decoder, which will
+         * maybe need to wait several packets of buffer to autoplug the decoder, which will
          * leads to no buffer can arrived at the srcpad of parser due to the MultiQueueCutOut.
          * Insteadly, we add the blocker at the parser's sinkpad to fix this issue.
          *
@@ -414,5 +425,5 @@ void AVMetaMetaCollector::StopBlocker(bool unlock)
     }
     mqCutOut_ = nullptr; // restore the mq's cache limit
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

@@ -59,6 +59,14 @@ int32_t AVMetadataHelperClient::SetSource(const std::string &uri, int32_t usage)
     return avMetadataHelperProxy_->SetSource(uri, usage);
 }
 
+int32_t AVMetadataHelperClient::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperProxy_ != nullptr, MSERR_NO_MEMORY,
+        "avmetadatahelper service does not exist.");
+    return avMetadataHelperProxy_->SetSource(fd, offset, size, usage);
+}
+
 std::string AVMetadataHelperClient::ResolveMetadata(int32_t key)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -94,5 +102,5 @@ void AVMetadataHelperClient::Release()
     CHECK_AND_RETURN_LOG(avMetadataHelperProxy_ != nullptr, "avmetadatahelper service does not exist.");
     avMetadataHelperProxy_->Release();
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

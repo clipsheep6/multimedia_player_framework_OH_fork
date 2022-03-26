@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2021 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License\n");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -117,7 +117,7 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
         }
         DEMO_CHECK_AND_BREAK_LOG(memset_s(addr, buffer->GetSize(), 0xFF, YUV_BUFFER_SIZE) == EOK, "Fatal");
         (void)buffer->ExtraSet("timeStamp", timestampNs_);
-        timestampNs_ += intervalUs * 1000; // us to ns
+        timestampNs_ += static_cast<int64_t>(intervalUs * 1000); // us to ns
 
         (void)surface_->FlushBuffer(buffer, -1, g_flushConfig);
         cout << "Generate input buffer success, timestamp: " << timestampNs_ << endl;
@@ -249,6 +249,7 @@ void VEncDemoCallback::OnOutputFormatChanged(const Format &format)
 
 void VEncDemoCallback::OnInputBufferAvailable(uint32_t index)
 {
+    (void)index;
 }
 
 void VEncDemoCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)

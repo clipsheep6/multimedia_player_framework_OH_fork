@@ -37,7 +37,7 @@ namespace {
 #define GST_BUFFER_POOL_NOTIFY(pool) (g_cond_signal(&pool->cond))
 
 #define gst_surface_pool_parent_class parent_class
-G_DEFINE_TYPE(GstSurfacePool, gst_surface_pool, GST_TYPE_BUFFER_POOL);
+G_DEFINE_TYPE (GstSurfacePool, gst_surface_pool, GST_TYPE_BUFFER_POOL);
 
 GST_DEBUG_CATEGORY_STATIC(gst_surface_pool_debug_category);
 #define GST_CAT_DEFAULT gst_surface_pool_debug_category
@@ -68,7 +68,7 @@ static void clear_preallocated_buffer(GstSurfacePool *spool)
     spool->preAllocated = nullptr;
 }
 
-static void gst_surface_pool_class_init(GstSurfacePoolClass *klass)
+static void gst_surface_pool_class_init (GstSurfacePoolClass *klass)
 {
     g_return_if_fail(klass != nullptr);
     GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS (klass);
@@ -142,8 +142,7 @@ GstSurfacePool *gst_surface_pool_new()
 static const gchar **gst_surface_pool_get_options (GstBufferPool *pool)
 {
     // add buffer type meta option at here
-    static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT,
-        nullptr };
+    static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, nullptr };
     return options;
 }
 
@@ -411,18 +410,22 @@ static GstFlowReturn gst_surface_pool_alloc_buffer(GstBufferPool *pool,
     // add buffer type meta at here.
     OHOS::sptr<OHOS::SurfaceBuffer> buf = memory->buf;
     auto buffer_handle = buf->GetBufferHandle();
-    g_return_val_if_fail(buffer_handle != nullptr, GST_FLOW_ERROR);
     int32_t stride = buffer_handle->stride;
-    gst_buffer_add_buffer_handle_meta(*buffer, reinterpret_cast<intptr_t>(buffer_handle), memory->fence, 0);
-
     GstVideoInfo *info = &spool->info;
-    g_return_val_if_fail(info != nullptr && info->finfo != nullptr, GST_FLOW_ERROR);
-    for (int plane = 0; plane < info->finfo->n_planes; ++plane) {
-        info->stride[plane] = stride;
-        GST_DEBUG_OBJECT(spool, "new stride %d", stride);
+
+    if (buf->GetFormat() == PIXEL_FMT_RGBA_8888) {
+        for (int plane = 0; plane < info->finfo->n_planes; ++plane) {
+            info->stride[plane] = stride;
+            GST_DEBUG_OBJECT(spool, "new stride %d", stride);
+        }
+        gst_buffer_add_video_meta_full(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
+            GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info), info->finfo->n_planes, info->offset, info->stride);
+    } else {
+        gst_buffer_add_video_meta(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
+            GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info));
     }
-    gst_buffer_add_video_meta_full(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
-        GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info), info->finfo->n_planes, info->offset, info->stride);
+
+    gst_buffer_add_buffer_handle_meta(*buffer, reinterpret_cast<intptr_t>(buffer_handle), memory->fence, 0);
     return GST_FLOW_OK;
 }
 

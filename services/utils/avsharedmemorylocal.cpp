@@ -49,6 +49,7 @@ AVSharedMemoryLocal::~AVSharedMemoryLocal()
                FAKE_POINTER(this), name_.c_str());
     if (base_ != nullptr) {
         delete [] base_;
+        base_ = nullptr;
     }
 }
 
@@ -82,5 +83,5 @@ uint32_t AVSharedMemoryLocal::GetFlags()
 {
     return flags_;
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

@@ -103,11 +103,12 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
         return nullptr;
     }
 
-    config->needCodecData_ = (codecName_ == CODEC_MIMIE_TYPE_VIDEO_AVC && isSoftWare_) ? true : false;
+    config->needCodecData_ = (codecName_ == CODEC_MIMIE_TYPE_VIDEO_AVC && isSoftWare_);
     if (maxInputSize_ > 0) {
         config->bufferSize_ = (maxInputSize_ > MAX_SIZE) ? MAX_SIZE : static_cast<uint32_t>(maxInputSize_);
     } else {
-        config->bufferSize_ = CompressedBufSize(width_, height_, false, codecName_);
+        constexpr uint32_t alignment = 16;
+        config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_), width_, height_, alignment);
     }
 
     return config;
@@ -135,5 +136,5 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
 
     return config;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

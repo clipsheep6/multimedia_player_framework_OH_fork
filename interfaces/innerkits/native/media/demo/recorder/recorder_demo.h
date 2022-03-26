@@ -70,7 +70,7 @@ public:
     int32_t CameraServicesForAudio() const;
     int32_t SetFormat(const std::string &type) const;
     int32_t GetStubFile();
-    uint64_t GetPts();
+    int64_t GetPts();
 
 private:
     void SetVideoSource();
@@ -95,6 +95,6 @@ public:
     void OnError(RecorderErrorType errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // RECORDER_DEMO_H

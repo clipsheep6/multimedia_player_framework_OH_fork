@@ -13,17 +13,15 @@
  * limitations under the License.
  */
 
-#include "avcodec_server.h"
-#include "avmetadatahelper_server.h"
+#include "media_local.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "avcodec_server.h"
+#include "avmetadatahelper_server.h"
 #include "player_server.h"
 #include "recorder_server.h"
 #include "avcodeclist_server.h"
 #include "avmuxer_server.h"
-#include "media_errors.h"
-#include "avmetadatahelper_server.h"
-#include "media_local.h"
 
 namespace OHOS {
 namespace Media {
@@ -98,5 +96,5 @@ int32_t MediaLocal::DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmux
     (void)avmuxer;
     return MSERR_OK;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

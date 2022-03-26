@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2021 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License\n");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -173,7 +173,7 @@ bool AVCodecListDemo::BuildFormat(Format &format)
     return true;
 }
 
-void AVCodecListDemo::SetMediaDescriptionToFormat(Format &format, std::string key)
+void AVCodecListDemo::SetMediaDescriptionToFormat(Format &format, const std::string &key)
 {
     cout << "Set the " << key << " :" << endl;
     string mediaDescription;
@@ -200,6 +200,10 @@ void AVCodecListDemo::PrintVideoCapsArray(const std::vector<std::shared_ptr<Vide
 {
     for (auto iter = videoCapsArray.begin(); iter != videoCapsArray.end(); iter++) {
         std::shared_ptr<VideoCaps> pVideoCaps = *iter;
+        if (pVideoCaps == nullptr) {
+            cout << "pVideoCaps is nullptr" << endl;
+            break;
+        }
         std::shared_ptr<AVCodecInfo> pVideoCodecCaps;
         pVideoCodecCaps = pVideoCaps->GetCodecInfo();
         cout << "This codec capability is :" << endl;
@@ -235,6 +239,10 @@ void AVCodecListDemo::PrintAudioCapsArray(const std::vector<std::shared_ptr<Audi
     for (auto iter = audioCapsArray.begin(); iter != audioCapsArray.end(); iter++) {
         std::shared_ptr<AudioCaps> pAudioCaps = *iter;
         std::shared_ptr<AVCodecInfo> pAudioCodecCaps = pAudioCaps->GetCodecInfo();
+        if (pAudioCodecCaps == nullptr) {
+            cout << "pAudioCodecCaps is nullptr" << endl;
+            break;
+        }
         cout << "This codec capability is :" << endl;
         cout << "GetName = "<< pAudioCodecCaps->GetName() << endl;
         cout << "GetType = "<< pAudioCodecCaps->GetType() << endl;
@@ -274,5 +282,5 @@ void AVCodecListDemo::RunCase(const string &path)
 
     DoNext();
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

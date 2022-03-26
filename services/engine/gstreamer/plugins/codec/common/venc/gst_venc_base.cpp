@@ -54,6 +54,7 @@ enum {
     PROP_REQUEST_I_FRAME,
     PROP_VENDOR,
     PROP_SURFACE_ENABLE,
+    PROP_I_FRAME_INTERVAL,
 };
 
 G_DEFINE_ABSTRACT_TYPE(GstVencBase, gst_venc_base, GST_TYPE_VIDEO_ENCODER);
@@ -90,6 +91,10 @@ static void gst_venc_base_class_init(GstVencBaseClass *klass)
         g_param_spec_uint("req-i-frame", "Request I frame", "Request I frame for video encoder",
             0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_I_FRAME_INTERVAL,
+        g_param_spec_uint("i-frame-interval", "I frame interval", "Set i frame interval for video encoder",
+            0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     g_object_class_install_property(gobject_class, PROP_VENDOR,
         g_param_spec_pointer("vendor", "Vendor property", "Vendor property",
             (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
@@ -110,6 +115,7 @@ static void gst_venc_base_class_init(GstVencBaseClass *klass)
 
 static void gst_venc_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
+    (void)pspec;
     GST_DEBUG_OBJECT(object, "Set Property");
     GstVencBase *self = GST_VENC_BASE(object);
     g_return_if_fail(value != nullptr);
@@ -134,6 +140,11 @@ static void gst_venc_base_set_property(GObject *object, guint prop_id, const GVa
             }
             break;
         }
+        case PROP_I_FRAME_INTERVAL: {
+            self->i_frame_interval = g_value_get_uint(value);
+            GST_INFO_OBJECT(object, "Set i frame interval %u for video encoder", self->i_frame_interval);
+            break;
+        }
         case PROP_VENDOR: {
             GST_INFO_OBJECT(object, "Set vendor property");
             if (self->encoder != nullptr) {
@@ -155,6 +166,7 @@ static void gst_venc_base_set_property(GObject *object, guint prop_id, const GVa
 
 static void gst_venc_base_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
+    (void)pspec;
     GST_DEBUG_OBJECT(object, "Get Property");
     g_return_if_fail(object != nullptr);
     GstVencBase *self = GST_VENC_BASE(object);
@@ -201,6 +213,7 @@ static void gst_venc_base_init(GstVencBase *self)
     self->first_out_frame = TRUE;
     self->last_pts = GST_CLOCK_TIME_NONE;
     self->first_frame_pts = GST_CLOCK_TIME_NONE;
+    self->i_frame_interval = 0;
 }
 
 static void gst_venc_base_finalize(GObject *object)
@@ -223,6 +236,8 @@ static void gst_venc_base_finalize(GObject *object)
     g_mutex_clear(&self->drain_lock);
     g_cond_clear(&self->drain_cond);
     g_mutex_clear(&self->lock);
+    self->input.av_shmem_pool = nullptr;
+    self->output.av_shmem_pool = nullptr;
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -541,10 +556,9 @@ static GstFlowReturn gst_venc_base_handle_frame(GstVideoEncoder *encoder, GstVid
 {
     GST_DEBUG_OBJECT(encoder, "Handle frame");
     ON_SCOPE_EXIT(0) { gst_video_codec_frame_unref(frame); };
-    g_return_val_if_fail(encoder != nullptr, GST_FLOW_ERROR);
     g_return_val_if_fail(frame != nullptr, GST_FLOW_ERROR);
     GstVencBase *self = GST_VENC_BASE(encoder);
-    g_return_val_if_fail(self->encoder != nullptr, GST_FLOW_ERROR);
+    g_return_val_if_fail(self != nullptr && self->encoder != nullptr, GST_FLOW_ERROR);
     if (gst_venc_base_is_flushing(self)) {
         return GST_FLOW_FLUSHING;
     }
@@ -565,6 +579,9 @@ static GstFlowReturn gst_venc_base_handle_frame(GstVideoEncoder *encoder, GstVid
     }
     GST_VIDEO_ENCODER_STREAM_UNLOCK(self);
     gst_venc_debug_input_time(self);
+    if (self->i_frame_interval != 0 && self->input.frame_cnt % (gint64)self->i_frame_interval == 0) {
+        (void)self->encoder->SetParameter(GST_REQUEST_I_FRAME, GST_ELEMENT(self));
+    }
     gint codec_ret = self->encoder->PushInputBuffer(frame->input_buffer);
     GST_VIDEO_ENCODER_STREAM_LOCK(self);
     GstFlowReturn ret = GST_FLOW_OK;
@@ -622,13 +639,6 @@ static GstFlowReturn gst_venc_base_codec_eos(GstVencBase *self)
     g_return_val_if_fail(GST_VIDEO_ENCODER_SRC_PAD(self) != nullptr, GST_FLOW_ERROR);
     g_mutex_lock(&self->drain_lock);
     if (self->draining) {
-        GstQuery *query = gst_query_new_drain();
-
-        if (!gst_pad_peer_query(GST_VIDEO_ENCODER_SRC_PAD(self), query)) {
-            GST_WARNING_OBJECT(self, "drain query failed");
-        }
-        gst_query_unref(query);
-
         GST_DEBUG_OBJECT(self, "Drained");
         self->draining = FALSE;
         g_cond_broadcast(&self->drain_cond);
@@ -683,15 +693,17 @@ static void gst_venc_base_loop(GstVencBase *self)
 {
     g_return_if_fail(self != nullptr);
     g_return_if_fail(self->encoder != nullptr);
-
     GstBuffer *gst_buffer = nullptr;
+    GST_DEBUG_OBJECT(self, "coding buffers %u", self->coding_outbuf_cnt);
     gint codec_ret = self->encoder->PullOutputBuffer(&gst_buffer);
     gint flow_ret = GST_FLOW_OK;
     switch (codec_ret) {
         case GST_CODEC_OK:
+            self->coding_outbuf_cnt--;
             flow_ret = gst_venc_base_finish_output_buffer(self, gst_buffer);
             break;
         case GST_CODEC_EOS:
+            self->coding_outbuf_cnt--;
             flow_ret = gst_venc_base_codec_eos(self);
             break;
         case GST_CODEC_FLUSH:
@@ -708,7 +720,6 @@ static void gst_venc_base_loop(GstVencBase *self)
     GST_DEBUG_OBJECT(self, "Flow_ret %d", flow_ret);
     switch (flow_ret) {
         case GST_FLOW_OK:
-            self->coding_outbuf_cnt--;
             if (gst_venc_base_push_out_buffers(self)) {
                 return;
             }

@@ -83,5 +83,5 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
         }
     }
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

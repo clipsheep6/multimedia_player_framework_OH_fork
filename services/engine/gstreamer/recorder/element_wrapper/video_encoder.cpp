@@ -23,6 +23,7 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoEncoder"};
+    constexpr uint32_t DEFAULT_I_FRAME_INTERVAL = 25;
 }
 
 namespace OHOS {
@@ -56,7 +57,7 @@ int32_t VideoEncoder::CreateMpegElement()
     std::string encorderName = GetEncorderName(CodecMimeType::VIDEO_MPEG4);
     gstElem_ = gst_element_factory_make(encorderName.c_str(), name_.c_str());
     if (gstElem_ == nullptr) {
-        MEDIA_LOGE("Create mpeg encorder gst_element failed! sourceId: %{public}d", desc_.handle_);
+        MEDIA_LOGE("Create mpeg encoder gst_element failed! sourceId: %{public}d", desc_.handle_);
         return MSERR_INVALID_OPERATION;
     }
 
@@ -74,9 +75,10 @@ int32_t VideoEncoder::CreateH264Element()
     std::string encorderName = GetEncorderName(CodecMimeType::VIDEO_AVC);
     gstElem_ = gst_element_factory_make(encorderName.c_str(), name_.c_str());
     if (gstElem_ == nullptr) {
-        MEDIA_LOGE("Create h264 encorder gst_element failed! sourceId: %{public}d", desc_.handle_);
+        MEDIA_LOGE("Create h264 encoder gst_element failed! sourceId: %{public}d", desc_.handle_);
         return MSERR_INVALID_OPERATION;
     }
+    g_object_set(gstElem_, "i-frame-interval", DEFAULT_I_FRAME_INTERVAL, nullptr);
 
     MEDIA_LOGI("use %{public}s", encorderName.c_str());
     return MSERR_OK;
@@ -91,12 +93,12 @@ int32_t VideoEncoder::Configure(const RecorderParam &recParam)
             case VideoCodecFormat::VIDEO_DEFAULT:
             case VideoCodecFormat::MPEG4: {
                 int32_t ret = CreateMpegElement();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "create Mpeg4 encorder failed");
+                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "create Mpeg4 encoder failed");
                 break;
             }
             case VideoCodecFormat::H264: {
                 int32_t ret = CreateH264Element();
-                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "create H264 encorder failed");
+                CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "create H264 encoder failed");
                 break;
             }
             default:
@@ -169,5 +171,5 @@ void VideoEncoder::Dump()
 }
 
 REGISTER_RECORDER_ELEMENT(VideoEncoder);
-}
-}
+} // namespace Media
+} // namespace OHOS

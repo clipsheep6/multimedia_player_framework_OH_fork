@@ -94,8 +94,8 @@ std::unique_ptr<IAVMuxerEngine> GstEngineFactory::CreateAVMuxerEngine()
     GstLoader::Instance().UpdateLogLevel();
     return std::make_unique<AVMuxerEngineGstImpl>();
 }
-}
-}
+} // namespace Media
+} // namespace OHOS
 
 #ifdef __cplusplus
 extern "C" {

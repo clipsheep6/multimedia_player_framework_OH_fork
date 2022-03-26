@@ -30,6 +30,7 @@ public:
     void RunCase(const std::string &pathOuter);
 
 private:
+    int32_t SetSource(const std::string &pathOuter);
     void GetMetadata(std::queue<std::string_view> &options);
     void FetchFrame(std::queue<std::string_view> &options);
     void FetchArtPicture(std::queue<std::string_view> &option);
@@ -37,6 +38,6 @@ private:
     void DoNext();
     std::shared_ptr<AVMetadataHelper> avMetadataHelper_;
 };
-}
-}
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // AVMETADATAHELPER_DEMO_H

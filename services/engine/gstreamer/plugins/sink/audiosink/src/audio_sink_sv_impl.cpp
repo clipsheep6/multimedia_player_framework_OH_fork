@@ -95,7 +95,7 @@ int32_t AudioSinkSvImpl::SetVolume(float volume)
 
 int32_t AudioSinkSvImpl::SetParameter(int32_t &param)
 {
-    int32_t contentType = (param & 0x0000FFFF);
+    int32_t contentType = (static_cast<uint32_t>(param) & 0x0000FFFF);
     int32_t streamUsage = static_cast<uint32_t>(param) >> AudioStandard::RENDERER_STREAM_USAGE_SHIFT;
 
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audioRenderer_ is nullptr");
@@ -275,13 +275,21 @@ int32_t AudioSinkSvImpl::GetMinimumFrameCount(uint32_t &frameCount)
 
 bool AudioSinkSvImpl::Writeable() const
 {
+    CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, false);
     return audioRenderer_->GetStatus() == AudioStandard::RENDERER_RUNNING;
 }
 
 int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
 {
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(audioRenderer_->Write(buffer, size) > 0, MSERR_UNKNOWN);
+    size_t bytesWritten = 0;
+    int32_t bytesSingle = 0;
+    while (bytesWritten < size) {
+        bytesSingle = audioRenderer_->Write(buffer + bytesWritten, size - bytesWritten);
+        CHECK_AND_RETURN_RET(bytesSingle > 0, MSERR_UNKNOWN);
+        bytesWritten += static_cast<size_t>(bytesSingle);
+        CHECK_AND_RETURN_RET(bytesWritten >= static_cast<size_t>(bytesSingle), MSERR_UNKNOWN);
+    }
     return MSERR_OK;
 }
 
@@ -301,5 +309,5 @@ int32_t AudioSinkSvImpl::GetLatency(uint64_t &latency) const
     CHECK_AND_RETURN_RET(audioRenderer_->GetLatency(latency) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
     return MSERR_OK;
 }
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS
