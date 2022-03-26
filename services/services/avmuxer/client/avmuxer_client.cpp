@@ -58,11 +58,11 @@ std::vector<std::string> AVMuxerClient::GetAVMuxerFormatList()
     return avmuxerProxy_->GetAVMuxerFormatList();
 }
 
-int32_t AVMuxerClient::SetOutput(const std::string &path, const std::string &format)
+int32_t AVMuxerClient::SetOutput(int32_t fd, const std::string &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
-    return avmuxerProxy_->SetOutput(path, format);
+    return avmuxerProxy_->SetOutput(fd, format);
 }
 
 int32_t AVMuxerClient::SetLocation(float latitude, float longitude)

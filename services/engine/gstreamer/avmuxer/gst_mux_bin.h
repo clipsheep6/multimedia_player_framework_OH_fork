@@ -55,7 +55,6 @@ struct _GstMuxBin {
     GSList *audio_src_list;
     GstElement *split_mux_sink;
 
-    gchar *path;
     gint out_fd;
     gchar *mux;
     gint degrees;

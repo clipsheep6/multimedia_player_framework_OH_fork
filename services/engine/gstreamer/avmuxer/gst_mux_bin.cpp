@@ -16,14 +16,12 @@
 #include "config.h"
 #include "gst_mux_bin.h"
 #include <fcntl.h>
-#include <unistd.h>
 #include "gstappsrc.h"
 #include "gstbasesink.h"
 #include "gstbaseparse.h"
 
 enum {
     PROP_0,
-    PROP_PATH,
     PROP_FD,
     PROP_MUX,
     PROP_DEGREES,
@@ -75,10 +73,6 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
     gobject_class->set_property = gst_mux_bin_set_property;
     gobject_class->get_property = gst_mux_bin_get_property;
 
-    g_object_class_install_property(gobject_class, PROP_PATH,
-        g_param_spec_string("path", "Path", "Path of the output file",
-            nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
     g_object_class_install_property(gobject_class, PROP_FD,
         g_param_spec_int("fd", "FD", "fd of the output file",
             0, G_MAXINT32, -1, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
@@ -113,7 +107,6 @@ static void gst_mux_bin_init(GstMuxBin *mux_bin)
     mux_bin->video_src_list = nullptr;
     mux_bin->audio_src_list = nullptr;
     mux_bin->split_mux_sink = nullptr;
-    mux_bin->path = nullptr;
     mux_bin->out_fd = -1;
     mux_bin->mux = nullptr;
     mux_bin->degrees = 0;
@@ -130,10 +123,6 @@ static void gst_mux_bin_finalize(GObject *object)
     if (mux_bin->out_fd > 0) {
         (void)::close(mux_bin->out_fd);
         mux_bin->out_fd = -1;
-    }
-    if (mux_bin->path != nullptr) {
-        g_free(mux_bin->path);
-        mux_bin->path = nullptr;
     }
     if (mux_bin->mux != nullptr) {
         g_free(mux_bin->mux);
@@ -172,9 +161,6 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id,
     (void)param_spec;
     GstMuxBin *mux_bin = GST_MUX_BIN(object);
     switch (prop_id) {
-        case PROP_PATH:
-            mux_bin->path = g_strdup(g_value_get_string(value));
-            break;
         case PROP_FD:
             mux_bin->out_fd = g_value_get_int(value);
             break;
@@ -203,9 +189,6 @@ static void gst_mux_bin_get_property(GObject *object, guint prop_id,
     (void)param_spec;
     GstMuxBin *mux_bin = GST_MUX_BIN(object);
     switch (prop_id) {
-        case PROP_PATH:
-            g_value_set_string(value, mux_bin->path);
-            break;
         case PROP_FD:
             g_value_set_int(value, mux_bin->out_fd);
             break;
@@ -230,7 +213,7 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 {
     GST_INFO_OBJECT(mux_bin, "create_splitmuxsink");
     g_return_val_if_fail(mux_bin != nullptr, false);
-    g_return_val_if_fail(mux_bin->path != nullptr || mux_bin->out_fd >= 0, false);
+    g_return_val_if_fail(mux_bin->out_fd >= 0, false);
     g_return_val_if_fail(mux_bin->mux != nullptr, false);
 
     mux_bin->split_mux_sink = gst_element_factory_make("splitmuxsink", "splitmuxsink");
@@ -238,14 +221,6 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 
     GstElement *fdsink = gst_element_factory_make("fdsink", "fdsink");
     g_return_val_if_fail(fdsink != nullptr, false);
-
-    if (mux_bin->out_fd < 0 && mux_bin->path != nullptr) {
-        mux_bin->out_fd = open(mux_bin->path, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
-        if (mux_bin->out_fd < 0) {
-            GST_ERROR_OBJECT(mux_bin, "Open file failed! filePath is: %s", mux_bin->path);
-            return GST_STATE_CHANGE_FAILURE;
-        }
-    }
 
     g_object_set(fdsink, "fd", mux_bin->out_fd, nullptr);
     gst_base_sink_set_async_enabled(GST_BASE_SINK(fdsink), FALSE);

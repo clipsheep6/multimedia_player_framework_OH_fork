@@ -66,16 +66,16 @@ std::vector<std::string> AVMuxerServer::GetAVMuxerFormatList()
     return formatList;
 }
 
-int32_t AVMuxerServer::SetOutput(const std::string &path, const std::string &format)
+int32_t AVMuxerServer::SetOutput(int32_t fd, const std::string &format)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (curState_ != AVMUXER_IDEL && curState_ != AVMUXER_OUTPUT_SET) {
        MEDIA_LOGE("Failed to call SetOutput, currentState is %{public}d", curState_);
        return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGD("Current output path is: %{public}s, and the format is: %{public}s", path.c_str(), format.c_str());
+    MEDIA_LOGD("Current output path is: %{public}d, and the format is: %{public}s", fd, format.c_str());
     
-    int32_t ret = avmuxerEngine_->SetOutput(path, format);
+    int32_t ret = avmuxerEngine_->SetOutput(fd, format);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetOutput");
     curState_ = AVMUXER_OUTPUT_SET;
     return MSERR_OK;

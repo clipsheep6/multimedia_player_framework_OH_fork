@@ -185,9 +185,14 @@ int32_t AVMuxerDemo::AddTrackAudio()
 
 void AVMuxerDemo::DoNext()
 {
-    std::string path = "file:///system/app/output.mp4";
+    std::string path = "/system/app/output.mp4";
     std::string format = "mp4";
-    avmuxer_->SetOutput(path, format);
+    int32_t fd = open(path, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+    if (fd < 0) {
+        std::cout << "Open file failed! filePath is: " << path << endl;
+        return;
+    }
+    avmuxer_->SetOutput(fd, format);
     avmuxer_->SetLocation(30.1111, 150.22222);
     avmuxer_->SetOrientationHint(90);
 

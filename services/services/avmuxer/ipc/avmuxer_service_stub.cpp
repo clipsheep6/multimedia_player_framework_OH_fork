@@ -100,10 +100,10 @@ std::vector<std::string> AVMuxerServiceStub::GetAVMuxerFormatList()
     return avmuxerServer_->GetAVMuxerFormatList();
 }
 
-int32_t AVMuxerServiceStub::SetOutput(const std::string &path, const std::string &format)
+int32_t AVMuxerServiceStub::SetOutput(int32_t fd, const std::string &format)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
-    return avmuxerServer_->SetOutput(path, format);
+    return avmuxerServer_->SetOutput(fd, format);
 }
 
 int32_t AVMuxerServiceStub::SetLocation(float latitude, float longitude)
@@ -158,9 +158,9 @@ int32_t AVMuxerServiceStub::GetAVMuxerFormatList(MessageParcel &data, MessagePar
 
 int32_t AVMuxerServiceStub::SetOutput(MessageParcel &data, MessageParcel &reply)
 {
-    std::string path = data.ReadString();
+    int32_t fd = data.ReadInt32();
     std::string format = data.ReadString();
-    reply.WriteInt32(SetOutput(path, format));
+    reply.WriteInt32(SetOutput(fd, format));
     return MSERR_OK;
 }
 

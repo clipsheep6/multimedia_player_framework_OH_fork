@@ -110,25 +110,14 @@ std::vector<std::string> AVMuxerEngineGstImpl::GetAVMuxerFormatList()
     return formatList;
 }
 
-int32_t AVMuxerEngineGstImpl::SetOutput(const std::string &path, const std::string &format)
+int32_t AVMuxerEngineGstImpl::SetOutput(int32_t fd, const std::string &format)
 {
     MEDIA_LOGD("SetOutput");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
 
-    std::string rawUri;
-    UriHelper uriHelper(path);
-    if (uriHelper.UriType() == UriHelper::URI_TYPE_FILE) {
-        rawUri = path.substr(strlen("file://"));
-        g_object_set(muxBin_, "path", rawUri.c_str(), "mux", FORMAT_TO_MUX.at(format).c_str(), nullptr);
-    } else if (uriHelper.UriType() == UriHelper::URI_TYPE_FD) {
-        rawUri = path.substr(strlen("fd://"));
-        g_object_set(muxBin_, "fd", std::stoi(rawUri), "mux", FORMAT_TO_MUX.at(format).c_str(), nullptr);
-    } else {
-        MEDIA_LOGE("Failed to check output path");
-        return MSERR_INVALID_VAL;
-    }
-
+    g_object_set(muxBin_, "fd", fd, "mux", FORMAT_TO_MUX.at(format).c_str(), nullptr);
     format_ = format;
+    
     return MSERR_OK;
 }
 

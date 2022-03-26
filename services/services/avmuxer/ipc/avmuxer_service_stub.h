@@ -29,7 +29,7 @@ public:
     using AVMuxerStubFunc = int32_t(AVMuxerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
 
     std::vector<std::string> GetAVMuxerFormatList() override;
-    int32_t SetOutput(const std::string &path, const std::string &format) override;
+    int32_t SetOutput(int32_t fd, const std::string &format) override;
     int32_t SetLocation(float latitude, float longitude) override;
     int32_t SetOrientationHint(int degrees) override;
     int32_t AddTrack(const MediaDescription &trackDesc, int32_t &trackId) override;

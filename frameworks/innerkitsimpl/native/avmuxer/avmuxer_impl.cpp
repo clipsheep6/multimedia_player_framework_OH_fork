@@ -63,13 +63,13 @@ std::vector<std::string> AVMuxerImpl::GetAVMuxerFormatList()
     return avmuxerService_->GetAVMuxerFormatList();
 }
 
-int32_t AVMuxerImpl::SetOutput(const std::string &path, const std::string &format)
+int32_t AVMuxerImpl::SetOutput(int32_t fd, const std::string &format)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
-    CHECK_AND_RETURN_RET_LOG(!path.empty(), MSERR_INVALID_VAL, "Path is empty");
+    CHECK_AND_RETURN_RET_LOG(fd > 0, MSERR_INVALID_VAL, "Fd is invalid");
     CHECK_AND_RETURN_RET_LOG(!format.empty(), MSERR_INVALID_VAL, "Format is empty");
 
-    return avmuxerService_->SetOutput(path, format);
+    return avmuxerService_->SetOutput(fd, format);
 }
 
 int32_t AVMuxerImpl::SetLocation(float latitude, float longitude)
