@@ -693,7 +693,6 @@ static void gst_venc_base_loop(GstVencBase *self)
 {
     g_return_if_fail(self != nullptr);
     g_return_if_fail(self->encoder != nullptr);
-
     GstBuffer *gst_buffer = nullptr;
     GST_DEBUG_OBJECT(self, "coding buffers %u", self->coding_outbuf_cnt);
     gint codec_ret = self->encoder->PullOutputBuffer(&gst_buffer);

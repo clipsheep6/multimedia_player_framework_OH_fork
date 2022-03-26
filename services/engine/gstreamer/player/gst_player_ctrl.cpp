@@ -167,6 +167,7 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
 {
     CHECK_AND_RETURN_LOG(player != nullptr, "player is null");
     CHECK_AND_RETURN_LOG(playerGst != nullptr, "playerGst is null");
+    CHECK_AND_RETURN_LOG(playerGst->trackParse_ != nullptr, "playerGst->trackParse_ is null");
     CHECK_AND_RETURN_LOG(src != nullptr, "src is null");
 
     const gchar *metadata = gst_element_get_metadata(src, GST_ELEMENT_METADATA_KLASS);
@@ -1116,7 +1117,7 @@ PlayerStates GstPlayerCtrl::ProcessStoppedState()
     } else {
         if (currentState_ == PLAYER_STARTED) {
             newState = PLAYER_STARTED;
-            locatedInEos_ = enableLooping_ ? false : true;
+            locatedInEos_ = !enableLooping_;
         }
     }
 
@@ -1169,11 +1170,7 @@ bool GstPlayerCtrl::IsLiveMode() const
         return true;
     }
 
-    if (sourceDuration_ == GST_CLOCK_TIME_NONE) {
-        return true;
-    }
-
-    return false;
+    return sourceDuration_ == GST_CLOCK_TIME_NONE;
 }
 
 bool GstPlayerCtrl::SetAudioRendererInfo(const Format &param)
