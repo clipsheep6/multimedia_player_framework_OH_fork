@@ -44,6 +44,7 @@ public:
     int32_t Stop() override;
 private:
     void SetParse(const std::string &mimeType);
+    int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstAppSrc *src)
     int32_t SetupMsgProcessor();
     void OnNotifyMessage(const InnerMessage &msg);
     void Clear();

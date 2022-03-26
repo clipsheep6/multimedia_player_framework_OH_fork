@@ -236,6 +236,38 @@ int32_t AVMuxerEngineGstImpl::Start()
     return MSERR_OK;
 }
 
+int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
+    GstAppSrc *src, GstShMemWrapAllocator *allocator)
+{
+    
+
+    return MSERR_OK;
+}
+
+int32_t AVMuxerEngineGstImpl::WriteData(std::shared_ptr<AVSharedMemory> sampleData,
+    const TrackSampleInfo &sampleInfo, GstAppSrc *src)
+{
+    CHECK_AND_RETURN_RET_LOG(sampleData != nullptr, MSERR_INVALID_VAL, "sampleData is nullptr");
+    CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_VAL, "src is nullptr");
+    CHECK_AND_RETURN_RET_LOG(allocator_ != nullptr, MSERR_INVALID_VAL, "allocator is nullptr");
+    
+    GstMemory *mem = gst_shmem_wrap(GST_ALLOCATOR_CAST(allocator_), sampleData);
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "Failed to call gst_shmem_wrap");
+    GstBuffer *buffer = gst_buffer_new();
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "Failed to call gst_buffer_new");
+    gst_buffer_append_memory(buffer, mem);
+    GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * MSTONS);
+    GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * MSTONS);
+    if (sampleInfo.flags & AVCODEC_BUFFER_FLAG_SYNC_FRAME) {
+        gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+    }
+
+    GstFlowReturn ret = gst_app_src_push_buffer(src, buffer);
+    CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call gst_app_src_push_buffer");
+
+    return MSERR_OK;
+}
+
 int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData,
     const TrackSampleInfo &sampleInfo)
 {
@@ -252,16 +284,18 @@ int32_t AVMuxerEngineGstImpl::WriteTrackSample(std::shared_ptr<AVSharedMemory> s
     GstAppSrc *src = trackInfo_[sampleInfo.trackIdx].src_;
     CHECK_AND_RETURN_RET_LOG(src != nullptr, MSERR_INVALID_VAL, "Failed to get AppSrc");
 
-    if (sampleInfo.flags & AVCODEC_BUFFER_FLAG_CODEC_DATA) {
+    if (sampleInfo.flags & AVCODEC_BUFFER_FLAG_CODEC_DATA &&
+        trackInfo_[sampleInfo.trackIdx].hasCodecData_ != true) {
         g_object_set(src, "caps", trackInfo_[sampleInfo.trackIdx].caps_, nullptr);
-        ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
+        ret = WriteData(sampleData, sampleInfo, src);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteData");
         trackInfo_[sampleInfo.trackIdx].hasCodecData_ = true;
-    } else if (trackInfo_[sampleInfo.trackIdx].hasCodecData_ == true) {
-        ret = AVMuxerUtil::WriteData(sampleData, sampleInfo, src, trackInfo_, allocator_);
+    } else if (!(sampleInfo.flags & AVCODEC_BUFFER_FLAG_CODEC_DATA & AVCODEC_BUFFER_FLAG_EOS) &&
+        trackInfo_[sampleInfo.trackIdx].hasCodecData_ == true) {
+        ret = WriteData(sampleData, sampleInfo, src);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call WriteData");
     } else {
-        MEDIA_LOGW("First frame must be code_data");
+        MEDIA_LOGW("Failed to Write sample, note: first frame must be code_data");
     }
 
     return MSERR_OK;

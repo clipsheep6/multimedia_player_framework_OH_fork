@@ -71,8 +71,6 @@ public:
     static TrackType CheckType(const std::string &mimeType);
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
         GstCaps *src_caps);
-    static int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-        GstAppSrc *src, std::map<int, TrackInfo>& trackInfo, GstShMemWrapAllocator *allocator);
 };
 }  // namespace Media
 }  // namespace OHOS
