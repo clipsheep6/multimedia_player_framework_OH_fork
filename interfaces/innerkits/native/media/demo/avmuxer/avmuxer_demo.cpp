@@ -155,6 +155,8 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
         audioFrameArray++;
         videoStamp += TIME_STAMP;
         audioStamp += (*audioFrameArray) * BASE_TIME / SAMPLE_RATE;
+        std::cout << videoStamp << std::endl;
+        std::cout << audioStamp << std::endl;
     }
 }
 
