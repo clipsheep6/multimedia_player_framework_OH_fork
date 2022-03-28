@@ -26,9 +26,9 @@
 namespace OHOS {
 namespace Media {
 const std::string ERROR_CALLBACK_NAME = "error";
-const std::string FORMAT_CHANGED_CALLBACK_NAME = "outputFormatChanged";
-const std::string INPUT_CALLBACK_NAME = "inputBufferAvailable";
-const std::string OUTPUT_CALLBACK_NAME = "outputBufferAvailable";
+const std::string FORMAT_CHANGED_CALLBACK_NAME = "streamChanged";
+const std::string INPUT_CALLBACK_NAME = "needInputData";
+const std::string OUTPUT_CALLBACK_NAME = "newOutputData";
 
 class AudioEncoderCallbackNapi : public AVCodecCallback {
 public:
@@ -74,6 +74,6 @@ private:
     std::unordered_map<uint32_t, std::shared_ptr<AVSharedMemory>> inputBufferCaches_;
     std::unordered_map<uint32_t, std::shared_ptr<AVSharedMemory>> outputBufferCaches_;
 };
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // AUDIO_ENCODER_CALLBACK_NAPI_H

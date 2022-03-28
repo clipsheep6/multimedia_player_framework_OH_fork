@@ -24,11 +24,11 @@
 
 namespace OHOS {
 namespace Media {
-class AVCodecListDemo {
+class AVCodecListDemo : public NoCopyable {
 public:
     AVCodecListDemo() = default;
     virtual ~AVCodecListDemo() = default;
-    DISALLOW_COPY_AND_MOVE(AVCodecListDemo);
+
     void RunCase(const std::string &path);
     void DoNext();
 
@@ -38,11 +38,11 @@ private:
     void PrintAudioCapsArray(const std::vector<std::shared_ptr<AudioCaps>> &audioCapsArray) const;
     void PrintIntArray(const std::vector<int32_t> &array, const std::string &logmsg) const;
     bool BuildFormat(Format &format);
-    void SetMediaDescriptionToFormat(Format &format, std::string key);
+    void SetMediaDescriptionToFormat(Format &format, const std::string &key);
     void GetSupportedFrameRatesDemo();
     void GetPreferredFrameRateDemo();
     ImgSize SetSize();
 };
-}
-}
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // AVCODECLIST_DEMO_H

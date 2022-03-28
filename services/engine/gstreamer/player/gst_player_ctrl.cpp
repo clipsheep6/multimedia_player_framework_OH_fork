@@ -69,7 +69,7 @@ GstPlayerCtrl::GstPlayerCtrl(GstPlayer *gstPlayer)
     (void)taskQue_.Start();
     trackParse_ = GstPlayerTrackParse::Create();
     if (trackParse_ == nullptr) {
-        MEDIA_LOGE("creat track parse fail");
+        MEDIA_LOGE("create track parse fail");
     }
 }
 
@@ -79,6 +79,7 @@ GstPlayerCtrl::~GstPlayerCtrl()
     condVarPauseSync_.notify_all();
     condVarStopSync_.notify_all();
     condVarSeekSync_.notify_all();
+    condVarPreparingSync_.notify_all();
     (void)taskQue_.Stop();
     for (auto &signalId : signalIds_) {
         g_signal_handler_disconnect(gstPlayer_, signalId);
@@ -166,11 +167,8 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
 {
     CHECK_AND_RETURN_LOG(player != nullptr, "player is null");
     CHECK_AND_RETURN_LOG(playerGst != nullptr, "playerGst is null");
+    CHECK_AND_RETURN_LOG(playerGst->trackParse_ != nullptr, "playerGst->trackParse_ is null");
     CHECK_AND_RETURN_LOG(src != nullptr, "src is null");
-
-    if (playerGst->trackParse_->GetDemuxerElementFind() == true) {
-        return;
-    }
 
     const gchar *metadata = gst_element_get_metadata(src, GST_ELEMENT_METADATA_KLASS);
     if (metadata == nullptr) {
@@ -182,9 +180,22 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
     std::string metaStr(metadata);
 
     if (metaStr.find("Codec/Demuxer") != std::string::npos || metaStr.find("Codec/Parser") != std::string::npos) {
-        playerGst->signalIds_.push_back(g_signal_connect(src,
-            "pad-added", G_CALLBACK(GstPlayerTrackParse::OnPadAddedCb), playerGst->trackParse_.get()));
-        playerGst->trackParse_->SetDemuxerElementFind(true);
+        if (playerGst->trackParse_->GetDemuxerElementFind() == false) {
+            playerGst->signalIds_.push_back(g_signal_connect(src,
+                "pad-added", G_CALLBACK(GstPlayerTrackParse::OnPadAddedCb), playerGst->trackParse_.get()));
+            playerGst->trackParse_->SetDemuxerElementFind(true);
+        }
+    }
+
+    if (metaStr.find("Codec/Decoder/Video/Hardware") != std::string::npos) {
+        playerGst->isHardWare_ = true;
+        return;
+    }
+
+    if (metaStr.find("Sink/Video") != std::string::npos && playerGst->isHardWare_) {
+        GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12", nullptr);
+        g_object_set(G_OBJECT(src), "caps", caps, nullptr);
+        return;
     }
 }
 
@@ -228,6 +239,10 @@ void GstPlayerCtrl::PauseSync()
         currentState_ == PLAYER_PREPARED ||
         currentState_ == PLAYER_PLAYBACK_COMPLETE) {
         return;
+    }
+
+    if (currentState_ == PLAYER_PREPARING) {
+        preparing_ = true;
     }
 
     MEDIA_LOGD("Pause start!");
@@ -299,6 +314,11 @@ int32_t GstPlayerCtrl::Seek(uint64_t position, const PlayerSeekMode mode)
         return MSERR_INVALID_OPERATION;
     }
 
+    if ((position == 0) && (position == GetPositionInner())) {
+        MEDIA_LOGW("Seek to the inner position");
+        return MSERR_OK;
+    }
+
     position = (position > sourceDuration_) ? sourceDuration_ : position;
     auto task = std::make_shared<TaskHandler<void>>([this, position, mode] { SeekSync(position, mode); });
     if (taskQue_.EnqueueTask(task) != 0) {
@@ -344,10 +364,18 @@ void GstPlayerCtrl::SeekSync(uint64_t position, const PlayerSeekMode mode)
 void GstPlayerCtrl::Stop()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (currentState_ <= PLAYER_PREPARING) {
+    if (currentState_ <= PLAYER_PREPARING && !preparing_) {
         isExit_ = true;
         return;
     }
+
+    if (currentState_ == PLAYER_PREPARING && preparing_) {
+        MEDIA_LOGD("begin wait stop for current status is preparing!");
+        static constexpr int32_t timeout = 1;
+        condVarPreparingSync_.wait_for(lock, std::chrono::seconds(timeout));
+        MEDIA_LOGD("end wait stop for current status is preparing!");
+    }
+
     if (appsrcWarp_ != nullptr) {
         appsrcWarp_->Stop();
     }
@@ -856,7 +884,7 @@ void GstPlayerCtrl::ProcessBufferingTime(const GstPlayer *cbPlayer, guint64 buff
     if (mqBufferingTime_.size() != mqNumUseBuffering_) {
         return;
     }
-    
+
     guint64 mqBufferingTime = BUFFER_TIME_DEFAULT;
     for (auto iter = mqBufferingTime_.begin(); iter != mqBufferingTime_.end(); ++iter) {
         if (iter->second < mqBufferingTime) {
@@ -987,6 +1015,7 @@ void GstPlayerCtrl::OnStateChanged(PlayerStates state)
     if (state == PLAYER_PREPARED) {
         InitDuration();
         GetAudioSink();
+        MEDIA_LOGW("KPI-TRACE: prepared");
     }
 
     currentState_ = state;
@@ -1004,6 +1033,8 @@ void GstPlayerCtrl::OnNotify(PlayerStates state)
     switch (state) {
         case PLAYER_PREPARED:
             condVarPauseSync_.notify_all();
+            condVarPreparingSync_.notify_all();
+            preparing_ = false;
             break;
         case PLAYER_STARTED:
             condVarPlaySync_.notify_all();
@@ -1086,13 +1117,15 @@ PlayerStates GstPlayerCtrl::ProcessStoppedState()
     } else {
         if (currentState_ == PLAYER_STARTED) {
             newState = PLAYER_STARTED;
-            locatedInEos_ = enableLooping_ ? false : true;
+            locatedInEos_ = !enableLooping_;
         }
     }
 
     if (currentState_ == PLAYER_PREPARING) {
         // return stop when vidoe/audio prepare failed, notify pause finished
         condVarPauseSync_.notify_all();
+        condVarPreparingSync_.notify_all();
+        preparing_ = false;
     }
     return newState;
 }
@@ -1137,11 +1170,7 @@ bool GstPlayerCtrl::IsLiveMode() const
         return true;
     }
 
-    if (sourceDuration_ == GST_CLOCK_TIME_NONE) {
-        return true;
-    }
-
-    return false;
+    return sourceDuration_ == GST_CLOCK_TIME_NONE;
 }
 
 bool GstPlayerCtrl::SetAudioRendererInfo(const Format &param)
@@ -1154,7 +1183,9 @@ bool GstPlayerCtrl::SetAudioRendererInfo(const Format &param)
     if (param.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType) &&
         param.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage)) {
         int32_t rendererInfo(0);
-        rendererInfo |= (contentType | (streamUsage << AudioStandard::RENDERER_STREAM_USAGE_SHIFT));
+        CHECK_AND_RETURN_RET(streamUsage >= 0 && contentType >= 0, false);
+        rendererInfo |= (contentType | (static_cast<uint32_t>(streamUsage) <<
+            AudioStandard::RENDERER_STREAM_USAGE_SHIFT));
         g_object_set(audioSink_, "audio-renderer-desc", rendererInfo, nullptr);
         return true;
     } else {
@@ -1162,5 +1193,5 @@ bool GstPlayerCtrl::SetAudioRendererInfo(const Format &param)
         return false;
     }
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

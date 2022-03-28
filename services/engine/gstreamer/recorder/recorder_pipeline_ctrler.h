@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace Media {
-class RecorderPipelineCtrler {
+class RecorderPipelineCtrler : public NoCopyable {
 public:
     RecorderPipelineCtrler();
     ~RecorderPipelineCtrler();
@@ -40,8 +40,6 @@ public:
     int32_t Stop(bool isDrainAll);
     int32_t Reset();
 
-    DISALLOW_COPY_AND_MOVE(RecorderPipelineCtrler);
-
 private:
     void Notify(const RecorderMessage &msg);
 
@@ -51,6 +49,6 @@ private:
     std::unique_ptr<TaskQueue> cmdQ_;
     std::unique_ptr<TaskQueue> msgQ_;
 };
-}
-}
+} // namespace Media
+} // namespace OHOS
 #endif

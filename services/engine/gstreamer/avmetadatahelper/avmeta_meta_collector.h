@@ -27,12 +27,10 @@
 
 namespace OHOS {
 namespace Media {
-class AVMetaMetaCollector {
+class AVMetaMetaCollector : public NoCopyable {
 public:
     AVMetaMetaCollector();
     ~AVMetaMetaCollector();
-
-    DISALLOW_COPY_AND_MOVE(AVMetaMetaCollector);
 
     void Start();
     void AddMetaSource(GstElement &source);
@@ -40,6 +38,7 @@ public:
     std::unordered_map<int32_t, std::string> GetMetadata();
     std::string GetMetadata(int32_t key);
     std::shared_ptr<AVSharedMemory> FetchArtPicture();
+    bool IsCollecteCompleted();
 
 private:
     uint8_t ProbeElemType(GstElement &source);
@@ -47,7 +46,7 @@ private:
     void AddElemBlocker(GstElement &source, uint8_t elemType);
     void UpdateElemBlocker(GstElement &source, uint8_t elemType);
     void UpdataMeta(const Metadata &metadata);
-    bool CheckCollectCompleted() const;
+    bool CheckCollectCompleted();
     void AdjustMimeType();
     void StopBlocker(bool unlock);
     static void PadAdded(GstElement *elem, GstPad *pad, gpointer userdata);
@@ -64,8 +63,8 @@ private:
 
     using BufferBlockerVec = std::vector<std::shared_ptr<AVMetaBufferBlocker>>;
     std::unordered_map<uint8_t, BufferBlockerVec> blockers_;
+    bool collectCompleted_ = false;
 };
-}
-}
-
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // AVMETA_META_COLLECTOR_H

@@ -45,8 +45,7 @@ void VideoCallbackNapi::SaveCallbackReference(const std::string &callbackName, n
         (callbackName == VIDEO_SIZE_CHANGED_CALLBACK_NAME) ||
         (callbackName == PLAYBACK_COMPLETED_CALLBACK_NAME)) {
         napi_ref callback = nullptr;
-        const int32_t refCount = 1;
-        napi_status status = napi_create_reference(env_, args, refCount, &callback);
+        napi_status status = napi_create_reference(env_, args, 1, &callback);
         CHECK_AND_RETURN_LOG(status == napi_ok && callback != nullptr, "creating reference for callback fail");
         std::shared_ptr<AutoRef> cb = std::make_shared<AutoRef>(env_, callback);
         if (callbackName == START_RENDER_FRAME_CALLBACK_NAME) {
@@ -152,7 +151,7 @@ void VideoCallbackNapi::OnInfo(PlayerOnInfoType type, int32_t extra, const Forma
     MEDIA_LOGD("send OnInfo callback success");
 }
 
-void VideoCallbackNapi::OnSeekDoneCb(int32_t positon)
+void VideoCallbackNapi::OnSeekDoneCb(int32_t position)
 {
     if (contextSeekQue_.empty()) {
         MEDIA_LOGD("OnSeekDoneCb is called, But contextSeekQue_ is empty");
@@ -162,7 +161,7 @@ void VideoCallbackNapi::OnSeekDoneCb(int32_t positon)
     VideoPlayerAsyncContext *context = contextSeekQue_.front();
     CHECK_AND_RETURN_LOG(context != nullptr, "context is nullptr");
     contextSeekQue_.pop();
-    context->JsResult = std::make_unique<MediaJsResultInt>(positon);
+    context->JsResult = std::make_unique<MediaJsResultInt>(position);
 
     // Switch Napi threads
     napi_value resource = nullptr;
@@ -230,10 +229,9 @@ void VideoCallbackNapi::OnStartRenderFrameCb() const
 
 void VideoCallbackNapi::OnVideoSizeChangedCb(const Format &infoBody)
 {
-    MEDIA_LOGD("OnVideoSizeChangedCb is called");
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_WIDTH, width_);
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_HEIGHT, height_);
-
+    MEDIA_LOGD("OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d", width_, height_);
     CHECK_AND_RETURN_LOG(videoSizeChangedCallback_ != nullptr,
         "Cannot find the reference of videoSizeChanged callback");
     PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
@@ -325,5 +323,5 @@ void VideoCallbackNapi::OnStateChangeCb(PlayerStates state)
             break;
     }
 }
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS

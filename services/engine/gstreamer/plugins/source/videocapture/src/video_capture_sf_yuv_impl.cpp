@@ -55,13 +55,14 @@ std::shared_ptr<VideoFrameBuffer> VideoCaptureSfYuvImpl::DoGetFrameBuffer()
     ON_SCOPE_EXIT(1) { gst_buffer_unref(gstBuffer); };
 
     gsize size = gst_buffer_fill(gstBuffer, 0, (char *)buffer, bufferSize);
-    CHECK_AND_RETURN_RET_LOG(size == static_cast<gsize>(bufferSize), nullptr, "unkonwn error during gst_buffer_fill");
+    CHECK_AND_RETURN_RET_LOG(size == static_cast<gsize>(bufferSize), nullptr, "unknown error during gst_buffer_fill");
 
     std::shared_ptr<VideoFrameBuffer> frameBuffer = std::make_shared<VideoFrameBuffer>();
     frameBuffer->keyFrameFlag = 0;
     frameBuffer->timeStamp = static_cast<uint64_t>(pts_); // yuv timestamp from camera
     frameBuffer->gstBuffer = gstBuffer;
     frameBuffer->size = static_cast<uint64_t>(bufferSize);
+    frameBuffer->pixelFormat = pixelFormat_;
 
     CANCEL_SCOPE_EXIT_GUARD(1);
     return frameBuffer;

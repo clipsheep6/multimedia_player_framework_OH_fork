@@ -13,41 +13,48 @@
  * limitations under the License.
  */
 
-#include "buffer_log.h"
-#include "surface_buffer_impl.h"
 #include "videodisplaymanager.h"
-
+#include <hilog/log.h>
 #include <iremote_proxy.h>
+#include "surface_buffer_impl.h"
 #include "idisplay_layer.h"
 
 using namespace OHOS::HDI::Display::V1_0;
 static OHOS::sptr<IDisplayLayer> g_layerService = nullptr;
 constexpr const char *DISPLAY_LAYER_SERVICE_NAME = "hdi_video_layer_service";
 
+namespace {
+    static constexpr ::OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VideoDisplayManager" };
+}
+
+#define __VLOG(func, fmt, ...) \
+    func(LABEL, "%{public}s: " fmt , __func__, ##__VA_ARGS__)
+
+#define VLOGFD(fmt, ...) __VLOG(::OHOS::HiviewDFX::HiLog::Debug, fmt, ##__VA_ARGS__)
+#define VLOGFI(fmt, ...) __VLOG(::OHOS::HiviewDFX::HiLog::Info, fmt, ##__VA_ARGS__)
+#define VLOGFW(fmt, ...) __VLOG(::OHOS::HiviewDFX::HiLog::Warn, fmt, ##__VA_ARGS__)
+#define VLOGFE(fmt, ...) __VLOG(::OHOS::HiviewDFX::HiLog::Error, fmt, ##__VA_ARGS__)
+
 #ifndef VIDEO_DISPLAY_DEBUG
 #define VIDEO_DISPLAY_ENTER() ((void)0)
 #define VIDEO_DISPLAY_EXIT() ((void)0)
 #else
 #define VIDEO_DISPLAY_ENTER() do { \
-    BLOGFD("enter..."); \
+    VLOGFD("enter..."); \
 } while (0)
 
 #define VIDEO_DISPLAY_EXIT() do { \
-    BLOGFD("exit..."); \
+    VLOGFD("exit..."); \
 } while (0)
 #endif
 
 namespace OHOS {
-namespace {
-    static constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, 0, "VideoDisplayManager" };
-}
-
     Listener::~Listener()
     {
         if (surface_ != nullptr && preBuffer != nullptr) {
             SurfaceError ret = surface_->ReleaseBuffer(preBuffer, -1);
             if (ret != SURFACE_ERROR_OK) {
-                BLOGFE("release buffer fail, ret=%{public}d", ret);
+                VLOGFE("release buffer fail, ret=%{public}d", ret);
             }
             preBuffer = nullptr;
         }
@@ -63,15 +70,19 @@ namespace {
         VIDEO_DISPLAY_ENTER();
         auto surfacTemp = surface_.promote();
         if (surfacTemp == nullptr) {
-            BLOGFE("surface is null");
+            VLOGFE("surface is null");
             return;
         }
         ret = surfacTemp->AcquireBuffer(buffer, fence, timestamp, damage);
         if (ret != SURFACE_ERROR_OK) {
-            BLOGFE("acquire buffer fail, ret=%{public}d", ret);
+            VLOGFE("acquire buffer fail, ret=%{public}d", ret);
             return;
         }
         bufferImpl = SurfaceBufferImpl::FromBase(buffer);
+        if (bufferImpl == nullptr) {
+            VLOGFE("bufferImpl is null");
+            return;
+        }
         if (g_layerService != nullptr) {
             auto bufferHandle = bufferImpl->GetBufferHandle();
             g_layerService->SetLayerBuffer(0, layerId_, *bufferHandle, fence);
@@ -79,7 +90,7 @@ namespace {
         if (preBuffer != nullptr) {
             ret = surfacTemp->ReleaseBuffer(preBuffer, -1);
             if (ret != SURFACE_ERROR_OK) {
-                BLOGFE("release buffer fail, ret=%{public}d", ret);
+                VLOGFE("release buffer fail, ret=%{public}d", ret);
             }
         }
         preBuffer = buffer;
@@ -92,7 +103,7 @@ namespace {
         if (g_layerService == nullptr) {
             g_layerService = IDisplayLayer::Get(DISPLAY_LAYER_SERVICE_NAME);
             if (g_layerService == nullptr) {
-                BLOGFE("VideoDisplayManager : get layer service failed");
+                VLOGFE("VideoDisplayManager : get layer service failed");
             }
         }
         VIDEO_DISPLAY_EXIT();
@@ -114,20 +125,20 @@ namespace {
         if (g_layerService == nullptr) {
             g_layerService = IDisplayLayer::Get(DISPLAY_LAYER_SERVICE_NAME);
             if (g_layerService == nullptr) {
-                BLOGFE("VideoDisplayManager : get layer service failed");
+                VLOGFE("VideoDisplayManager : get layer service failed");
                 return DISPLAY_FAILURE;
             }
         }
 
         ret = g_layerService->InitDisplay(0);
         if (ret != DISPLAY_SUCCESS) {
-            BLOGFE("init display fail, ret=%{public}d",  ret);
+            VLOGFE("init display fail, ret=%{public}d",  ret);
             return DISPLAY_FAILURE;
         }
 
         ret = g_layerService->GetDisplayInfo(0, dspInfo);
         if (ret != DISPLAY_SUCCESS) {
-            BLOGFE("get display info fail, ret=%{public}d",  ret);
+            VLOGFE("get display info fail, ret=%{public}d",  ret);
             (void)g_layerService->DeinitDisplay(0);
             return DISPLAY_FAILURE;
         }
@@ -137,19 +148,19 @@ namespace {
             info.height = dspInfo->height;
         }
 
-        BLOGFI("create layer width=%{public}d height=%{public}d type=%{public}d bpp=%{public}d pixFormat=%{public}d",
+        VLOGFI("create layer width=%{public}d height=%{public}d type=%{public}d bpp=%{public}d pixFormat=%{public}d",
             info.width, info.height, info.type, info.bpp, info.pixFormat);
 
         ret = g_layerService->CreateLayer(0, info, layerId);
         if (ret != DISPLAY_SUCCESS) {
-            BLOGFE("create layer fail, ret=%{public}d",  ret);
+            VLOGFE("create layer fail, ret=%{public}d",  ret);
             (void)g_layerService->DeinitDisplay(0);
             return DISPLAY_FAILURE;
         }
 
         surface = Surface::CreateSurfaceAsConsumer();
         if (surface == nullptr) {
-            BLOGFE("create surface fail");
+            VLOGFE("create surface fail");
             (void)g_layerService->CloseLayer(0, layerId);
             return DISPLAY_FAILURE;
         }
@@ -164,7 +175,7 @@ namespace {
         if (g_layerService != nullptr) {
             (void)g_layerService->CloseLayer(0, layerId);
         } else {
-            BLOGFE("layer is not create");
+            VLOGFE("layer is not create");
         }
         VIDEO_DISPLAY_EXIT();
     }
@@ -173,7 +184,12 @@ namespace {
     {
         VIDEO_DISPLAY_ENTER();
         surface_ = surface;
-        listener = new Listener(surface_, layerId);
+        listener = new (std::nothrow) Listener(surface_, layerId);
+        if (listener == nullptr) {
+            VLOGFE("Failed to create listener");
+            return nullptr;
+        }
+
         surface_->RegisterConsumerListener(listener);
         VIDEO_DISPLAY_EXIT();
         return surface_->GetProducer();
@@ -192,7 +208,7 @@ namespace {
     {
         VIDEO_DISPLAY_ENTER();
         if (g_layerService == nullptr) {
-            BLOGFE("layer is not create or invalid");
+            VLOGFE("layer is not create or invalid");
             return DISPLAY_FAILURE;
         }
 
@@ -205,7 +221,7 @@ namespace {
     {
         VIDEO_DISPLAY_ENTER();
         if (g_layerService == nullptr) {
-            BLOGFE("layer is not create or invalid");
+            VLOGFE("layer is not create or invalid");
             return DISPLAY_FAILURE;
         }
 
@@ -221,7 +237,7 @@ namespace {
     {
         VIDEO_DISPLAY_ENTER();
         if (g_layerService == nullptr) {
-            BLOGFE("layer is not create or invalid");
+            VLOGFE("layer is not create or invalid");
             return DISPLAY_FAILURE;
         }
 
@@ -234,7 +250,7 @@ namespace {
     {
         VIDEO_DISPLAY_ENTER();
         if (g_layerService == nullptr) {
-            BLOGFE("layer is not create or invalid");
+            VLOGFE("layer is not create or invalid");
             return DISPLAY_FAILURE;
         }
 
@@ -247,7 +263,7 @@ namespace {
     {
         VIDEO_DISPLAY_ENTER();
         if (g_layerService == nullptr) {
-            BLOGFE("layer is not create or invalid");
+            VLOGFE("layer is not create or invalid");
             return DISPLAY_FAILURE;
         }
 
@@ -260,7 +276,7 @@ namespace {
     {
         VIDEO_DISPLAY_ENTER();
         if (g_layerService == nullptr) {
-            BLOGFE("layer is not create or invalid");
+            VLOGFE("layer is not create or invalid");
             return DISPLAY_FAILURE;
         }
 
@@ -273,7 +289,7 @@ namespace {
     {
         VIDEO_DISPLAY_ENTER();
         if (g_layerService == nullptr) {
-            BLOGFE("layer is not create or invalid");
+            VLOGFE("layer is not create or invalid");
             return DISPLAY_FAILURE;
         }
 

@@ -21,13 +21,13 @@
 
 namespace OHOS {
 namespace Media {
-class AVMetadataHelperImpl : public AVMetadataHelper {
+class AVMetadataHelperImpl : public AVMetadataHelper, public NoCopyable {
 public:
     AVMetadataHelperImpl();
     ~AVMetadataHelperImpl();
-    DISALLOW_COPY_AND_MOVE(AVMetadataHelperImpl);
 
     int32_t SetSource(const std::string &uri, int32_t usage) override;
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
@@ -37,6 +37,6 @@ public:
 private:
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService_ = nullptr;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // AVMETADATAHELPER_IMPL_H

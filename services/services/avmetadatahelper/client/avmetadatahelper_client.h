@@ -21,15 +21,15 @@
 
 namespace OHOS {
 namespace Media {
-class AVMetadataHelperClient : public IAVMetadataHelperService {
+class AVMetadataHelperClient : public IAVMetadataHelperService, public NoCopyable {
 public:
     static std::shared_ptr<AVMetadataHelperClient> Create(const sptr<IStandardAVMetadataHelperService> &ipcProxy);
     explicit AVMetadataHelperClient(const sptr<IStandardAVMetadataHelperService> &ipcProxy);
     ~AVMetadataHelperClient();
-    DISALLOW_COPY_AND_MOVE(AVMetadataHelperClient);
 
     // IAVMetadataHelperService override
     int32_t SetSource(const std::string &uri, int32_t usage) override;
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;

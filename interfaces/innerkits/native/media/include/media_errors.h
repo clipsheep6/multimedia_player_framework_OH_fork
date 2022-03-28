@@ -37,6 +37,7 @@ enum MediaServiceErrCode : ErrCode {
     MSERR_CREATE_PLAYER_ENGINE_FAILED,                // create player engine failed.
     MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,      // create avmetadatahelper engine failed.
     MSERR_CREATE_AVCODEC_ENGINE_FAILED,               // create avcodec engine failed.
+    MSERR_CREATE_AVMUXER_ENGINE_FAILED,               // create avmuxer engine failed.
     MSERR_INVALID_STATE,                              // the state is not support this operation.
     MSERR_UNSUPPORT,                                  // unsupport interface.
     MSERR_UNSUPPORT_AUD_SRC_TYPE,                     // unsupport audio source type.
@@ -51,11 +52,12 @@ enum MediaServiceErrCode : ErrCode {
     MSERR_UNSUPPORT_PROTOCOL_TYPE,                    // unsupport protocol type.
     MSERR_UNSUPPORT_VID_DEC_TYPE,                     // unsupport video decoder type.
     MSERR_UNSUPPORT_AUD_DEC_TYPE,                     // unsupport audio decoder type.
+    MSERR_UNSUPPORT_END,                              // unsupport errcode end flag.
     MSERR_AUD_ENC_FAILED,                             // audio encode failed.
     MSERR_VID_ENC_FAILED,                             // video encode failed.
     MSERR_AUD_DEC_FAILED,                             // audio decode failed.
     MSERR_VID_DEC_FAILED,                             // video decode failed.
-    MSERR_MUXER_FAILED,                               // stream muxer failed.
+    MSERR_MUXER_FAILED,                               // stream avmuxer failed.
     MSERR_DEMUXER_FAILED,                             // stream demuxer or parser failed.
     MSERR_OPEN_FILE_FAILED,                           // open file failed.
     MSERR_FILE_ACCESS_FAILED,                         // read or write file failed.
@@ -92,4 +94,4 @@ __attribute__((visibility("default"))) std::string MSErrorToExtErrorString(Media
 __attribute__((visibility("default"))) MediaServiceExtErrCode MSErrorToExtError(MediaServiceErrCode code);
 } // namespace Media
 } // namespace OHOS
-#endif // define MEDIA_ERRORS_H
+#endif // MEDIA_ERRORS_H

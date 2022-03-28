@@ -23,11 +23,10 @@
 
 namespace OHOS {
 namespace Media {
-class SinkSurfaceImpl : public SinkBase {
+class SinkSurfaceImpl : public SinkBase, public NoCopyable {
 public:
     SinkSurfaceImpl();
     ~SinkSurfaceImpl() override;
-    DISALLOW_COPY_AND_MOVE(SinkSurfaceImpl);
 
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
@@ -50,6 +49,6 @@ private:
     bool isFirstFrame_ = true;
     Format bufferFormat_;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // SINK_SURFACE_IMPL_H

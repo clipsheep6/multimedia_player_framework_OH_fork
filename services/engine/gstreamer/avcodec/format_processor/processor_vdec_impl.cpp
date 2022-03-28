@@ -19,9 +19,9 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ProcessorVdecImpl"};
-    const uint32_t MAX_SIZE = 3150000; // 3MB
-    const uint32_t MAX_WIDTH = 8000;
-    const uint32_t MAX_HEIGHT = 5000;
+    constexpr uint32_t MAX_SIZE = 3150000; // 3MB
+    constexpr uint32_t MAX_WIDTH = 8000;
+    constexpr uint32_t MAX_HEIGHT = 5000;
 }
 
 namespace OHOS {
@@ -103,11 +103,12 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
         return nullptr;
     }
 
-    config->needCodecData_ = (codecName_ == CODEC_MIMIE_TYPE_VIDEO_AVC && isSoftWare_) ? true : false;
+    config->needCodecData_ = (codecName_ == CODEC_MIMIE_TYPE_VIDEO_AVC && isSoftWare_);
     if (maxInputSize_ > 0) {
         config->bufferSize_ = (maxInputSize_ > MAX_SIZE) ? MAX_SIZE : static_cast<uint32_t>(maxInputSize_);
     } else {
-        config->bufferSize_ = CompressedBufSize(width_, height_, false, codecName_);
+        constexpr uint32_t alignment = 16;
+        config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_), width_, height_, alignment);
     }
 
     return config;
@@ -129,11 +130,11 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
         return nullptr;
     }
 
-    const uint32_t alignment = 16;
+    constexpr uint32_t alignment = 16;
     config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_),
         static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), alignment);
 
     return config;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

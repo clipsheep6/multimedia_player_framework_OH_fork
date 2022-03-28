@@ -36,11 +36,10 @@ public:
     std::queue<uint32_t> outQueue_;
 };
 
-class VDecDemoCallback : public AVCodecCallback {
+class VDecDemoCallback : public AVCodecCallback, public NoCopyable {
 public:
     explicit VDecDemoCallback(std::shared_ptr<VDecSignal> signal);
     virtual ~VDecDemoCallback() = default;
-    DISALLOW_COPY_AND_MOVE(VDecDemoCallback);
 
     void OnError(AVCodecErrorType errorType, int32_t errorCode) override;
     void OnOutputFormatChanged(const Format &format) override;
@@ -51,11 +50,10 @@ private:
     std::shared_ptr<VDecSignal> signal_;
 };
 
-class VDecDemo {
+class VDecDemo : public NoCopyable {
 public:
     VDecDemo() = default;
     virtual ~VDecDemo() = default;
-    DISALLOW_COPY_AND_MOVE(VDecDemo);
     void RunCase();
 
 private:
@@ -82,6 +80,6 @@ private:
     int64_t timeStamp_ = 0;
     uint32_t frameCount_ = 0;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // AVCODEC_VDEC_DEMO_H

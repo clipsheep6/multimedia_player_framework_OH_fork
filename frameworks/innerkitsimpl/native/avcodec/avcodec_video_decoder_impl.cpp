@@ -107,10 +107,7 @@ int32_t VideoDecoderImpl::Reset()
 int32_t VideoDecoderImpl::Release()
 {
     CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_INVALID_OPERATION, "service died");
-    int32_t ret = codecService_->Release();
-    (void)MediaServiceFactory::GetInstance().DestroyAVCodecService(codecService_);
-    codecService_ = nullptr;
-    return ret;
+    return codecService_->Release();
 }
 
 int32_t VideoDecoderImpl::SetOutputSurface(sptr<Surface> surface)
@@ -167,5 +164,5 @@ int32_t VideoDecoderImpl::SetCallback(const std::shared_ptr<AVCodecCallback> &ca
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
     return codecService_->SetCallback(callback);
 }
-} // nmamespace Media
+} // namespace Media
 } // namespace OHOS

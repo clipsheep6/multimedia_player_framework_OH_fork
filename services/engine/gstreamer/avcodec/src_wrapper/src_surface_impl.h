@@ -21,17 +21,16 @@
 
 namespace OHOS {
 namespace Media {
-class SrcSurfaceImpl : public SrcBase {
+class SrcSurfaceImpl : public SrcBase, public NoCopyable {
 public:
     SrcSurfaceImpl();
     ~SrcSurfaceImpl() override;
-    DISALLOW_COPY_AND_MOVE(SrcSurfaceImpl);
 
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
     sptr<Surface> CreateInputSurface(std::shared_ptr<ProcessorConfig> inputConfig) override;
     int32_t SetParameter(const Format &format) override;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // SRC_SURFACE_IMPL_H

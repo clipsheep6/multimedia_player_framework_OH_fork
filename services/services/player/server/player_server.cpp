@@ -14,11 +14,9 @@
  */
 
 #include "player_server.h"
-#include <unistd.h>
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
-#include "uri_helper.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
@@ -58,6 +56,7 @@ int32_t PlayerServer::Init()
 int32_t PlayerServer::SetSource(const std::string &url)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(url)");
     int32_t ret = InitPlayEngine(url);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
     return ret;
@@ -67,6 +66,7 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
+    MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(dataSrc)");
     dataSrc_ = dataSrc;
     std::string url = "MediaDataSource";
     int32_t ret = InitPlayEngine(url);
@@ -83,15 +83,12 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
 int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    ResetFdSource();
-    fd_ = dup(fd);
-    if (fd_ < 0) {
-        return MSERR_UNKNOWN;
-    }
-
-    std::string url = UriHelper::FormatFdToUri(fd_, offset, size);
-    int32_t ret = InitPlayEngine(url);
+    MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(fd)");
+    auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
+    CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read the fd");
+    int32_t ret = InitPlayEngine(uriHelper->FormattedUri());
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
+    uriHelper_ = std::move(uriHelper);
     return ret;
 }
 
@@ -127,6 +124,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
 int32_t PlayerServer::Prepare()
 {
+    MEDIA_LOGW("KPI-TRACE: PlayerServer Prepare in");
     return OnPrepare(false);
 }
 
@@ -170,7 +168,7 @@ int32_t PlayerServer::Play()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
-
+    MEDIA_LOGW("KPI-TRACE: PlayerServer Play in");
     if (status_ != PLAYER_PREPARED && status_ != PLAYER_PLAYBACK_COMPLETE &&
         status_ != PLAYER_PAUSED && status_ != PLAYER_STARTED) {
         MEDIA_LOGE("Can not Play, currentState is %{public}d", status_);
@@ -202,6 +200,7 @@ int32_t PlayerServer::Play()
 
 int32_t PlayerServer::PrepareAsync()
 {
+    MEDIA_LOGW("KPI-TRACE: PlayerServer PrepareAsync in");
     return OnPrepare(true);
 }
 
@@ -236,7 +235,7 @@ int32_t PlayerServer::Stop()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
-
+    MEDIA_LOGW("KPI-TRACE: PlayerServer Stop in");
     if (status_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not Stop, currentState is PLAYER_STATE_ERROR");
         return MSERR_INVALID_OPERATION;
@@ -265,6 +264,7 @@ int32_t PlayerServer::Stop()
 int32_t PlayerServer::Reset()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGW("KPI-TRACE: PlayerServer Reset in");
     return OnReset();
 }
 
@@ -282,7 +282,7 @@ int32_t PlayerServer::OnReset()
     playerEngine_ = nullptr;
     dataSrc_ = nullptr;
     looping_ = false;
-    ResetFdSource();
+    uriHelper_ = nullptr;
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
     stopTimeMonitor_.FinishTime();
@@ -300,14 +300,6 @@ int32_t PlayerServer::Release()
     return MSERR_OK;
 }
 
-void PlayerServer::ResetFdSource()
-{
-    if (fd_ >= 0) {
-        close(fd_);
-        fd_ = -1;
-    }
-}
-
 int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -316,7 +308,7 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
         return MSERR_INVALID_OPERATION;
     }
 
-    const float maxVolume = 1.0f;
+    constexpr float maxVolume = 1.0f;
     if ((leftVolume < 0) || (leftVolume > maxVolume) || (rightVolume < 0) || (rightVolume > maxVolume)) {
         MEDIA_LOGE("SetVolume failed, the volume should be set to a value ranging from 0 to 5");
         return MSERR_INVALID_OPERATION;
@@ -635,5 +627,5 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         playerCb_->OnInfo(type, extra, infoBody);
     }
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

@@ -14,9 +14,10 @@
  */
 
 #include "gst_surface_pool_src.h"
+#include <gst/video/video.h>
+#include <sync_fence.h>
 #include "gst_consumer_surface_pool.h"
 #include "gst_consumer_surface_allocator.h"
-#include <gst/video/video.h>
 #include "media_errors.h"
 #include "surface_buffer.h"
 #include "buffer_type_meta.h"
@@ -289,6 +290,7 @@ static void gst_surface_pool_src_destroy_surface(GstSurfacePoolSrc *src)
 
 static void gst_surface_pool_src_init_surface(GstSurfacePoolSrc *src)
 {
+    g_return_if_fail(src != nullptr && src->consumerSurface != nullptr);
     // The internal function do not need judge whether it is empty
     GstMemPoolSrc *memsrc = GST_MEM_POOL_SRC(src);
     sptr<Surface> surface = src->consumerSurface;
@@ -299,8 +301,8 @@ static void gst_surface_pool_src_init_surface(GstSurfacePoolSrc *src)
         GstVideoInfo info;
         gst_video_info_init(&info);
         gst_video_info_from_caps(&info, memsrc->caps);
-        width = info.width;
-        height = info.height;
+        width = static_cast<guint>(info.width);
+        height = static_cast<guint>(info.height);
     }
     GST_OBJECT_UNLOCK(memsrc);
     SurfaceError ret = surface->SetUserData("video_width", std::to_string(width));
@@ -343,6 +345,7 @@ static int32_t gst_surface_pool_src_gstformat_to_surfaceformat(GstSurfacePoolSrc
 // it is necessary to apply for the buffers first.
 static void gst_surface_pool_src_init_surface_buffer(GstSurfacePoolSrc *surfacesrc)
 {
+    g_return_if_fail(surfacesrc != nullptr && surfacesrc->producerSurface != nullptr);
     GstMemPoolSrc *memsrc = GST_MEM_POOL_SRC(surfacesrc);
     gint width = DEFAULT_VIDEO_WIDTH;
     gint height = DEFAULT_VIDEO_HEIGHT;
@@ -359,7 +362,7 @@ static void gst_surface_pool_src_init_surface_buffer(GstSurfacePoolSrc *surfaces
     OHOS::BufferRequestConfig g_requestConfig;
     g_requestConfig.width = width;
     g_requestConfig.height = height;
-    g_requestConfig.strideAlignment = surfacesrc->stride;
+    g_requestConfig.strideAlignment = static_cast<gint>(surfacesrc->stride);
     g_requestConfig.format = format;
     g_requestConfig.usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
     g_requestConfig.timeout = 0;
@@ -367,10 +370,18 @@ static void gst_surface_pool_src_init_surface_buffer(GstSurfacePoolSrc *surfaces
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         (void)surfacesrc->producerSurface->RequestBuffer(buffer, releaseFence, g_requestConfig);
-        buffers.push_back(buffer);
+        sptr<OHOS::SyncFence> autoFence = new(std::nothrow) OHOS::SyncFence(releaseFence);
+        if (autoFence != nullptr) {
+            autoFence->Wait(100); // 100ms
+        }
+        if (buffer != nullptr) {
+            buffers.push_back(buffer);
+        }
     }
     for (uint32_t i = 0; i < buffers.size(); ++i) {
-        surfacesrc->producerSurface->CancelBuffer(buffers[i]);
+        if (buffers[i] != nullptr) {
+            surfacesrc->producerSurface->CancelBuffer(buffers[i]);
+        }
     }
 }
 

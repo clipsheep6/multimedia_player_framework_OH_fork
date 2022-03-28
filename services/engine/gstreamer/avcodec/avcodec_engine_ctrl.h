@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace Media {
-class AVCodecEngineCtrl {
+class AVCodecEngineCtrl : public NoCopyable {
 public:
     AVCodecEngineCtrl();
     ~AVCodecEngineCtrl();
@@ -45,8 +45,6 @@ public:
     int32_t ReleaseOutputBuffer(uint32_t index, bool render);
     int32_t SetParameter(const Format &format);
 
-    DISALLOW_COPY_AND_MOVE(AVCodecEngineCtrl);
-
 private:
     static GstBusSyncReply BusSyncHandler(GstBus *bus, GstMessage *message, gpointer userData);
 
@@ -65,6 +63,6 @@ private:
     bool flushAtStart_ = false;
     bool isStart_ = false;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // AVCODEC_ENGINE_CTRL_H

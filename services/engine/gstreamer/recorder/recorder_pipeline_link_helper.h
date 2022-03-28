@@ -23,12 +23,11 @@
 
 namespace OHOS {
 namespace Media {
-class RecorderPipelineLinkHelper {
+class RecorderPipelineLinkHelper : public NoCopyable {
 public:
     RecorderPipelineLinkHelper(const std::shared_ptr<RecorderPipeline> &pipeline,
                                const std::shared_ptr<RecorderPipelineDesc> &desc);
     ~RecorderPipelineLinkHelper();
-    DISALLOW_COPY_AND_MOVE(RecorderPipelineLinkHelper);
 
     int32_t ExecuteLink();
 
@@ -42,6 +41,6 @@ private:
     std::shared_ptr<RecorderPipelineDesc> desc_;
     std::map<GstElement *, std::vector<GstPad *>> requestedPads_;
 };
-}
-}
+} // namespace Media
+} // namespace OHOS
 #endif

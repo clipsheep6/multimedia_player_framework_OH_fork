@@ -21,11 +21,10 @@
 
 namespace OHOS {
 namespace Media {
-class VideoDecoderImpl : public VideoDecoder {
+class VideoDecoderImpl : public VideoDecoder, public NoCopyable {
 public:
     VideoDecoderImpl();
     ~VideoDecoderImpl();
-    DISALLOW_COPY_AND_MOVE(VideoDecoderImpl);
 
     int32_t Configure(const Format &format) override;
     int32_t Prepare() override;
@@ -48,6 +47,6 @@ public:
 private:
     std::shared_ptr<IAVCodecService> codecService_ = nullptr;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // AVCODEC_VIDEO_DECODER_IMPL_H

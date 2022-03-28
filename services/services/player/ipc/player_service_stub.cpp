@@ -45,7 +45,7 @@ PlayerServiceStub::PlayerServiceStub()
 
 PlayerServiceStub::~PlayerServiceStub()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destory", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 int32_t PlayerServiceStub::Init()
@@ -97,6 +97,12 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
     MessageOption &option)
 {
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
+
+    auto remoteDescriptor = data.ReadInterfaceToken();
+    if (PlayerServiceStub::GetDescriptor() != remoteDescriptor) {
+        MEDIA_LOGE("Invalid descriptor");
+        return MSERR_INVALID_OPERATION;
+    }
 
     auto itFunc = playerFuncs_.find(code);
     if (itFunc != playerFuncs_.end()) {
@@ -484,8 +490,7 @@ int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &r
 
     std::string format = data.ReadString();
     MEDIA_LOGI("surfaceFormat is %{public}s!", format.c_str());
-    const std::string surfaceFormat = "SURFACE_FORMAT";
-    (void)surface->SetUserData(surfaceFormat, format);
+    (void)surface->SetUserData("SURFACE_FORMAT", format);
     reply.WriteInt32(SetVideoSurface(surface));
     return MSERR_OK;
 }

@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace Media {
-class AVCodecEngineGstImpl : public IAVCodecEngine {
+class AVCodecEngineGstImpl : public IAVCodecEngine, public NoCopyable {
 public:
     AVCodecEngineGstImpl();
     ~AVCodecEngineGstImpl();
@@ -48,8 +48,6 @@ public:
     int32_t SetParameter(const Format &format) override;
     int32_t SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs) override;
 
-    DISALLOW_COPY_AND_MOVE(AVCodecEngineGstImpl);
-
 private:
     std::string FindMimeTypeByName(AVCodecType type, const std::string &name);
     int32_t HandleMimeType(AVCodecType type, const std::string &name);
@@ -67,6 +65,6 @@ private:
     Format format_;
     CapabilityData capData_;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // AVCODEC_ENGINE_GST_IMPL_H

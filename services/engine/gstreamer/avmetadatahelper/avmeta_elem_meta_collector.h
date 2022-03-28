@@ -82,7 +82,7 @@ enum class AVMetaSourceType : uint8_t {
     PARSER,
 };
 
-class AVMetaElemMetaCollector {
+class AVMetaElemMetaCollector : public NoCopyable {
 public:
     AVMetaElemMetaCollector(AVMetaSourceType type, const MetaResCb &resCb);
     virtual ~AVMetaElemMetaCollector();
@@ -97,8 +97,6 @@ public:
     }
     std::shared_ptr<AVSharedMemory> FetchArtPicture();
     void Stop();
-
-    DISALLOW_COPY_AND_MOVE(AVMetaElemMetaCollector);
 
 protected:
     bool AddProbeToPadList(GList &list);
@@ -165,7 +163,6 @@ public:
 
     void AddMetaSource(GstElement &elem) override;
 };
-}
-}
-
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // AVMETA_ELEM_META_COLLECTOR_H

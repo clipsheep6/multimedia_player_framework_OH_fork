@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef AVCODEC_AUDIO_ENCODER_IMPL_H
 #define AVCODEC_AUDIO_ENCODER_IMPL_H
 
@@ -21,11 +22,10 @@
 
 namespace OHOS {
 namespace Media {
-class AudioEncoderImpl : public AudioEncoder {
+class AudioEncoderImpl : public AudioEncoder, public NoCopyable {
 public:
     AudioEncoderImpl();
     ~AudioEncoderImpl();
-    DISALLOW_COPY_AND_MOVE(AudioEncoderImpl);
 
     int32_t Configure(const Format &format) override;
     int32_t Prepare() override;
@@ -47,6 +47,6 @@ public:
 private:
     std::shared_ptr<IAVCodecService> codecService_ = nullptr;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // AVCODEC_AUDIO_ENCODER_IMPL_H

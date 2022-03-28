@@ -88,6 +88,11 @@ struct _GstVencBase {
     GstBufferPool *inpool;
     GstBufferPool *outpool;
     guint coding_outbuf_cnt;
+    gboolean first_in_frame;
+    gboolean first_out_frame;
+    GstClockTime last_pts;
+    GstClockTime first_frame_pts;
+    guint i_frame_interval;
 };
 
 struct _GstVencBaseClass {

@@ -21,6 +21,7 @@
 #include "directory_ex.h"
 #include "string_ex.h"
 #include "surface_utils.h"
+#include "recorder_napi_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoRecorderNapi"};
@@ -103,9 +104,11 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
 
     recorderNapi->env_ = env;
     recorderNapi->recorder_ = RecorderFactory::CreateRecorder();
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "No memory!");
+    if (recorderNapi->recorder_ == nullptr) {
+        MEDIA_LOGE("failed to CreateRecorder");
+    }
 
-    if (recorderNapi->callbackNapi_ == nullptr) {
+    if (recorderNapi->callbackNapi_ == nullptr && recorderNapi->recorder_ != nullptr) {
         recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
         (void)recorderNapi->recorder_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
@@ -141,6 +144,8 @@ void VideoRecorderNapi::Destructor(napi_env env, void *nativeObject, void *final
 
 napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("CreateVideoRecorder In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -169,6 +174,8 @@ napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_in
 
 napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Prepare In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     napi_value jsThis = nullptr;
@@ -234,6 +241,8 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("GetInputSurface In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -282,6 +291,8 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
 
 napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Start In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -322,6 +333,8 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Pause In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -362,6 +375,8 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Resume In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -402,6 +417,8 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Stop In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -442,6 +459,8 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Reset In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -489,6 +508,8 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
 
 napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
 {
+    MEDIA_LOGD("Release In");
+
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -539,9 +560,9 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    static const size_t MIN_REQUIRED_ARG_COUNT = 2;
-    size_t argCount = MIN_REQUIRED_ARG_COUNT;
-    napi_value args[MIN_REQUIRED_ARG_COUNT] = { nullptr, nullptr };
+    static constexpr size_t minArgCount = 2;
+    size_t argCount = minArgCount;
+    napi_value args[minArgCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {
@@ -589,7 +610,7 @@ void VideoRecorderNapi::GetConfig(napi_env env, napi_value args,
     (void)CommonNapi::GetPropertyInt32(env, args, "videoSourceType", videoSource);
     properties.videoSourceType = static_cast<VideoSourceType>(videoSource);
 
-    (void)CommonNapi::GetPropertyInt32(env, args, "orientationHint", properties.orientationHint);
+    (void)CommonNapi::GetPropertyInt32(env, args, "rotation", properties.orientationHint);
 
     napi_value geoLocation = nullptr;
     napi_get_named_property(env, args, "location", &geoLocation);
@@ -610,14 +631,14 @@ int32_t VideoRecorderNapi::GetVideoRecorderProperties(napi_env env, napi_value a
     (void)CommonNapi::GetPropertyInt32(env, item, "audioBitrate", properties.profile.audioBitrate);
     (void)CommonNapi::GetPropertyInt32(env, item, "audioChannels", properties.profile.audioChannels);
     std::string audioCodec = CommonNapi::GetPropertyString(env, item, "audioCodec");
-    MapStringToCodecMime(audioCodec, properties.profile.audioCodec);
+    (void)MapMimeToAudioCodecFormat(audioCodec, properties.profile.audioCodecFormat);
     (void)CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", properties.profile.auidoSampleRate);
     (void)CommonNapi::GetPropertyInt32(env, item, "durationTime", properties.profile.duration);
     std::string outputFile = CommonNapi::GetPropertyString(env, item, "fileFormat");
-    MapStringToContainerFormat(outputFile, properties.profile.fileFormat);
+    (void)MapExtensionNameToOutputFormat(outputFile, properties.profile.outputFormat);
     (void)CommonNapi::GetPropertyInt32(env, item, "videoBitrate", properties.profile.videoBitrate);
     std::string videoCodec = CommonNapi::GetPropertyString(env, item, "videoCodec");
-    MapStringToCodecMime(videoCodec, properties.profile.videoCodec);
+    (void)MapMimeToVideoCodecFormat(videoCodec, properties.profile.videoCodecFormat);
     (void)CommonNapi::GetPropertyInt32(env, item, "videoFrameWidth", properties.profile.videoFrameWidth);
     (void)CommonNapi::GetPropertyInt32(env, item, "videoFrameHeight", properties.profile.videoFrameHeight);
     (void)CommonNapi::GetPropertyInt32(env, item, "videoFrameRate", properties.profile.videoFrameRate);
@@ -638,14 +659,10 @@ int32_t VideoRecorderNapi::SetVideoRecorderProperties(std::unique_ptr<VideoRecor
         ret = recorder_->SetVideoSource(properties.videoSourceType, ctx->napi->videoSourceID);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set VideoSource");
 
-        OutputFormatType outputFile;
-        MapContainerFormatToOutputFormat(properties.profile.fileFormat, outputFile);
-        ret = recorder_->SetOutputFormat(outputFile);
+        ret = recorder_->SetOutputFormat(properties.profile.outputFormat);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set OutputFormat");
 
-        AudioCodecFormat audioCodec;
-        MapCodecMimeToAudioCodec(properties.profile.audioCodec, audioCodec);
-        ret = recorder_->SetAudioEncoder(ctx->napi->audioSourceID, audioCodec);
+        ret = recorder_->SetAudioEncoder(ctx->napi->audioSourceID, properties.profile.audioCodecFormat);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set audioCodec");
 
         ret = recorder_->SetAudioSampleRate(ctx->napi->audioSourceID, properties.profile.auidoSampleRate);
@@ -660,14 +677,10 @@ int32_t VideoRecorderNapi::SetVideoRecorderProperties(std::unique_ptr<VideoRecor
         ret = recorder_->SetVideoSource(properties.videoSourceType, ctx->napi->videoSourceID);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set VideoSource");
 
-        OutputFormatType outputFile;
-        MapContainerFormatToOutputFormat(properties.profile.fileFormat, outputFile);
-        ret = recorder_->SetOutputFormat(outputFile);
+        ret = recorder_->SetOutputFormat(properties.profile.outputFormat);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set OutputFormat");
     }
-    VideoCodecFormat videoCodec;
-    MapCodecMimeToVideoCodec(properties.profile.videoCodec, videoCodec);
-    ret = recorder_->SetVideoEncoder(ctx->napi->videoSourceID, videoCodec);
+    ret = recorder_->SetVideoEncoder(ctx->napi->videoSourceID, properties.profile.videoCodecFormat);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set videoCodec");
 
     ret = recorder_->SetVideoSize(ctx->napi->videoSourceID, properties.profile.videoFrameWidth,

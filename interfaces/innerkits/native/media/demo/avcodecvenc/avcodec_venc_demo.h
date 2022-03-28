@@ -32,11 +32,10 @@ public:
     std::queue<uint32_t> bufferQueue_;
 };
 
-class VEncDemoCallback : public AVCodecCallback {
+class VEncDemoCallback : public AVCodecCallback, public NoCopyable {
 public:
     explicit VEncDemoCallback(std::shared_ptr<VEncSignal> signal);
     virtual ~VEncDemoCallback() = default;
-    DISALLOW_COPY_AND_MOVE(VEncDemoCallback);
 
     void OnError(AVCodecErrorType errorType, int32_t errorCode) override;
     void OnOutputFormatChanged(const Format &format) override;
@@ -47,11 +46,11 @@ private:
     std::shared_ptr<VEncSignal> signal_;
 };
 
-class VEncDemo {
+class VEncDemo : public NoCopyable {
 public:
     VEncDemo() = default;
     virtual ~VEncDemo() = default;
-    DISALLOW_COPY_AND_MOVE(VEncDemo);
+
     void RunCase(bool enableProp);
     void GenerateData(uint32_t count, uint32_t fps);
 
@@ -76,6 +75,6 @@ private:
     sptr<Surface> surface_ = nullptr;
     int64_t timestampNs_ = 0;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // AVCODEC_VENC_DEMO_H

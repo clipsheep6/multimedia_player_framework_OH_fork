@@ -227,7 +227,7 @@ static bool ParseGValueSimple(const GValue &value, const MetaParseItem &item, Fo
         case G_TYPE_INT: {
             gint num = g_value_get_int(&value);
             ret = metadata.PutIntValue(item.toKey, num);
-            MEDIA_LOGD("toKey: %{public}s, value: %{public}d", item.toKey.data(), num);
+            MEDIA_LOGD("toKey: %{public}s, value: %{public}u", item.toKey.data(), num);
             break;
         }
         case G_TYPE_UINT64: {
@@ -301,7 +301,7 @@ static bool ImageMetaSetter(const GValue &gval, const std::string_view &key, For
         return false;
     }
 
-    static const gsize minImageSize = 32;
+    static constexpr gsize minImageSize = 32;
     CHECK_AND_RETURN_RET(mapInfo.data != nullptr && mapInfo.size > minImageSize, false);
 
     bool ret = true;
@@ -328,5 +328,5 @@ static bool ImageMetaSetter(const GValue &gval, const std::string_view &key, For
     gst_buffer_unmap(imageBuf, &mapInfo);
     return ret;
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

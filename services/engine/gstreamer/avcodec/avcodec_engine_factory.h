@@ -18,7 +18,6 @@
 
 #include <memory>
 #include "format_processor/processor_base.h"
-#include "nocopyable.h"
 #include "sink_wrapper/sink_base.h"
 #include "src_wrapper/src_base.h"
 
@@ -28,13 +27,11 @@ class AVCodecEngineFactory {
 public:
     AVCodecEngineFactory() = delete;
     ~AVCodecEngineFactory() = delete;
-    DISALLOW_COPY_AND_MOVE(AVCodecEngineFactory);
 
     static std::unique_ptr<ProcessorBase> CreateProcessor(AVCodecType type);
     static std::unique_ptr<SinkBase> CreateSink(SinkType type);
     static std::unique_ptr<SrcBase> CreateSrc(SrcType type);
 };
-}  // namespace Media
-}  // namespace OHOS
-
+} // namespace Media
+} // namespace OHOS
 #endif // AVCODEC_ENGINE_FACTORY_H

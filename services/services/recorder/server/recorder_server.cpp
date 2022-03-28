@@ -165,32 +165,15 @@ sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
     return recorderEngine_->GetSurface(sourceId);
 }
 
-bool RecorderServer::GetSystemParam()
-{
-    std::string permissionEnable;
-    int32_t res = OHOS::system::GetStringParameter("sys.media.audioSource.closepermission", permissionEnable, "");
-    if (res != 0 || permissionEnable.empty()) {
-        MEDIA_LOGD("sys.media.audioSource.permission is working");
-        return false;
-    }
-    MEDIA_LOGD("sys.media.audioSource.closepermission =%{public}s", permissionEnable.c_str());
-    if (permissionEnable == "true") {
-        return true;
-    }
-    return false;
-}
-
 int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
 
-    if (!GetSystemParam()) {
-        if (!CheckPermission()) {
-            MEDIA_LOGE("Permission check failed!");
-            return MSERR_INVALID_VAL;
-        }
+    if (!CheckPermission()) {
+        MEDIA_LOGE("Permission check failed!");
+        return MSERR_INVALID_VAL;
     }
 
     return recorderEngine_->SetAudioSource(source, sourceId);
@@ -317,7 +300,6 @@ void RecorderServer::SetOrientationHint(int32_t rotation)
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
     RotationAngle rotationAngle(rotation);
     recorderEngine_->Configure(DUMMY_SOURCE_ID, rotationAngle);
-    return;
 }
 
 int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
@@ -438,5 +420,5 @@ int32_t RecorderServer::SetParameter(int32_t sourceId, const Format &format)
     (void)format;
     return MSERR_OK;
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

@@ -24,15 +24,15 @@
 
 namespace OHOS {
 namespace Media {
-class MediaSurfaceImpl : public MediaSurface {
+class MediaSurfaceImpl : public MediaSurface, public NoCopyable {
 public:
     MediaSurfaceImpl();
     ~MediaSurfaceImpl();
-    DISALLOW_COPY_AND_MOVE(MediaSurfaceImpl);
-    virtual std::string GetSurfaceId(const sptr<Surface> &surface) override;
-    virtual sptr<Surface> GetSurface() override;
-    virtual sptr<Surface> GetSurface(const std::string &id) override;
-    virtual void Release() override;
+
+    std::string GetSurfaceId(const sptr<Surface> &surface) override;
+    sptr<Surface> GetSurface() override;
+    sptr<Surface> GetSurface(const std::string &id) override;
+    void Release() override;
 
 private:
     std::mutex mutex_;
@@ -43,6 +43,6 @@ private:
     std::map<std::string, wptr<Surface>> surfaceMap_;
     sptr<Surface> producerSurface_ = nullptr;
 };
-}
-}
+} // namespace Media
+} // namespace OHOS
 #endif // MEDIA_SURFACE_IMPL_H

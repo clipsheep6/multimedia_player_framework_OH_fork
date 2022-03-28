@@ -23,6 +23,7 @@
 #include "directory_ex.h"
 #include "string_ex.h"
 #include "common_napi.h"
+#include "recorder_napi_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioRecorderNapi"};
@@ -32,9 +33,9 @@ namespace OHOS {
 namespace Media {
 napi_ref AudioRecorderNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AudioRecorder";
-const int32_t DEFAULT_AUDIO_ENCODER_BIT_RATE = 48000;
-const int32_t DEFAULT_AUDIO_SAMPLE_RATE = 48000;
-const int32_t DEFAULT_NUMBER_OF_CHANNELS = 2;
+constexpr int32_t DEFAULT_AUDIO_ENCODER_BIT_RATE = 48000;
+constexpr int32_t DEFAULT_AUDIO_SAMPLE_RATE = 48000;
+constexpr int32_t DEFAULT_NUMBER_OF_CHANNELS = 2;
 
 AudioRecorderNapi::AudioRecorderProperties::AudioRecorderProperties()
     : sourceType(AUDIO_SOURCE_DEFAULT),
@@ -118,13 +119,17 @@ napi_value AudioRecorderNapi::Constructor(napi_env env, napi_callback_info info)
 
     recorderNapi->env_ = env;
     recorderNapi->recorderImpl_ = RecorderFactory::CreateRecorder();
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->recorderImpl_ != nullptr, nullptr, "No memory");
+    if (recorderNapi->recorderImpl_ == nullptr) {
+        MEDIA_LOGE("failed to CreateRecorder");
+    }
 
     recorderNapi->taskQue_ = std::make_unique<TaskQueue>("RecorderNapi");
     (void)recorderNapi->taskQue_->Start();
 
-    recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
-    (void)recorderNapi->recorderImpl_->SetRecorderCallback(recorderNapi->callbackNapi_);
+    if (recorderNapi->callbackNapi_ == nullptr && recorderNapi->recorderImpl_ != nullptr) {
+        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
+        (void)recorderNapi->recorderImpl_->SetRecorderCallback(recorderNapi->callbackNapi_);
+    }
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(recorderNapi),
         AudioRecorderNapi::Destructor, nullptr, &(recorderNapi->wrapper_));
@@ -258,18 +263,14 @@ int32_t AudioRecorderNapi::GetAudioEncAndFileFormat(napi_env env, napi_value arg
     bool ret = false;
     napi_status status = napi_has_named_property(env, args, "fileFormat", &ret);
     if (status == napi_ok && ret) {
-        ContainerFormatType tempCFT;
         std::string outputFile = CommonNapi::GetPropertyString(env, args, "fileFormat");
-        MapStringToContainerFormat(outputFile, tempCFT);
-        MapContainerFormatToOutputFormat(tempCFT, properties.outputFormatType);
+        (void)MapExtensionNameToOutputFormat(outputFile, properties.outputFormatType);
     }
 
     status = napi_has_named_property(env, args, "audioEncoderMime", &ret);
     if (status == napi_ok && ret) {
-        CodecMimeType tempCMT;
-        std::string audioCodec = CommonNapi::GetPropertyString(env, args, "audioEncoderMime");
-        MapStringToCodecMime(audioCodec, tempCMT);
-        MapCodecMimeToAudioCodec(tempCMT, properties.audioCodecFormat);
+        std::string audioMime = CommonNapi::GetPropertyString(env, args, "audioEncoderMime");
+        (void)MapMimeToAudioCodecFormat(audioMime, properties.audioCodecFormat);
     }
 
     return MSERR_OK;
@@ -585,9 +586,9 @@ napi_value AudioRecorderNapi::On(napi_env env, napi_callback_info info)
     napi_value undefinedResult = nullptr;
     napi_get_undefined(env, &undefinedResult);
 
-    static const size_t MIN_REQUIRED_ARG_COUNT = 2;
-    size_t argCount = MIN_REQUIRED_ARG_COUNT;
-    napi_value args[MIN_REQUIRED_ARG_COUNT] = { nullptr };
+    static constexpr size_t minArgCount = 2;
+    size_t argCount = minArgCount;
+    napi_value args[minArgCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {
@@ -677,5 +678,5 @@ void AudioRecorderNapi::StateCallback(const std::string &callbackName)
         napiCb->SendStateCallback(callbackName);
     }
 }
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS

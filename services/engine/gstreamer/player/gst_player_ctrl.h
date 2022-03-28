@@ -28,11 +28,11 @@
 
 namespace OHOS {
 namespace Media {
-class GstPlayerCtrl {
+class GstPlayerCtrl : public NoCopyable {
 public:
     explicit GstPlayerCtrl(GstPlayer *gstPlayer);
     ~GstPlayerCtrl();
-    DISALLOW_COPY_AND_MOVE(GstPlayerCtrl);
+
     int32_t SetUrl(const std::string &url);
     int32_t SetSource(const std::shared_ptr<GstAppsrcWarp> &appsrcWarp);
     int32_t SetCallbacks(const std::weak_ptr<IPlayerEngineObs> &obs);
@@ -113,6 +113,7 @@ private:
     std::condition_variable condVarPauseSync_;
     std::condition_variable condVarStopSync_;
     std::condition_variable condVarSeekSync_;
+    std::condition_variable condVarPreparingSync_;
     GstPlayer *gstPlayer_ = nullptr;
     TaskQueue taskQue_;
     std::weak_ptr<IPlayerEngineObs> obs_;
@@ -131,6 +132,7 @@ private:
     uint32_t mqNumUseBuffering_ = 0;
     bool seekDoneNeedCb_ = false;
     bool endOfStreamCb_ = false;
+    bool preparing_ = false;
     std::vector<gulong> signalIds_;
     gulong signalIdVolume_ = 0;
     GstElement *audioSink_ = nullptr;
@@ -147,7 +149,8 @@ private:
     std::shared_ptr<GstPlayerTrackParse> trackParse_ = nullptr;
     int32_t videoWidth_ = 0;
     int32_t videoHeight_ = 0;
+    bool isHardWare_ = false;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // GST_PLAYER_CTRL_H

@@ -23,8 +23,8 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-static const uint32_t MEDIA_TYPE_AUD = 0;
-static const uint32_t MEDIA_TYPE_VID = 1;
+static constexpr uint32_t MEDIA_TYPE_AUD = 0;
+static constexpr uint32_t MEDIA_TYPE_VID = 1;
 static const std::unordered_map<std::string_view, std::string> TRACK_FORMAT_STRING_CHANGE = {
     {PlayerKeys::PLAYER_WIDTH, "width"}, {PlayerKeys::PLAYER_HEIGHT, "height"}, {PlayerKeys::PLAYER_MIME, "codec_mime"},
     {PlayerKeys::PLAYER_BITRATE, "bitrate"}, {PlayerKeys::PLAYER_FRAMERATE, "framerate"},
@@ -285,7 +285,7 @@ void GstPlayerTrackParse::ParseTag(const GstTagList *tagList, guint tagIndex,
 }
 
 void GstPlayerTrackParse::ParseTagAndSaveTrackInfo(const GstPad *pad, const GstTagList *tagList,
-    std::vector<std::string_view> expectedTagFields,
+    const std::vector<std::string_view> &expectedTagFields,
     std::vector<std::unordered_map<GstPad *, std::unordered_map<std::string, std::string>>> &trackInfoVec)
 {
     std::unordered_map<std::string, std::string> *trackInfoMap;
@@ -389,5 +389,5 @@ bool GstPlayerTrackParse::GetDemuxerElementFind()
 {
     return demuxerElementFind_;
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

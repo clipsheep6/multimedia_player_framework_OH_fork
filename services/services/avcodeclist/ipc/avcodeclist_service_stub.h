@@ -26,11 +26,11 @@
 
 namespace OHOS {
 namespace Media {
-class AVCodecListServiceStub : public IRemoteStub<IStandardAVCodecListService> {
+class AVCodecListServiceStub : public IRemoteStub<IStandardAVCodecListService>, public NoCopyable {
 public:
     static sptr<AVCodecListServiceStub> Create();
     virtual ~AVCodecListServiceStub();
-    DISALLOW_COPY_AND_MOVE(AVCodecListServiceStub);
+
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     std::string FindVideoDecoder(const Format &format) override;
     std::string FindVideoEncoder(const Format &format) override;
@@ -53,6 +53,6 @@ private:
     std::map<uint32_t, AVCodecListStubFunc> codecListFuncs_;
     std::mutex mutex_;
 };
-}
+} // namespace Media
 } // namespace OHOS
 #endif // AVCODECLIST_SERVICE_STUB_H

@@ -25,7 +25,7 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetaFrameConv"};
-    static const int32_t KEEP_ORIGINAL_WIDTH_OR_HEIGHT = -1;
+    static constexpr int32_t KEEP_ORIGINAL_WIDTH_OR_HEIGHT = -1;
 }
 
 namespace OHOS {
@@ -197,7 +197,7 @@ int32_t AVMetaFrameConverter::Reset()
 
     /**
      * Must flush before change state and delete the msgProcessor, otherwise deadlock will
-     * happend when try to destory the msgprocessor.
+     * happened when try to destroy the msgprocessor.
      */
     auto tempMsgProc = std::move(msgProcessor_);
     lock.unlock();
@@ -391,5 +391,5 @@ GstFlowReturn AVMetaFrameConverter::OnNotifyNewSample(GstElement *elem, AVMetaFr
     thiz->cond_.notify_all();
     return GST_FLOW_OK;
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

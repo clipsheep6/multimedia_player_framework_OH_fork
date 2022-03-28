@@ -23,14 +23,14 @@
 
 namespace OHOS {
 namespace Media {
-class AVMetadataHelperDemo {
+class AVMetadataHelperDemo : public NoCopyable {
 public:
     AVMetadataHelperDemo() = default;
     ~AVMetadataHelperDemo() = default;
-    DISALLOW_COPY_AND_MOVE(AVMetadataHelperDemo);
     void RunCase(const std::string &pathOuter);
 
 private:
+    int32_t SetSource(const std::string &pathOuter);
     void GetMetadata(std::queue<std::string_view> &options);
     void FetchFrame(std::queue<std::string_view> &options);
     void FetchArtPicture(std::queue<std::string_view> &option);
@@ -38,6 +38,6 @@ private:
     void DoNext();
     std::shared_ptr<AVMetadataHelper> avMetadataHelper_;
 };
-}
-}
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // AVMETADATAHELPER_DEMO_H

@@ -14,6 +14,7 @@
  */
 
 #include "gst_surface_allocator.h"
+#include <sync_fence.h>
 #include "media_log.h"
 
 #define gst_surface_allocator_parent_class parent_class
@@ -32,15 +33,15 @@ gboolean gst_surface_allocator_set_surface(GstSurfaceAllocator *allocator, OHOS:
     return TRUE;
 }
 
-GstSurfaceMemory *gst_surface_allocator_alloc(GstSurfaceAllocator *allocator,
-    gint width, gint height, PixelFormat format, gint usage)
+GstSurfaceMemory *gst_surface_allocator_alloc(GstSurfaceAllocator *allocator, GstSurfaceAllocParam param)
 {
-    g_return_val_if_fail(allocator != nullptr && allocator->surface != nullptr && usage >= 0, nullptr);
+    g_return_val_if_fail(allocator != nullptr && allocator->surface != nullptr, nullptr);
 
     static constexpr int32_t stride_alignment = 8;
+    int32_t wait_time = param.dont_wait ? 0 : INT_MAX; // wait forever or no wait.
     OHOS::BufferRequestConfig request_config = {
-        width, height, stride_alignment, format, static_cast<uint32_t>(usage) |
-        HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA, 0
+        param.width, param.height, stride_alignment, param.format, static_cast<uint32_t>(param.usage) |
+        HBM_USE_CPU_READ | HBM_USE_MEM_DMA, wait_time
     };
     int32_t release_fence = -1;
     OHOS::sptr<OHOS::SurfaceBuffer> surface_buffer = nullptr;
@@ -50,6 +51,10 @@ GstSurfaceMemory *gst_surface_allocator_alloc(GstSurfaceAllocator *allocator,
     }
     if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK || surface_buffer == nullptr) {
         return nullptr;
+    }
+    OHOS::sptr<OHOS::SyncFence> autoFence = new(std::nothrow) OHOS::SyncFence(release_fence);
+    if (autoFence != nullptr) {
+        autoFence->Wait(100); // 100ms
     }
 
     GstSurfaceMemory *memory = reinterpret_cast<GstSurfaceMemory *>(g_slice_alloc0(sizeof(GstSurfaceMemory)));
@@ -63,10 +68,10 @@ GstSurfaceMemory *gst_surface_allocator_alloc(GstSurfaceAllocator *allocator,
         surface_buffer->GetSize(), 0, 0, surface_buffer->GetSize());
 
     memory->buf = surface_buffer;
-    memory->fence = release_fence;
+    memory->fence = -1;
     memory->needRender = FALSE;
     GST_DEBUG("alloc surface buffer for width: %d, height: %d, format: %d, size: %u",
-        width, height, format, surface_buffer->GetSize());
+        param.width, param.height, param.format, surface_buffer->GetSize());
 
     return memory;
 }
@@ -105,10 +110,10 @@ static gpointer gst_surface_allocator_mem_map(GstMemory *mem, gsize maxsize, Gst
     g_return_val_if_fail(mem != nullptr, nullptr);
     g_return_val_if_fail(gst_is_surface_memory(mem), nullptr);
 
-    GstSurfaceMemory *surfaceMem = reinterpret_cast<GstSurfaceMemory *>(mem);
-    g_return_val_if_fail(surfaceMem->buf != nullptr, nullptr);
+    GstSurfaceMemory *sf_mem = reinterpret_cast<GstSurfaceMemory *>(mem);
+    g_return_val_if_fail(sf_mem->buf != nullptr, nullptr);
 
-    return surfaceMem->buf->GetVirAddr();
+    return sf_mem->buf->GetVirAddr();
 }
 
 static void gst_surface_allocator_mem_unmap(GstMemory *mem)
@@ -118,14 +123,14 @@ static void gst_surface_allocator_mem_unmap(GstMemory *mem)
 
 static void gst_surface_allocator_init(GstSurfaceAllocator *allocator)
 {
-    GstAllocator *bAllocator = GST_ALLOCATOR_CAST(allocator);
-    g_return_if_fail(bAllocator != nullptr);
+    GstAllocator *base_allocator = GST_ALLOCATOR_CAST(allocator);
+    g_return_if_fail(base_allocator != nullptr);
 
     GST_DEBUG_OBJECT(allocator, "init allocator 0x%06" PRIXPTR "", FAKE_POINTER(allocator));
 
-    bAllocator->mem_type = GST_SURFACE_MEMORY_TYPE;
-    bAllocator->mem_map = (GstMemoryMapFunction)gst_surface_allocator_mem_map;
-    bAllocator->mem_unmap = (GstMemoryUnmapFunction)gst_surface_allocator_mem_unmap;
+    base_allocator->mem_type = GST_SURFACE_MEMORY_TYPE;
+    base_allocator->mem_map = (GstMemoryMapFunction)gst_surface_allocator_mem_map;
+    base_allocator->mem_unmap = (GstMemoryUnmapFunction)gst_surface_allocator_mem_unmap;
 }
 
 static void gst_surface_allocator_finalize(GObject *obj)
@@ -133,6 +138,7 @@ static void gst_surface_allocator_finalize(GObject *obj)
     GstSurfaceAllocator *allocator = GST_SURFACE_ALLOCATOR_CAST(obj);
     g_return_if_fail(allocator != nullptr);
 
+    allocator->surface = nullptr;
     GST_DEBUG_OBJECT(allocator, "finalize allocator 0x%06" PRIXPTR "", FAKE_POINTER(allocator));
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }

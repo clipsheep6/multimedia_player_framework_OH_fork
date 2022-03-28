@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace Media {
-class AVMetaFrameExtractor {
+class AVMetaFrameExtractor : public NoCopyable {
 public:
     AVMetaFrameExtractor();
     ~AVMetaFrameExtractor();
@@ -35,8 +35,6 @@ public:
     std::shared_ptr<AVSharedMemory> ExtractFrame(int64_t timeUs, int32_t option, const OutputConfiguration &param);
     void Reset();
     void NotifyPlayBinMsg(const PlayBinMessage &msg);
-
-    DISALLOW_COPY_AND_MOVE(AVMetaFrameExtractor);
 
 private:
     int32_t SetupVideoSink();
@@ -57,7 +55,6 @@ private:
     std::unique_ptr<AVMetaFrameConverter> frameConverter_;
     std::vector<gulong> signalIds_;
 };
-}
-}
-
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // AVMETA_FRAME_EXTRACTOR_H

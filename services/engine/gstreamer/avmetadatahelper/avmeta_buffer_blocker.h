@@ -27,9 +27,9 @@ namespace OHOS {
 namespace Media {
 /**
  * Utility for easy to process the work that block buffer on one element's pads.
- * Only avaliable for avmeta_meta_collector.
+ * Only available for avmeta_meta_collector.
  */
-class AVMetaBufferBlocker : public std::enable_shared_from_this<AVMetaBufferBlocker> {
+class AVMetaBufferBlocker : public std::enable_shared_from_this<AVMetaBufferBlocker>, public NoCopyable {
 public:
     using BufferRecievedNotifier = std::function<void(void)>;
     // direction == true means block srcpads's buffer
@@ -42,7 +42,6 @@ public:
     void Remove();
     void Hide();
 
-    DISALLOW_COPY_AND_MOVE(AVMetaBufferBlocker);
 private:
     static GstPadProbeReturn BlockCallback(GstPad *pad, GstPadProbeInfo *info, gpointer usrdata);
     static void PadAdded(GstElement *elem, GstPad *pad, gpointer userdata);
@@ -50,11 +49,12 @@ private:
     void OnPadAdded(GstElement &elem, GstPad &pad);
     bool CheckUpStreamBlocked(GstPad &pad);
     void AddPadProbe(GstPad &pad, GstPadProbeType type);
+    bool CheckBufferDetected(GstPadProbeInfo &info);
 
     struct PadInfo {
         GstPad *pad;
         gulong probeId;
-        bool hasBuffer;
+        bool detected;
         bool blocked;
     };
 
@@ -68,6 +68,6 @@ private:
     bool direction_;
     BufferRecievedNotifier notifier_;
 };
-}
-}
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // AVMETA_BUFFER_BLOCKER_H

@@ -21,6 +21,7 @@
 #include "avcodeclist_demo.h"
 #include "avcodec_venc_demo.h"
 #include "avcodec_vdec_demo.h"
+#include "avmuxer_demo.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -99,6 +100,18 @@ static int RunVideoDecoder()
     return 0;
 }
 
+static int RunAVMuxer()
+{
+    auto avmuxer = std::make_unique<AVMuxerDemo>();
+    if (avmuxer == nullptr) {
+        cout << "avmuxer is null" << endl;
+        return 0;
+    }
+    avmuxer->RunCase();
+    cout << "demo avmuxer end" << endl;
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     constexpr int minRequiredArgCount = 2;
@@ -106,7 +119,7 @@ int main(int argc, char *argv[])
     if (argc >= minRequiredArgCount && argv[1] != nullptr) {
         path = argv[1];
     }
-    cout << "Please select a demo scenario number(defult player): " << endl;
+    cout << "Please select a demo scenario number(default player): " << endl;
     cout << "0:player" << endl;
     cout << "1:recorder" << endl;
     cout << "2:avmetadatahelper" << endl;
@@ -114,6 +127,7 @@ int main(int argc, char *argv[])
     cout << "4:video-encoder-prop-disable" << endl;
     cout << "5:video-encoder-prop-enable" << endl;
     cout << "6:video-decoder" << endl;
+    cout << "7:avmuxer" << endl;
     string mode;
     (void)getline(cin, mode);
     if (mode == "" || mode == "0") {
@@ -130,6 +144,8 @@ int main(int argc, char *argv[])
         (void)RunVideoEncoder(true);
     } else if (mode == "6") {
         (void)RunVideoDecoder();
+    } else if (mode == "7") {
+        (void)RunAVMuxer();
     } else {
         cout << "no that selection" << endl;
     }

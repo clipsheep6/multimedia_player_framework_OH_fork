@@ -20,10 +20,16 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerUtil"};
+<<<<<<< HEAD
     constexpr uint32_t MSTONS = 1000000;
     constexpr uint32_t NUM_ZERO = 0;
     constexpr uint32_t NUM_ONE = 1;
     constexpr uint32_t NUM_TWO = 2;
+=======
+    constexpr uint32_t CAPS_FIELD_NAME_INDEX = 0;
+    constexpr uint32_t CAPS_FIELD_TYPE_INDEX = 1;
+    constexpr uint32_t CAPS_FIELD_VALUE_INDEX = 2;
+>>>>>>> 604c0dc07647ad318c86796aac08fc2c51df1464
 }
 
 namespace OHOS {
@@ -108,16 +114,28 @@ static void AddOptionCaps(GstCaps *src_caps, const std::string &mimeType)
             case G_TYPE_BOOLEAN:
             case G_TYPE_INT:
                 gst_caps_set_simple(src_caps,
+<<<<<<< HEAD
                     std::get<NUM_ZERO>(elements).c_str(),
                     std::get<NUM_ONE>(elements),
                     std::get<NUM_TWO>(elements).val_.intVal,
+=======
+                    std::get<CAPS_FIELD_NAME_INDEX>(elements).c_str(),
+                    std::get<CAPS_FIELD_TYPE_INDEX>(elements),
+                    std::get<CAPS_FIELD_VALUE_INDEX>(elements).val_.intVal,
+>>>>>>> 604c0dc07647ad318c86796aac08fc2c51df1464
                     nullptr);
                 break;
             case G_TYPE_STRING:
                 gst_caps_set_simple(src_caps,
+<<<<<<< HEAD
                     std::get<NUM_ZERO>(elements).c_str(),
                     std::get<NUM_ONE>(elements),
                     std::get<NUM_TWO>(elements).val_.stringVal,
+=======
+                    std::get<CAPS_FIELD_NAME_INDEX>(elements).c_str(),
+                    std::get<CAPS_FIELD_TYPE_INDEX>(elements),
+                    std::get<CAPS_FIELD_VALUE_INDEX>(elements).val_.stringVal,
+>>>>>>> 604c0dc07647ad318c86796aac08fc2c51df1464
                     nullptr);
                 break;
             default:
@@ -158,6 +176,7 @@ int32_t AVMuxerUtil::SetCaps(const MediaDescription &trackDesc, const std::strin
 
     return MSERR_OK;
 }
+<<<<<<< HEAD
 
 int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
     GstAppSrc *src, GstShMemWrapAllocator *allocator)
@@ -189,5 +208,7 @@ int32_t AVMuxerUtil::WriteData(std::shared_ptr<AVSharedMemory> sampleData, const
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call PushCodecData");
     return MSERR_OK;
 }
+=======
+>>>>>>> 604c0dc07647ad318c86796aac08fc2c51df1464
 }
 }

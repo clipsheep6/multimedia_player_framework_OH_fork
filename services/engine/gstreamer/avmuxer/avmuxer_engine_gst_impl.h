@@ -35,7 +35,11 @@ public:
 
     std::vector<std::string> GetAVMuxerFormatList() override;
     int32_t Init() override;
+<<<<<<< HEAD
     int32_t SetOutput(const std::string &path, const std::string &format) override;
+=======
+    int32_t SetOutput(int32_t fd, const std::string &format) override;
+>>>>>>> 604c0dc07647ad318c86796aac08fc2c51df1464
     int32_t SetLocation(float latitude, float longitude) override;
     int32_t SetOrientationHint(int degrees) override;
     int32_t AddTrack(const MediaDescription &trackDesc, int32_t &trackId) override;
@@ -44,6 +48,10 @@ public:
     int32_t Stop() override;
 private:
     void SetParse(const std::string &mimeType);
+<<<<<<< HEAD
+=======
+    int32_t WriteData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo, GstAppSrc *src);
+>>>>>>> 604c0dc07647ad318c86796aac08fc2c51df1464
     int32_t SetupMsgProcessor();
     void OnNotifyMessage(const InnerMessage &msg);
     void Clear();

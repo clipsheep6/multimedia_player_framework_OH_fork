@@ -49,8 +49,7 @@ void PlayerCallbackNapi::SaveCallbackReference(const std::string &callbackName, 
 {
     std::lock_guard<std::mutex> lock(mutex_);
     napi_ref callback = nullptr;
-    const int32_t refCount = 1;
-    napi_status status = napi_create_reference(env_, args, refCount, &callback);
+    napi_status status = napi_create_reference(env_, args, 1, &callback);
     CHECK_AND_RETURN_LOG(status == napi_ok && callback != nullptr, "creating reference for callback fail");
 
     std::shared_ptr<AutoRef> cb = std::make_shared<AutoRef>(env_, callback);
@@ -241,9 +240,9 @@ void PlayerCallbackNapi::OnStateChangeCb(PlayerStates state)
     return OnJsCallBack(cb);
 }
 
-void PlayerCallbackNapi::OnPositionUpdateCb(int32_t postion) const
+void PlayerCallbackNapi::OnPositionUpdateCb(int32_t position) const
 {
-    MEDIA_LOGD("OnPositionUpdateCb is called, postion: %{public}d", postion);
+    MEDIA_LOGD("OnPositionUpdateCb is called, position: %{public}d", position);
 }
 
 void PlayerCallbackNapi::OnMessageCb(int32_t type) const
@@ -354,9 +353,8 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
             CHECK_AND_RETURN_LOG(nstatus == napi_ok, "create error callback fail");
 
             // Call back function
-            const size_t argCount = 1;
             napi_value result = nullptr;
-            nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
+            nstatus = napi_call_function(env, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to napi call function", request.c_str());
         } while (0);
         delete event;
@@ -409,9 +407,8 @@ void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
                 "%{public}s fail to create callback", request.c_str());
 
-            const size_t argCount = 1;
             napi_value result = nullptr;
-            nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
+            nstatus = napi_call_function(env, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to call seekDone callback", request.c_str());
         } while (0);
         delete event;
@@ -482,5 +479,5 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
         delete work;
     }
 }
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS

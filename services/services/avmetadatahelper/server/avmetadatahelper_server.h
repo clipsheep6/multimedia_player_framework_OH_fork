@@ -20,17 +20,18 @@
 #include "i_avmetadatahelper_service.h"
 #include "i_avmetadatahelper_engine.h"
 #include "nocopyable.h"
+#include "uri_helper.h"
 
 namespace OHOS {
 namespace Media {
-class AVMetadataHelperServer : public IAVMetadataHelperService {
+class AVMetadataHelperServer : public IAVMetadataHelperService, public NoCopyable {
 public:
     static std::shared_ptr<IAVMetadataHelperService> Create();
     AVMetadataHelperServer();
     virtual ~AVMetadataHelperServer();
-    DISALLOW_COPY_AND_MOVE(AVMetadataHelperServer);
 
     int32_t SetSource(const std::string &uri, int32_t usage) override;
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override;
     std::string ResolveMetadata(int32_t key) override;
     std::unordered_map<int32_t, std::string> ResolveMetadata() override;
     std::shared_ptr<AVSharedMemory> FetchArtPicture() override;
@@ -40,6 +41,7 @@ public:
 private:
     std::shared_ptr<IAVMetadataHelperEngine> avMetadataHelperEngine_ = nullptr;
     std::mutex mutex_;
+    std::unique_ptr<UriHelper> uriHelper_;
 };
 } // namespace Media
 } // namespace OHOS

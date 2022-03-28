@@ -19,12 +19,14 @@
 #include "common_napi.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "audio_info.h"
+#include "audio_capturer_napi.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecNapiUtil"};
     const std::map<std::string, OHOS::Media::FormatDataType> FORMAT = {
         {"codec_mime", OHOS::Media::FORMAT_TYPE_STRING},
-        {"audio_raw_format", OHOS::Media::FORMAT_TYPE_INT32},
+        {"audio_sample_format", OHOS::Media::FORMAT_TYPE_INT32},
         {"bitrate", OHOS::Media::FORMAT_TYPE_INT32},
         {"max_input_size", OHOS::Media::FORMAT_TYPE_INT32},
         {"max_encoder_fps", OHOS::Media::FORMAT_TYPE_INT32},
@@ -48,6 +50,14 @@ namespace {
         {"channel_count", OHOS::Media::FORMAT_TYPE_INT32},
         {"sample_rate", OHOS::Media::FORMAT_TYPE_INT32},
         {"vendor.custom", OHOS::Media::FORMAT_TYPE_ADDR},
+    };
+    const std::map<OHOS::AudioStandard::AudioCapturerNapi::AudioSampleFormat,
+        OHOS::AudioStandard::AudioSampleFormat> SAMPLE_FORMAT_MAP = {
+        {OHOS::AudioStandard::AudioCapturerNapi::SAMPLE_FORMAT_INVALID, OHOS::AudioStandard::INVALID_WIDTH},
+        {OHOS::AudioStandard::AudioCapturerNapi::SAMPLE_FORMAT_U8, OHOS::AudioStandard::SAMPLE_U8},
+        {OHOS::AudioStandard::AudioCapturerNapi::SAMPLE_FORMAT_S16LE, OHOS::AudioStandard::SAMPLE_S16LE},
+        {OHOS::AudioStandard::AudioCapturerNapi::SAMPLE_FORMAT_S24LE, OHOS::AudioStandard::SAMPLE_S24LE},
+        {OHOS::AudioStandard::AudioCapturerNapi::SAMPLE_FORMAT_S32LE, OHOS::AudioStandard::SAMPLE_S32LE},
     };
 }
 
@@ -95,7 +105,7 @@ napi_value AVCodecNapiUtil::CreateOutputCodecBuffer(napi_env env, uint32_t index
     napi_status status = napi_create_object(env, &buffer);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
-    const int32_t msToUs = 1000;
+    constexpr int32_t msToUs = 1000;
     CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt32(env, buffer, "timeMs",
         info.presentationTimeUs / msToUs) == true, nullptr);
     CHECK_AND_RETURN_RET(CommonNapi::AddNumberPropInt32(env, buffer, "index",
@@ -156,9 +166,19 @@ bool AVCodecNapiUtil::ExtractCodecBuffer(napi_env env, napi_value buffer, int32_
 
     int32_t timeMs = 0;
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, buffer, "timeMs", timeMs) == true, false);
-    const int32_t msToUs = 1000;
+    constexpr int32_t msToUs = 1000;
     info.presentationTimeUs = msToUs * timeMs;
 
+    return true;
+}
+
+static bool ChangeAudioFormat(int32_t &format)
+{
+    if (SAMPLE_FORMAT_MAP.find(
+        static_cast<OHOS::AudioStandard::AudioCapturerNapi::AudioSampleFormat>(format)) == SAMPLE_FORMAT_MAP.end()) {
+        return false;
+    }
+    format = SAMPLE_FORMAT_MAP.at(static_cast<OHOS::AudioStandard::AudioCapturerNapi::AudioSampleFormat>(format));
     return true;
 }
 
@@ -179,6 +199,10 @@ bool AVCodecNapiUtil::ExtractMediaFormat(napi_env env, napi_value mediaFormat, F
         } else if (it->second == FORMAT_TYPE_INT32) {
             int32_t result = 0;
             (void)napi_get_value_int32(env, item, &result);
+            if (it->first == "audio_sample_format") {
+                bool ret = ChangeAudioFormat(result);
+                CHECK_AND_RETURN_RET(ret == true, false);
+            }
             format.PutIntValue(it->first, result);
         } else if (it->second == FORMAT_TYPE_DOUBLE) {
             double result = 0;
@@ -194,5 +218,5 @@ bool AVCodecNapiUtil::ExtractMediaFormat(napi_env env, napi_value mediaFormat, F
 
     return true;
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

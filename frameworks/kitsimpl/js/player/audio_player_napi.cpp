@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "media_data_source_napi.h"
 #include "media_data_source_callback.h"
+#include "string_ex.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioPlayerNapi"};
@@ -112,9 +113,11 @@ napi_value AudioPlayerNapi::Constructor(napi_env env, napi_callback_info info)
 
     playerNapi->env_ = env;
     playerNapi->nativePlayer_ = PlayerFactory::CreatePlayer();
-    CHECK_AND_RETURN_RET_LOG(playerNapi->nativePlayer_ != nullptr, nullptr, "No memory");
+    if (playerNapi->nativePlayer_ == nullptr) {
+        MEDIA_LOGE("failed to CreatePlayer");
+    }
 
-    if (playerNapi->callbackNapi_ == nullptr) {
+    if (playerNapi->callbackNapi_ == nullptr && playerNapi->nativePlayer_ != nullptr) {
         playerNapi->callbackNapi_ = std::make_shared<PlayerCallbackNapi>(env);
         (void)playerNapi->nativePlayer_->SetPlayerCallback(playerNapi->callbackNapi_);
     }
@@ -221,8 +224,26 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
 
     player->uri_ = CommonNapi::GetStringArgument(env, args[0]);
     CHECK_AND_RETURN_RET_LOG(player->nativePlayer_ != nullptr, undefinedResult, "No memory");
-    int32_t ret = player->nativePlayer_->SetSource(player->uri_);
+
+    const std::string fdHead = "fd://";
+    const std::string httpHead = "http";
+    int32_t ret = MSERR_EXT_INVALID_VAL;
+    int32_t fd = -1;
+    MEDIA_LOGD("input url is %{public}s!", player->uri_.c_str());
+    if (player->uri_.find(fdHead) != std::string::npos) {
+        std::string inputFd = player->uri_.substr(fdHead.size());
+        if (!StrToInt(inputFd, fd) || fd < 0) {
+            player->ErrorCallback(MSERR_EXT_INVALID_VAL);
+            return undefinedResult;
+        }
+
+        ret = player->nativePlayer_->SetSource(fd, 0, -1);
+    } else if (player->uri_.find(httpHead) != std::string::npos) {
+        ret = player->nativePlayer_->SetSource(player->uri_);
+    }
+
     if (ret != MSERR_OK) {
+        MEDIA_LOGE("input url error!");
         player->ErrorCallback(MSERR_EXT_INVALID_VAL);
         return undefinedResult;
     }
@@ -653,9 +674,9 @@ napi_value AudioPlayerNapi::On(napi_env env, napi_callback_info info)
     napi_value undefinedResult = nullptr;
     napi_get_undefined(env, &undefinedResult);
 
-    static const size_t MIN_REQUIRED_ARG_COUNT = 2;
-    size_t argCount = MIN_REQUIRED_ARG_COUNT;
-    napi_value args[MIN_REQUIRED_ARG_COUNT] = { nullptr, nullptr };
+    static constexpr size_t minArgCount = 2;
+    size_t argCount = minArgCount;
+    napi_value args[minArgCount] = { nullptr, nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr || args[1] == nullptr) {
@@ -945,5 +966,5 @@ napi_value AudioPlayerNapi::GetTrackDescription(napi_env env, napi_callback_info
     asyncContext.release();
     return result;
 }
-}  // namespace Media
-}  // namespace OHOS
+} // namespace Media
+} // namespace OHOS

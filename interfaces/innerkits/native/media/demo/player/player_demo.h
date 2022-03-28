@@ -41,19 +41,18 @@ namespace MediaDemo {
 
 namespace OHOS {
 namespace Media {
-class PlayerDemo {
+class PlayerDemo : public NoCopyable {
 public:
     PlayerDemo();
     ~PlayerDemo();
-    DISALLOW_COPY_AND_MOVE(PlayerDemo);
     sptr<Surface> GetVideoSurface();
     void RunCase(const std::string &path);
 
 private:
     void DoNext();
-    void Seek(const std::string cmd);
-    void SetLoop(const std::string cmd);
-    void SetPlaybackSpeed(const std::string cmd) const;
+    void Seek(const std::string &cmd);
+    void SetLoop(const std::string &cmd);
+    void SetPlaybackSpeed(const std::string &cmd) const;
     int32_t GetPlaying();
     int32_t GetLooping();
     void GetCurrentTime();
@@ -80,11 +79,11 @@ private:
     int32_t width_ = 0;
 };
 
-class PlayerCallbackDemo : public PlayerCallback {
+class PlayerCallbackDemo : public PlayerCallback, public NoCopyable {
 public:
     PlayerCallbackDemo() = default;
     virtual ~PlayerCallbackDemo() = default;
-    DISALLOW_COPY_AND_MOVE(PlayerCallbackDemo);
+
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
     void SetBufferingOut(int32_t bufferingOut);
@@ -97,6 +96,6 @@ private:
     int32_t bufferingOut_ = 0;
     PlayerStates state_ = PLAYER_STATE_ERROR;
 };
-}
-}
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // PLAYER_DEMO_H

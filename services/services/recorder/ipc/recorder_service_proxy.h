@@ -21,11 +21,10 @@
 
 namespace OHOS {
 namespace Media {
-class RecorderServiceProxy : public IRemoteProxy<IStandardRecorderService> {
+class RecorderServiceProxy : public IRemoteProxy<IStandardRecorderService>, public NoCopyable {
 public:
     explicit RecorderServiceProxy(const sptr<IRemoteObject> &impl);
     virtual ~RecorderServiceProxy();
-    DISALLOW_COPY_AND_MOVE(RecorderServiceProxy);
 
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId) override;
@@ -62,6 +61,6 @@ public:
 private:
     static inline BrokerDelegator<RecorderServiceProxy> delegator_;
 };
-}
+} // namespace Media
 } // namespace OHOS
 #endif // RECORDER_SERVICE_PROXY_H

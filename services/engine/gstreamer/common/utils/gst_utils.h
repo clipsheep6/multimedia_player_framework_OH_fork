@@ -29,7 +29,7 @@ namespace OHOS {
 namespace Media {
 #define EXPORT_API __attribute__((visibility("default")))
 
-#define ELEM_NAME(elem) (GST_ELEMENT_NAME(elem) != nullptr) ? GST_ELEMENT_NAME(elem) : "unkonwn"
+#define ELEM_NAME(elem) (GST_ELEMENT_NAME(elem) != nullptr) ? GST_ELEMENT_NAME(elem) : "unknown"
 
 #define PAD_NAME(pad) (GST_PAD_NAME(pad) != nullptr) ? GST_PAD_NAME(pad) : "unknown"
 
@@ -51,12 +51,10 @@ EXPORT_API bool MatchElementByMeta(
     const GstElement &elem, const std::string_view &metaKey, const std::vector<std::string_view> &expectedMetaFields);
 
 template <typename T>
-class ThizWrapper {
+class ThizWrapper : public NoCopyable {
 public:
     explicit ThizWrapper(std::weak_ptr<T> thiz) : thiz_(thiz) {}
     ~ThizWrapper() = default;
-
-    DISALLOW_COPY_AND_MOVE(ThizWrapper);
 
     static std::shared_ptr<T> TakeStrongThiz(gpointer userdata)
     {
@@ -79,7 +77,6 @@ public:
 private:
     std::weak_ptr<T> thiz_;
 };
-}
-}
-
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // GST_UTILS_H

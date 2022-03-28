@@ -25,6 +25,7 @@ config("media_client_local_config") {
     "$MEDIA_ROOT_DIR/services/services/factory",
     "$MEDIA_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_ROOT_DIR/services/services/avcodeclist/server",
+    "$MEDIA_ROOT_DIR/services/services/avmuxer/server",
   ]
 }
 
@@ -44,6 +45,8 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/avcodec/ipc",
     "$MEDIA_ROOT_DIR/services/services/avcodeclist/client",
     "$MEDIA_ROOT_DIR/services/services/avcodeclist/ipc",
+    "$MEDIA_ROOT_DIR/services/services/avmuxer/client",
+    "$MEDIA_ROOT_DIR/services/services/avmuxer/ipc",
   ]
 }
 
@@ -54,6 +57,7 @@ config("media_client_public_config") {
     "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec",
     "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist",
     "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper",
+    "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmuxer",
     "$MEDIA_ROOT_DIR/interfaces/innerkits/native/media/include",
     "$MEDIA_ROOT_DIR/services/include",
     "$MEDIA_ROOT_DIR/services/utils/include",
@@ -61,6 +65,9 @@ config("media_client_public_config") {
     "//utils/system/safwk/native/include",
     "//utils/native/base/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
+    "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiocommon/include",
+    "//foundation/multimedia/audio_standard/interfaces/kits/js/audio_capturer/include",
+    "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiocapturer/include",
   ]
 
   cflags = [
@@ -89,6 +96,7 @@ config("media_client_public_config") {
 
 ohos_shared_library("media_client") {
   install_enable = true
+
   if (defined(ohos_lite)) {
     sources = [
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_audio_decoder_impl.cpp",
@@ -98,12 +106,14 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist/avcodec_info.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist/avcodec_list_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmuxer/avmuxer_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder/recorder_impl.cpp",
       "$MEDIA_ROOT_DIR/services/services/avcodec/server/avcodec_server.cpp",
       "$MEDIA_ROOT_DIR/services/services/avcodeclist/server/avcodeclist_server.cpp",
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/server/avmetadatahelper_server.cpp",
+      "$MEDIA_ROOT_DIR/services/services/avmuxer/server/avmuxer_server.cpp",
       "$MEDIA_ROOT_DIR/services/services/factory/engine_factory_repo.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/server/player_server.cpp",
       "$MEDIA_ROOT_DIR/services/services/recorder/server/recorder_server.cpp",
@@ -138,7 +148,7 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist/avcodec_info.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist/avcodec_list_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/common/av_common.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmuxer/avmuxer_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
       "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder/recorder_impl.cpp",
@@ -149,6 +159,8 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/avcodeclist/ipc/avcodeclist_service_proxy.cpp",
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/client/avmetadatahelper_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc/avmetadatahelper_service_proxy.cpp",
+      "$MEDIA_ROOT_DIR/services/services/avmuxer/client/avmuxer_client.cpp",
+      "$MEDIA_ROOT_DIR/services/services/avmuxer/ipc/avmuxer_service_proxy.cpp",
       "$MEDIA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/client/player_client.cpp",

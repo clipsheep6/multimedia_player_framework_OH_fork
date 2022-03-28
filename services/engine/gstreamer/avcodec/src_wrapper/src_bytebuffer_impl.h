@@ -22,11 +22,10 @@
 
 namespace OHOS {
 namespace Media {
-class SrcBytebufferImpl : public SrcBase {
+class SrcBytebufferImpl : public SrcBase, public NoCopyable {
 public:
     SrcBytebufferImpl();
     ~SrcBytebufferImpl() override;
-    DISALLOW_COPY_AND_MOVE(SrcBytebufferImpl);
 
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
@@ -51,6 +50,6 @@ private:
     std::weak_ptr<IAVCodecEngineObs> obs_;
     bool start_ = false;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // SRC_BYTEBUFFER_IMPL_H

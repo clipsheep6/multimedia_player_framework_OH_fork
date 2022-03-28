@@ -24,8 +24,8 @@ namespace OHOS {
 namespace Media {
 /*
  * Declare the type enum value valid range for different kind of RecorderParam.
- * The "Public" means externally visable.
- * The "Private" means internally visable.
+ * The "Public" means externally visible.
+ * The "Private" means internally visible.
  */
 enum RecorderParamSectionStart {
     PUBLIC_PARAM_SECTION_START = 0,
@@ -113,7 +113,7 @@ struct AudEnc : public RecorderParam {
 };
 
 struct AudSampleRate : public RecorderParam {
-    AudSampleRate(int32_t sr) : RecorderParam(RecorderPublicParamType::AUD_SAMPLERATE), sampleRate(sr) {}
+    explicit AudSampleRate(int32_t sr) : RecorderParam(RecorderPublicParamType::AUD_SAMPLERATE), sampleRate(sr) {}
     int32_t sampleRate;
 };
 
@@ -165,6 +165,6 @@ struct NextOutFd : public RecorderParam {
     explicit NextOutFd(int32_t nextOutFd) : RecorderParam(RecorderPublicParamType::NEXT_OUT_FD), fd(nextOutFd) {}
     int32_t fd;
 };
-}
-}
+} // namespace Media
+} // namespace OHOS
 #endif

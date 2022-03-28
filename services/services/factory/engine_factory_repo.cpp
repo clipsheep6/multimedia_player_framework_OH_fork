@@ -67,7 +67,7 @@ static std::vector<std::string> GetMediaEngineLibs()
             continue;
         }
         MEDIA_LOGI("find media engine library: %{public}s", file.c_str());
-        allLibs.push_back(file);
+        allLibs.emplace_back(file);
     }
 
     return allLibs;
@@ -84,6 +84,7 @@ EngineFactoryRepo::~EngineFactoryRepo()
     for (auto &lib : factoryLibs_) {
         if (lib != nullptr) {
             (void)dlclose(lib);
+            lib = nullptr;
         }
     }
 }
@@ -154,5 +155,5 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     MEDIA_LOGI("Selected factory: 0x%{public}06" PRIXPTR ", score: %{public}d", FAKE_POINTER(target.get()), maxScore);
     return target;
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

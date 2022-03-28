@@ -78,7 +78,7 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
     GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS(klass);
     GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
 
-    gst_element_class_add_static_pad_template (element_class, &g_sinktemplate);
+    gst_element_class_add_static_pad_template(element_class, &g_sinktemplate);
 
     gst_element_class_set_static_metadata(element_class,
         "MemSink", "Generic/Sink",
@@ -91,7 +91,7 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
     gobject_class->get_property = gst_mem_sink_get_property;
 
     g_object_class_install_property(gobject_class, PROP_CAPS,
-        g_param_spec_boxed ("caps", "Caps",
+        g_param_spec_boxed("caps", "Caps",
             "The allowed caps for the sink pad", GST_TYPE_CAPS,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
@@ -172,7 +172,7 @@ static void gst_mem_sink_finalize(GObject *obj)
     GstMemSinkPrivate *priv = mem_sink->priv;
     g_return_if_fail(priv != nullptr);
 
-    g_mutex_clear (&priv->mutex);
+    g_mutex_clear(&priv->mutex);
 
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
@@ -348,6 +348,7 @@ static gboolean gst_mem_sink_event(GstBaseSink *bsink, GstEvent *event)
     g_return_val_if_fail(mem_sink != nullptr, FALSE);
     GstMemSinkPrivate *priv = mem_sink->priv;
     g_return_val_if_fail(priv != nullptr, FALSE);
+    g_return_val_if_fail(event != nullptr, FALSE);
 
     switch (event->type) {
         case GST_EVENT_EOS: {
@@ -525,7 +526,25 @@ GstFlowReturn gst_mem_sink_app_render(GstMemSink *mem_sink, GstBuffer *buffer)
 
     GstFlowReturn ret = GST_FLOW_OK;
     if (mem_sink_class->do_app_render != nullptr) {
-        ret = mem_sink_class->do_app_render(mem_sink, buffer);
+        ret = mem_sink_class->do_app_render(mem_sink, buffer, FALSE);
+    }
+
+    return ret;
+}
+
+GstFlowReturn gst_mem_sink_app_preroll_render(GstMemSink *mem_sink, GstBuffer *buffer)
+{
+    g_return_val_if_fail(mem_sink != nullptr, GST_FLOW_ERROR);
+    GstMemSinkPrivate *priv = mem_sink->priv;
+    g_return_val_if_fail(priv != nullptr, GST_FLOW_ERROR);
+    GstMemSinkClass *mem_sink_class = GST_MEM_SINK_GET_CLASS(mem_sink);
+    g_return_val_if_fail(mem_sink_class != nullptr, GST_FLOW_ERROR);
+
+    GST_INFO_OBJECT(mem_sink, "app preroll render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
+
+    GstFlowReturn ret = GST_FLOW_OK;
+    if (mem_sink_class->do_app_render != nullptr) {
+        ret = mem_sink_class->do_app_render(mem_sink, buffer, TRUE);
     }
 
     return ret;

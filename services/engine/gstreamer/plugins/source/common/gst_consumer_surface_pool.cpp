@@ -49,11 +49,10 @@ enum {
 
 G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfacePool, gst_consumer_surface_pool, GST_TYPE_VIDEO_BUFFER_POOL);
 
-class ConsumerListenerProxy : public IBufferConsumerListener {
+class ConsumerListenerProxy : public IBufferConsumerListener, public NoCopyable {
 public:
     explicit ConsumerListenerProxy(GstConsumerSurfacePool &owner) : owner_(owner) {}
     ~ConsumerListenerProxy() = default;
-    DISALLOW_COPY_AND_MOVE(ConsumerListenerProxy);
     void OnBufferAvailable() override;
 private:
     GstConsumerSurfacePool &owner_;
@@ -121,7 +120,7 @@ static void gst_consumer_surface_pool_finalize(GObject *obj)
 static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *klass)
 {
     g_return_if_fail(klass != nullptr);
-    GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS (klass);
+    GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS(klass);
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
     GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_pool_debug_category, "surfacepool", 0, "surface pool");
     gobjectClass->set_property = gst_consumer_surface_pool_set_property;
@@ -258,7 +257,7 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
     g_mutex_lock(&priv->pool_lock);
     ON_SCOPE_EXIT(0) { g_mutex_unlock(&priv->pool_lock); };
 
-    do {
+    while (true) {
         gboolean repeat = FALSE;
         while (priv->available_buf_count == 0 && !priv->flushing && priv->start) {
             if (priv->repeat_interval == 0 || priv->cache_buffer == nullptr) {
@@ -299,7 +298,8 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
             }
         }
         cache_frame_if_necessary(surfacepool, surfacemem, *buffer);
-    } while (0);
+        break;
+    };
 
     return GST_FLOW_OK;
 }
@@ -377,7 +377,7 @@ static void add_buffer_info(GstConsumerSurfacePool *pool, GstConsumerSurfaceMemo
         GST_WARNING_OBJECT(pool, "Invalid timestamp: < 0");
         GST_BUFFER_PTS(buffer) = 0;
     } else {
-        GST_BUFFER_PTS(buffer) = mem->timestamp;
+        GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(mem->timestamp);
     }
 }
 
@@ -385,7 +385,7 @@ static void cache_frame_if_necessary(GstConsumerSurfacePool *pool, GstConsumerSu
 {
     g_return_if_fail(pool != nullptr && pool->priv != nullptr && mem != nullptr && buffer != nullptr);
     auto priv = pool->priv;
-    priv->pre_timestamp = mem->timestamp;
+    priv->pre_timestamp = static_cast<uint64_t>(mem->timestamp);
     if (priv->is_first_buffer) {
         priv->is_first_buffer = FALSE;
     } else if (priv->repeat_interval > 0) {

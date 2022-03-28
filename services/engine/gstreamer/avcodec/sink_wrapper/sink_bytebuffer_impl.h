@@ -25,11 +25,10 @@
 
 namespace OHOS {
 namespace Media {
-class SinkBytebufferImpl : public SinkBase {
+class SinkBytebufferImpl : public SinkBase, public NoCopyable {
 public:
     SinkBytebufferImpl();
     ~SinkBytebufferImpl() override;
-    DISALLOW_COPY_AND_MOVE(SinkBytebufferImpl);
 
     int32_t Init() override;
     int32_t Configure(std::shared_ptr<ProcessorConfig> config) override;
@@ -53,6 +52,6 @@ private:
     Format bufferFormat_;
     bool isEos_ = false;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // SINK_BYTEBUFFER_IMPL_H

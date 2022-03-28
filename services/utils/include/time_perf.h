@@ -72,7 +72,7 @@ private:
     std::mutex mutex_;
 };
 
-struct __attribute__((visibility("default"))) AutoPerf {
+struct __attribute__((visibility("default"))) AutoPerf : public NoCopyable {
     AutoPerf(uintptr_t obj, std::string_view tag) : obj_(obj), tag_(tag)
     {
         TimePerf::Inst().StartPerfRecord(obj, tag);
@@ -83,12 +83,10 @@ struct __attribute__((visibility("default"))) AutoPerf {
         TimePerf::Inst().StopPerfRecord(obj_, tag_);
     }
 
-    DISALLOW_COPY_AND_MOVE(AutoPerf);
-
     uintptr_t obj_;
     std::string_view tag_;
 };
-}
-}
+} // namespace Media
+} // namespace OHOS
 
 #endif

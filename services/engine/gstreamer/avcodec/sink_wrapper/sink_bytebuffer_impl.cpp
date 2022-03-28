@@ -64,6 +64,7 @@ int32_t SinkBytebufferImpl::Flush()
 {
     std::unique_lock<std::mutex> lock(mutex_);
     for (auto it = bufferList_.begin(); it != bufferList_.end(); it++) {
+        CHECK_AND_RETURN_RET(*it != nullptr, MSERR_INVALID_VAL);
         if ((*it)->owner_ != BufferWrapper::DOWNSTREAM) {
             (*it)->owner_ = BufferWrapper::DOWNSTREAM;
             if ((*it)->gstBuffer_ != nullptr) {
@@ -81,6 +82,7 @@ std::shared_ptr<AVSharedMemory> SinkBytebufferImpl::GetOutputBuffer(uint32_t ind
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index <= bufferList_.size(), nullptr);
+    CHECK_AND_RETURN_RET(bufferList_[index] != nullptr, nullptr);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::SERVER, nullptr);
 
     GstMemory *memory = gst_buffer_peek_memory(bufferList_[index]->gstBuffer_, 0);
@@ -96,6 +98,7 @@ int32_t SinkBytebufferImpl::ReleaseOutputBuffer(uint32_t index, bool render)
     (void)render;
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(index < bufferList_.size(), MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET(bufferList_[index] != nullptr, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufferList_[index]->gstBuffer_ != nullptr, MSERR_UNKNOWN);
 
@@ -141,7 +144,7 @@ void SinkBytebufferImpl::EosCb(GstMemSink *memSink, gpointer userData)
     CHECK_AND_RETURN(obs != nullptr);
 
     AVCodecBufferInfo info;
-    const uint32_t invalidIndex = 1000;
+    constexpr uint32_t invalidIndex = 1000;
     obs->OnOutputBufferAvailable(invalidIndex, info, AVCODEC_BUFFER_FLAG_EOS);
 }
 
@@ -173,9 +176,14 @@ int32_t SinkBytebufferImpl::HandleNewSampleCb(GstBuffer *buffer)
 
     AVCodecBufferInfo info;
     info.offset = 0;
-    info.size = map.size;
-    const uint64_t nsToUs = 1000;
-    info.presentationTimeUs = GST_BUFFER_PTS(buffer) / nsToUs;
+    if (map.size >= INT32_MAX) {
+        MEDIA_LOGE("Invalid size");
+        gst_buffer_unmap(buffer, &map);
+        return MSERR_UNKNOWN;
+    }
+    info.size = static_cast<int32_t>(map.size);
+    constexpr uint64_t nsToUs = 1000;
+    info.presentationTimeUs = static_cast<int64_t>(GST_BUFFER_PTS(buffer) / nsToUs);
     obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
 
     MEDIA_LOGD("OutputBufferAvailable, index:%{public}d", index);
@@ -207,5 +215,5 @@ int32_t SinkBytebufferImpl::FindBufferIndex(uint32_t &index, std::shared_ptr<AVS
 
     return MSERR_OK;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

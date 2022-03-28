@@ -13,15 +13,15 @@
  * limitations under the License.
  */
 
-#include "avcodec_server.h"
-#include "avmetadatahelper_server.h"
+#include "media_local.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "avcodec_server.h"
+#include "avmetadatahelper_server.h"
 #include "player_server.h"
 #include "recorder_server.h"
 #include "avcodeclist_server.h"
-#include "avmetadatahelper_server.h"
-#include "media_local.h"
+#include "avmuxer_server.h"
 
 namespace OHOS {
 namespace Media {
@@ -46,6 +46,7 @@ std::shared_ptr<IAVMetadataHelperService> MediaLocal::CreateAVMetadataHelperServ
     return AVMetadataHelperServer::Create();
 }
 
+
 std::shared_ptr<IAVCodecService> MediaLocal::CreateAVCodecService()
 {
     return AVCodecServer::Create();
@@ -54,6 +55,11 @@ std::shared_ptr<IAVCodecService> MediaLocal::CreateAVCodecService()
 std::shared_ptr<IAVCodecListService> MediaLocal::CreateAVCodecListService()
 {
     return AVCodecListServer::Create();
+}
+
+std::shared_ptr<IAVMuxerService> MediaLocal::CreateAVMuxerService()
+{
+    return AVMuxerServer::Create();
 }
 
 int32_t MediaLocal::DestroyRecorderService(std::shared_ptr<IRecorderService> recorder)
@@ -85,5 +91,10 @@ int32_t MediaLocal::DestroyAVCodecListService(std::shared_ptr<IAVCodecListServic
     (void)avCodecList;
     return MSERR_OK;
 }
-} // Media
-} // OHOS
+int32_t MediaLocal::DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer)
+{
+    (void)avmuxer;
+    return MSERR_OK;
+}
+} // namespace Media
+} // namespace OHOS

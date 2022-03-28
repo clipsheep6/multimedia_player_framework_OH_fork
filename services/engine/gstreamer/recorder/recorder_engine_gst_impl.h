@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RECORDER_ENGINE_HST_IMPL
-#define RECORDER_ENGINE_HST_IMPL
+#ifndef RECORDER_ENGINE_GST_IMPL
+#define RECORDER_ENGINE_GST_IMPL
 
 #include <map>
 #include <vector>
@@ -29,7 +29,7 @@
 
 namespace OHOS {
 namespace Media {
-class RecorderEngineGstImpl : public IRecorderEngine {
+class RecorderEngineGstImpl : public IRecorderEngine, public NoCopyable {
 public:
     RecorderEngineGstImpl();
     ~RecorderEngineGstImpl();
@@ -49,8 +49,6 @@ public:
     int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam) override;
     sptr<Surface> GetSurface(int32_t sourceId) override;
 
-    DISALLOW_COPY_AND_MOVE(RecorderEngineGstImpl);
-
 private:
     int32_t BuildPipeline();
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam) const;
@@ -62,6 +60,6 @@ private:
     std::vector<int32_t> sourceCount_;
     std::mutex mutex_;
 };
-}
-}
+} // namespace Media
+} // namespace OHOS
 #endif

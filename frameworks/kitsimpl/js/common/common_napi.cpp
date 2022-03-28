@@ -15,8 +15,6 @@
 
 #include "common_napi.h"
 #include <climits>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include "avcodec_list.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -62,6 +60,28 @@ bool CommonNapi::GetPropertyInt32(napi_env env, napi_value configObj, const std:
     }
 
     if (napi_get_value_int32(env, item, &result) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property value fail", type.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool CommonNapi::GetPropertyUint32(napi_env env, napi_value configObj, const std::string &type, uint32_t &result)
+{
+    napi_value item = nullptr;
+    bool exist = false;
+    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        return false;
+    }
+
+    if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property fail", type.c_str());
+        return false;
+    }
+
+    if (napi_get_value_uint32(env, item, &result) != napi_ok) {
         MEDIA_LOGE("get %{public}s property value fail", type.c_str());
         return false;
     }
@@ -139,27 +159,12 @@ bool CommonNapi::GetFdArgument(napi_env env, napi_value value, AVFileDescriptor 
         rawFd.offset = 0; // use default value
     }
 
-    if (rawFd.offset < 0) {
-        MEDIA_LOGE("get rawfd argument invalid, offset = %{public}" PRIi64, rawFd.offset);
-        return false;
-    }
-
-    struct stat64 buffer;
-    if (fstat64(rawFd.fd, &buffer) != 0) {
-        MEDIA_LOGE("can not get file state");
-        return false;
-    }
-    int64_t fdSize = static_cast<int64_t>(buffer.st_size);
-
     if (GetPropertyInt64(env, value, "length", rawFd.length) == false) {
-        rawFd.length = fdSize - rawFd.offset; // use default value
+        rawFd.length = -1; // -1 means use default value
     }
 
-    if ((rawFd.length < 0) || (rawFd.length > fdSize - rawFd.offset)) {
-        MEDIA_LOGE("get rawfd argument invalid, length = %{public}" PRIi64 ", offset = %{public}" PRIi64 ","
-            "fdSize = %{public}" PRIi64 "", rawFd.length, rawFd.offset, fdSize);
-        return false;
-    }
+    MEDIA_LOGD("get fd argument, fd = %{public}d, offset = %{public}" PRIi64 ", size = %{public}" PRIi64 "",
+        rawFd.fd, rawFd.offset, rawFd.length);
 
     return true;
 }
@@ -258,9 +263,8 @@ napi_ref CommonNapi::CreateReference(napi_env env, napi_value arg)
     napi_ref ref = nullptr;
     napi_valuetype valueType = napi_undefined;
     if (arg != nullptr && napi_typeof(env, arg, &valueType) == napi_ok && valueType == napi_function) {
-        const size_t refCount = 1;
         MEDIA_LOGD("napi_create_reference");
-        napi_create_reference(env, arg, refCount, &ref);
+        napi_create_reference(env, arg, 1, &ref);
     }
     return ref;
 }
@@ -334,7 +338,7 @@ bool CommonNapi::SetPropertyInt32(napi_env env, napi_value &obj, const std::stri
     CHECK_AND_RETURN_RET(status == napi_ok, false);
 
     status = napi_set_property(env, obj, keyNapi, valueNapi);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "faile to set property");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "failed to set property");
 
     return true;
 }
@@ -352,7 +356,7 @@ bool CommonNapi::SetPropertyInt64(napi_env env, napi_value &obj, const std::stri
     CHECK_AND_RETURN_RET(status == napi_ok, false);
 
     status = napi_set_property(env, obj, keyNapi, valueNapi);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "faile to set property");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "failed to set property");
 
     return true;
 }
@@ -370,7 +374,7 @@ bool CommonNapi::SetPropertyString(napi_env env, napi_value &obj, const std::str
     CHECK_AND_RETURN_RET(status == napi_ok, false);
 
     status = napi_set_property(env, obj, keyNapi, valueNapi);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "faile to set property");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "failed to set property");
 
     return true;
 }
@@ -430,6 +434,24 @@ bool CommonNapi::CreateFormatBufferByRef(napi_env env, Format &format, napi_valu
     }
 
     return true;
+}
+
+napi_status MediaJsResultStringVector::GetJsResult(napi_env env, napi_value &result)
+{
+    napi_status status;
+    size_t size = value_.size();
+    napi_create_array_with_length(env, size, &result);
+    for (unsigned int i = 0; i < size; ++i) {
+        std::string format = value_[i];
+        napi_value value = nullptr;
+        status = napi_create_string_utf8(env, format.c_str(), NAPI_AUTO_LENGTH, &value);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status,
+            "Failed to call napi_create_string_utf8, with element %{public}u", i);
+        status = napi_set_element(env, result, i, value);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status,
+            "Failed to call napi_set_element, with element %{public}u", i);
+    }
+    return napi_ok;
 }
 
 bool CommonNapi::AddNumberPropInt32(napi_env env, napi_value obj, const std::string &key, int32_t value)
@@ -519,8 +541,11 @@ void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void 
         MEDIA_LOGD("async callback success");
         if (asyncContext->JsResult != nullptr) {
             asyncContext->JsResult->GetJsResult(env, result);
+            CheckCtorResult(env, result, asyncContext, args[0]);
         }
-        args[1] = result;
+        if (!asyncContext->errFlag) {
+            args[1] = result;
+        }
     }
 
     if (asyncContext->deferred) {
@@ -536,7 +561,7 @@ void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void 
         napi_value callback = nullptr;
         napi_get_reference_value(env, asyncContext->callbackRef, &callback);
         CHECK_AND_RETURN_LOG(callback != nullptr, "callbackRef is nullptr!");
-        const size_t argCount = 2;
+        constexpr size_t argCount = 2;
         napi_value retVal;
         napi_get_undefined(env, &retVal);
         napi_call_function(env, nullptr, callback, argCount, args, &retVal);
@@ -549,5 +574,19 @@ void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void 
         asyncContext = nullptr;
     }
 }
+
+void MediaAsyncContext::CheckCtorResult(napi_env env, napi_value &result, MediaAsyncContext *ctx, napi_value &args)
+{
+    CHECK_AND_RETURN(ctx != nullptr);
+    if (ctx->ctorFlag) {
+        void *instance = nullptr;
+        if (napi_unwrap(env, result, reinterpret_cast<void **>(&instance)) != napi_ok || instance == nullptr) {
+            MEDIA_LOGE("Failed to create instance");
+            ctx->errFlag = true;
+            (void)CommonNapi::CreateError(env, MSERR_EXT_UNKNOWN, "Failed to create instance", result);
+            args = result;
+        }
+    }
 }
-}
+} // namespace Media
+} // namespace OHOS

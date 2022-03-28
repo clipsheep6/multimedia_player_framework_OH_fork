@@ -25,13 +25,12 @@
 
 namespace OHOS {
 namespace Media {
-class RecorderServiceStub : public IRemoteStub<IStandardRecorderService> {
+class RecorderServiceStub : public IRemoteStub<IStandardRecorderService>, public NoCopyable {
 public:
     static sptr<RecorderServiceStub> Create();
     virtual ~RecorderServiceStub();
-    DISALLOW_COPY_AND_MOVE(RecorderServiceStub);
-    int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
+    int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     using RecorderStubFunc = int32_t(RecorderServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId) override;
@@ -104,6 +103,6 @@ private:
     std::map<uint32_t, RecorderStubFunc> recFuncs_;
     std::mutex mutex_;
 };
-}
+} // namespace Media
 } // namespace OHOS
 #endif // RECORDER_SERVICE_STUB_H

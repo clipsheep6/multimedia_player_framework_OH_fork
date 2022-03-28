@@ -39,8 +39,6 @@ public:
     explicit PlayBinCtrlerBase(const PlayBinCreateParam &createParam);
     virtual ~PlayBinCtrlerBase();
 
-    DISALLOW_COPY_AND_MOVE(PlayBinCtrlerBase);
-
     int32_t Init();
     int32_t SetSource(const std::string &url)  override;
     int32_t Prepare() override;
@@ -108,6 +106,6 @@ private:
     std::shared_ptr<PausedState> pausedState_;
     std::shared_ptr<StoppedState> stoppedState_;
 };
-}
-}
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // PLAYBIN_CTRLER_BASE_H

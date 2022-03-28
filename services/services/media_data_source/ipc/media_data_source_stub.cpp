@@ -33,12 +33,18 @@ MediaDataSourceStub::MediaDataSourceStub(const std::shared_ptr<IMediaDataSource>
 
 MediaDataSourceStub::~MediaDataSourceStub()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destory", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
+    auto remoteDescriptor = data.ReadInterfaceToken();
+    if (MediaDataSourceStub::GetDescriptor() != remoteDescriptor) {
+        MEDIA_LOGE("Invalid descriptor");
+        return MSERR_INVALID_OPERATION;
+    }
+
     switch (code) {
         case ListenerMsg::READ_AT: {
             uint32_t length = data.ReadUint32();

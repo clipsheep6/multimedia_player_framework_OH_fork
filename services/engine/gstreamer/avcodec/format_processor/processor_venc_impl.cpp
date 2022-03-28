@@ -19,8 +19,8 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ProcessorVencImpl"};
-    const uint32_t MAX_WIDTH = 8000;
-    const uint32_t MAX_HEIGHT = 5000;
+    constexpr int32_t MAX_WIDTH = 8000;
+    constexpr int32_t MAX_HEIGHT = 5000;
 }
 
 namespace OHOS {
@@ -57,6 +57,21 @@ int32_t ProcessorVencImpl::ProcessOptional(const Format &format)
         (void)format.GetIntValue("codec_profile", profile_);
     }
 
+    switch (codecName_) {
+        case CODEC_MIMIE_TYPE_VIDEO_MPEG4:
+            gstProfile_ = MPEG4ProfileToGst(static_cast<MPEG4Profile>(profile_));
+            break;
+        case CODEC_MIMIE_TYPE_VIDEO_AVC:
+            gstProfile_ = AVCProfileToGst(static_cast<AVCProfile>(profile_));
+            break;
+        default:
+            break;
+    }
+
+    if (format.GetValueType(std::string_view("i_frame_interval")) == FORMAT_TYPE_INT32) {
+        (void)format.GetIntValue("i_frame_interval", keyFrameInterval_);
+    }
+
     return MSERR_OK;
 }
 
@@ -79,7 +94,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetInputPortConfig()
         return nullptr;
     }
 
-    const uint32_t alignment = 16;
+    constexpr uint32_t alignment = 16;
     config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_),
         static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), alignment);
 
@@ -96,8 +111,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
         case CODEC_MIMIE_TYPE_VIDEO_MPEG4:
             caps = gst_caps_new_simple("video/mpeg",
                 "mpegversion", G_TYPE_INT, 4,
-                "systemstream", G_TYPE_BOOLEAN, FALSE,
-                "profile", G_TYPE_STRING, "simple", nullptr);
+                "systemstream", G_TYPE_BOOLEAN, FALSE, nullptr);
             break;
         case CODEC_MIMIE_TYPE_VIDEO_AVC:
             caps = gst_caps_new_simple("video/x-h264",
@@ -106,6 +120,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
         default:
             break;
     }
+
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
     auto config = std::make_shared<ProcessorConfig>(caps, true);
@@ -115,9 +130,10 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
         return nullptr;
     }
 
-    config->bufferSize_ = CompressedBufSize(width_, height_, true, codecName_);
+    constexpr uint32_t alignment = 16;
+    config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_), width_, height_, alignment);
 
     return config;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

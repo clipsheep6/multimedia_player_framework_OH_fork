@@ -107,10 +107,7 @@ int32_t AudioEncoderImpl::Reset()
 int32_t AudioEncoderImpl::Release()
 {
     CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_INVALID_OPERATION, "service died");
-    int32_t ret = codecService_->Release();
-    (void)MediaServiceFactory::GetInstance().DestroyAVCodecService(codecService_);
-    codecService_ = nullptr;
-    return ret;
+    return codecService_->Release();
 }
 
 std::shared_ptr<AVSharedMemory> AudioEncoderImpl::GetInputBuffer(uint32_t index)
@@ -161,5 +158,5 @@ int32_t AudioEncoderImpl::SetCallback(const std::shared_ptr<AVCodecCallback> &ca
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
     return codecService_->SetCallback(callback);
 }
-} // nmamespace Media
+} // namespace Media
 } // namespace OHOS

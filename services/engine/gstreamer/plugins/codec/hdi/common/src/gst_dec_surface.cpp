@@ -14,6 +14,7 @@
  */
 
 #include "gst_dec_surface.h"
+#include <sync_fence.h>
 #include "dec_surface_buffer_wrapper.h"
 #include "display_type.h"
 
@@ -35,6 +36,7 @@ extern "C" guint8 *GetSurfaceBufferVirAddr(GstBuffer *gstSurfaceBuffer)
     Media::DecSurfaceBufferWrapper *surfaceBufferWrap = reinterpret_cast<Media::DecSurfaceBufferWrapper *>(map.data);
     gst_buffer_unmap(gstSurfaceBuffer, &map);
     g_return_val_if_fail(surfaceBufferWrap != nullptr, nullptr);
+    g_return_val_if_fail(surfaceBufferWrap->GetSurfaceBuffer() != nullptr, nullptr);
     sptr<SurfaceBuffer> surfaceBuffer = surfaceBufferWrap->GetSurfaceBuffer();
     return static_cast<guint8 *>(surfaceBuffer->GetVirAddr());
 }
@@ -70,6 +72,7 @@ static void FreeSurfaceBufferWrapper(gpointer surfaceBufferWrapper)
 
 extern "C" GstBuffer *SurfaceBufferToGstBuffer(void *surface, guint width, guint height)
 {
+    g_return_val_if_fail(surface != nullptr, nullptr);
     sptr<Surface> producerSurface = static_cast<Surface *>(surface);
     if (producerSurface->GetQueueSize() != DEFAULT_INPUT_BUFFER_SIZE) {
         SurfaceError ret = producerSurface->SetQueueSize(DEFAULT_INPUT_BUFFER_SIZE);
@@ -90,6 +93,10 @@ extern "C" GstBuffer *SurfaceBufferToGstBuffer(void *surface, guint width, guint
     if (ret != SURFACE_ERROR_OK) {
         GST_ERROR_OBJECT(nullptr, "Failed to get surface output buffer");
         return nullptr;
+    }
+    sptr<SyncFence> autoFence = new(std::nothrow) SyncFence(releaseFence);
+    if (autoFence != nullptr) {
+        autoFence->Wait(100); // 100ms
     }
     Media::DecSurfaceBufferWrapper *surfaceBufferWrap =
         new(std::nothrow) Media::DecSurfaceBufferWrapper(producerSurface, surfaceBuffer);

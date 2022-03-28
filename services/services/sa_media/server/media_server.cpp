@@ -74,11 +74,14 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
         case MediaSystemAbility::MEDIA_AVCODEC: {
             return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
         }
+        case MediaSystemAbility::MEDIA_AVMUXER: {
+            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVMUXER);
+        }
         default: {
             MEDIA_LOGE("default case, media client need check subSystemId");
             return nullptr;
         }
     }
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

@@ -27,15 +27,13 @@
 
 namespace OHOS {
 namespace Media {
-class AVMetaFrameConverter {
+class AVMetaFrameConverter : public NoCopyable {
 public:
     AVMetaFrameConverter();
     ~AVMetaFrameConverter();
 
     int32_t Init(const OutputConfiguration &outConfig);
     std::shared_ptr<AVSharedMemory> Convert(GstCaps &inCaps, GstBuffer &inBuf);
-
-    DISALLOW_COPY_AND_MOVE(AVMetaFrameConverter);
 
 private:
     int32_t SetupConvPipeline();
@@ -63,7 +61,6 @@ private:
     bool startConverting_ = false;
     std::vector<GstBuffer *> allResults_;
 };
-}
-}
-
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // AVMETA_FRAME_CONVERTER_H

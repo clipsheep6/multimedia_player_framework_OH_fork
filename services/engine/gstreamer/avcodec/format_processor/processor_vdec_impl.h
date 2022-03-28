@@ -21,11 +21,10 @@
 
 namespace OHOS {
 namespace Media {
-class ProcessorVdecImpl : public ProcessorBase {
+class ProcessorVdecImpl : public ProcessorBase, public NoCopyable {
 public:
     ProcessorVdecImpl();
     ~ProcessorVdecImpl() override;
-    DISALLOW_COPY_AND_MOVE(ProcessorVdecImpl);
 
     std::shared_ptr<ProcessorConfig> GetInputPortConfig() override;
     std::shared_ptr<ProcessorConfig> GetOutputPortConfig() override;
@@ -42,6 +41,6 @@ private:
     std::string gstPixelFormat_;
     int32_t maxInputSize_ = 0;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // PROCESSOR_VDEC_IMPL_H

@@ -21,11 +21,10 @@
 
 namespace OHOS {
 namespace Media {
-class ProcessorAdecImpl : public ProcessorBase {
+class ProcessorAdecImpl : public ProcessorBase, public NoCopyable {
 public:
     ProcessorAdecImpl();
     ~ProcessorAdecImpl() override;
-    DISALLOW_COPY_AND_MOVE(ProcessorAdecImpl);
 
     std::shared_ptr<ProcessorConfig> GetInputPortConfig() override;
     std::shared_ptr<ProcessorConfig> GetOutputPortConfig() override;
@@ -37,9 +36,9 @@ protected:
 private:
     int32_t channels_ = 0;
     int32_t sampleRate_ = 0;
-    int32_t audioRawFormat_ = 0;
+    int32_t AudioSampleFormat_ = 0;
     std::string gstRawFormat_;
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // PROCESSOR_ADEC_IMPL_H

@@ -40,6 +40,11 @@ void PlayerListenerProxy::OnError(PlayerErrorType errorType, int32_t errorCode)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
+
+    if (!data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return;
+    }
     data.WriteInt32(errorType);
     data.WriteInt32(errorCode);
     int error = Remote()->SendRequest(PlayerListenerMsg::ON_ERROR, data, reply, option);
@@ -53,6 +58,11 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
+
+    if (!data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return;
+    }
     data.WriteInt32(type);
     if (type == INFO_TYPE_EXTRA_FORMAT ||
         type == INFO_TYPE_RESOLUTION_CHANGE ||
@@ -74,7 +84,7 @@ PlayerListenerCallback::PlayerListenerCallback(const sptr<IStandardPlayerListene
 
 PlayerListenerCallback::~PlayerListenerCallback()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destory", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 void PlayerListenerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)

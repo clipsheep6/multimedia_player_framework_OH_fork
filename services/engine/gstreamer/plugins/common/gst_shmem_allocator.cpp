@@ -24,7 +24,7 @@ G_DEFINE_TYPE(GstShMemAllocator, gst_shmem_allocator, GST_TYPE_ALLOCATOR);
 GST_DEBUG_CATEGORY_STATIC(gst_shmem_allocator_debug_category);
 #define GST_CAT_DEFAULT gst_shmem_allocator_debug_category
 
-static const uint32_t ALIGN_BYTES = 4;
+static constexpr uint32_t ALIGN_BYTES = 4;
 
 GstShMemAllocator *gst_shmem_allocator_new()
 {
@@ -117,7 +117,7 @@ static GstMemory *gst_shmem_allocator_mem_copy(GstShMemMemory *mem, gssize offse
         GST_ERROR("invalid offset");
         return nullptr;
     } else {
-        realOffset = mem->parent.offset + offset;
+        realOffset = static_cast<gssize>(mem->parent.offset) + offset;
     }
     g_return_val_if_fail(realOffset >= 0, nullptr);
 
@@ -126,7 +126,7 @@ static GstMemory *gst_shmem_allocator_mem_copy(GstShMemMemory *mem, gssize offse
             GST_ERROR("invalid size");
             return nullptr;
         } else {
-            size = mem->parent.size - offset;
+            size = static_cast<gssize>(mem->parent.size) - offset;
         }
     }
     g_return_val_if_fail(size > 0, nullptr);
@@ -176,7 +176,7 @@ static GstShMemMemory *gst_shmem_allocator_mem_share(GstMemory *mem, gssize offs
         parent = GST_MEMORY_CAST(mem);
     }
     if (size == -1) {
-        size = mem->size - offset;
+        size = static_cast<gssize>(mem->size) - offset;
     }
 
     GstShMemMemory *sub = reinterpret_cast<GstShMemMemory *>(g_slice_alloc0(sizeof(GstShMemMemory)));

@@ -26,11 +26,10 @@
 
 namespace OHOS {
 namespace Media {
-class MediaServerManager {
+class MediaServerManager : public NoCopyable {
 public:
     static MediaServerManager &GetInstance();
     ~MediaServerManager();
-    DISALLOW_COPY_AND_MOVE(MediaServerManager);
 
     enum StubType {
         RECORDER = 0,
@@ -38,6 +37,7 @@ public:
         AVMETADATAHELPER,
         AVCODECLIST,
         AVCODEC,
+        AVMUXER,
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -50,11 +50,13 @@ private:
     sptr<IRemoteObject> CreateAVMetadataHelperStubObject();
     sptr<IRemoteObject> CreateAVCodecListStubObject();
     sptr<IRemoteObject> CreateAVCodecStubObject();
+    sptr<IRemoteObject> CreateAVMuxerStubObject();
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
+    std::map<sptr<IRemoteObject>, pid_t> avmuxerStubMap_;
 
     std::mutex mutex_;
 };

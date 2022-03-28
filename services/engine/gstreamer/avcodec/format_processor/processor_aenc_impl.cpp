@@ -19,7 +19,7 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ProcessorAencImpl"};
-    const uint32_t DEFAULT_BUFFER_SIZE = 30000;
+    constexpr uint32_t DEFAULT_BUFFER_SIZE = 30000;
     static const GstAudioChannelPosition CHANNEL_POSITION[6][6] = {
     {
         GST_AUDIO_CHANNEL_POSITION_MONO
@@ -71,10 +71,11 @@ int32_t ProcessorAencImpl::ProcessMandatory(const Format &format)
 {
     CHECK_AND_RETURN_RET(format.GetIntValue("channel_count", channels_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("sample_rate", sampleRate_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("audio_raw_format", audioRawFormat_) == true, MSERR_INVALID_VAL);
-    MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d", channels_, sampleRate_, audioRawFormat_);
+    CHECK_AND_RETURN_RET(format.GetIntValue("audio_sample_format", AudioSampleFormat_) == true, MSERR_INVALID_VAL);
+    MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d",
+        channels_, sampleRate_, AudioSampleFormat_);
 
-    gstRawFormat_ = RawAudioFormatToGst(static_cast<AudioRawFormat>(audioRawFormat_));
+    gstRawFormat_ = RawAudioFormatToGst(static_cast<AudioStandard::AudioSampleFormat>(AudioSampleFormat_));
 
     return MSERR_OK;
 }
@@ -148,5 +149,5 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
 
     return config;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

@@ -87,6 +87,7 @@ int32_t MediaDataSourceDemoNoSeek::ReadAt(int64_t pos, uint32_t length, const st
 
 int32_t MediaDataSourceDemoNoSeek::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
 {
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_INVALID_VAL, "Mem is nullptr");
     size_t readRet = 0;
     if (fixedSize_ > 0) {
         length = static_cast<uint32_t>(fixedSize_);
@@ -119,5 +120,5 @@ int32_t MediaDataSourceDemoNoSeek::GetSize(int64_t &size)
     size = -1;
     return MSERR_OK;
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

@@ -26,14 +26,12 @@ namespace OHOS {
 namespace Media {
 class StateMachine;
 
-class State {
+class State : public NoCopyable {
 public:
     explicit State(const std::string &name) : name_(name) {}
     virtual ~State() = default;
 
     std::string GetStateName() const;
-
-    DISALLOW_COPY_AND_MOVE(State);
 
 protected:
     // do not do the time-consuming operation when enter state
@@ -48,12 +46,10 @@ private:
     std::string name_;
 };
 
-class StateMachine {
+class StateMachine : public NoCopyable {
 public:
     StateMachine() = default;
     virtual ~StateMachine() = default;
-
-    DISALLOW_COPY_AND_MOVE(StateMachine);
 
 protected:
     void HandleMessage(const InnerMessage &msg);
@@ -64,7 +60,6 @@ private:
     std::recursive_mutex recMutex_;
     std::shared_ptr<State> currState_;
 };
-}
-}
-
-#endif
+} // namespace Media
+} // namespace OHOS
+#endif // STATE_MACHINE_H

@@ -22,11 +22,11 @@
 
 namespace OHOS {
 namespace Media {
-class AVCodecListImpl : public AVCodecList {
+class AVCodecListImpl : public AVCodecList, public NoCopyable {
 public:
     AVCodecListImpl();
     ~AVCodecListImpl();
-    DISALLOW_COPY_AND_MOVE(AVCodecListImpl);
+
     std::string FindVideoDecoder(const Format &format) override;
     std::string FindVideoEncoder(const Format &format) override;
     std::string FindAudioDecoder(const Format &format) override;
@@ -42,7 +42,7 @@ private:
     std::shared_ptr<IAVCodecListService> codecListService_ = nullptr;
     void SelectTargetCapabilityDataArray(std::vector<CapabilityData> &capabilityArray, const AVCodecType &codecType);
 };
-}
-}
+} // namespace Media
+} // namespace OHOS
 #endif // AVCODEC_LIST_IMPL_H
 

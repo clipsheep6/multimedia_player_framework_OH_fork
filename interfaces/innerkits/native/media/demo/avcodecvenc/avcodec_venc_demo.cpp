@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2021 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License\n");
+ * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -15,6 +15,7 @@
 
 #include "avcodec_venc_demo.h"
 #include <iostream>
+#include <sync_fence.h>
 #include "securec.h"
 #include "demo_log.h"
 #include "display_type.h"
@@ -92,7 +93,7 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
     if (fps == 0) {
         return;
     }
-    const uint32_t secToUs = 1000000;
+    constexpr uint32_t secToUs = 1000000;
     uint32_t intervalUs = secToUs / fps;
     uint32_t frameCount = 0;
     while (frameCount <= count) {
@@ -105,6 +106,9 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
         }
         DEMO_CHECK_AND_BREAK_LOG(buffer != nullptr, "Fatal: SurfaceBuffer is nullptr");
 
+        sptr<SyncFence> tempFence = new SyncFence(fence);
+        tempFence->Wait(100); // 100ms
+
         auto addr = static_cast<uint8_t *>(buffer->GetVirAddr());
         if (addr == nullptr) {
             cout << "Fatal: SurfaceBuffer address is nullptr" << endl;
@@ -113,7 +117,7 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
         }
         DEMO_CHECK_AND_BREAK_LOG(memset_s(addr, buffer->GetSize(), 0xFF, YUV_BUFFER_SIZE) == EOK, "Fatal");
         (void)buffer->ExtraSet("timeStamp", timestampNs_);
-        timestampNs_ += intervalUs * 1000; // us to ns
+        timestampNs_ += static_cast<int64_t>(intervalUs * 1000); // us to ns
 
         (void)surface_->FlushBuffer(buffer, -1, g_flushConfig);
         cout << "Generate input buffer success, timestamp: " << timestampNs_ << endl;
@@ -245,6 +249,7 @@ void VEncDemoCallback::OnOutputFormatChanged(const Format &format)
 
 void VEncDemoCallback::OnInputBufferAvailable(uint32_t index)
 {
+    (void)index;
 }
 
 void VEncDemoCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)

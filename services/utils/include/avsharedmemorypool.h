@@ -30,7 +30,7 @@ namespace Media {
  * @brief A simple pool implementation for shared memory.
  *
  * This pool support multi configuration:
- * @preAllocMemCnt: The number of memory blocks allocated when the pool is intialized.
+ * @preAllocMemCnt: The number of memory blocks allocated when the pool is initialized.
  * @memSize: the size of the preallocated memory blocks.
  * @maxMemCnt: the total number of memory blocks in the pool.
  * @flags: the shared memory access property, refer to {@AVSharedMemory::Flags}.
@@ -42,7 +42,7 @@ namespace Media {
  *            non-blocking memory acquisition.
  */
 class __attribute__((visibility("default"))) AVSharedMemoryPool
-    : public std::enable_shared_from_this<AVSharedMemoryPool> {
+    : public std::enable_shared_from_this<AVSharedMemoryPool>, public NoCopyable {
 public:
     AVSharedMemoryPool(const std::string &name);
     ~AVSharedMemoryPool();
@@ -89,8 +89,6 @@ public:
         return name_;
     }
 
-    DISALLOW_COPY_AND_MOVE(AVSharedMemoryPool);
-
 private:
     bool DoAcquireMemory(int32_t size, AVSharedMemory **outMemory);
     AVSharedMemory *AllocMemory(int32_t size);
@@ -107,7 +105,7 @@ private:
     MemoryAvailableNotifier notifier_;
     bool forceNonBlocking_ = false;
 };
-}
-}
+} // namespace Media
+} // namespace OHOS
 
 #endif
