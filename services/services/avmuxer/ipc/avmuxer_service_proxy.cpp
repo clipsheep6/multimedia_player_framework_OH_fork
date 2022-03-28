@@ -81,7 +81,7 @@ int32_t AVMuxerServiceProxy::SetOutput(int32_t fd, const std::string &format)
         return MSERR_UNKNOWN;
     }
 
-    (void)data.WriteInt32(fd);
+    (void)data.WriteFileDescriptor(fd);
     (void)data.WriteString(format);
     int error = Remote()->SendRequest(SET_OUTPUT, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call SetOutput, error: %{public}d", error);

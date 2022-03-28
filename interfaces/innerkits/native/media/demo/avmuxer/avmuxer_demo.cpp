@@ -18,6 +18,7 @@
 #include <fstream>
 #include <cstdio>
 #include <unistd.h>
+#include <fcntl.h>
 #include "securec.h"
 namespace OHOS {
 namespace Media {
@@ -133,8 +134,8 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
 {
     const int32_t *videoFrameArray = H264_FRAME_SIZE;
     const int32_t *audioFrameArray = AAC_FRAME_SIZE;
-    std::shared_ptr<std::ifstream> videoFile = openFile("/system/app/test.h264");
-    std::shared_ptr<std::ifstream> audioFile = openFile("/system/app/test.aac");
+    std::shared_ptr<std::ifstream> videoFile = openFile("/data/media/test.h264");
+    std::shared_ptr<std::ifstream> audioFile = openFile("/data/media/test.aac");
 
     int64_t stamp = 0;
     int i = 0;
@@ -185,11 +186,11 @@ int32_t AVMuxerDemo::AddTrackAudio()
 
 void AVMuxerDemo::DoNext()
 {
-    std::string path = "/system/app/output.mp4";
+    std::string path = "/data/media/output.mp4";
     std::string format = "mp4";
-    int32_t fd = open(path, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+    int32_t fd = open(path.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
     if (fd < 0) {
-        std::cout << "Open file failed! filePath is: " << path << endl;
+        std::cout << "Open file failed! filePath is: " << path << std::endl;
         return;
     }
     avmuxer_->SetOutput(fd, format);
@@ -203,6 +204,8 @@ void AVMuxerDemo::DoNext()
 
     avmuxer_->Stop();
     avmuxer_->Release();
+
+    (void)::close(fd);
 }
 
 void AVMuxerDemo::RunCase()

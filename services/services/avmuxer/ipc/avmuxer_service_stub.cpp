@@ -158,7 +158,7 @@ int32_t AVMuxerServiceStub::GetAVMuxerFormatList(MessageParcel &data, MessagePar
 
 int32_t AVMuxerServiceStub::SetOutput(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t fd = data.ReadInt32();
+    int32_t fd = data.ReadFileDescriptor();
     std::string format = data.ReadString();
     reply.WriteInt32(SetOutput(fd, format));
     return MSERR_OK;

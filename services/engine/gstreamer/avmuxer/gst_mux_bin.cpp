@@ -15,7 +15,6 @@
 
 #include "config.h"
 #include "gst_mux_bin.h"
-#include <fcntl.h>
 #include "gstappsrc.h"
 #include "gstbasesink.h"
 #include "gstbaseparse.h"
@@ -75,7 +74,7 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
 
     g_object_class_install_property(gobject_class, PROP_FD,
         g_param_spec_int("fd", "FD", "fd of the output file",
-            0, G_MAXINT32, -1, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            G_MININT32, G_MAXINT32, -1, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_MUX,
         g_param_spec_string("mux", "Mux", "type of the mux",

@@ -117,7 +117,7 @@ int32_t AVMuxerEngineGstImpl::SetOutput(int32_t fd, const std::string &format)
 
     g_object_set(muxBin_, "fd", fd, "mux", FORMAT_TO_MUX.at(format).c_str(), nullptr);
     format_ = format;
-    
+
     return MSERR_OK;
 }
 
@@ -221,14 +221,6 @@ int32_t AVMuxerEngineGstImpl::Start()
         gst_app_src_set_callbacks(src, &callbacks, reinterpret_cast<gpointer *>(&trackInfo_), nullptr);
         info.second.src_ = src;
     }
-
-    return MSERR_OK;
-}
-
-int32_t PushCodecData(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo,
-    GstAppSrc *src, GstShMemWrapAllocator *allocator)
-{
-    
 
     return MSERR_OK;
 }

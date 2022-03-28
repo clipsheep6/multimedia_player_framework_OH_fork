@@ -38,7 +38,7 @@ struct AVMuxerNapiAsyncContext : public MediaAsyncContext {
     explicit AVMuxerNapiAsyncContext(napi_env env) : MediaAsyncContext(env) {}
     ~AVMuxerNapiAsyncContext() = default;
     AVMuxerNapi *jsAVMuxer = nullptr;
-    std::string path_;
+    std::string fd_;
     std::string format_;
     MediaDescription trackDesc_;
     int32_t trackId_;
@@ -187,7 +187,7 @@ void AVMuxerNapi::AsyncSetOutput(napi_env env, void *data)
         return;
     }
 
-    int32_t ret = asyncContext->jsAVMuxer->avmuxerImpl_->SetOutput(asyncContext->path_, asyncContext->format_);
+    int32_t ret = asyncContext->jsAVMuxer->avmuxerImpl_->SetOutput(asyncContext->fd_, asyncContext->format_);
     if (ret != MSERR_OK) {
         asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to call SetOutput");
     }
@@ -213,8 +213,9 @@ napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
     }
  
     napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
-        asyncContext->path_ = CommonNapi::GetStringArgument(env, args[0]);
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_number) {
+        status = napi_get_value_int32(env, args[0], &asyncContext->fd_);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get fd");
     }
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_string) {
         asyncContext->format_ = CommonNapi::GetStringArgument(env, args[1]);
