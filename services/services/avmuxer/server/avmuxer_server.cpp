@@ -79,7 +79,7 @@ int32_t AVMuxerServer::SetOutput(int32_t fd, const std::string &format)
     CHECK_AND_RETURN_RET_LOG(fd >= 0, MSERR_INVALID_VAL, "failed to get file descriptor");
     int32_t flags = fcntl(fd, F_GETFL);
     CHECK_AND_RETURN_RET_LOG(flags != -1, MSERR_INVALID_VAL, "failed to get file status flags");
-    CHECK_AND_RETURN_RET_LOG(static_cast<uint32_t>(flags) & O_WRONLY == O_WRONLY, MSERR_INVALID_VAL, "Failed to check fd")
+    CHECK_AND_RETURN_RET_LOG((static_cast<uint32_t>(flags) & O_WRONLY) == O_WRONLY, MSERR_INVALID_VAL, "Failed to check fd")
     
     int32_t ret = avmuxerEngine_->SetOutput(fd, format);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetOutput");
