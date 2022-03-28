@@ -1,0 +1,138 @@
+/*
+ * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "convert_codec_data.h"
+#include "media_log.h"
+#include "scope_guard.h"
+#include "securec.h"
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ConvertCodecData"};
+}
+
+namespace OHOS {
+namespace Media {
+ConvertCodecData::ConvertCodecData()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+}
+
+ConvertCodecData::~ConvertCodecData()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+GstBuffer *ConvertCodecData::GetCodecBuffer(std::shared_ptr<AVSharedMemory> sampleData)
+{
+    std::vector<uint8_t> sps;
+    std::vector<uint8_t> pps;
+    std::vector<uint8_t> sei;
+    uint8_t *data = sampleData->GetBase();
+    int32_t len = sampleData->GetSize();
+    GetCodecData(data, len, sps, pps, sei);
+    CHECK_AND_RETURN_RET_LOG(nalSize_ > 0 && sps.size() > 0 && pps.size() > 0 && sei.size() > 0,
+        nullptr, "illegal codec buffer");
+    AVCDecoderConfiguration(sps, pps);
+    return configBuffer_;
+}
+
+const uint8_t *ConvertCodecData::FindNextNal(const uint8_t *start, const uint8_t *end)
+{
+    CHECK_AND_RETURN_RET(start != nullptr && end != nullptr, nullptr);
+    // there is two kind of nal head. four byte 0x00000001 or three byte 0x000001
+    while (start <= end - 3) {
+        if (start[0] == 0x00 && start[1] == 0x00 && start[2] == 0x01) {
+            nalSize_ = 3; // 0x000001 Nal
+            return start;
+        }
+        if (start[0] == 0x00 && start[1] == 0x00 && start[2] == 0x00 && start[3] == 0x01) {
+            nalSize_ = 4; // 0x00000001 Nal
+            return start;
+        }
+        start++;
+    }
+    return end;
+}
+
+void ConvertCodecData::GetCodecData(const uint8_t *data, int32_t len,
+    std::vector<uint8_t> &sps, std::vector<uint8_t> &pps, std::vector<uint8_t> &sei)
+{
+    CHECK_AND_RETURN(data != nullptr);
+    const uint8_t *end = data + len - 1;
+    const uint8_t *pBegin = data;
+    const uint8_t *pEnd = nullptr;
+    while (pBegin < end) {
+        pBegin = FindNextNal(pBegin, end);
+        if (pBegin == end) {
+            break;
+        }
+        pBegin += nalSize_;
+        pEnd = FindNextNal(pBegin, end);
+        if (((*pBegin) & 0x1F) == 0x07) { // sps
+            sps.assign(pBegin, pBegin + static_cast<int>(pEnd - pBegin));
+        }
+        if (((*pBegin) & 0x1F) == 0x08) { // pps
+            pps.assign(pBegin, pBegin + static_cast<int>(pEnd - pBegin));
+        }
+        if (((*pBegin) & 0x1F) == 0x06) { // sei
+            sei.assign(pBegin, pBegin + static_cast<int>(pEnd - pBegin));
+        }
+        pBegin = pEnd;
+    }
+}
+
+void ConvertCodecData::AVCDecoderConfiguration(std::vector<uint8_t> &sps, std::vector<uint8_t> &pps)
+{
+    // 11 is the length of AVCDecoderConfigurationRecord field except sps and pps
+    uint32_t codecBufferSize = sps.size() + pps.size() + 11;
+    GstBuffer *codec = gst_buffer_new_allocate(nullptr, codecBufferSize, nullptr);
+    CHECK_AND_RETURN_LOG(codec != nullptr, "no memory");
+    ON_SCOPE_EXIT(0) {
+        gst_buffer_unref(codec);
+    };
+    GstMapInfo map = GST_MAP_INFO_INIT;
+    CHECK_AND_RETURN_LOG(gst_buffer_map(codec, &map, GST_MAP_READ) == TRUE, "gst_buffer_map fail");
+
+    ON_SCOPE_EXIT(1) {
+        gst_buffer_unmap(codec, &map);
+    };
+
+    uint32_t offset = 0;
+    map.data[offset++] = 0x01; // configurationVersion
+    map.data[offset++] = sps[1]; // AVCProfileIndication
+    map.data[offset++] = sps[2]; // profile_compatibility
+    map.data[offset++] = sps[3]; // AVCLevelIndication
+    map.data[offset++] = 0xff; // lengthSizeMinusOne
+
+    map.data[offset++] = 0xe0 | 0x01; // numOfSequenceParameterSets
+    map.data[offset++] = (sps.size() >> 8) & 0xff; // sequenceParameterSetLength high 8 bits
+    map.data[offset++] = sps.size() & 0xff; // sequenceParameterSetLength low 8 bits
+    // sequenceParameterSetNALUnit
+    CHECK_AND_RETURN_LOG(memcpy_s(map.data + offset, codecBufferSize - offset, &sps[0], sps.size()) == EOK,
+                            "memcpy_s fail");
+    offset += sps.size();
+
+    map.data[offset++] = 0x01; // numOfPictureParameterSets
+    map.data[offset++] = (pps.size() >> 8) & 0xff; // pictureParameterSetLength  high 8 bits
+    map.data[offset++] = pps.size() & 0xff; // pictureParameterSetLength  low 8 bits
+    // pictureParameterSetNALUnit
+    CHECK_AND_RETURN_LOG(memcpy_s(map.data + offset, codecBufferSize - offset, &pps[0], pps.size()) == EOK,
+                            "memcpy_s fail");
+    CANCEL_SCOPE_EXIT_GUARD(0);
+
+    configBuffer_ = codec;
+}
+}  // namespace Media
+}  // namespace OHOS

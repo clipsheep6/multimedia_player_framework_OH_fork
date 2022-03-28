@@ -20,7 +20,7 @@
 #include <vector>
 #include <memory>
 #include "avsharedmemory.h"
-#include "media_types.h"
+#include "avcontainer_types.h"
 #include "media_description.h"
 
 namespace OHOS {
@@ -31,7 +31,7 @@ public:
 
     virtual int32_t Init() = 0;
     virtual std::vector<std::string> GetAVMuxerFormatList() = 0;
-    virtual int32_t SetOutput(const std::string &path, const std::string &format) = 0;
+    virtual int32_t SetOutput(int32_t fd, const std::string &format) = 0;
     virtual int32_t SetLocation(float latitude, float longitude) = 0;
     virtual int32_t SetOrientationHint(int32_t degrees) = 0;
     virtual int32_t AddTrack(const MediaDescription &trackDesc, int32_t &trackIdx) = 0;
