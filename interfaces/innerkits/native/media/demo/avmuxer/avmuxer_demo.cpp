@@ -83,6 +83,7 @@ static const int32_t WIDTH = 480;
 static const int32_t HEIGHT = 640;
 static const int32_t FRAME_RATE = 30;
 static const std::string AUDIO_CODEC_MIME = "audio/mp4a-latm";
+static const int32_t BASE_TIME = 1000;
 static const int32_t SAMPLE_RATE = 44100;
 static const int32_t CHANNEL_COUNT = 2;
 static const uint32_t SLEEP_UTIME = 100000;
@@ -137,23 +138,23 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
     std::shared_ptr<std::ifstream> videoFile = openFile("/data/media/test.h264");
     std::shared_ptr<std::ifstream> audioFile = openFile("/data/media/test.aac");
 
-    int64_t stamp = 0;
+    int64_t videoStamp = 0;
+    int64_t audioStamp = 0;
     int i = 0;
     int videoLen = sizeof(H264_FRAME_SIZE) / sizeof(int32_t);
     int audioLen = sizeof(AAC_FRAME_SIZE) / sizeof(int32_t);
     while (i < videoLen && i < audioLen) {
-        if (!PushBuffer(videoFile, videoFrameArray, i, videoTrakcId_, stamp)) {
+        if (!PushBuffer(videoFile, videoFrameArray, i, videoTrakcId_, videoStamp)) {
             break;
         }
-        if (!PushBuffer(audioFile, audioFrameArray, i, audioTrackId_, stamp)) {
+        if (!PushBuffer(audioFile, audioFrameArray, i, audioTrackId_, audioStamp)) {
             break;
         }
         i++;
         videoFrameArray++;
         audioFrameArray++;
-        if (i != 0) {
-            stamp += TIME_STAMP;
-        }
+        videoStamp += TIME_STAMP;
+        audioStamp += (*audioFrameArray) * BASE_TIME / SAMPLE_RATE;
     }
 }
 
