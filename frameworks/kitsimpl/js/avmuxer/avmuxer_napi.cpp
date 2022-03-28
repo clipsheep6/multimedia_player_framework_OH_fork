@@ -38,7 +38,7 @@ struct AVMuxerNapiAsyncContext : public MediaAsyncContext {
     explicit AVMuxerNapiAsyncContext(napi_env env) : MediaAsyncContext(env) {}
     ~AVMuxerNapiAsyncContext() = default;
     AVMuxerNapi *jsAVMuxer = nullptr;
-    std::string fd_;
+    int32_t fd_;
     std::string format_;
     MediaDescription trackDesc_;
     int32_t trackId_;
