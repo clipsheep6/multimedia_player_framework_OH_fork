@@ -37,7 +37,7 @@ namespace {
     constexpr uint32_t MULTIPLY10000 = 10000;
     constexpr uint32_t MAX_VIDEO_TRACK_NUM = 1;
     constexpr uint32_t MAX_AUDIO_TRACK_NUM = 16;
-    constexpr uint32_t MSTONS = 1000000;
+    constexpr uint32_t BASE_TIME = 1000;
 }
 
 namespace OHOS {
@@ -237,8 +237,8 @@ int32_t AVMuxerEngineGstImpl::WriteData(std::shared_ptr<AVSharedMemory> sampleDa
     GstBuffer *buffer = gst_buffer_new();
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "Failed to call gst_buffer_new");
     gst_buffer_append_memory(buffer, mem);
-    GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * MSTONS);
-    GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * MSTONS);
+    GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * BASE_TIME);
+    GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * BASE_TIME);
     if (sampleInfo.flags & AVCODEC_BUFFER_FLAG_SYNC_FRAME) {
         gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
     }

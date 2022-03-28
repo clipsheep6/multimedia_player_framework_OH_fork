@@ -138,8 +138,8 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
     std::shared_ptr<std::ifstream> videoFile = openFile("/data/media/test.h264");
     std::shared_ptr<std::ifstream> audioFile = openFile("/data/media/test.aac");
 
-    int64_t videoStamp = 0;
-    int64_t audioStamp = 0;
+    double videoStamp = 0;
+    double audioStamp = 0;
     int i = 0;
     int videoLen = sizeof(H264_FRAME_SIZE) / sizeof(int32_t);
     int audioLen = sizeof(AAC_FRAME_SIZE) / sizeof(int32_t);

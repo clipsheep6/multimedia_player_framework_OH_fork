@@ -31,8 +31,9 @@ const std::string CLASS_NAME = "AVMuxer";
 const std::string PROPERTY_KEY_SAMPLEINFO = "sampleInfo";
 const std::string PROPERTY_KEY_SIZE = "size";
 const std::string PROPERTY_KEY_FLAG = "flags";
-const std::string PROPERTY_KEY_TIMEUS = "timeMs";
+const std::string PROPERTY_KEY_TIMEMS = "timeMs";
 const std::string PROPERTY_KEY_TRACK_ID = "trackIndex";
+const int32_t BASE_TIME = 1000;
 
 struct AVMuxerNapiAsyncContext : public MediaAsyncContext {
     explicit AVMuxerNapiAsyncContext(napi_env env) : MediaAsyncContext(env) {}
@@ -500,8 +501,10 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG, flags);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_FLAG");
         asyncContext->trackSampleInfo_.flags = static_cast<AVCodecBufferFlag>(flags);
-        ret = CommonNapi::GetPropertyInt64(env, trackSampleInfo, PROPERTY_KEY_TIMEUS, asyncContext->trackSampleInfo_.timeMs);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TIMEUS");
+        double milliTime;
+        ret = CommonNapi::GetPropertyDouble(env, trackSampleInfo, PROPERTY_KEY_TIMEMS, milliTime);
+        asyncContext->trackSampleInfo_.timeMs = milliTime * BASE_TIME;
+        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TIMEMS");
         ret = CommonNapi::GetPropertyUint32(env, args[2], PROPERTY_KEY_TRACK_ID, asyncContext->trackSampleInfo_.trackIdx);
         CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TRACK_ID");
     }
