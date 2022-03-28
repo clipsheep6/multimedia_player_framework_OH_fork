@@ -595,7 +595,8 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
 void VideoRecorderNapi::GetConfig(napi_env env, napi_value args,
     std::unique_ptr<VideoRecorderAsyncContext> &ctx, VideoRecorderProperties &properties)
 {
-    int32_t audioSource, videoSource;
+    int32_t audioSource = -1; // default invalid val
+    int32_t videoSource = -1; // default invalid val
 
     bool ret = CommonNapi::GetPropertyInt32(env, args, "audioSourceType", audioSource);
     if (ret == true) {
