@@ -112,7 +112,7 @@ int32_t AVMuxerServiceStub::SetLocation(float latitude, float longitude)
     return avmuxerServer_->SetLocation(latitude, longitude);
 }
 
-int32_t AVMuxerServiceStub::SetOrientationHint(int degrees)
+int32_t AVMuxerServiceStub::SetOrientationHint(int32_t degrees)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     return avmuxerServer_->SetOrientationHint(degrees);

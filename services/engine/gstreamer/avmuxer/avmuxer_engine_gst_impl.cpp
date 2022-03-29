@@ -42,7 +42,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-
 static void StartFeed(GstAppSrc *src, guint length, gpointer userData)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
@@ -144,7 +143,7 @@ int32_t AVMuxerEngineGstImpl::SetLocation(float latitude, float longitude)
     return MSERR_OK;
 }
 
-int32_t AVMuxerEngineGstImpl::SetOrientationHint(int degrees)
+int32_t AVMuxerEngineGstImpl::SetOrientationHint(int32_t degrees)
 {
     MEDIA_LOGD("SetOrientationHint");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");

@@ -101,7 +101,7 @@ int32_t AVMuxerServer::SetLocation(float latitude, float longitude)
     return MSERR_OK;
 }
 
-int32_t AVMuxerServer::SetOrientationHint(int degrees)
+int32_t AVMuxerServer::SetOrientationHint(int32_t degrees)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (curState_ != AVMUXER_OUTPUT_SET && curState_ != AVMUXER_PARAMETER_SET) {

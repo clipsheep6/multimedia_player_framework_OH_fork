@@ -72,7 +72,7 @@ int32_t AVMuxerClient::SetLocation(float latitude, float longitude)
     return avmuxerProxy_->SetLocation(latitude, longitude);
 }
 
-int32_t AVMuxerClient::SetOrientationHint(int degrees)
+int32_t AVMuxerClient::SetOrientationHint(int32_t degrees)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");

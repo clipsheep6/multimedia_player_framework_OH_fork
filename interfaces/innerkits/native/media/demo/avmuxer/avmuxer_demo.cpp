@@ -140,9 +140,9 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
 
     double videoStamp = 0;
     double audioStamp = 0;
-    int i = 0;
-    int videoLen = sizeof(H264_FRAME_SIZE) / sizeof(int32_t);
-    int audioLen = sizeof(AAC_FRAME_SIZE) / sizeof(int32_t);
+    int32_t i = 0;
+    int32_t videoLen = sizeof(H264_FRAME_SIZE) / sizeof(int32_t);
+    int32_t audioLen = sizeof(AAC_FRAME_SIZE) / sizeof(int32_t);
     while (i < videoLen && i < audioLen) {
         if (!PushBuffer(videoFile, videoFrameArray, i, videoTrakcId_, videoStamp)) {
             break;

@@ -269,7 +269,7 @@ napi_value AVMuxerNapi::SetLocation(napi_env env, napi_callback_info info)
     CommonNapi::GetPropertyDouble(env, args[0], "latitude", latitude);
     CommonNapi::GetPropertyDouble(env, args[0], "longitude", longitude);
     
-    int ret = avmuxer->avmuxerImpl_->SetLocation(static_cast<float>(latitude), static_cast<float>(longitude));
+    int32_t ret = avmuxer->avmuxerImpl_->SetLocation(static_cast<float>(latitude), static_cast<float>(longitude));
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call SetLocation");
 
     MEDIA_LOGD("Success SetLocation");

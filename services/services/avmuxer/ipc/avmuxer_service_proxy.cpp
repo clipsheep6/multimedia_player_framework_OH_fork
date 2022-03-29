@@ -106,7 +106,7 @@ int32_t AVMuxerServiceProxy::SetLocation(float latitude, float longitude)
     return reply.ReadInt32();
 }
 
-int32_t AVMuxerServiceProxy::SetOrientationHint(int degrees)
+int32_t AVMuxerServiceProxy::SetOrientationHint(int32_t degrees)
 {
     MessageParcel data;
     MessageParcel reply;
