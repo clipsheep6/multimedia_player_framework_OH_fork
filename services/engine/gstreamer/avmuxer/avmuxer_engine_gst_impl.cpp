@@ -239,9 +239,6 @@ int32_t AVMuxerEngineGstImpl::WriteData(std::shared_ptr<AVSharedMemory> sampleDa
     gst_buffer_append_memory(buffer, mem);
     GST_BUFFER_DTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * BASE_TIME);
     GST_BUFFER_PTS(buffer) = static_cast<uint64_t>(sampleInfo.timeMs * BASE_TIME);
-    // if (sampleInfo.flags & AVCODEC_BUFFER_FLAG_SYNC_FRAME) {
-    //     gst_buffer_set_flags(buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-    // }
 
     GstFlowReturn ret = gst_app_src_push_buffer(src, buffer);
     CHECK_AND_RETURN_RET_LOG(ret == GST_FLOW_OK, MSERR_INVALID_OPERATION, "Failed to call gst_app_src_push_buffer");
