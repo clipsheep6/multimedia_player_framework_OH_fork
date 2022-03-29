@@ -87,8 +87,8 @@ static const int32_t BASE_TIME = 1000;
 static const int32_t SAMPLE_RATE = 44100;
 static const int32_t CHANNEL_COUNT = 2;
 static const uint32_t SLEEP_UTIME = 100000;
-static const double VIDEO_TIME_DURATION = 33.33;
-static const double AUDIO_TIME_DURATION = 23.22;
+static const double VIDEO_TIME_DURATION = 33333;
+static const double AUDIO_TIME_DURATION = 23220;
 
 bool AVMuxerDemo::PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t *FrameArray,
     int32_t i, int32_t TrakcId, int64_t stamp)
