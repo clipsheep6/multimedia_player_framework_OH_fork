@@ -83,7 +83,6 @@ static const int32_t WIDTH = 480;
 static const int32_t HEIGHT = 640;
 static const int32_t FRAME_RATE = 30;
 static const std::string AUDIO_CODEC_MIME = "audio/mp4a-latm";
-static const int32_t BASE_TIME = 1000;
 static const int32_t SAMPLE_RATE = 44100;
 static const int32_t CHANNEL_COUNT = 2;
 static const uint32_t SLEEP_UTIME = 100000;
