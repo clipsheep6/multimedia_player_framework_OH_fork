@@ -135,6 +135,10 @@ static const int32_t MP3_FRAME_SIZE[] = {
     192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192,
     192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192};
 
+static const uint32_t H264_FRAME_NUM = 501;
+static const uint32_t AAC_FRAME_NUM = 433;
+static const uint32_t MPEG4_FRAME_NUM = 602;
+static const uint32_t MP3_FRAME_NUM = 575;
 static const uint32_t SLEEP_UTIME = 100000;
 
 bool AVMuxerDemo::PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t *FrameArray,
@@ -180,25 +184,29 @@ std::shared_ptr<std::ifstream> openFile(const std::string filePath) {
     return file;
 }
 
-void AVMuxerDemo::WriteTrackSampleByteStream()
+void AVMuxerDemo::WriteTrackSample()
 {
     double videoStamp = 0;
     double audioStamp = 0;
     int32_t i = 0;
-    int32_t videoLen = sizeof(MPEG4_FRAME_SIZE) / sizeof(int32_t);
-    int32_t audioLen = sizeof(AAC_FRAME_SIZE) / sizeof(int32_t);
+    int32_t videoLen = videoFile_ == nullptr ? INT32_MAX : videoFrameNum_;
+    int32_t audioLen = audioFile_ == nullptr ? INT32_MAX : audioFrameNum_;
     while (i < videoLen && i < audioLen) {
-        if (!PushBuffer(videoFile_, videoFrameArray_, i, videoTrakcId_, videoStamp)) {
-            break;
+        if (videoFile_ != nullptr) {
+            if (!PushBuffer(videoFile_, videoFrameArray_, i, videoTrakcId_, videoStamp)) {
+                break;
+            }
+            videoFrameArray_++;
+            videoStamp += videoTimeDuration_;
         }
-        if (!PushBuffer(audioFile_, audioFrameArray_, i, audioTrackId_, audioStamp)) {
-            break;
+        if (audioFile_ != nullptr) {
+            if (!PushBuffer(audioFile_, audioFrameArray_, i, audioTrackId_, audioStamp)) {
+                break;
+            }
+            audioFrameArray_++;
+            audioStamp += audioTimeDuration_;
         }
         i++;
-        videoFrameArray_++;
-        audioFrameArray_++;
-        videoStamp += videoTimeDuration_;
-        audioStamp += audioTimeDuration_;
         std::cout << videoStamp << std::endl;
         std::cout << audioStamp << std::endl;
     }
@@ -213,6 +221,7 @@ bool AVMuxerDemo::AddTrackVideo(std::string& videoType)
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), 640);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), 30);
         videoTimeDuration_ = 33333;
+        videoFrameNum_ = H264_FRAME_NUM;
         videoFrameArray_ = H264_FRAME_SIZE;
         videoFile_ = openFile("/data/media/test.h264");
     } else if (videoType == std::string("mpeg4")) {
@@ -221,6 +230,7 @@ bool AVMuxerDemo::AddTrackVideo(std::string& videoType)
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), 480);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), 60);
         videoTimeDuration_ = 16666;
+        videoFrameNum_ = MPEG4_FRAME_NUM;
         videoFrameArray_ = MPEG4_FRAME_SIZE;
         videoFile_ = openFile("/data/media/test.mpeg4");
     } else {
@@ -241,6 +251,7 @@ bool AVMuxerDemo::AddTrackAudio(std::string& audioType)
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_SAMPLE_RATE), 44100);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT), 2);
         audioTimeDuration_ = 23220;
+        audioFrameNum_ = AAC_FRAME_NUM;
         audioFrameArray_ = AAC_FRAME_SIZE;
         audioFile_ = openFile("/data/media/test.aac");
     } else if (audioType == std::string("mp3")) {
@@ -248,6 +259,7 @@ bool AVMuxerDemo::AddTrackAudio(std::string& audioType)
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_SAMPLE_RATE), 48000);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT), 2);
         audioTimeDuration_ = 23220;
+        audioFrameNum_ = MP3_FRAME_NUM;
         audioFrameArray_ = MP3_FRAME_SIZE;
         audioFile_ = openFile("/data/media/test.mp3");
     } else {
@@ -288,11 +300,6 @@ void AVMuxerDemo::DoNext()
         default:
             std::cout << "Failed to check mode" << std::endl;
     }
-    if ((mode == 0 && (AddTrackVideo(videoType_) == false || AddTrackAudio(audioType_) == false)) || 
-        (mode == 1 && (AddTrackVideo(videoType_) == false)) ||
-        (mode == 2 && (AddTrackAudio(audioType_) == false))) {
-        return;
-    }
     path = videoType_ + audioType_ + "." + format;
     int32_t fd = open(path.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
     if (fd < 0) {
@@ -303,8 +310,14 @@ void AVMuxerDemo::DoNext()
     avmuxer_->SetLocation(30.1111, 150.22222);
     avmuxer_->SetOrientationHint(90);
 
+    if ((mode == 0 && (AddTrackVideo(videoType_) == false || AddTrackAudio(audioType_) == false)) || 
+        (mode == 1 && (AddTrackVideo(videoType_) == false)) ||
+        (mode == 2 && (AddTrackAudio(audioType_) == false))) {
+        return;
+    }
+
     avmuxer_->Start();
-    WriteTrackSampleByteStream();
+    WriteTrackSample();
 
     avmuxer_->Stop();
     avmuxer_->Release();
