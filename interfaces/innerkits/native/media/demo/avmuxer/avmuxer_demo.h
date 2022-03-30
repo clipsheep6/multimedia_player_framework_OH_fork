@@ -29,8 +29,8 @@ private:
     bool PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t *FrameArray,
         int32_t i, int32_t TrakcId_, int64_t stamp);
     void WriteTrackSampleByteStream();
-    bool AddTrackVideo(std::string videoType);
-    bool AddTrackAudio(std::string audioType);
+    bool AddTrackVideo(std::string& videoType);
+    bool AddTrackAudio(std::string& audioType);
     void DoNext();
     std::shared_ptr<AVMuxer> avmuxer_;
     int32_t videoTrakcId_ = 0;
@@ -39,6 +39,8 @@ private:
     int32_t audioTimeDuration_ = 0;
     const int32_t *videoFrameArray_ = nullptr;
     const int32_t *audioFrameArray_ = nullptr;
+    std::shared_ptr<std::ifstream> videoFile_ = nullptr;
+    std::shared_ptr<std::ifstream> audioFile_ = nullptr;
 };
 }  // namespace Media
 }  // namespace OHOS

@@ -182,19 +182,16 @@ std::shared_ptr<std::ifstream> openFile(const std::string filePath) {
 
 void AVMuxerDemo::WriteTrackSampleByteStream()
 {
-    std::shared_ptr<std::ifstream> videoFile = openFile("/data/media/test.mpeg4");
-    std::shared_ptr<std::ifstream> audioFile = openFile("/data/media/test.aac");
-
     double videoStamp = 0;
     double audioStamp = 0;
     int32_t i = 0;
     int32_t videoLen = sizeof(MPEG4_FRAME_SIZE) / sizeof(int32_t);
     int32_t audioLen = sizeof(AAC_FRAME_SIZE) / sizeof(int32_t);
     while (i < videoLen && i < audioLen) {
-        if (!PushBuffer(videoFile, videoFrameArray_, i, videoTrakcId_, videoStamp)) {
+        if (!PushBuffer(videoFile_, videoFrameArray_, i, videoTrakcId_, videoStamp)) {
             break;
         }
-        if (!PushBuffer(audioFile, audioFrameArray_, i, audioTrackId_, audioStamp)) {
+        if (!PushBuffer(audioFile_, audioFrameArray_, i, audioTrackId_, audioStamp)) {
             break;
         }
         i++;
@@ -207,23 +204,25 @@ void AVMuxerDemo::WriteTrackSampleByteStream()
     }
 }
 
-bool AVMuxerDemo::AddTrackVideo(std::string videoType)
+bool AVMuxerDemo::AddTrackVideo(std::string& videoType)
 {
     MediaDescription trackDesc;
-    if (videoType == "h264") {
+    if (videoType == std::string("h264")) {
         trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "video/avc");
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_WIDTH), 480);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), 640);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), 30);
         videoTimeDuration_ = 33333;
         videoFrameArray_ = H264_FRAME_SIZE;
-    } else if (videoType == "mpeg4") {
+        videoFile_ = openFile("/data/media/test.h264");
+    } else if (videoType == std::string("mpeg4")) {
         trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "video/mp4v-es");
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_WIDTH), 720);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), 480);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), 60);
         videoTimeDuration_ = 16666;
         videoFrameArray_ = MPEG4_FRAME_SIZE;
+        videoFile_ = openFile("/data/media/test.mpeg4");
     } else {
         std::cout << "Failed to check video type" << std::endl;
         return false;
@@ -234,21 +233,23 @@ bool AVMuxerDemo::AddTrackVideo(std::string videoType)
     return true;
 }
 
-bool AVMuxerDemo::AddTrackAudio(std::string audioType)
+bool AVMuxerDemo::AddTrackAudio(std::string& audioType)
 {
     MediaDescription trackDesc;
-    if (audioType == "aac") {
+    if (audioType == std::string("aac")) {
         trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "audio/mp4a-latm");
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_SAMPLE_RATE), 44100);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT), 2);
         audioTimeDuration_ = 23220;
         audioFrameArray_ = AAC_FRAME_SIZE;
-    } else if (audioType == "mp3") {
+        audioFile_ = openFile("/data/media/test.aac");
+    } else if (audioType == std::string("mp3")) {
         trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "audio/mpeg");
-        trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_SAMPLE_RATE), 44100);
+        trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_SAMPLE_RATE), 48000);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT), 2);
         audioTimeDuration_ = 23220;
         audioFrameArray_ = MP3_FRAME_SIZE;
+        audioFile_ = openFile("/data/media/test.mp3");
     } else {
         std::cout << "Failed to check audio type" << std::endl;
         return false;
@@ -261,7 +262,14 @@ bool AVMuxerDemo::AddTrackAudio(std::string audioType)
 
 void AVMuxerDemo::DoNext()
 {
-    std::string path = "/data/media/output.mp4";
+    std::string videoType;
+    std::string audioType;
+    std::cout << "Please enter video type, note: only support h264 and mpeg4" << std::endl;
+    std::cin >> videoType;
+    std::cout << "Please enter audio type, note: only support aac and mp3" << std::endl;
+    std::cin >> audioType;
+
+    std::string path = videoType + "_" + audioType + ".mp4";
     std::string format = "mp4";
     int32_t fd = open(path.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
     if (fd < 0) {
@@ -271,13 +279,6 @@ void AVMuxerDemo::DoNext()
     avmuxer_->SetOutput(fd, format);
     avmuxer_->SetLocation(30.1111, 150.22222);
     avmuxer_->SetOrientationHint(90);
-
-    std::string videoType;
-    std::string audioType;
-    std::cout << "Please enter video type, note: only support h264 and mpeg4" << std::endl;
-    std::cin >> videoType;
-    std::cout << "Please enter audio type, note: only support aac and mp3" << std::endl;
-    std::cin >> videoType;
 
     if (AddTrackVideo(videoType) == false || AddTrackAudio(audioType) == false) {
         return;

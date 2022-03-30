@@ -362,7 +362,7 @@ void AVMuxerEngineGstImpl::OnNotifyMessage(const InnerMessage &msg)
 
 void AVMuxerEngineGstImpl::Clear()
 {
-    for (auto iter = trakcInfo_.begin(); iter != trackInfo.end(); iter++) {
+    for (auto iter = trackInfo_.begin(); iter != trackInfo_.end(); iter++) {
         gst_caps_unref(iter->second.caps_);
     }
     trackInfo_.clear();

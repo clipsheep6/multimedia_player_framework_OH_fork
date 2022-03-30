@@ -125,7 +125,7 @@ static void AddOptionCaps(GstCaps *src_caps, const std::string &mimeType)
     }
 }
 
-static GstCaps *CreateCaps(FormatParam &param, const std::string &mimeType, GstCaps *src_caps)
+static GstCaps *CreateCaps(FormatParam &param, const std::string &mimeType)
 {
     GstCaps *src_caps = nullptr;
     if (AVMuxerUtil::CheckType(mimeType) == VIDEO) {
