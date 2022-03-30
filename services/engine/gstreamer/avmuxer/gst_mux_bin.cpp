@@ -368,7 +368,7 @@ static bool connect_element(GstMuxBin *mux_bin, TrackType type)
         } else if (type == AUDIO) {
             split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->split_mux_sink, "audio_%u");
         }
-        if (((GstTrackInfo *)(iter->data))->parseName_ != nullptr) {
+        if (((GstTrackInfo *)(iter->data))->parseName_[0] != '\0') {
             GstElement *parse = create_parse(mux_bin, ((GstTrackInfo *)(iter->data))->parseName_);
             g_return_val_if_fail(parse != nullptr, false);
             ret = gst_bin_add(GST_BIN(mux_bin), parse);
