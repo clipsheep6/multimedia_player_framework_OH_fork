@@ -262,15 +262,38 @@ bool AVMuxerDemo::AddTrackAudio(std::string& audioType)
 
 void AVMuxerDemo::DoNext()
 {
-    std::string videoType;
-    std::string audioType;
-    std::cout << "Please enter video type, note: only support h264 and mpeg4" << std::endl;
-    std::cin >> videoType;
-    std::cout << "Please enter audio type, note: only support aac and mp3" << std::endl;
-    std::cin >> audioType;
-
-    std::string path = videoType + "_" + audioType + ".mp4";
-    std::string format = "mp4";
+    std::string path;
+    std::string format;
+    std::cout << "Please enter mode, 0: video + audio, 1: video, 2: audio" << std::endl;
+    int32_t mode;
+    std::cin >> mode;
+    switch (mode) {
+        case 0:
+            std::cout << "Please enter video type, note: only support h264 and mpeg4" << std::endl;
+            std::cin >> videoType_;
+            std::cout << "Please enter audio type, note: only support aac and mp3" << std::endl;
+            std::cin >> audioType_;
+            format = "mp4";
+            break;
+        case 1:
+            std::cout << "Please enter video type, note: only support h264 and mpeg4" << std::endl;
+            std::cin >> videoType_;
+            format = "mp4";
+            break;
+        case 2:
+            std::cout << "Please enter audio type, note: only support aac and mp3" << std::endl;
+            std::cin >> audioType_;
+            format = "m4a";
+            break;
+        default:
+            std::cout << "Failed to check mode" << std::endl;
+    }
+    if ((mode == 0 && (AddTrackVideo(videoType_) == false || AddTrackAudio(audioType_) == false)) || 
+        (mode == 1 && (AddTrackVideo(videoType_) == false)) ||
+        (mode == 2 && (AddTrackAudio(audioType_) == false))) {
+        return;
+    }
+    path = videoType_ + audioType_ + "." + format;
     int32_t fd = open(path.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
     if (fd < 0) {
         std::cout << "Open file failed! filePath is: " << path << std::endl;
@@ -280,9 +303,6 @@ void AVMuxerDemo::DoNext()
     avmuxer_->SetLocation(30.1111, 150.22222);
     avmuxer_->SetOrientationHint(90);
 
-    if (AddTrackVideo(videoType) == false || AddTrackAudio(audioType) == false) {
-        return;
-    } 
     avmuxer_->Start();
     WriteTrackSampleByteStream();
 

@@ -41,6 +41,8 @@ private:
     const int32_t *audioFrameArray_ = nullptr;
     std::shared_ptr<std::ifstream> videoFile_ = nullptr;
     std::shared_ptr<std::ifstream> audioFile_ = nullptr;
+    std::string videoType_ = std::string("");
+    std::string audioType_ = std::string("");
 };
 }  // namespace Media
 }  // namespace OHOS
