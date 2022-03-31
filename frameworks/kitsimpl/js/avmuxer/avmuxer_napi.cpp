@@ -66,7 +66,7 @@ napi_value AVMuxerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("stop", Stop),
         DECLARE_NAPI_FUNCTION("release", Release),
         DECLARE_NAPI_SETTER("location", SetLocation),
-        DECLARE_NAPI_SETTER("orientationHint", SetOrientationHint),
+        DECLARE_NAPI_SETTER("rotation", SetRotation),
     };
     
     napi_property_descriptor staticProperties[] = {
@@ -269,9 +269,9 @@ napi_value AVMuxerNapi::SetLocation(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value AVMuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info)
+napi_value AVMuxerNapi::SetRotation(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("SetOrientationHint In");
+    MEDIA_LOGD("SetRotation In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     napi_value jsThis = nullptr;
@@ -292,14 +292,14 @@ napi_value AVMuxerNapi::SetOrientationHint(napi_env env, napi_callback_info info
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && valueType == napi_number, result,
         "Failed to check argument type");
     
-    int32_t degrees;
-    status = napi_get_value_int32(env, args[0], &degrees);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get degrees");
+    int32_t rotation;
+    status = napi_get_value_int32(env, args[0], &rotation);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get rotation");
     
-    int32_t ret = avmuxer->avmuxerImpl_->SetOrientationHint(degrees);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call SetOrientationHint");
+    int32_t ret = avmuxer->avmuxerImpl_->SetRotation(rotation);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call SetRotation");
 
-    MEDIA_LOGD("Success SetOrientationHint");
+    MEDIA_LOGD("Success SetRotation");
     return result;
 }
 
@@ -451,7 +451,7 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     napi_value jsThis = nullptr;
-    napi_value args[4] = {nullptr,};
+    napi_value args[4] = {nullptr};
     size_t argCount = 4;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
@@ -464,7 +464,7 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
     }
     uint32_t offset;
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number) {
-        CHECK_AND_RETURN_RET(napi_get_value_uint32(env, args[1], &offset) == napi_ok, result, "Failed to get degrees");
+        CHECK_AND_RETURN_RET(napi_get_value_uint32(env, args[1], &offset) == napi_ok, result, "Failed to get offset");
     }
     if (args[2] != nullptr && napi_typeof(env, args[2], &valueType) == napi_ok && valueType == napi_object) {
         (void)CommonNapi::ExtractTrackSampleInfo(env, args[2], asyncContext->trackSampleInfo_);

@@ -54,7 +54,7 @@ int32_t AVMuxerServiceStub::Init()
     avmuxerFuncs_[GET_MUXER_FORMAT_LIST] = &AVMuxerServiceStub::GetAVMuxerFormatList;
     avmuxerFuncs_[SET_OUTPUT] = &AVMuxerServiceStub::SetOutput;
     avmuxerFuncs_[SET_LOCATION] = &AVMuxerServiceStub::SetLocation;
-    avmuxerFuncs_[SET_ORIENTATION_HINT] = &AVMuxerServiceStub::SetOrientationHint;
+    avmuxerFuncs_[SET_ORIENTATION_HINT] = &AVMuxerServiceStub::SetRotation;
     avmuxerFuncs_[ADD_TRACK] = &AVMuxerServiceStub::AddTrack;
     avmuxerFuncs_[START] = &AVMuxerServiceStub::Start;
     avmuxerFuncs_[WRITE_TRACK_SAMPLE] = &AVMuxerServiceStub::WriteTrackSample;
@@ -112,10 +112,10 @@ int32_t AVMuxerServiceStub::SetLocation(float latitude, float longitude)
     return avmuxerServer_->SetLocation(latitude, longitude);
 }
 
-int32_t AVMuxerServiceStub::SetOrientationHint(int32_t degrees)
+int32_t AVMuxerServiceStub::SetRotation(int32_t ratation)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
-    return avmuxerServer_->SetOrientationHint(degrees);
+    return avmuxerServer_->SetRotation(ratation);
 }
 
 int32_t AVMuxerServiceStub::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
@@ -172,10 +172,10 @@ int32_t AVMuxerServiceStub::SetLocation(MessageParcel &data, MessageParcel &repl
     return MSERR_OK;
 }
 
-int32_t AVMuxerServiceStub::SetOrientationHint(MessageParcel &data, MessageParcel &reply)
+int32_t AVMuxerServiceStub::SetRotation(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t degrees = data.ReadInt32();
-    reply.WriteInt32(SetOrientationHint(degrees));
+    int32_t ratation = data.ReadInt32();
+    reply.WriteInt32(SetRotation(ratation));
     return MSERR_OK;
 }
 

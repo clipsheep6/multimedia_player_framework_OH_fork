@@ -143,10 +143,10 @@ namespace {
         192, 192, 192, 192, 192, 192, 192, 192
     };
     std::map<std::string, std::tuple<uint32_t, uint32_t, const int32_t*, std::string>> CODEC_PARAMETER = {
-        {"h264", {33333, 501, H264_FRAME_SIZE, "/data/media/test.h264"}},
-        {"mpeg4", {16666, 602, MPEG4_FRAME_SIZE, "/data/media/test.mpeg4"}},
-        {"aac", {23220, 433, AAC_FRAME_SIZE, "/data/media/test.aac"}},
-        {"mp3", {23220, 575, MP3_FRAME_SIZE, "/data/media/test.mp3"}}
+        {"h264", {33333, sizeof(H264_FRAME_SIZE) / sizeof(int32_t), H264_FRAME_SIZE, "/data/media/test.h264"}},
+        {"mpeg4", {16666, sizeof(MPEG4_FRAME_SIZE) / sizeof(int32_t), MPEG4_FRAME_SIZE, "/data/media/test.mpeg4"}},
+        {"aac", {23220, sizeof(AAC_FRAME_SIZE) / sizeof(int32_t), AAC_FRAME_SIZE, "/data/media/test.aac"}},
+        {"mp3", {23220, sizeof(MP3_FRAME_SIZE) / sizeof(int32_t), MP3_FRAME_SIZE, "/data/media/test.mp3"}}
     };
 
     constexpr uint32_t DURATION_INDEX = 0;
@@ -347,7 +347,7 @@ void AVMuxerDemo::DoNext()
     }
     avmuxer_->SetOutput(fd, format);
     avmuxer_->SetLocation(LATITUDE, LONGITUDE);
-    avmuxer_->SetOrientationHint(RATATION);
+    avmuxer_->SetRotation(RATATION);
 
     if ((mode == VIDEO_AUDIO_MODE && (AddTrackVideo(videoType_) == false ||
         AddTrackAudio(audioType_) == false)) ||
