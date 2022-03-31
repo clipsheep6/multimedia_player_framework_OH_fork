@@ -103,7 +103,7 @@ static int32_t parseParam(FormatParam &param, const MediaDescription &trackDesc,
 static void AddOptionCaps(GstCaps *src_caps, const std::string &mimeType)
 {
     for (auto& elements : optionCapsMap[mimeType]) {
-        switch (std::get<1>(elements)) {
+        switch (std::get<CAPS_FIELD_TYPE_INDEX>(elements)) {
             case G_TYPE_BOOLEAN:
             case G_TYPE_INT:
                 gst_caps_set_simple(src_caps,
