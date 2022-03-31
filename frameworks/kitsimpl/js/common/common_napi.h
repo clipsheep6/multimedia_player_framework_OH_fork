@@ -20,6 +20,7 @@
 #include <vector>
 #include <unordered_map>
 #include "format.h"
+#include "avcontainer_types.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 

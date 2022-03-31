@@ -235,15 +235,15 @@ static GstElement *create_parse(GstMuxBin *mux_bin, const char* parse_name)
     GST_INFO_OBJECT(mux_bin, "create_parse");
     g_return_val_if_fail(mux_bin != nullptr, nullptr);
     GstElement *parse = nullptr;
-    if (strcmp(parse_name, "h264parse") == 0) {
-        parse = gst_element_factory_make("h264parse", "h264parse");
+    if (strstr(parse_name, "h264parse") != nullptr) {
+        parse = gst_element_factory_make("h264parse", parse_name);
         g_return_val_if_fail(parse != nullptr, nullptr);
-    } else if (strcmp(parse_name, "mpeg4videoparse") == 0) {
-        parse = gst_element_factory_make("mpeg4videoparse", "mpeg4parse");
+    } else if (strstr(parse_name, "mpeg4videoparse") != nullptr) {
+        parse = gst_element_factory_make("mpeg4videoparse", parse_name);
         g_return_val_if_fail(parse != nullptr, nullptr);
         g_object_set(parse, "config-interval", -1, "drop", false, nullptr);
-    } else if (strcmp(parse_name, "aacparse") == 0) {
-        parse = gst_element_factory_make("aacparse", "aacparse");
+    } else if (strstr(parse_name, "aacparse") != nullptr) {
+        parse = gst_element_factory_make("aacparse", parse_name);
         g_return_val_if_fail(parse != nullptr, nullptr);
     } else {
         GST_ERROR_OBJECT(mux_bin, "Invalid videoParse");
