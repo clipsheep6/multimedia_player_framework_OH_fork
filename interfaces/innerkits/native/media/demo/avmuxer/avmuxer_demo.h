@@ -31,7 +31,7 @@ private:
     void WriteTrackSample();
     bool AddTrackVideo(std::string& videoType);
     bool AddTrackAudio(std::string& audioType);
-    void SetParameter(std::string type)
+    void SetParameter(std::string type);
     void DoNext();
     std::shared_ptr<AVMuxer> avmuxer_;
     int32_t videoTrakcId_ = 0;

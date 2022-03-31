@@ -28,13 +28,6 @@ namespace OHOS {
 namespace Media {
 napi_ref AVMuxerNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVMuxer";
-const std::string PROPERTY_KEY_SAMPLEINFO = "sampleInfo";
-const std::string PROPERTY_KEY_SIZE = "size";
-const std::string PROPERTY_KEY_FLAG = "flags";
-const std::string PROPERTY_KEY_TIMEMS = "timeMs";
-const std::string PROPERTY_KEY_TRACK_ID = "trackIndex";
-const int32_t MS_TO_US = 1000;
-
 struct AVMuxerNapiAsyncContext : public MediaAsyncContext {
     explicit AVMuxerNapiAsyncContext(napi_env env) : MediaAsyncContext(env) {}
     ~AVMuxerNapiAsyncContext() = default;
@@ -445,20 +438,6 @@ void AVMuxerNapi::AsyncWriteTrackSample(napi_env env, void *data)
         asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsAVMuxer or avmuxerImpl_ is nullptr");
         return;
     }
-    // 暂时为同步接口
-    // napi_value sampleData = nullptr;
-    // MEDIA_LOGD("begin arraybuffer");
-    // napi_get_reference_value(env, asyncContext->sample_, &sampleData);
-    // MEDIA_LOGD("begin arraybuffer1");
-    // napi_get_arraybuffer_info(env, sampleData, &(asyncContext->arrayBuffer_), &(asyncContext->arrayBufferSize_));
-    // std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(static_cast<uint8_t*>(asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
-    // avMem->SetRange(asyncContext->trackSampleInfo_.offset, asyncContext->trackSampleInfo_.size);
-    // MEDIA_LOGD("data[0] is: %{public}u, data[1] is: %{public}u, data[2] is: %{public}u, data[3] is: %{public}u,", ((uint8_t*)(asyncContext->arrayBuffer_))[0], ((uint8_t*)(asyncContext->arrayBuffer_))[1], ((uint8_t*)(asyncContext->arrayBuffer_))[2], ((uint8_t*)(asyncContext->arrayBuffer_))[3]);
-    // int32_t ret = asyncContext->jsAVMuxer->avmuxerImpl_->WriteTrackSample(avMem, asyncContext->trackSampleInfo_);
-    // if (ret != MSERR_OK) {
-    //     asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to AsyncWriteTrackSample");
-    // }
-    // napi_delete_reference(env, asyncContext->sample_);
     MEDIA_LOGD("AsyncWriteTrackSample Out");
 }
 
@@ -482,31 +461,13 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
     bool isArrayBuffer = false;
     if (args[0] != nullptr && napi_is_arraybuffer(env, args[0], &isArrayBuffer) == napi_ok && isArrayBuffer == true) {
         napi_get_arraybuffer_info(env, args[0], &(asyncContext->arrayBuffer_), &(asyncContext->arrayBufferSize_));
-        // napi_create_reference(env, args[0], 1, &asyncContext->sample_);
     }
     uint32_t offset;
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number) {
-        status = napi_get_value_uint32(env, args[1], &offset);
-        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get degrees");
+        CHECK_AND_RETURN_RET(napi_get_value_uint32(env, args[1], &offset) == napi_ok, result, "Failed to get degrees");
     }
     if (args[2] != nullptr && napi_typeof(env, args[2], &valueType) == napi_ok && valueType == napi_object) {
-        bool ret;
-        napi_status state;
-        napi_value trackSampleInfo;
-        state = napi_get_named_property(env, args[2], PROPERTY_KEY_SAMPLEINFO.c_str(), &trackSampleInfo);
-        CHECK_AND_RETURN_RET_LOG(state == napi_ok, result, "Failed to call napi_get_named_property");
-        ret = CommonNapi::GetPropertyUint32(env, trackSampleInfo, PROPERTY_KEY_SIZE, asyncContext->trackSampleInfo_.size);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_SIZE");
-        int32_t flags;
-        ret = CommonNapi::GetPropertyInt32(env, trackSampleInfo, PROPERTY_KEY_FLAG, flags);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_FLAG");
-        asyncContext->trackSampleInfo_.flags = static_cast<AVCodecBufferFlag>(flags);
-        double milliTime;
-        ret = CommonNapi::GetPropertyDouble(env, trackSampleInfo, PROPERTY_KEY_TIMEMS, milliTime);
-        asyncContext->trackSampleInfo_.timeMs = milliTime * MS_TO_US;
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TIMEMS");
-        ret = CommonNapi::GetPropertyUint32(env, args[2], PROPERTY_KEY_TRACK_ID, asyncContext->trackSampleInfo_.trackIdx);
-        CHECK_AND_RETURN_RET_LOG(ret == true, result, "Failed to get PROPERTY_KEY_TRACK_ID");
+        (void)AVCodecNapiUtil::ExtractTrackSampleInfo(env, args[2], asyncContext->trackSampleInfo_);
     }
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[3]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
@@ -517,8 +478,8 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         asyncContext->jsAVMuxer->avmuxerImpl_ == nullptr) {
         asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsAVMuxer or avmuxerImpl_ is nullptr");
     } else {
-        std::shared_ptr<AVMemory> avMem =
-            std::make_shared<AVMemory>(static_cast<uint8_t *>(asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
+        std::shared_ptr<AVMemory> avMem = std::make_shared<AVMemory>(static_cast<uint8_t *>(
+            asyncContext->arrayBuffer_), asyncContext->arrayBufferSize_);
         avMem->SetRange(offset, asyncContext->trackSampleInfo_.size);
         asyncContext->writeSampleFlag_ =
             asyncContext->jsAVMuxer->avmuxerImpl_->WriteTrackSample(avMem, asyncContext->trackSampleInfo_);
@@ -631,6 +592,5 @@ napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
 
     return result;
 }
-
 }  // namespace Media
 }  // namespace OHOS
