@@ -197,12 +197,11 @@ void VDecDemo::InputFunc()
         info.offset = 0;
         info.presentationTimeUs = timeStamp_;
 
-        int32_t ret = MSERR_OK;
         if (isFirstFrame_) {
-            ret = vdec_->QueueInputBuffer(index, info, AVCODEC_BUFFER_FLAG_CODEC_DATA);
+            (void)vdec_->QueueInputBuffer(index, info, AVCODEC_BUFFER_FLAG_CODEC_DATA);
             isFirstFrame_ = false;
         } else {
-            ret = vdec_->QueueInputBuffer(index, info, AVCODEC_BUFFER_FLAG_NONE);
+            (void)vdec_->QueueInputBuffer(index, info, AVCODEC_BUFFER_FLAG_NONE);
         }
 
         free(fileBuffer);
@@ -213,11 +212,6 @@ void VDecDemo::InputFunc()
         frameCount_++;
         if (frameCount_ == DEFAULT_FRAME_COUNT) {
             cout << "Finish decode, exit" << endl;
-            break;
-        }
-
-        if (ret != MSERR_OK) {
-            cout << "Fatal error, exit" << endl;
             break;
         }
     }

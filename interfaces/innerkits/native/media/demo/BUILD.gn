@@ -56,11 +56,11 @@ ohos_executable("media_demo") {
   ]
 
   sources = [
+    "./avcodec/audio_decoder/avcodec_adec_demo.cpp",
+    "./avcodec/audio_encoder/avcodec_aenc_demo.cpp",
     "./avcodec/avcodeclist/avcodeclist_demo.cpp",
     "./avcodec/video_decoder/avcodec_vdec_demo.cpp",
     "./avcodec/video_encoder/avcodec_venc_demo.cpp",
-    "./avcodec/audio_decoder/avcodec_adec_demo.cpp",
-    "./avcodec/audio_encoder/avcodec_aenc_demo.cpp",
     "./avmetadatahelper/avmetadatahelper_demo.cpp",
     "./media_demo.cpp",
     "./player/data_source/media_data_source_demo_noseek.cpp",
