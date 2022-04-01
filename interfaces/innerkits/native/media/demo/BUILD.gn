@@ -20,9 +20,11 @@ ohos_executable("media_demo") {
     "./player/data_source",
     "./recorder",
     "./avmetadatahelper",
-    "./avcodeclist",
-    "./avcodecvenc",
-    "./avcodecvdec",
+    "./avcodec/avcodeclist",
+    "./avcodec/video_encoder",
+    "./avcodec/video_decoder",
+    "./avcodec/audio_decoder",
+    "./avcodec/audio_encoder",
     "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
     "//foundation/multimedia/media_standard/services/utils/include",
     "//graphic/standard/interfaces/innerkits/surface",
@@ -31,6 +33,7 @@ ohos_executable("media_demo") {
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//foundation/windowmanager/interfaces/innerkits/wm",
     "//third_party/libjpeg",
+    "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiocommon/include",
   ]
 
   cflags = [
@@ -53,9 +56,11 @@ ohos_executable("media_demo") {
   ]
 
   sources = [
-    "./avcodeclist/avcodeclist_demo.cpp",
-    "./avcodecvdec/avcodec_vdec_demo.cpp",
-    "./avcodecvenc/avcodec_venc_demo.cpp",
+    "./avcodec/audio_decoder/avcodec_adec_demo.cpp",
+    "./avcodec/audio_encoder/avcodec_aenc_demo.cpp",
+    "./avcodec/avcodeclist/avcodeclist_demo.cpp",
+    "./avcodec/video_decoder/avcodec_vdec_demo.cpp",
+    "./avcodec/video_encoder/avcodec_venc_demo.cpp",
     "./avmetadatahelper/avmetadatahelper_demo.cpp",
     "./media_demo.cpp",
     "./player/data_source/media_data_source_demo_noseek.cpp",

@@ -106,7 +106,7 @@ int32_t VDecDemo::Stop()
 
     if (inputLoop_ != nullptr && inputLoop_->joinable()) {
         unique_lock<mutex> lock(signal_->inMutex_);
-        signal_->inQueue_.push(10000); // wake up read loop thread
+        signal_->inQueue_.push(10000); // wake up loop thread
         signal_->inCond_.notify_all();
         lock.unlock();
         inputLoop_->join();
@@ -115,7 +115,7 @@ int32_t VDecDemo::Stop()
 
     if (outputLoop_ != nullptr && outputLoop_->joinable()) {
         unique_lock<mutex> lock(signal_->outMutex_);
-        signal_->outQueue_.push(10000); // wake up read loop thread
+        signal_->outQueue_.push(10000); // wake up loop thread
         signal_->outCond_.notify_all();
         lock.unlock();
         outputLoop_->join();
@@ -180,6 +180,11 @@ void VDecDemo::InputFunc()
         DEMO_CHECK_AND_BREAK_LOG(fileBuffer != nullptr, "Fatal: malloc fail");
 
         (void)testFile_->read(fileBuffer, *frameLen);
+        if (testFile_->eof()) {
+            free(fileBuffer);
+            cout << "Finish" << endl;
+            break;
+        }
         if (memcpy_s(buffer->GetBase(), buffer->GetSize(), fileBuffer, *frameLen) != EOK) {
             free(fileBuffer);
             cout << "Fatal: memcpy fail" << endl;
@@ -191,12 +196,11 @@ void VDecDemo::InputFunc()
         info.offset = 0;
         info.presentationTimeUs = timeStamp_;
 
-        int32_t ret = MSERR_OK;
         if (isFirstFrame_) {
-            ret = vdec_->QueueInputBuffer(index, info, AVCODEC_BUFFER_FLAG_CODEC_DATA);
+            (void)vdec_->QueueInputBuffer(index, info, AVCODEC_BUFFER_FLAG_CODEC_DATA);
             isFirstFrame_ = false;
         } else {
-            ret = vdec_->QueueInputBuffer(index, info, AVCODEC_BUFFER_FLAG_NONE);
+            (void)vdec_->QueueInputBuffer(index, info, AVCODEC_BUFFER_FLAG_NONE);
         }
 
         free(fileBuffer);
@@ -207,11 +211,6 @@ void VDecDemo::InputFunc()
         frameCount_++;
         if (frameCount_ == DEFAULT_FRAME_COUNT) {
             cout << "Finish decode, exit" << endl;
-            break;
-        }
-
-        if (ret != MSERR_OK) {
-            cout << "Fatal error, exit" << endl;
             break;
         }
     }

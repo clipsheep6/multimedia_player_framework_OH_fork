@@ -13,29 +13,34 @@
  * limitations under the License.
  */
 
-#ifndef AVCODEC_VENC_DEMO_H
-#define AVCODEC_VENC_DEMO_H
+#ifndef AVCODEC_ADEC_DEMO_H
+#define AVCODEC_ADEC_DEMO_H
 
 #include <atomic>
+#include <fstream>
 #include <thread>
 #include <queue>
 #include <string>
-#include "avcodec_video_encoder.h"
+#include "avcodec_audio_decoder.h"
 #include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
-class VEncSignal {
+class ADecSignal {
 public:
-    std::mutex mutex_;
-    std::condition_variable cond_;
-    std::queue<uint32_t> bufferQueue_;
+    std::mutex inMutex_;
+    std::mutex outMutex_;
+    std::condition_variable inCond_;
+    std::condition_variable outCond_;
+    std::queue<uint32_t> inQueue_;
+    std::queue<uint32_t> outQueue_;
+    std::queue<uint32_t> sizeQueue_;
 };
 
-class VEncDemoCallback : public AVCodecCallback, public NoCopyable {
+class ADecDemoCallback : public AVCodecCallback, public NoCopyable {
 public:
-    explicit VEncDemoCallback(std::shared_ptr<VEncSignal> signal);
-    virtual ~VEncDemoCallback() = default;
+    explicit ADecDemoCallback(std::shared_ptr<ADecSignal> signal);
+    virtual ~ADecDemoCallback() = default;
 
     void OnError(AVCodecErrorType errorType, int32_t errorCode) override;
     void OnOutputFormatChanged(const Format &format) override;
@@ -43,38 +48,36 @@ public:
     void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
 
 private:
-    std::shared_ptr<VEncSignal> signal_;
+    std::shared_ptr<ADecSignal> signal_;
 };
 
-class VEncDemo : public NoCopyable {
+class ADecDemo : public NoCopyable {
 public:
-    VEncDemo() = default;
-    virtual ~VEncDemo() = default;
-
-    void RunCase(bool enableProp);
-    void GenerateData(uint32_t count, uint32_t fps);
+    ADecDemo() = default;
+    virtual ~ADecDemo() = default;
+    void RunCase();
 
 private:
-    int32_t CreateVenc();
+    int32_t CreateAdec();
     int32_t Configure(const Format &format);
     int32_t Prepare();
     int32_t Start();
-    int32_t SetParameter(int32_t suspend, int32_t maxFps, int32_t repeatMs);
     int32_t Stop();
     int32_t Flush();
     int32_t Reset();
     int32_t Release();
-    sptr<Surface> GetVideoSurface();
-    void LoopFunc();
+    void InputFunc();
+    void OutputFunc();
 
     std::atomic<bool> isRunning_ = false;
-    std::unique_ptr<std::thread> readLoop_;
-    std::shared_ptr<VideoEncoder> venc_;
-    std::shared_ptr<VEncSignal> signal_;
-    std::shared_ptr<VEncDemoCallback> cb_;
-    sptr<Surface> surface_ = nullptr;
-    int64_t timestampNs_ = 0;
+    std::unique_ptr<std::ifstream> testFile_;
+    std::unique_ptr<std::thread> inputLoop_;
+    std::unique_ptr<std::thread> outputLoop_;
+    std::shared_ptr<AudioDecoder> adec_;
+    std::shared_ptr<ADecSignal> signal_;
+    std::shared_ptr<ADecDemoCallback> cb_;
+    int64_t timeStamp_ = 0;
 };
 } // namespace Media
 } // namespace OHOS
-#endif // AVCODEC_VENC_DEMO_H
+#endif // AVCODEC_ADEC_DEMO_H
