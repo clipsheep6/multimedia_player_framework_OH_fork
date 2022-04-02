@@ -81,7 +81,7 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
             nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_DEGREES,
-        g_param_spec_int("degrees", "Degrees", "rotation angle of the output file",
+        g_param_spec_int("ratation", "Ratation", "rotation angle of the output file",
             0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_LATITUDE,
@@ -108,7 +108,7 @@ static void gst_mux_bin_init(GstMuxBin *mux_bin)
     mux_bin->split_mux_sink = nullptr;
     mux_bin->out_fd = -1;
     mux_bin->mux = nullptr;
-    mux_bin->degrees = 0;
+    mux_bin->ratation = 0;
     mux_bin->latitude = 0;
     mux_bin->longitude = 0;
 }
@@ -163,7 +163,7 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id,
             mux_bin->mux = g_strdup(g_value_get_string(value));
             break;
         case PROP_DEGREES:
-            mux_bin->degrees = g_value_get_int(value);
+            mux_bin->ratation = g_value_get_int(value);
             break;
         case PROP_LATITUDE:
             mux_bin->latitude = g_value_get_int(value);
@@ -191,7 +191,7 @@ static void gst_mux_bin_get_property(GObject *object, guint prop_id,
             g_value_set_string(value, mux_bin->mux);
             break;
         case PROP_DEGREES:
-            g_value_set_int(value, mux_bin->degrees);
+            g_value_set_int(value, mux_bin->ratation);
             break;
         case PROP_LATITUDE:
             g_value_set_int(value, mux_bin->latitude);
@@ -223,7 +223,7 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 
     GstElement *qtmux = gst_element_factory_make(mux_bin->mux, mux_bin->mux);
     g_return_val_if_fail(qtmux != nullptr, false);
-    g_object_set(qtmux, "orientation-hint", mux_bin->degrees, "set-latitude", mux_bin->latitude,
+    g_object_set(qtmux, "orientation-hint", mux_bin->ratation, "set-latitude", mux_bin->latitude,
         "set-longitude", mux_bin->longitude, nullptr);
     g_object_set(mux_bin->split_mux_sink, "muxer", qtmux, nullptr);
 
@@ -235,15 +235,15 @@ static GstElement *create_parse(GstMuxBin *mux_bin, const char* parse_name)
     GST_INFO_OBJECT(mux_bin, "create_parse");
     g_return_val_if_fail(mux_bin != nullptr, nullptr);
     GstElement *parse = nullptr;
-    if (strcmp(parse_name, "h264parse") == 0) {
-        parse = gst_element_factory_make("h264parse", "h264parse");
+    if (strstr(parse_name, "h264parse") != nullptr) {
+        parse = gst_element_factory_make("h264parse", parse_name);
         g_return_val_if_fail(parse != nullptr, nullptr);
-    } else if (strcmp(parse_name, "mpeg4videoparse") == 0) {
-        parse = gst_element_factory_make("mpeg4videoparse", "mpeg4parse");
+    } else if (strstr(parse_name, "mpeg4videoparse") != nullptr) {
+        parse = gst_element_factory_make("mpeg4videoparse", parse_name);
         g_return_val_if_fail(parse != nullptr, nullptr);
         g_object_set(parse, "config-interval", -1, "drop", false, nullptr);
-    } else if (strcmp(parse_name, "aacparse") == 0) {
-        parse = gst_element_factory_make("aacparse", "aacparse");
+    } else if (strstr(parse_name, "aacparse") != nullptr) {
+        parse = gst_element_factory_make("aacparse", parse_name);
         g_return_val_if_fail(parse != nullptr, nullptr);
     } else {
         GST_ERROR_OBJECT(mux_bin, "Invalid videoParse");
@@ -368,7 +368,7 @@ static bool connect_element(GstMuxBin *mux_bin, TrackType type)
         } else if (type == AUDIO) {
             split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->split_mux_sink, "audio_%u");
         }
-        if (((GstTrackInfo *)(iter->data))->parseName_ != nullptr) {
+        if (((GstTrackInfo *)(iter->data))->parseName_[0] != '\0') {
             GstElement *parse = create_parse(mux_bin, ((GstTrackInfo *)(iter->data))->parseName_);
             g_return_val_if_fail(parse != nullptr, false);
             ret = gst_bin_add(GST_BIN(mux_bin), parse);

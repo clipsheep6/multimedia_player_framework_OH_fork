@@ -42,7 +42,7 @@ const std::map<std::string, std::set<std::string>> FORMAT_TO_MIME {
 const std::map<const std::string, std::tuple<const std::string, std::string>> MIME_MAP_TYPE {
     {"video/avc", {"video/x-h264", "h264parse"}},
     {"video/h263", {"video/x-h263", ""}},
-    {"video/mp4v-es", {"video/mpeg", "mpeg4parse"}},
+    {"video/mp4v-es", {"video/mpeg", "mpeg4videoparse"}},
     {"audio/mp4a-latm", {"audio/mpeg", "aacparse"}},
     {"audio/mpeg", {"audio/mpeg", ""}}
 };
@@ -70,7 +70,7 @@ public:
 
     static TrackType CheckType(const std::string &mimeType);
     static int32_t SetCaps(const MediaDescription &trackDesc, const std::string &mimeType,
-        GstCaps *src_caps);
+        GstCaps **src_caps);
 };
 }  // namespace Media
 }  // namespace OHOS

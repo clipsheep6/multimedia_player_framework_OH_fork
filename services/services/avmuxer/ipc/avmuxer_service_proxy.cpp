@@ -107,7 +107,7 @@ int32_t AVMuxerServiceProxy::SetLocation(float latitude, float longitude)
     return reply.ReadInt32();
 }
 
-int32_t AVMuxerServiceProxy::SetOrientationHint(int32_t degrees)
+int32_t AVMuxerServiceProxy::SetRotation(int32_t ratation)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -118,9 +118,9 @@ int32_t AVMuxerServiceProxy::SetOrientationHint(int32_t degrees)
         return MSERR_UNKNOWN;
     }
 
-    (void)data.WriteInt32(degrees);
+    (void)data.WriteInt32(ratation);
     int error = Remote()->SendRequest(SET_ORIENTATION_HINT, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call SetOrientationHint, error: %{public}d", error);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "Failed to call SetRotation, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

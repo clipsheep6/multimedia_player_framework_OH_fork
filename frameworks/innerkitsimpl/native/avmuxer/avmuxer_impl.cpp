@@ -78,10 +78,10 @@ int32_t AVMuxerImpl::SetLocation(float latitude, float longitude)
     return avmuxerService_->SetLocation(latitude, longitude);
 }
 
-int32_t AVMuxerImpl::SetOrientationHint(int32_t degrees)
+int32_t AVMuxerImpl::SetRotation(int32_t ratation)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
-    return avmuxerService_->SetOrientationHint(degrees);
+    return avmuxerService_->SetRotation(ratation);
 }
 
 int32_t AVMuxerImpl::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)

@@ -31,7 +31,7 @@ public:
     std::vector<std::string> GetAVMuxerFormatList() override;
     int32_t SetOutput(int32_t fd, const std::string &format) override;
     int32_t SetLocation(float latitude, float longitude) override;
-    int32_t SetOrientationHint(int32_t degrees) override;
+    int32_t SetRotation(int32_t ratation) override;
     int32_t AddTrack(const MediaDescription &trackDesc, int32_t &trackId) override;
     int32_t Start() override;
     int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) override;
@@ -44,7 +44,7 @@ private:
     int32_t GetAVMuxerFormatList(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutput(MessageParcel &data, MessageParcel &reply);
     int32_t SetLocation(MessageParcel &data, MessageParcel &reply);
-    int32_t SetOrientationHint(MessageParcel &data, MessageParcel &reply);
+    int32_t SetRotation(MessageParcel &data, MessageParcel &reply);
     int32_t AddTrack(MessageParcel &data, MessageParcel &reply);
     int32_t Start(MessageParcel &data, MessageParcel &reply);
     int32_t WriteTrackSample(MessageParcel &data, MessageParcel &reply);
