@@ -243,8 +243,8 @@ int32_t SinkBytebufferImpl::AddAdtsHead(std::shared_ptr<AVSharedMemory> mem, int
 
     base[0] = 0xFF;
     base[1] = 0xF1;
-    base[2] = static_cast<uint8_t>(head_.profile << 6);
-    base[3] = static_cast<uint8_t>(((head_.channelConfiguration & 0x03) << 6) + (adtsFrameSize >> 11)) ;
+    base[2] = static_cast<uint8_t>(((head_.profile - 1) << 6) + (head_.samplingIndex << 2) + head.channelConfig >> 2);
+    base[3] = static_cast<uint8_t>(((head_.channelConfig & 0x03) << 6) + (adtsFrameSize >> 11)) ;
     base[4] = static_cast<uint8_t>((adtsFrameSize & 0x7FF) >> 3);
     base[5] = static_cast<uint8_t>(((adtsFrameSize & 0x07) << 5) + 0x1F);
     base[6] = 0xFC;

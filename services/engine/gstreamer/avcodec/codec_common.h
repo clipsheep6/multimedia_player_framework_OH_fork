@@ -91,12 +91,9 @@ const std::map<int32_t, MPEG4SamplingFrequencies> MPEG4_SAMPLING_FREQUENCIES = {
 };
 
 struct AdtsFixedHeader {
-    int32_t version = 0; // MPEG-4
-    int32_t layer = 0;
-    int32_t protectAbsent = 1; // no CRC
-    int32_t profile = 1; // AAC_LC
-    int32_t samplingFrequencyIndex = 0;
-    int32_t channelConfiguration = 0;
+    int32_t profile = 2; // AAC_LC
+    int32_t samplingIndex = 0;
+    int32_t channelConfig = 0;
 };
 
 struct BufferWrapper {
