@@ -28,12 +28,6 @@
 
 namespace OHOS {
 namespace Media {
-/**
- * @brief Enumerates the codec mime type.
- *
- * @since 3.1
- * @version 3.1
- */
 enum InnerCodecMimeType : int32_t {
     CODEC_MIMIE_TYPE_DEFAULT = -1,
     /** H263 */
@@ -60,6 +54,49 @@ enum VideoEncoderBitrateMode : int32_t {
     VIDEO_ENCODER_BITRATE_MODE_CBR = 0,
     VIDEO_ENCODER_BITRATE_MODE_VBR,
     VIDEO_ENCODER_BITRATE_MODE_CQ,
+};
+
+enum MPEG4SamplingFrequencies : int32_t {
+    MPEG4_SAMPLING_FREQUENCY_0 = 0,
+    MPEG4_SAMPLING_FREQUENCY_1,
+    MPEG4_SAMPLING_FREQUENCY_2,
+    MPEG4_SAMPLING_FREQUENCY_3,
+    MPEG4_SAMPLING_FREQUENCY_4,
+    MPEG4_SAMPLING_FREQUENCY_5,
+    MPEG4_SAMPLING_FREQUENCY_6,
+    MPEG4_SAMPLING_FREQUENCY_7,
+    MPEG4_SAMPLING_FREQUENCY_8,
+    MPEG4_SAMPLING_FREQUENCY_9,
+    MPEG4_SAMPLING_FREQUENCY_10,
+    MPEG4_SAMPLING_FREQUENCY_11,
+    MPEG4_SAMPLING_FREQUENCY_12,
+    MPEG4_SAMPLING_FREQUENCY_13,
+};
+
+const std::map<int32_t, MPEG4SamplingFrequencies> MPEG4_SAMPLING_FREQUENCIES = {
+    { 96000, MPEG4_SAMPLING_FREQUENCY_0 },
+    { 88200, MPEG4_SAMPLING_FREQUENCY_1 },
+    { 64000, MPEG4_SAMPLING_FREQUENCY_2 },
+    { 48000, MPEG4_SAMPLING_FREQUENCY_3 },
+    { 44100, MPEG4_SAMPLING_FREQUENCY_4 },
+    { 32000, MPEG4_SAMPLING_FREQUENCY_5 },
+    { 24000, MPEG4_SAMPLING_FREQUENCY_6 },
+    { 22050, MPEG4_SAMPLING_FREQUENCY_7 },
+    { 16000, MPEG4_SAMPLING_FREQUENCY_8 },
+    { 12000, MPEG4_SAMPLING_FREQUENCY_9 },
+    { 11025, MPEG4_SAMPLING_FREQUENCY_10 },
+    { 8000, MPEG4_SAMPLING_FREQUENCY_11 },
+    { 7350, MPEG4_SAMPLING_FREQUENCY_12 },
+    { -1, MPEG4_SAMPLING_FREQUENCY_13 },
+};
+
+struct AdtsFixedHeader {
+    int32_t version = 0; // MPEG-4
+    int32_t layer = 0;
+    int32_t protectAbsent = 1; // no CRC
+    int32_t profile = 1; // AAC_LC
+    int32_t samplingFrequencyIndex = 0;
+    int32_t channelConfiguration = 0;
 };
 
 struct BufferWrapper {
@@ -101,8 +138,10 @@ struct ProcessorConfig {
     GstCaps *caps_ = nullptr;
     bool needCodecData_ = false;
     bool needParser_ = false;
+    bool needAdtsTransform_ = false;
     bool isEncoder_ = false;
     uint32_t bufferSize_ = 0;
+    AdtsFixedHeader head_;
 };
 
 std::string PixelFormatToGst(VideoPixelFormat pixel);
