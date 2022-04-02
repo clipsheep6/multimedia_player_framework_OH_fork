@@ -241,27 +241,12 @@ int32_t SinkBytebufferImpl::AddAdtsHead(std::shared_ptr<AVSharedMemory> mem, int
         base[i] = base[i - adtsHeadSize];
     }
 
-    base[0] = 0xFF; // syncword
-    base[1] = 0xF0; // syncword
-    base[1] |= static_cast<uint8_t>(head_.version << 3); // MPEG version
-    base[1] |= static_cast<uint8_t>(head_.layer << 1); // layer
-    base[1] |= static_cast<uint8_t>(head_.protectAbsent); // protection absent
-
-    base[2] = static_cast<uint8_t>(head_.profile << 6); // profile
-    base[2] |= static_cast<uint8_t>((head_.samplingFrequencyIndex & 0x0F) << 2); // MPEG-4 Sampling Frequency Index
-    base[2] |= 0 << 1; // 	private bit
-    base[2] |= static_cast<uint8_t>((head_.channelConfiguration & 0x04) >> 2); // MPEG-4 Channel Configuration
-
-    base[3] = static_cast<uint8_t>((head_.channelConfiguration & 0x03) << 6); // MPEG-4 Channel Configuration
-    base[3] |= 0 << 5; // originality
-    base[3] |= 0 << 4; // home
-    base[3] |= 0 << 3; // copyrighted id bit
-    base[3] |= 0 << 2; // copyright id start
-    base[3] |= static_cast<uint8_t>((adtsFrameSize & 0x1800) >> 11); // frame length
-
-    base[4] = static_cast<uint8_t>((adtsFrameSize & 0x7F8) >> 3); // frame length
-    base[5] = static_cast<uint8_t>((adtsFrameSize & 0x7) << 5); // frame length
-    base[5] |= 0x1F; // buffer fullness
+    base[0] = 0xFF;
+    base[1] = 0xF1;
+    base[2] = static_cast<uint8_t>(head_.profile << 6);
+    base[3] = static_cast<uint8_t>(((head_.channelConfiguration & 0x03) << 6) + (adtsFrameSize >> 11)) ;
+    base[4] = static_cast<uint8_t>((adtsFrameSize & 0x7FF) >> 3);
+    base[5] = static_cast<uint8_t>(((adtsFrameSize & 0x07) << 5) + 0x1F);
     base[6] = 0xFC;
 
     return MSERR_OK;
