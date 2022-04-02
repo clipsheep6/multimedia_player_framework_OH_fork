@@ -146,6 +146,14 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
     }
 
     config->bufferSize_ = DEFAULT_BUFFER_SIZE;
+    config->needAdtsTransform_ = true;
+    config->head_.channelConfig = channels_;
+    for (auto iter = MPEG4_SAMPLING_FREQUENCIES.begin(); iter != MPEG4_SAMPLING_FREQUENCIES.end(); iter++) {
+        if (sampleRate_ >= iter->first) {
+            config->head_.samplingIndex = iter->second;
+            break;
+        }
+    }
 
     return config;
 }
