@@ -32,7 +32,6 @@ ohos_executable("media_demo") {
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//foundation/windowmanager/interfaces/innerkits/wm",
     "//third_party/libjpeg",
-    "//third_party/ffmpeg/",
   ]
 
   cflags = [
