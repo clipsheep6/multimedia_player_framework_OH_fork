@@ -1,0 +1,91 @@
+# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+ohos_executable("media_demo") {
+  include_dirs = [
+    "./include",
+    "./player",
+    "./player/data_source",
+    "./recorder",
+    "./avmetadatahelper",
+    "./avcodeclist",
+    "./avcodecvenc",
+    "./avcodecvdec",
+    "./avmuxer",
+    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
+    "//foundation/multimedia/media_standard/services/utils/include",
+    "//graphic/standard/interfaces/innerkits/surface",
+    "//foundation/graphic/standard/utils/sync_fence/export",
+    "//drivers/peripheral/display/interfaces/include",
+    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
+    "//foundation/windowmanager/interfaces/innerkits/wm",
+    "//third_party/libjpeg",
+    "//third_party/ffmpeg/",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-std=c++17",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
+    "-Wformat=2",
+    "-Wdate-time",
+  ]
+
+  sources = [
+    "./avcodeclist/avcodeclist_demo.cpp",
+    "./avcodecvdec/avcodec_vdec_demo.cpp",
+    "./avcodecvenc/avcodec_venc_demo.cpp",
+    "./avmetadatahelper/avmetadatahelper_demo.cpp",
+    "./avmuxer/avmuxer_demo.cpp",
+    "./media_demo.cpp",
+    "./player/data_source/media_data_source_demo_noseek.cpp",
+    "./player/data_source/media_data_source_demo_seekable.cpp",
+    "./player/player_demo.cpp",
+    "./recorder/recorder_demo.cpp",
+  ]
+
+  deps = [
+    "//foundation/graphic/standard:libsurface",
+    "//foundation/graphic/standard/frameworks/surface:surface",
+    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/graphic/standard/utils:sync_fence",
+    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+    "//third_party/ffmpeg:libohosffmpeg",
+    "//foundation/multimedia/media_standard/services/utils:media_service_utils",
+    "//foundation/windowmanager/wm:libwm",
+    "//third_party/libjpeg:libjpeg_static",
+    "//utils/native/base:utils",
+  ]
+
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "multimedia_media_standard:media_client",
+  ]
+
+  part_name = "multimedia_media_standard"
+  subsystem_name = "multimedia"
+}

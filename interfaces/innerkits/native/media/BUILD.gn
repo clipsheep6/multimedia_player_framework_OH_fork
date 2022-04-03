@@ -63,6 +63,7 @@ config("media_client_public_config") {
     "$MEDIA_ROOT_DIR/services/utils/include",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
     "//utils/system/safwk/native/include",
+    "//third_party/bounds_checking_function/include",
     "//utils/native/base/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiocommon/include",
@@ -99,17 +100,17 @@ ohos_shared_library("media_client") {
 
   if (defined(ohos_lite)) {
     sources = [
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_audio_decoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_audio_encoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_video_decoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_video_encoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist/avcodec_info.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist/avcodec_list_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmuxer/avmuxer_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder/recorder_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_decoder_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_encoder_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_decoder_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_encoder_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_info.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_list_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avmuxer/avmuxer_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/common/media_errors.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/player/player_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/recorder/recorder_impl.cpp",
       "$MEDIA_ROOT_DIR/services/services/avcodec/server/avcodec_server.cpp",
       "$MEDIA_ROOT_DIR/services/services/avcodeclist/server/avcodeclist_server.cpp",
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/server/avmetadatahelper_server.cpp",
@@ -131,8 +132,8 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
       "//foundation/graphic/standard/frameworks/surface:surface",
       "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+      "//third_party/bounds_checking_function:libsec_static",
       "//utils/native/base:utils",
-      "//utils/native/base:utilsecurec",
     ]
 
     external_deps = [
@@ -141,17 +142,17 @@ ohos_shared_library("media_client") {
     ]
   } else {
     sources = [
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_audio_decoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_audio_encoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_video_decoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodec/avcodec_video_encoder_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist/avcodec_info.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avcodeclist/avcodec_list_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmetadatahelper/avmetadatahelper_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/avmuxer/avmuxer_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/common/media_errors.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/player/player_impl.cpp",
-      "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/recorder/recorder_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_decoder_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_encoder_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_decoder_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_encoder_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_info.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_list_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/avmuxer/avmuxer_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/common/media_errors.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/player/player_impl.cpp",
+      "$MEDIA_ROOT_DIR/frameworks/native/recorder/recorder_impl.cpp",
       "$MEDIA_ROOT_DIR/services/services/avcodec/client/avcodec_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/avcodec/ipc/avcodec_listener_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/avcodec/ipc/avcodec_service_proxy.cpp",
@@ -188,8 +189,8 @@ ohos_shared_library("media_client") {
       "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
       "//foundation/multimedia/media_standard/services/utils:media_format",
       "//foundation/multimedia/media_standard/services/utils:media_service_utils",
+      "//third_party/bounds_checking_function:libsec_static",
       "//utils/native/base:utils",
-      "//utils/native/base:utilsecurec",
     ]
 
     external_deps = [
@@ -201,54 +202,4 @@ ohos_shared_library("media_client") {
 
   subsystem_name = "multimedia"
   part_name = "multimedia_media_standard"
-}
-
-ohos_shared_library("media_surface") {
-  install_enable = true
-  include_dirs = [
-    "//foundation/multimedia/media_standard/frameworks/innerkits/native/media_surface",
-    "//foundation/multimedia/media_standard/interfaces/innerkits/native/media/include",
-    "//foundation/multimedia/media_standard/services/utils/include",
-    "//graphic/standard/interfaces/innerkits/surface",
-    "//foundation/graphic/standard/interfaces/innerkits/wmclient",
-    "//drivers/peripheral/display/interfaces/include",
-  ]
-
-  cflags = [
-    "-Wall",
-    "-Werror",
-    "-std=c++17",
-    "-fno-rtti",
-    "-fno-exceptions",
-    "-Wall",
-    "-fno-common",
-    "-fstack-protector-strong",
-    "-Wshadow",
-    "-FPIC",
-    "-FS",
-    "-O2",
-    "-D_FORTIFY_SOURCE=2",
-    "-fvisibility=hidden",
-    "-Wformat=2",
-    "-Wdate-time",
-  ]
-
-  sources = [ "$MEDIA_ROOT_DIR/frameworks/innerkitsimpl/native/media_surface/media_surface_impl.cpp" ]
-
-  deps = [
-    "//foundation/graphic/standard:libsurface",
-    "//foundation/graphic/standard:libwmclient",
-    "//foundation/graphic/standard/frameworks/surface:surface",
-    "//foundation/graphic/standard/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/windowmanager/wm:libwm",
-    "//utils/native/base:utils",
-  ]
-
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
-  ]
-
-  part_name = "multimedia_media_standard"
-  subsystem_name = "multimedia"
 }
