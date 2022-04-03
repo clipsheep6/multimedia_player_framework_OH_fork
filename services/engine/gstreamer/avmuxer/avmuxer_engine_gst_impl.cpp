@@ -20,7 +20,6 @@
 #include "gstappsrc.h"
 #include "media_errors.h"
 #include "media_log.h"
-#include "convert_codec_data.h"
 #include "gstbaseparse.h"
 #include "gst_mux_bin.h"
 #include "uri_helper.h"
