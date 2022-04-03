@@ -90,7 +90,7 @@ static GstMemory *gst_shmem_wrap_allocator_mem_share(GstMemory *mem, gssize offs
     g_return_val_if_fail(offset >= 0 && static_cast<gsize>(offset) < mem->size, nullptr);
     GstShMemMemory *sub = nullptr;
     GstMemory *parent = nullptr;
-    GST_DEBUG("offset is: %ld, size is: %u", offset, size);
+    GST_DEBUG("offset is: %ld, size is: %lu", offset, size);
     /* find the real parent */
     if ((parent = mem->parent) == NULL) {
         parent = (GstMemory *)mem;
