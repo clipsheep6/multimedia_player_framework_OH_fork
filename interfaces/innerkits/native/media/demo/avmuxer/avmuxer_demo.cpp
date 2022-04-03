@@ -271,17 +271,16 @@ bool AVMuxerDemo::AddTrackVideo(std::string &videoType)
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_WIDTH), H264_WIDTH);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), H264_HEIGHT);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), H264_FRAME_RATE);
-        SetParameter("h264");
     } else if (videoType == "mpeg4") {
         trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "video/mp4v-es");
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_WIDTH), MPEG4_WIDTH);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), MPEG4_HEIGHT);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), MPEG4_FRAME_RATE);
-        SetParameter("mpeg4");
     } else {
         std::cout << "Failed to check video type" << std::endl;
         return false;
     }
+    SetParameter(videoType);
     avmuxer_->AddTrack(trackDesc, videoTrackId_);
     std::cout << "trackId is: " << videoTrackId_ << std::endl;
 
@@ -295,16 +294,15 @@ bool AVMuxerDemo::AddTrackAudio(std::string &audioType)
         trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "audio/mp4a-latm");
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_SAMPLE_RATE), AAC_SAMPLE_RATE);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT), AAC_CHANNEL);
-        SetParameter("aac");
     } else if (audioType == "mp3") {
         trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "audio/mpeg");
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_SAMPLE_RATE), MP3_SAMPLE_RATE);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT), MP3_CHANNEL);
-        SetParameter("mp3");
     } else {
         std::cout << "Failed to check audio type" << std::endl;
         return false;
     }
+    SetParameter(audioType);
     avmuxer_->AddTrack(trackDesc, audioTrackId_);
     std::cout << "trackId is: " << audioTrackId_ << std::endl;
 

@@ -102,7 +102,7 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
 static void gst_mux_bin_init(GstMuxBin *mux_bin)
 {
     g_return_if_fail(mux_bin != nullptr);
-    GST_INFO_OBJECT(mux_bin, "gst_mux_bin_init");
+    GST_DEBUG_OBJECT(mux_bin, "gst_mux_bin_init");
     mux_bin->video_src_list = nullptr;
     mux_bin->audio_src_list = nullptr;
     mux_bin->split_mux_sink = nullptr;
@@ -117,7 +117,7 @@ static void gst_mux_bin_finalize(GObject *object)
 {
     g_return_if_fail(object != nullptr);
     GstMuxBin *mux_bin = GST_MUX_BIN(object);
-    GST_INFO_OBJECT(mux_bin, "gst_mux_bin_finalize");
+    GST_DEBUG_OBJECT(mux_bin, "gst_mux_bin_finalize");
 
     if (mux_bin->mux != nullptr) {
         g_free(mux_bin->mux);
@@ -206,7 +206,7 @@ static void gst_mux_bin_get_property(GObject *object, guint prop_id,
 
 static bool create_splitmuxsink(GstMuxBin *mux_bin)
 {
-    GST_INFO_OBJECT(mux_bin, "create_splitmuxsink");
+    GST_DEBUG_OBJECT(mux_bin, "create_splitmuxsink");
     g_return_val_if_fail(mux_bin != nullptr, false);
     g_return_val_if_fail(mux_bin->out_fd >= 0, false);
     g_return_val_if_fail(mux_bin->mux != nullptr, false);
@@ -232,7 +232,7 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 
 static GstElement *create_parse(GstMuxBin *mux_bin, const char* parse_name)
 {
-    GST_INFO_OBJECT(mux_bin, "create_parse");
+    GST_DEBUG_OBJECT(mux_bin, "create_parse");
     g_return_val_if_fail(mux_bin != nullptr, nullptr);
     GstElement *parse = nullptr;
     if (strstr(parse_name, "h264parse") != nullptr) {
@@ -254,7 +254,7 @@ static GstElement *create_parse(GstMuxBin *mux_bin, const char* parse_name)
 
 static bool create_src(GstMuxBin *mux_bin, TrackType track_type)
 {
-    GST_INFO_OBJECT(mux_bin, "create_src");
+    GST_DEBUG_OBJECT(mux_bin, "create_src");
     g_return_val_if_fail(mux_bin != nullptr, false);
     GSList *iter = nullptr;
     switch (track_type) {
@@ -280,7 +280,7 @@ static bool create_src(GstMuxBin *mux_bin, TrackType track_type)
 
 static bool create_element(GstMuxBin *mux_bin)
 {
-    GST_INFO_OBJECT(mux_bin, "create_element");
+    GST_DEBUG_OBJECT(mux_bin, "create_element");
     g_return_val_if_fail(mux_bin != nullptr, false);
     if (!create_splitmuxsink(mux_bin)) {
         GST_ERROR_OBJECT(mux_bin, "Failed to call create_splitmuxsink");
@@ -302,7 +302,7 @@ static bool create_element(GstMuxBin *mux_bin)
 
 static bool add_element_to_bin(GstMuxBin *mux_bin)
 {
-    GST_INFO_OBJECT(mux_bin, "add_element_to_bin");
+    GST_DEBUG_OBJECT(mux_bin, "add_element_to_bin");
     g_return_val_if_fail(mux_bin != nullptr, false);
     g_return_val_if_fail(mux_bin->split_mux_sink != nullptr, false);
     bool ret;
@@ -326,7 +326,7 @@ static bool add_element_to_bin(GstMuxBin *mux_bin)
 
 static bool connect_parse(GstMuxBin *mux_bin, GstElement *parse, GstPad *upstream_pad, GstPad *downstream_pad)
 {
-    GST_INFO_OBJECT(mux_bin, "connect_parse");
+    GST_DEBUG_OBJECT(mux_bin, "connect_parse");
     g_return_val_if_fail(mux_bin != nullptr, false);
     g_return_val_if_fail(parse != nullptr, false);
     g_return_val_if_fail(upstream_pad != nullptr, false);
@@ -347,7 +347,7 @@ static bool connect_parse(GstMuxBin *mux_bin, GstElement *parse, GstPad *upstrea
 
 static bool connect_element(GstMuxBin *mux_bin, TrackType type)
 {
-    GST_INFO_OBJECT(mux_bin, "connect_element");
+    GST_DEBUG_OBJECT(mux_bin, "connect_element");
     g_return_val_if_fail(mux_bin != nullptr, false);
     g_return_val_if_fail(mux_bin->split_mux_sink != nullptr, false);
     GSList *iter = nullptr;
@@ -368,7 +368,7 @@ static bool connect_element(GstMuxBin *mux_bin, TrackType type)
         } else if (type == AUDIO) {
             split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->split_mux_sink, "audio_%u");
         }
-        if (((GstTrackInfo *)(iter->data))->parseName_[0] != '\0') {
+        if (strstr(((GstTrackInfo *)(iter->data))->parseName_, "parse")) {
             GstElement *parse = create_parse(mux_bin, ((GstTrackInfo *)(iter->data))->parseName_);
             g_return_val_if_fail(parse != nullptr, false);
             ret = gst_bin_add(GST_BIN(mux_bin), parse);
@@ -393,7 +393,7 @@ static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstSta
 {
     g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
     GstMuxBin *mux_bin = GST_MUX_BIN(element);
-    GST_INFO_OBJECT(mux_bin, "gst_mux_bin_change_state");
+    GST_DEBUG_OBJECT(mux_bin, "gst_mux_bin_change_state");
 
     switch (transition) {
         case GST_STATE_CHANGE_NULL_TO_READY:
