@@ -17,7 +17,6 @@
 #define AVMUXER_H
 
 #include <string>
-#include <string_view>
 #include <vector>
 #include <memory>
 #include "avmemory.h"
