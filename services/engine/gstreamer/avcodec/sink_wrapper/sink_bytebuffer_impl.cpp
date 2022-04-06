@@ -241,6 +241,7 @@ int32_t SinkBytebufferImpl::AddAdtsHead(std::shared_ptr<AVSharedMemory> mem, int
     for (int32_t i = adtsFrameSize - 1; i > adtsHeadSize - 1; i--) {
         base[i] = base[i - adtsHeadSize];
     }
+    CHECK_AND_RETURN_RET(memset_s(base, mem->GetSize(), 0, adtsHeadSize) == EOK, MSERR_UNKNOWN);
 
     base[0] = 0xFF; // syncword 8 bits
     base[1] = 0xF1; // syncword 4 bits + MPEG version + layer + protection absent
