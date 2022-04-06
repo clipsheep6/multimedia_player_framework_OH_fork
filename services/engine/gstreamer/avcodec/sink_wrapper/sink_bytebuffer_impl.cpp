@@ -246,8 +246,9 @@ int32_t SinkBytebufferImpl::AddAdtsHead(std::shared_ptr<AVSharedMemory> mem, int
     base[0] = 0xFF; // syncword 8 bits
     base[1] = 0xF1; // syncword 4 bits + MPEG version + layer + protection absent
     constexpr int32_t objectType = 2; // AAC_LC
+    int32_t proflie = objectType - 1;
     // profile + sampling frequency index + private bit + channel configuration 1 bits
-    base[2] = static_cast<uint8_t>(((objectType - 1) << 6) + (head_.samplingIndex << 2) + (head_.channelConfig >> 2));
+    base[2] = static_cast<uint8_t>((proflie << 6) + (head_.samplingIndex << 2) + (head_.channelConfig >> 2));
     // channel configuration 2 bits + original + home + copyright id bit + copyright id start + frame length 2 bits
     base[3] = static_cast<uint8_t>(((head_.channelConfig & 0x03) << 6) + (adtsFrameSize >> 11)) ;
     base[4] = static_cast<uint8_t>((adtsFrameSize & 0x7FF) >> 3); // frame length 8 bits
