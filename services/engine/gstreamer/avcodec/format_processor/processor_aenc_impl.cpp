@@ -183,10 +183,11 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
     config->bufferSize_ = DEFAULT_BUFFER_SIZE;
     if (codecName_ == CODEC_MIMIE_TYPE_AUDIO_AAC) {
         config->needAdtsTransform_ = true;
-        config->head_.channelConfig = channels_;
+        config->adtsHead_.channelConfig = channels_;
+        config->adtsHead_.objectType = 2; // AAC_LC
         for (size_t i = 0; i < SAMPLING_ROW_COUNT; i++) {
             if (sampleRate_ >= MPEG4_SAMPLING_FREQUENCIES[i][0]) {
-                config->head_.samplingIndex = MPEG4_SAMPLING_FREQUENCIES[i][1];
+                config->adtsHead_.samplingIndex = MPEG4_SAMPLING_FREQUENCIES[i][1];
                 break;
             }
         }

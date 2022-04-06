@@ -57,6 +57,7 @@ enum VideoEncoderBitrateMode : int32_t {
 };
 
 struct AdtsFixedHeader {
+    int32_t objectType = 0;
     int32_t samplingIndex = 0;
     int32_t channelConfig = 0;
 };
@@ -103,7 +104,7 @@ struct ProcessorConfig {
     bool needAdtsTransform_ = false;
     bool isEncoder_ = false;
     uint32_t bufferSize_ = 0;
-    AdtsFixedHeader head_;
+    AdtsFixedHeader adtsHead_;
 };
 
 std::string PixelFormatToGst(VideoPixelFormat pixel);

@@ -53,7 +53,7 @@ private:
     Format bufferFormat_;
     bool isEos_ = false;
     bool needAdtsTransform_ = false;
-    AdtsFixedHeader head_;
+    AdtsFixedHeader adtsHead_;
 };
 } // namespace Media
 } // namespace OHOS
