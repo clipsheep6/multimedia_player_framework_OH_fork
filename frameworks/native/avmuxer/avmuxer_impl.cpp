@@ -103,9 +103,7 @@ int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVMemory> sampleData, cons
         sampleData->Offset() + sampleData->Size() <= sampleData->Capacity() &&
         sampleData->Offset() + sampleData->Size() >= sampleData->Size(),
         MSERR_INVALID_VAL, "Invalid memory");
-    MEDIA_LOGD("sampleData->Capacity is: %{public}u, sampleData->Size is: %{public}u,"
-        "sampleData->Data is: %{public}s, sampleData->Base is: %{public}s",
-        sampleData->Capacity(), sampleData->Size(), sampleData->Data(), sampleData->Base());
+    
     std::shared_ptr<AVSharedMemoryBase> avSharedMem =
         std::make_shared<AVSharedMemoryBase>(sampleData->Size(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
     int32_t ret = avSharedMem->Init();
