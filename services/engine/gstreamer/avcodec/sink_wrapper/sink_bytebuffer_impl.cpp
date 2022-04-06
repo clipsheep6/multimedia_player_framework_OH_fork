@@ -242,13 +242,15 @@ int32_t SinkBytebufferImpl::AddAdtsHead(std::shared_ptr<AVSharedMemory> mem, int
         base[i] = base[i - adtsHeadSize];
     }
 
-    base[0] = 0xFF;
-    base[1] = 0xF1;
-    constexpr int32_t profile = 2; // AAC_LC
-    base[2] = static_cast<uint8_t>(((profile - 1) << 6) + (head_.samplingIndex << 2) + (head_.channelConfig >> 2));
+    base[0] = 0xFF; // syncword 8 bits
+    base[1] = 0xF1; // syncword 4 bits + MPEG version + layer + protection absent
+    constexpr int32_t objectType = 2; // AAC_LC
+    // profile + sampling frequency index + private bit + channel configuration 1 bits
+    base[2] = static_cast<uint8_t>(((objectType - 1) << 6) + (head_.samplingIndex << 2) + (head_.channelConfig >> 2));
+    // channel configuration 2 bits + original + home + copyright id bit + copyright id start + frame length 2 bits
     base[3] = static_cast<uint8_t>(((head_.channelConfig & 0x03) << 6) + (adtsFrameSize >> 11)) ;
-    base[4] = static_cast<uint8_t>((adtsFrameSize & 0x7FF) >> 3);
-    base[5] = static_cast<uint8_t>(((adtsFrameSize & 0x07) << 5) + 0x1F);
+    base[4] = static_cast<uint8_t>((adtsFrameSize & 0x7FF) >> 3); // frame length 8 bits
+    base[5] = static_cast<uint8_t>(((adtsFrameSize & 0x07) << 5) + 0x1F); // frame length 5 bits + buffer fullness
     base[6] = 0xFC;
 
     return MSERR_OK;
