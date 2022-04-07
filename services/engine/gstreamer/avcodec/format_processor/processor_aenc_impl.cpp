@@ -20,41 +20,77 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ProcessorAencImpl"};
     constexpr uint32_t DEFAULT_BUFFER_SIZE = 30000;
+    constexpr int32_t MAX_CHANNELS = 6;
     static const GstAudioChannelPosition CHANNEL_POSITION[6][6] = {
-    {
-        GST_AUDIO_CHANNEL_POSITION_MONO
-    },
-    {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
-    },
-    {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
-    },
-    {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER
-    },
-    {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
-    },
-    {
-        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
-        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
-        GST_AUDIO_CHANNEL_POSITION_LFE1
-    },
-};
+        {
+            GST_AUDIO_CHANNEL_POSITION_MONO
+        },
+        {
+            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+        },
+        {
+            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+        },
+        {
+            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_CENTER
+        },
+        {
+            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT
+        },
+        {
+            GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+            GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+            GST_AUDIO_CHANNEL_POSITION_LFE1
+        },
+    };
+
+    enum MPEG4SamplingFrequencies : int32_t {
+        MPEG4_SAMPLING_FREQUENCY_0 = 0,
+        MPEG4_SAMPLING_FREQUENCY_1,
+        MPEG4_SAMPLING_FREQUENCY_2,
+        MPEG4_SAMPLING_FREQUENCY_3,
+        MPEG4_SAMPLING_FREQUENCY_4,
+        MPEG4_SAMPLING_FREQUENCY_5,
+        MPEG4_SAMPLING_FREQUENCY_6,
+        MPEG4_SAMPLING_FREQUENCY_7,
+        MPEG4_SAMPLING_FREQUENCY_8,
+        MPEG4_SAMPLING_FREQUENCY_9,
+        MPEG4_SAMPLING_FREQUENCY_10,
+        MPEG4_SAMPLING_FREQUENCY_11,
+        MPEG4_SAMPLING_FREQUENCY_12,
+        MPEG4_SAMPLING_FREQUENCY_13,
+    };
+
+    constexpr size_t SAMPLING_ROW_COUNT = 14;
+    static const int32_t MPEG4_SAMPLING_FREQUENCIES[SAMPLING_ROW_COUNT][2] = {
+        { 96000, MPEG4_SAMPLING_FREQUENCY_0 },
+        { 88200, MPEG4_SAMPLING_FREQUENCY_1 },
+        { 64000, MPEG4_SAMPLING_FREQUENCY_2 },
+        { 48000, MPEG4_SAMPLING_FREQUENCY_3 },
+        { 44100, MPEG4_SAMPLING_FREQUENCY_4 },
+        { 32000, MPEG4_SAMPLING_FREQUENCY_5 },
+        { 24000, MPEG4_SAMPLING_FREQUENCY_6 },
+        { 22050, MPEG4_SAMPLING_FREQUENCY_7 },
+        { 16000, MPEG4_SAMPLING_FREQUENCY_8 },
+        { 12000, MPEG4_SAMPLING_FREQUENCY_9 },
+        { 11025, MPEG4_SAMPLING_FREQUENCY_10 },
+        { 8000, MPEG4_SAMPLING_FREQUENCY_11 },
+        { 7350, MPEG4_SAMPLING_FREQUENCY_12 },
+        { -1, MPEG4_SAMPLING_FREQUENCY_13 },
+    };
 }
 
 namespace OHOS {
@@ -121,7 +157,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetInputPortConfig()
 
 std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
 {
-    CHECK_AND_RETURN_RET(channels_ > 0 && sampleRate_ > 0, nullptr);
+    CHECK_AND_RETURN_RET(channels_ > 0 && sampleRate_ > 0 && channels_ <= MAX_CHANNELS, nullptr);
 
     GstCaps *caps = nullptr;
     switch (codecName_) {
@@ -149,6 +185,17 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
     }
 
     config->bufferSize_ = DEFAULT_BUFFER_SIZE;
+    if (codecName_ == CODEC_MIMIE_TYPE_AUDIO_AAC) {
+        config->needAdtsTransform_ = true;
+        config->adtsHead_.channelConfig = channels_;
+        config->adtsHead_.objectType = 2; // AAC_LC
+        for (size_t i = 0; i < SAMPLING_ROW_COUNT; i++) {
+            if (sampleRate_ >= MPEG4_SAMPLING_FREQUENCIES[i][0]) {
+                config->adtsHead_.samplingIndex = MPEG4_SAMPLING_FREQUENCIES[i][1];
+                break;
+            }
+        }
+    }
 
     return config;
 }
