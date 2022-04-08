@@ -191,9 +191,13 @@ void RecorderDemo::HDICreateESBuffer()
             isStart_.store(false);
         }
 
-        (void)buffer->ExtraSet("dataSize", static_cast<int32_t>(*frameLenArray));
-        (void)buffer->ExtraSet("timeStamp", pts_);
-        (void)buffer->ExtraSet("isKeyFrame", isKeyFrame_);
+        const sptr<OHOS::BufferExtraData>& extraData = buffer->GetExtraData();
+        if (extraData == nullptr) {
+            break;
+        }
+        (void)extraData->ExtraSet("dataSize", static_cast<int32_t>(*frameLenArray));
+        (void)extraData->ExtraSet("timeStamp", pts_);
+        (void)extraData->ExtraSet("isKeyFrame", isKeyFrame_);
         count_++;
         (count_ % 30) == 0 ? (isKeyFrame_ = 1) : (isKeyFrame_ = 0); // keyframe every 30fps
         pts_ += FRAME_DURATION;
@@ -258,9 +262,13 @@ void RecorderDemo::HDICreateYUVBuffer()
         // get time
         pts_= GetPts();
 
-        (void)buffer->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
-        (void)buffer->ExtraSet("timeStamp", pts_);
-        (void)buffer->ExtraSet("isKeyFrame", isKeyFrame_);
+        const sptr<OHOS::BufferExtraData>& extraData = buffer->GetExtraData();
+        if (extraData == nullptr) {
+            break;
+        }
+        (void)extraData->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
+        (void)extraData->ExtraSet("timeStamp", pts_);
+        (void)extraData->ExtraSet("isKeyFrame", isKeyFrame_);
         count_++;
         (count_ % 30) == 0 ? (isKeyFrame_ = 1) : (isKeyFrame_ = 0); // keyframe every 30fps
         (void)producerSurface_->FlushBuffer(buffer, -1, g_yuvFlushConfig);
