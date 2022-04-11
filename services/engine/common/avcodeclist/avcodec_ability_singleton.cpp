@@ -77,8 +77,9 @@ bool AVCodecAbilitySingleton::ParseHardwareCapability()
 {
     MEDIA_LOGD("ParseHardwareCapability start");
     if (pluginsCapabilityDataArray_.empty()) {
-    pluginsCapabilityDataArray_ = CodecPluginsCapability::GetInstance().GetCodecPluginsCapability();
-    capabilityDataArray_.insert(capabilityDataArray_.end(), pluginsCapabilityDataArray_.begin(), pluginsCapabilityDataArray_.end());
+        pluginsCapabilityDataArray_ = CodecPluginsCapability::GetInstance().GetCodecPluginsCapability();
+        capabilityDataArray_.insert(capabilityDataArray_.end(), pluginsCapabilityDataArray_.begin(),
+                                    pluginsCapabilityDataArray_.end());
     }
     MEDIA_LOGD("ParseHardwareCapability end");
     return true;
