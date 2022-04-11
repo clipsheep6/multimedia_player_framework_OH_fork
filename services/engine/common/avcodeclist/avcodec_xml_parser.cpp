@@ -116,31 +116,31 @@ const std::unordered_map<std::string, AVCodecType> CODEC_TYPE_MAP = {
 
 AVCodecXmlParser::AVCodecXmlParser()
 {
-    // capabilityKeys_ = {
-    //     "codecName",
-    //     "codecType",
-    //     "mimeType",
-    //     "isVendor",
-    //     "bitrate",
-    //     "channels",
-    //     "sampleRate",
-    //     "format",
-    //     "profiles",
-    //     "complexity",
-    //     "bitrateMode",
-    //     "alignment",
-    //     "width",
-    //     "height",
-    //     "frameRate",
-    //     "encodeQuality",
-    //     "quality",
-    //     "levels",
-    //     "blockPerFrame",
-    //     "blockPerSecond",
-    //     "blockSize",
-    //     "profileLevelsMap",
-    //     "measuredFrameRate",
-    // };
+    capabilityKeys_ = {
+        "codecName",
+        "codecType",
+        "mimeType",
+        "isVendor",
+        "bitrate",
+        "channels",
+        "sampleRate",
+        "format",
+        "profiles",
+        "complexity",
+        "bitrateMode",
+        "alignment",
+        "width",
+        "height",
+        "frameRate",
+        "encodeQuality",
+        "quality",
+        "levels",
+        "blockPerFrame",
+        "blockPerSecond",
+        "blockSize",
+        "profileLevelsMap",
+        "measuredFrameRate",
+    };
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
@@ -488,8 +488,11 @@ bool AVCodecXmlParser::ParseData(xmlNode *node)
             std::string capabilityKey = *it;
 
             if (xmlHasProp(child, reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str())))) {
-                capabilityValue = std::string(reinterpret_cast<char*>(xmlGetProp(child,
-                    reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str())))));
+                xmlChar * pXmlProp = xmlGetProp(child, reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str())));
+                if (pXmlProp == nullptr) {
+                    continue;
+                }
+                capabilityValue = std::string(reinterpret_cast<char*>(pXmlProp));
                 bool ret = SetCapabilityData(capabilityData, capabilityKey, capabilityValue);
                 CHECK_AND_RETURN_RET_LOG(ret != false, false, "SetCapabilityData failed");
                 break;
