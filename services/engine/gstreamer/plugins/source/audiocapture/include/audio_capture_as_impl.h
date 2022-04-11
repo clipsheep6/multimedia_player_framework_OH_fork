@@ -16,13 +16,23 @@
 #ifndef AUDIO_CAPTURE_AS_IMPL_H
 #define AUDIO_CAPTURE_AS_IMPL_H
 
+#include <atomic>
+#include <condition_variable>
 #include <mutex>
+#include <queue>
 #include "audio_capture.h"
 #include "audio_capturer.h"
 #include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
+class AudioCaptureSignal {
+public:
+    std::mutex CaptureMutex_;
+    std::condition_variable CaptureCond_;
+    std::queue<std::shared_ptr<AudioBuffer>> CaptureQueue_;
+};
+
 class AudioCaptureAsImpl : public AudioCapture, public NoCopyable {
 public:
     AudioCaptureAsImpl();
@@ -50,6 +60,12 @@ private:
     bool isResume_ = false;
     bool isPause_ = false;
     std::mutex pauseMutex_;
+
+    //audio cache buffer
+    void GetAudioCaptureBuffer();
+    std::shared_ptr<AudioCaptureSignal> audioCaptureSingal_;
+    std::unique_ptr<std::thread> captureLoop_;
+    std::atomic<bool> recording_ { false };
 };
 } // namespace Media
 } // namespace OHOS

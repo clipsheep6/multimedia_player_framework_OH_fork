@@ -55,6 +55,7 @@ int32_t VideoSource::Configure(const RecorderParam &recParam)
     int32_t ret = ConfigureVideoRectangle(recParam);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
+
     ret = ConfigureVideoFrameRate(recParam);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
