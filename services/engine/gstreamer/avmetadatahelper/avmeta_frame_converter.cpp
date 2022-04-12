@@ -173,11 +173,6 @@ void AVMetaFrameConverter::UninstallPipeline()
         pipeline_ = nullptr;
     }
 
-    if (pipeline_ != nullptr) {
-        gst_object_unref(pipeline_);
-        pipeline_ = nullptr;
-    }
-
     if (vidShMemSink_ != nullptr) {
         gst_object_unref(vidShMemSink_);
         vidShMemSink_ = nullptr;

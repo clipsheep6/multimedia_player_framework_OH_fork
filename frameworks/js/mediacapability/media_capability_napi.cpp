@@ -120,7 +120,7 @@ napi_value MediaCapsNapi::GetMediaCapability(napi_env env, napi_callback_info in
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env);
+    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -150,7 +150,7 @@ napi_value MediaCapsNapi::GetAudioDecoderCaps(napi_env env, napi_callback_info i
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env);
+    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -192,7 +192,7 @@ napi_value MediaCapsNapi::FindAudioDecoder(napi_env env, napi_callback_info info
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env);
+    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -247,7 +247,7 @@ napi_value MediaCapsNapi::GetAudioEncoderCaps(napi_env env, napi_callback_info i
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env);
+    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -289,7 +289,7 @@ napi_value MediaCapsNapi::FindAudioEncoder(napi_env env, napi_callback_info info
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env);
+    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -344,7 +344,7 @@ napi_value MediaCapsNapi::GetVideoDecoderCaps(napi_env env, napi_callback_info i
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env);
+    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -386,7 +386,7 @@ napi_value MediaCapsNapi::FindVideoDecoder(napi_env env, napi_callback_info info
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env);
+    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -441,7 +441,7 @@ napi_value MediaCapsNapi::GetVideoEncoderCaps(napi_env env, napi_callback_info i
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env);
+    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -483,7 +483,7 @@ napi_value MediaCapsNapi::FindVideoEncoder(napi_env env, napi_callback_info info
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env);
+    auto asyncCtx = std::make_unique<MediaCapsAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};

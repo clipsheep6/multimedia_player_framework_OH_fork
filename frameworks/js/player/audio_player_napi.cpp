@@ -119,7 +119,7 @@ napi_value AudioPlayerNapi::Constructor(napi_env env, napi_callback_info info)
     }
 
     if (playerNapi->callbackNapi_ == nullptr && playerNapi->nativePlayer_ != nullptr) {
-        playerNapi->callbackNapi_ = std::make_shared<PlayerCallbackNapi>(env);
+        playerNapi->callbackNapi_ = std::make_shared<PlayerCallbackNapi>(env, std::this_thread::get_id());;
         (void)playerNapi->nativePlayer_->SetPlayerCallback(playerNapi->callbackNapi_);
     }
 
@@ -174,7 +174,7 @@ napi_value AudioPlayerNapi::CreateAudioPlayerAsync(napi_env env, napi_callback_i
     napi_get_undefined(env, &result);
     MEDIA_LOGD("CreateAudioPlayerAsync In");
 
-    std::unique_ptr<MediaAsyncContext> asyncContext = std::make_unique<MediaAsyncContext>(env);
+    std::unique_ptr<MediaAsyncContext> asyncContext = std::make_unique<MediaAsyncContext>(env, std::this_thread::get_id());;
 
     // get args
     napi_value jsThis = nullptr;
@@ -943,7 +943,7 @@ napi_value AudioPlayerNapi::GetTrackDescription(napi_env env, napi_callback_info
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("GetTrackDescription In");
-    std::unique_ptr<AudioPlayerAsyncContext> asyncContext = std::make_unique<AudioPlayerAsyncContext>(env);
+    std::unique_ptr<AudioPlayerAsyncContext> asyncContext = std::make_unique<AudioPlayerAsyncContext>(env, std::this_thread::get_id());;
 
     // get args
     napi_value jsThis = nullptr;

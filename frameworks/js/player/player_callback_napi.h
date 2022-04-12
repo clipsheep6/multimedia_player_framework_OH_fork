@@ -25,14 +25,14 @@
 namespace OHOS {
 namespace Media {
 struct AudioPlayerAsyncContext : public MediaAsyncContext {
-    explicit AudioPlayerAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    AudioPlayerAsyncContext(napi_env env, std::thread::id threadId) : MediaAsyncContext(env, threadId) {}
     ~AudioPlayerAsyncContext() = default;
     AudioPlayerNapi *jsPlayer = nullptr;
 };
 
 class PlayerCallbackNapi : public PlayerCallback {
 public:
-    explicit PlayerCallbackNapi(napi_env env);
+    PlayerCallbackNapi(napi_env env, std::thread::id threadId);
     virtual ~PlayerCallbackNapi();
     virtual void SaveCallbackReference(const std::string &callbackName, napi_value args);
     void SendErrorCallback(MediaServiceExtErrCode errCode, const std::string &info = "unknown");
@@ -42,6 +42,8 @@ public:
 
 protected:
     struct PlayerJsCallback {
+        explicit PlayerJsCallback(std::thread::id threadId) : jsThread(threadId) {}
+        std::thread::id jsThread;
         std::shared_ptr<AutoRef> callback = nullptr;
         std::string callbackName = "unknown";
         std::string errorMsg = "unknown";
@@ -63,6 +65,7 @@ private:
     void OnBufferingUpdateCb(const Format &infoBody) const;
     std::mutex mutex_;
     napi_env env_ = nullptr;
+    std::thread::id jsThreadId_;
     PlayerStates currentState_ = PLAYER_IDLE;
     std::shared_ptr<AutoRef> errorCallback_ = nullptr; // error
     std::shared_ptr<AutoRef> playCallback_ = nullptr; // started

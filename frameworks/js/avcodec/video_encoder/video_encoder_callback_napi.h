@@ -31,7 +31,8 @@ const std::string OUTPUT_CALLBACK_NAME = "newOutputData";
 
 class VideoEncoderCallbackNapi : public AVCodecCallback {
 public:
-    explicit VideoEncoderCallbackNapi(napi_env env, std::weak_ptr<AVCodecVideoEncoder> venc);
+
+    VideoEncoderCallbackNapi(napi_env env, std::thread::id threadId, std::weak_ptr<AVCodecVideoEncoder> venc);
     virtual ~VideoEncoderCallbackNapi();
 
     void SaveCallbackReference(const std::string &callbackName, napi_value callback);
@@ -45,6 +46,8 @@ protected:
 
 private:
     struct VideoEncoderJsCallback {
+        explicit VideoEncoderJsCallback(std::thread::id threadId) : jsThread(threadId) {}
+        std::thread::id jsThread;
         std::shared_ptr<AutoRef> callback = nullptr;
         std::string callbackName = "unknown";
         std::string errorMsg = "unknown";
@@ -62,6 +65,7 @@ private:
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
+    std::thread::id jsThreadId_;
     std::weak_ptr<AVCodecVideoEncoder> venc_;
     std::shared_ptr<AutoRef> errorCallback_ = nullptr;
     std::shared_ptr<AutoRef> formatChangedCallback_ = nullptr;

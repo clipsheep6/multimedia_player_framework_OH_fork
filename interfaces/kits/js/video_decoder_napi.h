@@ -66,7 +66,7 @@ private:
 };
 
 struct VideoDecoderAsyncContext : public MediaAsyncContext {
-    explicit VideoDecoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    VideoDecoderAsyncContext(napi_env env, std::thread::id threadId) : MediaAsyncContext(env, threadId) {}
     ~VideoDecoderAsyncContext() = default;
     // general variable
     VideoDecoderNapi *napi = nullptr;

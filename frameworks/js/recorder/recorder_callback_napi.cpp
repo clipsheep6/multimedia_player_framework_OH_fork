@@ -24,8 +24,8 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-RecorderCallbackNapi::RecorderCallbackNapi(napi_env env)
-    : env_(env)
+RecorderCallbackNapi::RecorderCallbackNapi(napi_env env, std::thread::id threadId)
+    : env_(env), jsThreadId_(threadId)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -40,6 +40,7 @@ void RecorderCallbackNapi::SaveCallbackReference(const std::string &callbackName
     std::lock_guard<std::mutex> lock(mutex_);
 
     napi_ref callback = nullptr;
+    CHECK_AND_RETURN_LOG(CommonNapi::IsJsThread(this->jsThreadId_), "media js thread error");
     napi_status status = napi_create_reference(env_, args, 1, &callback);
     CHECK_AND_RETURN_LOG(status == napi_ok && callback != nullptr, "creating reference for callback fail");
 
@@ -71,7 +72,7 @@ void RecorderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "Cannot find the reference of error callback");
 
-    RecordJsCallback *cb = new(std::nothrow) RecordJsCallback();
+    RecordJsCallback *cb = new(std::nothrow) RecordJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->callback = errorCallback_;
     cb->callbackName = ERROR_CALLBACK_NAME;
@@ -108,7 +109,7 @@ void RecorderCallbackNapi::SendStateCallback(const std::string &callbackName)
     std::shared_ptr<AutoRef> callbackRef = nullptr;
     callbackRef = StateCallbackSelect(callbackName);
     CHECK_AND_RETURN_LOG(callbackRef != nullptr, "no callback reference");
-    RecordJsCallback *cb = new(std::nothrow) RecordJsCallback();
+    RecordJsCallback *cb = new(std::nothrow) RecordJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->callback = callbackRef;
     cb->callbackName = callbackName;
@@ -121,7 +122,7 @@ void RecorderCallbackNapi::OnError(RecorderErrorType errorType, int32_t errCode)
     MEDIA_LOGD("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
     CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "Cannot find the reference of error callback");
 
-    RecordJsCallback *cb = new(std::nothrow) RecordJsCallback();
+    RecordJsCallback *cb = new(std::nothrow) RecordJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = errorCallback_;
     cb->callbackName = ERROR_CALLBACK_NAME;
@@ -163,6 +164,7 @@ void RecorderCallbackNapi::OnJsStateCallBack(RecordJsCallback *jsCb) const
         MEDIA_LOGD("OnJsStateCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+            CHECK_AND_BREAK_LOG(CommonNapi::IsJsThread(event->jsThread), "media js thread error");
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
@@ -206,6 +208,7 @@ void RecorderCallbackNapi::OnJsErrorCallBack(RecordJsCallback *jsCb) const
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+            CHECK_AND_BREAK_LOG(CommonNapi::IsJsThread(event->jsThread), "media js thread error");
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",

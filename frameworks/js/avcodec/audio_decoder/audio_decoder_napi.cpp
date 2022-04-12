@@ -117,7 +117,8 @@ napi_value AudioDecoderNapi::Constructor(napi_env env, napi_callback_info info)
     adecNapi->codecHelper_ = std::make_shared<AVCodecNapiHelper>();
 
     if (adecNapi->callback_ == nullptr) {
-        adecNapi->callback_ = std::make_shared<AudioDecoderCallbackNapi>(env, adecNapi->adec_, adecNapi->codecHelper_);
+        adecNapi->callback_ = std::make_shared<AudioDecoderCallbackNapi>(env, std::this_thread::get_id(),
+            adecNapi->adec_, adecNapi->codecHelper_);
         (void)adecNapi->adec_->SetCallback(adecNapi->callback_);
     }
 
@@ -147,7 +148,7 @@ napi_value AudioDecoderNapi::CreateAudioDecoderByMime(napi_env env, napi_callbac
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -187,7 +188,7 @@ napi_value AudioDecoderNapi::CreateAudioDecoderByName(napi_env env, napi_callbac
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -227,7 +228,7 @@ napi_value AudioDecoderNapi::Configure(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -279,7 +280,7 @@ napi_value AudioDecoderNapi::Prepare(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -324,7 +325,7 @@ napi_value AudioDecoderNapi::Start(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -372,7 +373,7 @@ napi_value AudioDecoderNapi::Stop(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -422,7 +423,7 @@ napi_value AudioDecoderNapi::Flush(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -475,7 +476,7 @@ napi_value AudioDecoderNapi::Reset(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -525,7 +526,7 @@ napi_value AudioDecoderNapi::Release(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -574,7 +575,7 @@ napi_value AudioDecoderNapi::QueueInput(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -630,7 +631,7 @@ napi_value AudioDecoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -682,7 +683,7 @@ napi_value AudioDecoderNapi::SetParameter(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -734,7 +735,7 @@ napi_value AudioDecoderNapi::GetOutputMediaDescription(napi_env env, napi_callba
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -774,7 +775,7 @@ napi_value AudioDecoderNapi::GetAudioDecoderCaps(napi_env env, napi_callback_inf
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioDecoderAsyncContext>(env, std::this_thread::get_id());
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};

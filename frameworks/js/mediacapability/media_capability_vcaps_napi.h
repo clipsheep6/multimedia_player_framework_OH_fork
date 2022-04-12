@@ -64,7 +64,7 @@ private:
 };
 
 struct MediaVideoCapsAsyncCtx : public MediaAsyncContext {
-    explicit MediaVideoCapsAsyncCtx(napi_env env) : MediaAsyncContext(env) {}
+    MediaVideoCapsAsyncCtx(napi_env env, std::thread::id threadId) : MediaAsyncContext(env, threadId) {}
     ~MediaVideoCapsAsyncCtx() = default;
 
     MediaVideoCapsNapi *napi_ = nullptr;

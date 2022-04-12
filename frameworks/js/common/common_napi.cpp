@@ -25,6 +25,15 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+bool CommonNapi::IsJsThread(std::thread::id jsThread)
+{
+    if (jsThread != std::this_thread::get_id()) {
+        MEDIA_LOGD("JsThread Error!");
+        return false;
+    }
+    return true;
+}
+
 std::string CommonNapi::GetStringArgument(napi_env env, napi_value value)
 {
     std::string strValue = "";
@@ -509,8 +518,8 @@ napi_status MediaJsResultArray::GetJsResult(napi_env env, napi_value &result)
     return napi_ok;
 }
 
-MediaAsyncContext::MediaAsyncContext(napi_env env)
-    : env(env)
+MediaAsyncContext::MediaAsyncContext(napi_env env, std::thread::id threadId)
+    : env(env), jsThread(threadId)
 {
     MEDIA_LOGD("MediaAsyncContext Create 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
@@ -534,6 +543,7 @@ void MediaAsyncContext::CompleteCallback(napi_env env, napi_status status, void 
     MEDIA_LOGD("CompleteCallback In");
     auto asyncContext = reinterpret_cast<MediaAsyncContext *>(data);
     CHECK_AND_RETURN_LOG(asyncContext != nullptr, "asyncContext is nullptr!");
+    CHECK_AND_RETURN_LOG(CommonNapi::IsJsThread(asyncContext->jsThread), "media js thread error");
 
     std::string memoryTag = asyncContext->memoryTagHead + asyncContext->memoryTagTail;
     MEDIA_LOGD("MediaAsyncContext Create 0x%{public}06" PRIXPTR " memoryTag = %{public}s",

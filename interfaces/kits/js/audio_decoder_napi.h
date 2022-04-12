@@ -62,7 +62,7 @@ private:
 };
 
 struct AudioDecoderAsyncContext : public MediaAsyncContext {
-    explicit AudioDecoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    AudioDecoderAsyncContext(napi_env env, std::thread::id threadId) : MediaAsyncContext(env, threadId) {}
     ~AudioDecoderAsyncContext() = default;
     // general variable
     AudioDecoderNapi *napi = nullptr;

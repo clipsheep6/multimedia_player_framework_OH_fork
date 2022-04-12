@@ -36,7 +36,7 @@ enum class AsyncWorkType : int32_t {
 };
 
 struct VideoPlayerAsyncContext : public MediaAsyncContext {
-    explicit VideoPlayerAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    VideoPlayerAsyncContext(napi_env env, std::thread::id threadId) : MediaAsyncContext(env, threadId) {}
     ~VideoPlayerAsyncContext() = default;
     VideoPlayerNapi *jsPlayer = nullptr;
     AsyncWorkType asyncWorkType = AsyncWorkType::ASYNC_WORK_INVALID;
@@ -49,7 +49,7 @@ struct VideoPlayerAsyncContext : public MediaAsyncContext {
 
 class VideoCallbackNapi : public PlayerCallbackNapi {
 public:
-    explicit VideoCallbackNapi(napi_env env);
+    VideoCallbackNapi(napi_env env, std::thread::id threadId);
     ~VideoCallbackNapi() override;
 
     void SaveCallbackReference(const std::string &callbackName, napi_value callback) override;
@@ -80,6 +80,7 @@ private:
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
+    std::thread::id jsThreadId_;
     PlayerStates currentState_ = PLAYER_IDLE;
     std::queue<VideoPlayerAsyncContext *> contextStateQue_;
     std::queue<VideoPlayerAsyncContext *> contextSeekQue_;

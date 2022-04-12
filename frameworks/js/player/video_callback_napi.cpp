@@ -26,8 +26,8 @@ const std::string PLAYBACK_COMPLETED_CALLBACK_NAME = "playbackCompleted";
 
 namespace OHOS {
 namespace Media {
-VideoCallbackNapi::VideoCallbackNapi(napi_env env)
-    : PlayerCallbackNapi(env), env_(env)
+VideoCallbackNapi::VideoCallbackNapi(napi_env env, std::thread::id threadId)
+    : PlayerCallbackNapi(env, threadId), env_(env), jsThreadId_(threadId)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -45,6 +45,7 @@ void VideoCallbackNapi::SaveCallbackReference(const std::string &callbackName, n
         (callbackName == VIDEO_SIZE_CHANGED_CALLBACK_NAME) ||
         (callbackName == PLAYBACK_COMPLETED_CALLBACK_NAME)) {
         napi_ref callback = nullptr;
+        CHECK_AND_RETURN_LOG(CommonNapi::IsJsThread(this->jsThreadId_), "media js thread error");
         napi_status status = napi_create_reference(env_, args, 1, &callback);
         CHECK_AND_RETURN_LOG(status == napi_ok && callback != nullptr, "creating reference for callback fail");
         std::shared_ptr<AutoRef> cb = std::make_shared<AutoRef>(env_, callback);
@@ -208,7 +209,7 @@ void VideoCallbackNapi::OnStartRenderFrameCb() const
     CHECK_AND_RETURN_LOG(startRenderFrameCallback_ != nullptr,
         "Cannot find the reference of startRenderFrame callback");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = startRenderFrameCallback_;
     cb->callbackName = START_RENDER_FRAME_CALLBACK_NAME;
@@ -222,7 +223,7 @@ void VideoCallbackNapi::OnVideoSizeChangedCb(const Format &infoBody)
     MEDIA_LOGD("OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d", width_, height_);
     CHECK_AND_RETURN_LOG(videoSizeChangedCallback_ != nullptr,
         "Cannot find the reference of videoSizeChanged callback");
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = videoSizeChangedCallback_;
     cb->callbackName = VIDEO_SIZE_CHANGED_CALLBACK_NAME;
@@ -237,7 +238,7 @@ void VideoCallbackNapi::OnPlaybackCompleteCb() const
     CHECK_AND_RETURN_LOG(playbackCompletedCallback_ != nullptr,
         "Cannot find the reference of startRenderFrame callback");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = playbackCompletedCallback_;
     cb->callbackName = PLAYBACK_COMPLETED_CALLBACK_NAME;

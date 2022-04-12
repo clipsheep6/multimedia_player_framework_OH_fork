@@ -149,7 +149,7 @@ napi_value MediaVideoCapsNapi::IsSizeSupported(napi_env env, napi_callback_info 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaVideoCapsAsyncCtx>(env);
+    auto asyncCtx = std::make_unique<MediaVideoCapsAsyncCtx>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[3] = {nullptr};
@@ -202,7 +202,7 @@ napi_value MediaVideoCapsNapi::GetSupportedFrameRate(napi_env env, napi_callback
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaVideoCapsAsyncCtx>(env);
+    auto asyncCtx = std::make_unique<MediaVideoCapsAsyncCtx>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[3] = {nullptr};
@@ -255,7 +255,7 @@ napi_value MediaVideoCapsNapi::GetPreferredFrameRate(napi_env env, napi_callback
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<MediaVideoCapsAsyncCtx>(env);
+    auto asyncCtx = std::make_unique<MediaVideoCapsAsyncCtx>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[3] = {nullptr};

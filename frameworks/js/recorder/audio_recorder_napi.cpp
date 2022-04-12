@@ -127,7 +127,7 @@ napi_value AudioRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     (void)recorderNapi->taskQue_->Start();
 
     if (recorderNapi->callbackNapi_ == nullptr && recorderNapi->recorderImpl_ != nullptr) {
-        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
+        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env, std::this_thread::get_id());;
         (void)recorderNapi->recorderImpl_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
 
@@ -182,7 +182,7 @@ napi_value AudioRecorderNapi::CreateAudioRecorderAsync(napi_env env, napi_callba
     napi_get_undefined(env, &result);
     MEDIA_LOGD("CreateAudioRecorderAsync In");
 
-    auto asyncCtx = std::make_unique<MediaAsyncContext>(env);
+    auto asyncCtx = std::make_unique<MediaAsyncContext>(env, std::this_thread::get_id());;
 
     // get args
     napi_value jsThis = nullptr;

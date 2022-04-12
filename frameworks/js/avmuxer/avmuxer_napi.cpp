@@ -29,7 +29,7 @@ namespace Media {
 thread_local napi_ref AVMuxerNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVMuxer";
 struct AVMuxerNapiAsyncContext : public MediaAsyncContext {
-    explicit AVMuxerNapiAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    AVMuxerNapiAsyncContext(napi_env env, std::thread::id threadId) : MediaAsyncContext(env, threadId) {}
     ~AVMuxerNapiAsyncContext() = default;
     AVMuxerNapi *jsAVMuxer = nullptr;
     int32_t fd_;
@@ -142,7 +142,7 @@ napi_value AVMuxerNapi::CreateAVMuxer(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGD("CreateAVMuxer In");
 
-    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env);
+    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env, std::this_thread::get_id());;
     CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     napi_value jsThis = nullptr;
@@ -194,7 +194,7 @@ napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGD("SetOutput In");
 
-    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env);
+    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env, std::this_thread::get_id());;
     CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     // get args
@@ -330,7 +330,7 @@ napi_value AVMuxerNapi::AddTrack(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGD("AddTrack In");
 
-    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env);
+    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env, std::this_thread::get_id());;
     CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     // get args
@@ -394,7 +394,7 @@ napi_value AVMuxerNapi::Start(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGD("Start In");
 
-    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env);
+    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env, std::this_thread::get_id());;
     CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     // get args
@@ -447,7 +447,7 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGD("WriteTrackSample In");
 
-    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env);
+    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env, std::this_thread::get_id());;
     CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     napi_value jsThis = nullptr;
@@ -520,7 +520,7 @@ napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGD("Stop In");
 
-    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env);
+    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env, std::this_thread::get_id());;
     CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     // get args
@@ -559,7 +559,7 @@ napi_value AVMuxerNapi::Release(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGD("Release In");
 
-    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env);
+    std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env, std::this_thread::get_id());;
     CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     napi_value jsThis = nullptr;

@@ -26,9 +26,10 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-AudioEncoderCallbackNapi::AudioEncoderCallbackNapi(napi_env env, std::weak_ptr<AVCodecAudioEncoder> aenc,
-    const std::shared_ptr<AVCodecNapiHelper>& codecHelper)
+AudioEncoderCallbackNapi::AudioEncoderCallbackNapi(napi_env env, std::thread::id threadId,
+    std::weak_ptr<AVCodecAudioEncoder> aenc, const std::shared_ptr<AVCodecNapiHelper>& codecHelper)
     : env_(env),
+      jsThreadId_(threadId), 
       aenc_(aenc),
       codecHelper_(codecHelper)
 {
@@ -45,6 +46,7 @@ void AudioEncoderCallbackNapi::SaveCallbackReference(const std::string &callback
     std::lock_guard<std::mutex> lock(mutex_);
 
     napi_ref callback = nullptr;
+    CHECK_AND_RETURN_LOG(CommonNapi::IsJsThread(this->jsThreadId_), "media js thread error");
     napi_status status = napi_create_reference(env_, args, 1, &callback);
     CHECK_AND_RETURN_LOG(status == napi_ok && callback != nullptr, "Failed to create callback reference");
 
@@ -68,7 +70,7 @@ void AudioEncoderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN(errorCallback_ != nullptr);
 
-    AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback();
+    AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN(cb != nullptr);
     cb->callback = errorCallback_;
     cb->callbackName = ERROR_CALLBACK_NAME;
@@ -83,7 +85,7 @@ void AudioEncoderCallbackNapi::OnError(AVCodecErrorType errorType, int32_t errCo
     MEDIA_LOGD("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
     CHECK_AND_RETURN(errorCallback_ != nullptr);
 
-    AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback();
+    AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN(cb != nullptr);
     cb->callback = errorCallback_;
     cb->callbackName = ERROR_CALLBACK_NAME;
@@ -98,7 +100,7 @@ void AudioEncoderCallbackNapi::OnOutputFormatChanged(const Format &format)
     MEDIA_LOGD("OnOutputFormatChanged is called");
     CHECK_AND_RETURN(formatChangedCallback_ != nullptr);
 
-    AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback();
+    AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN(cb != nullptr);
     cb->callback = formatChangedCallback_;
     cb->callbackName = FORMAT_CHANGED_CALLBACK_NAME;
@@ -131,7 +133,7 @@ void AudioEncoderCallbackNapi::OnInputBufferAvailable(uint32_t index)
         iter->second = buffer;
     }
 
-    AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback();
+    AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN(cb != nullptr);
 
     cb->callback = inputCallback_;
@@ -173,7 +175,7 @@ void AudioEncoderCallbackNapi::OnOutputBufferAvailable(uint32_t index, AVCodecBu
         iter->second = buffer;
     }
 
-    AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback();
+    AudioEncoderJsCallback *cb = new(std::nothrow) AudioEncoderJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN(cb != nullptr);
 
     cb->callback = outputCallback_;
@@ -213,6 +215,7 @@ void AudioEncoderCallbackNapi::OnJsErrorCallBack(AudioEncoderJsCallback *jsCb) c
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", event->callbackName.c_str());
         do {
             CHECK_AND_BREAK(status != UV_ECANCELED);
+            CHECK_AND_BREAK_LOG(CommonNapi::IsJsThread(event->jsThread), "media js thread error");
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK(nstatus == napi_ok && jsCallback != nullptr);
@@ -266,6 +269,7 @@ void AudioEncoderCallbackNapi::OnJsBufferCallBack(AudioEncoderJsCallback *jsCb, 
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", event->callbackName.c_str());
         do {
             CHECK_AND_BREAK(!event->cancelled && status != UV_ECANCELED);
+            CHECK_AND_BREAK_LOG(CommonNapi::IsJsThread(event->jsThread), "media js thread error");
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, event->callback->cb_, &jsCallback);
             CHECK_AND_BREAK(nstatus == napi_ok && jsCallback != nullptr);
@@ -326,6 +330,7 @@ void AudioEncoderCallbackNapi::OnJsFormatCallBack(AudioEncoderJsCallback *jsCb) 
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", event->callbackName.c_str());
         do {
             CHECK_AND_BREAK(status != UV_ECANCELED);
+            CHECK_AND_BREAK_LOG(CommonNapi::IsJsThread(event->jsThread), "media js thread error");
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, event->callback->cb_, &jsCallback);
             CHECK_AND_BREAK(nstatus == napi_ok && jsCallback != nullptr);
