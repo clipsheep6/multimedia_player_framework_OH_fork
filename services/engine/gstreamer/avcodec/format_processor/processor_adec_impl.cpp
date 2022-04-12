@@ -72,6 +72,7 @@ int32_t ProcessorAdecImpl::ProcessMandatory(const Format &format)
     CHECK_AND_RETURN_RET(format.GetIntValue("channel_count", channels_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("sample_rate", sampleRate_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("audio_sample_format", audioSampleFormat_) == true, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(format.GetIntValue("duration", duration_) == true, MSERR_INVALID_VAL);
     MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d",
         channels_, sampleRate_, audioSampleFormat_);
 
@@ -156,9 +157,12 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetOutputPortConfig()
         gst_caps_unref(caps);
         return nullptr;
     }
-
-    config->bufferSize_ = DEFAULT_BUFFER_SIZE;
-
+    int32_t audioSampleBitDepth = AudioSampleFormatToDepth(audioSampleFormat_);
+    config->bufferSize_ = duration_ * sampleRate_ * audioSampleBitDepth / channels_ / 8 / 1000;
+    if (config->bufferSize_ == 0 ) {
+        config->bufferSize_ = DEFAULT_BUFFER_SIZE;
+        MEDIA_LOGD("Set bufferSize as default value");
+    }
     return config;
 }
 } // namespace Media
