@@ -34,7 +34,7 @@ const std::string OUTPUT_CALLBACK_NAME = "newOutputData";
 class AudioDecoderCallbackNapi : public AVCodecCallback {
 public:
     AudioDecoderCallbackNapi(napi_env env, std::thread::id threadId, std::weak_ptr<AVCodecAudioDecoder> adec,
-        const std::shared_ptr<AVCodecNapiHelper>& codecHelper);
+        const std::shared_ptr<AVCodecNapiHelper> &codecHelper);
     virtual ~AudioDecoderCallbackNapi();
 
     void SaveCallbackReference(const std::string &callbackName, napi_value callback);

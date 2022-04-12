@@ -27,7 +27,7 @@ namespace {
 namespace OHOS {
 namespace Media {
 AudioDecoderCallbackNapi::AudioDecoderCallbackNapi(napi_env env, std::thread::id threadId,
-    std::weak_ptr<AVCodecAudioDecoder> adec, const std::shared_ptr<AVCodecNapiHelper>& codecHelper)
+    std::weak_ptr<AVCodecAudioDecoder> adec, const std::shared_ptr<AVCodecNapiHelper> &codecHelper)
     : env_(env),
       jsThreadId_(threadId), 
       adec_(adec),
