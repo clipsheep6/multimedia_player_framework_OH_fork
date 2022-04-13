@@ -103,16 +103,16 @@ int32_t AVMuxerServer::SetLocation(float latitude, float longitude)
     return MSERR_OK;
 }
 
-int32_t AVMuxerServer::SetOrientationHint(int32_t degrees)
+int32_t AVMuxerServer::SetRotation(int32_t ratation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (curState_ != AVMUXER_OUTPUT_SET && curState_ != AVMUXER_PARAMETER_SET) {
-        MEDIA_LOGE("Failed to call SetOrientationHint, currentState is %{public}d", curState_);
+        MEDIA_LOGE("Failed to call SetRotation, currentState is %{public}d", curState_);
         return MSERR_INVALID_OPERATION;
     }
     CHECK_AND_RETURN_RET_LOG(avmuxerEngine_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer engine does not exist");
-    int32_t ret = avmuxerEngine_->SetOrientationHint(degrees);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetOrientationHint");
+    int32_t ret = avmuxerEngine_->SetRotation(ratation);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetRotation");
     curState_ = AVMUXER_PARAMETER_SET;
     return MSERR_OK;
 }

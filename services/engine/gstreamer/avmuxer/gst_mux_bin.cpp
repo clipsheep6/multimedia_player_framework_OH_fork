@@ -81,7 +81,7 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
             nullptr, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_DEGREES,
-        g_param_spec_int("degrees", "Degrees", "rotation angle of the output file",
+        g_param_spec_int("ratation", "Ratation", "rotation angle of the output file",
             0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_LATITUDE,
@@ -102,13 +102,13 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
 static void gst_mux_bin_init(GstMuxBin *mux_bin)
 {
     g_return_if_fail(mux_bin != nullptr);
-    GST_INFO_OBJECT(mux_bin, "gst_mux_bin_init");
+    GST_DEBUG_OBJECT(mux_bin, "gst_mux_bin_init");
     mux_bin->video_src_list = nullptr;
     mux_bin->audio_src_list = nullptr;
     mux_bin->split_mux_sink = nullptr;
     mux_bin->out_fd = -1;
     mux_bin->mux = nullptr;
-    mux_bin->degrees = 0;
+    mux_bin->ratation = 0;
     mux_bin->latitude = 0;
     mux_bin->longitude = 0;
 }
@@ -131,7 +131,7 @@ static void gst_mux_bin_finalize(GObject *object)
 {
     g_return_if_fail(object != nullptr);
     GstMuxBin *mux_bin = GST_MUX_BIN(object);
-    GST_INFO_OBJECT(mux_bin, "gst_mux_bin_finalize");
+    GST_DEBUG_OBJECT(mux_bin, "gst_mux_bin_finalize");
 
     if (mux_bin->mux != nullptr) {
         g_free(mux_bin->mux);
@@ -164,7 +164,7 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id,
             mux_bin->mux = g_strdup(g_value_get_string(value));
             break;
         case PROP_DEGREES:
-            mux_bin->degrees = g_value_get_int(value);
+            mux_bin->ratation = g_value_get_int(value);
             break;
         case PROP_LATITUDE:
             mux_bin->latitude = g_value_get_int(value);
@@ -192,7 +192,7 @@ static void gst_mux_bin_get_property(GObject *object, guint prop_id,
             g_value_set_string(value, mux_bin->mux);
             break;
         case PROP_DEGREES:
-            g_value_set_int(value, mux_bin->degrees);
+            g_value_set_int(value, mux_bin->ratation);
             break;
         case PROP_LATITUDE:
             g_value_set_int(value, mux_bin->latitude);
@@ -210,7 +210,6 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
     g_return_val_if_fail(mux_bin != nullptr, false);
     g_return_val_if_fail(mux_bin->out_fd >= 0, false);
     g_return_val_if_fail(mux_bin->mux != nullptr, false);
-
     GST_INFO_OBJECT(mux_bin, "create_splitmuxsink");
 
     mux_bin->split_mux_sink = gst_element_factory_make("splitmuxsink", "splitmuxsink");
@@ -225,7 +224,7 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 
     GstElement *qtmux = gst_element_factory_make(mux_bin->mux, mux_bin->mux);
     g_return_val_if_fail(qtmux != nullptr, false);
-    g_object_set(qtmux, "orientation-hint", mux_bin->degrees, "set-latitude", mux_bin->latitude,
+    g_object_set(qtmux, "orientation-hint", mux_bin->ratation, "set-latitude", mux_bin->latitude,
         "set-longitude", mux_bin->longitude, nullptr);
     g_object_set(mux_bin->split_mux_sink, "muxer", qtmux, nullptr);
 
@@ -235,19 +234,18 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 static GstElement *create_parse(GstMuxBin *mux_bin, const char* parse_name)
 {
     g_return_val_if_fail(mux_bin != nullptr, nullptr);
-
     GST_INFO_OBJECT(mux_bin, "create_parse");
 
     GstElement *parse = nullptr;
-    if (strcmp(parse_name, "h264parse") == 0) {
-        parse = gst_element_factory_make("h264parse", "h264parse");
+    if (strstr(parse_name, "h264parse") != nullptr) {
+        parse = gst_element_factory_make("h264parse", parse_name);
         g_return_val_if_fail(parse != nullptr, nullptr);
-    } else if (strcmp(parse_name, "mpeg4videoparse") == 0) {
-        parse = gst_element_factory_make("mpeg4videoparse", "mpeg4parse");
+    } else if (strstr(parse_name, "mpeg4videoparse") != nullptr) {
+        parse = gst_element_factory_make("mpeg4videoparse", parse_name);
         g_return_val_if_fail(parse != nullptr, nullptr);
         g_object_set(parse, "config-interval", -1, "drop", false, nullptr);
-    } else if (strcmp(parse_name, "aacparse") == 0) {
-        parse = gst_element_factory_make("aacparse", "aacparse");
+    } else if (strstr(parse_name, "aacparse") != nullptr) {
+        parse = gst_element_factory_make("aacparse", parse_name);
         g_return_val_if_fail(parse != nullptr, nullptr);
     } else {
         GST_ERROR_OBJECT(mux_bin, "Invalid videoParse");
@@ -259,7 +257,6 @@ static GstElement *create_parse(GstMuxBin *mux_bin, const char* parse_name)
 static bool create_src(GstMuxBin *mux_bin, TrackType track_type)
 {
     g_return_val_if_fail(mux_bin != nullptr, false);
-
     GST_INFO_OBJECT(mux_bin, "create_src");
 
     GSList *iter = nullptr;
@@ -287,8 +284,8 @@ static bool create_src(GstMuxBin *mux_bin, TrackType track_type)
 static bool create_element(GstMuxBin *mux_bin)
 {
     g_return_val_if_fail(mux_bin != nullptr, false);
-
     GST_INFO_OBJECT(mux_bin, "create_element");
+    
     if (!create_splitmuxsink(mux_bin)) {
         GST_ERROR_OBJECT(mux_bin, "Failed to call create_splitmuxsink");
         return false;
@@ -311,8 +308,8 @@ static bool add_element_to_bin(GstMuxBin *mux_bin)
 {
     g_return_val_if_fail(mux_bin != nullptr, false);
     g_return_val_if_fail(mux_bin->split_mux_sink != nullptr, false);
-
     GST_INFO_OBJECT(mux_bin, "add_element_to_bin");
+    
     bool ret;
     GSList *iter = mux_bin->video_src_list;
     while (iter != nullptr) {
@@ -338,7 +335,6 @@ static bool connect_parse(GstMuxBin *mux_bin, GstElement *parse, GstPad *upstrea
     g_return_val_if_fail(parse != nullptr, false);
     g_return_val_if_fail(upstream_pad != nullptr, false);
     g_return_val_if_fail(downstream_pad != nullptr, false);
-
     GST_INFO_OBJECT(mux_bin, "connect_parse");
 
     GstPad *parse_sink_pad = gst_element_get_static_pad(parse, "sink");
@@ -359,7 +355,6 @@ static bool connect_element(GstMuxBin *mux_bin, TrackType type)
 {
     g_return_val_if_fail(mux_bin != nullptr, false);
     g_return_val_if_fail(mux_bin->split_mux_sink != nullptr, false);
-
     GST_INFO_OBJECT(mux_bin, "connect_element");
 
     GSList *iter = nullptr;
@@ -380,7 +375,7 @@ static bool connect_element(GstMuxBin *mux_bin, TrackType type)
         } else if (type == AUDIO) {
             split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->split_mux_sink, "audio_%u");
         }
-        if (((GstTrackInfo *)(iter->data))->parseName_ != nullptr) {
+        if (strstr(((GstTrackInfo *)(iter->data))->parseName_, "parse")) {
             GstElement *parse = create_parse(mux_bin, ((GstTrackInfo *)(iter->data))->parseName_);
             g_return_val_if_fail(parse != nullptr, false);
             ret = gst_bin_add(GST_BIN(mux_bin), parse);
@@ -405,7 +400,7 @@ static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstSta
 {
     g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
     GstMuxBin *mux_bin = GST_MUX_BIN(element);
-    GST_INFO_OBJECT(mux_bin, "gst_mux_bin_change_state");
+    GST_DEBUG_OBJECT(mux_bin, "gst_mux_bin_change_state");
 
     switch (transition) {
         case GST_STATE_CHANGE_NULL_TO_READY:

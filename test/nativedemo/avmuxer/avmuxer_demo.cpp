@@ -143,10 +143,10 @@ namespace {
         192, 192, 192, 192, 192, 192, 192, 192
     };
     std::map<std::string, std::tuple<uint32_t, uint32_t, const int32_t*, std::string>> CODEC_PARAMETER = {
-        {"h264", {33333, 501, H264_FRAME_SIZE, "/data/media/test.h264"}},
-        {"mpeg4", {16666, 602, MPEG4_FRAME_SIZE, "/data/media/test.mpeg4"}},
-        {"aac", {23220, 433, AAC_FRAME_SIZE, "/data/media/test.aac"}},
-        {"mp3", {23220, 575, MP3_FRAME_SIZE, "/data/media/test.mp3"}}
+        {"h264", {33333, sizeof(H264_FRAME_SIZE) / sizeof(int32_t), H264_FRAME_SIZE, "/data/media/test.h264"}},
+        {"mpeg4", {16666, sizeof(MPEG4_FRAME_SIZE) / sizeof(int32_t), MPEG4_FRAME_SIZE, "/data/media/test.mpeg4"}},
+        {"aac", {23220, sizeof(AAC_FRAME_SIZE) / sizeof(int32_t), AAC_FRAME_SIZE, "/data/media/test.aac"}},
+        {"mp3", {23220, sizeof(MP3_FRAME_SIZE) / sizeof(int32_t), MP3_FRAME_SIZE, "/data/media/test.mp3"}}
     };
 
     constexpr uint32_t DURATION_INDEX = 0;
@@ -174,7 +174,7 @@ namespace {
 namespace OHOS {
 namespace Media {
 bool AVMuxerDemo::PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t *FrameArray,
-    int32_t i, int32_t trackId, int64_t stamp)
+    int32_t i, int32_t TrackId, int64_t stamp)
 {
     if (FrameArray == nullptr) {
         std::cout << "Frame array error" << std::endl;
@@ -190,12 +190,12 @@ bool AVMuxerDemo::PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t 
     aVMem->SetRange(0, *FrameArray);
     TrackSampleInfo info;
     info.size = *FrameArray;
-    info.trackIdx = trackId;
+    info.trackIdx = TrackId;
 
     if (i == 0) {
         info.timeMs = 0;
         info.flags = AVCODEC_BUFFER_FLAG_CODEC_DATA;
-    } else if ((i == 1 && trackId == videotrackId_) || trackId == audioTrackId_) {
+    } else if ((i == 1 && TrackId == videoTrackId_) || TrackId == audioTrackId_) {
         info.timeMs = stamp;
         info.flags = AVCODEC_BUFFER_FLAG_SYNC_FRAME;
     } else {
@@ -229,7 +229,7 @@ void AVMuxerDemo::WriteTrackSample()
     int32_t audioLen = audioFile_ == nullptr ? INT32_MAX : audioFrameNum_;
     while (i < videoLen && i < audioLen) {
         if (videoFile_ != nullptr) {
-            if (!PushBuffer(videoFile_, videoFrameArray_, i, videotrackId_, videoStamp)) {
+            if (!PushBuffer(videoFile_, videoFrameArray_, i, videoTrackId_, videoStamp)) {
                 break;
             }
             videoFrameArray_++;
@@ -271,19 +271,18 @@ bool AVMuxerDemo::AddTrackVideo(std::string &videoType)
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_WIDTH), H264_WIDTH);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), H264_HEIGHT);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), H264_FRAME_RATE);
-        SetParameter("h264");
     } else if (videoType == "mpeg4") {
         trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "video/mp4v-es");
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_WIDTH), MPEG4_WIDTH);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), MPEG4_HEIGHT);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_FRAME_RATE), MPEG4_FRAME_RATE);
-        SetParameter("mpeg4");
     } else {
         std::cout << "Failed to check video type" << std::endl;
         return false;
     }
-    avmuxer_->AddTrack(trackDesc, videotrackId_);
-    std::cout << "trackId is: " << videotrackId_ << std::endl;
+    SetParameter(videoType);
+    avmuxer_->AddTrack(trackDesc, videoTrackId_);
+    std::cout << "trackId is: " << videoTrackId_ << std::endl;
 
     return true;
 }
@@ -295,16 +294,15 @@ bool AVMuxerDemo::AddTrackAudio(std::string &audioType)
         trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "audio/mp4a-latm");
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_SAMPLE_RATE), AAC_SAMPLE_RATE);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT), AAC_CHANNEL);
-        SetParameter("aac");
     } else if (audioType == "mp3") {
         trackDesc.PutStringValue(std::string(MediaDescriptionKey::MD_KEY_CODEC_MIME), "audio/mpeg");
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_SAMPLE_RATE), MP3_SAMPLE_RATE);
         trackDesc.PutIntValue(std::string(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT), MP3_CHANNEL);
-        SetParameter("mp3");
     } else {
         std::cout << "Failed to check audio type" << std::endl;
         return false;
     }
+    SetParameter(audioType);
     avmuxer_->AddTrack(trackDesc, audioTrackId_);
     std::cout << "trackId is: " << audioTrackId_ << std::endl;
 
@@ -347,7 +345,7 @@ void AVMuxerDemo::DoNext()
     }
     avmuxer_->SetOutput(fd, format);
     avmuxer_->SetLocation(LATITUDE, LONGITUDE);
-    avmuxer_->SetOrientationHint(RATATION);
+    avmuxer_->SetRotation(RATATION);
 
     if ((mode == VIDEO_AUDIO_MODE && (AddTrackVideo(videoType_) == false ||
         AddTrackAudio(audioType_) == false)) ||

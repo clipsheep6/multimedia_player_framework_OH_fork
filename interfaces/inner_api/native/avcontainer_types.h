@@ -41,7 +41,7 @@ struct TrackSampleInfo {
     /**
      * @brief the presentation timestamp in microseconds.
      */
-    int64_t timeUs;
+    int64_t timeMs;
     /**
      * @brief the size in bytes.
      */
