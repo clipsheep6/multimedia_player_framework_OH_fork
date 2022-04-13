@@ -19,7 +19,7 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "ProcessorAencImpl"};
-    constexpr uint32_t DEFAULT_BUFFER_SIZE = 30000;
+    constexpr uint32_t DEFAULT_BUFFER_SIZE = 50000;
     static const GstAudioChannelPosition CHANNEL_POSITION[6][6] = {
     {
         GST_AUDIO_CHANNEL_POSITION_MONO
@@ -133,6 +133,9 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
                 "stream-format", G_TYPE_STRING, "raw",
                 "base-profile", G_TYPE_STRING, "lc", nullptr);
             break;
+        case CODEC_MIMIE_TYPE_AUDIO_OPUS:
+            caps = gst_caps_new_simple("audio/x-opus",
+                "rate", G_TYPE_INT, sampleRate_, "channels", G_TYPE_INT, channels_, nullptr);
         default:
             break;
     }

@@ -31,7 +31,7 @@ namespace {
     };
 }
 
-#define GST_BUFFER_POOL_LOCK(pool)   (g_mutex_lock(&pool->lock))
+#define GST_BUFFER_POOL_LOCK(pool) (g_mutex_lock(&pool->lock))
 #define GST_BUFFER_POOL_UNLOCK(pool) (g_mutex_unlock(&pool->lock))
 #define GST_BUFFER_POOL_WAIT(pool) (g_cond_wait(&pool->cond, &pool->lock))
 #define GST_BUFFER_POOL_NOTIFY(pool) (g_cond_signal(&pool->cond))
@@ -86,7 +86,7 @@ static void gst_surface_pool_class_init(GstSurfacePoolClass *klass)
     poolClass->flush_start = gst_surface_pool_flush_start;
 }
 
-static void gst_surface_pool_init (GstSurfacePool *pool)
+static void gst_surface_pool_init(GstSurfacePool *pool)
 {
     g_return_if_fail(pool != nullptr);
 
@@ -139,7 +139,7 @@ GstSurfacePool *gst_surface_pool_new()
     return pool;
 }
 
-static const gchar **gst_surface_pool_get_options (GstBufferPool *pool)
+static const gchar **gst_surface_pool_get_options(GstBufferPool *pool)
 {
     // add buffer type meta option at here
     static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT,
@@ -268,7 +268,7 @@ static void gst_surface_pool_request_loop(GstSurfacePool *spool)
     GstBuffer *buffer = nullptr;
     GstFlowReturn ret = gst_surface_pool_alloc_buffer(pool, &buffer, nullptr);
     if (ret != GST_FLOW_OK) {
-        GST_WARNING_OBJECT(spool, "alloc bufer failed, exit");
+        GST_WARNING_OBJECT(spool, "alloc buffer failed, exit");
         gst_task_pause(spool->task);
         GST_BUFFER_POOL_LOCK(spool);
         spool->started = FALSE;
@@ -310,7 +310,7 @@ static gboolean gst_surface_pool_start(GstBufferPool *pool)
     }
 
     gst_surface_allocator_set_surface(spool->allocator, spool->surface);
-    GST_INFO_OBJECT(spool, "Set pool minbuf %d maxbuf %d", spool->minBuffers, spool->maxBuffers);
+    GST_INFO_OBJECT(spool, "Set pool minbuf %u maxbuf %u", spool->minBuffers, spool->maxBuffers);
 
     spool->freeBufCnt = spool->maxBuffers;
     GST_BUFFER_POOL_UNLOCK(spool);
@@ -395,7 +395,7 @@ static GstFlowReturn gst_surface_pool_alloc_buffer(GstBufferPool *pool,
     GstSurfaceMemory *memory = nullptr;
     GstFlowReturn ret = do_alloc_memory_locked(spool, params, &memory);
     if (memory == nullptr) {
-        GST_DEBUG_OBJECT(spool, "allocator mem fail");
+        GST_WARNING_OBJECT(spool, "allocator mem fail");
         return ret;
     }
 

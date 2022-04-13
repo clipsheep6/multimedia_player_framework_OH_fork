@@ -89,7 +89,7 @@ uint64_t VideoCaptureSfImpl::GetCurrentTime()
     constexpr uint32_t SEC_TO_NS = 1000000000; // second to nano second
     struct timespec timestamp = {0, 0};
     clock_gettime(CLOCK_MONOTONIC, &timestamp);
-    uint64_t time = (uint64_t)timestamp.tv_sec * SEC_TO_NS + (uint64_t)timestamp.tv_nsec;
+    uint64_t time = (uint64_t)timestamp.tv_sec * SEC_TO_NS + static_cast<uint64_t>(timestamp.tv_nsec);
     return time;
 }
 
@@ -375,6 +375,7 @@ void VideoCaptureSfImpl::OnBufferAvailable()
     if (bufferAvailableCount_ == 0) {
         bufferAvailableCondition_.notify_all();
     }
+    MEDIA_LOGD("bufferAvailableCount_ %{public}d", bufferAvailableCount_);
     bufferAvailableCount_++;
 }
 
