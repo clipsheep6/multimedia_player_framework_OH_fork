@@ -33,6 +33,13 @@ const std::map<AudioStandard::AudioSampleFormat, std::string> PCM_TO_STRING = {
     {AudioStandard::SAMPLE_S32LE, "S32LE"},
 };
 
+const std::map<AudioStandard::AudioSampleFormat, int32_t> AUDIO_SAMPLE_FORMAT_TO_DEPTH = {
+    {AudioStandard::SAMPLE_U8, 8},
+    {AudioStandard::SAMPLE_S16LE, 16},
+    {AudioStandard::SAMPLE_S24LE, 24},
+    {AudioStandard::SAMPLE_S32LE, 32},
+};
+
 const std::map<MPEG4Profile, std::string> MPEG4_PROFILE_TO_STRING = {
     {MPEG4_PROFILE_ADVANCED_CODING, "advanced-coding-efficiency"},
     {MPEG4_PROFILE_ADVANCED_CORE, "advanced-core"},
@@ -107,6 +114,14 @@ std::string RawAudioFormatToGst(AudioStandard::AudioSampleFormat format)
         return PCM_TO_STRING.at(format);
     }
     return "Invalid";
+}
+
+int32_t AudioSampleFormatToDepth(const AudioStandard::AudioSampleFormat &format)
+{
+    if (AUDIO_SAMPLE_FORMAT_TO_DEPTH.count(format) != 0) {
+        return AUDIO_SAMPLE_FORMAT_TO_DEPTH.at(format);
+    }
+    return 0;
 }
 
 int32_t MapCodecMime(const std::string &mime, InnerCodecMimeType &name)
