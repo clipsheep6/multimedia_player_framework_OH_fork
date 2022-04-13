@@ -159,9 +159,9 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetOutputPortConfig()
     }
     constexpr uint32_t bitsPerByte = 8;
     constexpr uint32_t bufferSizePadding = 5000;
-    int32_t audioSampleBitDepth = AudioSampleFormatToDepth(audioSampleFormat_);
+    int32_t audioSampleBitDepth = AudioSampleFormatToDepth(static_cast<AudioStandard::AudioSampleFormat>(audioSampleFormat_));
     config->bufferSize_ = duration_ * sampleRate_ * audioSampleBitDepth * channels_ / bitsPerByte + bufferSizePadding;
-    if (config->bufferSize_ == bufferSizePadding ) {
+    if (config->bufferSize_ == bufferSizePadding) {
         config->bufferSize_ = DEFAULT_BUFFER_SIZE;
         MEDIA_LOGD("Set bufferSize as default value");
     }

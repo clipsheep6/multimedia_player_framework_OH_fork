@@ -119,7 +119,7 @@ std::string RawAudioFormatToGst(AudioStandard::AudioSampleFormat format)
 int32_t AudioSampleFormatToDepth(const AudioStandard::AudioSampleFormat &format)
 {
     if (AUDIO_SAMPLE_FORMAT_TO_DEPTH.count(format) != 0) {
-        return PCM_TO_STRING.at(format);
+        return AUDIO_SAMPLE_FORMAT_TO_DEPTH.at(format);
     }
     return 0;
 }
