@@ -27,3 +27,23 @@ ohos_prebuilt_etc("media_service.rc") {
   part_name = "multimedia_media_standard"
   subsystem_name = "multimedia"
 }
+
+ohos_prebuilt_etc("codec_caps.xml") {
+  source = "codec_caps.xml"
+
+  subsystem_name = "multimedia"
+  module_install_dir = "etc/codec"
+  part_name = "multimedia_media_standard"
+}
+
+ohos_prebuilt_etc("recorder_configs.xml") {
+  if ("${product_name}" == "rk3568") {
+    source = "rk3568/recorder_configs.xml"
+  } else {
+    source = "recorder_configs.xml"
+  }
+
+  subsystem_name = "multimedia"
+  module_install_dir = "etc"
+  part_name = "multimedia_media_standard"
+}
