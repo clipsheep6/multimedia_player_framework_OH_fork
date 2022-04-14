@@ -48,6 +48,8 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
         audioCapturer_ = AudioStandard::AudioCapturer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC);
         CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_NO_MEMORY);
     }
+    audioCaptureSingal_ = make_shared<AudioCaptureSignal>();
+    CHECK_AND_RETURN_RET(audioCaptureSingal_ != nullptr, MSERR_NO_MEMORY);
 
     AudioStandard::AudioCapturerParams params;
     auto supportedSampleList = AudioStandard::AudioCapturer::GetSupportedSamplingRates();
@@ -123,8 +125,51 @@ int32_t AudioCaptureAsImpl::GetSegmentInfo(uint64_t &start)
     return MSERR_OK;
 }
 
+void AudioCaptureAsImpl::GetAudioCaptureBuffer()
+{
+    while (true)) {
+        unique_lock<mutex> loopLock(audioCaptureSingal_->CaptureMutex_);
+        audioCaptureSingal_->CaptureCond_.wait(loopLock, [this] () { return audioCaptureSingal_->CaptureQueue_.size() > 0});
+
+        if (!recording_.load()) {
+            break;
+        }
+
+        CHECK_AND_BREAK(audioCapturer_ != nullptr);
+        std::shared_ptr<AudioBuffer> tempBuffer = std::make_shared<AudioBuffer>();
+        CHECK_AND_BREAK(bufferSize_ > 0 && bufferSize_ < MAXIMUM_BUFFER_SIZE);
+        tempBuffer->gstBuffer = gst_buffer_new_allocate(nullptr, bufferSize_, nullptr);
+        CHECK_AND_BREAK(tempBuffer->gstBuffer != nullptr);
+
+        GstMapInfo map = GST_MAP_INFO_INIT;
+        if (gst_buffer_map(tempBuffer->gstBuffer, &map, GST_MAP_READ) != TRUE) {
+            gst_buffer_unref(tempBuffer->gstBuffer);
+            break;
+        }
+        bool isBlocking = true;
+        int32_t bytesRead = audioCapturer_->Read(*(map.data), map.size, isBlocking);
+        gst_buffer_unmap(tempBuffer->gstBuffer, &map);
+        if (bytesRead <= 0) {
+            gst_buffer_unref(tempBuffer->gstBuffer);
+            break;
+        }
+        if (GetSegmentInfo(timestamp_) != MSERR_OK) {
+            gst_buffer_unref(tempBuffer->gstBuffer);
+            break;
+        }
+
+        tempBuffer->timestamp = timestamp_ - totalPauseTime_;
+        tempBuffer->duration = bufferDurationNs_;
+        tempBuffer->dataLen = bufferSize_;
+
+        audioCaptureSingal_->CaptureQueue_.push(tempBuffer);
+        audioCaptureSingal_->CaptureCond_.notify_all();
+    }
+}
+
 std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
 {
+#if 0
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, nullptr);
     std::shared_ptr<AudioBuffer> buffer = std::make_shared<AudioBuffer>();
     CHECK_AND_RETURN_RET(bufferSize_ > 0 && bufferSize_ < MAXIMUM_BUFFER_SIZE, nullptr);
@@ -172,11 +217,29 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
     buffer->duration = bufferDurationNs_;
     buffer->dataLen = bufferSize_;
     return buffer;
+#endif
+
+    unique_lock<mutex> loopLock(audioCaptureSingal_->CaptureMutex_);
+    audioCaptureSingal_->CaptureCond_.wait(loopLock, [this] () { return audioCaptureSingal_->CaptureQueue_.size() > 0});
+
+    if (!recording_.load()) {
+        return nullptr;
+    }
+
+    std::shared_ptr<AudioBuffer> BufferOut = audioCaptureSingal_->CaptureQueue_.front();
+    audioCaptureSingal_->CaptureQueue_.pop();
+    return BufferOut;
 }
+
 
 int32_t AudioCaptureAsImpl::StartAudioCapture()
 {
     MEDIA_LOGD("StartAudioCapture");
+
+    recording_.store(true);
+    captureLoop_ = make_unique<thread>(&AudioCaptureAsImpl::GetAudioCaptureBuffer, this);
+    CHECK_AND_RETURN_RET(captureLoop_ != nullptr, MSERR_INVALID_OPERATION);
+
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(audioCapturer_->Start(), MSERR_UNKNOWN);
     return MSERR_OK;
@@ -185,6 +248,16 @@ int32_t AudioCaptureAsImpl::StartAudioCapture()
 int32_t AudioCaptureAsImpl::StopAudioCapture()
 {
     MEDIA_LOGD("StopAudioCapture");
+    recording_.store(false);
+    if (captureLoop_ != nullptr && captureLoop_->joinable()) {
+        unique_lock<mutex> loopLock(audioCaptureSingal_->CaptureMutex_);
+        audioCaptureSingal_->CaptureQueue_.push(nullptr); // to wake up the loop thread
+        audioCaptureSingal_->CaptureCond_.notify_all();
+        loopLock.unlock();
+        captureLoop_->join();
+        captureLoop_.reset();
+    }
+
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     if (audioCapturer_->GetStatus() == AudioStandard::CapturerState::CAPTURER_RUNNING) {
         CHECK_AND_RETURN_RET(audioCapturer_->Stop(), MSERR_UNKNOWN);
