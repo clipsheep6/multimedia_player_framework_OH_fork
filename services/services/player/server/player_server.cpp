@@ -193,7 +193,7 @@ int32_t PlayerServer::OnPrepare(bool async)
 int32_t PlayerServer::Play()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MediaTrace trace("PlayerServer::Play", PLAY_TASK_ID);
+    MediaTrace::TraceBegin("PlayerServer::Play", PLAY_TASK_ID);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     MEDIA_LOGW("KPI-TRACE: PlayerServer Play in");
     if (status_ != PLAYER_PREPARED && status_ != PLAYER_PLAYBACK_COMPLETE &&
@@ -228,14 +228,14 @@ int32_t PlayerServer::Play()
 int32_t PlayerServer::PrepareAsync()
 {
     MEDIA_LOGW("KPI-TRACE: PlayerServer PrepareAsync in");
-    MediaTrace trace("PlayerServer::PrepareAsync", PREPARE_TASK_ID);
+    MediaTrace::TraceBegin("PlayerServer::PrepareAsync", PREPARE_TASK_ID);
     return OnPrepare(true);
 }
 
 int32_t PlayerServer::Pause()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MediaTrace trace("PlayerServer::Pause", PAUSE_TASK_ID);
+    MediaTrace::TraceBegin("PlayerServer::Pause", PAUSE_TASK_ID);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     if (status_ == PLAYER_STATE_ERROR) {
@@ -265,7 +265,7 @@ int32_t PlayerServer::Stop()
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     MEDIA_LOGW("KPI-TRACE: PlayerServer Stop in");
-    MediaTrace trace("PlayerServer::Stop", STOP_TASK_ID);
+    MediaTrace::TraceBegin("PlayerServer::Stop", STOP_TASK_ID);
     if (status_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not Stop, currentState is PLAYER_STATE_ERROR");
         return MSERR_INVALID_OPERATION;
@@ -380,7 +380,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
-    MediaTrace trace("PlayerServer::Seek", SEEK_TASK_ID);
+    MediaTrace::TraceBegin("Player::Seek", SEEK_TASK_ID);
 
     if (status_ != PLAYER_PREPARED && status_ != PLAYER_PAUSED &&
         status_ != PLAYER_STARTED && status_ != PLAYER_PLAYBACK_COMPLETE) {

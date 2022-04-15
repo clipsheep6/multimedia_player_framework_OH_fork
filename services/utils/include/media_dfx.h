@@ -40,7 +40,7 @@ __attribute__((visibility("default"))) void FaultEventWrite(std::string msg, std
 class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
 public:
     explicit MediaTrace(const std::string &funcName);
-    MediaTrace(const std::string &funcName, int32_t taskId);
+    static void TraceBegin(const std::string &funcName, int32_t taskId);
     static void TraceEnd(const std::string &funcName, int32_t taskId);
     ~MediaTrace();
 private:

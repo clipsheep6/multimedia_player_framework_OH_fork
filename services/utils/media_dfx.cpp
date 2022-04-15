@@ -80,7 +80,7 @@ MediaTrace::MediaTrace(const std::string &funcName)
     isSync_ = true;
 }
 
-MediaTrace::MediaTrace(const std::string &funcName, int32_t taskId)
+void MediaTrace::TraceBegin(const std::string &funcName, int32_t taskId)
 {
     StartAsyncTrace(BYTRACE_TAG_ZMEDIA, funcName, taskId);
 }
