@@ -18,7 +18,6 @@
 #include "audio_system_manager.h"
 #include "media_errors.h"
 #include "audio_errors.h"
-#include "media_dfx.h"
 
 namespace {
     constexpr float INVALID_VOLUME = -1.0;
@@ -736,7 +735,6 @@ void GstPlayerCtrl::MessageErrorProcess(const char *name, const GError *err,
     CHECK_AND_RETURN_LOG(name != nullptr, "name is null");
     char *errMsg = gst_error_get_message(err->domain, err->code);
     MEDIA_LOGE("errMsg:%{public}s", errMsg);
-    MediaDFX::EventReport("GstPlayerCtrl", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, errMsg);
     if (err->domain == GST_STREAM_ERROR) {
         errorType = PLAYER_ERROR;
         StreamErrorParse(name, err, errorCode);

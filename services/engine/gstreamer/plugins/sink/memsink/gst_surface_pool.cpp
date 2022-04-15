@@ -15,12 +15,14 @@
 
 #include "gst_surface_pool.h"
 #include <unordered_map>
+#include <sys/time.h>
 #include "media_log.h"
 #include "display_type.h"
 #include "surface_buffer.h"
 #include "buffer_type_meta.h"
 #include "gst_surface_allocator.h"
 #include "gst/video/gstvideometa.h"
+#include "media_dfx.h"
 
 namespace {
     const std::unordered_map<GstVideoFormat, PixelFormat> FORMAT_MAPPING = {
@@ -29,15 +31,16 @@ namespace {
         { GST_VIDEO_FORMAT_NV12, PIXEL_FMT_YCBCR_420_SP },
         { GST_VIDEO_FORMAT_I420, PIXEL_FMT_YCBCR_420_P },
     };
+    constexpr int32_t TIME_VAL_US = 1000000;
 }
 
-#define GST_BUFFER_POOL_LOCK(pool)   (g_mutex_lock(&pool->lock))
-#define GST_BUFFER_POOL_UNLOCK(pool) (g_mutex_unlock(&pool->lock))
-#define GST_BUFFER_POOL_WAIT(pool) (g_cond_wait(&pool->cond, &pool->lock))
-#define GST_BUFFER_POOL_NOTIFY(pool) (g_cond_signal(&pool->cond))
+#define GST_BUFFER_POOL_LOCK(pool)   (g_mutex_lock(&(pool)->lock))
+#define GST_BUFFER_POOL_UNLOCK(pool) (g_mutex_unlock(&(pool)->lock))
+#define GST_BUFFER_POOL_WAIT(pool) (g_cond_wait(&(pool)->cond, &(pool)->lock))
+#define GST_BUFFER_POOL_NOTIFY(pool) (g_cond_signal(&(pool)->cond))
 
 #define gst_surface_pool_parent_class parent_class
-G_DEFINE_TYPE (GstSurfacePool, gst_surface_pool, GST_TYPE_BUFFER_POOL);
+G_DEFINE_TYPE(GstSurfacePool, gst_surface_pool, GST_TYPE_BUFFER_POOL);
 
 GST_DEBUG_CATEGORY_STATIC(gst_surface_pool_debug_category);
 #define GST_CAT_DEFAULT gst_surface_pool_debug_category
@@ -68,7 +71,7 @@ static void clear_preallocated_buffer(GstSurfacePool *spool)
     spool->preAllocated = nullptr;
 }
 
-static void gst_surface_pool_class_init (GstSurfacePoolClass *klass)
+static void gst_surface_pool_class_init(GstSurfacePoolClass *klass)
 {
     g_return_if_fail(klass != nullptr);
     GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS (klass);
@@ -86,7 +89,7 @@ static void gst_surface_pool_class_init (GstSurfacePoolClass *klass)
     poolClass->flush_start = gst_surface_pool_flush_start;
 }
 
-static void gst_surface_pool_init (GstSurfacePool *pool)
+static void gst_surface_pool_init(GstSurfacePool *pool)
 {
     g_return_if_fail(pool != nullptr);
 
@@ -106,6 +109,9 @@ static void gst_surface_pool_init (GstSurfacePool *pool)
     gst_allocation_params_init(&pool->params);
     pool->task = nullptr;
     g_rec_mutex_init(&pool->taskLock);
+    pool->beginTime = {0};
+    pool->endTime = {0};
+    pool->callCnt = 0;
 }
 
 static void gst_surface_pool_finalize(GObject *obj)
@@ -139,10 +145,11 @@ GstSurfacePool *gst_surface_pool_new()
     return pool;
 }
 
-static const gchar **gst_surface_pool_get_options (GstBufferPool *pool)
+static const gchar **gst_surface_pool_get_options(GstBufferPool *pool)
 {
     // add buffer type meta option at here
-    static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, nullptr };
+    static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT,
+        nullptr };
     return options;
 }
 
@@ -256,6 +263,24 @@ static void gst_surface_pool_request_loop(GstSurfacePool *spool)
     GST_DEBUG_OBJECT(spool, "Loop In");
 
     GST_BUFFER_POOL_LOCK(spool);
+
+    if (spool->callCnt == 0) {
+        gettimeofday(&(spool->beginTime), nullptr);
+    }
+    spool->callCnt++;
+    gettimeofday(&(spool->endTime), nullptr);
+    if ((spool->endTime.tv_sec * TIME_VAL_US + spool->endTime.tv_usec) -
+        (spool->beginTime.tv_sec * TIME_VAL_US + spool->beginTime.tv_usec) > TIME_VAL_US) {
+        OHOS::Media::MediaEvent event;
+        if (event.CreateMsg("The gst_surface_pool_request_loop function is called in a second: %d",
+            spool->callCnt)) {
+            event.EventWrite("PLAYER_STATISTICS", OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, "PLAYER");
+            spool->callCnt = 0;
+        } else {
+            GST_ERROR_OBJECT(pool, "Failed to call CreateMsg");
+        }
+    }
+
     if (!spool->started) {
         GST_BUFFER_POOL_UNLOCK(spool);
         GST_WARNING_OBJECT(spool, "task is paused, exit");
@@ -267,7 +292,7 @@ static void gst_surface_pool_request_loop(GstSurfacePool *spool)
     GstBuffer *buffer = nullptr;
     GstFlowReturn ret = gst_surface_pool_alloc_buffer(pool, &buffer, nullptr);
     if (ret != GST_FLOW_OK) {
-        GST_WARNING_OBJECT(spool, "alloc bufer failed, exit");
+        GST_WARNING_OBJECT(spool, "alloc buffer failed, exit");
         gst_task_pause(spool->task);
         GST_BUFFER_POOL_LOCK(spool);
         spool->started = FALSE;
@@ -309,7 +334,7 @@ static gboolean gst_surface_pool_start(GstBufferPool *pool)
     }
 
     gst_surface_allocator_set_surface(spool->allocator, spool->surface);
-    GST_INFO_OBJECT(spool, "Set pool minbuf %d maxbuf %d", spool->minBuffers, spool->maxBuffers);
+    GST_INFO_OBJECT(spool, "Set pool minbuf %u maxbuf %u", spool->minBuffers, spool->maxBuffers);
 
     spool->freeBufCnt = spool->maxBuffers;
     GST_BUFFER_POOL_UNLOCK(spool);
@@ -394,7 +419,7 @@ static GstFlowReturn gst_surface_pool_alloc_buffer(GstBufferPool *pool,
     GstSurfaceMemory *memory = nullptr;
     GstFlowReturn ret = do_alloc_memory_locked(spool, params, &memory);
     if (memory == nullptr) {
-        GST_DEBUG_OBJECT(spool, "allocator mem fail");
+        GST_WARNING_OBJECT(spool, "allocator mem fail");
         return ret;
     }
 
@@ -410,22 +435,18 @@ static GstFlowReturn gst_surface_pool_alloc_buffer(GstBufferPool *pool,
     // add buffer type meta at here.
     OHOS::sptr<OHOS::SurfaceBuffer> buf = memory->buf;
     auto buffer_handle = buf->GetBufferHandle();
+    g_return_val_if_fail(buffer_handle != nullptr, GST_FLOW_ERROR);
     int32_t stride = buffer_handle->stride;
-    GstVideoInfo *info = &spool->info;
-
-    if (buf->GetFormat() == PIXEL_FMT_RGBA_8888) {
-        for (int plane = 0; plane < info->finfo->n_planes; ++plane) {
-            info->stride[plane] = stride;
-            GST_DEBUG_OBJECT(spool, "new stride %d", stride);
-        }
-        gst_buffer_add_video_meta_full(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
-            GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info), info->finfo->n_planes, info->offset, info->stride);
-    } else {
-        gst_buffer_add_video_meta(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
-            GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info));
-    }
-
     gst_buffer_add_buffer_handle_meta(*buffer, reinterpret_cast<intptr_t>(buffer_handle), memory->fence, 0);
+
+    GstVideoInfo *info = &spool->info;
+    g_return_val_if_fail(info != nullptr && info->finfo != nullptr, GST_FLOW_ERROR);
+    for (guint plane = 0; plane < info->finfo->n_planes; ++plane) {
+        info->stride[plane] = stride;
+        GST_DEBUG_OBJECT(spool, "new stride %d", stride);
+    }
+    gst_buffer_add_video_meta_full(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
+        GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info), info->finfo->n_planes, info->offset, info->stride);
     return GST_FLOW_OK;
 }
 

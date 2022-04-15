@@ -17,17 +17,35 @@
 #define MEDIA_DFX_H
 
 #include <string>
+#include <refbase.h>
 #include "nocopyable.h"
-#include "base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include/hisysevent.h"
+#include "hisysevent.h"
 
 namespace OHOS {
 namespace Media {
-class MediaDFX : public NoCopyable {
-    MediaDFX() = default;
-    ~MediaDFX() = default;
-    static void EventReport(std::string eventName, EventType type, std::string msg);
+class __attribute__((visibility("default"))) MediaEvent : public NoCopyable {
+public:
+    MediaEvent() = default;
+    ~MediaEvent() = default;
+    bool CreateMsg(const char *format, ...) __attribute__((__format__(printf, 2, 3)));
+    void EventWrite(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
+        std::string module);
+private:
+    std::string msg_;
+};
+
+__attribute__((visibility("default"))) void BehaviorEventWrite(std::string status, std::string moudle);
+__attribute__((visibility("default"))) void FaultEventWrite(std::string msg, std::string moudle);
+
+class __attribute__((visibility("default"))) MediaTrace : public NoCopyable {
+public:
+    explicit MediaTrace(const std::string &funcName);
+    MediaTrace(const std::string &funcName, int32_t taskId);
+    static void TraceEnd(const std::string &funcName, int32_t taskId);
+    ~MediaTrace();
+private:
+    bool isSync_ = false;
 };
 } // namespace Media
 } // namespace OHOS
-
-#endif
+#endif // MEDIA_DFX_H

@@ -33,11 +33,25 @@
 #  // "arrsize" of the parameter is an array, set a non-zero value.
 #  // "desc" full description of this parameter.
 
-domain: MEDIA
+domain: MULTIMEDIA
 
-NO_DRAW:
-  __BASE: {type: FAULT, level: CRITICAL, desc: play error}
+PLAYER_ERR:
+  __BASE: {type: FAULT, level: CRITICAL, desc: player error}
   PID: {type: INT32, desc: pid}
-  UID: {type: INT32, desc: pid}
-  PROCESS_NAME: {type: STRING, desc: process name}
+  UID: {type: INT32, desc: uid}
+  MODULE: {type: STRING, desc: module name}
+  MSG: {type: STRING, desc: message}
+
+PLAYER_STATE:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: state change}
+  PID: {type: INT32, desc: pid}
+  UID: {type: INT32, desc: uid}
+  MODULE: {type: STRING, desc: module name}
+  MSG: {type: STRING, desc: message}
+
+PLAYER_STATISTICS:
+  __BASE: {type: STATISTIC, level: MINOR, desc: function call frequency}
+  PID: {type: INT32, desc: pid}
+  UID: {type: INT32, desc: uid}
+  MODULE: {type: STRING, desc: module name}
   MSG: {type: STRING, desc: message}
