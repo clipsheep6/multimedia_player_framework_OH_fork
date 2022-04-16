@@ -41,6 +41,7 @@ public:
     static constexpr std::string_view PLAYER_CACHED_DURATION = "cached_duration";
     static constexpr std::string_view CONTENT_TYPE = "content_type";
     static constexpr std::string_view STREAM_USAGE = "stream_usage";
+    static constexpr std::string_view RENDERER_FLAG = "renderer_flag";
 };
 
 enum BufferingInfoType : int32_t {

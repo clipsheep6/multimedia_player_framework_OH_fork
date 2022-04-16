@@ -614,6 +614,20 @@ int32_t PlayerServer::SetParameter(const Format &param)
         return MSERR_INVALID_OPERATION;
     }
 
+    if (param.GetValueType(PlayerKeys::CONTENT_TYPE) == FORMAT_TYPE_INT32 &&
+        param.GetValueType(PlayerKeys::STREAM_USAGE) == FORMAT_TYPE_INT32 &&
+        param.GetValueType(PlayerKeys::RENDERER_FLAG) == FORMAT_TYPE_INT32) {
+        if (status_ != PLAYER_IDLE && status_ != PLAYER_INITIALIZED) {
+            MEDIA_LOGE("Can not set AudioRendererInfo, currentState is %{public}s",
+                GetStatusDescription(status_).c_str());
+            return MSERR_INVALID_OPERATION;
+        }
+        if (playerEngine_ != nullptr) {
+            int32_t ret = playerEngine_->SetParameter(param);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Set AudioRendererInfo Failed!");
+        }
+    }
+
     if (playerEngine_ != nullptr) {
         int32_t ret = playerEngine_->SetParameter(param);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetParameter Failed!");
@@ -670,12 +684,12 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     CHECK_AND_RETURN_RET(GetVideoTrackInfo(videoTrack) == MSERR_OK, MSERR_INVALID_OPERATION);
     dumpString += "PlayerServer video tracks info: \n";
     FormatToString(dumpString, videoTrack);
-    
+
     std::vector<Format> audioTrack;
     CHECK_AND_RETURN_RET(GetAudioTrackInfo(audioTrack) == MSERR_OK, MSERR_INVALID_OPERATION);
     dumpString += "PlayerServer audio tracks info: \n";
     FormatToString(dumpString, audioTrack);
-    
+
     int32_t currentTime;
     CHECK_AND_RETURN_RET(GetCurrentTime(currentTime) == MSERR_OK, MSERR_INVALID_OPERATION);
     dumpString += "PlayerServer current time is: " + std::to_string(currentTime) + "\n";
