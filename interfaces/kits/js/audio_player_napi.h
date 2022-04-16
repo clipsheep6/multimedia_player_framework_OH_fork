@@ -40,6 +40,7 @@ private:
     static napi_value Reset(napi_env env, napi_callback_info info);
     static napi_value Seek(napi_env env, napi_callback_info info);
     static napi_value SetVolume(napi_env env, napi_callback_info info);
+    static napi_value SetAudioRendererInfo(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value SetSrc(napi_env env, napi_callback_info info);
@@ -54,6 +55,7 @@ private:
     static napi_value GetDuration(napi_env env, napi_callback_info info);
     static napi_value GetState(napi_env env, napi_callback_info info);
     static napi_value GetTrackDescription(napi_env env, napi_callback_info info);
+    static void AsyncSetAudioRendererInfo(napi_env env, void *data);
     static void AsyncGetTrackDescription(napi_env env, void *data);
     void ErrorCallback(MediaServiceExtErrCode errCode);
     AudioPlayerNapi();

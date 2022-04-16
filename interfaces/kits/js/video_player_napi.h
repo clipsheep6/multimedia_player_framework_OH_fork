@@ -89,6 +89,7 @@ private:
      * setVolume(vol: number): Promise<void>
      */
     static napi_value SetVolume(napi_env env, napi_callback_info info);
+    static napi_value SetAudioRendererInfo(napi_env env, napi_callback_info info);
     /**
      * url: string
      */

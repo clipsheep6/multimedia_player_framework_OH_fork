@@ -32,6 +32,7 @@ enum class AsyncWorkType : int32_t {
     ASYNC_WORK_SEEK,
     ASYNC_WORK_SPEED,
     ASYNC_WORK_VOLUME,
+    ASYNC_WORK_AUDIO_RENDERER_INFO,
     ASYNC_WORK_INVALID,
 };
 

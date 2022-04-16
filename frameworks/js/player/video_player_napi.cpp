@@ -73,6 +73,7 @@ napi_value VideoPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("seek", Seek),
         DECLARE_NAPI_FUNCTION("on", On),
         DECLARE_NAPI_FUNCTION("setVolume", SetVolume),
+        DECLARE_NAPI_FUNCTION("setAudioRendererInfo", SetAudioRendererInfo),
         DECLARE_NAPI_FUNCTION("getTrackDescription", GetTrackDescription),
         DECLARE_NAPI_FUNCTION("setSpeed", SetSpeed),
 
@@ -536,6 +537,9 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
     } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_VOLUME) {
         float volume = static_cast<float>(asyncContext->volume);
         ret = player->SetVolume(volume, volume);
+    } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_AUDIO_RENDERER_INFO) {
+        float volume = static_cast<float>(asyncContext->volume);
+        ret = player->SetVolume(volume, volume);
     } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_SEEK) {
         PlayerSeekMode seekMode = static_cast<PlayerSeekMode>(asyncContext->seekMode);
         MEDIA_LOGD("seek position %{public}d, seekmode %{public}d", asyncContext->seekPosition, seekMode);
@@ -967,6 +971,48 @@ napi_value VideoPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "SetVolume", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
+        CompleteAsyncWork, static_cast<void *>(asyncContext.get()), &asyncContext->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
+    asyncContext.release();
+    return result;
+}
+
+napi_value VideoPlayerNapi::SetAudioRendererInfo(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGD("SetAudioRendererInfo In");
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_AUDIO_RENDERER_INFO;
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[2] = { nullptr };
+    size_t argCount = 2;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    // get volume
+    napi_valuetype valueType = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "get volume napi_typeof is't napi_number");
+    } else {
+        status = napi_get_value_double(env, args[0], &asyncContext->volume);
+        if (status != napi_ok || asyncContext->volume < 0.0f || asyncContext->volume > 1.0f) {
+            asyncContext->SignError(MSERR_EXT_INVALID_VAL, "get volume input volume < 0.0f or > 1.0f");
+        }
+    }
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    // get jsPlayer
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+    // async work
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "SetAudioRendererInfo", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
         CompleteAsyncWork, static_cast<void *>(asyncContext.get()), &asyncContext->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));

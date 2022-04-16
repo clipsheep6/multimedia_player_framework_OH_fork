@@ -14,6 +14,7 @@
 */
 
 import { ErrorCallback, AsyncCallback, Callback } from './basic';
+import { AudioRendererInfo } from './@ohos.multimedia.audio.d.ts';
 
 /**
  * @name media
@@ -245,6 +246,10 @@ declare namespace media {
      * @param vol Relative volume. The value ranges from 0.00 to 1.00. The value 1 indicates the maximum volume (100%).
      */
     setVolume(vol: number): void;
+
+    setAudioRendererInfo(info: AudioRendererInfo, callback: AsyncCallback<void>): void;
+
+    setAudioRendererInfo(info: AudioRendererInfo): Promise<void>;
 
     /**
      * Releases resources used for audio playback.
@@ -937,6 +942,11 @@ declare namespace media {
       * @return A Promise instance used to return when set volume completed.
       */
     setVolume(vol: number): Promise<void>;
+
+    setAudioRendererInfo(info: AudioRendererInfo, callback: AsyncCallback<void>): void;
+
+    setAudioRendererInfo(info: AudioRendererInfo): Promise<void>;
+
     /**
      * Releases resources used for video playback.
      * @since 8
