@@ -40,6 +40,7 @@ public:
     int32_t Drain() override;
     int32_t Flush() override;
     int32_t Release() override;
+    int32_t SetRendererInfo(int32_t desc, int32_t rendererFlags) override;
     int32_t SetParameters(uint32_t bitsPerSample, uint32_t channels, uint32_t sampleRate) override;
     int32_t GetParameters(uint32_t &bitsPerSample, uint32_t &channels, uint32_t &sampleRate) override;
     int32_t GetMinimumBufferSize(uint32_t &bufferSize) override;

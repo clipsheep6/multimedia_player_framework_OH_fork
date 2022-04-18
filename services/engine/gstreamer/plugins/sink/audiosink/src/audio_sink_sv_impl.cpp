@@ -206,6 +206,18 @@ int32_t AudioSinkSvImpl::Release()
     return MSERR_OK;
 }
 
+int32_t AudioSinkSvImpl::SetRendererInfo(int32_t desc, int32_t rendererFlags)
+{
+    int32_t contentType = (static_cast<uint32_t>(desc) & 0x0000FFFF);
+    int32_t streamUsage = static_cast<uint32_t>(desc) >> AudioStandard::RENDERER_STREAM_USAGE_SHIFT;
+
+    rendererInfo_.contentType = static_cast<AudioStandard::ContentType>(contentType);
+    rendererInfo_.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
+    rendererInfo_.rendererFlags = rendererFlags;
+    useRendererOption_ = true;
+    return MSERR_OK;
+}
+
 int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels, uint32_t sampleRate)
 {
     (void)bitsPerSample;

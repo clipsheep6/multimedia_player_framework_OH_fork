@@ -1009,7 +1009,6 @@ napi_value VideoPlayerNapi::SetAudioRendererInfo(napi_env env, napi_callback_inf
 
     context->callbackRef = CommonNapi::CreateReference(env, args[1]);
     context->deferred = CommonNapi::CreatePromise(env, context->callbackRef, result);
-
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&context->jsPlayer));
 
     napi_value resource = nullptr;

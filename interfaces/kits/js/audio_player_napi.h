@@ -55,6 +55,8 @@ private:
     static napi_value GetDuration(napi_env env, napi_callback_info info);
     static napi_value GetState(napi_env env, napi_callback_info info);
     static napi_value GetTrackDescription(napi_env env, napi_callback_info info);
+    static bool ExtractRendererInfo(napi_env env, napi_value info, int32_t &contentType,
+        int32_t &streamUsage, int32_t &rendererFlags);
     static void AsyncSetAudioRendererInfo(napi_env env, void *data);
     static void AsyncGetTrackDescription(napi_env env, void *data);
     void ErrorCallback(MediaServiceExtErrCode errCode);

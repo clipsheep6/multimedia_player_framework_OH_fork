@@ -677,29 +677,46 @@ napi_value AudioPlayerNapi::SetAudioRendererInfo(napi_env env, napi_callback_inf
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("SetAudioRendererInfo In");
-    std::unique_ptr<AudioPlayerAsyncContext> asyncContext = std::make_unique<AudioPlayerAsyncContext>(env);
+    std::unique_ptr<AudioPlayerAsyncContext> context = std::make_unique<AudioPlayerAsyncContext>(env);
 
-    // get args
     napi_value jsThis = nullptr;
-    napi_value args[1] = { nullptr };
-    size_t argCount = 1;
+    napi_value args[2] = { nullptr };
+    size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+        context->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
     }
 
-    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
-    // get jsPlayer
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
-    // async work
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
+        if (!ExtractRendererInfo(env, args[0], context->contentType, context->streamUsage, context->rendererFlags)) {
+            context->SignError(MSERR_EXT_INVALID_VAL, "Illegal argument");
+        }
+    } else {
+        context->SignError(MSERR_EXT_INVALID_VAL, "Illegal argument");
+    }
+
+    context->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    context->deferred = CommonNapi::CreatePromise(env, context->callbackRef, result);
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&context->jsPlayer));
+
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "SetAudioRendererInfo", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, AudioPlayerNapi::AsyncSetAudioRendererInfo,
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
-    asyncContext.release();
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(context.get()), &context->work));
+    NAPI_CALL(env, napi_queue_async_work(env, context->work));
+    context.release();
     return result;
+}
+
+bool AudioPlayerNapi::ExtractRendererInfo(napi_env env, napi_value info, int32_t &contentType,
+    int32_t &streamUsage, int32_t &rendererFlags)
+{
+    CHECK_AND_RETURN_RET(info != nullptr, false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, info, "content", contentType) == true, false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, info, "usage", streamUsage) == true, false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, info, "rendererFlags", rendererFlags) == true, false);
+    return true;
 }
 
 napi_value AudioPlayerNapi::On(napi_env env, napi_callback_info info)
@@ -951,21 +968,17 @@ void AudioPlayerNapi::AsyncSetAudioRendererInfo(napi_env env, void *data)
         return;
     }
 
-    auto player = asyncContext->jsPlayer->nativePlayer_;
-    std::vector<Format> &audioInfo = asyncContext->jsPlayer->audioTrackInfoVec_;
-    audioInfo.clear();
-    int32_t ret = player->GetAudioTrackInfo(audioInfo);
+    Format format;
+    (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, asyncContext->contentType);
+    (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, asyncContext->streamUsage);
+    (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, asyncContext->rendererFlags);
+    int32_t ret = asyncContext->jsPlayer->nativePlayer_->SetParameter(format);
+
     if (ret != MSERR_OK) {
-        asyncContext->SignError(MSERR_EXT_UNKNOWN, "failed to operate playback");
+        asyncContext->SignError(MSERR_EXT_UNKNOWN, "Failed to set AudioRendererInfo");
         return;
     }
 
-    if (audioInfo.empty()) {
-        asyncContext->SignError(MSERR_EXT_UNKNOWN, "audio tranck info is empty");
-        return;
-    }
-
-    asyncContext->JsResult = std::make_unique<MediaJsResultArray>(audioInfo);
     MEDIA_LOGD("AsyncSetAudioRendererInfo Out");
 }
 

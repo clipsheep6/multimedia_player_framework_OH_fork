@@ -1175,6 +1175,16 @@ bool GstPlayerCtrl::IsLiveMode() const
 
 bool GstPlayerCtrl::SetAudioRendererInfo(const Format &param)
 {
+    if (param.GetValueType(PlayerKeys::CONTENT_TYPE) == FORMAT_TYPE_INT32 &&
+        param.GetValueType(PlayerKeys::STREAM_USAGE) == FORMAT_TYPE_INT32 &&
+        param.GetValueType(PlayerKeys::RENDERER_FLAG) == FORMAT_TYPE_INT32) {
+        (void)param.GetIntValue(PlayerKeys::CONTENT_TYPE, audioContentType_);
+        (void)param.GetIntValue(PlayerKeys::STREAM_USAGE, audioStreamUsage_);
+        (void)param.GetIntValue(PlayerKeys::RENDERER_FLAG, audioRendererFlag_);
+        useRendererOption_ = true;
+        return true;
+    }
+
     CHECK_AND_RETURN_RET_LOG(audioSink_ != nullptr, false, "audioSink_ is nullptr");
 
     int32_t contentType = 0;
