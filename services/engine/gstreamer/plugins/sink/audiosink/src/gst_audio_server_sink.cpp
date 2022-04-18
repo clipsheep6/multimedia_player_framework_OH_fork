@@ -284,6 +284,7 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
     sink->channels = static_cast<uint32_t>(channels);
     g_return_val_if_fail(sink->audio_sink->SetParameters(sink->bits_per_sample, sink->channels,
         sink->sample_rate) == MSERR_OK, FALSE);
+    g_return_val_if_fail(sink->audio_sink->Prepare() == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->SetVolume(sink->volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetParameters(sink->bits_per_sample,
         sink->channels, sink->sample_rate) == MSERR_OK, FALSE);
@@ -340,7 +341,6 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     g_return_val_if_fail(sink != nullptr, FALSE);
     sink->audio_sink = OHOS::Media::AudioSinkFactory::CreateAudioSink();
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
-    g_return_val_if_fail(sink->audio_sink->Prepare() == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMaxVolume(sink->max_volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinVolume(sink->min_volume) == MSERR_OK, FALSE);
 

@@ -146,6 +146,8 @@ private:
     static void AsyncGetTrackDescription(napi_env env, void *data);
     static void AsyncSetDisplaySurface(napi_env env, void *data);
     static void CompleteAsyncWork(napi_env env, napi_status status, void *data);
+    static bool ExtractRendererInfo(napi_env env, napi_value info, int32_t &contentType,
+        int32_t &streamUsage, int32_t &rendererFlags);
     void OnErrorCallback(MediaServiceExtErrCode errCode);
     void ReleaseDataSource(std::shared_ptr<MediaDataSourceCallback> dataSourceCb);
     VideoPlayerNapi();

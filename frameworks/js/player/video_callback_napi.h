@@ -46,6 +46,9 @@ struct VideoPlayerAsyncContext : public MediaAsyncContext {
     int32_t seekMode = SEEK_PREVIOUS_SYNC;
     int32_t speedMode = SPEED_FORWARD_1_00_X;
     std::string surface = "";
+    int32_t contentType = 0;
+    int32_t streamUsage = 0;
+    int32_t rendererFlags = 0;
 };
 
 class VideoCallbackNapi : public PlayerCallbackNapi {

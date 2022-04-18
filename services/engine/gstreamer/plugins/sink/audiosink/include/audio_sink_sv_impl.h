@@ -54,6 +54,10 @@ private:
     std::unique_ptr<OHOS::AudioStandard::AudioRenderer> audioRenderer_;
     void InitChannelRange(GstCaps *caps) const;
     void InitRateRange(GstCaps *caps) const;
+
+    bool useRendererOption_ = false;
+    AudioStandard::AudioRendererInfo rendererInfo_;
+    AudioStandard::AudioRendererParams rendererParams_;
 };
 } // namespace Media
 } // namespace OHOS
