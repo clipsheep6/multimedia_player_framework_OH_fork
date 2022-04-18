@@ -609,6 +609,8 @@ int32_t PlayerServer::SetLooping(bool loop)
 int32_t PlayerServer::SetParameter(const Format &param)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
     if (status_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not SetParameter, currentState is PLAYER_STATE_ERROR");
         return MSERR_INVALID_OPERATION;
@@ -622,17 +624,10 @@ int32_t PlayerServer::SetParameter(const Format &param)
                 GetStatusDescription(status_).c_str());
             return MSERR_INVALID_OPERATION;
         }
-        if (playerEngine_ != nullptr) {
-            int32_t ret = playerEngine_->SetParameter(param);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Set AudioRendererInfo Failed!");
-        }
+        CHECK_AND_RETURN_RET(playerEngine_->SetParameter(param) == MSERR_OK, MSERR_INVALID_OPERATION);
     }
 
-    if (playerEngine_ != nullptr) {
-        int32_t ret = playerEngine_->SetParameter(param);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetParameter Failed!");
-    }
-
+    CHECK_AND_RETURN_RET(playerEngine_->SetParameter(param) == MSERR_OK, MSERR_INVALID_OPERATION);
     return MSERR_OK;
 }
 
