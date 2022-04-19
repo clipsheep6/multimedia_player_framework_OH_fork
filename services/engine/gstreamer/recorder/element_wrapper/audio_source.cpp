@@ -115,6 +115,14 @@ int32_t AudioSource::CheckConfigReady()
     return MSERR_OK;
 }
 
+int32_t AudioSource::GetParameter(RecorderParam &recParam)
+{
+    if (recParam.type == RecorderPrivateParamType::APP_UID) {
+        g_object_set(gstElem_, "appuid", static_cast<int32_t>(recParam.appUid_), nullptr);
+    }
+    return MSERR_OK;
+}
+
 void AudioSource::Dump()
 {
     MEDIA_LOGI("Audio [sourceId = 0x%{public}x]: sample rate = %{public}d, "

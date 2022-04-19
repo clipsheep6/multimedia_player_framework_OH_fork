@@ -16,6 +16,7 @@
 #include "recorder_engine_gst_impl.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "ipc_skeleton.h"
 #include "recorder_private_param.h"
 
 namespace {
@@ -98,6 +99,8 @@ int32_t RecorderEngineGstImpl::SetAudioSource(AudioSourceType source, int32_t &s
         MEDIA_LOGE("No free audio channel !");
         return MSERR_INVALID_OPERATION;
     }
+
+    int32_t uid = IPCSkeleton::GetCallingUid();
 
     RecorderSourceDesc desc;
     desc.SetAudioSource(source, sourceCount_[RECORDER_SOURCE_KIND_AUDIO]);
