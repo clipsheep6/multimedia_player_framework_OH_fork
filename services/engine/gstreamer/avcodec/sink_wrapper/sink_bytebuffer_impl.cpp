@@ -17,6 +17,7 @@
 #include "securec.h"
 #include "gst_shmem_memory.h"
 #include "media_log.h"
+#include <stdio.h>
 #include "scope_guard.h"
 
 namespace {
@@ -192,6 +193,12 @@ int32_t SinkBytebufferImpl::HandleNewSampleCb(GstBuffer *buffer)
     } else {
         info.size = static_cast<int32_t>(map.size);
     }
+
+    FILE *file;
+    file = fopen("/data/media/dump.aac", "a");
+    fwrite(shmem->mem->GetBase(), 1, info.size, file);
+    fclose(file);
+
     constexpr uint64_t nsToUs = 1000;
     info.presentationTimeUs = static_cast<int64_t>(GST_BUFFER_PTS(buffer) / nsToUs);
     obs->OnOutputBufferAvailable(index, info, AVCODEC_BUFFER_FLAG_NONE);
