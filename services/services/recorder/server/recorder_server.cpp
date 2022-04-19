@@ -206,6 +206,13 @@ int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId
         MEDIA_LOGE("Permission check failed!");
         return MSERR_INVALID_VAL;
     }
+
+    int32_t tempUid = IPCSkeleton::GetCallingPid();
+
+    AppUid appUid(tempUid);
+    int32_t ret = recorderEngine_->Configure(sourceId, appUid);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "set uid failed");
+
     config_.audioSource = source;
     return recorderEngine_->SetAudioSource(source, sourceId);
 }
