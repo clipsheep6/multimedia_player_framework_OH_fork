@@ -57,6 +57,7 @@ enum RecorderPublicParamType : uint32_t {
     OUT_FD,
     NEXT_OUT_FD, // reserved.
     GEO_LOCATION,
+    APP_UID,
 
     PUBLIC_PARAM_TYPE_END,
 };
@@ -164,6 +165,11 @@ struct OutFd : public RecorderParam {
 struct NextOutFd : public RecorderParam {
     explicit NextOutFd(int32_t nextOutFd) : RecorderParam(RecorderPublicParamType::NEXT_OUT_FD), fd(nextOutFd) {}
     int32_t fd;
+};
+
+struct AppUid : public RecorderParam {
+    explicit AppUid(int32_t appUid) : RecorderParam(RecorderPublicParamType::APP_UID), uid(appUid) {}
+    int32_t uid;
 };
 } // namespace Media
 } // namespace OHOS

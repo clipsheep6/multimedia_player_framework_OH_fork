@@ -49,11 +49,24 @@ int32_t AudioSource::Configure(const RecorderParam &recParam)
         case RecorderPublicParamType::AUD_BITRATE:
             ret = ConfigAudioBitRate(recParam);
             break;
+        case RecorderPublicParamType::APP_UID:
+            ret = ConfigureAppUid(recParam);
+            break;
         default:
             break;
     }
 
     return ret;
+}
+
+int32_t AudioSource::ConfigureAppUid(const RecorderParam &recParam)
+{
+    const AppUid &param = static_cast<const AppUid &>(recParam);
+
+    g_object_set(gstElem_, "appuid", static_cast<int32_t>(param.uid), nullptr);
+    MarkParameter(static_cast<int32_t>(RecorderPublicParamType::AUD_SAMPLERATE));
+
+    return MSERR_OK;
 }
 
 int32_t AudioSource::ConfigAudioSampleRate(const RecorderParam &recParam)
