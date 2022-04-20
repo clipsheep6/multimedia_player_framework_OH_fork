@@ -17,6 +17,7 @@
 #include <mutex>
 #include "gst_shmem_memory.h"
 #include "media_log.h"
+#include <stdio.h>
 #include "scope_guard.h"
 
 namespace {
@@ -137,6 +138,11 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
     uint8_t *address = bufWrapper->mem_->GetBase();
     CHECK_AND_RETURN_RET(address != nullptr, MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET((info.offset + info.size) <= bufWrapper->mem_->GetSize(), MSERR_INVALID_VAL);
+
+    FILE *file;
+    file = fopen("/data/media/pcm.dump", "a");
+    fwrite(bufWrapper->mem_->GetBase(), 1, info.size, file);
+    fclose(file);
 
     constexpr int32_t usToNs = 1000;
     if (info.presentationTimeUs < 0) {
