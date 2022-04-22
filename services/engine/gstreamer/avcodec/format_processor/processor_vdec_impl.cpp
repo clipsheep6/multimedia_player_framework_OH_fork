@@ -22,6 +22,7 @@ namespace {
     constexpr uint32_t MAX_SIZE = 3150000; // 3MB
     constexpr uint32_t MAX_WIDTH = 8000;
     constexpr uint32_t MAX_HEIGHT = 5000;
+    constexpr uint32_t ALIGNMENT = 16;
 }
 
 namespace OHOS {
@@ -40,6 +41,11 @@ int32_t ProcessorVdecImpl::ProcessMandatory(const Format &format)
     CHECK_AND_RETURN_RET(format.GetIntValue("height", height_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("pixel_format", pixelFormat_) == true, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(format.GetIntValue("frame_rate", frameRate_) == true, MSERR_INVALID_VAL);
+
+    if (pixelFormat_ == SURFACE_FORMAT) {
+        pixelFormat_ = preferFormat_;
+    }
+
     MEDIA_LOGD("width:%{public}d, height:%{public}d, pixel:%{public}d, frameRate:%{public}d",
         width_, height_, pixelFormat_, frameRate_);
 
@@ -107,9 +113,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
     if (maxInputSize_ > 0) {
         config->bufferSize_ = (maxInputSize_ > MAX_SIZE) ? MAX_SIZE : static_cast<uint32_t>(maxInputSize_);
     } else {
-        // Memory is aligned to 16 bytes
-        constexpr uint32_t alignment = 16;
-        config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_), width_, height_, alignment);
+        config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_), width_, height_, ALIGNMENT);
     }
 
     return config;
@@ -130,10 +134,8 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
         gst_caps_unref(caps);
         return nullptr;
     }
-    // Memory is aligned to 16 bytes
-    constexpr uint32_t alignment = 16;
     config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_),
-        static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), alignment);
+        static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), ALIGNMENT);
 
     return config;
 }

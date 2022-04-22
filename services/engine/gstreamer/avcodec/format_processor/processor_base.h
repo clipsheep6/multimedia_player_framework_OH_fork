@@ -16,6 +16,7 @@
 #ifndef FORMAT_PROCESSOR_BASE_H
 #define FORMAT_PROCESSOR_BASE_H
 
+#include "avcodeclist_engine_gst_impl.h"
 #include "codec_common.h"
 #include "format.h"
 
@@ -24,7 +25,8 @@ namespace Media {
 class ProcessorBase {
 public:
     virtual ~ProcessorBase() = default;
-    int32_t Init(const InnerCodecMimeType &name, bool isSoftWare);
+    int32_t Init(AVCodecType type, bool isMimeType, const std::string &name);
+    int32_t GetParameter(bool &isSoftWare, std::string &pluginName);
     int32_t DoProcess(const Format &format);
     virtual std::shared_ptr<ProcessorConfig> GetInputPortConfig() = 0;
     virtual std::shared_ptr<ProcessorConfig> GetOutputPortConfig() = 0;
@@ -33,8 +35,11 @@ protected:
     virtual int32_t ProcessMandatory(const Format &format) = 0;
     virtual int32_t ProcessOptional(const Format &format) = 0;
 
-    InnerCodecMimeType codecName_ = CODEC_MIMIE_TYPE_AUDIO_AAC;
+    InnerCodecMimeType codecName_ = CODEC_MIMIE_TYPE_DEFAULT;
+    std::string pluginName_ = "";
     bool isSoftWare_ = false;
+    int32_t preferFormat_ = -1;
+
 private:
     int32_t ProcessVendor(const Format &format);
 };
