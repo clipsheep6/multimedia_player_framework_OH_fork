@@ -51,7 +51,7 @@ int32_t AVCodecEngineGstImpl::Init(AVCodecType type, bool isMimeType, const std:
     ctrl_ = std::make_unique<AVCodecEngineCtrl>();
     CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_NO_MEMORY);
     ctrl_->SetObs(obs_);
-    return ctrl_->Init(type, useSoftWare_, pluginName_);;
+    return ctrl_->Init(type, useSoftWare_, pluginName_);
 }
 
 int32_t AVCodecEngineGstImpl::Configure(const Format &format)
