@@ -32,12 +32,6 @@ public:
 protected:
     int32_t ProcessMandatory(const Format &format) override;
     int32_t ProcessOptional(const Format &format) override;
-
-private:
-    int32_t channels_ = 0;
-    int32_t sampleRate_ = 0;
-    int32_t audioSampleFormat_ = 0;
-    std::string gstRawFormat_ = "";
 };
 } // namespace Media
 } // namespace OHOS

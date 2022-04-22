@@ -27,7 +27,7 @@ public:
     virtual ~ProcessorBase() = default;
     int32_t Init(AVCodecType type, bool isMimeType, const std::string &name);
     int32_t GetParameter(bool &isSoftWare, std::string &pluginName);
-    int32_t DoProcess(const Format &format);
+    int32_t ProcessParameter(const Format &format);
     virtual std::shared_ptr<ProcessorConfig> GetInputPortConfig() = 0;
     virtual std::shared_ptr<ProcessorConfig> GetOutputPortConfig() = 0;
 
@@ -41,8 +41,23 @@ protected:
     bool isAudio_ = false;
     CapabilityData data_;
 
+    // video common parameter
+    int32_t width_ = 0;
+    int32_t height_ = 0;
+    int32_t pixelFormat_ = 0;
+    int32_t frameRate_ = 0;
+    std::string gstPixelFormat_;
+
+    // audio common parameter
+    int32_t channels_ = 0;
+    int32_t sampleRate_ = 0;
+    int32_t audioSampleFormat_ = 0;
+    std::string gstRawFormat_ = "";
+
 private:
-    int32_t ProcessVendor(const Format &format);
+    int32_t ProcessAudioCommonPara(const Format &format);
+    int32_t ProcessVideoCommonPara(const Format &format);
+    int32_t ProcessVendorPara(const Format &format);
 };
 } // namespace Media
 } // namespace OHOS

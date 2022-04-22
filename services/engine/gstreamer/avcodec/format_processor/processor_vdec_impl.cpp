@@ -37,36 +37,7 @@ ProcessorVdecImpl::~ProcessorVdecImpl()
 
 int32_t ProcessorVdecImpl::ProcessMandatory(const Format &format)
 {
-    CHECK_AND_RETURN_RET(format.GetIntValue("width", width_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("height", height_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("pixel_format", pixelFormat_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("frame_rate", frameRate_) == true, MSERR_INVALID_VAL);
-
-    if (pixelFormat_ == SURFACE_FORMAT) {
-        pixelFormat_ = data_.format[0];
-    }
-
-    MEDIA_LOGD("width:%{public}d, height:%{public}d, pixel:%{public}d, frameRate:%{public}d",
-        width_, height_, pixelFormat_, frameRate_);
-
-    if (width_ < data_.width.minVal || width_ > data_.width.maxVal) {
-        return MSERR_UNSUPPORT_VID_PARAMS;
-    }
-
-    if (height_ < data_.height.minVal || height_ > data_.height.maxVal) {
-        return MSERR_UNSUPPORT_VID_PARAMS;
-    }
-
-    if (std::find(data_.format.begin(), data_.format.end(), pixelFormat_) == data_.format.end()) {
-        return MSERR_UNSUPPORT_VID_PARAMS;
-    }
-
-    if (frameRate_ < data_.frameRate.minVal || frameRate_ > data_.frameRate.maxVal) {
-        return MSERR_UNSUPPORT_VID_PARAMS;
-    }
-
-    gstPixelFormat_ = PixelFormatToGst(static_cast<VideoPixelFormat>(pixelFormat_));
-
+    (void)format;
     return MSERR_OK;
 }
 
