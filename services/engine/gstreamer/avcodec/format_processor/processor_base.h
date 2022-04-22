@@ -38,7 +38,8 @@ protected:
     InnerCodecMimeType codecName_ = CODEC_MIMIE_TYPE_DEFAULT;
     std::string pluginName_ = "";
     bool isSoftWare_ = false;
-    int32_t preferFormat_ = -1;
+    bool isAudio_ = false;
+    CapabilityData data_;
 
 private:
     int32_t ProcessVendor(const Format &format);

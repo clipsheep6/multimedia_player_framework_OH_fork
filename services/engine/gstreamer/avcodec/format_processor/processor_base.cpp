@@ -25,6 +25,8 @@ namespace OHOS {
 namespace Media {
 int32_t ProcessorBase::Init(AVCodecType type, bool isMimeType, const std::string &name)
 {
+    isAudio_ = (type == AVCODEC_TYPE_AUDIO_ENCODER) || (type == AVCODEC_TYPE_AUDIO_DECODER);
+
     auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
     CHECK_AND_RETURN_RET(codecList != nullptr, MSERR_NO_MEMORY);
 
@@ -59,8 +61,7 @@ int32_t ProcessorBase::Init(AVCodecType type, bool isMimeType, const std::string
                 (void)MapCodecMime((*it).mimeType, codecName_);
             }
             pluginExist = true;
-            // use this format to avoid raw audio/video frame format convert
-            preferFormat_ = (*it).format[0];
+            data_ = *it;
             break;
         }
     }

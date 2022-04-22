@@ -76,6 +76,20 @@ int32_t ProcessorAdecImpl::ProcessMandatory(const Format &format)
     MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d",
         channels_, sampleRate_, audioSampleFormat_);
 
+    if (channels_ < data_.channels.minVal || channels_ > data_.channels.maxVal) {
+        return MSERR_UNSUPPORT_AUD_CHANNEL_NUM;
+    }
+
+    CHECK_AND_RETURN_RET(data_.sampleRate.size() > 0, MSERR_UNKNOWN);
+    std::sort(data_.sampleRate.begin(), data_.sampleRate.end());
+    if (sampleRate_ < data_.sampleRate[0] || sampleRate_ > data_.sampleRate.back()) {
+        return MSERR_UNSUPPORT_AUD_SAMPLE_RATE;
+    }
+
+    if (std::find(data_.format.begin(), data_.format.end(), audioSampleFormat_) == data_.format.end()) {
+        return MSERR_UNSUPPORT_AUD_PARAMS;
+    }
+
     gstRawFormat_ = RawAudioFormatToGst(static_cast<AudioStandard::AudioSampleFormat>(audioSampleFormat_));
     return MSERR_OK;
 }
