@@ -59,7 +59,6 @@ private:
     std::weak_ptr<IAVCodecEngineObs> obs_;
     std::unique_ptr<SrcBase> src_;
     std::unique_ptr<SinkBase> sink_;
-    bool isEncoder_ = false;
     bool flushAtStart_ = false;
     bool isStart_ = false;
 };

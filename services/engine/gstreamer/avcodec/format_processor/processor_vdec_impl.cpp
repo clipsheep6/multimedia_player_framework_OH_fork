@@ -35,12 +35,6 @@ ProcessorVdecImpl::~ProcessorVdecImpl()
 {
 }
 
-int32_t ProcessorVdecImpl::ProcessMandatory(const Format &format)
-{
-    (void)format;
-    return MSERR_OK;
-}
-
 int32_t ProcessorVdecImpl::ProcessOptional(const Format &format)
 {
     if (format.GetValueType(std::string_view("max_input_size")) == FORMAT_TYPE_INT32) {
@@ -90,7 +84,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
     }
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
-    auto config = std::make_shared<ProcessorConfig>(caps, false);
+    auto config = std::make_shared<ProcessorConfig>(caps, needSrcConvert_);
     if (config == nullptr) {
         gst_caps_unref(caps);
         return nullptr;
@@ -115,7 +109,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
         "format", G_TYPE_STRING, gstPixelFormat_.c_str(), nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
-    auto config = std::make_shared<ProcessorConfig>(caps, false);
+    auto config = std::make_shared<ProcessorConfig>(caps, needSinkConvert_);
     if (config == nullptr) {
         MEDIA_LOGE("No memory");
         gst_caps_unref(caps);

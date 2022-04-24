@@ -34,12 +34,6 @@ ProcessorVencImpl::~ProcessorVencImpl()
 {
 }
 
-int32_t ProcessorVencImpl::ProcessMandatory(const Format &format)
-{
-    (void)format;
-    return MSERR_OK;
-}
-
 int32_t ProcessorVencImpl::ProcessOptional(const Format &format)
 {
     if (format.GetValueType(std::string_view("video_encode_bitrate_mode")) == FORMAT_TYPE_INT32) {
@@ -80,7 +74,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetInputPortConfig()
         "framerate", GST_TYPE_FRACTION, frameRate_, 1, nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
-    auto config = std::make_shared<ProcessorConfig>(caps, true);
+    auto config = std::make_shared<ProcessorConfig>(caps, needSrcConvert_);
     if (config == nullptr) {
         MEDIA_LOGE("No memory");
         gst_caps_unref(caps);
@@ -115,7 +109,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
 
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
-    auto config = std::make_shared<ProcessorConfig>(caps, true);
+    auto config = std::make_shared<ProcessorConfig>(caps, needSinkConvert_);
     if (config == nullptr) {
         MEDIA_LOGE("No memory");
         gst_caps_unref(caps);

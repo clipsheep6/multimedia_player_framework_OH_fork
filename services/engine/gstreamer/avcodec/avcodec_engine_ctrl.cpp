@@ -57,13 +57,6 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
     g_object_set(codecBin_, "type", static_cast<int32_t>(type), nullptr);
     g_object_set(codecBin_, "coder-name", name.c_str(), nullptr);
 
-    isEncoder_ = (type == AVCODEC_TYPE_VIDEO_ENCODER) || (type == AVCODEC_TYPE_AUDIO_ENCODER);
-    if (isEncoder_) {
-        g_object_set(codecBin_, "src-convert", static_cast<gboolean>(true), nullptr);
-    } else {
-        g_object_set(codecBin_, "sink-convert", static_cast<gboolean>(true), nullptr);
-    }
-
     return MSERR_OK;
 }
 
@@ -71,6 +64,9 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
     std::shared_ptr<ProcessorConfig> outputConfig)
 {
     CHECK_AND_RETURN_RET(inputConfig != nullptr && outputConfig != nullptr, MSERR_UNKNOWN);
+    g_object_set(codecBin_, "src-convert", static_cast<gboolean>(inputConfig->needConvert_), nullptr);
+    g_object_set(codecBin_, "sink-convert", static_cast<gboolean>(outputConfig->needConvert_), nullptr);
+
     if (src_ == nullptr) {
         MEDIA_LOGD("Use buffer src");
         src_ = AVCodecEngineFactory::CreateSrc(SrcType::SRC_TYPE_BYTEBUFFER);

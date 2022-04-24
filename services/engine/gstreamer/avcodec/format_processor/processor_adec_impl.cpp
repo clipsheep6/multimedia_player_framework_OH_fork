@@ -68,12 +68,6 @@ ProcessorAdecImpl::~ProcessorAdecImpl()
 {
 }
 
-int32_t ProcessorAdecImpl::ProcessMandatory(const Format &format)
-{
-    (void)format;
-    return MSERR_OK;
-}
-
 int32_t ProcessorAdecImpl::ProcessOptional(const Format &format)
 {
     (void)format;
@@ -121,7 +115,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
     }
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
-    auto config = std::make_shared<ProcessorConfig>(caps, false);
+    auto config = std::make_shared<ProcessorConfig>(caps, needSrcConvert_);
     if (config == nullptr) {
         MEDIA_LOGE("No memory");
         gst_caps_unref(caps);
@@ -146,7 +140,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetOutputPortConfig()
         "layout", G_TYPE_STRING, "interleaved", nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
-    auto config = std::make_shared<ProcessorConfig>(caps, false);
+    auto config = std::make_shared<ProcessorConfig>(caps, needSinkConvert_);
     if (config == nullptr) {
         MEDIA_LOGE("No memory");
         gst_caps_unref(caps);

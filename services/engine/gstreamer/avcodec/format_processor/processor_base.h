@@ -32,13 +32,15 @@ public:
     virtual std::shared_ptr<ProcessorConfig> GetOutputPortConfig() = 0;
 
 protected:
-    virtual int32_t ProcessMandatory(const Format &format) = 0;
     virtual int32_t ProcessOptional(const Format &format) = 0;
 
     InnerCodecMimeType codecName_ = CODEC_MIMIE_TYPE_DEFAULT;
     std::string pluginName_ = "";
     bool isSoftWare_ = false;
     bool isAudio_ = false;
+    bool isEncoder_ = false;
+    bool needSrcConvert_ = false;
+    bool needSinkConvert_ = false;
     CapabilityData data_;
 
     // video common parameter
@@ -58,6 +60,7 @@ private:
     int32_t ProcessAudioCommonPara(const Format &format);
     int32_t ProcessVideoCommonPara(const Format &format);
     int32_t ProcessVendorPara(const Format &format);
+    void NeedFrameConvert();
 };
 } // namespace Media
 } // namespace OHOS

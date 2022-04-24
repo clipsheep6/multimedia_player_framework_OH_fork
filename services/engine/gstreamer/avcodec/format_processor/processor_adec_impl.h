@@ -30,7 +30,6 @@ public:
     std::shared_ptr<ProcessorConfig> GetOutputPortConfig() override;
 
 protected:
-    int32_t ProcessMandatory(const Format &format) override;
     int32_t ProcessOptional(const Format &format) override;
 };
 } // namespace Media

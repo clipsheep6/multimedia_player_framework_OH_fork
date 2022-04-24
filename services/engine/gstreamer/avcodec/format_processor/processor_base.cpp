@@ -26,6 +26,7 @@ namespace Media {
 int32_t ProcessorBase::Init(AVCodecType type, bool isMimeType, const std::string &name)
 {
     isAudio_ = (type == AVCODEC_TYPE_AUDIO_ENCODER) || (type == AVCODEC_TYPE_AUDIO_DECODER);
+    isEncoder_ = (type == AVCODEC_TYPE_AUDIO_ENCODER) || (type == AVCODEC_TYPE_VIDEO_ENCODER);
 
     auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
     CHECK_AND_RETURN_RET(codecList != nullptr, MSERR_NO_MEMORY);
@@ -88,7 +89,6 @@ int32_t ProcessorBase::ProcessParameter(const Format &format)
         int32_t ret = ProcessVideoCommonPara(format);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
     }
-    CHECK_AND_RETURN_RET(ProcessMandatory(format) == MSERR_OK, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(ProcessOptional(format) == MSERR_OK, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(ProcessVendorPara(format) == MSERR_OK, MSERR_INVALID_VAL);
     return MSERR_OK;
@@ -113,8 +113,8 @@ int32_t ProcessorBase::ProcessAudioCommonPara(const Format &format)
         return MSERR_UNSUPPORT_AUD_SAMPLE_RATE;
     }
     if (std::find(data_.format.begin(), data_.format.end(), audioSampleFormat_) == data_.format.end()) {
-        MEDIA_LOGE("Unsupported audio raw format");
-        return MSERR_UNSUPPORT_AUD_PARAMS;
+        MEDIA_LOGW("Unsupported audio raw format, need to convert the format");
+        NeedFrameConvert();
     }
 
     gstRawFormat_ = RawAudioFormatToGst(static_cast<AudioStandard::AudioSampleFormat>(audioSampleFormat_));
@@ -144,8 +144,8 @@ int32_t ProcessorBase::ProcessVideoCommonPara(const Format &format)
         return MSERR_UNSUPPORT_VID_PARAMS;
     }
     if (std::find(data_.format.begin(), data_.format.end(), pixelFormat_) == data_.format.end()) {
-        MEDIA_LOGE("Unsupported pixel format");
-        return MSERR_UNSUPPORT_VID_PARAMS;
+        MEDIA_LOGW("Unsupported pixel format, need to convert the format");
+        NeedFrameConvert();
     }
     if (frameRate_ < data_.frameRate.minVal || frameRate_ > data_.frameRate.maxVal) {
         MEDIA_LOGE("Unsupported frame rate");
@@ -159,6 +159,17 @@ int32_t ProcessorBase::ProcessVideoCommonPara(const Format &format)
 int32_t ProcessorBase::ProcessVendorPara(const Format &format)
 {
     return MSERR_OK;
+}
+
+void ProcessorBase::NeedFrameConvert()
+{
+    if (isEncoder_) {
+        needSrcConvert_ = true;
+        needSinkConvert_ = false;
+    } else {
+        needSinkConvert_ = true;
+        needSrcConvert_ = false;
+    }
 }
 } // namespace Media
 } // namespace OHOS
