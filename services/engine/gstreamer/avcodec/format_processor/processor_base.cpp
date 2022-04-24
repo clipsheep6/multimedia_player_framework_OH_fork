@@ -50,6 +50,8 @@ int32_t ProcessorBase::Init(AVCodecType type, bool isMimeType, const std::string
             default:
                 break;
         }
+    } else {
+        pluginName_ = name;
     }
 
     std::vector<CapabilityData> data = codecList->GetCodecCapabilityInfos();
