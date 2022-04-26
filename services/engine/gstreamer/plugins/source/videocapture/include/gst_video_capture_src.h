@@ -17,7 +17,7 @@
 #define GST_VIDEO_CAPTURE_SRC_H
 
 #include <memory>
-#include "gst_surface_pool_src.h"
+#include "gst_surface_src.h"
 #include "common_utils.h"
 
 G_BEGIN_DECLS

@@ -187,7 +187,7 @@ static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, Gs
     switch (transition) {
         case GST_STATE_CHANGE_NULL_TO_READY:
             g_return_val_if_fail(gst_surface_src_create_surface(surfacesrc) == TRUE, GST_STATE_CHANGE_FAILURE);
-            g_return_val_if_fail(gst_surface_src_create_pool(surfacesrc) == TRUE, GST_STATE_CHANGE_FAILURE);
+            g_return_val_if_fail(gst_surface_src_init_pool(surfacesrc) == TRUE, GST_STATE_CHANGE_FAILURE);
             break;
         case GST_STATE_CHANGE_READY_TO_PAUSED:
             gst_surface_src_init_surface(surfacesrc);

@@ -26,7 +26,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_video_capture_pool_debug_category);
 
 G_DEFINE_TYPE(GstVideoCapturePool, gst_video_capture_pool, GST_TYPE_CONSUMER_SURFACE_POOL);
 
-static void gst_video_capture_pool_class_init(GstVideoCapturePool *klass)
+static void gst_video_capture_pool_class_init(GstVideoCapturePoolClass *klass)
 {
     g_return_if_fail(klass != nullptr);
 
