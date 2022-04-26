@@ -59,7 +59,8 @@ static void gst_surface_src_get_property(GObject *object, guint prop_id, GValue 
 static void gst_surface_src_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_surface_src_create_surface(GstSurfaceSrc *src);
-static gboolean gst_surface_src_create_pool(GstSurfaceSrc *src);
+static GstBufferPool *gst_surface_src_create_pool();
+static gboolean gst_surface_src_init_pool(GstSurfaceSrc *src);
 static void gst_surface_src_destroy_surface(GstSurfaceSrc *src);
 static void gst_surface_src_destroy_pool(GstSurfaceSrc *src);
 static gboolean gst_surface_src_decide_allocation(GstBaseSrc *basesrc, GstQuery *query);
@@ -73,6 +74,7 @@ static void gst_surface_src_class_init(GstSurfaceSrcClass *klass)
     GObjectClass *gobject_class = reinterpret_cast<GObjectClass*>(klass);
     GstElementClass *gstelement_class = reinterpret_cast<GstElementClass*>(klass);
     GstBaseSrcClass *gstbasesrc_class = reinterpret_cast<GstBaseSrcClass*>(klass);
+    GstMemSrcClass *gstmemsrc_class = reinterpret_cast<GstMemSrcClass*>(klass);
     GST_DEBUG_CATEGORY_INIT(gst_surface_src_debug_category, "surfacepoolsrc", 0, "surface pool src base class");
     gobject_class->get_property = gst_surface_src_get_property;
     gobject_class->set_property = gst_surface_src_set_property;
@@ -102,6 +104,7 @@ static void gst_surface_src_class_init(GstSurfaceSrcClass *klass)
     gstelement_class->send_event = gst_surface_src_send_event;
     gstbasesrc_class->fill = gst_surface_src_fill;
     gstbasesrc_class->decide_allocation = gst_surface_src_decide_allocation;
+    gstmemsrc_class->create_pool = gst_surface_src_create_pool;
     gst_element_class_set_static_metadata(gstelement_class,
         "surface mem source", "Source/Surface/Pool",
         "Retrieve frame from surface buffer queue with raw data", "OpenHarmony");
@@ -255,11 +258,24 @@ static gboolean gst_surface_src_send_event(GstElement *element, GstEvent *event)
     return GST_ELEMENT_CLASS(parent_class)->send_event(element, event);
 }
 
-static gboolean gst_surface_src_create_pool(GstSurfaceSrc *surfacesrc)
+static GstBufferPool *gst_surface_src_create_pool()
 {
+    return gst_consumer_surface_pool_new();
+}
+
+static gboolean gst_surface_src_init_pool(GstSurfaceSrc *surfacesrc)
+{
+    GstMemSrcClass *memsrcclass = GST_MEM_SRC_GET_CLASS(surfacesrc);
+    g_return_val_if_fail(memsrcclass != nullptr, FALSE);
     GstAllocationParams params;
+    GstBufferPool *pool = nullptr;
     gst_allocation_params_init(&params);
-    GstBufferPool *pool = gst_consumer_surface_pool_new();
+
+    if (memsrcclass->create_pool) {
+        pool = memsrcclass->create_pool();
+        g_return_val_if_fail(pool != nullptr, FALSE);
+    }
+
     g_return_val_if_fail(pool != nullptr, FALSE);
     ON_SCOPE_EXIT(0) { gst_object_unref(pool); };
     GstAllocator *allocator = gst_consumer_surface_allocator_new();

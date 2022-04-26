@@ -51,5 +51,6 @@ struct _GstSurfaceSrcClass {
 
 GST_API_EXPORT GType gst_surface_src_get_type(void);
 
+
 G_END_DECLS
 #endif

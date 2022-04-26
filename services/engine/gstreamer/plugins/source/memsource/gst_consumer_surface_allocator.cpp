@@ -61,8 +61,11 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
     sptr<SurfaceBuffer> surface_buffer = nullptr;
     gint32 fencefd = -1;
     gint64 timestamp = 0;
-    gboolean endOfStream = false;
+    gint32 data_size = 0;
+    gint32 is_codec_frame = 0;
+    gboolean end_of_stream = false;
     gboolean is_key_frame = FALSE;
+    uint32_t pixel_format = 0;
     Rect damage = {0, 0, 0, 0};
     if (surface->AcquireBuffer(surface_buffer, fencefd, timestamp, damage) != SURFACE_ERROR_OK) {
         GST_WARNING_OBJECT(allocator, "Acquire surface buffer failed");
@@ -74,17 +77,24 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
     const sptr<OHOS::BufferExtraData>& extraData = surface_buffer->GetExtraData();
     if (extraData != nullptr) {
         (void)extraData->ExtraGet("timeStamp", timestamp);
-        (void)extraData->ExtraGet("endOfStream", endOfStream);
+        (void)extraData->ExtraGet("endOfStream", end_of_stream);
+        (void)extraData->ExtraGet("dataSize", data_size);
+        (void)extraData->ExtraGet("isKeyFrame", is_codec_frame);
     }
+
+    pixel_format = surface_buffer->GetFormat();
 
     gst_memory_init(GST_MEMORY_CAST(mem), GST_MEMORY_FLAG_NO_SHARE,
         allocator, nullptr, surface_buffer->GetSize(), 0, 0, size);
     mem->surface_buffer = surface_buffer;
     mem->fencefd = fencefd;
     mem->timestamp = timestamp;
+    mem->data_size = data_size;
     mem->is_key_frame = is_key_frame;
+    mem->is_codec_frame = is_codec_frame;
+    mem->pixel_format = pixel_format;
     mem->damage = damage;
-    mem->is_eos_frame = endOfStream;
+    mem->is_eos_frame = end_of_stream;
     mem->buffer_handle = reinterpret_cast<intptr_t>(surface_buffer->GetBufferHandle());
     GST_INFO_OBJECT(allocator, "acquire surface buffer");
 
