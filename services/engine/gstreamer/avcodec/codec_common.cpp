@@ -31,6 +31,7 @@ const std::map<AudioStandard::AudioSampleFormat, std::string> PCM_TO_STRING = {
     {AudioStandard::SAMPLE_S16LE, "S16LE"},
     {AudioStandard::SAMPLE_S24LE, "S24LE"},
     {AudioStandard::SAMPLE_S32LE, "S32LE"},
+    {AudioStandard::SAMPLE_F32LE, "F32LE"},
 };
 
 const std::map<MPEG4Profile, std::string> MPEG4_PROFILE_TO_STRING = {

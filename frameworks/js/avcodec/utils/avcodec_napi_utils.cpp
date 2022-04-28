@@ -58,6 +58,7 @@ namespace {
         {OHOS::AudioStandard::AudioCapturerNapi::SAMPLE_FORMAT_S16LE, OHOS::AudioStandard::SAMPLE_S16LE},
         {OHOS::AudioStandard::AudioCapturerNapi::SAMPLE_FORMAT_S24LE, OHOS::AudioStandard::SAMPLE_S24LE},
         {OHOS::AudioStandard::AudioCapturerNapi::SAMPLE_FORMAT_S32LE, OHOS::AudioStandard::SAMPLE_S32LE},
+        {OHOS::AudioStandard::AudioCapturerNapi::SAMPLE_FORMAT_F32LE, OHOS::AudioStandard::SAMPLE_F32LE},
     };
 }
 

@@ -34,7 +34,7 @@
                 <Item bitrate="1-384000"/>
                 <Item channels="1-2"/>
                 <Item mpegVersion="4"/>
-                <Item format="S16LE"/>
+                <Item format="F32LE"/>
                 <Item sampleRate="8000,11025,12000,16000,22050,24000,32000,44100,48000,64000,88200,96000"/>
                 <Item streamFormat="adts"/>
                 <Item profiles="AAC_LC"/>
@@ -47,7 +47,7 @@
                 <Item isVendor="false" />
                 <Item bitrate="1-384000"/>
                 <Item channels="1-7"/>
-                <Item format="S16LE"/>
+                <Item format="F32LE"/>
                 <Item sampleRate="8000,11025,12000,16000,22050,24000,32000,44100,48000,64000,88200,96000,176400,192000"/>
             </AudioDecoder>
             <AudioDecoder>
@@ -58,7 +58,7 @@
                 <Item bitrate="1-384000"/>
                 <Item channels="1-2"/>
                 <Item framed="true"/>
-                <Item format="S16LE"/>
+                <Item format="S16LE,S32LE"/>
                 <Item layout="interleaved,non-interleaved"/>
                 <Item sampleRate="8000,11025,12000,16000,22050,24000,32000,44100,48000,64000,88200,96000"/>
             </AudioDecoder>
@@ -79,7 +79,7 @@
                 <Item isVendor="false"/>
                 <Item bitrate="1-384000"/>
                 <Item channels="1-2"/>
-                <Item format="S32LE"/>
+                <Item format="F32LE"/>
                 <Item mpegVersion="4"/>
                 <Item sampleRate="8000,12000,16000,22050,24000,32000,44100,48000,64000,88200,96000"/>
                 <Item streamFormat="raw"/>
@@ -109,7 +109,7 @@
                 <Item blockPerFrame="1-32768"/>
                 <Item blockPerSecond="1-244800"/>
                 <Item blockSize="16x16"/>
-                <Item format="NV12,NV21"/>
+                <Item format="I420,NV12,NV21"/>
                 <Item profiles="AVCBaseline,AVCMain,AVCHigh"/>
                 <Item measuredFrameRate="1920x1080@1-30"/>
             </VideoDecoder>
@@ -125,7 +125,7 @@
                 <Item frameRate="1-30"/>
                 <Item blockSize="16x16"/>
                 <Item blockPerSecond="1-244800"/>
-                <Item format="NV12,NV21"/>
+                <Item format="I420"/>
                 <Item profiles="H263Baseline"/>
                 <Item measuredFrameRate="1920x1080@1-30"/>
             </VideoDecoder>
@@ -141,7 +141,7 @@
                 <Item frameRate="1-30"/>
                 <Item blockPerSecond="1-244800"/>
                 <Item blockSize="16x16"/>
-                <Item format="NV12,NV21"/>
+                <Item format="I420,NV12,NV21"/>
                 <Item profiles="MPEG2Main,MPEG2Simple"/>
                 <Item measuredFrameRate="1920x1080@1-30"/>
             </VideoDecoder>
@@ -157,7 +157,7 @@
                 <Item frameRate="1-30"/>
                 <Item blockPerSecond="12-244800"/>
                 <Item blockSize="16x16"/>
-                <Item format="NV12,NV21"/>
+                <Item format="I420"/>
                 <Item profiles="MPEG4Simple,MPEG4AdvancedSimple"/>
                 <Item measuredFrameRate="1920x1080@1-30"/>
             </VideoDecoder>
@@ -174,7 +174,7 @@
                 <Item frameRate="1-30"/>
                 <Item blockPerSecond="1-36000"/>
                 <Item blockSize="16x16"/>
-                <Item format="YUVI420,NV21"/>
+                <Item format="YUVI420"/>
                 <Item profiles="MPEG4Simple,MPEG4AdvancedSimple"/>
                 <Item measuredFrameRate="720x480@1-40"/>
             </VideoEncoder>
