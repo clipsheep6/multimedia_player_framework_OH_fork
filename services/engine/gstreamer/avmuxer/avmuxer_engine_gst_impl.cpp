@@ -155,7 +155,7 @@ int32_t AVMuxerEngineGstImpl::SetRotation(int32_t rotation)
     return MSERR_OK;
 }
 
-int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
+int32_t AVMuxerEngineGstImpl::AddTrack(const MediaDescription &trackDesc, uint32_t &trackId)
 {
     MEDIA_LOGD("AddTrack");
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");

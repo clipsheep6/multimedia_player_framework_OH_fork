@@ -117,7 +117,7 @@ int32_t AVMuxerServer::SetRotation(int32_t rotation)
     return MSERR_OK;
 }
 
-int32_t AVMuxerServer::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
+int32_t AVMuxerServer::AddTrack(const MediaDescription &trackDesc, uint32_t &trackId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (curState_ != AVMUXER_OUTPUT_SET && curState_ != AVMUXER_PARAMETER_SET) {

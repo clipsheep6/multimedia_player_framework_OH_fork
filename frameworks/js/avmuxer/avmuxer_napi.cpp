@@ -35,7 +35,7 @@ struct AVMuxerNapiAsyncContext : public MediaAsyncContext {
     int32_t fd_ = -1;
     std::string format_;
     MediaDescription trackDesc_;
-    int32_t trackId_ = -1;
+    uint32_t trackId_ = 0;
     void *arrayBuffer_ = nullptr;
     size_t arrayBufferSize_ = 0;
     int32_t writeSampleFlag_ = -1;
@@ -321,8 +321,8 @@ void AVMuxerNapi::AsyncAddTrack(napi_env env, void *data)
         asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to call AddTrack");
         return;
     }
-    MEDIA_LOGD("asyncContext->trackId_ is: %{public}d", asyncContext->trackId_);
-    asyncContext->JsResult = std::make_unique<MediaJsResultInt>(asyncContext->trackId_);
+    MEDIA_LOGD("asyncContext->trackId_ is: %{public}u", asyncContext->trackId_);
+    asyncContext->JsResult = std::make_unique<MediaJsResultUint>(asyncContext->trackId_);
     MEDIA_LOGD("Success AsyncAddTrack");
 }
 
@@ -544,7 +544,6 @@ napi_value AVMuxerNapi::Stop(napi_env env, napi_callback_info info)
     MEDIA_LOGD("Stop In");
 
     std::unique_ptr<AVMuxerNapiAsyncContext> asyncContext = std::make_unique<AVMuxerNapiAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     // get args
     napi_value jsThis = nullptr;

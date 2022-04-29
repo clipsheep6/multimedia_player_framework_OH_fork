@@ -84,7 +84,7 @@ int32_t AVMuxerImpl::SetRotation(int32_t rotation)
     return avmuxerService_->SetRotation(rotation);
 }
 
-int32_t AVMuxerImpl::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
+int32_t AVMuxerImpl::AddTrack(const MediaDescription &trackDesc, uint32_t &trackId)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
     return avmuxerService_->AddTrack(trackDesc, trackId);
@@ -107,7 +107,8 @@ int32_t AVMuxerImpl::WriteTrackSample(std::shared_ptr<AVContainerMemory> sampleD
         std::make_shared<AVSharedMemoryBase>(sampleData->Size(), AVSharedMemory::FLAGS_READ_ONLY, "sampleData");
     int32_t ret = avSharedMem->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_NO_MEMORY, "Failed to create AVSharedMemoryBase");
-    errno_t rc = memcpy_s(avSharedMem->GetBase(), avSharedMem->GetSize(), sampleData->Data(), sampleData->Size());
+    errno_t rc = memcpy_s(avSharedMem->GetBase(), static_cast<size_t>(avSharedMem->GetSize()),
+        sampleData->Data(), sampleData->Size());
     CHECK_AND_RETURN_RET_LOG(rc == EOK, MSERR_UNKNOWN, "memcpy_s failed");
     return avmuxerService_->WriteTrackSample(avSharedMem, info);
 }

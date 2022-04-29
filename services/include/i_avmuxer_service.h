@@ -33,7 +33,7 @@ public:
     virtual int32_t SetOutput(int32_t fd, const std::string &format) = 0;
     virtual int32_t SetLocation(float latitude, float longtitude) = 0;
     virtual int32_t SetRotation(int32_t rotation) = 0;
-    virtual int32_t AddTrack(const MediaDescription &trackDesc, int32_t &trackIdx) = 0;
+    virtual int32_t AddTrack(const MediaDescription &trackDesc, uint32_t &trackIdx) = 0;
     virtual int32_t Start() = 0;
     virtual int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) = 0;
     virtual int32_t Stop() = 0;

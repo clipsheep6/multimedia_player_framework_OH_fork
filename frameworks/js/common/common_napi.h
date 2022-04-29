@@ -76,6 +76,21 @@ private:
     int32_t value_;
 };
 
+class MediaJsResultUint : public MediaJsResult {
+public:
+    explicit MediaJsResultUint(uint32_t value)
+        : value_(value)
+    {
+    }
+    ~MediaJsResultUint() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override
+    {
+        return napi_create_uint32(env, value_, &result);
+    }
+private:
+    uint32_t value_;
+};
+
 class MediaJsResultString : public MediaJsResult {
 public:
     explicit MediaJsResultString(const std::string &value)

@@ -16,6 +16,7 @@
 #include "avmuxer_demo.h"
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include <cstdio>
 #include <unistd.h>
 #include <fcntl.h>
@@ -170,11 +171,12 @@ namespace {
     constexpr float LATITUDE = 30.1111;
     constexpr float LONGITUDE = 150.2222;
     constexpr int32_t ROTATION = 90;
+    constexpr uint32_t PATH_LEN_MAX = 500;
 }
 namespace OHOS {
 namespace Media {
 bool AVMuxerDemo::PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t frameSize,
-    int32_t i, int32_t trackId, int64_t stamp)
+    int32_t i, uint32_t trackId, int64_t stamp)
 {
     if (frameSize == 0) {
         std::cout << "Frame size error" << std::endl;
@@ -224,9 +226,9 @@ void AVMuxerDemo::WriteTrackSample()
 {
     double videoStamp = 0;
     double audioStamp = 0;
-    int32_t i = 0;
-    int32_t videoLen = videoFile_ == nullptr ? INT32_MAX : videoFrameNum_;
-    int32_t audioLen = audioFile_ == nullptr ? INT32_MAX : audioFrameNum_;
+    uint32_t i = 0;
+    uint32_t videoLen = videoFile_ == nullptr ? UINT32_MAX : videoFrameNum_;
+    uint32_t audioLen = audioFile_ == nullptr ? UINT32_MAX : audioFrameNum_;
     while (i < videoLen && i < audioLen) {
         if (videoFile_ != nullptr) {
             if (!PushBuffer(videoFile_, *videoFrameArray_, i, videoTrackId_, videoStamp)) {
@@ -340,7 +342,11 @@ void AVMuxerDemo::DoNext()
             std::cout << "Failed to check mode" << std::endl;
     }
     path = videoType_ + audioType_ + "." + format;
-    int32_t fd = open(path.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+    char realPath[PATH_LEN_MAX + 1] = {0x00};
+    if (strlen(path.c_str()) > PATH_LEN_MAX || realpath(path.c_str(), realPath) == nullptr) {
+        std::cout << "path strlen > " << PATH_LEN_MAX << " or failed to call realpath" << std::endl;
+    }
+    int32_t fd = open(realPath, O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
     if (fd < 0) {
         std::cout << "Open file failed! filePath is: " << path << std::endl;
         return;
