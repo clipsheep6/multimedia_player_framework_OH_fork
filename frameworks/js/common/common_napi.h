@@ -18,6 +18,7 @@
 
 #include <string>
 #include <vector>
+#include <thread>
 #include <unordered_map>
 #include "format.h"
 #include "avcontainer_common.h"
@@ -26,12 +27,17 @@
 
 namespace OHOS {
 namespace Media {
-struct AVFileDescriptor;
+struct AVFileDescriptor {
+    int32_t fd = 0;
+    int64_t offset = 0;
+    int64_t length = -1;
+};
 
 class CommonNapi {
 public:
     CommonNapi() = delete;
     ~CommonNapi() = delete;
+    static bool IsJsThread(std::thread::id jsThread);
     static std::string GetStringArgument(napi_env env, napi_value value);
     static bool GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static bool GetPropertyUint32(napi_env env, napi_value configObj, const std::string &type, uint32_t &result);
@@ -224,7 +230,7 @@ private:
 };
 
 struct MediaAsyncContext {
-    explicit MediaAsyncContext(napi_env env);
+    MediaAsyncContext(napi_env env, std::thread::id jsThread);
     virtual ~MediaAsyncContext();
     static void CompleteCallback(napi_env env, napi_status status, void *data);
     static void Callback(napi_env env, const MediaAsyncContext *context, const napi_value *args);
@@ -232,6 +238,7 @@ struct MediaAsyncContext {
     void SignError(int32_t code, std::string message, bool del = true);
     std::string memoryTagHead = "safe";
     napi_env env;
+    std::thread::id jsThread;
     napi_async_work work = nullptr;
     napi_deferred deferred = nullptr;
     napi_ref callbackRef = nullptr;
@@ -257,12 +264,6 @@ struct AutoRef {
     }
     napi_env env_;
     napi_ref cb_;
-};
-
-struct AVFileDescriptor {
-    int32_t fd = 0;
-    int64_t offset = 0;
-    int64_t length = -1;
 };
 } // namespace Media
 } // namespace OHOS

@@ -112,7 +112,7 @@ private:
 };
 
 struct VideoRecorderAsyncContext : public MediaAsyncContext {
-    explicit VideoRecorderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    VideoRecorderAsyncContext(napi_env env, std::thread::id threadId) : MediaAsyncContext(env, threadId) {}
     ~VideoRecorderAsyncContext() = default;
 
     VideoRecorderNapi *napi = nullptr;

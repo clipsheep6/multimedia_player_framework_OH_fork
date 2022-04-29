@@ -117,7 +117,8 @@ napi_value AudioEncoderNapi::Constructor(napi_env env, napi_callback_info info)
     aencNapi->codecHelper_ = std::make_shared<AVCodecNapiHelper>();
 
     if (aencNapi->callback_ == nullptr) {
-        aencNapi->callback_ = std::make_shared<AudioEncoderCallbackNapi>(env, aencNapi->aenc_, aencNapi->codecHelper_);
+        aencNapi->callback_ = std::make_shared<AudioEncoderCallbackNapi>(env, std::this_thread::get_id(),
+            aencNapi->aenc_, aencNapi->codecHelper_);
         (void)aencNapi->aenc_->SetCallback(aencNapi->callback_);
     }
 
@@ -147,7 +148,7 @@ napi_value AudioEncoderNapi::CreateAudioEncoderByMime(napi_env env, napi_callbac
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -187,7 +188,7 @@ napi_value AudioEncoderNapi::CreateAudioEncoderByName(napi_env env, napi_callbac
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -227,7 +228,7 @@ napi_value AudioEncoderNapi::Configure(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -279,7 +280,7 @@ napi_value AudioEncoderNapi::Prepare(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -324,7 +325,7 @@ napi_value AudioEncoderNapi::Start(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -372,7 +373,7 @@ napi_value AudioEncoderNapi::Stop(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -422,7 +423,7 @@ napi_value AudioEncoderNapi::Flush(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -475,7 +476,7 @@ napi_value AudioEncoderNapi::Reset(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -525,7 +526,7 @@ napi_value AudioEncoderNapi::Release(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -574,7 +575,7 @@ napi_value AudioEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -629,7 +630,7 @@ napi_value AudioEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -681,7 +682,7 @@ napi_value AudioEncoderNapi::SetParameter(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -733,7 +734,7 @@ napi_value AudioEncoderNapi::GetOutputMediaDescription(napi_env env, napi_callba
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -773,7 +774,7 @@ napi_value AudioEncoderNapi::GetAudioEncoderCaps(napi_env env, napi_callback_inf
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<AudioEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};

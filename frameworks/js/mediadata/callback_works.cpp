@@ -96,7 +96,7 @@ uv_work_t *CallbackWorks::InitWork(const std::shared_ptr<CallbackWarp> &callback
     uv_work_t *work = new(std::nothrow) uv_work_t;
     CHECK_AND_RETURN_RET_LOG(work != nullptr, nullptr, "new work is failed");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " work create", FAKE_POINTER(work));
-    CallbackWorkData *data = new(std::nothrow) CallbackWorkData;
+    CallbackWorkData *data = new(std::nothrow) CallbackWorkData();
     if (data == nullptr) {
         MEDIA_LOGE("new CallbackWorkData failed");
         delete work;

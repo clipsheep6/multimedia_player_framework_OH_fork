@@ -52,7 +52,7 @@ private:
 };
 
 struct MediaCapsAsyncContext : public MediaAsyncContext {
-    explicit MediaCapsAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    MediaCapsAsyncContext(napi_env env, std::thread::id threadId) : MediaAsyncContext(env, threadId) {}
     ~MediaCapsAsyncContext() = default;
 
     MediaCapsNapi *napi = nullptr;

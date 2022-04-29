@@ -34,8 +34,8 @@ const std::string BUFFERING_UPDATE_CALLBACK_NAME = "bufferingUpdate";
 
 namespace OHOS {
 namespace Media {
-PlayerCallbackNapi::PlayerCallbackNapi(napi_env env)
-    : env_(env)
+PlayerCallbackNapi::PlayerCallbackNapi(napi_env env, std::thread::id threadId)
+    : env_(env), jsThreadId_(threadId)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -49,6 +49,7 @@ void PlayerCallbackNapi::SaveCallbackReference(const std::string &callbackName, 
 {
     std::lock_guard<std::mutex> lock(mutex_);
     napi_ref callback = nullptr;
+    CHECK_AND_RETURN_LOG(CommonNapi::IsJsThread(this->jsThreadId_), "media js thread error");
     napi_status status = napi_create_reference(env_, args, 1, &callback);
     CHECK_AND_RETURN_LOG(status == napi_ok && callback != nullptr, "creating reference for callback fail");
 
@@ -84,7 +85,7 @@ void PlayerCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode, const
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "no error callback reference");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
 
     cb->callback = errorCallback_;
@@ -105,7 +106,7 @@ void PlayerCallbackNapi::OnError(PlayerErrorType errorType, int32_t errorCode)
     MEDIA_LOGD("OnError is called, name: %{public}d, message: %{public}d", errorType, errorCode);
     CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "Cannot find the reference of error callback");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = errorCallback_;
     cb->callbackName = ERROR_CALLBACK_NAME;
@@ -151,7 +152,7 @@ void PlayerCallbackNapi::OnSeekDoneCb(int32_t currentPositon) const
     MEDIA_LOGD("OnSeekDone is called, currentPositon: %{public}d", currentPositon);
     CHECK_AND_RETURN_LOG(timeUpdateCallback_ != nullptr, "Cannot find the reference of timeUpdate callback");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = timeUpdateCallback_;
     cb->callbackName = TIME_UPDATE_CALLBACK_NAME;
@@ -164,7 +165,7 @@ void PlayerCallbackNapi::OnBufferingUpdateCb(const Format &infoBody) const
     CHECK_AND_RETURN_LOG(bufferingUpdateCallback_ != nullptr,
         "Cannot find the reference of buffering percent callback");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = bufferingUpdateCallback_;
     cb->callbackName = BUFFERING_UPDATE_CALLBACK_NAME;
@@ -237,7 +238,7 @@ void PlayerCallbackNapi::OnStateChangeCb(PlayerStates state)
             break;
     }
     CHECK_AND_RETURN_LOG(callback != nullptr, "Cannot find the reference of callback");
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = callback;
     cb->callbackName = callbackName;
@@ -259,7 +260,7 @@ void PlayerCallbackNapi::OnVolumeChangeCb()
     MEDIA_LOGD("OnVolumeChangeCb in");
     CHECK_AND_RETURN_LOG(volumeChangeCallback_ != nullptr, "Cannot find the reference of volumeChange callback");
 
-    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback();
+    PlayerJsCallback *cb = new(std::nothrow) PlayerJsCallback(this->jsThreadId_);
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
     cb->callback = volumeChangeCallback_;
     cb->callbackName = VOL_CHANGE_CALLBACK_NAME;
@@ -293,6 +294,7 @@ void PlayerCallbackNapi::OnJsCallBack(PlayerJsCallback *jsCb) const
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+            CHECK_AND_BREAK_LOG(CommonNapi::IsJsThread(event->jsThread), "media js thread error");
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
@@ -340,6 +342,7 @@ void PlayerCallbackNapi::OnJsCallBackError(PlayerJsCallback *jsCb) const
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
+            CHECK_AND_BREAK_LOG(CommonNapi::IsJsThread(event->jsThread), "media js thread error");
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
@@ -398,7 +401,7 @@ void PlayerCallbackNapi::OnJsCallBackInt(PlayerJsCallback *jsCb) const
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-
+            CHECK_AND_BREAK_LOG(CommonNapi::IsJsThread(event->jsThread), "media js thread error");
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",
@@ -452,7 +455,7 @@ void PlayerCallbackNapi::OnJsCallBackIntVec(PlayerJsCallback *jsCb) const
         MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
-
+            CHECK_AND_BREAK_LOG(CommonNapi::IsJsThread(event->jsThread), "media js thread error");
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(env, callback, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "%{public}s get reference value fail",

@@ -109,7 +109,7 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     }
 
     if (recorderNapi->callbackNapi_ == nullptr && recorderNapi->recorder_ != nullptr) {
-        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
+        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env, std::this_thread::get_id());;
         (void)recorderNapi->recorder_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
 
@@ -156,7 +156,7 @@ napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_in
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
-    std::unique_ptr<VideoRecorderAsyncContext> asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    std::unique_ptr<VideoRecorderAsyncContext> asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env, std::this_thread::get_id());;
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
@@ -181,7 +181,7 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     napi_value jsThis = nullptr;
     napi_value args[2] = { nullptr };
 
-    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env, std::this_thread::get_id());;
 
     // get args
     size_t argCount = 2;
@@ -246,7 +246,7 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env, std::this_thread::get_id());;
     // get args
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -296,7 +296,7 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -338,7 +338,7 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -380,7 +380,7 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -422,7 +422,7 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -464,7 +464,7 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -513,7 +513,7 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };

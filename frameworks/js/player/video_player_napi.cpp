@@ -128,7 +128,7 @@ napi_value VideoPlayerNapi::Constructor(napi_env env, napi_callback_info info)
     }
 
     if (jsPlayer->jsCallback_ == nullptr && jsPlayer->nativePlayer_ != nullptr) {
-        jsPlayer->jsCallback_ = std::make_shared<VideoCallbackNapi>(env);
+        jsPlayer->jsCallback_ = std::make_shared<VideoCallbackNapi>(env, std::this_thread::get_id());
         (void)jsPlayer->nativePlayer_->SetPlayerCallback(jsPlayer->jsCallback_);
     }
 
@@ -161,7 +161,7 @@ napi_value VideoPlayerNapi::CreateVideoPlayer(napi_env env, napi_callback_info i
     napi_get_undefined(env, &result);
     MEDIA_LOGD("CreateVideoPlayer In");
 
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext =std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
 
     // get args
     napi_value jsThis = nullptr;
@@ -469,7 +469,7 @@ napi_value VideoPlayerNapi::SetDisplaySurface(napi_env env, napi_callback_info i
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("SetDisplaySurface In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
 
     // get args
     napi_value jsThis = nullptr;
@@ -505,6 +505,7 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
     MEDIA_LOGD("CompleteAsyncFunc In");
     auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
     CHECK_AND_RETURN_LOG(asyncContext != nullptr, "VideoPlayerAsyncContext is nullptr!");
+    CHECK_AND_RETURN_LOG(CommonNapi::IsJsThread(asyncContext->jsThread), "media js thread error");
 
     if (status != napi_ok) {
         return MediaAsyncContext::CompleteCallback(env, status, data);
@@ -563,7 +564,7 @@ napi_value VideoPlayerNapi::Prepare(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGD("Prepare In");
 
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PREPARE;
 
     // get args
@@ -596,7 +597,7 @@ napi_value VideoPlayerNapi::Play(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
     MEDIA_LOGD("Play In");
 
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PLAY;
     // get args
     napi_value jsThis = nullptr;
@@ -627,7 +628,7 @@ napi_value VideoPlayerNapi::Pause(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("Pause In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_PAUSE;
 
     // get args
@@ -660,7 +661,7 @@ napi_value VideoPlayerNapi::Stop(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("Stop In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_STOP;
 
     // get args
@@ -692,7 +693,7 @@ napi_value VideoPlayerNapi::Reset(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("Reset In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_RESET;
 
     // get args
@@ -725,7 +726,7 @@ napi_value VideoPlayerNapi::Release(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("Release In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
 
     // get args
     napi_value jsThis = nullptr;
@@ -770,7 +771,7 @@ napi_value VideoPlayerNapi::Seek(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("Seek In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_SEEK;
 
     // get args
@@ -829,7 +830,7 @@ napi_value VideoPlayerNapi::SetSpeed(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("SetSpeed In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_SPEED;
 
     // get args
@@ -907,7 +908,7 @@ napi_value VideoPlayerNapi::GetTrackDescription(napi_env env, napi_callback_info
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("GetTrackDescription In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
 
     // get args
     napi_value jsThis = nullptr;
@@ -938,7 +939,7 @@ napi_value VideoPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     MEDIA_LOGD("SetVolume In");
-    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    auto asyncContext = std::make_unique<VideoPlayerAsyncContext>(env, std::this_thread::get_id());
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_VOLUME;
 
     // get args

@@ -118,7 +118,8 @@ napi_value VideoEncoderNapi::Constructor(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET(vencNapi->venc_ != nullptr, result);
 
     if (vencNapi->callback_ == nullptr) {
-        vencNapi->callback_ = std::make_shared<VideoEncoderCallbackNapi>(env, vencNapi->venc_);
+        vencNapi->callback_ = std::make_shared<VideoEncoderCallbackNapi>(env, std::this_thread::get_id(),
+            vencNapi->venc_);
         (void)vencNapi->venc_->SetCallback(vencNapi->callback_);
     }
 
@@ -155,7 +156,7 @@ napi_value VideoEncoderNapi::CreateVideoEncoderByMime(napi_env env, napi_callbac
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -195,7 +196,7 @@ napi_value VideoEncoderNapi::CreateVideoEncoderByName(napi_env env, napi_callbac
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -235,7 +236,7 @@ napi_value VideoEncoderNapi::Configure(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -287,7 +288,7 @@ napi_value VideoEncoderNapi::Prepare(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -336,7 +337,7 @@ napi_value VideoEncoderNapi::Start(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -381,7 +382,7 @@ napi_value VideoEncoderNapi::Stop(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -426,7 +427,7 @@ napi_value VideoEncoderNapi::Flush(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -471,7 +472,7 @@ napi_value VideoEncoderNapi::Reset(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -524,7 +525,7 @@ napi_value VideoEncoderNapi::Release(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -568,7 +569,7 @@ napi_value VideoEncoderNapi::QueueInput(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -620,7 +621,7 @@ napi_value VideoEncoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -673,7 +674,7 @@ napi_value VideoEncoderNapi::GetInputSurface(napi_env env, napi_callback_info in
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -728,7 +729,7 @@ napi_value VideoEncoderNapi::SetParameter(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[2] = {nullptr};
@@ -779,7 +780,7 @@ napi_value VideoEncoderNapi::GetOutputMediaDescription(napi_env env, napi_callba
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -819,7 +820,7 @@ napi_value VideoEncoderNapi::GetVideoEncoderCaps(napi_env env, napi_callback_inf
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env);
+    auto asyncCtx = std::make_unique<VideoEncoderAsyncContext>(env, std::this_thread::get_id());;
 
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
