@@ -239,8 +239,6 @@ int32_t RecorderTest::SetFormat(const std::string &recorderType) const
 
     ret = recorder_->SetMaxDuration(g_videoRecorderConfig.duration);
     TEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxDuration failed ");
-    ret = recorder_->SetOutputPath(g_videoRecorderConfig.outPath);
-    TEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputPath failed ");
     std::shared_ptr<RecorderCallbackTest> testCallback = std::make_shared<RecorderCallbackTest>();
     ret = recorder_->SetRecorderCallback(testCallback);
     TEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetRecorderCallback failed ");
