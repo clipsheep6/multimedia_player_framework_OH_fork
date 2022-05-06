@@ -22,6 +22,7 @@ namespace {
     constexpr uint32_t MAX_SIZE = 3150000; // 3MB
     constexpr uint32_t MAX_WIDTH = 8000;
     constexpr uint32_t MAX_HEIGHT = 5000;
+    constexpr uint32_t ALIGNMENT = 16;
 }
 
 namespace OHOS {
@@ -32,20 +33,6 @@ ProcessorVdecImpl::ProcessorVdecImpl()
 
 ProcessorVdecImpl::~ProcessorVdecImpl()
 {
-}
-
-int32_t ProcessorVdecImpl::ProcessMandatory(const Format &format)
-{
-    CHECK_AND_RETURN_RET(format.GetIntValue("width", width_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("height", height_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("pixel_format", pixelFormat_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("frame_rate", frameRate_) == true, MSERR_INVALID_VAL);
-    MEDIA_LOGD("width:%{public}d, height:%{public}d, pixel:%{public}d, frameRate:%{public}d",
-        width_, height_, pixelFormat_, frameRate_);
-
-    gstPixelFormat_ = PixelFormatToGst(static_cast<VideoPixelFormat>(pixelFormat_));
-
-    return MSERR_OK;
 }
 
 int32_t ProcessorVdecImpl::ProcessOptional(const Format &format)
@@ -97,7 +84,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
     }
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
-    auto config = std::make_shared<ProcessorConfig>(caps, false);
+    auto config = std::make_shared<ProcessorConfig>(caps, needSrcConvert_);
     if (config == nullptr) {
         gst_caps_unref(caps);
         return nullptr;
@@ -107,9 +94,7 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
     if (maxInputSize_ > 0) {
         config->bufferSize_ = (maxInputSize_ > MAX_SIZE) ? MAX_SIZE : static_cast<uint32_t>(maxInputSize_);
     } else {
-        // Memory is aligned to 16 bytes
-        constexpr uint32_t alignment = 16;
-        config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_), width_, height_, alignment);
+        config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_), width_, height_, ALIGNMENT);
     }
 
     return config;
@@ -124,16 +109,14 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
         "format", G_TYPE_STRING, gstPixelFormat_.c_str(), nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
-    auto config = std::make_shared<ProcessorConfig>(caps, false);
+    auto config = std::make_shared<ProcessorConfig>(caps, needSinkConvert_);
     if (config == nullptr) {
         MEDIA_LOGE("No memory");
         gst_caps_unref(caps);
         return nullptr;
     }
-    // Memory is aligned to 16 bytes
-    constexpr uint32_t alignment = 16;
     config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_),
-        static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), alignment);
+        static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), ALIGNMENT);
 
     return config;
 }

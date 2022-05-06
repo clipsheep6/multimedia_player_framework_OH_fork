@@ -68,18 +68,6 @@ ProcessorAdecImpl::~ProcessorAdecImpl()
 {
 }
 
-int32_t ProcessorAdecImpl::ProcessMandatory(const Format &format)
-{
-    CHECK_AND_RETURN_RET(format.GetIntValue("channel_count", channels_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("sample_rate", sampleRate_) == true, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(format.GetIntValue("audio_sample_format", audioSampleFormat_) == true, MSERR_INVALID_VAL);
-    MEDIA_LOGD("channels:%{public}d, sampleRate:%{public}d, pcm:%{public}d",
-        channels_, sampleRate_, audioSampleFormat_);
-
-    gstRawFormat_ = RawAudioFormatToGst(static_cast<AudioStandard::AudioSampleFormat>(audioSampleFormat_));
-    return MSERR_OK;
-}
-
 int32_t ProcessorAdecImpl::ProcessOptional(const Format &format)
 {
     (void)format;
@@ -127,7 +115,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
     }
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
-    auto config = std::make_shared<ProcessorConfig>(caps, false);
+    auto config = std::make_shared<ProcessorConfig>(caps, needSrcConvert_);
     if (config == nullptr) {
         MEDIA_LOGE("No memory");
         gst_caps_unref(caps);
@@ -152,7 +140,7 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetOutputPortConfig()
         "layout", G_TYPE_STRING, "interleaved", nullptr);
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
-    auto config = std::make_shared<ProcessorConfig>(caps, false);
+    auto config = std::make_shared<ProcessorConfig>(caps, needSinkConvert_);
     if (config == nullptr) {
         MEDIA_LOGE("No memory");
         gst_caps_unref(caps);

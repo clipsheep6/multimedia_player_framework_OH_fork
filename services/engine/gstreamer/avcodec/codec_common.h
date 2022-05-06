@@ -89,9 +89,9 @@ struct BufferWrapper {
 };
 
 struct ProcessorConfig {
-    ProcessorConfig(GstCaps *caps, bool isEncoder)
+    ProcessorConfig(GstCaps *caps, bool needConvert)
         : caps_(caps),
-          isEncoder_(isEncoder)
+          needConvert_(needConvert)
     {
     }
     ~ProcessorConfig()
@@ -103,7 +103,7 @@ struct ProcessorConfig {
     GstCaps *caps_ = nullptr;
     bool needCodecData_ = false;
     bool needParser_ = false;
-    bool isEncoder_ = false;
+    bool needConvert_ = false;
     uint32_t bufferSize_ = 0;
 };
 

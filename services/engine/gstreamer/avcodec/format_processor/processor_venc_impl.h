@@ -30,18 +30,12 @@ public:
     std::shared_ptr<ProcessorConfig> GetOutputPortConfig() override;
 
 protected:
-    int32_t ProcessMandatory(const Format &format) override;
     int32_t ProcessOptional(const Format &format) override;
 
 private:
-    int32_t width_ = 0;
-    int32_t height_ = 0;
-    int32_t pixelFormat_ = 0;
-    int32_t frameRate_ = 0;
     int32_t profile_ = -1;
     int32_t keyFrameInterval_ = 0;
     int32_t bitrateMode_ = 0;
-    std::string gstPixelFormat_;
     std::string gstProfile_;
 };
 } // namespace Media

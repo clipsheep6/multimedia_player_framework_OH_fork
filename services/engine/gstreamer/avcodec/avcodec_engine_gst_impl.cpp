@@ -14,7 +14,6 @@
  */
 
 #include "avcodec_engine_gst_impl.h"
-#include "avcodeclist_engine_gst_impl.h"
 #include "media_errors.h"
 #include "media_log.h"
 
@@ -44,44 +43,15 @@ int32_t AVCodecEngineGstImpl::Init(AVCodecType type, bool isMimeType, const std:
     std::unique_lock<std::mutex> lock(mutex_);
     type_ = type;
 
-    InnerCodecMimeType codecName = CODEC_MIMIE_TYPE_DEFAULT;
-    if (!isMimeType) {
-        std::string mimeType = FindMimeTypeByName(type, name);
-        CHECK_AND_RETURN_RET(MapCodecMime(mimeType, codecName) == MSERR_OK, MSERR_UNKNOWN);
-    } else {
-        CHECK_AND_RETURN_RET(MapCodecMime(name, codecName) == MSERR_OK, MSERR_UNKNOWN);
-    }
-
     processor_ = AVCodecEngineFactory::CreateProcessor(type);
+    CHECK_AND_RETURN_RET(processor_ != nullptr, MSERR_NO_MEMORY);
+    CHECK_AND_RETURN_RET(processor_->Init(type, isMimeType, name) == MSERR_OK, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET(processor_->GetParameter(useSoftWare_, pluginName_) == MSERR_OK, MSERR_UNKNOWN);
 
     ctrl_ = std::make_unique<AVCodecEngineCtrl>();
     CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_NO_MEMORY);
     ctrl_->SetObs(obs_);
-
-    if (isMimeType) {
-        CHECK_AND_RETURN_RET(HandleMimeType(type, name) == MSERR_OK, MSERR_UNKNOWN);
-    } else {
-        CHECK_AND_RETURN_RET(HandlePluginName(type, name) == MSERR_OK, MSERR_UNKNOWN);
-    }
-    CHECK_AND_RETURN_RET(processor_ != nullptr, MSERR_NO_MEMORY);
-    CHECK_AND_RETURN_RET(processor_->Init(codecName, useSoftWare_) == MSERR_OK, MSERR_UNKNOWN);
-
-    return MSERR_OK;
-}
-
-void AVCodecEngineGstImpl::CheckSurfaceFormat(Format &format)
-{
-    int32_t pixelFormat = 0;
-    if (useSoftWare_) {
-        return;
-    }
-    if (format.GetIntValue("pixel_format", pixelFormat) && pixelFormat == SURFACE_FORMAT) {
-        format.RemoveKey("pixel_format");
-        if (capData_.format.empty()) {
-            return;
-        }
-        format.PutIntValue("pixel_format", capData_.format[0]);
-    }
+    return ctrl_->Init(type, useSoftWare_, pluginName_);
 }
 
 int32_t AVCodecEngineGstImpl::Configure(const Format &format)
@@ -89,11 +59,9 @@ int32_t AVCodecEngineGstImpl::Configure(const Format &format)
     MEDIA_LOGD("Enter Configure");
     std::unique_lock<std::mutex> lock(mutex_);
     format_ = format;
-    CheckSurfaceFormat(format_);
 
     CHECK_AND_RETURN_RET(processor_ != nullptr, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET(processor_->DoProcess(format_) == MSERR_OK, MSERR_UNKNOWN);
-
+    CHECK_AND_RETURN_RET(processor_->ProcessParameter(format_) == MSERR_OK, MSERR_UNKNOWN);
     MEDIA_LOGD("Configure success");
 
     return MSERR_OK;
@@ -243,96 +211,6 @@ int32_t AVCodecEngineGstImpl::SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs
 {
     std::unique_lock<std::mutex> lock(mutex_);
     obs_ = obs;
-    return MSERR_OK;
-}
-
-std::string AVCodecEngineGstImpl::FindMimeTypeByName(AVCodecType type, const std::string &name)
-{
-    std::string mimeType = "error";
-    auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
-    CHECK_AND_RETURN_RET(codecList != nullptr, mimeType);
-
-    std::vector<CapabilityData> data = codecList->GetCodecCapabilityInfos();
-    bool ret = false;
-
-    for (auto it = data.begin(); it != data.end(); it++) {
-        if ((*it).codecName == name) {
-            mimeType = (*it).mimeType;
-            ret = true;
-        }
-    }
-    CHECK_AND_RETURN_RET(ret == true, mimeType);
-
-    return mimeType;
-}
-
-int32_t AVCodecEngineGstImpl::HandleMimeType(AVCodecType type, const std::string &name)
-{
-    int32_t ret = MSERR_OK;
-    auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
-    CHECK_AND_RETURN_RET(codecList != nullptr, MSERR_NO_MEMORY);
-
-    std::string pluginName = "";
-    Format format;
-    format.PutStringValue("codec_mime", name);
-    switch (type) {
-        case AVCODEC_TYPE_VIDEO_ENCODER:
-            pluginName = codecList->FindVideoEncoder(format);
-            break;
-        case AVCODEC_TYPE_VIDEO_DECODER:
-            pluginName = codecList->FindVideoDecoder(format);
-            break;
-        case AVCODEC_TYPE_AUDIO_ENCODER:
-            pluginName = codecList->FindAudioEncoder(format);
-            break;
-        case AVCODEC_TYPE_AUDIO_DECODER:
-            pluginName = codecList->FindAudioDecoder(format);
-            break;
-        default:
-            ret = MSERR_INVALID_VAL;
-            MEDIA_LOGE("Unknown type");
-            break;
-    }
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_UNKNOWN);
-    MEDIA_LOGD("Found plugin name:%{public}s", pluginName.c_str());
-
-    (void)QueryIsSoftPlugin(pluginName, useSoftWare_);
-    pluginName_ = pluginName;
-
-    CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_UNKNOWN);
-    return ctrl_->Init(type, useSoftWare_, pluginName);
-}
-
-int32_t AVCodecEngineGstImpl::HandlePluginName(AVCodecType type, const std::string &name)
-{
-    bool isSoftware = true;
-    (void)QueryIsSoftPlugin(name, isSoftware);
-
-    useSoftWare_ = isSoftware;
-    pluginName_ = name;
-
-    CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_UNKNOWN);
-    return ctrl_->Init(type, isSoftware, name);
-}
-
-int32_t AVCodecEngineGstImpl::QueryIsSoftPlugin(const std::string &name, bool &isSoftware)
-{
-    auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
-    CHECK_AND_RETURN_RET(codecList != nullptr, MSERR_NO_MEMORY);
-
-    std::vector<CapabilityData> data = codecList->GetCodecCapabilityInfos();
-    bool pluginExist = false;
-
-    for (auto it = data.begin(); it != data.end(); it++) {
-        if ((*it).codecName == name) {
-            isSoftware = !(*it).isVendor;
-            pluginExist = true;
-            capData_ = *it;
-            break;
-        }
-    }
-    CHECK_AND_RETURN_RET(pluginExist == true, MSERR_INVALID_VAL);
-
     return MSERR_OK;
 }
 } // namespace Media
