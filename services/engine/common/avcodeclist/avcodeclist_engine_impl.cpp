@@ -13,30 +13,30 @@
  * limitations under the License.
  */
 
-#include "avcodeclist_engine_gst_impl.h"
+#include "avcodeclist_engine_impl.h"
 #include <cmath>
 #include "avcodec_ability_singleton.h"
 #include "media_errors.h"
 #include "media_log.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecListEngineGstImpl"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecListEngineImpl"};
     constexpr float EPSINON = 0.0001;
 }
 
 namespace OHOS {
 namespace Media {
-AVCodecListEngineGstImpl::AVCodecListEngineGstImpl()
+AVCodecListEngineImpl::AVCodecListEngineImpl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
-AVCodecListEngineGstImpl::~AVCodecListEngineGstImpl()
+AVCodecListEngineImpl::~AVCodecListEngineImpl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-bool AVCodecListEngineGstImpl::IsSupportMimeType(const Format &format, const CapabilityData &data)
+bool AVCodecListEngineImpl::IsSupportMimeType(const Format &format, const CapabilityData &data)
 {
     std::string targetMimeType;
     if (!format.ContainKey("codec_mime")) {
@@ -50,7 +50,7 @@ bool AVCodecListEngineGstImpl::IsSupportMimeType(const Format &format, const Cap
     return true;
 }
 
-bool AVCodecListEngineGstImpl::IsSupportBitrate(const Format &format, const CapabilityData &data)
+bool AVCodecListEngineImpl::IsSupportBitrate(const Format &format, const CapabilityData &data)
 {
     int32_t targetBitrate;
     if (!format.ContainKey("bitrate")) {
@@ -64,7 +64,7 @@ bool AVCodecListEngineGstImpl::IsSupportBitrate(const Format &format, const Capa
     return true;
 }
 
-bool AVCodecListEngineGstImpl::IsSupportSize(const Format &format, const CapabilityData &data)
+bool AVCodecListEngineImpl::IsSupportSize(const Format &format, const CapabilityData &data)
 {
     int32_t targetWidth;
     int32_t targetHeight;
@@ -81,7 +81,7 @@ bool AVCodecListEngineGstImpl::IsSupportSize(const Format &format, const Capabil
     return true;
 }
 
-bool AVCodecListEngineGstImpl::IsSupportPixelFormat(const Format &format, const CapabilityData &data)
+bool AVCodecListEngineImpl::IsSupportPixelFormat(const Format &format, const CapabilityData &data)
 {
     if (data.codecType == AVCODEC_TYPE_AUDIO_ENCODER || data.codecType == AVCODEC_TYPE_AUDIO_DECODER) {
         return true;
@@ -98,7 +98,7 @@ bool AVCodecListEngineGstImpl::IsSupportPixelFormat(const Format &format, const 
     return true;
 }
 
-bool AVCodecListEngineGstImpl::IsSupportFrameRate(const Format &format, const CapabilityData &data)
+bool AVCodecListEngineImpl::IsSupportFrameRate(const Format &format, const CapabilityData &data)
 {
     if (!format.ContainKey("frame_rate")) {
         MEDIA_LOGD("The frame_rate of the format are not specified");
@@ -130,7 +130,7 @@ bool AVCodecListEngineGstImpl::IsSupportFrameRate(const Format &format, const Ca
     return true;
 }
 
-bool AVCodecListEngineGstImpl::IsSupportChannel(const Format &format, const CapabilityData &data)
+bool AVCodecListEngineImpl::IsSupportChannel(const Format &format, const CapabilityData &data)
 {
     if (data.codecType == AVCODEC_TYPE_VIDEO_ENCODER || data.codecType == AVCODEC_TYPE_VIDEO_DECODER) {
         return true;
@@ -147,7 +147,7 @@ bool AVCodecListEngineGstImpl::IsSupportChannel(const Format &format, const Capa
     return true;
 }
 
-bool AVCodecListEngineGstImpl::IsSupportSampleRate(const Format &format, const CapabilityData &data)
+bool AVCodecListEngineImpl::IsSupportSampleRate(const Format &format, const CapabilityData &data)
 {
     if (data.codecType == AVCODEC_TYPE_VIDEO_ENCODER || data.codecType == AVCODEC_TYPE_VIDEO_DECODER) {
         return true;
@@ -164,7 +164,7 @@ bool AVCodecListEngineGstImpl::IsSupportSampleRate(const Format &format, const C
     return true;
 }
 
-std::string AVCodecListEngineGstImpl::FindTargetCodec(const Format &format,
+std::string AVCodecListEngineImpl::FindTargetCodec(const Format &format,
     const std::vector<CapabilityData> &capabilityDataArray, const AVCodecType &codecType)
 {
     for (auto iter = capabilityDataArray.begin(); iter != capabilityDataArray.end(); ++iter) {
@@ -179,31 +179,31 @@ std::string AVCodecListEngineGstImpl::FindTargetCodec(const Format &format,
     return "";
 }
 
-std::string AVCodecListEngineGstImpl::FindVideoDecoder(const Format &format)
+std::string AVCodecListEngineImpl::FindVideoDecoder(const Format &format)
 {
     std::vector<CapabilityData> capabilityDataArray = GetCodecCapabilityInfos();
     return FindTargetCodec(format, capabilityDataArray, AVCODEC_TYPE_VIDEO_DECODER);
 }
 
-std::string AVCodecListEngineGstImpl::FindVideoEncoder(const Format &format)
+std::string AVCodecListEngineImpl::FindVideoEncoder(const Format &format)
 {
     std::vector<CapabilityData> capabilityDataArray = GetCodecCapabilityInfos();
     return FindTargetCodec(format, capabilityDataArray, AVCODEC_TYPE_VIDEO_ENCODER);
 }
 
-std::string AVCodecListEngineGstImpl::FindAudioDecoder(const Format &format)
+std::string AVCodecListEngineImpl::FindAudioDecoder(const Format &format)
 {
     std::vector<CapabilityData> capabilityDataArray = GetCodecCapabilityInfos();
     return FindTargetCodec(format, capabilityDataArray, AVCODEC_TYPE_AUDIO_DECODER);
 }
 
-std::string AVCodecListEngineGstImpl::FindAudioEncoder(const Format &format)
+std::string AVCodecListEngineImpl::FindAudioEncoder(const Format &format)
 {
     std::vector<CapabilityData> capabilityDataArray = GetCodecCapabilityInfos();
     return FindTargetCodec(format, capabilityDataArray, AVCODEC_TYPE_AUDIO_ENCODER);
 }
 
-std::vector<CapabilityData> AVCodecListEngineGstImpl::GetCodecCapabilityInfos()
+std::vector<CapabilityData> AVCodecListEngineImpl::GetCodecCapabilityInfos()
 {
     AVCodecAbilitySingleton& codecAbilityInstance = AVCodecAbilitySingleton::GetInstance();
     return codecAbilityInstance.GetCapabilityDataArray();

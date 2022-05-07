@@ -49,7 +49,7 @@ ohos_static_library("media_engine_common_avcodeclist") {
   sources = [
     "avcodec_ability_singleton.cpp",
     "avcodec_xml_parser.cpp",
-    "avcodeclist_engine_gst_impl.cpp",
+    "avcodeclist_engine_impl.cpp",
   ]
 
   configs = [

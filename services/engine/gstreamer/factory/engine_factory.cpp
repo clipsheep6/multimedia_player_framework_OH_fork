@@ -15,7 +15,7 @@
 
 #include "i_engine_factory.h"
 #include "avcodec_engine_gst_impl.h"
-#include "avcodeclist_engine_gst_impl.h"
+#include "avcodeclist_engine_impl.h"
 #include "avmetadatahelper_engine_gst_impl.h"
 #include "gst_loader.h"
 #include "media_errors.h"
@@ -83,7 +83,7 @@ std::unique_ptr<IAVCodecEngine> GstEngineFactory::CreateAVCodecEngine()
 std::unique_ptr<IAVCodecListEngine> GstEngineFactory::CreateAVCodecListEngine()
 {
     GstLoader::Instance().UpdateLogLevel();
-    return std::make_unique<AVCodecListEngineGstImpl>();
+    return std::make_unique<AVCodecListEngineImpl>();
 }
 } // namespace Media
 } // namespace OHOS

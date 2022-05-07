@@ -19,7 +19,7 @@
 #include "media_log.h"
 #include "recorder_private_param.h"
 #include "i_recorder_engine.h"
-#include "avcodeclist_engine_gst_impl.h"
+#include "avcodeclist_engine_impl.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoEncoder"};
@@ -36,7 +36,7 @@ int32_t VideoEncoder::Init()
 
 std::string VideoEncoder::GetEncorderName(std::string_view mimeType)
 {
-    auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
+    auto codecList = std::make_unique<AVCodecListEngineImpl>();
     CHECK_AND_RETURN_RET(codecList != nullptr, "");
 
     Format format;
