@@ -27,6 +27,8 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_CONSUMER_SURFACE_POOL, GstConsumerSurfacePool))
 #define GST_CONSUMER_SURFACE_POOL_CLASS(klass) \
     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_CONSUMER_SURFACE_POOL, GstConsumerSurfacePoolClass))
+#define GST_CONSUMER_SURFACE_POOL_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_CONSUMER_SURFACE_POOL, GstConsumerSurfacePoolClass))
 #define GST_IS_CONSUMER_SURFACE_POOL(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_CONSUMER_SURFACE_POOL))
 #define GST_IS_CONSUMER_SURFACE_POOL_CLASS(klass) \
@@ -49,6 +51,8 @@ struct _GstConsumerSurfacePool {
 
 struct _GstConsumerSurfacePoolClass {
     GstVideoBufferPoolClass parent_class;
+
+    void (*available) (GstConsumerSurfacePool *pool);
 };
 
 GType gst_consumer_surface_pool_get_type(void);

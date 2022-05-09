@@ -61,6 +61,7 @@ private:
 static void gst_consumer_surface_pool_set_property(GObject *object, guint id, const GValue *value, GParamSpec *pspec);
 static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool);
 static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *pool);
+static void gst_consumer_surface_pool_buffer_available_inner(GstConsumerSurfacePool *pool);
 static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *pool, GstBuffer **buffer,
     GstBufferPoolAcquireParams *params);
 static void gst_consumer_surface_pool_release_buffer(GstBufferPool *pool, GstBuffer *buffer);
@@ -122,6 +123,7 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
     g_return_if_fail(klass != nullptr);
     GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS(klass);
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
+    GstConsumerSurfacePoolClass *surfacePoolClass = GST_CONSUMER_SURFACE_POOL_CLASS(klass);
     GST_DEBUG_CATEGORY_INIT(gst_consumer_surface_pool_debug_category, "surfacepool", 0, "surface pool");
     gobjectClass->set_property = gst_consumer_surface_pool_set_property;
     gobjectClass->finalize = gst_consumer_surface_pool_finalize;
@@ -146,6 +148,7 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
     poolClass->stop = gst_consumer_surface_pool_stop;
     poolClass->flush_start = gst_consumer_surface_pool_flush_start;
     poolClass->flush_stop = gst_consumer_surface_pool_flush_stop;
+    surfacePoolClass->available = gst_consumer_surface_pool_buffer_available_inner;
 }
 
 static void gst_consumer_surface_pool_set_property(GObject *object, guint id, const GValue *value, GParamSpec *pspec)
@@ -326,6 +329,16 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
 
 static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *pool)
 {
+    GstConsumerSurfacePoolClass *poolClass = GST_CONSUMER_SURFACE_POOL_GET_CLASS(pool);
+    g_return_if_fail(poolClass != nullptr);
+
+    if (poolClass->available) {
+        return poolClass->available(pool);
+    }
+}
+
+static void gst_consumer_surface_pool_buffer_available_inner(GstConsumerSurfacePool *pool)
+{
     g_return_if_fail(pool != nullptr && pool->priv != nullptr);
     auto priv = pool->priv;
     g_mutex_lock(&priv->pool_lock);
@@ -371,7 +384,13 @@ static void add_buffer_info(GstConsumerSurfacePool *pool, GstConsumerSurfaceMemo
     if (mem->is_eos_frame) {
         bufferFlag = BUFFER_FLAG_EOS;
     }
-    gst_buffer_add_buffer_handle_meta(buffer, mem->buffer_handle, mem->fencefd, bufferFlag);
+
+    if (mem->is_codec_frame) {
+        bufferFlag |= BUFFER_FLAG_CODEC_FRAME;
+    }
+
+    GstBuferHandleConfig config = { mem->fencefd, bufferFlag, mem->data_size, mem->pixel_format };
+    gst_buffer_add_buffer_handle_meta(buffer, mem->buffer_handle, config);
 
     if (mem->timestamp < 0) {
         GST_WARNING_OBJECT(pool, "Invalid timestamp: < 0");
