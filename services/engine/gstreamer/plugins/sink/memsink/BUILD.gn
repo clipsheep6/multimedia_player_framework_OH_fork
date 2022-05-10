@@ -48,7 +48,7 @@ config("gst_mem_sink_config") {
     "//third_party/glib/gmodule",
     "//foundation/graphic/graphic/interfaces/innerkits/common",
     "//foundation/graphic/graphic/utils/sync_fence/export",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
+    "//base/startup/init_lite/interfaces/innerkits/include/syspara",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
   ]
 }
@@ -72,7 +72,7 @@ ohos_shared_library("gst_mem_sink") {
   configs = [ ":gst_mem_sink_config" ]
 
   deps = [
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//foundation/graphic/graphic:libsurface",
     "//foundation/graphic/graphic/utils:sync_fence",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common:gst_media_common",
