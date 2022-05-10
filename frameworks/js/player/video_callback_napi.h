@@ -32,6 +32,7 @@ enum class AsyncWorkType : int32_t {
     ASYNC_WORK_SEEK,
     ASYNC_WORK_SPEED,
     ASYNC_WORK_VOLUME,
+    ASYNC_WORK_AUDIO_RENDERER_INFO,
     ASYNC_WORK_INVALID,
 };
 
@@ -45,6 +46,9 @@ struct VideoPlayerAsyncContext : public MediaAsyncContext {
     int32_t seekMode = SEEK_PREVIOUS_SYNC;
     int32_t speedMode = SPEED_FORWARD_1_00_X;
     std::string surface = "";
+    int32_t contentType = 0;
+    int32_t streamUsage = 0;
+    int32_t rendererFlags = 0;
 };
 
 class VideoCallbackNapi : public PlayerCallbackNapi {

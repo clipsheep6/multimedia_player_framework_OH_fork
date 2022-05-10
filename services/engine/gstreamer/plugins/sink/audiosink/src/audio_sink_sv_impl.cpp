@@ -135,8 +135,20 @@ int32_t AudioSinkSvImpl::GetMinVolume(float &volume)
 int32_t AudioSinkSvImpl::Prepare()
 {
     MEDIA_LOGD("audioRenderer Prepare In");
-    audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC);
+    if (useRendererOption_) {
+        AudioStandard::AudioRendererOptions rendererOption;
+        rendererOption.rendererInfo = rendererInfo_;
+        rendererOption.streamInfo.samplingRate = rendererParams_.sampleRate;
+        rendererOption.streamInfo.encoding = rendererParams_.encodingType;
+        rendererOption.streamInfo.format = rendererParams_.sampleFormat;
+        rendererOption.streamInfo.channels = rendererParams_.channelCount;
+        audioRenderer_ = AudioStandard::AudioRenderer::Create(rendererOption);
+    } else {
+        audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC);
+        CHECK_AND_RETURN_RET(audioRenderer_->SetParams(rendererParams_) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
+    }
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
+
     MEDIA_LOGD("audioRenderer Prepare Out");
     return MSERR_OK;
 }
@@ -194,13 +206,24 @@ int32_t AudioSinkSvImpl::Release()
     return MSERR_OK;
 }
 
+int32_t AudioSinkSvImpl::SetRendererInfo(int32_t desc, int32_t rendererFlags)
+{
+    int32_t contentType = (static_cast<uint32_t>(desc) & 0x0000FFFF);
+    int32_t streamUsage = static_cast<uint32_t>(desc) >> AudioStandard::RENDERER_STREAM_USAGE_SHIFT;
+
+    rendererInfo_.contentType = static_cast<AudioStandard::ContentType>(contentType);
+    rendererInfo_.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
+    rendererInfo_.rendererFlags = rendererFlags;
+    useRendererOption_ = true;
+    return MSERR_OK;
+}
+
 int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels, uint32_t sampleRate)
 {
     (void)bitsPerSample;
     MEDIA_LOGD("SetParameters in, channels:%{public}d, sampleRate:%{public}d", channels, sampleRate);
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
 
-    AudioStandard::AudioRendererParams params;
     std::vector<AudioStandard::AudioSamplingRate> supportedSampleList = AudioStandard::
                                                                         AudioRenderer::GetSupportedSamplingRates();
     CHECK_AND_RETURN_RET(supportedSampleList.size() > 0, MSERR_UNKNOWN);
@@ -209,7 +232,7 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
         CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, MSERR_UNKNOWN);
         uint32_t supportedSampleRate = static_cast<uint32_t>(*iter);
         if (sampleRate <= supportedSampleRate) {
-            params.sampleRate = *iter;
+            rendererParams_.sampleRate = *iter;
             isValidSampleRate = true;
             break;
         }
@@ -224,19 +247,17 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
         CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, MSERR_UNKNOWN);
         uint32_t supportedChannels = static_cast<uint32_t>(*iter);
         if (channels == supportedChannels) {
-            params.channelCount = *iter;
+            rendererParams_.channelCount = *iter;
             isValidChannels = true;
             break;
         }
     }
     CHECK_AND_RETURN_RET(isValidChannels == true, MSERR_UNSUPPORT_AUD_CHANNEL_NUM);
 
-    params.sampleFormat = AudioStandard::SAMPLE_S16LE;
-    params.encodingType = AudioStandard::ENCODING_PCM;
-    MEDIA_LOGD("SetParameters out, channels:%{public}d, sampleRate:%{public}d", params.channelCount, params.sampleRate);
-    MEDIA_LOGD("audioRenderer SetParams In");
-    CHECK_AND_RETURN_RET(audioRenderer_->SetParams(params) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
-    MEDIA_LOGD("audioRenderer SetParams Out");
+    rendererParams_.sampleFormat = AudioStandard::SAMPLE_S16LE;
+    rendererParams_.encodingType = AudioStandard::ENCODING_PCM;
+    MEDIA_LOGD("SetParameters out, channels:%{public}d, sampleRate:%{public}d",
+        rendererParams_.channelCount, rendererParams_.sampleRate);
     return MSERR_OK;
 }
 

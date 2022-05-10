@@ -72,6 +72,7 @@ void VideoCallbackNapi::QueueAsyncWork(VideoPlayerAsyncContext *context)
         case AsyncWorkType::ASYNC_WORK_PAUSE:
         case AsyncWorkType::ASYNC_WORK_STOP:
         case AsyncWorkType::ASYNC_WORK_RESET:
+        case AsyncWorkType::ASYNC_WORK_AUDIO_RENDERER_INFO:
             contextStateQue_.push(context);
             break;
         case AsyncWorkType::ASYNC_WORK_SEEK:

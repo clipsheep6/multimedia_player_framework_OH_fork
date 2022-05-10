@@ -1189,11 +1189,22 @@ bool GstPlayerCtrl::IsLiveMode() const
 
 bool GstPlayerCtrl::SetAudioRendererInfo(const Format &param)
 {
-    CHECK_AND_RETURN_RET_LOG(audioSink_ != nullptr, false, "audioSink_ is nullptr");
-
     int32_t contentType = 0;
     int32_t streamUsage = 0;
 
+    if (param.GetValueType(PlayerKeys::CONTENT_TYPE) == FORMAT_TYPE_INT32 &&
+        param.GetValueType(PlayerKeys::STREAM_USAGE) == FORMAT_TYPE_INT32 &&
+        param.GetValueType(PlayerKeys::RENDERER_FLAG) == FORMAT_TYPE_INT32) {
+        (void)param.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType);
+        (void)param.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
+        (void)param.GetIntValue(PlayerKeys::RENDERER_FLAG, audioRendererFlag_);
+        audioRendererInfo_ |= (contentType | (static_cast<uint32_t>(streamUsage) <<
+            AudioStandard::RENDERER_STREAM_USAGE_SHIFT));
+        useRendererOption_ = true;
+        return true;
+    }
+
+    CHECK_AND_RETURN_RET_LOG(audioSink_ != nullptr, false, "audioSink_ is nullptr");
     if (param.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType) &&
         param.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage)) {
         int32_t rendererInfo(0);

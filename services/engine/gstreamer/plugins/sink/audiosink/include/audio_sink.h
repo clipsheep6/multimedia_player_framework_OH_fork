@@ -38,6 +38,7 @@ public:
     virtual int32_t Drain() = 0;
     virtual int32_t Flush() = 0;
     virtual int32_t Release() = 0;
+    virtual int32_t SetRendererInfo(int32_t desc, int32_t rendererFlags) = 0;
     virtual int32_t SetParameters(uint32_t bitsPerSample, uint32_t channels, uint32_t sampleRate) = 0;
     virtual int32_t GetParameters(uint32_t &bitsPerSample, uint32_t &channels, uint32_t &sampleRate) = 0;
     virtual int32_t GetMinimumBufferSize(uint32_t &bufferSize) = 0;

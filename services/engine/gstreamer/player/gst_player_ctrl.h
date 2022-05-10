@@ -150,6 +150,9 @@ private:
     int32_t videoWidth_ = 0;
     int32_t videoHeight_ = 0;
     bool isHardWare_ = false;
+    int32_t audioRendererInfo_ = 0;
+    int32_t audioRendererFlag_ = 0;
+    bool useRendererOption_ = false;
 };
 } // namespace Media
 } // namespace OHOS

@@ -73,6 +73,7 @@ napi_value VideoPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("seek", Seek),
         DECLARE_NAPI_FUNCTION("on", On),
         DECLARE_NAPI_FUNCTION("setVolume", SetVolume),
+        DECLARE_NAPI_FUNCTION("setAudioRendererInfo", SetAudioRendererInfo),
         DECLARE_NAPI_FUNCTION("getTrackDescription", GetTrackDescription),
         DECLARE_NAPI_FUNCTION("setSpeed", SetSpeed),
 
@@ -536,6 +537,12 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
     } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_VOLUME) {
         float volume = static_cast<float>(asyncContext->volume);
         ret = player->SetVolume(volume, volume);
+    } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_AUDIO_RENDERER_INFO) {
+        Format format;
+        (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, asyncContext->contentType);
+        (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, asyncContext->streamUsage);
+        (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, asyncContext->rendererFlags);
+        ret = player->SetParameter(format);
     } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_SEEK) {
         PlayerSeekMode seekMode = static_cast<PlayerSeekMode>(asyncContext->seekMode);
         MEDIA_LOGD("seek position %{public}d, seekmode %{public}d", asyncContext->seekPosition, seekMode);
@@ -972,6 +979,55 @@ napi_value VideoPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
     asyncContext.release();
     return result;
+}
+
+napi_value VideoPlayerNapi::SetAudioRendererInfo(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGD("SetAudioRendererInfo In");
+    std::unique_ptr<VideoPlayerAsyncContext> context = std::make_unique<VideoPlayerAsyncContext>(env);
+    context->asyncWorkType = AsyncWorkType::ASYNC_WORK_AUDIO_RENDERER_INFO;
+
+    napi_value jsThis = nullptr;
+    napi_value args[2] = { nullptr };
+    size_t argCount = 2;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        context->SignError(MSERR_EXT_INVALID_VAL, "Failed to napi_get_cb_info");
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_object) {
+        if (!ExtractRendererInfo(env, args[0], context->contentType, context->streamUsage, context->rendererFlags)) {
+            context->SignError(MSERR_EXT_INVALID_VAL, "Illegal argument");
+        }
+    } else {
+        context->SignError(MSERR_EXT_INVALID_VAL, "Illegal argument");
+    }
+
+    context->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    context->deferred = CommonNapi::CreatePromise(env, context->callbackRef, result);
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&context->jsPlayer));
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "SetAudioRendererInfo", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
+        CompleteAsyncWork, static_cast<void *>(context.get()), &context->work));
+    NAPI_CALL(env, napi_queue_async_work(env, context->work));
+    context.release();
+    return result;
+}
+
+bool VideoPlayerNapi::ExtractRendererInfo(napi_env env, napi_value info, int32_t &contentType,
+    int32_t &streamUsage, int32_t &rendererFlags)
+{
+    CHECK_AND_RETURN_RET(info != nullptr, false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, info, "content", contentType) == true, false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, info, "usage", streamUsage) == true, false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, info, "rendererFlags", rendererFlags) == true, false);
+    return true;
 }
 
 napi_value VideoPlayerNapi::On(napi_env env, napi_callback_info info)
