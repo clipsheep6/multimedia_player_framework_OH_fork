@@ -52,6 +52,7 @@ static const std::unordered_map<std::string_view, MetaParseItem> GST_TAG_PARSE_I
     { GST_TAG_DURATION, { INNER_META_KEY_DURATION, G_TYPE_UINT64 } },
     { GST_TAG_BITRATE, { INNER_META_KEY_BITRATE, G_TYPE_UINT } },
     { GST_TAG_IMAGE, { INNER_META_KEY_IMAGE, GST_SAMPLE_TYPE, ImageMetaSetter } },
+    { GST_TAG_IMAGE_ORIENTATION, { INNER_META_KEY_VIDEO_ORIENTATION, G_TYPE_STRING } },
 };
 
 static const std::unordered_map<std::string_view, MetaParseItem> GST_CAPS_PARSE_ITEMS = {
@@ -75,6 +76,12 @@ static const std::unordered_map<std::string_view, std::string_view> FILE_MIME_TY
     { "video/quicktime, variant=(string)iso", FILE_MIMETYPE_VIDEO_MP4 },
     { "video/quicktime, variant=(string)3gpp", FILE_MIMETYPE_VIDEO_MP4 },
     { "video/quicktime, variant=(string)3g2", FILE_MIMETYPE_VIDEO_MP4 },
+    { "video/x-matroska", FILE_MIMETYPE_VIDEO_MKV},  // mkv
+    { "audio/x-matroska", FILE_MIMETYPE_AUDIO_MKV},  // mkv
+    { "video/mpegts", FILE_MIMETYPE_VIDEO_MPEGTS},  // mpeg-ts
+    { "audio/mpegts", FILE_MIMETYPE_AUDIO_MPEGTS},  // mpeg-ts
+    { "video/webm", FILE_MIMETYPE_VIDEO_WEBM},  // webm
+    { "audio/webm", FILE_MIMETYPE_AUDIO_WEBM},  // webm
     { "audio/x-m4a", FILE_MIMETYPE_AUDIO_MP4 },
     { "audio/mpeg", FILE_MIMETYPE_AUDIO_AAC }, // aac
     { "application/x-id3", FILE_MIMETYPE_AUDIO_MP3 }, // mp3
