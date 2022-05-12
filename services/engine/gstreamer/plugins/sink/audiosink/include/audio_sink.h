@@ -45,7 +45,6 @@ public:
     virtual int32_t Write(uint8_t *buffer, size_t size) = 0;
     virtual int32_t GetAudioTime(uint64_t &time) = 0;
     virtual int32_t GetLatency(uint64_t &latency) const = 0;
-    virtual int32_t SetParameter(int32_t &param) = 0;
     virtual int32_t SetRendererInfo(int32_t desc, int32_t rendererFlags) = 0;
     virtual bool Writeable() const;
 };

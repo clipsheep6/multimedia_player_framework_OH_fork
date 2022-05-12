@@ -28,8 +28,6 @@ namespace Media {
 AudioSinkSvImpl::AudioSinkSvImpl()
     : audioRenderer_(nullptr)
 {
-    rendererOptions_.rendererInfo.contentType = AudioStandard::CONTENT_TYPE_MUSIC;;
-    rendererOptions_.rendererInfo.streamUsage = AudioStandard::STREAM_USAGE_MEDIA;
 }
 
 AudioSinkSvImpl::~AudioSinkSvImpl()
@@ -95,31 +93,23 @@ int32_t AudioSinkSvImpl::SetVolume(float volume)
     return MSERR_OK;
 }
 
-int32_t AudioSinkSvImpl::SetParameter(int32_t &param)
-{
-    int32_t contentType = (static_cast<uint32_t>(param) & 0x0000FFFF);
-    int32_t streamUsage = static_cast<uint32_t>(param) >> AudioStandard::RENDERER_STREAM_USAGE_SHIFT;
-
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audioRenderer_ is nullptr");
-
-    AudioStandard::AudioRendererDesc audioRendererDesc;
-    audioRendererDesc.contentType = static_cast<AudioStandard::ContentType>(contentType);
-    audioRendererDesc.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
-
-    int32_t ret = audioRenderer_->SetAudioRendererDesc(audioRendererDesc);
-    CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_UNKNOWN, "audio server SetParameter failed!");
-
-    return MSERR_OK;
-}
-
 int32_t AudioSinkSvImpl::SetRendererInfo(int32_t desc, int32_t rendererFlags)
 {
     int32_t contentType = (static_cast<uint32_t>(desc) & 0x0000FFFF);
     int32_t streamUsage = static_cast<uint32_t>(desc) >> AudioStandard::RENDERER_STREAM_USAGE_SHIFT;
 
-    rendererOptions_.rendererInfo.contentType = static_cast<AudioStandard::ContentType>(contentType);
-    rendererOptions_.rendererInfo.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
-    rendererOptions_.rendererInfo.rendererFlags = rendererFlags;
+    if (audioRenderer_ == nullptr) {
+        rendererOptions_.rendererInfo.contentType = static_cast<AudioStandard::ContentType>(contentType);
+        rendererOptions_.rendererInfo.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
+        rendererOptions_.rendererInfo.rendererFlags = rendererFlags;
+    } else {
+        AudioStandard::AudioRendererDesc audioRendererDesc;
+        audioRendererDesc.contentType = static_cast<AudioStandard::ContentType>(contentType);
+        audioRendererDesc.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
+
+        int32_t ret = audioRenderer_->SetAudioRendererDesc(audioRendererDesc);
+        CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_UNKNOWN, "audio server SetParameter failed!");
+    }
 
     return MSERR_OK;
 }

@@ -195,7 +195,7 @@ static gboolean gst_audio_server_sink_set_audio_renderer_desc(GstAudioServerSink
         return TRUE;
     }
 
-    g_return_val_if_fail(sink->audio_sink->SetParameter(param) == MSERR_OK, FALSE);
+    g_return_val_if_fail(sink->audio_sink->SetRendererInfo(param, sink->flag) == MSERR_OK, FALSE);
     return TRUE;
 }
 
