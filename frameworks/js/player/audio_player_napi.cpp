@@ -801,9 +801,9 @@ napi_value AudioPlayerNapi::SetRendererInfo(napi_env env, napi_callback_info inf
         return undefinedResult;
     }
 
-    if (!CommonNapi::GetPropertyInt32(env, info, PlayerKeys::CONTENT_TYPE, rendererInfo_.contentType) ||
-        !CommonNapi::GetPropertyInt32(env, info, PlayerKeys::STREAM_USAGE, rendererInfo_.streamUsage) ||
-        !CommonNapi::GetPropertyInt32(env, info, PlayerKeys::RENDERER_FLAG, rendererInfo_.rendererFlags)) {
+    if (!CommonNapi::GetPropertyInt32(env, info, "content", rendererInfo_.contentType) ||
+        !CommonNapi::GetPropertyInt32(env, info, "usage", rendererInfo_.streamUsage) ||
+        !CommonNapi::GetPropertyInt32(env, info, "rendererFlags", rendererInfo_.rendererFlags)) {
         player->ErrorCallback(MSERR_EXT_INVALID_VAL);
         return undefinedResult;
     }
@@ -839,9 +839,9 @@ napi_value AudioPlayerNapi::GetRendererInfo(napi_env env, napi_callback_info inf
 
     status = napi_create_object(env, &jsResult);
     CHECK_AND_RETURN_RET(status == napi_ok && jsResult != nullptr, undefinedResult);
-    (void)CommonNapi::AddNumberPropInt32(env, jsResult, PlayerKeys::CONTENT_TYPE, rendererInfo_.contentType);
-    (void)CommonNapi::AddNumberPropInt32(env, jsResult, PlayerKeys::STREAM_USAGE, rendererInfo_.streamUsage);
-    (void)CommonNapi::AddNumberPropInt32(env, jsResult, PlayerKeys::RENDERER_FLAG, rendererInfo_.rendererFlags);
+    (void)CommonNapi::AddNumberPropInt32(env, jsResult, "content", rendererInfo_.contentType);
+    (void)CommonNapi::AddNumberPropInt32(env, jsResult, "usage", rendererInfo_.streamUsage);
+    (void)CommonNapi::AddNumberPropInt32(env, jsResult, "rendererFlags", rendererInfo_.rendererFlags);
 
     MEDIA_LOGD("GetRendererInfo success");
     return jsResult;
