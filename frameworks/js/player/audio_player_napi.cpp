@@ -69,6 +69,7 @@ napi_value AudioPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("dataSrc", GetMediaDataSrc, SetMediaDataSrc),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", GetFdSrc, SetFdSrc),
         DECLARE_NAPI_GETTER_SETTER("loop", GetLoop, SetLoop),
+        DECLARE_NAPI_GETTER_SETTER("audioRendererInfo", SetRendererInfo, GetRendererInfo),
 
         DECLARE_NAPI_GETTER("currentTime", GetCurrentTime),
         DECLARE_NAPI_GETTER("duration", GetDuration),
@@ -114,6 +115,8 @@ napi_value AudioPlayerNapi::Constructor(napi_env env, napi_callback_info info)
 
     playerNapi->env_ = env;
     playerNapi->nativePlayer_ = PlayerFactory::CreatePlayer();
+    playerNapi->rendererInfo_.contentType = AudioStandard::CONTENT_TYPE_MUSIC;
+    playerNapi->rendererInfo_.streamUsage = AudioStandard::STREAM_USAGE_MEDIA;
     if (playerNapi->nativePlayer_ == nullptr) {
         MEDIA_LOGE("failed to CreatePlayer");
     }
@@ -771,6 +774,76 @@ napi_value AudioPlayerNapi::GetLoop(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "napi_get_boolean error");
 
     MEDIA_LOGD("GetSrc success loop Status: %{public}d", loopFlag);
+    return jsResult;
+}
+
+napi_value AudioPlayerNapi::SetRendererInfo(napi_env env, napi_callback_info info)
+{
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+    napi_value jsThis = nullptr;
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    AudioPlayerNapi *player = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&player));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && player != nullptr, undefinedResult, "Failed to retrieve instance");
+
+    napi_valuetype valueType = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        player->ErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    if (!CommonNapi::GetPropertyInt32(env, info, PlayerKeys::CONTENT_TYPE, rendererInfo_.contentType) ||
+        !CommonNapi::GetPropertyInt32(env, info, PlayerKeys::STREAM_USAGE, rendererInfo_.streamUsage) ||
+        !CommonNapi::GetPropertyInt32(env, info, PlayerKeys::RENDERER_FLAG, rendererInfo_.rendererFlags)) {
+        player->ErrorCallback(MSERR_EXT_INVALID_VAL);
+        return undefinedResult;
+    }
+
+    CHECK_AND_RETURN_RET(player->nativePlayer_ != nullptr, undefinedResult);
+    Format format;
+    (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, rendererInfo_.contentType);
+    (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, rendererInfo_.streamUsage);
+    (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererInfo_.rendererFlags);
+    int32_t ret = player->nativePlayer_->SetParameter(format);
+    if (ret != MSERR_OK) {
+        player->ErrorCallback(MSERR_EXT_UNKNOWN);
+        return undefinedResult;
+    }
+
+    MEDIA_LOGD("SetRendererInfo success");
+    return undefinedResult;
+}
+
+napi_value AudioPlayerNapi::GetRendererInfo(napi_env env, napi_callback_info info)
+{
+    napi_value jsThis = nullptr;
+    napi_value jsResult = nullptr;
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    size_t argCount = 0;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    status = napi_create_object(env, &jsResult);
+    CHECK_AND_RETURN_RET(status == napi_ok && jsResult != nullptr, undefinedResult);
+    (void)CommonNapi::AddNumberPropInt32(env, jsResult, PlayerKeys::CONTENT_TYPE, rendererInfo_.contentType);
+    (void)CommonNapi::AddNumberPropInt32(env, jsResult, PlayerKeys::STREAM_USAGE, rendererInfo_.streamUsage);
+    (void)CommonNapi::AddNumberPropInt32(env, jsResult, PlayerKeys::RENDERER_FLAG, rendererInfo_.rendererFlags);
+
+    MEDIA_LOGD("GetRendererInfo success");
     return jsResult;
 }
 

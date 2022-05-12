@@ -48,12 +48,15 @@ public:
     int32_t GetAudioTime(uint64_t &time) override;
     int32_t GetLatency(uint64_t &latency) const override;
     int32_t SetParameter(int32_t &param) override;
+    int32_t SetRendererInfo(int32_t desc, int32_t rendererFlags) override;
     bool Writeable() const override;
 
 private:
     std::unique_ptr<OHOS::AudioStandard::AudioRenderer> audioRenderer_;
     void InitChannelRange(GstCaps *caps) const;
     void InitRateRange(GstCaps *caps) const;
+
+    AudioStandard::AudioRendererOptions rendererOptions_;
 };
 } // namespace Media
 } // namespace OHOS

@@ -17,6 +17,7 @@
 #define AUDIO_PLAYER_NAPI_H_
 
 #include "player.h"
+#include "audio_info.h"
 #include "media_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
@@ -50,6 +51,8 @@ private:
     static napi_value GetFdSrc(napi_env env, napi_callback_info info);
     static napi_value SetLoop(napi_env env, napi_callback_info info);
     static napi_value GetLoop(napi_env env, napi_callback_info info);
+    static napi_value SetRendererInfo(napi_env env, napi_callback_info info);
+    static napi_value GetRendererInfo(napi_env env, napi_callback_info info);
     static napi_value GetCurrentTime(napi_env env, napi_callback_info info);
     static napi_value GetDuration(napi_env env, napi_callback_info info);
     static napi_value GetState(napi_env env, napi_callback_info info);
@@ -68,6 +71,7 @@ private:
     std::string uri_ = "";
     std::vector<Format> audioTrackInfoVec_;
     AVFileDescriptor rawFd_;
+    AudioStandard::AudioRendererInfo rendererInfo_;
 };
 } // namespace Media
 } // namespace OHOS

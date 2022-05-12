@@ -46,7 +46,8 @@ enum {
     PROP_VOLUME,
     PROP_MAX_VOLUME,
     PROP_MIN_VOLUME,
-    PROP_AUDIO_RENDERER_DESC
+    PROP_AUDIO_RENDERER_DESC,
+    PROP_AUDIO_RENDERER_FLAG
 };
 
 #define gst_audio_server_sink_parent_class parent_class
@@ -110,6 +111,11 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
             "Audio Renderer Desc", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_AUDIO_RENDERER_FLAG,
+        g_param_spec_int("audio-renderer-flag", "Audio Renderer Flag",
+            "Audio Renderer Flag", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Audio server sink", "Sink/Audio",
         "Push pcm data to Audio server", "OpenHarmony");
@@ -144,6 +150,8 @@ static void gst_audio_server_sink_init(GstAudioServerSink *sink)
     sink->enable_cache = FALSE;
     sink->frame_after_segment = FALSE;
     g_mutex_init(&sink->render_lock);
+    sink->desc = 0;
+    sink->flag = 0;
 }
 
 static void gst_audio_server_sink_finalize(GObject *object)
@@ -180,16 +188,15 @@ static gboolean gst_audio_server_sink_set_volume(GstAudioServerSink *sink, gfloa
 
 static gboolean gst_audio_server_sink_set_audio_renderer_desc(GstAudioServerSink *sink, gint param)
 {
-    gboolean ret = FALSE;
     g_return_val_if_fail(sink != nullptr, FALSE);
-    g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
+    sink->desc = param;
 
-    if (sink->audio_sink->SetParameter(param) == MSERR_OK) {
-        ret = TRUE;
+    if (sink->audio_sink == nullptr) {
+        return TRUE;
     }
 
-    GST_INFO_OBJECT(sink, "set renderer descriptor finish, ret=%d", ret);
-    return ret;
+    g_return_val_if_fail(sink->audio_sink->SetParameter(param) == MSERR_OK, FALSE);
+    return TRUE;
 }
 
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
@@ -212,6 +219,9 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
                 GST_INFO_OBJECT(sink, "set renderer descriptor success!");
                 g_object_notify(G_OBJECT(sink), "audio-renderer-desc");
             }
+            break;
+        case PROP_AUDIO_RENDERER_FLAG:
+            sink->flag = g_value_get_int(value);
             break;
         default:
             break;
@@ -284,6 +294,8 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
     sink->channels = static_cast<uint32_t>(channels);
     g_return_val_if_fail(sink->audio_sink->SetParameters(sink->bits_per_sample, sink->channels,
         sink->sample_rate) == MSERR_OK, FALSE);
+    g_return_val_if_fail(sink->audio_sink->SetRendererInfo(sink->desc, sink->flag) == MSERR_OK, FALSE);
+    g_return_val_if_fail(sink->audio_sink->Prepare() == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->SetVolume(sink->volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetParameters(sink->bits_per_sample,
         sink->channels, sink->sample_rate) == MSERR_OK, FALSE);
@@ -340,7 +352,6 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     g_return_val_if_fail(sink != nullptr, FALSE);
     sink->audio_sink = OHOS::Media::AudioSinkFactory::CreateAudioSink();
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
-    g_return_val_if_fail(sink->audio_sink->Prepare() == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMaxVolume(sink->max_volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinVolume(sink->min_volume) == MSERR_OK, FALSE);
 

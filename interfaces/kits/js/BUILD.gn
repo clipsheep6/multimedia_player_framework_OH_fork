@@ -41,6 +41,7 @@ ohos_shared_library("media") {
     "//foundation/multimedia/media_standard/frameworks/js/mediacapability",
     "//foundation/multimedia/media_standard/frameworks/js/common",
     "//foundation/multimedia/media_standard/services/utils/include",
+    "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiocommon/include",
     "//third_party/libuv/include",
   ]
 
