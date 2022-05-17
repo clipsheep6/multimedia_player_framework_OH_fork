@@ -442,6 +442,10 @@ void GstPlayerCtrl::Stop()
         gst_object_unref(videoSink_);
         videoSink_ = nullptr;
     }
+    if (decoder_ != nullptr) {
+        gst_object_unref(decoder_);
+        decoder_ = nullptr;
+    }
     if (rateTask_ != nullptr) {
         rateTask_->Cancel();
         rateTask_ = nullptr;
