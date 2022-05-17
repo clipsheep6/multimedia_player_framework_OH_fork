@@ -191,6 +191,7 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
 
     if (metaStr.find("Codec/Decoder/Video/Hardware") != std::string::npos) {
         playerGst->isHardWare_ = true;
+        playerGst->decoder_ = GST_ELEMENT_CAST(gst_object_ref(src));
         if (!playerGst->preparing_) {
             // For hls scene.
             return;
@@ -370,6 +371,9 @@ void GstPlayerCtrl::SeekSync(uint64_t position, const PlayerSeekMode mode)
     CHECK_AND_RETURN_LOG(gstPlayer_ != nullptr, "gstPlayer_ is nullptr");
     // need keep the seek and seek modes consistent.
     g_object_set(gstPlayer_, "seek-mode", static_cast<gint>(ChangeSeekModeToGstFlag(mode)), nullptr);
+    if (isHardWare_ && decoder_ != nullptr) {
+        g_object_set(decoder_, "seeking", true, nullptr);
+    }
     GstClockTime time = static_cast<GstClockTime>(position * MICRO);
     (void)GetPositionInner();
     seeking_ = true;
@@ -378,6 +382,9 @@ void GstPlayerCtrl::SeekSync(uint64_t position, const PlayerSeekMode mode)
     {
         condVarSeekSync_.wait(lock);
         MEDIA_LOGD("Seek finised!");
+        if (isHardWare_ && decoder_ != nullptr) {
+            g_object_set(decoder_, "seeking", false, nullptr);
+        }
     }
 }
 

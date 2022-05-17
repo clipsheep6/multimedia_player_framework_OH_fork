@@ -137,6 +137,7 @@ private:
     std::vector<gulong> signalIds_;
     gulong signalIdVolume_ = 0;
     GstElement *audioSink_ = nullptr;
+    GstElement *decoder_ = nullptr;
     float volume_; // inited at the constructor
     std::shared_ptr<GstAppsrcWarp> appsrcWarp_ = nullptr;
     std::shared_ptr<ITaskHandler> seekTask_ = nullptr;
