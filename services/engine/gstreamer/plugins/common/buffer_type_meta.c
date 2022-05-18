@@ -21,7 +21,7 @@ static gboolean gst_buffer_type_meta_init(GstMeta *meta, gpointer params, GstBuf
     (void)buffer;
     g_return_val_if_fail(meta != NULL, FALSE);
     GstBufferTypeMeta *buffer_meta = (GstBufferTypeMeta *)meta;
-    buffer_meta->type = BUFFER_TYPE_VIR;
+    buffer_meta->type = GST_BUFFER_TYPE_VIR;
     buffer_meta->buf = (intptr_t)0;
     buffer_meta->offset = 0;
     buffer_meta->length = 0;
@@ -115,7 +115,7 @@ GstBufferTypeMeta *gst_buffer_add_buffer_vir_meta(GstBuffer *buffer, intptr_t bu
     buffer_meta = (GstBufferTypeMeta *)gst_buffer_add_meta(buffer, GST_BUFFER_TYPE_META_INFO, NULL);
     g_return_val_if_fail(buffer_meta != NULL, buffer_meta);
 
-    buffer_meta->type = BUFFER_TYPE_VIR;
+    buffer_meta->type = GST_BUFFER_TYPE_VIR;
     buffer_meta->buf = buf;
     buffer_meta->bufferFlag = bufferFlag;
     return buffer_meta;
@@ -130,7 +130,7 @@ GstBufferTypeMeta *gst_buffer_add_buffer_handle_meta(GstBuffer *buffer, intptr_t
     buffer_meta = (GstBufferTypeMeta *)gst_buffer_add_meta(buffer, GST_BUFFER_TYPE_META_INFO, NULL);
     g_return_val_if_fail(buffer_meta != NULL, buffer_meta);
 
-    buffer_meta->type = BUFFER_TYPE_HANDLE;
+    buffer_meta->type = GST_BUFFER_TYPE_HANDLE;
     buffer_meta->buf = buf;
     buffer_meta->fenceFd = fenceFd;
     buffer_meta->bufferFlag = bufferFlag;
@@ -145,7 +145,7 @@ GstBufferTypeMeta *gst_buffer_add_buffer_fd_meta(GstBuffer *buffer, intptr_t buf
     buffer_meta = (GstBufferTypeMeta *)gst_buffer_add_meta(buffer, GST_BUFFER_TYPE_META_INFO, NULL);
     g_return_val_if_fail(buffer_meta != NULL, buffer_meta);
 
-    buffer_meta->type = BUFFER_TYPE_AVSHMEM;
+    buffer_meta->type = GST_BUFFER_TYPE_AVSHMEM;
     buffer_meta->buf = buf;
     buffer_meta->offset = config.offset;
     buffer_meta->length = config.length;
