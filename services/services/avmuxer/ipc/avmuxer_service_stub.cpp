@@ -118,7 +118,7 @@ int32_t AVMuxerServiceStub::SetRotation(int32_t rotation)
     return avmuxerServer_->SetRotation(rotation);
 }
 
-int32_t AVMuxerServiceStub::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
+int32_t AVMuxerServiceStub::AddTrack(const MediaDescription &trackDesc, uint32_t &trackId)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerServer_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");
     return avmuxerServer_->AddTrack(trackDesc, trackId);
@@ -183,7 +183,7 @@ int32_t AVMuxerServiceStub::AddTrack(MessageParcel &data, MessageParcel &reply)
 {
     MediaDescription trackDesc;
     (void)MediaParcel::Unmarshalling(data, trackDesc);
-    int32_t trackId;
+    uint32_t trackId;
     int32_t ret = AddTrack(trackDesc, trackId);
     CHECK_AND_RETURN_RET(reply.WriteInt32(trackId), MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET(reply.WriteInt32(ret), MSERR_UNKNOWN);

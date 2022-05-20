@@ -80,7 +80,7 @@ int32_t AVMuxerClient::SetRotation(int32_t rotation)
     return avmuxerProxy_->SetRotation(rotation);
 }
 
-int32_t AVMuxerClient::AddTrack(const MediaDescription &trackDesc, int32_t &trackId)
+int32_t AVMuxerClient::AddTrack(const MediaDescription &trackDesc, uint32_t &trackId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avmuxerProxy_ != nullptr, MSERR_NO_MEMORY, "AVMuxer Service does not exist");

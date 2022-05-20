@@ -27,17 +27,17 @@ public:
     void RunCase();
 private:
     bool PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t frameSize,
-        int32_t i, int32_t trackId, int64_t stamp);
+        int32_t i, uint32_t trackId, int64_t stamp);
     void WriteTrackSample();
     void SetParameter(const std::string &type);
     bool AddTrackVideo(std::string &videoType);
     bool AddTrackAudio(std::string &audioType);
     void DoNext();
     std::shared_ptr<AVMuxer> avmuxer_;
-    int32_t videoTrackId_ = 0;
-    int32_t audioTrackId_ = 0;
-    int32_t videoTimeDuration_ = 0;
-    int32_t audioTimeDuration_ = 0;
+    uint32_t videoTrackId_ = 0;
+    uint32_t audioTrackId_ = 0;
+    uint32_t videoTimeDuration_ = 0;
+    uint32_t audioTimeDuration_ = 0;
     uint32_t videoFrameNum_ = 0;
     uint32_t audioFrameNum_ = 0;
     const int32_t *videoFrameArray_ = nullptr;
