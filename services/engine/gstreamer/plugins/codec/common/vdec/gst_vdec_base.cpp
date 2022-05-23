@@ -680,11 +680,13 @@ static gboolean gst_vdec_base_prepare(GstVdecBase *self)
     // Negotiate with downstream and get format
     g_return_val_if_fail(gst_vdec_base_negotiate(self), FALSE);
 
-    // Check allocate input buffer already
-    gst_vdec_base_check_allocate_input(self);
+    if (!gst_vdec_base_is_flushing(self)) {
+        // Check allocate input buffer already
+        gst_vdec_base_check_allocate_input(self);
 
-    // To allocate output memory, we need to give the size
-    g_return_val_if_fail(gst_vdec_base_allocate_out_buffers(self), FALSE);
+        // To allocate output memory, we need to give the size
+        g_return_val_if_fail(gst_vdec_base_allocate_out_buffers(self), FALSE);
+    }
 
     return TRUE;
 }
@@ -833,13 +835,20 @@ static GstFlowReturn gst_vdec_base_handle_frame(GstVideoDecoder *decoder, GstVid
         self->input.first_frame = FALSE;
     }
     if (gst_vdec_base_is_flushing(self)) {
+        GST_VIDEO_DECODER_STREAM_UNLOCK(self);
         return GST_FLOW_FLUSHING;
     }
     gst_vdec_base_clean_all_frames(decoder);
     if (!self->prepared) {
         if (!gst_vdec_base_prepare(self)) {
             GST_WARNING_OBJECT(self, "hdi video dec enable failed");
+            GST_VIDEO_DECODER_STREAM_UNLOCK(self);
             return GST_FLOW_ERROR;
+        }
+
+        if (gst_vdec_base_is_flushing(self)) {
+            GST_VIDEO_DECODER_STREAM_UNLOCK(self);
+            return GST_FLOW_FLUSHING;
         }
         self->prepared = TRUE;
     }
@@ -852,6 +861,7 @@ static GstFlowReturn gst_vdec_base_handle_frame(GstVideoDecoder *decoder, GstVid
     }
     if (gst_pad_get_task_state(pad) != GST_TASK_STARTED &&
         gst_pad_start_task(pad, (GstTaskFunction)gst_vdec_base_loop, decoder, nullptr) != TRUE) {
+        GST_VIDEO_DECODER_STREAM_UNLOCK(self);
         return GST_FLOW_ERROR;
     }
     GST_VIDEO_DECODER_STREAM_UNLOCK(self);
@@ -1341,6 +1351,10 @@ static gboolean gst_vdec_base_event(GstVideoDecoder *decoder, GstEvent *event)
         case GST_EVENT_FLUSH_START:
             {
                 GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: flush start");
+                if (!self->prepared) {
+                   gst_vdec_base_set_flushing(self, TRUE);
+                   break;
+                }
                 GST_VIDEO_DECODER_STREAM_LOCK(self);
                 gst_vdec_base_set_flushing(self, TRUE);
                 self->decoder_start = FALSE;
