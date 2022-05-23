@@ -97,6 +97,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_RESOLUTION_CHANGE,
     /* return multiqueue buffering time. */
     INFO_TYPE_BUFFERING_UPDATE,
+    /* return hls bitrate. */
+    INFO_TYPE_BITRATE,
     /* return the message with extra information in format. */
     INFO_TYPE_EXTRA_FORMAT
 };
@@ -401,6 +403,17 @@ public:
      * @version 1.0
      */
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
+
+    /**
+     * @brief set the bit rate use for hls player
+     *
+     * @param bitRate the bit rate.
+     * @return Returns {@link MSERR_OK} if the bit rate is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
 
     /**
      * @brief Method to set the surface.
