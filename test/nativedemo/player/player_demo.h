@@ -52,7 +52,7 @@ private:
     void Seek(const std::string &cmd);
     void SetLoop(const std::string &cmd);
     void SetPlaybackSpeed(const std::string &cmd) const;
-    _INLINE_VARIABLES_SUPPORTED SelectBitRate(const std::string &cmd) const;
+    void SelectBitRate(const std::string &cmd) const;
     int32_t GetPlaying();
     int32_t GetLooping();
     void GetCurrentTime();
