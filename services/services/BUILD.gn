@@ -53,7 +53,7 @@ config("media_service_config") {
     "avmuxer/ipc",
     "avmuxer/server",
     "//base/security/access_token/interfaces/innerkits/access_token/include",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara/include",
+    "//base/startup/init_lite/interfaces/innerkits/include/syspara",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
     "//foundation/multimedia/media_standard/services/include",
     "//foundation/multimedia/media_standard/services/services/factory",
@@ -109,7 +109,7 @@ ohos_shared_library("media_service") {
   ]
 
   deps = [
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//foundation/graphic/graphic/frameworks/surface:surface",
     "//foundation/multimedia/media_standard/services/utils:media_format",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",

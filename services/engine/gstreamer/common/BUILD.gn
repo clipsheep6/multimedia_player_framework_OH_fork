@@ -71,7 +71,7 @@ ohos_static_library("media_engine_gst_common") {
 
   deps = [
     ":media_gst_dfx",
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//foundation/multimedia/media_standard/services/utils:media_format",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
     "//third_party/glib:glib",
@@ -132,7 +132,7 @@ ohos_static_library("media_gst_dfx") {
   configs = [ ":media_gst_dfx_config" ]
 
   deps = [
-    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
+    "//base/startup/init_lite/interfaces/innerkits:libbegetutil",
     "//foundation/multimedia/media_standard/services/utils:media_format",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
     "//third_party/glib:glib",
