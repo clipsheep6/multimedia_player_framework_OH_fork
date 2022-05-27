@@ -59,6 +59,12 @@ std::shared_ptr<AVSharedMemory> AVSharedMemoryBase::CreateFromRemote(
     return memory;
 }
 
+void AVSharedMemoryBase::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    dfxClassHelper_.Init(this, "AVSharedMemoryBase", dfxNode_);
+}
+
 AVSharedMemoryBase::AVSharedMemoryBase(int32_t size, uint32_t flags, const std::string &name)
     : base_(nullptr), size_(size), flags_(flags), name_(name), fd_(-1)
 {

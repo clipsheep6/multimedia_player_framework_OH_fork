@@ -27,7 +27,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_consumer_surface_pool_debug_category);
 
 struct _GstConsumerSurfacePoolPrivate {
     sptr<Surface> consumer_surface;
-    guint available_buf_count;
+    OHOS::Media::DfxValHelper<gint> available_buf_count;
     GMutex pool_lock;
     GCond buffer_available_con;
     gboolean flushing;
@@ -38,6 +38,8 @@ struct _GstConsumerSurfacePoolPrivate {
     guint32 max_frame_rate;
     guint64 pre_timestamp;
     GstBuffer *cache_buffer;
+    std::shared_ptr<OHOS::Media::DfxNode> dfx_node;
+    OHOS::Media::DfxClassHelper dfx_class_helper;
 };
 
 enum {
@@ -45,6 +47,7 @@ enum {
     PROP_SUSPEND,
     PROP_REPEAT,
     PROP_MAX_FRAME_RATE,
+    PROP_DFX_NODE
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfacePool, gst_consumer_surface_pool, GST_TYPE_VIDEO_BUFFER_POOL);
@@ -112,6 +115,8 @@ static void gst_consumer_surface_pool_finalize(GObject *obj)
         }
         priv->consumer_surface = nullptr;
     }
+    priv->dfx_node = nullptr;
+    priv->dfx_class_helper.DeInit();
     g_mutex_clear(&priv->pool_lock);
     g_cond_clear(&priv->buffer_available_con);
     G_OBJECT_CLASS(parent_class)->finalize(obj);
@@ -138,6 +143,10 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
         g_param_spec_uint("max-framerate", "Max frame rate", "Max frame rate",
             0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobjectClass, PROP_DFX_NODE,
+        g_param_spec_pointer("dfx-node", "Dfx node", "Dfx node",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     poolClass->get_options = gst_consumer_surface_pool_get_options;
     poolClass->set_config = gst_consumer_surface_pool_set_config;
     poolClass->release_buffer = gst_consumer_surface_pool_release_buffer;
@@ -148,12 +157,20 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
     poolClass->flush_stop = gst_consumer_surface_pool_flush_stop;
 }
 
+static void gst_consumer_surface_pool_init_dfx_node(GstConsumerSurfacePool *pool)
+{
+    auto priv = pool->priv;
+    priv->dfx_class_helper.Init(pool, "surfacepool", priv->dfx_node);
+    priv->available_buf_count.Init(priv->dfx_node, "available buf count");
+}
+
 static void gst_consumer_surface_pool_set_property(GObject *object, guint id, const GValue *value, GParamSpec *pspec)
 {
     (void)pspec;
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(object);
     g_return_if_fail(surfacepool != nullptr && value != nullptr);
     auto priv = surfacepool->priv;
+    g_return_if_fail(priv != nullptr);
 
     g_mutex_lock(&priv->pool_lock);
     ON_SCOPE_EXIT(0) { g_mutex_unlock(&priv->pool_lock); };
@@ -171,6 +188,11 @@ static void gst_consumer_surface_pool_set_property(GObject *object, guint id, co
             break;
         case PROP_MAX_FRAME_RATE:
             priv->max_frame_rate = g_value_get_uint(value);
+            break;
+        case PROP_DFX_NODE:
+            priv->dfx_node =
+                *(reinterpret_cast<std::shared_ptr<OHOS::Media::DfxNode> *>(g_value_get_boolean(value)));
+            gst_consumer_surface_pool_init_dfx_node(surfacepool);
             break;
         default:
             break;
@@ -360,7 +382,7 @@ static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *p
         g_cond_signal(&priv->buffer_available_con);
     }
     pool->priv->available_buf_count++;
-    GST_DEBUG_OBJECT(pool, "Available buffer count %u", pool->priv->available_buf_count);
+    GST_DEBUG_OBJECT(pool, "Available buffer count %u", pool->priv->available_buf_count.GetValue());
 }
 
 void gst_consumer_surface_pool_set_surface(GstBufferPool *pool, sptr<Surface> &consumer_surface)

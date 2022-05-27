@@ -19,6 +19,7 @@
 #include <string>
 #include "nocopyable.h"
 #include "avsharedmemory.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -108,6 +109,8 @@ public:
         return (base_ != nullptr) ? flags_ : 0;
     }
 
+    void SetDfxNode(const std::shared_ptr<DfxNode> &node);
+
 protected:
     AVSharedMemoryBase(int32_t fd, int32_t size, uint32_t flags, const std::string &name);
 
@@ -120,6 +123,8 @@ private:
     uint32_t flags_;
     std::string name_;
     int32_t fd_;
+    std::shared_ptr<DfxNode> dfxNode_;
+    DfxClassHelper dfxClassHelper_;
 };
 } // namespace Media
 } // namespace OHOS

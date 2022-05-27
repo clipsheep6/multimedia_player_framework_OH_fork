@@ -41,6 +41,7 @@ AVCodecEngineCtrl::~AVCodecEngineCtrl()
 int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::string &name)
 {
     MEDIA_LOGD("Enter Init");
+    DfxFuncHelper("AVCodecEngineCtrl::Init", dfxNode_);
     codecType_ = type;
     isUseSoftWare_ = useSoftware;
     gstPipeline_ = GST_PIPELINE_CAST(gst_object_ref_sink(gst_pipeline_new("codec-pipeline")));
@@ -55,6 +56,8 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
 
     gboolean ret = gst_bin_add(GST_BIN_CAST(gstPipeline_), codecBin_);
     CHECK_AND_RETURN_RET(ret == TRUE, MSERR_NO_MEMORY);
+    std::shared_ptr<DfxNode> node = DfxNodeManager::GetInstance().CreateChildDfxNode(dfxNode_, "CodecBin");
+    g_object_set(codecBin_, "dfx-node", &node, nullptr);
 
     g_object_set(codecBin_, "use-software", static_cast<gboolean>(useSoftware), nullptr);
     g_object_set(codecBin_, "type", static_cast<int32_t>(type), nullptr);
@@ -70,9 +73,16 @@ int32_t AVCodecEngineCtrl::Init(AVCodecType type, bool useSoftware, const std::s
     return MSERR_OK;
 }
 
+void AVCodecEngineCtrl::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    dfxClassHelper_.Init(this, "AVCodecEngineCtrl", dfxNode_);
+}
+
 int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
     std::shared_ptr<ProcessorConfig> outputConfig)
 {
+    DfxFuncHelper("AVCodecEngineCtrl::Prepare", dfxNode_);
     CHECK_AND_RETURN_RET(inputConfig != nullptr && outputConfig != nullptr, MSERR_UNKNOWN);
     if (src_ == nullptr) {
         MEDIA_LOGD("Use buffer src");
@@ -115,6 +125,7 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
 
 int32_t AVCodecEngineCtrl::Start()
 {
+    DfxFuncHelper("AVCodecEngineCtrl::Start", dfxNode_);
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
 
     CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
@@ -139,6 +150,7 @@ int32_t AVCodecEngineCtrl::Start()
 
 int32_t AVCodecEngineCtrl::Stop()
 {
+    DfxFuncHelper("AVCodecEngineCtrl::Stop", dfxNode_);
     if (!isStart_) {
         return MSERR_OK;
     }
@@ -160,6 +172,7 @@ int32_t AVCodecEngineCtrl::Stop()
 
 int32_t AVCodecEngineCtrl::Flush()
 {
+    DfxFuncHelper("AVCodecEngineCtrl::Flush", dfxNode_);
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
 
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
@@ -187,6 +200,7 @@ int32_t AVCodecEngineCtrl::Flush()
 
 int32_t AVCodecEngineCtrl::Release()
 {
+    DfxFuncHelper("AVCodecEngineCtrl::Release", dfxNode_);
     if (gstPipeline_ != nullptr) {
         CHECK_AND_RETURN_RET(Stop() == MSERR_OK, MSERR_UNKNOWN);
         (void)gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_NULL);
@@ -218,6 +232,7 @@ void AVCodecEngineCtrl::SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs)
 
 sptr<Surface> AVCodecEngineCtrl::CreateInputSurface(std::shared_ptr<ProcessorConfig> inputConfig)
 {
+    DfxFuncHelper("AVCodecEngineCtrl::CreateInputSurface", dfxNode_);
     CHECK_AND_RETURN_RET(codecType_ == AVCODEC_TYPE_VIDEO_ENCODER, nullptr);
     if (src_ == nullptr) {
         MEDIA_LOGD("Use surface src");
@@ -237,6 +252,7 @@ sptr<Surface> AVCodecEngineCtrl::CreateInputSurface(std::shared_ptr<ProcessorCon
 
 int32_t AVCodecEngineCtrl::SetOutputSurface(sptr<Surface> surface)
 {
+    DfxFuncHelper("AVCodecEngineCtrl::SetOutputSurface", dfxNode_);
     CHECK_AND_RETURN_RET(codecType_ == AVCODEC_TYPE_VIDEO_DECODER, MSERR_INVALID_OPERATION);
     if (sink_ == nullptr) {
         MEDIA_LOGD("Use surface sink");
@@ -262,12 +278,14 @@ int32_t AVCodecEngineCtrl::SetOutputSurface(sptr<Surface> surface)
 
 std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetInputBuffer(uint32_t index)
 {
+    DfxFuncHelper("AVCodecEngineCtrl::GetInputBuffer", dfxNode_);
     CHECK_AND_RETURN_RET(src_ != nullptr, nullptr);
     return src_->GetInputBuffer(index);
 }
 
 int32_t AVCodecEngineCtrl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
+    DfxFuncHelper("AVCodecEngineCtrl::QueueInputBuffer", dfxNode_);
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
     int32_t ret = src_->QueueInputBuffer(index, info, flag);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
@@ -282,6 +300,7 @@ int32_t AVCodecEngineCtrl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
 
 std::shared_ptr<AVSharedMemory> AVCodecEngineCtrl::GetOutputBuffer(uint32_t index)
 {
+    DfxFuncHelper(__func__, dfxNode_);
     CHECK_AND_RETURN_RET(sink_ != nullptr, nullptr);
     return sink_->GetOutputBuffer(index);
 }
@@ -294,6 +313,7 @@ int32_t AVCodecEngineCtrl::ReleaseOutputBuffer(uint32_t index, bool render)
 
 int32_t AVCodecEngineCtrl::SetParameter(const Format &format)
 {
+    DfxFuncHelper(__func__, dfxNode_);
     CHECK_AND_RETURN_RET(src_ != nullptr, MSERR_UNKNOWN);
     CHECK_AND_RETURN_RET(src_->SetParameter(format) == MSERR_OK, MSERR_UNKNOWN);
 

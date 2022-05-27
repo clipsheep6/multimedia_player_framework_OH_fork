@@ -53,6 +53,7 @@ AVCodecServer::AVCodecServer()
 
 AVCodecServer::~AVCodecServer()
 {
+    DfxNodeManager::GetInstance().SaveFinishDfxNode(dfxNode_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -60,9 +61,12 @@ int32_t AVCodecServer::Init()
 {
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_AVCODEC);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_AVCODEC_ENGINE_FAILED, "failed to get factory");
+    dfxNode_ = DfxNodeManager::GetInstance().CreateDfxNode("AVCodecServer");
     codecEngine_ = engineFactory->CreateAVCodecEngine();
     CHECK_AND_RETURN_RET_LOG(codecEngine_ != nullptr, MSERR_CREATE_AVCODEC_ENGINE_FAILED,
         "Failed to create codec engine");
+    codecEngine_->SetDfxNode(dfxNode_);
+    status_.Init(dfxNode_, "Status");
     status_ = AVCODEC_INITIALIZED;
     BehaviorEventWrite(GetStatusDescription(status_), "AVCodec");
     return MSERR_OK;
@@ -264,17 +268,18 @@ int32_t AVCodecServer::DumpInfo(int32_t fd)
 {
     std::string dumpString;
     dumpString += "In AVCodecServer::DumpInfo\n";
-    dumpString += "Current AVCodecServer state is: " + std::to_string(status_) + "\n";
+    dumpString += "Current AVCodecServer state is: \n";
     if (lastErrMsg_.size() != 0) {
         dumpString += "AVCodecServer last error is: " + lastErrMsg_ + "\n";
     }
+    DfxNodeManager::GetInstance().DumpDfxNode(dfxNode_, dumpString);
     dumpString += config_.Stringify();
     write(fd, dumpString.c_str(), dumpString.size());
 
     return MSERR_OK;
 }
 
-const std::string &AVCodecServer::GetStatusDescription(OHOS::Media::AVCodecServer::AVCodecStatus status)
+const std::string &AVCodecServer::GetStatusDescription(DfxValHelper<OHOS::Media::AVCodecServer::AVCodecStatus> status)
 {
     static const std::string ILLEGAL_STATE = "PLAYER_STATUS_ILLEGAL";
     if (status < OHOS::Media::AVCodecServer::AVCODEC_UNINITIALIZED ||
@@ -282,7 +287,7 @@ const std::string &AVCodecServer::GetStatusDescription(OHOS::Media::AVCodecServe
         return ILLEGAL_STATE;
     }
 
-    return AVCODEC_STATE_MAP.find(status)->second;
+    return AVCODEC_STATE_MAP.find(status.GetValue())->second;
 }
 
 void AVCodecServer::OnError(int32_t errorType, int32_t errorCode)
@@ -293,6 +298,7 @@ void AVCodecServer::OnError(int32_t errorType, int32_t errorCode)
     if (codecCb_ == nullptr) {
         return;
     }
+    DfxNodeManager::GetInstance().SaveErrorDfxNode(dfxNode_);
     codecCb_->OnError(static_cast<AVCodecErrorType>(errorType), errorCode);
 }
 

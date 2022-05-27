@@ -64,6 +64,8 @@ config("media_service_config") {
     "//utils/native/base/include",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//foundation/multimedia/media_standard/services/engine/common/avcodeclist",
+    "//foundation/multimedia/media_standard/services/utils",
+    "//third_party/glib/glibmemdfx",
   ]
 
   if (target_cpu == "arm") {
@@ -114,6 +116,7 @@ ohos_shared_library("media_service") {
     "//foundation/multimedia/media_standard/services/utils:media_format",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
     "//utils/native/base:utils",
+    "//third_party/glib:g_mem_dfx",
   ]
 
   external_deps = [

@@ -56,6 +56,8 @@ struct _GstShMemPool {
     gboolean end;
     gchar *debugName;
     std::shared_ptr<OHOS::Media::AVSharedMemoryPool> avshmempool;
+    std::shared_ptr<OHOS::Media::DfxNode> dfxNode;
+    OHOS::Media::DfxClassHelper dfxClassHelper;
 };
 
 struct _GstShMemPoolClass {
