@@ -151,6 +151,16 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
     }
 }
 
+static void gst_vdec_base_init_after(GstVdecBase *self)
+{
+    self->input_need_copy = FALSE;
+    GstVdecBaseClass *base_class = GST_VDEC_BASE_GET_CLASS(self);
+    g_return_if_fail(base_class != nullptr);
+    if (base_class->input_need_copy != nullptr) {
+        self->input_need_copy = base_class->input_need_copy();
+    }
+}
+
 static void gst_vdec_base_init(GstVdecBase *self)
 {
     GST_DEBUG_OBJECT(self, "Init");
@@ -206,6 +216,7 @@ static void gst_vdec_base_init(GstVdecBase *self)
     self->out_buffer_max_cnt = DEFAULT_MAX_QUEUE_SIZE;
     self->pre_init_pool = FALSE;
     self->performance_mode = FALSE;
+    gst_vdec_base_init_after(self);
 }
 
 static void gst_vdec_base_finalize(GObject *object)
@@ -665,7 +676,7 @@ static gboolean gst_vdec_base_allocate_out_buffers(GstVdecBase *self)
     std::vector<GstBuffer*> buffers;
     self->coding_outbuf_cnt = self->out_buffer_cnt;
     for (guint i = 0; i < self->out_buffer_cnt; ++i) {
-        GST_DEBUG_OBJECT(self, "Allocate output buffer %d", i);
+        GST_ERROR_OBJECT(self, "Allocate output buffer %d", i);
         GstBuffer *buffer = gst_video_decoder_allocate_output_buffer(GST_VIDEO_DECODER(self));
         if (buffer == nullptr) {
             GST_WARNING_OBJECT(self, "Allocate buffer is nullptr");
@@ -829,13 +840,50 @@ static void gst_vdec_base_get_frame_pts(GstVdecBase *self, GstVideoCodecFrame *f
     g_mutex_unlock(&self->lock);
 }
 
+static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstBuffer *src_buffer)
+{
+    GstBuffer* dts_buffer;
+    GstBufferPool *pool = reinterpret_cast<GstBufferPool *>(gst_object_ref(self->inpool));
+    ON_SCOPE_EXIT(0) { gst_object_unref(pool); };
+    GstFlowReturn flow_ret = gst_buffer_pool_acquire_buffer(pool, &dts_buffer, nullptr);
+    ON_SCOPE_EXIT(1) { gst_buffer_unref(dts_buffer); };
+    if (flow_ret != GST_FLOW_OK || dts_buffer == nullptr) {
+        GST_ERROR_OBJECT(self, "Acquire buffer is nullptr");
+        return GST_CODEC_FLUSH;
+    }
+    GstMapInfo dts_map = GST_MAP_INFO_INIT;
+    if (gst_buffer_map(dts_buffer, &dts_map, GST_MAP_WRITE) != TRUE) {
+        return GST_CODEC_ERROR;
+    }
+    ON_SCOPE_EXIT(2) { gst_buffer_unmap(dts_buffer, &dts_map); };
+    GstMapInfo src_map = GST_MAP_INFO_INIT;
+    if (gst_buffer_map(src_buffer, &src_map, GST_MAP_READ) != TRUE) {
+        return GST_CODEC_ERROR;
+    }
+    ON_SCOPE_EXIT(3) { gst_buffer_unmap(src_buffer, &src_map); };
+
+    auto ret = memcpy_s(dts_map.data, dts_map.size, src_map.data, src_map.size);
+    g_return_val_if_fail(ret == EOK, GST_CODEC_ERROR);
+    CANCEL_SCOPE_EXIT_GUARD(2);
+    CANCEL_SCOPE_EXIT_GUARD(3);
+    gst_buffer_unmap(dts_buffer, &dts_map);
+    gst_buffer_unmap(src_buffer, &src_map);
+    gint codec_ret = self->decoder->PushInputBuffer(dts_buffer);
+    return codec_ret;
+}
+
 static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, GstVideoCodecFrame *frame)
 {
     GstVdecBase *self = GST_VDEC_BASE(decoder);
     gst_vdec_debug_input_time(self);
     gst_vdec_base_dump_input_buffer(self, frame->input_buffer);
     gst_vdec_base_get_frame_pts(self, frame);
-    gint codec_ret = self->decoder->PushInputBuffer(frame->input_buffer);
+    gint codec_ret = GST_CODEC_OK;
+    if (self->input_need_copy) {
+        codec_ret = gst_vdec_base_push_input_buffer_with_copy(self, frame->input_buffer);
+    } else {
+        codec_ret = self->decoder->PushInputBuffer(frame->input_buffer);
+    }
     GST_VIDEO_DECODER_STREAM_LOCK(self);
     GstFlowReturn ret = GST_FLOW_OK;
     switch (codec_ret) {
@@ -1434,7 +1482,6 @@ static GstBufferPool *gst_vdec_base_new_in_shmem_pool(GstVdecBase *self, GstCaps
     g_return_val_if_fail(pool != nullptr, nullptr);
     ON_SCOPE_EXIT(0) { gst_object_unref(pool); };
     g_return_val_if_fail(self->input.allocator != nullptr, nullptr);
-
     self->input.av_shmem_pool = std::make_shared<OHOS::Media::AVSharedMemoryPool>("vdec_in");
     (void)gst_shmem_pool_set_avshmempool(pool, self->input.av_shmem_pool);
     (void)gst_shmem_allocator_set_pool(self->input.allocator, self->input.av_shmem_pool);
