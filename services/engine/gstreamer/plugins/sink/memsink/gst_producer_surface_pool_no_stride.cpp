@@ -29,6 +29,8 @@ namespace {
         { GST_VIDEO_FORMAT_RGBA, PIXEL_FMT_RGBA_8888 },
         { GST_VIDEO_FORMAT_NV21, PIXEL_FMT_YCRCB_420_SP },
         { GST_VIDEO_FORMAT_NV12, PIXEL_FMT_YCBCR_420_SP },
+        { GST_VIDEO_FORMAT_NV16, PIXEL_FMT_YCBCR_422_SP },
+        { GST_VIDEO_FORMAT_NV61, PIXEL_FMT_YCRCB_422_SP },
         { GST_VIDEO_FORMAT_I420, PIXEL_FMT_YCBCR_420_P },
     };
     constexpr int32_t TIME_VAL_US = 1000000;
@@ -541,8 +543,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
         gst_buffer_add_video_meta(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
             GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info));
     }
-
-    GstBufferHandleConfig config = { memory->fence, 0, 0, 0 };
+    GstBufferHandleConfig config = { sizeof(buffer_handle), memory->fence, 0, 0, 0 };
     gst_buffer_add_buffer_handle_meta(*buffer, reinterpret_cast<intptr_t>(buffer_handle), config);
     return GST_FLOW_OK;
 }
