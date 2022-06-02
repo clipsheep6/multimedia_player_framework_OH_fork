@@ -14,7 +14,7 @@
  */
 
 #include "avcodec_engine_gst_impl.h"
-#include "avcodeclist_engine_gst_impl.h"
+#include "avcodeclist_engine_impl.h"
 #include "media_errors.h"
 #include "media_log.h"
 
@@ -249,7 +249,7 @@ int32_t AVCodecEngineGstImpl::SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs
 std::string AVCodecEngineGstImpl::FindMimeTypeByName(AVCodecType type, const std::string &name)
 {
     std::string mimeType = "error";
-    auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
+    auto codecList = std::make_unique<AVCodecListEngineImpl>();
     CHECK_AND_RETURN_RET(codecList != nullptr, mimeType);
 
     std::vector<CapabilityData> data = codecList->GetCodecCapabilityInfos();
@@ -269,7 +269,7 @@ std::string AVCodecEngineGstImpl::FindMimeTypeByName(AVCodecType type, const std
 int32_t AVCodecEngineGstImpl::HandleMimeType(AVCodecType type, const std::string &name)
 {
     int32_t ret = MSERR_OK;
-    auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
+    auto codecList = std::make_unique<AVCodecListEngineImpl>();
     CHECK_AND_RETURN_RET(codecList != nullptr, MSERR_NO_MEMORY);
 
     std::string pluginName = "";
@@ -317,7 +317,7 @@ int32_t AVCodecEngineGstImpl::HandlePluginName(AVCodecType type, const std::stri
 
 int32_t AVCodecEngineGstImpl::QueryIsSoftPlugin(const std::string &name, bool &isSoftware)
 {
-    auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
+    auto codecList = std::make_unique<AVCodecListEngineImpl>();
     CHECK_AND_RETURN_RET(codecList != nullptr, MSERR_NO_MEMORY);
 
     std::vector<CapabilityData> data = codecList->GetCodecCapabilityInfos();

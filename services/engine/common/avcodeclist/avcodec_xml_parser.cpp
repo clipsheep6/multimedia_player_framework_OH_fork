@@ -99,6 +99,7 @@ const std::unordered_map<std::string, int> AUDIO_FORMAT_MAP = {
     {"S16LE", AudioStandard::SAMPLE_S16LE},
     {"S24LE", AudioStandard::SAMPLE_S24LE},
     {"S32LE", AudioStandard::SAMPLE_S32LE},
+    {"F32LE", AudioStandard::SAMPLE_F32LE},
 };
 
 const std::unordered_map<std::string, int> BITRATE_MODE_MAP = {

@@ -22,10 +22,10 @@
 
 namespace OHOS {
 namespace Media {
-class __attribute__((visibility("default"))) AVCodecListEngineGstImpl : public IAVCodecListEngine, public NoCopyable {
+class __attribute__((visibility("default"))) AVCodecListEngineImpl : public IAVCodecListEngine, public NoCopyable {
 public:
-    AVCodecListEngineGstImpl();
-    ~AVCodecListEngineGstImpl();
+    AVCodecListEngineImpl();
+    ~AVCodecListEngineImpl();
     std::string FindVideoDecoder(const Format &format) override;
     std::string FindVideoEncoder(const Format &format) override;
     std::string FindAudioDecoder(const Format &format) override;
@@ -46,4 +46,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // AVCODECLIST_ENGINE_GST_IMPL_H
+#endif // AVCODECLIST_ENGINE_IMPL_H
