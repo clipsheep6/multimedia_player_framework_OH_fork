@@ -54,6 +54,8 @@ struct _GstCodecBin {
     gboolean need_parser;
     gboolean is_input_surface;
     gboolean is_output_surface;
+    guint bit_mode;
+    guint profile;
 };
 
 struct _GstCodecBinClass {

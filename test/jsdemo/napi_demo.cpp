@@ -31,6 +31,7 @@ namespace OHOS {
 namespace Media {
 thread_local napi_ref NapiDemo::constructor_ = nullptr;
 const std::string CLASS_NAME = "MediaTest";
+constexpr uint32_t SEC_TO_NS = 1000000000;
 
 NapiDemo::NapiDemo()
 {
@@ -160,6 +161,7 @@ napi_value NapiDemo::StartStream(napi_env env, napi_callback_info info)
 
     if (napiDemo->bufferThread_ != nullptr) {
         napiDemo->isStart_.store(false);
+        napiDemo->isSetPts_.store(false);
         napiDemo->bufferThread_->join();
         napiDemo->bufferThread_.reset();
         napiDemo->bufferThread_ = nullptr;
@@ -335,9 +337,16 @@ std::string NapiDemo::GetStringArgument(napi_env env, napi_value value)
     return strValue;
 }
 
+uint64_t NapiDemo::GetPts()
+{
+    struct timespec timestamp = {0, 0};
+    clock_gettime(CLOCK_MONOTONIC, &timestamp);
+    uint64_t time = (uint64_t)timestamp.tv_sec * SEC_TO_NS + (uint64_t)timestamp.tv_nsec;
+    return time;
+}
+
 void NapiDemo::BufferLoop()
 {
-    pts_ = 0;
     color_ = 0xFF;
     count_ = 0;
     CHECK_AND_RETURN(frameRate_ > 0);
@@ -378,9 +387,17 @@ void NapiDemo::BufferLoop()
             (void)extraData->ExtraSet("endOfStream", false);
         }
 
-        (void)extraData->ExtraSet("timeStamp", pts_);
+        if (!isSetPts_.load()) {
+            pts_ = (int64_t)(GetPts());
+            isSetPts_.store(true);
+        }
 
+        MEDIA_LOGD("pts_ %{public}lld", pts_);
+        extraData->ExtraSet("dataSize", static_cast<int32_t>(bufferSize));
+        extraData->ExtraSet("timeStamp", pts_);
+        extraData->ExtraSet("isKeyFrame", isKeyFrame_);
         count_++;
+        (count_ % frameRate_) == 0 ? (isKeyFrame_ = 1) : (isKeyFrame_ = 0);
         color_ = color_ <= 0 ? 0xFF : (color_ - 1);
         pts_ += interval;
 
@@ -389,6 +406,8 @@ void NapiDemo::BufferLoop()
         MEDIA_LOGD("FlushBuffer %{public}d", count_);
         (void)producerSurface_->FlushBuffer(buffer, -1, flushConfig_);
     }
+
+    pts_ = 0;
 }
 } // namespace Media
 } // namespace OHOS

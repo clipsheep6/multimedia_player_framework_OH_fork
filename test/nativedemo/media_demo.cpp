@@ -100,6 +100,18 @@ static int RunAVMuxer()
     return 0;
 }
 
+static int RunVideoDecoder()
+{
+    auto vdecoder = std::make_unique<VDecDemo>();
+    if (vdecoder == nullptr) {
+        cout << "vdecoder is null" << endl;
+        return 0;
+    }
+    vdecoder->RunCase();
+    cout << "demo vdecoder end" << endl;
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     constexpr int minRequiredArgCount = 2;
@@ -114,6 +126,7 @@ int main(int argc, char *argv[])
     cout << "3:codeclist" << endl;
     cout << "4:video-encoder" << endl;
     cout << "5:avmuxer" << endl;
+    cout << "7:video-decoder" << endl;
     string mode;
     (void)getline(cin, mode);
     if (mode == "" || mode == "0") {
@@ -128,6 +141,8 @@ int main(int argc, char *argv[])
         (void)RunVideoEncoder(false);
     } else if (mode == "5") {
         (void)RunAVMuxer();
+    } else if (mode == "7") {
+        (void)RunVideoDecoder();
     } else {
         cout << "no that selection" << endl;
     }
