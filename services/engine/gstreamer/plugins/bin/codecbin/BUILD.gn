@@ -44,6 +44,7 @@ config("gst_codec_bin_config") {
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/glib/gmodule",
+    "//third_party/openh264/codec/api",
   ]
 }
 

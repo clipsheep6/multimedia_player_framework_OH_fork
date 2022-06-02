@@ -21,6 +21,7 @@ ohos_executable("media_demo") {
     "./recorder",
     "./avmetadatahelper",
     "./avcodeclist",
+    "./recorder_profiles",
     "./avcodecvenc",
     "./avcodecvdec",
     "./avmuxer",
@@ -55,6 +56,7 @@ ohos_executable("media_demo") {
 
   sources = [
     "./avcodeclist/avcodeclist_demo.cpp",
+    "./recorder_profiles/recorder_profiles_demo.cpp",
     "./avcodecvdec/avcodec_vdec_demo.cpp",
     "./avcodecvenc/avcodec_venc_demo.cpp",
     "./avmetadatahelper/avmetadatahelper_demo.cpp",

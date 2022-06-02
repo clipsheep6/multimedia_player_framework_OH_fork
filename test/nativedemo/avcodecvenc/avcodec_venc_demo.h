@@ -59,7 +59,7 @@ private:
     int32_t Configure(const Format &format);
     int32_t Prepare();
     int32_t Start();
-    int32_t SetParameter(int32_t suspend, int32_t maxFps, int32_t repeatMs);
+    int32_t SetParameter(const Format &format);
     int32_t Stop();
     int32_t Flush();
     int32_t Reset();
@@ -74,6 +74,7 @@ private:
     std::shared_ptr<VEncDemoCallback> cb_;
     sptr<Surface> surface_ = nullptr;
     int64_t timestampNs_ = 0;
+    std::string mimetype = "";
 };
 } // namespace Media
 } // namespace OHOS
