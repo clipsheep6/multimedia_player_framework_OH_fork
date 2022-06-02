@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <svc/codec_app_def.h>
 #include "config.h"
 #include "gst_codec_bin.h"
 #include <gst/gst.h>
@@ -32,6 +33,8 @@ enum {
     PROP_BITRATE,
     PROP_VENDOR,
     PROP_USE_SURFACE_INPUT,
+    PROP_BITMODE,
+    PROP_PROFILE,
     PROP_USE_SURFACE_OUTPUT
 };
 
@@ -42,6 +45,8 @@ static void gst_codec_bin_finalize(GObject *object);
 static void gst_codec_bin_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *param_spec);
 static void gst_codec_bin_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *param_spec);
 static GstStateChangeReturn gst_codec_bin_change_state(GstElement *element, GstStateChange transition);
+static gboolean gst_codec_bin_set_profile(GstCodecBin *bin, guint profile);
+static gboolean gst_codec_bin_set_bit_mode(GstCodecBin *bin, guint bit_mode);
 
 #define GST_TYPE_CODEC_BIN_TYPE (gst_codec_bin_type_get_type())
 static GType gst_codec_bin_type_get_type(void)
@@ -125,6 +130,14 @@ static void gst_codec_bin_class_init(GstCodecBinClass *klass)
     g_object_class_install_property(gobject_class, PROP_USE_SURFACE_OUTPUT,
         g_param_spec_boolean("use-surface-output", "use surface output", "The sink is surface",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_BITMODE,
+        g_param_spec_uint("bit-mode", "Bit mode", "Set the bit mode surpport CBR/VBR/CQ",
+            0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_PROFILE,
+        g_param_spec_uint("profile", "Profile property", "Profile property",
+            0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     gst_element_class_set_static_metadata(gstelement_class,
         "Codec Bin", "Bin/Decoder&Encoder", "Auto construct codec pipeline", "OpenHarmony");
@@ -213,6 +226,16 @@ static void gst_codec_bin_set_property(GObject *object, guint prop_id,
             break;
         case PROP_USE_SURFACE_OUTPUT:
             bin->is_output_surface = g_value_get_boolean(value);
+            break;
+        case PROP_BITMODE:
+            if (bin != nullptr && bin->coder != nullptr) {
+                gst_codec_bin_set_bit_mode(bin, g_value_get_uint(value));
+            }
+            break;
+        case PROP_PROFILE:
+            if (bin != nullptr && bin->coder != nullptr) {
+                gst_codec_bin_set_profile(bin, g_value_get_uint(value));
+            }
             break;
         default:
             break;
@@ -450,6 +473,84 @@ static GstStateChangeReturn gst_codec_bin_change_state(GstElement *element, GstS
             break;
     }
     return GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
+}
+
+static gboolean gst_codec_bin_set_profile(GstCodecBin *bin, guint profile)
+{
+    g_return_val_if_fail(bin != nullptr, FALSE);
+    g_return_val_if_fail(bin->coder != nullptr && bin->coder_name != nullptr, FALSE);
+
+    if (strcmp(bin->coder_name, "openh264enc") == 0) {
+        bin->profile = profile;
+        EProfileIdc pro = PRO_BASELINE;
+        switch (bin->profile) {
+            case CODEC_BIN_H264_PROFILE_BASELINE:
+                pro = PRO_BASELINE;
+                break;
+            case CODEC_BIN_H264_PROFILE_CONSTRAINED_BASELINE:
+                pro = PRO_SCALABLE_BASELINE;
+                break;
+            case CODEC_BIN_H264_PROFILE_CONSTRAINED_HIGH:
+                pro = PRO_SCALABLE_HIGH;
+                break;
+            case CODEC_BIN_H264_PROFILE_EXTENDED:
+                pro = PRO_EXTENDED;
+                break;
+            case CODEC_BIN_H264_PROFILE_HIGH:
+                pro = PRO_HIGH;
+                break;
+            case CODEC_BIN_H264_PROFILE_HIGH10:
+                pro = PRO_HIGH10;
+                break;
+            case CODEC_BIN_H264_PROFILE_HIGH422:
+                pro = PRO_HIGH422;
+                break;
+            case CODEC_BIN_H264_PROFILE_HIGH444:
+                pro = PRO_HIGH444;
+                break;
+            case CODEC_BIN_H264_PROFILE_MAIN:
+                pro = PRO_MAIN;
+                break;
+            default:
+                break;
+        }
+        g_object_set(bin->coder, "profile", pro, nullptr);
+        GST_INFO_OBJECT(bin, "set coder profile success");
+    }
+
+    return TRUE;
+}
+
+
+static gboolean gst_codec_bin_set_bit_mode(GstCodecBin *bin, guint bit_mode)
+{
+    g_return_val_if_fail(bin != nullptr, FALSE);
+    g_return_val_if_fail(bin->coder != nullptr && bin->coder_name != nullptr, FALSE);
+
+    if (strcmp(bin->coder_name, "openh264enc") == 0) {
+        bin->bit_mode = bit_mode;
+        guint rc_mode = RC_QUALITY_MODE;
+        switch (bin->bit_mode) {
+            case CODEC_BIN_H264_BIT_MODE_CBR:
+                rc_mode = RC_BITRATE_MODE;
+                break;
+            case CODEC_BIN_H264_BIT_MODE_VBR:
+                rc_mode = RC_BUFFERBASED_MODE;
+                break;
+            case CODEC_BIN_H264_BIT_MODE_CQ:
+                rc_mode = RC_QUALITY_MODE;
+                break;
+            default:
+                break;
+        }
+        GParamSpec *param = g_object_class_find_property(G_OBJECT_GET_CLASS(bin->coder), "rate-control");
+        if (G_IS_PARAM_SPEC_ENUM(param)) {
+            GEnumValue *values = G_ENUM_CLASS(g_type_class_ref(param->value_type))->values;
+            g_object_set(bin->coder, "rate-control", values[rc_mode].value, nullptr);
+            GST_INFO_OBJECT(bin, "set coder bit-mode success: %d", bin->bit_mode);
+        }
+    }
+    return TRUE;
 }
 
 static gboolean plugin_init(GstPlugin *plugin)
