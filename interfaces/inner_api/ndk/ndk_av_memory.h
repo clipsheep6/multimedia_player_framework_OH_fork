@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef NDK_AV_SHAREMEMORY_H
-#define NDK_AV_SHAREMEMORY_H
+#ifndef NDK_AV_MEMORY_H
+#define NDK_AV_MEMORY_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -74,4 +74,4 @@ uint32_t OH_AV_MemoryGetFlags(struct AVMemory *mem);
 }
 #endif
 
-#endif // NDK_AV_SHAREMEMORY_H
+#endif // NDK_AV_MEMORY_H

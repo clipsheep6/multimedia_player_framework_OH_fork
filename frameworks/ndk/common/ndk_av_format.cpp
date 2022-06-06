@@ -54,6 +54,17 @@ void OH_AV_DestroyFormat(AVFormat *format)
     delete format;
 }
 
+bool OH_AV_FormatCopy(struct AVFormat *to, struct AVFormat *from)
+{
+    CHECK_AND_RETURN_RET_LOG(to != nullptr, false, "to format is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(to->magic_ == AVMagic::MEDIA_MAGIC_FORMAT, false, "magic error!");
+    CHECK_AND_RETURN_RET_LOG(from != nullptr, false, "from format is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(from->magic_ == AVMagic::MEDIA_MAGIC_FORMAT, false, "magic error!");
+
+    to->format_ = from->format_;
+    return true;
+}
+
 bool OH_AV_FormatPutIntValue(AVFormat *format, const char *key, int32_t value)
 {
     CHECK_AND_RETURN_RET_LOG(format != nullptr, false, "input format is nullptr!");

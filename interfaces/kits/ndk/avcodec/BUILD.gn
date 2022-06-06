@@ -18,6 +18,7 @@ ohos_ndk_headers("avcodec_header") {
   dest_dir = "$ndk_headers_out_dir/avcodec"
   sources = [
     "//foundation/multimedia/media_standard/interfaces/inner_api/ndk/ndk_av_codec.h",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/ndk/ndk_av_errors.h",
     "//foundation/multimedia/media_standard/interfaces/inner_api/ndk/ndk_av_format.h",
     "//foundation/multimedia/media_standard/interfaces/inner_api/ndk/ndk_av_memory.h",
   ]
@@ -30,5 +31,8 @@ ohos_ndk_library("libavcodec_ndk") {
   system_capability = "SystemCapability.Multimedia.Media.Codec"
   system_capability_headers = [
     "avcodec/ndk_av_codec.h",
+    "avcodec/ndk_av_errors.h",
+    "avcodec/ndk_av_format.h",
+    "avcodec/ndk_av_memory.h",
   ]
 }

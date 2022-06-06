@@ -35,6 +35,7 @@ struct VideoDecorderObject : public AVCodec {
 
     const std::shared_ptr<AVCodecVideoDecoder> videoDecoder_;
     std::list<OHOS::sptr<AVMemory>> memoryObjList_;
+    OHOS::sptr<AVFormat> outputFormat_ = nullptr;
     std::shared_ptr<AVCodecCallback> callback_ = nullptr;
 };
 
@@ -46,9 +47,10 @@ public:
 
     void OnError(AVCodecErrorType errorType, int32_t errorCode) override
     {
+        (void)errorType;
         if (callback_ != nullptr && codec_ != nullptr) {
-            // 这里要转换错误码native到ndk
-            callback_->onAsyncError(codec_, errorCode, userData_);
+            int32_t extErr = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
+            callback_->onAsyncError(codec_, extErr, userData_);
         }
     }
 
@@ -204,6 +206,7 @@ AVErrCode OH_AVCODEC_VideoDecoderReset(struct AVCodec *codec)
     int32_t ret = videoDecObj->videoDecoder_->Reset();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "videoDecoder Reset failed!");
 
+    videoDecObj->memoryObjList_.clear();
     return AV_ERR_OK;
 }
 
@@ -283,20 +286,22 @@ AVErrCode OH_AVCODEC_VideoDecoderQueueInputBuffer(struct AVCodec *codec, uint32_
     return AV_ERR_OK;
 }
 
-AVErrCode OH_AVCODEC_VideoDecoderGetOutputFormat(struct AVCodec *codec, struct AVFormat *format)
+AVFormat* OH_AVCODEC_VideoDecoderGetOutputFormat(struct AVCodec *codec)
 {
-    CHECK_AND_RETURN_RET_LOG(codec != nullptr, AV_ERR_INVALID_VAL, "input codec is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_VIDEO_DECODER, AV_ERR_INVALID_VAL, "magic error!");
-    CHECK_AND_RETURN_RET_LOG(format != nullptr, AV_ERR_INVALID_VAL, "input format is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(format->magic_ == AVMagic::MEDIA_MAGIC_FORMAT, AV_ERR_INVALID_VAL, "magic error!");
+    CHECK_AND_RETURN_RET_LOG(codec != nullptr, nullptr, "input codec is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_VIDEO_DECODER, nullptr, "magic error!");
 
     struct VideoDecorderObject *videoDecObj = reinterpret_cast<VideoDecorderObject *>(codec);
-    CHECK_AND_RETURN_RET_LOG(videoDecObj->videoDecoder_ != nullptr, AV_ERR_INVALID_VAL, "context videoDecoder is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(videoDecObj->videoDecoder_ != nullptr, nullptr, "context videoDecoder is nullptr!");
 
-    int32_t ret = videoDecObj->videoDecoder_->GetOutputFormat(format->format_);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_OPERATE_NOT_PERMIT, "videoDecoder GetOutputFormat failed!");
+    Format format;
+    int32_t ret = videoDecObj->videoDecoder_->GetOutputFormat(format);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "videoDecoder GetOutputFormat failed!");
 
-    return AV_ERR_OK;
+    videoDecObj->outputFormat_ = new(std::nothrow) AVFormat(format);
+    CHECK_AND_RETURN_RET_LOG(videoDecObj->outputFormat_ != nullptr, nullptr, "failed to new AVFormat");
+
+    return reinterpret_cast<AVFormat *>(videoDecObj->outputFormat_.GetRefPtr());
 }
 
 // struct VideoCapsObject* OH_AVCODEC_VideoDecoderGetVideoDecoderCaps(struct AVCodec *codec);

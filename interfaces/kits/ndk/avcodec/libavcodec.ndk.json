@@ -10,7 +10,7 @@
     { "name": "OH_AVCODEC_VideoDecoderStop" },
     { "name": "OH_AVCODEC_VideoDecoderFlush" },
     { "name": "OH_AVCODEC_VideoDecoderReset" },
-    { "name": "OH_AVCODEC_VideoDecoderRelease" },
+    //{ "name": "OH_AVCODEC_VideoDecoderRelease" },
     { "name": "OH_AVCODEC_VideoDecoderSetOutputSurface" },
     { "name": "OH_AVCODEC_VideoDecoderGetInputBuffer" },
     { "name": "OH_AVCODEC_VideoDecoderQueueInputBuffer" },
