@@ -36,23 +36,23 @@ enum AVPixelFormat {
     /**
      * yuv 420 planar.
      */
-    AV_FORMT_YUVI420 = 1,
+    AV_PIXEL_FORMT_YUVI420 = 1,
     /**
      *  NV12. yuv 420 semiplanar.
      */
-    AV_FORMT_NV12 = 2,
+    AV_PIXEL_FORMT_NV12 = 2,
     /**
      *  NV21. yvu 420 semiplanar.
      */
-    AV_FORMT_NV21 = 3,
+    AV_PIXEL_FORMT_NV21 = 3,
     /**
      * format from surface.
      */
-    AV_FORMT_SURFACE_FORMAT = 4,
+    AV_PIXEL_FORMT_SURFACE_FORMAT = 4,
     /**
      * RGBA.
      */
-    AV_FORMT_RGBA = 5,
+    AV_PIXEL_FORMT_RGBA = 5,
 };
 
 struct AVFormat* OH_AV_CreateFormat(void);

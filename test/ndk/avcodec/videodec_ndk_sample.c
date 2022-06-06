@@ -80,7 +80,7 @@ struct AVFormat* CreateFormat(void)
     if (format != NULL) {
         (void)OH_AV_FormatPutIntValue(format, width, DEFAULT_WIDTH);
         (void)OH_AV_FormatPutIntValue(format, height, DEFAULT_HEIGHT);
-        (void)OH_AV_FormatPutIntValue(format, fmt, AV_FORMT_NV21);
+        (void)OH_AV_FormatPutIntValue(format, fmt, AV_PIXEL_FORMT_NV21);
         (void)OH_AV_FormatPutIntValue(format, rate, DEFAULT_FRAME_RATE);
         (void)OH_AV_FormatPutIntValue(format, max, MAX_INPUT_BUFFER_SIZE);
     }

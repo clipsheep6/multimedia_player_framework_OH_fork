@@ -146,7 +146,7 @@ AVErrCode OH_AVCODEC_VideoDecoderSetParameter(AVCodec *codec, AVFormat *format);
 // Video Encoder
 AVCodec* OH_AVCODEC_CreateVideoEncoderByMime(const char *mime);
 AVCodec* OH_AVCODEC_CreateVideoEncoderByName(const char *name);
-void OH_AVCODEC_DestroyVideoEnoder(AVCodec *codec);
+void OH_AVCODEC_DestroyVideoEncoder(AVCodec *codec);
 AVErrCode OH_AVCODEC_VideoEncoderSetCallback(AVCodec *codec, AVCodecOnAsyncCallback *callback, void *userData);
 AVErrCode OH_AVCODEC_VideoEncoderConfigure(AVCodec *codec, AVFormat *format);
 AVErrCode OH_AVCODEC_VideoEncoderPrepare(AVCodec *codec);

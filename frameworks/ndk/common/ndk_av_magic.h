@@ -46,7 +46,7 @@ struct AVFormat : public AVObjectMagic {
     explicit AVFormat(const OHOS::Media::Format &fmt);
     ~AVFormat();
     OHOS::Media::Format format_;
-    char *outString_;
+    char *outString_ = nullptr;
 };
 
 struct AVMemory : public AVObjectMagic {
