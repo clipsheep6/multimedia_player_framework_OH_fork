@@ -1,0 +1,55 @@
+# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+ohos_executable("media_ndk_sample") {
+  include_dirs = [
+    "./avcodec",
+    "./common",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/ndk",
+  ]
+
+  cflags = [
+    "-Werror",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
+    "-Wformat=2",
+    "-Wdate-time",
+    "",
+  ]
+
+  sources = [
+    "./avcodec/audiodec_ndk_sample.c",
+    "./avcodec/audioenc_ndk_sample.c",
+    "./avcodec/videodec_ndk_sample.c",
+    "./avcodec/videoenc_ndk_sample.c",
+    "./media_ndk_sample.c",
+  ]
+
+  deps = [
+    "//foundation/multimedia/media_standard/interfaces/kits/ndk:media_ndk",
+  ]
+
+  part_name = "multimedia_media_standard"
+  subsystem_name = "multimedia"
+}
