@@ -51,6 +51,7 @@ static void gst_surface_mem_sink_dump_from_sys_param(GstSurfaceMemSink *self);
 static void gst_surface_mem_sink_dump_buffer(GstSurfaceMemSink *self, GstBuffer *buffer);
 static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_surface_mem_sink_event(GstBaseSink *bsink, GstEvent *event);
+static void gst_surface_mem_sink_init_dfx_node(GstMemSink *sink);
 
 #define gst_surface_mem_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE(GstSurfaceMemSink, gst_surface_mem_sink,
@@ -103,8 +104,23 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
     mem_sink_class->do_propose_allocation = gst_surface_mem_sink_do_propose_allocation;
     mem_sink_class->do_app_render = gst_surface_mem_sink_do_app_render;
     base_sink_class->event = gst_surface_mem_sink_event;
+    mem_sink_class->init_dfx_node = gst_surface_mem_sink_init_dfx_node;
 
     GST_DEBUG_CATEGORY_INIT(gst_surface_mem_sink_debug_category, "surfacesink", 0, "surfacesink class");
+}
+
+static void gst_surface_mem_sink_init_dfx_node(GstMemSink *sink)
+{
+    g_return_if_fail(sink != nullptr);
+    GstSurfaceMemSink *surface_sink = GST_SURFACE_MEM_SINK_CAST(sink);
+    surface_sink->performanceMode.Init(sink->dfx_node, "sink performanceMode");
+    GST_MEM_SINK_CLASS(parent_class)->init_dfx_node(sink);
+
+    if (surface_sink->priv->pool != nullptr) {
+        std::shared_ptr<OHOS::Media::DfxNode> surface_pool_node =
+            OHOS::Media::DfxNodeManager::GetInstance().CreateChildDfxNode(sink->dfx_node, SURFACE_POOL);
+        g_object_set(surface_sink->priv->pool, "dfx-node", &surface_pool_node, nullptr);
+    }
 }
 
 static void gst_surface_mem_sink_init(GstSurfaceMemSink *sink)
@@ -319,7 +335,7 @@ static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, 
         GST_ERROR_OBJECT(surface_sink, "no need buffer pool, unexpected!");
         return FALSE;
     }
-    if (surface_sink->performanceMode && surface_sink->preInitPool) {
+    if (surface_sink->performanceMode.GetValue() && surface_sink->preInitPool) {
         GST_INFO_OBJECT(surface_sink, "pool pre init");
         surface_sink->preInitPool = FALSE;
         return TRUE;

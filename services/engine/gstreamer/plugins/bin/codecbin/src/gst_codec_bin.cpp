@@ -32,7 +32,8 @@ enum {
     PROP_BITRATE,
     PROP_VENDOR,
     PROP_USE_SURFACE_INPUT,
-    PROP_USE_SURFACE_OUTPUT
+    PROP_USE_SURFACE_OUTPUT,
+    PROP_DFX_NODE
 };
 
 #define gst_codec_bin_parent_class parent_class
@@ -126,6 +127,10 @@ static void gst_codec_bin_class_init(GstCodecBinClass *klass)
         g_param_spec_boolean("use-surface-output", "use surface output", "The sink is surface",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_DFX_NODE,
+        g_param_spec_pointer("dfx-node", "Dfx node", "Dfx node",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Codec Bin", "Bin/Decoder&Encoder", "Auto construct codec pipeline", "OpenHarmony");
 
@@ -162,7 +167,28 @@ static void gst_codec_bin_finalize(GObject *object)
         g_free(bin->coder_name);
         bin->coder_name = nullptr;
     }
+    bin->dfx_node = nullptr;
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static void gst_codec_bin_set_property_after(GObject *object, guint prop_id,
+    const GValue *value)
+{
+    GstCodecBin *bin = GST_CODEC_BIN(object);
+    g_return_if_fail(bin != nullptr);
+    switch (prop_id) {
+        case PROP_USE_SURFACE_INPUT:
+            bin->is_input_surface = g_value_get_boolean(value);
+            break;
+        case PROP_USE_SURFACE_OUTPUT:
+            bin->is_output_surface = g_value_get_boolean(value);
+            break;
+        case PROP_DFX_NODE:
+            bin->dfx_node = *(reinterpret_cast<std::shared_ptr<OHOS::Media::DfxNode> *>(g_value_get_pointer(value)));
+            break;
+        default:
+            break;
+    }
 }
 
 static void gst_codec_bin_set_property(GObject *object, guint prop_id,
@@ -208,15 +234,10 @@ static void gst_codec_bin_set_property(GObject *object, guint prop_id,
             g_return_if_fail(bin->coder != nullptr);
             g_object_set(bin->coder, "vendor", g_value_get_pointer(value), nullptr);
             break;
-        case PROP_USE_SURFACE_INPUT:
-            bin->is_input_surface = g_value_get_boolean(value);
-            break;
-        case PROP_USE_SURFACE_OUTPUT:
-            bin->is_output_surface = g_value_get_boolean(value);
-            break;
         default:
             break;
     }
+    gst_codec_bin_set_property_after(object, prop_id, value);
 }
 
 static void gst_codec_bin_get_property(GObject *object, guint prop_id,
@@ -399,6 +420,24 @@ static gboolean operate_element(GstCodecBin *bin)
 {
     g_return_val_if_fail(bin != nullptr, FALSE);
     g_return_val_if_fail(bin->sink != nullptr, FALSE);
+    if (bin->dfx_node != nullptr) {
+        if (bin->type == CODEC_BIN_TYPE_VIDEO_DECODER && bin->use_software == FALSE) {
+            std::shared_ptr<OHOS::Media::DfxNode> node =
+                OHOS::Media::DfxNodeManager::GetInstance().CreateChildDfxNode(bin->dfx_node, HARDWARE_VIDEO_DECODER);
+            g_object_set(bin->coder, "dfx-node", &node, nullptr);        
+        }
+        if (bin->type == CODEC_BIN_TYPE_VIDEO_ENCODER && bin->use_software == FALSE) {
+            std::shared_ptr<OHOS::Media::DfxNode> node =
+                OHOS::Media::DfxNodeManager::GetInstance().CreateChildDfxNode(bin->dfx_node, HARDWARE_VIDEO_ENCODER);
+            g_object_set(bin->coder, "dfx-node", &node, nullptr);        
+        }
+        std::shared_ptr<OHOS::Media::DfxNode> sink_node =
+            OHOS::Media::DfxNodeManager::GetInstance().CreateChildDfxNode(bin->dfx_node, SINK);
+        g_object_set(bin->sink, "dfx-node", &sink_node, nullptr);
+        std::shared_ptr<OHOS::Media::DfxNode> src_node =
+            OHOS::Media::DfxNodeManager::GetInstance().CreateChildDfxNode(bin->dfx_node, SOURCE);
+        g_object_set(bin->src, "dfx-node", &src_node, nullptr);
+    }
     g_object_set(bin->sink, "sync", FALSE, nullptr);
     if (bin->type == CODEC_BIN_TYPE_VIDEO_DECODER && bin->use_software == FALSE && bin->is_output_surface) {
         g_object_set(bin->coder, "performance-mode", TRUE, nullptr);

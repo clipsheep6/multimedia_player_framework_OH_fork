@@ -21,6 +21,7 @@
 #include "gst_shmem_allocator.h"
 #include "gst_shmem_pool.h"
 #include "i_gst_codec.h"
+#include "dfx_node_manager.h"
 
 #ifndef GST_API_EXPORT
 #define GST_API_EXPORT __attribute__((visibility("default")))
@@ -95,6 +96,7 @@ struct _GstVencBase {
     guint i_frame_interval;
     gboolean flushing_stopping;
     gboolean encoder_start;
+    std::shared_ptr<OHOS::Media::DfxNode> dfx_node;
 };
 
 struct _GstVencBaseClass {

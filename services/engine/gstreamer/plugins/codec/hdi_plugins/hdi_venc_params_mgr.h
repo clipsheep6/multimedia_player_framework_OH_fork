@@ -32,6 +32,7 @@ public:
     void Init(CodecComponentType *handle, const OMX_PORT_PARAM_TYPE &portParam, const CompVerInfo &verInfo) override;
     int32_t SetParameter(GstCodecParamKey key, GstElement *element) override;
     int32_t GetParameter(GstCodecParamKey key, GstElement *element) override;
+    void SetDfxNode(const std::shared_ptr<DfxNode> &node) override;
 protected:
     int32_t SetInputVideoCommon(GstElement *element);
     int32_t SetOutputVideoCommon(GstElement *element);
@@ -50,6 +51,8 @@ private:
     OMX_VIDEO_PARAM_PORTFORMATTYPE videoFormat_ = {0};
     OMX_VIDEO_PARAM_BITRATETYPE bitrateConfig_ = {0};
     CompVerInfo verInfo_;
+    std::shared_ptr<DfxNode> dfxNode_;
+    DfxClassHelper dfxClassHelper_;  
 };
 } // namespace Media
 } // namespace OHOS

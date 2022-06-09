@@ -23,6 +23,7 @@
 #include "nocopyable.h"
 #include "i_codec_params_mgr.h"
 #include "codec_component_if.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -33,6 +34,7 @@ public:
         const OMX_PORT_PARAM_TYPE &portParam, const CompVerInfo &verInfo) = 0;
     int32_t SetParameter(GstCodecParamKey key, GstElement *element) = 0;
     int32_t GetParameter(GstCodecParamKey key, GstElement *element) = 0;
+    virtual void SetDfxNode(const std::shared_ptr<DfxNode> &node) = 0;
 };
 } // namespace Media
 } // namespace OHOS

@@ -28,6 +28,7 @@
 #include "codec_component_type.h"
 #include "codec_component_if.h"
 #include "buffer_type_meta.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -76,6 +77,7 @@ public:
     virtual int32_t Flush(bool enable) override;
     virtual int32_t Stop();
     virtual void WaitFlushed();
+    void SetDfxNode(const std::shared_ptr<DfxNode> &node);
 
 protected:
     void FreeCodecBuffers();
@@ -94,6 +96,8 @@ protected:
     int32_t UseAshareMems(std::vector<GstBuffer *> &buffers);
     std::shared_ptr<OmxCodecBuffer> GetCodecBuffer(GstBuffer *buffer);
     virtual void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<OmxCodecBuffer> &codecBuffer);
+    std::shared_ptr<DfxNode> dfxNode_;
+    DfxClassHelper dfxClassHelper_;
 };
 } // namespace Media
 } // namespace OHOS

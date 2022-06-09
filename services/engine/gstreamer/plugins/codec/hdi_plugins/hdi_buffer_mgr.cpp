@@ -54,6 +54,12 @@ void HdiBufferMgr::Init(CodecComponentType *handle, int32_t index, const CompVer
     mPortDef_.nPortIndex = (uint32_t)index;
 }
 
+void HdiBufferMgr::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    dfxClassHelper_.Init(this, "HdiBufferMgr", dfxNode_);
+}
+
 std::shared_ptr<OmxCodecBuffer> HdiBufferMgr::GetCodecBuffer(GstBuffer *buffer)
 {
     MEDIA_LOGD("Enter GetCodecBuffer");

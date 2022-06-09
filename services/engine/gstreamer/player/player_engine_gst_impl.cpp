@@ -21,7 +21,7 @@
 #include "directory_ex.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerEngineGstImpl"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
 }
 
 namespace OHOS {
@@ -103,6 +103,12 @@ int32_t PlayerEngineGstImpl::SetSource(const std::shared_ptr<IMediaDataSource> &
     appsrcWarp_ = GstAppsrcWarp::Create(dataSrc);
     CHECK_AND_RETURN_RET_LOG(appsrcWarp_ != nullptr, MSERR_NO_MEMORY, "new appsrcwarp failed!");
     return MSERR_OK;
+}
+
+void PlayerEngineGstImpl::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    dfxClassHelper_.Init(this, "PlayerServer", node);
 }
 
 int32_t PlayerEngineGstImpl::SetObs(const std::weak_ptr<IPlayerEngineObs> &obs)

@@ -21,7 +21,7 @@
 #include "hdi_codec_util.h"
 #include "hdi_codec.h"
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVencParamsMgr"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVdecParamsMgr"};
     constexpr uint32_t OMX_FRAME_RATE_MOVE = 16; // hdi frame rate need move 16
 }
 
@@ -145,6 +145,12 @@ int32_t HdiVencParamsMgr::SetVideoFormat(GstElement *element)
     auto ret = HdiSetParameter(handle_, OMX_IndexParamVideoPortFormat, videoFormat_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
     return GST_CODEC_OK;
+}
+
+void HdiVencParamsMgr::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    dfxClassHelper_.Init(this, "HdiVdecParamsMgr", dfxNode_);
 }
 
 int32_t HdiVencParamsMgr::GetInputVideoCommon(GstElement *element)

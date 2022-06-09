@@ -57,6 +57,7 @@ public:
     int32_t Flush(GstCodecDirect direct) override;
     int32_t ActiveBufferMgr(GstCodecDirect direct, bool active) override;
     void Deinit() override;
+    void SetDfxNode(const std::shared_ptr<DfxNode> &node) override;
 private:
     struct AppData {
         std::weak_ptr<HdiCodec> instance;
@@ -105,6 +106,8 @@ private:
     bool start_ = false;
     uint32_t id_ = 0;
     CompVerInfo verInfo_;
+    std::shared_ptr<DfxNode> dfxNode_;
+    DfxClassHelper dfxClassHelper_;
 };
 } // namespace Media
 } // namespace OHOS

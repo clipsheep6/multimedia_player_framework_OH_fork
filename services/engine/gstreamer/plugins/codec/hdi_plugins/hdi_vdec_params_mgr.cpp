@@ -72,16 +72,22 @@ int32_t HdiVdecParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element
     return GST_CODEC_OK;
 }
 
+void HdiVdecParamsMgr::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    dfxClassHelper_.Init(this, "HdiVdecParamsMgr", dfxNode_);
+}
+
 int32_t HdiVdecParamsMgr::SetInputVideoCommon(GstElement *element)
 {
     MEDIA_LOGD("SetInputVideoCommon");
     GstVdecBase *base = GST_VDEC_BASE(element);
     inPortDef_.format.video.eCompressionFormat = HdiCodecUtil::CompressionGstToHdi(base->compress_format);
-    inPortDef_.format.video.nFrameHeight = (uint32_t)base->height;
-    inPortDef_.format.video.nFrameWidth = (uint32_t)base->width;
-    inPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate) << HDI_FRAME_RATE_MOVE;
-    inPortDef_.nBufferCountActual = base->input.buffer_cnt;
-    MEDIA_LOGD("frame_rate %{public}d", base->frame_rate);
+    inPortDef_.format.video.nFrameHeight = (uint32_t)base->height.GetValue();
+    inPortDef_.format.video.nFrameWidth = (uint32_t)base->width.GetValue();
+    inPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate.GetValue()) << HDI_FRAME_RATE_MOVE;
+    inPortDef_.nBufferCountActual = base->input.buffer_cnt.GetValue();
+    MEDIA_LOGD("frame_rate %{public}d", base->frame_rate.GetValue());
     auto ret = HdiSetParameter(handle_, OMX_IndexParamPortDefinition, inPortDef_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
     return GST_CODEC_OK;
@@ -91,11 +97,11 @@ int32_t HdiVdecParamsMgr::SetOutputVideoCommon(GstElement *element)
 {
     MEDIA_LOGD("SetOutputVideoCommon");
     GstVdecBase *base = GST_VDEC_BASE(element);
-    outPortDef_.format.video.nFrameHeight = (uint32_t)base->height;
-    outPortDef_.format.video.nFrameWidth = (uint32_t)base->width;
-    outPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate) << HDI_FRAME_RATE_MOVE;
-    outPortDef_.nBufferCountActual = base->output.buffer_cnt;
-    MEDIA_LOGD("frame_rate %{public}d", base->frame_rate);
+    outPortDef_.format.video.nFrameHeight = (uint32_t)base->height.GetValue();
+    outPortDef_.format.video.nFrameWidth = (uint32_t)base->width.GetValue();
+    outPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate.GetValue()) << HDI_FRAME_RATE_MOVE;
+    outPortDef_.nBufferCountActual = base->output.buffer_cnt.GetValue();
+    MEDIA_LOGD("frame_rate %{public}d", base->frame_rate.GetValue());
     auto ret = HdiSetParameter(handle_, OMX_IndexParamPortDefinition, outPortDef_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
     return GST_CODEC_OK;

@@ -41,6 +41,7 @@ enum {
     PROP_0,
     PROP_DYNAMIC_BUFFER_NUM,
     PROP_CACHE_BUFFERS_NUM,
+    PROP_DFX_NODE
 };
 
 #define GST_BUFFER_POOL_LOCK(pool)   (g_mutex_lock(&(pool)->lock))
@@ -103,6 +104,10 @@ static void gst_producer_surface_pool_class_init(GstSurfacePoolClass *klass)
             "Set cached buffer nums for pool thread loop",
             0, G_MAXUINT, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobjectClass, PROP_DFX_NODE,
+        g_param_spec_pointer("dfx-node", "Dfx node", "Dfx node",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     poolClass->get_options = gst_producer_surface_pool_get_options;
     poolClass->set_config = gst_producer_surface_pool_set_config;
     poolClass->start = gst_producer_surface_pool_start;
@@ -141,6 +146,16 @@ static void gst_producer_surface_pool_init(GstSurfacePool *pool)
     pool->cachedBuffers = 0;
 }
 
+static void gst_producer_surface_pool_init_dfx_node(GstSurfacePool *pool)
+{
+    pool->dfxClassHelper.Init(pool, "surfacepool", pool->dfxNode);
+    pool->minBuffers.Init(pool->dfxNode, "surface pool minBuffer");
+    pool->maxBuffers.Init(pool->dfxNode, "surface pool maxBuffer");
+    pool->freeBufCnt.Init(pool->dfxNode, "surface pool freeBufCnt");
+    pool->isDynamicCached.Init(pool->dfxNode, "surface pool isDynamicCached");
+    pool->cachedBuffers.Init(pool->dfxNode, "surface pool cachedBuffers");
+}
+
 static void gst_producer_surface_pool_finalize(GObject *obj)
 {
     g_return_if_fail(obj != nullptr);
@@ -159,6 +174,8 @@ static void gst_producer_surface_pool_finalize(GObject *obj)
         gst_object_unref(spool->task);
         spool->task = nullptr;
     }
+    spool->dfxNode = nullptr;
+    spool->dfxClassHelper.DeInit();
 
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
@@ -179,18 +196,18 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
             GST_BUFFER_POOL_LOCK(spool);
             if (spool->freeBufCnt + dynamicBuffers < spool->maxBuffers) {
                 GST_BUFFER_POOL_UNLOCK(spool);
-                GST_ERROR_OBJECT(spool, "set queue size failed for free buffers %u", spool->freeBufCnt);
+                GST_ERROR_OBJECT(spool, "set queue size failed for free buffers %u", spool->freeBufCnt.GetValue());
                 return;
             }
             spool->freeBufCnt += (dynamicBuffers - spool->maxBuffers);
             spool->maxBuffers = dynamicBuffers;
-            OHOS::SurfaceError err = spool->surface->SetQueueSize(spool->maxBuffers);
+            OHOS::SurfaceError err = spool->surface->SetQueueSize(spool->maxBuffers.GetValue());
             if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {
                 GST_BUFFER_POOL_UNLOCK(spool);
-                GST_ERROR_OBJECT(spool, "set queue size to %u failed", spool->maxBuffers);
+                GST_ERROR_OBJECT(spool, "set queue size to %u failed", spool->maxBuffers.GetValue());
                 return;
             }
-            GST_DEBUG_OBJECT(spool, "set max buffer count: %u", spool->maxBuffers);
+            GST_DEBUG_OBJECT(spool, "set max buffer count: %u", spool->maxBuffers.GetValue());
             GST_BUFFER_POOL_UNLOCK(spool);
             break;
         }
@@ -199,6 +216,12 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
             spool->isDynamicCached = TRUE;
             spool->cachedBuffers = g_value_get_uint(value);
             GST_BUFFER_POOL_UNLOCK(spool);
+            break;
+        }
+        case PROP_DFX_NODE: {
+            spool->dfxNode =
+                *(reinterpret_cast<std::shared_ptr<OHOS::Media::DfxNode> *>(g_value_get_pointer(value)));
+            gst_producer_surface_pool_init_dfx_node(spool);
             break;
         }
         default:
@@ -217,7 +240,7 @@ static void gst_producer_surface_pool_get_property(GObject *object, guint prop_i
     switch (prop_id) {
         case PROP_DYNAMIC_BUFFER_NUM: {
             GST_BUFFER_POOL_LOCK(spool);
-            g_value_set_uint(value, spool->maxBuffers);
+            g_value_set_uint(value, spool->maxBuffers.GetValue());
             GST_BUFFER_POOL_UNLOCK(spool);
             break;
         }
@@ -230,7 +253,7 @@ static void gst_producer_surface_pool_get_property(GObject *object, guint prop_i
 GstSurfacePool *gst_producer_surface_pool_new()
 {
     GstSurfacePool *pool = GST_PRODUCER_SURFACE_POOL_CAST(g_object_new(
-        GST_TYPE_SURFACE_POOL, "name", "SurfacePool", nullptr));
+        GST_TYPE_PRODUCER_SURFACE_POOL, "name", "SurfacePool", nullptr));
     (void)gst_object_ref_sink(pool);
 
     return pool;
@@ -372,7 +395,8 @@ static void gst_producer_surface_pool_request_loop(GstSurfacePool *spool)
         }
     }
 
-    while (spool->isDynamicCached && g_list_length(spool->preAllocated) >= spool->cachedBuffers && spool->started) {
+    while (spool->isDynamicCached.GetValue() &&
+        g_list_length(spool->preAllocated) >= spool->cachedBuffers && spool->started) {
         GST_BUFFER_POOL_WAIT(spool);
     }
 
@@ -421,15 +445,16 @@ static gboolean gst_producer_surface_pool_start(GstBufferPool *pool)
         return FALSE;
     }
 
-    OHOS::SurfaceError err = spool->surface->SetQueueSize(spool->maxBuffers);
+    OHOS::SurfaceError err = spool->surface->SetQueueSize(spool->maxBuffers.GetValue());
     if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {
         GST_BUFFER_POOL_UNLOCK(spool);
-        GST_ERROR_OBJECT(spool, "set queue size to %u failed", spool->maxBuffers);
+        GST_ERROR_OBJECT(spool, "set queue size to %u failed", spool->maxBuffers.GetValue());
         return FALSE;
     }
 
     gst_surface_allocator_set_surface(spool->allocator, spool->surface);
-    GST_INFO_OBJECT(spool, "Set pool minbuf %u maxbuf %u", spool->minBuffers, spool->maxBuffers);
+    gst_surface_allocator_set_dfx_node(spool->allocator, spool->dfxNode);
+    GST_INFO_OBJECT(spool, "Set pool minbuf %u maxbuf %u", spool->minBuffers.GetValue(), spool->maxBuffers.GetValue());
 
     spool->freeBufCnt = spool->maxBuffers;
     GST_BUFFER_POOL_UNLOCK(spool);
@@ -586,7 +611,7 @@ static GstFlowReturn gst_producer_surface_pool_acquire_buffer(GstBufferPool *poo
             }
             spool->preAllocated = g_list_delete_link(spool->preAllocated, node);
             GST_DEBUG_OBJECT(spool, "acquire buffer from preallocated buffers");
-            spool->freeBufCnt -= 1;
+            spool->freeBufCnt--;
             GST_BUFFER_POOL_NOTIFY(spool);
             ret = GST_FLOW_OK;
             break;
@@ -626,7 +651,7 @@ static void gst_producer_surface_pool_release_buffer(GstBufferPool *pool, GstBuf
     gst_producer_surface_pool_free_buffer(pool, buffer);
 
     GST_BUFFER_POOL_LOCK(spool);
-    spool->freeBufCnt += 1;
+    spool->freeBufCnt++;
     GST_BUFFER_POOL_UNLOCK(spool);
 }
 

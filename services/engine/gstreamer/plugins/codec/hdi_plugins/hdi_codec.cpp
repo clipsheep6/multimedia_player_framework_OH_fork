@@ -125,6 +125,12 @@ void HdiCodec::SetHdiParamsMgr(shared_ptr<HdiParamsMgr> paramsMgr)
     paramsMgr_->Init(handle_, portParam_, verInfo_);
 }
 
+void HdiCodec::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    dfxClassHelper_.Init(this, "HdiCodec", dfxNode_);
+}
+
 int32_t HdiCodec::SetParameter(GstCodecParamKey key, GstElement *element)
 {
     return paramsMgr_->SetParameter(key, element);

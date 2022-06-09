@@ -106,6 +106,8 @@ static void gst_shmem_pool_finalize(GObject *obj)
         g_free(spool->debugName);
         spool->debugName = nullptr;
     }
+    spool->dfxNode = nullptr;
+    spool->dfxClassHelper.DeInit();
 
     GST_DEBUG_OBJECT(spool, "finalize pool");
     G_OBJECT_CLASS(parent_class)->finalize(obj);
@@ -146,6 +148,8 @@ gboolean gst_shmem_pool_set_avshmempool(GstShMemPool *pool,
         return FALSE;
     }
     pool->avshmempool = avshmempool;
+    pool->dfxNode = avshmempool->GetDfxNode();
+    pool->dfxClassHelper.Init(pool, "shmempool", pool->dfxNode);
 
     if (pool->debugName != nullptr) {
         g_free(pool->debugName);

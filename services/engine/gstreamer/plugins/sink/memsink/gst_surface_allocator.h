@@ -39,6 +39,8 @@ typedef struct _GstSurfaceAllocatorClass GstSurfaceAllocatorClass;
 struct _GstSurfaceAllocator {
     GstAllocator parent;
     OHOS::sptr<OHOS::Surface> surface;
+    std::shared_ptr<OHOS::Media::DfxNode> dfx_node;
+    OHOS::Media::DfxClassHelper dfx_class_helper;
 };
 
 struct _GstSurfaceAllocatorClass {
@@ -50,6 +52,8 @@ GType gst_surface_allocator_get_type(void);
 GstSurfaceAllocator *gst_surface_allocator_new();
 
 gboolean gst_surface_allocator_set_surface(GstSurfaceAllocator *allocator, OHOS::sptr<OHOS::Surface> surface);
+void gst_surface_allocator_set_dfx_node(GstSurfaceAllocator *allocator,
+    const std::shared_ptr<OHOS::Media::DfxNode> &node);
 
 typedef struct _GstSurfaceAllocParam {
     gint width;

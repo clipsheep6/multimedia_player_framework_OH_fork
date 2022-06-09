@@ -22,6 +22,9 @@
 #include "avmuxer_service_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "dfx_node_manager.h"
+#include "gmemdfxdump.h"
+#include "dfx_log_dump.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};
@@ -62,6 +65,27 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
     return OHOS::NO_ERROR;
 }
 
+void DumpFinishNode(int32_t fd, std::string &dumpString)
+{
+    DfxNodeManager::GetInstance().DumpFinishDfxNode(dumpString);
+    write(fd, dumpString.c_str(), dumpString.size());
+    dumpString.clear();
+}
+
+void DumpErrorNode(int32_t fd, std::string &dumpString)
+{
+    DfxNodeManager::GetInstance().DumpErrorDfxNode(dumpString);
+    write(fd, dumpString.c_str(), dumpString.size());
+    dumpString.clear();
+}
+
+void DumpGMem(int32_t fd, std::string &dumpString)
+{
+    getGMemDump(dumpString);
+    write(fd, dumpString.c_str(), dumpString.size());
+    dumpString.clear();
+}
+
 int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
     std::string dumpString;
@@ -96,6 +120,17 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         MEDIA_LOGW("Failed to write AVMetaServer information");
         return OHOS::INVALID_OPERATION;
     }
+
+    dumpString += "------------------ErrorNode------------------\n";
+    DumpErrorNode(fd, dumpString);
+
+    dumpString += "------------------FinishNode------------------\n";
+    DumpFinishNode(fd, dumpString);
+
+    dumpString += "------------------GlibMem------------------\n";
+    DumpGMem(fd, dumpString);
+
+    DfxLogDump::GetInstance().DumpLog();    
 
     return OHOS::NO_ERROR;
 }

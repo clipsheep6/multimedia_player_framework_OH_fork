@@ -59,6 +59,7 @@ static gboolean gst_shared_mem_sink_start(GstBaseSink *bsink);
 static gboolean gst_shared_mem_sink_stop(GstBaseSink *bsink);
 static guint caculate_mem_size_from_caps(GstSharedMemSink *memsink, GstCaps *caps);
 static gboolean gst_shared_mem_sink_event(GstBaseSink *bsink, GstEvent *event);
+static void gst_shared_mem_sink_init_dfx_node(GstMemSink *sink);
 
 #define gst_shared_mem_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE(GstSharedMemSink, gst_shared_mem_sink,
@@ -106,8 +107,15 @@ static void gst_shared_mem_sink_class_init(GstSharedMemSinkClass *klass)
 
     mem_sink_class->do_propose_allocation = gst_shared_mem_sink_do_propose_allocation;
     mem_sink_class->do_stream_render = gst_shared_mem_sink_do_stream_render;
+    mem_sink_class->init_dfx_node = gst_shared_mem_sink_init_dfx_node;
 
     GST_DEBUG_CATEGORY_INIT(gst_shmem_sink_debug_category, "shmemsink", 0, "shmemsink class");
+}
+
+static void gst_shared_mem_sink_init_dfx_node(GstMemSink *sink)
+{
+    g_return_if_fail(sink != nullptr);
+    GST_MEM_SINK_CLASS(parent_class)->init_dfx_node(sink);
 }
 
 static void gst_shared_mem_sink_init(GstSharedMemSink *sink)
@@ -331,6 +339,7 @@ static void notify_memory_available(GstSharedMemSink *shmem_sink)
 static gboolean set_pool_for_allocator(GstSharedMemSink *shmem_sink, guint min_bufs, guint max_bufs, guint size)
 {
     GstSharedMemSinkPrivate *priv = shmem_sink->priv;
+    GstMemSink *mem_sink = GST_MEM_SINK(shmem_sink);
 
     if (priv->allocator == nullptr) {
         return FALSE;
@@ -356,6 +365,8 @@ static gboolean set_pool_for_allocator(GstSharedMemSink *shmem_sink, guint min_b
     };
 
     priv->av_shmem_pool = std::make_shared<OHOS::Media::AVSharedMemoryPool>("shmemsink");
+    std::shared_ptr<OHOS::Media::DfxNode> pool_node =
+        OHOS::Media::DfxNodeManager::GetInstance().CreateChildDfxNode(mem_sink->dfx_node, AVSHMEM_POOL);
     OHOS::Media::AVSharedMemoryPool::InitializeOption option = {
         .preAllocMemCnt = min_bufs,
         .memSize = size,
@@ -364,7 +375,7 @@ static gboolean set_pool_for_allocator(GstSharedMemSink *shmem_sink, guint min_b
     };
     int32_t ret = priv->av_shmem_pool->Init(option);
     g_return_val_if_fail(ret == OHOS::Media::MSERR_OK, GST_FLOW_ERROR);
-
+    priv->av_shmem_pool->SetDfxNode(pool_node);
     priv->av_shmem_pool->SetNonBlocking(true);
     gst_shmem_allocator_set_pool(priv->allocator, priv->av_shmem_pool);
     priv->set_pool_for_allocator = TRUE;

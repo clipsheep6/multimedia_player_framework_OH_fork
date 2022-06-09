@@ -23,6 +23,7 @@
 #include "i_codec_params_mgr.h"
 #include "i_codec_buffer_mgr.h"
 #include "i_codec_common.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -248,6 +249,19 @@ public:
      * @version 1.0
      */
     virtual void Deinit() = 0;
+
+    /**
+     * @brief Set DfxNode.
+     *
+     * Set the dfxNode to Codec.
+     *
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual void SetDfxNode(const std::shared_ptr<DfxNode> &node)
+    {
+        return;
+    }
 };
 } // namespace Media
 } // namespace OHOS

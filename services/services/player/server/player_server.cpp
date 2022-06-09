@@ -71,6 +71,8 @@ PlayerServer::~PlayerServer()
 int32_t PlayerServer::Init()
 {
     MediaTrace trace("PlayerServer::Init");
+    dfxNode_ = DfxNodeManager::GetInstance().CreateDfxNode(PLAYER_SERVICE);
+    dfxClassHelper_.Init(this, "PlayerServer", dfxNode_);
     return MSERR_OK;
 }
 
@@ -133,6 +135,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     playerEngine_ = engineFactory->CreatePlayerEngine();
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
+    playerEngine_->SetDfxNode(dfxNode_);
     int32_t ret = MSERR_OK;
     if (dataSrc_ == nullptr) {
         ret = playerEngine_->SetSource(url);
@@ -698,8 +701,9 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     int32_t currentTime;
     CHECK_AND_RETURN_RET(GetCurrentTime(currentTime) == MSERR_OK, MSERR_INVALID_OPERATION);
     dumpString += "PlayerServer current time is: " + std::to_string(currentTime) + "\n";
-    write(fd, dumpString.c_str(), dumpString.size());
 
+    DfxNodeManager::GetInstance().DumpDfxNode(dfxNode_, dumpString);
+    write(fd, dumpString.c_str(), dumpString.size());
     return MSERR_OK;
 }
 
@@ -708,6 +712,7 @@ void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
     std::lock_guard<std::mutex> lockCb(mutexCb_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     FaultEventWrite(lastErrMsg_, "Player");
+    DfxNodeManager::GetInstance().SaveErrorDfxNode(dfxNode_);
     if (playerCb_ != nullptr) {
         playerCb_->OnError(errorType, errorCode);
     }
