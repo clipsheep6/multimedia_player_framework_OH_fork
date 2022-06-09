@@ -39,7 +39,8 @@ ohos_shared_library("videodisplaymanager") {
   ]
 
   cflags = [ "-DVIDEO_DISPLAY_DEBUG" ]
-
+  install_images = [ system_base_dir ]
+  relative_install_dir = "platformsdk"
   part_name = "multimedia_media_standard"
   subsystem_name = "multimedia"
 }

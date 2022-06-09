@@ -84,7 +84,8 @@ ohos_shared_library("media_service_utils") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
   ]
-
+  install_images = [ system_base_dir ]
+  relative_install_dir = "platformsdk"
   subsystem_name = "multimedia"
   part_name = "multimedia_media_standard"
 }
