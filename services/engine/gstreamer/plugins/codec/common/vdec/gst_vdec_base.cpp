@@ -919,7 +919,7 @@ static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, G
     gst_vdec_base_dump_input_buffer(self, frame->input_buffer);
     gst_vdec_base_get_frame_pts(self, frame);
     gint codec_ret = GST_CODEC_OK;
-    if (self->input_need_copy) {
+    if (self->input_need_copy.GetValue()) {
         codec_ret = gst_vdec_base_push_input_buffer_with_copy(self, frame->input_buffer);
     } else {
         codec_ret = self->decoder->PushInputBuffer(frame->input_buffer);

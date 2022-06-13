@@ -113,7 +113,7 @@ struct _GstVdecBase {
     gboolean pre_init_pool;
     OHOS::Media::DfxValHelper<gboolean> performance_mode;
     GstCaps *sink_caps;
-    gboolean input_need_copy;
+    OHOS::Media::DfxValHelper<gboolean> input_need_copy;
     std::shared_ptr<OHOS::Media::DfxNode> dfx_node;
     OHOS::Media::DfxClassHelper dfx_class_helper;
 };

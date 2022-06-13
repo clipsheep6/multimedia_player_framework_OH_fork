@@ -36,7 +36,7 @@ namespace {
     };
     const std::string g_gstDftTag = "*";
     const std::string g_gstVdecTag = "vdecbase";
-    const std::string g_gstVencTag = "vdecbase";
+    const std::string g_gstVencTag = "vencbase";
     const std::vector<const gchar *> GST_ARGS = {
         "ohos_media_service",
         "--gst-disable-registry-fork",
@@ -212,9 +212,9 @@ static void SetGstLogLevelFromSysPara()
     if (res != 0 || levelPara.empty()) {
         gst_debug_set_default_threshold(GST_LEVEL_WARNING);
         MEDIA_LOGD("sys.media.log.level not find");
-        return;
+    } else {
+        MEDIA_LOGD("sys.media.log.level=%{public}s", levelPara.c_str());
     }
-    MEDIA_LOGD("sys.media.log.level=%{public}s", levelPara.c_str());
 
     static std::map<std::string, char> logTagLevelMap =
         { { g_gstDftTag, 'I' }, {g_gstVdecTag, 'D'}, {g_gstVencTag, 'D'} };

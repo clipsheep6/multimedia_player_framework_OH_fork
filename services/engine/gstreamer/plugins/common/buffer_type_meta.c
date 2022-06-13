@@ -133,7 +133,7 @@ GstBufferTypeMeta *gst_buffer_add_buffer_handle_meta(GstBuffer *buffer, intptr_t
 
     buffer_meta->type = GST_BUFFER_TYPE_HANDLE;
     buffer_meta->buf = buf;
-    buffer_meta->buf = config.bufLen;
+    buffer_meta->bufLen = config.bufLen;
     buffer_meta->fenceFd = config.fenceFd;
     buffer_meta->bufferFlag = config.bufferFlag;
     buffer_meta->pixelFormat = config.pixelFormat;
@@ -151,7 +151,7 @@ GstBufferTypeMeta *gst_buffer_add_buffer_fd_meta(GstBuffer *buffer, intptr_t buf
 
     buffer_meta->type = GST_BUFFER_TYPE_AVSHMEM;
     buffer_meta->buf = buf;
-    buffer_meta->buf = config.bufLen;
+    buffer_meta->bufLen = config.bufLen;
     buffer_meta->offset = config.offset;
     buffer_meta->length = config.length;
     buffer_meta->totalSize = config.totalSize;

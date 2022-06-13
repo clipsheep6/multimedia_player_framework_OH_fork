@@ -16,11 +16,9 @@
 #include "dfx_log_dump.h"
 #include <fstream>
 #include <unistd.h>
-#include "media_log.h"
 #include "securec.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "DfxLogDump"};
 constexpr int32_t FILE_MAX = 100;
 constexpr int32_t FILE_LINE_MAX = 1000000;
 }
@@ -34,13 +32,11 @@ DfxLogDump &DfxLogDump::GetInstance()
 
 DfxLogDump::DfxLogDump()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     thread_ = std::make_unique<std::thread>(&DfxLogDump::TaskProcessor, this);
 }
 
 DfxLogDump::~DfxLogDump()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     {
         std::unique_lock<std::mutex> lock(mutex_);
         isExit_ = true;
@@ -112,7 +108,6 @@ void DfxLogDump::TaskProcessor()
     file += std::to_string(fileCount++);
     std::ofstream ofStream(file);
     if (!ofStream.is_open()) {
-        MEDIA_LOGE("open %{public}s failed", file.c_str());
         return;
     }
     ofStream.write(temp.c_str(), temp.size());

@@ -20,6 +20,7 @@
 #include <vector>
 #include <list>
 #include <unordered_map>
+#include <unordered_set>
 #include <memory>
 #include <sstream>
 #include <mutex>
@@ -61,7 +62,7 @@ public:
         }
     }
 
-    void UpdateFuncTag(const std::string &funcTag);
+    void UpdateFuncTag(const std::string &funcTag, bool insert);
     void UpdateClassTag(void *thiz, const std::string &classTag, bool insert);
     std::shared_ptr<DfxNode> GetChildNode(const std::string &name);
     void DumpInfo(std::string &dumpString);
@@ -71,6 +72,7 @@ private:
     std::unordered_map<std::string, std::list<std::string>> valMap_;
     std::unordered_map<void *, std::string> classMap_;
     std::list<std::string> funcTags_;
+    std::unordered_set<std::string> funcSet_;
     std::string name_;
     const uint32_t FUNC_TAG_SIZE = 20;
     const uint32_t VAL_TAG_SIZE = 10;
@@ -138,13 +140,13 @@ public:
     DfxFuncHelper(const std::string& func, const std::shared_ptr<DfxNode> &node) : func_(func), node_(node)
     {
         if (node_) {
-            node_->UpdateFuncTag(func_ + "In");
+            node_->UpdateFuncTag(func_, true);
         }
     }
     ~DfxFuncHelper()
     {
         if (node_) {
-            node_->UpdateFuncTag(func_ + "Out");
+            node_->UpdateFuncTag(func_, false);
         }
     }
 private:

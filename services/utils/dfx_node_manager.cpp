@@ -30,11 +30,16 @@ enum DfxLevel : uint32_t {
 
 namespace OHOS {
 namespace Media {
-void DfxNode::UpdateFuncTag(const std::string &funcTag) {
+void DfxNode::UpdateFuncTag(const std::string &funcTag, bool insert) {
     std::unique_lock<std::mutex> lock(funcMutex_);
-    funcTags_.push_back(funcTag);
-    if (funcTags_.size() > FUNC_TAG_SIZE) {
-        funcTags_.pop_front();
+    if (insert) {
+        funcSet_.insert(funcTag);
+        funcTags_.push_back(funcTag);
+        if (funcTags_.size() > FUNC_TAG_SIZE) {
+            funcTags_.pop_front();
+        }
+    } else {
+        funcSet_.erase(funcTag);
     }
 }
 
@@ -71,13 +76,19 @@ void DfxNode::DumpInfo(std::string &dumpString) {
         dumpString += "\n";
     }
     decltype(funcTags_) funcTemp;
+    decltype(funcSet_) funcSetTemp;
     {
         std::unique_lock<std::mutex> lock(funcMutex_);
         funcTemp = funcTags_;
+        funcSetTemp = funcSet_;
     }
-    dumpString += "Function\n";
+    dumpString += "Function History:\n";
     for (auto str : funcTemp) {
-        dumpString += (str + " ");
+        dumpString += (str + "\n");
+    }
+    dumpString += "Function No Exit:\n";
+    for (auto str : funcSetTemp) {
+        dumpString += (str + "\n");
     }
     dumpString += "\n";
     decltype(classMap_) classTemp;
@@ -85,7 +96,7 @@ void DfxNode::DumpInfo(std::string &dumpString) {
         std::unique_lock<std::mutex> lock(classMutex_);
         classTemp = classMap_;
     }
-    dumpString += "Class\n";
+    dumpString += "Class No Exit:\n";
     for (auto iter : classTemp) {
         dumpString += iter.second;
     }

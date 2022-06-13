@@ -21,7 +21,7 @@
 #include "hdi_codec_util.h"
 #include "hdi_codec.h"
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVdecParamsMgr"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVencParamsMgr"};
     constexpr uint32_t OMX_FRAME_RATE_MOVE = 16; // hdi frame rate need move 16
 }
 

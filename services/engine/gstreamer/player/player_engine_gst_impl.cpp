@@ -21,7 +21,7 @@
 #include "directory_ex.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerEngineGstImpl"};
 }
 
 namespace OHOS {
@@ -108,7 +108,7 @@ int32_t PlayerEngineGstImpl::SetSource(const std::shared_ptr<IMediaDataSource> &
 void PlayerEngineGstImpl::SetDfxNode(const std::shared_ptr<DfxNode> &node)
 {
     dfxNode_ = node;
-    dfxClassHelper_.Init(this, "PlayerServer", node);
+    dfxClassHelper_.Init(this, "PlayerEngineGstImpl", node);
 }
 
 int32_t PlayerEngineGstImpl::SetObs(const std::weak_ptr<IPlayerEngineObs> &obs)
@@ -176,7 +176,7 @@ void PlayerEngineGstImpl::PlayerLoop()
 
     playerCtrl_ = playerBuild_->BuildPlayerCtrl();
     CHECK_AND_RETURN_LOG(playerCtrl_ != nullptr, "playerCtrl_ is nullptr");
-
+    playerCtrl_->SetDfxNode(dfxNode_);
     condVarSync_.notify_all();
 
     MEDIA_LOGD("Start the player loop");

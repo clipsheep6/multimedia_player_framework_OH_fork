@@ -139,6 +139,7 @@ std::shared_ptr<IGstCodec> GstHdiFactory::CreateHdiVencH264(GstElementClass *kcl
 
 gboolean GstHdiFactory::InputNeedCopy()
 {
+    MEDIA_LOGD("need copy");
     return TRUE;
 }
 
@@ -150,9 +151,9 @@ void GstHdiFactory::SetCreateFuncs(GstElementClass *elementClass, CapabilityData
     }
     switch (capData.codecType) {
         case AVCODEC_TYPE_VIDEO_DECODER: {
-            GstVdecBaseClass *vdecClass = reinterpret_cast<GstVdecBaseClass*>(elementClass);
+            GstVdecBaseClass *vdecClass = reinterpret_cast<GstVdecBaseClass *>(elementClass);
             vdecClass->create_codec = FUNCTIONS_MAP.at(factoryPair);
-            vdecClass->input_need_copy = InputNeedCopy;
+            vdecClass->input_need_copy = &GstHdiFactory::InputNeedCopy;
             break;
         }
         case AVCODEC_TYPE_VIDEO_ENCODER: {
@@ -260,7 +261,7 @@ void GstHdiFactory::UpdatePluginName(std::string &codecName)
 void GstHdiFactory::GstHdiCodecClassInit(gpointer kclass, gpointer data)
 {
     MEDIA_LOGD("HdiClassInit");
-    GstElementClass *elementClass = reinterpret_cast<GstElementClass*>(kclass);
+    GstElementClass *elementClass = reinterpret_cast<GstElementClass *>(kclass);
     CapDataWarp *capDataWarp = reinterpret_cast<CapDataWarp *>(data);
     // Params must delete before return.
     CHECK_AND_RETURN_LOG(elementClass != nullptr && capDataWarp != nullptr, "ClassInit cap is nullptr");
