@@ -180,9 +180,8 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
     }
 }
 
-static void gst_vdec_base_init_after(GstVdecBase *self)
+static void gst_vdec_base_check_input_need_copy(GstVdecBase *self)
 {
-    self->input_need_copy = FALSE;
     GstVdecBaseClass *base_class = GST_VDEC_BASE_GET_CLASS(self);
     g_return_if_fail(base_class != nullptr);
     if (base_class->input_need_copy != nullptr) {
@@ -245,7 +244,6 @@ static void gst_vdec_base_init(GstVdecBase *self)
     self->out_buffer_max_cnt = DEFAULT_MAX_QUEUE_SIZE;
     self->pre_init_pool = FALSE;
     self->performance_mode = FALSE;
-    gst_vdec_base_init_after(self);
 }
 
 static void gst_vdec_base_finalize(GObject *object)
@@ -295,6 +293,7 @@ static gboolean gst_vdec_base_open(GstVideoDecoder *decoder)
     self->decoder = base_class->create_codec(reinterpret_cast<GstElementClass*>(base_class));
     g_return_val_if_fail(self->decoder != nullptr, FALSE);
     self->decoder->SetDfxNode(self->dfx_node);
+    gst_vdec_base_check_input_need_copy(self);
     return TRUE;
 }
 
@@ -714,7 +713,7 @@ static gboolean gst_vdec_base_allocate_out_buffers(GstVdecBase *self)
     std::vector<GstBuffer*> buffers;
     self->coding_outbuf_cnt = self->out_buffer_cnt;
     for (guint i = 0; i < self->out_buffer_cnt; ++i) {
-        GST_ERROR_OBJECT(self, "Allocate output buffer %d", i);
+        GST_DEBUG_OBJECT(self, "Allocate output buffer %d", i);
         GstBuffer *buffer = gst_video_decoder_allocate_output_buffer(GST_VIDEO_DECODER(self));
         if (buffer == nullptr) {
             GST_WARNING_OBJECT(self, "Allocate buffer is nullptr");
@@ -904,10 +903,16 @@ static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstB
 
     auto ret = memcpy_s(dts_map.data, dts_map.size, src_map.data, src_map.size);
     g_return_val_if_fail(ret == EOK, GST_CODEC_ERROR);
+
+    GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(dts_buffer);
+    g_return_val_if_fail(meta != nullptr, GST_CODEC_ERROR);
+    meta->length = src_map.size;
+    GST_DEBUG_OBJECT(self, "meta->length %d", meta->length);
     CANCEL_SCOPE_EXIT_GUARD(2);
     CANCEL_SCOPE_EXIT_GUARD(3);
     gst_buffer_unmap(dts_buffer, &dts_map);
     gst_buffer_unmap(src_buffer, &src_map);
+
     gint codec_ret = self->decoder->PushInputBuffer(dts_buffer);
     return codec_ret;
 }

@@ -58,6 +58,9 @@ void HdiBufferMgr::SetDfxNode(const std::shared_ptr<DfxNode> &node)
 {
     dfxNode_ = node;
     dfxClassHelper_.Init(this, "HdiBufferMgr", dfxNode_);
+    allocLen_.Init(dfxNode_, "allocLen");
+    offset_.Init(dfxNode_, "offset");
+    filledLen_.Init(dfxNode_, "filledLen");
 }
 
 std::shared_ptr<OmxCodecBuffer> HdiBufferMgr::GetCodecBuffer(GstBuffer *buffer)
@@ -92,6 +95,10 @@ void HdiBufferMgr::UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_pt
     codecBuffer->filledLen = bufferType->length;
     codecBuffer->fenceFd = bufferType->fenceFd;
     codecBuffer->type = bufferType->memFlag == FLAGS_READ_ONLY ? READ_ONLY_TYPE : READ_WRITE_TYPE;
+    allocLen_ = codecBuffer->allocLen;
+    offset_ = codecBuffer->offset;
+    filledLen_ = codecBuffer->filledLen;
+    MEDIA_LOGD("id fillLen %{public}d", filledLen_.GetValue());
 }
 
 int32_t HdiBufferMgr::UseAshareMems(std::vector<GstBuffer *> &buffers)

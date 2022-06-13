@@ -98,6 +98,9 @@ protected:
     virtual void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<OmxCodecBuffer> &codecBuffer);
     std::shared_ptr<DfxNode> dfxNode_;
     DfxClassHelper dfxClassHelper_;
+    DfxValHelper<uint32_t> allocLen_;
+    DfxValHelper<uint32_t> offset_;
+    DfxValHelper<uint32_t> filledLen_;
 };
 } // namespace Media
 } // namespace OHOS

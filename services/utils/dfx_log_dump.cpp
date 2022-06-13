@@ -77,8 +77,8 @@ void DfxLogDump::SaveLog(const char *level, const OHOS::HiviewDFX::HiLogLabel &l
 
     std::unique_lock<std::mutex> lock(mutex_);
     logString_ += level;
-    logString_ += " uid:";
-    logString_ += std::to_string(getuid());
+    logString_ += " tid:";
+    logString_ += std::to_string(gettid());
     logString_ += " ";
     logString_ += label.tag;
     logString_ += ":";

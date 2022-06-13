@@ -689,18 +689,27 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
         std::to_string(config_.leftVolume) + ", " + std::to_string(config_.rightVolume) + "\n";
 
     std::vector<Format> videoTrack;
-    CHECK_AND_RETURN_RET(GetVideoTrackInfo(videoTrack) == MSERR_OK, MSERR_INVALID_OPERATION);
-    dumpString += "PlayerServer video tracks info: \n";
-    FormatToString(dumpString, videoTrack);
+    if (GetVideoTrackInfo(videoTrack) == MSERR_OK) {
+        dumpString += "PlayerServer video tracks info: \n";
+        FormatToString(dumpString, videoTrack);
+    } else {
+        dumpString += "Get PlayerServer video tracks info failed\n";
+    }
     
     std::vector<Format> audioTrack;
-    CHECK_AND_RETURN_RET(GetAudioTrackInfo(audioTrack) == MSERR_OK, MSERR_INVALID_OPERATION);
-    dumpString += "PlayerServer audio tracks info: \n";
-    FormatToString(dumpString, audioTrack);
+    if (GetAudioTrackInfo(audioTrack) == MSERR_OK) {
+        dumpString += "PlayerServer audio tracks info: \n";
+        FormatToString(dumpString, audioTrack);
+    } else {
+        dumpString += "Get PlayerServer audio tracks info failed\n";
+    }
     
     int32_t currentTime;
-    CHECK_AND_RETURN_RET(GetCurrentTime(currentTime) == MSERR_OK, MSERR_INVALID_OPERATION);
-    dumpString += "PlayerServer current time is: " + std::to_string(currentTime) + "\n";
+    if (GetCurrentTime(currentTime) == MSERR_OK) {
+        dumpString += "PlayerServer current time is: " + std::to_string(currentTime) + "\n";
+    } else {
+        dumpString += "Get PlayerServer current time failed\n";
+    }
 
     DfxNodeManager::GetInstance().DumpDfxNode(dfxNode_, dumpString);
     write(fd, dumpString.c_str(), dumpString.size());

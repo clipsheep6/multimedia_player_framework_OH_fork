@@ -24,6 +24,7 @@ const std::map<VideoPixelFormat, std::string> PIXEL_TO_STRING = {
     {NV21, "NV21"},
     {SURFACE_FORMAT, "NV21"},
     {RGBA, "RGBA"},
+    {NV16, "NV16"},
 };
 
 const std::map<AudioStandard::AudioSampleFormat, std::string> PCM_TO_STRING = {

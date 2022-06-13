@@ -129,6 +129,9 @@ void HdiCodec::SetDfxNode(const std::shared_ptr<DfxNode> &node)
 {
     dfxNode_ = node;
     dfxClassHelper_.Init(this, "HdiCodec", dfxNode_);
+    inBufferMgr_->SetDfxNode(node);
+    outBufferMgr_->SetDfxNode(node);
+    paramsMgr_->SetDfxNode(node);
 }
 
 int32_t HdiCodec::SetParameter(GstCodecParamKey key, GstElement *element)

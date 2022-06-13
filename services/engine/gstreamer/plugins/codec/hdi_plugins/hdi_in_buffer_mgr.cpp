@@ -74,6 +74,7 @@ int32_t HdiInBufferMgr::PushBuffer(GstBuffer *buffer)
         codecBuffer = GetCodecBuffer(buffer);
     }
     CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
+    MEDIA_LOGD("id %{public}d fillLen %{public}d", codecBuffer->bufferId, codecBuffer->filledLen);
     auto ret = handle_->EmptyThisBuffer(handle_, codecBuffer.get());
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "EmptyThisBuffer failed");
     MEDIA_LOGD("PushBuffer end");
