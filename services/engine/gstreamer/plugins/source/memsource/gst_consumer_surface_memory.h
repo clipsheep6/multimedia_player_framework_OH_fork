@@ -18,6 +18,7 @@
 
 #include <gst/gst.h>
 #include "surface_buffer.h"
+#include "dfx_node_manager.h"
 
 typedef struct _GstConsumerSurfaceMemory GstConsumerSurfaceMemory;
 
@@ -33,6 +34,7 @@ struct _GstConsumerSurfaceMemory {
     gint32 data_size;
     gint32 is_codec_frame;
     gint32 pixel_format;
+    OHOS::Media::DfxClassHelper dfx_class_helper;
 };
 
 gboolean gst_is_consumer_surface_memory(GstMemory *mem);

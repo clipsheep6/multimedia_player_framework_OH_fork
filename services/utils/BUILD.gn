@@ -50,6 +50,7 @@ ohos_shared_library("media_service_utils") {
     "time_monitor.cpp",
     "time_perf.cpp",
     "uri_helper.cpp",
+    "dfx_node_manager.cpp",
   ]
 
   include_dirs = [
@@ -77,12 +78,16 @@ ohos_shared_library("media_service_utils") {
 
   configs = [ ":media_service_utils_public_config" ]
 
-  deps = [ "//utils/native/base:utils" ]
+  deps = [
+    "//utils/native/base:utils",
+    "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
+  ]
 
   external_deps = [
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "faultloggerd:lib_dfx_dump_catcher",
   ]
 
   subsystem_name = "multimedia"

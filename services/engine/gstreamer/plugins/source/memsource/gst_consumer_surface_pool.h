@@ -19,6 +19,7 @@
 #include <gst/gst.h>
 #include <gst/video/gstvideopool.h>
 #include "surface.h"
+#include "dfx_node_manager.h"
 
 G_BEGIN_DECLS
 

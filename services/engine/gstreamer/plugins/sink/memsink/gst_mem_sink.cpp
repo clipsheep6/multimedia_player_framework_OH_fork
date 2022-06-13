@@ -34,6 +34,7 @@ struct _GstMemSinkPrivate {
     GstMemSinkCallbacks callbacks;
     gpointer userdata;
     GDestroyNotify notify;
+    OHOS::Media::DfxClassHelper dfx_class_helper;
 };
 
 enum {
@@ -41,6 +42,7 @@ enum {
     PROP_CAPS,
     PROP_MAX_POOL_CAPACITY,
     PROP_WAIT_TIME,
+    PROP_DFX_NODE
 };
 
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
@@ -63,6 +65,7 @@ static gboolean gst_mem_sink_stop(GstBaseSink *basesink);
 static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *basesink, GstBuffer *buffer);
 static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *basesink, GstBuffer *buffer);
 static gboolean gst_mem_sink_propose_allocation(GstBaseSink *bsink, GstQuery *query);
+static void gst_mem_sink_init_dfx_node(GstMemSink *sink);
 
 #define gst_mem_sink_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE(GstMemSink, gst_mem_sink, GST_TYPE_BASE_SINK, G_ADD_PRIVATE(GstMemSink));
@@ -77,6 +80,7 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS(klass);
     GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
+    GstMemSinkClass *mem_sink_class = GST_MEM_SINK_CLASS(klass);
 
     gst_element_class_add_static_pad_template(element_class, &g_sinktemplate);
 
@@ -107,6 +111,10 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
             0, G_MAXUINT, DEFAULT_PROP_MAX_POOL_CAPACITY,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_DFX_NODE,
+        g_param_spec_pointer("dfx-node", "Dfx node", "Dfx node",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     base_sink_class->start = gst_mem_sink_start;
     base_sink_class->stop = gst_mem_sink_stop;
     base_sink_class->preroll = gst_mem_sink_preroll;
@@ -116,6 +124,7 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
     base_sink_class->query = gst_mem_sink_query;
     base_sink_class->event = gst_mem_sink_event;
     base_sink_class->propose_allocation = gst_mem_sink_propose_allocation;
+    mem_sink_class->init_dfx_node = gst_mem_sink_init_dfx_node;
 
     GST_DEBUG_CATEGORY_INIT(gst_mem_sink_debug_category, "memsink", 0, "memsink class");
 }
@@ -159,6 +168,8 @@ static void gst_mem_sink_dispose(GObject *obj)
         priv->userdata = nullptr;
         priv->notify = nullptr;
     }
+    mem_sink->dfx_node = nullptr;
+    mem_sink->priv->dfx_class_helper.DeInit();
     GST_OBJECT_UNLOCK(mem_sink);
 
     G_OBJECT_CLASS(parent_class)->dispose(obj);
@@ -175,6 +186,14 @@ static void gst_mem_sink_finalize(GObject *obj)
     g_mutex_clear(&priv->mutex);
 
     G_OBJECT_CLASS(parent_class)->finalize(obj);
+}
+
+static void gst_mem_sink_init_dfx_node(GstMemSink *sink)
+{
+    g_return_if_fail(sink != nullptr);
+    GstMemSinkPrivate *priv = sink->priv;
+    g_return_if_fail(priv != nullptr);
+    priv->dfx_class_helper.Init(sink, "memsink", sink->dfx_node);
 }
 
 static void gst_mem_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -206,6 +225,13 @@ static void gst_mem_sink_set_property(GObject *object, guint prop_id, const GVal
             mem_sink->wait_time = g_value_get_uint(value);
             GST_DEBUG_OBJECT(mem_sink, "set wait time: %d", mem_sink->wait_time);
             GST_OBJECT_UNLOCK(mem_sink);
+            break;
+        }
+        case PROP_DFX_NODE: {
+            mem_sink->dfx_node =
+                *(reinterpret_cast<std::shared_ptr<OHOS::Media::DfxNode> *>(g_value_get_boolean(value)));
+            GstMemSinkClass *sink_class = GST_MEM_SINK_GET_CLASS(mem_sink);
+            sink_class->init_dfx_node(mem_sink);
             break;
         }
         default:

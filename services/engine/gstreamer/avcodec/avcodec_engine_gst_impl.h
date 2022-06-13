@@ -47,6 +47,7 @@ public:
     int32_t ReleaseOutputBuffer(uint32_t index, bool render) override;
     int32_t SetParameter(const Format &format) override;
     int32_t SetObs(const std::weak_ptr<IAVCodecEngineObs> &obs) override;
+    void SetDfxNode(const std::shared_ptr<DfxNode> &node) override;
 
 private:
     std::string FindMimeTypeByName(AVCodecType type, const std::string &name);
@@ -56,14 +57,16 @@ private:
     void CheckSurfaceFormat(Format &format);
 
     AVCodecType type_ = AVCODEC_TYPE_VIDEO_ENCODER;
-    bool useSoftWare_ = false;
-    std::string pluginName_ = "";
+    DfxValHelper<std::string> pluginName_ = std::string("");
     std::unique_ptr<AVCodecEngineCtrl> ctrl_ = nullptr;
     std::unique_ptr<ProcessorBase> processor_ = nullptr;
     std::mutex mutex_;
     std::weak_ptr<IAVCodecEngineObs> obs_;
     Format format_;
+    bool useSoftWare_ = false;
     CapabilityData capData_;
+    std::shared_ptr<DfxNode> dfxNode_;
+    DfxClassHelper dfxClassHelper_;
 };
 } // namespace Media
 } // namespace OHOS

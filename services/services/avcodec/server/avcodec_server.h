@@ -20,6 +20,7 @@
 #include "i_avcodec_service.h"
 #include "time_monitor.h"
 #include "nocopyable.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -68,15 +69,16 @@ public:
 
 private:
     int32_t Init();
-    const std::string &GetStatusDescription(OHOS::Media::AVCodecServer::AVCodecStatus status);
+    const std::string &GetStatusDescription(DfxValHelper<OHOS::Media::AVCodecServer::AVCodecStatus> status);
 
-    AVCodecStatus status_ = AVCODEC_UNINITIALIZED;
+    DfxValHelper<AVCodecStatus> status_ = AVCODEC_UNINITIALIZED;
     std::unique_ptr<IAVCodecEngine> codecEngine_;
     std::shared_ptr<AVCodecCallback> codecCb_;
     std::mutex mutex_;
     std::mutex cbMutex_;
     Format config_;
     std::string lastErrMsg_;
+    std::shared_ptr<DfxNode> dfxNode_;
 };
 } // namespace Media
 } // namespace OHOS

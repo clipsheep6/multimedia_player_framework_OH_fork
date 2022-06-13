@@ -23,6 +23,7 @@
 #include <mutex>
 #include "nocopyable.h"
 #include "avsharedmemorybase.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -84,6 +85,15 @@ public:
      */
     void Reset();
 
+    /**
+     * @brief Get dfxNode which may be nullptr in avsharedmemorypool.
+     */
+    std::shared_ptr<DfxNode> GetDfxNode();
+
+    /**
+     * @brief Set dfxNode which may be nullptr to avsharedmemorypool.
+     */
+    void SetDfxNode(const std::shared_ptr<DfxNode> &dfxNode);
     std::string GetName()
     {
         return name_;
@@ -104,6 +114,8 @@ private:
     std::string name_;
     MemoryAvailableNotifier notifier_;
     bool forceNonBlocking_ = false;
+    std::shared_ptr<DfxNode> dfxNode_ = nullptr;
+    DfxClassHelper dfxClassHelper_;
 };
 } // namespace Media
 } // namespace OHOS
