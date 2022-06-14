@@ -75,6 +75,7 @@ napi_value VideoPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setVolume", SetVolume),
         DECLARE_NAPI_FUNCTION("getTrackDescription", GetTrackDescription),
         DECLARE_NAPI_FUNCTION("setSpeed", SetSpeed),
+        DECLARE_NAPI_FUNCTION("selectBitrate", SelectBitrate),
 
         DECLARE_NAPI_GETTER_SETTER("dataSrc", GetDataSrc, SetDataSrc),
         DECLARE_NAPI_GETTER_SETTER("url", GetUrl, SetUrl),
@@ -500,25 +501,10 @@ napi_value VideoPlayerNapi::SetDisplaySurface(napi_env env, napi_callback_info i
     return result;
 }
 
-void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *data)
+int32_t VideoPlayerNapi::ProcessWork(napi_env env, napi_status status, void *data)
 {
-    MEDIA_LOGD("CompleteAsyncFunc In");
     auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
-    CHECK_AND_RETURN_LOG(asyncContext != nullptr, "VideoPlayerAsyncContext is nullptr!");
-
-    if (status != napi_ok) {
-        return MediaAsyncContext::CompleteCallback(env, status, data);
-    }
-
-    if (asyncContext->jsPlayer == nullptr || asyncContext->jsPlayer->nativePlayer_ == nullptr ||
-        asyncContext->jsPlayer->jsCallback_ == nullptr) {
-        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer or nativePlayer or jsCallback is nullptr");
-        return MediaAsyncContext::CompleteCallback(env, status, data);
-    }
-
-    asyncContext->env = env;
     auto cb = std::static_pointer_cast<VideoCallbackNapi>(asyncContext->jsPlayer->jsCallback_);
-    cb->QueueAsyncWork(asyncContext);
 
     int32_t ret = MSERR_OK;
     auto player = asyncContext->jsPlayer->nativePlayer_;
@@ -543,13 +529,39 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
     } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_SPEED) {
         PlaybackRateMode speedMode = static_cast<PlaybackRateMode>(asyncContext->speedMode);
         ret = player->SetPlaybackSpeed(speedMode);
+    } else if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_BITRATE) {
+        uint32_t bitRate = static_cast<uint32_t>(asyncContext->bitRate);
+        ret = player->SelectBitRate(bitRate);
     } else {
         asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to operate playback", false);
         MediaAsyncContext::CompleteCallback(env, status, data);
         cb->ClearAsyncWork();
-        return;
     }
 
+    return ret;
+}
+
+void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *data)
+{
+    MEDIA_LOGD("CompleteAsyncFunc In");
+    auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
+    CHECK_AND_RETURN_LOG(asyncContext != nullptr, "VideoPlayerAsyncContext is nullptr!");
+
+    if (status != napi_ok) {
+        return MediaAsyncContext::CompleteCallback(env, status, data);
+    }
+
+    if (asyncContext->jsPlayer == nullptr || asyncContext->jsPlayer->nativePlayer_ == nullptr ||
+        asyncContext->jsPlayer->jsCallback_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer or nativePlayer or jsCallback is nullptr");
+        return MediaAsyncContext::CompleteCallback(env, status, data);
+    }
+
+    asyncContext->env = env;
+    auto cb = std::static_pointer_cast<VideoCallbackNapi>(asyncContext->jsPlayer->jsCallback_);
+    cb->QueueAsyncWork(asyncContext);
+
+    int32_t ret = ProcessWork(env, status, data);
     if (ret != MSERR_OK) {
         asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to operate playback", false);
         MediaAsyncContext::CompleteCallback(env, status, data);
@@ -867,6 +879,48 @@ napi_value VideoPlayerNapi::SetSpeed(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value VideoPlayerNapi::SelectBitrate(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGD("SelectBitRate In");
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+    asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_BITRATE;
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[2] = { nullptr };
+    size_t argCount = 2;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    // get bitrate
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed get bitrate");
+    }
+    status = napi_get_value_int32(env, args[0], &asyncContext->bitRate);
+    if ((status != napi_ok) || (asyncContext->bitRate < 0)) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "bitrate invalid");
+    }
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+
+    // get jsPlayer
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+    // async work
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "SelectBitrate", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
+        CompleteAsyncWork, static_cast<void *>(asyncContext.get()), &asyncContext->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
+    asyncContext.release();
+    return result;
+}
+
 void VideoPlayerNapi::AsyncGetTrackDescription(napi_env env, void *data)
 {
     auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
@@ -1048,7 +1102,6 @@ napi_value VideoPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
     MEDIA_LOGD("SetLoop success");
     return undefinedResult;
 }
-
 
 napi_value VideoPlayerNapi::GetLoop(napi_env env, napi_callback_info info)
 {

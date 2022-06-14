@@ -269,8 +269,7 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
     g_return_val_if_fail(sink != nullptr, FALSE);
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
 
-    gchar *caps_str = gst_caps_to_string(caps);
-    GST_INFO_OBJECT(basesink, "caps=%s", caps_str);
+    GST_INFO_OBJECT(basesink, "caps=%" GST_PTR_FORMAT, caps);
     GstStructure *structure = gst_caps_get_structure(caps, 0);
     g_return_val_if_fail(structure != nullptr, FALSE);
     gint channels = 0;
@@ -289,6 +288,10 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
         sink->channels, sink->sample_rate) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinimumBufferSize(sink->min_buffer_size) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinimumFrameCount(sink->min_frame_count) == MSERR_OK, FALSE);
+
+    if (GST_STATE(sink) == GST_STATE_PLAYING) {
+        g_return_val_if_fail(sink->audio_sink->Start() == MSERR_OK, FALSE);
+    }
 
     return TRUE;
 }

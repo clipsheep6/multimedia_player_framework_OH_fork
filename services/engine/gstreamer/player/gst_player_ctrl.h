@@ -58,6 +58,7 @@ public:
     void SetRingBufferMaxSize(uint64_t size);
     void SetBufferingInfo();
     void SetHttpTimeOut();
+    int32_t SelectBitRate(uint32_t bitRate);
     static void OnStateChangedCb(const GstPlayer *player, GstPlayerState state, GstPlayerCtrl *playerGst);
     static void OnEndOfStreamCb(const GstPlayer *player, GstPlayerCtrl *playerGst);
     static void StreamDecErrorParse(const gchar *name, int32_t &errorCode);
@@ -74,10 +75,14 @@ public:
     static void OnElementSetupCb(const GstPlayer *player, GstElement *src, GstPlayerCtrl *playerGst);
     static void OnResolutionChanegdCb(const GstPlayer *player,
         int32_t width, int32_t height, GstPlayerCtrl *playerGst);
+    static void OnBitRateParseCompleteCb(const GstPlayer *player, uint32_t *bitrateInfo,
+        uint32_t bitrateNum, GstPlayerCtrl *playerGst);
     static void OnCachedPercentCb(const GstPlayer *player, guint percent, GstPlayerCtrl *playerGst);
     static void OnBufferingTimeCb(const GstPlayer *player, guint64 bufferingTime, guint mqNumId,
         GstPlayerCtrl *playerGst);
     static void OnMqNumUseBufferingCb(const GstPlayer *player, guint mqNumUseBuffering, GstPlayerCtrl *playerGst);
+    static GValueArray* OnAutoplugSortCb(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
+                                         GValueArray *factories, GstPlayerCtrl *playerGst);
 private:
     PlayerStates ProcessStoppedState();
     PlayerStates ProcessPausedState();
@@ -91,7 +96,7 @@ private:
     void OnSeekDone();
     void OnEndOfStream();
     void OnMessage(int32_t extra) const;
-    void OnBufferingUpdate(const std::string Message) const;
+    void OnBufferingUpdate(const std::string &Message) const;
     void OnResolutionChange(int32_t width, int32_t height);
     void InitDuration();
     void PlaySync();
@@ -107,8 +112,11 @@ private:
     void ProcessCachedPercent(const GstPlayer *cbPlayer, int32_t percent);
     void ProcessBufferingTime(const GstPlayer *cbPlayer, guint64 bufferingTime, guint mqNumId);
     void ProcessMqNumUseBuffering(const GstPlayer *cbPlayer, uint32_t mqNumUseBuffering);
+    void RemoveGstPlaySinkVideoConvertPlugin();
+    void OnBitRateParseComplete(uint32_t *bitrateInfo, uint32_t bitrateNum);
     bool IsLiveMode() const;
     bool SetAudioRendererInfo(const Format &param);
+    void SetBitRate(uint32_t bitRate);
     std::mutex mutex_;
     std::condition_variable condVarPlaySync_;
     std::condition_variable condVarPauseSync_;
@@ -134,7 +142,9 @@ private:
     bool seekDoneNeedCb_ = false;
     bool endOfStreamCb_ = false;
     bool preparing_ = false;
+    bool decPluginRegister_ = false;
     std::vector<gulong> signalIds_;
+    std::vector<uint32_t> bitRateVec_;
     gulong signalIdVolume_ = 0;
     GstElement *audioSink_ = nullptr;
     GstElement *decoder_ = nullptr;
@@ -153,6 +163,8 @@ private:
     int32_t videoHeight_ = 0;
     bool isHardWare_ = false;
     GstElement *videoSink_ = nullptr;
+    bool isPlaySinkFlagsSet_ = false;
+    bool isNetWorkPlay_ = false;
 };
 } // namespace Media
 } // namespace OHOS

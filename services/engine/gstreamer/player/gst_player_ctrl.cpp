@@ -14,6 +14,7 @@
  */
 
 #include "gst_player_ctrl.h"
+#include <playback/gstplay-enum.h>
 #include "media_log.h"
 #include "audio_system_manager.h"
 #include "media_errors.h"
@@ -86,6 +87,8 @@ GstPlayerCtrl::~GstPlayerCtrl()
     for (auto &signalId : signalIds_) {
         g_signal_handler_disconnect(gstPlayer_, signalId);
     }
+    g_object_unref(gstPlayer_);
+    gstPlayer_ = nullptr;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -111,6 +114,38 @@ void GstPlayerCtrl::SetBufferingInfo()
         "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, nullptr);
 }
 
+int32_t GstPlayerCtrl::SelectBitRate(uint32_t bitRate)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (bitRateVec_.empty()) {
+        MEDIA_LOGE("BitRate is empty");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([this, bitRate] { SetBitRate(bitRate); });
+    if (taskQue_.EnqueueTask(task) != 0) {
+        MEDIA_LOGE("SelectBitRate fail");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    return MSERR_OK;
+}
+
+void GstPlayerCtrl::SetBitRate(uint32_t bitRate)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(gstPlayer_ != nullptr, "gstPlayer_ is nullptr");
+    MEDIA_LOGD("SelectBitRate bitRate = %{public}u", bitRate);
+
+    g_object_set(gstPlayer_, "connection-speed", static_cast<uint64_t>(bitRate), nullptr);
+
+    std::shared_ptr<IPlayerEngineObs> tempObs = obs_.lock();
+    if (tempObs != nullptr) {
+        Format format;
+        tempObs->OnInfo(INFO_TYPE_BITRATEDONE, static_cast<int32_t>(bitRate), format);
+    }
+}
+
 void GstPlayerCtrl::SetHttpTimeOut()
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -126,6 +161,9 @@ int32_t GstPlayerCtrl::SetUrl(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(gstPlayer_ != nullptr, MSERR_INVALID_VAL, "gstPlayer_ is nullptr");
     gst_player_set_uri(gstPlayer_, url.c_str());
     currentState_ = PLAYER_PREPARING;
+    if (url.find("http") == 0 || url.find("https") == 0) {
+        isNetWorkPlay_ = true;
+    }
     return MSERR_OK;
 }
 
@@ -159,10 +197,56 @@ int32_t GstPlayerCtrl::SetCallbacks(const std::weak_ptr<IPlayerEngineObs> &obs)
     signalIds_.push_back(g_signal_connect(gstPlayer_, "mq-num-use-buffering", G_CALLBACK(OnMqNumUseBufferingCb), this));
     signalIds_.push_back(g_signal_connect(gstPlayer_, "resolution-changed", G_CALLBACK(OnResolutionChanegdCb), this));
     signalIds_.push_back(g_signal_connect(gstPlayer_, "element-setup", G_CALLBACK(OnElementSetupCb), this));
+    signalIds_.push_back(g_signal_connect(gstPlayer_, "bitrate-parse-complete",
+        G_CALLBACK(OnBitRateParseCompleteCb), this));
 
     obs_ = obs;
     currentState_ = PLAYER_PREPARING;
     return MSERR_OK;
+}
+
+void GstPlayerCtrl::RemoveGstPlaySinkVideoConvertPlugin()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(gstPlayer_ != nullptr, "gstPlayer_ is null");
+
+    GstElement *playbin = gst_player_get_pipeline(gstPlayer_);
+    uint32_t flags = 0;
+
+    g_object_get(playbin, "flags", &flags, nullptr);
+    flags |= (GST_PLAY_FLAG_NATIVE_VIDEO | GST_PLAY_FLAG_HARDWARE_VIDEO);
+    flags &= ~GST_PLAY_FLAG_SOFT_COLORBALANCE;
+    MEDIA_LOGD("set gstplaysink flags %{public}d", flags);
+    // set playsink remove GstPlaySinkVideoConvert, for first-frame performance optimization
+    g_object_set(playbin, "flags", flags, nullptr);
+    gst_object_unref(playbin);
+}
+
+GValueArray* GstPlayerCtrl::OnAutoplugSortCb(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
+                                             GValueArray *factories, GstPlayerCtrl *playerGst)
+{
+    CHECK_AND_RETURN_RET_LOG(uriDecoder != nullptr, nullptr, "uriDecoder is null");
+    CHECK_AND_RETURN_RET_LOG(pad != nullptr, nullptr, "pad is null");
+    CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "caps is null");
+    CHECK_AND_RETURN_RET_LOG(factories != nullptr, nullptr, "factories is null");
+    CHECK_AND_RETURN_RET_LOG(playerGst != nullptr, nullptr, "playerGst is null");
+
+    if (playerGst->isPlaySinkFlagsSet_) {
+        return nullptr;
+    }
+
+    for (uint32_t i = 0; i < factories->n_values; i++) {
+        GstElementFactory *factory =
+            static_cast<GstElementFactory *>(g_value_get_object(g_value_array_get_nth(factories, i)));
+        if (strstr(gst_element_factory_get_metadata(factory, GST_ELEMENT_METADATA_KLASS),
+            "Codec/Decoder/Video/Hardware")) {
+            MEDIA_LOGD("set remove GstPlaySinkVideoConvert plugins from pipeline");
+            playerGst->RemoveGstPlaySinkVideoConvertPlugin();
+            playerGst->isPlaySinkFlagsSet_ = true;
+            break;
+        }
+    }
+    return nullptr;
 }
 
 void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, GstPlayerCtrl *playerGst)
@@ -180,23 +264,28 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
 
     MEDIA_LOGD("get element_name %{public}s, get metadata %{public}s", GST_ELEMENT_NAME(src), metadata);
     std::string metaStr(metadata);
+    std::string elementName(GST_ELEMENT_NAME(src));
 
     if (metaStr.find("Codec/Demuxer") != std::string::npos || metaStr.find("Codec/Parser") != std::string::npos) {
         if (!playerGst->trackParse_->GetDemuxerElementFind()) {
-            playerGst->signalIds_.push_back(g_signal_connect(src,
-                "pad-added", G_CALLBACK(GstPlayerTrackParse::OnPadAddedCb), playerGst->trackParse_.get()));
+            g_signal_connect(src,
+                "pad-added", G_CALLBACK(GstPlayerTrackParse::OnPadAddedCb), playerGst->trackParse_.get());
             playerGst->trackParse_->SetDemuxerElementFind(true);
         }
     }
 
+    if (playerGst->isNetWorkPlay_ == false && elementName.find("uridecodebin") != std::string::npos) {
+        g_signal_connect(src, "autoplug-sort", G_CALLBACK(OnAutoplugSortCb), playerGst);
+    }
+
     if (metaStr.find("Codec/Decoder/Video/Hardware") != std::string::npos) {
         playerGst->isHardWare_ = true;
-        playerGst->decoder_ = GST_ELEMENT_CAST(gst_object_ref(src));
-        if (!playerGst->preparing_) {
-            // For hls scene.
+        if (playerGst->decPluginRegister_) {
+            // For hls scene when change codec, the second codec should not go performance mode process.
             return;
         }
         // For performance mode.
+        playerGst->decPluginRegister_ = true;
         playerGst->GetVideoSink();
         CHECK_AND_RETURN_LOG(playerGst->videoSink_ != nullptr, "videoSink is null");
         g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
@@ -217,6 +306,33 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
             g_object_set(G_OBJECT(src), "cache-buffers-num", DEFAULT_CACHE_BUFFERS, nullptr);
         }
         return;
+    }
+}
+
+void GstPlayerCtrl::OnBitRateParseCompleteCb(const GstPlayer *player,
+    uint32_t *bitrateInfo, uint32_t bitrateNum, GstPlayerCtrl *playerGst)
+{
+    CHECK_AND_RETURN_LOG(player != nullptr, "player is null");
+    CHECK_AND_RETURN_LOG(playerGst != nullptr, "playerGst is null");
+    CHECK_AND_RETURN_LOG(bitrateInfo != nullptr, "bitrateInfo is null");
+
+    playerGst->OnBitRateParseComplete(bitrateInfo, bitrateNum);
+}
+
+void GstPlayerCtrl::OnBitRateParseComplete(uint32_t *bitrateInfo, uint32_t bitrateNum)
+{
+    MEDIA_LOGD("bitrateNum = %{public}u", bitrateNum);
+    for (uint32_t i = 0; i < bitrateNum; i++) {
+        MEDIA_LOGD("bitrate = %{public}u", bitrateInfo[i]);
+        bitRateVec_.push_back(bitrateInfo[i]);
+    }
+
+    Format format;
+    (void)format.PutBuffer(std::string(PlayerKeys::PLAYER_BITRATE),
+        static_cast<uint8_t *>(static_cast<void *>(bitrateInfo)), bitrateNum * sizeof(uint32_t));
+    std::shared_ptr<IPlayerEngineObs> tempObs = obs_.lock();
+    if (tempObs != nullptr) {
+        tempObs->OnInfo(INFO_TYPE_BITRATE_COLLECT, 0, format);
     }
 }
 
@@ -1152,7 +1268,7 @@ void GstPlayerCtrl::OnMessage(int32_t extra) const
     }
 }
 
-void GstPlayerCtrl::OnBufferingUpdate(const std::string Message) const
+void GstPlayerCtrl::OnBufferingUpdate(const std::string &Message) const
 {
     MEDIA_LOGI("On Message callback info: %{public}s", Message.c_str());
     std::shared_ptr<IPlayerEngineObs> tempObs = obs_.lock();

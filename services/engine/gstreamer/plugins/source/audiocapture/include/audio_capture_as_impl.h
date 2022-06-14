@@ -54,6 +54,7 @@ public:
     int32_t PauseAudioCapture() override;
     int32_t ResumeAudioCapture() override;
     std::shared_ptr<AudioBuffer> GetBuffer() override;
+    int32_t WakeUpAudioThreads() override;
 
 private:
     std::unique_ptr<OHOS::AudioStandard::AudioCapturer> audioCapturer_ = nullptr;
@@ -74,6 +75,7 @@ private:
     std::unique_ptr<std::thread> captureLoop_;
     std::mutex pauseMutex_;
     std::atomic<int32_t> curState_ = RECORDER_INITIALIZED;
+    uint64_t lastInputTime_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

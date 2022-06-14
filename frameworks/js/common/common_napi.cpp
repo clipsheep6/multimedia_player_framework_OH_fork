@@ -177,7 +177,7 @@ napi_status CommonNapi::FillErrorArgs(napi_env env, int32_t errCode, const napi_
 
     napi_value errCodeVal = nullptr;
     int32_t errCodeInt = errCode;
-    status = napi_create_int32(env, errCodeInt - MS_ERR_OFFSET, &errCodeVal);
+    status = napi_create_int32(env, errCodeInt, &errCodeVal);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && errCodeVal != nullptr, napi_invalid_arg,
         "create error code number val fail");
 
@@ -223,7 +223,7 @@ napi_status CommonNapi::CreateError(napi_env env, int32_t errCode, const std::st
     }
 
     napi_value errCodeVal = nullptr;
-    nstatus = napi_create_int32(env, errCode - MS_ERR_OFFSET, &errCodeVal);
+    nstatus = napi_create_int32(env, errCode, &errCodeVal);
     if (nstatus != napi_ok || errCodeVal == nullptr) {
         MEDIA_LOGE("create error code number val fail");
         return napi_invalid_arg;
@@ -321,6 +321,24 @@ bool CommonNapi::AddArrayProperty(napi_env env, napi_value obj, const std::strin
 
     status = napi_set_property(env, obj, nameStr, array);
     CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    return true;
+}
+
+bool CommonNapi::AddArrayInt(napi_env env, napi_value &array, const std::vector<int32_t> &vec)
+{
+    if (vec.size() == 0) {
+        return false;
+    }
+
+    napi_status status = napi_create_array_with_length(env, vec.size(), &array);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    for (uint32_t i = 0; i < vec.size(); i++) {
+        napi_value number = nullptr;
+        (void)napi_create_int32(env, vec.at(i), &number);
+        (void)napi_set_element(env, array, i, number);
+    }
 
     return true;
 }
@@ -610,6 +628,24 @@ void MediaAsyncContext::CheckCtorResult(napi_env env, napi_value &result, MediaA
             args = result;
         }
     }
+}
+
+bool CommonNapi::AddStringProperty(napi_env env, napi_value obj, const std::string &key, std::string value)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value valueNapi = nullptr;
+    status = napi_create_string_utf8(env, value.c_str(), NAPI_AUTO_LENGTH, &valueNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, keyNapi, valueNapi);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "Failed to set property");
+
+    return true;
 }
 } // namespace Media
 } // namespace OHOS
