@@ -163,7 +163,6 @@ static void gst_mux_bin_finalize(GObject *object)
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
-
 static void gst_mux_bin_set_property(GObject *object, guint prop_id,
     const GValue *value, GParamSpec *param_spec)
 {

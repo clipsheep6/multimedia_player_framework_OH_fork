@@ -487,6 +487,9 @@ void GstPlayerCtrl::SeekSync(uint64_t position, const PlayerSeekMode mode)
     CHECK_AND_RETURN_LOG(gstPlayer_ != nullptr, "gstPlayer_ is nullptr");
     // need keep the seek and seek modes consistent.
     g_object_set(gstPlayer_, "seek-mode", static_cast<gint>(ChangeSeekModeToGstFlag(mode)), nullptr);
+    if (isHardWare_ && decoder_ != nullptr) {
+        g_object_set(decoder_, "seeking", true, nullptr);
+    }
     GstClockTime time = static_cast<GstClockTime>(position * MICRO);
     (void)GetPositionInner();
     seeking_ = true;
@@ -495,6 +498,9 @@ void GstPlayerCtrl::SeekSync(uint64_t position, const PlayerSeekMode mode)
     {
         condVarSeekSync_.wait(lock);
         MEDIA_LOGD("Seek finised!");
+        if (isHardWare_ && decoder_ != nullptr) {
+            g_object_set(decoder_, "seeking", false, nullptr);
+        }
     }
 }
 
@@ -551,6 +557,10 @@ void GstPlayerCtrl::Stop()
     if (videoSink_ != nullptr) {
         gst_object_unref(videoSink_);
         videoSink_ = nullptr;
+    }
+    if (decoder_ != nullptr) {
+        gst_object_unref(decoder_);
+        decoder_ = nullptr;
     }
     if (rateTask_ != nullptr) {
         rateTask_->Cancel();

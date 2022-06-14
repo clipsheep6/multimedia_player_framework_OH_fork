@@ -47,17 +47,20 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
         dumpString += " uid = ";
         dumpString += std::to_string(iter.uid_);
         dumpString += "-----\n";
-        write(fd, dumpString.c_str(), dumpString.size());
-        dumpString.clear();
-        i++;
-        if (!needDetail) {
-            continue;
+        if (fd != -1) {
+            write(fd, dumpString.c_str(), dumpString.size());
+            dumpString.clear();
         }
-        if (iter.entry_(fd) != MSERR_OK) {
+        i++;
+        if (needDetail && iter.entry_(fd) != MSERR_OK) {
             return OHOS::INVALID_OPERATION;
         }
     }
-    write(fd, dumpString.c_str(), dumpString.size());
+    if (fd != -1) {
+        write(fd, dumpString.c_str(), dumpString.size());
+    } else {
+        MEDIA_LOGI("%{public}s", dumpString.c_str());
+    }
     dumpString.clear();
 
     return OHOS::NO_ERROR;
@@ -169,6 +172,9 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
         dumper.uid_ = IPCSkeleton::GetCallingUid();
         dumper.remoteObject_ = object;
         dumperTbl_[StubType::PLAYER].emplace_back(dumper);
+        if (Dump(-1, std::vector<std::u16string>) != OHOS::NO_ERROR) {
+            MEDIA_LOGW("failed to call InstanceDump");
+        }
         MEDIA_LOGD("The number of player services(%{public}zu) pid(%{public}d).",
             playerStubMap_.size(), pid);
     }
@@ -200,6 +206,9 @@ sptr<IRemoteObject> MediaServerManager::CreateRecorderStubObject()
         dumper.uid_ = IPCSkeleton::GetCallingUid();
         dumper.remoteObject_ = object;
         dumperTbl_[StubType::RECORDER].emplace_back(dumper);
+        if (Dump(-1, std::vector<std::u16string>) != OHOS::NO_ERROR) {
+            MEDIA_LOGW("failed to call InstanceDump");
+        }
         MEDIA_LOGD("The number of recorder services(%{public}zu) pid(%{public}d).",
             recorderStubMap_.size(), pid);
     }
@@ -229,7 +238,9 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMetadataHelperStubObject()
         dumper.uid_ = IPCSkeleton::GetCallingUid();
         dumper.remoteObject_ = object;
         dumperTbl_[StubType::AVMETADATAHELPER].emplace_back(dumper);
-
+        if (Dump(-1, std::vector<std::u16string>) != OHOS::NO_ERROR) {
+            MEDIA_LOGW("failed to call InstanceDump");
+        }
         MEDIA_LOGD("The number of avmetadatahelper services(%{public}zu) pid(%{public}d).",
             avMetadataHelperStubMap_.size(), pid);
     }
@@ -282,6 +293,9 @@ sptr<IRemoteObject> MediaServerManager::CreateAVCodecStubObject()
         dumper.uid_ = IPCSkeleton::GetCallingUid();
         dumper.remoteObject_ = object;
         dumperTbl_[StubType::AVCODEC].emplace_back(dumper);
+        if (Dump(-1, std::vector<std::u16string>) != OHOS::NO_ERROR) {
+            MEDIA_LOGW("failed to call InstanceDump");
+        }
         MEDIA_LOGD("The number of avcodec services(%{public}zu).", avCodecStubMap_.size());
     }
     return object;
@@ -507,6 +521,9 @@ void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object
         if (it->remoteObject_ == object) {
             (void)dumperTbl_[type].erase(it);
             MEDIA_LOGD("MediaServerManager::DestroyDumper");
+            if (Dump(-1, std::vector<std::u16string>) != OHOS::NO_ERROR) {
+                MEDIA_LOGW("failed to call InstanceDump");
+            }
             return;
         }
     }
@@ -523,6 +540,9 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
                 it++;
             }
         }
+    }
+    if (Dump(-1, std::vector<std::u16string>) != OHOS::NO_ERROR) {
+        MEDIA_LOGW("failed to call InstanceDump");
     }
 }
 } // namespace Media
