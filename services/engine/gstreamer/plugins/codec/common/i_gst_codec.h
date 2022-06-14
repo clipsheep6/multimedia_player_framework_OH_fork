@@ -23,6 +23,7 @@
 #include "i_codec_params_mgr.h"
 #include "i_codec_buffer_mgr.h"
 #include "i_codec_common.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -48,7 +49,10 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void SetInBufferMgr(std::shared_ptr<ICodecBufferMgr> bufferMgr) = 0;
+    virtual void SetInBufferMgr(std::shared_ptr<ICodecBufferMgr> bufferMgr)
+    {
+        return;
+    };
 
     /**
      * @brief Set a ICodecBufferMgr for the codec interface.
@@ -58,7 +62,10 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void SetOutBufferMgr(std::shared_ptr<ICodecBufferMgr> bufferMgr) = 0;
+    virtual void SetOutBufferMgr(std::shared_ptr<ICodecBufferMgr> bufferMgr)
+    {
+        return;
+    };
 
     /**
      * @brief Set a ICodecParamsMgr for the codec interface.
@@ -68,7 +75,10 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void SetParamsMgr(std::shared_ptr<ICodecParamsMgr> paramsMgr) = 0;
+    virtual void SetParamsMgr(std::shared_ptr<ICodecParamsMgr> paramsMgr)
+    {
+        return;
+    };
 
     /**
      * @brief Set param with key, and value is in element.
@@ -239,6 +249,19 @@ public:
      * @version 1.0
      */
     virtual void Deinit() = 0;
+
+    /**
+     * @brief Set DfxNode.
+     *
+     * Set the dfxNode to Codec.
+     *
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual void SetDfxNode(const std::shared_ptr<DfxNode> &node)
+    {
+        return;
+    }
 };
 } // namespace Media
 } // namespace OHOS

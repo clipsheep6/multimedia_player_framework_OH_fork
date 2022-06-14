@@ -22,6 +22,7 @@
 #include "avcodec_engine_factory.h"
 #include "i_avcodec_engine.h"
 #include "nocopyable.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -44,6 +45,7 @@ public:
     std::shared_ptr<AVSharedMemory> GetOutputBuffer(uint32_t index);
     int32_t ReleaseOutputBuffer(uint32_t index, bool render);
     int32_t SetParameter(const Format &format);
+    void SetDfxNode(const std::shared_ptr<DfxNode> &node);
 
 private:
     static GstBusSyncReply BusSyncHandler(GstBus *bus, GstMessage *message, gpointer userData);
@@ -63,6 +65,8 @@ private:
     bool flushAtStart_ = false;
     bool isStart_ = false;
     bool isUseSoftWare_ = false;
+    std::shared_ptr<DfxNode> dfxNode_;
+    DfxClassHelper dfxClassHelper_;
 };
 } // namespace Media
 } // namespace OHOS

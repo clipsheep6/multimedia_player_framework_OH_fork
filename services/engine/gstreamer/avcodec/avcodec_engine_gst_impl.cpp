@@ -38,6 +38,13 @@ AVCodecEngineGstImpl::~AVCodecEngineGstImpl()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
+void AVCodecEngineGstImpl::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    pluginName_.Init(dfxNode_, "AVCodecPluginName");
+    dfxClassHelper_.Init(this, "AVCodecEngineGstImpl", node);
+}
+
 int32_t AVCodecEngineGstImpl::Init(AVCodecType type, bool isMimeType, const std::string &name)
 {
     MEDIA_LOGD("Init AVCodecGstEngine: type:%{public}d, %{public}d, name:%{public}s", type, isMimeType, name.c_str());
@@ -57,7 +64,7 @@ int32_t AVCodecEngineGstImpl::Init(AVCodecType type, bool isMimeType, const std:
     ctrl_ = std::make_unique<AVCodecEngineCtrl>();
     CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_NO_MEMORY);
     ctrl_->SetObs(obs_);
-
+    ctrl_->SetDfxNode(dfxNode_);
     if (isMimeType) {
         CHECK_AND_RETURN_RET(HandleMimeType(type, name) == MSERR_OK, MSERR_UNKNOWN);
     } else {
@@ -152,7 +159,7 @@ int32_t AVCodecEngineGstImpl::Reset()
     }
     ctrl_ = std::make_unique<AVCodecEngineCtrl>();
     CHECK_AND_RETURN_RET(ctrl_ != nullptr, MSERR_NO_MEMORY);
-    CHECK_AND_RETURN_RET(ctrl_->Init(type_, useSoftWare_, pluginName_) == MSERR_OK, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET(ctrl_->Init(type_, useSoftWare_, pluginName_.GetValue()) == MSERR_OK, MSERR_UNKNOWN);
     ctrl_->SetObs(obs_);
 
     MEDIA_LOGD("Reset success");
@@ -207,7 +214,7 @@ std::shared_ptr<AVSharedMemory> AVCodecEngineGstImpl::GetOutputBuffer(uint32_t i
 
 int32_t AVCodecEngineGstImpl::GetOutputFormat(Format &format)
 {
-    format_.PutStringValue("plugin_name", pluginName_);
+    format_.PutStringValue("plugin_name", pluginName_.GetValue());
     format = format_;
     return MSERR_OK;
 }

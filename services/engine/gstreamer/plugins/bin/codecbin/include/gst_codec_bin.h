@@ -17,6 +17,7 @@
 #define GST_CODEC_BIN_H
 
 #include "common_utils.h"
+#include "dfx_node_manager.h"
 
 G_BEGIN_DECLS
 
@@ -54,6 +55,7 @@ struct _GstCodecBin {
     gboolean need_parser;
     gboolean is_input_surface;
     gboolean is_output_surface;
+    std::shared_ptr<OHOS::Media::DfxNode> dfx_node;
 };
 
 struct _GstCodecBinClass {

@@ -74,7 +74,19 @@ int32_t AVSharedMemoryPool::Init(const InitializeOption &option)
 
     inited_ = true;
     notifier_ = option.notifier;
+    
     return MSERR_OK;
+}
+
+void AVSharedMemoryPool::SetDfxNode(const std::shared_ptr<DfxNode> &dfxNode)
+{
+    dfxNode_  = dfxNode;
+    dfxClassHelper_.Init(this, "AVSharedMemoryPool", dfxNode_);
+}
+
+std::shared_ptr<DfxNode> AVSharedMemoryPool::GetDfxNode()
+{
+    return dfxNode_;
 }
 
 AVSharedMemory *AVSharedMemoryPool::AllocMemory(int32_t size)
@@ -87,6 +99,7 @@ AVSharedMemory *AVSharedMemoryPool::AllocMemory(int32_t size)
         memory = nullptr;
         MEDIA_LOGE("init avsharedmemorybase failed");
     }
+    memory->SetDfxNode(dfxNode_);
 
     return memory;
 }

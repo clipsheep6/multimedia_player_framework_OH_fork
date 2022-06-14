@@ -17,6 +17,7 @@
 #define GST_MEM_SINK_H
 
 #include <gst/base/gstbasesink.h>
+#include "dfx_node_manager.h"
 
 G_BEGIN_DECLS
 
@@ -52,6 +53,7 @@ struct _GstMemSink {
 
     guint max_pool_capacity; /* max buffer count for buffer pool */
     guint wait_time; /* longest waiting time for single try to acquire buffer from buffer pool */
+    std::shared_ptr<OHOS::Media::DfxNode> dfx_node;
 
     /* < private > */
     GstMemSinkPrivate *priv;
@@ -63,6 +65,7 @@ struct _GstMemSinkClass {
     gboolean (*do_propose_allocation) (GstMemSink *sink, GstQuery *query);
     GstFlowReturn (*do_stream_render) (GstMemSink *sink, GstBuffer **buffer);
     GstFlowReturn (*do_app_render) (GstMemSink *sink, GstBuffer *buffer, bool isPreroll);
+    void (*init_dfx_node) (GstMemSink *sink);
 };
 
 GST_API_EXPORT GType gst_mem_sink_get_type(void);

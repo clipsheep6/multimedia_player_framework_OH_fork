@@ -167,6 +167,12 @@ int32_t GstPlayerCtrl::SetUrl(const std::string &url)
     return MSERR_OK;
 }
 
+void GstPlayerCtrl::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    dfxClassHelper_.Init(this, "GstPlayerCtrl", dfxNode_);
+}
+
 int32_t GstPlayerCtrl::SetSource(const std::shared_ptr<GstAppsrcWarp> &appsrcWarp)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -279,6 +285,9 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
     }
 
     if (metaStr.find("Codec/Decoder/Video/Hardware") != std::string::npos) {
+        std::shared_ptr<DfxNode> node =
+            DfxNodeManager::GetInstance().CreateChildDfxNode(playerGst->dfxNode_, HARDWARE_VIDEO_DECODER);
+        g_object_set(src, "dfx-node", &node, nullptr);
         playerGst->isHardWare_ = true;
         if (playerGst->decPluginRegister_) {
             // For hls scene when change codec, the second codec should not go performance mode process.
@@ -290,7 +299,7 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
         CHECK_AND_RETURN_LOG(playerGst->videoSink_ != nullptr, "videoSink is null");
         g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
         g_object_set(G_OBJECT(playerGst->videoSink_), "performance-mode", TRUE, nullptr);
-        GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12", nullptr);
+        GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV16", nullptr);
         g_object_set(G_OBJECT(playerGst->videoSink_), "caps", caps, nullptr);
         g_object_set(G_OBJECT(src), "sink-caps", caps, nullptr);
         gst_caps_unref(caps);
@@ -734,6 +743,9 @@ void GstPlayerCtrl::GetVideoSink()
     }
     g_object_get(playbin, "video-sink", &videoSink_, nullptr);
 
+    std::shared_ptr<DfxNode> node =
+        DfxNodeManager::GetInstance().CreateChildDfxNode(dfxNode_, SINK);
+    g_object_set(videoSink_, "dfx-node", &node, nullptr);
     gst_object_unref(playbin);
 }
 

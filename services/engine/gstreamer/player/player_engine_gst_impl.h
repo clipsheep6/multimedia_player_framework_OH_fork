@@ -56,6 +56,7 @@ public:
     int32_t SetParameter(const Format &param) override;
     int32_t SetLooping(bool loop) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
+    void SetDfxNode(const std::shared_ptr<DfxNode> &node) override;
 
 private:
     double ChangeModeToSpeed(const PlaybackRateMode &mode) const;
@@ -78,6 +79,8 @@ private:
     bool gstPlayerInit_ = false;
     std::unique_ptr<std::thread> playerThread_;
     std::shared_ptr<GstAppsrcWarp> appsrcWarp_ = nullptr;
+    std::shared_ptr<DfxNode> dfxNode_;
+    DfxClassHelper dfxClassHelper_;
 };
 } // namespace Media
 } // namespace OHOS

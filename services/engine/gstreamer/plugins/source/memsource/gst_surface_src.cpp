@@ -266,6 +266,7 @@ static GstBufferPool *gst_surface_src_create_pool()
 static gboolean gst_surface_src_init_pool(GstSurfaceSrc *surfacesrc)
 {
     GstMemSrcClass *memsrcclass = GST_MEM_SRC_GET_CLASS(surfacesrc);
+    GstMemSrc *memsrc = GST_MEM_SRC(surfacesrc);
     g_return_val_if_fail(memsrcclass != nullptr, FALSE);
     GstAllocationParams params;
     GstBufferPool *pool = nullptr;
@@ -276,9 +277,13 @@ static gboolean gst_surface_src_init_pool(GstSurfaceSrc *surfacesrc)
     }
 
     g_return_val_if_fail(pool != nullptr, FALSE);
+    std::shared_ptr<OHOS::Media::DfxNode> surface_pool_node =
+        OHOS::Media::DfxNodeManager::GetInstance().CreateChildDfxNode(memsrc->dfx_node, CONSUMER_SURFACE_POOL);
+    g_object_set(pool, "dfx-node", &surface_pool_node, nullptr);
     ON_SCOPE_EXIT(0) { gst_object_unref(pool); };
     GstAllocator *allocator = gst_consumer_surface_allocator_new();
     g_return_val_if_fail(allocator != nullptr, FALSE);
+    gst_consumer_surface_allocator_set_dfx_node(allocator, surface_pool_node);
     gst_consumer_surface_pool_set_surface(pool, surfacesrc->consumerSurface);
     gst_consumer_surface_allocator_set_surface(allocator, surfacesrc->consumerSurface);
     // init pool config

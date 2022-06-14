@@ -40,6 +40,8 @@ void gst_shmem_allocator_set_pool(GstShMemAllocator *allocator,
 {
     g_return_if_fail(allocator != nullptr && pool != nullptr);
     allocator->avShmemPool = pool;
+    allocator->dfxNode = pool->GetDfxNode();
+    allocator->dfxClassHelper.Init(allocator, "shmempool", allocator->dfxNode);
 }
 
 GstMemory *gst_shmem_allocator_alloc(GstAllocator *allocator, gsize size, GstAllocationParams *params)
@@ -236,6 +238,8 @@ static void gst_shmem_allocator_finalize(GObject *obj)
 
     GST_DEBUG_OBJECT(allocator, "finalize allocator 0x%06" PRIXPTR "", FAKE_POINTER(allocator));
     allocator->avShmemPool = nullptr;
+    allocator->dfxNode = nullptr;
+    allocator->dfxClassHelper.DeInit();
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
 

@@ -47,7 +47,7 @@ struct _GstSurfaceMemSink {
     GstBuffer *prerollBuffer;
     gboolean firstRenderFrame;
     gboolean preInitPool;
-    gboolean performanceMode;
+    OHOS::Media::DfxValHelper<gboolean> performanceMode;
     /* < private > */
     GstSurfaceMemSinkPrivate *priv;
     GstSurfaceMemSinkDump dump;

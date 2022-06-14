@@ -30,6 +30,8 @@ GST_DEBUG_CATEGORY_STATIC(gst_consumer_surface_allocator_debug_category);
 
 struct _GstConsumerSurfaceAllocatorPrivate {
     sptr<Surface> csurface;
+    std::shared_ptr<OHOS::Media::DfxNode> dfx_node;
+    OHOS::Media::DfxClassHelper dfx_class_helper;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfaceAllocator, gst_consumer_surface_allocator, GST_TYPE_ALLOCATOR);
@@ -97,6 +99,7 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
     mem->damage = damage;
     mem->is_eos_frame = end_of_stream;
     mem->buffer_handle = reinterpret_cast<intptr_t>(surface_buffer->GetBufferHandle());
+    mem->dfx_class_helper.Init(mem, "surface mem", sallocator->priv->dfx_node);
     GST_INFO_OBJECT(allocator, "acquire surface buffer");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
@@ -115,6 +118,7 @@ static void gst_consumer_surface_allocator_free(GstAllocator *allocator, GstMemo
     (void)sallocator->priv->csurface->ReleaseBuffer(surfacemem->surface_buffer, surfacemem->fencefd);
     GST_INFO_OBJECT(allocator, "release surface buffer");
     surfacemem->surface_buffer = nullptr;
+    surfacemem->dfx_class_helper.DeInit();
     g_slice_free(GstConsumerSurfaceMemory, surfacemem);
 }
 
@@ -133,6 +137,16 @@ static gpointer gst_consumer_surface_allocator_mem_map(GstMemory *mem, gsize max
 static void gst_consumer_surface_allocator_mem_unmap(GstMemory *mem)
 {
     (void)mem;
+}
+
+void gst_consumer_surface_allocator_set_dfx_node(GstAllocator *allocator,
+    const std::shared_ptr<OHOS::Media::DfxNode> &node)
+{
+    g_return_if_fail(allocator != nullptr);
+    GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
+    g_return_if_fail(sallocator->priv != nullptr);
+    sallocator->priv->dfx_node = node;
+    sallocator->priv->dfx_class_helper.Init(allocator, "surface allocator", sallocator->priv->dfx_node);
 }
 
 static GstMemory *gst_consumer_surface_allocator_mem_copy(GstConsumerSurfaceMemory *mem, gssize offset, gssize size)
@@ -215,7 +229,8 @@ static void gst_consumer_surface_allocator_finalize(GObject *obj)
     GstConsumerSurfaceAllocator *allocator = GST_CONSUMER_SURFACE_ALLOCATOR(obj);
     g_return_if_fail(allocator != nullptr && allocator->priv != nullptr);
     allocator->priv->csurface = nullptr;
-
+    allocator->priv->dfx_node = nullptr;
+    allocator->priv->dfx_class_helper.DeInit();
     GST_DEBUG_OBJECT(allocator, "finalize allocator 0x%06" PRIXPTR "", FAKE_POINTER(allocator));
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }

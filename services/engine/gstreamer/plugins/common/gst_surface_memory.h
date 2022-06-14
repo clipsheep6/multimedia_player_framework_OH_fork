@@ -18,6 +18,7 @@
 
 #include <gst/gst.h>
 #include "surface.h"
+#include "dfx_node_manager.h"
 
 typedef struct _GstSurfaceMemory GstSurfaceMemory;
 
@@ -26,6 +27,7 @@ struct _GstSurfaceMemory {
     OHOS::sptr<OHOS::SurfaceBuffer> buf;
     gint fence;
     gboolean need_render;
+    OHOS::Media::DfxClassHelper dfx_class_helper;
 };
 
 static const char GST_SURFACE_MEMORY_TYPE[] = "SurfaceMemory";
