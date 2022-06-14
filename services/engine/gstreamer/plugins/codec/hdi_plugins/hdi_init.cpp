@@ -106,28 +106,6 @@ std::string HdiInit::GetCodecMime(AvCodecRole &role)
     return "invalid";
 }
 
-std::vector<int32_t> HdiInit::GetOmxFormats(VideoPortCap &port)
-{
-    int32_t index = 0;
-    std::vector<int32_t> formats;
-    while (index < PIX_FORMAT_NUM) {
-        switch (port.supportPixFmts[index]) {
-            case OMX_COLOR_FormatYUV420SemiPlanar:
-                formats.push_back(NV12);
-                break;
-            case OMX_COLOR_FormatYUV422SemiPlanar:
-                formats.push_back(NV16);
-                break;
-            default:
-                MEDIA_LOGW("Unknow Format %{public}d", port.supportPixFmts[index]);
-                return formats;
-        }
-        index++;
-    }
-
-    return formats;
-}
-
 std::vector<int32_t> HdiInit::GetCodecFormats(VideoPortCap &port)
 {
     int32_t index = 0;
@@ -201,7 +179,7 @@ void HdiInit::AddHdiCap(CodecCompCapability &hdiCap)
     codecCap.height = {hdiCap.port.video.minSize.height, hdiCap.port.video.maxSize.height};
     codecCap.bitrate = {hdiCap.bitRate.min, hdiCap.bitRate.max};
     codecCap.frameRate = {0, 60}; //need to do
-    codecCap.format = GetOmxFormats(hdiCap.port.video); // need to do
+    codecCap.format = GetCodecFormats(hdiCap.port.video); // need to do
     codecCap.blockPerFrame = {hdiCap.port.video.blockCount.min, hdiCap.port.video.blockCount.max}; //need to check
     codecCap.blockPerSecond = {hdiCap.port.video.blocksPerSecond.min, hdiCap.port.video.blocksPerSecond.max};
     codecCap.blockSize = {hdiCap.port.video.blockSize.width, hdiCap.port.video.blockSize.height};

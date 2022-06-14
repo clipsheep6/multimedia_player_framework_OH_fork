@@ -841,6 +841,12 @@ static void gst_vdec_base_dump_output_buffer(GstVdecBase *self, GstBuffer *buffe
     guint stride = (guint)(self->real_stride == 0 ? self->stride.GetValue() : self->real_stride.GetValue());
     guint stride_height = (guint)(self->real_stride_height == 0 ?
         self->stride_height.GetValue() : self->real_stride_height.GetValue());
+    if (stride == 0) {
+        stride = (guint)self->width.GetValue();
+    }
+    if (stride_height == 0) {
+        stride_height = (guint)self->height.GetValue();
+    }
     // yuv size
     guint size = stride * stride_height * 3 / 2;
     if (size > info.size) {
