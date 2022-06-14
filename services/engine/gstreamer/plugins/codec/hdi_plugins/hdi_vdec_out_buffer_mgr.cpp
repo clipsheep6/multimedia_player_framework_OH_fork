@@ -54,6 +54,7 @@ int32_t HdiVdecOutBufferMgr::UseHandleMems(std::vector<GstBuffer *> &buffers)
         auto ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, codecBuffer.get());
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "UseBuffer failed");
         availableBuffers_.push_back(codecBuffer);
+        mBuffers.push_back(buffer);
     }
     return GST_CODEC_OK;
 }

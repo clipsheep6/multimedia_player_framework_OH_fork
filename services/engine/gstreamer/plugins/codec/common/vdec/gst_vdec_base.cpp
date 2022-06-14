@@ -151,9 +151,8 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
     }
 }
 
-static void gst_vdec_base_init_after(GstVdecBase *self)
+static void gst_vdec_base_check_input_need_copy(GstVdecBase *self)
 {
-    self->input_need_copy = FALSE;
     GstVdecBaseClass *base_class = GST_VDEC_BASE_GET_CLASS(self);
     g_return_if_fail(base_class != nullptr);
     if (base_class->input_need_copy != nullptr) {
@@ -216,7 +215,7 @@ static void gst_vdec_base_init(GstVdecBase *self)
     self->out_buffer_max_cnt = DEFAULT_MAX_QUEUE_SIZE;
     self->pre_init_pool = FALSE;
     self->performance_mode = FALSE;
-    gst_vdec_base_init_after(self);
+    self->input_need_copy = FALSE;
 }
 
 static void gst_vdec_base_finalize(GObject *object)
@@ -261,6 +260,7 @@ static gboolean gst_vdec_base_open(GstVideoDecoder *decoder)
     GstVdecBaseClass *base_class = GST_VDEC_BASE_GET_CLASS(self);
     g_return_val_if_fail(base_class != nullptr && base_class->create_codec != nullptr, FALSE);
     self->decoder = base_class->create_codec(reinterpret_cast<GstElementClass*>(base_class));
+    gst_vdec_base_check_input_need_copy(self);
     return TRUE;
 }
 
@@ -864,6 +864,9 @@ static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstB
 
     auto ret = memcpy_s(dts_map.data, dts_map.size, src_map.data, src_map.size);
     g_return_val_if_fail(ret == EOK, GST_CODEC_ERROR);
+    GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(dts_buffer);
+    g_return_val_if_fail(meta != nullptr, GST_CODEC_ERROR);
+    meta->length = src_map.size;
     CANCEL_SCOPE_EXIT_GUARD(2);
     CANCEL_SCOPE_EXIT_GUARD(3);
     gst_buffer_unmap(dts_buffer, &dts_map);

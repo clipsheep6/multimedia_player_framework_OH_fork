@@ -290,7 +290,7 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
         CHECK_AND_RETURN_LOG(playerGst->videoSink_ != nullptr, "videoSink is null");
         g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
         g_object_set(G_OBJECT(playerGst->videoSink_), "performance-mode", TRUE, nullptr);
-        GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV16", nullptr);
+        GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12", nullptr);
         g_object_set(G_OBJECT(playerGst->videoSink_), "caps", caps, nullptr);
         g_object_set(G_OBJECT(src), "sink-caps", caps, nullptr);
         gst_caps_unref(caps);
