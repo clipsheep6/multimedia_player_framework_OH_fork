@@ -803,6 +803,8 @@ static void gst_vdec_base_dump_output_buffer(GstVdecBase *self, GstBuffer *buffe
     g_return_if_fail(gst_buffer_map(buffer, &info, GST_MAP_READ));
     guint stride = (guint)(self->real_stride == 0 ? self->stride : self->real_stride);
     guint stride_height = (guint)(self->real_stride_height == 0 ? self->stride_height : self->real_stride_height);
+    stride = stride == 0 ? width : stride;
+    stride_height = stride_height == 0 ? height : stride_height;
     // yuv size
     guint size = stride * stride_height * 3 / 2;
     if (size > info.size) {
@@ -871,6 +873,8 @@ static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstB
     CANCEL_SCOPE_EXIT_GUARD(3);
     gst_buffer_unmap(dts_buffer, &dts_map);
     gst_buffer_unmap(src_buffer, &src_map);
+    gst_buffer_set_size(dts_buffer, meta->length);
+    gst_vdec_base_dump_input_buffer(self, dts_buffer);
     gint codec_ret = self->decoder->PushInputBuffer(dts_buffer);
     return codec_ret;
 }
@@ -879,12 +883,12 @@ static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, G
 {
     GstVdecBase *self = GST_VDEC_BASE(decoder);
     gst_vdec_debug_input_time(self);
-    gst_vdec_base_dump_input_buffer(self, frame->input_buffer);
     gst_vdec_base_get_frame_pts(self, frame);
     gint codec_ret = GST_CODEC_OK;
     if (self->input_need_copy) {
         codec_ret = gst_vdec_base_push_input_buffer_with_copy(self, frame->input_buffer);
     } else {
+        gst_vdec_base_dump_input_buffer(self, frame->input_buffer);
         codec_ret = self->decoder->PushInputBuffer(frame->input_buffer);
     }
     GST_VIDEO_DECODER_STREAM_LOCK(self);
