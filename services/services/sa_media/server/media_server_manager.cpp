@@ -238,7 +238,9 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMetadataHelperStubObject()
         dumper.uid_ = IPCSkeleton::GetCallingUid();
         dumper.remoteObject_ = object;
         dumperTbl_[StubType::AVMETADATAHELPER].emplace_back(dumper);
-
+        if (Dump(-1, std::vector<std::u16string>) != OHOS::NO_ERROR) {
+            MEDIA_LOGW("failed to call InstanceDump");
+        }
         MEDIA_LOGD("The number of avmetadatahelper services(%{public}zu) pid(%{public}d).",
             avMetadataHelperStubMap_.size(), pid);
     }
