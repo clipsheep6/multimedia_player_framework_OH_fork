@@ -32,6 +32,10 @@
 
 namespace OHOS {
 namespace Media {
+struct HdiBufferWrap {
+    intptr_t buf;
+    OmxCodecBuffer hdiBuffer;
+};
 class HdiBufferMgr : public NoCopyable, public ICodecBufferMgr {
 public:
     HdiBufferMgr();
@@ -91,11 +95,12 @@ protected:
     std::condition_variable bufferCond_;
     OMX_PARAM_PORTDEFINITIONTYPE mPortDef_ = {0};
     CodecComponentType *handle_ = nullptr;
-    std::list<std::shared_ptr<OmxCodecBuffer>> availableBuffers_;
-    std::list<std::pair<std::shared_ptr<OmxCodecBuffer>, GstBuffer *>> codingBuffers_;
-    int32_t UseAshareMems(std::vector<GstBuffer *> &buffers);
-    std::shared_ptr<OmxCodecBuffer> GetCodecBuffer(GstBuffer *buffer);
-    virtual void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<OmxCodecBuffer> &codecBuffer);
+    std::list<std::shared_ptr<HdiBufferWrap>> availableBuffers_;
+    std::list<std::pair<std::shared_ptr<HdiBufferWrap>, GstBuffer *>> codingBuffers_;
+    std::vector<std::shared_ptr<HdiBufferWrap>> PreUseAshareMems(std::vector<GstBuffer *> &buffers);
+    int32_t UseHdiBuffers(std::vector<std::shared_ptr<HdiBufferWrap>> &buffers);
+    virtual std::shared_ptr<HdiBufferWrap> GetCodecBuffer(GstBuffer *buffer);
+    virtual void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<HdiBufferWrap> &codecBuffer);
     std::shared_ptr<DfxNode> dfxNode_;
     DfxClassHelper dfxClassHelper_;
     DfxValHelper<uint32_t> allocLen_;

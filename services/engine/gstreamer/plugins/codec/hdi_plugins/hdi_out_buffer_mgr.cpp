@@ -46,10 +46,11 @@ int32_t HdiOutBufferMgr::Start()
     while (!mBuffers.empty()) {
         GstBuffer *buffer = mBuffers.front();
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
-        std::shared_ptr<OmxCodecBuffer> codecBuffer = GetCodecBuffer(buffer);
+        std::shared_ptr<HdiBufferWrap> codecBuffer = GetCodecBuffer(buffer);
         CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
-        auto ret = HdiFillThisBuffer(handle_, codecBuffer.get());
+        auto ret = HdiFillThisBuffer(handle_, &codecBuffer->hdiBuffer);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "FillThisBuffer failed");
+        mBuffers.pop_front();
     }
     MEDIA_LOGD("Quit Start");
     return GST_CODEC_OK;
@@ -59,11 +60,11 @@ int32_t HdiOutBufferMgr::PushBuffer(GstBuffer *buffer)
 {
     MEDIA_LOGD("Enter PushBuffer");
     std::unique_lock<std::mutex> lock(mutex_);
-    std::shared_ptr<OmxCodecBuffer> codecBuffer = nullptr;
+    std::shared_ptr<HdiBufferWrap> codecBuffer = nullptr;
     codecBuffer = GetCodecBuffer(buffer);
     CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
     lock.unlock();
-    auto ret = HdiFillThisBuffer(handle_, codecBuffer.get());
+    auto ret = HdiFillThisBuffer(handle_, &codecBuffer->hdiBuffer);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "EmptyThisBuffer failed");
     return GST_CODEC_OK;
 }
@@ -110,7 +111,7 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("mBuffers %{public}zu, available %{public}zu", mBuffers.size(), availableBuffers_.size());
     for (auto iter = codingBuffers_.begin(); iter != codingBuffers_.end(); ++iter) {
-        if (iter->first != nullptr && iter->first->bufferId == buffer->bufferId) {
+        if (iter->first != nullptr && iter->first->hdiBuffer.bufferId == buffer->bufferId) {
             availableBuffers_.push_back(iter->first);
             if (buffer->flag & OMX_BUFFERFLAG_EOS) {
                 MEDIA_LOGD("Bufferavailable, but buffer is eos");

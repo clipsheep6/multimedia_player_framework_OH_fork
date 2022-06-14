@@ -34,28 +34,21 @@ HdiInBufferMgr::HdiInBufferMgr()
 HdiInBufferMgr::~HdiInBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-    std::for_each(preBuffers_.begin(), preBuffers_.end(), [&](GstBuffer *buffer){ gst_buffer_unref(buffer); });
     EmptyList(preBuffers_);
 }
 
-int32_t HdiInBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
+std::shared_ptr<HdiBufferWrap> HdiInBufferMgr::GetHdiEosBuffer()
 {
-    MEDIA_LOGD("Enter UseBuffers");
-    std::for_each(buffers.begin(), buffers.end(), [&](GstBuffer *buffer){ gst_buffer_ref(buffer); });
-    preBuffers_ = buffers;
-    return GST_CODEC_OK;
-}
-
-std::shared_ptr<OmxCodecBuffer> HdiInBufferMgr::GetHdiEosBuffer()
-{
-    std::shared_ptr<OmxCodecBuffer> codecBuffer = nullptr;
+    std::shared_ptr<HdiBufferWrap> codecBuffer = nullptr;
     if (!availableBuffers_.empty()) {
         MEDIA_LOGD("Init eos buffer");
         codecBuffer = availableBuffers_.front();
         availableBuffers_.pop_front();
-        codecBuffer->filledLen = 0;
-        codecBuffer->flag |= OMX_BUFFERFLAG_EOS;
+        codecBuffer->hdiBuffer.filledLen = 0;
+        codecBuffer->hdiBuffer.flag |= OMX_BUFFERFLAG_EOS;
+        codingBuffers_.push_back(std::make_pair(codecBuffer, nullptr));
     }
+    MEDIA_LOGD("bufferType->buf %{public}ld", codecBuffer->buf);
     return codecBuffer;
 }
 
@@ -67,15 +60,15 @@ int32_t HdiInBufferMgr::PushBuffer(GstBuffer *buffer)
     if (isFlushed_ || !isStart_) {
         return GST_CODEC_FLUSH;
     }
-    std::shared_ptr<OmxCodecBuffer> codecBuffer = nullptr;
+    std::shared_ptr<HdiBufferWrap> codecBuffer = nullptr;
     if (buffer == nullptr) {
         codecBuffer = GetHdiEosBuffer();
     } else {
         codecBuffer = GetCodecBuffer(buffer);
     }
     CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
-    MEDIA_LOGD("id %{public}d fillLen %{public}d", codecBuffer->bufferId, codecBuffer->filledLen);
-    auto ret = handle_->EmptyThisBuffer(handle_, codecBuffer.get());
+    MEDIA_LOGD("id %{public}d fillLen %{public}d", codecBuffer->hdiBuffer.bufferId, codecBuffer->hdiBuffer.filledLen);
+    auto ret = HdiEmptyThisBuffer(handle_, &codecBuffer->hdiBuffer);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "EmptyThisBuffer failed");
     MEDIA_LOGD("PushBuffer end");
     return GST_CODEC_OK;
@@ -89,7 +82,6 @@ int32_t HdiInBufferMgr::FreeBuffers()
         MEDIA_LOGE("Erorr buffer number");
     }
     FreeCodecBuffers();
-    std::for_each(preBuffers_.begin(), preBuffers_.end(), [&](GstBuffer *buffer){ gst_buffer_unref(buffer); });
     EmptyList(preBuffers_);
     return GST_CODEC_OK;
 }
@@ -100,8 +92,10 @@ int32_t HdiInBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "EmptyBufferDone failed");
     std::unique_lock<std::mutex> lock(mutex_);
     for (auto iter = codingBuffers_.begin(); iter != codingBuffers_.end(); ++iter) {
-        if (iter->first != nullptr && iter->first->bufferId == buffer->bufferId) {
+        if (iter->first != nullptr && iter->first->hdiBuffer.bufferId == buffer->bufferId) {
             availableBuffers_.push_back(iter->first);
+            iter->first->hdiBuffer.flag = 0;
+            MEDIA_LOGD("bufferType->buf %ld", iter->first->buf);
             gst_buffer_unref(iter->second);
             (void)codingBuffers_.erase(iter);
             break;

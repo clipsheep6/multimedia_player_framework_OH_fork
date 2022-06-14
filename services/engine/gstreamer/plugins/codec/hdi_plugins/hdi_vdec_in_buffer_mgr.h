@@ -24,6 +24,7 @@ class HdiVdecInBufferMgr : public HdiInBufferMgr {
 public:
     HdiVdecInBufferMgr();
     virtual ~HdiVdecInBufferMgr();
+    int32_t UseBuffers(std::vector<GstBuffer*> buffers) override;
     int32_t Preprocessing() override;
 };
 } // namespace Media

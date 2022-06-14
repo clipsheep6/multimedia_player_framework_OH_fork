@@ -26,8 +26,6 @@ public:
     HdiInBufferMgr();
     virtual ~HdiInBufferMgr() override;
 
-    int32_t UseBuffers(std::vector<GstBuffer *> buffers) override;
-
     int32_t PushBuffer(GstBuffer *buffer) override;
 
     int32_t FreeBuffers() override;
@@ -35,8 +33,8 @@ public:
     int32_t CodecBufferAvailable(const OmxCodecBuffer *buffer) override;
 
 protected:
-    std::vector<GstBuffer *> preBuffers_;
-    std::shared_ptr<OmxCodecBuffer> GetHdiEosBuffer();
+    std::vector<std::shared_ptr<HdiBufferWrap>> preBuffers_;
+    std::shared_ptr<HdiBufferWrap> GetHdiEosBuffer();
 };
 } // namespace Media
 } // namespace OHOS
