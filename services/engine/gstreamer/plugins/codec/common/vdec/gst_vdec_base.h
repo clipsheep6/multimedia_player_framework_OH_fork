@@ -111,7 +111,7 @@ struct _GstVdecBase {
     gboolean pre_init_pool;
     gboolean performance_mode;
     GstCaps *sink_caps;
-    gboolean input_need_copy;
+    gboolean input_need_ashmem;
 };
 
 struct _GstVdecBaseClass {

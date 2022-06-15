@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "hdi_codec_util.h"
 #include "buffer_type_meta.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiOutBufferMgr"};
@@ -51,6 +52,7 @@ int32_t HdiOutBufferMgr::Start()
         auto ret = HdiFillThisBuffer(handle_, &codecBuffer->hdiBuffer);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "FillThisBuffer failed");
         mBuffers.pop_front();
+        gst_buffer_unref(buffer);
     }
     MEDIA_LOGD("Quit Start");
     return GST_CODEC_OK;
@@ -59,6 +61,7 @@ int32_t HdiOutBufferMgr::Start()
 int32_t HdiOutBufferMgr::PushBuffer(GstBuffer *buffer)
 {
     MEDIA_LOGD("Enter PushBuffer");
+    ON_SCOPE_EXIT(0) { gst_buffer_unref(buffer); };
     std::unique_lock<std::mutex> lock(mutex_);
     std::shared_ptr<HdiBufferWrap> codecBuffer = nullptr;
     codecBuffer = GetCodecBuffer(buffer);
