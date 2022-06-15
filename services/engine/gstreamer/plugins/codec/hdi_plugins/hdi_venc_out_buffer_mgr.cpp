@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "hdi_codec_util.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVencOutBufferMgr"};

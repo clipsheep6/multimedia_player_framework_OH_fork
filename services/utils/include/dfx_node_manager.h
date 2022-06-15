@@ -231,12 +231,18 @@ public:
     DfxValHelper<T> operator-=(const T &other)
     {
         this->value_ -= other;
+        if (node_ != nullptr) {
+            node_->UpdateValTag(name_, value_);
+        }
         return *this;
     }
 
     DfxValHelper<T> operator+=(const T &other)
     {
         this->value_ += other;
+        if (node_ != nullptr) {
+            node_->UpdateValTag(name_, value_);
+        }
         return *this;
     }
 

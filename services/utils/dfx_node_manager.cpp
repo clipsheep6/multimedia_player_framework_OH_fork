@@ -99,6 +99,8 @@ void DfxNode::DumpInfo(std::string &dumpString) {
     dumpString += "Class No Exit:\n";
     for (auto iter : classTemp) {
         dumpString += iter.second;
+        dumpString += std::to_string(FAKE_POINTER(iter.first));
+        dumpString += "\n";
     }
     dumpString += "\n";
     decltype(childs) childsTemp;

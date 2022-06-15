@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "hdi_codec_util.h"
 #include "buffer_type_meta.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVdecOutBufferMgr"};
@@ -56,6 +57,7 @@ int32_t HdiVdecOutBufferMgr::UseHandleMems(std::vector<GstBuffer *> &buffers)
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "UseBuffer failed");
         availableBuffers_.push_back(codecBuffer);
         mBuffers.push_back(buffer);
+        gst_buffer_ref(buffer);
     }
     return GST_CODEC_OK;
 }
@@ -65,6 +67,9 @@ int32_t HdiVdecOutBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
     MEDIA_LOGD("Enter UseBuffers");
     CHECK_AND_RETURN_RET_LOG(!buffers.empty(), GST_CODEC_ERROR, "buffers is empty");
     CHECK_AND_RETURN_RET_LOG(buffers[0] != nullptr, GST_CODEC_ERROR, "first buffer is empty");
+    ON_SCOPE_EXIT(0) {
+        std::for_each(buffers.begin(), buffers.end(), [&](GstBuffer *buffer){ gst_buffer_unref(buffer); });
+    };
     GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffers[0]);
     CHECK_AND_RETURN_RET_LOG(bufferType != nullptr, GST_CODEC_ERROR, "bufferType is nullptr");
     enableNativeBuffer_ = bufferType->type == GstBufferType::GST_BUFFER_TYPE_HANDLE ? true : false;

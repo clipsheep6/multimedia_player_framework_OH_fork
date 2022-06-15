@@ -656,6 +656,7 @@ static GstFlowReturn gst_venc_base_handle_frame(GstVideoEncoder *encoder, GstVid
     if (self->i_frame_interval != 0 && self->input.frame_cnt % (gint64)self->i_frame_interval == 0) {
         (void)self->encoder->SetParameter(GST_REQUEST_I_FRAME, GST_ELEMENT(self));
     }
+    // buffer ref no give to encoder
     gint codec_ret = self->encoder->PushInputBuffer(frame->input_buffer);
     GST_VIDEO_ENCODER_STREAM_LOCK(self);
     GstFlowReturn ret = GST_FLOW_OK;
@@ -749,6 +750,7 @@ static gboolean gst_venc_base_push_out_buffers(GstVencBase *self)
         flow = gst_buffer_pool_acquire_buffer(pool, &buffer, &params);
         if (flow == GST_FLOW_OK) {
             g_return_val_if_fail(buffer != nullptr, FALSE);
+            // buffer ref give to encoder
             codec_ret = self->encoder->PushOutputBuffer(buffer);
             g_return_val_if_fail(gst_codec_return_is_ok(self, codec_ret, "push buffer", TRUE), FALSE);
             self->coding_outbuf_cnt++;
