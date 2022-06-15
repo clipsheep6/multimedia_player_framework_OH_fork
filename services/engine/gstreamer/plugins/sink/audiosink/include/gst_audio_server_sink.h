@@ -57,6 +57,8 @@ struct _GstAudioServerSink {
     GMutex render_lock;
     std::mutex mutex_;
     GstBuffer *pause_cache_buffer;
+    gint desc;
+    gint flag;
 };
 
 struct _GstAudioServerSinkClass {

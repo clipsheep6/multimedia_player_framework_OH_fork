@@ -93,19 +93,23 @@ int32_t AudioSinkSvImpl::SetVolume(float volume)
     return MSERR_OK;
 }
 
-int32_t AudioSinkSvImpl::SetParameter(int32_t &param)
+int32_t AudioSinkSvImpl::SetRendererInfo(int32_t desc, int32_t rendererFlags)
 {
-    int32_t contentType = (static_cast<uint32_t>(param) & 0x0000FFFF);
-    int32_t streamUsage = static_cast<uint32_t>(param) >> AudioStandard::RENDERER_STREAM_USAGE_SHIFT;
+    int32_t contentType = (static_cast<uint32_t>(desc) & 0x0000FFFF);
+    int32_t streamUsage = static_cast<uint32_t>(desc) >> AudioStandard::RENDERER_STREAM_USAGE_SHIFT;
 
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION, "audioRenderer_ is nullptr");
+    if (audioRenderer_ == nullptr) {
+        rendererOptions_.rendererInfo.contentType = static_cast<AudioStandard::ContentType>(contentType);
+        rendererOptions_.rendererInfo.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
+        rendererOptions_.rendererInfo.rendererFlags = rendererFlags;
+    } else {
+        AudioStandard::AudioRendererDesc audioRendererDesc;
+        audioRendererDesc.contentType = static_cast<AudioStandard::ContentType>(contentType);
+        audioRendererDesc.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
 
-    AudioStandard::AudioRendererDesc audioRendererDesc;
-    audioRendererDesc.contentType = static_cast<AudioStandard::ContentType>(contentType);
-    audioRendererDesc.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
-
-    int32_t ret = audioRenderer_->SetAudioRendererDesc(audioRendererDesc);
-    CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_UNKNOWN, "audio server SetParameter failed!");
+        int32_t ret = audioRenderer_->SetAudioRendererDesc(audioRendererDesc);
+        CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_UNKNOWN, "audio server SetParameter failed!");
+    }
 
     return MSERR_OK;
 }
@@ -135,7 +139,7 @@ int32_t AudioSinkSvImpl::GetMinVolume(float &volume)
 int32_t AudioSinkSvImpl::Prepare()
 {
     MEDIA_LOGD("audioRenderer Prepare In");
-    audioRenderer_ = AudioStandard::AudioRenderer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC);
+    audioRenderer_ = AudioStandard::AudioRenderer::Create(rendererOptions_);
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
     MEDIA_LOGD("audioRenderer Prepare Out");
     return MSERR_OK;
@@ -203,7 +207,6 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
     MEDIA_LOGD("SetParameters in, channels:%{public}d, sampleRate:%{public}d", channels, sampleRate);
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_INVALID_OPERATION);
 
-    AudioStandard::AudioRendererParams params;
     std::vector<AudioStandard::AudioSamplingRate> supportedSampleList = AudioStandard::
                                                                         AudioRenderer::GetSupportedSamplingRates();
     CHECK_AND_RETURN_RET(supportedSampleList.size() > 0, MSERR_UNKNOWN);
@@ -212,7 +215,7 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
         CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, MSERR_UNKNOWN);
         uint32_t supportedSampleRate = static_cast<uint32_t>(*iter);
         if (sampleRate <= supportedSampleRate) {
-            params.sampleRate = *iter;
+            rendererOptions_.streamInfo.samplingRate = *iter;
             isValidSampleRate = true;
             break;
         }
@@ -227,19 +230,17 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
         CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, MSERR_UNKNOWN);
         uint32_t supportedChannels = static_cast<uint32_t>(*iter);
         if (channels == supportedChannels) {
-            params.channelCount = *iter;
+            rendererOptions_.streamInfo.channels = *iter;
             isValidChannels = true;
             break;
         }
     }
     CHECK_AND_RETURN_RET(isValidChannels == true, MSERR_UNSUPPORT_AUD_CHANNEL_NUM);
 
-    params.sampleFormat = AudioStandard::SAMPLE_S16LE;
-    params.encodingType = AudioStandard::ENCODING_PCM;
-    MEDIA_LOGD("SetParameters out, channels:%{public}d, sampleRate:%{public}d", params.channelCount, params.sampleRate);
-    MEDIA_LOGD("audioRenderer SetParams In");
-    CHECK_AND_RETURN_RET(audioRenderer_->SetParams(params) == AudioStandard::SUCCESS, MSERR_UNKNOWN);
-    MEDIA_LOGD("audioRenderer SetParams Out");
+    rendererOptions_.streamInfo.format = AudioStandard::SAMPLE_S16LE;
+    rendererOptions_.streamInfo.encoding = AudioStandard::ENCODING_PCM;
+    MEDIA_LOGD("SetParameters out, channels:%{public}d, sampleRate:%{public}d",
+        rendererOptions_.streamInfo.channels, rendererOptions_.streamInfo.samplingRate);
     return MSERR_OK;
 }
 
