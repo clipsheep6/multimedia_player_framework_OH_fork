@@ -36,12 +36,18 @@ HdiVdecInBufferMgr::~HdiVdecInBufferMgr()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
+int32_t HdiVdecInBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
+{
+    MEDIA_LOGD("Enter UseBuffers");
+    preBuffers_ = PreUseAshareMems(buffers);
+    return GST_CODEC_OK;
+}
+
 int32_t HdiVdecInBufferMgr::Preprocessing()
 {
     MEDIA_LOGD("Enter Preprocessing");
     std::unique_lock<std::mutex> lock(mutex_);
-    int32_t ret = UseAshareMems(preBuffers_);
-    std::for_each(preBuffers_.begin(), preBuffers_.end(), [&](GstBuffer *buffer){ gst_buffer_unref(buffer); });
+    int32_t ret = UseHdiBuffers(preBuffers_);
     EmptyList(preBuffers_);
     return ret;
 }

@@ -45,13 +45,14 @@ int32_t HdiVdecOutBufferMgr::UseHandleMems(std::vector<GstBuffer *> &buffers)
     for (auto buffer : buffers) {
         GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffer);
         CHECK_AND_RETURN_RET_LOG(bufferType != nullptr, GST_CODEC_ERROR, "bufferType is nullptr");
-        std::shared_ptr<OmxCodecBuffer> codecBuffer = std::make_shared<OmxCodecBuffer>();
-        codecBuffer->size = sizeof(OmxCodecBuffer);
-        codecBuffer->version = verInfo_.compVersion;
-        codecBuffer->bufferType = CodecBufferType::CODEC_BUFFER_TYPE_HANDLE;
-        codecBuffer->buffer = reinterpret_cast<uint8_t *>(bufferType->buf);
-        codecBuffer->bufferLen = bufferType->bufLen;
-        auto ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, codecBuffer.get());
+        std::shared_ptr<HdiBufferWrap> codecBuffer = std::make_shared<HdiBufferWrap>();
+        codecBuffer->buf = bufferType->buf;
+        codecBuffer->hdiBuffer.size = sizeof(OmxCodecBuffer);
+        codecBuffer->hdiBuffer.version = verInfo_.compVersion;
+        codecBuffer->hdiBuffer.bufferType = CodecBufferType::CODEC_BUFFER_TYPE_HANDLE;
+        codecBuffer->hdiBuffer.buffer = reinterpret_cast<uint8_t *>(bufferType->buf);
+        codecBuffer->hdiBuffer.bufferLen = bufferType->bufLen;
+        auto ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, &codecBuffer->hdiBuffer);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "UseBuffer failed");
         availableBuffers_.push_back(codecBuffer);
         mBuffers.push_back(buffer);
@@ -71,19 +72,20 @@ int32_t HdiVdecOutBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
     if (enableNativeBuffer_) {
         ret = UseHandleMems(buffers);
     } else {
-        ret = UseAshareMems(buffers);
+        auto omxBuffers = PreUseAshareMems(buffers);
+        ret = UseHdiBuffers(omxBuffers);
     }
     MEDIA_LOGD("UseBuffer end");
     return GST_CODEC_OK;
 }
 
-void HdiVdecOutBufferMgr::UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<OmxCodecBuffer> &codecBuffer)
+void HdiVdecOutBufferMgr::UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<HdiBufferWrap> &codecBuffer)
 {
     MEDIA_LOGD("Enter UpdateCodecMeta");
     CHECK_AND_RETURN_LOG(codecBuffer != nullptr, "bufferType is nullptr");
     CHECK_AND_RETURN_LOG(bufferType != nullptr, "bufferType is nullptr");
     if (enableNativeBuffer_) {
-        codecBuffer->fenceFd = bufferType->fenceFd;
+        codecBuffer->hdiBuffer.fenceFd = bufferType->fenceFd;
     } else {
         HdiBufferMgr::UpdateCodecMeta(bufferType, codecBuffer);
     }

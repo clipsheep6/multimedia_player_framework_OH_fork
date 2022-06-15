@@ -54,21 +54,22 @@ void HdiBufferMgr::Init(CodecComponentType *handle, int32_t index, const CompVer
     mPortDef_.nPortIndex = (uint32_t)index;
 }
 
-std::shared_ptr<OmxCodecBuffer> HdiBufferMgr::GetCodecBuffer(GstBuffer *buffer)
+std::shared_ptr<HdiBufferWrap> HdiBufferMgr::GetCodecBuffer(GstBuffer *buffer)
 {
     MEDIA_LOGD("Enter GetCodecBuffer");
-    std::shared_ptr<OmxCodecBuffer> codecBuffer = nullptr;
+    std::shared_ptr<HdiBufferWrap> codecBuffer = nullptr;
     GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffer);
     CHECK_AND_RETURN_RET_LOG(bufferType != nullptr, nullptr, "bufferType is nullptr");
     for (auto iter = availableBuffers_.begin(); iter != availableBuffers_.end(); ++iter) {
         if (*iter != nullptr) {
-            if ((*iter)->bufferId == bufferType->id) {
+            MEDIA_LOGD("(*iter)->buf %{public}ld bufferType->buf %{public}ld", (*iter)->buf, bufferType->buf);
+            if ((*iter)->buf == bufferType->buf) {
                 codecBuffer = *iter;
                 codingBuffers_.push_back(std::make_pair(codecBuffer, buffer));
                 gst_buffer_ref(buffer);
                 (void)availableBuffers_.erase(iter);
                 UpdateCodecMeta(bufferType, codecBuffer);
-                codecBuffer->pts = GST_BUFFER_PTS(buffer);
+                codecBuffer->hdiBuffer.pts = GST_BUFFER_PTS(buffer);
                 break;
             }
         }
@@ -76,45 +77,56 @@ std::shared_ptr<OmxCodecBuffer> HdiBufferMgr::GetCodecBuffer(GstBuffer *buffer)
     return codecBuffer;
 }
 
-void HdiBufferMgr::UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<OmxCodecBuffer> &codecBuffer)
+void HdiBufferMgr::UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<HdiBufferWrap> &codecBuffer)
 {
     MEDIA_LOGD("Enter UpdateCodecMeta");
     CHECK_AND_RETURN_LOG(codecBuffer != nullptr, "bufferType is nullptr");
     CHECK_AND_RETURN_LOG(bufferType != nullptr, "bufferType is nullptr");
-    codecBuffer->allocLen = bufferType->totalSize;
-    codecBuffer->offset = bufferType->offset;
-    codecBuffer->filledLen = bufferType->length;
-    codecBuffer->fenceFd = bufferType->fenceFd;
-    codecBuffer->type = bufferType->memFlag == FLAGS_READ_ONLY ? READ_ONLY_TYPE : READ_WRITE_TYPE;
+    codecBuffer->hdiBuffer.allocLen = bufferType->totalSize;
+    codecBuffer->hdiBuffer.offset = bufferType->offset;
+    codecBuffer->hdiBuffer.filledLen = bufferType->length;
+    codecBuffer->hdiBuffer.fenceFd = bufferType->fenceFd;
+    codecBuffer->hdiBuffer.type = bufferType->memFlag == FLAGS_READ_ONLY ? READ_ONLY_TYPE : READ_WRITE_TYPE;
 }
 
-int32_t HdiBufferMgr::UseAshareMems(std::vector<GstBuffer *> &buffers)
+std::vector<std::shared_ptr<HdiBufferWrap>> HdiBufferMgr::PreUseAshareMems(std::vector<GstBuffer *> &buffers)
 {
     MEDIA_LOGD("Enter UseAshareMems");
+    std::vector<std::shared_ptr<HdiBufferWrap>> preBuffers;
     auto ret = HdiGetParameter(handle_, OMX_IndexParamPortDefinition, mPortDef_);
-    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, preBuffers, "HdiGetParameter failed");
+    CHECK_AND_RETURN_RET_LOG(buffers.size() == mPortDef_.nBufferCountActual, preBuffers, "BufferNum error");
+    for (auto buffer : buffers) {
+        CHECK_AND_RETURN_RET_LOG(buffer != nullptr, preBuffers, "buffer is nullptr");
+        GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffer);
+        CHECK_AND_RETURN_RET_LOG(bufferType != nullptr, preBuffers, "bufferType is nullptr");
+        std::shared_ptr<HdiBufferWrap> codecBuffer = std::make_shared<HdiBufferWrap>();
+        codecBuffer->buf = bufferType->buf;
+        codecBuffer->hdiBuffer.size = sizeof(OmxCodecBuffer);
+        codecBuffer->hdiBuffer.version = verInfo_.compVersion;
+        codecBuffer->hdiBuffer.bufferType = CodecBufferType::CODEC_BUFFER_TYPE_AVSHARE_MEM_FD;
+        codecBuffer->hdiBuffer.bufferLen = bufferType->bufLen;
+        codecBuffer->hdiBuffer.buffer = reinterpret_cast<uint8_t *>(bufferType->buf);
+        codecBuffer->hdiBuffer.allocLen = bufferType->totalSize;
+        codecBuffer->hdiBuffer.offset = bufferType->offset;
+        codecBuffer->hdiBuffer.filledLen = bufferType->length;
+        codecBuffer->hdiBuffer.fenceFd = bufferType->fenceFd;
+        codecBuffer->hdiBuffer.flag = 0;
+        codecBuffer->hdiBuffer.type = bufferType->memFlag == FLAGS_READ_ONLY ? READ_ONLY_TYPE : READ_WRITE_TYPE;
+        preBuffers.push_back(codecBuffer);
+    }
+    return preBuffers;
+}
+
+int32_t HdiBufferMgr::UseHdiBuffers(std::vector<std::shared_ptr<HdiBufferWrap>> &buffers)
+{
+    MEDIA_LOGD("Enter UseAshareMems");
     CHECK_AND_RETURN_RET_LOG(buffers.size() == mPortDef_.nBufferCountActual, GST_CODEC_ERROR, "BufferNum error");
     for (auto buffer : buffers) {
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "buffer is nullptr");
-        GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffer);
-        CHECK_AND_RETURN_RET_LOG(bufferType != nullptr, GST_CODEC_ERROR, "bufferType is nullptr");
-        std::shared_ptr<OmxCodecBuffer> codecBuffer = std::make_shared<OmxCodecBuffer>();
-        codecBuffer->size = sizeof(OmxCodecBuffer);
-        codecBuffer->version = verInfo_.compVersion;
-        codecBuffer->bufferType = CodecBufferType::CODEC_BUFFER_TYPE_AVSHARE_MEM_FD;
-        codecBuffer->bufferLen = bufferType->bufLen;
-        codecBuffer->buffer = reinterpret_cast<uint8_t *>(bufferType->buf);
-        codecBuffer->allocLen = bufferType->totalSize;
-        codecBuffer->offset = bufferType->offset;
-        codecBuffer->filledLen = bufferType->length;
-        codecBuffer->fenceFd = bufferType->fenceFd;
-        codecBuffer->flag = 0;
-        codecBuffer->type = bufferType->memFlag == FLAGS_READ_ONLY ? READ_ONLY_TYPE : READ_WRITE_TYPE;
-        MEDIA_LOGE("Enter UseAshareMems codecBuffer->type %d", codecBuffer->type);
-        auto ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, codecBuffer.get());
+        auto ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, &buffer->hdiBuffer);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "UseBuffer failed");
-        bufferType->id = codecBuffer->bufferId;
-        availableBuffers_.push_back(codecBuffer);
+        availableBuffers_.push_back(buffer);
     }
     return GST_CODEC_OK;
 }
@@ -123,9 +135,9 @@ void HdiBufferMgr::FreeCodecBuffers()
 {
     MEDIA_LOGD("Enter FreeCodecBuffers");
     for (auto codecBuffer : availableBuffers_) {
-        auto ret = handle_->FreeBuffer(handle_, mPortIndex_, codecBuffer.get());
+        auto ret = handle_->FreeBuffer(handle_, mPortIndex_, &codecBuffer->hdiBuffer);
         if (ret != HDF_SUCCESS) {
-            MEDIA_LOGE("free buffer %{public}u fail", codecBuffer->bufferId);
+            MEDIA_LOGE("free buffer %{public}u fail", codecBuffer->hdiBuffer.bufferId);
         }
     }
     EmptyList(availableBuffers_);

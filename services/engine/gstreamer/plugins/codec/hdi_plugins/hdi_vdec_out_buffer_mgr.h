@@ -27,7 +27,7 @@ public:
     int32_t UseBuffers(std::vector<GstBuffer*> buffers) override;
 
 protected:
-    void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<OmxCodecBuffer> &codecBuffer) override;
+    void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<HdiBufferWrap> &codecBuffer) override;
 
 private:
     bool enableNativeBuffer_ = false;

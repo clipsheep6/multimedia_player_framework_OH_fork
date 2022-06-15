@@ -803,8 +803,8 @@ static void gst_vdec_base_dump_output_buffer(GstVdecBase *self, GstBuffer *buffe
     g_return_if_fail(gst_buffer_map(buffer, &info, GST_MAP_READ));
     guint stride = (guint)(self->real_stride == 0 ? self->stride : self->real_stride);
     guint stride_height = (guint)(self->real_stride_height == 0 ? self->stride_height : self->real_stride_height);
-    stride = stride == 0 ? width : stride;
-    stride_height = stride_height == 0 ? height : stride_height;
+    stride = stride == 0 ? self->width : stride;
+    stride_height = stride_height == 0 ? self->height : stride_height;
     // yuv size
     guint size = stride * stride_height * 3 / 2;
     if (size > info.size) {

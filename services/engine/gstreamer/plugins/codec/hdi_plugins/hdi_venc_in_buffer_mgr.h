@@ -28,10 +28,10 @@ public:
     int32_t Preprocessing() override;
 
 protected:
-    void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<OmxCodecBuffer> &codecBuffer) override;
+    std::shared_ptr<HdiBufferWrap> GetCodecBuffer(GstBuffer *buffer) override;
 
 private:
-    int32_t UseHandleMems(std::vector<GstBuffer *> &buffers);
+    std::vector<std::shared_ptr<HdiBufferWrap>> PreUseHandleMems(std::vector<GstBuffer *> &buffers);
     bool enableNativeBuffer_ = false;
     std::condition_variable cond_;
 };
