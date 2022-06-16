@@ -16,6 +16,7 @@
 #include "dfx_log_dump.h"
 #include <fstream>
 #include <unistd.h>
+#include <sys/time.h>
 #include "securec.h"
 
 namespace {
@@ -76,6 +77,21 @@ void DfxLogDump::SaveLog(const char *level, const OHOS::HiviewDFX::HiLogLabel &l
     va_end(ap);
 
     std::unique_lock<std::mutex> lock(mutex_);
+    struct timeval time = {};
+    (void)gettimeofday(&time, nullptr);
+    int64_t second = time.tv_sec % 60;
+    int64_t allMinute = time.tv_sec / 60;
+    int64_t minute = allMinute % 60;
+    int64_t hour = allMinute / 60 % 24;
+    int64_t mSecond = time.tv_usec / 1000;
+    logString_ += std::to_string(hour);
+    logString_ += ":";
+    logString_ += std::to_string(minute);
+    logString_ += ":";
+    logString_ += std::to_string(second);
+    logString_ += ":";
+    logString_ += std::to_string(mSecond);
+    logString_ += " ";
     logString_ += level;
     logString_ += " tid:";
     logString_ += std::to_string(gettid());
@@ -92,27 +108,29 @@ void DfxLogDump::SaveLog(const char *level, const OHOS::HiviewDFX::HiLogLabel &l
 
 void DfxLogDump::TaskProcessor()
 {
-    std::string temp;
-    {
-        std::unique_lock<std::mutex> lock(mutex_);
-        cond_.wait(lock, [this] { return isExit_ || isDump_ || lineCount >= FILE_LINE_MAX; });
-        if (isExit_) {
+    while (true) {
+        std::string temp;
+        {
+            std::unique_lock<std::mutex> lock(mutex_);
+            cond_.wait(lock, [this] { return isExit_ || isDump_ || lineCount >= FILE_LINE_MAX; });
+            if (isExit_) {
+                return;
+            }
+            isDump_ = false;
+            lineCount = 0;
+            swap(logString_, temp);
+        }
+
+        std::string file = "/data/media/hilog_media.log";
+        file += std::to_string(fileCount++);
+        std::ofstream ofStream(file);
+        if (!ofStream.is_open()) {
             return;
         }
-        isDump_ = false;
-        lineCount = 0;
-        swap(logString_, temp);
+        ofStream.write(temp.c_str(), temp.size());
+        ofStream.close();
+        fileCount = fileCount > FILE_MAX ? 0 : fileCount;
     }
-
-    std::string file = "/data/media/hilog_media.log";
-    file += std::to_string(fileCount++);
-    std::ofstream ofStream(file);
-    if (!ofStream.is_open()) {
-        return;
-    }
-    ofStream.write(temp.c_str(), temp.size());
-    ofStream.close();
-    fileCount = fileCount > FILE_MAX ? 0 : fileCount;
 }
 } // namespace Media
 } // namespace OHOS

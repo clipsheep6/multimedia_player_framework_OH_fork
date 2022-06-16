@@ -85,10 +85,16 @@ std::shared_ptr<HdiBufferWrap> HdiVencInBufferMgr::GetCodecBuffer(GstBuffer *buf
         availableBuffers_.pop_front();
         codingBuffers_.push_back(std::make_pair(codecBuffer, buffer));
         gst_buffer_ref(buffer);
+        codecBuffer->hdiBuffer.size = sizeof(OmxCodecBuffer);
+        codecBuffer->hdiBuffer.version = verInfo_.compVersion;
+        codecBuffer->hdiBuffer.bufferType = CodecBufferType::CODEC_BUFFER_TYPE_DYNAMIC_HANDLE;
         codecBuffer->hdiBuffer.fenceFd = bufferType->fenceFd;
         codecBuffer->hdiBuffer.buffer = reinterpret_cast<uint8_t *>(bufferType->buf);
         codecBuffer->hdiBuffer.bufferLen = bufferType->bufLen;
+        codecBuffer->hdiBuffer.allocLen = bufferType->bufLen;
+        codecBuffer->hdiBuffer.filledLen = bufferType->bufLen;
         codecBuffer->hdiBuffer.pts = GST_BUFFER_PTS(buffer);
+        MEDIA_LOGD("Get Codec Buffer with buffer %ld", bufferType->buf);
         return codecBuffer;
     }
     return HdiBufferMgr::GetCodecBuffer(buffer);
