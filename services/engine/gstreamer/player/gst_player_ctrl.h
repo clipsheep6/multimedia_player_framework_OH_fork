@@ -60,6 +60,7 @@ public:
     void SetBufferingInfo();
     void SetHttpTimeOut();
     int32_t SelectBitRate(uint32_t bitRate);
+    void SetVideoScaleType(VideoScaleType videoScaleType);
     static void OnStateChangedCb(const GstPlayer *player, GstPlayerState state, GstPlayerCtrl *playerGst);
     static void OnEndOfStreamCb(const GstPlayer *player, GstPlayerCtrl *playerGst);
     static void StreamDecErrorParse(const gchar *name, int32_t &errorCode);
@@ -85,6 +86,7 @@ public:
     static GValueArray* OnAutoplugSortCb(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
                                          GValueArray *factories, GstPlayerCtrl *playerGst);
     void SetDfxNode(const std::shared_ptr<DfxNode> &node);
+    static void HardwareDecoderElementSetupCb(GstElement *src, GstPlayerCtrl *playerGst);
 private:
     PlayerStates ProcessStoppedState();
     PlayerStates ProcessPausedState();
@@ -168,6 +170,7 @@ private:
     bool isNetWorkPlay_ = false;
     std::shared_ptr<DfxNode> dfxNode_;
     DfxClassHelper dfxClassHelper_;
+    VideoScaleType videoScaleType_ = VIDEO_SCALE_TYPE_FIT;
 };
 } // namespace Media
 } // namespace OHOS

@@ -108,8 +108,8 @@ int32_t AudioCaptureAsImpl::GetCaptureParameter(uint32_t &bitrate, uint32_t &cha
     MEDIA_LOGD("get channels:%{public}u, sampleRate:%{public}u from audio server", channels, sampleRate);
     CHECK_AND_RETURN_RET(bufferSize_ > 0 && channels > 0 && sampleRate > 0, MSERR_UNKNOWN);
     constexpr uint32_t bitsPerByte = 8;
-    bufferDurationNs_ = (bufferSize_ * SEC_TO_NANOSECOND) /
-        (sampleRate * (AudioStandard::SAMPLE_S16LE / bitsPerByte) * channels);
+    constexpr uint32_t audioSampleS16 = 16;
+    bufferDurationNs_ = (bufferSize_ * SEC_TO_NANOSECOND) / (sampleRate * (audioSampleS16 / bitsPerByte) * channels);
 
     MEDIA_LOGD("audio frame duration is (%{public}" PRIu64 ") ns", bufferDurationNs_);
     return MSERR_OK;
@@ -314,6 +314,27 @@ int32_t AudioCaptureAsImpl::ResumeAudioCapture()
     }
 
     MEDIA_LOGD("exit ResumeAudioCapture");
+    return MSERR_OK;
+}
+
+int32_t AudioCaptureAsImpl::WakeUpAudioThreads()
+{
+    MEDIA_LOGD("wake up threads when paused state");
+
+    CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
+
+    {
+        std::unique_lock<std::mutex> lock(pauseMutex_);
+        curState_.store(RECORDER_STOP);
+        audioCacheCtrl_->pauseCond_.notify_all();
+    }
+
+    {
+        std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
+        audioCacheCtrl_->captureQueue_.push(nullptr); // to wake up the loop thread
+        audioCacheCtrl_->captureCond_.notify_all();
+    }
+
     return MSERR_OK;
 }
 } // namespace Media

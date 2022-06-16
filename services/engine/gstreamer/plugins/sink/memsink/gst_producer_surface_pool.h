@@ -62,6 +62,7 @@ struct _GstSurfacePool {
     OHOS::Media::DfxValHelper<guint> cachedBuffers;
     std::shared_ptr<OHOS::Media::DfxNode> dfxNode;
     OHOS::Media::DfxClassHelper dfxClassHelper;
+    guint scale_type;
 };
 
 struct _GstSurfacePoolClass {

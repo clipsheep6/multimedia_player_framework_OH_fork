@@ -284,6 +284,7 @@ static gboolean gst_surface_src_init_pool(GstSurfaceSrc *surfacesrc)
     GstAllocator *allocator = gst_consumer_surface_allocator_new();
     g_return_val_if_fail(allocator != nullptr, FALSE);
     gst_consumer_surface_allocator_set_dfx_node(allocator, surface_pool_node);
+    ON_SCOPE_EXIT(1) { gst_object_unref(allocator); };
     gst_consumer_surface_pool_set_surface(pool, surfacesrc->consumerSurface);
     gst_consumer_surface_allocator_set_surface(allocator, surfacesrc->consumerSurface);
     // init pool config
