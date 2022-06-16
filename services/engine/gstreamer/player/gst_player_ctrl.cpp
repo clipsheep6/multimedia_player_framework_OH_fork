@@ -371,30 +371,6 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
     }
 }
 
-void GstPlayerCtrl::HardwareDecoderElementSetupCb(GstElement *src, GstPlayerCtrl *playerGst)
-{
-    playerGst->isHardWare_ = true;
-    if (playerGst->decPluginRegister_) {
-        // For hls scene when change codec, the second codec should not go performance mode process.
-        return;
-    }
-    // For performance mode.
-    playerGst->decPluginRegister_ = true;
-    playerGst->GetVideoSink();
-    CHECK_AND_RETURN_LOG(playerGst->videoSink_ != nullptr, "videoSink is null");
-    g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
-    g_object_set(G_OBJECT(playerGst->videoSink_), "performance-mode", TRUE, nullptr);
-    g_object_set(G_OBJECT(playerGst->videoSink_), "video-scale-type", playerGst->videoScaleType_, nullptr);
-    GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12", nullptr);
-    g_object_set(G_OBJECT(playerGst->videoSink_), "caps", caps, nullptr);
-    g_object_set(G_OBJECT(src), "sink-caps", caps, nullptr);
-    gst_caps_unref(caps);
-    GstBufferPool *pool;
-    g_object_get(playerGst->videoSink_, "surface-pool", &pool, nullptr);
-    g_object_set(G_OBJECT(src), "surface-pool", pool, nullptr);
-    return;
-}
-
 void GstPlayerCtrl::OnBitRateParseCompleteCb(const GstPlayer *player,
     uint32_t *bitrateInfo, uint32_t bitrateNum, GstPlayerCtrl *playerGst)
 {
