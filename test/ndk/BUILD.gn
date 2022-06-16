@@ -47,7 +47,7 @@ ohos_executable("media_ndk_sample") {
   ]
 
   deps = [
-    "//foundation/multimedia/media_standard/interfaces/kits/ndk:media_ndk",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/ndk:media_ndk",
   ]
 
   part_name = "multimedia_media_standard"

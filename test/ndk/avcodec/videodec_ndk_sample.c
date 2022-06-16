@@ -26,24 +26,23 @@ const uint32_t DEFAULT_FRAME_RATE = 30;
 const uint32_t MAX_INPUT_BUFFER_SIZE = 30000;
 const uint32_t FRAME_DURATION_US = 33000;
 const uint32_t DEFAULT_FRAME_COUNT = 1;
-struct AVCodecOnAsyncCallback g_callback;
 
-void AsyncErrorCallBack(struct AVCodec *codec, int32_t errorCode, void *userData)
+void AsyncErrorCallBack(AVCodec *codec, int32_t errorCode, void *userData)
 {
     (void)printf("Error errorCode=%d\n", errorCode);
 }
 
-void AsyncFormatChanged(struct AVCodec *codec, struct AVFormat *format, void *userData)
+void AsyncFormatChanged(AVCodec *codec, AVFormat *format, void *userData)
 {
     (void)printf("Format Changed\n");
 }
 
-void AsyncInputAvailable(struct AVCodec *codec, uint32_t index, void *userData)
+void AsyncInputAvailable(AVCodec *codec, uint32_t index, AVMemory *data, void *userData)
 {
     (void)printf("InputAvailable\n");
 }
 
-void AsyncOutputAvailable(struct AVCodec *codec, uint32_t index, struct AVCodecBufferAttr *attr, void *userData)
+void AsyncOutputAvailable(AVCodec *codec, uint32_t index, AVMemory *data, AVCodecBufferAttr *attr, void *userData)
 {
     (void)printf("OutputAvailable\n");
 }
@@ -53,11 +52,12 @@ struct AVCodec* CreateVideoDecoder(void)
     struct AVCodec *codec = OH_AVCODEC_CreateVideoDecoderByMime("video/avc");
     NDK_CHECK_AND_RETURN_RET_LOG(codec != NULL, NULL, "Fatal: OH_AVCODEC_CreateVideoDecoderByMime");
     
-    g_callback.onAsyncError = AsyncErrorCallBack;
-    g_callback.onAsyncFormatChanged = AsyncFormatChanged;
-    g_callback.onAsyncInputAvailable = AsyncInputAvailable;
-    g_callback.onAsyncOutputAvailable = AsyncOutputAvailable;
-    int32_t ret = OH_AVCODEC_VideoDecoderSetCallback(codec, &g_callback, NULL);
+    struct AVCodecOnAsyncCallback cb;
+    cb.onAsyncError = AsyncErrorCallBack;
+    cb.onAsyncStreamChanged = AsyncFormatChanged;
+    cb.onAsyncNeedInputData = AsyncInputAvailable;
+    cb.onAsyncNewOutputData = AsyncOutputAvailable;
+    int32_t ret = OH_AVCODEC_VideoDecoderSetCallback(codec, cb, NULL);
     NDK_CHECK_AND_RETURN_RET_LOG(ret == AV_ERR_OK, NULL, "Fatal: OH_AVCODEC_CreateVideoDecoderByMime");
     return codec;
 }

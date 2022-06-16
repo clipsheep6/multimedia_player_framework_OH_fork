@@ -86,10 +86,10 @@ typedef struct AVCodecBufferAttr {
  * @since 3.2
  * @version 3.2
  */
-typedef void (* AVCodecOnAsyncError)(struct AVCodec *codec, int32_t errorCode, void *userData);
+typedef void (* AVCodecOnAsyncError)(AVCodec *codec, int32_t errorCode, void *userData);
 
 /**
- * @brief Called when the output format has changed. format生命周期仅维持在FormatChanged事件中，禁止结束后访问
+ * @brief Called when the output format has changed. format生命周期仅维持在StreamChanged事件中，禁止结束后访问
  * @syscap SystemCapability.Multimedia.Media.Codec
  * @param codec AVCodec句柄指针
  * @param format AVFormat句柄指针
@@ -97,7 +97,7 @@ typedef void (* AVCodecOnAsyncError)(struct AVCodec *codec, int32_t errorCode, v
  * @since 3.2
  * @version 3.2
  */
-typedef void (* AVCodecOnAsyncFormatChanged)(struct AVCodec *codec, struct AVFormat *format, void *userData);
+typedef void (* AVCodecOnAsyncStreamChanged)(AVCodec *codec, AVFormat *format, void *userData);
 
 /**
  * @brief Called when an input buffer becomes available.
@@ -108,10 +108,10 @@ typedef void (* AVCodecOnAsyncFormatChanged)(struct AVCodec *codec, struct AVFor
  * @since 3.2
  * @version 3.2
  */
-typedef void (* AVCodecOnAsyncInputAvailable)(struct AVCodec *codec, uint32_t index, void *userData);
+typedef void (* AVCodecOnAsyncNeedInputData)(AVCodec *codec, uint32_t index, AVMemory *data, void *userData);
 
 /**
- * @brief Called when an out buffer becomes available. attr生命周期仅维持在OutputAvailable事件中，禁止结束后访问
+ * @brief Called when an out buffer becomes available. attr生命周期仅维持在NewOutputData事件中，禁止结束后访问
  * @syscap SystemCapability.Multimedia.Media.Codec
  * @param codec AVCodec句柄指针
  * @param index The index of the available output buffer.
@@ -120,24 +120,35 @@ typedef void (* AVCodecOnAsyncInputAvailable)(struct AVCodec *codec, uint32_t in
  * @since 3.2
  * @version 3.2
  */
-typedef void (* AVCodecOnAsyncOutputAvailable)(struct AVCodec *codec, uint32_t index, struct AVCodecBufferAttr *attr, void *userData);
+typedef void (* AVCodecOnAsyncNewOutputData)(AVCodec *codec, uint32_t index, AVMemory *data,
+    AVCodecBufferAttr *attr, void *userData);
 
 /**
  * @brief Register callback function, Respond to codec reporting events
  * @syscap SystemCapability.Multimedia.Media.Codec
  * @param onAsyncError 监听编解码错误码，当回调产生时，编解码出现异常状况
- * @param onAsyncFormatChanged 监听编解码Format，当回调产生时，Format变更
- * @param onAsyncInputAvailable 监听编解码输入Buffer的空闲情况，当回调产生时，调用者可通过GetInputBuffer获得InputBuffer
- * @param onAsyncOutputAvailable 监听编解码输出Buffer的空闲情况，当回调产生时，调用者可通过GetOutputBuffer获得OutputBuffer
+ * @param onAsyncStreamChanged 监听编解码流信息，当回调产生时，流信息变更
+ * @param onAsyncNeedInputData 监听编解码需要输入数据，当回调产生时，调用者可通过GetInputData获得InputData
+ * @param onAsyncNewOutputData 监听编解码产生输出数据，当回调产生时，调用者方可调用GetOutputData获取OutputData
  * @since  3.2
  * @version 3.2
  */
 typedef struct AVCodecOnAsyncCallback {
     AVCodecOnAsyncError onAsyncError;
-    AVCodecOnAsyncFormatChanged onAsyncFormatChanged;
-    AVCodecOnAsyncInputAvailable onAsyncInputAvailable;
-    AVCodecOnAsyncOutputAvailable onAsyncOutputAvailable;
+    AVCodecOnAsyncStreamChanged onAsyncStreamChanged;
+    AVCodecOnAsyncNeedInputData onAsyncNeedInputData;
+    AVCodecOnAsyncNewOutputData onAsyncNewOutputData;
 } AVCodecOnAsyncCallback;
+
+/**
+ * @brief 通过mime创建一个视频解码句柄指针
+ * @syscap SystemCapability.Multimedia.Media.Codec
+ * @param name 查询Xml能力 或者 芯片手册，必须确保解码器name正确
+ * @return 返回一个AVCodec句柄指针
+ * @since  3.2
+ * @version 3.2
+ */
+AVCodec* OH_AVCODEC_CreateVideoDecoderByName(const char *name);
 
 /**
  * @brief 通过mime创建一个视频解码句柄指针
@@ -159,7 +170,7 @@ AVCodec* OH_AVCODEC_CreateVideoDecoderByMime(const char *mime);
 void OH_AVCODEC_DestroyVideoDecoder(AVCodec *codec);
 
 /**
- * @brief 设置一个异步回调函数，用以响应编解码产生的事件，监听编解码工作状态，输入/输出Buffer空闲情况，要求在Configure/Prepare前设置
+ * @brief 设置一个异步回调函数，用以响应编解码产生的事件，监听编解码工作状态，输入/输出Data情况，要求在Configure/Prepare前设置
  * @syscap SystemCapability.Multimedia.Media.Codec
  * @param codec AVCodec句柄指针
  * @param callback Refer to the definition of AVCodecOnAsyncCallback on how each callback function is called and what are specified.
@@ -168,7 +179,18 @@ void OH_AVCODEC_DestroyVideoDecoder(AVCodec *codec);
  * @since  3.2
  * @version 3.2
  */
-AVErrCode OH_AVCODEC_VideoDecoderSetCallback(AVCodec *codec, AVCodecOnAsyncCallback *callback, void *userData);
+AVErrCode OH_AVCODEC_VideoDecoderSetCallback(AVCodec *codec, AVCodecOnAsyncCallback callback, void *userData);
+
+/**
+ * @brief 设置输出Window和Surface，提供解码输出和窗口渲染
+ * @syscap SystemCapability.Multimedia.Media.Codec
+ * @param codec AVCodec句柄指针
+ * @param window NativeWindow句柄指针
+ * @return AVErrCode 错误码
+ * @since  3.2
+ * @version 3.2
+ */
+AVErrCode OH_AVCODEC_VideoDecoderSetOutputSurface(AVCodec *codec, NativeWindow *window);
 
 /**
  * @brief 设置解码器参数
@@ -242,40 +264,6 @@ AVErrCode OH_AVCODEC_VideoDecoderReset(AVCodec *codec);
 AVErrCode OH_AVCODEC_VideoDecoderRelease(AVCodec *codec);
 
 /**
- * @brief 设置输出Window和Surface，提供解码输出和窗口渲染
- * @syscap SystemCapability.Multimedia.Media.Codec
- * @param codec AVCodec句柄指针
- * @param window NativeWindow句柄指针
- * @return AVErrCode 错误码
- * @since  3.2
- * @version 3.2
- */
-AVErrCode OH_AVCODEC_VideoDecoderSetOutputSurface(AVCodec *codec, NativeWindow *window);
-
-/**
- * @brief 当监听到AVCodecOnAsyncInputAvailable事件时，可通过事件提供的索引值，查询获取一块输入Buffer
- * @syscap SystemCapability.Multimedia.Media.Codec
- * @param codec AVCodec句柄指针
- * @param index 指向一块AVCodecOnAsyncInputAvailable事件提供的InputBuffer索引值
- * @return 返回一块输入Buffer，AVMemory句柄指针，生命周期随Flush/Reset刷新，或伴随AVCodec销毁；
- * @since  3.2
- * @version 3.2
- */
-AVMemory* OH_AVCODEC_VideoDecoderGetInputBuffer(AVCodec *codec, uint32_t index);
-
-/**
- * @brief 当GetInputBuffer返回的AVMemory被写入SPS/PTS/ES数据后，可通过QueueInputBuffer通知解码器读取数据
- * @syscap SystemCapability.Multimedia.Media.Codec
- * @param codec AVCodec句柄指针
- * @param index 指向一块AVCodecOnAsyncInputAvailable事件提供的InputBuffer索引值
- * @param attr 描述InputBuffer的属性信息
- * @return AVErrCode 错误码
- * @since  3.2
- * @version 3.2
- */
-AVErrCode OH_AVCODEC_VideoDecoderQueueInputBuffer(AVCodec *codec, uint32_t index, AVCodecBufferAttr attr);
-
-/**
  * @brief 获取输出AVFormat格式，可以通过AVFormat的KEY获取PixelFormat、Wide/Hight等参数
  * @syscap SystemCapability.Multimedia.Media.Codec
  * @param codec AVCodec句柄指针
@@ -284,18 +272,6 @@ AVErrCode OH_AVCODEC_VideoDecoderQueueInputBuffer(AVCodec *codec, uint32_t index
  * @version 3.2
  */
 AVFormat* OH_AVCODEC_VideoDecoderGetOutputFormat(AVCodec *codec);
-
-/**
- * @brief 当监听到AVCodecOnAsyncOutputAvailable事件时，可通过事件提供的索引值，选择处理OutputBuffer的方式
- * @syscap SystemCapability.Multimedia.Media.Codec
- * @param codec AVCodec句柄指针
- * @param index OutputBuffer索引值
- * @param render TRUE：到Surface执行下一阶段任务，对应Surface->Flush   FALSE：丢帧，Surface->Cache
- * @return AVErrCode 错误码
- * @since  3.2
- * @version 3.2
- */
-AVErrCode OH_AVCODEC_VideoDecoderReleaseOutputBuffer(AVCodec *codec, uint32_t index, bool render);
 
 /**
  * @brief 向解码器设置动态参数，只能在Started状态下调用，注意：错误的参数变更，可能会导致解码失败
@@ -307,6 +283,30 @@ AVErrCode OH_AVCODEC_VideoDecoderReleaseOutputBuffer(AVCodec *codec, uint32_t in
  * @version 3.2
  */
 AVErrCode OH_AVCODEC_VideoDecoderSetParameter(AVCodec *codec, AVFormat *format);
+
+/**
+ * @brief 当GetInputBuffer返回的AVMemory被写入SPS/PTS/ES数据后，可通过QueueInputBuffer通知解码器读取数据
+ * @syscap SystemCapability.Multimedia.Media.Codec
+ * @param codec AVCodec句柄指针
+ * @param index AVCodecOnAsyncNeedInputData事件提供的索引值
+ * @param attr 描述InputBuffer的属性信息
+ * @return AVErrCode 错误码
+ * @since  3.2
+ * @version 3.2
+ */
+AVErrCode OH_AVCODEC_VideoDecoderPushInputData(AVCodec *codec, uint32_t index, AVCodecBufferAttr attr);
+
+/**
+ * @brief 当监听到AVCodecOnAsyncNewOutputData事件时，可通过事件提供的索引值，选择处理OutputBuffer的方式
+ * @syscap SystemCapability.Multimedia.Media.Codec
+ * @param codec AVCodec句柄指针
+ * @param index OutputBuffer索引值
+ * @param render TRUE：到Surface执行下一阶段任务，对应Surface->Flush   FALSE：丢帧，Surface->Cache
+ * @return AVErrCode 错误码
+ * @since  3.2
+ * @version 3.2
+ */
+AVErrCode OH_AVCODEC_VideoDecoderRenderOutputData(AVCodec *codec, uint32_t index, bool render);
 
 // Video Encoder
 AVCodec* OH_AVCODEC_CreateVideoEncoderByMime(const char *mime);
@@ -320,12 +320,10 @@ AVErrCode OH_AVCODEC_VideoEncoderStop(AVCodec *codec);
 AVErrCode OH_AVCODEC_VideoEncoderFlush(AVCodec *codec);
 AVErrCode OH_AVCODEC_VideoEncoderReset(AVCodec *codec);
 AVErrCode OH_AVCODEC_VideoEncoderRelease(AVCodec *codec);
-AVErrCode OH_AVCODEC_VideoEncoderCreateInputSurface(AVCodec *codec, NativeWindow **window);
-AVErrCode OH_AVCODEC_VideoEncoderQueueInputBuffer(AVCodec *codec, uint32_t index, AVCodecBufferAttr attr);
-AVMemory* OH_AVCODEC_VideoEncoderGetOutputBuffer(AVCodec *codec, uint32_t index);
-AVErrCode OH_AVCODEC_VideoEncoderReleaseOutputBuffer(AVCodec *codec, uint32_t index, bool render);
 AVErrCode OH_AVCODEC_VideoEncoderSetParameter(AVCodec *codec, AVFormat *format);
 AVErrCode OH_AVCODEC_VideoEncoderGetOutputFormat(AVCodec *codec, AVFormat *format);
+AVErrCode OH_AVCODEC_VideoEncoderGetInputSurface(AVCodec *codec, NativeWindow **window);
+AVErrCode OH_AVCODEC_VideoEncoderFreeOutputData(AVCodec *codec, uint32_t index);
 
 // Audio Decoder
 AVCodec* OH_AVCODEC_CreateAudioDecoderByMime(const char *mime);
@@ -339,12 +337,10 @@ AVErrCode OH_AVCODEC_AudioDecoderStop(AVCodec *codec);
 AVErrCode OH_AVCODEC_AudioDecoderFlush(AVCodec *codec);
 AVErrCode OH_AVCODEC_AudioDecoderReset(AVCodec *codec);
 AVErrCode OH_AVCODEC_AudioDecoderRelease(AVCodec *codec);
-AVMemory* OH_AVCODEC_AudioDecoderGetInputBuffer(AVCodec *codec, uint32_t index);
-AVMemory* OH_AVCODEC_AudioDecoderGetOutputBuffer(AVCodec *codec, uint32_t index);
-AVErrCode OH_AVCODEC_AudioDecoderQueueInputBuffer(AVCodec *codec, uint32_t index, AVCodecBufferAttr attr);
-AVErrCode OH_AVCODEC_AudioDecoderReleaseOutputBuffer(AVCodec *codec, uint32_t index);
 AVErrCode OH_AVCODEC_AudioDecoderSetParameter(AVCodec *codec, AVFormat *format);
 AVErrCode OH_AVCODEC_AudioDecoderGetOutputFormat(AVCodec *codec, AVFormat *format);
+AVErrCode OH_AVCODEC_AudioDecoderPushInputData(AVCodec *codec, uint32_t index, AVCodecBufferAttr attr);
+AVErrCode OH_AVCODEC_AudioDecoderFreeOutputData(AVCodec *codec, uint32_t index);
 
 // Audio Encoder
 AVCodec* OH_AVCODEC_CreateAudioEncoderByMime(const char *mime);
@@ -358,12 +354,10 @@ AVErrCode OH_AVCODEC_AudioEncoderStop(AVCodec *codec);
 AVErrCode OH_AVCODEC_AudioEncoderFlush(AVCodec *codec);
 AVErrCode OH_AVCODEC_AudioEncoderReset(AVCodec *codec);
 AVErrCode OH_AVCODEC_AudioEncoderRelease(AVCodec *codec);
-AVMemory* OH_AVCODEC_AudioEncoderGetInputBuffer(AVCodec *codec, uint32_t index);
-AVMemory* OH_AVCODEC_AudioEncoderGetOutputBuffer(AVCodec *codec, uint32_t index);
-AVErrCode OH_AVCODEC_AudioEncoderQueueInputBuffer(AVCodec *codec, uint32_t index, AVCodecBufferAttr attr);
-AVErrCode OH_AVCODEC_AudioEncoderReleaseOutputBuffer(AVCodec *codec, uint32_t index);
 AVErrCode OH_AVCODEC_AudioEncoderSetParameter(AVCodec *codec, AVFormat *format);
 AVErrCode OH_AVCODEC_AudioEncoderGetOutputFormat(AVCodec *codec, AVFormat *format);
+AVErrCode OH_AVCODEC_AudioEncoderPushInputData(AVCodec *codec, uint32_t index, AVCodecBufferAttr attr);
+AVErrCode OH_AVCODEC_AudioEncoderFreeOutputData(AVCodec *codec, uint32_t index);
 
 #ifdef __cplusplus
 }

@@ -39,53 +39,81 @@ struct VideoDecorderObject : public AVCodec {
     std::shared_ptr<AVCodecCallback> callback_ = nullptr;
 };
 
-class NdkAVCodecCallback : public AVCodecCallback {
+class NdkVideoDecoderCallback : public AVCodecCallback {
 public:
-    NdkAVCodecCallback(AVCodec *codec, struct AVCodecOnAsyncCallback *cb, void *userData)
+    NdkVideoDecoderCallback(AVCodec *codec, struct AVCodecOnAsyncCallback cb, void *userData)
         : codec_(codec), callback_(cb), userData_(userData) {}
-    virtual ~NdkAVCodecCallback() = default;
+    virtual ~NdkVideoDecoderCallback() = default;
 
     void OnError(AVCodecErrorType errorType, int32_t errorCode) override
     {
         (void)errorType;
-        if (callback_ != nullptr && codec_ != nullptr) {
+        if (codec_ != nullptr) {
             int32_t extErr = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
-            callback_->onAsyncError(codec_, extErr, userData_);
+            callback_.onAsyncError(codec_, extErr, userData_);
         }
     }
 
     void OnOutputFormatChanged(const Format &format) override
     {
-        if (callback_ != nullptr && codec_ != nullptr) {
+        if (codec_ != nullptr) {
             OHOS::sptr<AVFormat> object = new(std::nothrow) AVFormat(format);
             // The object lifecycle is controlled by the current function stack
-            callback_->onAsyncFormatChanged(codec_, reinterpret_cast<AVFormat *>(object.GetRefPtr()), userData_);
+            callback_.onAsyncStreamChanged(codec_, reinterpret_cast<AVFormat *>(object.GetRefPtr()), userData_);
         }
     }
 
     void OnInputBufferAvailable(uint32_t index) override
     {
-        if (callback_ != nullptr && codec_ != nullptr) {
-            callback_->onAsyncInputAvailable(codec_, index, userData_);
+        if (codec_ != nullptr) {
+            AVMemory *data = GetInputData(codec_, index);
+            if (data != nullptr) {
+                callback_.onAsyncNeedInputData(codec_, index, data, userData_);
+            }
         }
     }
 
     void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override
     {
-        if (callback_ != nullptr && codec_ != nullptr) {
+        if (codec_ != nullptr) {
             struct AVCodecBufferAttr bufferInfo;
             bufferInfo.presentationTimeUs = info.presentationTimeUs;
             bufferInfo.size = info.size;
             bufferInfo.offset = info.offset;
             bufferInfo.flags = flag;
             // The bufferInfo lifecycle is controlled by the current function stack
-            callback_->onAsyncOutputAvailable(codec_, index, &bufferInfo, userData_);
+            callback_.onAsyncNewOutputData(codec_, index, nullptr, &bufferInfo, userData_);
         }
     }
 
 private:
+    AVMemory* GetInputData(struct AVCodec *codec, uint32_t index)
+    {
+        CHECK_AND_RETURN_RET_LOG(codec != nullptr, nullptr, "input codec is nullptr!");
+        CHECK_AND_RETURN_RET_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_VIDEO_DECODER, nullptr, "magic error!");
+
+        struct VideoDecorderObject *videoDecObj = reinterpret_cast<VideoDecorderObject *>(codec);
+        CHECK_AND_RETURN_RET_LOG(videoDecObj->videoDecoder_ != nullptr, nullptr, "context videoDecoder is nullptr!");
+
+        std::shared_ptr<AVSharedMemory> memory = videoDecObj->videoDecoder_->GetInputBuffer(index);
+        CHECK_AND_RETURN_RET_LOG(memory != nullptr, nullptr, "get input buffer is nullptr!");
+
+        for (auto &memoryObj : videoDecObj->memoryObjList_) {
+            if (memoryObj->IsEqualMemory(memory)) {
+                return reinterpret_cast<AVMemory *>(memoryObj.GetRefPtr());
+            }
+        }
+
+        OHOS::sptr<AVMemory> object = new(std::nothrow) AVMemory(memory);
+        CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to new AVMemory");
+
+        videoDecObj->memoryObjList_.push_back(object);
+        MEDIA_LOGD("AVCodec VideoDecoder GetInputBuffer memoryList size:%{public}zu", videoDecObj->memoryObjList_.size());
+        return reinterpret_cast<AVMemory *>(object.GetRefPtr());
+    }
+
     struct AVCodec *codec_;
-    struct AVCodecOnAsyncCallback *callback_;
+    struct AVCodecOnAsyncCallback callback_;
     void *userData_;
 };
 
@@ -241,32 +269,7 @@ AVErrCode OH_AVCODEC_VideoDecoderSetOutputSurface(struct AVCodec *codec, struct 
     return AV_ERR_OK;
 }
 
-AVMemory* OH_AVCODEC_VideoDecoderGetInputBuffer(struct AVCodec *codec, uint32_t index)
-{
-    CHECK_AND_RETURN_RET_LOG(codec != nullptr, nullptr, "input codec is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_VIDEO_DECODER, nullptr, "magic error!");
-
-    struct VideoDecorderObject *videoDecObj = reinterpret_cast<VideoDecorderObject *>(codec);
-    CHECK_AND_RETURN_RET_LOG(videoDecObj->videoDecoder_ != nullptr, nullptr, "context videoDecoder is nullptr!");
-
-    std::shared_ptr<AVSharedMemory> memory = videoDecObj->videoDecoder_->GetInputBuffer(index);
-    CHECK_AND_RETURN_RET_LOG(memory != nullptr, nullptr, "get input buffer is nullptr!");
-
-    for (auto &memoryObj : videoDecObj->memoryObjList_) {
-        if (memoryObj->IsEqualMemory(memory)) {
-            return reinterpret_cast<AVMemory *>(memoryObj.GetRefPtr());
-        }
-    }
-
-    OHOS::sptr<AVMemory> object = new(std::nothrow) AVMemory(memory);
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to new AVMemory");
-
-    videoDecObj->memoryObjList_.push_back(object);
-    MEDIA_LOGD("AVCodec VideoDecoder GetInputBuffer memoryList size:%{public}zu", videoDecObj->memoryObjList_.size());
-    return reinterpret_cast<AVMemory *>(object.GetRefPtr());
-}
-
-AVErrCode OH_AVCODEC_VideoDecoderQueueInputBuffer(struct AVCodec *codec, uint32_t index, AVCodecBufferAttr attr)
+AVErrCode OH_AVCODEC_VideoDecoderPushInputData(struct AVCodec *codec, uint32_t index, AVCodecBufferAttr attr)
 {
     CHECK_AND_RETURN_RET_LOG(codec != nullptr, AV_ERR_INVALID_VAL, "input codec is nullptr!");
     CHECK_AND_RETURN_RET_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_VIDEO_DECODER, AV_ERR_INVALID_VAL, "magic error!");
@@ -305,7 +308,7 @@ AVFormat* OH_AVCODEC_VideoDecoderGetOutputFormat(struct AVCodec *codec)
 }
 
 // struct VideoCapsObject* OH_AVCODEC_VideoDecoderGetVideoDecoderCaps(struct AVCodec *codec);
-AVErrCode OH_AVCODEC_VideoDecoderReleaseOutputBuffer(struct AVCodec *codec, uint32_t index, bool render)
+AVErrCode OH_AVCODEC_VideoDecoderRenderOutputData(struct AVCodec *codec, uint32_t index, bool render)
 {
     CHECK_AND_RETURN_RET_LOG(codec != nullptr, AV_ERR_INVALID_VAL, "input codec is nullptr!");
     CHECK_AND_RETURN_RET_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_VIDEO_DECODER, AV_ERR_INVALID_VAL, "magic error!");
@@ -335,7 +338,7 @@ AVErrCode OH_AVCODEC_VideoDecoderSetParameter(struct AVCodec *codec, struct AVFo
     return AV_ERR_OK;
 }
 
-AVErrCode OH_AVCODEC_VideoDecoderSetCallback(struct AVCodec *codec, struct AVCodecOnAsyncCallback *callback, void *userData)
+AVErrCode OH_AVCODEC_VideoDecoderSetCallback(struct AVCodec *codec, struct AVCodecOnAsyncCallback callback, void *userData)
 {
     CHECK_AND_RETURN_RET_LOG(codec != nullptr, AV_ERR_INVALID_VAL, "input codec is nullptr!");
     CHECK_AND_RETURN_RET_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_VIDEO_DECODER, AV_ERR_INVALID_VAL, "magic error!");
@@ -343,7 +346,7 @@ AVErrCode OH_AVCODEC_VideoDecoderSetCallback(struct AVCodec *codec, struct AVCod
     struct VideoDecorderObject *videoDecObj = reinterpret_cast<VideoDecorderObject *>(codec);
     CHECK_AND_RETURN_RET_LOG(videoDecObj->videoDecoder_ != nullptr, AV_ERR_INVALID_VAL, "context videoDecoder is nullptr!");
 
-    videoDecObj->callback_ = std::make_shared<NdkAVCodecCallback>(codec, callback, userData);
+    videoDecObj->callback_ = std::make_shared<NdkVideoDecoderCallback>(codec, callback, userData);
     CHECK_AND_RETURN_RET_LOG(videoDecObj->callback_ != nullptr, AV_ERR_INVALID_VAL, "context videoDecoder is nullptr!");
 
     int32_t ret = videoDecObj->videoDecoder_->SetCallback(videoDecObj->callback_);

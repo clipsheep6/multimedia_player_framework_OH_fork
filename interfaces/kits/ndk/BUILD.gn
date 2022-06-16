@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,63 +12,36 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//build/ohos/ndk/ndk.gni")
 
-MEDIA_ROOT_DIR = "//foundation/multimedia/media_standard"
-
-config("media_ndk_config") {
-  include_dirs = [
-    "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_ROOT_DIR/interfaces/inner_api/ndk",
-    "$MEDIA_ROOT_DIR/frameworks/ndk/avcodec",
-    "$MEDIA_ROOT_DIR/frameworks/ndk/common",
-    "//foundation/graphic/standard/frameworks/surface/include"
-  ]
-
-  cflags = [
-    "-fno-exceptions",
-    "-Wall",
-    "-fno-common",
-    "-fstack-protector-strong",
-    "-Wshadow",
-    "-FPIC",
-    "-FS",
-    "-O2",
-    "-D_FORTIFY_SOURCE=2",
-    "-Wformat=2",
-    "-Wdate-time",
-  ]
-
-  cflags_cc = [
-    "-std=c++17",
-    "-fno-rtti",
+ohos_ndk_headers("avcodec_header") {
+  dest_dir = "$ndk_headers_out_dir/avcodec"
+  sources = [
+    "//foundation/multimedia/media_standard/interfaces/inner_api/ndk/ndk_av_codec.h",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/ndk/ndk_av_errors.h",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/ndk/ndk_av_format.h",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/ndk/ndk_av_memory.h",
   ]
 }
 
-ohos_shared_library("media_ndk") {
-  install_enable = true
-  sources = [
-    "$MEDIA_ROOT_DIR/frameworks/ndk/avcodec/ndk_video_decoder.cpp",
-    "$MEDIA_ROOT_DIR/frameworks/ndk/common/ndk_av_format.cpp",
-    "$MEDIA_ROOT_DIR/frameworks/ndk/common/ndk_av_memory.cpp",
+ohos_ndk_library("libnative_media_ndk") {
+  output_name = "native_media"
+  output_extension = "so"
+  ndk_description_file = "./libnative_media.ndk.json"
+  system_capability = [
+    "SystemCapability.Multimedia.Media.Core",
+    "SystemCapability.Multimedia.Media.AudioPlayer",
+    "SystemCapability.Multimedia.Media.VideoPlayer",
+    "SystemCapability.Multimedia.Media.AudioRecorder",
+    "SystemCapability.Multimedia.Media.VideoRecorder",
+    "SystemCapability.Multimedia.Media.Codec",
+    "SystemCapability.Multimedia.Media.Spliter",
+    "SystemCapability.Multimedia.Media.Muxer"
   ]
-
-  public_configs = [
-    ":media_ndk_config",
-    "//foundation/graphic/standard/frameworks/surface:surface_public_config",
+  system_capability_headers = [
+    "native_media/ndk_av_codec.h",
+    "native_media/ndk_av_errors.h",
+    "native_media/ndk_av_format.h",
+    "native_media/ndk_av_memory.h",
   ]
-
-  deps = [
-    "//foundation/graphic/standard/frameworks/surface:surface",
-    "//foundation/multimedia/media_standard/interfaces/inner_api/native:media_client",
-    "//foundation/multimedia/media_standard/services/utils:media_format",
-    "//foundation/multimedia/media_standard/services/utils:media_service_utils",
-    "//utils/native/base:utils",
-  ]
-
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-  ]
-
-  subsystem_name = "multimedia"
-  part_name = "multimedia_media_standard"
 }
