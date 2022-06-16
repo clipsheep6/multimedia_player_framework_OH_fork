@@ -177,6 +177,12 @@ int32_t GstPlayerCtrl::SetUrl(const std::string &url)
     return MSERR_OK;
 }
 
+void GstPlayerCtrl::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    dfxClassHelper_.Init(this, "GstPlayerCtrl", dfxNode_);
+}
+
 int32_t GstPlayerCtrl::SetSource(const std::shared_ptr<GstAppsrcWarp> &appsrcWarp)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -306,6 +312,9 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
 
 void GstPlayerCtrl::HardwareDecoderElementSetupCb(GstElement *src, GstPlayerCtrl *playerGst)
 {
+    std::shared_ptr<DfxNode> node =
+        DfxNodeManager::GetInstance().CreateChildDfxNode(playerGst->dfxNode_, HARDWARE_VIDEO_DECODER);
+    g_object_set(src, "dfx-node", &node, nullptr);    
     playerGst->isHardWare_ = true;
     if (playerGst->decPluginRegister_) {
         // For hls scene when change codec, the second codec should not go performance mode process.
@@ -753,6 +762,9 @@ void GstPlayerCtrl::GetVideoSink()
     }
     g_object_get(playbin, "video-sink", &videoSink_, nullptr);
 
+    std::shared_ptr<DfxNode> node =
+        DfxNodeManager::GetInstance().CreateChildDfxNode(dfxNode_, SINK);
+    g_object_set(videoSink_, "dfx-node", &node, nullptr);
     gst_object_unref(playbin);
 }
 

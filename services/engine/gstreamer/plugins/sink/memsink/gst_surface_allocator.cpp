@@ -17,6 +17,9 @@
 #include <sync_fence.h>
 #include "media_log.h"
 
+GST_DEBUG_CATEGORY_STATIC(gst_surface_allocator_debug_category);
+#define GST_CAT_DEFAULT gst_surface_allocator_debug_category
+
 #define gst_surface_allocator_parent_class parent_class
 G_DEFINE_TYPE(GstSurfaceAllocator, gst_surface_allocator, GST_TYPE_ALLOCATOR);
 
@@ -46,6 +49,15 @@ gboolean gst_surface_allocator_set_surface(GstSurfaceAllocator *allocator, OHOS:
     return TRUE;
 }
 
+void gst_surface_allocator_set_dfx_node(GstSurfaceAllocator *allocator,
+    const std::shared_ptr<OHOS::Media::DfxNode> &node)
+{
+    if (node == nullptr) {
+        return;
+    }
+    allocator->dfx_node = node;
+    allocator->dfx_class_helper.Init(allocator, "surface allocator", allocator->dfx_node);
+}
 static OHOS::ScalingMode gst_surface_allocator_get_scale_type(GstSurfaceAllocParam param)
 {
     if (SCALEMODE_MAP.find(static_cast<VideoScaleType>(param.scale_type)) == SCALEMODE_MAP.end()) {
@@ -101,6 +113,7 @@ GstSurfaceMemory *gst_surface_allocator_alloc(GstSurfaceAllocator *allocator, Gs
     memory->buf = surface_buffer;
     memory->fence = -1;
     memory->need_render = FALSE;
+    memory->dfx_class_helper.Init(memory, "surface mem", allocator->dfx_node);
     GST_DEBUG("alloc surface buffer for width: %d, height: %d, format: %d, size: %u",
         param.width, param.height, param.format, surface_buffer->GetSize());
 
@@ -125,6 +138,7 @@ static void gst_surface_allocator_free(GstAllocator *baseAllocator, GstMemory *b
     }
 
     memory->buf = nullptr;
+    memory->dfx_class_helper.DeInit();
     g_slice_free(GstSurfaceMemory, memory);
 }
 
@@ -172,6 +186,8 @@ static void gst_surface_allocator_finalize(GObject *obj)
     g_return_if_fail(allocator != nullptr);
 
     allocator->surface = nullptr;
+    allocator->dfx_node = nullptr;
+    allocator->dfx_class_helper.DeInit();
     GST_DEBUG_OBJECT(allocator, "finalize allocator 0x%06" PRIXPTR "", FAKE_POINTER(allocator));
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
@@ -188,6 +204,7 @@ static void gst_surface_allocator_class_init(GstSurfaceAllocatorClass *klass)
 
     allocatorClass->alloc = gst_surface_allocator_alloc_dummy;
     allocatorClass->free = gst_surface_allocator_free;
+    GST_DEBUG_CATEGORY_INIT(gst_surface_allocator_debug_category, "prosurallocator", 0, "surface allocator");
 }
 
 GstSurfaceAllocator *gst_surface_allocator_new()

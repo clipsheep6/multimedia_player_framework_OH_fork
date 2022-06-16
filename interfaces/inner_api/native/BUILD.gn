@@ -80,6 +80,7 @@ config("media_client_public_config") {
     "-D_FORTIFY_SOURCE=2",
     "-Wformat=2",
     "-Wdate-time",
+    "-DOHOS_MEDIA_LOG_DFX",
   ]
 
   cflags_cc = [

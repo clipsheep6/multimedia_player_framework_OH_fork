@@ -105,6 +105,12 @@ int32_t PlayerEngineGstImpl::SetSource(const std::shared_ptr<IMediaDataSource> &
     return MSERR_OK;
 }
 
+void PlayerEngineGstImpl::SetDfxNode(const std::shared_ptr<DfxNode> &node)
+{
+    dfxNode_ = node;
+    dfxClassHelper_.Init(this, "PlayerEngineGstImpl", node);
+}
+
 int32_t PlayerEngineGstImpl::SetObs(const std::weak_ptr<IPlayerEngineObs> &obs)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -170,7 +176,7 @@ void PlayerEngineGstImpl::PlayerLoop()
 
     playerCtrl_ = playerBuild_->BuildPlayerCtrl();
     CHECK_AND_RETURN_LOG(playerCtrl_ != nullptr, "playerCtrl_ is nullptr");
-
+    playerCtrl_->SetDfxNode(dfxNode_);
     condVarSync_.notify_all();
 
     MEDIA_LOGD("Start the player loop");

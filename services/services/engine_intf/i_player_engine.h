@@ -22,6 +22,7 @@
 #include <refbase.h>
 #include "player.h"
 #include "nocopyable.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 class Surface;
@@ -60,6 +61,10 @@ public:
     virtual int32_t SetLooping(bool loop) = 0;
     virtual int32_t SetParameter(const Format &param) = 0;
     virtual int32_t SetObs(const std::weak_ptr<IPlayerEngineObs> &obs) = 0;
+    virtual void SetDfxNode(const std::shared_ptr<DfxNode> &node)
+    {
+        return;
+    }
     virtual int32_t SelectBitRate(uint32_t bitRate)
     {
         (void)bitRate;

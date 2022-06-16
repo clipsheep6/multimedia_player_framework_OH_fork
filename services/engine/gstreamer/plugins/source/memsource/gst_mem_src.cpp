@@ -51,6 +51,7 @@ enum {
     PROP_EMIT_SIGNALS,
     PROP_BUFFER_NUM,
     PROP_BUFFER_SIZE,
+    PROP_DFX_NODE
 };
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE(GstMemSrc, gst_mem_src, GST_TYPE_BASE_SRC);
@@ -62,6 +63,7 @@ static gboolean gst_mem_src_query(GstBaseSrc *src, GstQuery *query);
 static gboolean gst_mem_src_is_seekable(GstBaseSrc *basesrc);
 static gboolean gst_mem_src_negotiate(GstBaseSrc *basesrc);
 static void gst_mem_src_dispose(GObject *object);
+static void gst_mem_src_init_dfx_node(GstMemSrc *memsrc);
 
 static void gst_mem_src_class_init(GstMemSrcClass *klass)
 {
@@ -93,6 +95,10 @@ static void gst_mem_src_class_init(GstMemSrcClass *klass)
             "Emit new-preroll and new-sample signals", FALSE,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_DFX_NODE,
+        g_param_spec_pointer("dfx-node", "Dfx node", "Dfx node",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     gst_mem_src_signals[SIGNAL_BUFFER_AVAILABLE] =
         g_signal_new("buffer-available", G_TYPE_FROM_CLASS(gobject_class), G_SIGNAL_RUN_LAST,
             0, nullptr, nullptr, nullptr, GST_TYPE_FLOW_RETURN, 0, G_TYPE_NONE);
@@ -112,6 +118,7 @@ static void gst_mem_src_class_init(GstMemSrcClass *klass)
     gstbasesrc_class->is_seekable = gst_mem_src_is_seekable;
     gstbasesrc_class->query = gst_mem_src_query;
     gstbasesrc_class->negotiate = gst_mem_src_negotiate;
+    klass->init_dfx_node = gst_mem_src_init_dfx_node;
 }
 
 static void gst_mem_src_init(GstMemSrc *memsrc)
@@ -221,9 +228,17 @@ static void gst_mem_src_dispose(GObject *object)
     }
     priv->user_data = nullptr;
     priv->notify = nullptr;
+    memsrc->dfx_node = nullptr;
+    memsrc->dfx_class_helper.DeInit();
     GST_OBJECT_UNLOCK(memsrc);
 
     G_OBJECT_CLASS(parent_class)->dispose(object);
+}
+
+static void gst_mem_src_init_dfx_node(GstMemSrc *memsrc)
+{
+    g_return_if_fail(memsrc != nullptr);
+    memsrc->dfx_class_helper.Init(memsrc, "memsrc", memsrc->dfx_node);
 }
 
 static void gst_mem_src_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -244,6 +259,13 @@ static void gst_mem_src_set_property(GObject *object, guint prop_id, const GValu
         case PROP_BUFFER_NUM:
             gst_mem_src_set_buffer_num(memsrc, g_value_get_uint(value));
             break;
+        case PROP_DFX_NODE: {
+            memsrc->dfx_node =
+                *(reinterpret_cast<std::shared_ptr<OHOS::Media::DfxNode> *>(g_value_get_pointer(value)));
+            GstMemSrcClass *src_class = GST_MEM_SRC_GET_CLASS(memsrc);
+            src_class->init_dfx_node(memsrc);
+            break;
+        }
         default:
             break;
     }

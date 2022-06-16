@@ -17,6 +17,7 @@
 #define __GST_MEM_SRC_H__
 
 #include <gst/base/gstbasesrc.h>
+#include "dfx_node_manager.h"
 
 G_BEGIN_DECLS
 
@@ -47,6 +48,8 @@ struct _GstMemSrc {
     GstCaps *caps;
     guint buffer_size;
     guint buffer_num;
+    std::shared_ptr<OHOS::Media::DfxNode> dfx_node;
+    OHOS::Media::DfxClassHelper dfx_class_helper;
 
     /* < private > */
     GstMemSrcPrivate *priv;
@@ -59,6 +62,7 @@ struct _GstMemSrcClass {
     GstBuffer *(*pull_buffer) (GstMemSrc *memsrc);
     GstFlowReturn (*push_buffer) (GstMemSrc *memsrc, GstBuffer *buffer);
     GstBufferPool *(*create_pool) ();
+    void (*init_dfx_node) (GstMemSrc *src);
 };
 
 // for subclass to use

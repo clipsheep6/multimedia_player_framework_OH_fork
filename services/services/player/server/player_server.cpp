@@ -71,6 +71,8 @@ PlayerServer::~PlayerServer()
 int32_t PlayerServer::Init()
 {
     MediaTrace trace("PlayerServer::Init");
+    dfxNode_ = DfxNodeManager::GetInstance().CreateDfxNode(PLAYER_SERVICE);
+    dfxClassHelper_.Init(this, "PlayerServer", dfxNode_);
     return MSERR_OK;
 }
 
@@ -133,6 +135,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     playerEngine_ = engineFactory->CreatePlayerEngine();
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
+    playerEngine_->SetDfxNode(dfxNode_);
     int32_t ret = MSERR_OK;
     if (dataSrc_ == nullptr) {
         ret = playerEngine_->SetSource(url);
@@ -685,20 +688,30 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
         std::to_string(config_.leftVolume) + ", " + std::to_string(config_.rightVolume) + "\n";
 
     std::vector<Format> videoTrack;
-    CHECK_AND_RETURN_RET(GetVideoTrackInfo(videoTrack) == MSERR_OK, MSERR_INVALID_OPERATION);
-    dumpString += "PlayerServer video tracks info: \n";
-    FormatToString(dumpString, videoTrack);
+    if (GetVideoTrackInfo(videoTrack) == MSERR_OK) {
+        dumpString += "PlayerServer video tracks info: \n";
+        FormatToString(dumpString, videoTrack);
+    } else {
+        dumpString += "Get PlayerServer video tracks info failed\n";
+    }
     
     std::vector<Format> audioTrack;
-    CHECK_AND_RETURN_RET(GetAudioTrackInfo(audioTrack) == MSERR_OK, MSERR_INVALID_OPERATION);
-    dumpString += "PlayerServer audio tracks info: \n";
-    FormatToString(dumpString, audioTrack);
+    if (GetAudioTrackInfo(audioTrack) == MSERR_OK) {
+        dumpString += "PlayerServer audio tracks info: \n";
+        FormatToString(dumpString, audioTrack);
+    } else {
+        dumpString += "Get PlayerServer audio tracks info failed\n";
+    }
     
     int32_t currentTime;
-    CHECK_AND_RETURN_RET(GetCurrentTime(currentTime) == MSERR_OK, MSERR_INVALID_OPERATION);
-    dumpString += "PlayerServer current time is: " + std::to_string(currentTime) + "\n";
-    write(fd, dumpString.c_str(), dumpString.size());
+    if (GetCurrentTime(currentTime) == MSERR_OK) {
+        dumpString += "PlayerServer current time is: " + std::to_string(currentTime) + "\n";
+    } else {
+        dumpString += "Get PlayerServer current time failed\n";
+    }
 
+    DfxNodeManager::GetInstance().DumpDfxNode(dfxNode_, dumpString);
+    write(fd, dumpString.c_str(), dumpString.size());
     return MSERR_OK;
 }
 
@@ -707,6 +720,7 @@ void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
     std::lock_guard<std::mutex> lockCb(mutexCb_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     FaultEventWrite(lastErrMsg_, "Player");
+    DfxNodeManager::GetInstance().SaveErrorDfxNode(dfxNode_);
     if (playerCb_ != nullptr) {
         playerCb_->OnError(errorType, errorCode);
     }

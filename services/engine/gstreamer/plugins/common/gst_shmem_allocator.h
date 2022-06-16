@@ -43,6 +43,8 @@ typedef struct _GstShMemAllocatorClass GstShMemAllocatorClass;
 struct _GstShMemAllocator {
     GstAllocator parent;
     std::shared_ptr<OHOS::Media::AVSharedMemoryPool> avShmemPool;
+    std::shared_ptr<OHOS::Media::DfxNode> dfxNode;
+    OHOS::Media::DfxClassHelper dfxClassHelper;
 };
 
 struct _GstShMemAllocatorClass {

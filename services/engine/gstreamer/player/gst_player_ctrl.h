@@ -25,6 +25,7 @@
 #include "task_queue.h"
 #include "gst_appsrc_warp.h"
 #include "gst_player_track_parse.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -84,6 +85,7 @@ public:
     static void OnMqNumUseBufferingCb(const GstPlayer *player, guint mqNumUseBuffering, GstPlayerCtrl *playerGst);
     static GValueArray* OnAutoplugSortCb(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
                                          GValueArray *factories, GstPlayerCtrl *playerGst);
+    void SetDfxNode(const std::shared_ptr<DfxNode> &node);
     static void HardwareDecoderElementSetupCb(GstElement *src, GstPlayerCtrl *playerGst);
 private:
     PlayerStates ProcessStoppedState();
@@ -166,6 +168,8 @@ private:
     GstElement *videoSink_ = nullptr;
     bool isPlaySinkFlagsSet_ = false;
     bool isNetWorkPlay_ = false;
+    std::shared_ptr<DfxNode> dfxNode_;
+    DfxClassHelper dfxClassHelper_;
     VideoScaleType videoScaleType_ = VIDEO_SCALE_TYPE_FIT;
 };
 } // namespace Media

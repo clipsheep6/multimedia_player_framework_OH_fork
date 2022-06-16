@@ -18,6 +18,7 @@
 
 #include <gst/gst.h>
 #include "surface.h"
+#include "dfx_node_manager.h"
 
 G_BEGIN_DECLS
 
@@ -50,6 +51,9 @@ struct _GstConsumerSurfaceAllocatorClass {
 GType gst_consumer_surface_allocator_get_type(void);
 
 GstAllocator *gst_consumer_surface_allocator_new();
+
+void gst_consumer_surface_allocator_set_dfx_node(GstAllocator *allocator,
+    const std::shared_ptr<OHOS::Media::DfxNode> &node);
 
 void gst_consumer_surface_allocator_set_surface(GstAllocator *allocator,
     OHOS::sptr<OHOS::Surface> &consumerSurface);

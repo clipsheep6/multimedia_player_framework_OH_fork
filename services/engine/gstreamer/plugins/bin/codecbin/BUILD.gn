@@ -37,6 +37,7 @@ config("gst_codec_bin_config") {
     "//utils/native/base/include",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/utils",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
+    "//foundation/multimedia/media_standard/services/utils/include",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base",
@@ -44,6 +45,7 @@ config("gst_codec_bin_config") {
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/glib/gmodule",
+    "//foundation/multimedia/media_standard/interfaces/inner_api/native",
   ]
 }
 

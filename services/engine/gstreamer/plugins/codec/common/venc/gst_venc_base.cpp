@@ -56,6 +56,7 @@ enum {
     PROP_VENDOR,
     PROP_SURFACE_ENABLE,
     PROP_I_FRAME_INTERVAL,
+    PROP_DFX_NODE
 };
 
 G_DEFINE_ABSTRACT_TYPE(GstVencBase, gst_venc_base, GST_TYPE_VIDEO_ENCODER);
@@ -104,6 +105,10 @@ static void gst_venc_base_class_init(GstVencBaseClass *klass)
     g_object_class_install_property(gobject_class, PROP_SURFACE_ENABLE,
         g_param_spec_boolean("enable-surface", "Enable Surface", "The input mem is surface buffer",
         FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_DFX_NODE,
+        g_param_spec_pointer("dfx-node", "Dfx node", "Dfx node",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     const gchar *sink_caps_string = GST_VIDEO_CAPS_MAKE(GST_VENC_BASE_SUPPORTED_FORMATS);
     GstCaps *sink_caps = gst_caps_from_string(sink_caps_string);
@@ -159,6 +164,10 @@ static void gst_venc_base_set_property(GObject *object, guint prop_id, const GVa
             gboolean enable = g_value_get_boolean(value);
             self->memtype = enable ? GST_MEMTYPE_SURFACE : self->memtype;
             GST_OBJECT_UNLOCK(self);
+            break;
+        }
+        case PROP_DFX_NODE: {
+            self->dfx_node = *(reinterpret_cast<std::shared_ptr<OHOS::Media::DfxNode> *>(g_value_get_pointer(value)));
             break;
         }
         default:
@@ -242,6 +251,7 @@ static void gst_venc_base_finalize(GObject *object)
     g_mutex_clear(&self->lock);
     self->input.av_shmem_pool = nullptr;
     self->output.av_shmem_pool = nullptr;
+    self->dfx_node = nullptr;
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -646,6 +656,7 @@ static GstFlowReturn gst_venc_base_handle_frame(GstVideoEncoder *encoder, GstVid
     if (self->i_frame_interval != 0 && self->input.frame_cnt % (gint64)self->i_frame_interval == 0) {
         (void)self->encoder->SetParameter(GST_REQUEST_I_FRAME, GST_ELEMENT(self));
     }
+    // buffer ref no give to encoder
     gint codec_ret = self->encoder->PushInputBuffer(frame->input_buffer);
     GST_VIDEO_ENCODER_STREAM_LOCK(self);
     GstFlowReturn ret = GST_FLOW_OK;
@@ -739,6 +750,7 @@ static gboolean gst_venc_base_push_out_buffers(GstVencBase *self)
         flow = gst_buffer_pool_acquire_buffer(pool, &buffer, &params);
         if (flow == GST_FLOW_OK) {
             g_return_val_if_fail(buffer != nullptr, FALSE);
+            // buffer ref give to encoder
             codec_ret = self->encoder->PushOutputBuffer(buffer);
             g_return_val_if_fail(gst_codec_return_is_ok(self, codec_ret, "push buffer", TRUE), FALSE);
             self->coding_outbuf_cnt++;

@@ -21,6 +21,7 @@
 #include "time_monitor.h"
 #include "nocopyable.h"
 #include "uri_helper.h"
+#include "dfx_node_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -89,6 +90,8 @@ private:
         std::string url;
     } config_;
     std::string lastErrMsg_;
+    std::shared_ptr<DfxNode> dfxNode_;
+    DfxClassHelper dfxClassHelper_;
 };
 } // namespace Media
 } // namespace OHOS

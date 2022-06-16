@@ -22,6 +22,8 @@
 #include "gst_shmem_allocator.h"
 #include "gst_shmem_pool.h"
 #include "i_gst_codec.h"
+#include "dfx_node_manager.h"
+#include "gst_codec_video_common.h"
 
 #ifndef GST_API_EXPORT
 #define GST_API_EXPORT __attribute__((visibility("default")))
@@ -52,14 +54,14 @@ struct _GstVdecBasePort {
     gint width;
     gint height;
     guint min_buffer_cnt;
-    guint buffer_cnt;
+    OHOS::Media::DfxValHelper<guint> buffer_cnt;
     guint buffer_size;
     std::shared_ptr<OHOS::Media::AVSharedMemoryPool> av_shmem_pool;
     GstShMemAllocator *allocator;
     GstAllocationParams allocParams;
     gint64 frame_cnt;
     gint64 first_frame_time;
-    gint64 last_frame_time;
+    OHOS::Media::DfxValHelper<gint64> last_frame_time;
     gboolean enable_dump;
     FILE *dump_file;
     gboolean first_frame;
@@ -89,33 +91,37 @@ struct _GstVdecBase {
     gboolean is_codec_outbuffer;
     GstVdecBasePort input;
     GstVdecBasePort output;
-    gint frame_rate;
-    gint width;
-    gint height;
-    gint memtype;
+    OHOS::Media::DfxValHelper<gint> frame_rate;
+    OHOS::Media::DfxValHelper<gint> width;
+    OHOS::Media::DfxValHelper<gint> height;
+    OHOS::Media::DfxValHelper<GstMemType> memtype;
     gint usage;
     GstBufferPool *inpool;
     GstBufferPool *outpool;
-    guint coding_outbuf_cnt;
-    guint out_buffer_cnt;
+    OHOS::Media::DfxValHelper<guint> coding_outbuf_cnt;
+    OHOS::Media::DfxValHelper<guint> out_buffer_cnt;
     guint out_buffer_max_cnt;
     std::list<GstClockTime> pts_list;
     GstClockTime last_pts;
     gboolean flushing_stoping;
     gboolean decoder_start;
-    gint stride;
-    gint stride_height;
-    gint real_stride;
-    gint real_stride_height;
+    OHOS::Media::DfxValHelper<gint> stride;
+    OHOS::Media::DfxValHelper<gint> stride_height;
+    OHOS::Media::DfxValHelper<gint> real_stride;
+    OHOS::Media::DfxValHelper<gint> real_stride_height;
     DisplayRect rect;
     gboolean pre_init_pool;
-    gboolean performance_mode;
+    OHOS::Media::DfxValHelper<gboolean> performance_mode;
     GstCaps *sink_caps;
+    OHOS::Media::DfxValHelper<gboolean> input_need_ashmem;
+    std::shared_ptr<OHOS::Media::DfxNode> dfx_node;
+    OHOS::Media::DfxClassHelper dfx_class_helper;
 };
 
 struct _GstVdecBaseClass {
     GstVideoDecoderClass parentClass;
     std::shared_ptr<OHOS::Media::IGstCodec> (*create_codec)(GstElementClass *kclass);
+    gboolean (*input_need_copy)();
 };
 
 GST_API_EXPORT GType gst_vdec_base_get_type(void);
