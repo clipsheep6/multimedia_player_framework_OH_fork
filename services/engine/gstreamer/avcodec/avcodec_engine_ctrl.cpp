@@ -315,6 +315,18 @@ int32_t AVCodecEngineCtrl::SetParameter(const Format &format)
         }
     }
 
+    if (format.GetValueType(std::string_view("video_encode_bitrate_mode")) == FORMAT_TYPE_INT32) {
+        if (format.GetIntValue("video_encode_bitrate_mode", value)) {
+            g_object_set(codecBin_, "bit-mode", static_cast<uint32_t>(value), nullptr);
+        }
+    }
+
+    if (format.GetValueType(std::string_view("codec_profile")) == FORMAT_TYPE_INT32) {
+        if (format.GetIntValue("codec_profile", value)) {
+            g_object_set(codecBin_, "profile", static_cast<uint32_t>(value), nullptr);
+        }
+    }
+
     if (format.GetValueType(std::string_view("vendor.custom")) == FORMAT_TYPE_ADDR) {
         uint8_t *addr = nullptr;
         size_t size = 0;
