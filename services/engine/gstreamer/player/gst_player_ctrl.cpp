@@ -538,6 +538,7 @@ void GstPlayerCtrl::Stop()
     bufferingStart_ = false;
     nextSeekFlag_ = false;
     enableLooping_ = false;
+    disableNextSeekDoneCb_ = false;
     speeding_ = false;
     seeking_ = false;
     rate_ = DEFAULT_RATE;
@@ -832,6 +833,7 @@ void GstPlayerCtrl::ProcessEndOfStream(const GstPlayer *cbPlayer)
     }
 
     if (enableLooping_) {
+        disableNextSeekDoneCb_ = true;
         (void)Seek(0, SEEK_PREVIOUS_SYNC);
     } else {
         Pause();
@@ -1225,12 +1227,14 @@ void GstPlayerCtrl::OnSeekDone()
             if (speeding_) {
                 tempObs->OnInfo(INFO_TYPE_SPEEDDONE, 0, format);
                 speeding_ = false;
-            } else {
+            } else if (!(disableNextSeekDoneCb_ && seekDonePosition_ == 0)) {
+                // when Loop == 1, there is no need to report seek to 0 after EOS
                 tempObs->OnInfo(INFO_TYPE_SEEKDONE, static_cast<int32_t>(seekDonePosition_), format);
                 seeking_ = false;
             }
         }
         seekDoneNeedCb_ = false;
+        disableNextSeekDoneCb_ = false;
         condVarSeekSync_.notify_all();
     }
 }
