@@ -44,6 +44,7 @@ private:
     static bool StrToUint64(const std::string &str, uint64_t &value);
 
     void BufferLoop();
+    uint64_t GetPts();
 
     NapiDemo();
     ~NapiDemo();
@@ -60,9 +61,11 @@ private:
     int32_t height_ = 0;
     OHOS::sptr<OHOS::Surface> producerSurface_ = nullptr;
     std::atomic<bool> isStart_ = false;
+    std::atomic<bool> isSetPts_ = false;
     OHOS::BufferFlushConfig flushConfig_;
     OHOS::BufferRequestConfig requestConfig_;
     std::unique_ptr<std::thread> bufferThread_;
+    int32_t isKeyFrame_ = 1;
 };
 } // namespace Media
 } // namespace OHOS
