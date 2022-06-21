@@ -91,7 +91,7 @@ void HdiBufferMgr::UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_pt
 
 std::vector<std::shared_ptr<HdiBufferWrap>> HdiBufferMgr::PreUseAshareMems(std::vector<GstBuffer *> &buffers)
 {
-    MEDIA_LOGD("Enter UseAshareMems");
+    MEDIA_LOGD("Enter PreUseAshareMems");
     std::vector<std::shared_ptr<HdiBufferWrap>> preBuffers;
     auto ret = HdiGetParameter(handle_, OMX_IndexParamPortDefinition, mPortDef_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, preBuffers, "HdiGetParameter failed");
@@ -120,12 +120,13 @@ std::vector<std::shared_ptr<HdiBufferWrap>> HdiBufferMgr::PreUseAshareMems(std::
 
 int32_t HdiBufferMgr::UseHdiBuffers(std::vector<std::shared_ptr<HdiBufferWrap>> &buffers)
 {
-    MEDIA_LOGD("Enter UseAshareMems");
+    MEDIA_LOGD("Enter UseHdiBuffers");
     CHECK_AND_RETURN_RET_LOG(buffers.size() == mPortDef_.nBufferCountActual, GST_CODEC_ERROR, "BufferNum error");
     for (auto buffer : buffers) {
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "buffer is nullptr");
         auto ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, &buffer->hdiBuffer);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "UseBuffer failed");
+        MEDIA_LOGD("Enter buffer id %{public}d", buffer->hdiBuffer.bufferId);
         availableBuffers_.push_back(buffer);
     }
     return GST_CODEC_OK;

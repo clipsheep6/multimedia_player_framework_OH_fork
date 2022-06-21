@@ -100,7 +100,7 @@ std::string HdiInit::GetCodecMime(AvCodecRole &role)
         case MEDIA_ROLETYPE_VIDEO_HEVC:
             return "video/hevc";
         default:
-            MEDIA_LOGW("Unknow codecRole");
+            MEDIA_LOGW("Unknow codecRole %{public}d", (int32_t)role);
             break;
     }
     return "invalid";
@@ -110,7 +110,7 @@ std::vector<int32_t> HdiInit::GetCodecFormats(VideoPortCap &port)
 {
     int32_t index = 0;
     std::vector<int32_t> formats;
-    while (index < PIX_FORMAT_NUM) {
+    while (index < PIX_FORMAT_NUM && port.supportPixFmts[index] > 0) {
         switch (port.supportPixFmts[index]) {
             case PIXEL_FMT_YCBCR_420_SP:
                 formats.push_back(NV12);
@@ -121,9 +121,11 @@ std::vector<int32_t> HdiInit::GetCodecFormats(VideoPortCap &port)
             case PIXEL_FMT_YCBCR_422_SP:
                 formats.push_back(NV16);
                 break;
+            case PIXEL_FMT_YCBCR_420_P:
+                formats.push_back(YUVI420);
+                break;
             default:
                 MEDIA_LOGW("Unknow Format %{public}d", port.supportPixFmts[index]);
-                return formats;
         }
         index++;
     }
@@ -136,7 +138,7 @@ std::map<int32_t, std::vector<int32_t>> HdiInit::GetH264ProfileLevels(CodecCompC
     std::map<int32_t, std::vector<int32_t>> profileLevelsMap;
     int32_t index = 0;
     std::vector<int32_t> formats;
-    while (index < PROFILE_NUM) {
+    while (index < PROFILE_NUM && hdiCap.supportProfiles[index] > 0) {
         if (AVC_PROFILE_MAP.find(hdiCap.supportProfiles[index]) == AVC_PROFILE_MAP.end()) {
             MEDIA_LOGW("Unknow profile %{public}d", hdiCap.supportProfiles[index]);
             break;
@@ -168,6 +170,7 @@ std::map<int32_t, std::vector<int32_t>> HdiInit::GetCodecProfileLevels(CodecComp
 
 void HdiInit::AddHdiCap(CodecCompCapability &hdiCap)
 {
+    MEDIA_LOGW("Add codec name %{public}s", hdiCap.compName);
     CapabilityData codecCap;
     codecCap.codecName = hdiCap.compName;
     codecCap.codecType = GetCodecType(hdiCap.type);

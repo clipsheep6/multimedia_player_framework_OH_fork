@@ -41,6 +41,10 @@ int32_t HdiVencOutBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
     std::unique_lock<std::mutex> lock(mutex_);
     auto omxBuffers = PreUseAshareMems(buffers);
     int32_t ret = UseHdiBuffers(omxBuffers);
+    for (auto buffer : buffers) {
+        mBuffers.push_back(buffer);
+        gst_buffer_ref(buffer);
+    }
     MEDIA_LOGD("UseBuffers end");
     return ret;
 }

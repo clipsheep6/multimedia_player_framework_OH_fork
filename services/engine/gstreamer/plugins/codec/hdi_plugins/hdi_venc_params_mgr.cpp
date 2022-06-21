@@ -142,6 +142,7 @@ int32_t HdiVencParamsMgr::SetVideoFormat(GstElement *element)
 {
     GstVencBase *base = GST_VENC_BASE(element);
     videoFormat_.eColorFormat = (OMX_COLOR_FORMATTYPE)HdiCodecUtil::FormatGstToOmx(base->format); // need to do
+    videoFormat_.xFramerate = (uint32_t)(base->frame_rate) << OMX_FRAME_RATE_MOVE;
     auto ret = HdiSetParameter(handle_, OMX_IndexParamVideoPortFormat, videoFormat_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
     return GST_CODEC_OK;
@@ -190,7 +191,24 @@ int32_t HdiVencParamsMgr::GetVideoFormat(GstElement *element)
 
 int32_t HdiVencParamsMgr::VideoSurfaceInit(GstElement *element)
 {
-    (void)element;
+    MEDIA_LOGD("Enter surface init");
+    SupportBufferType supportBufferTypes;
+    InitHdiParam(supportBufferTypes, verInfo_);
+    supportBufferTypes.portIndex = inPortDef_.nPortIndex;
+    auto ret = HdiGetParameter(handle_, OMX_IndexParamSupportBufferType, supportBufferTypes); // need to do
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
+    if (!(supportBufferTypes.bufferTypes & CODEC_BUFFER_TYPE_DYNAMIC_HANDLE)) {
+        MEDIA_LOGD("No CODEC_BUFFER_TYPE_DYNAMIC_HANDLE, support bufferType %{public}d",
+            supportBufferTypes.bufferTypes);
+        return GST_CODEC_ERROR;
+    }
+
+    UseBufferType useBufferTypes;
+    InitHdiParam(useBufferTypes, verInfo_);
+    useBufferTypes.portIndex = inPortDef_.nPortIndex;
+    useBufferTypes.bufferType = CODEC_BUFFER_TYPE_DYNAMIC_HANDLE;
+    ret = HdiSetParameter(handle_, OMX_IndexParamUseBufferType, useBufferTypes); // need to do
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
     return GST_CODEC_OK;
 }
 
