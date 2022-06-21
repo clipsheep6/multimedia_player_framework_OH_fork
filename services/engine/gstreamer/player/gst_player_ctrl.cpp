@@ -305,6 +305,7 @@ void GstPlayerCtrl::SetupCodecCb(GstElement *src, GstPlayerCtrl *playerGst, cons
 {
     if (metaStr.find("Codec/Decoder/Video/Hardware") != std::string::npos) {
         playerGst->isHardWare_ = true;
+        g_object_set(G_OBJECT(src), "enable-slice-cat", TRUE, nullptr);
         if (!playerGst->codecTypeList_.empty()) {
             // For hls scene when change codec, the second codec should not go performance mode process.
             playerGst->codecTypeList_.push_back(true);
