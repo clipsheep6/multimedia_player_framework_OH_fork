@@ -25,10 +25,10 @@ using namespace OHOS;
 using namespace OHOS::Media;
 using namespace std;
 namespace {
-    constexpr uint32_t DEFAULT_WIDTH = 480;
-    constexpr uint32_t DEFAULT_HEIGHT = 360;
+    constexpr uint32_t DEFAULT_WIDTH = 320;
+    constexpr uint32_t DEFAULT_HEIGHT = 240;
     constexpr uint32_t DEFAULT_FRAME_RATE = 30;
-    constexpr uint32_t YUV_BUFFER_SIZE = 259200; // 480 * 360 * 3 / 2
+    constexpr uint32_t YUV_BUFFER_SIZE = 320 * 240 * 3 / 2; // 480 * 360 * 3 / 2
     constexpr uint32_t STRIDE_ALIGN = 8;
 
     constexpr int32_t FAST_PRODUCER = 50; // 50 fps producer, used to test max_encoder_fps property
@@ -51,7 +51,7 @@ static BufferRequestConfig g_request = {
     .width = DEFAULT_WIDTH,
     .height = DEFAULT_HEIGHT,
     .strideAlignment = STRIDE_ALIGN,
-    .format = PIXEL_FMT_YCRCB_420_SP,
+    .format = PIXEL_FMT_YCBCR_420_SP,
     .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
     .timeout = 0
 };
@@ -63,7 +63,7 @@ void VEncDemo::RunCase(bool enableProp)
     Format format;
     format.PutIntValue("width", DEFAULT_WIDTH);
     format.PutIntValue("height", DEFAULT_HEIGHT);
-    format.PutIntValue("pixel_format", NV21);
+    format.PutIntValue("pixel_format", NV12);
     format.PutIntValue("frame_rate", DEFAULT_FRAME_RATE);
     DEMO_CHECK_AND_RETURN_LOG(Configure(format) == MSERR_OK, "Fatal: Configure fail");
 
@@ -115,7 +115,9 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
             (void)surface_->CancelBuffer(buffer);
             break;
         }
-        DEMO_CHECK_AND_BREAK_LOG(memset_s(addr, buffer->GetSize(), 0xFF, YUV_BUFFER_SIZE) == EOK, "Fatal");
+
+        ifStream_.read((char *)addr, YUV_BUFFER_SIZE);
+        // DEMO_CHECK_AND_BREAK_LOG(memset_s(addr, buffer->GetSize(), 0xFF, YUV_BUFFER_SIZE) == EOK, "Fatal");
 
         const sptr<OHOS::BufferExtraData>& extraData = buffer->GetExtraData();
         DEMO_CHECK_AND_BREAK_LOG(extraData != nullptr, "Fatal: SurfaceBuffer is nullptr");
@@ -130,8 +132,11 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
 
 int32_t VEncDemo::CreateVenc()
 {
-    venc_ = VideoEncoderFactory::CreateByMime("video/mp4v-es");
+    venc_ = VideoEncoderFactory::CreateByMime("video/avc");
     DEMO_CHECK_AND_RETURN_RET_LOG(venc_ != nullptr, MSERR_UNKNOWN, "Fatal: CreateByMime fail");
+
+    ofStream_.open("/data/media/encoder_video.es");
+    ifStream_.open("/data/320240.nv12");
 
     signal_ = make_shared<VEncSignal>();
     DEMO_CHECK_AND_RETURN_RET_LOG(signal_ != nullptr, MSERR_UNKNOWN, "Fatal: No memory");
@@ -176,12 +181,14 @@ int32_t VEncDemo::Stop()
 
     if (readLoop_ != nullptr && readLoop_->joinable()) {
         unique_lock<mutex> queueLock(signal_->mutex_);
-        signal_->bufferQueue_.push(0);
+        AVCodecBufferInfo info;
+        signal_->bufferQueue_.push({0, info});
         signal_->cond_.notify_all();
         queueLock.unlock();
         readLoop_->join();
         readLoop_.reset();
     }
+    ofStream_.close();
 
     return venc_->Stop();
 }
@@ -220,14 +227,16 @@ void VEncDemo::LoopFunc()
             break;
         }
 
-        uint32_t index = signal_->bufferQueue_.front();
-        auto buffer = venc_->GetOutputBuffer(index);
+        auto buf = signal_->bufferQueue_.front();
+        auto buffer = venc_->GetOutputBuffer(buf.first);
         if (!buffer) {
             cout << "Fatal: GetOutputBuffer fail, exit" << endl;
             break;
         }
+        uint8_t *bufData = buffer->GetBase() + buf.second.offset;
+        ofStream_.write((char *)bufData, buf.second.size);
 
-        if (venc_->ReleaseOutputBuffer(index) != MSERR_OK) {
+        if (venc_->ReleaseOutputBuffer(buf.first) != MSERR_OK) {
             cout << "Fatal: ReleaseOutputBuffer fail, exit" << endl;
             break;
         }
@@ -259,6 +268,6 @@ void VEncDemoCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo
 {
     cout << "OnOutputBufferAvailable received, index:" << index << " timestamp:" << info.presentationTimeUs << endl;
     unique_lock<mutex> lock(signal_->mutex_);
-    signal_->bufferQueue_.push(index);
+    signal_->bufferQueue_.push(std::pair<uint32_t, AVCodecBufferInfo>(index, info));
     signal_->cond_.notify_all();
 }

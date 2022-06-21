@@ -20,6 +20,7 @@
 #include <thread>
 #include <queue>
 #include <string>
+#include <fstream>
 #include "avcodec_video_encoder.h"
 #include "nocopyable.h"
 
@@ -29,7 +30,7 @@ class VEncSignal {
 public:
     std::mutex mutex_;
     std::condition_variable cond_;
-    std::queue<uint32_t> bufferQueue_;
+    std::queue<std::pair<uint32_t, AVCodecBufferInfo>> bufferQueue_;
 };
 
 class VEncDemoCallback : public AVCodecCallback, public NoCopyable {
@@ -74,6 +75,8 @@ private:
     std::shared_ptr<VEncDemoCallback> cb_;
     sptr<Surface> surface_ = nullptr;
     int64_t timestampNs_ = 0;
+    std::ofstream ofStream_;
+    std::ifstream ifStream_;
 };
 } // namespace Media
 } // namespace OHOS

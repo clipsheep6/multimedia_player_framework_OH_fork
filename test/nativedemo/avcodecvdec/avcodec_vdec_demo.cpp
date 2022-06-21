@@ -27,12 +27,27 @@ using namespace OHOS;
 using namespace OHOS::Media;
 using namespace std;
 namespace {
-    constexpr uint32_t DEFAULT_WIDTH = 480;
-    constexpr uint32_t DEFAULT_HEIGHT = 360;
+    constexpr uint32_t DEFAULT_WIDTH = 320;
+    constexpr uint32_t DEFAULT_HEIGHT = 240;
     constexpr uint32_t DEFAULT_FRAME_RATE = 30;
     constexpr uint32_t MAX_INPUT_BUFFER_SIZE = 30000;
     constexpr uint32_t FRAME_DURATION_US = 33000;
-    constexpr uint32_t DEFAULT_FRAME_COUNT = 1;
+    constexpr uint32_t DEFAULT_FRAME_COUNT = 290;
+    constexpr uint32_t input[] = { 2106, 11465, 321, 72, 472, 68, 76, 79, 509, 90, 677, 88, 956, 99, 347, 77, 452, 681, 81, 1263, 94, 106, 97,
+        998, 97, 797, 93, 1343, 150, 116, 117, 926, 1198, 128, 110, 78, 1582, 158, 135, 112, 1588, 165, 132,
+        128, 1697, 168, 149, 117, 1938, 170, 141, 142, 1830, 106, 161, 122, 1623, 160, 154, 156, 1998, 230,
+        177, 139, 1650, 186, 128, 134, 1214, 122, 1411, 120, 1184, 128, 1591, 195, 145, 105, 1587, 169, 140,
+        118, 1952, 177, 150, 161, 1437, 159, 123, 1758, 180, 165, 144, 1936, 214, 191, 175, 2122, 180, 179,
+        160, 1927, 161, 184, 119, 1973, 218, 210, 129, 1962, 196, 127, 154, 2308, 173, 127, 1572, 142, 122,
+        2065, 262, 159, 206, 2251, 269, 179, 170, 2056, 308, 168, 191, 2090, 303, 191, 110, 1932, 272, 162,
+        122, 1877, 245, 167, 141, 1908, 294, 162, 118, 1493, 132, 1782, 273, 184, 133, 1958, 274, 180, 149,
+        2070, 216, 169, 143, 1882, 224, 149, 139, 1749, 277, 184, 139, 2141, 197, 170, 140, 2002, 269, 162,
+        140, 1862, 202, 179, 131, 1868, 214, 164, 140, 1546, 226, 150, 130, 1707, 162, 146, 1824, 181, 147,
+        130, 1898, 209, 143, 131, 1805, 180, 148, 106, 1776, 147, 141, 1572, 177, 130, 105, 1776, 178, 144,
+        122, 1557, 142, 124, 114, 1436, 143, 126, 1326, 127, 1755, 169, 127, 105, 1807, 177, 131, 134, 1613,
+        187, 137, 136, 1314, 134, 118, 2005, 194, 129, 147, 1566, 185, 132, 131, 1236, 174, 137, 106, 11049,
+        574, 126, 1242, 188, 130, 119, 1450, 187, 137, 141, 1116, 124, 1848, 138, 122, 1605, 186, 127, 140,
+        1798, 170, 124, 121, 1666, 157, 128, 130, 1678, 135, 118, 1804, 169, 135, 125, 1837, 168, 124, 124};
 }
 
 void VDecDemo::RunCase()
@@ -42,7 +57,7 @@ void VDecDemo::RunCase()
     Format format;
     format.PutIntValue("width", DEFAULT_WIDTH);
     format.PutIntValue("height", DEFAULT_HEIGHT);
-    format.PutIntValue("pixel_format", NV21);
+    format.PutIntValue("pixel_format", NV12);
     format.PutIntValue("frame_rate", DEFAULT_FRAME_RATE);
     format.PutIntValue("max_input_size", MAX_INPUT_BUFFER_SIZE);
     DEMO_CHECK_AND_RETURN_LOG(Configure(format) == MSERR_OK, "Fatal: Configure fail");
@@ -171,7 +186,7 @@ void VDecDemo::InputFunc()
         DEMO_CHECK_AND_BREAK_LOG(buffer != nullptr, "Fatal: GetInputBuffer fail");
         DEMO_CHECK_AND_BREAK_LOG(testFile_ != nullptr && testFile_->is_open(), "Fatal: open file fail");
 
-        constexpr uint32_t bufferSize = 0; // replace with the actual size
+        uint32_t bufferSize = input[frameCount_]; // replace with the actual size
         char *fileBuffer = (char *)malloc(sizeof(char) * bufferSize + 1);
         DEMO_CHECK_AND_BREAK_LOG(fileBuffer != nullptr, "Fatal: malloc fail");
 

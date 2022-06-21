@@ -88,6 +88,18 @@ static int RunVideoEncoder(bool enableProp)
     return 0;
 }
 
+static int RunVideoDecoder()
+{
+    auto vdec = std::make_unique<VDecDemo>();
+    if (vdec == nullptr) {
+        cout << "videodecoder is null" << endl;
+        return 0;
+    }
+    vdec->RunCase();
+    cout << "demo videodecoder end" << endl;
+    return 0;
+}
+
 static int RunAVMuxer()
 {
     auto avmuxer = std::make_unique<AVMuxerDemo>();
@@ -114,6 +126,7 @@ int main(int argc, char *argv[])
     cout << "3:codeclist" << endl;
     cout << "4:video-encoder" << endl;
     cout << "5:avmuxer" << endl;
+    cout << "6:decoder" << endl;
     string mode;
     (void)getline(cin, mode);
     if (mode == "" || mode == "0") {
@@ -128,6 +141,8 @@ int main(int argc, char *argv[])
         (void)RunVideoEncoder(false);
     } else if (mode == "5") {
         (void)RunAVMuxer();
+    } else if (mode == "6") {
+        (void)RunVideoDecoder();
     } else {
         cout << "no that selection" << endl;
     }
