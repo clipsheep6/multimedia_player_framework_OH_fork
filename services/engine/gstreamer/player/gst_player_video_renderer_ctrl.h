@@ -36,6 +36,7 @@ public:
     const GstElement *GetVideoSink() const;
     const GstElement *GetAudioSink() const;
     const sptr<Surface> GetProducerSurface() const;
+    void SetAppInfo(int32_t uid, int32_t pid);
 
 private:
     sptr<Surface> producerSurface_ = nullptr;
@@ -44,6 +45,8 @@ private:
     GstCaps *videoCaps_ = nullptr;
     GstCaps *audioCaps_ = nullptr;
     uint32_t queueSize_ = 0;
+    int32_t uid_ = 0;
+    int32_t pid_ = 0;
     std::vector<gulong> signalIds_;
 };
 
