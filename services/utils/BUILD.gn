@@ -22,7 +22,10 @@ ohos_static_library("media_format") {
     "//utils/native/base/include",
   ]
 
+  configs = [ "//foundation/multimedia/media_standard/services/dfx:media_service_dfx_public_config" ]
+
   deps = [
+    "//foundation/multimedia/media_standard/services/dfx:media_service_dfx",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
   ]
 
@@ -51,7 +54,6 @@ ohos_shared_library("media_service_utils") {
     "time_perf.cpp",
     "uri_helper.cpp",
     "dfx_node_manager.cpp",
-    "dfx_log_dump.cpp"
   ]
 
   include_dirs = [
@@ -75,12 +77,15 @@ ohos_shared_library("media_service_utils") {
     "-Wformat=2",
     "-Wfloat-equal",
     "-Wdate-time",
-    "-DOHOS_MEDIA_LOG_DFX",
   ]
 
-  configs = [ ":media_service_utils_public_config" ]
+  configs = [
+    ":media_service_utils_public_config",
+    "//foundation/multimedia/media_standard/services/dfx:media_service_dfx_public_config",
+  ]
 
   deps = [
+    "//foundation/multimedia/media_standard/services/dfx:media_service_dfx",
     "//utils/native/base:utils",
     "//base/startup/syspara_lite/interfaces/innerkits/native/syspara:syspara",
   ]
