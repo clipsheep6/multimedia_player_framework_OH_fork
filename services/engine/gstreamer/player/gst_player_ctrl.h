@@ -130,6 +130,7 @@ private:
     TaskQueue taskQue_;
     std::weak_ptr<IPlayerEngineObs> obs_;
     bool enableLooping_ = false;
+    bool disableNextSeekDoneCb_ = false;
     bool bufferingStart_ = false;
     bool nextSeekFlag_ = false;
     bool userStop_ = false;
