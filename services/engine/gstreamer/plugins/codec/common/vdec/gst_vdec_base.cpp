@@ -151,6 +151,9 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
         case PROP_PERFORMANCE_MODE:
             self->performance_mode = g_value_get_boolean(value);
             break;
+        case PROP_ENABLE_SLICE_CAT:
+            self->enable_slice_cat = g_value_get_boolean(value);
+            break;
         default:
             break;
     }
@@ -1348,13 +1351,14 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
     g_mutex_lock(&self->drain_lock);
     self->draining = TRUE;
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
-    GstBuffer *cat_buffer = kclass->handle_slice_buffer(self, frame->input_buffer, true);
-    gint codec_ret = GST_CODEC_OK;
+    GstBuffer *cat_buffer = kclass->handle_slice_buffer(self, nullptr, true);
+    // gint codec_ret = GST_CODEC_OK;
     if (cat_buffer != nullptr && self->enable_slice_cat == true) {
         if (self->decoder->PushInputBuffer(cat_buffer) != GST_CODEC_OK) {
             GST_ERROR_OBJECT(self, "Failed to push the end of slice frame");
             g_mutex_unlock(&self->drain_lock);
             GST_VIDEO_DECODER_STREAM_LOCK(self);
+            gst_buffer_unref(cat_buffer);
             return GST_FLOW_ERROR;
         }
         gst_buffer_unref(cat_buffer);

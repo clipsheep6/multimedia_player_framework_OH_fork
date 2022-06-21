@@ -69,8 +69,8 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
         return buffer;
     }
     gboolean slice_flag = false;
-    guint offset = 2;
-    for (gsize i = 0; i < info.size - offsize; i++) {
+    guint8 offset = 2;
+    for (gsize i = 0; i < info.size - offset; i++) {
         if (info.data[i] == 0x01) {
             slice_flag = ((info.data[i + offset] & 0x80) == 0x80) ? true : false; // 0x80 is nal flag of slice
             break;
@@ -86,7 +86,7 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
         buf = vdec_h264->cache_slice_buffer;
         vdec_h264->cache_slice_buffer = nullptr;
         gst_buffer_set_size(buf, vdec_h264->cache_offset);
-
+        vdec_h264->cache_offset = 0;
         (void)cat_slice_buffer(self, &info);
     } else {
         buf = buffer;
@@ -108,7 +108,7 @@ static gboolean cat_slice_buffer(GstVdecBase *self, GstMapInfo *src_info)
     }
     GstMapInfo cache_info = GST_MAP_INFO_INIT;
     g_return_val_if_fail(gst_buffer_map(vdec_h264->cache_slice_buffer, &cache_info, GST_MAP_READ), FALSE);
-    errno_t ret = memcpy_s(cache_info, data + vdec_h264->cache_offset,
+    errno_t ret = memcpy_s(cache_info.data + vdec_h264->cache_offset,
                 self->input.buffer_size - vdec_h264->cache_offset, src_info->data, src_info->size);
     if (ret != EOK) {
         GST_ERROR_OBJECT(self, "memcpy_s fail");
