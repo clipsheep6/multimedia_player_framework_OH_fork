@@ -18,7 +18,7 @@
 
 G_DEFINE_TYPE(GstVdecH264, gst_vdec_h264, GST_TYPE_VDEC_BASE);
 
-static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool is_finish);
+static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool &ready_push, bool is_finish);
 static gboolean cat_slice_buffer(GstVdecBase *self, GstMapInfo *src_info);
 
 static void gst_vdec_h264_class_init(GstVdecH264Class *klass)
@@ -53,13 +53,14 @@ static void gst_vdec_h264_init(GstVdecH264 *self)
     self->cache_slice_buffer = nullptr;
 }
 
-static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool is_finish)
+static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool &ready_push, bool is_finish)
 {
     GstVdecH264 *vdec_h264 = GST_VDEC_H264(self);
-    GstBuffer *buf = nullptr;
+    GstBuffer *buf;
     if (is_finish == true) {
         gst_buffer_set_size(vdec_h264->cache_slice_buffer, vdec_h264->cache_offset);
         vdec_h264->is_slice_buffer = false;
+        ready_push = true;
         return vdec_h264->cache_slice_buffer;
     }
 
@@ -80,16 +81,22 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
     if (slice_flag == true && vdec_h264->is_slice_buffer == false) { // cache the first slice frame
         (void)cat_slice_buffer(self, &info);
         vdec_h264->is_slice_buffer = true;
+        buf = vdec_h264->cache_slice_buffer;
+        ready_push = false;
     } else if (slice_flag == false && vdec_h264->is_slice_buffer == true) { // cache the middle slice frame
         (void)cat_slice_buffer(self, &info);
+        buf = vdec_h264->cache_slice_buffer;
+        ready_push = false;
     } else if (slice_flag == true && vdec_h264->is_slice_buffer == true) { // get full frame, cache next first slice
         buf = vdec_h264->cache_slice_buffer;
         vdec_h264->cache_slice_buffer = nullptr;
         gst_buffer_set_size(buf, vdec_h264->cache_offset);
+        ready_push = true;
         vdec_h264->cache_offset = 0;
         (void)cat_slice_buffer(self, &info);
     } else {
         buf = buffer;
+        ready_push = true;
     }
 
     gst_buffer_unmap(buffer, &info);
