@@ -57,15 +57,8 @@ private:
     std::shared_ptr<AutoRef> StateCallbackSelect(const std::string &callbackName) const;
     napi_env env_ = nullptr;
     std::mutex mutex_;
-
-    std::shared_ptr<AutoRef> errorCallback_ = nullptr;
-    std::shared_ptr<AutoRef> prepareCallback_ = nullptr;
-    std::shared_ptr<AutoRef> startCallback_ = nullptr;
-    std::shared_ptr<AutoRef> pauseCallback_ = nullptr;
-    std::shared_ptr<AutoRef> resumeCallback_ = nullptr;
-    std::shared_ptr<AutoRef> stopCallback_ = nullptr;
-    std::shared_ptr<AutoRef> resetCallback_ = nullptr;
-    std::shared_ptr<AutoRef> releaseCallback_ = nullptr;
+    
+    std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
 };
 } // namespace Media
 } // namespace OHOS
