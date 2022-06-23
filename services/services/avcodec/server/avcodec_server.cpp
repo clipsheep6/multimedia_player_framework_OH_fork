@@ -21,7 +21,7 @@
 #include "media_dfx.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecServer"};
     const std::map<OHOS::Media::AVCodecServer::AVCodecStatus, std::string> AVCODEC_STATE_MAP = {
         {OHOS::Media::AVCodecServer::AVCODEC_UNINITIALIZED, "uninitialized"},
         {OHOS::Media::AVCodecServer::AVCODEC_INITIALIZED, "initialized"},
