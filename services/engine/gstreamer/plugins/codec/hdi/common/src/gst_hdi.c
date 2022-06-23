@@ -581,7 +581,7 @@ static void gst_hdi_init_params_func(GstHDIClassData *class_data)
     }
 }
 
-static void gst_hdi_buffer_mode_support(const CodecCapbility *hdi_cap, AllocateBufferMode mode,
+static void gst_hdi_buffer_mode_support(const CodecCapability *hdi_cap, AllocateBufferMode mode,
     guint *support, GstHDIBufferModeSupport support_mode)
 {
     g_return_if_fail(hdi_cap != NULL);
@@ -597,7 +597,7 @@ void gst_hdi_class_data_init(GstHDIClassData *class_data)
     g_return_if_fail(class_data->codec_name != NULL);
     gst_hdi_init_params_func(class_data);
     class_data->is_soft = FALSE;
-    CodecCapbility *hdi_cap = g_hash_table_lookup(caps_map, class_data->codec_name);
+    CodecCapability *hdi_cap = g_hash_table_lookup(caps_map, class_data->codec_name);
     if (hdi_cap == NULL) {
         GST_ERROR_OBJECT(class_data, "can not find caps");
         return;
@@ -670,7 +670,7 @@ const gchar *gst_hdi_error_to_string(gint err)
     }
 }
 
-static gchar *gst_hdi_codec_mime_of_cap(const CodecCapbility *caps)
+static gchar *gst_hdi_codec_mime_of_cap(const CodecCapability *caps)
 {
     gchar *codec_mime = NULL;
     gchar *codec_type = NULL;
@@ -724,7 +724,7 @@ GHashTable *gst_hdi_init_caps_map(void)
     int32_t index = 0;
     int32_t ret = HDI_SUCCESS;
     do {
-        CodecCapbility *caps = g_malloc(sizeof(CodecCapbility));
+        CodecCapability *caps = g_malloc(sizeof(CodecCapability));
         if (caps == NULL) {
             GST_ERROR_OBJECT(NULL, "new caps index: %d", index);
             break;

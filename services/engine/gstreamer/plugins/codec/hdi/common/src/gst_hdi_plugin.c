@@ -70,7 +70,7 @@ static gboolean plugin_init(GstPlugin *plugin)
 {
     GHashTable *caps_map = gst_hdi_init_caps_map();
     gboolean ret = FALSE;
-    CodecCapbility *caps = g_hash_table_lookup(caps_map, "hdih264dec");
+    CodecCapability *caps = g_hash_table_lookup(caps_map, "hdih264dec");
     if (caps != NULL) {
         GST_WARNING_OBJECT(NULL, "caps->whAlignment.widthAlginment = %d %d",
             caps->whAlignment.widthAlginment, caps->whAlignment.heightAlginment);
