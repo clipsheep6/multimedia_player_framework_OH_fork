@@ -647,5 +647,28 @@ bool CommonNapi::AddStringProperty(napi_env env, napi_value obj, const std::stri
 
     return true;
 }
+
+void MediaJsCallbackRef::SaveCallbackReference(const std::string &callbackName, napi_env env, napi_value args)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    napi_ref callback = nullptr;
+    napi_status status = napi_create_reference(env, args, 1, &callback);
+    CHECK_AND_RETURN_LOG(status == napi_ok && callback != nullptr, "failed to create reference!");
+
+    std::shared_ptr<AutoRef> cb = std::make_shared<AutoRef>(env, callback);
+    refMap_[callbackName] = cb;
+}
+
+std::shared_ptr<AutoRef> MediaJsCallbackRef::GetCallbackReference(const std::string &callbackName)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (refMap_.find(callbackName) != refMap_.end()) {
+        return refMap_.at(callbackName);
+    }
+
+    return nullptr;
+}
 } // namespace Media
 } // namespace OHOS

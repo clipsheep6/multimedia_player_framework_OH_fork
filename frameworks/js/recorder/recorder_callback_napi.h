@@ -34,7 +34,7 @@ const std::string RESET_CALLBACK_NAME = "reset";
 const std::string RELEASE_CALLBACK_NAME = "release";
 class RecorderCallbackNapi : public RecorderCallback {
 public:
-    explicit RecorderCallbackNapi(napi_env env);
+    RecorderCallbackNapi(napi_env env, MediaJsCallbackRef *ref);
     virtual ~RecorderCallbackNapi();
 
     void SaveCallbackReference(const std::string &callbackName, napi_value callback);
@@ -54,18 +54,9 @@ private:
     };
     void OnJsErrorCallBack(RecordJsCallback *jsCb) const;
     void OnJsStateCallBack(RecordJsCallback *jsCb) const;
-    std::shared_ptr<AutoRef> StateCallbackSelect(const std::string &callbackName) const;
     napi_env env_ = nullptr;
+    MediaJsCallbackRef *mediaRef_ = nullptr;
     std::mutex mutex_;
-
-    std::shared_ptr<AutoRef> errorCallback_ = nullptr;
-    std::shared_ptr<AutoRef> prepareCallback_ = nullptr;
-    std::shared_ptr<AutoRef> startCallback_ = nullptr;
-    std::shared_ptr<AutoRef> pauseCallback_ = nullptr;
-    std::shared_ptr<AutoRef> resumeCallback_ = nullptr;
-    std::shared_ptr<AutoRef> stopCallback_ = nullptr;
-    std::shared_ptr<AutoRef> resetCallback_ = nullptr;
-    std::shared_ptr<AutoRef> releaseCallback_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

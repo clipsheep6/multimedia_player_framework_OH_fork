@@ -276,6 +276,18 @@ struct AutoRef {
     napi_ref cb_;
 };
 
+class MediaJsCallbackRef {
+public:
+    MediaJsCallbackRef() = default;
+    ~MediaJsCallbackRef() = default;
+    void SaveCallbackReference(const std::string &callbackName, napi_env env, napi_value args);
+    std::shared_ptr<AutoRef> GetCallbackReference(const std::string &callbackName);
+
+private:
+    std::mutex mutex_;
+    std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
+};
+
 struct AVFileDescriptor {
     int32_t fd = 0;
     int64_t offset = 0;
