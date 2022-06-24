@@ -89,20 +89,6 @@ void PlayerCallbackTest::SeekNotify(int32_t extra, const Format &infoBody)
     }
 }
 
-sptr<Surface> Player_mock::GetVideoSurface()
-{
-    sptr<Rosen::WindowOption> option = new Rosen::WindowOption();
-    option->SetWindowRect({ 0, 0, width_, height_ });
-    option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_LAUNCHING);
-    option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
-    previewWindow_ = Rosen::Window::Create("xcomponent_window_unittest", option);
-    if (previewWindow_ == nullptr || previewWindow_->GetSurfaceNode() == nullptr) {
-        return nullptr;
-    }
-    previewWindow_->Show();
-    return previewWindow_->GetSurfaceNode()->GetSurface();
-}
-
 Player_mock::Player_mock(std::shared_ptr<PlayerSignal> test) : test_(test) {}
 
 Player_mock::~Player_mock()
@@ -122,71 +108,6 @@ bool Player_mock::CreatePlayer()
 int32_t Player_mock::SetSource(const std::string url)
 {
     int32_t ret = player_->SetSource(url);
-    return ret;
-}
-
-int32_t Player_mock::Prepare()
-{
-    int32_t ret = player_->Prepare();
-    if (ret == MSERR_OK && test_->state_ != PLAYER_PREPARED) {
-        std::unique_lock<std::mutex> lockPrepare(test_->mutexPrepare_);
-        test_->condVarPrepare_.wait_for(lockPrepare, std::chrono::seconds(WAITSECOND));
-        if (test_->state_ != PLAYER_PREPARED) {
-            return -1;
-        }
-    }
-    return ret;
-}
-
-int32_t Player_mock::PrepareAsync()
-{
-    int ret = player_->PrepareAsync();
-    if (ret == MSERR_OK && test_->state_ != PLAYER_PREPARED) {
-        std::unique_lock<std::mutex> lockPrepare(test_->mutexPrepare_);
-        test_->condVarPrepare_.wait_for(lockPrepare, std::chrono::seconds(WAITSECOND));
-        if (test_->state_ != PLAYER_PREPARED) {
-            return -1;
-        }
-    }
-    return ret;
-}
-
-int32_t Player_mock::Play()
-{
-    int32_t ret = player_->Play();
-    if (ret == MSERR_OK && test_->state_ != PLAYER_STARTED) {
-        std::unique_lock<std::mutex> lockPlay(test_->mutexPlay_);
-        test_->condVarPlay_.wait_for(lockPlay, std::chrono::seconds(WAITSECOND));
-        if (test_->state_ != PLAYER_STARTED) {
-            return -1;
-        }
-    }
-    return ret;
-}
-
-int32_t Player_mock::Pause()
-{
-    int32_t ret = player_->Pause();
-    if (ret == MSERR_OK && test_->state_ != PLAYER_PAUSED) {
-        std::unique_lock<std::mutex> lockPause(test_->mutexPause_);
-        test_->condVarPause_.wait_for(lockPause, std::chrono::seconds(WAITSECOND));
-        if (test_->state_ != PLAYER_PAUSED) {
-            return -1;
-        }
-    }
-    return ret;
-}
-
-int32_t Player_mock::Stop()
-{
-    int32_t ret = player_->Stop();
-    if (ret == MSERR_OK && test_->state_ != PLAYER_STOPPED) {
-        std::unique_lock<std::mutex> lockStop(test_->mutexStop_);
-        test_->condVarStop_.wait_for(lockStop, std::chrono::seconds(WAITSECOND));
-        if (test_->state_ != PLAYER_STOPPED) {
-            return -1;
-        }
-    }
     return ret;
 }
 
@@ -212,63 +133,9 @@ int32_t Player_mock::Release()
     return player_->Release();
 }
 
-int32_t Player_mock::Seek(int32_t mseconds, PlayerSeekMode mode)
-{
-    test_->seekDoneFlag_ = false;
-    int32_t duration = 0;
-    player_->GetDuration(duration);
-    if (mseconds < 0) {
-        test_->seekPosition_ = 0;
-    } else if (mseconds > duration) {
-        test_->seekPosition_ = duration;
-    } else {
-        test_->seekPosition_ = mseconds;
-    }
-    test_->seekMode_ = mode;
-    int32_t ret = player_->Seek(mseconds, mode);
-    if (ret == MSERR_OK && test_->seekDoneFlag_ == false) {
-        std::unique_lock<std::mutex> lockSeek(test_->mutexSeek_);
-        test_->condVarSeek_.wait_for(lockSeek, std::chrono::seconds(WAITSECOND));
-        if (test_->seekDoneFlag_ != true) {
-            return -1;
-        }
-    }
-    return ret;
-}
-
-int32_t Player_mock::SetVolume(float leftVolume, float rightVolume)
-{
-    return player_->SetVolume(leftVolume, rightVolume);
-}
-
-int32_t Player_mock::SetLooping(bool loop)
-{
-    return player_->SetLooping(loop);
-}
-
-int32_t Player_mock::GetCurrentTime(int32_t &currentTime)
-{
-    return player_->GetCurrentTime(currentTime);
-}
-
-bool Player_mock::IsPlaying()
-{
-    return player_->IsPlaying();
-}
-
-bool Player_mock::IsLooping()
-{
-    return player_->IsLooping();
-}
-
 int32_t Player_mock::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback)
 {
     return player_->SetPlayerCallback(callback);
-}
-
-int32_t Player_mock::SetVideoSurface(sptr<Surface> surface)
-{
-    return player_->SetVideoSurface(surface);
 }
 
 PlayerCallbackTest::PlayerCallbackTest(std::shared_ptr<PlayerSignal> test)

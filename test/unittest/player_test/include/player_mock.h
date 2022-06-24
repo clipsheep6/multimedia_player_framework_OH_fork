@@ -47,32 +47,15 @@ public:
 class Player_mock : public NoCopyable {
 public:
     std::shared_ptr<Player> player_ = nullptr;
-    sptr<Rosen::Window> window_ = nullptr;
-    sptr<Rosen::Window> previewWindow_ = nullptr;
     explicit Player_mock(std::shared_ptr<PlayerSignal> test);
     virtual ~Player_mock();
     bool CreatePlayer();
     int32_t SetSource(const std::string url);
-    int32_t Prepare();
-    int32_t PrepareAsync();
-    int32_t Play();
-    int32_t Pause();
-    int32_t Stop();
     int32_t Reset();
     int32_t Release();
-    int32_t Seek(int32_t mseconds, PlayerSeekMode mode);
-    int32_t SetVolume(float leftVolume, float rightVolume);
-    int32_t SetLooping(bool loop);
-    int32_t GetCurrentTime(int32_t &currentTime);
-    bool IsPlaying();
-    bool IsLooping();
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback);
-    int32_t SetVideoSurface(sptr<Surface> surface);
-    sptr<Surface> GetVideoSurface();
 private:
     std::shared_ptr<PlayerSignal> test_;
-    int32_t height_ = 1080;
-    int32_t width_ = 1920;
 };
 
 class PlayerCallbackTest : public PlayerCallback, public NoCopyable {
