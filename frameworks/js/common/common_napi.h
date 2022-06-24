@@ -262,6 +262,7 @@ struct MediaAsyncContext {
 };
 
 struct AutoRef {
+    static void ArkThreadDeleteRef(napi_env env, std::map<std::string, std::shared_ptr<AutoRef>> &ref);
     AutoRef(napi_env env, napi_ref cb)
         : env_(env), cb_(cb)
     {

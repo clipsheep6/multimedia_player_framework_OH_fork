@@ -129,9 +129,7 @@ napi_value VideoPlayerNapi::Constructor(napi_env env, napi_callback_info info)
 
     jsPlayer->env_ = env;
     jsPlayer->nativePlayer_ = PlayerFactory::CreatePlayer();
-    if (jsPlayer->nativePlayer_ == nullptr) {
-        MEDIA_LOGE("failed to CreatePlayer");
-    }
+    CHECK_AND_RETURN_RET_LOG(jsPlayer->nativePlayer_ != nullptr, result, "failed to CreatePlayer");
 
     if (jsPlayer->jsCallback_ == nullptr && jsPlayer->nativePlayer_ != nullptr) {
         jsPlayer->jsCallback_ = std::make_shared<VideoCallbackNapi>(env);
@@ -181,6 +179,8 @@ napi_value VideoPlayerNapi::CreateVideoPlayer(napi_env env, napi_callback_info i
     asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     asyncContext->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
+    asyncContext->ctorFlag = true;
+
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "CreateVideoPlayer", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},

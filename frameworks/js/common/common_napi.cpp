@@ -15,6 +15,7 @@
 
 #include "common_napi.h"
 #include <climits>
+#include <uv.h>
 #include "avcodec_list.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -646,6 +647,40 @@ bool CommonNapi::AddStringProperty(napi_env env, napi_value obj, const std::stri
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "Failed to set property");
 
     return true;
+}
+
+void AutoRef::ArkThreadDeleteRef(napi_env env, std::map<std::string, std::shared_ptr<AutoRef>> &ref)
+{
+    uv_loop_s *loop = nullptr;
+    napi_get_uv_event_loop(env, &loop);
+    CHECK_AND_RETURN_LOG(loop != nullptr, "fail to get uv event loop");
+
+    uv_work_t *work = new(std::nothrow) uv_work_t;
+    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
+
+    struct ArkEvent {
+        explicit ArkEvent(std::map<std::string, std::shared_ptr<AutoRef>> &ref) : refMap(ref) {}
+        ~ArkEvent() = default;
+        std::map<std::string, std::shared_ptr<AutoRef>> &refMap;
+    };
+    struct ArkEvent *event = new(std::nothrow) ArkEvent(ref);
+    if (event == nullptr) {
+        MEDIA_LOGE("Failed to create ArkEvent");
+        delete work;
+        return;
+    }
+
+    work->data = reinterpret_cast<void *>(event);
+    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        struct ArkEvent *data = reinterpret_cast<struct ArkEvent*>(work->data);
+        delete data;
+        delete work;
+    });
+    if (ret != 0) {
+        MEDIA_LOGE("Failed to execute libuv work queue");
+        delete event;
+        delete work;
+    }
 }
 } // namespace Media
 } // namespace OHOS
