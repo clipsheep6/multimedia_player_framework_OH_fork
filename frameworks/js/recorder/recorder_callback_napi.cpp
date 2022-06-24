@@ -24,8 +24,8 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-RecorderCallbackNapi::RecorderCallbackNapi(napi_env env)
-    : env_(env)
+RecorderCallbackNapi::RecorderCallbackNapi(napi_env env, MediaJsCallbackRef *ref)
+    : env_(env), mediaRef_(ref)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -35,82 +35,29 @@ RecorderCallbackNapi::~RecorderCallbackNapi()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-void RecorderCallbackNapi::SaveCallbackReference(const std::string &callbackName, napi_value args)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    napi_ref callback = nullptr;
-    napi_status status = napi_create_reference(env_, args, 1, &callback);
-    CHECK_AND_RETURN_LOG(status == napi_ok && callback != nullptr, "creating reference for callback fail");
-
-    std::shared_ptr<AutoRef> cb = std::make_shared<AutoRef>(env_, callback);
-    if (callbackName == ERROR_CALLBACK_NAME) {
-        errorCallback_ = cb;
-    } else if (callbackName == PREPARE_CALLBACK_NAME) {
-        prepareCallback_ = cb;
-    } else if (callbackName == START_CALLBACK_NAME) {
-        startCallback_ = cb;
-    } else if (callbackName == PAUSE_CALLBACK_NAME) {
-        pauseCallback_ = cb;
-    } else if (callbackName == RESUME_CALLBACK_NAME) {
-        resumeCallback_ = cb;
-    } else if (callbackName == STOP_CALLBACK_NAME) {
-        stopCallback_ = cb;
-    } else if (callbackName == RESET_CALLBACK_NAME) {
-        resetCallback_ = cb;
-    } else if (callbackName == RELEASE_CALLBACK_NAME) {
-        releaseCallback_ = cb;
-    } else {
-        MEDIA_LOGW("Unknown callback type: %{public}s", callbackName.c_str());
-        return;
-    }
-}
-
 void RecorderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "Cannot find the reference of error callback");
+    auto ref = mediaRef_->GetCallbackReference(ERROR_CALLBACK_NAME);
+    CHECK_AND_RETURN_LOG(ref != nullptr, "error callback is nullptr");
 
     RecordJsCallback *cb = new(std::nothrow) RecordJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->callback = errorCallback_;
+    cb->callback = ref;
     cb->callbackName = ERROR_CALLBACK_NAME;
     cb->errorMsg = MSExtErrorToString(errCode);
     cb->errorCode = errCode;
     return OnJsErrorCallBack(cb);
 }
 
-std::shared_ptr<AutoRef> RecorderCallbackNapi::StateCallbackSelect(const std::string &callbackName) const
-{
-    CHECK_AND_RETURN_RET_LOG(!callbackName.empty(), nullptr, "illegal callbackname");
-    if (callbackName == PREPARE_CALLBACK_NAME) {
-        return prepareCallback_;
-    } else if (callbackName == START_CALLBACK_NAME) {
-        return startCallback_;
-    } else if (callbackName == PAUSE_CALLBACK_NAME) {
-        return pauseCallback_;
-    } else if (callbackName == RESUME_CALLBACK_NAME) {
-        return resumeCallback_;
-    } else if (callbackName == STOP_CALLBACK_NAME) {
-        return stopCallback_;
-    } else if (callbackName == RESET_CALLBACK_NAME) {
-        return resetCallback_;
-    } else if (callbackName == RELEASE_CALLBACK_NAME) {
-        return releaseCallback_;
-    } else {
-        MEDIA_LOGW("Unknown callback type: %{public}s", callbackName.c_str());
-        return nullptr;
-    }
-}
-
 void RecorderCallbackNapi::SendStateCallback(const std::string &callbackName)
 {
-    std::shared_ptr<AutoRef> callbackRef = nullptr;
-    callbackRef = StateCallbackSelect(callbackName);
-    CHECK_AND_RETURN_LOG(callbackRef != nullptr, "no callback reference");
+    auto ref = mediaRef_->GetCallbackReference(callbackName);
+    CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s callback is nullptr", callbackName.c_str());
+
     RecordJsCallback *cb = new(std::nothrow) RecordJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->callback = callbackRef;
+    cb->callback = ref;
     cb->callbackName = callbackName;
     return OnJsStateCallBack(cb);
 }
@@ -119,11 +66,13 @@ void RecorderCallbackNapi::OnError(RecorderErrorType errorType, int32_t errCode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
-    CHECK_AND_RETURN_LOG(errorCallback_ != nullptr, "Cannot find the reference of error callback");
+
+    auto ref = mediaRef_->GetCallbackReference(ERROR_CALLBACK_NAME);
+    CHECK_AND_RETURN_LOG(ref != nullptr, "error callback is nullptr");
 
     RecordJsCallback *cb = new(std::nothrow) RecordJsCallback();
     CHECK_AND_RETURN_LOG(cb != nullptr, "No memory");
-    cb->callback = errorCallback_;
+    cb->callback = ref;
     cb->callbackName = ERROR_CALLBACK_NAME;
     cb->errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errCode));
     cb->errorCode = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));

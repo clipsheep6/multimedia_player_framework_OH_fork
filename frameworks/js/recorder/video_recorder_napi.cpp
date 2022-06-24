@@ -104,12 +104,10 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
 
     recorderNapi->env_ = env;
     recorderNapi->recorder_ = RecorderFactory::CreateRecorder();
-    if (recorderNapi->recorder_ == nullptr) {
-        MEDIA_LOGE("failed to CreateRecorder");
-    }
+    CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "failed to CreateRecorder");
 
     if (recorderNapi->callbackNapi_ == nullptr && recorderNapi->recorder_ != nullptr) {
-        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
+        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env, recorderNapi);
         (void)recorderNapi->recorder_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
 
@@ -161,6 +159,7 @@ napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_in
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
+    asyncCtx->ctorFlag = true;
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "createVideoRecorder", NAPI_AUTO_LENGTH, &resource);
@@ -585,9 +584,7 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     MEDIA_LOGD("callbackName: %{public}s", callbackName.c_str());
 
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->callbackNapi_ != nullptr, result, "callbackNapi_ is nullptr");
-    auto cb = std::static_pointer_cast<RecorderCallbackNapi>(recorderNapi->callbackNapi_);
-    cb->SaveCallbackReference(callbackName, args[1]);
+    recorderNapi->SaveCallbackReference(callbackName, env, args[1]);
     return result;
 }
 

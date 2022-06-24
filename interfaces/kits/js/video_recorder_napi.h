@@ -46,7 +46,7 @@ constexpr int32_t DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t DEFAULT_FRAME_WIDTH = -1;
 constexpr int32_t DEFAULT_FRAME_RATE = 30;
 
-class VideoRecorderNapi {
+class VideoRecorderNapi : public MediaJsCallbackRef {
 public:
     static napi_value Init(napi_env env, napi_value exports);
 

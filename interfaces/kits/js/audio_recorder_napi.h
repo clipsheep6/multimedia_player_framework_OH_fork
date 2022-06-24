@@ -22,6 +22,7 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "task_queue.h"
+#include "common_napi.h"
 
 namespace OHOS {
 namespace Media {
@@ -36,7 +37,7 @@ enum JSFileFormat : int32_t {
     JS_AAC_ADTS = 6,
 };
 
-class AudioRecorderNapi {
+class AudioRecorderNapi : public MediaJsCallbackRef {
 public:
     static napi_value Init(napi_env env, napi_value exports);
 

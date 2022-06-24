@@ -63,6 +63,7 @@ AudioRecorderNapi::~AudioRecorderNapi()
     if (taskQue_ != nullptr) {
         (void)taskQue_->Stop();
     }
+    (void)recorderImpl_->SetRecorderCallback(nullptr);
     callbackNapi_ = nullptr;
     recorderImpl_ = nullptr;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy out ", FAKE_POINTER(this));
@@ -127,7 +128,7 @@ napi_value AudioRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     (void)recorderNapi->taskQue_->Start();
 
     if (recorderNapi->callbackNapi_ == nullptr && recorderNapi->recorderImpl_ != nullptr) {
-        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
+        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env, recorderNapi);
         (void)recorderNapi->recorderImpl_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
 
@@ -613,9 +614,7 @@ napi_value AudioRecorderNapi::On(napi_env env, napi_callback_info info)
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     MEDIA_LOGD("callbackName: %{public}s", callbackName.c_str());
 
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->callbackNapi_ != nullptr, undefinedResult, "callbackNapi_ is nullptr");
-    auto cb = std::static_pointer_cast<RecorderCallbackNapi>(recorderNapi->callbackNapi_);
-    cb->SaveCallbackReference(callbackName, args[1]);
+    recorderNapi->SaveCallbackReference(callbackName, env, args[1]);
     return undefinedResult;
 }
 
