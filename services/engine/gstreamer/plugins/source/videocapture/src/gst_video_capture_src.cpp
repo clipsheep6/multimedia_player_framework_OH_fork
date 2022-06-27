@@ -52,7 +52,7 @@ namespace {
 GST_DEBUG_CATEGORY_STATIC (gst_video_capture_src_debug);
 #define GST_CAT_DEFAULT gst_video_capture_src_debug
 
-enum {
+enum VideoCaptureProp : prop {
     PROP_0,
     PROP_STREAM_TYPE,
     PROP_SURFACE_WIDTH,

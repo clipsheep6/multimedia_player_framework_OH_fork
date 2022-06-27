@@ -19,7 +19,7 @@
 #include "gstbasesink.h"
 #include "gstbaseparse.h"
 
-enum {
+enum MuxProp : uint32_t {
     PROP_0,
     PROP_FD,
     PROP_MUX,
@@ -28,7 +28,7 @@ enum {
     PROP_LONGITUDE,
 };
 
-enum {
+enum MuxSignal : uint32_t {
     SIGNAL_ADD_TRACK,
     LAST_SIGNAL
 };
