@@ -175,6 +175,7 @@ int32_t AVCodecEngineCtrl::Flush()
     CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_UNKNOWN);
     GstEvent *event = gst_event_new_flush_start();
     CHECK_AND_RETURN_RET(event != nullptr, MSERR_NO_MEMORY);
+    g_object_set(codecBin_, "flush-at-start", TRUE, nullptr);
     (void)gst_element_send_event(codecBin_, event);
 
     event = gst_event_new_flush_stop(FALSE);

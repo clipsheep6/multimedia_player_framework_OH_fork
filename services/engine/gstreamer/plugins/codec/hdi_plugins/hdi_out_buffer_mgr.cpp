@@ -46,7 +46,11 @@ int32_t HdiOutBufferMgr::Start()
     isFlushed_ = false;
     while (!mBuffers.empty()) {
         GstBuffer *buffer = mBuffers.front();
-        CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
+        if (buffer == nullptr) {
+            mBuffers.pop_front();
+            MEDIA_LOGI("nullptr, continue!");
+            continue;
+        }
         std::shared_ptr<HdiBufferWrap> codecBuffer = GetCodecBuffer(buffer);
         CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
         auto ret = HdiFillThisBuffer(handle_, &codecBuffer->hdiBuffer);
