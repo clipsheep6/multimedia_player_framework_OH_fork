@@ -43,6 +43,10 @@ config("media_engine_gst_avmeta_config") {
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/metadata",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/message",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/common/utils",
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/common/appsrc_wrap",
+    "//foundation/graphic/standard/interfaces/innerkits/surface",
+    "//foundation/graphic/standard/interfaces/innerkits/common",
+    "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/sink/memsink",
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
@@ -70,9 +74,13 @@ ohos_static_library("media_engine_gst_avmeta") {
     "avmetadatahelper_engine_gst_impl.cpp",
   ]
 
-  configs = [ ":media_engine_gst_avmeta_config" ]
+  configs = [
+    ":media_engine_gst_avmeta_config",
+    "//foundation/multimedia/media_standard/services/dfx:media_service_dfx_public_config",
+  ]
 
   deps = [
+    "//foundation/multimedia/media_standard/services/dfx:media_service_dfx",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins:media_engine_gst_plugins_common",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
   ]

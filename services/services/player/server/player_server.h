@@ -21,10 +21,52 @@
 #include "time_monitor.h"
 #include "nocopyable.h"
 #include "uri_helper.h"
+#include "player_server_task_mgr.h"
 
 namespace OHOS {
 namespace Media {
-class PlayerServer : public IPlayerService, public IPlayerEngineObs, public NoCopyable {
+class PlayerServerState {
+public:
+    explicit PlayerServerState(const std::string &name) : name_(name) {}
+    virtual ~PlayerServerState() = default;
+
+    std::string GetStateName() const;
+
+    DISALLOW_COPY_AND_MOVE(PlayerServerState);
+
+protected:
+    virtual void StateEnter() {}
+    virtual void StateExit() {}
+    virtual void OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
+
+    friend class PlayerServerStateMachine;
+
+private:
+    std::string name_;
+};
+
+class PlayerServerStateMachine {
+public:
+    PlayerServerStateMachine() = default;
+    virtual ~PlayerServerStateMachine() = default;
+
+    DISALLOW_COPY_AND_MOVE(PlayerServerStateMachine);
+
+protected:
+    void HandleMessage(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    void ChangeState(const std::shared_ptr<PlayerServerState> &state);
+    std::shared_ptr<PlayerServerState> GetCurrState();
+
+private:
+    std::recursive_mutex recMutex_;
+    std::shared_ptr<PlayerServerState> currState_;
+};
+
+class PlayerServer
+    : public IPlayerService,
+      public IPlayerEngineObs,
+      public NoCopyable,
+      public PlayerServerStateMachine {
 public:
     static std::shared_ptr<IPlayerService> Create();
     PlayerServer();
@@ -64,18 +106,36 @@ public:
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
 private:
+    class BaseState;
+    class IdleState;
+    class InitializedState;
+    class PreparingState;
+    class PreparedState;
+    class PlayingState;
+    class PausedState;
+    class StoppedState;
+    class PlaybackCompletedState;
+
     int32_t Init();
     bool IsValidSeekMode(PlayerSeekMode mode);
     int32_t OnReset();
     int32_t InitPlayEngine(const std::string &url);
-    int32_t OnPrepare(bool async);
+    int32_t OnPrepare();
+    int32_t HandlePrepare();
+    int32_t HandlePlay();
+    int32_t HandlePause();
+    int32_t HandleStop();
+    int32_t HandleReset();
+    int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
+    int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     const std::string &GetStatusDescription(int32_t status);
 
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
     sptr<Surface> surface_ = nullptr;
-    PlayerStates status_ = PLAYER_IDLE;
+    PlayerStates lastOpStatus_ = PLAYER_IDLE;
+    PlayerServerTaskMgr taskMgr_;
     std::mutex mutex_;
     std::mutex mutexCb_;
     TimeMonitor startTimeMonitor_;
@@ -89,7 +149,22 @@ private:
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
         std::string url;
     } config_;
+    int32_t contentType_ = 0;
+    int32_t streamUsage_ = 0;
+    int32_t rendererFlag_ = 0;
     std::string lastErrMsg_;
+
+    std::mutex condMutex_;
+    std::condition_variable stateCond_;
+
+    std::shared_ptr<IdleState> idleState_;
+    std::shared_ptr<InitializedState> initializedState_;
+    std::shared_ptr<PreparingState> preparingState_;
+    std::shared_ptr<PreparedState> preparedState_;
+    std::shared_ptr<PlayingState> playingState_;
+    std::shared_ptr<PausedState> pausedState_;
+    std::shared_ptr<StoppedState> stoppedState_;
+    std::shared_ptr<PlaybackCompletedState> playbackCompletedState_;
 };
 } // namespace Media
 } // namespace OHOS

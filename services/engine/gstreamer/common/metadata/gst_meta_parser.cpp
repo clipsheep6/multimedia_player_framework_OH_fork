@@ -28,6 +28,7 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstMetaParser"};
     static GType GST_SAMPLE_TYPE = gst_sample_get_type();
     static GType GST_DATE_TIME_TYPE = gst_date_time_get_type();
+    static GType GST_FRACTION_TYPE = gst_fraction_get_type();
     constexpr size_t FORMATTED_TIME_NUM_SIZE = 2;
 }
 
@@ -45,6 +46,7 @@ static bool ParseGValueSimple(const GValue &value, const MetaParseItem &item, Fo
 static bool FractionMetaSetter(const GValue &gval, const std::string_view &key, Format &metadata);
 static bool ImageMetaSetter(const GValue &gval, const std::string_view &key, Format &metadata);
 static bool DateTimeMetaSetter(const GValue &gval, const std::string_view &key, Format &metadata);
+static bool OrientationMetaSetter(const GValue &gval, const std::string_view &key, Format &metadata);
 
 static const std::unordered_map<std::string_view, MetaParseItem> GST_TAG_PARSE_ITEMS = {
     { GST_TAG_ALBUM, { INNER_META_KEY_ALBUM, G_TYPE_STRING } },
@@ -58,18 +60,20 @@ static const std::unordered_map<std::string_view, MetaParseItem> GST_TAG_PARSE_I
     { GST_TAG_DURATION, { INNER_META_KEY_DURATION, G_TYPE_UINT64 } },
     { GST_TAG_BITRATE, { INNER_META_KEY_BITRATE, G_TYPE_UINT } },
     { GST_TAG_IMAGE, { INNER_META_KEY_IMAGE, GST_SAMPLE_TYPE, ImageMetaSetter } },
+    { GST_TAG_LANGUAGE_CODE, { INNER_META_KEY_LANGUAGE, G_TYPE_STRING } },
+    { GST_TAG_IMAGE_ORIENTATION, { INNER_META_KEY_VIDEO_ORIENTATION, G_TYPE_STRING, OrientationMetaSetter } },
 };
 
 static const std::unordered_map<std::string_view, MetaParseItem> GST_CAPS_PARSE_ITEMS = {
     { "width", { INNER_META_KEY_VIDEO_WIDTH, G_TYPE_INT, nullptr } },
     { "height", { INNER_META_KEY_VIDEO_HEIGHT, G_TYPE_INT } },
     { "rate", { INNER_META_KEY_SAMPLE_RATE, G_TYPE_INT } },
-    { "framerate", { INNER_META_KEY_FRAMERATE, GST_TYPE_FRACTION, FractionMetaSetter } },
+    { "framerate", { INNER_META_KEY_FRAMERATE, GST_FRACTION_TYPE, FractionMetaSetter } },
     { "channels", { INNER_META_KEY_CHANNEL_COUNT, G_TYPE_INT } },
 };
 
 static const std::unordered_map<std::string_view, std::vector<std::string_view>> STREAM_CAPS_FIELDS = {
-    { "video", { "width", "height", "framrate", "format" } },
+    { "video", { "width", "height", "framerate", "format" } },
     { "audio", { "rate", "channels" } },
     { "text", { "format" } },
 };
@@ -81,6 +85,11 @@ static const std::unordered_map<std::string_view, std::string_view> FILE_MIME_TY
     { "video/quicktime, variant=(string)iso", FILE_MIMETYPE_VIDEO_MP4 },
     { "video/quicktime, variant=(string)3gpp", FILE_MIMETYPE_VIDEO_MP4 },
     { "video/quicktime, variant=(string)3g2", FILE_MIMETYPE_VIDEO_MP4 },
+    { "video/x-matroska", FILE_MIMETYPE_VIDEO_MKV},  // mkv
+    { "audio/x-matroska", FILE_MIMETYPE_AUDIO_MKV},  // mkv
+    { "video/mpegts", FILE_MIMETYPE_VIDEO_MPEGTS},  // mpeg-ts
+    { "video/webm", FILE_MIMETYPE_VIDEO_WEBM},  // webm
+    { "audio/webm", FILE_MIMETYPE_AUDIO_WEBM},  // webm
     { "audio/x-m4a", FILE_MIMETYPE_AUDIO_MP4 },
     { "audio/mpeg", FILE_MIMETYPE_AUDIO_AAC }, // aac
     { "application/x-id3", FILE_MIMETYPE_AUDIO_MP3 }, // mp3
@@ -233,7 +242,7 @@ static bool ParseGValueSimple(const GValue &value, const MetaParseItem &item, Fo
         case G_TYPE_INT: {
             gint num = g_value_get_int(&value);
             ret = metadata.PutIntValue(item.toKey, num);
-            MEDIA_LOGD("toKey: %{public}s, value: %{public}u", item.toKey.data(), num);
+            MEDIA_LOGD("toKey: %{public}s, value: %{public}d", item.toKey.data(), num);
             break;
         }
         case G_TYPE_UINT64: {
@@ -374,6 +383,26 @@ static bool DateTimeMetaSetter(const GValue &gval, const std::string_view &key, 
 
     bool ret = metadata.PutStringValue(key, str);
     MEDIA_LOGD("Key: %{public}s, value: %{public}s", key.data(), str.data());
+
+    return ret;
+}
+
+static bool OrientationMetaSetter(const GValue &gval, const std::string_view &key, Format &metadata)
+{
+    std::string str = g_value_get_string(&gval);
+    CHECK_AND_RETURN_RET_LOG(!str.empty(), false, "Parse key %{public}s failed", key.data());
+    bool ret = false;
+
+    std::string::size_type pos = std::string::npos;
+    if ((pos = str.find("-")) == std::string::npos) {
+        ret = false;
+    } else {
+        std::string subStr = str.substr(pos + 1, str.length() - pos);
+        int32_t rotate = std::stol(subStr, nullptr, 10);  // 10 : decimalism
+        MEDIA_LOGI("Get rotate str is %{public}s", subStr.c_str());
+        MEDIA_LOGI("Get rotate is %{public}d", rotate);
+        ret = metadata.PutIntValue(key, rotate);
+    }
 
     return ret;
 }

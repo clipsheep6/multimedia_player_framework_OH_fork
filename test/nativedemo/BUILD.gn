@@ -21,6 +21,7 @@ ohos_executable("media_demo") {
     "./recorder",
     "./avmetadatahelper",
     "./avcodeclist",
+    "./recorder_profiles",
     "./avcodecvenc",
     "./avcodecvdec",
     "./avmuxer",
@@ -64,7 +65,10 @@ ohos_executable("media_demo") {
     "./player/data_source/media_data_source_demo_seekable.cpp",
     "./player/player_demo.cpp",
     "./recorder/recorder_demo.cpp",
+    "./recorder_profiles/recorder_profiles_demo.cpp",
   ]
+
+  configs = [ "//foundation/multimedia/media_standard/services/dfx:media_service_dfx_public_config" ]
 
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
@@ -72,6 +76,7 @@ ohos_executable("media_demo") {
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+    "//foundation/multimedia/media_standard/services/dfx:media_service_dfx",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
     "//foundation/windowmanager/wm:libwm",
     "//third_party/libjpeg:libjpeg_static",

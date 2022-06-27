@@ -107,7 +107,7 @@ static void gst_venc_base_class_init(GstVencBaseClass *klass)
 
     const gchar *sink_caps_string = GST_VIDEO_CAPS_MAKE(GST_VENC_BASE_SUPPORTED_FORMATS);
     GstCaps *sink_caps = gst_caps_from_string(sink_caps_string);
-    GST_DEBUG_OBJECT(klass, "Sink_caps %s", gst_caps_to_string(sink_caps));
+    GST_DEBUG_OBJECT(klass, "Sink_caps %" GST_PTR_FORMAT, sink_caps);
     if (sink_caps != nullptr) {
         GstPadTemplate *sink_templ = gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sink_caps);
         gst_element_class_add_pad_template(element_class, sink_templ);
@@ -233,7 +233,7 @@ static void gst_venc_base_finalize(GObject *object)
     self->input.allocator = nullptr;
     gst_object_unref(self->output.allocator);
     self->output.allocator = nullptr;
-    gst_object_unref(self->input_state);
+    gst_video_codec_state_unref(self->input_state);
     self->input_state = nullptr;
     gst_object_unref(self->output_state);
     self->output_state = nullptr;
@@ -253,6 +253,7 @@ static gboolean gst_venc_base_open(GstVideoEncoder *encoder)
     GstVencBaseClass *base_class = GST_VENC_BASE_GET_CLASS(self);
     g_return_val_if_fail(base_class != nullptr && base_class->create_codec != nullptr, FALSE);
     self->encoder = base_class->create_codec(reinterpret_cast<GstElementClass*>(base_class));
+    g_return_val_if_fail(self->encoder != nullptr, FALSE);
     return TRUE;
 }
 
@@ -317,6 +318,7 @@ static gboolean gst_venc_base_stop(GstVideoEncoder *encoder)
 {
     g_return_val_if_fail(encoder != nullptr, FALSE);
     GstVencBase *self = GST_VENC_BASE(encoder);
+    g_return_val_if_fail(self->encoder != nullptr, FALSE);
     GST_DEBUG_OBJECT(self, "Stop encoder start");
 
     g_mutex_lock(&self->drain_lock);
@@ -844,6 +846,9 @@ static gboolean gst_venc_base_set_format(GstVideoEncoder *encoder, GstVideoCodec
     g_return_val_if_fail(ret == GST_CODEC_OK, FALSE);
     ret = self->encoder->SetParameter(GST_STATIC_BITRATE, GST_ELEMENT(self));
     g_return_val_if_fail(ret == GST_CODEC_OK, FALSE);
+    if (self->input_state != nullptr) {
+        gst_video_codec_state_unref(self->input_state);
+    }
     self->input_state = gst_video_codec_state_ref(state);
     return gst_codec_return_is_ok(self, ret, "setparam", TRUE);
 }
@@ -1045,7 +1050,7 @@ static gboolean gst_venc_base_propose_allocation(GstVideoEncoder *encoder, GstQu
     gst_video_info_init(&vinfo);
     gst_query_parse_allocation(query, &incaps, nullptr);
     if (incaps != nullptr) {
-        GST_DEBUG_OBJECT(encoder, "Query caps %s", gst_caps_to_string(incaps));
+        GST_DEBUG_OBJECT(encoder, "Query caps %" GST_PTR_FORMAT, incaps);
         gst_video_info_from_caps(&vinfo, incaps);
     }
     size = vinfo.size;

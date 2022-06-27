@@ -247,6 +247,12 @@ static void gst_vdec_base_finalize(GObject *object)
         gst_caps_unref(self->sink_caps);
         self->sink_caps = nullptr;
     }
+
+    std::list<GstClockTime> tempList;
+    tempList.swap(self->pts_list);
+    std::vector<GstVideoFormat> tempVec;
+    tempVec.swap(self->formats);
+
     self->input.av_shmem_pool = nullptr;
     self->output.av_shmem_pool = nullptr;
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -260,6 +266,7 @@ static gboolean gst_vdec_base_open(GstVideoDecoder *decoder)
     GstVdecBaseClass *base_class = GST_VDEC_BASE_GET_CLASS(self);
     g_return_val_if_fail(base_class != nullptr && base_class->create_codec != nullptr, FALSE);
     self->decoder = base_class->create_codec(reinterpret_cast<GstElementClass*>(base_class));
+    g_return_val_if_fail(self->decoder != nullptr, FALSE);
     gst_vdec_base_check_input_need_copy(self);
     return TRUE;
 }
@@ -535,7 +542,7 @@ static gboolean gst_vdec_base_negotiate_format(GstVdecBase *self)
     }
     GstCaps *templ_caps = gst_pad_get_pad_template_caps(GST_VIDEO_DECODER_SRC_PAD(self));
     g_return_val_if_fail(templ_caps != nullptr, FALSE);
-    GST_DEBUG_OBJECT(self, "templ_caps %s", gst_caps_to_string(templ_caps));
+    GST_DEBUG_OBJECT(self, "templ_caps %" GST_PTR_FORMAT, templ_caps);
     (void)update_caps_format(self, templ_caps);
     GstCaps *intersection = gst_pad_peer_query_caps(GST_VIDEO_DECODER_SRC_PAD(self), templ_caps);
     g_return_val_if_fail(intersection != nullptr, FALSE);

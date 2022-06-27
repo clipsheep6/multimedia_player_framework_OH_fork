@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <gst/gst.h>
+#include <gst/base/gstbasesink.h>
 
 namespace OHOS {
 namespace Media {
@@ -31,7 +32,7 @@ public:
     virtual int32_t GetVolume(float &volume) = 0;
     virtual int32_t GetMaxVolume(float &volume) = 0;
     virtual int32_t GetMinVolume(float &volume) = 0;
-    virtual int32_t Prepare() = 0;
+    virtual int32_t Prepare(int32_t appUid, int32_t appPid) = 0;
     virtual int32_t Start() = 0;
     virtual int32_t Stop() = 0;
     virtual int32_t Pause() = 0;
@@ -45,8 +46,10 @@ public:
     virtual int32_t Write(uint8_t *buffer, size_t size) = 0;
     virtual int32_t GetAudioTime(uint64_t &time) = 0;
     virtual int32_t GetLatency(uint64_t &latency) const = 0;
-    virtual int32_t SetParameter(int32_t &param) = 0;
+    virtual int32_t SetRendererInfo(int32_t desc, int32_t rendererFlags) = 0;
+    virtual void SetAudioInterruptMode(int32_t interruptMode) = 0;
     virtual bool Writeable() const;
+    virtual void SetAudioSinkInterruptCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint)) = 0;
 };
 } // namespace Media
 } // namespace OHOS
