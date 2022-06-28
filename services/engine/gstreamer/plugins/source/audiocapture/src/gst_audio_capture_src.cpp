@@ -30,7 +30,7 @@ GST_STATIC_PAD_TEMPLATE("src",
         "layout = (string) interleaved, "
         "channels = (int) [ 1, MAX ]"));
 
-enum {
+enum AudioCaptureProp : uint32_t {
     PROP_0,
     PROP_SOURCE_TYPE,
     PROP_SAMPLE_RATE,
