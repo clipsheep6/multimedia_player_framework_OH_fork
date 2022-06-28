@@ -18,6 +18,7 @@
 #include "av_common.h"
 #include "gstbasesink.h"
 #include "gstbaseparse.h"
+#include "scope_guard.h"
 
 enum {
     PROP_0,
@@ -34,13 +35,12 @@ enum {
 };
 
 static guint gst_mux_bin_signals[LAST_SIGNAL] = { 0 };
-
+using namespace OHOS;
 #define gst_mux_bin_parent_class parent_class
 G_DEFINE_TYPE(GstMuxBin, gst_mux_bin, GST_TYPE_PIPELINE);
 
 static void gst_mux_bin_finalize(GObject *object);
 static void gst_mux_bin_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *param_spec);
-static void gst_mux_bin_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *param_spec);
 static GstStateChangeReturn gst_mux_bin_change_state(GstElement *element, GstStateChange transition);
 
 static void gst_mux_bin_add_track(GstMuxBin *mux_bin, const char *src_name, const char *parse_name, int32_t track_type)
@@ -69,15 +69,12 @@ static void gst_mux_bin_class_init(GstMuxBinClass *klass)
     g_return_if_fail(klass != nullptr);
     GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
     GstElementClass *gstelement_class = GST_ELEMENT_CLASS(klass);
-    GstBinClass *gstbin_class = GST_BIN_CLASS(klass);
 
     g_return_if_fail(gobject_class != nullptr);
     g_return_if_fail(gstelement_class != nullptr);
-    g_return_if_fail(gstbin_class != nullptr);
 
     gobject_class->finalize = gst_mux_bin_finalize;
     gobject_class->set_property = gst_mux_bin_set_property;
-    gobject_class->get_property = gst_mux_bin_get_property;
 
     g_object_class_install_property(gobject_class, PROP_FD,
         g_param_spec_int("fd", "FD", "fd of the output file",
@@ -192,15 +189,6 @@ static void gst_mux_bin_set_property(GObject *object, guint prop_id,
     }
 }
 
-static void gst_mux_bin_get_property(GObject *object, guint prop_id,
-    GValue *value, GParamSpec *param_spec)
-{
-    g_return_if_fail(object != nullptr);
-    g_return_if_fail(value != nullptr);
-    (void)prop_id;
-    (void)param_spec;
-}
-
 static bool create_splitmuxsink(GstMuxBin *mux_bin)
 {
     g_return_val_if_fail(mux_bin != nullptr, false);
@@ -210,9 +198,11 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
 
     mux_bin->split_mux_sink = gst_element_factory_make("splitmuxsink", "splitmuxsink");
     g_return_val_if_fail(mux_bin->split_mux_sink != nullptr, false);
+    ON_SCOPE_EXIT(0) { gst_object_unref(mux_bin->split_mux_sink); };
 
     GstElement *fdsink = gst_element_factory_make("fdsink", "fdsink");
     g_return_val_if_fail(fdsink != nullptr, false);
+    ON_SCOPE_EXIT(1) { gst_object_unref(fdsink); };
 
     g_object_set(fdsink, "fd", mux_bin->out_fd, nullptr);
     gst_base_sink_set_async_enabled(GST_BASE_SINK(fdsink), FALSE);
@@ -223,6 +213,9 @@ static bool create_splitmuxsink(GstMuxBin *mux_bin)
     g_object_set(qtmux, "orientation-hint", mux_bin->rotation, "set-latitude", mux_bin->latitude,
         "set-longitude", mux_bin->longitude, nullptr);
     g_object_set(mux_bin->split_mux_sink, "muxer", qtmux, nullptr);
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    CANCEL_SCOPE_EXIT_GUARD(1);
 
     return true;
 }
@@ -255,28 +248,49 @@ static bool create_src(GstMuxBin *mux_bin, OHOS::Media::MediaType track_type)
     g_return_val_if_fail(mux_bin != nullptr, false);
     GST_INFO_OBJECT(mux_bin, "create_src");
 
+    GSList *list = nullptr;
     GSList *iter = nullptr;
     switch (track_type) {
         case OHOS::Media::MEDIA_TYPE_VID:
-            iter = mux_bin->video_src_list;
+            list = mux_bin->video_src_list;
             break;
         case OHOS::Media::MEDIA_TYPE_AUD:
-            iter = mux_bin->audio_src_list;
+            list = mux_bin->audio_src_list;
             break;
         default:
             break;
     }
+    bool error_happend = false;
+    iter = list;
     while (iter != nullptr) {
-        GstElement *appSrc = gst_element_factory_make("appsrc", ((GstTrackInfo *)(iter->data))->srcName_);
-        g_return_val_if_fail(appSrc != nullptr, false);
-        g_object_set(appSrc, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
-        ((GstTrackInfo *)(iter->data))->src_ = appSrc;
-        if (strstr(((GstTrackInfo *)(iter->data))->parseName_, "parse")) {
+        GstElement *app_src = gst_element_factory_make("appsrc", ((GstTrackInfo *)(iter->data))->srcName_);
+        if (app_src == nullptr) {
+            GST_ERROR_OBJECT(mux_bin, "Failed to call gst_element_factory_make");
+            error_happend = true;
+            break;
+        }
+        g_object_set(app_src, "is-live", true, "format", GST_FORMAT_TIME, nullptr);
+        ((GstTrackInfo *)(iter->data))->src_ = app_src;
+        if (strstr((reinterpret_cast<GstTrackInfo *>(iter->data))->parseName_, "parse")) {
             GstElement *parse = create_parse(mux_bin, ((GstTrackInfo *)(iter->data))->parseName_);
-            g_return_val_if_fail(parse != nullptr, false);
-            ((GstTrackInfo *)(iter->data))->parse_ = parse;
+            if (parse == nullptr) {
+                GST_ERROR_OBJECT(mux_bin, "Failed to call create_parse");
+                error_happend = true;
+                break;
+            }
+            (reinterpret_cast<GstTrackInfo *>(iter->data))->parse_ = parse;
         }
         iter = iter->next;
+    }
+
+    if (error_happend) {
+        iter = list;
+        while (iter != nullptr && iter->data != nullptr) {
+            gst_object_unref(((GstTrackInfo *)(iter->data))->src_);
+            gst_object_unref(((GstTrackInfo *)(iter->data))->parse_);
+            iter = iter->next;
+        }
+        return false;
     }
 
     return true;
@@ -357,6 +371,8 @@ static bool connect_parse(GstMuxBin *mux_bin, GstElement *parse, GstPad *upstrea
         return false;
     }
     
+    gst_object_unref(parse_sink_pad);
+    gst_object_unref(parse_src_pad);
     return true;
 }
 
@@ -378,12 +394,14 @@ static bool connect_element(GstMuxBin *mux_bin, OHOS::Media::MediaType type)
     
     while (iter != nullptr) {
         GstPad *src_src_pad = gst_element_get_static_pad(((GstTrackInfo *)(iter->data))->src_, "src");
+        ON_SCOPE_EXIT(0) { gst_object_unref(src_src_pad); };
         GstPad *split_mux_sink_sink_pad = nullptr;
         if (type == OHOS::Media::MEDIA_TYPE_VID) {
             split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->split_mux_sink, "video");
         } else if (type == OHOS::Media::MEDIA_TYPE_AUD) {
             split_mux_sink_sink_pad = gst_element_get_request_pad(mux_bin->split_mux_sink, "audio_%u");
         }
+        ON_SCOPE_EXIT(1) { gst_object_unref(split_mux_sink_sink_pad); };
         if (((GstTrackInfo *)(iter->data))->parse_ != nullptr) {
             if (!connect_parse(mux_bin, ((GstTrackInfo *)(iter->data))->parse_, src_src_pad, split_mux_sink_sink_pad)) {
                 GST_ERROR_OBJECT(mux_bin, "Failed to call connect_parse");
