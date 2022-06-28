@@ -55,7 +55,8 @@ config("gst_codec_plugin_hdi_config") {
     "//drivers/peripheral/codec/interfaces/include",
     "//drivers/peripheral/codec/hal/include",
     "//drivers/framework/include/utils",
-    "//drivers/adapter/uhdf2/osal/include",
+    "//drivers/hdf_core/framework/include/utils",
+    "//drivers/hdf_core/adapter/uhdf2/osal/include",
     "//third_party/openmax/api/1.1.2",
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/codec/hdi_plugins"
@@ -81,9 +82,13 @@ ohos_shared_library("gst_codec_plugin_hdi") {
     "hdi_venc_params_mgr.cpp"
   ]
 
-  configs = [ ":gst_codec_plugin_hdi_config" ]
+  configs = [
+    ":gst_codec_plugin_hdi_config",
+    "//foundation/multimedia/media_standard/services/dfx:media_service_dfx_public_config",
+  ]
 
   deps = [
+    "//foundation/multimedia/media_standard/services/dfx:media_service_dfx",
     "//foundation/multimedia/media_standard/services/engine/common:media_engine_common",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common:gst_media_common",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
