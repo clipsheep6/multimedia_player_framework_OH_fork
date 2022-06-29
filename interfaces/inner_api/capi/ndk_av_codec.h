@@ -260,7 +260,7 @@ AVErrCode OH_AVCODEC_VideoDecoderReset(AVCodec *codec);
  * @brief 获取输出AVFormat格式，可以通过AVFormat的KEY获取PixelFormat、Width/Hight等参数
  * @syscap SystemCapability.Multimedia.Media.Codec
  * @param codec AVCodec句柄指针
- * @return 返回AVFormat句柄指针，生命周期随下一次GetOutputMediaDescription刷新，或伴随AVCodec销毁；
+ * @return 返回AVFormat句柄指针，生命周期随下一次GetOutputMediaDescription刷新，或伴随AVCodec销毁;
  * @since  3.2
  * @version 3.2
  */
@@ -429,7 +429,7 @@ AVErrCode OH_AVCODEC_VideoEncoderSetParameter(AVCodec *codec, AVFormat *format);
  * @brief 获取输出AVFormat格式，可以通过AVFormat的KEY获取PixelFormat、Width/Hight等参数
  * @syscap SystemCapability.Multimedia.Media.Codec
  * @param codec AVCodec句柄指针
- * @return 返回AVFormat句柄指针，生命周期随下一次GetOutputMediaDescription刷新，或伴随AVCodec销毁；
+ * @return 返回AVFormat句柄指针，生命周期随下一次GetOutputMediaDescription刷新，或伴随AVCodec销毁;
  * @since  3.2
  * @version 3.2
  */
@@ -576,7 +576,7 @@ AVErrCode OH_AVCODEC_AudioDecoderSetParameter(AVCodec *codec, AVFormat *format);
  * @brief 获取输出AVFormat格式，可以通过AVFormat的KEY获取SampleFormat、channel、SampleRate等参数
  * @syscap SystemCapability.Multimedia.Media.Codec
  * @param codec AVCodec句柄指针
- * @return 返回AVFormat句柄指针，生命周期随下一次GetOutputMediaDescription刷新，或伴随AVCodec销毁；
+ * @return 返回AVFormat句柄指针，生命周期随下一次GetOutputMediaDescription刷新，或伴随AVCodec销毁;
  * @since  3.2
  * @version 3.2
  */
@@ -723,7 +723,7 @@ AVErrCode OH_AVCODEC_AudioEncoderSetParameter(AVCodec *codec, AVFormat *format);
  * @brief 获取输出AVFormat格式，可以通过AVFormat的KEY获取SampleFormat、channel、SampleRate等参数
  * @syscap SystemCapability.Multimedia.Media.Codec
  * @param codec AVCodec句柄指针
- * @return 返回AVFormat句柄指针，生命周期随下一次GetOutputMediaDescription刷新，或伴随AVCodec销毁；
+ * @return 返回AVFormat句柄指针，生命周期随下一次GetOutputMediaDescription刷新，或伴随AVCodec销毁;
  * @since  3.2
  * @version 3.2
  */
