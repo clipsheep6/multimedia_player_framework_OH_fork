@@ -20,6 +20,9 @@ group("fuzztest") {
     "playerfile_fuzzer:PlayerFileFuzzTest",
     "playerseek_fuzzer:PlayerSeekFuzzTest",
     "playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
+    "metadatafile_fuzzer:PlayerMetaDataFileFuzzTest",
+    "pixelmap_fuzzer:PixelMapFuzzTest",
+    "pixelmapfile_fuzzer:PixelMapFileFuzzTest",
   ]
 }
 ###############################################################################
