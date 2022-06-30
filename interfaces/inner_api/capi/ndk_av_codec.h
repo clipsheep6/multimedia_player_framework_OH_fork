@@ -433,7 +433,7 @@ AVErrCode OH_AVCODEC_VideoEncoderSetParameter(AVCodec *codec, AVFormat *format);
  * @since  3.2
  * @version 3.2
  */
-AVFormat *format OH_AVCODEC_VideoEncoderGetOutputMediaDescription(AVCodec *codec);
+AVFormat* OH_AVCODEC_VideoEncoderGetOutputMediaDescription(AVCodec *codec);
 
 /**
  * @brief Obtains the surface from encoder.
@@ -580,7 +580,7 @@ AVErrCode OH_AVCODEC_AudioDecoderSetParameter(AVCodec *codec, AVFormat *format);
  * @since  3.2
  * @version 3.2
  */
-AVFormat *format OH_AVCODEC_AudioDecoderGetOutputMediaDescription(AVCodec *codec);
+AVFormat* OH_AVCODEC_AudioDecoderGetOutputMediaDescription(AVCodec *codec);
 
 /**
  * @brief 当GetInputBuffer返回的AVMemory被写入ES数据后，可通过QueueInputBuffer通知解码器读取数据
@@ -727,7 +727,7 @@ AVErrCode OH_AVCODEC_AudioEncoderSetParameter(AVCodec *codec, AVFormat *format);
  * @since  3.2
  * @version 3.2
  */
-AVFormat *format OH_AVCODEC_AudioEncoderGetOutputMediaDescription(AVCodec *codec);
+AVFormat* OH_AVCODEC_AudioEncoderGetOutputMediaDescription(AVCodec *codec);
 
 /**
  * @brief 当GetInputBuffer返回的AVMemory被写入ES数据后，可通过QueueInputBuffer通知解码器读取数据
