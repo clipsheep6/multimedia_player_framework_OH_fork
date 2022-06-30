@@ -24,7 +24,7 @@ extern "C" {
 
 typedef struct AVMemory AVMemory; 
 
-enum AVMemoryFlags {
+typedef enum AVMemoryFlags {
     /**
      * This flag bit indicates that the remote process is allowed to read and write
      * the shared memory. If no flags are specified, this is the default memory
@@ -41,7 +41,7 @@ enum AVMemoryFlags {
       * not be available. In this case, this flag is invalid.
       */
     FLAGS_READ_ONLY = 0x2,
-};
+} AVMemoryFlags;
 
 /**
  * @brief Get the memory's virtual address

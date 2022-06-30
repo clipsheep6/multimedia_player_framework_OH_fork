@@ -32,7 +32,7 @@ typedef struct AVFormat AVFormat;
  * @since 3.2
  * @version 3.2
  */
-enum AVPixelFormat {
+typedef enum AVPixelFormat {
     /**
      * yuv 420 planar.
      */
@@ -49,11 +49,7 @@ enum AVPixelFormat {
      * format from surface.
      */
     AV_PIXEL_FORMT_SURFACE_FORMAT = 4,
-    /**
-     * RGBA.
-     */
-    AV_PIXEL_FORMT_RGBA = 5,
-};
+} AVPixelFormat;
 
 /**
  * @brief 创建一个AVFormat句柄指针，用以读写数据
