@@ -1,0 +1,77 @@
+/*
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef PLAYER_TEST_H
+#define PLAYER_TEST_H
+
+#include "player.h"
+#include "test_params_config.h"
+#include "window.h"
+
+namespace OHOS {
+namespace Media {
+class PlayerSignal {
+public:
+    PlayerStates state_ = PLAYER_IDLE;
+    int32_t seekPosition_;
+    bool seekDoneFlag_;
+    PlayerSeekMode seekMode_ = PlayerSeekMode::SEEK_CLOSEST;
+    std::mutex mutexPrepare_;
+    std::mutex mutexPlay_;
+    std::mutex mutexPause_;
+    std::mutex mutexStop_;
+    std::mutex mutexReset_;
+    std::mutex mutexSeek_;
+    std::condition_variable condVarPrepare_;
+    std::condition_variable condVarPlay_;
+    std::condition_variable condVarPause_;
+    std::condition_variable condVarStop_;
+    std::condition_variable condVarReset_;
+    std::condition_variable condVarSeek_;
+    void SetState(PlayerStates state);
+    void SetSeekResult(bool seekDoneFlag);
+};
+
+class Player_mock : public NoCopyable {
+public:
+    std::shared_ptr<Player> player_ = nullptr;
+    explicit Player_mock(std::shared_ptr<PlayerSignal> test);
+    virtual ~Player_mock();
+    bool CreatePlayer();
+    int32_t SetSource(const std::string url);
+    int32_t Reset();
+    int32_t Release();
+    int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback);
+private:
+    std::shared_ptr<PlayerSignal> test_;
+};
+
+class PlayerCallbackTest : public PlayerCallback, public NoCopyable {
+public:
+    int32_t position_ = 0;
+    PlayerStates state_ = PLAYER_STATE_ERROR;
+    explicit PlayerCallbackTest(std::shared_ptr<PlayerSignal> test);
+    ~PlayerCallbackTest() {}
+    void OnError(PlayerErrorType errorType, int32_t errorCode) override {}
+    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
+    void SeekNotify(int32_t extra, const Format &infoBody);
+    void Notify(PlayerStates currentState);
+private:
+    std::shared_ptr<PlayerSignal> test_;
+    bool seekDoneFlag_ = false;
+};
+} // namespace Media
+} // namespace OHOS
+#endif
