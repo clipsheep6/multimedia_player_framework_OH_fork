@@ -59,8 +59,10 @@
           "//foundation/multimedia/media_standard/sa_profile:media_service_sa_profile",
           "//foundation/multimedia/media_standard/interfaces/kits/js:media",
           "//foundation/multimedia/media_standard/interfaces/kits/js:media_js",
+          "//foundation/multimedia/media_standard/interfaces/kits/ndk:media_ndk",
           "//foundation/multimedia/media_standard/frameworks/videodisplaymanager:videodisplaymanager",
           "//foundation/multimedia/media_standard/test/nativedemo:media_demo",
+          "//foundation/multimedia/media_standard/test/ndk:media_ndk_sample",
           "//foundation/multimedia/media_standard/test/jsdemo:media_demo_js",
           "//foundation/multimedia/media_standard/test/jsdemo:mediademo"
         ],
