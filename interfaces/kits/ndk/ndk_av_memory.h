@@ -24,51 +24,25 @@ extern "C" {
 
 typedef struct AVMemory AVMemory; 
 
-typedef enum AVMemoryFlags {
-    /**
-     * This flag bit indicates that the remote process is allowed to read and write
-     * the shared memory. If no flags are specified, this is the default memory
-     * sharing policy. If the FLAGS_READ_ONLY bit is set, this flag bit is ignored.
-     */
-    FLAGS_READ_WRITE = 0x1,
-    /**
-      * For platforms that support multiple processes, this flag bit indicates that the
-      * remote process can only read data in the shared memory. If this flag is not set,
-      * the remote process has both read and write permissions by default. Adding this
-      * flag does not affect the process that creates the memory, which always has the
-      * read and write permission on the shared memory. For platforms that do not support
-      * multi-processes, the memory read and write permission control capability may
-      * not be available. In this case, this flag is invalid.
-      */
-    FLAGS_READ_ONLY = 0x2,
-} AVMemoryFlags;
-
 /**
  * @brief Get the memory's virtual address
+ * @syscap SystemCapability.Multimedia.Media.Core
  * @param mem Encapsulate AVMemory structure instance pointer
  * @return the memory's virtual address if the memory is valid, otherwise nullptr.
- * @since 3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 uint8_t* OH_AV_MemoryGetAddr(struct AVMemory *mem);
 
 /**
  * @brief Get the memory's size
+ * @syscap SystemCapability.Multimedia.Media.Core
  * @param mem Encapsulate AVMemory structure instance pointer
  * @return the memory's size if the memory is valid, otherwise -1.
- * @since 3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 int32_t OH_AV_MemoryGetSize(struct AVMemory *mem);
-
-/**
- * @brief Get the memory's flags set by the creator, refer to {@AVMemoryFlags}
- * @param mem Encapsulate AVMemory structure instance pointer
- * @return the memory's flags if the memory is valid, otherwise 0.
- * @since 3.2
- * @version 3.2
- */
-uint32_t OH_AV_MemoryGetFlags(struct AVMemory *mem);
 
 #ifdef __cplusplus
 }

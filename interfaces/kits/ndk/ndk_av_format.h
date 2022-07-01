@@ -29,8 +29,8 @@ typedef struct AVFormat AVFormat;
 /**
  * @brief Enumerates AVPixel Format.
  * @syscap SystemCapability.Multimedia.Media.Core
- * @since 3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 typedef enum AVPixelFormat {
     /**
@@ -55,8 +55,8 @@ typedef enum AVPixelFormat {
  * @brief 创建一个AVFormat句柄指针，用以读写数据
  * @syscap SystemCapability.Multimedia.Media.Core
  * @return 返回值为AVFormat句柄指针
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 struct AVFormat* OH_AV_CreateFormat(void);
 
@@ -65,8 +65,8 @@ struct AVFormat* OH_AV_CreateFormat(void);
  * @syscap SystemCapability.Multimedia.Media.Core
  * @param format AVFormat句柄指针
  * @return void
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 void OH_AV_DestroyFormat(struct AVFormat *format);
 
@@ -76,8 +76,8 @@ void OH_AV_DestroyFormat(struct AVFormat *format);
  * @param to 接收数据的AVFormat句柄指针
  * @param from 被拷贝数据的AVFormat句柄指针
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatCopy(struct AVFormat *to, struct AVFormat *from);
 
@@ -88,8 +88,8 @@ bool OH_AV_FormatCopy(struct AVFormat *to, struct AVFormat *from);
  * @param key 写入数据的键值
  * @param value 写入的数据
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatPutIntValue(struct AVFormat *format, const char *key, int32_t value);
 
@@ -100,8 +100,8 @@ bool OH_AV_FormatPutIntValue(struct AVFormat *format, const char *key, int32_t v
  * @param key 写入数据的键值
  * @param value 写入的数据
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatPutLongValue(struct AVFormat *format, const char *key, int64_t value);
 
@@ -112,8 +112,8 @@ bool OH_AV_FormatPutLongValue(struct AVFormat *format, const char *key, int64_t 
  * @param key 写入数据的键值
  * @param value 写入的数据
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatPutFloatValue(struct AVFormat *format, const char *key, float value);
 
@@ -124,8 +124,8 @@ bool OH_AV_FormatPutFloatValue(struct AVFormat *format, const char *key, float v
  * @param key 写入数据的键值
  * @param value 写入的数据
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatPutDoubleValue(struct AVFormat *format, const char *key, double value);
 
@@ -136,8 +136,8 @@ bool OH_AV_FormatPutDoubleValue(struct AVFormat *format, const char *key, double
  * @param key 写入数据的键值
  * @param value 写入的数据
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatPutStringValue(struct AVFormat *format, const char *key, const char *value);
 
@@ -149,8 +149,8 @@ bool OH_AV_FormatPutStringValue(struct AVFormat *format, const char *key, const 
  * @param addr 写入的数据地址
  * @param size 写入的数据长度
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatPutBuffer(struct AVFormat *format, const char *key, const uint8_t *addr, size_t size);
 
@@ -161,8 +161,8 @@ bool OH_AV_FormatPutBuffer(struct AVFormat *format, const char *key, const uint8
  * @param key 读取数据的键值
  * @param out 读取的数据
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatGetIntValue(struct AVFormat *format, const char *key, int32_t *out);
 
@@ -173,8 +173,8 @@ bool OH_AV_FormatGetIntValue(struct AVFormat *format, const char *key, int32_t *
  * @param key 读取数据的键值
  * @param out 读取的数据
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatGetLongValue(struct AVFormat *format, const char *key, int64_t *out);
 
@@ -185,8 +185,8 @@ bool OH_AV_FormatGetLongValue(struct AVFormat *format, const char *key, int64_t 
  * @param key 读取数据的键值
  * @param out 读取的数据
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatGetFloatValue(struct AVFormat *format, const char *key, float *out);
 
@@ -197,8 +197,8 @@ bool OH_AV_FormatGetFloatValue(struct AVFormat *format, const char *key, float *
  * @param key 读取数据的键值
  * @param out 读取的数据
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatGetDoubleValue(struct AVFormat *format, const char *key, double *out);
 
@@ -209,8 +209,8 @@ bool OH_AV_FormatGetDoubleValue(struct AVFormat *format, const char *key, double
  * @param key 读取数据的键值
  * @param out 读取的字符串指针，指向的数据生命周期伴随GetString更新，伴随Format销毁，如果调用者需要长期持有，必须进行内存拷贝
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatGetStringValue(struct AVFormat *format, const char *key, const char **out);
 
@@ -222,8 +222,8 @@ bool OH_AV_FormatGetStringValue(struct AVFormat *format, const char *key, const 
  * @param addr 生命周期是format持有，伴随Format销毁，如果调用者需要长期持有，必须进行内存拷贝
  * @param size 读写数据的长度
  * @return 返回值为TRUE 成功，FALSE 失败
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 bool OH_AV_FormatGetBuffer(struct AVFormat *format, const char *key, uint8_t **addr, size_t *size);
 
@@ -233,8 +233,8 @@ bool OH_AV_FormatGetBuffer(struct AVFormat *format, const char *key, uint8_t **a
  * @syscap SystemCapability.Multimedia.Media.Core
  * @param format AVFormat句柄指针
  * @return 返回由键值和数据组成的字符串
- * @since  3.2
- * @version 3.2
+ * @since 9
+ * @version 1.0
  */
 const char * OH_AV_FormatDumpInfo(struct AVFormat *format);
 

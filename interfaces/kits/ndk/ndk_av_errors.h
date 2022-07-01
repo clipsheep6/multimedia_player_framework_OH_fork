@@ -21,9 +21,9 @@ extern "C" {
 
 /**
  * @brief AV error code
- *
- * @since 3.2
- * @version 3.2
+ * @syscap SystemCapability.Multimedia.Media.Core
+ * @since 9
+ * @version 1.0
  */
 typedef enum AVErrCode {
     /**
