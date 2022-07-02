@@ -142,6 +142,7 @@ void HdiBufferMgr::FreeCodecBuffers()
         }
     }
     EmptyList(availableBuffers_);
+    MEDIA_LOGD("Enter FreeCodecBuffers End");
 }
 
 int32_t HdiBufferMgr::Stop()
@@ -174,6 +175,13 @@ void HdiBufferMgr::WaitFlushed()
     MEDIA_LOGD("Enter WaitFlushed");
     std::unique_lock<std::mutex> lock(mutex_);
     flushCond_.wait(lock, [this]() { return !isFlushing_ || !isStart_; });
+}
+
+void HdiBufferMgr::NotifyAvailable()
+{
+    if (isStart_ == false && availableBuffers_.size() == mPortDef_.nBufferCountActual) {
+        freeCond_.notify_all();
+    }
 }
 }  // namespace Media
 }  // namespace OHOS

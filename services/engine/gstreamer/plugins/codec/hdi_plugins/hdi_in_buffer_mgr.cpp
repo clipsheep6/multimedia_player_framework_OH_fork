@@ -78,9 +78,7 @@ int32_t HdiInBufferMgr::FreeBuffers()
 {
     MEDIA_LOGD("Enter FreeBuffers");
     std::unique_lock<std::mutex> lock(mutex_);
-    if (availableBuffers_.size() != mPortDef_.nBufferCountActual) {
-        MEDIA_LOGE("Erorr buffer number");
-    }
+    freeCond_.wait(lock, [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual; });
     FreeCodecBuffers();
     EmptyList(preBuffers_);
     return GST_CODEC_OK;
@@ -101,6 +99,7 @@ int32_t HdiInBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
             break;
         }
     }
+    NotifyAvailable();
     bufferCond_.notify_all();
     return GST_CODEC_OK;
 }

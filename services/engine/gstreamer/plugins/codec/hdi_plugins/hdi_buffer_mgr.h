@@ -91,6 +91,7 @@ protected:
     std::mutex mutex_;
     std::condition_variable flushCond_;
     std::condition_variable bufferCond_;
+    std::condition_variable freeCond_;
     OMX_PARAM_PORTDEFINITIONTYPE mPortDef_ = {0};
     CodecComponentType *handle_ = nullptr;
     std::list<std::shared_ptr<HdiBufferWrap>> availableBuffers_;
@@ -99,6 +100,7 @@ protected:
     int32_t UseHdiBuffers(std::vector<std::shared_ptr<HdiBufferWrap>> &buffers);
     virtual std::shared_ptr<HdiBufferWrap> GetCodecBuffer(GstBuffer *buffer);
     virtual void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<HdiBufferWrap> &codecBuffer);
+    void NotifyAvailable();
 };
 } // namespace Media
 } // namespace OHOS

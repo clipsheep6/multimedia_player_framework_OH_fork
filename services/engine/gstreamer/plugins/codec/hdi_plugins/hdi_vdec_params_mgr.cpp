@@ -139,22 +139,21 @@ int32_t HdiVdecParamsMgr::GetOutputVideoCommon(GstElement *element)
     base->output.height = (int32_t)outPortDef_.format.video.nFrameHeight;
     base->output.width = (int32_t)outPortDef_.format.video.nFrameWidth;
     base->output.frame_rate = (int32_t)outPortDef_.format.video.xFramerate;
-
+    base->stride = outPortDef_.format.video.nStride;
+    base->stride_height = (int32_t)outPortDef_.format.video.nSliceHeight;
+    MEDIA_LOGD("frame width %{public}d height %{public}d nStride %{public}d nSliceHeight %{public}d",
+        base->output.width, base->output.height, base->stride, base->stride_height);
     OMX_CONFIG_RECTTYPE rect;
     InitParam(rect, verInfo_);
     rect.nPortIndex = outPortDef_.nPortIndex;
-    if (HdiGetConfig(handle_, OMX_IndexConfigCommonOutputCrop, rect) == HDF_SUCCESS) {
-        MEDIA_LOGD("frame nStride %{public}d nSliceHeight %{public}d",
-            outPortDef_.format.video.nStride, outPortDef_.format.video.nSliceHeight);
-        MEDIA_LOGD("rect left %{public}d top %{public}d width %{public}d height %{public}d",
-            rect.nLeft, rect.nTop, rect.nWidth, rect.nHeight);
-        base->stride = outPortDef_.format.video.nStride;
-        base->stride_height = (int32_t)outPortDef_.format.video.nSliceHeight;
-        base->rect.x = rect.nLeft;
-        base->rect.y = rect.nTop;
-        base->rect.width = rect.nWidth;
-        base->rect.height = rect.nHeight;
-    }
+    // if (HdiGetConfig(handle_, OMX_IndexConfigCommonOutputCrop, rect) == HDF_SUCCESS) {
+    //     MEDIA_LOGD("rect left %{public}d top %{public}d width %{public}d height %{public}d",
+    //         rect.nLeft, rect.nTop, rect.nWidth, rect.nHeight);
+    //     base->rect.x = rect.nLeft;
+    //     base->rect.y = rect.nTop;
+    //     base->rect.width = rect.nWidth;
+    //     base->rect.height = rect.nHeight;
+    // }
 
     return GST_CODEC_OK;
 }
