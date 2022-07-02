@@ -60,12 +60,12 @@ private:
     int32_t Stop();
     int32_t Flush();
     int32_t Reset();
-    void Release();
+    int32_t Release();
     void InputFunc();
     void OutputFunc();
     int32_t SetParameter(AVFormat *format);
     struct AVFormat* CreateFormat(void);
-    
+
     std::atomic<bool> isRunning_ = false;
     std::unique_ptr<std::ifstream> testFile_;
     std::unique_ptr<std::thread> inputLoop_;

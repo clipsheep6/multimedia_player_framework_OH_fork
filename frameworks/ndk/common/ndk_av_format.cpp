@@ -208,5 +208,5 @@ bool OH_AV_FormatGetBuffer(AVFormat *format, const char *key, uint8_t **addr, si
 
 const char* OH_AV_FormatDumpInfo(struct AVFormat *format)
 {
-    return nullptr;
+    return format->format_.Stringify().c_str();
 }

@@ -60,7 +60,7 @@ private:
     int32_t Stop();
     int32_t Flush();
     int32_t Reset();
-    void Release();
+    int32_t Release();
     int32_t SetParameter(AVFormat *format);
     void InputFunc();
     void OutputFunc();

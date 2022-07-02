@@ -170,20 +170,27 @@ struct AVCodec* OH_AVCODEC_CreateAudioDecoderByName(const char *name)
     return object; 
 }
 
-void OH_AVCODEC_DestroyAudioDecoder(struct AVCodec *codec)
+AVErrCode OH_AVCODEC_DestroyAudioDecoder(struct AVCodec *codec)
 {
-    CHECK_AND_RETURN_LOG(codec != nullptr, "input codec is nullptr!");
-    CHECK_AND_RETURN_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_AUDIO_DECODER, "magic error!");
-    
+    CHECK_AND_RETURN_RET_LOG(codec != nullptr, AV_ERR_INVALID_VAL, "input codec is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_AUDIO_DECODER, AV_ERR_INVALID_VAL, "magic error!");
+
     struct AudioDecoderObject *audioDecObj = reinterpret_cast<AudioDecoderObject *>(codec);
-    CHECK_AND_RETURN_LOG(audioDecObj->audioDecoder_ != nullptr, "context audioDecoder is nullptr!");
 
-    int32_t ret = audioDecObj->audioDecoder_->Release();
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "audioDecoder Release failed!");
-
-    audioDecObj->memoryObjList_.clear();
+    if (audioDecObj != nullptr && audioDecObj->audioDecoder_ != nullptr) {
+        audioDecObj->memoryObjList_.clear();
+        int32_t ret = audioDecObj->audioDecoder_->Release();
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("audioDecoder Release failed!");
+            delete codec;
+            return AV_ERR_OPERATE_NOT_PERMIT;
+        }
+    } else {
+        MEDIA_LOGD("context audioDecoder is nullptr!");
+    }
 
     delete codec;
+    return AV_ERR_OK;
 }
 
 AVErrCode OH_AVCODEC_AudioDecoderConfigure(struct AVCodec *codec, struct AVFormat *format)

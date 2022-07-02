@@ -143,19 +143,27 @@ struct AVCodec* OH_AVCODEC_CreateVideoDecoderByName(const char *name)
     return object; 
 }
 
-void OH_AVCODEC_DestroyVideoDecoder(struct AVCodec *codec)
+AVErrCode OH_AVCODEC_DestroyVideoDecoder(struct AVCodec *codec)
 {
-    CHECK_AND_RETURN_LOG(codec != nullptr, "input codec is nullptr!");
-    CHECK_AND_RETURN_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_VIDEO_DECODER, "magic error!");
+    CHECK_AND_RETURN_RET_LOG(codec != nullptr, AV_ERR_INVALID_VAL, "input codec is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(codec->magic_ == AVMagic::MEDIA_MAGIC_VIDEO_DECODER, AV_ERR_INVALID_VAL, "magic error!");
 
     struct VideoDecoderObject *videoDecObj = reinterpret_cast<VideoDecoderObject *>(codec);
-    CHECK_AND_RETURN_LOG(videoDecObj->videoDecoder_ != nullptr, "context videoDecoder is nullptr!");
 
-    int32_t ret = videoDecObj->videoDecoder_->Release();
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "videoDecoder Release failed!");
+    if (videoDecObj != nullptr && videoDecObj->videoDecoder_ != nullptr) {
+        videoDecObj->memoryObjList_.clear();
+        int32_t ret = videoDecObj->videoDecoder_->Release();
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("videoDecoder Release failed!");
+            delete codec;
+            return AV_ERR_OPERATE_NOT_PERMIT;
+        }
+    } else {
+        MEDIA_LOGD("context videoDecoder is nullptr!");
+    }
 
-    videoDecObj->memoryObjList_.clear();
     delete codec;
+    return AV_ERR_OK;
 }
 
 AVErrCode OH_AVCODEC_VideoDecoderConfigure(struct AVCodec *codec, struct AVFormat *format)

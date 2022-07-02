@@ -227,7 +227,6 @@ bool OH_AV_FormatGetStringValue(struct AVFormat *format, const char *key, const 
  */
 bool OH_AV_FormatGetBuffer(struct AVFormat *format, const char *key, uint8_t **addr, size_t *size);
 
-
 /**
  * @brief The returned data is owned by the format and remains valid as long as the named entry is part of the format.
  * @syscap SystemCapability.Multimedia.Media.Core

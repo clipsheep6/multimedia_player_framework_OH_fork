@@ -167,10 +167,11 @@ AVCodec* OH_AVCODEC_CreateVideoDecoderByName(const char *name);
  * @brief 设置解码器到Release状态，清空解码器资源，销毁解码器
  * @syscap SystemCapability.Multimedia.Media.VideoDecoder
  * @param codec AVCodec句柄指针
+ * @return AVErrCode 错误码
  * @since 9
  * @version 1.0
  */
-void OH_AVCODEC_DestroyVideoDecoder(AVCodec *codec);
+AVErrCode OH_AVCODEC_DestroyVideoDecoder(AVCodec *codec);
 
 /**
  * @brief 设置一个异步回调函数，用以响应编解码产生的事件，监听编解码工作状态，输入/输出Data情况，要求在Configure/Prepare前设置
@@ -336,10 +337,11 @@ AVCodec* OH_AVCODEC_CreateVideoEncoderByName(const char *name);
  * @brief 设置编码器到Release状态，清空编码器资源，销毁编码器
  * @syscap SystemCapability.Multimedia.Media.VideoEncoder
  * @param codec AVCodec句柄指针
+ * @return AVErrCode 错误码
  * @since 9
  * @version 1.0
  */
-void OH_AVCODEC_DestroyVideoEncoder(AVCodec *codec);
+AVErrCode OH_AVCODEC_DestroyVideoEncoder(AVCodec *codec);
 
 /**
  * @brief 设置一个异步回调函数，用以响应编解码产生的事件，监听编解码工作状态，输入/输出Data情况，要求在Configure/Prepare前设置
@@ -482,10 +484,11 @@ AVCodec* OH_AVCODEC_CreateAudioDecoderByName(const char *name);
  * @brief 设置解码器到Release状态，清空解码器资源，销毁解码器
  * @syscap SystemCapability.Multimedia.Media.AudioDecoder
  * @param codec AVCodec句柄指针
+ * @return AVErrCode 错误码
  * @since 9
  * @version 1.0
  */
-void OH_AVCODEC_DestroyAudioDecoder(AVCodec *codec);
+AVErrCode OH_AVCODEC_DestroyAudioDecoder(AVCodec *codec);
 
 /**
  * @brief 设置一个异步回调函数，用以响应编解码产生的事件，监听编解码工作状态，输入/输出Data情况，要求在Configure/Prepare前设置
@@ -630,10 +633,11 @@ AVCodec* OH_AVCODEC_CreateAudioEncoderByName(const char *name);
  * @brief 设置编码器到Release状态，清空编码器资源，销毁编码器
  * @syscap SystemCapability.Multimedia.Media.AudioEncoder
  * @param codec AVCodec句柄指针
+ * @return AVErrCode 错误码
  * @since 9
  * @version 1.0
  */
-void OH_AVCODEC_DestroyAudioEncoder(AVCodec *codec);
+AVErrCode OH_AVCODEC_DestroyAudioEncoder(AVCodec *codec);
 
 /**
  * @brief 设置一个异步回调函数，用以响应编解码产生的事件，监听编解码工作状态，输入/输出Data情况，要求在Configure/Prepare前设置

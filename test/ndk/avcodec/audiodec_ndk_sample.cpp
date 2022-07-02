@@ -126,26 +126,24 @@ void AdecAsyncNewOutputData(AVCodec *codec, uint32_t index, AVMemory *data, AVCo
 
 ADecNdkSample::~ADecNdkSample()
 {
-    OH_AVCODEC_DestroyAudioDecoder(adec_);
-    signal_ = nullptr;
+    (void)Release();
     delete signal_;
+    signal_ = nullptr;
 }
 
 void ADecNdkSample::RunAudioDec(void)
 {
     adec_ = CreateAudioDecoder();
+    NDK_CHECK_AND_RETURN_LOG(adec_ != nullptr, "Fatal: CreateAudioDecoder fail");
     struct AVFormat *format = CreateFormat();
-    if (adec_ == nullptr || format == nullptr) {
-        OH_AVCODEC_DestroyAudioDecoder(adec_);
-        OH_AV_DestroyFormat(format);
-        return;
-    }
+    NDK_CHECK_AND_RETURN_LOG(format != nullptr, "Fatal: CreateFormat fail");
+
     NDK_CHECK_AND_RETURN_LOG(Configure(format) == AV_ERR_OK, "Fatal: Configure fail");
     NDK_CHECK_AND_RETURN_LOG(Prepare() == AV_ERR_OK, "Fatal: Prepare fail");
     NDK_CHECK_AND_RETURN_LOG(Start() == AV_ERR_OK, "Fatal: Start fail");
     sleep(10); // start run 10s
     NDK_CHECK_AND_RETURN_LOG(Stop() == AV_ERR_OK, "Fatal: Start fail");
-    Release();
+    NDK_CHECK_AND_RETURN_LOG(Release() == AV_ERR_OK, "Fatal: Release fail");
 }
 
 struct AVCodec* ADecNdkSample::CreateAudioDecoder(void)
@@ -243,9 +241,14 @@ int32_t ADecNdkSample::Reset()
     return OH_AVCODEC_AudioDecoderReset(adec_);
 }
 
-void ADecNdkSample::Release()
+int32_t ADecNdkSample::Release()
 {
-    OH_AVCODEC_DestroyAudioDecoder(adec_);
+    AVErrCode ret = AV_ERR_OK;
+    if (adec_ != nullptr) {
+        ret = OH_AVCODEC_DestroyAudioDecoder(adec_);
+        adec_ = (ret == AV_ERR_OK) ? nullptr : adec_;
+    }
+    return ret;
 }
 
 int32_t ADecNdkSample::SetParameter(AVFormat *format)
@@ -271,30 +274,32 @@ void ADecNdkSample::InputFunc()
         AVMemory *buffer = reinterpret_cast<AVMemory *>(signal_->inBufferQueue_.front());
         NDK_CHECK_AND_RETURN_LOG(buffer != nullptr, "Fatal: GetInputBuffer fail");
         NDK_CHECK_AND_RETURN_LOG(testFile_ != nullptr && testFile_->is_open(), "Fatal: open file fail");
+        uint32_t bufferSize = 0;
+        if (frameCount_ < ES_LENGTH) {
+            bufferSize = ES[frameCount_]; // replace with the actual size
+            char *fileBuffer = (char *)malloc(sizeof(char) * bufferSize + 1);
+            NDK_CHECK_AND_RETURN_LOG(fileBuffer != nullptr, "Fatal: malloc fail.");
+            (void)testFile_->read(fileBuffer, bufferSize);
+            if (testFile_->eof()) {
+                free(fileBuffer);
+                cout << "Finish" << endl;
+                break;
+            }
 
-        uint32_t bufferSize = ES[frameCount_]; // replace with the actual size
-        char *fileBuffer = (char *)malloc(sizeof(char) * bufferSize + 1);
-        NDK_CHECK_AND_RETURN_LOG(fileBuffer != nullptr, "Fatal: malloc fail");
-
-        (void)testFile_->read(fileBuffer, bufferSize);
-        if (testFile_->eof()) {
+            if (memcpy_s(OH_AV_MemoryGetAddr(buffer), OH_AV_MemoryGetSize(buffer), fileBuffer, bufferSize) != EOK) {
+                free(fileBuffer);
+                cout << "Fatal: memcpy fail" << endl;
+                break;
+            }
             free(fileBuffer);
-            cout << "Finish" << endl;
-            break;
         }
-
-        if (memcpy_s(OH_AV_MemoryGetAddr(buffer), OH_AV_MemoryGetSize(buffer), fileBuffer, bufferSize) != EOK) {
-            free(fileBuffer);
-            cout << "Fatal: memcpy fail" << endl;
-            break;
-        }
-
         struct AVCodecBufferAttr attr;
-        if (frameCount_ == ES_LENGTH + 1) {
+        if (frameCount_ == ES_LENGTH) {
             attr.flags = AVCODEC_BUFFER_FLAGS_EOS;
             attr.presentationTimeUs = 0;
             attr.size = 0;
             attr.offset = 0;
+            cout << "EOS Frame, frameCount = " << frameCount_ << endl;
             isRunning_.store(false);
         } else {
             attr.presentationTimeUs = timeStamp_;
@@ -309,7 +314,6 @@ void ADecNdkSample::InputFunc()
 
         AVErrCode ret = OH_AVCODEC_AudioDecoderPushInputData(adec_, index, attr);
 
-        free(fileBuffer);
         timeStamp_ += SAMPLE_DURATION_US;
         frameCount_ ++;
         signal_->inQueue_.pop();

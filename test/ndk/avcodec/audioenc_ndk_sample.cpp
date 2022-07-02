@@ -68,20 +68,18 @@ void AencAsyncNewOutputData(AVCodec *codec, uint32_t index, AVMemory *data, AVCo
 
 AEncNdkSample::~AEncNdkSample()
 {
-    OH_AVCODEC_DestroyAudioEncoder(aenc_);
-    signal_ = nullptr;
+    Release();
+
     delete signal_;
+    signal_ = nullptr;
 }
 
 void AEncNdkSample::RunAudioEnc(void)
 {
     aenc_ = CreateAudioEncoder();
+    NDK_CHECK_AND_RETURN_LOG(aenc_ != nullptr, "Fatal: CreateAudioEncoder fail");
     struct AVFormat *format = CreateFormat();
-    if (aenc_ == nullptr || format == nullptr) {
-        OH_AVCODEC_DestroyAudioEncoder(aenc_);
-        OH_AV_DestroyFormat(format);
-        return;
-    }
+    NDK_CHECK_AND_RETURN_LOG(format != nullptr, "Fatal: CreateFormat fail");
 
     NDK_CHECK_AND_RETURN_LOG(Configure(format) == AV_ERR_OK, "Fatal: Configure fail");
     NDK_CHECK_AND_RETURN_LOG(Prepare() == AV_ERR_OK, "Fatal: Prepare fail");
@@ -89,7 +87,7 @@ void AEncNdkSample::RunAudioEnc(void)
     // sleep(10); // start run 10s
     while (isRunning_.load()) {};
     NDK_CHECK_AND_RETURN_LOG(Stop() == AV_ERR_OK, "Fatal: Start fail");
-    Release();
+    NDK_CHECK_AND_RETURN_LOG(Release() == AV_ERR_OK, "Fatal: Release fail");
 }
 
 struct AVCodec* AEncNdkSample::CreateAudioEncoder(void)
@@ -188,9 +186,14 @@ int32_t AEncNdkSample::Reset()
     return OH_AVCODEC_AudioEncoderReset(aenc_);
 }
 
-void AEncNdkSample::Release()
+int32_t AEncNdkSample::Release()
 {
-    OH_AVCODEC_DestroyAudioEncoder(aenc_);
+    AVErrCode ret = AV_ERR_OK;
+    if (aenc_ != nullptr) {
+        ret = OH_AVCODEC_DestroyAudioEncoder(aenc_);
+        aenc_ = (ret == AV_ERR_OK) ? nullptr : aenc_;
+    }
+    return ret;
 }
 
 int32_t AEncNdkSample::SetParameter(AVFormat *format)
@@ -216,21 +219,23 @@ void AEncNdkSample::InputFunc()
         AVMemory *buffer = reinterpret_cast<AVMemory *>(signal_->inBufferQueue_.front());
         NDK_CHECK_AND_RETURN_LOG(buffer != nullptr, "Fatal: GetInputBuffer fail");
         NDK_CHECK_AND_RETURN_LOG(testFile_ != nullptr && testFile_->is_open(), "Fatal: open file fail");
+        if (frameCount_ < ES_LENGTH) {
+            char *fileBuffer = (char *)malloc(sizeof(char) * SAMPLE_SIZE + 1);
+            NDK_CHECK_AND_RETURN_LOG(fileBuffer != nullptr, "Fatal: malloc fail");
 
-        char *fileBuffer = (char *)malloc(sizeof(char) * SAMPLE_SIZE + 1);
-        NDK_CHECK_AND_RETURN_LOG(fileBuffer != nullptr, "Fatal: malloc fail");
+            (void)testFile_->read(fileBuffer, SAMPLE_SIZE);
+            if (testFile_->eof()) {
+                free(fileBuffer);
+                cout << "Finish" << endl;
+                break;
+            }
 
-        (void)testFile_->read(fileBuffer, SAMPLE_SIZE);
-        if (testFile_->eof()) {
+            if (memcpy_s(OH_AV_MemoryGetAddr(buffer), OH_AV_MemoryGetSize(buffer), fileBuffer, SAMPLE_SIZE) != EOK) {
+                free(fileBuffer);
+                cout << "Fatal: memcpy fail" << endl;
+                break;
+            }
             free(fileBuffer);
-            cout << "Finish" << endl;
-            break;
-        }
-
-        if (memcpy_s(OH_AV_MemoryGetAddr(buffer), OH_AV_MemoryGetSize(buffer), fileBuffer, SAMPLE_SIZE) != EOK) {
-            free(fileBuffer);
-            cout << "Fatal: memcpy fail" << endl;
-            break;
         }
 
         struct AVCodecBufferAttr attr;
@@ -239,16 +244,16 @@ void AEncNdkSample::InputFunc()
             attr.flags = AVCODEC_BUFFER_FLAGS_EOS;
             attr.size = 0;
             attr.presentationTimeUs = 0;
+            cout << "EOS Frame, frameCount = " << frameCount_ << endl;
             isRunning_.store(false);
         } else {
             attr.flags = AVCODEC_BUFFER_FLAGS_NONE;
             attr.size = SAMPLE_SIZE;
             attr.presentationTimeUs = timeStamp_;
         }
-        
+
         AVErrCode ret = OH_AVCODEC_AudioEncoderPushInputData(aenc_, index, attr);
 
-        free(fileBuffer);
         timeStamp_ += SAMPLE_DURATION_US;
         frameCount_ ++;
         signal_->inQueue_.pop();
