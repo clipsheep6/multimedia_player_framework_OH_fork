@@ -17,7 +17,7 @@ import("//build/test.gni")
 module_output_path = "media_standard/fuzztest"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("PlayerMetaDataFileFuzzTest") {
+ohos_fuzztest("MetaDataFileFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file =
     "//foundation//multimedia/media_standard/test/fuzztest/metadatafile_fuzzer"

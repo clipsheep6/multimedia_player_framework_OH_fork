@@ -59,6 +59,12 @@ bool MetaDataFileFuzzer :: FuzzMetaDataFile(uint8_t* data, size_t size)
         return false;
     }
     cout << "metadata_ ResolveMetadata fail" << endl;
+    std::shared_ptr<AVSharedMemory> ret4 = metadata_ -> FetchArtPicture();
+    if(ret4 != 0){
+        cout << "metadata_ FetchFrameAtTime fail" << endl;
+        return false;
+    }
+    cout << "metadata_ FetchFrameAtTime success!" << endl;
     metadata_ -> Release();
     cout << "success!" << endl;
     return true;
