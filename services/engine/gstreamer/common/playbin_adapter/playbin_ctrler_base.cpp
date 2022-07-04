@@ -435,7 +435,6 @@ void PlayBinCtrlerBase::Reset() noexcept
     uri_.clear();
     isErrorHappened_ = false;
     enableLooping_ = false;
-    disableNextSeekDoneCb_ = false;
     {
         std::unique_lock<std::mutex> appsrcLock(appsrcMutex_);
         appsrcWrap_ = nullptr;
@@ -555,10 +554,6 @@ void PlayBinCtrlerBase::ExitInitializedState()
     }
     signalIds_.clear();
 
-    if (audioSink_ != nullptr) {
-        gst_object_unref(audioSink_);
-        audioSink_ = nullptr;
-    }
     if (videoSink_ != nullptr) {
         gst_object_unref(videoSink_);
         videoSink_ = nullptr;
@@ -778,10 +773,7 @@ void PlayBinCtrlerBase::ProcessEndOfStream()
         return;
     }
 
-    if (enableLooping_ && !isSeeking_) {
-        disableNextSeekDoneCb_ = true;
-        (void)SeekInternal(0, IPlayBinCtrler::PlayBinSeekMode::PREV_SYNC);
-    } else {
+    if (!enableLooping_) {
         ChangeState(playbackCompletedState_);
     }
 }
