@@ -17,11 +17,11 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
+    "metadatafile_fuzzer:MetaDataFileFuzzTest",
+    "pixelmap_fuzzer:PixelMapFuzzTest",
     "playerfile_fuzzer:PlayerFileFuzzTest",
     "playerseek_fuzzer:PlayerSeekFuzzTest",
     "playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
-    "metadatafile_fuzzer:MetaDataFileFuzzTest",
-    "pixelmap_fuzzer:PixelMapFuzzTest",
   ]
 }
 ###############################################################################
