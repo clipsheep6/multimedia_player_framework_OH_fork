@@ -21,6 +21,7 @@
 #include "surface.h"
 #include "display_type.h"
 
+
 namespace OHOS {
 namespace Media {
 class TestPlayer : public NoCopyable {

@@ -35,48 +35,42 @@ PixelMapFuzzer::~PixelMapFuzzer()
 
 bool PixelMapFuzzer::FuzzPixelMap(uint8_t* data, size_t size)
 {
-    pixelmap_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
-    if(pixelmap_ == nullptr){
-        cout << "pixelmap_ is null" << endl;
+    metadata_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
+    if(metadata_ == nullptr){
+        cout << "metadata_ is null" << endl;
         return false;
     }
-
+    cout << "create metadata_ success!" << endl;
     const string path = "/data/media/H264_AAC.mp4";
-
-    ret = pixelmap_ -> MetaDataSetSource(path);
+    int32_t ret = MetaDataSetSource(path);
     if(ret != 0){
-        cout << "pixelmap_ SetSource file" << endl;
+        cout << "metadata_ SetSource file" << endl;
         return false;
     }
-
+    cout << "metadata_ SetSource success!" << endl;
     if (size >= sizeof(int64_t)) {
         struct PixelMapParams pixelMapParams_;
-        ret = pixelmap_ -> FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), AV_META_QUERY_NEXT_SYNC, pixelMapParams_);
-        if(ret != 0){
-            cout << "pixelmap_ FetchFrameAtTime fail" << endl;
+        std::shared_ptr<PixelMap> ret2 = metadata_ -> FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), AV_META_QUERY_NEXT_SYNC, pixelMapParams_);
+        if(ret2 != 0){
+            cout << "metadata_ FetchFrameAtTime fail" << endl;
             return false;
         }
     }
-
-    ret = pixelmap_ -> Release();
-    if(ret != 0){
-        cout << "pixelmap_ release fail" << endl;
-        return false;
-    }
-
+    cout << "metadata_ FetchFrameAtTime success!" << endl;
+    metadata_ -> Release();
+    cout << "success!" << endl;
+    return true;
 }
 
 bool OHOS::Media::FuzzTestPixelMap(uint8_t* data, size_t size)
 {
-    auto player = std::make_unique<MetaDataFuzzer>();
+    auto player = std::make_unique<PixelMapFuzzer>();
     if(player == nullptr){
         cout << "player is null" << endl;
         return 0;
     }
     return player -> FuzzPixelMap(data, size);
-
 }
-
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)

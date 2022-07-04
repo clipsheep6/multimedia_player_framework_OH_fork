@@ -32,7 +32,6 @@ MetaDataFileFuzzer::~MetaDataFileFuzzer()
 {
 }
 
-
 bool MetaDataFileFuzzer :: FuzzMetaDataFile(uint8_t* data, size_t size)
 {
     metadata_ = OHOS::Media::AVMetadataHelperFactory::CreateAVMetadataHelper();
@@ -40,60 +39,34 @@ bool MetaDataFileFuzzer :: FuzzMetaDataFile(uint8_t* data, size_t size)
         cout << "metadata_ is null" << endl;
         return false;
     }
-
-    const string path = "/data/fuzztest/fuzztest.mp4";
-    ret = OHOS::Media::WriteDataToFile(path, data, size);
+    cout << "create metadata_ success" << endl;
+    const string path = "/data/media/fuzztest.mp4";
+    int32_t ret = WriteDataToFile_METADATA(path, data, size);
     if (ret != 0) {
-        cout << "WriteDataToFile fail" << endl;
+        cout << "WriteDataToFile_METADATA fail" << endl;
         return false;
     }
-    
-    ret = metadata_ -> OHOS::Media::MetaDataSetSource(path);
-    if(ret != 0){
-        cout << "metadata SetSource fail" >> endl;
+    cout << "metadata_ WriteDataToFile_METADATA success" << endl;
+    int32_t ret2 = MetaDataSetSource(path);
+    if(ret2 != 0){
+        cout << "metadata SetSource fail" << endl;
         return false;
     }
-
-    ret = metadata_ -> ResolveMetadata(AV_KEY_ALBUM);
-    if(ret != 0){
+    cout << "metadata_ SetSource success" << endl;
+    std::string ret3 = metadata_ -> ResolveMetadata(AV_KEY_ALBUM);
+    if(ret3.empty()){
         cout << "metadata_ ResolveMetadata fail" << endl;
         return false;
     }
-
-    ret = metadata_ -> Release();
-    if(ret != 0){
-        cout << "metadata_ release fail" << endl;
-        return false;
-    }
+    cout << "metadata_ ResolveMetadata fail" << endl;
+    metadata_ -> Release();
+    cout << "success!" << endl;
+    return true;
 }
-
-
-int32_t OHOS::Media::MetaDataSetSource(const string &path)
-{
-    int32_t fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0) {
-        cout << "Open file failed" << endl;
-        (void)close(fd);
-        return -1;
-    }
-    int64_t offset = 0;
-    int64_t size = 0;
-    int32_t usage = AV_META_USAGE_PIXEL_MAP;
-
-    int32_t ret = player_->SetSource(fd, offset, size, AV_META_USAGE_PIXEL_MAP);
-    if (ret != 0) {
-        cout << "SetSource fail" << endl;
-        (void)close(fd);
-        return -1;
-    }
-    (void)close(fd);
-    return 0;
-}
-
 
 bool OHOS::Media::FuzzTestMetaDataFile(uint8_t* data, size_t size)
 {
-    auto player = std::make_unique<MetaDataFuzzer>();
+    auto player = std::make_unique<MetaDataFileFuzzer>();
     if (player == nullptr){
         cout << "player is null" << endl;
         return 0;

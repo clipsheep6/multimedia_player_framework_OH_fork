@@ -35,51 +35,48 @@ PixelMapFileFuzzer::~PixelMapFileFuzzer()
 
 bool PixelMapFileFuzzer::FuzzTestPixelMap(uint8_t* data, size_t size)
 {
-    pixelmap_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
-    if(pixelmap_ == nullptr){
-        cout << "pixelmap_ is null" << endl;
+    metadata_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
+    if(metadata_ == nullptr){
+        cout << "metadata_ is null" << endl;
         return false;
     }
-
+    cout << "create metadata_ success!" << endl;
     const string path = "/data/media/pixelmapfuzztest.mp4";
-    ret = WriteDataToFile(path, data, size);
+    int32_t ret = WriteDataToFile_METADATA(path, data, size);
     if(ret != 0){
-        cout << "WriteDataToFile fail" << std::endl;
+        cout << "WriteDataToFile_METADATA fail" << std::endl;
         return false;
     }
-
-    ret = pixelmap_ -> MetaDataSetSource(path);
-    if(ret != 0){
-        cout << "pixelmap_ SetSource file" << endl;
+    cout << "metadata_ WriteDataToFile_METADATA success!" << endl;
+    int32_t ret2 = MetaDataSetSource(path);
+    if(ret2 != 0){
+        cout << "metadata_ SetSource file" << endl;
         return false;
     }
-
+    cout << "metadata_ SetSource success!" << endl;
     if (size >= sizeof(int64_t)) {
-        ret = pixelmap_ -> FetchArtPicture();
-        if(ret != 0){
-            cout << "pixelmap_ FetchFrameAtTime fail" << endl;
+        std::shared_ptr<AVSharedMemory> ret3 = metadata_ -> FetchArtPicture();
+        if(ret3 != 0){
+            cout << "metadata_ FetchFrameAtTime fail" << endl;
             return false;
         }
     }
+    cout << "metadata_ FetchFrameAtTime success!" << endl;
 
-    ret = pixelmap_ -> Release();
-    if(ret != 0){
-        cout << "pixelmap_ release fail" << endl;
-        return false;
-    }
+    metadata_ -> Release();
+    cout << "success!" << endl;
+    return true;
 }
 
-*
 bool OHOS::Media::PixelMapFileFuzzTest(uint8_t* data, size_t size)
 {
-    player = std::make_unique<PixelMapFileFuzzer>();
+    auto player = std::make_unique<PixelMapFileFuzzer>();
     if(player == nullptr){
         cout << "player is null" << endl;
         return 0;
     }
     return player -> FuzzTestPixelMap(data, size);
 }
-
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)

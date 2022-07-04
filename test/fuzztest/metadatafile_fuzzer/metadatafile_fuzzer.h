@@ -18,18 +18,18 @@
 
 #define FUZZ_PROJECT_NAME "metadatafile_fuzzer"
 #include "test_player.h"
+#include "test_metadata.h"
 
 namespace OHOS{
 namespace Media{
 int32_t MetaDataSetSource(const std::string &path);
 bool FuzzTestMetaDataFile (uint8_t* data, size_t size);
 
-class MetaDataFileFuzzer : public TestPlayer {
+class MetaDataFileFuzzer : public TEST_METADATA {
 public:
     MetaDataFileFuzzer();
     ~ MetaDataFileFuzzer();
     bool FuzzMetaDataFile(uint8_t* data, size_t size);
-    
 };
 }
 }

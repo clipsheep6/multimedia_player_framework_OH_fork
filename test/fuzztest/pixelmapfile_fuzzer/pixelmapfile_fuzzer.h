@@ -18,12 +18,13 @@
 
 #define FUZZ_PROJECT_NAME "pixelmapfile_fuzzer"
 #include "test_player.h"
+#include "test_metadata.h"
 
 namespace OHOS{
 namespace Media{
 bool PixelMapFileFuzzTest(uint8_t* data, size_t size);
 
-class PixelMapFileFuzzer : public TestPlayer {
+class PixelMapFileFuzzer : public TEST_METADATA {
 public:
     PixelMapFileFuzzer();
     ~PixelMapFileFuzzer();

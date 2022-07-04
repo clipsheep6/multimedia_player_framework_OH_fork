@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration ver="2.0">
+    <target name="PlayerMetaDataFileFuzzTest">
+        <preparer>
+            <option name="push" value="fuzztest.mp4 -> /data/test/resource" src="res"/>
+        </preparer>
+    </target>
+</configuration>
