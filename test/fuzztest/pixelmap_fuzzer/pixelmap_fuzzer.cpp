@@ -50,8 +50,8 @@ bool PixelMapFuzzer::FuzzPixelMap(uint8_t* data, size_t size)
     cout << "metadata_ SetSource success!" << endl;
     if (size >= sizeof(int64_t)) {
         struct PixelMapParams pixelMapParams_;
-        std::shared_ptr<PixelMap> ret2 = metadata_ -> FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), 
-        AV_META_QUERY_NEXT_SYNC, pixelMapParams_);
+        std::shared_ptr<PixelMap> ret2 = metadata_ -> FetchFrameAtTime(*reinterpret_cast<int64_t *>(data),
+            AV_META_QUERY_NEXT_SYNC, pixelMapParams_);
         if (ret2 != 0) {
             cout << "metadata_ FetchFrameAtTime fail" << endl;
             return false;
