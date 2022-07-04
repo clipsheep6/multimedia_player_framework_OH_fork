@@ -23,7 +23,7 @@
 namespace OHOS {
 namespace Media {
 bool FuzzTestPixelMap(uint8_t* data, size_t size);
-class PixelMapFuzzer : public TEST_METADATA {
+class PixelMapFuzzer : public TestMetadata {
 public:
     PixelMapFuzzer();
     ~PixelMapFuzzer();

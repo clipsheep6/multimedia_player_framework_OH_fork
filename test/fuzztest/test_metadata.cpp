@@ -25,15 +25,15 @@ using namespace std;
 using namespace OHOS;
 using namespace OHOS::Media;
 
-TestMedia::TestMedia()
+TestMetadata::TestMetadata()
 {
 }
 
-TestMedia::~TestMedia()
+TestMetadata::~TestMetadata()
 {
 }
 
-int32_t TestMedia::MetaDataSetSource(const string &path)
+int32_t TestMetadata::MetaDataSetSource(const string &path)
 {
     int32_t fd = open(path.c_str(), O_RDONLY);
     if (fd < 0) {
@@ -60,7 +60,7 @@ int32_t TestMedia::MetaDataSetSource(const string &path)
     return 0;
 }
 
-int32_t TestMedia::WriteDataToFile_METADATA(const string &path, const uint8_t* data, size_t size)
+int32_t TestMetadata::WriteDataToFile_METADATA(const string &path, const uint8_t* data, size_t size)
 {
     FILE *file = nullptr;
     file = fopen(path.c_str(), "w+");

@@ -25,7 +25,7 @@ namespace Media {
 int32_t MetaDataSetSource(const std::string &path);
 bool FuzzTestMetaDataFile (uint8_t* data, size_t size);
 
-class MetaDataFileFuzzer : public TEST_METADATA {
+class MetaDataFileFuzzer : public TestMetadata {
 public:
     MetaDataFileFuzzer();
     ~ MetaDataFileFuzzer();

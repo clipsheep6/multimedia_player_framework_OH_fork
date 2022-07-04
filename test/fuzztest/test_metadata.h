@@ -24,10 +24,10 @@
 
 namespace OHOS {
 namespace Media {
-class TestMedia : public NoCopyable {
+class TestMetadata : public NoCopyable {
 public:
-    TestMedia();
-    ~TestMedia();
+    TestMetadata();
+    ~TestMetadata();
     std::shared_ptr<AVMetadataHelper> metadata_ = nullptr;
     int32_t MetaDataSetSource(const std::string &path);
     int32_t WriteDataToFile_METADATA(const std::string &path, const std::uint8_t* data, std::size_t size);
