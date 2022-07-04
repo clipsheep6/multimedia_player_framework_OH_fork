@@ -41,7 +41,7 @@ bool PixelMapFuzzer::FuzzPixelMap(uint8_t* data, size_t size)
         return false;
     }
     cout << "create metadata_ success!" << endl;
-    const string path = "/data/media/H264_AAC.mp4";
+    const string path = "/data/test/resources/H264_AAC.mp4";
     int32_t ret = MetaDataSetSource(path);
     if(ret != 0){
         cout << "metadata_ SetSource file" << endl;

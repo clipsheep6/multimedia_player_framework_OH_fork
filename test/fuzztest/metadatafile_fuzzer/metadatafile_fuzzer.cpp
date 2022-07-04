@@ -40,7 +40,7 @@ bool MetaDataFileFuzzer :: FuzzMetaDataFile(uint8_t* data, size_t size)
         return false;
     }
     cout << "create metadata_ success" << endl;
-    const string path = "/data/media/fuzztest.mp4";
+    const string path = "/data/test/resources/fuzztest.mp4";
     int32_t ret = WriteDataToFile_METADATA(path, data, size);
     if (ret != 0) {
         cout << "WriteDataToFile_METADATA fail" << endl;
