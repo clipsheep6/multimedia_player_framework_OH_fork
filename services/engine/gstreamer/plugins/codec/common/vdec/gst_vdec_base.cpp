@@ -684,7 +684,7 @@ static gboolean gst_vdec_base_allocate_out_buffers(GstVdecBase *self)
     std::vector<GstBuffer*> buffers;
     self->coding_outbuf_cnt = self->out_buffer_cnt;
     for (guint i = 0; i < self->out_buffer_cnt; ++i) {
-        GST_ERROR_OBJECT(self, "Allocate output buffer %d", i);
+        GST_DEBUG_OBJECT(self, "Allocate output buffer %d", i);
         GstBuffer *buffer = gst_video_decoder_allocate_output_buffer(GST_VIDEO_DECODER(self));
         if (buffer == nullptr) {
             GST_WARNING_OBJECT(self, "Allocate buffer is nullptr");

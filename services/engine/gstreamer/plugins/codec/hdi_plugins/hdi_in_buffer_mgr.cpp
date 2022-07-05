@@ -93,7 +93,6 @@ int32_t HdiInBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
         if (iter->first != nullptr && iter->first->hdiBuffer.bufferId == buffer->bufferId) {
             availableBuffers_.push_back(iter->first);
             iter->first->hdiBuffer.flag = 0;
-            MEDIA_LOGD("bufferType->buf %ld", iter->first->buf);
             gst_buffer_unref(iter->second);
             (void)codingBuffers_.erase(iter);
             break;

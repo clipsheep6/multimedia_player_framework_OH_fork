@@ -29,8 +29,6 @@ namespace {
         { GST_VIDEO_FORMAT_RGBA, PIXEL_FMT_RGBA_8888 },
         { GST_VIDEO_FORMAT_NV21, PIXEL_FMT_YCRCB_420_SP },
         { GST_VIDEO_FORMAT_NV12, PIXEL_FMT_YCBCR_420_SP },
-        { GST_VIDEO_FORMAT_NV16, PIXEL_FMT_YCBCR_422_SP },
-        { GST_VIDEO_FORMAT_NV61, PIXEL_FMT_YCRCB_422_SP },
         { GST_VIDEO_FORMAT_I420, PIXEL_FMT_YCBCR_420_P },
     };
     constexpr int32_t TIME_VAL_US = 1000000;
@@ -543,6 +541,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
     // add buffer type meta at here.
     OHOS::sptr<OHOS::SurfaceBuffer> buf = memory->buf;
     auto buffer_handle = buf->GetBufferHandle();
+
     int32_t stride = buffer_handle->stride;
     GstVideoInfo *info = &spool->info;
 

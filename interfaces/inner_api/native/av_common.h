@@ -68,7 +68,7 @@ enum VideoPixelFormat {
     /**
      * RGBA.
      */
-    RGBA = 5,  
+    RGBA = 5,
 };
 
 /**
