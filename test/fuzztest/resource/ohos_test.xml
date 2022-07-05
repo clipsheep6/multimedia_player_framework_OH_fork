@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration ver="2.0">
+    <target name="MetaDataFileFuzzTest">
+        <preparer>
+            <option name="push" value="filefuzz_resources/fuzztest.mp4 -> /data/test/resources" src="res"/>
+        </preparer>
+    </target>
+    <target name="PixelMapFuzzTest">
+        <preparer>
+            <option name="push" value="interfacefuzz_resources/H264_AAC.mp4 -> /data/test/resources" src="res"/>
+        </preparer>
+    </target>
+    <target name="PixelMapFuzzTest">
+        <preparer>
+            <option name="push" value="interfacefuzz_resources/H264_AAC.mp4 -> /data/test/resources" src="res"/>
+        </preparer>
+    </target>
+    <target name="PlayerFileFuzzTest">
+        <preparer>
+            <option name="push" value="filefuzz_resources/fuzztest.mp4 -> /data/fuzztest" src="res"/>
+        </preparer>
+    </target>
+    <target name="PlayerSeekFuzzTest">
+        <preparer>
+            <option name="push" value="interfacefuzz_resources/H264_AAC.mp4 -> /data/test/resources" src="res"/>
+        </preparer>
+    </target>
+    <target name="PlayerSetVolumeFuzzTest">
+        <preparer>
+            <option name="push" value="interfacefuzz_resources/H264_AAC.mp4 -> /data/test/resources" src="res"/>
+        </preparer>
+    </target>
+</configuration>
