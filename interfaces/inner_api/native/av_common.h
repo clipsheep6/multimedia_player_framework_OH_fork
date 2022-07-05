@@ -68,11 +68,7 @@ enum VideoPixelFormat {
     /**
      * RGBA.
      */
-    RGBA = 5,
-    /**
-     *  NV16. yuv 422 semiplanar.
-     */
-    NV16 = 6,    
+    RGBA = 5,  
 };
 
 /**

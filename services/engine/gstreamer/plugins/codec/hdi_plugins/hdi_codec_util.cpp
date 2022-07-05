@@ -31,24 +31,20 @@ static const std::unordered_map<GstCompressionFormat, OMX_VIDEO_CODINGTYPE> COMP
 
 static const std::unordered_map<GstVideoFormat, PixelFormat> FORMAT_GST_HDI = {
     {GST_VIDEO_FORMAT_NV12, PIXEL_FMT_YCBCR_420_SP},
-    {GST_VIDEO_FORMAT_NV21, PIXEL_FMT_YCRCB_420_SP},
-    {GST_VIDEO_FORMAT_NV16, PIXEL_FMT_YCBCR_422_SP}
+    {GST_VIDEO_FORMAT_NV21, PIXEL_FMT_YCRCB_420_SP}
 };
 
 static const std::unordered_map<PixelFormat, GstVideoFormat> FORMAT_HDI_GST = {
     {PIXEL_FMT_YCBCR_420_SP, GST_VIDEO_FORMAT_NV12},
-    {PIXEL_FMT_YCRCB_420_SP, GST_VIDEO_FORMAT_NV21},
-    {PIXEL_FMT_YCBCR_422_SP, GST_VIDEO_FORMAT_NV16}
+    {PIXEL_FMT_YCRCB_420_SP, GST_VIDEO_FORMAT_NV21}
 };
 
 static const std::unordered_map<GstVideoFormat, OMX_COLOR_FORMATTYPE> FORMAT_GST_OMX = {
-    {GST_VIDEO_FORMAT_NV12, OMX_COLOR_FormatYUV420SemiPlanar},
-    {GST_VIDEO_FORMAT_NV16, OMX_COLOR_FormatYUV422SemiPlanar}
+    {GST_VIDEO_FORMAT_NV12, OMX_COLOR_FormatYUV420SemiPlanar}
 };
 
 static const std::unordered_map<OMX_COLOR_FORMATTYPE, GstVideoFormat> FORMAT_OMX_GST = {
-    {OMX_COLOR_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12},
-    {OMX_COLOR_FormatYUV422SemiPlanar, GST_VIDEO_FORMAT_NV16}
+    {OMX_COLOR_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}
 };
 
 OMX_VIDEO_CODINGTYPE HdiCodecUtil::CompressionGstToHdi(GstCompressionFormat format)

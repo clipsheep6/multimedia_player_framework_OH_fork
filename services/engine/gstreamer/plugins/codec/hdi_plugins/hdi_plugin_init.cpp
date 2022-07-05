@@ -43,7 +43,6 @@ namespace {
     const std::unordered_map<int32_t, std::string> FORMAT_MAPPING = {
         { NV21, "NV21" },
         { NV12, "NV12" },
-        { NV16, "NV16" },
         { YUVI420, "I420" },
     };
 }

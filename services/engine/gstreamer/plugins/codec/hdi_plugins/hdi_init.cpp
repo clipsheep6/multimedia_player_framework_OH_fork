@@ -118,9 +118,6 @@ std::vector<int32_t> HdiInit::GetCodecFormats(VideoPortCap &port)
             case PIXEL_FMT_YCRCB_420_SP:
                 formats.push_back(NV21);
                 break;
-            case PIXEL_FMT_YCBCR_422_SP:
-                formats.push_back(NV16);
-                break;
             case PIXEL_FMT_YCBCR_420_P:
                 formats.push_back(YUVI420);
                 break;
