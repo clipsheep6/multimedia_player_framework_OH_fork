@@ -33,12 +33,12 @@ ohos_fuzztest("PixelMapFuzzTest") {
     "-g",
     "-O0",
     "-Wno-unused-variable",
-    "-fno-omit-frame-pointer"
+    "-fno-omit-frame-pointer",
   ]
   sources = [
+    "../test_metadata.cpp",
     "../test_player.cpp",
     "pixelmap_fuzzer.cpp",
-    "../test_metadata.cpp",
   ]
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
