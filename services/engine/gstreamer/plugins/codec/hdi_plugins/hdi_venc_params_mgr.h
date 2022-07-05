@@ -42,7 +42,10 @@ protected:
     int32_t GetInputVideoCommon(GstElement *element);
     int32_t GetOutputVideoCommon(GstElement *element);
     int32_t GetVideoFormat(GstElement *element);
-    int32_t InitBitRateMode();
+    int32_t ConfigEncoderParams(GstElement *element);
+    int32_t InitBitRateMode(GstElement *element);
+    int32_t InitAvcParamters(GstElement *element);
+    void InitAvcCommonParamters(GstElement *element, OMX_VIDEO_PARAM_AVCTYPE &avcType);
 private:
     CodecComponentType *handle_;
     OMX_PARAM_PORTDEFINITIONTYPE inPortDef_ = {0};

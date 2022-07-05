@@ -275,9 +275,6 @@ int32_t HdiCodec::AllocateOutputBuffers()
         CHECK_AND_RETURN_RET_LOG(inBufferMgr_->Preprocessing() == GST_CODEC_OK, GST_CODEC_ERROR, "Allocatebuffer fail");
     }
     CHECK_AND_RETURN_RET_LOG(outBufferMgr_->AllocateBuffers() == GST_CODEC_OK, GST_CODEC_ERROR, "Allocatebuffer fail");
-    if (outState_ == ACTIVING) {
-        WaitForEvent(OMX_CommandPortEnable);
-    }
     return GST_CODEC_OK;
 }
 
@@ -290,9 +287,6 @@ int32_t HdiCodec::UseOutputBuffers(std::vector<GstBuffer*> buffers)
         CHECK_AND_RETURN_RET_LOG(inBufferMgr_->Preprocessing() == GST_CODEC_OK, GST_CODEC_ERROR, "Allocatebuffer fail");
     }
     CHECK_AND_RETURN_RET_LOG(outBufferMgr_->UseBuffers(buffers) == GST_CODEC_OK, GST_CODEC_ERROR, "Usebuffer fail");
-    if (outState_ == ACTIVING) {
-        WaitForEvent(OMX_CommandPortEnable);
-    }
     return GST_CODEC_OK;
 }
 

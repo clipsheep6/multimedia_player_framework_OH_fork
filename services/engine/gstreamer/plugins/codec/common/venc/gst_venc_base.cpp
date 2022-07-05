@@ -56,6 +56,10 @@ enum {
     PROP_VENDOR,
     PROP_SURFACE_ENABLE,
     PROP_I_FRAME_INTERVAL,
+    PROP_BITRATE_MODE,
+    PROP_CODEC_QUALITY,
+    PROP_I_FRAME_INTERVAL_NEW,
+    PROP_CODEC_PROFILE,
 };
 
 G_DEFINE_ABSTRACT_TYPE(GstVencBase, gst_venc_base, GST_TYPE_VIDEO_ENCODER);
@@ -104,6 +108,23 @@ static void gst_venc_base_class_init(GstVencBaseClass *klass)
     g_object_class_install_property(gobject_class, PROP_SURFACE_ENABLE,
         g_param_spec_boolean("enable-surface", "Enable Surface", "The input mem is surface buffer",
         FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_BITRATE_MODE,
+        g_param_spec_int("bitrate-mode", "Bitrate mode", "bitrate mode for video encoder",
+            0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_CODEC_QUALITY,
+        g_param_spec_int("codec-quality", "Codec quality", "Codec quality for video encoder",
+            0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    // this interval is operate by codec
+    g_object_class_install_property(gobject_class, PROP_I_FRAME_INTERVAL_NEW,
+        g_param_spec_int("i-frame-interval-new", "I frame interval new", "I frame interval for video encoder",
+            0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_CODEC_PROFILE,
+        g_param_spec_int("codec-profile", "Codec profile", "Codec profile for video encoder",
+            0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     const gchar *sink_caps_string = GST_VIDEO_CAPS_MAKE(GST_VENC_BASE_SUPPORTED_FORMATS);
     GstCaps *sink_caps = gst_caps_from_string(sink_caps_string);
@@ -161,6 +182,18 @@ static void gst_venc_base_set_property(GObject *object, guint prop_id, const GVa
             GST_OBJECT_UNLOCK(self);
             break;
         }
+        case PROP_BITRATE_MODE:
+            self->bitrate_mode = g_value_get_int(value);
+            break;
+        case PROP_CODEC_QUALITY:
+            self->codec_quality = g_value_get_int(value);
+            break;
+        case PROP_I_FRAME_INTERVAL_NEW:
+            self->i_frame_interval_new = g_value_get_int(value);
+            break;
+        case PROP_CODEC_PROFILE:
+            self->codec_profile = g_value_get_int(value);
+            break;
         default:
             break;
     }
@@ -218,6 +251,11 @@ static void gst_venc_base_init(GstVencBase *self)
     self->i_frame_interval = 0;
     self->flushing_stopping = FALSE;
     self->encoder_start = FALSE;
+    self->bitrate_mode = -1;
+    self->codec_quality = -1;
+    self->i_frame_interval_new = -1;
+    self->codec_profile = -1;
+    self->codec_level = -1;
 }
 
 static void gst_venc_base_finalize(GObject *object)
@@ -844,7 +882,7 @@ static gboolean gst_venc_base_set_format(GstVideoEncoder *encoder, GstVideoCodec
     g_return_val_if_fail(ret == GST_CODEC_OK, FALSE);
     ret = self->encoder->SetParameter(GST_VIDEO_FORMAT, GST_ELEMENT(self));
     g_return_val_if_fail(ret == GST_CODEC_OK, FALSE);
-    ret = self->encoder->SetParameter(GST_STATIC_BITRATE, GST_ELEMENT(self));
+    ret = self->encoder->SetParameter(GST_VIDEO_ENCODER_CONFIG, GST_ELEMENT(self));
     g_return_val_if_fail(ret == GST_CODEC_OK, FALSE);
     if (self->input_state != nullptr) {
         gst_video_codec_state_unref(self->input_state);

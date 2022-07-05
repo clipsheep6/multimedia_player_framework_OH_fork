@@ -20,6 +20,7 @@
 #include "gst_venc_base.h"
 #include "hdi_codec_util.h"
 #include "hdi_codec.h"
+#include "avcodec_info.h"
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVencParamsMgr"};
     constexpr uint32_t OMX_FRAME_RATE_MOVE = 16; // hdi frame rate need move 16
@@ -27,6 +28,40 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+const std::map<int32_t, OMX_VIDEO_CONTROLRATETYPE> BITRATE_MODE_MAP = {
+    {CBR, OMX_Video_ControlRateConstant},
+    {VBR, OMX_Video_ControlRateVariable},
+};
+
+const std::map<int32_t, OMX_VIDEO_AVCPROFILETYPE> AVC_PROFILE_MAP = {
+    {AVC_PROFILE_BASELINE, OMX_VIDEO_AVCProfileBaseline},
+    {AVC_PROFILE_EXTENDED, OMX_VIDEO_AVCProfileExtended},
+    {AVC_PROFILE_HIGH, OMX_VIDEO_AVCProfileHigh},
+    {AVC_PROFILE_HIGH_10, OMX_VIDEO_AVCProfileHigh10},
+    {AVC_PROFILE_HIGH_422, OMX_VIDEO_AVCProfileHigh422},
+    {AVC_PROFILE_HIGH_444, OMX_VIDEO_AVCProfileHigh444},
+    {AVC_PROFILE_MAIN, OMX_VIDEO_AVCProfileMain},
+};
+
+const std::map<int32_t, OMX_VIDEO_AVCLEVELTYPE> AVC_LEVEL_MAP = {
+    {AVC_LEVEL_1, OMX_VIDEO_AVCLevel1},
+    {AVC_LEVEL_1b, OMX_VIDEO_AVCLevel1b},
+    {AVC_LEVEL_11, OMX_VIDEO_AVCLevel11},
+    {AVC_LEVEL_12, OMX_VIDEO_AVCLevel12},
+    {AVC_LEVEL_13, OMX_VIDEO_AVCLevel13},
+    {AVC_LEVEL_2, OMX_VIDEO_AVCLevel2},
+    {AVC_LEVEL_21, OMX_VIDEO_AVCLevel21},
+    {AVC_LEVEL_22, OMX_VIDEO_AVCLevel22},
+    {AVC_LEVEL_3, OMX_VIDEO_AVCLevel3},
+    {AVC_LEVEL_31, OMX_VIDEO_AVCLevel31},
+    {AVC_LEVEL_32, OMX_VIDEO_AVCLevel32},
+    {AVC_LEVEL_4, OMX_VIDEO_AVCLevel4},
+    {AVC_LEVEL_41, OMX_VIDEO_AVCLevel41},
+    {AVC_LEVEL_42, OMX_VIDEO_AVCLevel42},
+    {AVC_LEVEL_5, OMX_VIDEO_AVCLevel5},
+    {AVC_LEVEL_51, OMX_VIDEO_AVCLevel51},
+};
+
 HdiVencParamsMgr::HdiVencParamsMgr()
     : handle_(nullptr)
 {
@@ -50,7 +85,6 @@ void HdiVencParamsMgr::Init(CodecComponentType *handle,
     inPortDef_.nPortIndex = portParam.nStartPortNumber;
     outPortDef_.nPortIndex = portParam.nStartPortNumber + 1;
     videoFormat_.nPortIndex = portParam.nStartPortNumber;
-    (void)InitBitRateMode();
 }
 
 int32_t HdiVencParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element)
@@ -78,6 +112,21 @@ int32_t HdiVencParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element
         case GST_DYNAMIC_BITRATE:
             SetDynamicBitrate(element);
             break;
+        case GST_VIDEO_ENCODER_CONFIG:
+            ConfigEncoderParams(element);
+        default:
+            break;
+    }
+    return GST_CODEC_OK;
+}
+
+int32_t HdiVencParamsMgr::ConfigEncoderParams(GstElement *element)
+{
+    GstVencBase *base = GST_VENC_BASE(element);
+    InitBitRateMode(element);
+    switch (base->compress_format) {
+        case GST_AVC:
+            return InitAvcParamters(element);
         default:
             break;
     }
@@ -226,15 +275,94 @@ int32_t HdiVencParamsMgr::RequestIFrame()
     return GST_CODEC_OK;
 }
 
-int32_t HdiVencParamsMgr::InitBitRateMode()
+int32_t HdiVencParamsMgr::InitBitRateMode(GstElement *element)
 {
     MEDIA_LOGD("Init bitrate");
+    GstVencBase *base = GST_VENC_BASE(element);
     bitrateConfig_.nPortIndex = outPortDef_.nPortIndex;
     auto ret = HdiGetParameter(handle_, OMX_IndexParamVideoBitrate, bitrateConfig_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoBitrate Failed");
-    bitrateConfig_.eControlRate = OMX_Video_ControlRateVariable;
+    if (BITRATE_MODE_MAP.find(base->bitrate_mode) == BITRATE_MODE_MAP.end()) {
+        bitrateConfig_.eControlRate = OMX_Video_ControlRateVariable;
+    } else {
+        bitrateConfig_.eControlRate = BITRATE_MODE_MAP.at(base->bitrate_mode);
+    }
+    if (base->bitrate != 0) {
+        bitrateConfig_.nTargetBitrate = base->bitrate;
+    }
     ret = HdiSetParameter(handle_, OMX_IndexParamVideoBitrate, bitrateConfig_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoBitrate Failed");
+    return GST_CODEC_OK;
+}
+
+void HdiVencParamsMgr::InitAvcCommonParamters(GstElement *element, OMX_VIDEO_PARAM_AVCTYPE &avcType)
+{
+    GstVencBase *base = GST_VENC_BASE(element);
+    if (AVC_PROFILE_MAP.find(base->codec_profile) != AVC_PROFILE_MAP.end()) {
+        avcType.eProfile = AVC_PROFILE_MAP.at(base->codec_profile);
+    } else {
+        avcType.eProfile = OMX_VIDEO_AVCProfileBaseline;
+    }
+    if (AVC_LEVEL_MAP.find(base->codec_level) != AVC_LEVEL_MAP.end()) {
+        avcType.eLevel = AVC_LEVEL_MAP.at(base->codec_level);
+    } else {
+        avcType.eLevel = OMX_VIDEO_AVCLevel1;
+    }
+    avcType.nSliceHeaderSpacing = 0;
+    avcType.bUseHadamard = OMX_TRUE;
+    avcType.nRefIdx10ActiveMinus1 = 0;
+    avcType.nRefIdx11ActiveMinus1 = 0;
+    avcType.bEnableUEP = OMX_FALSE;
+    avcType.bEnableFMO = OMX_FALSE;
+    avcType.bEnableASO = OMX_FALSE;
+    avcType.bEnableRS = OMX_FALSE;
+    avcType.bFrameMBsOnly = OMX_TRUE;
+    avcType.bMBAFF = OMX_FALSE;
+    avcType.eLoopFilterMode = OMX_VIDEO_AVCLoopFilterEnable;
+}
+
+int32_t HdiVencParamsMgr::InitAvcParamters(GstElement *element)
+{
+    GstVencBase *base = GST_VENC_BASE(element);
+    OMX_VIDEO_PARAM_AVCTYPE avcType;
+    InitParam(avcType, verInfo_);
+    avcType.nPortIndex = outPortDef_.nPortIndex;
+    auto ret = HdiGetParameter(handle_, OMX_IndexParamVideoAvc, avcType);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoAvc Failed");
+    InitAvcCommonParamters(element, avcType);
+
+    if (avcType.eProfile == OMX_VIDEO_AVCProfileBaseline) {
+        avcType.nBFrames = 0;
+        avcType.nRefFrames = 1;
+        avcType.nPFrames = base->frame_rate * base->i_frame_interval_new - 1;
+        avcType.bEntropyCodingCABAC = OMX_FALSE;
+        avcType.bWeightedPPrediction = OMX_FALSE;
+        avcType.bconstIpred = OMX_FALSE;
+        avcType.bDirect8x8Inference = OMX_FALSE;
+        avcType.bDirectSpatialTemporal = OMX_FALSE;
+        avcType.nCabacInitIdc = 0;
+    } else {
+        // need more paramters
+        avcType.nBFrames = 0;
+        // when have b frame default ref frame is 2
+        avcType.nRefFrames = avcType.nBFrames == 0 ? 1 : 2;
+        avcType.nPFrames = base->frame_rate * base->i_frame_interval_new / (avcType.nBFrames + 1) - 1;
+        avcType.bEntropyCodingCABAC = OMX_TRUE;
+        avcType.bWeightedPPrediction = OMX_TRUE;
+        avcType.bconstIpred = OMX_TRUE;
+        avcType.bDirect8x8Inference = OMX_TRUE;
+        avcType.bDirectSpatialTemporal = OMX_TRUE;
+        avcType.nCabacInitIdc = 1;
+    }
+    avcType.nAllowedPictureTypes = OMX_VIDEO_PictureTypeI;
+    if (avcType.nPFrames != 0) {
+        avcType.nAllowedPictureTypes |= OMX_VIDEO_PictureTypeP;
+    }
+    if (avcType.nBFrames != 0) {
+        avcType.nAllowedPictureTypes |= OMX_VIDEO_PictureTypeB;
+    }
+    ret = HdiSetParameter(handle_, OMX_IndexParamVideoAvc, avcType);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoAvc Failed");
     return GST_CODEC_OK;
 }
 

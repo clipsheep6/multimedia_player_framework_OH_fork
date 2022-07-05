@@ -143,17 +143,8 @@ int32_t HdiVdecParamsMgr::GetOutputVideoCommon(GstElement *element)
     base->stride_height = (int32_t)outPortDef_.format.video.nSliceHeight;
     MEDIA_LOGD("frame width %{public}d height %{public}d nStride %{public}d nSliceHeight %{public}d",
         base->output.width, base->output.height, base->stride, base->stride_height);
-    OMX_CONFIG_RECTTYPE rect;
-    InitParam(rect, verInfo_);
-    rect.nPortIndex = outPortDef_.nPortIndex;
-    // if (HdiGetConfig(handle_, OMX_IndexConfigCommonOutputCrop, rect) == HDF_SUCCESS) {
-    //     MEDIA_LOGD("rect left %{public}d top %{public}d width %{public}d height %{public}d",
-    //         rect.nLeft, rect.nTop, rect.nWidth, rect.nHeight);
-    //     base->rect.x = rect.nLeft;
-    //     base->rect.y = rect.nTop;
-    //     base->rect.width = rect.nWidth;
-    //     base->rect.height = rect.nHeight;
-    // }
+    base->rect.width = base->output.width;
+    base->rect.height = base->output.height;
 
     return GST_CODEC_OK;
 }

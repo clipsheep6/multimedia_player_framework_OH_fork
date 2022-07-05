@@ -1096,13 +1096,13 @@ static GstFlowReturn push_output_buffer(GstVdecBase *self, GstBuffer *buffer)
 
 static gboolean gst_vdec_check_out_format_change(GstVdecBase *self)
 {
-    gboolean is_format_change = (self->width != self->output.width) || (self->height != self->output.height);
+    gboolean is_format_change = (self->width != self->rect.width) || (self->height != self->rect.height);
 
     if (is_format_change) {
         GST_INFO_OBJECT(self, "Format change width %d to %d, height %d to %d",
             self->width, self->output.width, self->height, self->output.height);
-        self->width = self->output.width;
-        self->height = self->output.height;
+        self->width = self->rect.width;
+        self->height = self->rect.height;
     }
     return is_format_change;
 }
