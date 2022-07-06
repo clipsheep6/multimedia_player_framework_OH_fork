@@ -48,6 +48,7 @@ static gboolean gst_venc_base_propose_allocation(GstVideoEncoder *encoder, GstQu
 static gboolean gst_codec_return_is_ok(const GstVencBase *encoder, gint ret,
     const char *error_name, gboolean need_report);
 static GstStateChangeReturn gst_venc_base_change_state(GstElement *element, GstStateChange transition);
+static void gst_venc_base_init_config(GObjectClass *gobject_class);
 
 enum {
     PROP_0,
@@ -105,6 +106,19 @@ static void gst_venc_base_class_init(GstVencBaseClass *klass)
         g_param_spec_pointer("vendor", "Vendor property", "Vendor property",
             (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    gst_venc_base_init_config(gobject_class);
+    const gchar *sink_caps_string = GST_VIDEO_CAPS_MAKE(GST_VENC_BASE_SUPPORTED_FORMATS);
+    GstCaps *sink_caps = gst_caps_from_string(sink_caps_string);
+    GST_DEBUG_OBJECT(klass, "Sink_caps %" GST_PTR_FORMAT, sink_caps);
+    if (sink_caps != nullptr) {
+        GstPadTemplate *sink_templ = gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sink_caps);
+        gst_element_class_add_pad_template(element_class, sink_templ);
+        gst_caps_unref(sink_caps);
+    }
+}
+
+static void gst_venc_base_init_config(GObjectClass *gobject_class)
+{
     g_object_class_install_property(gobject_class, PROP_SURFACE_ENABLE,
         g_param_spec_boolean("enable-surface", "Enable Surface", "The input mem is surface buffer",
         FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
@@ -125,20 +139,34 @@ static void gst_venc_base_class_init(GstVencBaseClass *klass)
     g_object_class_install_property(gobject_class, PROP_CODEC_PROFILE,
         g_param_spec_int("codec-profile", "Codec profile", "Codec profile for video encoder",
             0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+}
 
-    const gchar *sink_caps_string = GST_VIDEO_CAPS_MAKE(GST_VENC_BASE_SUPPORTED_FORMATS);
-    GstCaps *sink_caps = gst_caps_from_string(sink_caps_string);
-    GST_DEBUG_OBJECT(klass, "Sink_caps %" GST_PTR_FORMAT, sink_caps);
-    if (sink_caps != nullptr) {
-        GstPadTemplate *sink_templ = gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sink_caps);
-        gst_element_class_add_pad_template(element_class, sink_templ);
-        gst_caps_unref(sink_caps);
+static void gst_venc_base_set_property_next(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+    (void)pspec;
+    GstVencBase *self = GST_VENC_BASE(object);
+    g_return_if_fail(value != nullptr);
+    g_return_if_fail(self != nullptr);
+    switch (prop_id) {
+        case PROP_BITRATE_MODE:
+            self->bitrate_mode = g_value_get_int(value);
+            break;
+        case PROP_CODEC_QUALITY:
+            self->codec_quality = g_value_get_int(value);
+            break;
+        case PROP_I_FRAME_INTERVAL_NEW:
+            self->i_frame_interval_new = g_value_get_int(value);
+            break;
+        case PROP_CODEC_PROFILE:
+            self->codec_profile = g_value_get_int(value);
+            break;
+        default:
+            break;
     }
 }
 
 static void gst_venc_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
-    (void)pspec;
     GST_DEBUG_OBJECT(object, "Set Property");
     GstVencBase *self = GST_VENC_BASE(object);
     g_return_if_fail(value != nullptr);
@@ -182,21 +210,10 @@ static void gst_venc_base_set_property(GObject *object, guint prop_id, const GVa
             GST_OBJECT_UNLOCK(self);
             break;
         }
-        case PROP_BITRATE_MODE:
-            self->bitrate_mode = g_value_get_int(value);
-            break;
-        case PROP_CODEC_QUALITY:
-            self->codec_quality = g_value_get_int(value);
-            break;
-        case PROP_I_FRAME_INTERVAL_NEW:
-            self->i_frame_interval_new = g_value_get_int(value);
-            break;
-        case PROP_CODEC_PROFILE:
-            self->codec_profile = g_value_get_int(value);
-            break;
         default:
             break;
     }
+    gst_venc_base_set_property_next(object, prop_id, value, pspec);
 }
 
 static void gst_venc_base_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)

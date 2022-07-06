@@ -103,7 +103,7 @@ int32_t HdiOutBufferMgr::FreeBuffers()
     std::unique_lock<std::mutex> lock(mutex_);
     freeCond_.wait(lock, [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual; });
     FreeCodecBuffers();
-    std::for_each(mBuffers.begin(), mBuffers.end(), [&](GstBuffer *buffer){ gst_buffer_unref(buffer); });
+    std::for_each(mBuffers.begin(), mBuffers.end(), [&](GstBuffer *buffer) { gst_buffer_unref(buffer); });
     EmptyList(mBuffers);
     return GST_CODEC_OK;
 }

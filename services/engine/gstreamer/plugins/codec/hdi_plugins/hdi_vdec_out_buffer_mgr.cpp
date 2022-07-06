@@ -68,7 +68,7 @@ int32_t HdiVdecOutBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
     CHECK_AND_RETURN_RET_LOG(!buffers.empty(), GST_CODEC_ERROR, "buffers is empty");
     CHECK_AND_RETURN_RET_LOG(buffers[0] != nullptr, GST_CODEC_ERROR, "first buffer is empty");
     ON_SCOPE_EXIT(0) {
-        std::for_each(buffers.begin(), buffers.end(), [&](GstBuffer *buffer){ gst_buffer_unref(buffer); });
+        std::for_each(buffers.begin(), buffers.end(), [&](GstBuffer *buffer) { gst_buffer_unref(buffer); });
     };
     GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffers[0]);
     CHECK_AND_RETURN_RET_LOG(bufferType != nullptr, GST_CODEC_ERROR, "bufferType is nullptr");

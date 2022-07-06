@@ -59,31 +59,31 @@ inline void InitHdiParam(T &param, CompVerInfo &verInfo)
 template <typename T, typename U>
 inline int32_t HdiSetParameter(T *handle, uint32_t paramIndex, U &param)
 {
-    return handle->SetParameter(handle, paramIndex, (int8_t *)&param, sizeof(param));
+    return handle->SetParameter(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiGetParameter(T *handle, uint32_t paramIndex, U &param)
 {
-    return handle->GetParameter(handle, paramIndex, (int8_t *)&param, sizeof(param));
+    return handle->GetParameter(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiGetConfig(T *handle, uint32_t paramIndex, U &param)
 {
-    return handle->GetConfig(handle, paramIndex, (int8_t *)&param, sizeof(param));
+    return handle->GetConfig(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiSetConfig(T *handle, uint32_t paramIndex, U &param)
 {
-    return handle->SetConfig(handle, paramIndex, (int8_t *)&param, sizeof(param));
+    return handle->SetConfig(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
-inline int32_t HdiSendCommand(T *handle, enum OMX_COMMANDTYPE cmd, uint32_t param, U &&cmdData)
+inline int32_t HdiSendCommand(T *handle, OMX_COMMANDTYPE cmd, uint32_t param, U &&cmdData)
 {
-    return handle->SendCommand(handle, cmd, param, (int8_t *)&cmdData, sizeof(cmdData));
+    return handle->SendCommand(handle, cmd, param, reinterpret_cast<int8_t *>(&cmdData), sizeof(cmdData));
 }
 
 template <typename T, typename U>

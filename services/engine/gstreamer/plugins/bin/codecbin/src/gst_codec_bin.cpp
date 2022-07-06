@@ -124,6 +124,16 @@ static void gst_codec_bin_class_init(GstCodecBinClass *klass)
         g_param_spec_pointer("vendor", "Vendor property", "Vendor property",
             (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    gst_codec_bin_init_config(gobject_class);
+
+    gst_element_class_set_static_metadata(gstelement_class,
+        "Codec Bin", "Bin/Decoder&Encoder", "Auto construct codec pipeline", "OpenHarmony");
+
+    gstelement_class->change_state = gst_codec_bin_change_state;
+}
+
+static void gst_codec_bin_init_config(GObjectClass *gobject_class)
+{
     g_object_class_install_property(gobject_class, PROP_USE_SURFACE_INPUT,
         g_param_spec_boolean("use-surface-input", "use surface input", "The source is surface",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
@@ -136,16 +146,6 @@ static void gst_codec_bin_class_init(GstCodecBinClass *klass)
         g_param_spec_boolean("flush-at-start", "flush at start", "The Flush is at start",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
-    gst_codec_bin_init_config(gobject_class);
-
-    gst_element_class_set_static_metadata(gstelement_class,
-        "Codec Bin", "Bin/Decoder&Encoder", "Auto construct codec pipeline", "OpenHarmony");
-
-    gstelement_class->change_state = gst_codec_bin_change_state;
-}
-
-static void gst_codec_bin_init_config(GObjectClass *gobject_class)
-{
     g_object_class_install_property(gobject_class, PROP_BITRATE_MODE,
         g_param_spec_int("bitrate-mode", "Bitrate mode", "bitrate mode for video encoder",
             0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
@@ -225,7 +225,7 @@ static void gst_codec_bin_set_property_next(GObject *object, guint prop_id,
             break;
         default:
             break;
-    }    
+    }
 }
 
 static void gst_codec_bin_set_property(GObject *object, guint prop_id,

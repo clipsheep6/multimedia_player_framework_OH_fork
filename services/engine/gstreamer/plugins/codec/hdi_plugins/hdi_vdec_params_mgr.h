@@ -28,7 +28,7 @@ namespace Media {
 class HdiVdecParamsMgr : public HdiParamsMgr {
 public:
     HdiVdecParamsMgr();
-    virtual ~HdiVdecParamsMgr();
+    ~HdiVdecParamsMgr() override;
     void Init(CodecComponentType *handle, const OMX_PORT_PARAM_TYPE &portParam, const CompVerInfo &verInfo) override;
     int32_t SetParameter(GstCodecParamKey key, GstElement *element) override;
     int32_t GetParameter(GstCodecParamKey key, GstElement *element) override;

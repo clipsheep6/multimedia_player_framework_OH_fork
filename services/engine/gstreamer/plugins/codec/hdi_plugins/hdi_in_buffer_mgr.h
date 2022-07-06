@@ -24,7 +24,7 @@ namespace Media {
 class HdiInBufferMgr : public HdiBufferMgr {
 public:
     HdiInBufferMgr();
-    virtual ~HdiInBufferMgr() override;
+    ~HdiInBufferMgr() override;
 
     int32_t PushBuffer(GstBuffer *buffer) override;
 

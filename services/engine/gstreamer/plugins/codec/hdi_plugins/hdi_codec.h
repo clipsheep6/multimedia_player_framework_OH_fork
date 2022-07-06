@@ -20,15 +20,12 @@
 #include <mutex>
 #include <condition_variable>
 #include <gst/gst.h>
-#include "nocopyable.h"
-#include "i_gst_codec.h"
 #include <OMX_Core.h>
 #include <OMX_Component.h>
+#include "nocopyable.h"
+#include "i_gst_codec.h"
 #include "hdi_buffer_mgr.h"
 #include "hdi_params_mgr.h"
-
-#define GST_CODEC_FACTORY "factory_id"
-#define GST_CODEC_NAME "codec_name"
 
 namespace OHOS {
 namespace Media {
@@ -61,7 +58,7 @@ private:
     struct AppData {
         std::weak_ptr<HdiCodec> instance;
     };
-    enum PortState {
+    enum PortState : int32_t {
         ACTIVATED,
         ACTIVING,
         DEACTIVATED,

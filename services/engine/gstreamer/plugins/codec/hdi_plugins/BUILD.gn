@@ -59,7 +59,7 @@ config("gst_codec_plugin_hdi_config") {
     "//drivers/hdf_core/adapter/uhdf2/osal/include",
     "//third_party/openmax/api/1.1.2",
     "//drivers/peripheral/display/interfaces/include",
-    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/codec/hdi_plugins"
+    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/codec/hdi_plugins",
   ]
 }
 
@@ -68,18 +68,18 @@ ohos_shared_library("gst_codec_plugin_hdi") {
 
   sources = [
     "hdi_buffer_mgr.cpp",
-    "hdi_codec_util.cpp",
     "hdi_codec.cpp",
+    "hdi_codec_util.cpp",
     "hdi_in_buffer_mgr.cpp",
     "hdi_init.cpp",
     "hdi_out_buffer_mgr.cpp",
-    "hdi_plugin_init.cpp",
+    "gst_hdi_factory.cpp",
     "hdi_vdec_in_buffer_mgr.cpp",
     "hdi_vdec_out_buffer_mgr.cpp",
     "hdi_vdec_params_mgr.cpp",
     "hdi_venc_in_buffer_mgr.cpp",
     "hdi_venc_out_buffer_mgr.cpp",
-    "hdi_venc_params_mgr.cpp"
+    "hdi_venc_params_mgr.cpp",
   ]
 
   configs = [
@@ -88,18 +88,18 @@ ohos_shared_library("gst_codec_plugin_hdi") {
   ]
 
   deps = [
+    "//drivers/peripheral/codec/hal:libcodec_hdi_omx_client",
+    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/media_standard/services/dfx:media_service_dfx",
     "//foundation/multimedia/media_standard/services/engine/common:media_engine_common",
     "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common:gst_media_common",
     "//foundation/multimedia/media_standard/services/utils:media_service_utils",
-    "//foundation/graphic/graphic_2d:libsurface",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
     "//third_party/gstreamer/gstplugins_base:gstvideo",
     "//third_party/gstreamer/gstreamer:gstbase",
     "//third_party/gstreamer/gstreamer:gstreamer",
-    "//drivers/peripheral/codec/hal:libcodec_hdi_omx_client",
   ]
 
   external_deps = [

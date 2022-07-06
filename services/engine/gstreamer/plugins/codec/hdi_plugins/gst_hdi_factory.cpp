@@ -17,9 +17,9 @@
 #include <vector>
 #include <sstream>
 #include "config.h"
+#include <gst/video/video.h>
 #include "securec.h"
 #include "hdi_codec.h"
-#include <gst/video/video.h>
 #include "gst_vdec_h264.h"
 #include "gst_venc_h264.h"
 #include "hdi_init.h"
@@ -45,6 +45,7 @@ namespace {
         { NV12, "NV12" },
         { YUVI420, "I420" },
     };
+    const char *GST_CODEC_NAME = "codec_name";
 }
 
 namespace OHOS {
@@ -104,8 +105,10 @@ const std::map<std::pair<int32_t, std::string>, GetCapsStr> GstHdiFactory::SRC_C
 };
 
 const std::map<std::pair<int32_t, std::string>, CreateCodecFunc> GstHdiFactory::FUNCTIONS_MAP = {
-    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_AVC), &GstHdiFactory::CreateHdiVdecH264},
-    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC), &GstHdiFactory::CreateHdiVencH264}
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_AVC),
+        &GstHdiFactory::CreateHdiVdecH264},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC),
+        &GstHdiFactory::CreateHdiVencH264}
 };
 
 std::shared_ptr<IGstCodec> GstHdiFactory::CreateHdiVdecH264(GstElementClass *kclass)
@@ -179,7 +182,7 @@ void GstHdiFactory::GetHeight(std::string &capStr, CapabilityData &capData)
     heightRange << "(int) [ " << capData.height.minVal << ", " << capData.height.maxVal << " ]";
     capStr += "height = ";
     capStr += heightRange.str();
-    capStr += ", ";    
+    capStr += ", ";
 }
 
 void GstHdiFactory::GetFrameRate(std::string &capStr, CapabilityData &capData)

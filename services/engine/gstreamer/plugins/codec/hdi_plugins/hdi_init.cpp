@@ -48,6 +48,7 @@ namespace {
         {OMX_VIDEO_AVCLevel5, AVC_LEVEL_5},
         {OMX_VIDEO_AVCLevel51, AVC_LEVEL_51},
     };
+    constexpr int32_t MAX_COMPONENT_NUM = 1024;
 }
 
 namespace OHOS {
@@ -174,16 +175,16 @@ void HdiInit::AddHdiCap(CodecCompCapability &hdiCap)
     codecCap.mimeType = GetCodecMime(hdiCap.role);
     codecCap.isVendor = !hdiCap.isSoftwareCodec;
     codecCap.alignment = {hdiCap.port.video.whAlignment.widthAlignment, hdiCap.port.video.whAlignment.heightAlignment};
-    codecCap.bitrateMode = {1}; // need to do
+    codecCap.bitrateMode = {1}; // need wait hdi
     codecCap.width = {hdiCap.port.video.minSize.width, hdiCap.port.video.maxSize.width};
     codecCap.height = {hdiCap.port.video.minSize.height, hdiCap.port.video.maxSize.height};
     codecCap.bitrate = {hdiCap.bitRate.min, hdiCap.bitRate.max};
-    codecCap.frameRate = {0, 60}; //need to do
-    codecCap.format = GetCodecFormats(hdiCap.port.video); // need to do
-    codecCap.blockPerFrame = {hdiCap.port.video.blockCount.min, hdiCap.port.video.blockCount.max}; //need to check
+    codecCap.frameRate = {0, 60}; // need wait hdi
+    codecCap.format = GetCodecFormats(hdiCap.port.video); // need wait hdi
+    codecCap.blockPerFrame = {hdiCap.port.video.blockCount.min, hdiCap.port.video.blockCount.max}; // need wait hdi
     codecCap.blockPerSecond = {hdiCap.port.video.blocksPerSecond.min, hdiCap.port.video.blocksPerSecond.max};
     codecCap.blockSize = {hdiCap.port.video.blockSize.width, hdiCap.port.video.blockSize.height};
-    codecCap.measuredFrameRate = std::map<ImgSize, Range>(); //need to do
+    codecCap.measuredFrameRate = std::map<ImgSize, Range>(); // need wait hdi
     codecCap.profileLevelsMap = GetCodecProfileLevels(hdiCap);
     capabilitys_.push_back(codecCap);
 }
@@ -194,6 +195,7 @@ void HdiInit::InitCaps()
         return;
     }
     auto len = mgr_->GetComponentNum();
+    CHECK_AND_RETURN_LOG(len < MAX_COMPONENT_NUM, "Component num is %{public}d", len);
     CodecCompCapability *hdiCaps = new CodecCompCapability[len];
     CHECK_AND_RETURN_LOG(hdiCaps != nullptr, "New CodecCompCapability fail");
     ON_SCOPE_EXIT(0) { delete[] hdiCaps; };

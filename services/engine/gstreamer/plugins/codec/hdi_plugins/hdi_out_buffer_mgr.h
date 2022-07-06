@@ -24,7 +24,7 @@ namespace Media {
 class HdiOutBufferMgr : public HdiBufferMgr {
 public:
     HdiOutBufferMgr();
-    virtual ~HdiOutBufferMgr() override;
+    ~HdiOutBufferMgr() override;
     int32_t Start() override;
     int32_t PushBuffer(GstBuffer *buffer) override;
     int32_t PullBuffer(GstBuffer **buffer) override;

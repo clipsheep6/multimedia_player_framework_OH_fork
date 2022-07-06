@@ -23,7 +23,7 @@ namespace Media {
 class HdiVencOutBufferMgr : public HdiOutBufferMgr {
 public:
     HdiVencOutBufferMgr();
-    virtual ~HdiVencOutBufferMgr();
+    ~HdiVencOutBufferMgr() override;
     int32_t UseBuffers(std::vector<GstBuffer*> buffers) override;
 };
 } // namespace Media

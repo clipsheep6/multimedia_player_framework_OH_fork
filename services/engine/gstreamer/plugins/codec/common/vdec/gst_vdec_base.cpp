@@ -163,8 +163,7 @@ static void gst_vdec_base_check_input_need_copy(GstVdecBase *self)
 static void gst_vdec_base_init(GstVdecBase *self)
 {
     GST_DEBUG_OBJECT(self, "Init");
-    g_return_if_fail(self != nullptr);
-    g_return_if_fail(GST_VIDEO_DECODER_SINK_PAD(self) != nullptr);
+    g_return_if_fail(self != nullptr && GST_VIDEO_DECODER_SINK_PAD(self) != nullptr);
     // The upstreamer must after parser.
     gst_video_decoder_set_packetized(GST_VIDEO_DECODER(self), TRUE);
     // Use accept caps from default.

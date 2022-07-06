@@ -23,7 +23,7 @@ namespace Media {
 class HdiVencInBufferMgr : public HdiInBufferMgr {
 public:
     HdiVencInBufferMgr();
-    virtual ~HdiVencInBufferMgr();
+    ~HdiVencInBufferMgr() override;
     int32_t UseBuffers(std::vector<GstBuffer*> buffers) override;
     int32_t Preprocessing() override;
 
