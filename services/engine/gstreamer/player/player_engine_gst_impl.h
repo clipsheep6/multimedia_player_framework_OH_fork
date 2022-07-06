@@ -30,7 +30,7 @@ namespace OHOS {
 namespace Media {
 class PlayerEngineGstImpl : public IPlayerEngine, public NoCopyable {
 public:
-    PlayerEngineGstImpl();
+    explicit PlayerEngineGstImpl(int32_t uid = 0, int32_t pid = 0);
     ~PlayerEngineGstImpl();
 
     int32_t SetSource(const std::string &url) override;
@@ -74,6 +74,8 @@ private:
     std::weak_ptr<IPlayerEngineObs> obs_;
     sptr<Surface> producerSurface_ = nullptr;
     std::string url_ = "";
+    int32_t appuid_ = 0;
+    int32_t apppid_ = 0;
     std::condition_variable condVarSync_;
     bool gstPlayerInit_ = false;
     std::unique_ptr<std::thread> playerThread_;
