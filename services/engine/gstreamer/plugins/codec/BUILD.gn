@@ -18,5 +18,9 @@ group("codec_plugins") {
     deps = [
       "//foundation/multimedia/omx_adapter/omx_plugins:gst_codec_plugin_omx",
     ]
+  } else {
+    deps = [
+      "hdi_plugins:gst_codec_plugin_hdi",
+    ]    
   }
 }
