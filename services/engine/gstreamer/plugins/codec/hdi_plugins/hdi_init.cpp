@@ -107,6 +107,44 @@ std::string HdiInit::GetCodecMime(AvCodecRole &role)
     return "invalid";
 }
 
+std::vector<int32_t> HdiInit::GetBitrateMode(VideoPortCap &port)
+{
+    int32_t index = 0;
+    std::vector<int32_t> bitrate;
+    while (index < BIT_RATE_MODE_NUM && port.bitRatemode[index] != BIT_RATE_MODE_INVALID) {
+        switch (port.bitRatemode[index]) {
+            case BIT_RATE_MODE_VBR:
+                bitrate.push_back(VBR);
+                break;
+            case BIT_RATE_MODE_CBR:
+                bitrate.push_back(CBR);
+                break;
+            case BIT_RATE_MODE_CQ:
+                bitrate.push_back(CQ);
+                break;
+            default:
+                MEDIA_LOGW("Unknow bitrate mode %{public}d", port.bitRatemode[index]);
+        }
+        index++;
+    }
+    return bitrate;
+}
+
+std::map<ImgSize, Range> HdiInit::GetMeasuredFrameRate(VideoPortCap &port)
+{
+    int32_t index = 0;
+    std::map<ImgSize, Range> rateMap;
+    const int32_t measureStep = 4;
+    // measuredFrameRate is 0 width 1 height 2 minRate 3 maxRate. So the step is 4.
+    while (index < MEASURED_FRAME_RATE_NUM && port.measuredFrameRate[index] > 0) {
+        ImgSize imageSize(port.measuredFrameRate[index], port.measuredFrameRate[index + 1]);
+        Range range(port.measuredFrameRate[index + 2], port.measuredFrameRate[index + 3]);
+        rateMap[imageSize] = range;
+        index += measureStep;
+    }
+    return rateMap;
+}
+
 std::vector<int32_t> HdiInit::GetCodecFormats(VideoPortCap &port)
 {
     int32_t index = 0;
@@ -175,16 +213,16 @@ void HdiInit::AddHdiCap(CodecCompCapability &hdiCap)
     codecCap.mimeType = GetCodecMime(hdiCap.role);
     codecCap.isVendor = !hdiCap.isSoftwareCodec;
     codecCap.alignment = {hdiCap.port.video.whAlignment.widthAlignment, hdiCap.port.video.whAlignment.heightAlignment};
-    codecCap.bitrateMode = {1}; // need wait hdi
+    codecCap.bitrateMode = GetBitrateMode(hdiCap.port.video);
     codecCap.width = {hdiCap.port.video.minSize.width, hdiCap.port.video.maxSize.width};
     codecCap.height = {hdiCap.port.video.minSize.height, hdiCap.port.video.maxSize.height};
     codecCap.bitrate = {hdiCap.bitRate.min, hdiCap.bitRate.max};
-    codecCap.frameRate = {0, 60}; // need wait hdi
-    codecCap.format = GetCodecFormats(hdiCap.port.video); // need wait hdi
-    codecCap.blockPerFrame = {hdiCap.port.video.blockCount.min, hdiCap.port.video.blockCount.max}; // need wait hdi
+    codecCap.frameRate = {hdiCap.port.video.frameRate.min, hdiCap.port.video.frameRate.max};
+    codecCap.format = GetCodecFormats(hdiCap.port.video);
+    codecCap.blockPerFrame = {hdiCap.port.video.blockCount.min, hdiCap.port.video.blockCount.max};
     codecCap.blockPerSecond = {hdiCap.port.video.blocksPerSecond.min, hdiCap.port.video.blocksPerSecond.max};
     codecCap.blockSize = {hdiCap.port.video.blockSize.width, hdiCap.port.video.blockSize.height};
-    codecCap.measuredFrameRate = std::map<ImgSize, Range>(); // need wait hdi
+    codecCap.measuredFrameRate = GetMeasuredFrameRate(hdiCap.port.video);
     codecCap.profileLevelsMap = GetCodecProfileLevels(hdiCap);
     capabilitys_.push_back(codecCap);
 }

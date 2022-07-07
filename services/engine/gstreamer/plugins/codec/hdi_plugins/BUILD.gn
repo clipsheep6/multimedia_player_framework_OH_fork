@@ -67,13 +67,13 @@ ohos_shared_library("gst_codec_plugin_hdi") {
   install_enable = true
 
   sources = [
+    "gst_hdi_factory.cpp",
     "hdi_buffer_mgr.cpp",
     "hdi_codec.cpp",
     "hdi_codec_util.cpp",
     "hdi_in_buffer_mgr.cpp",
     "hdi_init.cpp",
     "hdi_out_buffer_mgr.cpp",
-    "gst_hdi_factory.cpp",
     "hdi_vdec_in_buffer_mgr.cpp",
     "hdi_vdec_out_buffer_mgr.cpp",
     "hdi_vdec_params_mgr.cpp",

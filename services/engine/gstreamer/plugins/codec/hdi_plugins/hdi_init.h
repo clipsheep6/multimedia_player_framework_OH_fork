@@ -42,6 +42,8 @@ private:
     static std::string GetCodecMime(AvCodecRole &role);
     static std::vector<int32_t> GetCodecFormats(VideoPortCap &port);
     static std::vector<int32_t> GetOmxFormats(VideoPortCap &port);
+    static std::vector<int32_t> GetBitrateMode(VideoPortCap &port);
+    std::map<ImgSize, Range> GetMeasuredFrameRate(VideoPortCap &port);
     static std::map<int32_t, std::vector<int32_t>> GetH264ProfileLevels(CodecCompCapability &hdiCap);
     static std::map<int32_t, std::vector<int32_t>> GetCodecProfileLevels(CodecCompCapability &hdiCap);
     void AddHdiCap(CodecCompCapability &hdiCap);
