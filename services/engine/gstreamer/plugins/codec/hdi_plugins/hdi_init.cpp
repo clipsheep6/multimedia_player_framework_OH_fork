@@ -263,7 +263,7 @@ int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, std::st
 int32_t HdiInit::FreeHandle(uint32_t id)
 {
     CHECK_AND_RETURN_RET_LOG(mgr_ != nullptr, HDF_FAILURE, "mgr_ is nullptr");
-    return mgr_->DestoryComponent(id);
+    return mgr_->DestroyComponent(id);
 }
 }  // namespace Media
 }  // namespace OHOS
