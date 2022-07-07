@@ -32,7 +32,8 @@ enum {
     PROP_BITRATE,
     PROP_VENDOR,
     PROP_USE_SURFACE_INPUT,
-    PROP_USE_SURFACE_OUTPUT
+    PROP_USE_SURFACE_OUTPUT,
+    PROP_FLUSH_AT_START,
 };
 
 #define gst_codec_bin_parent_class parent_class
@@ -126,6 +127,10 @@ static void gst_codec_bin_class_init(GstCodecBinClass *klass)
         g_param_spec_boolean("use-surface-output", "use surface output", "The sink is surface",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_FLUSH_AT_START,
+        g_param_spec_boolean("flush-at-start", "flush at start", "The Flush is at start",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Codec Bin", "Bin/Decoder&Encoder", "Auto construct codec pipeline", "OpenHarmony");
 
@@ -214,6 +219,10 @@ static void gst_codec_bin_set_property(GObject *object, guint prop_id,
         case PROP_USE_SURFACE_OUTPUT:
             bin->is_output_surface = g_value_get_boolean(value);
             break;
+        case PROP_FLUSH_AT_START:
+            if (bin->type == CODEC_BIN_TYPE_VIDEO_ENCODER && bin->src != nullptr) {
+                g_object_set(bin->src, "flush-at-start", g_value_get_boolean(value), nullptr);
+            }
         default:
             break;
     }

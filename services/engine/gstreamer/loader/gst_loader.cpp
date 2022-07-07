@@ -36,7 +36,7 @@ namespace {
     };
     const std::string g_gstDftTag = "*";
     const std::string g_gstVdecTag = "vdecbase";
-    const std::string g_gstVencTag = "vencbase";
+    const std::string g_gstVencTag = "vdecbase";
     const std::vector<const gchar *> GST_ARGS = {
         "ohos_media_service",
         "--gst-disable-registry-fork",
