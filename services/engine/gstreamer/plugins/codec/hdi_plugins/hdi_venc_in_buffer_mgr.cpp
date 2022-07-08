@@ -92,7 +92,6 @@ std::shared_ptr<HdiBufferWrap> HdiVencInBufferMgr::GetCodecBuffer(GstBuffer *buf
         codecBuffer->hdiBuffer.buffer = reinterpret_cast<uint8_t *>(bufferType->buf);
         codecBuffer->hdiBuffer.bufferLen = bufferType->bufLen;
         codecBuffer->hdiBuffer.pts = GST_BUFFER_PTS(buffer);
-        MEDIA_LOGD("Get Codec Buffer with no alloc len %ld", bufferType->buf);
         return codecBuffer;
     }
     return HdiBufferMgr::GetCodecBuffer(buffer);

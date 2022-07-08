@@ -48,7 +48,6 @@ std::shared_ptr<HdiBufferWrap> HdiInBufferMgr::GetHdiEosBuffer()
         codecBuffer->hdiBuffer.flag |= OMX_BUFFERFLAG_EOS;
         codingBuffers_.push_back(std::make_pair(codecBuffer, nullptr));
     }
-    MEDIA_LOGD("bufferType->buf %{public}ld", codecBuffer->buf);
     return codecBuffer;
 }
 

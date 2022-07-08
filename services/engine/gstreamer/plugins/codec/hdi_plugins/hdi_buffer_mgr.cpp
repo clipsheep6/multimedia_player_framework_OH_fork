@@ -62,7 +62,6 @@ std::shared_ptr<HdiBufferWrap> HdiBufferMgr::GetCodecBuffer(GstBuffer *buffer)
     CHECK_AND_RETURN_RET_LOG(bufferType != nullptr, nullptr, "bufferType is nullptr");
     for (auto iter = availableBuffers_.begin(); iter != availableBuffers_.end(); ++iter) {
         if (*iter != nullptr) {
-            MEDIA_LOGD("(*iter)->buf %{public}ld bufferType->buf %{public}ld", (*iter)->buf, bufferType->buf);
             if ((*iter)->buf == bufferType->buf) {
                 codecBuffer = *iter;
                 codingBuffers_.push_back(std::make_pair(codecBuffer, buffer));
