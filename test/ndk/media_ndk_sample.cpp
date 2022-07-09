@@ -18,11 +18,22 @@
 #include "securec.h"
 #include "audiodec_ndk_sample.h"
 #include "audioenc_ndk_sample.h"
+#include "videoenc_ndk_sample.h"
 #include "ndk_sample_log.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
 using namespace std;
+
+void RunVideoEncSample(void)
+{
+    auto venc = std::make_unique<VEncNdkSample>();
+    if (venc == nullptr) {
+        cout << "venc is null " << endl;
+    }
+    venc->RunVideoEnc();
+    cout << "video encoder sample end " << endl;
+}
 
 void RunAudioDecSample(void)
 {
@@ -59,10 +70,10 @@ void RunAVCodec(void)
     switch (input) {
         case 0: // video dec
             (void)printf("fail, video dec none \n");
-            // RunVideoDec();
+            // RunVideoDecSample();
             break;
         case 1: // video dec
-            // RunVideoDec();
+            RunVideoEncSample();
             break;
         case 2: // audio dec
             RunAudioDecSample();

@@ -47,8 +47,8 @@ config("media_ndk_config") {
 ohos_shared_library("media_ndk") {
   install_enable = true
   sources = [
-
     "$MEDIA_ROOT_DIR/frameworks/ndk/avcodec/ndk_video_decoder.cpp",
+    "$MEDIA_ROOT_DIR/frameworks/ndk/avcodec/ndk_video_encoder.cpp",
     "$MEDIA_ROOT_DIR/frameworks/ndk/avcodec/ndk_audio_decoder.cpp",
     "$MEDIA_ROOT_DIR/frameworks/ndk/avcodec/ndk_audio_encoder.cpp",
     "$MEDIA_ROOT_DIR/frameworks/ndk/common/ndk_av_format.cpp",

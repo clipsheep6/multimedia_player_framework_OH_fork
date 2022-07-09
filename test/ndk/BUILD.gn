@@ -43,11 +43,13 @@ ohos_executable("media_ndk_sample") {
   sources = [
     "./avcodec/audiodec_ndk_sample.cpp",
     "./avcodec/audioenc_ndk_sample.cpp",
+    "./avcodec/videoenc_ndk_sample.cpp",
     "./media_ndk_sample.cpp",
   ]
 
   deps = [
     "//foundation/multimedia/media_standard/interfaces/kits/ndk:media_ndk",
+    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//utils/native/base:utils",
   ]
 
