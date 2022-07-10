@@ -384,7 +384,8 @@ static void add_buffer_info(GstConsumerSurfacePool *pool, GstConsumerSurfaceMemo
     if (mem->is_eos_frame) {
         bufferFlag = BUFFER_FLAG_EOS;
     }
-    GstBufferHandleConfig config = { mem->fencefd, bufferFlag, mem->data_size, mem->pixel_format };
+    GstBufferHandleConfig config = { sizeof(mem->buffer_handle), mem->fencefd,
+        bufferFlag, mem->data_size, mem->pixel_format };
     gst_buffer_add_buffer_handle_meta(buffer, mem->buffer_handle, config);
 
     if (mem->timestamp < 0) {
