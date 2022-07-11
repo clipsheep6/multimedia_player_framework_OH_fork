@@ -40,14 +40,15 @@ typedef enum {
 } BufferFlags;
 
 typedef enum {
-    BUFFER_TYPE_VIR,
-    BUFFER_TYPE_AVSHMEM,
-    BUFFER_TYPE_HANDLE,
-} BufferType;
+    GST_BUFFER_TYPE_VIR,
+    GST_BUFFER_TYPE_AVSHMEM,
+    GST_BUFFER_TYPE_HANDLE,
+} GstBufferType;
 
 struct _GstBufferTypeMeta {
     GstMeta meta;
-    BufferType type;
+    uint32_t id;
+    GstBufferType type;
     intptr_t buf;
     uint32_t offset;
     uint32_t length;
