@@ -48,7 +48,10 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void SetInBufferMgr(std::shared_ptr<ICodecBufferMgr> bufferMgr) = 0;
+    virtual void SetInBufferMgr(std::shared_ptr<ICodecBufferMgr> bufferMgr)
+    {
+        return;
+    };
 
     /**
      * @brief Set a ICodecBufferMgr for the codec interface.
@@ -58,7 +61,10 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void SetOutBufferMgr(std::shared_ptr<ICodecBufferMgr> bufferMgr) = 0;
+    virtual void SetOutBufferMgr(std::shared_ptr<ICodecBufferMgr> bufferMgr)
+    {
+        return;
+    };
 
     /**
      * @brief Set a ICodecParamsMgr for the codec interface.
@@ -68,7 +74,10 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void SetParamsMgr(std::shared_ptr<ICodecParamsMgr> paramsMgr) = 0;
+    virtual void SetParamsMgr(std::shared_ptr<ICodecParamsMgr> paramsMgr)
+    {
+        return;
+    };
 
     /**
      * @brief Set param with key, and value is in element.
