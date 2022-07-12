@@ -180,8 +180,8 @@ static void gst_vdec_base_init(GstVdecBase *self)
     self->height = DEFAULT_HEIGHT;
     self->frame_rate = 0;
     self->memtype = GST_MEMTYPE_INVALID;
-    self->input = { 0 };
-    self->output = { 0 };
+    (void)memset_s(&self->input, sizeof(GstVdecBasePort), 0, sizeof(GstVdecBasePort));
+    (void)memset_s(&self->output, sizeof(GstVdecBasePort), 0, sizeof(GstVdecBasePort));
     self->input.allocator = gst_shmem_allocator_new();
     self->output.allocator = gst_shmem_allocator_new();
     self->coding_outbuf_cnt = 0;
@@ -206,7 +206,7 @@ static void gst_vdec_base_init(GstVdecBase *self)
     self->stride_height = 0;
     self->real_stride = 0;
     self->real_stride_height = 0;
-    self->rect = {0};
+    (void)memset_s(&self->rect, sizeof(DisplayRect), 0, sizeof(DisplayRect));
     self->inpool = nullptr;
     self->outpool = nullptr;
     self->input.first_frame = TRUE;
@@ -485,8 +485,8 @@ static gboolean update_caps_format(GstVdecBase *self, GstCaps *caps)
     GST_DEBUG_OBJECT(self, "update_caps_format");
 
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "flush", FALSE), FALSE);
-    GValue value_list = { 0 };
-    GValue value = { 0 };
+    GValue value_list = G_VALUE_INIT;
+    GValue value = G_VALUE_INIT;
 
     if (!self->formats.empty()) {
         g_value_init(&value_list, GST_TYPE_LIST);
@@ -544,8 +544,8 @@ static gboolean gst_vdec_base_negotiate_format(GstVdecBase *self)
     GST_DEBUG_OBJECT(self, "templ_caps %" GST_PTR_FORMAT, templ_caps);
     (void)update_caps_format(self, templ_caps);
     GstCaps *intersection = gst_pad_peer_query_caps(GST_VIDEO_DECODER_SRC_PAD(self), templ_caps);
-    g_return_val_if_fail(intersection != nullptr, FALSE);
     gst_caps_unref(templ_caps);
+    g_return_val_if_fail(intersection != nullptr, FALSE);
     // We need unref at end.
     ON_SCOPE_EXIT(0) { gst_caps_unref(intersection); };
     if (gst_caps_is_empty(intersection)) {
@@ -746,7 +746,7 @@ static void gst_vdec_debug_input_time(GstVdecBase *self)
         gint64 time_every_frame = time_interval / frame_cnt;
         GST_DEBUG_OBJECT(self, "Decoder Input Time interval %" G_GINT64_FORMAT " us, frame count %" G_GINT64_FORMAT
         " ,every frame time %" G_GINT64_FORMAT " us, frame rate %.9f", time_interval, self->input.frame_cnt,
-        time_every_frame, static_cast<double>(G_TIME_SPAN_SECOND)/static_cast<double>(time_every_frame));
+        time_every_frame, static_cast<double>(G_TIME_SPAN_SECOND) / static_cast<double>(time_every_frame));
     }
 }
 
@@ -764,7 +764,7 @@ static void gst_vdec_debug_output_time(GstVdecBase *self)
         gint64 time_every_frame = time_interval / frame_cnt;
         GST_DEBUG_OBJECT(self, "Decoder Output Time interval %" G_GINT64_FORMAT " us, frame count %" G_GINT64_FORMAT
         " ,every frame time %" G_GINT64_FORMAT " us, frame rate %.9f", time_interval, self->output.frame_cnt,
-        time_every_frame, static_cast<double>(G_TIME_SPAN_SECOND)/static_cast<double>(time_every_frame));
+        time_every_frame, static_cast<double>(G_TIME_SPAN_SECOND) / static_cast<double>(time_every_frame));
     }
 }
 
@@ -824,7 +824,7 @@ static void gst_vdec_base_dump_output_buffer(GstVdecBase *self, GstBuffer *buffe
     gst_buffer_unmap(buffer, &info);
 }
 
-static void gst_vdec_base_get_frame_pts(GstVdecBase *self, GstVideoCodecFrame *frame)
+static void gst_vdec_base_input_frame_pts_to_list(GstVdecBase *self, GstVideoCodecFrame *frame)
 {
     GST_DEBUG_OBJECT(self, "Input frame pts %" G_GUINT64_FORMAT, frame->pts);
     g_mutex_lock(&self->lock);
@@ -898,7 +898,7 @@ static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, G
 {
     GstVdecBase *self = GST_VDEC_BASE(decoder);
     gst_vdec_debug_input_time(self);
-    gst_vdec_base_get_frame_pts(self, frame);
+    gst_vdec_base_input_frame_pts_to_list(self, frame);
     gint codec_ret = GST_CODEC_OK;
     if (!gst_vdec_check_ashmem_buffer(frame->input_buffer) && self->input_need_ashmem) {
         codec_ret = gst_vdec_base_push_input_buffer_with_copy(self, frame->input_buffer);

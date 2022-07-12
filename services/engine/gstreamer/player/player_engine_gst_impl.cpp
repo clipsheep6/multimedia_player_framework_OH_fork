@@ -189,9 +189,9 @@ void PlayerEngineGstImpl::HandleInfoMessage(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleSeekDoneMessage(const PlayBinMessage &msg)
 {
-    MEDIA_LOGI("seek done, seek position = %{public}dms", msg.code / MSEC_PER_USEC);
+    MEDIA_LOGI("seek done, seek position = %{public}dms", msg.code);
 
-    int32_t status = msg.code / MSEC_PER_USEC;
+    int32_t status = msg.code;
     Format format;
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     if (notifyObs != nullptr) {
@@ -224,7 +224,7 @@ void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
 {
     std::pair<uint32_t, int64_t> bufferingTimePair = std::any_cast<std::pair<uint32_t, int64_t>>(msg.extra);
     uint32_t mqNumId = bufferingTimePair.first;
-    int64_t bufferingTime = bufferingTimePair.second / MSEC_PER_NSEC;
+    uint64_t bufferingTime = bufferingTimePair.second / MSEC_PER_NSEC;
 
     if (bufferingTime > BUFFER_TIME_DEFAULT) {
         bufferingTime = BUFFER_TIME_DEFAULT;
@@ -418,7 +418,6 @@ void PlayerEngineGstImpl::OnNotifyMessage(const PlayBinMessage &msg)
         { PLAYBIN_MSG_POSITION_UPDATE, std::bind(&PlayerEngineGstImpl::HandlePositionUpdateMessage, this,
             std::placeholders::_1) },
     };
-
     if (MSG_NOTIFY_FUNC_TABLE.count(msg.type) != 0) {
         MSG_NOTIFY_FUNC_TABLE.at(msg.type)(msg);
     }
@@ -735,9 +734,8 @@ int32_t PlayerEngineGstImpl::SetVideoScaleType(VideoScaleType videoScaleType)
     if (sinkProvider_ != nullptr) {
         MEDIA_LOGD("SetVideoScaleType in");
         sinkProvider_->SetVideoScaleType(static_cast<uint32_t>(videoScaleType));
-    } else {
-        videoScaleType_ = videoScaleType;
     }
+    videoScaleType_ = videoScaleType;
     return MSERR_OK;
 }
 
@@ -750,7 +748,7 @@ int32_t PlayerEngineGstImpl::SetAudioRendererInfo(const int32_t contentType,
     rendererFlag_ = rendererFlag;
     if (playBinCtrler_ != nullptr) {
         MEDIA_LOGD("SetAudioRendererInfo in");
-        int32_t rendererInfo(0);
+        uint32_t rendererInfo(0);
         rendererInfo |= (contentType | (static_cast<uint32_t>(streamUsage) <<
         AudioStandard::RENDERER_STREAM_USAGE_SHIFT));
         playBinCtrler_->SetAudioRendererInfo(rendererInfo, rendererFlag);
