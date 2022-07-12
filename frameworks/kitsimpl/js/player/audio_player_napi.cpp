@@ -850,13 +850,11 @@ static std::string GetJSState(PlayerStates currentState)
             result = STATE_STOPPED;
             break;
         case PLAYER_IDLE:
-            result = STATE_IDLE;
-            break;
         case PLAYER_INITIALIZED:
+        case PLAYER_PREPARED:
             result = STATE_IDLE;
             break;
         case PLAYER_PAUSED:
-        case PLAYER_PREPARED:
             result = STATE_PAUSED;
             break;
         case PLAYER_STARTED:
