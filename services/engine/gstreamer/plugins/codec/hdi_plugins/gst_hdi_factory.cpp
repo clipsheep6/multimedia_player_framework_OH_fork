@@ -325,7 +325,7 @@ gboolean GstHdiFactory::PluginInit(GstPlugin *plugin)
             MEDIA_LOGD("Cant register %{public}s ", capData.codecName.c_str());
         }
     }
-    AVCodecAbilitySingleton::GetInstance().RegisterCapability(capDatas);
+    AVCodecAbilitySingleton::GetInstance().RegisterHdiCapability(capDatas);
     return TRUE;
 }
 }
