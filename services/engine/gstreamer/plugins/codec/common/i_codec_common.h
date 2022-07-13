@@ -49,6 +49,7 @@ enum GstCodecParamKey : int32_t {
     GST_REQUEST_I_FRAME,
     GST_VENDOR,
     GST_VIDEO_ENCODER_CONFIG,
+    GST_DYNAMIC_FRAME_RATE,
 };
 } // namespace Media
 } // namespace OHOS
