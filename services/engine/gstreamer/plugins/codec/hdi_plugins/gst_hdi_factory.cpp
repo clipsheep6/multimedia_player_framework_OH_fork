@@ -118,7 +118,7 @@ std::shared_ptr<IGstCodec> GstHdiFactory::CreateHdiVdecH264(GstElementClass *kcl
     std::shared_ptr<HdiVdecInBufferMgr> inBufferMgr = std::make_shared<HdiVdecInBufferMgr>();
     std::shared_ptr<HdiVdecOutBufferMgr> outBufferMgr = std::make_shared<HdiVdecOutBufferMgr>();
     std::shared_ptr<HdiVdecParamsMgr> paramsMgr = std::make_shared<HdiVdecParamsMgr>();
-    (void)hdiCodec->Init();
+    CHECK_AND_RETURN_RET_LOG(hdiCodec->Init() == GST_CODEC_OK, nullptr, "Init failed");
     hdiCodec->SetHdiInBufferMgr(inBufferMgr);
     hdiCodec->SetHdiOutBufferMgr(outBufferMgr);
     hdiCodec->SetHdiParamsMgr(paramsMgr);
@@ -132,7 +132,7 @@ std::shared_ptr<IGstCodec> GstHdiFactory::CreateHdiVencH264(GstElementClass *kcl
     std::shared_ptr<HdiVencInBufferMgr> inBufferMgr = std::make_shared<HdiVencInBufferMgr>();
     std::shared_ptr<HdiVencOutBufferMgr> outBufferMgr = std::make_shared<HdiVencOutBufferMgr>();
     std::shared_ptr<HdiVencParamsMgr> paramsMgr = std::make_shared<HdiVencParamsMgr>();
-    (void)hdiCodec->Init();
+    CHECK_AND_RETURN_RET_LOG(hdiCodec->Init() == GST_CODEC_OK, nullptr, "Init failed");
     hdiCodec->SetHdiInBufferMgr(inBufferMgr);
     hdiCodec->SetHdiOutBufferMgr(outBufferMgr);
     hdiCodec->SetHdiParamsMgr(paramsMgr);
@@ -302,7 +302,7 @@ gboolean GstHdiFactory::HdiClassRegister(GstPlugin *plugin, CapabilityData &capD
         return FALSE;
     }
     g_type_query(type, &query);
-    GTypeInfo typeInfo = { 0, };
+    GTypeInfo typeInfo = {};
     (void)memset_s(&typeInfo, sizeof(typeInfo), 0, sizeof(typeInfo));
     typeInfo.class_size = query.class_size;
     typeInfo.instance_size = query.instance_size;

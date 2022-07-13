@@ -42,9 +42,9 @@ protected:
     int32_t GetVideoFormat(GstElement *element);
 private:
     CodecComponentType *handle_;
-    OMX_PARAM_PORTDEFINITIONTYPE inPortDef_ = {0};
-    OMX_PARAM_PORTDEFINITIONTYPE outPortDef_ = {0};
-    OMX_VIDEO_PARAM_PORTFORMATTYPE videoFormat_ = {0};
+    OMX_PARAM_PORTDEFINITIONTYPE inPortDef_ = {};
+    OMX_PARAM_PORTDEFINITIONTYPE outPortDef_ = {};
+    OMX_VIDEO_PARAM_PORTFORMATTYPE videoFormat_ = {};
     CompVerInfo verInfo_;
 };
 } // namespace Media

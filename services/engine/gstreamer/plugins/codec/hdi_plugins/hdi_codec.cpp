@@ -333,6 +333,7 @@ int32_t HdiCodec::FreeOutputBuffers()
 
 int32_t HdiCodec::Event(CodecCallbackType *self, OMX_EVENTTYPE event, EventInfo *info)
 {
+    (void)self;
     CHECK_AND_RETURN_RET_LOG(info != nullptr, HDF_ERR_INVALID_PARAM, "appData is null");
     if (OMX_EVENT_TO_STRING.find(event) != OMX_EVENT_TO_STRING.end()) {
         MEDIA_LOGD("Event %{public}s %{public}d data1 %{public}d data2 %{public}d",
@@ -467,6 +468,7 @@ void HdiCodec::HandleEventBufferFlag(OMX_U32 data1, OMX_U32 data2)
 
 void HdiCodec::HandleEventError(OMX_U32 data)
 {
+    (void)data;
     unique_lock<mutex> lock(mutex_);
     ret_ = GST_CODEC_ERROR;
     eventDone_ = true;
@@ -477,6 +479,7 @@ void HdiCodec::HandleEventError(OMX_U32 data)
 int32_t HdiCodec::EmptyBufferDone(CodecCallbackType *self, int64_t appData, const OmxCodecBuffer *buffer)
 {
     MEDIA_LOGD("EmptyBufferDone");
+    (void)self;
     AppData *mAppData = reinterpret_cast<AppData *>(appData);
     CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, HDF_ERR_INVALID_PARAM, "appData is null");
     auto instance = mAppData->instance.lock();
@@ -491,6 +494,7 @@ int32_t HdiCodec::EmptyBufferDone(CodecCallbackType *self, int64_t appData, cons
 int32_t HdiCodec::FillBufferDone(CodecCallbackType *self, int64_t appData, const OmxCodecBuffer *buffer)
 {
     MEDIA_LOGD("FillBufferDone");
+    (void)self;
     AppData *mAppData = reinterpret_cast<AppData *>(appData);
     CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, OMX_ErrorBadParameter, "appData is null");
     auto instance = mAppData->instance.lock();

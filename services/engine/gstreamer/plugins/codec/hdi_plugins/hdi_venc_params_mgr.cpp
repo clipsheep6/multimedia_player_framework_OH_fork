@@ -114,6 +114,7 @@ int32_t HdiVencParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element
             break;
         case GST_VIDEO_ENCODER_CONFIG:
             ConfigEncoderParams(element);
+            break;
         default:
             break;
     }
@@ -240,6 +241,7 @@ int32_t HdiVencParamsMgr::GetVideoFormat(GstElement *element)
 
 int32_t HdiVencParamsMgr::VideoSurfaceInit(GstElement *element)
 {
+    (void)element;
     MEDIA_LOGD("Enter surface init");
     SupportBufferType supportBufferTypes;
     InitHdiParam(supportBufferTypes, verInfo_);

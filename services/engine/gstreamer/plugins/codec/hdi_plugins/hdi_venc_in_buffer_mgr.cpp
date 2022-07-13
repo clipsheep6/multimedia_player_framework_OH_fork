@@ -43,7 +43,7 @@ std::vector<std::shared_ptr<HdiBufferWrap>> HdiVencInBufferMgr::PreUseHandleMems
     auto ret = HdiGetParameter(handle_, OMX_IndexParamPortDefinition, mPortDef_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, preBuffers, "HdiGetParameter failed");
     CHECK_AND_RETURN_RET_LOG(buffers.size() == mPortDef_.nBufferCountActual, preBuffers, "BufferNum error");
-    for (int i = 0; i < buffers.size(); ++i) {
+    for (uint32_t i = 0; i < buffers.size(); ++i) {
         std::shared_ptr<HdiBufferWrap> codecBuffer = std::make_shared<HdiBufferWrap>();
         codecBuffer->hdiBuffer.size = sizeof(OmxCodecBuffer);
         codecBuffer->hdiBuffer.version = verInfo_.compVersion;

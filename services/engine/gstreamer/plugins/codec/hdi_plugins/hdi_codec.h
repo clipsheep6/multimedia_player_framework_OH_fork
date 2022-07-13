@@ -88,7 +88,7 @@ private:
     std::mutex mutex_;
     std::condition_variable cond_;
     std::string componentName_ = "";
-    OMX_PORT_PARAM_TYPE portParam_ = {0};
+    OMX_PORT_PARAM_TYPE portParam_ = {};
     GstCodecRet ret_ = GST_CODEC_OK;
     bool eventDone_ = false;
     bool needCrop_ = true;

@@ -49,16 +49,19 @@ public:
 
     int32_t UseBuffers(std::vector<GstBuffer *> buffers) override
     {
+        (void)buffers;
         return GST_CODEC_OK;
     }
 
     int32_t PushBuffer(GstBuffer *buffer) override
     {
+        (void)buffer;
         return GST_CODEC_OK;
     }
 
     int32_t PullBuffer(GstBuffer **buffer) override
     {
+        (void)buffer;
         return GST_CODEC_OK;
     }
 
@@ -74,6 +77,7 @@ public:
 
     virtual int32_t CodecBufferAvailable(const OmxCodecBuffer *buffer)
     {
+        (void)buffer;
         return GST_CODEC_OK;
     }
 
@@ -92,7 +96,7 @@ protected:
     std::condition_variable flushCond_;
     std::condition_variable bufferCond_;
     std::condition_variable freeCond_;
-    OMX_PARAM_PORTDEFINITIONTYPE mPortDef_ = {0};
+    OMX_PARAM_PORTDEFINITIONTYPE mPortDef_ = {};
     CodecComponentType *handle_ = nullptr;
     std::list<std::shared_ptr<HdiBufferWrap>> availableBuffers_;
     std::list<std::pair<std::shared_ptr<HdiBufferWrap>, GstBuffer *>> codingBuffers_;

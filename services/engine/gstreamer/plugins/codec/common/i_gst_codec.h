@@ -50,6 +50,7 @@ public:
      */
     virtual void SetInBufferMgr(std::shared_ptr<ICodecBufferMgr> bufferMgr)
     {
+        (void)bufferMgr;
         return;
     };
 
@@ -63,6 +64,7 @@ public:
      */
     virtual void SetOutBufferMgr(std::shared_ptr<ICodecBufferMgr> bufferMgr)
     {
+        (void)bufferMgr;
         return;
     };
 
@@ -76,6 +78,7 @@ public:
      */
     virtual void SetParamsMgr(std::shared_ptr<ICodecParamsMgr> paramsMgr)
     {
+        (void)paramsMgr;
         return;
     };
 
