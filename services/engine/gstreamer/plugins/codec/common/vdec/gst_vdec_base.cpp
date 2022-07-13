@@ -56,6 +56,7 @@ static gboolean gst_codec_return_is_ok(const GstVdecBase *decoder, gint ret,
 static GstStateChangeReturn gst_vdec_base_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_vdec_base_update_out_port_def(GstVdecBase *self, guint *size);
 static void gst_vdec_base_update_out_pool(GstVdecBase *self, GstBufferPool **pool, GstCaps *outcaps, gint size);
+static void gst_vdec_base_post_resolution_changed_message(GstVdecBase *self);
 
 enum {
     PROP_0,
@@ -222,6 +223,7 @@ static void gst_vdec_base_init(GstVdecBase *self)
     self->out_buffer_max_cnt = DEFAULT_MAX_QUEUE_SIZE;
     self->pre_init_pool = FALSE;
     self->performance_mode = FALSE;
+    self->resolution_changed = FALSE;
 }
 
 static void gst_vdec_base_finalize(GObject *object)
@@ -393,6 +395,7 @@ static void gst_vdec_base_stop_after(GstVdecBase *self)
     self->decoder_start = FALSE;
     self->pre_init_pool = FALSE;
     self->performance_mode = FALSE;
+    self->resolution_changed = FALSE;
     gst_vdec_base_set_flushing(self, FALSE);
     if (self->input.dump_file != nullptr) {
         fclose(self->input.dump_file);
@@ -1018,6 +1021,17 @@ static void copy_to_no_stride_buffer(GstVdecBase *self, GstVideoCodecFrame *fram
         self->width, self->height, nplane, rst_offset, rst_stride);
 }
 
+static void gst_vdec_base_post_resolution_changed_message(GstVdecBase *self)
+{
+    GstMessage *msg_resolution_changed = nullptr;
+    msg_resolution_changed = gst_message_new_resolution_changed(GST_OBJECT(self),
+        self->width, self->height);
+    if (msg_resolution_changed) {
+        gst_element_post_message(GST_ELEMENT(self), msg_resolution_changed);
+    }
+    GST_DEBUG_OBJECT(self, "post resolution changed message");
+}
+
 static GstFlowReturn push_output_buffer(GstVdecBase *self, GstBuffer *buffer)
 {
     GST_DEBUG_OBJECT(self, "Push output buffer");
@@ -1028,14 +1042,9 @@ static GstFlowReturn push_output_buffer(GstVdecBase *self, GstBuffer *buffer)
     g_return_val_if_fail(frame != nullptr, GST_FLOW_ERROR);
     gst_vdec_debug_output_time(self);
 
-    if (self->output.first_frame) {
-        GstMessage *msg_resolution_changed = nullptr;
-        msg_resolution_changed = gst_message_new_resolution_changed(GST_OBJECT(self),
-            self->width, self->height);
-        if (msg_resolution_changed) {
-            gst_element_post_message(GST_ELEMENT(self), msg_resolution_changed);
-        }
-        self->output.first_frame = FALSE;
+    if (self->resolution_changed == FALSE) {
+        gst_vdec_base_post_resolution_changed_message(self);
+        self->resolution_changed = TRUE;
         GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: first frame out");
     }
 
@@ -1094,13 +1103,9 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
     gst_vdec_base_get_real_stride(self);
     gboolean format_change = gst_vdec_check_out_format_change(self);
     gboolean buffer_cnt_change = gst_vdec_check_out_buffer_cnt(self);
-    if (format_change && self->output.first_frame == FALSE) {
-        GstMessage *msg_resolution_changed = nullptr;
-        msg_resolution_changed = gst_message_new_resolution_changed(GST_OBJECT(self),
-            self->width, self->height);
-        if (msg_resolution_changed) {
-            gst_element_post_message(GST_ELEMENT(self), msg_resolution_changed);
-        }
+    if (format_change) {
+        gst_vdec_base_post_resolution_changed_message(self);
+        self->resolution_changed = TRUE;
     }
     if (format_change || (buffer_cnt_change && self->memtype != GST_MEMTYPE_SURFACE)) {
         g_return_val_if_fail(gst_vdec_base_set_outstate(self), GST_FLOW_ERROR);
@@ -1320,6 +1325,8 @@ static gboolean gst_vdec_base_set_format(GstVideoDecoder *decoder, GstVideoCodec
         self->width = info->width;
         self->height = GST_VIDEO_INFO_FIELD_HEIGHT(info);
         self->frame_rate  = info->fps_n;
+        gst_vdec_base_post_resolution_changed_message(self);
+        self->resolution_changed = TRUE;
         GST_DEBUG_OBJECT(self, "width: %d, height: %d, frame_rate: %d", self->width, self->height, self->frame_rate);
     }
 
