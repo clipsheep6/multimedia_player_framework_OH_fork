@@ -139,6 +139,7 @@ int32_t AVCodecEngineCtrl::Start()
 
 int32_t AVCodecEngineCtrl::Stop()
 {
+    MEDIA_LOGD("Stop in");
     if (!isStart_) {
         return MSERR_OK;
     }

@@ -67,11 +67,15 @@ int32_t HdiOutBufferMgr::PushBuffer(GstBuffer *buffer)
     MEDIA_LOGD("Enter PushBuffer");
     ON_SCOPE_EXIT(0) { gst_buffer_unref(buffer); };
     std::unique_lock<std::mutex> lock(mutex_);
+    if (isFlushed_ || !isStart_) {
+        MEDIA_LOGD("isFlush %{public}d isStart %{public}d", isFlushed_, isStart_);
+        return GST_CODEC_FLUSH;
+    }
     std::shared_ptr<HdiBufferWrap> codecBuffer = nullptr;
     codecBuffer = GetCodecBuffer(buffer);
     CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
     auto ret = HdiFillThisBuffer(handle_, &codecBuffer->hdiBuffer);
-    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "EmptyThisBuffer failed");
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "FillThisBuffer failed");
     return GST_CODEC_OK;
 }
 

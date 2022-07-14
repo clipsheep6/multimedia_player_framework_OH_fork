@@ -77,9 +77,12 @@ int32_t HdiInBufferMgr::FreeBuffers()
 {
     MEDIA_LOGD("Enter FreeBuffers");
     std::unique_lock<std::mutex> lock(mutex_);
+    if (!preBuffers_.empty()) {
+        EmptyList(preBuffers_);
+        return GST_CODEC_OK;
+    }
     freeCond_.wait(lock, [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual; });
     FreeCodecBuffers();
-    EmptyList(preBuffers_);
     return GST_CODEC_OK;
 }
 

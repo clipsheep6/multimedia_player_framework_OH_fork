@@ -139,7 +139,6 @@ int32_t HdiCodec::Start()
 {
     MEDIA_LOGD("Start begin");
     if (curState_ != OMX_StateExecuting) {
-        CHECK_AND_RETURN_RET_LOG(WaitForState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "Wait failed");
         CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateExecuting) == GST_CODEC_OK, GST_CODEC_ERROR, "Change failed");
         CHECK_AND_RETURN_RET_LOG(WaitForState(OMX_StateExecuting) == GST_CODEC_OK, GST_CODEC_ERROR, "Wait failed");
     }
@@ -275,6 +274,7 @@ int32_t HdiCodec::AllocateOutputBuffers()
         CHECK_AND_RETURN_RET_LOG(inBufferMgr_->Preprocessing() == GST_CODEC_OK, GST_CODEC_ERROR, "Allocatebuffer fail");
     }
     CHECK_AND_RETURN_RET_LOG(outBufferMgr_->AllocateBuffers() == GST_CODEC_OK, GST_CODEC_ERROR, "Allocatebuffer fail");
+    CHECK_AND_RETURN_RET_LOG(WaitForState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "Wait failed");
     return GST_CODEC_OK;
 }
 
@@ -287,6 +287,7 @@ int32_t HdiCodec::UseOutputBuffers(std::vector<GstBuffer*> buffers)
         CHECK_AND_RETURN_RET_LOG(inBufferMgr_->Preprocessing() == GST_CODEC_OK, GST_CODEC_ERROR, "Allocatebuffer fail");
     }
     CHECK_AND_RETURN_RET_LOG(outBufferMgr_->UseBuffers(buffers) == GST_CODEC_OK, GST_CODEC_ERROR, "Usebuffer fail");
+    CHECK_AND_RETURN_RET_LOG(WaitForState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "Wait failed");
     return GST_CODEC_OK;
 }
 
