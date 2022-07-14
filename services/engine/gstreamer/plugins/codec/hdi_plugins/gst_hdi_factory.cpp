@@ -312,7 +312,7 @@ gboolean GstHdiFactory::HdiClassRegister(GstPlugin *plugin, CapabilityData &capD
     CHECK_AND_RETURN_RET_LOG(g_type_from_name(typeName.c_str()) == G_TYPE_INVALID, FALSE, "typeName exist");
     GType subtype = g_type_register_static(type, typeName.c_str(), &typeInfo, static_cast<GTypeFlags>(0));
     CHECK_AND_RETURN_RET_LOG(subtype != 0, FALSE, "Type register failed");
-    return gst_element_register(plugin, typeName.c_str(), GST_RANK_PRIMARY + 1, subtype);
+    return gst_element_register(plugin, typeName.c_str(), GST_RANK_NONE, subtype);
 }
 
 gboolean GstHdiFactory::PluginInit(GstPlugin *plugin)
