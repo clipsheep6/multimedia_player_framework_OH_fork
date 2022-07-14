@@ -112,11 +112,13 @@ struct _GstVdecBase {
     gboolean pre_init_pool;
     gboolean performance_mode;
     GstCaps *sink_caps;
+    gboolean input_need_ashmem;
 };
 
 struct _GstVdecBaseClass {
     GstVideoDecoderClass parentClass;
     std::shared_ptr<OHOS::Media::IGstCodec> (*create_codec)(GstElementClass *kclass);
+    gboolean (*input_need_copy)();
 };
 
 GST_API_EXPORT GType gst_vdec_base_get_type(void);
