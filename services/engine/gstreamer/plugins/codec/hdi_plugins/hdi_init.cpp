@@ -206,7 +206,7 @@ std::map<int32_t, std::vector<int32_t>> HdiInit::GetCodecProfileLevels(CodecComp
 
 void HdiInit::AddHdiCap(CodecCompCapability &hdiCap)
 {
-    MEDIA_LOGW("Add codec name %{public}s", hdiCap.compName);
+    MEDIA_LOGI("Add codec name %{public}s", hdiCap.compName);
     CapabilityData codecCap;
     codecCap.codecName = hdiCap.compName;
     codecCap.codecType = GetCodecType(hdiCap.type);
@@ -233,7 +233,10 @@ void HdiInit::InitCaps()
         return;
     }
     auto len = mgr_->GetComponentNum();
-    CHECK_AND_RETURN_LOG(len < MAX_COMPONENT_NUM, "Component num is %{public}d", len);
+    if (len >= MAX_COMPONENT_NUM || len <= 0) {
+        MEDIA_LOGW("Component num is %{public}d", len);
+        return;
+    }
     CodecCompCapability *hdiCaps = new CodecCompCapability[len];
     CHECK_AND_RETURN_LOG(hdiCaps != nullptr, "New CodecCompCapability fail");
     ON_SCOPE_EXIT(0) { delete[] hdiCaps; };

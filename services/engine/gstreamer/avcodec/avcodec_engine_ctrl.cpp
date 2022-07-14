@@ -119,6 +119,7 @@ int32_t AVCodecEngineCtrl::Start()
 
     CHECK_AND_RETURN_RET(sink_ != nullptr, MSERR_UNKNOWN);
     if (flushAtStart_ || sink_->IsEos()) {
+        g_object_set(codecBin_, "flush-at-start", TRUE, nullptr);
         CHECK_AND_RETURN_RET(Flush() == MSERR_OK, MSERR_INVALID_OPERATION);
         flushAtStart_ = false;
     }
@@ -176,7 +177,6 @@ int32_t AVCodecEngineCtrl::Flush()
     CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_UNKNOWN);
     GstEvent *event = gst_event_new_flush_start();
     CHECK_AND_RETURN_RET(event != nullptr, MSERR_NO_MEMORY);
-    g_object_set(codecBin_, "flush-at-start", TRUE, nullptr);
     (void)gst_element_send_event(codecBin_, event);
 
     event = gst_event_new_flush_stop(FALSE);
@@ -304,14 +304,14 @@ int32_t AVCodecEngineCtrl::SetConfigParameter(const Format &format)
 {
     CHECK_AND_RETURN_RET(codecBin_ != nullptr, MSERR_UNKNOWN);
     int32_t value = 0;
-    if (format.GetValueType(std::string_view("bitrate-mode")) == FORMAT_TYPE_INT32) {
-        if (format.GetIntValue("bitrate-mode", value) && value >= 0) {
+    if (format.GetValueType(std::string_view("video_encode_bitrate_mode")) == FORMAT_TYPE_INT32) {
+        if (format.GetIntValue("video_encode_bitrate_mode", value) && value >= 0) {
             g_object_set(codecBin_, "bitrate-mode", value, nullptr);
         }
     }
 
-    if (format.GetValueType(std::string_view("codec-quality")) == FORMAT_TYPE_INT32) {
-        if (format.GetIntValue("codec-quality", value) && value >= 0) {
+    if (format.GetValueType(std::string_view("codec_quality")) == FORMAT_TYPE_INT32) {
+        if (format.GetIntValue("codec_quality", value) && value >= 0) {
             g_object_set(codecBin_, "codec-quality", value, nullptr);
         }
     }

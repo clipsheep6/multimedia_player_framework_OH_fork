@@ -269,11 +269,17 @@ void GstHdiFactory::GstHdiCodecClassInit(gpointer kclass, gpointer data)
     GstCaps *sinkcaps = GetSinkCaps(capData);
     GstCaps *srccaps = GetSrcCaps(capData);
     // Caps must delete before return.
-    ON_SCOPE_EXIT(0) { gst_caps_unref(sinkcaps); gst_caps_unref(srccaps);};
+    ON_SCOPE_EXIT(0) {
+        gst_caps_unref(sinkcaps);
+        gst_caps_unref(srccaps);
+    };
     CHECK_AND_RETURN_LOG(sinkcaps != nullptr && srccaps != nullptr, "Caps is nullptr");
     GstPadTemplate *sinktempl = gst_pad_template_new("sink", GST_PAD_SINK, GST_PAD_ALWAYS, sinkcaps);
     GstPadTemplate *srctempl = gst_pad_template_new("src", GST_PAD_SRC, GST_PAD_ALWAYS, srccaps);
-    ON_SCOPE_EXIT(1) { gst_object_unref(sinktempl); gst_object_unref(srctempl); };
+    ON_SCOPE_EXIT(1) {
+        gst_object_unref(sinktempl);
+        gst_object_unref(srctempl);
+    };
     CHECK_AND_RETURN_LOG(sinktempl != nullptr && srctempl != nullptr, "Templ is nullptr");
     gst_element_class_add_pad_template(elementClass, srctempl);
     gst_element_class_add_pad_template(elementClass, sinktempl);
