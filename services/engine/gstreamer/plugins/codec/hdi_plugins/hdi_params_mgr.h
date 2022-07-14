@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace Media {
-class HdiParamsMgr : public ICodecParamsMgr {
+class HdiParamsMgr : public NoCopyable, public ICodecParamsMgr {
 public:
     virtual ~HdiParamsMgr() = default;
     virtual void Init(CodecComponentType *handle,

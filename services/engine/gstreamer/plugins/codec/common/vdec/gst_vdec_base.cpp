@@ -176,6 +176,27 @@ static void gst_vdec_base_check_input_need_copy(GstVdecBase *self)
     }
 }
 
+static void gst_vdec_base_init_after(GstVdecBase *self)
+{
+    g_return_if_fail(self != nullptr);
+    self->last_pts = GST_CLOCK_TIME_NONE;
+    self->flushing_stoping = FALSE;
+    self->decoder_start = FALSE;
+    self->stride = 0;
+    self->stride_height = 0;
+    self->real_stride = 0;
+    self->real_stride_height = 0;
+    (void)memset_s(&self->rect, sizeof(DisplayRect), 0, sizeof(DisplayRect));
+    self->inpool = nullptr;
+    self->outpool = nullptr;
+    self->input.first_frame = TRUE;
+    self->output.first_frame = TRUE;
+    self->out_buffer_max_cnt = DEFAULT_MAX_QUEUE_SIZE;
+    self->pre_init_pool = FALSE;
+    self->performance_mode = FALSE;
+    self->input_need_ashmem = FALSE;
+}
+
 static void gst_vdec_base_init(GstVdecBase *self)
 {
     GST_DEBUG_OBJECT(self, "Init");
@@ -216,22 +237,7 @@ static void gst_vdec_base_init(GstVdecBase *self)
     self->output.last_frame_time = 0;
     self->output.enable_dump = FALSE;
     self->output.dump_file = nullptr;
-    self->last_pts = GST_CLOCK_TIME_NONE;
-    self->flushing_stoping = FALSE;
-    self->decoder_start = FALSE;
-    self->stride = 0;
-    self->stride_height = 0;
-    self->real_stride = 0;
-    self->real_stride_height = 0;
-    (void)memset_s(&self->rect, sizeof(DisplayRect), 0, sizeof(DisplayRect));
-    self->inpool = nullptr;
-    self->outpool = nullptr;
-    self->input.first_frame = TRUE;
-    self->output.first_frame = TRUE;
-    self->out_buffer_max_cnt = DEFAULT_MAX_QUEUE_SIZE;
-    self->pre_init_pool = FALSE;
-    self->performance_mode = FALSE;
-    self->input_need_ashmem = FALSE;
+    gst_vdec_base_init_after(self);
 }
 
 static void gst_vdec_base_finalize(GObject *object)

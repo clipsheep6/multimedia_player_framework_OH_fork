@@ -264,7 +264,6 @@ void GstHdiFactory::GstHdiCodecClassInit(gpointer kclass, gpointer data)
     MEDIA_LOGD("HdiClassInit");
     GstElementClass *elementClass = reinterpret_cast<GstElementClass*>(kclass);
     CapDataWarp *capDataWarp = reinterpret_cast<CapDataWarp *>(data);
-    // Params must delete before return.
     CHECK_AND_RETURN_LOG(elementClass != nullptr && capDataWarp != nullptr, "ClassInit cap is nullptr");
     CapabilityData &capData = capDataWarp->capData;
     GstCaps *sinkcaps = GetSinkCaps(capData);
@@ -291,6 +290,7 @@ gboolean GstHdiFactory::HdiClassRegister(GstPlugin *plugin, CapabilityData &capD
     UpdatePluginName(capData.codecName);
     std::string typeName = capData.codecName;
     params->capData = capData;
+    // Params must delete before return.
     ON_SCOPE_EXIT(0) { delete params; };
     GType type = 0;
     GTypeQuery query;
@@ -310,6 +310,7 @@ gboolean GstHdiFactory::HdiClassRegister(GstPlugin *plugin, CapabilityData &capD
     typeInfo.class_data = params;
     MEDIA_LOGD("TypeName %{public}s", typeName.c_str());
     CHECK_AND_RETURN_RET_LOG(g_type_from_name(typeName.c_str()) == G_TYPE_INVALID, FALSE, "typeName exist");
+    // In register, will GstHdiCodecClassInit.
     GType subtype = g_type_register_static(type, typeName.c_str(), &typeInfo, static_cast<GTypeFlags>(0));
     CHECK_AND_RETURN_RET_LOG(subtype != 0, FALSE, "Type register failed");
     return gst_element_register(plugin, typeName.c_str(), GST_RANK_NONE, subtype);
