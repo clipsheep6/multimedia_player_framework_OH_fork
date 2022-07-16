@@ -25,6 +25,9 @@
 namespace {
     constexpr guint32 DEFAULT_PROP_MAX_POOL_CAPACITY = 5; // 0 is meanlessly
     constexpr guint32 DEFAULT_PROP_WAIT_TIME = 5000; // us, 0 is meanlessly
+    constexpr guint64 DEFAULT_MAX_WAIT_CLOCK_TIME = 60000000; // ns, 60ms
+    constexpr gint64 DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD = 20000000; // ns, 20ms
+    constexpr gint64 DEFAULT_EXTRA_RENDER_FRAME_DIFF = 20000000; // ns, 20ms
 }
 
 struct _GstMemSinkPrivate {
@@ -36,6 +39,7 @@ struct _GstMemSinkPrivate {
     GDestroyNotify notify;
     GstElement *audio_sink;
     gboolean enable_kpi_avsync_log;
+    guint64 render_time_diff_threshold;
 };
 
 enum {
@@ -67,6 +71,7 @@ static gboolean gst_mem_sink_stop(GstBaseSink *basesink);
 static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *basesink, GstBuffer *buffer);
 static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *basesink, GstBuffer *buffer);
 static gboolean gst_mem_sink_propose_allocation(GstBaseSink *bsink, GstQuery *query);
+static GstClockTime gst_mem_sink_update_reach_time(GstBaseSink *base_sink, GstClockTime reach_time);
 
 #define gst_mem_sink_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE(GstMemSink, gst_mem_sink, GST_TYPE_BASE_SINK, G_ADD_PRIVATE(GstMemSink));
@@ -128,6 +133,7 @@ static void gst_mem_sink_class_init(GstMemSinkClass *klass)
     base_sink_class->query = gst_mem_sink_query;
     base_sink_class->event = gst_mem_sink_event;
     base_sink_class->propose_allocation = gst_mem_sink_propose_allocation;
+    base_sink_class->update_reach_time = gst_mem_sink_update_reach_time;
 
     GST_DEBUG_CATEGORY_INIT(gst_mem_sink_debug_category, "memsink", 0, "memsink class");
 }
@@ -153,6 +159,7 @@ static void gst_mem_sink_init(GstMemSink *mem_sink)
     priv->notify = nullptr;
     priv->audio_sink = nullptr;
     priv->enable_kpi_avsync_log = FALSE;
+    priv->render_time_diff_threshold = DEFAULT_MAX_WAIT_CLOCK_TIME;
 }
 
 static void gst_mem_sink_dispose(GObject *obj)
@@ -524,6 +531,21 @@ static void kpi_log_avsync_diff(GstMemSink *mem_sink, guint64 last_render_pts)
     g_mutex_unlock(&priv->mutex);
 }
 
+static void gst_mem_sink_get_render_time_diff_thd(GstMemSink *mem_sink, GstClockTime duration)
+{
+    if (!GST_CLOCK_TIME_IS_VALID(duration)) {
+        return;
+    }
+
+    GstMemSinkPrivate *priv = mem_sink->priv;
+    guint64 render_time_diff_thd = duration + DEFAULT_EXTRA_RENDER_FRAME_DIFF;
+    if (render_time_diff_thd != priv->render_time_diff_threshold &&
+        render_time_diff_thd <= DEFAULT_MAX_WAIT_CLOCK_TIME) {
+        priv->render_time_diff_threshold = render_time_diff_thd;
+        GST_INFO_OBJECT(mem_sink, "get new render_time_diff_threshold=%" G_GUINT64_FORMAT, render_time_diff_thd);
+    }
+}
+
 static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *bsink, GstBuffer *buffer)
 {
     GstMemSink *mem_sink = GST_MEM_SINK_CAST(bsink);
@@ -553,6 +575,7 @@ static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *bsink, GstBuffer *b
         ret = priv->callbacks.new_sample(mem_sink, buffer, priv->userdata);
     }
     kpi_log_avsync_diff(mem_sink, GST_BUFFER_PTS(buffer));
+    gst_mem_sink_get_render_time_diff_thd(mem_sink, GST_BUFFER_DURATION(buffer));
 
     // the basesink will unref the buffer.
     return ret;
@@ -622,4 +645,59 @@ GstFlowReturn gst_mem_sink_app_preroll_render(GstMemSink *mem_sink, GstBuffer *b
     }
 
     return ret;
+}
+
+static GstClockTime gst_mem_sink_adjust_reach_time_by_jitter(GstMemSink *mem_sink, GstClockTime reach_time)
+{
+    GstMemSinkPrivate *priv = mem_sink->priv;
+    if (priv == nullptr) {
+        return reach_time;
+    }
+
+    g_mutex_lock(&priv->mutex);
+    if (priv->audio_sink != nullptr) {
+        gint64 audio_running_time_diff = 0;
+        g_object_get(priv->audio_sink, "last-running-time-diff", &audio_running_time_diff, nullptr);
+        if (audio_running_time_diff > DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD) {
+            GST_LOG_OBJECT(mem_sink, "audio_running_time_diff=%" G_GINT64_FORMAT
+                ", old reach_time=%" G_GUINT64_FORMAT ", new reach_time=%" G_GUINT64_FORMAT,
+                audio_running_time_diff, reach_time, reach_time + audio_running_time_diff);
+            reach_time += audio_running_time_diff;
+        }
+    }
+    g_mutex_unlock(&priv->mutex);
+    return reach_time;
+}
+
+static GstClockTime gst_mem_sink_update_reach_time(GstBaseSink *base_sink, GstClockTime reach_time)
+{
+    g_return_val_if_fail(base_sink != nullptr, reach_time);
+    g_return_val_if_fail(GST_CLOCK_TIME_IS_VALID(reach_time), reach_time);
+    GstMemSink *mem_sink = GST_MEM_SINK_CAST(base_sink);
+    GstMemSinkPrivate *priv = mem_sink->priv;
+    // 1st: update reach_time by audio jitter
+    GstClockTime new_reach_time = gst_mem_sink_adjust_reach_time_by_jitter(mem_sink, reach_time);
+
+    // 2ed: update reach_time if the running_time_diff exceeded the threshold
+    GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(base_sink)); // get base time
+    GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(base_sink)); // get current clock time
+    if (!GST_CLOCK_TIME_IS_VALID(base_time) || !GST_CLOCK_TIME_IS_VALID(cur_clock_time)) {
+        return new_reach_time;
+    }
+    if (cur_clock_time < base_time) {
+        return new_reach_time;
+    }
+    GstClockTime cur_running_time = cur_clock_time - base_time; // get running time
+    if (cur_running_time >= new_reach_time) {
+        return new_reach_time;
+    }
+    GstClockTime running_time_diff = new_reach_time - cur_running_time;
+    if (running_time_diff > priv->render_time_diff_threshold) {
+        new_reach_time = new_reach_time - (running_time_diff - priv->render_time_diff_threshold);
+    }
+    if (new_reach_time != reach_time) {
+        GST_LOG_OBJECT(base_sink, "running_time_diff:%" G_GUINT64_FORMAT " old reach_time:%" G_GUINT64_FORMAT
+            " new reach_time:%" G_GUINT64_FORMAT, running_time_diff, reach_time, new_reach_time);
+    }
+    return new_reach_time;
 }
