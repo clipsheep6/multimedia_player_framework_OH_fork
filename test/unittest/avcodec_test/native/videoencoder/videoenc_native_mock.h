@@ -23,6 +23,7 @@ namespace OHOS {
 namespace Media {
 class VideoEncNativeMock : public VideoEncMock {
 public:
+    explicit VideoEncNativeMock(std::shared_ptr<AVCodecVideoEncoder> videoEnc) : videoEnc_(videoEnc) {}
     int32_t SetCallback(std::shared_ptr<AVCodecCallbackMock> cb) override;
     std::shared_ptr<SurfaceMock> GetInputSurface() override;
     int32_t Configure(std::shared_ptr<FormatMock> format) override;
@@ -38,7 +39,6 @@ public:
 
 private:
     std::shared_ptr<AVCodecVideoEncoder> videoEnc_ = nullptr;
-    std::unique_ptr<AVCodecCallback> cb_ = nullptr;
 };
 
 class VideoEncCallbackMock : public AVCodecCallback {
@@ -51,7 +51,7 @@ public:
 
 private:
     std::shared_ptr<AVCodecCallbackMock> mockCb_ = nullptr;
-    std::weak_ptr<AVCodecVideoEncoder> videoDec_ = nullptr;
+    std::weak_ptr<AVCodecVideoEncoder> videoEnc_;
 };
 } // namespace Media
 } // namespace OHOS

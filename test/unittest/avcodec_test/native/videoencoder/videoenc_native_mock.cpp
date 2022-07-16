@@ -14,12 +14,15 @@
  */
 
 #include "videoenc_native_mock.h"
+#include "avformat_native_mock.h"
+#include "avmemory_native_mock.h"
+#include "surface_native_mock.h"
 #include "media_errors.h"
 
 namespace OHOS {
 namespace Media {
 VideoEncCallbackMock::VideoEncCallbackMock(std::shared_ptr<AVCodecCallbackMock> cb, std::weak_ptr<AVCodecVideoEncoder> vd)
-    : mockCb_(cb), videoDec_(vd)
+    : mockCb_(cb), videoEnc_(vd)
 {
 }
 
@@ -34,7 +37,7 @@ void VideoEncCallbackMock::OnError(AVCodecErrorType errorType, int32_t errorCode
 void VideoEncCallbackMock::OnOutputFormatChanged(const Format &format)
 {
     if (mockCb_ != nullptr) {
-        AVFormatNativeMock formatMock(format);
+        auto formatMock = std::make_shared<AVFormatNativeMock>(format);
         mockCb_->OnStreamChanged(formatMock);
     }
 }
@@ -66,9 +69,9 @@ void VideoEncCallbackMock::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
 int32_t VideoEncNativeMock::SetCallback(std::shared_ptr<AVCodecCallbackMock> cb)
 {
     if (cb != nullptr) {
-        nativeCb_ = std::make_unique<VideoEncCallbackMock>(cb, videoEnc_);
-        if (videoEnc_ != nullptr && nativeCb_ != nullptr) {
-            return videoEnc_->SetCallback(nativeCb_);
+        auto callback = std::make_shared<VideoEncCallbackMock>(cb, videoEnc_);
+        if (videoEnc_ != nullptr && callback != nullptr) {
+            return videoEnc_->SetCallback(callback);
         }
     }
     return MSERR_INVALID_OPERATION;
@@ -147,7 +150,7 @@ std::shared_ptr<FormatMock> VideoEncNativeMock::GetOutputMediaDescription()
     if (videoEnc_ != nullptr) {
         Format format;
         (void)videoEnc_->GetOutputFormat(format);
-        return std::make_shared<FormatMock>(format);
+        return std::make_shared<AVFormatNativeMock>(format);
     }
     return nullptr;
 }
@@ -155,7 +158,7 @@ std::shared_ptr<FormatMock> VideoEncNativeMock::GetOutputMediaDescription()
 int32_t VideoEncNativeMock::SetParameter(std::shared_ptr<FormatMock> format)
 {
     if (videoEnc_ != nullptr) {
-        auto fmt = std::static_cast<AVFormatNativeMock *>(&format);
+        auto fmt = std::static_pointer_cast<AVFormatNativeMock>(format);
         return videoEnc_->SetParameter(fmt->GetFormat());
     }
     return MSERR_INVALID_OPERATION;

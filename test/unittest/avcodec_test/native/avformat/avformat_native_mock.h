@@ -16,16 +16,18 @@
 #ifndef AVFORMAT_NATIVE_MOCK_H
 #define AVFORMAT_NATIVE_MOCK_H
 
+#include "avcodec_mock.h"
 #include "format.h"
 
 namespace OHOS {
 namespace Media {
 class AVFormatNativeMock : public FormatMock {
 public:
-    explicit AVFormatNativeMock(Format &format) : format_(format) {}
+    explicit AVFormatNativeMock(const Format &format) : format_(format) {}
+    AVFormatNativeMock() = default;
     bool PutIntValue(const std::string_view &key, int32_t value) override;
     bool GetIntValue(const std::string_view &key, int32_t &value) override;
-    Format GetFormat();
+    Format &GetFormat();
 
 private:
     Format format_;

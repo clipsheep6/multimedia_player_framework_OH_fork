@@ -17,6 +17,7 @@
 #define AVCODEC_MOCK_H
 
 #include <string>
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
@@ -35,8 +36,9 @@ public:
 class AVMemoryMock : public NoCopyable {
 public:
     virtual ~AVMemoryMock() = default;
-    virtual uint8_t *GetAddr() = 0;
-    virtual int32_t GetSize() = 0;
+    virtual uint8_t *GetAddr() const = 0;
+    virtual int32_t GetSize() const = 0;
+    virtual uint32_t GetFlags() const = 0;
 };
 
 struct AVCodecBufferAttrMock {
@@ -50,7 +52,7 @@ class AVCodecCallbackMock : public NoCopyable {
 public:
     virtual ~AVCodecCallbackMock() = 0;
     virtual void OnError(int32_t errorCode) = 0;
-    virtual void OnStreamChanged(const FormatMock &format) = 0;
+    virtual void OnStreamChanged(std::shared_ptr<FormatMock> format) = 0;
     virtual void OnNeedInputData(uint32_t index, std::shared_ptr<AVMemoryMock> data) = 0;
     virtual void OnNewOutputData(uint32_t index, std::shared_ptr<AVMemoryMock> data, AVCodecBufferAttrMock attr) = 0;
 };
@@ -69,7 +71,7 @@ public:
     virtual int32_t Release() = 0;
     virtual std::shared_ptr<FormatMock> GetOutputMediaDescription() = 0;
     virtual int32_t SetParameter(std::shared_ptr<FormatMock> format) = 0;
-    virtual int32_t PushInputData(uint32_t index, const AVCodecBufferAttrMock &attr) = 0;
+    virtual int32_t PushInputData(uint32_t index, AVCodecBufferAttrMock &attr) = 0;
     virtual int32_t RenderOutputData(uint32_t index) = 0;
     virtual int32_t FreeOutputData(uint32_t index) = 0;
 };
@@ -93,10 +95,10 @@ public:
 
 class __attribute__((visibility("default"))) AVCodecMockFactory {
 public:
-    static std::shared_ptr<VideoDecMock> CreateVideoDecMockByMine();
-    static std::shared_ptr<VideoDecMock> CreateVideoDecMockByName();
-    static std::shared_ptr<VideoEncMock> CreateVideoEncMockByMine();
-    static std::shared_ptr<VideoEncMock> CreateVideoEncMockByName();
+    static std::shared_ptr<VideoDecMock> CreateVideoDecMockByMine(const std::string &mime);
+    static std::shared_ptr<VideoDecMock> CreateVideoDecMockByName(const std::string &name);
+    static std::shared_ptr<VideoEncMock> CreateVideoEncMockByMine(const std::string &mime);
+    static std::shared_ptr<VideoEncMock> CreateVideoEncMockByName(const std::string &name);
     static std::shared_ptr<FormatMock> CreateFormat();
     static std::shared_ptr<SurfaceMock> CreateSurface();
 
@@ -104,4 +106,6 @@ private:
     AVCodecMockFactory() = delete;
     ~AVCodecMockFactory() = delete;
 };
+} // Media
+} // OHOS
 #endif // AVCODEC_MOCK_H

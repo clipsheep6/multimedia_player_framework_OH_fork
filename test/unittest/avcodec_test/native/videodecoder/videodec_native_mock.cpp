@@ -14,6 +14,9 @@
  */
 
 #include "videodec_native_mock.h"
+#include "avformat_native_mock.h"
+#include "avmemory_native_mock.h"
+#include "surface_native_mock.h"
 #include "media_errors.h"
 
 namespace OHOS {
@@ -34,7 +37,7 @@ void VideoDecCallbackMock::OnError(AVCodecErrorType errorType, int32_t errorCode
 void VideoDecCallbackMock::OnOutputFormatChanged(const Format &format)
 {
     if (mockCb_ != nullptr) {
-        AVFormatNativeMock formatMock(format);
+        auto formatMock = std::make_shared<AVFormatNativeMock>(format);
         mockCb_->OnStreamChanged(formatMock);
     }
 }
@@ -66,9 +69,9 @@ void VideoDecCallbackMock::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
 int32_t VideoDecNativeMock::SetCallback(std::shared_ptr<AVCodecCallbackMock> cb)
 {
     if (cb != nullptr) {
-        nativeCb_ = std::make_unique<VideoDecCallbackMock>(cb, videoDec_);
-        if (videoDec_ != nullptr && nativeCb_ != nullptr) {
-            return videoDec_->SetCallback(nativeCb_);
+        auto callback = std::make_shared<VideoDecCallbackMock>(cb, videoDec_);
+        if (videoDec_ != nullptr && callback != nullptr) {
+            return videoDec_->SetCallback(callback);
         }
     }
     return MSERR_INVALID_OPERATION;
@@ -78,9 +81,9 @@ int32_t VideoDecNativeMock::SetOutputSurface(std::shared_ptr<SurfaceMock> surfac
 {
     if (surface != nullptr) {
         auto decSurface = std::static_pointer_cast<SurfaceNativeMock>(surface);
-        sptr<Surface> surface = decSurface->GetSurface();
-        if (videoDec_ != nullptr && surface != nullptr) {
-            return videoDec_->SetOutputSurface(surface);
+        sptr<Surface> nativeSurface = decSurface->GetSurface();
+        if (videoDec_ != nullptr && nativeSurface != nullptr) {
+            return videoDec_->SetOutputSurface(nativeSurface);
         }
     }
     return MSERR_INVALID_OPERATION;
@@ -89,7 +92,7 @@ int32_t VideoDecNativeMock::SetOutputSurface(std::shared_ptr<SurfaceMock> surfac
 int32_t VideoDecNativeMock::Configure(std::shared_ptr<FormatMock> format)
 {
     if (videoDec_ != nullptr && format != nullptr) {
-        auto fmt = std::static_pointer_cast<stdAVFormatNativeMock>(&format);
+        auto fmt = std::static_pointer_cast<AVFormatNativeMock>(format);
         return videoDec_->Configure(fmt->GetFormat());
     }
     return MSERR_INVALID_OPERATION;
@@ -148,7 +151,7 @@ std::shared_ptr<FormatMock> VideoDecNativeMock::GetOutputMediaDescription()
     if (videoDec_ != nullptr) {
         Format format;
         (void)videoDec_->GetOutputFormat(format);
-        return std::make_shared<FormatMock>(format);
+        return std::make_shared<AVFormatNativeMock>(format);
     }
     return nullptr;
 }
@@ -162,15 +165,15 @@ int32_t VideoDecNativeMock::SetParameter(std::shared_ptr<FormatMock> format)
     return MSERR_INVALID_OPERATION;
 }
 
-int32_t VideoDecNativeMock::PushInputData(uint32_t index, const AVCodecBufferAttrMock &attr)
+int32_t VideoDecNativeMock::PushInputData(uint32_t index, AVCodecBufferAttrMock &attr)
 {
     if (videoDec_ != nullptr) {
         AVCodecBufferInfo info;
         info.presentationTimeUs = attr.pts;
         info.size = attr.size;
         info.offset = attr.offset;
-        AVCodecBufferFlag flag = attr.flag;
-        return videoDec_->QueueInputBuffer(index, info, flag);
+        AVCodecBufferFlag flags = static_cast<AVCodecBufferFlag>(attr.flags);
+        return videoDec_->QueueInputBuffer(index, info, flags);
     }
     return MSERR_INVALID_OPERATION;
 }

@@ -16,6 +16,7 @@
 #ifndef AVMEMORY_NATIVE_MOCK_H
 #define AVMEMORY_NATIVE_MOCK_H
 
+#include "avcodec_mock.h"
 #include "avsharedmemory.h"
 
 namespace OHOS {
@@ -23,11 +24,12 @@ namespace Media {
 class AVMemoryNativeMock : public AVMemoryMock {
 public:
     explicit AVMemoryNativeMock(std::shared_ptr<AVSharedMemory> mem) : memory_(mem) {}
-    uint8_t *GetAddr() override;
-    int32_t GetSize() override;
+    uint8_t *GetAddr() const override;
+    int32_t GetSize() const override;
+    uint32_t GetFlags() const override;
 
 private:
-    std::shared_ptr<AVSharedMemory> memory_;
+    std::shared_ptr<AVSharedMemory> memory_ = nullptr;
 };
 } // Media
 } // OHOS

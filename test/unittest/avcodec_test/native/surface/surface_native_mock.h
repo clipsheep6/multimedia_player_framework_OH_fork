@@ -16,22 +16,22 @@
 #ifndef SURFACE_NATIVE_MOCK_H
 #define SURFACE_NATIVE_MOCK_H
 
+#include "avcodec_mock.h"
 #include "surface.h"
+#include "window.h"
 
 namespace OHOS {
 namespace Media {
 class SurfaceNativeMock : public SurfaceMock {
 public:
-    explicit SurfaceNativeMock(sptr<Surface> surface) : surface_(surface)
-    {
-    }
-    sptr<Surface> GetSurface() const
-    {
-        return surface_;
-    }
+    explicit SurfaceNativeMock(sptr<Surface> surface) : surface_(surface) {}
+    SurfaceNativeMock() = default;
+    ~SurfaceNativeMock() = default;
+    sptr<Surface> GetSurface();
 
 private:
     sptr<Surface> surface_ = nullptr;
+    sptr<Rosen::Window> window_ = nullptr;
 };
 } // Media
 } // OHOS

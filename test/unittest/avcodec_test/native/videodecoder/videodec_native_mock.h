@@ -37,13 +37,12 @@ public:
     int32_t Release() override;
     std::shared_ptr<FormatMock> GetOutputMediaDescription() override;
     int32_t SetParameter(std::shared_ptr<FormatMock> format) override;
-    int32_t PushInputData(uint32_t index, const AVCodecBufferAttrMock &attr) override;
+    int32_t PushInputData(uint32_t index, AVCodecBufferAttrMock &attr) override;
     int32_t RenderOutputData(uint32_t index) override;
     int32_t FreeOutputData(uint32_t index) override;
 
 private:
     std::shared_ptr<AVCodecVideoDecoder> videoDec_ = nullptr;
-    std::unique_ptr<AVCodecCallback> cb_ = nullptr;
 };
 
 class VideoDecCallbackMock : public AVCodecCallback {
@@ -57,7 +56,7 @@ public:
 
 private:
     std::shared_ptr<AVCodecCallbackMock> mockCb_ = nullptr;
-    std::weak_ptr<AVCodecVideoDecoder> videoDec_ = nullptr;
+    std::weak_ptr<AVCodecVideoDecoder> videoDec_;
 };
 } // namespace Media
 } // namespace OHOS
