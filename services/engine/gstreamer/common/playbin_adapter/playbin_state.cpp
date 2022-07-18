@@ -98,6 +98,10 @@ int32_t PlayBinCtrlerBase::BaseState::ChangePlayBinState(GstState targetState)
 
 void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
 {
+    if (!msg.extend.has_value() || std::any_cast<GstPipeline *>(msg.extend) != ctrler_.playbin_) {
+        return;
+    }
+
     GstState targetState = static_cast<GstState>(msg.detail2);
     MEDIA_LOGI("state changed from %{public}s to %{public}s",
         gst_element_state_get_name(static_cast<GstState>(msg.detail1)),
@@ -118,9 +122,7 @@ void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
     }
 
     Dumper::DumpDotGraph(*ctrler_.playbin_, msg.detail1, msg.detail2);
-    if (msg.extend.has_value() && std::any_cast<GstPipeline *>(msg.extend) == ctrler_.playbin_) {
-        ProcessStateChange(msg);
-    }
+    ProcessStateChange(msg);
 }
 
 void PlayBinCtrlerBase::BaseState::HandleDurationChange()
