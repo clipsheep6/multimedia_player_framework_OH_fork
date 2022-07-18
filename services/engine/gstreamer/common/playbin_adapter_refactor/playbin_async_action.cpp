@@ -164,8 +164,8 @@ int32_t SetSpeedAction::Execute()
         return MSERR_INVALID_STATE;
     }
 
-    MEDIA_LOGI("Begin set speed to %{public}lf", rate_);
-    return sender_.SendSpeedEvent(rate_);
+    MEDIA_LOGI("Begin set speed to %{public}lf", speed_);
+    return sender_.SendSpeedEvent(speed_);
 }
 
 void SetSpeedAction::HandleMessage(const InnerMessage &inMsg)
@@ -180,9 +180,9 @@ void SetSpeedAction::HandleMessage(const InnerMessage &inMsg)
             return;
         }
 
-        MEDIA_LOGI("Success to set speed to %{public}lf", rate_);
+        MEDIA_LOGI("Success to set speed to %{public}lf", speed_);
         observer_.OnActionDone(*this);
-        sender_.SendMessage(InnerMessage { PLAYBIN_MSG_SPEED_DONE, rate_ });
+        sender_.SendMessage(InnerMessage { PLAYBIN_MSG_SPEED_DONE, speed_ });
         return;
     }
 
@@ -197,9 +197,9 @@ void SetSpeedAction::HandleMessage(const InnerMessage &inMsg)
             return;
         }
 
-        MEDIA_LOGI("Success to set speed to %{public}lf", rate_);
+        MEDIA_LOGI("Success to set speed to %{public}lf", speed_);
         observer_.OnActionDone(*this);
-        sender_.SendMessage(InnerMessage { PLAYBIN_MSG_SPEED_DONE, rate_ });
+        sender_.SendMessage(InnerMessage { PLAYBIN_MSG_SPEED_DONE, speed_ });
 
         return;
     }
