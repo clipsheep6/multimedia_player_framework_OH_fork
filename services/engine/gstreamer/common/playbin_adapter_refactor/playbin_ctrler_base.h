@@ -67,10 +67,16 @@ private:
 
     std::mutex mutex_;
     PlayBinState selfState_ = PLAYBIN_STATE_IDLE;
-    GstPipeline *playbin_ = nullptr;
+    // 先把这个放在这，但是长期看，还是需要有区分场景手段，不同源类型可以是不同场景
+    // 每个场景的实现只包含该场景自身的内容，涉及该场景的所有专有内容，应该在该场景实现里能闭环
+    // 但是还不清楚场景和Source的区别，是否要做区分
+    // 按照这个思路，isBuffering_这个标记应该挪到网络播放场景里
+    bool isBuffering_ = false;
 
     friend class PlayBinStateOperator;
     friend class PlayBinEventMsgSender;
+
+    GstPipeline *playbin_ = nullptr;
     std::unordered_map<GstElement *, gulong> signalIds_;
 };
 }

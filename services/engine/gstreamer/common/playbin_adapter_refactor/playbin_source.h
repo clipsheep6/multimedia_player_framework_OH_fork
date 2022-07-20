@@ -97,6 +97,7 @@ private:
     MsgNotifier notifier_;
 };
 
+// 还需要再进一步区分http、https、hls等协议
 class NetWorkSource : public SourceBase {
 public:
     NetWorkSource(const UriHelper &url) = default;

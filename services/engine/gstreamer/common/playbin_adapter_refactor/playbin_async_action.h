@@ -34,26 +34,43 @@ class ActionObserver {
 public:
     virtual ~ActionObserver() = default;
 
-    virtual void OnActionDone(const AsyncAction &doneAction) = 0;
+    virtual void OnActionDone(const AsyncAction &action) = 0;
+    virtual void OnActionCancel(const AsyncAction &action) = 0;
 };
 
 class AsyncAction {
 public:
-    AsyncAction(ActionType type, ActionObserver& observer)
-        : type_(type), observer_(observer) {}
+    AsyncAction(ActionType type, bool internal = false) : type_(type), isInternalAction_(internal)  {}
     virtual ~AsyncAction() = default;
+
+    void SetObserver(const std::weak_ptr<ActionObserver>& observer)
+    {
+        observer_ = observer;
+    }
 
     virtual int32_t Execute() = 0;
     virtual void HandleMessage(const InnerMessage &inMsg) = 0;
 
-    ActionType GetType()
+    ActionType GetType() const
     {
         return type_;
     }
 
 protected:
-    ActionType type_;
-    ActionObserver &observer_;
+    bool IsInternalActon() const
+    {
+        return isInternalAction_;
+    }
+
+    std::shared_ptr<ActionObserver> GetObserver()
+    {
+        return observer_.lock();
+    }
+
+private:
+    const ActionType type_;
+    std::weak_ptr<ActionObserver> &observer_;
+    const bool isInternalAction_ = false;
 };
 
 class StateOperator {
@@ -67,8 +84,8 @@ public:
 
 class ChangeStateAction : public AsyncAction {
 public:
-    ChangeStateAction(StateOperator &stateOperator, PlayBinState targetState, ActionObserver& observer)
-        : AsyncAction(ActionType::ACTION_CHANGE_STATE, observer),
+    ChangeStateAction(StateOperator &stateOperator, PlayBinState targetState, bool internal)
+        : AsyncAction(ActionType::ACTION_CHANGE_STATE, internal),
           stateOperator_(stateOperator),
           targetState_(targetState)
     {}
@@ -96,8 +113,8 @@ public:
 class SeekAction : public AsyncAction {
 public:
     SeekAction(const StateOperator &stateOperator, EventMsgSender &sender,
-        int64_t position, IPlayBinCtrler::SeekMode mode, ActionObserver& observer)
-        : AsyncAction(ActionType::ACTION_SEEK, observer),
+        int64_t position, IPlayBinCtrler::SeekMode mode, bool internal)
+        : AsyncAction(ActionType::ACTION_SEEK, internal),
           stateOperator_(stateOperator),
           sender_(sender),
           position_(position),
@@ -117,8 +134,8 @@ private:
 
 class SetSpeedAction : public AsyncAction {
 public:
-    SetSpeedAction(const StateOperator &stateOperator, EventMsgSender &sender, double speed, ActionObserver& observer)
-        : AsyncAction(ActionType::ACTION_SET_SPEED, observer),
+    SetSpeedAction(const StateOperator &stateOperator, EventMsgSender &sender, double speed)
+        : AsyncAction(ActionType::ACTION_SET_SPEED, false),
           stateOperator_(stateOperator),
           sender_(sender),
           speed_(speed)
@@ -136,8 +153,8 @@ private:
 
 class CombinationAction : public AsyncAction, public ActionObserver {
 public:
-    CombinationAction(ActionObserver &observer)
-        : AsyncAction(ActionType::ACTION_COMBINATION, observer)
+    CombinationAction()
+        : AsyncAction(ActionType::ACTION_COMBINATION, true)
     {}
     ~CombinationAction() = default;
 
@@ -151,22 +168,33 @@ public:
 protected:
     void AddAction(const std::shared_ptr<AsyncAction> &action);
     void EnqueueNextAction();
-    void OnActionDone(const AsyncAction &doneAction) override final;
     virtual void DoHandleMessage(const InnerMessage &inMsg)
     {
         (void)inMsg;
     }
 
 private:
+    void OnActionDone(const AsyncAction &action) override final;
+    // 若取消该动作，则队列中后面的动作也全部取消，因为理论上不应该存在前一个动作没有执行，却需要执行后面动作的理由
+    void OnActionCancel(const AsyncAction &action) override final;
+
     std::queue<std::shared_ptr<AsyncAction>> subActions_;
 };
 
+// 下面这个举例，用于处理buffering逻辑
 // class ProcessUnderrunAction : public CombinatinoAction;
 // 提供两个带条件的ChangeStateAction实例，它们继承自ChangeStateAction：PlayingToPauseAction，PauseToPlayingAction
-// 都重载了Execute接口，在Execute接口的入口先检查条件是否允许，再执行父类的Execute。
-// 如果在执行第一个动作前，已经不处于playing状态，则取消所有Action执行，直接结束
-// 如果在执行第二个动作前，判断PlayBin的调用者已经强行要求状态为pause或者更低的状态，则取消该Action执行，直接结束。
-// 实现消息处理，确认能够第二个动作触发条件满足后，调用EnqueueNextAction将第二个动作请求塞入PendingActionList
+// 都重载了Execute接口，在Execute接口的入口先检查条件是否允许，若允许再执行父类的Execute。
+
+// 这两个Action都标记为内部动作，gstreamer状态切换完成后不切换自身状态
+
+// 如果在执行第一个动作前，1)已经不处于playing状态;2)或者已经不再处于需要buffering的状态，
+// 比如seek抢先执行，seek结束后，自然就缓冲完成, 则取消所有Action执行，直接结束
+
+// 如果在执行第二个动作前，1)已经不处于playing状态如调用者主动切换了状态，则取消该Action执行，直接结束。
+
+// ProcessUnderrunAction实现消息处理，确认能够第二个动作触发条件满足后，调用EnqueueNextAction将
+// 第二个动作请求塞入PendingActionList, 第二个动作触发条件为，收到了buffering 100%消息
 }
 }
 }
