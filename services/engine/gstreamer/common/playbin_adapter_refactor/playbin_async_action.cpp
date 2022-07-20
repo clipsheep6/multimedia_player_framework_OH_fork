@@ -25,184 +25,107 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinAsy
 namespace OHOS {
 namespace Media {
 namespace PlayBin {
-struct StateTransitionEntry {
-    PlayBinState startState;
-    GstState startGstState;
-    PlayBinState targetState;
-    GstState targetGstState;
-};
-
-#define STATE_TRANS_ENTRY(s, sg, t, tg) { PLAYBIN_STATE_##s, GST_STATE_##sg, PLAYBIN_STATE_##t, GST_STATE_##tg }
-
-static const std::vector<StateTransitionEntry> STATE_TRANSTION_TABLE = {
-    STATE_TRANS_ENTRY(IDLE, NULL, PREPARED, PAUSED),
-    STATE_TRANS_ENTRY(PREPARED, PAUSED, PLAYING, PLAYING),
-    STATE_TRANS_ENTRY(PREPARED, PAUSED, STOPPED, READY),
-    STATE_TRANS_ENTRY(PLAYING, PLAYING, PAUSED, PAUSED),
-    STATE_TRANS_ENTRY(PLAYING, PLAYING, STOPPED, READY),
-    STATE_TRANS_ENTRY(PAUSED, PAUSED, PLAYING, PLAYING),
-    STATE_TRANS_ENTRY(PAUSED, PAUSED, STOPPED, READY),
-    STATE_TRANS_ENTRY(STOPPED, READY, PREPARED, PAUSED),
-    STATE_TRANS_ENTRY(STOPPED, READY, IDLE, NULL),
-};
-
-int32_t ChangeStateAction::Execute()
+int32_t CombinationAction::Execute()
 {
-    startState_ = stateOperator_.GetPlayBinState();
-    GstState startGstState_ = stateOperator_.GetGstState();
-    MEDIA_LOGI("Begin to change state from %{public}s to %{public}s, curr gst state: %{public}s",
-        StringifyPlayBinState(startState_).data(), StringifyPlayBinState(targetState_).data(),
-        gst_element_state_get_name(startGstState_));
-
-    if (startGstState_ == GST_STATE_VOID_PENDING) {
-        MEDIA_LOGE("Invalid gst state");
-        return MSERR_INVALID_STATE;
+    if (subActions_.empty()) {
+        MEDIA_LOGE("Failed to execute action: %{public}s, all sub actions have already been done!", name_.c_str());
+        return MSERR_INVALID_OPERATION;
     }
 
-    for (auto &transEntry : STATE_TRANSTION_TABLE) {
-        if (startState_ != transEntry.startState || targetState_ != transEntry.targetState ||
-            startGstState_ != transEntry.startGstState) {
-            continue;
-        }
-
-        int32_t ret = stateOperator_.SetGstState(transEntry.targetGstState);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-        targetGstState_ = transEntry.targetGstState;
-
-        if (targetState_ == PLAYBIN_STATE_PREPARED) {
-            ret = stateOperator_.SetPlayBinState(PLAYBIN_STATE_PREPARING);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to set playbin state to PREPARING");
-        }
-
-        return MSERR_OK;
+    if (doingAction_ != nullptr) {
+        MEDIA_LOGE("Failed to exeute action: %{public}s, currently a sub action is doing!", name_.c_str());
+        return MSERR_INVALID_OPERATION;
     }
 
-    MEDIA_LOGE("Failed to change state from %{public}s to %{public}s, curr gst state: %{public}s",
-        StringifyPlayBinState(startState_).data(), StringifyPlayBinState(targetState_).data(),
-        gst_element_state_get_name(startGstState_));
-    return MSERR_INVALID_STATE;
+    doingAction_ = subActions_.front();
+    return doingAction_->Execute();
 }
 
-void ChangeStateAction::HandleMessage(const InnerMessage &inMsg)
+void CombinationAction::HandleMessage(const InnerMessage &inMsg)
 {
-    if (inMsg.type != INNER_MSG_STATE_CHANGED) {
+    DoHandleMessage(inMsg);
+
+    if (doingAction_ == nullptr) {
         return;
     }
 
-    MEDIA_LOGI("Got gst state change message, from %{public}s to %{public}s",
-        gst_element_state_get_name(inMsg.detail1), gst_element_state_get_name(inMsg.detail2));
-
-    if (inMsg.detail2 == targetGstState_) {
-        MEDIA_LOGI("Success change state from %{public}s to %{public}s",
-            StringifyPlayBinState(startState_).data(), StringifyPlayBinState(targetState_).data());
-        int32_t ret = stateOperator_.SetPlayBinState(targetState_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to set playbin state");
-
-        observer_.OnActionDone(*this);
-        return;
-    }
+    doingAction_->HandleMessage(inMsg);
 }
 
-int32_t SeekAction::Execute()
+bool CombinationAction::IsAllDone()
 {
-    PlayBinState currState = stateOperator_.GetPlayBinState();
-    if (currState != PLAYBIN_STATE_PREPARED &&
-        currState != PLAYBIN_STATE_PLAYING &&
-        currState != PLAYBIN_STATE_PAUSED) {
-        MEDIA_LOGE("Invalid state %{public}s to seek", StringifyPlayBinState(currState).data());
-        return MSERR_INVALID_STATE;
-    }
-
-    MEDIA_LOGI("Begin seek to position %{public}" PRIi64 "us, mode: %{public}hhu", position_, mode_);
-    return sender_.SendSeekEvent(position_, mode_);
+    return subActions_.empty();
 }
 
-void SeekAction::HandleMessage(const InnerMessage &inMsg)
+void CombinationAction::AppendAction(const std::shared_ptr<AsyncAction> &action)
 {
-    if (inMsg.type != INNER_MSG_ASYNC_DONE && inMsg.type != INNER_MSG_STATE_CHANGED) {
+    if (action == nullptr) {
         return;
     }
 
-    if (inMsg.type == INNER_MSG_ASYNC_DONE) {
-        GstState currGstState = stateOperator_.GetGstState();
-        if (currGstState < GST_STATE_PAUSED) {
-            return;
-        }
-
-        MEDIA_LOGI("Success to seek to position %{public}" PRIi64 "", position_);
-        observer_.OnActionDone(*this);
-        sender_.SendMessage(InnerMessage { PLAYBIN_MSG_SEEK_DONE, position_ });
-        return;
-    }
-
-    if (inMsg.type == INNER_MSG_STATE_CHANGED) {
-        if (inMsg.detail1 != GST_STATE_PAUSED || inMsg.detail2 != GST_STATE_PLAYING) {
-            return;
-        }
-
-        PlayBinState currState = stateOperator_.GetPlayBinState();
-        if (currState != PLAYBIN_STATE_PLAYING) {
-            MEDIA_LOGW("Not in PLAYBIN_STATE_PLAYING, but got gst state change from PAUSED to PLAYING");
-            return;
-        }
-
-        MEDIA_LOGI("Success to seek to position %{public}" PRIi64 "", position_);
-        observer_.OnActionDone(*this);
-        sender_.SendMessage(InnerMessage { PLAYBIN_MSG_SEEK_DONE, position_ });
-
-        return;
-    }
+    subActions_.push_back(action);
 }
 
-int32_t SetSpeedAction::Execute()
+void CombinationAction::EnqueueNextAction()
 {
-    PlayBinState currState = stateOperator_.GetPlayBinState();
-    if (currState != PLAYBIN_STATE_PREPARED &&
-        currState != PLAYBIN_STATE_PLAYING &&
-        currState != PLAYBIN_STATE_PAUSED) {
-        MEDIA_LOGE("Invalid state %{public}s to set speed", StringifyPlayBinState(currState).data());
-        return MSERR_INVALID_STATE;
+    if (subActions_.empty()) {
+        MEDIA_LOGW("All sub actions have been done already for %{public}s", name_.c_str());
+        return;
     }
 
-    MEDIA_LOGI("Begin set speed to %{public}lf", speed_);
-    return sender_.SendSpeedEvent(speed_);
+    if (doingAction_ != nullptr) {
+        MEDIA_LOGW("Failed to enqueue next action for %{public}s, currently a sub action is doing!", name_.c_str());
+        return;
+    }
+
+    // re-enqueue this combination action to let the executor to call the Execute again.
+    OnActionReEnqueue();
 }
 
-void SetSpeedAction::HandleMessage(const InnerMessage &inMsg)
+void CombinationAction::OnActionDone(const AsyncAction &action)
 {
-    if (inMsg.type != INNER_MSG_ASYNC_DONE && inMsg.type != INNER_MSG_STATE_CHANGED) {
+    if (doingAction_ == nullptr) {
+        MEDIA_LOGE("Failed to done action for %{public}s, currently no sub action is doing!", name_.c_str());
         return;
     }
 
-    if (inMsg.type == INNER_MSG_ASYNC_DONE) {
-        GstState currGstState = stateOperator_.GetGstState();
-        if (currGstState < GST_STATE_PAUSED) {
-            return;
-        }
-
-        MEDIA_LOGI("Success to set speed to %{public}lf", speed_);
-        observer_.OnActionDone(*this);
-        sender_.SendMessage(InnerMessage { PLAYBIN_MSG_SPEED_DONE, speed_ });
+    if (doingAction_.get() != &action) {
+        MEDIA_LOGE("Failed to done action for %{public}s, currently action mismatch!", name_.c_str());
         return;
     }
 
-    if (inMsg.type == INNER_MSG_STATE_CHANGED) {
-        if (inMsg.detail1 != GST_STATE_PAUSED || inMsg.detail2 != GST_STATE_PLAYING) {
-            return;
-        }
+    doingAction_ = nullptr;
+    subActions_.pop_front();
 
-        PlayBinState currState = stateOperator_.GetPlayBinState();
-        if (currState != PLAYBIN_STATE_PLAYING) {
-            MEDIA_LOGW("Not in PLAYBIN_STATE_PLAYING, but got gst state change from PAUSED to PLAYING");
-            return;
-        }
+    // Notify the action executor, this combination action's sub action has done, need to transfer this
+    // combination action to pending list temporarily. Then, the executor can execute other async action.
+    NotifyActionDone();
+}
 
-        MEDIA_LOGI("Success to set speed to %{public}lf", speed_);
-        observer_.OnActionDone(*this);
-        sender_.SendMessage(InnerMessage { PLAYBIN_MSG_SPEED_DONE, speed_ });
-
+void CombinationAction::OnActionCancel(const AsyncAction &action)
+{
+    if (doingAction_ == nullptr) {
+        MEDIA_LOGE("Failed to cancel action for %{public}s, currently no sub action is doing!", name_.c_str());
         return;
     }
+
+    if (doingAction_.get() != &action) {
+        MEDIA_LOGE("Failed to done action for %{public}s, currently action mismatch!", name_.c_str());
+        return;
+    }
+
+    doingAction_ = nullptr;
+    // If a sub action cancelled, then all rest of sub actions should be cancelled.
+    decltype(subActions_) tempList;
+    tempList.swap(subActions_);
+
+    NotifyActionCancel();
+}
+
+void CombinationAction::OnActionReEnqueue(const AsyncAction &action)
+{
+    (void)action;
+    MEDIA_LOGE("Unsupported api !");
 }
 }
 }

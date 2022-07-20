@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace Media {
 namespace PlayBin {
-using Action = std::function<void()>;
+using SyncAction = std::function<int32_t()>;
 
 // 添加一个定时器，用于周期性的检查还有多少异步Action没有执行，当前正在进行中的异步任务是哪个，执行了多久，等等维测信息
 class ActionExecutor : public ActionObserver {
@@ -33,7 +33,7 @@ public:
     ~ActionExecutor() = default;
 
     int32_t Enqueue(const std::shared_ptr<AsyncAction> &action);
-    int32_t Enqueue(const Action &action);
+    int32_t Execute(const SyncAction &action);
     void HandleMessage(const InnerMessage &msg);
     int32_t Reset();
 
