@@ -51,7 +51,7 @@ config("media_data_extension_public_config") {
     "//foundation/communication/dsoftbus/interfaces/kits/bus_center",
     "//foundation/communication/dsoftbus/interfaces/kits/common",
     "//foundation/filemanager/user_file_service/frameworks/innerkits/file_access/include/",
-    "//foundation/distributedschedule/safwk/services/safwk/include",
+    "//foundation/systemabilitymgr/safwk/services/safwk/include",
     "//foundation/distributedhardware/device_manager/interfaces/inner_kits/native_cpp/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//utils/native/base/include",
@@ -186,7 +186,7 @@ ohos_shared_library("medialibrary_data_extension") {
     "relational_store:native_appdatafwk",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 
   subsystem_name = "multimedia"

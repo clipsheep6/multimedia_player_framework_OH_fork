@@ -81,6 +81,6 @@ ohos_unittest("medialibrary_datashare_unittest") {
     "relational_store:native_appdatafwk",
     "relational_store:native_rdb",
     "safwk:system_ability_fwk",
-    "samgr_standard:samgr_proxy",
+    "samgr:samgr_proxy",
   ]
 }
