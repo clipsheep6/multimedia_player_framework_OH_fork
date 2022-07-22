@@ -21,7 +21,7 @@
 #include "ui/rs_surface_node.h"
 #include "window_option.h"
 #include "image_type.h"
-#define random(x)(rand()%x)
+#define random(x) (rand() % x)
 
 
 using namespace std;
@@ -52,7 +52,12 @@ bool PixelMapFuzzer::FuzzPixelMap(uint8_t* data, size_t size)
     }
 
     if (size >= sizeof(int64_t)) {
-        int32_t nameListAVMetadataQueryOption[4] {AV_META_QUERY_NEXT_SYNC, AV_META_QUERY_PREVIOUS_SYNC, AV_META_QUERY_CLOSEST_SYNC, AV_META_QUERY_CLOSEST};
+        int32_t nameListAVMetadataQueryOption[4] {
+            AV_META_QUERY_NEXT_SYNC, 
+            AV_META_QUERY_PREVIOUS_SYNC, 
+            AV_META_QUERY_CLOSEST_SYNC, 
+            AV_META_QUERY_CLOSEST
+        };
         int32_t option = nameListAVMetadataQueryOption[random(4)];
         PixelFormat colorFormat_[11] {
             PixelFormat :: UNKNOWN, 

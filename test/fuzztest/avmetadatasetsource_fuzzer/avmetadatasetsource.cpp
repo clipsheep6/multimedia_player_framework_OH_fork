@@ -21,7 +21,7 @@
 #include "ui/rs_surface_node.h"
 #include "window_option.h"
 #include "image_type.h"
-#define random(x)(rand()%x)
+#define random(x) ( rand()%x )
 
 
 using namespace std;
