@@ -22,12 +22,12 @@
 
 namespace OHOS {
 namespace Media {
-bool FuzzTestResolveMetadata(uint8_t* data, size_t size);
-class ResolveMetadataFuzzer : public TestMetadata {
+bool FuzzTestAVMetadataResolveMetadata(uint8_t* data, size_t size);
+class AVMetadataResolveMetadataFuzzer : public TestMetadata {
 public:
-    ResolveMetadataFuzzer();
-    ~ResolveMetadataFuzzer();
-    bool FuzzResolveMetadata(uint8_t* data, size_t size);
+    AVMetadataResolveMetadataMetadataFuzzer();
+    ~AVMetadataResolveMetadataMetadataFuzzer();
+    bool FuzzAVMetadataResolveMetadata(uint8_t* data, size_t size);
 };
 }
 }

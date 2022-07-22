@@ -21,22 +21,22 @@
 #include "ui/rs_surface_node.h"
 #include "window_option.h"
 #include "image_type.h"
-#define random(x) ( rand()%x )
+#define random(x) ( rand() % (x) )
 
 
 using namespace std;
 using namespace OHOS;
 using namespace Media;
 
-AVMetadataSetSourceFuzzer::AVMetadataSetSourceFuzzer()
+AVMetadataResolveMetadataFuzzer::AVMetadataResolveMetadataFuzzer()
 {
 }
 
-AVMetadataSetSourceFuzzer::~AVMetadataSetSourceFuzzer()
+AVMetadataResolveMetadataFuzzer::~AVMetadataResolveMetadataFuzzer()
 {
 }
 
-bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t* data, size_t size)
+bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t* data, size_t size)
 {
     metadata_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (metadata_ == nullptr) {
@@ -63,10 +63,6 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t* data, size_t si
     int64_t setsource_size = static_cast<int64_t>(buffer.st_size);
     AVMetadataUsage usage[2] {AVMetadataUsage::AV_META_USAGE_META_ONLY, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP};
     int32_t setsource_usage = usage[random(2)];
-    cout << "setsource_fd : " << setsource_fd << "; setsource_offset : " << setsource_offset << "; setsource_size : " << setsource_size << ": setsource_usage : " << setsource_usage << endl;
-
-
-
     int32_t ret_setsource = metadata_ -> SetSource(setsource_fd, setsource_offset, setsource_size, setsource_usage);
     if (ret_setsource != 0) {
         cout << "SetSource fail!" << endl;
@@ -87,21 +83,21 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t* data, size_t si
     return true;
 }
 
-bool OHOS::Media::FuzzTestAVMetadataSetSource(uint8_t* data, size_t size)
+bool OHOS::Media::FuzzTestAVMetadataResolveMetadata(uint8_t* data, size_t size)
 {
-    auto player = std::make_unique<AVMetadataSetSourceFuzzer>();
+    auto player = std::make_unique<AVMetadataResolveMetadataFuzzer>();
     if (player == nullptr) {
         cout << "player is null" << endl;
         return 0;
     }
-    return player -> FuzzAVMetadataSetSource(data, size);
+    return player -> FuzzAVMetadataResolveMetadata(data, size);
 }
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Media::FuzzTestAVMetadataSetSource(data, size);
+    OHOS::Media::FuzzTestAVMetadataResolveMetadata(data, size);
     return 0;
 }
 

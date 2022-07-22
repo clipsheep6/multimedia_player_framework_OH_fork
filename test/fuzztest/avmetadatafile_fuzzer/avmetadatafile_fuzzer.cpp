@@ -26,15 +26,15 @@ using namespace std;
 using namespace OHOS;
 using namespace Media;
 
-MetadataFuzzer::MetadataFuzzer()
+AVMetadataFileFuzzer::AVMetadataFileFuzzer()
 {
 }
 
-MetadataFuzzer::~MetadataFuzzer()
+AVMetadataFileFuzzer::~AVMetadataFileFuzzer()
 {
 }
 
-bool MetadataFuzzer::FuzzMetadata(uint8_t* data, size_t size)
+bool AVMetadataFileFuzzer::FuzzAVMetadataFile(uint8_t* data, size_t size)
 {
     metadata_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (metadata_ == nullptr) {
@@ -45,7 +45,7 @@ bool MetadataFuzzer::FuzzMetadata(uint8_t* data, size_t size)
     const string path = "/data/test/resource/fuzztest.mp4";
 
     int32_t ret_writefile = WriteDataToFile(path, data, size);
-    if(ret_writefile != 0) {
+    if (ret_writefile != 0) {
         cout << "metadata_ ret_writefile fail!" << endl;
         return false;
     }
@@ -57,13 +57,13 @@ bool MetadataFuzzer::FuzzMetadata(uint8_t* data, size_t size)
     }
 
     std::unordered_map<int32_t, std::string> ret_resolve = metadata_ -> ResolveMetadata();
-    if(ret_resolve.empty()) {
+    if (ret_resolve.empty()) {
         cout << "expext metadata_ ResolveMetadata file" << endl;
         return true;
     }
 
     std::shared_ptr<AVSharedMemory> ret_fetchartpicture = metadata_ -> FetchArtPicture();
-    if(ret_fetchartpicture == nullptr) {
+    if (ret_fetchartpicture == nullptr) {
         cout << "expect metadata_ FetchArtPicture file" << endl;
         return true;
     }
@@ -73,21 +73,21 @@ bool MetadataFuzzer::FuzzMetadata(uint8_t* data, size_t size)
     return true;
 }
 
-bool OHOS::Media::FuzzTestMetadata(uint8_t* data, size_t size)
+bool OHOS::Media::FuzzTestavMetadataFile(uint8_t* data, size_t size)
 {
-    auto player = std::make_unique<MetadataFuzzer>();
+    auto player = std::make_unique<AVMetadataFileFuzzer>();
     if (player == nullptr) {
         cout << "player is null" << endl;
         return 0;
     }
-    return player -> FuzzMetadata(data, size);
+    return player -> FuzzAVMetadataFile(data, size);
 }
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Media::FuzzTestMetadata(data, size);
+    OHOS::Media::FuzzTestavMetadataFile(data, size);
     return 0;
 }
 

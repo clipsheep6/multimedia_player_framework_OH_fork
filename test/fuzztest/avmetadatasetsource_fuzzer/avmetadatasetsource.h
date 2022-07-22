@@ -16,7 +16,7 @@
 #ifndef AVMETADATASetSource_FUZZER
 #define AVMETADATASetSource_FUZZER
 
-#define FUZZ_PROJECT_NAME "avmetadatasetsource"
+#define FUZZ_PROJECT_NAME "avmetadatasetsource_fuzzer"
 #include "test_metadata.h"
 
 

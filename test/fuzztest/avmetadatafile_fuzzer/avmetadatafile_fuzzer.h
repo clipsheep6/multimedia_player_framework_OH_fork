@@ -17,18 +17,17 @@
 #define AVMETADATAFILE_FUZZER
 
 #define FUZZ_PROJECT_NAME "avmetadatafile_fuzzer"
-// #include "test_metadata.h"
 #include "common.h"
 
 
 namespace OHOS {
 namespace Media {
-bool FuzzTestMetadata(uint8_t* data, size_t size);
-class MetadataFuzzer : public Common {
+bool FuzzTestavMetadataFile(uint8_t* data, size_t size);
+class AVMetadataFileFuzzer : public Common {
 public:
-    MetadataFuzzer();
-    ~MetadataFuzzer();
-    bool FuzzMetadata(uint8_t* data, size_t size);
+    AVMetadataFileFuzzer();
+    ~AVMetadataFileFuzzer();
+    bool FuzzAVMetadataFile(uint8_t* data, size_t size);
 };
 }
 }

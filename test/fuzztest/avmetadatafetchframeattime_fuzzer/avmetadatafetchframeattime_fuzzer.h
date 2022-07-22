@@ -22,12 +22,12 @@
 
 namespace OHOS {
 namespace Media {
-bool FuzzTestPixelMap(uint8_t* data, size_t size);
-class PixelMapFuzzer : public TestMetadata {
+bool FuzzTestAVMetadataFetchFrameAtTime(uint8_t* data, size_t size);
+class AVMetadataFetchFrameAtTimeFuzzer : public TestMetadata {
 public:
-    PixelMapFuzzer();
-    ~PixelMapFuzzer();
-    bool FuzzPixelMap(uint8_t* data, size_t size);
+    AVMetadataFetchFrameAtTimeFuzzer();
+    ~AVMetadataFetchFrameAtTimeFuzzer();
+    bool FuzzAVMetadataFetchFrameAtTime(uint8_t* data, size_t size);
 };
 }
 }

@@ -21,22 +21,22 @@
 #include "ui/rs_surface_node.h"
 #include "window_option.h"
 #include "image_type.h"
-#define random(x) (rand() % x)
+#define random(x) (rand() % (x))
 
 
 using namespace std;
 using namespace OHOS;
 using namespace Media;
 
-PixelMapFuzzer::PixelMapFuzzer()
+AVMetadataFetchFrameAtTimeFuzzer::AVMetadataFetchFrameAtTimeFuzzer()
 {
 }
 
-PixelMapFuzzer::~PixelMapFuzzer()
+AVMetadataFetchFrameAtTimeFuzzer::~AVMetadataFetchFrameAtTimeFuzzer()
 {
 }
 
-bool PixelMapFuzzer::FuzzPixelMap(uint8_t* data, size_t size)
+bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t* data, size_t size)
 {
     metadata_ = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (metadata_ == nullptr) {
@@ -53,14 +53,14 @@ bool PixelMapFuzzer::FuzzPixelMap(uint8_t* data, size_t size)
 
     if (size >= sizeof(int64_t)) {
         int32_t nameListAVMetadataQueryOption[4] {
-            AV_META_QUERY_NEXT_SYNC, 
-            AV_META_QUERY_PREVIOUS_SYNC, 
-            AV_META_QUERY_CLOSEST_SYNC, 
+            AV_META_QUERY_NEXT_SYNC,
+            AV_META_QUERY_PREVIOUS_SYNC,
+            AV_META_QUERY_CLOSEST_SYNC,
             AV_META_QUERY_CLOSEST
         };
         int32_t option = nameListAVMetadataQueryOption[random(4)];
         PixelFormat colorFormat_[11] {
-            PixelFormat :: UNKNOWN, 
+            PixelFormat :: UNKNOWN,
             PixelFormat :: ARGB_8888,
             PixelFormat :: RGB_565,
             PixelFormat :: RGBA_8888,
@@ -75,11 +75,9 @@ bool PixelMapFuzzer::FuzzPixelMap(uint8_t* data, size_t size)
         PixelFormat colorFormat = colorFormat_[random(11)];
 
         int32_t dstWidth = rand();
-
         int32_t dstHeight = rand();
-
         struct PixelMapParams pixelMapParams_ = {
-            dstWidth, 
+            dstWidth,
             dstHeight, 
             colorFormat
         };
@@ -97,21 +95,21 @@ bool PixelMapFuzzer::FuzzPixelMap(uint8_t* data, size_t size)
     return true;
 }
 
-bool OHOS::Media::FuzzTestPixelMap(uint8_t* data, size_t size)
+bool OHOS::Media::FuzzTestAVMetadataFetchFrameAtTime(uint8_t* data, size_t size)
 {
-    auto player = std::make_unique<PixelMapFuzzer>();
+    auto player = std::make_unique<AVMetadataFetchFrameAtTimeFuzzer>();
     if (player == nullptr) {
         cout << "player is null" << endl;
         return 0;
     }
-    return player -> FuzzPixelMap(data, size);
+    return player -> FuzzAVMetadataFetchFrameAtTime(data, size);
 }
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Media::FuzzTestPixelMap(data, size);
+    OHOS::Media::FuzzTestAVMetadataFetchFrameAtTime(data, size);
     return 0;
 }
 

@@ -71,7 +71,6 @@ bool ResolveMetadataFuzzer::FuzzResolveMetadata(uint8_t* data, size_t size)
     };
     int32_t key = AVMetadataCode_[*reinterpret_cast<int64_t *>(data) % 17];
     std::string ret_resolvemetadata = metadata_ -> ResolveMetadata(key);
-
     if (ret_resolvemetadata.empty()) {
         cout << "metadata_ ResolveMetadata fail" << endl;
         return false;
