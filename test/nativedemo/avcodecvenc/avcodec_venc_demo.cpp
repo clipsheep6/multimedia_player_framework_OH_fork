@@ -15,6 +15,7 @@
 
 #include "avcodec_venc_demo.h"
 #include <iostream>
+#include <fstream>
 #include <sync_fence.h>
 #include "securec.h"
 #include "demo_log.h"
@@ -30,11 +31,12 @@ namespace {
     constexpr uint32_t DEFAULT_FRAME_RATE = 30;
     constexpr uint32_t YUV_BUFFER_SIZE = 259200; // 480 * 360 * 3 / 2
     constexpr uint32_t STRIDE_ALIGN = 8;
-
+    constexpr uint32_t DEFAULT_BIT_MODE = 1;  // bit mode VBR
     constexpr int32_t FAST_PRODUCER = 50; // 50 fps producer, used to test max_encoder_fps property
     constexpr int32_t SLOW_PRODUCER = 20; // 20 fps producer, used to test repeat_frame_after property
     constexpr uint32_t REPEAT_FRAME_AFTER_MS = 50;
     constexpr uint32_t DEFAULT_FRAME_COUNT = 50;
+    constexpr uint32_t SUSPEND = 0;
 }
 
 static BufferFlushConfig g_flushConfig = {
@@ -60,25 +62,43 @@ void VEncDemo::RunCase(bool enableProp)
 {
     DEMO_CHECK_AND_RETURN_LOG(CreateVenc() == MSERR_OK, "Fatal: CreateVenc fail");
 
+    std::string proflie;
+    std::cout << "Enter profile: " << endl;
+    cout << "profile baseline : 0" << endl;
+    cout << "profile high : 4" << endl;
+    cout << "profile main : 8" << endl;
+    (void)getline(cin, proflie);
+
+    int32_t pro = atoi(proflie.c_str());
+
     Format format;
+    Format parameter;
     format.PutIntValue("width", DEFAULT_WIDTH);
     format.PutIntValue("height", DEFAULT_HEIGHT);
     format.PutIntValue("pixel_format", NV21);
     format.PutIntValue("frame_rate", DEFAULT_FRAME_RATE);
+    parameter.PutIntValue("video_encode_bitrate_mode", DEFAULT_BIT_MODE);
+    parameter.PutIntValue("codec_profile", pro);
+    parameter.PutIntValue("suspend_input_surface", SUSPEND);
+    parameter.PutIntValue("max_encoder_fps", DEFAULT_FRAME_RATE);
+    parameter.PutIntValue("repeat_frame_after", REPEAT_FRAME_AFTER_MS);
+
     DEMO_CHECK_AND_RETURN_LOG(Configure(format) == MSERR_OK, "Fatal: Configure fail");
 
     surface_ = GetVideoSurface();
     DEMO_CHECK_AND_RETURN_LOG(surface_ != nullptr, "Fatal: GetVideoSurface fail");
 
     DEMO_CHECK_AND_RETURN_LOG(Prepare() == MSERR_OK, "Fatal: Prepare fail");
+    DEMO_CHECK_AND_RETURN_LOG(SetParameter(parameter) == MSERR_OK,
+            "Fatal: SetParameter fail");
     DEMO_CHECK_AND_RETURN_LOG(Start() == MSERR_OK, "Fatal: Start fail");
 
     if (enableProp) {
-        DEMO_CHECK_AND_RETURN_LOG(SetParameter(0, DEFAULT_FRAME_RATE, REPEAT_FRAME_AFTER_MS) == MSERR_OK,
+        DEMO_CHECK_AND_RETURN_LOG(SetParameter(parameter) == MSERR_OK,
             "Fatal: SetParameter fail");
         GenerateData(DEFAULT_FRAME_COUNT, FAST_PRODUCER);
         GenerateData(DEFAULT_FRAME_COUNT, SLOW_PRODUCER);
-        DEMO_CHECK_AND_RETURN_LOG(SetParameter(1, 0, 0) == MSERR_OK, "Fatal: Set suspend fail");
+        DEMO_CHECK_AND_RETURN_LOG(SetParameter(parameter) == MSERR_OK, "Fatal: Set suspend fail");
         GenerateData(DEFAULT_FRAME_COUNT, DEFAULT_FRAME_RATE);
     } else {
         GenerateData(DEFAULT_FRAME_COUNT, DEFAULT_FRAME_RATE);
@@ -120,17 +140,32 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
         const sptr<OHOS::BufferExtraData>& extraData = buffer->GetExtraData();
         DEMO_CHECK_AND_BREAK_LOG(extraData != nullptr, "Fatal: SurfaceBuffer is nullptr");
         (void)extraData->ExtraSet("timeStamp", timestampNs_);
+        extraData->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
+        extraData->ExtraSet("isKeyFrame", isKeyFrame_);
         timestampNs_ += static_cast<int64_t>(intervalUs * 1000); // us to ns
 
         (void)surface_->FlushBuffer(buffer, -1, g_flushConfig);
         cout << "Generate input buffer success, timestamp: " << timestampNs_ << endl;
         frameCount++;
+        (frameCount % 30) == 0 ? (isKeyFrame_ = 1) : (isKeyFrame_ = 0);
     }
 }
 
 int32_t VEncDemo::CreateVenc()
 {
-    venc_ = VideoEncoderFactory::CreateByMime("video/mp4v-es");
+    string encodeMode;
+    mimetype = "video/mp4v-es";
+    std::cout << "Enter media mine type: " << endl;
+    cout << "select video/mp4v-es format : 1" << endl;
+    cout << "select video/avc foramt : 2" << endl;
+    (void)getline(cin, encodeMode);
+    if (encodeMode.compare("1") == 0) {
+        cout << "select video/mp4v-es" << endl;
+    } else {
+        cout << "select video/avc" << endl;
+        mimetype = "video/avc";
+    }
+    venc_ = VideoEncoderFactory::CreateByMime(mimetype);
     DEMO_CHECK_AND_RETURN_RET_LOG(venc_ != nullptr, MSERR_UNKNOWN, "Fatal: CreateByMime fail");
 
     signal_ = make_shared<VEncSignal>();
@@ -161,12 +196,8 @@ int32_t VEncDemo::Start()
     return venc_->Start();
 }
 
-int32_t VEncDemo::SetParameter(int32_t suspend, int32_t maxFps, int32_t repeatMs)
+int32_t VEncDemo::SetParameter(const Format &format)
 {
-    Format format;
-    format.PutIntValue("suspend_input_surface", suspend);
-    format.PutIntValue("max_encoder_fps", maxFps);
-    format.PutIntValue("repeat_frame_after", repeatMs);
     return venc_->SetParameter(format);
 }
 
@@ -177,6 +208,7 @@ int32_t VEncDemo::Stop()
     if (readLoop_ != nullptr && readLoop_->joinable()) {
         unique_lock<mutex> queueLock(signal_->mutex_);
         signal_->bufferQueue_.push(0);
+        signal_->sizeQueue_.push(0);
         signal_->cond_.notify_all();
         queueLock.unlock();
         readLoop_->join();
@@ -208,6 +240,16 @@ sptr<Surface> VEncDemo::GetVideoSurface()
 
 void VEncDemo::LoopFunc()
 {
+    std::ofstream ofs;
+    if (mimetype.compare("video/avc") == 0) {
+            ofs.open("/data/media/avc.h264", ios::out| ios::app);
+        } else {
+            ofs.open("/data/media/mpeg4.mpeg4", ios::out| ios::app);
+    }
+    if (!ofs.is_open()) {
+            std::cout << "open file failed" << std::endl;
+            return;
+    }
     while (true) {
         if (!isRunning_.load()) {
             break;
@@ -221,7 +263,9 @@ void VEncDemo::LoopFunc()
         }
 
         uint32_t index = signal_->bufferQueue_.front();
+        uint32_t size = signal_->sizeQueue_.front();
         auto buffer = venc_->GetOutputBuffer(index);
+        ofs.write(reinterpret_cast<char *>(buffer->GetBase()), size);
         if (!buffer) {
             cout << "Fatal: GetOutputBuffer fail, exit" << endl;
             break;
@@ -232,7 +276,9 @@ void VEncDemo::LoopFunc()
             break;
         }
         signal_->bufferQueue_.pop();
+        signal_->sizeQueue_.pop();
     }
+    ofs.close();
 }
 
 VEncDemoCallback::VEncDemoCallback(shared_ptr<VEncSignal> signal)
@@ -258,7 +304,9 @@ void VEncDemoCallback::OnInputBufferAvailable(uint32_t index)
 void VEncDemoCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
     cout << "OnOutputBufferAvailable received, index:" << index << " timestamp:" << info.presentationTimeUs << endl;
+    cout << "OnOutputBufferAvailable received, index:" << index << " size:" << info.size << endl;
     unique_lock<mutex> lock(signal_->mutex_);
     signal_->bufferQueue_.push(index);
+    signal_->sizeQueue_.push(info.size);
     signal_->cond_.notify_all();
 }
