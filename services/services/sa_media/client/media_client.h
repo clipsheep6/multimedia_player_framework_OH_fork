@@ -56,7 +56,7 @@ private:
     bool IsAlived();
     static void MediaServerDied(pid_t pid);
     void DoMediaServerDied();
-
+    
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     sptr<MediaListenerStub> listenerStub_ = nullptr;
     sptr<MediaDeathRecipient> deathRecipient_ = nullptr;
