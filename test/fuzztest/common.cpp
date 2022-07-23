@@ -46,7 +46,7 @@ int32_t Common::WriteDataToFile(const string &path, const uint8_t* data, size_t 
 }
 
 int32_t Common::ProduceRandomNumberCrypt()
-{ 
+{
     int32_t r = 0;
     int fd = open("/dev/random", O_RDONLY); /* 通过读取/dev/random来获取随机数 */
     if (fd > 0) {
