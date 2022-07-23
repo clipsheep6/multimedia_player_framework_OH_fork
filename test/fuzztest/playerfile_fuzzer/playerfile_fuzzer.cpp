@@ -45,7 +45,7 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
     if (ret != 0) {
         cout << "SetPlayerCallback fail" << endl;
     }
-    const string path = "/data/fuzztest/fuzztest.mp4";
+    const string path = "/data/test/fuzztest.mp4";
     ret = WriteDataToFile(path, data, size);
     if (ret != 0) {
         cout << "WriteDataToFile fail" << endl;
