@@ -17,13 +17,13 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
+    "avmetadatafetchframeattime_fuzzer:AVmetadataFetchFrameAtTimeFuzzTest",
+    "avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
+    "avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",
+    "avmetadatasetsource_fuzzer:AVmetadataSetSource",
     "playerfile_fuzzer:PlayerFileFuzzTest",
     "playerseek_fuzzer:PlayerSeekFuzzTest",
     "playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
-    "avmetadatafetchframeattime_fuzzer:AVmetadataFetchFrameAtTimeFuzzTest",
-    "avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",
-    "avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
-    "avmetadatasetsource_fuzzer:AVmetadataSetSource"
   ]
 }
 ###############################################################################
