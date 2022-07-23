@@ -54,6 +54,7 @@ private:
     static napi_value Reset(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
+    static napi_value SetSubsequentFile(napi_env env, napi_callback_info info);
     void ErrorCallback(MediaServiceExtErrCode errCode);
     void StateCallback(const std::string &callbackName);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -67,6 +68,8 @@ private:
         int32_t encodeBitRate;
         int32_t audioSampleRate;
         int32_t numberOfChannels;
+        int32_t maxDuration = 0;
+        int64_t maxFileSize = 0;
         Location location;
     };
     int32_t GetAudioProperties(napi_env env, napi_value args, AudioRecorderProperties &properties);
@@ -74,6 +77,7 @@ private:
     int32_t GetAudioUriPath(napi_env env, napi_value args, std::string &uriPath);
     int32_t OnPrepare(const std::string &uriPath, const AudioRecorderProperties &properties);
     int32_t SetUri(const std::string &uriPath);
+    int32_t SetNextUri(const std::string &uriPath);
     int32_t CheckValidPath(const std::string &filePath, std::string &realPath);
     AudioRecorderNapi();
     ~AudioRecorderNapi();
@@ -86,6 +90,15 @@ private:
     std::unique_ptr<TaskQueue> taskQue_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
 };
+
+struct AudioRecorderAsyncContext : public MediaAsyncContext {
+    explicit AudioRecorderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    ~AudioRecorderAsyncContext() = default;
+
+    AudioRecorderNapi *napi = nullptr;
+    std::string url = "";
+};
+
 } // namespace Media
 } // namespace OHOS
 #endif // AUDIO_RECORDER_NAPI_H_

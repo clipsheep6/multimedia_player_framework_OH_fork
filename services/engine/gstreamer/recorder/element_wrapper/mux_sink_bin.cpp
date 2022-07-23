@@ -34,10 +34,25 @@ namespace {
     constexpr int32_t MAX_LONGITUDE = 180;
     constexpr int32_t MIN_LONGITUDE = -180;
     constexpr uint32_t MULTIPLY10000 = 10000;
+    constexpr int64_t MIN_DURATION_MSECONDS = 60 * 1000;  // 60s
+    constexpr int64_t MIN_SIZE_BYTES = 5 * 1024 * 1024;  // 5MB
+    constexpr int64_t MAX_DURATION_MSECONDS = 30 * 60 * 1000;  // 30 * 60s
+    constexpr int64_t MAX_SIZE_BYTES = 1 * 1024 * 1024 * 1024;  // 1GB
+    constexpr uint64_t CONVERT_MSEC_TO_NANOSEC = 1000000;
 }
 
 namespace OHOS {
 namespace Media {
+static const std::map<std::string, RecorderInfoType> ELEMENT_MSG_TYPE_CHANGE_TABLE = {
+    {"splitmuxsink-fragment-nextfd-not-set", RECORDER_INFO_NEXT_FILE_FD_NOT_SET},
+    {"splitmuxsink-fragment-approaching-size", RECORDER_INFO_MAX_FILESIZE_APPROACHING},
+    {"splitmuxsink-fragment-approaching-duration", RECORDER_INFO_MAX_DURATION_APPROACHING},
+    {"splitmuxsink-fragment-closed-size", RECORDER_INFO_MAX_FILESIZE_REACHED},
+    {"splitmuxsink-fragment-closed-duration", RECORDER_INFO_MAX_DURATION_REACHED},
+    {"splitmuxsink-fragment-opened", RECORDER_INFO_NEXT_OUTPUT_FILE_STARTED},
+    {"splitmuxsink-fragment-closed", RECORDER_INFO_FRAGMENT_CLOSED},
+};
+
 MuxSinkBin::~MuxSinkBin()
 {
     MEDIA_LOGD("enter, dtor");
@@ -82,6 +97,9 @@ int32_t MuxSinkBin::Configure(const RecorderParam &recParam)
         case RecorderPublicParamType::OUT_FD:
             ret = ConfigureOutputTarget(recParam);
             break;
+        case RecorderPublicParamType::NEXT_OUT_FD:
+            ret = ConfigureNextOutputFd(recParam);
+            break;
         case RecorderPublicParamType::MAX_DURATION:
             ret = ConfigureMaxDuration(recParam);
             break;
@@ -99,6 +117,77 @@ int32_t MuxSinkBin::Configure(const RecorderParam &recParam)
     }
     return ret;
 }
+
+RecorderMsgProcResult MuxSinkBin::DoProcessMessage(GstMessage &rawMsg, RecorderMessage &prettyMsg)
+{
+    if (GST_MESSAGE_TYPE(&rawMsg) != GST_MESSAGE_ELEMENT) {
+        return RecorderMsgProcResult::REC_MSG_PROC_IGNORE;
+    }
+    (void)prettyMsg;
+
+    GstMessage *local = static_cast<GstMessage *>(&rawMsg);
+    const GstStructure *msgStructure = gst_message_get_structure(local);
+    if (NULL == msgStructure) {
+        return RecorderMsgProcResult::REC_MSG_PROC_IGNORE;
+    }
+
+    const char* msgName = gst_structure_get_name(msgStructure);
+
+
+    MEDIA_LOGD("Recive info message name:%{public}s", msgName);
+    auto elementMsgTypeIter = ELEMENT_MSG_TYPE_CHANGE_TABLE.find(msgName);
+    if (elementMsgTypeIter != ELEMENT_MSG_TYPE_CHANGE_TABLE.end()) {
+        prettyMsg.type = REC_MSG_INFO;
+        prettyMsg.code = elementMsgTypeIter->second;
+        MEDIA_LOGD("Recive info message name:%{public}s", msgName);
+        if (prettyMsg.code == RECORDER_INFO_NEXT_OUTPUT_FILE_STARTED && isFirstRecvOpen == false) {
+            if (nextFd_ > 0) {
+                MEDIA_LOGD("RECORDER_INFO_NEXT_OUTPUT_FILE_STARTED nextFd_:%{public}d", nextFd_);
+                outFd_ = nextFd_;
+                nextFd_ = -1;
+            }
+        } else if (prettyMsg.code == RECORDER_INFO_NEXT_OUTPUT_FILE_STARTED && isFirstRecvOpen == true) {
+            isFirstRecvOpen = false;
+            return RecorderMsgProcResult::REC_MSG_PROC_IGNORE;
+        } else if (prettyMsg.code == RECORDER_INFO_MAX_FILESIZE_REACHED ||
+                   prettyMsg.code == RECORDER_INFO_MAX_DURATION_REACHED ||
+                   prettyMsg.code == RECORDER_INFO_FRAGMENT_CLOSED) {
+            if (outFd_ > 0) {
+                (void)::close(outFd_);
+                outFd_ = -1;
+            }
+
+            if (nextFd_ > 0) {
+                outFd_ = nextFd_;
+                nextFd_ = -1;
+            }
+        }
+
+        return RecorderMsgProcResult::REC_MSG_PROC_OK;
+    }
+
+    return RecorderMsgProcResult::REC_MSG_PROC_IGNORE;
+}
+
+int32_t MuxSinkBin::ConfigureNextOutputFd(const RecorderParam &recParam)
+{
+    const NextOutFd &param = static_cast<const NextOutFd &>(recParam);
+    int flags = fcntl(param.fd, F_GETFL);
+    if (flags == -1) {
+        MEDIA_LOGE("Fail to get File Status Flags");
+        return MSERR_INVALID_VAL;
+    }
+    if ((static_cast<unsigned int>(flags) & (O_RDWR | O_WRONLY)) == 0) {
+        MEDIA_LOGE("File descriptor is not in read-write mode or write-only mode");
+        return MSERR_INVALID_VAL;
+    }
+    nextFd_ = dup(param.fd);
+    MEDIA_LOGI("Configure nextoutput fd %{public}d", nextFd_);
+    g_object_set(gstElem_, "next-fd", nextFd_, nullptr);
+
+    return MSERR_OK;
+}
+
 
 int32_t MuxSinkBin::ConfigureOutputFormat(const RecorderParam &recParam)
 {
@@ -174,28 +263,35 @@ int32_t MuxSinkBin::ConfigureOutputTarget(const RecorderParam &recParam)
 int32_t MuxSinkBin::ConfigureMaxDuration(const RecorderParam &recParam)
 {
     const MaxDuration &param = static_cast<const MaxDuration &>(recParam);
-    if (param.duration <= 0) {
-        MEDIA_LOGE("Invalid max record duration: %{public}d", param.duration);
+    if ((param.duration != 0 && param.duration < MIN_DURATION_MSECONDS) ||
+       (param.duration > MAX_DURATION_MSECONDS)) {
+        MEDIA_LOGE("Invalid record duration: %{public}d, Min=%{public}ld, Max=%{public}ld",
+        param.duration, MIN_DURATION_MSECONDS, MAX_DURATION_MSECONDS);
         return MSERR_INVALID_VAL;
     }
     MEDIA_LOGI("Set max duration success: %{public}d", param.duration);
 
     MarkParameter(recParam.type);
     maxDuration_ = param.duration;
+    maxDuration_ = maxDuration_ * CONVERT_MSEC_TO_NANOSEC;
+    g_object_set(gstElem_, "max-size-time", maxDuration_, nullptr);
     return MSERR_OK;
 }
 
 int32_t MuxSinkBin::ConfigureMaxFileSize(const RecorderParam &recParam)
 {
     const MaxFileSize &param = static_cast<const MaxFileSize &>(recParam);
-    if (param.size <= 0) {
-        MEDIA_LOGE("Invalid max record file size: (%{public}" PRId64 ")", param.size);
+    if ((param.size != 0 && param.size < MIN_SIZE_BYTES) ||
+        (param.size > MAX_SIZE_BYTES)) {
+        MEDIA_LOGE("Invalid record file size: (%{public}" PRId64 "), Min=%{public}ld, Max=%{public}ld",
+        param.size, MIN_SIZE_BYTES, MAX_SIZE_BYTES);
         return MSERR_INVALID_VAL;
     }
     MEDIA_LOGI("Set max filesize success: (%{public}" PRId64 ")", param.size);
 
     MarkParameter(recParam.type);
     maxSize_ = param.size;
+    g_object_set(gstElem_, "max-size-bytes", maxSize_, nullptr);
     return MSERR_OK;
 }
 
@@ -205,9 +301,9 @@ int32_t MuxSinkBin::ConfigureGeoLocation(const RecorderParam &recParam)
     bool setLocationToMux = true;
     if (param.latitude < MIN_LATITUDE || param.latitude > MAX_LATITUDE || param.longitude < MIN_LONGITUDE
         || param.longitude > MAX_LONGITUDE) {
-        setLocationToMux = false;
-        MEDIA_LOGE("Invalid GeoLocation!");
-    }
+            setLocationToMux = false;
+            MEDIA_LOGE("Invalid GeoLocation!");
+        }
 
     MarkParameter(recParam.type);
     int32_t latitudex10000 = param.latitude * MULTIPLY10000;
@@ -224,9 +320,9 @@ int32_t MuxSinkBin::ConfigureRotationAngle(const RecorderParam &recParam)
     const RotationAngle &param = static_cast<const RotationAngle &>(recParam);
     bool setRotationToMux = true;
     if (param.rotation != ROTATION_90 && param.rotation != ROTATION_180 && param.rotation != ROTATION_270) {
-        setRotationToMux = false;
-        MEDIA_LOGE("Invalid rotation: %{public}d, keep default 0", param.rotation);
-    }
+            setRotationToMux = false;
+            MEDIA_LOGE("Invalid rotation: %{public}d, keep default 0", param.rotation);
+        }
 
     MarkParameter(recParam.type);
     if (setRotationToMux) {
@@ -321,6 +417,11 @@ int32_t MuxSinkBin::Reset()
         outFd_ = -1;
     }
 
+    if (nextFd_ > 0) {
+        (void)::close(nextFd_);
+        nextFd_ = -1;
+    }
+
     return MSERR_OK;
 }
 
@@ -343,7 +444,7 @@ int32_t MuxSinkBin::CreateMuxerElement(const std::string &name)
 
 void MuxSinkBin::Dump()
 {
-    MEDIA_LOGI("file format = %{public}d, max duration = %{public}d, "
+    MEDIA_LOGI("file format = %{public}d, max duration = %{public}lu, "
                "max size = %{public}" PRId64 ", fd = %{public}d, path = %{public}s",
                format_, maxDuration_,  maxSize_, outFd_, outPath_.c_str());
 }

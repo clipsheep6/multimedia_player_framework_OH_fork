@@ -62,6 +62,7 @@ napi_value VideoRecorderNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("reset", Reset),
         DECLARE_NAPI_FUNCTION("release", Release),
         DECLARE_NAPI_FUNCTION("on", On),
+        DECLARE_NAPI_FUNCTION("setSubsequentFile", SetSubsequentFile),
 
         DECLARE_NAPI_GETTER("state", GetState),
     };
@@ -596,6 +597,52 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value VideoRecorderNapi::SetSubsequentFile(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGD("SetSubsequentFile In");
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+
+    napi_value jsThis = nullptr;
+    static constexpr size_t minArgCount = 2;
+    napi_value args[minArgCount] = { nullptr, nullptr };
+    size_t argCount = minArgCount;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+    napi_valuetype valueType = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
+        asyncCtx->url = CommonNapi::GetStringArgument(env, args[0]);
+    } else {
+        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "Illegal argument");
+    }
+
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "SetSubsequentFile", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
+        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            return;
+        }
+        if (threadCtx->napi->SetNextUri(threadCtx->url) != MSERR_OK) {
+            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to SetSubsequentFile");
+        }
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+
+    return result;
+}
 
 void VideoRecorderNapi::GetConfig(napi_env env, napi_value args,
     std::unique_ptr<VideoRecorderAsyncContext> &ctx, VideoRecorderProperties &properties)
@@ -648,6 +695,8 @@ int32_t VideoRecorderNapi::GetVideoRecorderProperties(napi_env env, napi_value a
     (void)CommonNapi::GetPropertyInt32(env, item, "videoFrameWidth", properties.profile.videoFrameWidth);
     (void)CommonNapi::GetPropertyInt32(env, item, "videoFrameHeight", properties.profile.videoFrameHeight);
     (void)CommonNapi::GetPropertyInt32(env, item, "videoFrameRate", properties.profile.videoFrameRate);
+    (void)CommonNapi::GetPropertyInt32(env, args, "maxDuration", properties.maxDuration);
+    (void)CommonNapi::GetPropertyInt64(env, args, "maxSize", properties.maxFileSize);
 
     return MSERR_OK;
 }
@@ -686,6 +735,12 @@ int32_t VideoRecorderNapi::SetVideoRecorderProperties(std::unique_ptr<VideoRecor
         ret = recorder_->SetOutputFormat(properties.profile.outputFormat);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set OutputFormat");
     }
+    ret = recorder_->SetMaxDuration(properties.maxDuration);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to SetMaxDuration");
+
+    ret = recorder_->SetMaxFileSize(properties.maxFileSize);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to SetMaxFileSize");
+
     ret = recorder_->SetVideoEncoder(ctx->napi->videoSourceID, properties.profile.videoCodecFormat);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set videoCodec");
 
@@ -718,6 +773,25 @@ int32_t VideoRecorderNapi::SetUrl(const std::string &urlPath)
         CHECK_AND_RETURN_RET(recorder_->SetOutputFile(fd) == MSERR_OK, MSERR_INVALID_OPERATION);
     } else {
         MEDIA_LOGE("invalid input uri, not a fd!");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    return MSERR_OK;
+}
+
+int32_t VideoRecorderNapi::SetNextUri(const std::string &uriPath)
+{
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "No memory");
+    const std::string fdHead = "fd://";
+    int32_t fd = -1;
+
+    if (uriPath.find(fdHead) != std::string::npos) {
+        std::string inputFd = uriPath.substr(fdHead.size());
+        CHECK_AND_RETURN_RET(StrToInt(inputFd, fd) == true, MSERR_INVALID_VAL);
+        CHECK_AND_RETURN_RET(fd >= 0, MSERR_INVALID_OPERATION);
+        CHECK_AND_RETURN_RET(recorder_->SetNextOutputFile(fd) == MSERR_OK, MSERR_INVALID_OPERATION);
+    } else {
+        MEDIA_LOGE("invalid input uri, neither file nor fd!");
         return MSERR_INVALID_OPERATION;
     }
 

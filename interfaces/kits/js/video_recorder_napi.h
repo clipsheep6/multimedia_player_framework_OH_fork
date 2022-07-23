@@ -63,6 +63,7 @@ private:
     static napi_value Release(napi_env env, napi_callback_info info);
     static napi_value Reset(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
+    static napi_value SetSubsequentFile(napi_env env, napi_callback_info info);
     static napi_value GetState(napi_env env, napi_callback_info info);
     void ErrorCallback(MediaServiceExtErrCode errCode);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -89,6 +90,8 @@ private:
         VideoRecorderProfile profile;
         int32_t orientationHint = 0; // Optional
         Location location; // Optional
+        int32_t maxDuration = 0;
+        int64_t maxFileSize = 0;
         std::string url;
     };
 
@@ -98,6 +101,7 @@ private:
     void GetConfig(napi_env env, napi_value args, std::unique_ptr<VideoRecorderAsyncContext> &ctx,
         VideoRecorderProperties &properties);
     int32_t SetUrl(const std::string &UrlPath);
+    int32_t SetNextUri(const std::string &uriPath);
     bool isSurfaceIdVaild(uint64_t surfaceID);
 
     static thread_local napi_ref constructor_;
@@ -118,6 +122,7 @@ struct VideoRecorderAsyncContext : public MediaAsyncContext {
     ~VideoRecorderAsyncContext() = default;
 
     VideoRecorderNapi *napi = nullptr;
+    std::string url = "";
 };
 } // namespace Media
 } // namespace OHOS
