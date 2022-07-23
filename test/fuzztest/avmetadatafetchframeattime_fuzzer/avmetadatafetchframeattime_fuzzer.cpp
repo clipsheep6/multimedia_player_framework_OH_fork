@@ -78,8 +78,8 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t* d
         int32_t dstHeight = common_.ProduceRandomNumberCrypt();
         struct PixelMapParams pixelMapParams_ = {dstWidth, dstHeight, colorFormat};
         
-        std::shared_ptr<PixelMap> ret_fetchframeattime = metadata_ -> FetchFrameAtTime(*reinterpret_cast<int64_t *>(data),
-            option, pixelMapParams_);
+        std::shared_ptr<PixelMap> ret_fetchframeattime =
+		    metadata_ -> FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), option, pixelMapParams_);
 
         if (ret_fetchframeattime != 0) {
             cout << "metadata_ FetchFrameAtTime fail" << endl;
