@@ -33,6 +33,7 @@ namespace {
     constexpr uint64_t BUFFER_DURATION = 15000000000; // 15s
     constexpr int32_t BUFFER_LOW_PERCENT_DEFAULT = 1;
     constexpr int32_t BUFFER_HIGH_PERCENT_DEFAULT = 4;
+    constexpr int32_t BUFFER_PERCENT_THRESHOLD = 100;
     constexpr uint32_t HTTP_TIME_OUT_DEFAULT = 15; // 15s
     constexpr int32_t NANO_SEC_PER_USEC = 1000;
     constexpr double DEFAULT_RATE = 1.0;
@@ -318,9 +319,14 @@ int32_t PlayBinCtrlerBase::SetRateInternal(double rate)
 {
     MEDIA_LOGD("execute set rate, rate: %{public}lf", rate);
 
-    gint64 position = 0;
-    gboolean ret = gst_element_query_position(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &position);
-    CHECK_AND_RETURN_RET_LOG(ret, MSERR_NO_MEMORY, "query position failed");
+    gint64 position;
+    gboolean ret;
+    if (isDuration_) {
+        position = duration_ * NANO_SEC_PER_USEC;
+    } else {
+        ret = gst_element_query_position(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &position);
+        CHECK_AND_RETURN_RET_LOG(ret, MSERR_NO_MEMORY, "query position failed");
+    }
 
     GstSeekFlags flags = ChooseSetRateFlags(rate);
     int64_t start = rate > 0 ? position : 0;
@@ -460,6 +466,7 @@ void PlayBinCtrlerBase::Reset() noexcept
     isSeeking_ = false;
     isRating_ = false;
     isBuffering_ = false;
+    isDuration_ = false;
 
     MEDIA_LOGD("exit");
 }
@@ -786,6 +793,7 @@ void PlayBinCtrlerBase::ProcessEndOfStream()
 {
     MEDIA_LOGD("End of stream");
     std::unique_lock<std::mutex> lock(mutex_);
+    isDuration_ = true;
     if (IsLiveSource()) {
         MEDIA_LOGD("appsrc livemode, can not loop");
         return;
@@ -832,7 +840,8 @@ void PlayBinCtrlerBase::HandleCacheCtrl(const InnerMessage &msg)
 
 void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
 {
-    if (percent < BUFFER_LOW_PERCENT_DEFAULT) {
+    if (percent < static_cast<float>(BUFFER_LOW_PERCENT_DEFAULT) / BUFFER_HIGH_PERCENT_DEFAULT *
+        BUFFER_PERCENT_THRESHOLD) {
         isBuffering_ = true;
         {
             std::unique_lock<std::mutex> lock(mutex_);
@@ -853,7 +862,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
 
 void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
 {
-    if (percent > BUFFER_HIGH_PERCENT_DEFAULT) {
+    if (percent >= BUFFER_PERCENT_THRESHOLD) {
         isBuffering_ = false;
         if (GetCurrState() == playingState_) {
             {
@@ -1073,12 +1082,14 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
         isErrorHappened_ = true;
         stateCond_.notify_all();
     }
+
     if (msg.type == PlayBinMsgType::PLAYBIN_MSG_STATE_CHANGE &&
         msg.code == PlayBinState::PLAYBIN_STATE_STOPPED) {
         std::unique_lock<std::mutex> condLock(stopCondMutex_);
         isStopFinish_ = true;
         stopCond_.notify_all();
     }
+
     MEDIA_LOGD("report msg, type: %{public}d", msg.type);
 
     auto msgReportHandler = std::make_shared<TaskHandler<void>>([this, msg]() { notifier_(msg); });
