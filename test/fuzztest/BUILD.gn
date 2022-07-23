@@ -20,6 +20,10 @@ group("fuzztest") {
     "playerfile_fuzzer:PlayerFileFuzzTest",
     "playerseek_fuzzer:PlayerSeekFuzzTest",
     "playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
+    "avmetadatafetchframeattime_fuzzer:AVmetadataFetchFrameAtTimeFuzzTest",
+    "avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",
+    "avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
+    "avmetadatasetsource_fuzzer:AVmetadataSetSource"
   ]
 }
 ###############################################################################
