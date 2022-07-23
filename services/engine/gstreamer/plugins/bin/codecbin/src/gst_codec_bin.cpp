@@ -578,8 +578,8 @@ static gboolean gst_codec_bin_set_profile(GstCodecBin *bin, gint profile)
         break;
         default:
         break;
-        }
-        bin->codec_profile = pro;
+    }
+    bin->codec_profile = pro;
     return TRUE;
 }
 
@@ -602,8 +602,8 @@ static gboolean gst_codec_bin_set_bit_mode(GstCodecBin *bin, gint bit_mode)
         break;
         default:
         break;
-        }
-        bin->bitrate_mode = rc_mode;
+    }
+    bin->bitrate_mode = rc_mode;
     return TRUE;
 }
 
