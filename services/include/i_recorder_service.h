@@ -211,7 +211,7 @@ public:
     virtual int32_t SetDataSource(DataSourceType dataType, int32_t &sourceId) = 0;
 
     /**
-     * @brief Sets the maximum duration of a recorded file, in seconds.
+     * @brief Sets the maximum duration of a recorded file, in milliseconds.
      *
      * This method must be called before {@link Prepare}. If the setting is valid,
      * {@link RECORDER_INFO_MAX_DURATION_APPROACHING} is reported through {@link OnInfo} in the {@link RecorderCallback}
