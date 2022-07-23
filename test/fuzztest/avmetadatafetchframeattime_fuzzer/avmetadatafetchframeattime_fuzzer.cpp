@@ -60,27 +60,23 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t* d
         Common common_;
         int32_t option = nameListAVMetadataQueryOption[common_.ProduceRandomNumberCrypt() % (4)];
         PixelFormat colorFormat_[11] {
-            PixelFormat :: UNKNOWN,
-            PixelFormat :: ARGB_8888,
-            PixelFormat :: RGB_565,
-            PixelFormat :: RGBA_8888,
-            PixelFormat :: BGRA_8888,
-            PixelFormat :: RGB_888,
-            PixelFormat :: ALPHA_8,
-            PixelFormat :: RGBA_F16,
-            PixelFormat :: NV21,
-            PixelFormat :: NV12,
-            PixelFormat :: CMYK
+            PixelFormat::UNKNOWN,
+            PixelFormat::ARGB_8888,
+            PixelFormat::RGB_565,
+            PixelFormat::RGBA_8888,
+            PixelFormat::BGRA_8888,
+            PixelFormat::RGB_888,
+            PixelFormat::ALPHA_8,
+            PixelFormat::RGBA_F16,
+            PixelFormat::NV21,
+            PixelFormat::NV12,
+            PixelFormat::CMYK
         };
         PixelFormat colorFormat = colorFormat_[common_.ProduceRandomNumberCrypt() % (11)];
 
         int32_t dstWidth = common_.ProduceRandomNumberCrypt();
         int32_t dstHeight = common_.ProduceRandomNumberCrypt();
-        struct PixelMapParams pixelMapParams_ = {
-            dstWidth,
-            dstHeight, 
-            colorFormat
-        };
+        struct PixelMapParams pixelMapParams_ = {dstWidth, dstHeight, colorFormat};
         
         std::shared_ptr<PixelMap> ret_fetchframeattime = metadata_ -> FetchFrameAtTime(*reinterpret_cast<int64_t *>(data),
             option, pixelMapParams_);
@@ -112,4 +108,3 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
     OHOS::Media::FuzzTestAVMetadataFetchFrameAtTime(data, size);
     return 0;
 }
-

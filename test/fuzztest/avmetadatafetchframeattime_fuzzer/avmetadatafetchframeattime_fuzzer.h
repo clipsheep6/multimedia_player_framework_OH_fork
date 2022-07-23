@@ -20,7 +20,6 @@
 #include "test_metadata.h"
 #include "common.h"
 
-
 namespace OHOS {
 namespace Media {
 bool FuzzTestAVMetadataFetchFrameAtTime(uint8_t* data, size_t size);
@@ -33,4 +32,3 @@ public:
 }
 }
 #endif
-

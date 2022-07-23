@@ -22,7 +22,6 @@
 #include "window_option.h"
 #include "image_type.h"
 
-
 using namespace std;
 using namespace OHOS;
 using namespace Media;
@@ -98,4 +97,3 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
     OHOS::Media::FuzzTestAVMetadataResolveMetadata(data, size);
     return 0;
 }
-

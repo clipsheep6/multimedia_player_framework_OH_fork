@@ -22,7 +22,6 @@
 #include "surface.h"
 #include "display_type.h"
 
-
 namespace OHOS {
 namespace Media {
 class TestMetadata : public NoCopyable {
@@ -35,4 +34,3 @@ public:
 }
 }
 #endif
-

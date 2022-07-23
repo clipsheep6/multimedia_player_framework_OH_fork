@@ -48,18 +48,10 @@ int32_t Common::WriteDataToFile(const string &path, const uint8_t* data, size_t 
 int32_t Common::ProduceRandomNumberCrypt()
 { 
     int32_t r = 0;
-    int fd;
-    fd = open("/dev/random", O_RDONLY); /* 通过读取/dev/random来获取随机数 */
+    int fd = open("/dev/random", O_RDONLY); /* 通过读取/dev/random来获取随机数 */
     if (fd > 0) {
         read(fd, &r, sizeof(int32_t));
     }
     close(fd);
-    // num = sprintf_s(RandomArray, sizeof(RandomArray), "ID-%d", r); /* generate the ID */
-    cout << "r:" << r << endl;
-
     return r;
 }
-
-
-
-
