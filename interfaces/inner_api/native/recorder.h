@@ -141,25 +141,25 @@ enum FileSplitType : int32_t {
  */
 enum RecorderInfoType : int32_t {
     /**
-     * The recording duration is reaching the threshold specified by {@link SetMaxDuration}. This type of
-     * information is reported when only one second or 10% is left to reach the allowed duration.
-     */
-    RECORDER_INFO_MAX_DURATION_APPROACHING = 0,
-    /**
      * The recorded file size is reaching the threshold specified by {@link SetMaxFileSize}. This type of
      * information is reported when only 100 KB or 10% is left to reach the allowed size.
      */
-    RECORDER_INFO_MAX_FILESIZE_APPROACHING,
+    RECORDER_INFO_MAX_FILESIZE_APPROACHING = 0,
     /**
-     * The threshold specified by {@link SetMaxDuration} is reached, and the recording ends.
-     * Before calling {@link SetNextOutputFile}, you must close the file.
+     * The recording duration is reaching the threshold specified by {@link SetMaxDuration}. This type of
+     * information is reported when only one second or 10% is left to reach the allowed duration.
      */
-    RECORDER_INFO_MAX_DURATION_REACHED,
+    RECORDER_INFO_MAX_DURATION_APPROACHING,
     /**
      * The threshold specified by {@link SetMaxFileSize} is reached, and the recording ends.
      * Before calling {@link SetNextOutputFile}, you must close the file.
      */
     RECORDER_INFO_MAX_FILESIZE_REACHED,
+    /**
+     * The threshold specified by {@link SetMaxDuration} is reached, and the recording ends.
+     * Before calling {@link SetNextOutputFile}, you must close the file.
+     */
+    RECORDER_INFO_MAX_DURATION_REACHED,
     /** Recording started for the next output file. */
     RECORDER_INFO_NEXT_OUTPUT_FILE_STARTED,
     /** Manual file split completed. */
@@ -171,6 +171,11 @@ enum RecorderInfoType : int32_t {
 
     /** warnings, and the err code passed by the 'extra' argument, the code see "MediaServiceErrCode". */
     RECORDER_INFO_INTERNEL_WARNING,
+    /**
+     * When the segmentation condition is not reached, the user actively stops recording,
+     * receives this message, closes current FD, and does not return to the application.
+     */
+    RECORDER_INFO_FRAGMENT_CLOSED,
 
      /** extend info start,The extension information code agreed upon by the plug-in and
          the application will be transparently transmitted by the service. */
@@ -424,7 +429,7 @@ public:
 
     /**
      * Unsupported App Usage.
-     * @brief Sets the maximum duration of a recorded file, in seconds.
+     * @brief Sets the maximum duration of a recorded file, in milliseconds.
      *
      * This function must be called after {@link SetOutputFormat} but before {@link Prepare}. If the setting is valid,
      * {@link RECORDER_INFO_MAX_DURATION_APPROACHING} is reported through {@link OnInfo} in the {@link RecorderCallback}

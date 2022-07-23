@@ -61,7 +61,8 @@ std::shared_ptr<IRecorderService> RecorderServer::Create()
 
 RecorderServer::RecorderServer()
     : startTimeMonitor_(START_TAG),
-      stopTimeMonitor_(STOP_TAG)
+      stopTimeMonitor_(STOP_TAG),
+      setNextUrl_(false)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -144,6 +145,12 @@ void RecorderServer::OnInfo(InfoType type, int32_t extra)
 {
     std::lock_guard<std::mutex> lock(cbMutex_);
     if (recorderCb_ != nullptr) {
+        if (type == FRAMENT_CLOSED) {
+            return;
+        } else if (type == NEXT_OUTPUT_FILE_STARTED) {
+            setNextUrl_ = false;
+        }
+
         recorderCb_->OnInfo(type, extra);
     }
 }
@@ -314,10 +321,17 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
 int32_t RecorderServer::SetNextOutputFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    if (setNextUrl_ == true) {
+        MEDIA_LOGE("SetNextOutputFile fd also be set: %{public}d", fd);
+        return MSERR_INVALID_OPERATION;
+    }
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     NextOutFd nextFileFd(fd);
-    return recorderEngine_->Configure(DUMMY_SOURCE_ID, nextFileFd);
+    int32_t ret = recorderEngine_->Configure(DUMMY_SOURCE_ID, nextFileFd);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Configure fail");
+    setNextUrl_ = true;
+    return ret;
 }
 
 int32_t RecorderServer::SetMaxFileSize(int64_t size)

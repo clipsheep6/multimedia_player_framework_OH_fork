@@ -101,7 +101,7 @@ int32_t AVCodecEngineCtrl::Prepare(std::shared_ptr<ProcessorConfig> inputConfig,
     CHECK_AND_RETURN_RET(sink_->Configure(outputConfig) == MSERR_OK, MSERR_UNKNOWN);
 
     CHECK_AND_RETURN_RET(gstPipeline_ != nullptr, MSERR_UNKNOWN);
-    GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_PAUSED);
+    GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(gstPipeline_), GST_STATE_READY);
     CHECK_AND_RETURN_RET(ret != GST_STATE_CHANGE_FAILURE, MSERR_UNKNOWN);
     if (ret == GST_STATE_CHANGE_ASYNC) {
         MEDIA_LOGD("Wait state change");
@@ -350,6 +350,18 @@ int32_t AVCodecEngineCtrl::SetParameter(const Format &format)
     if (format.GetValueType(std::string_view("bitrate")) == FORMAT_TYPE_INT32) {
         if (format.GetIntValue("bitrate", value) && value > 0) {
             g_object_set(codecBin_, "bitrate", static_cast<uint32_t>(value), nullptr);
+        }
+    }
+
+    if (format.GetValueType(std::string_view("video_encode_bitrate_mode")) == FORMAT_TYPE_INT32) {
+        if (format.GetIntValue("video_encode_bitrate_mode", value)) {
+            g_object_set(codecBin_, "bitrate-mode", static_cast<uint32_t>(value), nullptr);
+        }
+    }
+
+    if (format.GetValueType(std::string_view("codec_profile")) == FORMAT_TYPE_INT32) {
+        if (format.GetIntValue("codec_profile", value)) {
+            g_object_set(codecBin_, "codec-profile", static_cast<uint32_t>(value), nullptr);
         }
     }
 

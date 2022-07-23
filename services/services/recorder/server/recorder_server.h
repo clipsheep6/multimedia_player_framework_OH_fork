@@ -88,6 +88,7 @@ private:
     std::mutex cbMutex_;
     TimeMonitor startTimeMonitor_;
     TimeMonitor stopTimeMonitor_;
+    bool setNextUrl_;
     struct ConfigInfo {
         VideoSourceType videoSource;
         AudioSourceType audioSource;

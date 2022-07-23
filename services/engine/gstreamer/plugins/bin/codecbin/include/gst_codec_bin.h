@@ -16,6 +16,7 @@
 #ifndef GST_CODEC_BIN_H
 #define GST_CODEC_BIN_H
 
+#include <svc/codec_app_def.h>
 #include "common_utils.h"
 
 G_BEGIN_DECLS
@@ -53,6 +54,8 @@ struct _GstCodecBin {
     gboolean need_sink_convert;
     gboolean need_parser;
     gboolean is_input_surface;
+    guint bit_mode;
+    EProfileIdc profile;
     gboolean is_output_surface;
 
     gint bitrate_mode;
