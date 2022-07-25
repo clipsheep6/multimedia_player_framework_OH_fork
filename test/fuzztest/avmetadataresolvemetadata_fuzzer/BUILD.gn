@@ -19,8 +19,7 @@ module_output_path = "player_framework/avmetadata"
 ##############################fuzztest##########################################
 ohos_fuzztest("AVmetadataResolveMetadataFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file =
-      "//foundation//multimedia/player_framework/test/fuzztest/avmetadataresolvemetadata_fuzzer"
+  fuzz_config_file = "//foundation//multimedia/player_framework/test/fuzztest/avmetadataresolvemetadata_fuzzer"
 
   resource_config_file = "//foundation/multimedia/player_framework/test/fuzztest/resource/ohos_test.xml"
 
@@ -38,8 +37,8 @@ ohos_fuzztest("AVmetadataResolveMetadataFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [
-    "../test_metadata.cpp",
     "../common.cpp",
+    "../test_metadata.cpp",
     "avmetadataresolvemetadata_fuzzer.cpp",
   ]
   deps = [
@@ -47,6 +46,7 @@ ohos_fuzztest("AVmetadataResolveMetadataFuzzTest") {
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/window/window_manager/wm:libwm",
+
     # "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
   ]
   external_deps = [
