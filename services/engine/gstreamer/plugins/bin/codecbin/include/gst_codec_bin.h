@@ -16,6 +16,7 @@
 #ifndef GST_CODEC_BIN_H
 #define GST_CODEC_BIN_H
 
+#include <svc/codec_app_def.h>
 #include "common_utils.h"
 
 G_BEGIN_DECLS
