@@ -30,6 +30,7 @@ public:
     std::mutex mutex_;
     std::condition_variable cond_;
     std::queue<uint32_t> bufferQueue_;
+    std::queue<uint32_t> sizeQueue_;
 };
 
 class VEncDemoCallback : public AVCodecCallback, public NoCopyable {
@@ -74,6 +75,8 @@ private:
     std::shared_ptr<VEncDemoCallback> cb_;
     sptr<Surface> surface_ = nullptr;
     int64_t timestampNs_ = 0;
+    std::string mimetype = "";
+    int32_t isKeyFrame_ = 1;
 };
 } // namespace Media
 } // namespace OHOS
