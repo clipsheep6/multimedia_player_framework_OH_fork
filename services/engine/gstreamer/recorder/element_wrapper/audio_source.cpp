@@ -35,12 +35,6 @@ int32_t AudioSource::Init()
     }
     g_object_set(gstElem_, "source-type", desc_.type_, nullptr);
 
-    uint32_t tokenId = IPCSkeleton::GetCallingTokenID();
-    g_object_set(gstElem_, "token-id", tokenId, nullptr);
-
-    int32_t appUid = IPCSkeleton::GetCallingUid();
-    g_object_set(gstElem_, "app-uid", appUid, nullptr);
-
     return MSERR_OK;
 }
 
@@ -56,6 +50,9 @@ int32_t AudioSource::Configure(const RecorderParam &recParam)
             break;
         case RecorderPublicParamType::AUD_BITRATE:
             ret = ConfigAudioBitRate(recParam);
+            break;
+        case RecorderPrivateParamType::APP_INFO:
+            ret = ConfigAppInfo(recParam);
             break;
         default:
             break;
@@ -109,11 +106,24 @@ int32_t AudioSource::ConfigAudioBitRate(const RecorderParam &recParam)
     return MSERR_OK;
 }
 
+int32_t AudioSource::ConfigAppInfo(const RecorderParam &recParam)
+{
+    const AppInfo &param = static_cast<const AppInfo &>(recParam);
+    g_object_set(gstElem_, "token-id", param.appTokenId_, nullptr);
+    g_object_set(gstElem_, "app-uid", param.appUid_, nullptr);
+    g_object_set(gstElem_, "app-pid", param.appPid_, nullptr);
+
+    MEDIA_LOGI("Set app info done");
+    MarkParameter(static_cast<int32_t>(RecorderPrivateParamType::APP_INFO));
+    return MSERR_OK;
+}
+
 int32_t AudioSource::CheckConfigReady()
 {
     std::set<int32_t> expectedParam = {
         RecorderPublicParamType::AUD_SAMPLERATE,
         RecorderPublicParamType::AUD_CHANNEL,
+        RecorderPrivateParamType::APP_INFO,
     };
 
     if (!CheckAllParamsConfigured(expectedParam)) {

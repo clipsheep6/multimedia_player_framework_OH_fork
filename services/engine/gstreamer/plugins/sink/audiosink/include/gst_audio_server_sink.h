@@ -45,6 +45,8 @@ struct _GstAudioServerSink {
     guint bits_per_sample;
     guint channels;
     guint sample_rate;
+    gint appuid;
+    gint apppid;
     gfloat volume;
     gfloat max_volume;
     gfloat min_volume;
@@ -57,6 +59,11 @@ struct _GstAudioServerSink {
     GMutex render_lock;
     std::mutex mutex_;
     GstBuffer *pause_cache_buffer;
+    guint renderer_desc;
+    gint renderer_flag;
+    GstClockTime last_render_pts;
+    gboolean enable_opt_render_delay;
+    GstClockTimeDiff last_running_time_diff;
 };
 
 struct _GstAudioServerSinkClass {

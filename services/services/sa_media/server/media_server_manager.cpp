@@ -19,6 +19,7 @@
 #include "player_service_stub.h"
 #include "avmetadatahelper_service_stub.h"
 #include "avcodeclist_service_stub.h"
+#include "recorder_profiles_service_stub.h"
 #include "avmuxer_service_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -30,6 +31,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServe
 namespace OHOS {
 namespace Media {
 constexpr uint32_t SERVER_MAX_NUMBER = 16;
+constexpr uint32_t RECORDER_MAX_NUMBER = 2;
 MediaServerManager &MediaServerManager::GetInstance()
 {
     static MediaServerManager instance;
@@ -46,17 +48,20 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
         dumpString += " uid = ";
         dumpString += std::to_string(iter.uid_);
         dumpString += "-----\n";
-        write(fd, dumpString.c_str(), dumpString.size());
-        dumpString.clear();
-        i++;
-        if (!needDetail) {
-            continue;
+        if (fd != -1) {
+            write(fd, dumpString.c_str(), dumpString.size());
+            dumpString.clear();
         }
-        if (iter.entry_(fd) != MSERR_OK) {
+        i++;
+        if (needDetail && iter.entry_(fd) != MSERR_OK) {
             return OHOS::INVALID_OPERATION;
         }
     }
-    write(fd, dumpString.c_str(), dumpString.size());
+    if (fd != -1) {
+        write(fd, dumpString.c_str(), dumpString.size());
+    } else {
+        MEDIA_LOGI("%{public}s", dumpString.c_str());
+    }
     dumpString.clear();
 
     return OHOS::NO_ERROR;
@@ -129,6 +134,9 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         case AVCODEC: {
             return CreateAVCodecStubObject();
         }
+        case RECORDERPROFILES: {
+            return CreateRecorderProfilesStubObject();
+        }
         case AVMUXER: {
             return CreateAVMuxerStubObject();
         }
@@ -167,13 +175,16 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
         dumperTbl_[StubType::PLAYER].emplace_back(dumper);
         MEDIA_LOGD("The number of player services(%{public}zu) pid(%{public}d).",
             playerStubMap_.size(), pid);
+        if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
+            MEDIA_LOGW("failed to call InstanceDump");
+        }
     }
     return object;
 }
 
 sptr<IRemoteObject> MediaServerManager::CreateRecorderStubObject()
 {
-    if (recorderStubMap_.size() >= SERVER_MAX_NUMBER) {
+    if (recorderStubMap_.size() >= RECORDER_MAX_NUMBER) {
         MEDIA_LOGE("The number of recorder services(%{public}zu) has reached the upper limit."
             "Please release the applied resources.", recorderStubMap_.size());
         return nullptr;
@@ -198,6 +209,9 @@ sptr<IRemoteObject> MediaServerManager::CreateRecorderStubObject()
         dumperTbl_[StubType::RECORDER].emplace_back(dumper);
         MEDIA_LOGD("The number of recorder services(%{public}zu) pid(%{public}d).",
             recorderStubMap_.size(), pid);
+        if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
+            MEDIA_LOGW("failed to call InstanceDump");
+        }
     }
     return object;
 }
@@ -228,6 +242,9 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMetadataHelperStubObject()
 
         MEDIA_LOGD("The number of avmetadatahelper services(%{public}zu) pid(%{public}d).",
             avMetadataHelperStubMap_.size(), pid);
+        if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
+            MEDIA_LOGW("failed to call InstanceDump");
+        }
     }
     return object;
 }
@@ -279,6 +296,30 @@ sptr<IRemoteObject> MediaServerManager::CreateAVCodecStubObject()
         dumper.remoteObject_ = object;
         dumperTbl_[StubType::AVCODEC].emplace_back(dumper);
         MEDIA_LOGD("The number of avcodec services(%{public}zu).", avCodecStubMap_.size());
+        if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
+            MEDIA_LOGW("failed to call InstanceDump");
+        }
+    }
+    return object;
+}
+
+sptr<IRemoteObject> MediaServerManager::CreateRecorderProfilesStubObject()
+{
+    if (recorderProfilesStubMap_.size() >= SERVER_MAX_NUMBER) {
+        MEDIA_LOGE("The number of recorder_profiles services(%{public}zu) has reached the upper limit."
+            "Please release the applied resources.", recorderProfilesStubMap_.size());
+        return nullptr;
+    }
+    sptr<RecorderProfilesServiceStub> recorderProfilesStub = RecorderProfilesServiceStub::Create();
+    if (recorderProfilesStub == nullptr) {
+        MEDIA_LOGE("failed to create recorderProfilesStub");
+        return nullptr;
+    }
+    sptr<IRemoteObject> object = recorderProfilesStub->AsObject();
+    if (object != nullptr) {
+        pid_t pid = IPCSkeleton::GetCallingPid();
+        recorderProfilesStubMap_[object] = pid;
+        MEDIA_LOGD("The number of recorder_profiles services(%{public}zu).", recorderProfilesStubMap_.size());
     }
     return object;
 }
@@ -370,6 +411,18 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             MEDIA_LOGE("find avcodeclist object failed, pid(%{public}d).", pid);
             break;
         }
+        case RECORDERPROFILES: {
+            for (auto it = recorderProfilesStubMap_.begin(); it != recorderProfilesStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy mediaprofile stub services(%{public}zu) pid(%{public}d).",
+                        recorderProfilesStubMap_.size(), pid);
+                    (void)recorderProfilesStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find mediaprofile object failed, pid(%{public}d).", pid);
+            break;
+        }
         case AVMUXER: {
             for (auto it = avmuxerStubMap_.begin(); it != avmuxerStubMap_.end(); it++) {
                 if (it->first == object) {
@@ -443,6 +496,16 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     }
     MEDIA_LOGD("avcodeclist stub services(%{public}zu).", avCodecListStubMap_.size());
 
+    MEDIA_LOGD("mediaprofile stub services(%{public}zu) pid(%{public}d).", recorderProfilesStubMap_.size(), pid);
+    for (auto itMediaProfile = recorderProfilesStubMap_.begin(); itMediaProfile != recorderProfilesStubMap_.end();) {
+        if (itMediaProfile->second == pid) {
+            itMediaProfile = recorderProfilesStubMap_.erase(itMediaProfile);
+        } else {
+            itMediaProfile++;
+        }
+    }
+    MEDIA_LOGD("mediaprofile stub services(%{public}zu).", recorderProfilesStubMap_.size());
+
     MEDIA_LOGD("avmuxer stub services(%{public}zu) pid(%{public}d).", avmuxerStubMap_.size(), pid);
     for (auto itAVMuxer = avmuxerStubMap_.begin(); itAVMuxer != avmuxerStubMap_.end();) {
         if (itAVMuxer->second == pid) {
@@ -460,6 +523,9 @@ void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object
         if (it->remoteObject_ == object) {
             (void)dumperTbl_[type].erase(it);
             MEDIA_LOGD("MediaServerManager::DestroyDumper");
+            if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
+                MEDIA_LOGW("failed to call InstanceDump");
+            }
             return;
         }
     }
@@ -476,6 +542,9 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
                 it++;
             }
         }
+    }
+    if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
+        MEDIA_LOGW("failed to call InstanceDump");
     }
 }
 } // namespace Media

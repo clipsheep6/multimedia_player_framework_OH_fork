@@ -37,10 +37,12 @@ inline constexpr std::string_view INNER_META_KEY_FRAMERATE = "frame-rate";
 inline constexpr std::string_view INNER_META_KEY_GENRE = "genre";
 inline constexpr std::string_view INNER_META_KEY_VIDEO_HEIGHT = "height";
 inline constexpr std::string_view INNER_META_KEY_IMAGE = "image";
+inline constexpr std::string_view INNER_META_KEY_LANGUAGE = "language";
 inline constexpr std::string_view INNER_META_KEY_VIDEO_ORIENTATION = "image-orientation";
 inline constexpr std::string_view INNER_META_KEY_MIME_TYPE = "mime";
 inline constexpr std::string_view INNER_META_KEY_SAMPLE_RATE = "samplerate";
 inline constexpr std::string_view INNER_META_KEY_TITLE = "title";
+inline constexpr std::string_view INNER_META_KEY_TRACK_INDEX = "track-index";
 inline constexpr std::string_view INNER_META_KEY_TRACK_TYPE = "track-type";
 inline constexpr std::string_view INNER_META_KEY_VIDEO_WIDTH = "width";
 

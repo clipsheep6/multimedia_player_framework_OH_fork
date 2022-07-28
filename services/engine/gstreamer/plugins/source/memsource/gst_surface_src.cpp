@@ -51,6 +51,7 @@ enum {
     PROP_SUSPEND,
     PROP_REPEAT,
     PROP_MAX_FRAME_RATE,
+    PROP_NOTIFY_EOS,
 };
 
 G_DEFINE_TYPE(GstSurfaceSrc, gst_surface_src, GST_TYPE_MEM_SRC);
@@ -99,6 +100,10 @@ static void gst_surface_src_class_init(GstSurfaceSrcClass *klass)
     g_object_class_install_property(gobject_class, PROP_MAX_FRAME_RATE,
         g_param_spec_uint("max-framerate", "Max frame rate", "Max frame rate",
             0, G_MAXUINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_NOTIFY_EOS,
+        g_param_spec_boolean("notify-eos", "notify eos", "Need notify eos",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     gstelement_class->change_state = gst_surface_src_change_state;
     gstelement_class->send_event = gst_surface_src_send_event;
@@ -163,6 +168,10 @@ static void gst_surface_src_set_property(GObject *object, guint prop_id, const G
             g_return_if_fail(src->pool != nullptr);
             g_object_set(src->pool, "max-framerate", g_value_get_uint(value), nullptr);
             break;
+        case PROP_NOTIFY_EOS:
+            g_return_if_fail(src->pool != nullptr);
+            g_object_set(src->pool, "notify-eos", g_value_get_boolean(value), nullptr);
+            break;
         default:
             break;
     }
@@ -175,6 +184,7 @@ static GstFlowReturn gst_surface_src_fill(GstBaseSrc *src, guint64 offset, guint
     (void)size;
     GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(buf);
     if (meta != nullptr && (meta->bufferFlag & BUFFER_FLAG_EOS)) {
+        GST_DEBUG_OBJECT(src, "EOS buffer");
         return GST_FLOW_EOS;
     }
     return GST_FLOW_OK;
@@ -233,12 +243,12 @@ static gboolean gst_surface_src_send_event(GstElement *element, GstEvent *event)
     GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(element);
     g_return_val_if_fail(surfacesrc != nullptr, FALSE);
     g_return_val_if_fail(event != nullptr, FALSE);
-    GST_DEBUG_OBJECT(surfacesrc, "New event %s", GST_EVENT_TYPE_NAME(event));
+    GST_INFO_OBJECT(surfacesrc, "New event %s", GST_EVENT_TYPE_NAME(event));
 
     switch (GST_EVENT_TYPE(event)) {
         case GST_EVENT_FLUSH_START:
             if (surfacesrc->need_flush == FALSE) {
-                GST_DEBUG_OBJECT(surfacesrc, "No need flushing");
+                GST_INFO_OBJECT(surfacesrc, "No need flushing");
                 surfacesrc->flushing = FALSE;
                 return TRUE;
             }
@@ -246,7 +256,7 @@ static gboolean gst_surface_src_send_event(GstElement *element, GstEvent *event)
             break;
         case GST_EVENT_FLUSH_STOP:
             if (surfacesrc->flushing == FALSE) {
-                GST_DEBUG_OBJECT(surfacesrc, "No flush start");
+                GST_INFO_OBJECT(surfacesrc, "No flush start");
                 return TRUE;
             }
             surfacesrc->flushing = FALSE;
@@ -279,6 +289,7 @@ static gboolean gst_surface_src_init_pool(GstSurfaceSrc *surfacesrc)
     ON_SCOPE_EXIT(0) { gst_object_unref(pool); };
     GstAllocator *allocator = gst_consumer_surface_allocator_new();
     g_return_val_if_fail(allocator != nullptr, FALSE);
+    ON_SCOPE_EXIT(1) { gst_object_unref(allocator); };
     gst_consumer_surface_pool_set_surface(pool, surfacesrc->consumerSurface);
     gst_consumer_surface_allocator_set_surface(allocator, surfacesrc->consumerSurface);
     // init pool config

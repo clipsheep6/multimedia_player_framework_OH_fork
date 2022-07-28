@@ -30,19 +30,24 @@ config("gst_audio_server_sink_config") {
     "-Wformat=2",
     "-Wfloat-equal",
     "-Wdate-time",
+    "-Werror",
+    "-Wextra",
+    "-Wimplicit-fallthrough",
+    "-Wsign-compare",
+    "-Wunused-parameter",
   ]
 
   include_dirs = [
     "include",
     "//utils/native/base/include",
-    "//foundation/multimedia/media_standard/services/utils/include",
-    "//foundation/multimedia/media_standard/interfaces/inner_api/native",
-    "//foundation/multimedia/media_standard/services/engine/gstreamer/plugins/common",
-    "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiocommon/include",
-    "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiomanager/include",
-    "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiorenderer/include",
-    "//foundation/multimedia/audio_standard/services/include",
-    "//foundation/multimedia/audio_standard/services/include/client",
+    "//foundation/multimedia/player_framework/services/utils/include",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common",
+    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiocommon/include",
+    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiomanager/include",
+    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiorenderer/include",
+    "//foundation/multimedia/audio_framework/services/include",
+    "//foundation/multimedia/audio_framework/services/include/client",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base",
@@ -62,11 +67,15 @@ ohos_shared_library("gst_audio_server_sink") {
     "src/gst_audio_server_sink.cpp",
   ]
 
-  configs = [ ":gst_audio_server_sink_config" ]
+  configs = [
+    ":gst_audio_server_sink_config",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx_public_config",
+  ]
 
   deps = [
-    "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiomanager:audio_client",
-    "//foundation/multimedia/audio_standard/interfaces/inner_api/native/audiorenderer:audio_renderer",
+    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiomanager:audio_client",
+    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiorenderer:audio_renderer",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
@@ -78,5 +87,5 @@ ohos_shared_library("gst_audio_server_sink") {
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
-  part_name = "multimedia_media_standard"
+  part_name = "multimedia_player_framework"
 }

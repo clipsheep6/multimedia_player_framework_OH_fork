@@ -223,7 +223,7 @@ napi_status CommonNapi::CreateError(napi_env env, int32_t errCode, const std::st
     }
 
     napi_value errCodeVal = nullptr;
-    nstatus = napi_create_int32(env, errCode - MS_ERR_OFFSET, &errCodeVal);
+    nstatus = napi_create_int32(env, errCode, &errCodeVal);
     if (nstatus != napi_ok || errCodeVal == nullptr) {
         MEDIA_LOGE("create error code number val fail");
         return napi_invalid_arg;
@@ -628,6 +628,24 @@ void MediaAsyncContext::CheckCtorResult(napi_env env, napi_value &result, MediaA
             args = result;
         }
     }
+}
+
+bool CommonNapi::AddStringProperty(napi_env env, napi_value obj, const std::string &key, std::string value)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    napi_value valueNapi = nullptr;
+    status = napi_create_string_utf8(env, value.c_str(), NAPI_AUTO_LENGTH, &valueNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, keyNapi, valueNapi);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "Failed to set property");
+
+    return true;
 }
 } // namespace Media
 } // namespace OHOS

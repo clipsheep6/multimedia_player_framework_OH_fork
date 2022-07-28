@@ -64,17 +64,23 @@ const std::map<AVCProfile, std::string> AVC_PROFILE_TO_STRING = {
     {AVC_PROFILE_MAIN, "main"},
 };
 
+const std::map<HEVCProfile, std::string> HEVC_PROFILE_TO_STRING = {
+    {HEVC_PROFILE_MAIN, "main"},
+    {HEVC_PROFILE_MAIN_10, "main-10"},
+    {HEVC_PROFILE_MAIN_STILL, "main-still-picture"},
+};
+
 const std::map<std::string_view, InnerCodecMimeType> MIME_TO_CODEC_NAME = {
-    {CodecMimeType::VIDEO_H263, CODEC_MIMIE_TYPE_VIDEO_H263},
-    {CodecMimeType::VIDEO_AVC, CODEC_MIMIE_TYPE_VIDEO_AVC},
-    {CodecMimeType::VIDEO_HEVC, CODEC_MIMIE_TYPE_VIDEO_HEVC},
-    {CodecMimeType::VIDEO_MPEG2, CODEC_MIMIE_TYPE_VIDEO_MPEG2},
-    {CodecMimeType::VIDEO_MPEG4, CODEC_MIMIE_TYPE_VIDEO_MPEG4},
-    {CodecMimeType::AUDIO_VORBIS, CODEC_MIMIE_TYPE_AUDIO_VORBIS},
-    {CodecMimeType::AUDIO_MPEG, CODEC_MIMIE_TYPE_AUDIO_MPEG},
-    {CodecMimeType::AUDIO_AAC, CODEC_MIMIE_TYPE_AUDIO_AAC},
-    {CodecMimeType::AUDIO_FLAC, CODEC_MIMIE_TYPE_AUDIO_FLAC},
-    {CodecMimeType::AUDIO_OPUS, CODEC_MIMIE_TYPE_AUDIO_OPUS},
+    {CodecMimeType::VIDEO_H263, CODEC_MIME_TYPE_VIDEO_H263},
+    {CodecMimeType::VIDEO_AVC, CODEC_MIME_TYPE_VIDEO_AVC},
+    {CodecMimeType::VIDEO_HEVC, CODEC_MIME_TYPE_VIDEO_HEVC},
+    {CodecMimeType::VIDEO_MPEG2, CODEC_MIME_TYPE_VIDEO_MPEG2},
+    {CodecMimeType::VIDEO_MPEG4, CODEC_MIME_TYPE_VIDEO_MPEG4},
+    {CodecMimeType::AUDIO_VORBIS, CODEC_MIME_TYPE_AUDIO_VORBIS},
+    {CodecMimeType::AUDIO_MPEG, CODEC_MIME_TYPE_AUDIO_MPEG},
+    {CodecMimeType::AUDIO_AAC, CODEC_MIME_TYPE_AUDIO_AAC},
+    {CodecMimeType::AUDIO_FLAC, CODEC_MIME_TYPE_AUDIO_FLAC},
+    {CodecMimeType::AUDIO_OPUS, CODEC_MIME_TYPE_AUDIO_OPUS},
 };
 
 std::string PixelFormatToGst(VideoPixelFormat pixel)
@@ -97,6 +103,14 @@ std::string AVCProfileToGst(AVCProfile profile)
 {
     if (AVC_PROFILE_TO_STRING.count(profile) != 0) {
         return AVC_PROFILE_TO_STRING.at(profile);
+    }
+    return "Invalid";
+}
+
+std::string HEVCProfileToGst(HEVCProfile profile)
+{
+    if (HEVC_PROFILE_TO_STRING.count(profile) != 0) {
+        return HEVC_PROFILE_TO_STRING.at(profile);
     }
     return "Invalid";
 }
@@ -161,6 +175,7 @@ uint32_t PixelBufferSize(VideoPixelFormat pixel, uint32_t width, uint32_t height
             break;
         case RGBA:
             size = width * height * 4;
+            break;
         default:
             break;
     }

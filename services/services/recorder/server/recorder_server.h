@@ -79,6 +79,7 @@ private:
     int32_t Init();
     bool CheckPermission();
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);
+    void ExitProcessor();
 
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
@@ -96,7 +97,7 @@ private:
         int32_t height;
         int32_t frameRate;
         int32_t bitRate;
-        double caputreRate;
+        double captureRate;
         int32_t audioSampleRate;
         int32_t audioChannel;
         int32_t audioBitRate;

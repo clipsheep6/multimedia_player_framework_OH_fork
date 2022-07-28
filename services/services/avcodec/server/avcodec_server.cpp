@@ -53,7 +53,16 @@ AVCodecServer::AVCodecServer()
 
 AVCodecServer::~AVCodecServer()
 {
+    std::unique_ptr<std::thread> thread = std::make_unique<std::thread>(&AVCodecServer::ExitProcessor, this);
+    if (thread != nullptr && thread->joinable()) {
+        thread->join();
+    }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+void AVCodecServer::ExitProcessor()
+{
+    codecEngine_ = nullptr;
 }
 
 int32_t AVCodecServer::Init()
@@ -139,6 +148,21 @@ int32_t AVCodecServer::Flush()
     return ret;
 }
 
+int32_t AVCodecServer::NotifyEos()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("AVCodecServer::NotifyEos");
+    CHECK_AND_RETURN_RET_LOG(status_ == AVCODEC_RUNNING, MSERR_INVALID_OPERATION, "invalid state");
+    CHECK_AND_RETURN_RET_LOG(codecEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    int32_t ret = codecEngine_->NotifyEos();
+    if (ret == MSERR_OK) {
+        status_ = AVCODEC_END_OF_STREAM;
+        BehaviorEventWrite(GetStatusDescription(status_), "AVCodec");
+        MEDIA_LOGI("EOS state");
+    }
+    return ret;
+}
+
 int32_t AVCodecServer::Reset()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -154,7 +178,10 @@ int32_t AVCodecServer::Reset()
 int32_t AVCodecServer::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    codecEngine_ = nullptr;
+    std::unique_ptr<std::thread> thread = std::make_unique<std::thread>(&AVCodecServer::ExitProcessor, this);
+    if (thread != nullptr && thread->joinable()) {
+        thread->join();
+    }
     return MSERR_OK;
 }
 

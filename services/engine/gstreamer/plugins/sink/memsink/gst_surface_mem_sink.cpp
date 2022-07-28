@@ -25,7 +25,7 @@
 using namespace OHOS;
 struct _GstSurfaceMemSinkPrivate {
     OHOS::sptr<OHOS::Surface> surface;
-    GstSurfacePool *pool;
+    GstProducerSurfacePool *pool;
 };
 
 enum {
@@ -34,6 +34,7 @@ enum {
     PROP_SURFACE_POOL,
     PROP_CACHE_BUFFERS_NUM,
     PROP_PERFORMANCE_MODE,
+    PROP_VIDEO_SCALE_TYPE,
 };
 
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
@@ -51,6 +52,8 @@ static void gst_surface_mem_sink_dump_from_sys_param(GstSurfaceMemSink *self);
 static void gst_surface_mem_sink_dump_buffer(GstSurfaceMemSink *self, GstBuffer *buffer);
 static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_surface_mem_sink_event(GstBaseSink *bsink, GstEvent *event);
+static GstFlowReturn gst_surface_mem_sink_subclass_do_app_render(GstSurfaceMemSink *sink,
+    GstBuffer *buffer, bool is_preroll);
 
 #define gst_surface_mem_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE(GstSurfaceMemSink, gst_surface_mem_sink,
@@ -100,10 +103,15 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
         g_param_spec_boolean("performance-mode", "performance mode", "performance mode",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_VIDEO_SCALE_TYPE,
+        g_param_spec_uint("video-scale-type", "Video Scale Type",
+            "Set video scale type for graphic",
+            0, G_MAXUINT, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     mem_sink_class->do_propose_allocation = gst_surface_mem_sink_do_propose_allocation;
     mem_sink_class->do_app_render = gst_surface_mem_sink_do_app_render;
     base_sink_class->event = gst_surface_mem_sink_event;
-
+    klass->do_app_render = gst_surface_mem_sink_subclass_do_app_render;
     GST_DEBUG_CATEGORY_INIT(gst_surface_mem_sink_debug_category, "surfacesink", 0, "surfacesink class");
 }
 
@@ -183,6 +191,12 @@ static void gst_surface_mem_sink_set_property(GObject *object, guint propId, con
         case PROP_PERFORMANCE_MODE:
             surface_sink->performanceMode = g_value_get_boolean(value);
             break;
+
+        case PROP_VIDEO_SCALE_TYPE: {
+            guint video_scale_type = g_value_get_uint(value);
+            g_object_set(G_OBJECT(priv->pool), "video-scale-type", video_scale_type, nullptr);
+            break;
+        }
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, pspec);
             break;
@@ -246,12 +260,38 @@ static gboolean gst_surface_mem_sink_drop_frame_check(GstSurfaceMemSink *surface
     return TRUE;
 }
 
+static GstFlowReturn gst_surface_mem_sink_subclass_do_app_render(GstSurfaceMemSink *sink,
+    GstBuffer *buffer, bool is_preroll)
+{
+    (void)sink;
+    (void)buffer;
+    (void)is_preroll;
+
+    return GST_FLOW_OK;
+}
+
+static gboolean gst_surface_mem_sink_need_flush(GstSurfaceMemSink *surface_sink, GstBuffer *buffer, bool is_preroll)
+{
+    gboolean needFlush = TRUE;
+    if (is_preroll) {
+        surface_sink->prerollBuffer = buffer;
+    } else {
+        if (surface_sink->prerollBuffer == buffer) {
+            // if it's paused, then play, this buffer is render by preroll
+            surface_sink->prerollBuffer = nullptr;
+            needFlush = FALSE;
+        }
+    }
+    return needFlush;
+}
+
 static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer, bool is_preroll)
 {
     g_return_val_if_fail(memsink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
     GstSurfaceMemSink *surface_sink = GST_SURFACE_MEM_SINK_CAST(memsink);
     g_return_val_if_fail(surface_sink != nullptr, GST_FLOW_ERROR);
     GstSurfaceMemSinkPrivate *priv = surface_sink->priv;
+    GstSurfaceMemSinkClass *surface_sink_class = GST_SURFACE_MEM_SINK_GET_CLASS(surface_sink);
     GST_OBJECT_LOCK(surface_sink);
 
     if (gst_surface_mem_sink_drop_frame_check(surface_sink) == FALSE) {
@@ -260,10 +300,12 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
         return GST_FLOW_OK;
     }
 
-    if (surface_sink->firstRenderFrame) {
-        GST_WARNING_OBJECT(surface_sink, "KPI-TRACE: first render frame");
-        surface_sink->firstRenderFrame = FALSE;
+    if (surface_sink->firstRenderFrame && is_preroll) {
+        GST_DEBUG_OBJECT(surface_sink, "first render frame");
+        GST_OBJECT_UNLOCK(surface_sink);
+        return GST_FLOW_OK;
     }
+    surface_sink->firstRenderFrame = FALSE;
 
     for (guint i = 0; i < gst_buffer_n_memory(buffer); i++) {
         GstMemory *memory = gst_buffer_peek_memory(buffer, i);
@@ -275,20 +317,12 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
         GstSurfaceMemory *surface_mem = reinterpret_cast<GstSurfaceMemory *>(memory);
         surface_mem->need_render = TRUE;
 
-        gboolean needFlush = TRUE;
-        if (is_preroll) {
-            surface_sink->prerollBuffer = buffer;
-        } else {
-            if (surface_sink->prerollBuffer == buffer) {
-                // if it's paused, then play, this buffer is render by preroll
-                surface_sink->prerollBuffer = nullptr;
-                needFlush = FALSE;
-            }
-        }
-
+        gboolean needFlush = gst_surface_mem_sink_need_flush(surface_sink, buffer, is_preroll);
         if (needFlush) {
+            // surface do not support timestamp is 0.
+            GST_BUFFER_PTS(buffer) = GST_BUFFER_PTS(buffer) == 0 ? 1 : GST_BUFFER_PTS(buffer);
             OHOS::BufferFlushConfig flushConfig = {
-                { 0, 0, surface_mem->buf->GetWidth(), surface_mem->buf->GetHeight() },
+                { 0, 0, surface_mem->buf->GetWidth(), surface_mem->buf->GetHeight() }, GST_BUFFER_PTS(buffer)
             };
             gst_surface_mem_sink_dump_buffer(surface_sink, buffer);
             OHOS::SurfaceError ret = priv->surface->FlushBuffer(surface_mem->buf, surface_mem->fence, flushConfig);
@@ -300,6 +334,10 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
     }
 
     GST_OBJECT_UNLOCK(surface_sink);
+
+    if (surface_sink_class->do_app_render != nullptr) {
+        (void)surface_sink_class->do_app_render(surface_sink, buffer, is_preroll);
+    }
     GST_DEBUG_OBJECT(surface_sink, "End gst_surface_mem_sink_do_app_render");
     return GST_FLOW_OK;
 }
@@ -313,7 +351,7 @@ static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, 
     GstCaps *caps = nullptr;
     gboolean needPool = FALSE;
     gst_query_parse_allocation(query, &caps, &needPool);
-    GST_DEBUG_OBJECT(surface_sink, "process allocation query, caps: %s", gst_caps_to_string(caps));
+    GST_DEBUG_OBJECT(surface_sink, "process allocation query, caps: %" GST_PTR_FORMAT, caps);
 
     if (!needPool) {
         GST_ERROR_OBJECT(surface_sink, "no need buffer pool, unexpected!");
@@ -338,7 +376,7 @@ static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, 
     }
     GST_DEBUG("maxBuffers is: %u", maxBuffers);
 
-    GstSurfacePool *pool = surface_sink->priv->pool;
+    GstProducerSurfacePool *pool = surface_sink->priv->pool;
     g_return_val_if_fail(pool != nullptr, FALSE);
     g_return_val_if_fail(gst_buffer_pool_set_active(GST_BUFFER_POOL(pool), FALSE), FALSE);
 
