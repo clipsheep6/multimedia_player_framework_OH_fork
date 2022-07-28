@@ -104,40 +104,40 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/factory/engine_factory_repo.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/server/player_server.cpp",
       "$MEDIA_ROOT_DIR/services/services/sa_media/client/media_local.cpp",
-	]
+    ]
 	
-	if (multimedia_player_framework_support_recorder) {
+    if (multimedia_player_framework_support_recorder) {
       sources += [
-		"$MEDIA_ROOT_DIR/frameworks/native/recorder/recorder_impl.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/recorder_profiles/recorder_profiles_impl.cpp",
-		"$MEDIA_ROOT_DIR/services/services/recorder/server/recorder_server.cpp",
-		"$MEDIA_ROOT_DIR/services/services/recorder_profiles/server/recorder_profiles_server.cpp",
-	  ]
-	}
-	if (multimedia_player_framework_support_codec) {
+        "$MEDIA_ROOT_DIR/frameworks/native/recorder/recorder_impl.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/recorder_profiles/recorder_profiles_impl.cpp",
+        "$MEDIA_ROOT_DIR/services/services/recorder/server/recorder_server.cpp",
+        "$MEDIA_ROOT_DIR/services/services/recorder_profiles/server/recorder_profiles_server.cpp",
+      ]
+    }
+    if (multimedia_player_framework_support_codec) {
       sources += [
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_decoder_impl.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_encoder_impl.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_decoder_impl.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_encoder_impl.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_info.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_list_impl.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avcodec/server/avcodec_server.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avcodeclist/server/avcodeclist_server.cpp",
-	  ]
-	}
-	if (multimedia_player_framework_support_muxer) {
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_decoder_impl.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_encoder_impl.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_decoder_impl.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_encoder_impl.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_info.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_list_impl.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avcodec/server/avcodec_server.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avcodeclist/server/avcodeclist_server.cpp",
+      ]
+    }
+    if (multimedia_player_framework_support_muxer) {
       sources += [
-		"$MEDIA_ROOT_DIR/frameworks/native/avmuxer/avmuxer_impl.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avmuxer/server/avmuxer_server.cpp",
-	  ]
-	}
-	if (multimedia_player_framework_support_metadata) {
+        "$MEDIA_ROOT_DIR/frameworks/native/avmuxer/avmuxer_impl.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avmuxer/server/avmuxer_server.cpp",
+      ]
+    }
+    if (multimedia_player_framework_support_metadata) {
       sources += [
-		"$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avmetadatahelper/server/avmetadatahelper_server.cpp",
-	  ]
-	}
+        "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/server/avmetadatahelper_server.cpp",
+      ]
+    }
 
     public_configs = [
       ":media_client_local_config",
@@ -151,14 +151,14 @@ ohos_shared_library("media_client") {
       "//utils/native/base:utils",
     ]
 
-	if (multimedia_player_framework_support_recorder || multimedia_player_framework_support_codec ||
-		multimedia_player_framework_support_muxer || multimedia_player_framework_support_metadata) {
-	  public_configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
+    if (multimedia_player_framework_support_recorder || multimedia_player_framework_support_codec ||
+        multimedia_player_framework_support_muxer || multimedia_player_framework_support_metadata) {
+      public_configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
       deps += [
-		"//foundation/graphic/graphic_2d/frameworks/surface:surface",
-		"//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
-	  ]
-	}
+        "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+        "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+      ]
+    }
 
     external_deps = [
       "hiviewdfx_hilog_native:libhilog",
@@ -168,60 +168,60 @@ ohos_shared_library("media_client") {
     sources = [
       "$MEDIA_ROOT_DIR/frameworks/native/common/media_errors.cpp",
       "$MEDIA_ROOT_DIR/frameworks/native/player/player_impl.cpp",
-	  "$MEDIA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
+      "$MEDIA_ROOT_DIR/services/services/common/avsharedmemory_ipc.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/client/player_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
-	  "$MEDIA_ROOT_DIR/services/services/sa_media/client/media_client.cpp",
+      "$MEDIA_ROOT_DIR/services/services/sa_media/client/media_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_listener_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_parcel.cpp",
       "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_service_proxy.cpp",
 	  "$MEDIA_ROOT_DIR/services/utils/avsharedmemorybase.cpp",
 	]
 	
-	if (multimedia_player_framework_support_recorder) {
+    if (multimedia_player_framework_support_recorder) {
       sources += [
-		"$MEDIA_ROOT_DIR/frameworks/native/recorder/recorder_impl.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/recorder_profiles/recorder_profiles_impl.cpp",
-		"$MEDIA_ROOT_DIR/services/services/recorder/client/recorder_client.cpp",
-		"$MEDIA_ROOT_DIR/services/services/recorder/ipc/recorder_listener_stub.cpp",
-		"$MEDIA_ROOT_DIR/services/services/recorder/ipc/recorder_service_proxy.cpp",
-		"$MEDIA_ROOT_DIR/services/services/recorder_profiles/client/recorder_profiles_client.cpp",
-		"$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc/recorder_profiles_service_proxy.cpp",
-		"$MEDIA_ROOT_DIR/services/services/sa_media/ipc/recorder_profiles_parcel.cpp",
-	  ]
-	}
-	if (multimedia_player_framework_support_codec) {
+        "$MEDIA_ROOT_DIR/frameworks/native/recorder/recorder_impl.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/recorder_profiles/recorder_profiles_impl.cpp",
+        "$MEDIA_ROOT_DIR/services/services/recorder/client/recorder_client.cpp",
+        "$MEDIA_ROOT_DIR/services/services/recorder/ipc/recorder_listener_stub.cpp",
+        "$MEDIA_ROOT_DIR/services/services/recorder/ipc/recorder_service_proxy.cpp",
+        "$MEDIA_ROOT_DIR/services/services/recorder_profiles/client/recorder_profiles_client.cpp",
+        "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc/recorder_profiles_service_proxy.cpp",
+        "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/recorder_profiles_parcel.cpp",
+      ]
+    }
+    if (multimedia_player_framework_support_codec) {
       sources += [
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_decoder_impl.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_encoder_impl.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_decoder_impl.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_encoder_impl.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_info.cpp",
-		"$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_list_impl.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avcodec/client/avcodec_client.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avcodec/ipc/avcodec_listener_stub.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avcodec/ipc/avcodec_service_proxy.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avcodeclist/client/avcodeclist_client.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avcodeclist/ipc/avcodeclist_service_proxy.cpp",
-		"$MEDIA_ROOT_DIR/services/services/sa_media/ipc/avcodeclist_parcel.cpp",
-	  ]
-	}
-	if (multimedia_player_framework_support_muxer) {
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_decoder_impl.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_audio_encoder_impl.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_decoder_impl.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodec/avcodec_video_encoder_impl.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_info.cpp",
+        "$MEDIA_ROOT_DIR/frameworks/native/avcodeclist/avcodec_list_impl.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avcodec/client/avcodec_client.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avcodec/ipc/avcodec_listener_stub.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avcodec/ipc/avcodec_service_proxy.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avcodeclist/client/avcodeclist_client.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avcodeclist/ipc/avcodeclist_service_proxy.cpp",
+        "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/avcodeclist_parcel.cpp",
+      ]
+    }
+    if (multimedia_player_framework_support_muxer) {
       sources += [
-		"$MEDIA_ROOT_DIR/frameworks/native/avmuxer/avmuxer_impl.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avmuxer/client/avmuxer_client.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avmuxer/ipc/avmuxer_service_proxy.cpp",
-	  ]
-	}
-	if (multimedia_player_framework_support_metadata) {
+        "$MEDIA_ROOT_DIR/frameworks/native/avmuxer/avmuxer_impl.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avmuxer/client/avmuxer_client.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avmuxer/ipc/avmuxer_service_proxy.cpp",
+      ]
+    }
+    if (multimedia_player_framework_support_metadata) {
       sources += [
-		"$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avmetadatahelper/client/avmetadatahelper_client.cpp",
-		"$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc/avmetadatahelper_service_proxy.cpp",
-	  ]
-	}
+        "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/client/avmetadatahelper_client.cpp",
+        "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc/avmetadatahelper_service_proxy.cpp",
+      ]
+    }
 
     public_configs = [
       ":media_client_ipc_config",
@@ -235,14 +235,14 @@ ohos_shared_library("media_client") {
       "//utils/native/base:utils",
     ]
 	
-	if (multimedia_player_framework_support_recorder || multimedia_player_framework_support_codec ||
-		multimedia_player_framework_support_muxer || multimedia_player_framework_support_metadata) {
-	  public_configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
+    if (multimedia_player_framework_support_recorder || multimedia_player_framework_support_codec ||
+        multimedia_player_framework_support_muxer || multimedia_player_framework_support_metadata) {
+      public_configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
       deps += [
-		"//foundation/graphic/graphic_2d/frameworks/surface:surface",
-		"//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
-	  ]
-	}
+        "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+        "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+      ]
+    }
 
     external_deps = [
       "hiviewdfx_hilog_native:libhilog",
