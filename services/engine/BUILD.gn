@@ -12,10 +12,14 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 group("media_engine_package") {
-  deps = [
-    "common:media_engine_common",
-    "gstreamer:media_engine_gst_package",
-  ]
+  deps = []
+  if (multimedia_player_framework_support_gstreamer) {
+	deps += [
+      "common:media_engine_common",
+      "gstreamer:media_engine_gst_package",
+	]
+  }
 }

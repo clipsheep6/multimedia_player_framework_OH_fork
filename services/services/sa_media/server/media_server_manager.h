@@ -20,9 +20,7 @@
 #include <functional>
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
-#include "recorder_service_stub.h"
 #include "player_service_stub.h"
-#include "avcodec_service_stub.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -64,13 +62,7 @@ private:
     sptr<IRemoteObject> CreateAVCodecStubObject();
     sptr<IRemoteObject> CreateRecorderProfilesStubObject();
     sptr<IRemoteObject> CreateAVMuxerStubObject();
-    std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avmuxerStubMap_;
+	std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>> stubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
 
     std::mutex mutex_;

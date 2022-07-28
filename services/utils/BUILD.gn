@@ -12,6 +12,12 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+config("media_format_public_config") {
+  defines = []
+  defines += media_defines
+}
 
 ohos_static_library("media_format") {
   sources = [
@@ -27,6 +33,8 @@ ohos_static_library("media_format") {
   ]
 
   configs = [ "//foundation/multimedia/player_framework/services/dfx:media_service_dfx_public_config" ]
+  
+  public_configs = [ ":media_format_public_config" ]
 
   deps = [
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
