@@ -88,13 +88,13 @@ public:
 #endif
 
     /**
-     * @brief Create a mediaprofile service.
+     * @brief Create a player service.
      *
      * All player functions must be created and obtained first.
      *
      * @return Returns a valid pointer if the setting is successful;
-     * @since 3.0
-     * @version 3.2
+     * @since 1.0
+     * @version 1.0
      */
     virtual std::shared_ptr<IPlayerService> CreatePlayerService() = 0;
 
