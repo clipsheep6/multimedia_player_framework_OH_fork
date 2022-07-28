@@ -1194,7 +1194,7 @@ declare namespace media {
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return available bitrates.
      */
-    on(type: 'availableBitratesCollect', callback: (bitrates: Array<number>) => void): void
+    on(type: 'availableBitratesCollect', callback: (bitrates: Array<number>) => void): void;
 
     /**
      * Listens for playback error events.
@@ -1229,7 +1229,7 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      */
-    VIDEO_SCALE_TYPE_FIT_CROP
+    VIDEO_SCALE_TYPE_FIT_CROP = 1,
   }
 
   /**
