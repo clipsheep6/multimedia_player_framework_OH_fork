@@ -17,9 +17,9 @@ import("//foundation/multimedia/player_framework/config.gni")
 group("napi_packages") {
   deps = []
   if (multimedia_player_framework_support_jsapi) {
-	deps += [
-	  "js:media",
-	  "js:media_js"
-	]
+    deps += [
+      "js:media",
+      "js:media_js"
+    ]
   }
 }
