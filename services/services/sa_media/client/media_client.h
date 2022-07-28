@@ -61,6 +61,7 @@ public:
     std::shared_ptr<IAVCodecListService> CreateAVCodecListService() override;
     int32_t DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCodec) override;
     int32_t DestroyAVCodecListService(std::shared_ptr<IAVCodecListService> avCodecList) override;
+#endif
 #ifdef SUPPORT_MUXER
     std::shared_ptr<IAVMuxerService> CreateAVMuxerService() override;
 	int32_t DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer) override;
