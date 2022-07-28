@@ -62,7 +62,7 @@ private:
     sptr<IRemoteObject> CreateAVCodecStubObject();
     sptr<IRemoteObject> CreateRecorderProfilesStubObject();
     sptr<IRemoteObject> CreateAVMuxerStubObject();
-	std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>> stubMap_;
+    std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>> stubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
 
     std::mutex mutex_;
