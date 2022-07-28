@@ -106,12 +106,12 @@ ohos_shared_library("media_service") {
     sources += [
       "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles/recorder_profiles_ability_singleton.cpp",
       "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles/recorder_profiles_xml_parser.cpp",
-	  "recorder/ipc/recorder_listener_proxy.cpp",
+      "recorder/ipc/recorder_listener_proxy.cpp",
       "recorder/ipc/recorder_service_stub.cpp",
       "recorder/server/recorder_server.cpp",
       "recorder_profiles/ipc/recorder_profiles_service_stub.cpp",
       "recorder_profiles/server/recorder_profiles_server.cpp",
-	  "sa_media/ipc/recorder_profiles_parcel.cpp",
+      "sa_media/ipc/recorder_profiles_parcel.cpp",
     ]
   }
   if (multimedia_player_framework_support_codec) {
@@ -121,7 +121,7 @@ ohos_shared_library("media_service") {
       "avcodec/server/avcodec_server.cpp",
       "avcodeclist/ipc/avcodeclist_service_stub.cpp",
       "avcodeclist/server/avcodeclist_server.cpp",
-	  "sa_media/ipc/avcodeclist_parcel.cpp",
+      "sa_media/ipc/avcodeclist_parcel.cpp",
     ]
   }
   if (multimedia_player_framework_support_muxer) {
