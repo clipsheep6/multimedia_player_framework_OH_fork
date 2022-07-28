@@ -1,0 +1,49 @@
+diff --git a/test/nativedemo/avcodecvenc/avcodec_venc_demo.cpp b/test/nativedemo/avcodecvenc/avcodec_venc_demo.cpp
+index da689819..b532d674 100644
+--- a/test/nativedemo/avcodecvenc/avcodec_venc_demo.cpp
++++ b/test/nativedemo/avcodecvenc/avcodec_venc_demo.cpp
+@@ -31,11 +31,12 @@ namespace {
+     constexpr uint32_t DEFAULT_FRAME_RATE = 30;
+     constexpr uint32_t YUV_BUFFER_SIZE = 259200; // 480 * 360 * 3 / 2
+     constexpr uint32_t STRIDE_ALIGN = 8;
+-    constexpr uint32_t DEFAULT_BIT_MODE = 1;  // bit mode VBR
++
+     constexpr int32_t FAST_PRODUCER = 50; // 50 fps producer, used to test max_encoder_fps property
+     constexpr int32_t SLOW_PRODUCER = 20; // 20 fps producer, used to test repeat_frame_after property
+     constexpr uint32_t REPEAT_FRAME_AFTER_MS = 50;
+     constexpr uint32_t DEFAULT_FRAME_COUNT = 50;
++    constexpr uint32_t DEFAULT_BITRATE = 128000;
+ }
+ 
+ static BufferFlushConfig g_flushConfig = {
+@@ -62,21 +63,28 @@ void VEncDemo::RunCase(bool enableProp)
+     DEMO_CHECK_AND_RETURN_LOG(CreateVenc() == MSERR_OK, "Fatal: CreateVenc fail");
+ 
+     std::string proflie;
++    std::string bitmode;
+     std::cout << "Enter profile: " << endl;
+     cout << "profile baseline : 0" << endl;
+     cout << "profile high : 4" << endl;
+     cout << "profile main : 8" << endl;
+     (void)getline(cin, proflie);
+ 
+-    int32_t pro = atoi(proflie.c_str());
++    std::cout << "Enter bitmode: " << endl;
++    cout << "bitmode CBR : 0" << endl;
++    cout << "bitmode VBR : 1" << endl;
++    (void)getline(cin, bitmode);
+ 
++    int32_t pro = atoi(proflie.c_str());
++    int32_t bmode = atoi(bitmode.c_str());
+     Format format;
+     format.PutIntValue("width", DEFAULT_WIDTH);
+     format.PutIntValue("height", DEFAULT_HEIGHT);
+     format.PutIntValue("pixel_format", NV21);
+     format.PutIntValue("frame_rate", DEFAULT_FRAME_RATE);
+-    format.PutIntValue("video_encode_bitrate_mode", DEFAULT_BIT_MODE);
++    format.PutIntValue("video_encode_bitrate_mode", bmode);
+     format.PutIntValue("codec_profile", pro);
++    format.PutIntValue("bitrate",DEFAULT_BITRATE);
+ 
+     DEMO_CHECK_AND_RETURN_LOG(Configure(format) == MSERR_OK, "Fatal: Configure fail");
+ 
