@@ -18,12 +18,12 @@ group("media_unit_test") {
   testonly = true
   deps = []
   if (multimedia_player_framework_support_test) {
-	deps = [
+    deps = [
       "unittest/avcodec_test:avcodec_native_unit_test",
       "unittest/avmetadata_test:avmetadata_unit_test",
       "unittest/player_test:player_unit_test",
       "unittest/recorder_test:recorder_unit_test",
-	]
+    ]
   }
 }
 
@@ -31,9 +31,9 @@ group("test_packages") {
   deps = []
   if (multimedia_player_framework_support_test) {
     deps += [
-	  "nativedemo:media_demo",
-	  "jsdemo:media_demo_js",
-	  "jsdemo:mediademo"
+      "nativedemo:media_demo",
+      "jsdemo:media_demo_js",
+      "jsdemo:mediademo"
 	]
   }
 }
