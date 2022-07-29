@@ -179,7 +179,7 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/media_service_proxy.cpp",
       "$MEDIA_ROOT_DIR/services/utils/avsharedmemorybase.cpp",
     ]
-	
+
     if (multimedia_player_framework_support_recorder) {
       sources += [
         "$MEDIA_ROOT_DIR/frameworks/native/recorder/recorder_impl.cpp",
