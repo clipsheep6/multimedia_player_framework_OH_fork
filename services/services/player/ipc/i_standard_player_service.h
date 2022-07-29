@@ -48,7 +48,7 @@ public:
     virtual int32_t GetDuration(int32_t &duration) = 0;
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) = 0;
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
-#ifdef SUPPORT_VIDEO	
+#ifdef SUPPORT_VIDEO
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
 #endif
     virtual bool IsPlaying() = 0;
