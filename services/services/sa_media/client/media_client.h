@@ -45,16 +45,16 @@ public:
     ~MediaClient();
 
     std::shared_ptr<IPlayerService> CreatePlayerService() override;
-	int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) override;
+    int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) override;
 #ifdef SUPPORT_RECORDER
-	std::shared_ptr<IRecorderService> CreateRecorderService() override;
-	std::shared_ptr<IRecorderProfilesService> CreateRecorderProfilesService() override;
-	int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
-	int32_t DestroyMediaProfileService(std::shared_ptr<IRecorderProfilesService> recorderProfiles) override;
+    std::shared_ptr<IRecorderService> CreateRecorderService() override;
+    std::shared_ptr<IRecorderProfilesService> CreateRecorderProfilesService() override;
+    int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
+    int32_t DestroyMediaProfileService(std::shared_ptr<IRecorderProfilesService> recorderProfiles) override;
 #endif
 #ifdef SUPPORT_METADATA
     std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() override;
-	int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;
+    int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;
 #endif
 #ifdef SUPPORT_CODEC
     std::shared_ptr<IAVCodecService> CreateAVCodecService() override;
@@ -64,7 +64,7 @@ public:
 #endif
 #ifdef SUPPORT_MUXER
     std::shared_ptr<IAVMuxerService> CreateAVMuxerService() override;
-	int32_t DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer) override;
+    int32_t DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer) override;
 #endif
 
 private:
@@ -78,8 +78,8 @@ private:
     sptr<MediaDeathRecipient> deathRecipient_ = nullptr;
     std::list<std::shared_ptr<IPlayerService>> playerClientList_;
 #ifdef SUPPORT_RECORDER
-	std::list<std::shared_ptr<IRecorderService>> recorderClientList_;
-	std::list<std::shared_ptr<IRecorderProfilesService>> recorderProfilesClientList_;
+    std::list<std::shared_ptr<IRecorderService>> recorderClientList_;
+    std::list<std::shared_ptr<IRecorderProfilesService>> recorderProfilesClientList_;
 #endif
 #ifdef SUPPORT_METADATA
     std::list<std::shared_ptr<IAVMetadataHelperService>> avMetadataHelperClientList_;
