@@ -637,7 +637,7 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
     int64_t timeNs = timeUs * usecToNanoSec;
     seekPos_ = timeUs;
     isSeeking_ = true;
-    GstEvent *event = gst_event_new_seek(1.0, GST_FORMAT_TIME, static_cast<GstSeekFlags>(seekFlags),
+    GstEvent *event = gst_event_new_seek(rate_, GST_FORMAT_TIME, static_cast<GstSeekFlags>(seekFlags),
         GST_SEEK_TYPE_SET, timeNs, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
     CHECK_AND_RETURN_RET_LOG(event != nullptr, MSERR_NO_MEMORY, "seek failed");
 
@@ -672,6 +672,8 @@ void PlayBinCtrlerBase::SetupCustomElement()
         audioSink_ = sinkProvider_->CreateAudioSink();
         if (audioSink_ != nullptr) {
             g_object_set(playbin_, "audio-sink", audioSink_, nullptr);
+            SetupVolumeChangedCb();
+            SetupInterruptEventCb();
         }
         videoSink_ = sinkProvider_->CreateVideoSink();
         if (videoSink_ != nullptr) {
@@ -1029,7 +1031,7 @@ void PlayBinCtrlerBase::OnVolumeChangedCb(const GstElement *playbin, GstElement 
     }
 
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
-    if (thizStrong != nullptr) {
+    if (thizStrong != nullptr && thizStrong->GetCurrState() != thizStrong->preparingState_) {
         PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_VOLUME_CHANGE, 0, 0, {} };
         thizStrong->ReportMessage(msg);
     }
@@ -1117,3 +1119,4 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
 }
 } // namespace Media
 } // namespace OHOS
+
