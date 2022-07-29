@@ -33,7 +33,7 @@ ohos_static_library("media_format") {
   ]
 
   configs = [ "//foundation/multimedia/player_framework/services/dfx:media_service_dfx_public_config" ]
-  
+
   public_configs = [ ":media_format_public_config" ]
 
   deps = [
