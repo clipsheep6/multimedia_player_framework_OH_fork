@@ -100,8 +100,7 @@ ohos_shared_library("media_service") {
     "sa_media/server/media_server.cpp",
     "sa_media/server/media_server_manager.cpp",
   ]
-  
-  
+
   if (multimedia_player_framework_support_recorder) {
     sources += [
       "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles/recorder_profiles_ability_singleton.cpp",
@@ -136,7 +135,7 @@ ohos_shared_library("media_service") {
       "avmetadatahelper/server/avmetadatahelper_server.cpp",
     ]
   }
-  
+
   configs = [
     ":media_service_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx_public_config",
@@ -148,7 +147,7 @@ ohos_shared_library("media_service") {
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//utils/native/base:utils",
   ]
-  
+
   if (multimedia_player_framework_support_recorder || multimedia_player_framework_support_codec ||
       multimedia_player_framework_support_muxer || multimedia_player_framework_support_metadata) {
     configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
