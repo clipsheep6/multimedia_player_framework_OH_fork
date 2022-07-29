@@ -25,13 +25,13 @@ ohos_shared_library("videodisplaymanager") {
         [ "//foundation/graphic/graphic_2d/frameworks/surface/include" ]
 
     public_configs = [
-        ":videodisplaymanager_public_config",
-        "//utils/native/base:utils_config",
+      ":videodisplaymanager_public_config",
+      "//utils/native/base:utils_config",
     ]
 
     public_deps = [
-        "//drivers/peripheral/display/hdi_service/video_layer/client:video_layer_client",
-        "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+      "//drivers/peripheral/display/hdi_service/video_layer/client:video_layer_client",
+      "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     ]
   }
   external_deps = [
