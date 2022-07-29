@@ -118,6 +118,14 @@ void GstPlayerCtrl::SetHttpTimeOut()
     g_object_set(gstPlayer_, "timeout", static_cast<uint32_t>(HTTP_TIME_OUT_DEFAULT / MILLI), nullptr);
 }
 
+void GstPlayerCtrl::SetRtspLatency(const uint32_t latency)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(gstPlayer_ != nullptr, "gstPlayer_ is nullptr");
+    MEDIA_LOGD("SetRtspLatency");
+    g_object_set(gstPlayer_, "latency", latency, nullptr);
+}
+
 int32_t GstPlayerCtrl::SetUrl(const std::string &url)
 {
     std::unique_lock<std::mutex> lock(mutex_);

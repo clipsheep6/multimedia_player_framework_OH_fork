@@ -31,6 +31,7 @@ public:
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
+    int32_t SetRtspLatency(const uint32_t latency) override;
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const sptr<IRemoteObject> &object) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
@@ -63,6 +64,7 @@ private:
     PlayerServiceStub();
     int32_t Init();
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
+    int32_t SetRtspLatency(MessageParcel &data, MessageParcel &reply);
     int32_t SetSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaDataSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetFdSource(MessageParcel &data, MessageParcel &reply);

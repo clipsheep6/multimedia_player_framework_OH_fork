@@ -76,6 +76,14 @@ int32_t PlayerEngineGstImpl::GetRealPath(const std::string &url, std::string &re
     return MSERR_OK;
 }
 
+int32_t PlayerEngineGstImpl::SetRtspLatency(const uint32_t latency)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerCtrl_ != nullptr, MSERR_INVALID_VAL, "playerCtrl_ is nullptr");
+    playerCtrl_->SetRtspLatency(latency);
+    return MSERR_OK;
+}
+
 int32_t PlayerEngineGstImpl::SetSource(const std::string &url)
 {
     std::unique_lock<std::mutex> lock(mutex_);

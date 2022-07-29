@@ -30,6 +30,7 @@ public:
     PlayerServer();
     virtual ~PlayerServer();
 
+    int32_t SetRtspLatency(const uint32_t latency) override;
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
@@ -82,6 +83,7 @@ private:
     float rightVolume_ = 1.0f; // audiotrack volume range [0, 1]
     PlaybackRateMode speedMode_ = SPEED_FORWARD_1_00_X;
     std::unique_ptr<UriHelper> uriHelper_;
+    std::uint32_t latency_ = 200;
 };
 } // namespace Media
 } // namespace OHOS

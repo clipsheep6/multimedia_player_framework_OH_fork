@@ -33,6 +33,7 @@ public:
     explicit GstPlayerCtrl(GstPlayer *gstPlayer);
     ~GstPlayerCtrl();
 
+    void SetRtspLatency(const uint32_t latency);
     int32_t SetUrl(const std::string &url);
     int32_t SetSource(const std::shared_ptr<GstAppsrcWarp> &appsrcWarp);
     int32_t SetCallbacks(const std::weak_ptr<IPlayerEngineObs> &obs);

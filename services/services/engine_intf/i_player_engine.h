@@ -38,6 +38,7 @@ class IPlayerEngine {
 public:
     virtual ~IPlayerEngine() = default;
 
+    virtual int32_t SetRtspLatency(const uint32_t latency) = 0;
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
     virtual int32_t Play() = 0;

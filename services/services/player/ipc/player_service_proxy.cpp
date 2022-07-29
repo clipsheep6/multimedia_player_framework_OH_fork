@@ -57,6 +57,26 @@ int32_t PlayerServiceProxy::SetListenerObject(const sptr<IRemoteObject> &object)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::SetRtspLatency(const uint32_t latency)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
+    data.WriteInt32(static_cast<int32_t>(latency));
+    int error = Remote()->SendRequest(SET_RTSP_LATENCY, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("Set RtspLatency failed, error: %{public}d", error);
+        return error;
+    }
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::SetSource(const std::string &url)
 {
     MessageParcel data;

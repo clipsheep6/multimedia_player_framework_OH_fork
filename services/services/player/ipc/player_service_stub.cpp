@@ -54,6 +54,7 @@ int32_t PlayerServiceStub::Init()
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
 
     playerFuncs_[SET_LISTENER_OBJ] = &PlayerServiceStub::SetListenerObject;
+    playerFuncs_[SET_RTSP_LATENCY] = &PlayerServiceStub::SetRtspLatency;
     playerFuncs_[SET_SOURCE] = &PlayerServiceStub::SetSource;
     playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = &PlayerServiceStub::SetMediaDataSource;
     playerFuncs_[SET_FD_SOURCE] = &PlayerServiceStub::SetFdSource;
@@ -132,6 +133,12 @@ int32_t PlayerServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
 
     playerCallback_ = callback;
     return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetRtspLatency(const uint32_t latency)
+{
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetRtspLatency(latency);
 }
 
 int32_t PlayerServiceStub::SetSource(const std::string &url)
@@ -304,6 +311,13 @@ int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel 
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     reply.WriteInt32(SetListenerObject(object));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetRtspLatency(MessageParcel &data, MessageParcel &reply)
+{
+    uint32_t latency = static_cast<uint32_t>(data.ReadInt32());
+    reply.WriteInt32(SetRtspLatency(latency));
     return MSERR_OK;
 }
 

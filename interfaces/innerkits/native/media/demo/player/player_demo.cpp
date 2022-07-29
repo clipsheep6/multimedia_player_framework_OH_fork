@@ -39,6 +39,7 @@ constexpr float SPEED_1_75_X = 1.75;
 constexpr float SPEED_2_00_X = 2.00;
 constexpr uint32_t PERCENT = 1;
 constexpr uint32_t TIME = 2;
+constexpr uint32_t TEST_RTSP_LATENCY = 319;
 }
 
 // PlayerCallback override
@@ -559,6 +560,7 @@ int32_t PlayerDemo::SelectSource(const string &pathOuter)
     } else {
         cout << "unknown mode" << endl;
     }
+    player_->SetRtspLatency(TEST_RTSP_LATENCY);
     return ret;
 }
 

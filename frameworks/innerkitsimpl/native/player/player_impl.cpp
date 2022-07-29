@@ -75,6 +75,13 @@ PlayerImpl::~PlayerImpl()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
+int32_t PlayerImpl::SetRtspLatency(const uint32_t latency)
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
+    MEDIA_LOGW("KPI-TRACE: PlayerImpl SetRtspLatency");
+    return playerService_->SetRtspLatency(latency);
+}
+
 int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
