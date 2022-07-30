@@ -13,15 +13,14 @@
  * limitations under the License.
  */
 
-#include "aw_common.h"
-#include "avmetadatasetsource_fuzzer.h"
 #include <iostream>
+#include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "window_option.h"
 #include "image_type.h"
-
+#include "avmetadatasetsource_fuzzer.h"
 
 using namespace std;
 using namespace OHOS;
@@ -64,7 +63,8 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
         return false;
     }
     int64_t setsourcesize = static_cast<int64_t>(buffer.st_size);
-    AVMetadataUsage usage[usageList] {AVMetadataUsage::AV_META_USAGE_META_ONLY, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP};
+    AVMetadataUsage usage[usageList] {AVMetadataUsage::AV_META_USAGE_META_ONLY,
+                                    AVMetadataUsage::AV_META_USAGE_PIXEL_MAP};
     int32_t setsourceusage = usage[ProduceRandomNumberCrypt() % usageList];
     int32_t retSetsource = avmetadata->SetSource(setsourcefd, setsourceoffset, setsourcesize, setsourceusage);
     if (retSetsource != 0) {

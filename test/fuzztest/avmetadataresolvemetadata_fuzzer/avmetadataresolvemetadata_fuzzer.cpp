@@ -18,7 +18,6 @@
 #include "string_ex.h"
 #include "media_errors.h"
 #include "directory_ex.h"
-// #include "ui/rs_surface_node.h"
 #include "window_option.h"
 #include "image_type.h"
 

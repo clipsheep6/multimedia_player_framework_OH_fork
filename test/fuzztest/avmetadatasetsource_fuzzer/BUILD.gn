@@ -53,9 +53,9 @@ ohos_fuzztest("AVmetadataSetSource") {
     "-Wunused-parameter",
   ]
   sources = [
-    "avmetadatasetsource_fuzzer.cpp",
     "../aw_common.cpp",
     "../test_metadata.cpp",
+    "avmetadatasetsource_fuzzer.cpp",
   ]
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
