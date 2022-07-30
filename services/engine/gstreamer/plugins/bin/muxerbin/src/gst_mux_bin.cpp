@@ -244,7 +244,7 @@ static GstElement *gst_mux_bin_create_parse(GstMuxBin *mux_bin, const char* pars
     } else if (strncmp(parse_name, "mpeg4videoparse", strlen("mpeg4videoparse")) == 0) {
         parse = GST_ELEMENT(gst_object_ref_sink(gst_element_factory_make("mpeg4videoparse", parse_name)));
         g_return_val_if_fail(parse != nullptr, nullptr);
-        g_object_set(parse, "config-interval", -1, "drop", false, nullptr);
+        g_object_set(parse, "config-interval", 0, "drop", false, nullptr);
     } else if (strncmp(parse_name, "aacparse", strlen("aacparse")) == 0) {
         parse = GST_ELEMENT(gst_object_ref_sink(gst_element_factory_make("aacparse", parse_name)));
         g_return_val_if_fail(parse != nullptr, nullptr);
