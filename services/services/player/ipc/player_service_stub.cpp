@@ -87,6 +87,8 @@ int32_t PlayerServiceStub::Init()
     playerFuncs_[SET_CALLBACK] = &PlayerServiceStub::SetPlayerCallback;
     playerFuncs_[GET_VIDEO_TRACK_INFO] = &PlayerServiceStub::GetVideoTrackInfo;
     playerFuncs_[GET_AUDIO_TRACK_INFO] = &PlayerServiceStub::GetAudioTrackInfo;
+    playerFuncs_[SET_TRACK_INDEX] = &PlayerServiceStub::SetTrackIndex;
+    playerFuncs_[GET_SELECTED_TRACK] = &PlayerServiceStub::GetSelectedTrack;
     playerFuncs_[GET_VIDEO_WIDTH] = &PlayerServiceStub::GetVideoWidth;
     playerFuncs_[GET_VIDEO_HEIGHT] = &PlayerServiceStub::GetVideoHeight;
     playerFuncs_[SELECT_BIT_RATE] = &PlayerServiceStub::SelectBitRate;
@@ -239,6 +241,18 @@ int32_t PlayerServiceStub::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetAudioTrackInfo(audioTrack);
+}
+
+int32_t PlayerServiceStub::SetTrackIndex(int32_t index)
+{
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetTrackIndex(index);
+}
+
+int32_t PlayerServiceStub::GetSelectedTrack(std::vector<int32_t> &trackIndex)
+{
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetSelectedTrack(trackIndex);
 }
 
 int32_t PlayerServiceStub::GetVideoWidth()
@@ -452,6 +466,23 @@ int32_t PlayerServiceStub::GetAudioTrackInfo(MessageParcel &data, MessageParcel 
     }
     reply.WriteInt32(ret);
 
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetTrackIndex(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t index = data.ReadInt32();
+    reply.WriteInt32(SetTrackIndex(index));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetSelectedTrack(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    std::vector<int32_t> trackIndex;
+    int32_t ret = GetSelectedTrack(trackIndex);
+    reply.WriteInt32Vector(trackIndex);
+    reply.WriteInt32(ret);
     return MSERR_OK;
 }
 

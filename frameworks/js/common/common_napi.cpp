@@ -490,6 +490,25 @@ bool CommonNapi::AddNumberPropInt64(napi_env env, napi_value obj, const std::str
     return true;
 }
 
+napi_status MediaJsResultIntVector::GetJsResult(napi_env env, napi_value &result)
+{
+    napi_status status;
+    size_t size = value_.size();
+    napi_create_array_with_length(env, size, &result);
+    int32_t format;
+    for (unsigned int i = 0; i < size; ++i) {
+        format = value_[i];
+        napi_value value = nullptr;
+        status = napi_create_int32(env, format, &value);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status,
+            "Failed to call napi_create_int32, with element %{public}u", i);
+        status = napi_set_element(env, result, i, value);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, status,
+            "Failed to call napi_set_element, with element %{public}u", i);
+    }
+    return napi_ok;
+}
+
 napi_status MediaJsResultStringVector::GetJsResult(napi_env env, napi_value &result)
 {
     napi_status status;

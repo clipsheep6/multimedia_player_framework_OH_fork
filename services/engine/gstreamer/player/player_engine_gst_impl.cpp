@@ -566,6 +566,56 @@ int32_t PlayerEngineGstImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return trackParse_->GetAudioTrackInfo(audioTrack);
 }
 
+int32_t PlayerEngineGstImpl::SetTrackIndex(int32_t index)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
+    std::vector<Format> videoTrack;
+    std::vector<Format> audioTrack;
+    trackParse_->GetVideoTrackInfo(videoTrack);
+    trackParse_->GetAudioTrackInfo(audioTrack);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(index < static_cast<int32_t>(videoTrack.size() + audioTrack.size())
+                             && index >= 0, MSERR_INVALID_VAL,
+                             "index is invalid");
+    int32_t ret;
+    if (index >= static_cast<int32_t>(videoTrack.size()))
+        ret = playBinCtrler_->SelectAudioTrack(index - videoTrack.size());
+    else
+        ret = playBinCtrler_->SelectVideoTrack(index);
+
+    return ret;
+}
+
+int32_t PlayerEngineGstImpl::GetSelectedTrack(std::vector<int32_t> &trackIndex)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
+    std::vector<Format> videoTrack;
+    std::vector<Format> audioTrack;
+    trackParse_->GetVideoTrackInfo(videoTrack);
+    trackParse_->GetAudioTrackInfo(audioTrack);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    int32_t index;
+    if (!videoTrack.empty()) {
+        index = playBinCtrler_->GetSelectVideoTrackIndex();
+        if (index == -1)
+            trackIndex.push_back(0);
+        else
+            trackIndex.push_back(index);
+    }
+
+    if (!audioTrack.empty()) {
+        index = playBinCtrler_->GetSelectAudioTrackIndex();
+        if (index == -1)
+            trackIndex.push_back(videoTrack.size());
+        else
+            trackIndex.push_back(index + videoTrack.size());
+    }
+
+    return MSERR_OK;
+}
+
 int32_t PlayerEngineGstImpl::GetVideoWidth()
 {
     std::unique_lock<std::mutex> lock(mutex_);

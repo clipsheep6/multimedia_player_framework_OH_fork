@@ -55,9 +55,13 @@ private:
     static napi_value GetDuration(napi_env env, napi_callback_info info);
     static napi_value GetState(napi_env env, napi_callback_info info);
     static napi_value GetTrackDescription(napi_env env, napi_callback_info info);
+    static napi_value SelectTrack(napi_env env, napi_callback_info info);
+    static napi_value GetSelectedTracks(napi_env env, napi_callback_info info);
     static napi_value GetAudioInterruptMode(napi_env env, napi_callback_info info);
     static napi_value SetAudioInterruptMode(napi_env env, napi_callback_info info);
     static void AsyncGetTrackDescription(napi_env env, void *data);
+    static void AsyncGetSelectedTracks(napi_env env, void *data);
+    static void AsyncSelectTrack(napi_env env, void *data);
     void ErrorCallback(MediaServiceExtErrCode errCode);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     AudioPlayerNapi();

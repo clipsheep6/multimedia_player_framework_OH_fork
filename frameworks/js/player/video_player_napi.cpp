@@ -78,6 +78,8 @@ napi_value VideoPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setVolume", SetVolume),
         DECLARE_NAPI_FUNCTION("getTrackDescription", GetTrackDescription),
         DECLARE_NAPI_FUNCTION("setSpeed", SetSpeed),
+        DECLARE_NAPI_FUNCTION("selectTrack", SelectTrack),
+        DECLARE_NAPI_FUNCTION("getSelectedTracks", GetSelectedTracks),
         DECLARE_NAPI_FUNCTION("selectBitrate", SelectBitrate),
 
         DECLARE_NAPI_GETTER_SETTER("dataSrc", GetDataSrc, SetDataSrc),
@@ -926,6 +928,117 @@ napi_value VideoPlayerNapi::SelectBitrate(napi_env env, napi_callback_info info)
     return result;
 }
 
+void VideoPlayerNapi::AsyncSelectTrack(napi_env env, void *data)
+{
+    auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
+    CHECK_AND_RETURN_LOG(asyncContext != nullptr, "VideoPlayerAsyncContext is nullptr!");
+
+    if (asyncContext->jsPlayer == nullptr || asyncContext->jsPlayer->nativePlayer_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer or nativePlayer is nullptr");
+        return;
+    }
+
+    auto player = asyncContext->jsPlayer->nativePlayer_;
+    int32_t result = player->SetTrackIndex(asyncContext->track);
+    if (result != MSERR_OK) {
+        asyncContext->SignError(MSERR_EXT_UNKNOWN, "failed to select track");
+        return;
+    }
+    asyncContext->JsResult = std::make_unique<MediaJsResultInt>(result);
+    MEDIA_LOGD("AsyncSelectTrack Out");
+}
+
+napi_value VideoPlayerNapi::SelectTrack(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGD("SelectTrack In");
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+
+    napi_value jsThis = nullptr;
+    napi_value args[2] = { nullptr };
+    size_t argCount = 2;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_number) {
+        (void)napi_get_value_int32(env, args[0], &asyncContext->track);
+    } else {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "Illegal argument");
+    }
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "SelectTrack", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, VideoPlayerNapi::AsyncSelectTrack,
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
+    asyncContext.release();
+    return result;
+}
+
+void VideoPlayerNapi::AsyncGetSelectedTracks(napi_env env, void *data)
+{
+    auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
+    CHECK_AND_RETURN_LOG(asyncContext != nullptr, "VideoPlayerAsyncContext is nullptr!");
+
+    if (asyncContext->jsPlayer == nullptr || asyncContext->jsPlayer->nativePlayer_ == nullptr) {
+        asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer or nativePlayer is nullptr");
+        return;
+    }
+
+    auto player = asyncContext->jsPlayer->nativePlayer_;
+    std::vector<int32_t> tracks;
+    int32_t result = player->GetSelectedTrack(tracks);
+
+    if (result != MSERR_OK) {
+        asyncContext->SignError(MSERR_EXT_UNKNOWN, "failed to get select track");
+        return;
+    }
+
+    if (tracks.empty()) {
+        asyncContext->SignError(MSERR_EXT_UNKNOWN, "tracks is empty");
+        return;
+    }
+    asyncContext->JsResult = std::make_unique<MediaJsResultIntVector>(tracks);
+    MEDIA_LOGD("AsyncGetSelectedTracks Out");
+}
+
+napi_value VideoPlayerNapi::GetSelectedTracks(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGD("GetSelectedTracks In");
+    std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
+
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "GetSelectedTracks", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, VideoPlayerNapi::AsyncGetSelectedTracks,
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
+
+    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
+    asyncContext.release();
+    return result;
+}
+
 void VideoPlayerNapi::AsyncGetTrackDescription(napi_env env, void *data)
 {
     auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
@@ -952,7 +1065,7 @@ void VideoPlayerNapi::AsyncGetTrackDescription(napi_env env, void *data)
     }
 
     if (videoInfo.empty()) {
-        asyncContext->SignError(MSERR_EXT_UNKNOWN, "video tranck info is empty");
+        asyncContext->SignError(MSERR_EXT_UNKNOWN, "video track info is empty");
         return;
     }
 

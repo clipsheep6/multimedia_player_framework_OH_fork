@@ -749,6 +749,34 @@ void PlayerServerHi::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &
     }
 }
 
+int32_t PlayerServerHi::SetTrackIndex(int32_t index)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    if (status_ != PLAYER_PREPARED && status_ != PLAYER_PAUSED &&
+        status_ != PLAYER_STARTED && status_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not set track index, currentState is %{public}s", GetStatusDescription(status_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    int32_t ret = playerEngine_->SetTrackIndex(index);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetTrackIndex Failed!");
+    return ret;
+}
+
+int32_t PlayerServerHi::GetSelectedTrack(std::vector<int32_t> &trackIndex)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    if (status_ != PLAYER_PREPARED && status_ != PLAYER_PAUSED &&
+        status_ != PLAYER_STARTED && status_ != PLAYER_STOPPED &&
+        status_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not get select track, currentState is %{public}s", GetStatusDescription(status_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    int32_t ret = playerEngine_->GetSelectedTrack(trackIndex);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "GetSelectedTrack Failed!");
+    return ret;
+}
 const std::string &PlayerServerHi::GetStatusDescription(int32_t status)
 {
     static const std::string ILLEGAL_STATE = "PLAYER_STATUS_ILLEGAL";

@@ -47,6 +47,8 @@ public:
     int32_t GetCurrentTime(int32_t &currentTime) override;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
+    int32_t SetTrackIndex(int32_t index) override;
+    int32_t GetSelectedTrack(std::vector<int32_t> &trackIndex) override;
     int32_t GetVideoWidth() override;
     int32_t GetVideoHeight() override;
     int32_t GetDuration(int32_t &duration) override;
@@ -81,6 +83,8 @@ private:
     int32_t GetCurrentTime(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoTrackInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetAudioTrackInfo(MessageParcel &data, MessageParcel &reply);
+    int32_t SetTrackIndex(MessageParcel &data, MessageParcel &reply);
+    int32_t GetSelectedTrack(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoWidth(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoHeight(MessageParcel &data, MessageParcel &reply);
     int32_t GetDuration(MessageParcel &data, MessageParcel &reply);

@@ -60,6 +60,8 @@ private:
     void GetCurrentTime();
     int32_t GetVideoTrackInfo();
     int32_t GetAudioTrackInfo();
+    void SetTrackIndex();
+    void GetSelectedTrack();
     int32_t GetTrackInfo();
     int32_t GetPlaybackSpeed() const;
     int32_t SetDataSrc(const std::string &path, bool seekable);
@@ -71,6 +73,12 @@ private:
     int32_t SetRendererInfo();
     int32_t ChangeModeToSpeed(const PlaybackRateMode &mode, double &rate) const;
     int32_t ChangeSpeedToMode(const double &rate, PlaybackRateMode &mode) const;
+    void SetCachedSizeLimit();
+    void SetCachedDurationLimit();
+    int32_t SetCachedInfo();
+    void GetCachedSizeLimit();
+    void GetCachedDurationLimit();
+    int32_t GetCachedInfo();
     void SetVideoScaleType();
     sptr<Surface> GetSubWindowSurface();
     void RegisterTable();
