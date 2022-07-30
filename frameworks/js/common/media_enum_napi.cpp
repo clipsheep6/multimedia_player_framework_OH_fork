@@ -83,6 +83,14 @@ static const std::vector<struct JsEnumInt> g_recorderAudioOutputFormat = {
     { "AAC_ADTS", OutputFormatType::FORMAT_M4A },
 };
 
+static const std::vector<struct JsEnumInt> g_recorderInfoType = {
+    { "INFO_MAX_SIZE_APPROACHING", RecorderInfoType::RECORDER_INFO_MAX_FILESIZE_APPROACHING },
+    { "INFO_MAX_DURATION_APPROACHING", RecorderInfoType::RECORDER_INFO_MAX_DURATION_APPROACHING },
+    { "INFO_MAX_SIZE_REACHED", RecorderInfoType::RECORDER_INFO_MAX_FILESIZE_REACHED },
+    { "INFO_MAX_DURATION_REACHED", RecorderInfoType::RECORDER_INFO_MAX_DURATION_REACHED },
+    { "INFO_NEXT_FILE_STARTED", RecorderInfoType::RECORDER_INFO_NEXT_OUTPUT_FILE_STARTED }
+};
+
 static const std::vector<struct JsEnumInt> g_playbackSpeed = {
     { "SPEED_FORWARD_0_75_X", PlaybackRateMode::SPEED_FORWARD_0_75_X },
     { "SPEED_FORWARD_1_00_X", PlaybackRateMode::SPEED_FORWARD_1_00_X },
@@ -290,6 +298,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "BufferingInfoType", g_bufferingInfoType },
     { "AudioEncoder", g_recorderAudioEncoder },
     { "AudioOutputFormat", g_recorderAudioOutputFormat },
+    { "RecorderInfoType", g_recorderInfoType},
     { "PlaybackSpeed", g_playbackSpeed },
     { "MediaType", g_mediaType },
     { "VideoRecorderQualityLevel", g_videoRecorderQualityLevel },

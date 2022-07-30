@@ -32,6 +32,7 @@ const std::string RESUME_CALLBACK_NAME = "resume";
 const std::string STOP_CALLBACK_NAME = "stop";
 const std::string RESET_CALLBACK_NAME = "reset";
 const std::string RELEASE_CALLBACK_NAME = "release";
+const std::string INFO_CALLBACK_NAME = "info";
 class RecorderCallbackNapi : public RecorderCallback {
 public:
     explicit RecorderCallbackNapi(napi_env env);
@@ -51,9 +52,12 @@ private:
         std::string callbackName = "unknown";
         std::string errorMsg = "unknown";
         MediaServiceExtErrCode errorCode = MSERR_EXT_UNKNOWN;
+        int32_t infoType = 0;
+        int32_t infoExtra = 0;
     };
     void OnJsErrorCallBack(RecordJsCallback *jsCb) const;
     void OnJsStateCallBack(RecordJsCallback *jsCb) const;
+    void OnJsInfoCallBack(RecordJsCallback *jsCb) const;
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
