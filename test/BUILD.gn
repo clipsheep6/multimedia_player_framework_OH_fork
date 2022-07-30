@@ -18,8 +18,7 @@ group("media_unit_test") {
   testonly = true
   deps = []
   if (multimedia_player_framework_support_test) {
-    deps = [
-      "unittest/avcodec_test:avcodec_native_unit_test",
+    deps += [
       "unittest/avmetadata_test:avmetadata_unit_test",
       "unittest/player_test:player_unit_test",
       "unittest/recorder_test:recorder_unit_test",
