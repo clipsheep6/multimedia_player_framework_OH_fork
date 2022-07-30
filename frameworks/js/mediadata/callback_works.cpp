@@ -87,6 +87,8 @@ void CallbackWorks::CancelAll()
             continue;
         }
         std::shared_ptr<CallbackWarp> callback = data->cWarp;
+        std::shared_ptr<CallbackWorks> callbackWorks = data->cWorks;
+        callbackWorks->cancelled = true;
         callback->CancelResult();
     }
 }
@@ -133,7 +135,7 @@ int32_t CallbackWorks::Run(uv_work_t *work)
         CHECK_AND_RETURN_LOG(callbackWarp != nullptr && callbackWorks != nullptr, "unknown error, null mem");
         do {
             // Js Thread
-            CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "work canceled");
+            CHECK_AND_BREAK_LOG(!callbackWorks->cancelled && status != UV_ECANCELED, "work canceled");
             std::string request = callbackWarp->GetName();
             MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
             napi_value result = nullptr;
@@ -146,7 +148,6 @@ int32_t CallbackWorks::Run(uv_work_t *work)
         } while (0);
         CHECK_AND_RETURN_LOG(callbackWorks->Remove(work) == MSERR_OK, "unknown error, work not in works");
     });
-    reinterpret_cast<NativeEngine*>(env_)->Loop(LOOP_ONCE);
     return MSERR_OK;
 }
 } // namespace Media

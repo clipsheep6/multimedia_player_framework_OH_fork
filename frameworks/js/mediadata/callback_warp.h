@@ -22,6 +22,12 @@
 
 namespace OHOS {
 namespace Media {
+struct Args {
+    uint32_t uint32;
+    int64_t int64;
+    std::shared_ptr<AVSharedMemory> mem;
+};
+
 class CallbackWarp : public NoCopyable {
 public:
     static std::shared_ptr<CallbackWarp> Create(napi_env env, const size_t argsCount,
@@ -48,6 +54,7 @@ private:
     size_t argsCount_ = 0;
     std::shared_ptr<JsCallback> jsCb_ = nullptr;
     napi_value *argv_ = nullptr;
+    Args args_;
     size_t avgsPos_ = 0;
     napi_value resultValue_ = nullptr;
     napi_ref result_ = nullptr;

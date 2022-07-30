@@ -572,6 +572,7 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
         MediaAsyncContext::CompleteCallback(env, status, data);
         cb->ClearAsyncWork();
     }
+    MediaAsyncContext::CompleteCallback(env, status, data);
 }
 
 napi_value VideoPlayerNapi::Prepare(napi_env env, napi_callback_info info)

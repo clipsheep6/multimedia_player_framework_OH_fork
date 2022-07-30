@@ -21,7 +21,7 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaDataSourceNapi"};
-    const std::string CLASS_NAME = "MediaDataSource";
+    const std::string CLASS_NAME = "AVDataSource";
     const std::string READ_AT_CALLBACK_NAME = "readAt";
 }
 
@@ -53,7 +53,7 @@ napi_value MediaDataSourceNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("on", On),
     };
     napi_property_descriptor static_prop[] = {
-        DECLARE_NAPI_STATIC_FUNCTION("createMediaDataSource", CreateMediaDataSource),
+        DECLARE_NAPI_STATIC_FUNCTION("createAVDataSource", CreateAVDataSource),
     };
     napi_value constructor = nullptr;
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
@@ -102,18 +102,33 @@ void MediaDataSourceNapi::Destructor(napi_env env, void *nativeObject, void *fin
     MEDIA_LOGD("Destructor success");
 }
 
-napi_value MediaDataSourceNapi::CreateMediaDataSource(napi_env env, napi_callback_info info)
+napi_value MediaDataSourceNapi::CreateAVDataSource(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    napi_value constructor = nullptr;
-    napi_status status = napi_get_reference_value(env, constructor_, &constructor);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && constructor != nullptr, result, "get reference value fail");
+    MEDIA_LOGD("CreateAVDataSource In");
 
-    status = napi_new_instance(env, constructor, 0, nullptr, &result);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && result != nullptr, result, "new instance fail");
+    std::unique_ptr<AVDataSourceAsyncContext> asyncContext = std::make_unique<AVDataSourceAsyncContext>(env);
 
-    MEDIA_LOGD("CreateMediaDataSource success");
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    asyncContext->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "CreateAVDataSource", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
+    asyncContext.release();
+
+    MEDIA_LOGD("CreateAVDataSource success");
     return result;
 }
 

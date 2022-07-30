@@ -47,8 +47,10 @@ std::shared_ptr<CallbackWarp> CallbackWarp::Create(napi_env env, const size_t ar
 CallbackWarp::CallbackWarp(napi_env env, const size_t argsCount, const std::shared_ptr<JsCallback> &jsCb)
     : env_(env),
       argsCount_(argsCount),
-      jsCb_(jsCb)
+      jsCb_(jsCb),
+      avgsPos_(0)
 {
+    CHECK_AND_RETURN_LOG(CheckArgv() == MSERR_OK, "malloc failed");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
@@ -75,9 +77,8 @@ int32_t CallbackWarp::SetArg(uint32_t arg)
 {
     CHECK_AND_RETURN_RET_LOG(env_ != nullptr, MSERR_INVALID_OPERATION, "env is nullptr");
     CHECK_AND_RETURN_RET_LOG(argsCount_ > avgsPos_, MSERR_INVALID_OPERATION, "args num error");
-    CHECK_AND_RETURN_RET_LOG(CheckArgv() == MSERR_OK, MSERR_NO_MEMORY, "malloc failed");
-    napi_status status = napi_create_uint32(env_, arg, &argv_[avgsPos_++]);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_INVALID_OPERATION, "create napi val failed");
+    args_.uint32 = arg;
+    avgsPos_++;
     return MSERR_OK;
 }
 
@@ -85,9 +86,8 @@ int32_t CallbackWarp::SetArg(int64_t arg)
 {
     CHECK_AND_RETURN_RET_LOG(env_ != nullptr, MSERR_INVALID_OPERATION, "env is nullptr");
     CHECK_AND_RETURN_RET_LOG(argsCount_ > avgsPos_, MSERR_INVALID_OPERATION, "args num error");
-    CHECK_AND_RETURN_RET_LOG(CheckArgv() == MSERR_OK, MSERR_NO_MEMORY, "malloc failed");
-    napi_status status = napi_create_int64(env_, arg, &argv_[avgsPos_++]);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_INVALID_OPERATION, "create napi val failed");
+    args_.int64 = arg;
+    avgsPos_++;
     return MSERR_OK;
 }
 
@@ -96,27 +96,38 @@ int32_t CallbackWarp::SetArg(const std::shared_ptr<AVSharedMemory> &mem)
     CHECK_AND_RETURN_RET_LOG(env_ != nullptr, MSERR_INVALID_OPERATION, "env is nullptr");
     CHECK_AND_RETURN_RET_LOG(argsCount_ > avgsPos_, MSERR_INVALID_OPERATION, "args num error");
     CHECK_AND_RETURN_RET_LOG(mem != nullptr && mem->GetBase() != nullptr, MSERR_NO_MEMORY, "AVSharedMemory is null");
-    CHECK_AND_RETURN_RET_LOG(CheckArgv() == MSERR_OK, MSERR_NO_MEMORY, "malloc failed");
-    AvMemNapiWarp *memWarp = new(std::nothrow) AvMemNapiWarp(mem);
-    CHECK_AND_RETURN_RET_LOG(memWarp != nullptr, MSERR_NO_MEMORY, "AvMemNapiWarp is null");
-    napi_status status = napi_create_external_arraybuffer(env_, mem->GetBase(),
-        static_cast<size_t>(mem->GetSize()), [] (napi_env env, void *data, void *hint) {
-            (void)env;
-            (void)data;
-            AvMemNapiWarp *memWarp = reinterpret_cast<AvMemNapiWarp *>(hint);
-            delete memWarp;
-        }, reinterpret_cast<void *>(memWarp), &argv_[avgsPos_++]);
-    if (status != napi_ok) {
-        delete memWarp;
-        MEDIA_LOGE("create napi val failed");
-        return MSERR_INVALID_OPERATION;
-    }
+    args_.mem = mem;
+    avgsPos_++;
     return MSERR_OK;
 }
 
 const napi_value *CallbackWarp::GetArgs() const
 {
     CHECK_AND_RETURN_RET_LOG(argsCount_ == avgsPos_, nullptr, "args need be full");
+    CHECK_AND_RETURN_RET_LOG(env_ != nullptr, nullptr, "env is nullptr");
+
+    napi_status status = napi_create_uint32(env_, args_.uint32, &argv_[0]);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "create napi val failed");
+
+    AvMemNapiWarp *memWarp = new(std::nothrow) AvMemNapiWarp(args_.mem);
+    CHECK_AND_RETURN_RET_LOG(memWarp != nullptr, nullptr, "AvMemNapiWarp is null");
+    status = napi_create_external_arraybuffer(env_, args_.mem->GetBase(),
+        static_cast<size_t>(args_.mem->GetSize()), [] (napi_env env, void *data, void *hint) {
+            (void)env;
+            (void)data;
+            AvMemNapiWarp *memWarp = reinterpret_cast<AvMemNapiWarp *>(hint);
+            delete memWarp;
+        }, reinterpret_cast<void *>(memWarp), &argv_[1]);
+    if (status != napi_ok) {
+        delete memWarp;
+        MEDIA_LOGE("create napi val failed");
+        return nullptr;
+    }
+
+    if (argsCount_ == 3) {
+        status = napi_create_int64(env_, args_.int64, &argv_[2]);
+        CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "create napi val failed");
+    }
     return argv_;
 }
 
@@ -157,7 +168,6 @@ int32_t CallbackWarp::CheckArgv()
 {
     if (argv_ == nullptr) {
         argv_ = static_cast<napi_value *>(malloc(sizeof(napi_value) * argsCount_));
-        avgsPos_ = 0;
     }
     CHECK_AND_RETURN_RET_LOG(argv_ != nullptr, MSERR_NO_MEMORY, "malloc fail");
     return MSERR_OK;

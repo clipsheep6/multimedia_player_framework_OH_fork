@@ -31,6 +31,7 @@ public:
     int32_t Push(const std::shared_ptr<CallbackWarp> &callback);
     int32_t Remove(uv_work_t *work);
     void CancelAll();
+    bool cancelled = false;
 
 private:
     uv_work_t *InitWork(const std::shared_ptr<CallbackWarp> &callback);
