@@ -153,19 +153,19 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
 int32_t VEncDemo::CreateVenc()
 {
     string encodeMode;
-    mimetype = "video/mp4v-es";
-    std::cout << "Enter media mine type: " << endl;
-    cout << "select video/mp4v-es format : 1" << endl;
-    cout << "select video/avc foramt : 2" << endl;
+    codername = "openh264enc";
+    std::cout << "Enter media coder name: " << endl;
+    cout << "selectt openh264enc: 1" << endl;
+    cout << "select avenc_mpeg4: 2" << endl;
     (void)getline(cin, encodeMode);
     if (encodeMode.compare("1") == 0) {
-        cout << "select video/mp4v-es" << endl;
+        cout << "select openh264enc" << endl;
     } else {
-        cout << "select video/avc" << endl;
-        mimetype = "video/avc";
+        cout << "select avenc_mpeg4"<< endl;
+        codername = "avenc_mpeg4";
     }
-    venc_ = VideoEncoderFactory::CreateByMime(mimetype);
-    DEMO_CHECK_AND_RETURN_RET_LOG(venc_ != nullptr, MSERR_UNKNOWN, "Fatal: CreateByMime fail");
+    venc_ = VideoEncoderFactory::CreateByName(codername);
+    DEMO_CHECK_AND_RETURN_RET_LOG(venc_ != nullptr, MSERR_UNKNOWN, "Fatal: CreateByName fail");
 
     signal_ = make_shared<VEncSignal>();
     DEMO_CHECK_AND_RETURN_RET_LOG(signal_ != nullptr, MSERR_UNKNOWN, "Fatal: No memory");
@@ -244,14 +244,14 @@ sptr<Surface> VEncDemo::GetVideoSurface()
 void VEncDemo::LoopFunc()
 {
     std::ofstream ofs;
-    if (mimetype.compare("video/avc") == 0) {
-        ofs.open("/data/media/avc.h264", ios::out| ios::app);
-    } else {
-        ofs.open("/data/media/mpeg4.mpeg4", ios::out| ios::app);
+    if (codername.compare("openh264enc") == 0) {
+            ofs.open("/data/media/avc.h264", ios::out| ios::app);
+        } else {
+            ofs.open("/data/media/mpeg4.mpeg4", ios::out| ios::app);
     }
     if (!ofs.is_open()) {
-        std::cout << "open file failed" << std::endl;
-        return;
+            std::cout << "open file failed" << std::endl;
+            return;
     }
     while (true) {
         if (!isRunning_.load()) {

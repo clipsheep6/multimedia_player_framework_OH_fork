@@ -75,7 +75,7 @@ private:
     std::shared_ptr<VEncDemoCallback> cb_;
     sptr<Surface> surface_ = nullptr;
     int64_t timestampNs_ = 0;
-    std::string mimetype = "";
+    std::string codername = "";
     int32_t isKeyFrame_ = 1;
 };
 } // namespace Media
