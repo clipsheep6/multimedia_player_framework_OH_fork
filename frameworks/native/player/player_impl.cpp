@@ -266,5 +266,34 @@ int32_t PlayerImpl::SetParameter(const Format &param)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
     return playerService_->SetParameter(param);
 }
+
+int32_t PlayerImpl::SetCachedSizeLimit(int32_t size)
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
+
+    return playerService_->SetCachedSizeLimit(size);
+}
+
+int32_t PlayerImpl::SetCachedDurationLimit(int32_t duration)
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
+
+    return playerService_->SetCachedDurationLimit(duration);
+}
+
+int32_t PlayerImpl::GetCachedSizeLimit()
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
+
+    return playerService_->GetCachedSizeLimit();
+}
+
+int32_t PlayerImpl::GetCachedDurationLimit()
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
+
+    return playerService_->GetCachedDurationLimit();
+}
+
 } // namespace Media
 } // namespace OHOS

@@ -508,6 +508,48 @@ public:
      * @version 1.0
      */
     virtual int32_t SetParameter(const Format &param) = 0;
+
+    /**
+     * @brief set max cache buffer size in byte to player, when playing the http file.
+     *
+     * @param size max cache size.
+     * @return Returns {@link MSERR_OK} if the size is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t SetCachedSizeLimit(int32_t size) = 0;
+
+    /**
+     * @brief set max cache buffer size in milliseconds to player, when playing the http file.
+     *
+     * @param duration max cache duration time.
+     * @return Returns {@link MSERR_OK} if the duration is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t SetCachedDurationLimit(int32_t duration) = 0;
+
+    /**
+     * @brief Get network stream playback's cache limit.
+     *
+     * @return Returns the player cache size limit set by the user; if the user has not set cache
+     * size limit, return -1.
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t GetCachedSizeLimit() = 0;
+
+    /**
+     * @brief Get network stream playback's cache limit.
+     *
+     * @return Returns the player cache duration limit set by the user; if the user has not 
+     * set cache duration limit, return -1.
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t GetCachedDurationLimit() = 0;
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

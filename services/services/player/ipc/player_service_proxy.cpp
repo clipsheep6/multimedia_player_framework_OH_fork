@@ -635,5 +635,83 @@ int32_t PlayerServiceProxy::SetPlayerCallback()
     }
     return reply.ReadInt32();
 }
+
+int32_t PlayerServiceProxy::SetCachedSizeLimit(int32_t size)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
+    data.WriteInt32(size);
+    int error = Remote()->SendRequest(SET_CACHED_SIZE_LIMIT, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("Set cache max size failed, error: %{public}d", error);
+        return error;
+    }
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SetCachedDurationLimit(int32_t duration)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
+    data.WriteInt32(duration);
+    int error = Remote()->SendRequest(SET_CACHED_DURATION_LIMIT, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("Set cache max duration failed, error: %{public}d", error);
+        return error;
+    }
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetCachedSizeLimit()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
+    int error = Remote()->SendRequest(GET_CACHED_SIZE_LIMIT, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("Set cache max duration failed, error: %{public}d", error);
+        return error;
+    }
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetCachedDurationLimit()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
+    int error = Remote()->SendRequest(GET_CACHED_DURATION_LIMIT, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("Set cache max duration failed, error: %{public}d", error);
+        return error;
+    }
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS

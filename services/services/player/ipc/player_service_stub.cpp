@@ -89,6 +89,10 @@ int32_t PlayerServiceStub::Init()
     playerFuncs_[GET_AUDIO_TRACK_INFO] = &PlayerServiceStub::GetAudioTrackInfo;
     playerFuncs_[GET_VIDEO_WIDTH] = &PlayerServiceStub::GetVideoWidth;
     playerFuncs_[GET_VIDEO_HEIGHT] = &PlayerServiceStub::GetVideoHeight;
+    playerFuncs_[SET_CACHED_SIZE_LIMIT] = &PlayerServiceStub::SetCachedSizeLimit;
+    playerFuncs_[SET_CACHED_DURATION_LIMIT] = &PlayerServiceStub::SetCachedDurationLimit;
+    playerFuncs_[GET_CACHED_SIZE_LIMIT] = &PlayerServiceStub::GetCachedSizeLimit;
+    playerFuncs_[GET_CACHED_DURATION_LIMIT] = &PlayerServiceStub::GetCachedDurationLimit;
     playerFuncs_[SELECT_BIT_RATE] = &PlayerServiceStub::SelectBitRate;
     return MSERR_OK;
 }
@@ -257,6 +261,30 @@ int32_t PlayerServiceStub::GetDuration(int32_t &duration)
 {
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetDuration(duration);
+}
+
+int32_t PlayerServiceStub::SetCachedSizeLimit(int32_t size)
+{
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetCachedSizeLimit(size);
+}
+
+int32_t PlayerServiceStub::SetCachedDurationLimit(int32_t duration)
+{
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SetCachedDurationLimit(duration);
+}
+
+int32_t PlayerServiceStub::GetCachedSizeLimit()
+{
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetCachedSizeLimit();
+}
+
+int32_t PlayerServiceStub::GetCachedDurationLimit()
+{
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetCachedDurationLimit();
 }
 
 int32_t PlayerServiceStub::SetPlaybackSpeed(PlaybackRateMode mode)
@@ -569,5 +597,36 @@ int32_t PlayerServiceStub::SetPlayerCallback(MessageParcel &data, MessageParcel 
     reply.WriteInt32(SetPlayerCallback());
     return MSERR_OK;
 }
+
+int32_t PlayerServiceStub::SetCachedSizeLimit(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t size = data.ReadInt32();
+    reply.WriteInt32(SetCachedSizeLimit(size));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SetCachedDurationLimit(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t duration = data.ReadInt32();
+    reply.WriteInt32(SetCachedDurationLimit(duration));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetCachedSizeLimit(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    int32_t getCachedSizeLimit = GetCachedSizeLimit();
+    reply.WriteInt32(getCachedSizeLimit);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetCachedDurationLimit(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    int32_t getCachedDurationLimit = GetCachedDurationLimit();
+    reply.WriteInt32(getCachedDurationLimit);
+    return MSERR_OK;
+}
+
 } // namespace Media
 } // namespace OHOS

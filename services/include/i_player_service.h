@@ -18,6 +18,7 @@
 
 #include "player.h"
 #include "refbase.h"
+#include "media_errors.h"
 
 namespace OHOS {
 namespace Media {
@@ -323,6 +324,48 @@ public:
      * @version 1.0
      */
     virtual int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) = 0;
+
+    /**
+     * @brief Set network stream playback's cache size limit.
+     *
+     * @param size max cache size;the default value is -1 Byte.
+     * @return Returns {@link MSERR_OK} if the size is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t SetCachedSizeLimit(int32_t size) = 0;
+
+    /**
+     * @brief Set network stream playback's cache size limit.
+     *
+     * @param duration max cache duration time;the default value is -1 ms.
+     * @return Returns {@link MSERR_OK} if the duration is set; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t SetCachedDurationLimit(int32_t duration) = 0;
+
+    /**
+     * @brief Get network stream playback's cache size limit.
+     *
+     * @return Returns the player cache size limit set by the user; if the user has not set cache
+     * size limit, return -1.
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t GetCachedSizeLimit() = 0;
+
+    /**
+     * @brief Get network stream playback's cache duration limit.
+     *
+     * @return Returns the player cache duration limit set by the user; if the user has not 
+     * set cache duration limit, return -1.
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t GetCachedDurationLimit() = 0;
 };
 } // namespace Media
 } // namespace OHOS

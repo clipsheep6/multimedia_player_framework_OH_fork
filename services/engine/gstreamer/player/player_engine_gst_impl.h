@@ -72,6 +72,10 @@ public:
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
     int32_t SetParameter(const Format &param) override;
     int32_t SetLooping(bool loop) override;
+    int32_t SetCachedSizeLimit(int32_t size) override;
+    int32_t SetCachedDurationLimit(int32_t duration) override;
+    int32_t GetCachedSizeLimit() override;
+    int32_t GetCachedDurationLimit() override;
     int32_t SelectBitRate(uint32_t bitRate) override;
     int32_t SetVideoScaleType(VideoScaleType videoScaleType) override;
     int32_t SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
@@ -112,6 +116,9 @@ private:
     std::weak_ptr<IPlayerEngineObs> obs_;
     sptr<Surface> producerSurface_ = nullptr;
     std::string url_ = "";
+    int32_t cacheSize_ = -1;
+    int32_t cacheDuration_ = -1;
+    bool isNetWorkPlay_ = false;
     std::shared_ptr<GstAppsrcWrap> appsrcWrap_ = nullptr;
     std::shared_ptr<PlayerTrackParse> trackParse_ = nullptr;
     std::shared_ptr<CodecChangedDetector> codecChangedDetector_ = nullptr;

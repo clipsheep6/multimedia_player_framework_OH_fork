@@ -37,6 +37,7 @@ namespace {
     constexpr uint32_t HTTP_TIME_OUT_DEFAULT = 15; // 15s
     constexpr int32_t NANO_SEC_PER_USEC = 1000;
     constexpr double DEFAULT_RATE = 1.0;
+    constexpr uint64_t NANO_SEC_PRE_MSEC = 1000000;
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
     constexpr uint32_t STOP_TIMEOUT = 5;
 }
@@ -417,6 +418,44 @@ void PlayBinCtrlerBase::SetAudioInterruptMode(const int32_t interruptMode)
     g_object_set(audioSink_, "audio-interrupt-mode", interruptMode, nullptr);
 }
 
+int32_t PlayBinCtrlerBase::SetCachedSizeLimit(int32_t size)
+{
+    MEDIA_LOGD("enter");
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    g_object_set(playbin_, "buffer-size", size, nullptr);
+    return MSERR_OK;
+}
+
+int32_t PlayBinCtrlerBase::SetCachedDurationLimit(int32_t duration)
+{
+    MEDIA_LOGD("enter");
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    uint64_t dur = static_cast<uint64_t>(duration * NANO_SEC_PRE_MSEC);
+    g_object_set(playbin_, "buffer-duration", dur, nullptr);
+    return MSERR_OK;
+}
+
+int32_t PlayBinCtrlerBase::GetCachedSizeLimit()
+{
+    MEDIA_LOGD("enter");
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    int32_t size = 0;
+    g_object_get(playbin_, "buffer-size", &size, nullptr);
+    return size;
+}
+
+int32_t PlayBinCtrlerBase::GetCachedDurationLimit()
+{
+    MEDIA_LOGD("enter");
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    uint64_t duration;
+    g_object_get(playbin_, "buffer-duration", &duration, nullptr);
+    return static_cast<int32_t>(duration / NANO_SEC_PRE_MSEC);
+}
 int32_t PlayBinCtrlerBase::SelectBitRate(uint32_t bitRate)
 {
     std::unique_lock<std::mutex> lock(mutex_);

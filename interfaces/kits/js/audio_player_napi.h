@@ -51,6 +51,8 @@ private:
     static napi_value GetFdSrc(napi_env env, napi_callback_info info);
     static napi_value SetLoop(napi_env env, napi_callback_info info);
     static napi_value GetLoop(napi_env env, napi_callback_info info);
+    static napi_value SetCacheLimit(napi_env env, napi_callback_info info);
+    static napi_value GetCacheLimit(napi_env env, napi_callback_info info);
     static napi_value GetCurrentTime(napi_env env, napi_callback_info info);
     static napi_value GetDuration(napi_env env, napi_callback_info info);
     static napi_value GetState(napi_env env, napi_callback_info info);

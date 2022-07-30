@@ -53,6 +53,10 @@ public:
     int32_t SetParameter(const Format &param) override;
     int32_t DestroyStub() override;
     int32_t SetPlayerCallback() override;
+    int32_t SetCachedSizeLimit(int32_t size) override;
+    int32_t SetCachedDurationLimit(int32_t duration) override;
+    int32_t GetCachedSizeLimit() override;
+    int32_t GetCachedDurationLimit() override;
     int32_t SelectBitRate(uint32_t bitRate) override;
 
 private:

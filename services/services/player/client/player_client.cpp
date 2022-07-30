@@ -281,5 +281,34 @@ int32_t PlayerClient::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &c
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
     return playerProxy_->SetPlayerCallback();
 }
+
+int32_t PlayerClient::SetCachedSizeLimit(int32_t size)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
+    return playerProxy_->SetCachedSizeLimit(size);
+}
+
+int32_t PlayerClient::SetCachedDurationLimit(int32_t duration)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
+    return playerProxy_->SetCachedDurationLimit(duration);
+}
+
+int32_t PlayerClient::GetCachedSizeLimit()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
+    return playerProxy_->GetCachedSizeLimit();
+}
+
+int32_t PlayerClient::GetCachedDurationLimit()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
+    return playerProxy_->GetCachedDurationLimit();
+}
+
 } // namespace Media
 } // namespace OHOS
