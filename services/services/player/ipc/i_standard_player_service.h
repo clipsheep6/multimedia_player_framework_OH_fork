@@ -28,6 +28,7 @@ class IStandardPlayerService : public IRemoteBroker {
 public:
     virtual ~IStandardPlayerService() = default;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
+    virtual int32_t SetRtspLatency(const uint32_t latency) = 0;
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size) = 0;
@@ -61,6 +62,7 @@ public:
      */
     enum PlayerServiceMsg {
         SET_LISTENER_OBJ = 0,
+        SET_RTSP_LATENCY,
         SET_SOURCE,
         SET_MEDIA_DATA_SRC_OBJ,
         SET_FD_SOURCE,

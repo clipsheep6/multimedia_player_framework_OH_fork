@@ -53,6 +53,20 @@ int32_t PlayerServer::Init()
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetRtspLatency(const uint32_t latency)
+{
+    latency_ = latency;
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGW("KPI-TRACE: PlayerServer SetRtspLatency in(latency)");
+    if (status_ == PLAYER_PREPARING) {
+        if (playerEngine_ != nullptr) {
+            int32_t ret = playerEngine_->SetRtspLatency(latency_);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetRtspLatency Failed!");
+        }
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::SetSource(const std::string &url)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -157,6 +171,7 @@ int32_t PlayerServer::OnPrepare(bool async)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Prepare Failed!");
     (void)playerEngine_->SetVolume(leftVolume_, rightVolume_);
     (void)playerEngine_->SetLooping(looping_);
+    (void)playerEngine_->SetRtspLatency(latency_);
     if (speedMode_ != SPEED_FORWARD_1_00_X) {
         (void)playerEngine_->SetPlaybackSpeed(speedMode_);
     }

@@ -74,6 +74,13 @@ void PlayerClient::MediaServerDied()
     }
 }
 
+int32_t PlayerClient::SetRtspLatency(const uint32_t latency)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
+    return playerProxy_->SetRtspLatency(latency);
+}
+
 int32_t PlayerClient::SetSource(const std::string &url)
 {
     std::lock_guard<std::mutex> lock(mutex_);

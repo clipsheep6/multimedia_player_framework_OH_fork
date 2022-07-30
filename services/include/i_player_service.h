@@ -26,6 +26,17 @@ public:
     virtual ~IPlayerService() = default;
 
     /**
+     * @brief Sets the playback rtspLatency for the player.
+     *
+     * @param latency RTSP latency.
+     * @return Returns {@link MSERR_OK} if the rtspLatency is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetRtspLatency(const uint32_t latency) = 0;
+
+    /**
      * @brief Sets the playback source for the player. The corresponding source can be local file url.
      *
      * @param url Indicates the playback source.

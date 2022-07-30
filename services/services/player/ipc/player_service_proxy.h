@@ -26,6 +26,7 @@ public:
     explicit PlayerServiceProxy(const sptr<IRemoteObject> &impl);
     virtual ~PlayerServiceProxy();
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
+    int32_t SetRtspLatency(const uint32_t latency) override;
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const sptr<IRemoteObject> &object) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;

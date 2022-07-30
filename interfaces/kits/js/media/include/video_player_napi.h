@@ -101,6 +101,11 @@ private:
     static napi_value SetUrl(napi_env env, napi_callback_info info);
     static napi_value GetUrl(napi_env env, napi_callback_info info);
     /**
+     * rtspLatency: number
+     */
+    static napi_value SetRtspLatency(napi_env env, napi_callback_info info);
+    static napi_value GetRtspLatency(napi_env env, napi_callback_info info);
+    /**
      * dataSrc?: AVDataSource
      */
     static napi_value GetDataSrc(napi_env env, napi_callback_info info);
@@ -166,6 +171,7 @@ private:
     std::string url_ = "";
     std::vector<Format> videoTrackInfoVec_;
     AVFileDescriptor rawFd_;
+    uint32_t rtspLatency_;
 };
 } // namespace Media
 } // namespace OHOS
