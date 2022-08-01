@@ -19,10 +19,9 @@ config("videodisplaymanager_public_config") {
 }
 
 ohos_shared_library("videodisplaymanager") {
-  sources = []
   if (multimedia_player_framework_support_video) {
-    sources += [ "src/videodisplaymanager.cpp" ]
-    include_dirs = 
+    sources = [ "src/videodisplaymanager.cpp" ]
+    include_dirs =
         [ "//foundation/graphic/graphic_2d/frameworks/surface/include" ]
 
     public_configs = [
