@@ -19,7 +19,7 @@ group("napi_packages") {
   if (multimedia_player_framework_support_jsapi) {
     deps += [
       "js:media",
-      "js:media_js"
+      "js:media_js",
     ]
   }
 }
