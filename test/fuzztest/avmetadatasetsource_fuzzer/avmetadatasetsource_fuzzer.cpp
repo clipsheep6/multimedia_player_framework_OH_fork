@@ -64,8 +64,8 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
     AVMetadataUsage usage[usageList] {AVMetadataUsage::AV_META_USAGE_META_ONLY,
                                     AVMetadataUsage::AV_META_USAGE_PIXEL_MAP};
     int32_t setsourceusage = usage[ProduceRandomNumberCrypt() % usageList];
-    int32_t retSetsource = avmetadata->SetSource(setsourcefd, 
-            *reinterpret_cast<int64_t *>(data), setsourcesize, setsourceusage);
+    int32_t retSetsource = avmetadata->SetSource(setsourcefd,
+        *reinterpret_cast<int64_t *>(data), setsourcesize, setsourceusage);
     if (retSetsource != 0) {
         cout << "expect SetSource fail!" << endl;
         (void)close(setsourcefd);
