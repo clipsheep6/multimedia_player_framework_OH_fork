@@ -372,7 +372,7 @@ int32_t PlayerServer::OnReset()
 {
     if (lastOpStatus_ == PLAYER_IDLE) {
         MEDIA_LOGE("Can not Reset, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_OK;
+        return MSERR_INVALID_OPERATION;
     }
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
@@ -411,7 +411,9 @@ int32_t PlayerServer::Release()
         playerCb_ = nullptr;
     }
     MEDIA_LOGD("PlayerServer Release in");
-    (void)OnReset();
+    if (lastOpStatus_ != PLAYER_IDLE) {
+        (void)OnReset();
+    }
     std::unique_ptr<std::thread> thread = std::make_unique<std::thread>(&PlayerServer::ReleaseProcessor, this);
     if (thread != nullptr && thread->joinable()) {
         thread->join();
