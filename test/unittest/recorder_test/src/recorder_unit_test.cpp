@@ -177,7 +177,8 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_001, TestSize.Level
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetOrientationHint_001.mp4").c_str(), O_RDWR);
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+    "recorder_video_SetOrientationHint_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
