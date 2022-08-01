@@ -32,7 +32,7 @@ group("test_packages") {
     deps += [
       "nativedemo:media_demo",
       "jsdemo:media_demo_js",
-      "jsdemo:mediademo"
+      "jsdemo:mediademo",
     ]
   }
 }
