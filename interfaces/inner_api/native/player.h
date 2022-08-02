@@ -17,9 +17,9 @@
 #define PLAYER_H
 
 #include <cstdint>
-#ifdef SUPPORT_VIDEO
+//#ifdef SUPPORT_VIDEO
 #include "surface.h"
-#endif
+//#endif
 #include "format.h"
 #include "media_data_source.h"
 
@@ -447,7 +447,7 @@ public:
      */
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
 
-#ifdef SUPPORT_VIDEO
+//#ifdef SUPPORT_VIDEO
     /**
      * @brief Method to set the surface.
      *
@@ -458,7 +458,7 @@ public:
      * @version 1.0
      */
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
-#endif
+//#endif
 
     /**
      * @brief Checks whether the player is playing.
