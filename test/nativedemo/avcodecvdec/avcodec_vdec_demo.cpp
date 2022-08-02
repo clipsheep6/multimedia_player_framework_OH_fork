@@ -57,14 +57,14 @@ void VDecDemo::RunCase()
     DEMO_CHECK_AND_RETURN_LOG(SetSurface() == MSERR_OK, "Fatal: SetSurface fail");
     DEMO_CHECK_AND_RETURN_LOG(Prepare() == MSERR_OK, "Fatal: Prepare fail");
     DEMO_CHECK_AND_RETURN_LOG(Start() == MSERR_OK, "Fatal: Start fail");
-    sleep(3);  // 3：sleep 3s
+    sleep(10);
     DEMO_CHECK_AND_RETURN_LOG(Stop() == MSERR_OK, "Fatal: Stop fail");
     DEMO_CHECK_AND_RETURN_LOG(Release() == MSERR_OK, "Fatal: Release fail");
 }
 
 int32_t VDecDemo::CreateVdec()
 {
-    vdec_ = VideoDecoderFactory::CreateByMime("video/avc");
+    vdec_ = VideoDecoderFactory::CreateByName("avdec_h264");
     DEMO_CHECK_AND_RETURN_RET_LOG(vdec_ != nullptr, MSERR_UNKNOWN, "Fatal: CreateByMime fail");
 
     signal_ = make_shared<VDecSignal>();
