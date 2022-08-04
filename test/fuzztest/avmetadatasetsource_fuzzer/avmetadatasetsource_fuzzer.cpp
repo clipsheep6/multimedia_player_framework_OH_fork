@@ -45,7 +45,7 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
         return false;
     }
 
-    const string path = "/data/test/resource/H264_AAC.mp4";
+    const string path = "/data/test/media/H264_AAC.mp4";
     int32_t setsourcefd = open(path.c_str(), O_RDONLY);
     if (setsourcefd < 0) {
         cout << "Open file failed" << endl;

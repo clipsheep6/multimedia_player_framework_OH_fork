@@ -48,7 +48,7 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
         return false;
     }
 
-    const string path = "/data/test/resource/H264_AAC.mp4";
+    const string path = "/data/test/media/H264_AAC.mp4";
     if (MetaDataSetSource(path) != 0) {
         cout << "avmetadata SetSource file" << endl;
         avmetadata->Release();

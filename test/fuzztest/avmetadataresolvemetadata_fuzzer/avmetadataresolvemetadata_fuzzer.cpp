@@ -44,7 +44,7 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
         return false;
     }
 
-    const string path = "/data/test/resource/H264_AAC.mp4";
+    const string path = "/data/test/media/H264_AAC.mp4";
     int32_t retMetadatasetsource = MetaDataSetSource(path);
     if (retMetadatasetsource != 0) {
         cout << "avmetadata SetSource file" << endl;
