@@ -241,7 +241,6 @@ void AVCodecListUnitTest::CheckAVDecMpeg2Video(const std::shared_ptr<VideoCaps> 
     EXPECT_EQ(false, videoCaps->IsSupportDynamicIframe());
     EXPECT_EQ(0, videoCaps->IsSizeAndRateSupported(videoCaps->GetSupportedWidth().minVal,
         videoCaps->GetSupportedHeight().maxVal, videoCaps->GetSupportedFrameRate().maxVal));
-    
 }
 
 void AVCodecListUnitTest::CheckAVDecMpeg4(const std::shared_ptr<VideoCaps> &videoCaps) const
