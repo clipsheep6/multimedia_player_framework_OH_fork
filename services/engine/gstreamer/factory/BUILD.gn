@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 config("media_engine_gst_factory_config") {
   visibility = [ ":*" ]
@@ -66,6 +67,8 @@ config("media_engine_gst_factory_config") {
     "//third_party/gstreamer/gstplugins_base/gst-libs",
     "//third_party/gstreamer/gstplugins_bad/gst-libs",
   ]
+  defines = []
+  defines += media_defines
 }
 
 ohos_static_library("media_engine_gst_factory") {

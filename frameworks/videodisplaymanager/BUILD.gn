@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,27 +12,28 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 config("videodisplaymanager_public_config") {
   include_dirs = [ "//foundation/multimedia/player_framework/frameworks/videodisplaymanager/include" ]
 }
 
 ohos_shared_library("videodisplaymanager") {
-  sources = [ "src/videodisplaymanager.cpp" ]
+  if (multimedia_player_framework_support_video) {
+    sources = [ "src/videodisplaymanager.cpp" ]
+    include_dirs =
+        [ "//foundation/graphic/graphic_2d/frameworks/surface/include" ]
 
-  include_dirs =
-      [ "//foundation/graphic/graphic_2d/frameworks/surface/include" ]
+    public_configs = [
+      ":videodisplaymanager_public_config",
+      "//commonlibrary/c_utils/base:utils_config",
+    ]
 
-  public_configs = [
-    ":videodisplaymanager_public_config",
-    "//commonlibrary/c_utils/base:utils_config",
-  ]
-
-  public_deps = [
-    "//drivers/peripheral/display/hdi_service/video_layer/client:video_layer_client",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
-  ]
-
+    public_deps = [
+      "//drivers/peripheral/display/hdi_service/video_layer/client:video_layer_client",
+      "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+    ]
+  }
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

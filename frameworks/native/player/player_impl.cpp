@@ -225,6 +225,7 @@ int32_t PlayerImpl::GetDuration(int32_t &duration)
     return playerService_->GetDuration(duration);
 }
 
+#ifdef SUPPORT_VIDEO
 int32_t PlayerImpl::SetVideoSurface(sptr<Surface> surface)
 {
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
@@ -232,6 +233,7 @@ int32_t PlayerImpl::SetVideoSurface(sptr<Surface> surface)
 
     return playerService_->SetVideoSurface(surface);
 }
+#endif
 
 bool PlayerImpl::IsPlaying()
 {

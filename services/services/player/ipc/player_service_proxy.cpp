@@ -485,6 +485,7 @@ int32_t PlayerServiceProxy::SelectBitRate(uint32_t bitRate)
     return reply.ReadInt32();
 }
 
+#ifdef SUPPORT_VIDEO
 int32_t PlayerServiceProxy::SetVideoSurface(sptr<Surface> surface)
 {
     MessageParcel data;
@@ -515,6 +516,7 @@ int32_t PlayerServiceProxy::SetVideoSurface(sptr<Surface> surface)
     }
     return reply.ReadInt32();
 }
+#endif
 
 bool PlayerServiceProxy::IsPlaying()
 {

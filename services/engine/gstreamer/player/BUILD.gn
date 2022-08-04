@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 config("media_engine_gst_player_config") {
   visibility = [ ":*" ]
@@ -68,6 +69,8 @@ config("media_engine_gst_player_config") {
     "//third_party/glib/gmodule",
     "//commonlibrary/c_utils/base/include",
   ]
+  defines = []
+  defines += media_defines
 }
 
 ohos_static_library("media_engine_gst_player") {
