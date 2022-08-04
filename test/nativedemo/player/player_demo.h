@@ -60,8 +60,6 @@ private:
     void GetCurrentTime();
     int32_t GetVideoTrackInfo();
     int32_t GetAudioTrackInfo();
-    void SetTrackIndex();
-    void GetSelectedTrack();
     int32_t GetTrackInfo();
     int32_t GetPlaybackSpeed() const;
     int32_t SetDataSrc(const std::string &path, bool seekable);
@@ -82,6 +80,8 @@ private:
     void SetVideoScaleType();
     sptr<Surface> GetSubWindowSurface();
     void RegisterTable();
+    bool DoCachedInfo(const std::string &cmd);
+    bool DoSetSourceSeekVolume(const std::string &cmd);
     sptr<Rosen::Window> previewWindow_ = nullptr;
     std::map<std::string, std::function<int32_t()>> playerTable_;
     std::shared_ptr<Player> player_ = nullptr;

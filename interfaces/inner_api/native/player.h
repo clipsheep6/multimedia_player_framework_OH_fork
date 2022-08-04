@@ -544,7 +544,7 @@ public:
     /**
      * @brief Get network stream playback's cache limit.
      *
-     * @return Returns the player cache duration limit set by the user; if the user has not 
+     * @return Returns the player cache duration limit set by the user; if the user has not
      * set cache duration limit, return -1.
      * @since 3.2
      * @version 3.2

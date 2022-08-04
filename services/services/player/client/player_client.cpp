@@ -309,6 +309,5 @@ int32_t PlayerClient::GetCachedDurationLimit()
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
     return playerProxy_->GetCachedDurationLimit();
 }
-
 } // namespace Media
 } // namespace OHOS

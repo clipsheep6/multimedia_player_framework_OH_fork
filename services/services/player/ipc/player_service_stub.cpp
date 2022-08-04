@@ -627,6 +627,5 @@ int32_t PlayerServiceStub::GetCachedDurationLimit(MessageParcel &data, MessagePa
     reply.WriteInt32(getCachedDurationLimit);
     return MSERR_OK;
 }
-
 } // namespace Media
 } // namespace OHOS
