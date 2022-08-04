@@ -205,7 +205,7 @@ public:
 
     /**
      * @brief Select a media track to be played.
-     * 
+     *
      * @param index the index of the track to be selected.
      * @return Returns {@link MSERR_OK} if the track info is get; returns an error code defined
      * in {@link media_errors.h} otherwise.

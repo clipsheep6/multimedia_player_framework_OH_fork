@@ -937,7 +937,6 @@ void VideoPlayerNapi::AsyncSelectTrack(napi_env env, void *data)
         asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer or nativePlayer is nullptr");
         return;
     }
-
     auto player = asyncContext->jsPlayer->nativePlayer_;
     int32_t result = player->SetTrackIndex(asyncContext->track);
     if (result != MSERR_OK) {
@@ -992,16 +991,13 @@ void VideoPlayerNapi::AsyncGetSelectedTracks(napi_env env, void *data)
         asyncContext->SignError(MSERR_EXT_NO_MEMORY, "jsPlayer or nativePlayer is nullptr");
         return;
     }
-
     auto player = asyncContext->jsPlayer->nativePlayer_;
     std::vector<int32_t> tracks;
     int32_t result = player->GetSelectedTrack(tracks);
-
     if (result != MSERR_OK) {
         asyncContext->SignError(MSERR_EXT_UNKNOWN, "failed to get select track");
         return;
     }
-
     if (tracks.empty()) {
         asyncContext->SignError(MSERR_EXT_UNKNOWN, "tracks is empty");
         return;

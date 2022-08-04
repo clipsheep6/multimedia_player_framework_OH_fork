@@ -73,15 +73,11 @@ private:
     int32_t SetRendererInfo();
     int32_t ChangeModeToSpeed(const PlaybackRateMode &mode, double &rate) const;
     int32_t ChangeSpeedToMode(const double &rate, PlaybackRateMode &mode) const;
-    void SetCachedSizeLimit();
-    void SetCachedDurationLimit();
-    int32_t SetCachedInfo();
-    void GetCachedSizeLimit();
-    void GetCachedDurationLimit();
-    int32_t GetCachedInfo();
     void SetVideoScaleType();
     sptr<Surface> GetSubWindowSurface();
     void RegisterTable();
+    bool DoSelectTrack(const std::string &cmd);
+    bool DoSetSourceSeekVolume(const std::string &cmd);
     sptr<Rosen::Window> previewWindow_ = nullptr;
     std::map<std::string, std::function<int32_t()>> playerTable_;
     std::shared_ptr<Player> player_ = nullptr;
