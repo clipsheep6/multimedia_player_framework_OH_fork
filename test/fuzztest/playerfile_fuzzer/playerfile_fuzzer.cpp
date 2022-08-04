@@ -65,14 +65,12 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
         return false;
     }
 
-    ret = player_->PrepareAsync();
-    if (ret != 0) {
+    if ((player_->PrepareAsync()) != 0) {
         cout << "PrepareAsync fail" << endl;
         return true;
     }
     sleep(1);
-    ret = player_->Play();
-    if (ret != 0) {
+    if ((player_->Play()) != 0) {
         cout << "Play fail" << endl;
         return false;
     }
@@ -81,8 +79,7 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
         cout << "Seek fail" << endl;
         return false;
     }
-    ret = player_->Release();
-    if (ret != 0) {
+    if ((player_->Release()) != 0) {
         cout << "Release fail" << endl;
         return false;
     }
@@ -98,7 +95,7 @@ int32_t OHOS::Media::WriteDataToFile(const string &path, const uint8_t* data, si
         return -1;
     }
     if (fwrite(data, 1, size, file) != size) {
-        std::cout << "[fuzz] write data failed";
+        std::cout << "write data failed";
         (void)fclose(file);
         return -1;
     }
