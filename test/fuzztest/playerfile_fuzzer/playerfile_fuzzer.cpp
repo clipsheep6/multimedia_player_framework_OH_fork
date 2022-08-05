@@ -46,7 +46,7 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
         return false;
     }
     const string path = "/data/test/media/fuzztest.mp4";
-    ret = WriteDataToFile(path, data, size);
+    int32_t ret = WriteDataToFile(path, data, size);
     if (ret != 0) {
         cout << "WriteDataToFile fail" << endl;
         return false;
