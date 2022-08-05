@@ -87,11 +87,13 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
     avmetadata->Release();
     return true;
 }
+}
 
 bool OHOS::Media::FuzzTestAVMetadataSetSource(uint8_t *data, size_t size)
 {
     AVMetadataSetSourceFuzzer metadata;
     return metadata.FuzzAVMetadataSetSource(data, size);
+}
 }
 
 /* Fuzzer entry point */
@@ -100,6 +102,4 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::Media::FuzzTestAVMetadataSetSource(data, size);
     return 0;
-}
-}
 }
