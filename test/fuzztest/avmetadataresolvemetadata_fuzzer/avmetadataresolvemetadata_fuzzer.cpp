@@ -35,7 +35,7 @@ AVMetadataResolveMetadataFuzzer::~AVMetadataResolveMetadataFuzzer()
 
 bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *data, size_t size)
 {
-    constexpr int32_t AVMETADATACODELIST = 17;
+    constexpr int32_t AV_METADATA_CODELIST = 17;
 
     avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
@@ -52,7 +52,7 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
         return false;
     }
 
-    int32_t avMetadataCodes[AVMETADATACODELIST] {
+    int32_t avMetadataCodes[AV_METADATA_CODELIST] {
         AV_KEY_ALBUM,
         AV_KEY_ALBUM_ARTIST,
         AV_KEY_ARTIST,
@@ -71,7 +71,7 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
         AV_KEY_VIDEO_WIDTH,
         AV_KEY_VIDEO_ORIENTATION
     };
-    int32_t keyParameter = avMetadataCodes[*reinterpret_cast<int64_t *>(data) % AVMETADATACODELIST];
+    int32_t keyParameter = avMetadataCodes[*reinterpret_cast<int64_t *>(data) % AV_METADATA_CODELIST];
     std::string retResolvemetadata = avmetadata->ResolveMetadata(keyParameter);
     avmetadata->Release();
     return true;

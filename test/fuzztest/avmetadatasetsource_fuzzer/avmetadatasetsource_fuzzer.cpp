@@ -39,7 +39,7 @@ AVMetadataSetSourceFuzzer::~AVMetadataSetSourceFuzzer()
 
 bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t size)
 {
-    constexpr int32_t usageList = 2;
+    constexpr int32_t USAGE_LIST = 2;
     avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
         cout << "avmetadata is null" << endl;
@@ -64,9 +64,9 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
         return false;
     }
     int64_t setsourcesize = static_cast<int64_t>(buffer.st_size);
-    AVMetadataUsage usage[usageList] {AVMetadataUsage::AV_META_USAGE_META_ONLY,
+    AVMetadataUsage usage[USAGE_LIST] {AVMetadataUsage::AV_META_USAGE_META_ONLY,
                                     AVMetadataUsage::AV_META_USAGE_PIXEL_MAP};
-    int32_t setsourceusage = usage[ProduceRandomNumberCrypt() % usageList];
+    int32_t setsourceusage = usage[ProduceRandomNumberCrypt() % USAGE_LIST];
     int32_t retSetsource = avmetadata->SetSource(setsourcefd,
         *reinterpret_cast<int64_t *>(data), setsourcesize, setsourceusage);
     if (retSetsource != 0) {
