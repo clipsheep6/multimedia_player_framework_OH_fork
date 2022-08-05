@@ -38,8 +38,8 @@ AVMetadataFetchFrameAtTimeFuzzer::~AVMetadataFetchFrameAtTimeFuzzer()
 
 bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *data, size_t size)
 {
-    constexpr int32_t avMetadataQueryOptionList = 4;
-    constexpr int32_t avColorFormatList = 11;
+    constexpr int32_t AVMETADATAQUERYOPTIONLIST = 4;
+    constexpr int32_t AVCOLORFORMATLIST = 11;
 
     avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
@@ -56,15 +56,15 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
     }
 
     if (size >= sizeof(int64_t)) {
-        int32_t nameAVMetadataQueryOption[avMetadataQueryOptionList] {
+        int32_t avMetadataQueryOption[AVMETADATAQUERYOPTIONLIST] {
             AV_META_QUERY_NEXT_SYNC,
             AV_META_QUERY_PREVIOUS_SYNC,
             AV_META_QUERY_CLOSEST_SYNC,
             AV_META_QUERY_CLOSEST
         };
 
-        int32_t option = nameAVMetadataQueryOption[ProduceRandomNumberCrypt() % avMetadataQueryOptionList];
-        PixelFormat colorFormats[avColorFormatList] {
+        int32_t option = avMetadataQueryOption[ProduceRandomNumberCrypt() % AVMETADATAQUERYOPTIONLIST];
+        PixelFormat colorFormats[AVCOLORFORMATLIST] {
             PixelFormat::UNKNOWN,
             PixelFormat::ARGB_8888,
             PixelFormat::RGB_565,
@@ -77,7 +77,7 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
             PixelFormat::NV12,
             PixelFormat::CMYK
         };
-        PixelFormat colorFormat = colorFormats[ProduceRandomNumberCrypt() % avColorFormatList];
+        PixelFormat colorFormat = colorFormats[ProduceRandomNumberCrypt() % AVCOLORFORMATLIST];
 
         struct PixelMapParams pixelMapParams = {ProduceRandomNumberCrypt(), ProduceRandomNumberCrypt(), colorFormat};
         
