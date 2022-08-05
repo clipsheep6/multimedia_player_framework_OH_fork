@@ -27,6 +27,8 @@ using namespace OHOS;
 using namespace Media;
 using namespace PlayerTestParam;
 
+namespace OHOS {
+namespace Media {
 AVMetadataSetSourceFuzzer::AVMetadataSetSourceFuzzer()
 {
 }
@@ -98,4 +100,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
     /* Run your code on data */
     OHOS::Media::FuzzTestAVMetadataSetSource(data, size);
     return 0;
+}
+}
 }

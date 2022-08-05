@@ -41,8 +41,7 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
         return false;
     }
     std::shared_ptr<TestPlayerCallback> cb = std::make_shared<TestPlayerCallback>();
-    int32_t ret = player_->SetPlayerCallback(cb);
-    if (ret != 0) {
+    if ((player_->SetPlayerCallback(cb)) != 0) {
         cout << "SetPlayerCallback fail" << endl;
         return false;
     }
