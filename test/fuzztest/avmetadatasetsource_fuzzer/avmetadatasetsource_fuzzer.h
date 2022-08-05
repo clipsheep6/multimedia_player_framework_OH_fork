@@ -21,7 +21,6 @@
 
 namespace OHOS {
 namespace Media {
-
 class AVMetadataSetSourceFuzzer : public TestMetadata {
 public:
     AVMetadataSetSourceFuzzer();
