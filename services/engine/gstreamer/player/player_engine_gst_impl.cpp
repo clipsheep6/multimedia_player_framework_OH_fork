@@ -579,10 +579,11 @@ int32_t PlayerEngineGstImpl::SetTrackIndex(int32_t index)
                              && index >= 0, MSERR_INVALID_VAL,
                              "index is invalid");
     int32_t ret;
-    if (index >= static_cast<int32_t>(videoTrack.size()))
+    if (index >= static_cast<int32_t>(videoTrack.size())) {
         ret = playBinCtrler_->SelectAudioTrack(index - videoTrack.size());
-    else
+    } else {
         ret = playBinCtrler_->SelectVideoTrack(index);
+    }
 
     return ret;
 }
@@ -599,18 +600,20 @@ int32_t PlayerEngineGstImpl::GetSelectedTrack(std::vector<int32_t> &trackIndex)
     int32_t index;
     if (!videoTrack.empty()) {
         index = playBinCtrler_->GetSelectVideoTrackIndex();
-        if (index == -1)
+        if (index == -1) {
             trackIndex.push_back(0);
-        else
+        } else {
             trackIndex.push_back(index);
+        }
     }
 
     if (!audioTrack.empty()) {
         index = playBinCtrler_->GetSelectAudioTrackIndex();
-        if (index == -1)
+        if (index == -1) {
             trackIndex.push_back(videoTrack.size());
-        else
+        } else {
             trackIndex.push_back(index + videoTrack.size());
+        }
     }
 
     return MSERR_OK;

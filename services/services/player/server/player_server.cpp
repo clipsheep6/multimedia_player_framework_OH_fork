@@ -570,6 +570,7 @@ int32_t PlayerServer::SetTrackIndex(int32_t index)
         MEDIA_LOGE("Can not set track index, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
+    MEDIA_LOGD("PlayerServer SetTrackIndex in");
     int32_t ret = playerEngine_->SetTrackIndex(index);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetTrackIndex Failed!");
     return ret;
@@ -585,6 +586,7 @@ int32_t PlayerServer::GetSelectedTrack(std::vector<int32_t> &trackIndex)
         MEDIA_LOGE("Can not get select track, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
+    MEDIA_LOGD("PlayerServer GetSelectedTrack in");
     int32_t ret = playerEngine_->GetSelectedTrack(trackIndex);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "GetSelectedTrack Failed!");
     return ret;
