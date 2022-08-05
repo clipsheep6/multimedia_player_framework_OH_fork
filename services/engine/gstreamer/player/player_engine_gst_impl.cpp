@@ -758,8 +758,9 @@ int32_t PlayerEngineGstImpl::SetCachedSizeLimit(int32_t size)
 
     MEDIA_LOGD("SetCachedSizeLimit %{public}d", size);
 
-    if (playBinCtrler_)
+    if (playBinCtrler_) {
         playBinCtrler_->SetCachedSizeLimit(size);
+    }
 
     cacheSize_ = size;
     return MSERR_OK;
@@ -780,8 +781,9 @@ int32_t PlayerEngineGstImpl::SetCachedDurationLimit(int32_t duration)
 
     MEDIA_LOGD("SetCachedDurationLimit %{public}d", duration);
 
-    if (playBinCtrler_)
+    if (playBinCtrler_) {
         playBinCtrler_->SetCachedDurationLimit(duration);
+    }
 
     cacheDuration_ = duration;
     return MSERR_OK;
