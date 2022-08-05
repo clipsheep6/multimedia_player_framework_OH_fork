@@ -89,7 +89,7 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
 }
 }
 
-bool OHOS::Media::FuzzTestAVMetadataSetSource(uint8_t *data, size_t size)
+bool FuzzTestAVMetadataSetSource(uint8_t *data, size_t size)
 {
     AVMetadataSetSourceFuzzer metadata;
     return metadata.FuzzAVMetadataSetSource(data, size);
@@ -100,6 +100,6 @@ bool OHOS::Media::FuzzTestAVMetadataSetSource(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Media::FuzzTestAVMetadataSetSource(data, size);
+    OHOS::FuzzTestAVMetadataSetSource(data, size);
     return 0;
 }
