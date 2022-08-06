@@ -442,6 +442,7 @@ void PlayBinCtrlerBase::Reset() noexcept
         std::unique_lock<std::mutex> lk(listenerMutex_);
         elemSetupListener_ = nullptr;
         elemUnSetupListener_ = nullptr;
+        autoPlugSortListener_ = nullptr;
     }
     isStopFinish_ = false;
     int32_t ret = StopInternal();
@@ -493,6 +494,13 @@ void PlayBinCtrlerBase::SetElemUnSetupListener(ElemSetupListener listener)
     std::unique_lock<std::mutex> lock(mutex_);
     std::unique_lock<std::mutex> lk(listenerMutex_);
     elemUnSetupListener_ = listener;
+}
+
+void PlayBinCtrlerBase::SetAutoPlugSortListener(AutoPlugSortListener listener)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lk(listenerMutex_);
+    autoPlugSortListener_ = listener;
 }
 
 void PlayBinCtrlerBase::DoInitializeForHttp()
@@ -911,7 +919,7 @@ void PlayBinCtrlerBase::RemoveGstPlaySinkVideoConvertPlugin()
     g_object_set(playbin_, "flags", flags, nullptr);
 }
 
-GValueArray *PlayBinCtrlerBase::OnDecodeBinTryAddNewElem(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
+GValueArray *PlayBinCtrlerBase::AutoPlugSort(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
     GValueArray *factories, gpointer userdata)
 {
     CHECK_AND_RETURN_RET_LOG(uriDecoder != nullptr, nullptr, "uriDecoder is null");
@@ -921,21 +929,21 @@ GValueArray *PlayBinCtrlerBase::OnDecodeBinTryAddNewElem(const GstElement *uriDe
 
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
     CHECK_AND_RETURN_RET_LOG(thizStrong != nullptr, nullptr, "thizStrong is null");
+    return thizStrong->OnAutoPlugSort(*factories);
+}
 
-    if (thizStrong->isPlaySinkFlagsSet_) {
-        return nullptr;
+GValueArray *PlayBinCtrlerBase::OnAutoPlugSort(GValueArray &factories)
+{
+    MEDIA_LOGD("DecodeBinTryAddNewElem");
+
+    decltype(autoPlugSortListener_) listener = nullptr;
+    {
+        std::unique_lock<std::mutex> lock(listenerMutex_);
+        listener = thizStrong->autoPlugSortListener_;
     }
 
-    for (uint32_t i = 0; i < factories->n_values; i++) {
-        GstElementFactory *factory =
-            static_cast<GstElementFactory *>(g_value_get_object(g_value_array_get_nth(factories, i)));
-        if (strstr(gst_element_factory_get_metadata(factory, GST_ELEMENT_METADATA_KLASS),
-            "Codec/Decoder/Video/Hardware")) {
-            MEDIA_LOGD("set remove GstPlaySinkVideoConvert plugins from pipeline");
-            thizStrong->RemoveGstPlaySinkVideoConvertPlugin();
-            thizStrong->isPlaySinkFlagsSet_ = true;
-            break;
-        }
+    if (listener != nullptr) {
+        return listener(*factories);
     }
     return nullptr;
 }
@@ -993,7 +1001,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
         (void)signalIds_.emplace(&elem, g_signal_connect_data(&elem, "autoplug-sort",
-            G_CALLBACK(&PlayBinCtrlerBase::OnDecodeBinTryAddNewElem), wrapper,
+            G_CALLBACK(&PlayBinCtrlerBase::DecodeBinTryAddNewElem), wrapper,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0)));
     }
 
