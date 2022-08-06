@@ -404,17 +404,19 @@ int32_t PlayBinCtrlerBase::SetAudioRendererInfo(const uint32_t rendererInfo, con
     std::unique_lock<std::mutex> lock(mutex_, std::try_to_lock);
     rendererInfo_ = rendererInfo;
     rendererFlag_ = rendererFlag;
-    CHECK_AND_RETURN_RET_LOG(audioSink_ != nullptr, MSERR_INVALID_VAL, "audioSink_ is nullptr");
-    g_object_set(audioSink_, "audio-renderer-desc", rendererInfo, nullptr);
-    g_object_set(audioSink_, "audio-renderer-flag", rendererFlag, nullptr);
+    if (audioSink_ != nullptr) {
+        g_object_set(audioSink_, "audio-renderer-desc", rendererInfo, nullptr);
+        g_object_set(audioSink_, "audio-renderer-flag", rendererFlag, nullptr);
+    }
     return MSERR_OK;
 }
 
 void PlayBinCtrlerBase::SetAudioInterruptMode(const int32_t interruptMode)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_LOG(audioSink_ != nullptr, "audioSink_ is nullptr");
-    g_object_set(audioSink_, "audio-interrupt-mode", interruptMode, nullptr);
+    if (audioSink_ != nullptr) {
+        g_object_set(audioSink_, "audio-interrupt-mode", interruptMode, nullptr);
+    }
 }
 
 int32_t PlayBinCtrlerBase::SelectBitRate(uint32_t bitRate)
@@ -589,11 +591,6 @@ void PlayBinCtrlerBase::ExitInitializedState()
         g_signal_handler_disconnect(elem, signalId);
     }
     signalIds_.clear();
-
-    if (videoSink_ != nullptr) {
-        gst_object_unref(videoSink_);
-        videoSink_ = nullptr;
-    }
 
     MEDIA_LOGD("unref playbin start");
     if (playbin_ != nullptr) {
@@ -789,7 +786,7 @@ int64_t PlayBinCtrlerBase::QueryPositionInternal(bool isSeekDone)
         if (isSeekDone) {
             position = seekPos_ * NANO_SEC_PER_USEC;
         } else {
-            MEDIA_LOGE("query position failed");
+            MEDIA_LOGW("query position failed");
             return lastTime_;
         }
     }

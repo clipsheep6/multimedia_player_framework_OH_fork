@@ -57,8 +57,6 @@ private:
 
     GstElement *audioSink_ = nullptr;
     GstElement *videoSink_ = nullptr;
-    GstCaps *audioCaps_ = nullptr;
-    GstCaps *videoCaps_ = nullptr;
     sptr<Surface> producerSurface_ = nullptr;
     uint32_t queueSize_ = 0;
     int32_t uid_ = 0;

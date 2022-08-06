@@ -449,13 +449,10 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
 void PlayerEngineGstImpl::PlayBinCtrlerDeInit()
 {
     url_.clear();
-    appsrcWrap_ = nullptr;
-    codecChangedDetector_ = nullptr;
 
     if (playBinCtrler_ != nullptr) {
         playBinCtrler_->SetElemSetupListener(nullptr);
         playBinCtrler_->SetElemUnSetupListener(nullptr);
-        playBinCtrler_ = nullptr;
     }
 
     {
@@ -467,6 +464,10 @@ void PlayerEngineGstImpl::PlayBinCtrlerDeInit()
         }
         signalIds_.clear();
     }
+
+    playBinCtrler_ = nullptr;
+    appsrcWrap_ = nullptr;
+    codecChangedDetector_ = nullptr;
 }
 
 int32_t PlayerEngineGstImpl::PlayBinCtrlerPrepare()
@@ -798,19 +799,24 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
         }
     }
 
-    CHECK_AND_RETURN_LOG(sinkProvider_ != nullptr, "sinkProvider_ is nullptr");
-    GstElement *videoSink = sinkProvider_->GetVideoSink();
-    CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
-    codecChangedDetector_->DetectCodecSetup(metaStr, &elem, videoSink);
+    if (producerSurface_ != nullptr) {
+        CHECK_AND_RETURN_LOG(sinkProvider_ != nullptr, "sinkProvider_ is nullptr");
+        GstElement *videoSink = sinkProvider_->GetVideoSink();
+        CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
+        codecChangedDetector_->DetectCodecSetup(metaStr, &elem, videoSink);
+    }
 }
 
 void PlayerEngineGstImpl::OnNotifyElemUnSetup(GstElement &elem)
 {
-    CHECK_AND_RETURN_LOG(sinkProvider_ != nullptr, "sinkProvider_ is nullptr");
-    GstElement *videoSink = sinkProvider_->GetVideoSink();
-    CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
+    if (producerSurface_ != nullptr) {
+        std::unique_lock<std::mutex> lock(trackParseMutex_);
+        CHECK_AND_RETURN_LOG(sinkProvider_ != nullptr, "sinkProvider_ is nullptr");
+        GstElement *videoSink = sinkProvider_->GetVideoSink();
+        CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
 
-    codecChangedDetector_->DetectCodecUnSetup(&elem, videoSink);
+        codecChangedDetector_->DetectCodecUnSetup(&elem, videoSink);
+    }
 }
 
 CodecChangedDetector::~CodecChangedDetector()

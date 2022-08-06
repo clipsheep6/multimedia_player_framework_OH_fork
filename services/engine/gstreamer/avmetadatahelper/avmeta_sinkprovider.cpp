@@ -60,11 +60,16 @@ PlayBinSinkProvider::SinkPtr AVMetaSinkProvider::CreateAudioSink()
 
 PlayBinSinkProvider::SinkPtr AVMetaSinkProvider::CreateVideoSink()
 {
+    if (vidSink_ != nullptr) {
+        gst_object_unref(vidSink_);
+        vidSink_ = nullptr;
+    }
+
     if (vidSink_ == nullptr) {
         if (usage_ == AVMetadataUsage::AV_META_USAGE_META_ONLY) {
-            vidSink_ = gst_element_factory_make("fakesink", "avmeta_vid_sink");
+            vidSink_ = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("fakesink", "avmeta_vid_sink")));
         } else {
-            vidSink_ = gst_element_factory_make("appsink", "avmeta_vid_sink");
+            vidSink_ = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("appsink", "avmeta_vid_sink")));
         }
     }
 
@@ -72,7 +77,7 @@ PlayBinSinkProvider::SinkPtr AVMetaSinkProvider::CreateVideoSink()
         MEDIA_LOGE("vidsink is nullptr");
     }
 
-    return GST_ELEMENT_CAST(gst_object_ref(vidSink_));
+    return vidSink_;
 }
 } // namespace Media
 } // namespace OHOS
