@@ -41,12 +41,12 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
         return false;
     }
     std::shared_ptr<TestPlayerCallback> cb = std::make_shared<TestPlayerCallback>();
-    int32_t ret = player_->SetPlayerCallback(cb);
-    if (ret != 0) {
+    if ((player_->SetPlayerCallback(cb)) != 0) {
         cout << "SetPlayerCallback fail" << endl;
+        return false;
     }
-    const string path = "/data/fuzztest/fuzztest.mp4";
-    ret = WriteDataToFile(path, data, size);
+    const string path = "/data/test/media/fuzztest.mp4";
+    int32_t ret = WriteDataToFile(path, data, size);
     if (ret != 0) {
         cout << "WriteDataToFile fail" << endl;
         return false;
@@ -61,24 +61,24 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
     ret = player_->SetVideoSurface(producerSurface);
     if (ret != 0) {
         cout << "SetVideoSurface fail" << endl;
+        return false;
     }
 
-    ret = player_->PrepareAsync();
-    if (ret != 0) {
+    if ((player_->PrepareAsync()) != 0) {
         cout << "PrepareAsync fail" << endl;
         return true;
     }
     sleep(1);
-    ret = player_->Play();
-    if (ret != 0) {
+    if ((player_->Play()) != 0) {
         cout << "Play fail" << endl;
+        return false;
     }
     ret = player_->Seek(3000, SEEK_NEXT_SYNC); // seek 3000 ms
     if (ret != 0) {
         cout << "Seek fail" << endl;
+        return false;
     }
-    ret = player_->Release();
-    if (ret != 0) {
+    if ((player_->Release()) != 0) {
         cout << "Release fail" << endl;
         return false;
     }
@@ -90,11 +90,11 @@ int32_t OHOS::Media::WriteDataToFile(const string &path, const uint8_t* data, si
     FILE *file = nullptr;
     file = fopen(path.c_str(), "w+");
     if (file == nullptr) {
-        std::cout << "[fuzz] open file fstab.test failed";
+        cout << "open file fstab.test failed" << endl;
         return -1;
     }
     if (fwrite(data, 1, size, file) != size) {
-        std::cout << "[fuzz] write data failed";
+        std::cout << "write data failed";
         (void)fclose(file);
         return -1;
     }
@@ -102,18 +102,14 @@ int32_t OHOS::Media::WriteDataToFile(const string &path, const uint8_t* data, si
     return 0;
 }
 
-bool OHOS::Media::FuzzPlayerFile(const uint8_t* data, size_t size)
+bool OHOS::Media::FuzzPlayerFile(const uint8_t *data, size_t size)
 {
-    auto player = std::make_unique<PlayerFileFuzzer>();
-    if (player == nullptr) {
-        cout << "player is null" << endl;
-        return 0;
-    }
-    return player->FuzzFile(data, size);
+    PlayerFileFuzzer player;
+    return player.FuzzFile(data, size);
 }
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     /* Run your code on data */
     OHOS::Media::FuzzPlayerFile(data, size);
