@@ -56,7 +56,7 @@ static BufferRequestConfig g_request = {
     .timeout = 0
 };
 
-int32_t VEncDemo::String2Int(const string &str)
+int32_t VEncDemo::String2Int(const std::string &str)
 {
     int32_t ret = 0;
     if (str == "\n") {
