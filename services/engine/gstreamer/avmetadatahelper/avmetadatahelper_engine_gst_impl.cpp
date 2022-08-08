@@ -220,7 +220,7 @@ int32_t AVMetadataHelperEngineGstImpl::SetSourceInternel(const std::string &uri,
     auto listener = std::bind(&AVMetadataHelperEngineGstImpl::OnNotifyElemSetup, this, std::placeholders::_1);
     playBinCtrler_->SetElemSetupListener(listener);
 
-    auto listener = std::bind(&AVMetadataHelperEngineGstImpl::OnNotifyElemSetup, this, std::placeholders::_1);
+    listener = std::bind(&AVMetadataHelperEngineGstImpl::OnNotifyElemSetup, this, std::placeholders::_1);
     playBinCtrler_->SetElemSetupListener(listener);
 
     auto autoPlugSortListener =

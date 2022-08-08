@@ -934,16 +934,16 @@ GValueArray *PlayBinCtrlerBase::AutoPlugSort(const GstElement *uriDecoder, GstPa
 
 GValueArray *PlayBinCtrlerBase::OnAutoPlugSort(GValueArray &factories)
 {
-    MEDIA_LOGD("DecodeBinTryAddNewElem");
+    MEDIA_LOGD("OnAutoPlugSort");
 
     decltype(autoPlugSortListener_) listener = nullptr;
     {
         std::unique_lock<std::mutex> lock(listenerMutex_);
-        listener = thizStrong->autoPlugSortListener_;
+        listener = autoPlugSortListener_;
     }
 
     if (listener != nullptr) {
-        return listener(*factories);
+        return listener(factories);
     }
     return nullptr;
 }
@@ -1001,7 +1001,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
         (void)signalIds_.emplace(&elem, g_signal_connect_data(&elem, "autoplug-sort",
-            G_CALLBACK(&PlayBinCtrlerBase::DecodeBinTryAddNewElem), wrapper,
+            G_CALLBACK(&PlayBinCtrlerBase::AutoPlugSort), wrapper,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0)));
     }
 
