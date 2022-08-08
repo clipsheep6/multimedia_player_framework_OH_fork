@@ -33,7 +33,7 @@ namespace {
     constexpr uint32_t MAX_INPUT_BUFFER_SIZE = 30000;
     constexpr uint32_t FRAME_DURATION_US = 33000;
 
-    //The size of each frame varies with the file
+    // The size of each frame varies with the file
     const uint32_t AVC_DATA_SIZE[] = {
         612, 15, 15, 15, 15, 15, 15, 15, 15,
         15, 15, 15, 15, 15, 15, 15, 15, 15,
