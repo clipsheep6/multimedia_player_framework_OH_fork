@@ -58,8 +58,7 @@ PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateAudioSink()
     constexpr gint channels = 2;
 
     if (audioSink_ != nullptr) {
-        gst_object_unref(audioSink_);
-        audioSink_ = nullptr;
+        return audioSink_;
     }
 
     if (audioSink_ == nullptr) {
@@ -145,8 +144,7 @@ PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateVideoSink()
     }
 
     if (videoSink_ != nullptr) {
-        gst_object_unref(videoSink_);
-        videoSink_ = nullptr;
+        return videoSink_;
     }
 
     if (videoSink_ == nullptr) {

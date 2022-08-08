@@ -61,8 +61,7 @@ PlayBinSinkProvider::SinkPtr AVMetaSinkProvider::CreateAudioSink()
 PlayBinSinkProvider::SinkPtr AVMetaSinkProvider::CreateVideoSink()
 {
     if (vidSink_ != nullptr) {
-        gst_object_unref(vidSink_);
-        vidSink_ = nullptr;
+        return vidSink_;
     }
 
     if (vidSink_ == nullptr) {
