@@ -77,7 +77,6 @@ private:
     sptr<Surface> surface_ = nullptr;
     int64_t timestampNs_ = 0;
     std::string codername = "";
-    int32_t isKeyFrame_ = 1;
 };
 } // namespace Media
 } // namespace OHOS
