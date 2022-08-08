@@ -61,8 +61,7 @@ bool PlayerSeekFuzzer::FuzzSeek(uint8_t* data, size_t size)
         return false;
     }
     sleep(1);
-    ret = player_->Play();
-    if (ret != 0) {
+    if ((player_->Play()) != 0) {
         cout << "Play fail" << endl;
         return false;
     }
@@ -78,8 +77,7 @@ bool PlayerSeekFuzzer::FuzzSeek(uint8_t* data, size_t size)
         }
     }
         
-    ret = player_->Release();
-    if (ret != 0) {
+    if ((player_->Release()) != 0) {
         cout << "Release fail" << endl;
         return false;
     }
