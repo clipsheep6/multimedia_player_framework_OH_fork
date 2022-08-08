@@ -56,24 +56,36 @@ static BufferRequestConfig g_request = {
     .timeout = 0
 };
 
+int32_t VEncDemo::String2Int(const string &str)
+{
+    int32_t ret = 0;
+    if (str == "\n") {
+        std::cout << "Enter enter, convert enter to 0" << endl;
+        ret = 0;
+    } else {
+        ret = atoi(str.c_str());
+    }
+    return ret;
+}
+
 void VEncDemo::RunCase(bool enableProp)
 {
     DEMO_CHECK_AND_RETURN_LOG(CreateVenc() == MSERR_OK, "Fatal: CreateVenc fail");
 
-    std::string proflie;
-    std::string bitmode;
     std::cout << "Enter profile: " << endl;
     cout << "profile baseline : 0" << endl;
     cout << "profile high : 4" << endl;
     cout << "profile main : 8" << endl;
+    std::string proflie = "";
     (void)getline(cin, proflie);
     std::cout << "Enter bitmode: " << endl;
     cout << "bitmode CBR : 0" << endl;
     cout << "bitmode VBR : 1" << endl;
+    std::string bitmode = "";
     (void)getline(cin, bitmode);
 
-    int32_t pro = atoi(proflie.c_str());
-    int32_t bmode = atoi(bitmode.c_str());
+    int32_t pro = String2Int(proflie);
+    int32_t bmode = String2Int(bitmode);
 
     Format format;
     format.PutIntValue("width", DEFAULT_WIDTH);
@@ -82,12 +94,9 @@ void VEncDemo::RunCase(bool enableProp)
     format.PutIntValue("frame_rate", DEFAULT_FRAME_RATE);
     format.PutIntValue("video_encode_bitrate_mode", bmode);
     format.PutIntValue("codec_profile", pro);
-
     DEMO_CHECK_AND_RETURN_LOG(Configure(format) == MSERR_OK, "Fatal: Configure fail");
-
     surface_ = GetVideoSurface();
     DEMO_CHECK_AND_RETURN_LOG(surface_ != nullptr, "Fatal: GetVideoSurface fail");
-
     DEMO_CHECK_AND_RETURN_LOG(Prepare() == MSERR_OK, "Fatal: Prepare fail");
     DEMO_CHECK_AND_RETURN_LOG(Start() == MSERR_OK, "Fatal: Start fail");
 
@@ -101,7 +110,6 @@ void VEncDemo::RunCase(bool enableProp)
     } else {
         GenerateData(DEFAULT_FRAME_COUNT, DEFAULT_FRAME_RATE);
     }
-
     DEMO_CHECK_AND_RETURN_LOG(Stop() == MSERR_OK, "Fatal: Stop fail");
     DEMO_CHECK_AND_RETURN_LOG(Release() == MSERR_OK, "Fatal: Release fail");
 }
@@ -138,34 +146,40 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
         const sptr<OHOS::BufferExtraData>& extraData = buffer->GetExtraData();
         DEMO_CHECK_AND_BREAK_LOG(extraData != nullptr, "Fatal: SurfaceBuffer is nullptr");
         (void)extraData->ExtraSet("timeStamp", timestampNs_);
-        extraData->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
-        extraData->ExtraSet("isKeyFrame", isKeyFrame_);
         timestampNs_ += static_cast<int64_t>(intervalUs * 1000); // us to ns
 
         (void)surface_->FlushBuffer(buffer, -1, g_flushConfig);
         cout << "Generate input buffer success, timestamp: " << timestampNs_ << endl;
         frameCount++;
-        // 30： The I frame interval
-        (frameCount % 30) == 0 ? (isKeyFrame_ = 1) : (isKeyFrame_ = 0);
     }
 }
 
 int32_t VEncDemo::CreateVenc()
 {
-    string encodeMode;
-    codername = "openh264enc";
-    std::cout << "Enter media coder name: " << endl;
-    cout << "selectt openh264enc: 1" << endl;
-    cout << "select avenc_mpeg4: 2" << endl;
-    (void)getline(cin, encodeMode);
-    if (encodeMode.compare("1") == 0) {
-        cout << "select openh264enc" << endl;
+    std::cout << "Enter create type: " << endl;
+    cout << "selectt CreateByName: 1" << endl;
+    cout << "select CreateByMime: 2" << endl;
+    string createType = "";
+    (void)getline(cin, createType);
+    if (createType.compare("1") == 0) {
+        codername = "openh264enc";
+        std::cout << "Enter media coder name: " << endl;
+        cout << "selectt openh264enc: 1" << endl;
+        cout << "select avenc_mpeg4: 2" << endl;
+        string encodeMode = "";
+        (void)getline(cin, encodeMode);
+        if (encodeMode.compare("1") == 0) {
+            cout << "select openh264enc" << endl;
+        } else {
+            cout << "select avenc_mpeg4"<< endl;
+            codername = "avenc_mpeg4";
+        }
+        venc_ = VideoEncoderFactory::CreateByName(codername);
+        DEMO_CHECK_AND_RETURN_RET_LOG(venc_ != nullptr, MSERR_UNKNOWN, "Fatal: CreateByName fail");
     } else {
-        cout << "select avenc_mpeg4"<< endl;
-        codername = "avenc_mpeg4";
+        venc_ = VideoEncoderFactory::CreateByMime("video/mp4v-es");
+        DEMO_CHECK_AND_RETURN_RET_LOG(venc_ != nullptr, MSERR_UNKNOWN, "Fatal: CreateByMime fail");
     }
-    venc_ = VideoEncoderFactory::CreateByName(codername);
-    DEMO_CHECK_AND_RETURN_RET_LOG(venc_ != nullptr, MSERR_UNKNOWN, "Fatal: CreateByName fail");
 
     signal_ = make_shared<VEncSignal>();
     DEMO_CHECK_AND_RETURN_RET_LOG(signal_ != nullptr, MSERR_UNKNOWN, "Fatal: No memory");
@@ -251,7 +265,6 @@ void VEncDemo::LoopFunc()
     }
     if (!ofs.is_open()) {
             std::cout << "open file failed" << std::endl;
-            return;
     }
     while (true) {
         if (!isRunning_.load()) {

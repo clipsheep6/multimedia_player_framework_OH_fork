@@ -67,6 +67,7 @@ private:
     int32_t Release();
     sptr<Surface> GetVideoSurface();
     void LoopFunc();
+    int32_t String2Int(const string &str);
 
     std::atomic<bool> isRunning_ = false;
     std::unique_ptr<std::thread> readLoop_;
