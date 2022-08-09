@@ -60,6 +60,10 @@ public:
     int32_t DestroyStub() override;
     int32_t SetPlayerCallback() override;
     int32_t DumpInfo(int32_t fd);
+    int32_t SetCachedSizeLimit(int32_t size) override;
+    int32_t SetCachedDurationLimit(int32_t duration) override;
+    int32_t GetCachedSizeLimit() override;
+    int32_t GetCachedDurationLimit() override;
     int32_t SelectBitRate(uint32_t bitRate) override;
 
 private:
@@ -93,6 +97,10 @@ private:
     int32_t SetParameter(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlayerCallback(MessageParcel &data, MessageParcel &reply);
+    int32_t SetCachedSizeLimit(MessageParcel &data, MessageParcel &reply);
+    int32_t SetCachedDurationLimit(MessageParcel &data, MessageParcel &reply);
+    int32_t GetCachedSizeLimit(MessageParcel &data, MessageParcel &reply);
+    int32_t GetCachedDurationLimit(MessageParcel &data, MessageParcel &reply);
     int32_t SelectBitRate(MessageParcel &data, MessageParcel &reply);
 
     std::mutex mutex_;

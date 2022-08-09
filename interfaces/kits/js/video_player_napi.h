@@ -130,6 +130,11 @@ private:
     static napi_value GetAudioInterruptMode(napi_env env, napi_callback_info info);
     static napi_value SetAudioInterruptMode(napi_env env, napi_callback_info info);
     /**
+     * cacheLimit ?: PlaybackCacheLimit;
+     */
+    static napi_value SetCacheLimit(napi_env env, napi_callback_info info);
+    static napi_value GetCacheLimit(napi_env env, napi_callback_info info);
+    /**
      * readonly currentTime: number
      */
     static napi_value GetCurrentTime(napi_env env, napi_callback_info info);

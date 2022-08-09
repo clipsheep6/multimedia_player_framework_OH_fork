@@ -846,6 +846,54 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SetCachedSizeLimit(int32_t size)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ != PLAYER_INITIALIZED && lastOpStatus_ != PLAYER_PREPARED) {
+        MEDIA_LOGE("Can not CachedSizeLimit, currentState must be PLAYER_INITIALIZED");
+        return MSERR_INVALID_OPERATION;
+    }
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    int32_t ret = playerEngine_->SetCachedSizeLimit(size);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetCachedSizeLimit Failed!");
+    return ret;
+}
+
+int32_t PlayerServer::SetCachedDurationLimit(int32_t duration)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ != PLAYER_INITIALIZED && lastOpStatus_ != PLAYER_PREPARED) {
+        MEDIA_LOGE("Can not CachedDurationLimit, currentState must be PLAYER_INITIALIZED");
+        return MSERR_INVALID_OPERATION;
+    }
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    int32_t ret = playerEngine_->SetCachedDurationLimit(duration);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetCachedDurationLimit Failed!");
+    return ret;
+}
+
+int32_t PlayerServer::GetCachedSizeLimit()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not GetCachedSizeLimit, currentState is PLAYER_STATE_ERROR");
+        return MSERR_INVALID_OPERATION;
+    }
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    return playerEngine_->GetCachedSizeLimit();
+}
+
+int32_t PlayerServer::GetCachedDurationLimit()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not GetCachedDurationLimit, currentState is PLAYER_STATE_ERROR");
+        return MSERR_INVALID_OPERATION;
+    }
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    return playerEngine_->GetCachedDurationLimit();
+}
+
 void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);

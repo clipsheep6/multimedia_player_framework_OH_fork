@@ -60,6 +60,10 @@ public:
     double GetRate() override;
     int32_t SetLoop(bool loop) override;
     void SetVolume(const float &leftVolume, const float &rightVolume) override;
+    int32_t SetCachedSizeLimit(int32_t size) override;
+    int32_t SetCachedDurationLimit(int32_t duration) override;
+    int32_t GetCachedSizeLimit() override;
+    int32_t GetCachedDurationLimit() override;
     void SetAudioInterruptMode(const int32_t interruptMode) override;
     int32_t SetAudioRendererInfo(const uint32_t rendererInfo, const int32_t rendererFlag) override;
     int32_t SelectBitRate(uint32_t bitRate) override;

@@ -55,6 +55,10 @@ public:
     virtual int32_t SetParameter(const Format &param) = 0;
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetPlayerCallback() = 0;
+    virtual int32_t SetCachedSizeLimit(int32_t size) = 0;
+    virtual int32_t SetCachedDurationLimit(int32_t duration) = 0;
+    virtual int32_t GetCachedSizeLimit() = 0;
+    virtual int32_t GetCachedDurationLimit() = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
     /**
      * IPC code ID
@@ -88,6 +92,10 @@ public:
         GET_AUDIO_TRACK_INFO,
         GET_VIDEO_WIDTH,
         GET_VIDEO_HEIGHT,
+        SET_CACHED_SIZE_LIMIT,
+        SET_CACHED_DURATION_LIMIT,
+        GET_CACHED_SIZE_LIMIT,
+        GET_CACHED_DURATION_LIMIT,
         SELECT_BIT_RATE
     };
 

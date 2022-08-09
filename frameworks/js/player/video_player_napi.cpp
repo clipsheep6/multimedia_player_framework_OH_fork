@@ -81,6 +81,7 @@ napi_value VideoPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("url", GetUrl, SetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", GetFdSrc, SetFdSrc),
         DECLARE_NAPI_GETTER_SETTER("loop", GetLoop, SetLoop),
+        DECLARE_NAPI_GETTER_SETTER("cacheLimit", GetCacheLimit, SetCacheLimit),
         DECLARE_NAPI_GETTER_SETTER("videoScaleType", GetVideoScaleType, SetVideoScaleType),
         DECLARE_NAPI_GETTER_SETTER("audioInterruptMode", GetAudioInterruptMode, SetAudioInterruptMode),
 
@@ -1261,6 +1262,94 @@ napi_value VideoPlayerNapi::GetCurrentTime(napi_env env, napi_callback_info info
     status = napi_create_int32(env, currentTime, &jsResult);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "napi_create_int32 error");
     MEDIA_LOGD("GetCurrenTime success, Current time: %{public}d", currentTime);
+    return jsResult;
+}
+
+napi_value VideoPlayerNapi::SetCacheLimit(napi_env env, napi_callback_info info)
+{
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+    napi_value jsThis = nullptr;
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    VideoPlayerNapi *player = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&player));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && player != nullptr, undefinedResult, "Failed to retrieve instance");
+
+    napi_valuetype valueType = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        player->OnErrorCallback(MSERR_EXT_INVALID_VAL);
+        MEDIA_LOGE("invalid argument");
+        return undefinedResult;
+    }
+
+    int32_t durationUpperLimit = -1;
+    int32_t sizeUpperLimit = -1;
+    (void)CommonNapi::GetPropertyInt32(env, args[0], "durationUpperLimit", durationUpperLimit);
+    (void)CommonNapi::GetPropertyInt32(env, args[0], "sizeUpperLimit", sizeUpperLimit);
+
+    CHECK_AND_RETURN_RET_LOG(player->nativePlayer_ != nullptr, undefinedResult, "No memory");
+    int32_t ret = MSERR_OK;
+    if (sizeUpperLimit >= 0) {
+        ret = player->nativePlayer_->SetCachedSizeLimit(sizeUpperLimit);
+        if (ret != MSERR_OK) {
+            player->OnErrorCallback(MSERR_EXT_UNKNOWN);
+            MEDIA_LOGE("SetCachedSizeLimit failed, ret : %{public}d", ret);
+            return undefinedResult;
+        }
+    }
+    if (durationUpperLimit >= 0) {
+        ret = player->nativePlayer_->SetCachedDurationLimit(durationUpperLimit);
+        if (ret != MSERR_OK) {
+            player->OnErrorCallback(MSERR_EXT_UNKNOWN);
+            MEDIA_LOGE("SetCachedDurationLimit failed, ret : %{public}d", ret);
+            return undefinedResult;
+        }
+    }
+
+    MEDIA_LOGD("SetCacheLimit success");
+    return undefinedResult;
+}
+
+napi_value VideoPlayerNapi::GetCacheLimit(napi_env env, napi_callback_info info)
+{
+    napi_value jsThis = nullptr;
+    napi_value jsResult = nullptr;
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    size_t argCount = 0;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    VideoPlayerNapi *player = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&player));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && player != nullptr, undefinedResult, "Failed to retrieve instance");
+
+    CHECK_AND_RETURN_RET_LOG(player->nativePlayer_ != nullptr, undefinedResult, "No memory");
+
+    int32_t durationUpperLimit = player->nativePlayer_->GetCachedDurationLimit();
+    int32_t sizeUpperLimit = player->nativePlayer_->GetCachedSizeLimit();
+
+    status = napi_create_object(env, &jsResult);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "napi_create_object error");
+
+    if (!CommonNapi::SetPropertyInt32(env, jsResult, "durationUpperLimit", durationUpperLimit) ||
+        !CommonNapi::SetPropertyInt32(env, jsResult, "sizeUpperLimit", sizeUpperLimit)) {
+        MEDIA_LOGE("SetPropertyInt32 durationUpperLimit or sizeUpperLimit error");
+        return undefinedResult;
+    }
+
     return jsResult;
 }
 

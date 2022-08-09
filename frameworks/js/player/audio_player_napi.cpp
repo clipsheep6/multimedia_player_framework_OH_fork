@@ -73,6 +73,7 @@ napi_value AudioPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("dataSrc", GetMediaDataSrc, SetMediaDataSrc),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", GetFdSrc, SetFdSrc),
         DECLARE_NAPI_GETTER_SETTER("loop", GetLoop, SetLoop),
+        DECLARE_NAPI_GETTER_SETTER("cacheLimit", GetCacheLimit, SetCacheLimit),
         DECLARE_NAPI_GETTER_SETTER("audioInterruptMode", GetAudioInterruptMode, SetAudioInterruptMode),
 
         DECLARE_NAPI_GETTER("currentTime", GetCurrentTime),
@@ -778,6 +779,94 @@ napi_value AudioPlayerNapi::GetLoop(napi_env env, napi_callback_info info)
     return jsResult;
 }
 
+napi_value AudioPlayerNapi::SetCacheLimit(napi_env env, napi_callback_info info)
+{
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+    napi_value jsThis = nullptr;
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    AudioPlayerNapi *player = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&player));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && player != nullptr, undefinedResult, "Failed to retrieve instance");
+
+    napi_valuetype valueType = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        player->ErrorCallback(MSERR_EXT_INVALID_VAL);
+        MEDIA_LOGE("invalid argument");
+        return undefinedResult;
+    }
+
+    int32_t durationUpperLimit = -1;
+    int32_t sizeUpperLimit = -1;
+    (void)CommonNapi::GetPropertyInt32(env, args[0], "durationUpperLimit", durationUpperLimit);
+    (void)CommonNapi::GetPropertyInt32(env, args[0], "sizeUpperLimit", sizeUpperLimit);
+
+    CHECK_AND_RETURN_RET_LOG(player->nativePlayer_ != nullptr, undefinedResult, "No memory");
+    int32_t ret = MSERR_OK;
+    if (sizeUpperLimit >= 0) {
+        ret = player->nativePlayer_->SetCachedSizeLimit(sizeUpperLimit);
+        if (ret != MSERR_OK) {
+            player->ErrorCallback(MSERR_EXT_UNKNOWN);
+            MEDIA_LOGE("SetCachedSizeLimit failed, ret : %{public}d", ret);
+            return undefinedResult;
+        }
+    }
+    if (durationUpperLimit >= 0) {
+        ret = player->nativePlayer_->SetCachedDurationLimit(durationUpperLimit);
+        if (ret != MSERR_OK) {
+            player->ErrorCallback(MSERR_EXT_UNKNOWN);
+            MEDIA_LOGE("SetCachedDurationLimit failed, ret : %{public}d", ret);
+            return undefinedResult;
+        }
+    }
+
+    MEDIA_LOGD("SetCacheLimit success");
+    return undefinedResult;
+}
+
+napi_value AudioPlayerNapi::GetCacheLimit(napi_env env, napi_callback_info info)
+{
+    napi_value jsThis = nullptr;
+    napi_value jsResult = nullptr;
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+
+    size_t argCount = 0;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    if (status != napi_ok || jsThis == nullptr) {
+        MEDIA_LOGE("Failed to retrieve details about the callback");
+        return undefinedResult;
+    }
+
+    AudioPlayerNapi *player = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&player));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && player != nullptr, undefinedResult, "Failed to retrieve instance");
+
+    CHECK_AND_RETURN_RET_LOG(player->nativePlayer_ != nullptr, undefinedResult, "No memory");
+
+    int32_t durationUpperLimit = player->nativePlayer_->GetCachedDurationLimit();
+    int32_t sizeUpperLimit = player->nativePlayer_->GetCachedSizeLimit();
+
+    status = napi_create_object(env, &jsResult);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "napi_create_object error");
+
+    if (!CommonNapi::SetPropertyInt32(env, jsResult, "durationUpperLimit", durationUpperLimit) ||
+        !CommonNapi::SetPropertyInt32(env, jsResult, "sizeUpperLimit", sizeUpperLimit)) {
+        MEDIA_LOGE("SetPropertyInt32 durationUpperLimit or sizeUpperLimit error");
+        return undefinedResult;
+    }
+
+    return jsResult;
+}
+
 napi_value AudioPlayerNapi::GetCurrentTime(napi_env env, napi_callback_info info)
 {
     napi_value jsThis = nullptr;
@@ -922,7 +1011,7 @@ void AudioPlayerNapi::AsyncGetTrackDescription(napi_env env, void *data)
     }
 
     if (audioInfo.empty()) {
-        asyncContext->SignError(MSERR_EXT_UNKNOWN, "audio tranck info is empty");
+        asyncContext->SignError(MSERR_EXT_UNKNOWN, "audio track info is empty");
         return;
     }
 

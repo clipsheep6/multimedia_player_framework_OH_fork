@@ -38,12 +38,18 @@ constexpr size_t MAX_URI_SIZE = 4096;
 constexpr int32_t MSEC_PER_USEC = 1000;
 constexpr int32_t MSEC_PER_NSEC = 1000000;
 constexpr int32_t BUFFER_TIME_DEFAULT = 15000; // 15s
+constexpr int32_t CACHE_BUFFER_MAX_SIZE_BYTE = 500 * 1024 * 1024; // 500MB
+constexpr int32_t CACHE_BUFFER_MIN_SIZE_BYTE = 100 * 1024 * 1024; // 100MB
+constexpr int32_t CACHE_BUFFER_MAX_DURATION_MS = 60 * 1000; // 60s
+constexpr int32_t CACHE_BUFFER_MIN_DURATION_MS = 15 * 1000; // 15s
 constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
 constexpr uint32_t MAX_SOFT_BUFFERS = 10;
 constexpr uint32_t DEFAULT_CACHE_BUFFERS = 1;
 
 PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid)
-    : appuid_(uid), apppid_(pid)
+    : cacheSize_(CACHE_BUFFER_MIN_SIZE_BYTE),
+    cacheDuration_(CACHE_BUFFER_MIN_DURATION_MS),
+    appuid_(uid), apppid_(pid)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -98,6 +104,10 @@ int32_t PlayerEngineGstImpl::SetSource(const std::string &url)
         url_ = "file://" + realUriPath;
     } else {
         url_ = url;
+    }
+
+    if (url_.find("http") == 0 || url_.find("https") == 0) {
+        isNetWorkPlay_ = true;
     }
 
     MEDIA_LOGD("set player source: %{public}s", url_.c_str());
@@ -524,6 +534,10 @@ int32_t PlayerEngineGstImpl::Play()
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
     MEDIA_LOGD("Play in");
+    if (isNetWorkPlay_) {
+        playBinCtrler_->SetCachedSizeLimit(cacheSize_);
+        playBinCtrler_->SetCachedDurationLimit(cacheDuration_);
+    }
     playBinCtrler_->Play();
     return MSERR_OK;
 }
@@ -726,6 +740,75 @@ int32_t PlayerEngineGstImpl::SetVolume(float leftVolume, float rightVolume)
         playBinCtrler_->SetVolume(leftVolume, rightVolume);
     }
     return MSERR_OK;
+}
+
+int32_t PlayerEngineGstImpl::SetCachedSizeLimit(int32_t size)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    if (!isNetWorkPlay_) {
+        MEDIA_LOGE("SetCachedSizeLimit source is null or not net source");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    if (size < CACHE_BUFFER_MIN_SIZE_BYTE || size > CACHE_BUFFER_MAX_SIZE_BYTE) {
+        MEDIA_LOGE("SetCachedSizeLimit %{public}d invalid value", size);
+        return MSERR_INVALID_VAL;
+    }
+
+    MEDIA_LOGD("SetCachedSizeLimit %{public}d", size);
+
+    if (playBinCtrler_) {
+        playBinCtrler_->SetCachedSizeLimit(size);
+    }
+
+    cacheSize_ = size;
+    return MSERR_OK;
+}
+
+int32_t PlayerEngineGstImpl::SetCachedDurationLimit(int32_t duration)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (!isNetWorkPlay_) {
+        MEDIA_LOGE("SetCachedDurationLimit source is null or not net source");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    if (duration < CACHE_BUFFER_MIN_DURATION_MS || duration > CACHE_BUFFER_MAX_DURATION_MS) {
+        MEDIA_LOGE("SetCachedDurationLimit %{public}d invalid value", duration);
+        return MSERR_INVALID_VAL;
+    }
+
+    MEDIA_LOGD("SetCachedDurationLimit %{public}d", duration);
+
+    if (playBinCtrler_) {
+        playBinCtrler_->SetCachedDurationLimit(duration);
+    }
+
+    cacheDuration_ = duration;
+    return MSERR_OK;
+}
+
+int32_t PlayerEngineGstImpl::GetCachedSizeLimit()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (!isNetWorkPlay_) {
+        MEDIA_LOGE("GetCachedSizeLimit source is null or not net source");
+        return -1;
+    }
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    return playBinCtrler_->GetCachedSizeLimit();
+}
+
+int32_t PlayerEngineGstImpl::GetCachedDurationLimit()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (!isNetWorkPlay_) {
+        MEDIA_LOGE("GetCachedDurationLimit source is null or not net source");
+        return -1;
+    }
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    return playBinCtrler_->GetCachedDurationLimit();
 }
 
 int32_t PlayerEngineGstImpl::SelectBitRate(uint32_t bitRate)

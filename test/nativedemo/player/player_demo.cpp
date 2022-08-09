@@ -39,6 +39,8 @@ constexpr float SPEED_1_75_X = 1.75;
 constexpr float SPEED_2_00_X = 2.00;
 constexpr uint32_t PERCENT = 1;
 constexpr uint32_t TIME = 2;
+constexpr int32_t BYTE_COUNT_PER_1M = 1024 * 1024;
+constexpr int32_t MILLISECOND_PER_1S = 1000;
 }
 
 // PlayerCallback override
@@ -481,6 +483,37 @@ void PlayerDemo::DoCmd(const std::string &cmd)
     }
 }
 
+bool PlayerDemo::DoCachedInfo(const std::string &cmd)
+{
+    bool cmdFound = true;
+    if (cmd.find("setcachedinfo") != std::string::npos) {
+        SetCachedInfo();
+    } else if (cmd.find("getcachedinfo") != std::string::npos) {
+        GetCachedInfo();
+    } else {
+        cmdFound = false;
+    }
+    return cmdFound;
+}
+
+bool PlayerDemo::DoSetSourceSeekVolume(const std::string &cmd)
+{
+    bool cmdFound = true;
+    if (cmd.find("source ") != std::string::npos) {
+        (void)SelectSource(cmd.substr(cmd.find("source ") + std::string("source ").length()));
+    } else if (cmd.find("seek ") != std::string::npos) {
+        Seek(cmd.substr(cmd.find("seek ") + std::string("seek ").length()));
+    } else if (cmd.find("volume ") != std::string::npos) {
+        std::string volume = cmd.substr(cmd.find("volume ") + std::string("volume ").length());
+        if (!volume.empty()) {
+            (void)player_->SetVolume(std::stof(volume.c_str()), std::stof(volume.c_str()));
+        }
+    } else {
+        cmdFound = false;
+    }
+    return cmdFound;
+}
+
 void PlayerDemo::DoNext()
 {
     std::string cmd;
@@ -494,6 +527,27 @@ void PlayerDemo::DoNext()
             if (cmd.find("stop") != std::string::npos && dataSrc_ != nullptr) {
                 dataSrc_->Reset();
             }
+            continue;
+        } else if (cmd.find("duration") != std::string::npos) {
+            int32_t duration = -1;
+            (void)player_->GetDuration(duration);
+            cout << "GetDuration:" << duration << endl;
+            continue;
+        } else if (cmd.find("time") != std::string::npos) {
+            GetCurrentTime();
+            continue;
+        } else if (cmd.find("loop ") != std::string::npos) {
+            SetLoop(cmd.substr(cmd.find("loop ") + std::string("loop ").length()));
+            continue;
+        } else if (cmd.find("speed ") != std::string::npos) {
+            SetPlaybackSpeed(cmd.substr(cmd.find("speed ") + std::string("speed ").length()));
+            continue;
+        } else if (cmd.find("videosize") != std::string::npos) {
+            cout << "video width: " << player_->GetVideoWidth() << ", height: " << player_->GetVideoHeight();
+            continue;
+        } else if (DoSetSourceSeekVolume(cmd)) {
+            continue;
+        } else if (DoCachedInfo(cmd)) {
             continue;
         } else if (cmd.find("quit") != std::string::npos || cmd == "q") {
             break;
@@ -598,6 +652,66 @@ int32_t PlayerDemo::SelectSource(const string &pathOuter)
     return ret;
 }
 
+void PlayerDemo::SetCachedSizeLimit()
+{
+    cout << "Please SetCachedSizeLimit" << endl;
+    string size;
+    int32_t cachesize;
+    (void)getline(cin, size);
+    if (size == "") {
+        cout << "Use Defaul Value" << endl;
+        return;
+    } else {
+        StrToInt(size, cachesize);
+        cout << "CachedSizeLimit Size:" << cachesize << "M" << endl;
+        cachesize = cachesize * BYTE_COUNT_PER_1M;
+        player_->SetCachedSizeLimit(cachesize);
+    }
+}
+
+void PlayerDemo::SetCachedDurationLimit()
+{
+    cout << "Please SetCachedDurationLimit" << endl;
+    string time;
+    int32_t cachetime;
+    (void)getline(cin, time);
+    if (time == "") {
+        cout << "Use Defaul Value" << endl;
+        return;
+    } else {
+        StrToInt(time, cachetime);
+        cout << "CachedDurationLimit Time:" << cachetime << "s" << endl;
+        cachetime = cachetime * MILLISECOND_PER_1S;
+        player_->SetCachedDurationLimit(cachetime);
+    }
+}
+
+int32_t PlayerDemo::SetCachedInfo()
+{
+    SetCachedSizeLimit();
+    SetCachedDurationLimit();
+    return 0;
+}
+
+void PlayerDemo::GetCachedSizeLimit()
+{
+    int32_t getcachedsize = player_->GetCachedSizeLimit();
+    cout << "GetCachedSizeLimit Size: " << getcachedsize << endl;
+}
+
+void PlayerDemo::GetCachedDurationLimit()
+{
+    int32_t getcachedduration = player_->GetCachedDurationLimit();
+    cout << "GetCachedDurationLimit Time: " << getcachedduration << "ms" << endl;
+}
+
+int32_t PlayerDemo::GetCachedInfo()
+{
+    GetCachedSizeLimit();
+    GetCachedDurationLimit();
+    return 0;
+}
+
 void PlayerDemo::SetVideoScaleType()
 {
     cout << "Please select video scale type(default 0):" << endl;
@@ -699,6 +813,7 @@ void PlayerDemo::RunCase(const string &path)
         cout << "SetSource fail" << endl;
         return;
     }
+    SetCachedInfo();
     sptr<Surface> producerSurface = nullptr;
     producerSurface = GetVideoSurface();
     if (producerSurface != nullptr) {
