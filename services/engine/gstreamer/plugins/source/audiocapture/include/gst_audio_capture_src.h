@@ -52,6 +52,8 @@ struct _GstAudioCaptureSrc {
     guint32 sample_rate;
     gboolean is_start;
     gboolean need_caps_info;
+    guint32 token_id;
+    gint32 appuid;
 };
 
 struct _GstAudioCaptureSrcClass {
