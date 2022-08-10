@@ -153,7 +153,7 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
         (void)surface_->FlushBuffer(buffer, -1, g_flushConfig);
         cout << "Generate input buffer success, timestamp: " << timestampNs_ << endl;
         frameCount++;
-        
+        (frameCount % 30) == 0 ? (isKeyFrame_ = 1) : (isKeyFrame_ = 0);
     }
 }
 
