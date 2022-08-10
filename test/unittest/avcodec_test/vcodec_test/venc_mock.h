@@ -35,6 +35,7 @@ public:
     std::queue<std::shared_ptr<AVMemoryMock>> outBufferQueue_;
     std::queue<uint32_t> outIndexQueue_;
     std::queue<uint32_t> outSizeQueue_;
+    std::atomic<bool> isRunning_ = false;
 };
 
 class VEncCallbackTest : public AVCodecCallbackMock {
@@ -64,19 +65,20 @@ public:
     int32_t Flush();
     int32_t Reset();
     int32_t Release();
+    int32_t NotifyEos();
     std::shared_ptr<FormatMock> GetOutputMediaDescription();
     int32_t SetParameter(std::shared_ptr<FormatMock> format);
     int32_t FreeOutputData(uint32_t index);
     void SetOutPath(const std::string &path);
     void OutLoopFunc();
 private:
-    std::atomic<bool> isRunning_ = false;
+    void FlushInner();
     std::unique_ptr<std::thread> outLoop_;
     std::shared_ptr<VideoEncMock> videoEnc_ = nullptr;
     std::shared_ptr<VEncSignal> signal_ = nullptr;
     std::shared_ptr<SurfaceMock> surface_ = nullptr;
     uint32_t frameCount_ = 0;
-    std::string outPath_ = "/data/test/vout.es";
+    std::string outPath_ = "/data/test/media/vout.es";
 };
 }  // namespace Media
 }  // namespace OHOS

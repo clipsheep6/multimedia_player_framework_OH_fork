@@ -182,6 +182,13 @@ void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
     }
 }
 
+void PlayerServer::PreparedState::StateEnter()
+{
+    if (server_.config_.speedMode != SPEED_FORWARD_1_00_X) {
+        server_.playerEngine_->SetPlaybackSpeed(server_.config_.speedMode);
+    }
+}
+
 int32_t PlayerServer::PlayingState::Play()
 {
     return MSERR_OK;
@@ -301,6 +308,11 @@ void PlayerServer::PlaybackCompletedState::HandleStateChange(int32_t newState)
         server_.ChangeState(server_.stoppedState_);
         (void)server_.taskMgr_.MarkTaskDone();
     }
+}
+
+int32_t PlayerServer::PlaybackCompletedState::SetPlaybackSpeed(PlaybackRateMode mode)
+{
+    return server_.HandleSetPlaybackSpeed(mode);
 }
 }
 }

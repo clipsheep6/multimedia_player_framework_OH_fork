@@ -178,7 +178,7 @@ private:
     static void AsyncGetSelectedTracks(napi_env env, void *data);
     static void AsyncSelectTrack(napi_env env, void *data);
     static int32_t ProcessWork(napi_env env, napi_status status, void *data);
-    void OnErrorCallback(MediaServiceExtErrCode errCode);
+    void ErrorCallback(MediaServiceExtErrCode errCode, std::string errMsg = "unknown");
     void ReleaseDataSource(std::shared_ptr<MediaDataSourceCallback> dataSourceCb);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     VideoPlayerNapi();
