@@ -35,6 +35,7 @@ namespace {
     constexpr int32_t SLOW_PRODUCER = 20; // 20 fps producer, used to test repeat_frame_after property
     constexpr uint32_t REPEAT_FRAME_AFTER_MS = 50;
     constexpr uint32_t DEFAULT_FRAME_COUNT = 50;
+    constexpr uint32_t DEFAULT_FRAME = 30;
 }
 
 static BufferFlushConfig g_flushConfig = {
@@ -153,7 +154,7 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
         (void)surface_->FlushBuffer(buffer, -1, g_flushConfig);
         cout << "Generate input buffer success, timestamp: " << timestampNs_ << endl;
         frameCount++;
-        (frameCount % 30) == 0 ? (isKeyFrame_ = 1) : (isKeyFrame_ = 0);
+        (frameCount % DEFAULT_FRAME) == 0 ? (isKeyFrame_ = 1) : (isKeyFrame_ = 0);
     }
 }
 
