@@ -33,6 +33,7 @@ int32_t AudioSource::Init()
         return MSERR_INVALID_OPERATION;
     }
     g_object_set(gstElem_, "source-type", desc_.type_, nullptr);
+
     return MSERR_OK;
 }
 
