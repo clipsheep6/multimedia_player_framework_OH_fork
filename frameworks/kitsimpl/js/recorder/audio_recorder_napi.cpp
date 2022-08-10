@@ -226,9 +226,11 @@ napi_value AudioRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 int32_t AudioRecorderNapi::GetAudioProperties(napi_env env, napi_value args, AudioRecorderProperties &properties)
 {
     properties.sourceType = AUDIO_MIC;
+    properties.outputFormatType = FORMAT_MPEG_4;
+    properties.audioCodecFormat = AAC_LC;
 
     int32_t fileFormat = -1;
-    CommonNapi::GetPropertyInt32(env, args, "format", fileFormat);
+    (void)CommonNapi::GetPropertyInt32(env, args, "format", fileFormat);
     switch (fileFormat) {
         case JS_MPEG_4:
             properties.outputFormatType = FORMAT_MPEG_4;
@@ -241,7 +243,7 @@ int32_t AudioRecorderNapi::GetAudioProperties(napi_env env, napi_value args, Aud
     }
 
     int32_t audioEncoder = -1;
-    CommonNapi::GetPropertyInt32(env, args, "audioEncoder", audioEncoder);
+    (void)CommonNapi::GetPropertyInt32(env, args, "audioEncoder", audioEncoder);
     switch (audioEncoder) {
         case JS_AAC_LC:
             properties.audioCodecFormat = AAC_LC;
@@ -562,27 +564,16 @@ int32_t AudioRecorderNapi::CheckValidPath(const std::string &filePath, std::stri
 int32_t AudioRecorderNapi::SetUri(const std::string &uriPath)
 {
     CHECK_AND_RETURN_RET_LOG(recorderImpl_ != nullptr, MSERR_INVALID_OPERATION, "No memory");
-    const std::string fileHead = "file://";
     const std::string fdHead = "fd://";
     int32_t fd = -1;
 
-    if (uriPath.find(fileHead) != std::string::npos) {
-        std::string filePath = uriPath.substr(fileHead.size());
-        std::string realPath = "invalid";
-        CHECK_AND_RETURN_RET(CheckValidPath(filePath, realPath) == MSERR_OK, MSERR_INVALID_VAL);
-        CHECK_AND_RETURN_RET(!realPath.empty(), MSERR_INVALID_VAL);
-        fd = open(realPath.c_str(), O_CREAT | O_WRONLY, 0664); // rw-rw-r
-        CHECK_AND_RETURN_RET(fd >= 0, MSERR_INVALID_VAL);
-        int32_t ret = recorderImpl_->SetOutputFile(fd);
-        (void)close(fd);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_INVALID_OPERATION);
-    } else if (uriPath.find(fdHead) != std::string::npos) {
+    if (uriPath.find(fdHead) != std::string::npos) {
         std::string inputFd = uriPath.substr(fdHead.size());
         CHECK_AND_RETURN_RET(StrToInt(inputFd, fd) == true, MSERR_INVALID_VAL);
         CHECK_AND_RETURN_RET(fd >= 0, MSERR_INVALID_OPERATION);
         CHECK_AND_RETURN_RET(recorderImpl_->SetOutputFile(fd) == MSERR_OK, MSERR_INVALID_OPERATION);
     } else {
-        MEDIA_LOGE("invalid input uri, neither file nor fd!");
+        MEDIA_LOGE("invalid input uri, not a fd!");
         return MSERR_INVALID_OPERATION;
     }
 
