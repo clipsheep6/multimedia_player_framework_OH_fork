@@ -34,12 +34,6 @@ int32_t AudioSource::Init()
     }
     g_object_set(gstElem_, "source-type", desc_.type_, nullptr);
 
-    uint32_t tokenId = IPCSkeleton::GetCallingTokenID();
-    g_object_set(gstElem_, "token-id", tokenId, nullptr);
-
-    int32_t appUid = IPCSkeleton::GetCallingUid();
-    g_object_set(gstElem_, "app-uid", appUid, nullptr);
-
     return MSERR_OK;
 }
 
