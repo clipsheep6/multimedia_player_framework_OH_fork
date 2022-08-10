@@ -146,11 +146,14 @@ void VEncDemo::GenerateData(uint32_t count, uint32_t fps)
         const sptr<OHOS::BufferExtraData>& extraData = buffer->GetExtraData();
         DEMO_CHECK_AND_BREAK_LOG(extraData != nullptr, "Fatal: SurfaceBuffer is nullptr");
         (void)extraData->ExtraSet("timeStamp", timestampNs_);
+        extraData->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
+        extraData->ExtraSet("isKeyFrame", isKeyFrame_);
         timestampNs_ += static_cast<int64_t>(intervalUs * 1000); // us to ns
-
+        
         (void)surface_->FlushBuffer(buffer, -1, g_flushConfig);
         cout << "Generate input buffer success, timestamp: " << timestampNs_ << endl;
         frameCount++;
+        
     }
 }
 
