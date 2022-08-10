@@ -17,7 +17,8 @@
 #define MEDIA_DATA_SOURCE_NAPI_H_
 
 #include "media_data_source.h"
-#include "callback_works.h"
+#include "nocopyable.h"
+#include "common_napi.h"
 
 namespace OHOS {
 namespace Media {
@@ -30,25 +31,28 @@ public:
     int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem);
     int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem);
     int32_t GetSize(int64_t &size) const;
+    int32_t GetReadAtRef(std::shared_ptr<AutoRef> &readAtRef) const;
     int32_t CallbackCheckAndSetNoChange();
-    void Release();
 
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
-    static napi_value CreateMediaDataSource(napi_env env, napi_callback_info info);
+    static napi_value CreateAVDataSource(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value SetSize(napi_env env, napi_callback_info info);
     static napi_value GetSize(napi_env env, napi_callback_info info);
-    void SaveCallbackReference(napi_env env, const std::string &callbackName, napi_value callback);
-    int32_t CheckCallbackWorks();
+    void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrapper_ = nullptr;
-    std::shared_ptr<CallbackWorks> callbackWorks_ = nullptr;
-    std::shared_ptr<JsCallback> readAt_ = nullptr;
+    std::shared_ptr<AutoRef> readAt_ = nullptr;
     int64_t size_ = -1;
     bool noChange_ = false;
+};
+
+struct AVDataSourceAsyncContext : public MediaAsyncContext {
+    explicit AVDataSourceAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    ~AVDataSourceAsyncContext() = default;
 };
 } // namespace Media
 } // namespace OHOS

@@ -18,16 +18,17 @@
 #include "media_errors.h"
 #include "securec.h"
 #include "common_napi.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaDataSourceNapi"};
-    const std::string CLASS_NAME = "MediaDataSource";
-    const std::string READ_AT_CALLBACK_NAME = "readAt";
 }
 
 namespace OHOS {
 namespace Media {
 thread_local napi_ref MediaDataSourceNapi::constructor_ = nullptr;
+const std::string CLASS_NAME = "AVDataSource";
+const std::string READ_AT_CALLBACK_NAME = "readAt";
 
 MediaDataSourceNapi::MediaDataSourceNapi()
 {
@@ -40,20 +41,18 @@ MediaDataSourceNapi::~MediaDataSourceNapi()
     if (wrapper_ != nullptr) {
         napi_delete_reference(env_, wrapper_);
     }
-    callbackWorks_ = nullptr;
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 napi_value MediaDataSourceNapi::Init(napi_env env, napi_value exports)
 {
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
     MEDIA_LOGD("MediaDataSourceNapi Init start");
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_GETTER_SETTER("size", GetSize, SetSize),
         DECLARE_NAPI_FUNCTION("on", On),
     };
     napi_property_descriptor static_prop[] = {
-        DECLARE_NAPI_STATIC_FUNCTION("createMediaDataSource", CreateMediaDataSource),
+        DECLARE_NAPI_STATIC_FUNCTION("createAVDataSource", CreateAVDataSource),
     };
     napi_value constructor = nullptr;
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
@@ -68,6 +67,8 @@ napi_value MediaDataSourceNapi::Init(napi_env env, napi_value exports)
 
     status = napi_define_properties(env, exports, sizeof(static_prop) / sizeof(static_prop[0]), static_prop);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "define properties fail");
+
+    MEDIA_LOGD("Init success");
     return exports;
 }
 
@@ -75,6 +76,7 @@ napi_value MediaDataSourceNapi::Constructor(napi_env env, napi_callback_info inf
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+
     napi_value jsThis = nullptr;
     size_t argCount = 0;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
@@ -83,11 +85,16 @@ napi_value MediaDataSourceNapi::Constructor(napi_env env, napi_callback_info inf
     MediaDataSourceNapi *sourceNapi = new(std::nothrow) MediaDataSourceNapi();
     CHECK_AND_RETURN_RET_LOG(sourceNapi != nullptr, result, "no memory");
 
+    ON_SCOPE_EXIT(0) { delete sourceNapi; };
+
     sourceNapi->env_ = env;
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(sourceNapi),
         MediaDataSourceNapi::Destructor, nullptr, &(sourceNapi->wrapper_));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "native wrap fail");
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
+
     MEDIA_LOGD("Constructor success");
     return jsThis;
 }
@@ -102,18 +109,35 @@ void MediaDataSourceNapi::Destructor(napi_env env, void *nativeObject, void *fin
     MEDIA_LOGD("Destructor success");
 }
 
-napi_value MediaDataSourceNapi::CreateMediaDataSource(napi_env env, napi_callback_info info)
+napi_value MediaDataSourceNapi::CreateAVDataSource(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    napi_value constructor = nullptr;
-    napi_status status = napi_get_reference_value(env, constructor_, &constructor);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && constructor != nullptr, result, "get reference value fail");
+    MEDIA_LOGD("CreateAVDataSource In");
 
-    status = napi_new_instance(env, constructor, 0, nullptr, &result);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && result != nullptr, result, "new instance fail");
+    auto asyncContext = std::make_unique<AVDataSourceAsyncContext>(env);
 
-    MEDIA_LOGD("CreateMediaDataSource success");
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok) {
+        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+    }
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    asyncContext->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
+    
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "CreateAVDataSource", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
+    asyncContext.release();
+
+    MEDIA_LOGD("CreateAVDataSource success");
     return result;
 }
 
@@ -122,8 +146,9 @@ napi_value MediaDataSourceNapi::On(napi_env env, napi_callback_info info)
     napi_value undefinedResult = nullptr;
     napi_get_undefined(env, &undefinedResult);
 
-    size_t argCount = 2;
-    napi_value args[2] = { nullptr };
+    static constexpr size_t minArgCount = 2;
+    size_t argCount = minArgCount;
+    napi_value args[minArgCount] = { nullptr };
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr && args[1] != nullptr,
@@ -133,6 +158,7 @@ napi_value MediaDataSourceNapi::On(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, jsThis, (void **)&data);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && data != nullptr, undefinedResult, "set callback fail");
     CHECK_AND_RETURN_RET_LOG(data->noChange_ == false, undefinedResult, "no change");
+
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
     if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
@@ -143,29 +169,14 @@ napi_value MediaDataSourceNapi::On(napi_env env, napi_callback_info info)
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
     MEDIA_LOGD("callbackName: %{public}s", callbackName.c_str());
-    data->SaveCallbackReference(env, callbackName, args[1]);
+
+    napi_ref ref = nullptr;
+    status = napi_create_reference(env, args[1], 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, undefinedResult, "failed to create reference!");
+    
+    std::shared_ptr<AutoRef> autoRef =  std::make_shared<AutoRef>(env, ref);
+    data->SetCallbackReference(callbackName, autoRef);
     return undefinedResult;
-}
-
-void MediaDataSourceNapi::SaveCallbackReference(napi_env env, const std::string &callbackName,
-    napi_value callback)
-{
-    if (callbackName == READ_AT_CALLBACK_NAME) {
-        readAt_ = JsCallback::Create(env, callback, callbackName);
-        CHECK_AND_RETURN_LOG(readAt_ != nullptr, "creating reference for readAt_ fail")
-    } else {
-        MEDIA_LOGE("unknown callback: %{public}s", callbackName.c_str());
-        return;
-    }
-}
-
-int32_t MediaDataSourceNapi::CheckCallbackWorks()
-{
-    if (callbackWorks_ == nullptr) {
-        callbackWorks_ = std::make_shared<CallbackWorks>(env_);
-        CHECK_AND_RETURN_RET_LOG(callbackWorks_ != nullptr, MSERR_NO_MEMORY, "init callbackwork failed");
-    }
-    return MSERR_OK;
 }
 
 int32_t MediaDataSourceNapi::CallbackCheckAndSetNoChange()
@@ -179,9 +190,10 @@ napi_value MediaDataSourceNapi::GetSize(napi_env env, napi_callback_info info)
 {
     napi_value undefinedResult = nullptr;
     napi_get_undefined(env, &undefinedResult);
-    napi_value jsThis = nullptr;
 
-    size_t argCount = 0;
+    static constexpr size_t minArgCount = 0;
+    size_t argCount = minArgCount;
+    napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, undefinedResult, "get args error");
 
@@ -200,10 +212,11 @@ napi_value MediaDataSourceNapi::SetSize(napi_env env, napi_callback_info info)
 {
     napi_value undefinedResult = nullptr;
     napi_get_undefined(env, &undefinedResult);
-    napi_value jsThis = nullptr;
-    napi_value args[1] = { nullptr };
 
-    size_t argCount = 1;
+    static constexpr size_t minArgCount = 1;
+    size_t argCount = minArgCount;
+    napi_value args[minArgCount] = { nullptr };
+    napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
         undefinedResult, "get args error");
@@ -225,49 +238,15 @@ napi_value MediaDataSourceNapi::SetSize(napi_env env, napi_callback_info info)
     return undefinedResult;
 }
 
-int32_t MediaDataSourceNapi::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+void MediaDataSourceNapi::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
-    CHECK_AND_RETURN_RET_LOG(env_ != nullptr, 0, "env is nullptr");
-    CHECK_AND_RETURN_RET_LOG(readAt_ != nullptr, 0, "readAt_ is nullptr");
-
-    // this ReadAt args count is 3
-    std::shared_ptr<CallbackWarp> cb = CallbackWarp::Create(env_, 3, readAt_);
-    CHECK_AND_RETURN_RET_LOG(cb != nullptr, 0, "create callback fail");
-    CHECK_AND_RETURN_RET_LOG(cb->SetArg(length) == MSERR_OK, 0, "set arg failed");
-    CHECK_AND_RETURN_RET_LOG(cb->SetArg(mem) == MSERR_OK, 0, "set arg failed");
-    CHECK_AND_RETURN_RET_LOG(cb->SetArg(pos) == MSERR_OK, 0, "set arg failed");
-
-    CHECK_AND_RETURN_RET_LOG(CheckCallbackWorks() == MSERR_OK, 0, "works in null");
-    CHECK_AND_RETURN_RET_LOG(callbackWorks_->Push(cb) == MSERR_OK, 0, "push work fail");
-    napi_value result = nullptr;
-    cb->GetResult(result);
-    CHECK_AND_RETURN_RET_LOG(result != nullptr, 0, "get result failed");
-    int32_t size = 0;
-    napi_status status = napi_get_value_int32(env_, result, &size);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, 0, "get value for ref failed");
-    return size;
-}
-
-int32_t MediaDataSourceNapi::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
-{
-    CHECK_AND_RETURN_RET_LOG(env_ != nullptr, 0, "env is nullptr");
-    CHECK_AND_RETURN_RET_LOG(readAt_ != nullptr, 0, "readAt_ is nullptr");
-
-    // this ReadAt args count is 2
-    std::shared_ptr<CallbackWarp> cb = CallbackWarp::Create(env_, 2, readAt_);
-    CHECK_AND_RETURN_RET_LOG(cb != nullptr, 0, "create callback fail");
-    CHECK_AND_RETURN_RET_LOG(cb->SetArg(length) == MSERR_OK, 0, "set arg failed");
-    CHECK_AND_RETURN_RET_LOG(cb->SetArg(mem) == MSERR_OK, 0, "set arg failed");
-
-    CHECK_AND_RETURN_RET_LOG(CheckCallbackWorks() == MSERR_OK, 0, "works in null");
-    CHECK_AND_RETURN_RET_LOG(callbackWorks_->Push(cb) == MSERR_OK, 0, "push work fail");
-    napi_value result = nullptr;
-    cb->GetResult(result);
-    CHECK_AND_RETURN_RET_LOG(result != nullptr, 0, "get result failed");
-    int32_t size = 0;
-    napi_status status = napi_get_value_int32(env_, result, &size);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, 0, "get value for ref failed");
-    return size;
+    if (callbackName == READ_AT_CALLBACK_NAME) {
+        readAt_ = ref;
+        CHECK_AND_RETURN_LOG(readAt_ != nullptr, "creating reference for readAt_ fail")
+    } else {
+        MEDIA_LOGE("unknown callback: %{public}s", callbackName.c_str());
+        return;
+    }
 }
 
 int32_t MediaDataSourceNapi::GetSize(int64_t &size) const
@@ -276,10 +255,11 @@ int32_t MediaDataSourceNapi::GetSize(int64_t &size) const
     return MSERR_OK;
 }
 
-void MediaDataSourceNapi::Release()
+int32_t MediaDataSourceNapi::GetReadAtRef(std::shared_ptr<AutoRef> &readAtRef) const
 {
-    CHECK_AND_RETURN_LOG(callbackWorks_ != nullptr, "callbackwork is null");
-    callbackWorks_->CancelAll();
+    readAtRef = readAt_;
+    CHECK_AND_RETURN_RET_LOG(readAtRef != nullptr, MSERR_UNKNOWN, "get reference fail");
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

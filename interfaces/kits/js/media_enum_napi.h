@@ -16,8 +16,9 @@
 #ifndef MEDIA_ENUM_NAPI_H_
 #define MEDIA_ENUM_NAPI_H_
 
-#include "media_data_source.h"
-#include "callback_works.h"
+#include "napi/native_api.h"
+#include "napi/native_node_api.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
