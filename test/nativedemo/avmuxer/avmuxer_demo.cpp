@@ -459,8 +459,6 @@ void AVMuxerDemo::DoNext()
         return;
     }
 
-    sleep(3); // 3s
-
     if (avmuxer_->Start() != MSERR_OK) {
         (void)::close(fd);
         std::cout << "Start failed!" << std::endl;
