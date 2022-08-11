@@ -1,0 +1,72 @@
+# Copyright (C) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+
+ohos_executable("media_capi_sample") {
+  include_dirs = [
+    "./avcodec",
+    "./common",
+    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiocommon/include",
+    "//foundation/multimedia/player_framework/interfaces/kits/c",
+    "//utils/native/base/include",
+    #"//foundation/window/window_manager/interfaces/innerkits/wm",
+    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
+    #"./avcodec/avcodec_native_utils.h",
+
+  ]
+
+  cflags = [
+    "-Werror",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
+    "-Wformat=2",
+    "-Wdate-time",
+    "",
+  ]
+
+  sources = [
+    "./avcodec/audiodec_native_sample.cpp",
+    "./avcodec/audioenc_native_sample.cpp",
+    "./avcodec/videoenc_native_sample.cpp",
+    "./avcodec/videodec_native_sample.cpp",
+    #"./avcodec/avcodec_native_utils.cpp",
+    "./avcodec/videodec_ndk_sample.c",
+
+    #"./media_capi_sample.c",
+    "./media_capi_sample.cpp",
+    
+  ]
+
+  deps = [
+    "//foundation/multimedia/player_framework/interfaces/kits/c:media_capi",
+    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+    "//utils/native/base:utils",
+    #"//foundation/window/window_manager/wm:libwm",
+  ]
+    external_deps = [
+      "hiviewdfx_hilog_native:libhilog",
+    ]
+
+  part_name = "multimedia_player_framework"
+  subsystem_name = "multimedia"
+}
