@@ -14,8 +14,13 @@
  */
 
 #include "state_machine.h"
-#include "media_errors.h"
+#include "__mutex_base"
+#include "hilog/log_c.h"
+#include "hilog/log_cpp.h"
 #include "media_log.h"
+#include "memory"
+#include "mutex"
+#include "string"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "StateMachine"};

@@ -16,7 +16,15 @@
 #ifndef GST_MEM_SINK_H
 #define GST_MEM_SINK_H
 
+#include <glib-object.h>
+#include <glib.h>
 #include <gst/base/gstbasesink.h>
+#include <gst/gstelement.h>
+#include "gst/gstbuffer.h"
+#include "gst/gstobject.h"
+#include "gst/gstquery.h"
+struct _GstMemSink;
+struct _GstMemSinkClass;
 
 G_BEGIN_DECLS
 

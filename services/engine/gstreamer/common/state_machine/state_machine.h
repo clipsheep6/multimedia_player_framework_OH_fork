@@ -16,11 +16,12 @@
 #ifndef STATE_MACHINE_H
 #define STATE_MACHINE_H
 
-#include <string>
 #include <memory>
 #include <mutex>
-#include "nocopyable.h"
+#include <string>
 #include "inner_msg_define.h"
+#include "iosfwd"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {

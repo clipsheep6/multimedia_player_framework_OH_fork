@@ -17,8 +17,7 @@
 #define AVMETA_SINKPROVIDER_H
 
 #include <cstdint>
-#include <memory>
-#include <gst/gst.h>
+#include "gst/gstelement.h"
 #include "nocopyable.h"
 #include "playbin_sink_provider.h"
 

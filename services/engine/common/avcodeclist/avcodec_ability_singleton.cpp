@@ -15,8 +15,10 @@
 
 #include "avcodec_ability_singleton.h"
 #include "avcodec_xml_parser.h"
+#include "hilog/log_c.h"
+#include "hilog/log_cpp.h"
+#include "inttypes.h"
 #include "media_log.h"
-#include "media_errors.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecAbilitySingleton"};

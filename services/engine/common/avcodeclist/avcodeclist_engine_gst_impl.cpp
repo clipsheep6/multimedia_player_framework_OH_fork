@@ -14,10 +14,16 @@
  */
 
 #include "avcodeclist_engine_gst_impl.h"
-#include <cmath>
+#include <stdint.h>
+#include "algorithm"
 #include "avcodec_ability_singleton.h"
-#include "media_errors.h"
+#include "hilog/log_c.h"
+#include "hilog/log_cpp.h"
+#include "inttypes.h"
+#include "math.h"
 #include "media_log.h"
+#include "string"
+#include "string_view"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecListEngineGstImpl"};

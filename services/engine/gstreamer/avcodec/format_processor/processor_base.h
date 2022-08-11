@@ -16,8 +16,10 @@
 #ifndef FORMAT_PROCESSOR_BASE_H
 #define FORMAT_PROCESSOR_BASE_H
 
+#include <stdint.h>
 #include "codec_common.h"
 #include "format.h"
+#include "memory"
 
 namespace OHOS {
 namespace Media {

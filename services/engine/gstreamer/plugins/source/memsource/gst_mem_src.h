@@ -17,6 +17,14 @@
 #define __GST_MEM_SRC_H__
 
 #include <gst/base/gstbasesrc.h>
+#include "gmacros.h"
+#include "gobject/gtype.h"
+#include "gst/gstbuffer.h"
+#include "gst/gstcaps.h"
+#include "gst/gstpad.h"
+#include "gtypes.h"
+struct _GstMemSrc;
+struct _GstMemSrcClass;
 
 G_BEGIN_DECLS
 

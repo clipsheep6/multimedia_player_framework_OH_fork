@@ -16,9 +16,13 @@
 #ifndef AVCODECLIST_ENGINE_GST_IMPL_H
 #define AVCODECLIST_ENGINE_GST_IMPL_H
 
-#include <mutex>
-#include "nocopyable.h"
+#include "__mutex_base"
+#include "avcodec_info.h"
+#include "format.h"
 #include "i_avcodeclist_engine.h"
+#include "iosfwd"
+#include "nocopyable.h"
+#include "vector"
 
 namespace OHOS {
 namespace Media {

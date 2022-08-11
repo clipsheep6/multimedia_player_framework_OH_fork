@@ -14,9 +14,25 @@
  */
 
 #include "avmeta_buffer_blocker.h"
-#include "media_errors.h"
-#include "media_log.h"
+#include "functional"
+#include "glist.h"
+#include "gmem.h"
+#include "gobject/gclosure.h"
+#include "gobject/gsignal.h"
+#include "gst/gstevent.h"
+#include "gst/gstghostpad.h"
+#include "gst/gstobject.h"
+#include "gst/gststructure.h"
+#include "gst/gstutils.h"
 #include "gst_utils.h"
+#include "hilog/log_c.h"
+#include "hilog/log_cpp.h"
+#include "inttypes.h"
+#include "media_log.h"
+#include "memory"
+#include "new"
+#include "string_view"
+#include "vector"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "BufferBlocker"};

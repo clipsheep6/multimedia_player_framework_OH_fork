@@ -15,8 +15,12 @@
 
 #include "avmeta_sinkprovider.h"
 #include "avmetadatahelper.h"
+#include "gst/gstelementfactory.h"
+#include "gst/gstobject.h"
+#include "hilog/log_c.h"
+#include "hilog/log_cpp.h"
+#include "inttypes.h"
 #include "media_log.h"
-#include "media_errors.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetaSinkProvider"};

@@ -16,13 +16,23 @@
 #ifndef AVMETA_FRAME_EXTRACTOR_H
 #define AVMETA_FRAME_EXTRACTOR_H
 
+#include <stdint.h>
 #include <queue>
 #include <vector>
-#include <mutex>
-#include <condition_variable>
-#include "avmetadatahelper_engine_gst_impl.h"
+#include "__mutex_base"
 #include "avmeta_frame_converter.h"
+#include "avsharedmemory.h"
+#include "gst/gstbuffer.h"
+#include "gst/gstcaps.h"
+#include "gst/gstelement.h"
+#include "gst/gstpad.h"
+#include "gtypes.h"
+#include "i_avmetadatahelper_service.h"
+#include "i_playbin_ctrler.h"
+#include "memory"
 #include "nocopyable.h"
+#include "playbin_msg_define.h"
+#include "utility"
 
 namespace OHOS {
 namespace Media {
