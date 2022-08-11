@@ -17,7 +17,7 @@
 #include "avcodec_xml_parser.h"
 #include "hilog/log_c.h"
 #include "hilog/log_cpp.h"
-#include "inttypes.h"
+#include "cinttypes"
 #include "media_log.h"
 
 namespace {

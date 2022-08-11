@@ -14,7 +14,7 @@
  */
 
 #include "gst_mem_src.h"
-#include <stdint.h>
+#include <cstdint>
 #include "errors.h"
 #include "gmessages.h"
 #include "gobject/gobject.h"

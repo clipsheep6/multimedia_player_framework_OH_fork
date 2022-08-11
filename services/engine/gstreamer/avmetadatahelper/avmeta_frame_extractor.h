@@ -16,7 +16,7 @@
 #ifndef AVMETA_FRAME_EXTRACTOR_H
 #define AVMETA_FRAME_EXTRACTOR_H
 
-#include <stdint.h>
+#include <cstdint>
 #include <queue>
 #include <vector>
 #include "__mutex_base"

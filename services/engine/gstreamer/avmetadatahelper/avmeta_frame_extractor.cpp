@@ -26,7 +26,7 @@
 #include "gst/gstsample.h"
 #include "hilog/log_c.h"
 #include "hilog/log_cpp.h"
-#include "inttypes.h"
+#include "cinttypes"
 #include "media_errors.h"
 #include "media_log.h"
 #include "queue"

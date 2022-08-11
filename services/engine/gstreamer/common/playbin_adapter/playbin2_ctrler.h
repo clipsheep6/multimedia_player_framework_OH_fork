@@ -16,7 +16,7 @@
 #ifndef PLAYBIN2_CTRLER_H
 #define PLAYBIN2_CTRLER_H
 
-#include <stdint.h>
+#include <cstdint>
 #include "playbin_ctrler_base.h"
 
 namespace OHOS {

@@ -14,13 +14,13 @@
  */
 
 #include "avcodeclist_engine_gst_impl.h"
-#include <stdint.h>
+#include <cstdint>
 #include "algorithm"
 #include "avcodec_ability_singleton.h"
 #include "hilog/log_c.h"
 #include "hilog/log_cpp.h"
-#include "inttypes.h"
-#include "math.h"
+#include "cinttypes"
+#include "cmath"
 #include "media_log.h"
 #include "string"
 #include "string_view"

@@ -16,7 +16,7 @@
 #ifndef AVCODEABILITY_SINGLETON_H
 #define AVCODEABILITY_SINGLETON_H
 
-#include <stdint.h>
+#include <cstdint>
 #include "__mutex_base"
 #include "avcodec_info.h"
 #include "nocopyable.h"
