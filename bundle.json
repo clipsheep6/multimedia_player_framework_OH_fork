@@ -18,7 +18,11 @@
         "SystemCapability.Multimedia.Media.VideoPlayer",
         "SystemCapability.Multimedia.Media.AudioRecorder",
         "SystemCapability.Multimedia.Media.VideoRecorder",
-        "SystemCapability.Multimedia.Media.Codec",
+        "SystemCapability.Multimedia.Media.AudioDecoder",
+        "SystemCapability.Multimedia.Media.AudioEncoder",
+        "SystemCapability.Multimedia.Media.VideoDecoder",
+        "SystemCapability.Multimedia.Media.VideoEncoder",
+        "SystemCapability.Multimedia.Media.CodecBase",
         "SystemCapability.Multimedia.Media.Spliter",
         "SystemCapability.Multimedia.Media.Muxer"
       ],
@@ -36,7 +40,7 @@
           "window_manager",
           "napi",
           "startup_l2",
-          "samgr_standard",
+          "samgr",
           "libxml2",
           "thirdparty_bounds_checking_function",
           "hitrace_native",
@@ -68,6 +72,7 @@
             "//foundation/multimedia/player_framework/interfaces/kits/js:media",
             "//foundation/multimedia/player_framework/interfaces/kits/js:media_js",
             "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+            "//foundation/multimedia/player_framework/interfaces/kits/c:media_capi",
             "//foundation/multimedia/player_framework/test/nativedemo:media_demo"
           ],
           "service_group": [
@@ -104,7 +109,8 @@
         ],
         "test": [
             "//foundation/multimedia/player_framework/test/fuzztest:fuzztest",
-            "//foundation/multimedia/player_framework/test:media_unit_test"
+            "//foundation/multimedia/player_framework/test:media_unit_test",
+            "//foundation/multimedia/player_framework/frameworks/native/recorder_profiles/test/unittest:unittest"
         ]
       }
     }
