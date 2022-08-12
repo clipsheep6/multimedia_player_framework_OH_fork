@@ -22,6 +22,7 @@
 #include "gst/video/gstvideometa.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerSinkProvider"};
@@ -49,14 +50,6 @@ PlayerSinkProvider::~PlayerSinkProvider()
         gst_object_unref(videoSink_);
         videoSink_ = nullptr;
     }
-    if (audioCaps_ != nullptr) {
-        gst_caps_unref(audioCaps_);
-        audioCaps_ = nullptr;
-    }
-    if (videoCaps_ != nullptr) {
-        gst_caps_unref(videoCaps_);
-        videoCaps_ = nullptr;
-    }
 }
 
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateAudioSink()
@@ -65,17 +58,19 @@ PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateAudioSink()
     constexpr gint channels = 2;
 
     if (audioSink_ != nullptr) {
-        gst_object_unref(audioSink_);
-        audioSink_ = nullptr;
+        return audioSink_;
     }
-    if (audioCaps_ == nullptr) {
-        audioCaps_ = gst_caps_new_simple("audio/x-raw",
-                                         "format", G_TYPE_STRING, "S16LE",
-                                         "rate", G_TYPE_INT, rate,
-                                         "channels", G_TYPE_INT, channels, nullptr);
-        CHECK_AND_RETURN_RET_LOG(audioCaps_ != nullptr, nullptr, "gst_caps_new_simple failed..");
 
-        audioSink_ = DoCreateAudioSink(audioCaps_, reinterpret_cast<gpointer>(this));
+    if (audioSink_ == nullptr) {
+        GstCaps *audioCaps = gst_caps_new_simple("audio/x-raw",
+                                                 "format", G_TYPE_STRING, "S16LE",
+                                                 "rate", G_TYPE_INT, rate,
+                                                 "channels", G_TYPE_INT, channels, nullptr);
+        CHECK_AND_RETURN_RET_LOG(audioCaps != nullptr, nullptr, "gst_caps_new_simple failed..");
+
+        ON_SCOPE_EXIT(0) { gst_object_unref(audioCaps); };
+
+        audioSink_ = DoCreateAudioSink(audioCaps, reinterpret_cast<gpointer>(this));
         CHECK_AND_RETURN_RET_LOG(audioSink_ != nullptr, nullptr, "CreateAudioSink failed..");
     }
 
@@ -148,11 +143,17 @@ PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateVideoSink()
         return nullptr;
     }
 
-    if (videoCaps_ == nullptr) {
-        videoCaps_ = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "RGBA", nullptr);
-        CHECK_AND_RETURN_RET_LOG(videoCaps_ != nullptr, nullptr, "gst_caps_new_simple failed..");
+    if (videoSink_ != nullptr) {
+        return videoSink_;
+    }
 
-        videoSink_ = DoCreateVideoSink(videoCaps_, reinterpret_cast<gpointer>(this));
+    if (videoSink_ == nullptr) {
+        GstCaps *videoCaps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "RGBA", nullptr);
+        CHECK_AND_RETURN_RET_LOG(videoCaps != nullptr, nullptr, "gst_caps_new_simple failed..");
+
+        ON_SCOPE_EXIT(0) { gst_caps_unref(videoCaps); };
+
+        videoSink_ = DoCreateVideoSink(videoCaps, reinterpret_cast<gpointer>(this));
         CHECK_AND_RETURN_RET_LOG(videoSink_ != nullptr, nullptr, "CreateVideoSink failed..");
     }
 
@@ -165,7 +166,7 @@ PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateVideoSink()
     (void)producerSurface_->SetQueueSize(DEFAULT_BUFFER_NUM);
     queueSize_ = DEFAULT_BUFFER_NUM;
 
-    return GST_ELEMENT_CAST(gst_object_ref(videoSink_));
+    return videoSink_;
 }
 
 GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpointer userData)
@@ -175,7 +176,7 @@ GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpo
     CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
     PlayerSinkProvider *sinkProvider = reinterpret_cast<PlayerSinkProvider *>(userData);
 
-    auto sink = gst_element_factory_make("videodisplaysink", "sink");
+    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("videodisplaysink", "sink")));
     CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
     gst_base_sink_set_async_enabled(GST_BASE_SINK(sink), FALSE);
 

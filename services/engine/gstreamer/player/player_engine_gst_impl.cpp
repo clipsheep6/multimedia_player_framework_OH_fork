@@ -449,13 +449,10 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
 void PlayerEngineGstImpl::PlayBinCtrlerDeInit()
 {
     url_.clear();
-    appsrcWrap_ = nullptr;
-    codecChangedDetector_ = nullptr;
 
     if (playBinCtrler_ != nullptr) {
         playBinCtrler_->SetElemSetupListener(nullptr);
         playBinCtrler_->SetElemUnSetupListener(nullptr);
-        playBinCtrler_ = nullptr;
     }
 
     {
@@ -467,6 +464,10 @@ void PlayerEngineGstImpl::PlayBinCtrlerDeInit()
         }
         signalIds_.clear();
     }
+
+    playBinCtrler_ = nullptr;
+    appsrcWrap_ = nullptr;
+    codecChangedDetector_ = nullptr;
 }
 
 int32_t PlayerEngineGstImpl::PlayBinCtrlerPrepare()
@@ -779,7 +780,6 @@ int32_t PlayerEngineGstImpl::SetAudioInterruptMode(const int32_t interruptMode)
 void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
 {
     std::unique_lock<std::mutex> lock(trackParseMutex_);
-    CHECK_AND_RETURN_LOG(trackParse_ != nullptr, "trackParse_ is null");
 
     const gchar *metadata = gst_element_get_metadata(&elem, GST_ELEMENT_METADATA_KLASS);
     CHECK_AND_RETURN_LOG(metadata != nullptr, "gst_element_get_metadata return nullptr");
@@ -787,30 +787,41 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
     MEDIA_LOGD("get element_name %{public}s, get metadata %{public}s", GST_ELEMENT_NAME(&elem), metadata);
     std::string metaStr(metadata);
 
-    if (metaStr.find("Codec/Demuxer") != std::string::npos || metaStr.find("Codec/Parser") != std::string::npos) {
-        if (trackParse_->GetDemuxerElementFind() == false) {
-            gulong signalId = g_signal_connect(&elem, "pad-added",
-                G_CALLBACK(PlayerTrackParse::OnPadAddedCb), trackParse_.get());
-            CHECK_AND_RETURN_LOG(signalId != 0, "listen to pad-added failed");
-            (void)signalIds_.emplace(&elem, signalId);
+    // demux/codec
+    if (trackParse_ != nullptr) {
+        if (metaStr.find("Codec/Demuxer") != std::string::npos || metaStr.find("Codec/Parser") != std::string::npos) {
+            if (trackParse_->GetDemuxerElementFind() == false) {
+                gulong signalId = g_signal_connect(&elem, "pad-added",
+                    G_CALLBACK(PlayerTrackParse::OnPadAddedCb), trackParse_.get());
+                CHECK_AND_RETURN_LOG(signalId != 0, "listen to pad-added failed");
+                (void)signalIds_.emplace(&elem, signalId);
 
-            trackParse_->SetDemuxerElementFind(true);
+                trackParse_->SetDemuxerElementFind(true);
+            }
         }
     }
 
-    CHECK_AND_RETURN_LOG(sinkProvider_ != nullptr, "sinkProvider_ is nullptr");
-    GstElement *videoSink = sinkProvider_->GetVideoSink();
-    CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
-    codecChangedDetector_->DetectCodecSetup(metaStr, &elem, videoSink);
+    // video sink
+    if (producerSurface_ != nullptr) {
+        CHECK_AND_RETURN_LOG(sinkProvider_ != nullptr, "sinkProvider_ is nullptr");
+        GstElement *videoSink = sinkProvider_->GetVideoSink();
+        CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
+        codecChangedDetector_->DetectCodecSetup(metaStr, &elem, videoSink);
+    }
 }
 
 void PlayerEngineGstImpl::OnNotifyElemUnSetup(GstElement &elem)
 {
-    CHECK_AND_RETURN_LOG(sinkProvider_ != nullptr, "sinkProvider_ is nullptr");
-    GstElement *videoSink = sinkProvider_->GetVideoSink();
-    CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
+    std::unique_lock<std::mutex> lock(trackParseMutex_);
 
-    codecChangedDetector_->DetectCodecUnSetup(&elem, videoSink);
+    // video sink 
+    if (producerSurface_ != nullptr) {
+        CHECK_AND_RETURN_LOG(sinkProvider_ != nullptr, "sinkProvider_ is nullptr");
+        GstElement *videoSink = sinkProvider_->GetVideoSink();
+        CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
+
+        codecChangedDetector_->DetectCodecUnSetup(&elem, videoSink);
+    }
 }
 
 CodecChangedDetector::~CodecChangedDetector()

@@ -207,7 +207,6 @@ int32_t AVMetadataHelperEngineGstImpl::SetSourceInternel(const std::string &uri,
         if (ret != MSERR_OK) {
             MEDIA_LOGE("frameExtractor init failed");
         }
-        gst_object_unref(vidSink);
     }
 
     metaCollector_->Start();
