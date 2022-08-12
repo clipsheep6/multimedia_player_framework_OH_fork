@@ -362,13 +362,13 @@ int32_t RecorderDemo::CameraServicesForAudio() const
 int32_t RecorderDemo::SetType()
 {
     int32_t ret;
-    if (setType_ == TYPE_MAX_TIME) {
+    if (setType_ == RecorderTyp::TYPE_MAX_TIME) {
         ret = recorder_->SetMaxDuration(g_videoRecorderConfig.duration * SEC_TO_MS);
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxDuration failed ");
-    } else if (setType_ == TYPE_MAX_SIZE) {
+    } else if (setType_ == RecorderTyp::TYPE_MAX_SIZE) {
         ret = recorder_->SetMaxFileSize(g_videoRecorderConfig.size);
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxFileSize failed ");
-    } else if (setType_ == TYPE_MAX_SIZE_AND_TIME) {
+    } else if (setType_ == RecorderTyp::TYPE_MAX_SIZE_AND_TIME) {
         ret = recorder_->SetMaxDuration(g_videoRecorderConfig.duration * SEC_TO_MS);
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxDuration failed ");
         ret = recorder_->SetMaxFileSize(g_videoRecorderConfig.size);
@@ -485,13 +485,13 @@ void RecorderDemo::SetThreshold()
         (void)getline(cin, value);
         g_videoRecorderConfig.duration = std::stol(value, nullptr, DECIMAL_BASE);
         g_videoRecorderConfig.size = 0;
-        setType_ = TYPE_MAX_TIME;
+        setType_ = RecorderTyp::TYPE_MAX_TIME;
     } else if (source == "2") {
         cout << "max size value" << endl;
         (void)getline(cin, value);
         g_videoRecorderConfig.duration = 0;
         g_videoRecorderConfig.size = std::stoll(value, nullptr, DECIMAL_BASE);
-        setType_ = TYPE_MAX_SIZE;
+        setType_ = RecorderTyp::TYPE_MAX_SIZE;
     } else if (source == "3") {
         cout << "max size value && max duration value" << endl;
         cout << "duration value" << endl;
@@ -500,9 +500,9 @@ void RecorderDemo::SetThreshold()
         cout << "size value" << endl;
         (void)getline(cin, value);
         g_videoRecorderConfig.size = std::stoll(value, nullptr, DECIMAL_BASE);
-        setType_ = TYPE_MAX_SIZE_AND_TIME;
+        setType_ = RecorderTyp::TYPE_MAX_SIZE_AND_TIME;
     } else {
-        setType_ = TYPE_SET_NONE;
+        setType_ = RecorderTyp::TYPE_SET_NONE;
         cout << "threshold not set" << endl;
     }
 }
