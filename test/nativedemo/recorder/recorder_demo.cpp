@@ -38,12 +38,15 @@ namespace {
     constexpr uint32_t FRAME_DURATION = 40000000;
     constexpr uint32_t YUV_BUFFER_SIZE = 1474560; // 1280 * 768 * 3 / 2
     constexpr uint32_t SEC_TO_NS = 1000000000;
+    constexpr uint32_t SEC_TO_MS = 1000;
+    constexpr uint32_t DECIMAL_BASE = 10;
     const string PURE_VIDEO = "1";
     const string PURE_AUDIO = "2";
     const string AUDIO_VIDEO = "3";
 }
 
-RecorderCallbackDemo::~RecorderCallbackDemo() {
+RecorderCallbackDemo::~RecorderCallbackDemo()
+{
     if (nextFd_ > 0) {
         close(nextFd_);
         nextFd_ = -1;
@@ -56,19 +59,18 @@ void RecorderCallbackDemo::OnError(RecorderErrorType errorType, int32_t errorCod
     cout << "Error received, errorType:" << errorType << " errorCode:" << errorCode << endl;
 }
 
-void RecorderCallbackDemo::OnInfo(int32_t type, int32_t extra)
+void RecorderCallbackDemo::OnInfo(int32_t type, int32_t extra) noexcept
 {
     cout << "Info received, Infotype:" << type << " Infocode:" << extra << endl;
     std::string path;
     int ret;
     int fd;
     if (type == RECORDER_INFO_MAX_FILESIZE_APPROACHING) {
-        cout << "Info received, RECORDER_INFO_MAX_FILESIZE_APPROACHING" << endl;
         path = "/data/recorder/split" + std::to_string(splitCnt_) + format_;
-        cout << "path.c_str():" << path.c_str()  << endl;
+        cout << "RECORDER_INFO_MAX_FILESIZE_APPROACHING, path.c_str():" << path.c_str()  << endl;
         if (isSetSub_)
             return;
-        fd = open(path.c_str(), O_CREAT | O_WRONLY, 0777);
+        fd = open(path.c_str(), O_CREAT | O_WRONLY, S_IRWXU);
         cout << "fd:" << fd << endl;
         ret = this->callbackRecorder_->SetNextOutputFile(fd);
         if (ret == MSERR_OK) {
@@ -79,12 +81,11 @@ void RecorderCallbackDemo::OnInfo(int32_t type, int32_t extra)
             cout << "RECORDER_INFO_MAX_FILESIZE_APPROACHING SetNextOutputFile failed" << endl;
         }
     } else if (type == RECORDER_INFO_MAX_DURATION_APPROACHING) {
-        cout << "Info received, RECORDER_INFO_MAX_DURATION_APPROACHING" << endl;
         path = "/data/recorder/split" + std::to_string(splitCnt_) + format_;
-        cout << "path.c_str():" << path.c_str()  << endl;
+        cout << "RECORDER_INFO_MAX_DURATION_APPROACHING, path.c_str():" << path.c_str()  << endl;
         if (isSetSub_)
             return;
-        fd = open(path.c_str(), O_CREAT | O_WRONLY, 0777);
+        fd = open(path.c_str(), O_CREAT | O_WRONLY, S_IRWXU);
         cout << "fd:" << fd << endl;
         ret = this->callbackRecorder_->SetNextOutputFile(fd);
         if (ret == MSERR_OK) {
@@ -94,14 +95,8 @@ void RecorderCallbackDemo::OnInfo(int32_t type, int32_t extra)
         } else {
             cout << "RECORDER_INFO_MAX_DURATION_APPROACHING SetNextOutputFile failed" << endl;
         }
-    } else if (type == RECORDER_INFO_MAX_FILESIZE_REACHED) {
-        cout << "Info received, RECORDER_INFO_MAX_FILESIZE_REACHED" << endl;
-        if (curFd_ > 0) {
-            close(curFd_);
-            curFd_ = -1;
-        }
-    } else if (type  == RECORDER_INFO_MAX_DURATION_REACHED) {
-        cout << "Info received, RECORDER_INFO_MAX_DURATION_REACHED" << endl;
+    } else if (type == RECORDER_INFO_MAX_FILESIZE_REACHED || type == RECORDER_INFO_MAX_DURATION_REACHED) {
+        cout << "Info received, FILESIZE_REACHED or DURATION_REACHED" << endl;
         if (curFd_ > 0) {
             close(curFd_);
             curFd_ = -1;
@@ -364,7 +359,25 @@ int32_t RecorderDemo::CameraServicesForAudio() const
     return MSERR_OK;
 }
 
-int32_t RecorderDemo::SetFormat(const std::string &recorderType) const
+int32_t RecorderDemo::SetType()
+{
+    int32_t ret;
+    if (setType_ == TYPE_MAX_TIME) {
+        ret = recorder_->SetMaxDuration(g_videoRecorderConfig.duration * SEC_TO_MS);
+        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxDuration failed ");
+    } else if (setType_ == TYPE_MAX_SIZE) {
+        ret = recorder_->SetMaxFileSize(g_videoRecorderConfig.size);
+        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxFileSize failed ");
+    } else if (setType_ == TYPE_MAX_SIZE_AND_TIME) {
+        ret = recorder_->SetMaxDuration(g_videoRecorderConfig.duration * SEC_TO_MS);
+        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxDuration failed ");
+        ret = recorder_->SetMaxFileSize(g_videoRecorderConfig.size);
+        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxFileSize failed ");
+    }
+    return MSERR_OK;
+}
+
+int32_t RecorderDemo::SetFormat(const std::string &recorderType) const noexcept
 {
     int32_t ret;
     std::string format;
@@ -399,18 +412,8 @@ int32_t RecorderDemo::SetFormat(const std::string &recorderType) const
         format = ".mp4";
     }
 
-    if (setType_ == TYPE_MAX_TIME) {
-        ret = recorder_->SetMaxDuration(g_videoRecorderConfig.duration * 1000);
-        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxDuration failed ");
-    } else if (setType_ == TYPE_MAX_SIZE) {
-        ret = recorder_->SetMaxFileSize(g_videoRecorderConfig.size);
-        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxFileSize failed ");
-    } else if (setType_ == TYPE_MAX_SIZE_AND_TIME) {
-        ret = recorder_->SetMaxDuration(g_videoRecorderConfig.duration * 1000);
-        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxDuration failed ");
-        ret = recorder_->SetMaxFileSize(g_videoRecorderConfig.size);
-        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxFileSize failed ");
-    }
+    ret = SetType();
+    DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetType failed ");
 
     ret = recorder_->SetOutputFile(g_videoRecorderConfig.outputFd);
     DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputFile failed ");
@@ -462,11 +465,11 @@ void RecorderDemo::SetRecorderTime()
     string time;
     cout << "time to keep recording, unit is seconds " << endl;
     (void)getline(cin, time);
-    recorderTime = std::stol(time, nullptr, 10);
+    recorderTime = std::stol(time, nullptr, DECIMAL_BASE);
     cout << "recorderTime : " << recorderTime << endl;
 }
 
-void RecorderDemo::SetThreshold()
+void RecorderDemo::SetThreshold() noexcept
 {
     string source;
     string value;
@@ -480,23 +483,23 @@ void RecorderDemo::SetThreshold()
     if (source == "1") {
         cout << "max duration value" << endl;
         (void)getline(cin, value);
-        g_videoRecorderConfig.duration = std::stol(value, nullptr, 10);
+        g_videoRecorderConfig.duration = std::stol(value, nullptr, DECIMAL_BASE);
         g_videoRecorderConfig.size = 0;
         setType_ = TYPE_MAX_TIME;
     } else if (source == "2") {
         cout << "max size value" << endl;
         (void)getline(cin, value);
         g_videoRecorderConfig.duration = 0;
-        g_videoRecorderConfig.size = std::stoll(value, nullptr, 10);
+        g_videoRecorderConfig.size = std::stoll(value, nullptr, DECIMAL_BASE);
         setType_ = TYPE_MAX_SIZE;
     } else if (source == "3") {
         cout << "max size value && max duration value" << endl;
         cout << "duration value" << endl;
         (void)getline(cin, value);
-        g_videoRecorderConfig.duration = std::stol(value, nullptr, 10);
+        g_videoRecorderConfig.duration = std::stol(value, nullptr, DECIMAL_BASE);
         cout << "size value" << endl;
         (void)getline(cin, value);
-        g_videoRecorderConfig.size = std::stoll(value, nullptr, 10);
+        g_videoRecorderConfig.size = std::stoll(value, nullptr, DECIMAL_BASE);
         setType_ = TYPE_MAX_SIZE_AND_TIME;
     } else {
         setType_ = TYPE_SET_NONE;

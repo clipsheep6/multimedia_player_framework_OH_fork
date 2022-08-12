@@ -127,12 +127,11 @@ RecorderMsgProcResult MuxSinkBin::DoProcessMessage(GstMessage &rawMsg, RecorderM
 
     GstMessage *local = static_cast<GstMessage *>(&rawMsg);
     const GstStructure *msgStructure = gst_message_get_structure(local);
-    if (NULL == msgStructure) {
+    if (msgStructure == nullptr) {
         return RecorderMsgProcResult::REC_MSG_PROC_IGNORE;
     }
 
     const char* msgName = gst_structure_get_name(msgStructure);
-
 
     MEDIA_LOGD("Recive info message name:%{public}s", msgName);
     auto elementMsgTypeIter = ELEMENT_MSG_TYPE_CHANGE_TABLE.find(msgName);
@@ -265,8 +264,8 @@ int32_t MuxSinkBin::ConfigureMaxDuration(const RecorderParam &recParam)
     const MaxDuration &param = static_cast<const MaxDuration &>(recParam);
     if ((param.duration != 0 && param.duration < MIN_DURATION_MSECONDS) ||
        (param.duration > MAX_DURATION_MSECONDS)) {
-        MEDIA_LOGE("Invalid record duration: %{public}d, Min=%{public}ld, Max=%{public}ld",
-        param.duration, MIN_DURATION_MSECONDS, MAX_DURATION_MSECONDS);
+        MEDIA_LOGE("Invalid record duration: %{public}, Min=%{public}" PRId64 ", Max=%{public}" PRId64 "",
+            param.duration, MIN_DURATION_MSECONDS, MAX_DURATION_MSECONDS);
         return MSERR_INVALID_VAL;
     }
     MEDIA_LOGI("Set max duration success: %{public}d", param.duration);
@@ -283,7 +282,7 @@ int32_t MuxSinkBin::ConfigureMaxFileSize(const RecorderParam &recParam)
     const MaxFileSize &param = static_cast<const MaxFileSize &>(recParam);
     if ((param.size != 0 && param.size < MIN_SIZE_BYTES) ||
         (param.size > MAX_SIZE_BYTES)) {
-        MEDIA_LOGE("Invalid record file size: (%{public}" PRId64 "), Min=%{public}ld, Max=%{public}ld",
+        MEDIA_LOGE("Invalid record file size: (%{public}" PRId64 "), Min=%{public}" PRId64 ", Max=%{public}" PRId64 "",
         param.size, MIN_SIZE_BYTES, MAX_SIZE_BYTES);
         return MSERR_INVALID_VAL;
     }

@@ -321,7 +321,7 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
 int32_t RecorderServer::SetNextOutputFile(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (setNextUrl_ == true) {
+    if (setNextUrl_) {
         MEDIA_LOGE("SetNextOutputFile fd also be set: %{public}d", fd);
         return MSERR_INVALID_OPERATION;
     }

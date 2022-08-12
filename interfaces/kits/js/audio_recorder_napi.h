@@ -98,7 +98,6 @@ struct AudioRecorderAsyncContext : public MediaAsyncContext {
     AudioRecorderNapi *napi = nullptr;
     std::string url = "";
 };
-
 } // namespace Media
 } // namespace OHOS
 #endif // AUDIO_RECORDER_NAPI_H_
