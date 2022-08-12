@@ -264,7 +264,7 @@ int32_t MuxSinkBin::ConfigureMaxDuration(const RecorderParam &recParam)
     const MaxDuration &param = static_cast<const MaxDuration &>(recParam);
     if ((param.duration != 0 && param.duration < MIN_DURATION_MSECONDS) ||
        (param.duration > MAX_DURATION_MSECONDS)) {
-        MEDIA_LOGE("Invalid record duration: %{public}, Min=%{public}" PRId64 ", Max=%{public}" PRId64 "",
+        MEDIA_LOGE("Invalid record duration: %{public}d, Min=%{public}" PRId64 ", Max=%{public}" PRId64 "",
             param.duration, MIN_DURATION_MSECONDS, MAX_DURATION_MSECONDS);
         return MSERR_INVALID_VAL;
     }
@@ -443,7 +443,7 @@ int32_t MuxSinkBin::CreateMuxerElement(const std::string &name)
 
 void MuxSinkBin::Dump()
 {
-    MEDIA_LOGI("file format = %{public}d, max duration = %{public}lu, "
+    MEDIA_LOGI("file format = %{public}d, max duration = %{public}" PRId64 ", "
                "max size = %{public}" PRId64 ", fd = %{public}d, path = %{public}s",
                format_, maxDuration_,  maxSize_, outFd_, outPath_.c_str());
 }

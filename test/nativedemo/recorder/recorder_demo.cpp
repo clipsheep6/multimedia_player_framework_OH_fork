@@ -59,10 +59,10 @@ void RecorderCallbackDemo::OnError(RecorderErrorType errorType, int32_t errorCod
     cout << "Error received, errorType:" << errorType << " errorCode:" << errorCode << endl;
 }
 
-void RecorderCallbackDemo::OnInfo(int32_t type, int32_t extra) noexcept
+void RecorderCallbackDemo::OnInfo(int32_t type, int32_t extra)
 {
     cout << "Info received, Infotype:" << type << " Infocode:" << extra << endl;
-    std::string path;
+    std::string path = "";
     int ret;
     int fd;
     if (type == RECORDER_INFO_MAX_FILESIZE_APPROACHING) {
@@ -377,10 +377,10 @@ int32_t RecorderDemo::SetType()
     return MSERR_OK;
 }
 
-int32_t RecorderDemo::SetFormat(const std::string &recorderType) const noexcept
+int32_t RecorderDemo::SetFormat(const std::string &recorderType) const
 {
     int32_t ret;
-    std::string format;
+    std::string format = "";
 
     if (recorderType == PURE_VIDEO) {
         ret = recorder_->SetVideoSource(g_videoRecorderConfig.vSource, g_videoRecorderConfig.videoSourceId);
@@ -469,10 +469,10 @@ void RecorderDemo::SetRecorderTime()
     cout << "recorderTime : " << recorderTime << endl;
 }
 
-void RecorderDemo::SetThreshold() noexcept
+void RecorderDemo::SetThreshold()
 {
     string source;
-    string value;
+    string value = "";
     cout << "set threshold" << endl;
     cout << "set max duration, unit is seconds : 1" << endl;
     cout << "set max size, unit is byes : 2" << endl;

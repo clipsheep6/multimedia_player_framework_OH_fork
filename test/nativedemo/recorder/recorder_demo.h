@@ -28,10 +28,10 @@ namespace Media {
 const std::string SAVE_PATH = "/data/recorder/";
 
 enum class RecorderTyp {
-  TYPE_MAX_SIZE = 1,
-  TYPE_MAX_TIME,
-  TYPE_MAX_SIZE_AND_TIME,
-  TYPE_SET_NONE
+    TYPE_MAX_SIZE = 1,
+    TYPE_MAX_TIME,
+    TYPE_MAX_SIZE_AND_TIME,
+    TYPE_SET_NONE
 };
 
 struct VideoRecorderConfig {
@@ -80,7 +80,7 @@ public:
     int32_t CameraServicesForVideo() const;
     int32_t CameraServicesForAudio() const;
     int32_t SetType();
-    int32_t SetFormat(const std::string &type) const noexcept;
+    int32_t SetFormat(const std::string &type) const;
     int32_t GetStubFile();
     void GetFileFd();
     uint64_t GetPts();
@@ -88,7 +88,7 @@ public:
 private:
     void SetVideoSource();
     void SetVideoEncodeMode();
-    void SetThreshold() noexcept;
+    void SetThreshold();
     void SetRecorderTime();
     int64_t pts_ = 0;
     int32_t isKeyFrame_ = 1;
@@ -111,7 +111,7 @@ public:
     virtual ~RecorderCallbackDemo();
 
     void OnError(RecorderErrorType errorType, int32_t errorCode) override;
-    void OnInfo(int32_t type, int32_t extra) noexcept override;
+    void OnInfo(int32_t type, int32_t extra) override;
     std::shared_ptr<Recorder> callbackRecorder_ = nullptr;
     std::string callbackNextUrl;
     int32_t nextFd_ = -1;
