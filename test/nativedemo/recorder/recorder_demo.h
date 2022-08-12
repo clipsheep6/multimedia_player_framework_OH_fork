@@ -79,7 +79,7 @@ public:
     void HDICreateYUVBuffer();
     int32_t CameraServicesForVideo() const;
     int32_t CameraServicesForAudio() const;
-    int32_t SetType();
+    int32_t SetType() const;
     int32_t SetFormat(const std::string &type) const;
     int32_t GetStubFile();
     void GetFileFd();
@@ -100,7 +100,7 @@ private:
     std::unique_ptr<std::thread> camereHDIThread_;
     uint32_t count_ = 0;
     unsigned char color_ = 0xFF;
-    RecorderTyp setType_ = 0;
+    RecorderTyp setType_ = RecorderTyp::TYPE_SET_NONE;
     uint32_t recorderTime = 0;
     int32_t frameRate_ = 30;
 };

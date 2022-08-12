@@ -359,7 +359,7 @@ int32_t RecorderDemo::CameraServicesForAudio() const
     return MSERR_OK;
 }
 
-int32_t RecorderDemo::SetType()
+int32_t RecorderDemo::SetType() const
 {
     int32_t ret;
     if (setType_ == RecorderTyp::TYPE_MAX_TIME) {
