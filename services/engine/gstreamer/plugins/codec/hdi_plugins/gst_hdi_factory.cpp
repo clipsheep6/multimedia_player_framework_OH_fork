@@ -319,7 +319,8 @@ gboolean GstHdiFactory::HdiClassRegister(GstPlugin *plugin, CapabilityData &capD
     // In register, will GstHdiCodecClassInit.
     GType subtype = g_type_register_static(type, typeName.c_str(), &typeInfo, static_cast<GTypeFlags>(0));
     CHECK_AND_RETURN_RET_LOG(subtype != 0, FALSE, "Type register failed");
-    return gst_element_register(plugin, typeName.c_str(), GST_RANK_NONE, subtype);
+    // need be first than others which is GST_RANK_PRIMARY + 1
+    return gst_element_register(plugin, typeName.c_str(), GST_RANK_PRIMARY + 2, subtype);
 }
 
 gboolean GstHdiFactory::PluginInit(GstPlugin *plugin)
