@@ -100,7 +100,7 @@ private:
     std::unique_ptr<std::thread> camereHDIThread_;
     uint32_t count_ = 0;
     unsigned char color_ = 0xFF;
-    uint32_t setType_ = 0;
+    RecorderTyp setType_ = 0;
     uint32_t recorderTime = 0;
     int32_t frameRate_ = 30;
 };
