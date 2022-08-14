@@ -15,6 +15,7 @@
 
 #include "player_server.h"
 #include <map>
+#include <unordered_map>
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
@@ -72,9 +73,12 @@ void PlayerServer::ResetProcessor()
 
 void PlayerServer::ReleaseProcessor()
 {
+#ifdef SUPPORT_AUDIO_ONLY
+#else
     if (surface_ != nullptr) {
         surface_ = nullptr;
     }
+#endif
 }
 
 int32_t PlayerServer::Init()
@@ -210,10 +214,13 @@ int32_t PlayerServer::OnPrepare()
     if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
         CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
         int32_t ret = MSERR_OK;
+#ifdef SUPPORT_AUDIO_ONLY
+#else
         if (surface_ != nullptr) {
             ret = playerEngine_->SetVideoSurface(surface_);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetVideoSurface Failed!");
         }
+#endif
 
         lastOpStatus_ = PLAYER_PREPARED;
 
@@ -693,6 +700,8 @@ int32_t PlayerServer::SelectBitRate(uint32_t bitRate)
     return MSERR_OK;
 }
 
+#ifdef SUPPORT_AUDIO_ONLY
+#else
 int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -706,6 +715,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
     surface_ = surface;
     return MSERR_OK;
 }
+#endif
 
 bool PlayerServer::IsPlaying()
 {
