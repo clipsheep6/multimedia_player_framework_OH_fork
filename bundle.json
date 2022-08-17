@@ -67,11 +67,10 @@
         "group_type": {
           "base_group": [],
           "fwk_group": [
-            "//foundation/multimedia/player_framework/interfaces/kits/js:media",
-            "//foundation/multimedia/player_framework/interfaces/kits/js:media_js",
+            "//foundation/multimedia/player_framework/interfaces/kits:napi_packages",
             "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
             "//foundation/multimedia/player_framework/interfaces/kits/c:native_media",
-            "//foundation/multimedia/player_framework/test/nativedemo:media_demo"
+          "//foundation/multimedia/player_framework/test:test_packages"
           ],
           "service_group": [
             "//foundation/multimedia/player_framework/services:media_services_package",
@@ -96,7 +95,7 @@
           },
           {
             "type": "none",
-            "name": "//foundation/multimedia/player_framework/interfaces/kits/js:media",
+            "name": "//foundation/multimedia/player_framework/interfaces/kits:napi_packages",
             "header": {
               "header_files": [
                 "native_module_ohos_media.h"
@@ -106,7 +105,7 @@
           }
         ],
         "test": [
-            "//foundation/multimedia/player_framework/test/fuzztest:fuzztest",
+            "//foundation/multimedia/player_framework/test:test_packages",
             "//foundation/multimedia/player_framework/test:media_unit_test",
             "//foundation/multimedia/player_framework/frameworks/native/recorder_profiles/test/unittest:unittest"
         ]

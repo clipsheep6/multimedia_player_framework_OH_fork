@@ -233,6 +233,8 @@ int32_t PlayerClient::GetDuration(int32_t &duration)
     return playerProxy_->GetDuration(duration);
 }
 
+#ifdef SUPPORT_AUDIO_ONLY
+#else
 int32_t PlayerClient::SetVideoSurface(sptr<Surface> surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -240,6 +242,7 @@ int32_t PlayerClient::SetVideoSurface(sptr<Surface> surface)
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_NO_MEMORY, "surface is nullptr..");
     return playerProxy_->SetVideoSurface(surface);
 }
+#endif
 
 bool PlayerClient::IsPlaying()
 {

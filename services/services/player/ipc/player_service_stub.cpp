@@ -78,7 +78,10 @@ int32_t PlayerServiceStub::Init()
     playerFuncs_[GET_DURATION] = &PlayerServiceStub::GetDuration;
     playerFuncs_[SET_PLAYERBACK_SPEED] = &PlayerServiceStub::SetPlaybackSpeed;
     playerFuncs_[GET_PLAYERBACK_SPEED] = &PlayerServiceStub::GetPlaybackSpeed;
+#ifdef SUPPORT_AUDIO_ONLY
+#else
     playerFuncs_[SET_VIDEO_SURFACE] = &PlayerServiceStub::SetVideoSurface;
+#endif
     playerFuncs_[IS_PLAYING] = &PlayerServiceStub::IsPlaying;
     playerFuncs_[IS_LOOPING] = &PlayerServiceStub::IsLooping;
     playerFuncs_[SET_LOOPING] = &PlayerServiceStub::SetLooping;
@@ -277,12 +280,15 @@ int32_t PlayerServiceStub::SelectBitRate(uint32_t bitRate)
     return playerServer_->SelectBitRate(bitRate);
 }
 
+#ifdef SUPPORT_AUDIO_ONLY
+#else
 int32_t PlayerServiceStub::SetVideoSurface(sptr<Surface> surface)
 {
     MEDIA_LOGD("SetVideoSurface");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetVideoSurface(surface);
 }
+#endif
 
 bool PlayerServiceStub::IsPlaying()
 {
@@ -507,6 +513,8 @@ int32_t PlayerServiceStub::SelectBitRate(MessageParcel &data, MessageParcel &rep
     return MSERR_OK;
 }
 
+#ifdef SUPPORT_AUDIO_ONLY
+#else
 int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
@@ -524,6 +532,7 @@ int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &r
     reply.WriteInt32(SetVideoSurface(surface));
     return MSERR_OK;
 }
+#endif
 
 int32_t PlayerServiceStub::IsPlaying(MessageParcel &data, MessageParcel &reply)
 {

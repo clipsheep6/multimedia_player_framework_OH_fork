@@ -264,6 +264,8 @@ public:
      */
     virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) = 0;
 
+#ifdef SUPPORT_AUDIO_ONLY
+#else
     /**
      * @brief Method to set the surface.
      *
@@ -274,6 +276,7 @@ public:
      * @version 1.0
      */
     virtual int32_t SetVideoSurface(sptr<Surface> surface) = 0;
+#endif
 
     /**
      * @brief Checks whether the player is playing.

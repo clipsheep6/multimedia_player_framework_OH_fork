@@ -46,7 +46,10 @@ public:
     int32_t GetDuration(int32_t &duration) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
+#ifdef SUPPORT_AUDIO_ONLY
+#else
     int32_t SetVideoSurface(sptr<Surface> surface) override;
+#endif
     bool IsPlaying() override;
     bool IsLooping() override;
     int32_t SetLooping(bool loop) override;
