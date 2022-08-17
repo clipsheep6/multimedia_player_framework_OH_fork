@@ -55,7 +55,6 @@ public:
     ~VideoCallbackNapi() override;
 
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
-    void OnError(PlayerErrorType errType, int32_t errCode) override;
     PlayerStates GetCurrentState() const override;
     int32_t GetVideoWidth() const
     {
@@ -66,7 +65,7 @@ public:
         return height_;
     }
     void QueueAsyncWork(VideoPlayerAsyncContext *context);
-    void ClearAsyncWork(bool error, const std::string &msg);
+    void ClearAsyncWork();
 
 private:
     void OnStartRenderFrameCb() const;
@@ -85,8 +84,11 @@ private:
     std::mutex mutex_;
     napi_env env_ = nullptr;
     PlayerStates currentState_ = PLAYER_IDLE;
-    std::map<AsyncWorkType, std::queue<VideoPlayerAsyncContext *>> contextMap_;
     std::queue<VideoPlayerAsyncContext *> contextStateQue_;
+    std::queue<VideoPlayerAsyncContext *> contextSeekQue_;
+    std::queue<VideoPlayerAsyncContext *> contextSpeedQue_;
+    std::queue<VideoPlayerAsyncContext *> contextVolumeQue_;
+    std::queue<VideoPlayerAsyncContext *> contextBitRateQue_;
     int32_t width_ = 0;
     int32_t height_ = 0;
 };
