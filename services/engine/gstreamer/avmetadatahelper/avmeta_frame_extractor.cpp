@@ -14,10 +14,26 @@
  */
 
 #include "avmeta_frame_extractor.h"
+#include "avmetadatahelper.h"
+#include "chrono"
+#include "cstdint"
+#include "foundation/multimedia/player_framework/services/engine/gstreamer/avmetadatahelper/avmeta_frame_converter.h"
+#include "gmacros.h"
+#include "gobject/gclosure.h"
+#include "gobject/gobject.h"
+#include "gobject/gsignal.h"
+#include "gst/gstobject.h"
+#include "gst/gstsample.h"
+#include "hilog/log_c.h"
+#include "hilog/log_cpp.h"
+#include "cinttypes"
 #include "media_errors.h"
 #include "media_log.h"
+#include "queue"
 #include "scope_guard.h"
-#include "time_perf.h"
+#include "type_traits"
+#include "unordered_map"
+#include "vector"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetaFrameExtract"};

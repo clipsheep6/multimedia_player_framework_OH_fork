@@ -15,9 +15,17 @@
 
 #include "config.h"
 #include "gst_mem_sink.h"
-#include <cinttypes>
-#include "gst_surface_mem_sink.h"
-#include "gst_shared_mem_sink.h"
+#include <glib/gtypes.h>
+#include <cstdint>
+#include "gst/base/gstbasesink.h"
+#include "gst/gstcaps.h"
+#include "gst/gstelement.h"
+#include "gst/gstevent.h"
+#include "gst/gstformat.h"
+#include "gst/gstinfo.h"
+#include "gst/gstpadtemplate.h"
+#include "gst/gstvalue.h"
+#include "cinttypes"
 
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))

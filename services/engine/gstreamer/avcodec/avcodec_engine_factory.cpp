@@ -14,16 +14,21 @@
  */
 
 #include "avcodec_engine_factory.h"
-#include <cstdlib>
 #include "format_processor/processor_adec_impl.h"
 #include "format_processor/processor_aenc_impl.h"
 #include "format_processor/processor_vdec_impl.h"
 #include "format_processor/processor_venc_impl.h"
+#include "hilog/log_c.h"
+#include "hilog/log_cpp.h"
+#include "media_log.h"
+#include "memory"
+#include "processor_base.h"
+#include "sink_base.h"
 #include "sink_wrapper/sink_bytebuffer_impl.h"
 #include "sink_wrapper/sink_surface_impl.h"
+#include "src_base.h"
 #include "src_wrapper/src_bytebuffer_impl.h"
 #include "src_wrapper/src_surface_impl.h"
-#include "media_log.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecEngineFactory"};

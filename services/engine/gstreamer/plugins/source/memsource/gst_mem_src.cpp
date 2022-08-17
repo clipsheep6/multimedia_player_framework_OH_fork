@@ -14,9 +14,21 @@
  */
 
 #include "gst_mem_src.h"
-#include <gst/video/video.h>
-#include "media_errors.h"
-#include "scope_guard.h"
+#include <cstdint>
+#include "errors.h"
+#include "gmessages.h"
+#include "gobject/gobject.h"
+#include "gobject/gparam.h"
+#include "gobject/gparamspecs.h"
+#include "gobject/gsignal.h"
+#include "gobject/gvaluetypes.h"
+#include "gst/base/gstbasesrc.h"
+#include "gst/gstenumtypes.h"
+#include "gst/gstformat.h"
+#include "gst/gstinfo.h"
+#include "gst/gstobject.h"
+#include "gst/gstquery.h"
+#include "gst/gstvalue.h"
 
 using namespace OHOS;
 namespace {

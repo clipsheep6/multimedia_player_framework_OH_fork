@@ -14,8 +14,14 @@
  */
 
 #include "playbin2_ctrler.h"
+#include "gst/gstelementfactory.h"
+#include "gst/gstpipeline.h"
+#include "hilog/log_c.h"
+#include "hilog/log_cpp.h"
+#include "i_playbin_ctrler.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "memory"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBin2Ctrler"};

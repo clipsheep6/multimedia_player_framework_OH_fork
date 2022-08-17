@@ -16,11 +16,13 @@
 #ifndef AVMETA_BUFFER_BLOCKER_H
 #define AVMETA_BUFFER_BLOCKER_H
 
-#include <vector>
-#include <mutex>
 #include <functional>
 #include <memory>
-#include <gst/gst.h>
+#include <vector>
+#include "__mutex_base"
+#include "gst/gstelement.h"
+#include "gst/gstpad.h"
+#include "gtypes.h"
 #include "nocopyable.h"
 
 namespace OHOS {

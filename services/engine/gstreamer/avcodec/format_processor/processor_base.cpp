@@ -14,6 +14,8 @@
  */
 
 #include "processor_base.h"
+#include "hilog/log_c.h"
+#include "hilog/log_cpp.h"
 #include "media_errors.h"
 #include "media_log.h"
 

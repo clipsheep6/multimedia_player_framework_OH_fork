@@ -16,9 +16,12 @@
 #ifndef AVCODEABILITY_SINGLETON_H
 #define AVCODEABILITY_SINGLETON_H
 
-#include <mutex>
-#include "format.h"
+#include <cstdint>
+#include "__mutex_base"
 #include "avcodec_info.h"
+#include "nocopyable.h"
+#include "vector"
+
 namespace OHOS {
 namespace Media {
 class __attribute__((visibility("default"))) AVCodecAbilitySingleton : public NoCopyable {

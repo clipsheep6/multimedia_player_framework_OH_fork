@@ -17,6 +17,7 @@
 #define AVCODEC_ENGINE_FACTORY_H
 
 #include <memory>
+#include "avcodec_info.h"
 #include "format_processor/processor_base.h"
 #include "sink_wrapper/sink_base.h"
 #include "src_wrapper/src_base.h"
