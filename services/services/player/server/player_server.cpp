@@ -905,6 +905,7 @@ int32_t PlayerServerStateMachine::HandleMessage(PlayerOnInfoType type, int32_t e
 void PlayerServerStateMachine::ChangeState(const std::shared_ptr<PlayerServerState> &state)
 {
     {
+        // Resolve the deadlock between reset and state callback
         std::unique_lock<std::recursive_mutex> lock(recMutex_);
 
         if (state == nullptr || (state == currState_)) {
