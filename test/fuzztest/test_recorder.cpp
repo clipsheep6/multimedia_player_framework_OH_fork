@@ -13,12 +13,12 @@
  * limitations under the License.
  */
 
+#include <iostream>
+#include <cstring.h>
+#include <sync_fence.h>
+#include "securec.h"
 #include "test_recorder.h"
 #include <fstream>
-#include "securec.h"
-#include <iostream>
-#include <string.h>
-#include <sync_fence.h>
 
 using namespace std;
 using namespace OHOS;
@@ -90,27 +90,27 @@ TestRecorder::~TestRecorder()
 int32_t TestRecorder::CameraServicesForVideo(VideoRecorderConfig &recorderConfig) const
 {
     int32_t ret = recorder->SetVideoEncoder(recorderConfig.videoSourceId, recorderConfig.videoFormat);
-    if(ret != 0) {
+    if (ret != 0) {
         cout << "SetVideoEncoder fail!!! " << endl;
         return -1;
     }
 
     ret = recorder->SetVideoSize(recorderConfig.videoSourceId,
         recorderConfig.width, recorderConfig.height);
-    if(ret != 0) {
+    if (ret != 0) {
         cout << "SetVideoSize fail!!! " << endl;
         return -1;
     }
 
     ret = recorder->SetVideoFrameRate(recorderConfig.videoSourceId, recorderConfig.frameRate);
-    if(ret != 0) {
+    if (ret != 0) {
         cout << "SetVideoFrameRate fail!!! " << endl;
         return -1;
     }
 
     ret = recorder->SetVideoEncodingBitRate(recorderConfig.videoSourceId,
         recorderConfig.videoEncodingBitRate);
-    if(ret != 0) {
+    if (ret != 0) {
         cout << "SetVideoEncodingBitRate fail!!! " << endl;
         return -1;
     }
@@ -120,25 +120,25 @@ int32_t TestRecorder::CameraServicesForVideo(VideoRecorderConfig &recorderConfig
 int32_t TestRecorder::CameraServicesForAudio(VideoRecorderConfig &recorderConfig) const
 {
     int32_t ret = recorder->SetAudioEncoder(recorderConfig.audioSourceId, recorderConfig.audioFormat);
-    if(ret != 0) {
+    if (ret != 0) {
         cout << "SetAudioEncoder fail!!! " << endl;
         return -1;
     }
     
     ret = recorder->SetAudioSampleRate(recorderConfig.audioSourceId, recorderConfig.sampleRate);
-    if(ret != 0) {
+    if (ret != 0) {
         cout << "SetAudioSampleRate fail!!! " << endl;
         return -1;
     }
 
     ret = recorder->SetAudioChannels(recorderConfig.audioSourceId, recorderConfig.channelCount);
-    if(ret != 0) {
+    if (ret != 0) {
         cout << "SetAudioChannels fail!!! " << endl;
         return -1;
     }
 
     ret = recorder->SetAudioEncodingBitRate(recorderConfig.audioSourceId, recorderConfig.audioEncodingBitRate);
-    if(ret != 0) {
+    if (ret != 0) {
         cout << "SetAudioEncodingBitRate fail!!! " << endl;
         return -1;
     }
@@ -150,7 +150,7 @@ int32_t TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecor
 {
     if (recorderType != PURE_AUDIO) {
         producerSurface = recorder->GetSurface(recorderConfig.videoSourceId);
-        if(producerSurface == nullptr) {
+        if (producerSurface == nullptr) {
             cout << "GetSurface fail!!! " << endl;
             return -1;
         }
@@ -198,27 +198,16 @@ void TestRecorder::HDICreateESBuffer()
 {
     const uint32_t *frameLenArray = HIGH_VIDEO_FRAME_SIZE;
     while (counts < STUB_STREAM_SIZE) {
-        if (isExit_.load()) {
-            cout << "close camera hdi thread" << endl;
-            break;
-        }
+        FUZZTEST_CHECK_DO(isExit_.load(), "close camera hdi thread", break);
         usleep(FRAME_RATE);
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError ret = producerSurface->RequestBuffer(buffer, releaseFence, g_esRequestConfig);
-        if (ret == OHOS::SURFACE_ERROR_NO_BUFFER) {
-            cout << "surface loop full, no buffer now" << endl;
-            continue;
-        }
+        FUZZTEST_CHECK_DO(ret == OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now", continue);
+        FUZZTEST_CHECK_DO(!(ret == SURFACE_ERROR_OK && buffer != nullptr), "RequestBuffer failed", break);
 
-        if (!(ret == SURFACE_ERROR_OK && buffer != nullptr)) {
-            cout << "ret:" << ret << endl;
-            cout << "RequestBuffer failed" << endl;
-            break;
-        }
-
-        sptr<SyncFence> tempFence = new SyncFence(releaseFence);
-        tempFence->Wait(100);
+        sptr<SyncFence> syncFence = new SyncFence(releaseFence);
+        syncFence->Wait(100);
 
         auto addrGetVirAddr = static_cast<uint8_t *>(buffer->GetVirAddr());
         if (addrGetVirAddr == nullptr) {
@@ -261,7 +250,8 @@ void TestRecorder::HDICreateESBuffer()
 }
 
 void TestRecorder::HDICreateYUVBuffer()
-{    while (counts < STUB_STREAM_SIZE) {
+{    
+    while (counts < STUB_STREAM_SIZE) {
         if (!isExit_.load()) {
             cout << "close camera hdi thread" << endl;
         }
@@ -270,17 +260,11 @@ void TestRecorder::HDICreateYUVBuffer()
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError ret = producerSurface->RequestBuffer(buffer, releaseFence, g_yuvRequestConfig);
-        if (ret == OHOS::SURFACE_ERROR_NO_BUFFER) {
-            cout << "surface loop full, no buffer now" << endl;
-            continue;
-        }
-        if (ret != SURFACE_ERROR_OK || buffer == nullptr) {
-            cout << "RequestBuffer failed" << endl;
-            break;
-        }
+        FUZZTEST_CHECK_DO(ret == OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now", continue);
+        FUZZTEST_CHECK_DO(ret != SURFACE_ERROR_OK || buffer == nullptr, "RequestBuffer failed", break);
 
-        sptr<SyncFence> tempFence = new SyncFence(releaseFence);
-        tempFence->Wait(100); // 100ms
+        sptr<SyncFence> syncFence = new SyncFence(releaseFence);
+        syncFence->Wait(100); // 100ms
 
         char *tempBuffer = (char *)(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color, YUV_BUFFER_SIZE);

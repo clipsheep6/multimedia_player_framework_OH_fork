@@ -16,9 +16,9 @@
 #ifndef TEST_RECORDER_H
 #define TEST_RECORDER_H
 
+#include <thread>
 #include "recorder.h"
 #include "aw_common.h"
-#include <thread>
 
 namespace OHOS {
 namespace Media {
@@ -28,6 +28,11 @@ if (cond) {                                                               \
     operation1;                                                           \
     operation2;                                                           \
     return ret;                                                           \
+}
+#define FUZZTEST_CHECK_DO(cond, fmt, operation)                           \
+if (cond) {                                                               \
+    (void)printf("%s\n", fmt);                                            \
+    operation;                                                            \
 }
 class TestRecorder : public NoCopyable {
 public:

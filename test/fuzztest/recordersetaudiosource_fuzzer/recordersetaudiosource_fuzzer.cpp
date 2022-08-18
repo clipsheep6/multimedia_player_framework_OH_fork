@@ -40,7 +40,7 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
 {
     constexpr int32_t AUDIO_SOURCE_TYPES_LIST = 3;
     recorder = RecorderFactory::CreateRecorder();
-    if(recorder == nullptr) {
+    if (recorder == nullptr) {
         cout << "recorder is null" << endl;
         recorder->Release();
         return false;
@@ -63,26 +63,32 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
     
     if (g_videoRecorderConfig.outputFd > 0) {
         int32_t retValue = SetConfig(PURE_AUDIO, g_videoRecorderConfig);
-        FUZZTEST_CHECK(retValue != 0, "expect SetConfig fail!!!", true, recorder->Release(), close(g_videoRecorderConfig.outputFd))
+        FUZZTEST_CHECK(retValue != 0, "expect SetConfig fail!!!", true, 
+            recorder->Release(), close(g_videoRecorderConfig.outputFd))
         
         std::shared_ptr<TestRecorderCallbackTest> cb = std::make_shared<TestRecorderCallbackTest>();
         
         retValue += recorder->SetRecorderCallback(cb);
-        FUZZTEST_CHECK(retValue != 0, "SetRecorderCallback fail!!!", true, recorder->Release(), close(g_videoRecorderConfig.outputFd))
+        FUZZTEST_CHECK(retValue != 0, "SetRecorderCallback fail!!!", true, 
+            recorder->Release(), close(g_videoRecorderConfig.outputFd))
 
         retValue = recorder->Prepare();
-        FUZZTEST_CHECK(retValue != 0, "Prepare fail!!!", true, recorder->Release(), close(g_videoRecorderConfig.outputFd))
+        FUZZTEST_CHECK(retValue != 0, "Prepare fail!!!", true, 
+            recorder->Release(), close(g_videoRecorderConfig.outputFd))
 
         retValue = recorder->Start();
-        FUZZTEST_CHECK(retValue != 0, "Start fail!!!", true, recorder->Release(), close(g_videoRecorderConfig.outputFd))
+        FUZZTEST_CHECK(retValue != 0, "Start fail!!!", true, 
+            recorder->Release(), close(g_videoRecorderConfig.outputFd))
 
         sleep(RECORDER_TIME);
 
         retValue = recorder->Stop(false);
-        FUZZTEST_CHECK(retValue != 0, "Stop fail!!!", true, recorder->Release(), close(g_videoRecorderConfig.outputFd))
+        FUZZTEST_CHECK(retValue != 0, "Stop fail!!!", true, 
+            recorder->Release(), close(g_videoRecorderConfig.outputFd))
 
         retValue = recorder->Release();
-        FUZZTEST_CHECK(retValue != 0, "Release fail!!!", true, cout << "over!" << endl, close(g_videoRecorderConfig.outputFd))
+        FUZZTEST_CHECK(retValue != 0, "Release fail!!!", true, 
+            cout << "over!" << endl, close(g_videoRecorderConfig.outputFd))
     }
     cout << "success!" << endl;
     close(g_videoRecorderConfig.outputFd);
