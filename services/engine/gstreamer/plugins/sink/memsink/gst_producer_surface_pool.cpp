@@ -145,6 +145,7 @@ static void gst_producer_surface_pool_init(GstProducerSurfacePool *pool)
     pool->isDynamicCached = FALSE;
     pool->cachedBuffers = 0;
     pool->scale_type = 0;
+    pool->is_hardware = FALSE;
 }
 
 static void gst_producer_surface_pool_finalize(GObject *obj)
@@ -293,6 +294,17 @@ static gboolean parse_config_usage(GstProducerSurfacePool *spool, GstStructure *
     return TRUE;
 }
 
+static gboolean parse_config_decode_mode(GstProducerSurfacePool *spool, GstStructure *config)
+{
+    g_return_val_if_fail(spool != nullptr, FALSE);
+    g_return_val_if_fail(config != nullptr, FALSE);
+    if (!gst_structure_get_int(config, "hardware-mode", &spool->is_hardware)) {
+        GST_INFO_OBJECT(spool, "soft mode");
+        spool->is_hardware = FALSE;
+    }
+    return TRUE;
+}
+
 static gboolean gst_producer_surface_pool_set_config(GstBufferPool *pool, GstStructure *config)
 {
     GstProducerSurfacePool *spool = GST_PRODUCER_SURFACE_POOL_CAST(pool);
@@ -316,6 +328,7 @@ static gboolean gst_producer_surface_pool_set_config(GstBufferPool *pool, GstStr
     }
     g_return_val_if_fail(parse_config_usage(spool, config), FALSE);
     GST_DEBUG_OBJECT(pool, "get usage %u", spool->usage);
+    g_return_val_if_fail(parse_config_decode_mode(spool, config), FALSE);
 
     GST_BUFFER_POOL_LOCK(spool);
 
@@ -518,7 +531,7 @@ static GstFlowReturn do_alloc_memory_locked(GstProducerSurfacePool *spool,
     GstSurfaceAllocParam allocParam = {
         GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info), spool->format, spool->usage,
         (params != nullptr ? ((params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT) != 0) : FALSE),
-        spool->scale_type
+        spool->scale_type, spool->is_hardware
     };
 
     GST_DEBUG_OBJECT(spool, "do_alloc_memory_locked");

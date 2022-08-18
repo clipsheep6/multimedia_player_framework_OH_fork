@@ -58,6 +58,7 @@ typedef struct _GstSurfaceAllocParam {
     gint usage;
     gboolean dont_wait;
     guint scale_type;
+    gboolean is_hardware;
 } GstSurfaceAllocParam;
 
 GstSurfaceMemory *gst_surface_allocator_alloc(GstSurfaceAllocator *allocator, GstSurfaceAllocParam param);

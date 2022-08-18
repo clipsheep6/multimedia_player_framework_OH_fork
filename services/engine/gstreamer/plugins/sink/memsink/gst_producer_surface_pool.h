@@ -61,6 +61,7 @@ struct _GstProducerSurfacePool {
     gboolean isDynamicCached;
     guint cachedBuffers;
     guint scale_type;
+    gboolean is_hardware;
 };
 
 struct _GstProducerSurfacePoolClass {
