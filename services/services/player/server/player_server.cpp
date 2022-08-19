@@ -235,7 +235,7 @@ int32_t PlayerServer::OnPrepare()
 
 int32_t PlayerServer::HandlePrepare()
 {
-    int32_t ret = playerEngine_->Prepare();
+    int32_t ret = playerEngine_->PrepareAsync();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
     (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
     (void)playerEngine_->SetLooping(config_.looping);
