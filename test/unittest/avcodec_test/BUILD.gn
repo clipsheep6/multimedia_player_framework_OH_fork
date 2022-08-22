@@ -33,6 +33,19 @@ avcodec_unittest_native_include_dirs = [
   "$MEDIA_ROOT_DIR/test/unittest/common/include/",
 ]
 
+avcodec_unittest_capi_include_dirs = [
+  "//graphic/graphic_2d/interfaces/inner_api/surface",
+  "$MEDIA_ROOT_DIR/interfaces/kists/c",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/audiodecoder/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/audioencoder/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/avformat/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/avmemory/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/surface/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/videodecoder/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/videoencoder/",
+  "$MEDIA_ROOT_DIR/test/unittest/common/include/",
+]
+
 avcodec_unittest_cflags = [
   "-std=c++17",
   "-fno-rtti",
@@ -151,6 +164,37 @@ ohos_unittest("avcodec_list_native_unit_test") {
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+  ]
+
+  resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
+}
+
+##################################################################################################################
+ohos_unittest("vcodec_capi_unit_test") {
+  module_out_path = module_output_path
+  include_dirs = avcodec_unittest_capi_include_dirs
+  include_dirs += [
+    "./",
+    "./vcodec_test",
+  ]
+
+  cflags = avcodec_unittest_cflags
+
+  sources = [
+    "./capi/avcodec_mock_factory.cpp",
+    "./capi/avformat/avformat_native_mock.cpp",
+    "./capi/avmemory/avmemory_native_mock.cpp",
+    "./capi/surface/surface_native_mock.cpp",
+    "./capi/videodecoder/videodec_native_mock.cpp",
+    "./capi/videoencoder/videoenc_native_mock.cpp",
+    "./vcodec_test/vcodec_unit_test.cpp",
+    "./vcodec_test/vdec_mock.cpp",
+    "./vcodec_test/venc_mock.cpp",
+  ]
+
+  deps = [
+    // 图形ndk库
+    // 编解码ndk库
   ]
 
   resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
