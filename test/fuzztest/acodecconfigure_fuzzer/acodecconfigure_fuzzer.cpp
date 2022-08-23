@@ -42,42 +42,54 @@ bool ACodecConfigureFuzzer::FuzzAudioConfigure(uint8_t* data, size_t size)
         if (adecCallback_ == nullptr) {
             cout << "create adecCallback_ fail" << endl;
             return false;
+        } else {
+            cout << "create adecCallback_ success" << endl;
         }
         aencCallback_ = std::make_shared<AEncCallbackTest>(acodecSignal);
         if (aencCallback_ == nullptr) {
             cout << "create aencCallback_ fail" << endl;
             return false;
+        } else {
+            cout << "create aencCallback_ success" << endl;            
         }
         audioCodec_ = std::make_shared<ACodecMock>(acodecSignal);
         if (audioCodec_ == nullptr) {
             cout << "create audioCodec_ fail" << endl;
             return false;
+        } else {
+            cout << "create audioCodec_ success" << endl;
         }
-        int32_t ret = audioCodec_->CreateAudioDecMockByMine("audio/mp4a-latm");
+        cout << "enter CreateAudioEncMockByMine" << endl;
+        bool retcreate = audioCodec_->CreateAudioEncMockByMine("audio/mp4a-latm");
+        if (!retcreate) {
+            cout << "enc CreateAudioEncMockByMine fail" << endl;
+        } else {
+            cout << "enc CreateAudioEncMockByMine success" << endl;  
+        }
+        cout << "enter SetCallbackEnc" << endl;
+        int32_t ret = audioCodec_->SetCallbackEnc(aencCallback_);
         if (ret != 0) {
+            cout << "enc SetCallbackEnc fail" << endl;
+        } else {
+            cout << "enc SetCallbackEnc success" << endl;
+        }
+        cout << "enter CreateAudioDecMockByMine" << endl;
+        retcreate = audioCodec_->CreateAudioDecMockByMine("audio/mp4a-latm");
+        if (!retcreate) {
             cout << "DEC CreateAudioDecMockByMine fail" << endl;
-            return false;
-        }  
+        } else {
+            cout << "DEC CreateAudioDecMockByMine success" << endl;
+        }
         ret = audioCodec_->SetCallbackDec(adecCallback_);
         if (ret != 0) {
             cout << "DEC SetCallbackDec fail" << endl;
-            return false;
-        }
-        ret = audioCodec_->CreateAudioEncMockByMine("audio/mp4a-latm");
-        if (ret != 0) {
-            cout << "DEC CreateAudioEncMockByMine fail" << endl;
-            return false;
-        }
-        ret = audioCodec_->SetCallbackEnc(aencCallback_);
-        if (ret != 0) {
-            cout << "DEC SetCallbackEnc fail" << endl;
-            return false;
+        } else {
+            cout << "DEC SetCallbackDec success" << endl;     
         }
 
         defaultFormat_ = AVCodecMockFactory::CreateFormat();
         if (defaultFormat_ == nullptr) {
             cout << "create defaultFormat_ fail" << endl;
-            return false;
         }
         int32_t data_ = *reinterpret_cast<int32_t *>(data);
         cout << "configure data " << data_ << endl;

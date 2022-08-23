@@ -53,18 +53,18 @@ bool ACodecFileFuzzer::FuzzAudioFile(uint8_t* data, size_t size)
             cout << "create audioCodec_ fail" << endl;
             return false;
         }
-        int32_t ret = audioCodec_->CreateAudioDecMockByMine("audio/mp4a-latm");
-        if (ret != 0) {
+        bool retBool = audioCodec_->CreateAudioDecMockByMine("audio/mp4a-latm");
+        if (!retBool) {
             cout << "DEC CreateAudioDecMockByMine fail" << endl;
             return false;
         }  
-        ret = audioCodec_->SetCallbackDec(adecCallback_);
+        int32_t ret = audioCodec_->SetCallbackDec(adecCallback_);
         if (ret != 0) {
             cout << "DEC SetCallbackDec fail" << endl;
             return false;
         }
-        ret = audioCodec_->CreateAudioEncMockByMine("audio/mp4a-latm");
-        if (ret != 0) {
+        retBool = audioCodec_->CreateAudioEncMockByMine("audio/mp4a-latm");
+        if (!retBool) {
             cout << "DEC CreateAudioEncMockByMine fail" << endl;
             return false;
         }
@@ -79,10 +79,9 @@ bool ACodecFileFuzzer::FuzzAudioFile(uint8_t* data, size_t size)
             cout << "create defaultFormat_ fail" << endl;
             return false;
         }
-        int32_t data_ = *reinterpret_cast<int32_t *>(data);
-        cout << "configure data " << data_ << endl;
+
         (void)defaultFormat_->PutIntValue("channel_count", 1); // 2 common channel count
-        (void)defaultFormat_->PutIntValue("sample_rate", data_); // 44100 common sample rate
+        (void)defaultFormat_->PutIntValue("sample_rate", 8000); // 44100 common sample rate
         (void)defaultFormat_->PutIntValue("audio_sample_format", 1); // 1 AudioStandard::SAMPLE_S16LE
 
         string prefix = "/data/test/media/";
