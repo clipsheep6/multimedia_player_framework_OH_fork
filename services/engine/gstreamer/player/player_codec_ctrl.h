@@ -18,6 +18,7 @@
 
 #include <string>
 #include <list>
+#include <mutex>
 #include <gst/gst.h>
 #include <gst/player/player.h>
 
@@ -39,6 +40,7 @@ private:
     bool isHardwareDec_ = false;
     GstElement *decoder_ = nullptr;
     std::list<bool> codecTypeList_;
+    std::mutex mutex_;
 };
 } // Media
 } // OHOS
