@@ -115,6 +115,7 @@ public:
     void InputLoopFunc();
     void OutputLoopFunc();
     void SetOutPath(const std::string &path);
+    void SetReadPath(const std::string &path);
 
 private:
     void clearIntQueue (std::queue<uint32_t>& q);
@@ -147,6 +148,7 @@ private:
     bool isEncOutputEOS_ = false;
     int64_t timeStampEnc_ = 0;
     std::string outPath_ = "/data/test/media/out.es";
+    std::string inPath_ = "/data/test/media/AAC_48000_32_1.aac";
 };
 }
 }

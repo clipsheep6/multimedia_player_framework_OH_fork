@@ -193,7 +193,8 @@ int32_t ACodecMock::StartDec()
     if (testFile_ == nullptr) {
         testFile_ = std::make_unique<std::ifstream>();
         UNITTEST_CHECK_AND_RETURN_RET_LOG(testFile_ != nullptr, MSERR_OK, "Fatal: No memory");
-        testFile_->open("/data/test/media/AAC_48000_32_1.aac", std::ios::in | std::ios::binary);
+        const char *readpath = inPath_.c_str();
+        testFile_->open(readpath, std::ios::in | std::ios::binary);
     }
     if (inputLoopDec_ == nullptr) {
         inputLoopDec_ = make_unique<thread>(&ACodecMock::InputFuncDec, this);
@@ -337,6 +338,12 @@ void ACodecMock::SetOutPath(const std::string &path)
 {
     outPath_ = path;
 }
+
+void ACodecMock::SetReadPath(const std::string &path)
+{
+    inPath_ = path;
+}
+
 
 void ACodecMock::PopOutQueueDec()
 {
