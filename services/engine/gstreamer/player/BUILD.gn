@@ -72,6 +72,7 @@ config("media_engine_gst_player_config") {
 
 ohos_static_library("media_engine_gst_player") {
   sources = [
+    "player_codec_ctrl.cpp",
     "player_engine_gst_impl.cpp",
     "player_sinkprovider.cpp",
     "player_track_parse.cpp",
@@ -87,7 +88,6 @@ ohos_static_library("media_engine_gst_player") {
   deps = [
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
-    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiomanager:audio_client",
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
@@ -100,6 +100,7 @@ ohos_static_library("media_engine_gst_player") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "multimedia_audio_framework:audio_client",
   ]
 
   subsystem_name = "multimedia"
