@@ -96,7 +96,6 @@ bool TestRecorder::SetVideoSource(RecorderTestParam::VideoRecorderConfig &record
         return false;
     }
     return true;
-
 }
 
 bool TestRecorder::SetAudioSource(RecorderTestParam::VideoRecorderConfig &recorderConfig)
@@ -108,7 +107,6 @@ bool TestRecorder::SetAudioSource(RecorderTestParam::VideoRecorderConfig &record
         return false;
     }
     return true;
-
 }
 
 bool TestRecorder::SetOutputFormat(RecorderTestParam::VideoRecorderConfig &recorderConfig)
@@ -120,7 +118,6 @@ bool TestRecorder::SetOutputFormat(RecorderTestParam::VideoRecorderConfig &recor
         return false;
     }
     return true;
-
 }
 
 bool TestRecorder::SetAudioEncoder(RecorderTestParam::VideoRecorderConfig &recorderConfig)
@@ -132,7 +129,6 @@ bool TestRecorder::SetAudioEncoder(RecorderTestParam::VideoRecorderConfig &recor
         return false;
     }
     return true;
-
 }
 
 bool TestRecorder::SetAudioSampleRate(RecorderTestParam::VideoRecorderConfig &recorderConfig)
@@ -144,7 +140,6 @@ bool TestRecorder::SetAudioSampleRate(RecorderTestParam::VideoRecorderConfig &re
         return false;
     }
     return true;
-
 }
 
 bool TestRecorder::SetAudioChannels(RecorderTestParam::VideoRecorderConfig &recorderConfig)
@@ -441,7 +436,6 @@ void TestRecorder::HDICreateESBuffer()
 
         auto addrGetVirAddr = static_cast<uint8_t *>(buffer->GetVirAddr());
         if (addrGetVirAddr == nullptr) {
-            cout << "GetVirAddr failed" << endl;
             (void)producerSurface->CancelBuffer(buffer);
             break;
         }
@@ -479,7 +473,11 @@ void TestRecorder::HDICreateESBuffer()
 }
 
 void TestRecorder::HDICreateYUVBuffer()
-{    
+{
+    constexpr int32_t COUNT_ABSTRACT = 3;
+    constexpr int32_t COUNT_SPLIT = 30;
+    constexpr int32_t COUNT_COLOR = 255;
+    constexpr int32_t TIME_WAIT = 100;
     while (counts < STUB_STREAM_SIZE) {
         if (!isExit_.load()) {
             break;
@@ -497,21 +495,19 @@ void TestRecorder::HDICreateYUVBuffer()
         }
 
         sptr<SyncFence> syncFence = new SyncFence(releaseFence);
-        syncFence->Wait(100); // 100ms
+        syncFence->Wait(TIME_WAIT); // 100ms
 
         char *tempBuffer = (char *)(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color, YUV_BUFFER_SIZE);
-
-        // (void)srand((int)time(0));
-        srand((int)time(0));
+        (void)srand((int)time(0));
         for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += (YUV_BUFFER_SIZE - 1)) {
             if (i >= YUV_BUFFER_SIZE - 1) {
                 break;
             }
-            tempBuffer[i] = (unsigned char)(rand() % 255);
+            tempBuffer[i] = (unsigned char)(rand() % COUNT_COLOR);
         }
 
-        color = color - 3;
+        color = color - COUNT_ABSTRACT;
 
         if (color <= 0) {
             color = 0xFF;
@@ -522,7 +518,7 @@ void TestRecorder::HDICreateYUVBuffer()
         (void)buffer->GetExtraData()->ExtraSet("timeStamp", pts);
         (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
         counts++;
-        (counts % 30) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0);
+        (counts % COUNT_SPLIT) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0);
         (void)producerSurface->FlushBuffer(buffer, -1, g_yuvFlushConfig);
     }
 }

@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Media {
-#define RETURN_IF(cond, ret)        \
+#define RETURN_IF(cond, ret, const char *fmt, ...)        \
 do {                                \
     if (!(cond)) {                  \
         return ret;                 \
