@@ -16,6 +16,7 @@
 #include <iostream>
 #include <string.h>
 #include <sync_fence.h>
+#include "aw_common.h"
 #include <fstream>
 #include "securec.h"
 #include "test_recorder.h"
@@ -408,7 +409,7 @@ int64_t TestRecorder::GetPts()
 {
     struct timespec timestamp = {0, 0};
     clock_gettime(CLOCK_MONOTONIC, &timestamp);
-    int64_t time = (int64_t)timestamp.tv_sec * SEC_TO_NS + (uint64_t)timestamp.tv_nsec;
+    int64_t time = reinterpret_cast<int64_t>(timestamp.tv_sec) * SEC_TO_NS + reinterpret_cast<uint64_t>(timestamp.tv_nsec);
     return time;
 }
 
@@ -499,12 +500,12 @@ void TestRecorder::HDICreateYUVBuffer()
 
         char *tempBuffer = (char *)(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color, YUV_BUFFER_SIZE);
-        (void)srand((int)time(0));
+        (void)srand(reinterpret_cast<int>(time(0)));
         for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += (YUV_BUFFER_SIZE - 1)) {
             if (i >= YUV_BUFFER_SIZE - 1) {
                 break;
             }
-            tempBuffer[i] = (unsigned char)(rand() % COUNT_COLOR);
+            tempBuffer[i] = (unsigned char)(ProduceRandomNumberCrypt() % COUNT_COLOR);
         }
 
         color = color - COUNT_ABSTRACT;
