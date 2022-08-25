@@ -22,8 +22,8 @@
 
 namespace OHOS {
 namespace Media {
-#define FUZZTEST_CHECK(cond, ret)        \
-if (!cond) {                             \
+#define RETURN_IF(cond, ret)        \
+if (!(cond)) {                             \
     return ret;                          \
 }
 class TestRecorder : public NoCopyable {

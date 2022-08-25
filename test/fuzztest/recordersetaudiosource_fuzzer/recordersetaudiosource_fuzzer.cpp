@@ -39,7 +39,7 @@ RecorderSetAudioSourceFuzzer::~RecorderSetAudioSourceFuzzer()
 bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, size_t size)
 {
     constexpr int32_t AUDIO_SOURCE_TYPES_LIST = 3;
-    FUZZTEST_CHECK(TestRecorder::CreateRecorder(), false);
+    RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig g_videoRecorderConfig;
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_audio_es.m4a", O_RDWR);
@@ -57,17 +57,17 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
     g_videoRecorderConfig.audioSourceId = sourceId;
     
     if (g_videoRecorderConfig.outputFd > 0) {
-        FUZZTEST_CHECK(TestRecorder::SetAudioSource(g_videoRecorderConfig), true);
-        FUZZTEST_CHECK(TestRecorder::SetOutputFormat(g_videoRecorderConfig), true);
-        FUZZTEST_CHECK(TestRecorder::CameraServicesForAudio(g_videoRecorderConfig), true);
-        FUZZTEST_CHECK(TestRecorder::SetMaxDuration(g_videoRecorderConfig), true);
-        FUZZTEST_CHECK(TestRecorder::SetOutputFile(g_videoRecorderConfig), true);
-        FUZZTEST_CHECK(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), true);
-        FUZZTEST_CHECK(TestRecorder::Prepare(g_videoRecorderConfig), true);
-        FUZZTEST_CHECK(TestRecorder::Start(g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::SetAudioSource(g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::CameraServicesForAudio(g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::SetMaxDuration(g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::SetOutputFile(g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
         sleep(RECORDER_TIME);
-        FUZZTEST_CHECK(TestRecorder::Stop(false, g_videoRecorderConfig), true);
-        FUZZTEST_CHECK(TestRecorder::Release(g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::Release(g_videoRecorderConfig), true);
     }
     close(g_videoRecorderConfig.outputFd);
     return true;
