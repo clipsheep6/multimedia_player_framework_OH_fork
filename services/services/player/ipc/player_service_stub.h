@@ -61,6 +61,7 @@ public:
     int32_t SetPlayerCallback() override;
     int32_t DumpInfo(int32_t fd);
     int32_t SelectBitRate(uint32_t bitRate) override;
+    void SetFreezerState(bool isCallback);
 
 private:
     PlayerServiceStub();

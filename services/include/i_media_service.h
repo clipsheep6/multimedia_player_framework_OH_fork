@@ -19,6 +19,7 @@
 #include <memory>
 #include "i_recorder_service.h"
 #include "i_player_service.h"
+#include "i_freezer_service.h"
 #include "i_avmetadatahelper_service.h"
 #include "i_avcodec_service.h"
 #include "i_avcodeclist_service.h"

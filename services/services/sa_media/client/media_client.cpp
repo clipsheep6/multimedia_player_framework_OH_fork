@@ -20,6 +20,7 @@
 #include "ipc_skeleton.h"
 #include "i_standard_recorder_service.h"
 #include "i_standard_player_service.h"
+#include "i_standard_freezer_service.h"
 #include "i_standard_avmetadatahelper_service.h"
 #include "i_standard_avmuxer_service.h"
 #include "media_log.h"

@@ -315,6 +315,12 @@ int32_t PlayerServiceStub::SetPlayerCallback()
     return playerServer_->SetPlayerCallback(playerCallback_);
 }
 
+void PlayerServiceStub::SetFreezerState(bool isCallback)
+{
+    MEDIA_LOGD("SetFreezerState isCallback is %{public}d", isCallback);
+    playerServer_->SetFreezerState(isCallback);
+}
+
 int32_t PlayerServiceStub::DumpInfo(int32_t fd)
 {
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");

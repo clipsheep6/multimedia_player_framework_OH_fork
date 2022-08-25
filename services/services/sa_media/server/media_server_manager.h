@@ -47,6 +47,7 @@ public:
         AVCODEC,
         AVMUXER,
         RECORDERPROFILES,
+        FREEZER,
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -54,6 +55,7 @@ public:
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args);
     void DestroyDumper(StubType type, sptr<IRemoteObject> object);
     void DestroyDumperForPid(pid_t pid);
+    sptr<PlayerServiceStub> processFreezer(int32_t pid);
 
 private:
     MediaServerManager();
