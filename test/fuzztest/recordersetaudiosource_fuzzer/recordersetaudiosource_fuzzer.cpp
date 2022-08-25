@@ -1,0 +1,90 @@
+/*
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "recordersetaudiosource_fuzzer.h"
+#include <iostream>
+#include <cmath>
+#include "aw_common.h"
+#include "string_ex.h"
+#include "media_errors.h"
+#include "directory_ex.h"
+#include "recorder.h"
+
+using namespace std;
+using namespace OHOS;
+using namespace Media;
+using namespace PlayerTestParam;
+using namespace RecorderTestParam;
+
+namespace OHOS {
+namespace Media {
+RecorderSetAudioSourceFuzzer::RecorderSetAudioSourceFuzzer()
+{
+}
+RecorderSetAudioSourceFuzzer::~RecorderSetAudioSourceFuzzer()
+{
+}
+bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, size_t size)
+{
+    constexpr int32_t AUDIO_SOURCE_TYPES_LIST = 3;
+    FUZZTEST_CHECK(TestRecorder::CreateRecorder(), false);
+
+    static VideoRecorderConfig g_videoRecorderConfig;
+    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_audio_es.m4a", O_RDWR);
+
+    AudioSourceType AudioSourceType[AUDIO_SOURCE_TYPES_LIST] {
+        AUDIO_SOURCE_INVALID,
+        AUDIO_SOURCE_DEFAULT,
+        AUDIO_MIC,
+    };
+
+    int32_t sourcesubscript = abs((ProduceRandomNumberCrypt()) % (AUDIO_SOURCE_TYPES_LIST));
+    int32_t sourceId = *reinterpret_cast<int32_t *>(data);
+
+    g_videoRecorderConfig.aSource = AudioSourceType[sourcesubscript];
+    g_videoRecorderConfig.audioSourceId = sourceId;
+    
+    if (g_videoRecorderConfig.outputFd > 0) {
+        FUZZTEST_CHECK(TestRecorder::SetAudioSource(g_videoRecorderConfig), true);
+        FUZZTEST_CHECK(TestRecorder::SetOutputFormat(g_videoRecorderConfig), true);
+        FUZZTEST_CHECK(TestRecorder::CameraServicesForAudio(g_videoRecorderConfig), true);
+        FUZZTEST_CHECK(TestRecorder::SetMaxDuration(g_videoRecorderConfig), true);
+        FUZZTEST_CHECK(TestRecorder::SetOutputFile(g_videoRecorderConfig), true);
+        FUZZTEST_CHECK(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), true);
+        FUZZTEST_CHECK(TestRecorder::Prepare(g_videoRecorderConfig), true);
+        FUZZTEST_CHECK(TestRecorder::Start(g_videoRecorderConfig), true);
+        sleep(RECORDER_TIME);
+        FUZZTEST_CHECK(TestRecorder::Stop(false, g_videoRecorderConfig), true);
+        FUZZTEST_CHECK(TestRecorder::Release(g_videoRecorderConfig), true);
+    }
+    close(g_videoRecorderConfig.outputFd);
+    return true;
+}
+}
+bool FuzzTestRecorderSetAudioSource(uint8_t *data, size_t size)
+{
+    RecorderSetAudioSourceFuzzer testRecorder;
+    return testRecorder.FuzzRecorderSetAudioSource(data, size);
+}
+}
+
+/* Fuzzer entry point */
+extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
+{
+    /* Run your code on data */
+    OHOS::FuzzTestRecorderSetAudioSource(data, size);
+    return 0;
+}
+
