@@ -23,9 +23,12 @@
 namespace OHOS {
 namespace Media {
 #define RETURN_IF(cond, ret)        \
-if (!(cond)) {                             \
-    return ret;                          \
-}
+do {                                \
+    if (!(cond)) {                  \
+        return ret;                 \
+    }                               \
+} while (0)
+
 class TestRecorder : public NoCopyable {
 public:
     TestRecorder();
