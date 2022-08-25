@@ -15,6 +15,7 @@
 import("//build/config/features.gni")
 import("//build/test.gni")
 module_output_path = "player_framework/recorder"
+
 ##############################fuzztest##########################################
 ohos_fuzztest("RecorderSetAudioChannelsFuzzTest") {
   module_out_path = module_output_path
