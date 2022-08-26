@@ -74,32 +74,31 @@ uint32_t GetUintVariable(const std::string name)
     constexpr uint32_t RECORDER_TIME = 5;
     constexpr uint32_t YUV_BUFFER_SIZE = 1474560;
     constexpr uint32_t SEC_TO_NS = 1000000000;
-    switch (name)
-    {
-    case "STUB_STREAM_SIZE":
-        return STUB_STREAM_SIZE;
-    case "FRAME_RATE":
-        return FRAME_RATE;
-    case "CODEC_BUFFER_WIDTH":
-        return CODEC_BUFFER_WIDTH;
-    case "CODEC_BUFFER_HEIGHT":
-        return CODEC_BUFFER_HEIGHT;
-    case "YUV_BUFFER_WIDTH":
-        return YUV_BUFFER_WIDTH;
-    case "YUV_BUFFER_HEIGHT":
-        return YUV_BUFFER_HEIGHT;
-    case "STRIDE_ALIGN":
-        return STRIDE_ALIGN;
-    case "FRAME_DURATION":
-        return FRAME_DURATION;
-    case "RECORDER_TIME":
-        return RECORDER_TIME;
-    case "YUV_BUFFER_SIZE":
-        return YUV_BUFFER_SIZE;
-    case "SEC_TO_NS":
-        return SEC_TO_NS;
-    default:
-        break;
+    switch (name) {
+        case "STUB_STREAM_SIZE":
+            return STUB_STREAM_SIZE;
+        case "FRAME_RATE":
+            return FRAME_RATE;
+        case "CODEC_BUFFER_WIDTH":
+            return CODEC_BUFFER_WIDTH;
+        case "CODEC_BUFFER_HEIGHT":
+            return CODEC_BUFFER_HEIGHT;
+        case "YUV_BUFFER_WIDTH":
+            return YUV_BUFFER_WIDTH;
+        case "YUV_BUFFER_HEIGHT":
+            return YUV_BUFFER_HEIGHT;
+        case "STRIDE_ALIGN":
+            return STRIDE_ALIGN;
+        case "FRAME_DURATION":
+            return FRAME_DURATION;
+        case "RECORDER_TIME":
+            return RECORDER_TIME;
+        case "YUV_BUFFER_SIZE":
+            return YUV_BUFFER_SIZE;
+        case "SEC_TO_NS":
+            return SEC_TO_NS;
+        default:
+            break;
     }
 }
 
@@ -108,16 +107,15 @@ const std::string GetRecordVariable(const std::string name)
     const std::string PURE_VIDEO = "1";
     const std::string PURE_AUDIO = "2";
     const std::string AUDIO_VIDEO = "3";
-    switch (name)
-    {
-    case "PURE_VIDEO":
-       return PURE_VIDEO;
-    case "PURE_AUDIO":
-       return PURE_AUDIO;
-    case "AUDIO_VIDEO":
-       return AUDIO_VIDEO;
-    default:
-        break;
+    switch (name) {
+        case "PURE_VIDEO":
+        return PURE_VIDEO;
+        case "PURE_AUDIO":
+        return PURE_AUDIO;
+        case "AUDIO_VIDEO":
+        return AUDIO_VIDEO;
+        default:
+            break;
     }
 }
 

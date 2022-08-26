@@ -57,7 +57,7 @@ static OHOS::BufferFlushConfig g_yuvFlushConfig = {
 
 // config for surface buffer request from the queue
 static OHOS::BufferRequestConfig g_yuvRequestConfig = {
-    .width = GetUintVariable("YUV_BUFFER_WIDTH"),,
+    .width = GetUintVariable("YUV_BUFFER_WIDTH"),
     .height = GetUintVariable("YUV_BUFFER_HEIGHT"),
     .strideAlignment = GetUintVariable("STRIDE_ALIGN"),
     .format = PIXEL_FMT_YCRCB_420_SP,
