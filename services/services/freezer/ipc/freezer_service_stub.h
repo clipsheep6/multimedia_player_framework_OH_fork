@@ -22,16 +22,15 @@
 
 namespace OHOS {
 namespace Media {
-class FreezerServiceStub : public IRemoteStub<IStandardFreezerService>, public NoCopyable {
+class FreezerServiceStub : public IRemoteStub<IStandardFreezerService> {
 public:
     DISALLOW_COPY_AND_MOVE(FreezerServiceStub);
     FreezerServiceStub();
     ~FreezerServiceStub() override = default;
-
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 private:
-    int32_t ProxyApp(MessageParcel &data, MessageParcel &reply);
-    int32_t ResetAll(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleProxyApp(MessageParcel &data, MessageParcel &reply);
+    int32_t HandleResetAll(MessageParcel &data, MessageParcel &reply);
     using FreezerStubFunc = int32_t(FreezerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, FreezerStubFunc> freezerFuncs_;
 };

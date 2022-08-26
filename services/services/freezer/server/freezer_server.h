@@ -19,15 +19,17 @@
 #include <unordered_set>
 #include <mutex>
 
+#include "singleton.h"
 #include "freezer_service_stub.h"
 #include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
 
-class FreezerServer : public FreezerServiceStub, public NoCopyable {
-public:
+class FreezerServer : public FreezerServiceStub {
     DECLARE_DELAYED_SINGLETON(FreezerServer);
+public:
+    
     int32_t ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze) override;
     int32_t ResetAll() override;
 private:

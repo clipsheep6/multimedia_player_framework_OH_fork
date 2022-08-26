@@ -14,9 +14,9 @@
  */
 
 #include "freezer_service_stub.h"
+
 #include <unistd.h>
-#include "media_data_source_proxy.h"
-#include "media_server_manager.h"
+
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
@@ -30,9 +30,8 @@ namespace OHOS {
 namespace Media {
 FreezerServiceStub::FreezerServiceStub()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    freezerFuncs_[PROXY_APP] = &FreezerServiceStub::ProxyApp;
-    freezerFuncs_[RESET_ALL] = &FreezerServiceStub::ResetAll;
+    freezerFuncs_[PROXY_APP] = &FreezerServiceStub::HandleProxyApp;
+    freezerFuncs_[RESET_ALL] = &FreezerServiceStub::HandleResetAll;
 }
 
 int FreezerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
@@ -61,7 +60,7 @@ int FreezerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
-int32_t FreezerServiceStub::ProxyApp(MessageParcel &data, MessageParcel &reply)
+int32_t FreezerServiceStub::HandleProxyApp(MessageParcel &data, MessageParcel &reply)
 {
     std::unordered_set<int32_t> pidSet;
     int32_t size = data.ReadInt32();
@@ -72,7 +71,7 @@ int32_t FreezerServiceStub::ProxyApp(MessageParcel &data, MessageParcel &reply)
     reply.WriteInt32(ProxyApp(pidSet, isFreeze));
     return MSERR_OK;
 }
-int32_t FreezerServiceStub::ResetAll(MessageParcel &data, MessageParcel &reply)
+int32_t FreezerServiceStub::HandleResetAll(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
     reply.WriteInt32(ResetAll());
