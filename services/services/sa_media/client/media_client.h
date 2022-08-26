@@ -22,6 +22,7 @@
 #include "media_listener_stub.h"
 #include "recorder_client.h"
 #include "player_client.h"
+#include "freezer_client.h"
 #include "avcodeclist_client.h"
 #include "recorder_profiles_client.h"
 #include "avmetadatahelper_client.h"
