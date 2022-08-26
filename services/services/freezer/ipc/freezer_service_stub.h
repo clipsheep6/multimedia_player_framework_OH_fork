@@ -28,6 +28,7 @@ public:
     FreezerServiceStub();
     ~FreezerServiceStub() override = default;
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    
 private:
     int32_t HandleProxyApp(MessageParcel &data, MessageParcel &reply);
     int32_t HandleResetAll(MessageParcel &data, MessageParcel &reply);
