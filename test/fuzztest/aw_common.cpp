@@ -109,11 +109,11 @@ const std::string GetRecordVariable(const std::string name)
     const std::string AUDIO_VIDEO = "3";
     switch (name) {
         case "PURE_VIDEO":
-        return PURE_VIDEO;
+            return PURE_VIDEO;
         case "PURE_AUDIO":
-        return PURE_AUDIO;
+            return PURE_AUDIO;
         case "AUDIO_VIDEO":
-        return AUDIO_VIDEO;
+            return AUDIO_VIDEO;
         default:
             break;
     }
