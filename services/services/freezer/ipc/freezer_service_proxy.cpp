@@ -47,6 +47,7 @@ int32_t FreezerServiceProxy::ProxyApp(const std::unordered_set<int32_t>& pidSet,
         data.WriteInt32(pid);
     }
     data.WriteBool(isFreeze);
+    MEDIA_LOGE("errorCode value is %{public}d", MSERR_SERVICE_DIED);
     int error = Remote()->SendRequest(PROXY_APP, data, reply, option);
     if (error != MSERR_OK) {
         MEDIA_LOGE("ProxyApp failed, error: %{public}d", error);
