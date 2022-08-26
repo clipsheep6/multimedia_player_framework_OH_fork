@@ -44,6 +44,7 @@ public:
     std::shared_ptr<IAVCodecListService> CreateAVCodecListService() override;
     std::shared_ptr<IRecorderProfilesService> CreateRecorderProfilesService() override;
     std::shared_ptr<IAVMuxerService> CreateAVMuxerService() override;
+    std::shared_ptr<IFreezerService> CreateFreezerService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
     int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) override;
     int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;

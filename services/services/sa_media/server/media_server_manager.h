@@ -66,6 +66,7 @@ private:
     sptr<IRemoteObject> CreateAVCodecStubObject();
     sptr<IRemoteObject> CreateRecorderProfilesStubObject();
     sptr<IRemoteObject> CreateAVMuxerStubObject();
+    sptr<IRemoteObject> CreateFreezerStubObject();
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;

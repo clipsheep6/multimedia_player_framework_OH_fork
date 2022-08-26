@@ -24,10 +24,14 @@
 namespace OHOS {
 namespace Media {
 class FreezerImpl : public Freezer, public NoCopyable {
-    DECLARE_DELAYED_SINGLETON(FreezerImpl)
 public:
+    FreezerImpl();
+    ~FreezerImpl();
     int32_t ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze) override;
     int32_t ResetAll() override;
+    int32_t Init();
+private:
+    std::shared_ptr<IFreezerService> freezerService_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

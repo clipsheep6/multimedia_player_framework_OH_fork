@@ -109,6 +109,8 @@ public:
      */
     virtual std::shared_ptr<IAVMuxerService> CreateAVMuxerService() = 0;
 
+    virtual std::shared_ptr<IFreezerService> CreateFreezerService() = 0;
+
     /**
      * @brief Destroy a recorder service.
      *

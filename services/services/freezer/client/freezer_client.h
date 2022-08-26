@@ -25,13 +25,15 @@
 namespace OHOS {
 namespace Media {
 class FreezerClient : public IFreezerService {
-    DECLARE_DELAYED_SINGLETON(FreezerClient)
 public:
+    static std::shared_ptr<FreezerClient> Create(const sptr<IStandardFreezerService> &ipcProxy);
+    explicit FreezerClient(const sptr<IStandardFreezerService> &ipcProxy) : freezerProxy_(ipcProxy) {}
+    ~FreezerClient() = default;
+
     int32_t ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze) override;
     int32_t ResetAll() override;
 
 private:
-    bool GetFreezerProxy();
     sptr<IStandardFreezerService> freezerProxy_ = nullptr;
     std::mutex mutex_;
 };

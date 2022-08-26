@@ -102,6 +102,25 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
     return player;
 }
 
+std::shared_ptr<IFreezerService> MediaClient::CreateFreezerService()
+{
+    if (!IsAlived()) {
+        MEDIA_LOGE("media service does not exist.");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_FREEZER, listenerStub_->AsObject());
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "freezer proxy object is nullptr.");
+
+    sptr<IStandardFreezerService> freezerProxy = iface_cast<IStandardFreezerService>(object);
+    CHECK_AND_RETURN_RET_LOG(freezerProxy != nullptr, nullptr, "freezer proxy is nullptr.");
+
+    std::shared_ptr<FreezerClient> freezer = FreezerClient::Create(freezerProxy);
+    CHECK_AND_RETURN_RET_LOG(freezer != nullptr, nullptr, "failed to create freezer client.");
+    return freezer;
+}
+
 std::shared_ptr<IAVCodecListService> MediaClient::CreateAVCodecListService()
 {
     if (!IsAlived()) {

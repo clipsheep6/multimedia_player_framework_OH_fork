@@ -17,6 +17,7 @@
 #include <unordered_set>
 #include "recorder_service_stub.h"
 #include "player_service_stub.h"
+#include "freezer_server.h"
 #include "avmetadatahelper_service_stub.h"
 #include "avcodeclist_service_stub.h"
 #include "recorder_profiles_service_stub.h"
@@ -139,6 +140,9 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         }
         case AVMUXER: {
             return CreateAVMuxerStubObject();
+        }
+        case FREEZER: {
+            return CreateFreezerStubObject();
         }
         default: {
             MEDIA_LOGE("default case, media server manager failed");
@@ -342,6 +346,17 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMuxerStubObject()
         avmuxerStubMap_[object] = pid;
         MEDIA_LOGD("The number of avmuxer services(%{public}zu).", avmuxerStubMap_.size());
     }
+    return object;
+}
+
+sptr<IRemoteObject> MediaServerManager::CreateFreezerStubObject()
+{
+    sptr<FreezerServiceStub> freezerStub = DelayedSpSingleton<FreezerServer>::GetInstance();
+    if (freezerStub == nullptr) {
+        MEDIA_LOGE("failed to create AVMuxerServiceStub");
+        return nullptr;
+    }
+    sptr<IRemoteObject> object = freezerStub->AsObject();
     return object;
 }
 

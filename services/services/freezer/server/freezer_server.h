@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#ifndef PLAYER_SERVICE_SERVER_H
-#define PLAYER_SERVICE_SERVER_H
+#ifndef FREEZER_SERVICE_SERVER_H
+#define FREEZER_SERVICE_SERVER_H
 
 #include <unordered_set>
 #include <mutex>
 
-#include "singleton.h"
+#include "media_sp_singleton.h"
 #include "freezer_service_stub.h"
 #include "nocopyable.h"
 
@@ -27,7 +27,7 @@ namespace OHOS {
 namespace Media {
 
 class FreezerServer : public FreezerServiceStub {
-    DECLARE_DELAYED_SINGLETON(FreezerServer);
+    DECLARE_DELAYED_SP_SINGLETON(FreezerServer);
 public:
     int32_t ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze) override;
     int32_t ResetAll() override;
@@ -37,4 +37,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // PLAYER_SERVICE_SERVER_H
+#endif // FREEZER_SERVICE_SERVER_H

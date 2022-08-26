@@ -47,24 +47,43 @@ std::string FreezerErrorTypeToString(FreezerErrorType type)
 
 std::shared_ptr<Freezer> FreezerFactory::CreateFreezer()
 {
-    MEDIA_LOGW("enter FreezerFactory::CreateFreezer");
-    return DelayedSingleton<FreezerImpl>::GetInstance();
+    std::shared_ptr<FreezerImpl> impl = std::make_shared<FreezerImpl>();
+    CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new FreezerImpl");
+
+    int32_t ret = impl->Init();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init FreezerImpl");
+
+    return impl;
 }
 
-FreezerImpl::FreezerImpl() { }
+int32_t FreezerImpl::Init()
+{
+    freezerService_ = MediaServiceFactory::GetInstance().CreateFreezerService();
+    CHECK_AND_RETURN_RET_LOG(freezerService_ != nullptr, MSERR_UNKNOWN, "failed to create player service");
+    return MSERR_OK;
+}
 
-FreezerImpl::~FreezerImpl() { }
+FreezerImpl::FreezerImpl()
+{
+    MEDIA_LOGD("FreezerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+}
+
+FreezerImpl::~FreezerImpl()
+{
+    freezerService_ = nullptr;
+    MEDIA_LOGD("FreezerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
 
 int32_t FreezerImpl::ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze)
 {
     MEDIA_LOGW("KPI-TRACE: FreezerImpl ProxyApp in(pidSet, isFreeze)");
-    return DelayedSingleton<FreezerClient>::GetInstance()->ProxyApp(pidSet, isFreeze);
+    return freezerService_->ProxyApp(pidSet, isFreeze);
 }
 
 int32_t FreezerImpl::ResetAll()
 {
     MEDIA_LOGW("KPI-TRACE: FreezerImpl ResetAll in()");
-    return DelayedSingleton<FreezerClient>::GetInstance()->ResetAll();
+    return freezerService_->ResetAll();
 }
 } // namespace Media
 } // namespace OHOS

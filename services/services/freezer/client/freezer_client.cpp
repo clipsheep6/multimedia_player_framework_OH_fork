@@ -26,49 +26,21 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "FreezerCli
 
 namespace OHOS {
 namespace Media {
-FreezerClient::FreezerClient() { }
-
-FreezerClient::~FreezerClient() { }
-
-bool FreezerClient::GetFreezerProxy()
+std::shared_ptr<FreezerClient> FreezerClient::Create(const sptr<IStandardFreezerService> &ipcProxy)
 {
-    if (freezerProxy_) {
-        MEDIA_LOGD("freezerProxy_ is already isExist");
-        return true;
-    }
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (!samgr) {
-        MEDIA_LOGE("samgr init fail");
-        return false;
-    }
-    sptr<IRemoteObject> object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
-    if (!object) {
-        MEDIA_LOGE("object init fail");
-        return false;
-    }
-
-    freezerProxy_ = iface_cast<IStandardFreezerService>(object);
-    if (!freezerProxy_) {
-        MEDIA_LOGE("freezerProxy_ init fail");
-        return false;
-    }
-    return true;
+    std::shared_ptr<FreezerClient> freezer = std::make_shared<FreezerClient>(ipcProxy);
+    return freezer;
 }
 
 int32_t FreezerClient::ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze)
 {
-    if (!freezerProxy_ && GetFreezerProxy()) {
-        return MSERR_UNKNOWN;
-    }
+    CHECK_AND_RETURN_RET_LOG(freezerProxy_ != nullptr, MSERR_NO_MEMORY, "freezer service does not exist..");
     return freezerProxy_->ProxyApp(pidSet, isFreeze);
 }
 
 int32_t FreezerClient::ResetAll()
 {
-    if (!freezerProxy_ && GetFreezerProxy()) {
-        return MSERR_UNKNOWN;
-    }
+    CHECK_AND_RETURN_RET_LOG(freezerProxy_ != nullptr, MSERR_NO_MEMORY, "freezer service does not exist..");
     return freezerProxy_->ResetAll();
 }
 } // namespace Media
