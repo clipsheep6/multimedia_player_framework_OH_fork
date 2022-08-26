@@ -860,7 +860,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     std::lock_guard<std::mutex> lockCb(mutexCb_);
 
     int32_t ret = HandleMessage(type, extra, infoBody);
-    if (playerCb_ != nullptr && ret == MSERR_OK) {
+    if (playerCb_ != nullptr && ret == MSERR_OK && isFreezeCallback_) {
         playerCb_->OnInfo(type, extra, infoBody);
     }
 }
@@ -869,7 +869,7 @@ void PlayerServer::OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, co
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
 
-    if (playerCb_ != nullptr) {
+    if (playerCb_ != nullptr && isFreezeCallback_) {
         playerCb_->OnInfo(type, extra, infoBody);
     }
 }
@@ -882,6 +882,11 @@ const std::string &PlayerServer::GetStatusDescription(int32_t status)
     }
 
     return STATUS_TO_STATUS_DESCRIPTION_TABLE.find(status)->second;
+}
+
+void PlayerServer::SetFreezerState(bool isCallback)
+{
+    isFreezeCallback_ = isCallback;
 }
 
 std::string PlayerServerState::GetStateName() const

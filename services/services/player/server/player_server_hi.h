@@ -58,6 +58,7 @@ public:
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
     int32_t DumpInfo(int32_t fd);
     int32_t SelectBitRate(uint32_t bitRate) override;
+    void SetFreezerState(bool isCallback) override;
 
     // IPlayerEngineObs override
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
@@ -92,6 +93,7 @@ private:
     } config_;
     std::string lastErrMsg_;
     int32_t resetRet_ = 0;
+    bool isFreezeCallback_ = true;
 };
 } // namespace Media
 } // namespace OHOS

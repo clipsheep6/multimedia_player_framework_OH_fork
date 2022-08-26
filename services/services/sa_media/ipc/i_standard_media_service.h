@@ -37,6 +37,7 @@ public:
         MEDIA_AVCODEC = 5,
         MEDIA_AVMUXER = 6,
         RECORDER_PROFILES = 7,
+        MEDIA_FREEZER = 8,
     };
 
     /**

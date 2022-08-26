@@ -323,6 +323,8 @@ public:
      * @version 1.0
      */
     virtual int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) = 0;
+
+    virtual void SetFreezerState(bool isCallback) = 0;
 };
 } // namespace Media
 } // namespace OHOS
