@@ -14,7 +14,7 @@
  */
 
 #include <iostream>
-#include <cstring.h>
+#include <string.h>
 #include <sync_fence.h>
 #include <fstream>
 #include "aw_common.h"
