@@ -376,7 +376,7 @@ bool TestRecorder::CameraServicesForAudio(VideoRecorderConfig &recorderConfig)
 
 bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig &recorderConfig)
 {
-    if (recorderType != PURE_AUDIO) {
+    if (recorderType != GetRecordVariable("PURE_AUDIO")) {
         RETURN_IF(TestRecorder::GetSurface(recorderConfig), false);
 
         if (recorderConfig.vSource == VIDEO_SOURCE_SURFACE_ES) {
@@ -527,22 +527,22 @@ void TestRecorder::HDICreateYUVBuffer()
 
 void TestRecorder::StopBuffer(const std::string &recorderType)
 {
-    if (recorderType != PURE_AUDIO && camereHDIThread != nullptr) {
+    if (recorderType != GetRecordVariable("PURE_AUDIO") && camereHDIThread != nullptr) {
         camereHDIThread->join();
     }
 }
 
 bool TestRecorder::SetConfig(const std::string &recorderType, VideoRecorderConfig &recorderConfig)
 {
-    if (recorderType == PURE_VIDEO) {
+    if (recorderType == GetRecordVariable("PURE_VIDEO")) {
         RETURN_IF(TestRecorder::SetVideoSource(recorderConfig), false);
         RETURN_IF(TestRecorder::SetOutputFormat(recorderConfig), false);
         RETURN_IF(TestRecorder::CameraServicesForVideo(recorderConfig), false);
-    } else if (recorderType == PURE_AUDIO) {
+    } else if (recorderType == GetRecordVariable("PURE_AUDIO")) {
         RETURN_IF(TestRecorder::SetAudioSource(recorderConfig), false);
         RETURN_IF(TestRecorder::SetOutputFormat(recorderConfig), false);
         RETURN_IF(TestRecorder::CameraServicesForAudio(recorderConfig), false);
-    } else if (recorderType == AUDIO_VIDEO) {
+    } else if (recorderType == GetRecordVariable("AUDIO_VIDEO")) {
         RETURN_IF(TestRecorder::SetVideoSource(recorderConfig), false);
         RETURN_IF(TestRecorder::SetAudioSource(recorderConfig), false);
         RETURN_IF(TestRecorder::SetOutputFormat(recorderConfig), false);
