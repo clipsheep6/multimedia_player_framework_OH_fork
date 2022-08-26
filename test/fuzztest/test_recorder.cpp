@@ -14,10 +14,10 @@
  */
 
 #include <iostream>
-#include <string.h>
+#include <cstring.h>
 #include <sync_fence.h>
-#include "aw_common.h"
 #include <fstream>
+#include "aw_common.h"
 #include "securec.h"
 #include "test_recorder.h"
 
@@ -30,16 +30,16 @@ static OHOS::BufferFlushConfig g_esFlushConfig = {
     .damage = {
         .x = 0,
         .y = 0,
-        .w = CODEC_BUFFER_WIDTH,
-        .h = CODEC_BUFFER_HEIGHT
+        .w = GetUintVariable("CODEC_BUFFER_WIDTH"),
+        .h = GetUintVariable("CODEC_BUFFER_HEIGHT")
     },
     .timestamp = 0
 };
 
 static OHOS::BufferRequestConfig g_esRequestConfig = {
-    .width = CODEC_BUFFER_WIDTH,
-    .height = CODEC_BUFFER_HEIGHT,
-    .strideAlignment = STRIDE_ALIGN,
+    .width = GetUintVariable("CODEC_BUFFER_WIDTH"),
+    .height = GetUintVariable("CODEC_BUFFER_HEIGHT"),
+    .strideAlignment = GetUintVariable("STRIDE_ALIGN"),
     .format = PIXEL_FMT_RGBA_8888,
     .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
     .timeout = 0
@@ -49,17 +49,17 @@ static OHOS::BufferFlushConfig g_yuvFlushConfig = {
     .damage = {
         .x = 0,
         .y = 0,
-        .w = YUV_BUFFER_WIDTH,
-        .h = YUV_BUFFER_HEIGHT
+        .w = GetUintVariable("YUV_BUFFER_WIDTH"),
+        .h = GetUintVariable("YUV_BUFFER_HEIGHT")
     },
     .timestamp = 0
 };
 
 // config for surface buffer request from the queue
 static OHOS::BufferRequestConfig g_yuvRequestConfig = {
-    .width = YUV_BUFFER_WIDTH,
-    .height = YUV_BUFFER_HEIGHT,
-    .strideAlignment = STRIDE_ALIGN,
+    .width = GetUintVariable("YUV_BUFFER_WIDTH"),,
+    .height = GetUintVariable("YUV_BUFFER_HEIGHT"),
+    .strideAlignment = GetUintVariable("STRIDE_ALIGN"),
     .format = PIXEL_FMT_YCRCB_420_SP,
     .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
     .timeout = 0
@@ -409,7 +409,8 @@ int64_t TestRecorder::GetPts()
 {
     struct timespec timestamp = {0, 0};
     clock_gettime(CLOCK_MONOTONIC, &timestamp);
-    int64_t time = reinterpret_cast<int64_t>(timestamp.tv_sec) * SEC_TO_NS + reinterpret_cast<uint64_t>(timestamp.tv_nsec);
+    int64_t time = reinterpret_cast<int64_t>(timestamp.tv_sec) * GetUintVariable("SEC_TO_NS") +
+        reinterpret_cast<uint64_t>(timestamp.tv_nsec);
     return time;
 }
 
@@ -417,11 +418,11 @@ void TestRecorder::HDICreateESBuffer()
 {
     constexpr int32_t SLEEP_TIME = 100;
     const uint32_t *frameLenArray = HIGH_VIDEO_FRAME_SIZE;
-    while (counts < STUB_STREAM_SIZE) {
+    while (counts < GetUintVariable("STUB_STREAM_SIZE")) {
         if (isExit_.load()) {
             break;
         }
-        usleep(FRAME_RATE);
+        usleep(GetUintVariable("FRAME_RATE"));
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError ret = producerSurface->RequestBuffer(buffer, releaseFence, g_esRequestConfig);
@@ -463,7 +464,7 @@ void TestRecorder::HDICreateESBuffer()
         (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
         counts++;
         (counts % 30) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0); // keyframe every 30fps
-        pts += FRAME_DURATION;
+        pts += GetUintVariable("FRAME_DURATION");
         (void)producerSurface->FlushBuffer(buffer, -1, g_esFlushConfig);
         frameLenArray++;
         free(tempBuffer);
@@ -479,12 +480,12 @@ void TestRecorder::HDICreateYUVBuffer()
     constexpr int32_t COUNT_SPLIT = 30;
     constexpr int32_t COUNT_COLOR = 255;
     constexpr int32_t TIME_WAIT = 100;
-    while (counts < STUB_STREAM_SIZE) {
+    while (counts < GetUintVariable("STUB_STREAM_SIZE")) {
         if (!isExit_.load()) {
             break;
         }
 
-        usleep(FRAME_RATE);
+        usleep(GetUintVariable("FRAME_RATE"));
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError ret = producerSurface->RequestBuffer(buffer, releaseFence, g_yuvRequestConfig);
@@ -499,10 +500,10 @@ void TestRecorder::HDICreateYUVBuffer()
         syncFence->Wait(TIME_WAIT); // 100ms
 
         char *tempBuffer = (char *)(buffer->GetVirAddr());
-        (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color, YUV_BUFFER_SIZE);
+        (void)memset_s(tempBuffer, GetUintVariable("YUV_BUFFER_SIZE"), color, YUV_BUFFER_SIZE);
         (void)srand(reinterpret_cast<int>(time(0)));
-        for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += (YUV_BUFFER_SIZE - 1)) {
-            if (i >= YUV_BUFFER_SIZE - 1) {
+        for (uint32_t i = 0; i < GetUintVariable("YUV_BUFFER_SIZE") - 1; i += (YUV_BUFFER_SIZE - 1)) {
+            if (i >= GetUintVariable("YUV_BUFFER_SIZE") - 1) {
                 break;
             }
             tempBuffer[i] = (unsigned char)(ProduceRandomNumberCrypt() % COUNT_COLOR);
@@ -515,7 +516,7 @@ void TestRecorder::HDICreateYUVBuffer()
         }
 
         pts= GetPts();
-        (void)buffer->GetExtraData()->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
+        (void)buffer->GetExtraData()->ExtraSet("dataSize", static_cast<int32_t>(GetUintVariable("YUV_BUFFER_SIZE")));
         (void)buffer->GetExtraData()->ExtraSet("timeStamp", pts);
         (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
         counts++;
