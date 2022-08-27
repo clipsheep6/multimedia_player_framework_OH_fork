@@ -40,7 +40,6 @@ bool AVMetadataFileFuzzer::FuzzAVMetadataFile(uint8_t *data, size_t size)
 {
     avmetadata = OHOS::Media::AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
-        cout << "avmetadata is null" << endl;
         avmetadata->Release();
         return false;
     }
@@ -49,7 +48,6 @@ bool AVMetadataFileFuzzer::FuzzAVMetadataFile(uint8_t *data, size_t size)
 
     int32_t retWritefile = WriteDataToFile(path, data, size);
     if (retWritefile != 0) {
-        cout << "avmetadata WriteDataToFile fail!" << endl;
         avmetadata->Release();
         return false;
     }

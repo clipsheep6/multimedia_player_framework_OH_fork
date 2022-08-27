@@ -82,7 +82,6 @@ sptr<Surface> TestPlayer::GetVideoSurface()
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
     previewWindow_ = Rosen::Window::Create("xcomponent_window_fuzztest", option);
     if (previewWindow_ == nullptr || previewWindow_->GetSurfaceNode() == nullptr) {
-        cout << "previewWindow_ is nullptr" << endl;
         return nullptr;
     }
     previewWindow_->Show();
@@ -93,7 +92,6 @@ int32_t TestPlayer::SetFdSource(const string &path)
 {
     int32_t fd = open(path.c_str(), O_RDONLY);
     if (fd < 0) {
-        cout << "Open file failed" << endl;
         (void)close(fd);
         return -1;
     }
@@ -101,16 +99,12 @@ int32_t TestPlayer::SetFdSource(const string &path)
 
     struct stat64 buffer;
     if (fstat64(fd, &buffer) != 0) {
-        cout << "Get file state failed" << endl;
         (void)close(fd);
         return -1;
     }
     int64_t length = static_cast<int64_t>(buffer.st_size);
-    cout << "fd = " << fd << ", offset = " << offset << ", length = " << length << endl;
-
     int32_t ret = player_->SetSource(fd, offset, length);
     if (ret != 0) {
-        cout << "SetSource fail" << endl;
         (void)close(fd);
         return -1;
     }

@@ -37,36 +37,32 @@ bool PlayerSetVolumeFuzzer::FuzzSetVolume(uint8_t* data, size_t size)
 {
     player_ = OHOS::Media::PlayerFactory::CreatePlayer();
     if (player_ == nullptr) {
-        cout << "player_ is null" << endl;
         return false;
     }
     std::shared_ptr<TestPlayerCallback> cb = std::make_shared<TestPlayerCallback>();
     int32_t ret = player_->SetPlayerCallback(cb);
     if (ret != 0) {
-        cout << "SetPlayerCallback fail" << endl;
+        return false;
     }
     const string path = "/data/test/media/H264_AAC.mp4";
     ret = SetFdSource(path);
     if (ret != 0) {
-        cout << "SetFdSource fail" << endl;
         return false;
     }
     sptr<Surface> producerSurface = nullptr;
     producerSurface = GetVideoSurface();
     ret = player_->SetVideoSurface(producerSurface);
     if (ret != 0) {
-        cout << "SetVideoSurface fail" << endl;
+        return false;
     }
 
     ret = player_->PrepareAsync();
     if (ret != 0) {
-        cout << "PrepareAsync fail" << endl;
         return false;
     }
     sleep(1);
     ret = player_->Play();
     if (ret != 0) {
-        cout << "Play fail" << endl;
         return false;
     }
     if (size >= sizeof(float)) {
@@ -76,7 +72,6 @@ bool PlayerSetVolumeFuzzer::FuzzSetVolume(uint8_t* data, size_t size)
 
     ret = player_->Release();
     if (ret != 0) {
-        cout << "Release fail" << endl;
         return false;
     }
     return true;
@@ -86,7 +81,6 @@ bool OHOS::Media::FuzzPlayerSetVolume(uint8_t* data, size_t size)
 {
     auto player = std::make_unique<PlayerSetVolumeFuzzer>();
     if (player == nullptr) {
-        cout << "player is null" << endl;
         return 0;
     }
     return player->FuzzSetVolume(data, size);

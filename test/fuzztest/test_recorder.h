@@ -51,7 +51,7 @@ public:
     bool GetStubFile();
     void HDICreateESBuffer();
     void HDICreateYUVBuffer();
-    int64_t GetPts();
+    uint64_t GetPts();
     bool SetVideoSource(RecorderTestParam::VideoRecorderConfig &recorderConfig);
     bool SetAudioSource(RecorderTestParam::VideoRecorderConfig &recorderConfig);
     bool SetOutputFormat(RecorderTestParam::VideoRecorderConfig &recorderConfig);
@@ -73,9 +73,11 @@ public:
     bool SetVideoFrameRate(RecorderTestParam::VideoRecorderConfig &recorderConfig);
     bool SetVideoEncodingBitRate(RecorderTestParam::VideoRecorderConfig &recorderConfig);
     bool SetCaptureRate(RecorderTestParam::VideoRecorderConfig &recorderConfig, double fps);
-    bool SetNextOutputFile(int32_t sourceId, RecorderTestParam::VideoRecorderConfig &recorderConfig);
+    bool SetNextOutputFile(RecorderTestParam::VideoRecorderConfig &recorderConfig);
     bool GetSurface(RecorderTestParam::VideoRecorderConfig &recorderConfig);
     bool SetMaxFileSize(int64_t size, RecorderTestParam::VideoRecorderConfig &recorderConfig);
+    bool SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration, RecorderTestParam::VideoRecorderConfig &recorderConfig);
+    bool SetParameter(int32_t sourceId, const Format &format, RecorderTestParam::VideoRecorderConfig &recorderConfig);
 
 private:
     std::atomic<bool> isExit_ { false };

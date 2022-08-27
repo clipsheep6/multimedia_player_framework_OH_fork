@@ -37,50 +37,41 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
 {
     player_ = OHOS::Media::PlayerFactory::CreatePlayer();
     if (player_ == nullptr) {
-        cout << "player_ is null" << endl;
         return false;
     }
     std::shared_ptr<TestPlayerCallback> cb = std::make_shared<TestPlayerCallback>();
     int32_t ret = player_->SetPlayerCallback(cb);
     if (ret != 0) {
-        cout << "SetPlayerCallback fail" << endl;
         return false;
     }
     const string path = "/data/test/media/fuzztest.mp4";
     ret = WriteDataToFile(path, data, size);
     if (ret != 0) {
-        cout << "WriteDataToFile fail" << endl;
         return false;
     }
     ret = SetFdSource(path);
     if (ret != 0) {
-        cout << "SetFdSource fail" << endl;
         return false;
     }
     sptr<Surface> producerSurface = nullptr;
     producerSurface = GetVideoSurface();
     ret = player_->SetVideoSurface(producerSurface);
     if (ret != 0) {
-        cout << "SetVideoSurface fail" << endl;
     }
 
     ret = player_->PrepareAsync();
     if (ret != 0) {
-        cout << "PrepareAsync fail" << endl;
         return true;
     }
     sleep(1);
     ret = player_->Play();
     if (ret != 0) {
-        cout << "Play fail" << endl;
     }
     ret = player_->Seek(3000, SEEK_NEXT_SYNC); // seek 3000 ms
     if (ret != 0) {
-        cout << "Seek fail" << endl;
     }
     ret = player_->Release();
     if (ret != 0) {
-        cout << "Release fail" << endl;
         return false;
     }
     return true;
@@ -91,11 +82,9 @@ int32_t OHOS::Media::WriteDataToFile(const string &path, const uint8_t* data, si
     FILE *file = nullptr;
     file = fopen(path.c_str(), "w+");
     if (file == nullptr) {
-        std::cout << "[fuzz] open file fstab.test failed";
         return -1;
     }
     if (fwrite(data, 1, size, file) != size) {
-        std::cout << "[fuzz] write data failed";
         (void)fclose(file);
         return -1;
     }
@@ -107,7 +96,6 @@ bool OHOS::Media::FuzzPlayerFile(const uint8_t* data, size_t size)
 {
     auto player = std::make_unique<PlayerFileFuzzer>();
     if (player == nullptr) {
-        cout << "player is null" << endl;
         return 0;
     }
     return player->FuzzFile(data, size);

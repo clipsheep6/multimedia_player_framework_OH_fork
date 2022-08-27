@@ -37,33 +37,27 @@ bool PlayerSeekFuzzer::FuzzSeek(uint8_t* data, size_t size)
 {
     player_ = OHOS::Media::PlayerFactory::CreatePlayer();
     if (player_ == nullptr) {
-        cout << "player_ is null" << endl;
         return false;
     }
     std::shared_ptr<TestPlayerCallback> cb = std::make_shared<TestPlayerCallback>();
     int32_t ret = player_->SetPlayerCallback(cb);
     if (ret != 0) {
-        cout << "SetPlayerCallback fail" << endl;
     }
     const string path = "/data/test/media/H264_AAC.mp4";
     if ((SetFdSource(path)) != 0) {
-        cout << "SetFdSource fail" << endl;
         return false;
     }
     sptr<Surface> producerSurface = nullptr;
     producerSurface = GetVideoSurface();
     if ((player_->SetVideoSurface(producerSurface)) != 0) {
-        cout << "SetVideoSurface fail" << endl;
     }
 
     if ((player_->PrepareAsync()) != 0) {
-        cout << "PrepareAsync fail" << endl;
         return false;
     }
     sleep(1);
     ret = player_->Play();
     if (ret != 0) {
-        cout << "Play fail" << endl;
         return false;
     }
     if (size >= sizeof(int32_t)) {
@@ -71,7 +65,6 @@ bool PlayerSeekFuzzer::FuzzSeek(uint8_t* data, size_t size)
         cout << "seek to " << data_ << endl;
         ret = player_->Seek(data_, SEEK_NEXT_SYNC);
         if (ret != 0) {
-            cout << "seek fail" << endl;
             return false;
         } else {
             sleep(1);
@@ -80,7 +73,6 @@ bool PlayerSeekFuzzer::FuzzSeek(uint8_t* data, size_t size)
         
     ret = player_->Release();
     if (ret != 0) {
-        cout << "Release fail" << endl;
         return false;
     }
     return true;
@@ -90,7 +82,6 @@ bool OHOS::Media::FuzzPlayerSeek(uint8_t* data, size_t size)
 {
     auto player = std::make_unique<PlayerSeekFuzzer>();
     if (player == nullptr) {
-        cout << "player is null" << endl;
         return 0;
     }
     return player->FuzzSeek(data, size);

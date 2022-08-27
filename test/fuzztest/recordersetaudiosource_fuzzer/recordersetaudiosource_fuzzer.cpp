@@ -65,7 +65,7 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
         RETURN_IF(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
-        sleep(GetUintVariable("RECORDER_TIME"));
+        sleep(RECORDER_TIME);
         RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Release(g_videoRecorderConfig), true);
     }
