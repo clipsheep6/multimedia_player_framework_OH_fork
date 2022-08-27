@@ -44,15 +44,16 @@ static constexpr int32_t DUMMY_SOURCE_ID = 0;
 class IRecorderEngineObs : public std::enable_shared_from_this<IRecorderEngineObs> {
 public:
     enum InfoType : int32_t {
-        MAX_DURATION_APPROACHING = 0,
-        MAX_FILESIZE_APPROACHING,
-        MAX_DURATION_REACHED,
+        MAX_FILESIZE_APPROACHING = 0,
+        MAX_DURATION_APPROACHING,
         MAX_FILESIZE_REACHED,
+        MAX_DURATION_REACHED,
         NEXT_OUTPUT_FILE_STARTED,
         FILE_SPLIT_FINISHED,  // reserved
         FILE_START_TIME_MS,   // reserved
         NEXT_FILE_FD_NOT_SET,
         INTERNEL_WARNING,
+        FRAMENT_CLOSED,
         INFO_EXTEND_START = 0x10000,
     };
 
