@@ -145,7 +145,6 @@ public:
     int32_t Stop() override;
 
 protected:
-    void ProcessStateChange(const InnerMessage &msg) override;
     void StateEnter() override;
 };
 

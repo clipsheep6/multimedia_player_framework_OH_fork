@@ -115,6 +115,9 @@ void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
             PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, 0, static_cast<int32_t>(position), {} };
             ctrler_.ReportMessage(posUpdateMsg);
         }
+    } else if (targetState == GST_STATE_READY) {
+        PlayBinMessage playBinMsg = { PLAYBIN_MSG_STATE_CHANGE, 0, PLAYBIN_STATE_STOPPED, {} };
+        ctrler_.ReportMessage(playBinMsg);
     }
 
     Dumper::DumpDotGraph(*ctrler_.playbin_, msg.detail1, msg.detail2);
@@ -480,14 +483,6 @@ int32_t PlayBinCtrlerBase::StoppedState::Prepare()
 int32_t PlayBinCtrlerBase::StoppedState::Stop()
 {
     return MSERR_OK;
-}
-
-void PlayBinCtrlerBase::StoppedState::ProcessStateChange(const InnerMessage &msg)
-{
-    if (msg.detail2 == GST_STATE_READY) {
-        PlayBinMessage playBinMsg = { PLAYBIN_MSG_STATE_CHANGE, 0, PLAYBIN_STATE_STOPPED, {} };
-        ctrler_.ReportMessage(playBinMsg);
-    }
 }
 
 void PlayBinCtrlerBase::PlaybackCompletedState::StateEnter()
