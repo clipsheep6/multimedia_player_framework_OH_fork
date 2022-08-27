@@ -17,6 +17,7 @@
 
 #include <unistd.h>
 
+#include "freezer_server.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
@@ -28,10 +29,31 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "FreezerSer
 
 namespace OHOS {
 namespace Media {
+sptr<FreezerServiceStub> FreezerServiceStub::Create()
+{
+    sptr<FreezerServiceStub> freezerStub = new(std::nothrow) FreezerServiceStub();
+    CHECK_AND_RETURN_RET_LOG(freezerStub != nullptr, nullptr, "failed to new FreezerServiceStub");
+
+    int32_t ret = freezerStub->Init();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to freezer stub init");
+    return freezerStub;
+}
+
 FreezerServiceStub::FreezerServiceStub()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+}
+
+FreezerServiceStub::~FreezerServiceStub()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+int32_t FreezerServiceStub::Init()
 {
     freezerFuncs_[PROXY_APP] = &FreezerServiceStub::HandleProxyApp;
     freezerFuncs_[RESET_ALL] = &FreezerServiceStub::HandleResetAll;
+    return MSERR_OK;
 }
 
 int FreezerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
@@ -76,6 +98,16 @@ int32_t FreezerServiceStub::HandleResetAll(MessageParcel &data, MessageParcel &r
     (void)data;
     reply.WriteInt32(ResetAll());
     return MSERR_OK;
+}
+
+int32_t FreezerServiceStub::ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze)
+{
+    return DelayedSingleton<FreezerServer>::GetInstance()->ProxyApp(pidSet, isFreeze);
+}
+
+int32_t FreezerServiceStub::ResetAll()
+{
+    return DelayedSingleton<FreezerServer>::GetInstance()->ResetAll();
 }
 } // namespace Media
 } // namespace OHOS

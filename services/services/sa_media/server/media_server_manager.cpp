@@ -17,7 +17,7 @@
 #include <unordered_set>
 #include "recorder_service_stub.h"
 #include "player_service_stub.h"
-#include "freezer_server.h"
+#include "freezer_service_stub.h"
 #include "avmetadatahelper_service_stub.h"
 #include "avcodeclist_service_stub.h"
 #include "recorder_profiles_service_stub.h"
@@ -118,6 +118,7 @@ MediaServerManager::~MediaServerManager()
 
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
+    MEDIA_LOGE("enter MediaServerManager::CreateStubObject()");
     std::lock_guard<std::mutex> lock(mutex_);
     switch (type) {
         case RECORDER: {
@@ -351,9 +352,10 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMuxerStubObject()
 
 sptr<IRemoteObject> MediaServerManager::CreateFreezerStubObject()
 {
-    sptr<FreezerServiceStub> freezerStub = DelayedSpSingleton<FreezerServer>::GetInstance();
+    MEDIA_LOGE("enter MediaServerManager::CreateFreezerStubObject()");
+    sptr<FreezerServiceStub> freezerStub = FreezerServiceStub::Create();
     if (freezerStub == nullptr) {
-        MEDIA_LOGE("failed to create AVMuxerServiceStub");
+        MEDIA_LOGE("failed to create FreezerServiceStub");
         return nullptr;
     }
     sptr<IRemoteObject> object = freezerStub->AsObject();

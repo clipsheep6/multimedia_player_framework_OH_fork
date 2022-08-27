@@ -18,18 +18,22 @@
 
 #include <map>
 #include "i_standard_freezer_service.h"
-#include "media_death_recipient.h"
 
 namespace OHOS {
 namespace Media {
 class FreezerServiceStub : public IRemoteStub<IStandardFreezerService> {
 public:
     DISALLOW_COPY_AND_MOVE(FreezerServiceStub);
-    FreezerServiceStub();
-    ~FreezerServiceStub() override = default;
+    static sptr<FreezerServiceStub> Create();
+    virtual ~FreezerServiceStub();
+
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    int32_t ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze) override;
+    int32_t ResetAll() override;
     
 private:
+    FreezerServiceStub();
+    int32_t Init();
     int32_t HandleProxyApp(MessageParcel &data, MessageParcel &reply);
     int32_t HandleResetAll(MessageParcel &data, MessageParcel &reply);
     using FreezerStubFunc = int32_t(FreezerServiceStub::*)(MessageParcel &data, MessageParcel &reply);

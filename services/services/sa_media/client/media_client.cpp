@@ -108,7 +108,7 @@ std::shared_ptr<IFreezerService> MediaClient::CreateFreezerService()
         MEDIA_LOGE("media service does not exist.");
         return nullptr;
     }
-
+    MEDIA_LOGE("enter MediaClient::CreateFreezerService()");
     sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::MEDIA_FREEZER, listenerStub_->AsObject());
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "freezer proxy object is nullptr.");

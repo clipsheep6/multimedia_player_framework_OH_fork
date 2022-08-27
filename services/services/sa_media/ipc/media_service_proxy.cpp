@@ -45,7 +45,7 @@ sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService
         MEDIA_LOGE("Failed to write descriptor");
         return nullptr;
     }
-
+    MEDIA_LOGE("enter MediaServiceProxy::GetSubSystemAbility()");
     (void)data.WriteInt32(static_cast<int32_t>(subSystemId));
     (void)data.WriteRemoteObject(listener);
     int error = Remote()->SendRequest(MediaServiceMsg::GET_SUBSYSTEM, data, reply, option);
