@@ -35,6 +35,9 @@ public:
     int32_t SetParameter(const RecorderParam &recParam) override;
     void Dump() override;
 
+protected:
+    RecorderMsgProcResult DoProcessMessage(GstMessage &rawMsg, RecorderMessage &prettyMsg) override;
+
 private:
     int32_t ConfigureOutputFormat(const RecorderParam &recParam);
     int32_t ConfigureOutputTarget(const RecorderParam &recParam);
@@ -42,6 +45,7 @@ private:
     int32_t ConfigureMaxFileSize(const RecorderParam &recParam);
     int32_t ConfigureGeoLocation(const RecorderParam &recParm);
     int32_t ConfigureRotationAngle(const RecorderParam &recParm);
+    int32_t ConfigureNextOutputFd(const RecorderParam &recParam);
     int32_t SetOutFilePath();
     int32_t CreateMuxerElement(const std::string &name);
     int32_t SetFdToFdsink(const std::string &path);
@@ -51,9 +55,11 @@ private:
     std::string outPath_;
     bool isReg_ = false;
     int outFd_ = -1;
+    int nextFd_ = -1;
     int32_t format_ = OutputFormatType::FORMAT_MPEG_4;
-    int32_t maxDuration_ = -1;
-    int64_t maxSize_ = -1;
+    uint64_t maxDuration_ = 0;
+    uint64_t maxSize_ = 0;
+    bool isFirstRecvOpen = true;
 };
 } // namespace Media
 } // namespace OHOS

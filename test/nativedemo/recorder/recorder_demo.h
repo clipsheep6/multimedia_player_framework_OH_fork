@@ -25,13 +25,22 @@
 
 namespace OHOS {
 namespace Media {
-const std::string SAVE_PATH = "/data/recorder";
+const std::string SAVE_PATH = "/data/recorder/";
+
+enum class RecorderTyp {
+    TYPE_MAX_SIZE = 1,
+    TYPE_MAX_TIME,
+    TYPE_MAX_SIZE_AND_TIME,
+    TYPE_SET_NONE
+};
+
 struct VideoRecorderConfig {
     int32_t audioSourceId = 0;
     int32_t videoSourceId = 0;
     int32_t audioEncodingBitRate = 48000;
     int32_t channelCount = 2;
     int32_t duration = 60;
+    int64_t size = 10*1024*1024;
     int32_t width = 1280;
     int32_t height = 720;
     int32_t frameRate = 30;
@@ -52,6 +61,7 @@ struct AudioRecorderConfig {
     int32_t audioEncodingBitRate = 48000;
     int32_t channelCount = 2;
     int32_t duration = 60;
+    int64_t size = 5*1024*1024;
     std::string outPath = SAVE_PATH;
     int32_t sampleRate = 48000;
     AudioCodecFormat audioFormat = AAC_LC;
@@ -69,6 +79,7 @@ public:
     void HDICreateYUVBuffer();
     int32_t CameraServicesForVideo() const;
     int32_t CameraServicesForAudio() const;
+    int32_t SetType() const;
     int32_t SetFormat(const std::string &type) const;
     int32_t GetStubFile();
     void GetFileFd();
@@ -77,6 +88,8 @@ public:
 private:
     void SetVideoSource();
     void SetVideoEncodeMode();
+    void SetThreshold();
+    void SetRecorderTime();
     int64_t pts_ = 0;
     int32_t isKeyFrame_ = 1;
     OHOS::sptr<OHOS::Surface> producerSurface_ = nullptr;
@@ -87,15 +100,25 @@ private:
     std::unique_ptr<std::thread> camereHDIThread_;
     uint32_t count_ = 0;
     unsigned char color_ = 0xFF;
+    RecorderTyp setType_ = RecorderTyp::TYPE_SET_NONE;
+    uint32_t recorderTime = 0;
+    int32_t frameRate_ = 30;
 };
 
 class RecorderCallbackDemo : public RecorderCallback, public NoCopyable {
 public:
     RecorderCallbackDemo() = default;
-    virtual ~RecorderCallbackDemo() = default;
+    virtual ~RecorderCallbackDemo();
 
     void OnError(RecorderErrorType errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
+    std::shared_ptr<Recorder> callbackRecorder_ = nullptr;
+    std::string callbackNextUrl;
+    int32_t nextFd_ = -1;
+    int32_t splitCnt_ = 0;
+    bool isSetSub_ = false;
+    int32_t curFd_ = -1;
+    std::string format_;
 };
 } // namespace Media
 } // namespace OHOS

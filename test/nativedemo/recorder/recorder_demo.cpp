@@ -17,6 +17,7 @@
 #include <iostream>
 #include <fstream>
 #include <unistd.h>
+#include <string>
 #include <sync_fence.h>
 #include "display_type.h"
 #include "securec.h"
@@ -35,12 +36,22 @@ namespace {
     constexpr uint32_t YUV_BUFFER_HEIGHT = 768;
     constexpr uint32_t STRIDE_ALIGN = 8;
     constexpr uint32_t FRAME_DURATION = 40000000;
-    constexpr uint32_t RECORDER_TIME = 5;
     constexpr uint32_t YUV_BUFFER_SIZE = 1474560; // 1280 * 768 * 3 / 2
     constexpr uint32_t SEC_TO_NS = 1000000000;
+    constexpr uint32_t SEC_TO_MS = 1000;
+    constexpr uint32_t DECIMAL_BASE = 10;
     const string PURE_VIDEO = "1";
     const string PURE_AUDIO = "2";
     const string AUDIO_VIDEO = "3";
+}
+
+RecorderCallbackDemo::~RecorderCallbackDemo()
+{
+    if (nextFd_ > 0) {
+        close(nextFd_);
+        nextFd_ = -1;
+    }
+    splitCnt_ = 0;
 }
 
 void RecorderCallbackDemo::OnError(RecorderErrorType errorType, int32_t errorCode)
@@ -51,6 +62,54 @@ void RecorderCallbackDemo::OnError(RecorderErrorType errorType, int32_t errorCod
 void RecorderCallbackDemo::OnInfo(int32_t type, int32_t extra)
 {
     cout << "Info received, Infotype:" << type << " Infocode:" << extra << endl;
+    std::string path = "";
+    int ret;
+    int fd;
+    if (type == RECORDER_INFO_MAX_FILESIZE_APPROACHING) {
+        path = "/data/recorder/split" + std::to_string(splitCnt_) + format_;
+        cout << "RECORDER_INFO_MAX_FILESIZE_APPROACHING, path.c_str():" << path.c_str()  << endl;
+        if (isSetSub_)
+            return;
+        fd = open(path.c_str(), O_CREAT | O_WRONLY, S_IRWXU);
+        cout << "fd:" << fd << endl;
+        ret = this->callbackRecorder_->SetNextOutputFile(fd);
+        if (ret == MSERR_OK) {
+            splitCnt_++;
+            isSetSub_ = true;
+            nextFd_ = fd;
+        } else {
+            cout << "RECORDER_INFO_MAX_FILESIZE_APPROACHING SetNextOutputFile failed" << endl;
+        }
+    } else if (type == RECORDER_INFO_MAX_DURATION_APPROACHING) {
+        path = "/data/recorder/split" + std::to_string(splitCnt_) + format_;
+        cout << "RECORDER_INFO_MAX_DURATION_APPROACHING, path.c_str():" << path.c_str()  << endl;
+        if (isSetSub_)
+            return;
+        fd = open(path.c_str(), O_CREAT | O_WRONLY, S_IRWXU);
+        cout << "fd:" << fd << endl;
+        ret = this->callbackRecorder_->SetNextOutputFile(fd);
+        if (ret == MSERR_OK) {
+            splitCnt_++;
+            isSetSub_ = true;
+            nextFd_ = fd;
+        } else {
+            cout << "RECORDER_INFO_MAX_DURATION_APPROACHING SetNextOutputFile failed" << endl;
+        }
+    } else if (type == RECORDER_INFO_MAX_FILESIZE_REACHED || type == RECORDER_INFO_MAX_DURATION_REACHED) {
+        cout << "Info received, FILESIZE_REACHED or DURATION_REACHED" << endl;
+        if (curFd_ > 0) {
+            close(curFd_);
+            curFd_ = -1;
+        }
+    } else if (type == RECORDER_INFO_NEXT_OUTPUT_FILE_STARTED) {
+        cout << "Info received, RECORDER_INFO_NEXT_OUTPUT_FILE_STARTED" << endl;
+        if (nextFd_ > 0) {
+            curFd_ = nextFd_;
+            nextFd_ = -1;
+        }
+
+        isSetSub_ = false;
+    }
 }
 
 // config for video to request buffer from surface
@@ -210,9 +269,13 @@ void RecorderDemo::HDICreateESBuffer()
 void RecorderDemo::HDICreateYUVBuffer()
 {
     // camera hdi loop to requeset buffer
-    while (count_ < STUB_STREAM_SIZE) {
+    int total_count = 0;
+    const uint32_t sleepTime = 1000000 / frameRate_;  // 1s = 1000000us
+    const int64_t interval = 1000000000 / frameRate_;  // 1s = 1000000000ns
+
+    while (true) {
         DEMO_CHECK_AND_BREAK_LOG(!isExit_.load(), "close camera hdi thread");
-        usleep(FRAME_RATE);
+        usleep(sleepTime);
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError ret = producerSurface_->RequestBuffer(buffer, releaseFence, g_yuvRequestConfig);
@@ -221,7 +284,6 @@ void RecorderDemo::HDICreateYUVBuffer()
 
         sptr<SyncFence> tempFence = new SyncFence(releaseFence);
         tempFence->Wait(100); // 100ms
-
         char *tempBuffer = (char *)(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color_, YUV_BUFFER_SIZE);
 
@@ -239,16 +301,24 @@ void RecorderDemo::HDICreateYUVBuffer()
             color_ = 0xFF;
         }
 
-        // get time
-        pts_= (int64_t)(GetPts());
+        if (isStart_.load()) {
+            pts_ = (int64_t)(GetPts());
+            isStart_.store(false);
+        }
+
+        cout << "pts_: " << pts_ << endl;
+        cout << "frame count: " << total_count << endl;
         (void)buffer->GetExtraData()->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
         (void)buffer->GetExtraData()->ExtraSet("timeStamp", pts_);
         (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame_);
         count_++;
         (count_ % 30) == 0 ? (isKeyFrame_ = 1) : (isKeyFrame_ = 0); // keyframe every 30fps
+        pts_ += interval;
         (void)producerSurface_->FlushBuffer(buffer, -1, g_yuvFlushConfig);
+        total_count++;
     }
     cout << "exit camera hdi loop" << endl;
+    cout << "exit camera total_count: " << total_count << endl;
 }
 
 
@@ -289,9 +359,29 @@ int32_t RecorderDemo::CameraServicesForAudio() const
     return MSERR_OK;
 }
 
+int32_t RecorderDemo::SetType() const
+{
+    int32_t ret;
+    if (setType_ == RecorderTyp::TYPE_MAX_TIME) {
+        ret = recorder_->SetMaxDuration(g_videoRecorderConfig.duration * SEC_TO_MS);
+        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxDuration failed ");
+    } else if (setType_ == RecorderTyp::TYPE_MAX_SIZE) {
+        ret = recorder_->SetMaxFileSize(g_videoRecorderConfig.size);
+        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxFileSize failed ");
+    } else if (setType_ == RecorderTyp::TYPE_MAX_SIZE_AND_TIME) {
+        ret = recorder_->SetMaxDuration(g_videoRecorderConfig.duration * SEC_TO_MS);
+        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxDuration failed ");
+        ret = recorder_->SetMaxFileSize(g_videoRecorderConfig.size);
+        DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxFileSize failed ");
+    }
+    return MSERR_OK;
+}
+
 int32_t RecorderDemo::SetFormat(const std::string &recorderType) const
 {
     int32_t ret;
+    std::string format = "";
+
     if (recorderType == PURE_VIDEO) {
         ret = recorder_->SetVideoSource(g_videoRecorderConfig.vSource, g_videoRecorderConfig.videoSourceId);
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoSource failed ");
@@ -299,6 +389,7 @@ int32_t RecorderDemo::SetFormat(const std::string &recorderType) const
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputFormat failed ");
         ret = CameraServicesForVideo();
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServices failed ");
+        format = ".mp4";
     } else if (recorderType == PURE_AUDIO) {
         ret = recorder_->SetAudioSource(g_videoRecorderConfig.aSource, g_videoRecorderConfig.audioSourceId);
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetAudioSource failed ");
@@ -306,6 +397,7 @@ int32_t RecorderDemo::SetFormat(const std::string &recorderType) const
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputFormat failed ");
         ret = CameraServicesForAudio();
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForAudio failed ");
+        format = ".m4a";
     } else if (recorderType == AUDIO_VIDEO) {
         ret = recorder_->SetVideoSource(g_videoRecorderConfig.vSource, g_videoRecorderConfig.videoSourceId);
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoSource failed ");
@@ -317,15 +409,19 @@ int32_t RecorderDemo::SetFormat(const std::string &recorderType) const
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForVideo failed ");
         ret = CameraServicesForAudio();
         DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForAudio failed ");
+        format = ".mp4";
     }
 
-    ret = recorder_->SetMaxDuration(g_videoRecorderConfig.duration);
-    DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetMaxDuration failed ");
+    ret = SetType();
+    DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetType failed ");
 
     ret = recorder_->SetOutputFile(g_videoRecorderConfig.outputFd);
     DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputFile failed ");
 
     std::shared_ptr<RecorderCallbackDemo> cb = std::make_shared<RecorderCallbackDemo>();
+    cb->callbackRecorder_ = recorder_;
+    cb->format_ = format;
+    cb->curFd_ = g_videoRecorderConfig.outputFd;
     ret = recorder_->SetRecorderCallback(cb);
     DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetRecorderCallback failed ");
 
@@ -335,7 +431,7 @@ int32_t RecorderDemo::SetFormat(const std::string &recorderType) const
 
 void RecorderDemo::GetFileFd()
 {
-    g_videoRecorderConfig.outputFd = open("/data/media/1.mp4", O_RDWR);
+    g_videoRecorderConfig.outputFd = open("/data/media/1.mp4", O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     if (g_videoRecorderConfig.outputFd <= 0) {
         cout << "open fd failed" << endl;
     }
@@ -361,6 +457,53 @@ void RecorderDemo::SetVideoSource()
     } else {
         cout << "wrong source type, use yuv source as default" << endl;
         g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    }
+}
+
+void RecorderDemo::SetRecorderTime()
+{
+    string time;
+    cout << "time to keep recording, unit is seconds " << endl;
+    (void)getline(cin, time);
+    recorderTime = std::stol(time, nullptr, DECIMAL_BASE);
+    cout << "recorderTime : " << recorderTime << endl;
+}
+
+void RecorderDemo::SetThreshold()
+{
+    string source;
+    string value = "";
+    cout << "set threshold" << endl;
+    cout << "set max duration, unit is seconds : 1" << endl;
+    cout << "set max size, unit is byes : 2" << endl;
+    cout << "set max size && max duration : 3" << endl;
+    cout << "not set max size && max duration : 4" << endl;
+    (void)getline(cin, source);
+
+    if (source == "1") {
+        cout << "max duration value" << endl;
+        (void)getline(cin, value);
+        g_videoRecorderConfig.duration = std::stol(value, nullptr, DECIMAL_BASE);
+        g_videoRecorderConfig.size = 0;
+        setType_ = RecorderTyp::TYPE_MAX_TIME;
+    } else if (source == "2") {
+        cout << "max size value" << endl;
+        (void)getline(cin, value);
+        g_videoRecorderConfig.duration = 0;
+        g_videoRecorderConfig.size = std::stoll(value, nullptr, DECIMAL_BASE);
+        setType_ = RecorderTyp::TYPE_MAX_SIZE;
+    } else if (source == "3") {
+        cout << "max size value && max duration value" << endl;
+        cout << "duration value" << endl;
+        (void)getline(cin, value);
+        g_videoRecorderConfig.duration = std::stol(value, nullptr, DECIMAL_BASE);
+        cout << "size value" << endl;
+        (void)getline(cin, value);
+        g_videoRecorderConfig.size = std::stoll(value, nullptr, DECIMAL_BASE);
+        setType_ = RecorderTyp::TYPE_MAX_SIZE_AND_TIME;
+    } else {
+        setType_ = RecorderTyp::TYPE_SET_NONE;
+        cout << "threshold not set" << endl;
     }
 }
 
@@ -405,6 +548,11 @@ void RecorderDemo::RunCase()
     SetVideoSource();
     SetVideoEncodeMode();
 
+    SetThreshold();
+
+    SetRecorderTime();
+
+    frameRate_ = g_videoRecorderConfig.frameRate;
     GetFileFd();
 
     int32_t ret = SetFormat(recorderType);
@@ -432,7 +580,7 @@ void RecorderDemo::RunCase()
     ret = recorder_->Start();
     DEMO_CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Start failed ");
     cout << "start recordering" << endl;
-    sleep(RECORDER_TIME);
+    sleep(recorderTime);
 
     isExit_.store(true);
     ret = recorder_->Stop(false);
