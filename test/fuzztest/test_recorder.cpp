@@ -466,7 +466,7 @@ void TestRecorder::HDICreateESBuffer()
             (void)producerSurface->CancelBuffer(buffer);
             break;
         }
-        (void)file->read(tempBuffer, *frameLenArray);
+        (void)newfile->read(tempBuffer, *frameLenArray);
         if (*frameLenArray > buffer->GetSize()) {
             free(tempBuffer);
             (void)producerSurface->CancelBuffer(buffer);
@@ -489,8 +489,8 @@ void TestRecorder::HDICreateESBuffer()
         frameLenArray++;
         free(tempBuffer);
     }
-    if ((file != nullptr) && (file->is_open())) {
-        file->close();
+    if ((newfile != nullptr) && (newfile->is_open())) {
+        newfile->close();
     }
 }
 
