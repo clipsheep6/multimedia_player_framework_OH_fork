@@ -438,7 +438,7 @@ void TestRecorder::HDICreateESBuffer()
 {
     constexpr int32_t SLEEP_TIME = 100;
     const uint32_t *frameLenArray = HIGH_VIDEO_FRAME_SIZE;
-    while (counts < STUB_STREAM_SIZE) {
+    while (nowFrame < STUB_STREAM_SIZE) {
         if (isExit_.load()) {
             break;
         }
@@ -482,8 +482,8 @@ void TestRecorder::HDICreateESBuffer()
         (void)buffer->GetExtraData()->ExtraSet("dataSize", static_cast<int32_t>(*frameLenArray));
         (void)buffer->GetExtraData()->ExtraSet("timeStamp", pts);
         (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
-        counts++;
-        (counts % 30) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0);
+        nowFrame++;
+        (nowFrame % 30) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0);
         pts += FRAME_DURATION;
         (void)producerSurface->FlushBuffer(buffer, -1, g_esFlushConfig);
         frameLenArray++;
@@ -500,7 +500,7 @@ void TestRecorder::HDICreateYUVBuffer()
     constexpr int32_t COUNT_SPLIT = 30;
     constexpr int32_t COUNT_COLOR = 255;
     constexpr int32_t TIME_WAIT = 100;
-    while (counts < STUB_STREAM_SIZE) {
+    while (nowFrame < STUB_STREAM_SIZE) {
         if (!isExit_.load()) {
             break;
         }
@@ -539,8 +539,8 @@ void TestRecorder::HDICreateYUVBuffer()
         (void)buffer->GetExtraData()->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
         (void)buffer->GetExtraData()->ExtraSet("timeStamp", pts);
         (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
-        counts++;
-        (counts % COUNT_SPLIT) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0);
+        nowFrame++;
+        (nowFrame % COUNT_SPLIT) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0);
         (void)producerSurface->FlushBuffer(buffer, -1, g_yuvFlushConfig);
     }
 }

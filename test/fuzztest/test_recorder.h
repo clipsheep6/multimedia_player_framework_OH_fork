@@ -41,7 +41,7 @@ public:
     const std::string PURE_VIDEO = "video";
     const std::string PURE_AUDIO = "audio";
     const std::string AUDIO_VIDEO = "av";
-    uint32_t counts = 0;
+    uint32_t nowFrame = 0;
 
     bool CameraServicesForAudio(RecorderTestParam::VideoRecorderConfig &recorderConfig);
     bool CameraServicesForVideo(RecorderTestParam::VideoRecorderConfig &recorderConfig);
