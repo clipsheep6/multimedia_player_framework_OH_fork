@@ -430,7 +430,7 @@ uint64_t TestRecorder::GetPts()
 {
     struct timespec timestamp = {0, 0};
     clock_gettime(CLOCK_MONOTONIC, &timestamp);
-    uint64_t timeValue = (uint64_t)(timestamp.tv_sec) * SEC_TO_NS + (uint64_t)(timestamp.tv_nsec);
+    uint64_t timeValue = static_cast<uint64_t>(timestamp.tv_sec) * SEC_TO_NS + static_cast<uint64_t>(timestamp.tv_nsec);
     return timeValue;
 }
 
