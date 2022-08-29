@@ -76,7 +76,8 @@ public:
     bool SetNextOutputFile(RecorderTestParam::VideoRecorderConfig &recorderConfig);
     bool GetSurface(RecorderTestParam::VideoRecorderConfig &recorderConfig);
     bool SetMaxFileSize(int64_t size, RecorderTestParam::VideoRecorderConfig &recorderConfig);
-    bool SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration, RecorderTestParam::VideoRecorderConfig &recorderConfig);
+    bool SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration,
+        RecorderTestParam::VideoRecorderConfig &recorderConfig);
     bool SetParameter(int32_t sourceId, const Format &format, RecorderTestParam::VideoRecorderConfig &recorderConfig);
 
 private:

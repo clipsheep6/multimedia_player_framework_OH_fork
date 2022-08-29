@@ -374,7 +374,8 @@ bool TestRecorder::CameraServicesForAudio(VideoRecorderConfig &recorderConfig)
     return true;
 }
 
-bool TestRecorder::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration, VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetFileSplitDuration(FileSplitType type, int64_t timestamp,
+    uint32_t duration, VideoRecorderConfig &recorderConfig)
 {
     int32_t retValue = recorder->SetFileSplitDuration(type, timestamp, duration);
     if (retValue != 0) {
@@ -413,13 +414,13 @@ bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorder
 
 bool TestRecorder::GetStubFile()
 {
-    file = std::make_shared<std::ifstream>();
-    if (file == nullptr) {
+    newfile = std::make_shared<std::ifstream>();
+    if (newfile == nullptr) {
         return false;
     }
     const std::string filePath = "/data/test/media/out_320_240_10s.h264";
-    file->open(filePath, std::ios::in | std::ios::binary);
-    if (!(file->is_open())) {
+    newfile->open(filePath, std::ios::in | std::ios::binary);
+    if (!(newfile->is_open())) {
         return false;
     }
     return true;
@@ -429,8 +430,8 @@ uint64_t TestRecorder::GetPts()
 {
     struct timespec timestamp = {0, 0};
     clock_gettime(CLOCK_MONOTONIC, &timestamp);
-    uint64_t time = (uint64_t)(timestamp.tv_sec) * SEC_TO_NS + (uint64_t)(timestamp.tv_nsec);
-    return time;
+    uint64_t timeValue = (uint64_t)(timestamp.tv_sec) * SEC_TO_NS + (uint64_t)(timestamp.tv_nsec);
+    return timeValue;
 }
 
 void TestRecorder::HDICreateESBuffer()
@@ -444,11 +445,11 @@ void TestRecorder::HDICreateESBuffer()
         usleep(FRAME_RATE);
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
-        OHOS::SurfaceError ret = producerSurface->RequestBuffer(buffer, releaseFence, g_esRequestConfig);
-        if (ret == OHOS::SURFACE_ERROR_NO_BUFFER) {
+        OHOS::SurfaceError retValue = producerSurface->RequestBuffer(buffer, releaseFence, g_esRequestConfig);
+        if (retValue == OHOS::SURFACE_ERROR_NO_BUFFER) {
             continue;
         }
-        if (ret == SURFACE_ERROR_OK && buffer != nullptr) {
+        if (retValue == SURFACE_ERROR_OK && buffer != nullptr) {
             break;
         }
 
@@ -482,7 +483,7 @@ void TestRecorder::HDICreateESBuffer()
         (void)buffer->GetExtraData()->ExtraSet("timeStamp", pts);
         (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
         counts++;
-        (counts % 30) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0); // keyframe every 30fps
+        (counts % 30) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0);
         pts += FRAME_DURATION;
         (void)producerSurface->FlushBuffer(buffer, -1, g_esFlushConfig);
         frameLenArray++;
@@ -520,12 +521,12 @@ void TestRecorder::HDICreateYUVBuffer()
 
         char *tempBuffer = (char *)(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color, YUV_BUFFER_SIZE);
-        (void)srand(static_cast<int>(time(0)));
+        (void)srand(static_cast<int>(time(nullptr)));
         for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += (YUV_BUFFER_SIZE - 1)) {
             if (i >= YUV_BUFFER_SIZE - 1) {
                 break;
             }
-            tempBuffer[i] = (unsigned char)(PlayerTestParam::ProduceRandomNumberCrypt() % COUNT_COLOR);
+            tempBuffer[i] = static_cast<unsigned char>(PlayerTestParam::ProduceRandomNumberCrypt() % COUNT_COLOR);
         }
 
         color = color - COUNT_ABSTRACT;
