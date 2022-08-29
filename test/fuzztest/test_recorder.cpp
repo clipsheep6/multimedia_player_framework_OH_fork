@@ -508,16 +508,16 @@ void TestRecorder::HDICreateYUVBuffer()
         usleep(FRAME_RATE);
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
-        OHOS::SurfaceError ret = producerSurface->RequestBuffer(buffer, releaseFence, g_yuvRequestConfig);
-        if (ret == OHOS::SURFACE_ERROR_NO_BUFFER) {
+        OHOS::SurfaceError retValue = producerSurface->RequestBuffer(buffer, releaseFence, g_yuvRequestConfig);
+        if (retValue == OHOS::SURFACE_ERROR_NO_BUFFER) {
             continue;
         }
-        if (ret != SURFACE_ERROR_OK || buffer == nullptr) {
+        if (retValue != SURFACE_ERROR_OK || buffer == nullptr) {
             break;
         }
 
         sptr<SyncFence> syncFence = new SyncFence(releaseFence);
-        syncFence->Wait(TIME_WAIT); // 100ms
+        syncFence->Wait(TIME_WAIT);
 
         char *tempBuffer = (char *)(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color, YUV_BUFFER_SIZE);
