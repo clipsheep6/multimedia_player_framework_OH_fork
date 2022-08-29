@@ -483,7 +483,7 @@ void TestRecorder::HDICreateESBuffer()
         (void)buffer->GetExtraData()->ExtraSet("timeStamp", pts);
         (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
         nowFrame++;
-        (nowFrame % 30) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0);
+        ((nowFrame % 30) == 0) ? (isKeyFrame = 1) : (isKeyFrame = 0);
         pts += FRAME_DURATION;
         (void)producerSurface->FlushBuffer(buffer, -1, g_esFlushConfig);
         frameLenArray++;
