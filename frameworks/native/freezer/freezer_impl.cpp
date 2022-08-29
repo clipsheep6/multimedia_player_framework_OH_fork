@@ -22,6 +22,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "FreezerImpl"};
+const int32_t DELAY_TIME = 2000;
+const std::string FREEZER_IMPL_NAME = "FreezerImpl";
 }
 
 namespace OHOS {
@@ -47,20 +49,34 @@ std::string FreezerErrorTypeToString(FreezerErrorType type)
 
 std::shared_ptr<Freezer> FreezerFactory::CreateFreezer()
 {
-    std::shared_ptr<FreezerImpl> impl = std::make_shared<FreezerImpl>();
-    CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new FreezerImpl");
-
-    int32_t ret = impl->Init();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init FreezerImpl");
-
-    return impl;
+    return DelayedSingleton<FreezerImpl>::GetInstance();
 }
 
-int32_t FreezerImpl::Init()
+bool FreezerImpl::GetFreezerService()
 {
+    if (freezerService_) {
+        MEDIA_LOGD("freezerService_ is already exist");
+        return false;
+    }
     freezerService_ = MediaServiceFactory::GetInstance().CreateFreezerService();
-    CHECK_AND_RETURN_RET_LOG(freezerService_ != nullptr, MSERR_UNKNOWN, "failed to create player service");
-    return MSERR_OK;
+    if (!freezerService_) {
+        return false;
+    }
+
+    if (!recipient_) {
+        recipient_ = new (std::nothrow) FreezerImplDeathRecipient();
+    }
+    freezerServiceRunner_ = AppExecFwk::EventRunner::Create(FREEZER_IMPL_NAME);
+    if (!freezerServiceRunner_) {
+        MEDIA_LOGE("FreezerImpl runner create failed!");
+        return false;
+    }
+    freezerServiceHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(freezerServiceRunner_);
+    if (!freezerServiceHandler_) {
+        MEDIA_LOGE("FreezerImpl handler create failed!");
+        return false;
+    }
+    return true;
 }
 
 FreezerImpl::FreezerImpl()
@@ -71,19 +87,44 @@ FreezerImpl::FreezerImpl()
 FreezerImpl::~FreezerImpl()
 {
     freezerService_ = nullptr;
+    recipient_ = nullptr;
     MEDIA_LOGD("FreezerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 int32_t FreezerImpl::ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze)
 {
     MEDIA_LOGW("KPI-TRACE: FreezerImpl ProxyApp in(pidSet, isFreeze)");
+    if (!freezerService_ && !GetFreezerService()) {
+        return MSERR_INVALID_OPERATION;
+    }
     return freezerService_->ProxyApp(pidSet, isFreeze);
 }
 
 int32_t FreezerImpl::ResetAll()
 {
     MEDIA_LOGW("KPI-TRACE: FreezerImpl ResetAll in()");
+    if (!freezerService_ && !GetFreezerService()) {
+        return MSERR_INVALID_OPERATION;
+    }
     return freezerService_->ResetAll();
+}
+
+void FreezerImpl::FreezerImplDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
+{
+    if (object == nullptr) {
+        MEDIA_LOGE("remote object is null.");
+        return;
+    }
+    DelayedSingleton<FreezerImpl>::GetInstance()->freezerService_ = nullptr;
+    DelayedSingleton<FreezerImpl>::GetInstance()->freezerServiceHandler_->PostTask([this, &object]() {
+            this->OnServiceDiedInner(object);
+        },
+        DELAY_TIME);
+}
+
+void FreezerImpl::FreezerImplDeathRecipient::OnServiceDiedInner(const wptr<IRemoteObject> &object)
+{
+    while (!DelayedSingleton<FreezerImpl>::GetInstance()->GetFreezerService()) { }
 }
 } // namespace Media
 } // namespace OHOS

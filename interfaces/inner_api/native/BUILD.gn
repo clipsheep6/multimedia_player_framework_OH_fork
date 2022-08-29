@@ -140,6 +140,7 @@ ohos_shared_library("media_client") {
 
     external_deps = [
       "c_utils:utils",
+      "eventhandler:libeventhandler",
       "hiviewdfx_hilog_native:libhilog",
       "ipc:ipc_core",
     ]
@@ -204,6 +205,7 @@ ohos_shared_library("media_client") {
 
     external_deps = [
       "c_utils:utils",
+      "eventhandler:libeventhandler",
       "hiviewdfx_hilog_native:libhilog",
       "ipc:ipc_core",
       "samgr:samgr_proxy",

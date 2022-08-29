@@ -568,7 +568,7 @@ sptr<PlayerServiceStub> MediaServerManager::processFreezer(int32_t pid)
 {
     sptr<PlayerServiceStub> playStub = nullptr;
     MEDIA_LOGD("MediaServerManager::processFreezer pid is%{public}d", pid);
-    for (auto itPlayer = playerStubMap_.begin(); itPlayer != playerStubMap_.end();) {
+    for (auto itPlayer = playerStubMap_.begin(); itPlayer != playerStubMap_.end(); itPlayer++) {
         if (itPlayer->second == pid) {
             playStub = iface_cast<PlayerServiceStub>(itPlayer->first);
         }
