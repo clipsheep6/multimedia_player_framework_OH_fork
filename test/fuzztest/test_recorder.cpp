@@ -414,13 +414,13 @@ bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorder
 
 bool TestRecorder::GetStubFile()
 {
-    newfile = std::make_shared<std::ifstream>();
-    if (newfile == nullptr) {
+    file = std::make_shared<std::ifstream>();
+    if (file == nullptr) {
         return false;
     }
     const std::string filePath = "/data/test/media/out_320_240_10s.h264";
-    newfile->open(filePath, std::ios::in | std::ios::binary);
-    if (!(newfile->is_open())) {
+    file->open(filePath, std::ios::in | std::ios::binary);
+    if (!(file->is_open())) {
         return false;
     }
     return true;
@@ -466,7 +466,7 @@ void TestRecorder::HDICreateESBuffer()
             (void)producerSurface->CancelBuffer(buffer);
             break;
         }
-        (void)newfile->read(tempBuffer, *frameLenArray);
+        (void)file->read(tempBuffer, *frameLenArray);
         if (*frameLenArray > buffer->GetSize()) {
             free(tempBuffer);
             (void)producerSurface->CancelBuffer(buffer);
@@ -489,8 +489,8 @@ void TestRecorder::HDICreateESBuffer()
         frameLenArray++;
         free(tempBuffer);
     }
-    if ((newfile != nullptr) && (newfile->is_open())) {
-        newfile->close();
+    if ((file != nullptr) && (file->is_open())) {
+        file->close();
     }
 }
 

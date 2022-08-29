@@ -34,7 +34,7 @@ public:
     TestRecorder();
     ~TestRecorder();
     std::shared_ptr<Recorder> recorder = nullptr;
-    std::shared_ptr<std::ifstream> newfile = nullptr;
+    std::shared_ptr<std::ifstream> file = nullptr;
     std::unique_ptr<std::thread> camereHDIThread;
     OHOS::sptr<OHOS::Surface> producerSurface = nullptr;
 
