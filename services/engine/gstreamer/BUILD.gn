@@ -35,6 +35,7 @@ ohos_shared_library("media_engine_gst") {
     "//third_party/gstreamer/gstplugins_good:gstplugins_good_packages",
     "//third_party/gstreamer/gstreamer:gstreamer_packages",
     "//third_party/libffi:ffi",
+    "//third_party/gstreamer/gst_omx:gst_omx_packages",
   ]
 
   relative_install_dir = "media"
