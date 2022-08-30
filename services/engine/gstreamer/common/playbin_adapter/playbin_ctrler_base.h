@@ -159,7 +159,7 @@ private:
     std::mutex condMutex_;
     std::condition_variable stateCond_;
 
-    bool isStopFinish_ = false;
+    bool isStop_ = true;
     std::mutex stopCondMutex_;
     std::condition_variable stopCond_;
     

@@ -39,7 +39,6 @@ namespace {
     constexpr int32_t NANO_SEC_PER_USEC = 1000;
     constexpr double DEFAULT_RATE = 1.0;
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
-    constexpr uint32_t STOP_TIMEOUT = 5;
 }
 
 namespace OHOS {
@@ -278,9 +277,8 @@ int32_t PlayBinCtrlerBase::StopInternal()
     }
 
     auto state = GetCurrState();
-    if (state == idleState_ || state == stoppedState_ || state == initializedState_ || state == preparingState_) {
+    if (state == idleState_ || state == stoppedState_ || state == initializedState_) {
         MEDIA_LOGI("curr state is %{public}s, skip", state->GetStateName().c_str());
-        isStopFinish_ = true;
         return MSERR_OK;
     }
 
@@ -449,16 +447,16 @@ int32_t PlayBinCtrlerBase::Reset() noexcept
         elemUnSetupListener_ = nullptr;
         autoPlugSortListener_ = nullptr;
     }
-    isStopFinish_ = false;
     int32_t ret = StopInternal();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StopInternal failed");
     {
         std::unique_lock<std::mutex> condLock(stopCondMutex_);
-        stopCond_.wait_for(condLock, std::chrono::seconds(STOP_TIMEOUT), [this]() {
-            return isStopFinish_;
+        MEDIA_LOGD("wait stop start");
+        stopCond_.wait(condLock, [this]() {
+            return isStop_;
         });
+        MEDIA_LOGD("wait stop end");
     }
-    CHECK_AND_RETURN_RET_LOG(isStopFinish_, MSERR_INVALID_OPERATION, "not recv stop done msg");
     // Do it here before the ChangeState to IdleState, for avoding the deadlock when msg handler
     // try to call the ChangeState.
     ExitInitializedState();
@@ -642,6 +640,10 @@ int32_t PlayBinCtrlerBase::PrepareAsyncInternal()
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     ret = currState->Prepare();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "PrepareAsyncInternal failed");
+    {
+        std::unique_lock<std::mutex> condLock(stopCondMutex_);
+        isStop_ = false;
+    }
 
     return MSERR_OK;
 }
@@ -1178,7 +1180,12 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
 {
     if (msg.type == PlayBinMsgType::PLAYBIN_MSG_ERROR) {
         MEDIA_LOGE("error happend, error code: %{public}d", msg.code);
-
+        {
+            std::unique_lock<std::mutex> condLock(stopCondMutex_);
+            if (GetCurrState() == preparingState_) {
+                isStop_ = true;
+            }
+        }
         std::unique_lock<std::mutex> condLock(condMutex_);
         isErrorHappened_ = true;
         stateCond_.notify_all();
@@ -1187,7 +1194,7 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
     if (msg.type == PlayBinMsgType::PLAYBIN_MSG_STATE_CHANGE &&
         msg.code == PlayBinState::PLAYBIN_STATE_STOPPED) {
         std::unique_lock<std::mutex> condLock(stopCondMutex_);
-        isStopFinish_ = true;
+        isStop_ = true;
         stopCond_.notify_all();
     }
 
