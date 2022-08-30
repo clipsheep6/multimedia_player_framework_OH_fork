@@ -45,14 +45,12 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
 
     avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
-        cout << "avmetadata is null" << endl;
         avmetadata->Release();
         return false;
     }
 
     const string path = "/data/test/media/H264_AAC.mp4";
     if (MetaDataSetSource(path) != 0) {
-        cout << "avmetadata SetSource file" << endl;
         avmetadata->Release();
         return false;
     }
@@ -87,7 +85,6 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
             avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), option, pixelMapParams);
 
         if (retFetchFrameAtTime != 0) {
-            cout << "expect avmetadata FetchFrameAtTime fail" << endl;
             avmetadata->Release();
             return true;
         }

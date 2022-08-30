@@ -42,7 +42,6 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
     constexpr int32_t USAGE_LIST = 2;
     avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
-        cout << "avmetadata is null" << endl;
         avmetadata->Release();
         return false;
     }
@@ -50,7 +49,6 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
     const string path = "/data/test/media/H264_AAC.mp4";
     int32_t setsourcefd = open(path.c_str(), O_RDONLY);
     if (setsourcefd < 0) {
-        cout << "Open file failed" << endl;
         (void)close(setsourcefd);
         avmetadata->Release();
         return false;
@@ -58,7 +56,6 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
 
     struct stat64 buffer;
     if (fstat64(setsourcefd, &buffer) != 0) {
-        cout << "Get file state failed" << endl;
         (void)close(setsourcefd);
         avmetadata->Release();
         return false;
