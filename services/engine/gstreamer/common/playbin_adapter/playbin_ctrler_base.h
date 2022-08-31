@@ -66,7 +66,8 @@ public:
 
     void SetElemSetupListener(ElemSetupListener listener) final;
     void SetElemUnSetupListener(ElemSetupListener listener) final;
-
+    void SetAutoPlugSortListener(AutoPlugSortListener listener) final;
+    void RemoveGstPlaySinkVideoConvertPlugin() final;
 protected:
     virtual int32_t OnInit() = 0;
 
@@ -103,7 +104,7 @@ private:
     static void OnVolumeChangedCb(const GstElement *playbin, GstElement *elem, gpointer userdata);
     static void OnBitRateParseCompleteCb(const GstElement *playbin, uint32_t *bitrateInfo,
         uint32_t bitrateNum, gpointer userdata);
-    static GValueArray *OnDecodeBinTryAddNewElem(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
+    static GValueArray *AutoPlugSort(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
         GValueArray *factories, gpointer userdata);
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
         const uint32_t hintType, gpointer userdata);
@@ -121,15 +122,16 @@ private:
     void OnAppsrcErrorMessageReceived(int32_t errorCode);
     void OnMessageReceived(const InnerMessage &msg);
     void OnSinkMessageReceived(const PlayBinMessage &msg);
+    GValueArray *OnAutoPlugSort(GValueArray &factories);
     void ReportMessage(const PlayBinMessage &msg);
     int32_t Reset() noexcept;
     bool IsLiveSource() const;
     int32_t DoInitializeForDataSource();
     void DoInitializeForHttp();
-    void HandleCacheCtrl(const InnerMessage &msg);
+    void HandleCacheCtrl(int32_t percent);
+    void HandleCacheCtrlCb(const InnerMessage &msg);
     void HandleCacheCtrlWhenNoBuffering(int32_t percent);
     void HandleCacheCtrlWhenBuffering(int32_t percent);
-    void RemoveGstPlaySinkVideoConvertPlugin();
 
     std::mutex mutex_;
     std::mutex cacheCtrlMutex_;
@@ -140,6 +142,7 @@ private:
     PlayBinMsgNotifier notifier_;
     ElemSetupListener elemSetupListener_;
     ElemSetupListener elemUnSetupListener_;
+    AutoPlugSortListener autoPlugSortListener_;
     std::shared_ptr<PlayBinSinkProvider> sinkProvider_;
     std::unique_ptr<GstMsgProcessor> msgProcessor_;
     std::string uri_;
@@ -175,10 +178,10 @@ private:
     bool isUserSetPause_ = false;
     uint32_t rendererInfo_ = 0;
     int32_t rendererFlag_ = 0;
+    int32_t cachePercent_ = 100; // 100% cache percent
 
     std::atomic<bool> isDuration_ = false;
     std::atomic<bool> enableLooping_ = false;
-    bool isPlaySinkFlagsSet_ = false;
     std::shared_ptr<GstAppsrcWrap> appsrcWrap_ = nullptr;
 
     std::shared_ptr<IdleState> idleState_;
