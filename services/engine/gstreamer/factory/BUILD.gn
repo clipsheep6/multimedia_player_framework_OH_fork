@@ -47,7 +47,6 @@ config("media_engine_gst_factory_config") {
     "//foundation/multimedia/player_framework/services/engine/gstreamer/recorder",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/avmetadatahelper",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/avcodec",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/avmuxer",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/loader",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/playbin_adapter",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/message",

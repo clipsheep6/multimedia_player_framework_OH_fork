@@ -17,7 +17,6 @@
 #include <iostream>
 #include "media_errors.h"
 #include "string_ex.h"
-#include "avmuxer_demo.h"
 
 using namespace std;
 
@@ -31,7 +30,6 @@ void RecorderProfilesDemo::PrintInputInfo() const
     cout << "3:GetAudioRecorderCaps" << endl;
     cout << "4:GetVideoRecorderCaps" << endl;
     cout << "5:GetVideoRecorderProfile" << endl;
-    cout << "6:GetAVMuxerFormatList" << endl;
     cout << endl;
 }
 
@@ -72,10 +70,6 @@ void RecorderProfilesDemo::DoNext()
                         sourceId_, qualityLevel_);
                 PrintVideoRecorderProfile(videoRecorderProfile);
             }
-        } else if (cmd.find("6") != std::string::npos || cmd.find("GetAVMuxerFormatList") != std::string::npos) {
-            std::vector<std::string> muxerFormatList =
-                OHOS::Media::AVMuxerFactory::CreateAVMuxer()->GetAVMuxerFormatList();
-            PrintMuxerFormatList(muxerFormatList);
         }
         cout << endl;
         PrintInputInfo();

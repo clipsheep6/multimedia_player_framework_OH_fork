@@ -48,7 +48,6 @@ private:
     static napi_value GetVideoRecorderCaps(napi_env env, napi_callback_info info);
     static napi_value GetVideoRecorderProfile(napi_env env, napi_callback_info info);
     static napi_value HasVideoRecorderProfile(napi_env env, napi_callback_info info);
-    static napi_value GetAVMuxerFormatList(napi_env env, napi_callback_info info);
 
     MediaCapsNapi();
     ~MediaCapsNapi();
