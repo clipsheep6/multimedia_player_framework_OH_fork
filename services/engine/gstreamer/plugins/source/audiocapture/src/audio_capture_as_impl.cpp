@@ -154,8 +154,8 @@ void AudioCaptureAsImpl::GetAudioCaptureBuffer()
         }
 
         if (audioCacheCtrl_->captureQueue_.size() >= MAX_QUEUE_SIZE) {
-            MEDIA_LOGD("audio cache queue size is %{public}zu", audioCacheCtrl_->captureQueue_.size());
             audioCacheCtrl_->captureCond_.notify_all();
+            usleep(1000); // delay 1ms
             continue;
         }
 
