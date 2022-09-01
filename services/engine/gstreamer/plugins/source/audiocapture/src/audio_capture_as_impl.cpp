@@ -155,7 +155,6 @@ void AudioCaptureAsImpl::GetAudioCaptureBuffer()
 
         if (audioCacheCtrl_->captureQueue_.size() >= MAX_QUEUE_SIZE) {
             audioCacheCtrl_->captureCond_.notify_all();
-            usleep(1000); // delay 1ms
             continue;
         }
 
