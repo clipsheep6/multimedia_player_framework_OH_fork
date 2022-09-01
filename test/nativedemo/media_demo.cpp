@@ -22,7 +22,6 @@
 #include "avcodec_venc_demo.h"
 #include "avcodec_vdec_demo.h"
 #include "recorder_profiles_demo.h"
-#include "avmuxer_demo.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -101,18 +100,6 @@ static int RunMediaProfile(const string &path)
     return 0;
 }
 
-static int RunAVMuxer()
-{
-    auto avmuxer = std::make_unique<AVMuxerDemo>();
-    if (avmuxer == nullptr) {
-        cout << "avmuxer is null" << endl;
-        return 0;
-    }
-    avmuxer->RunCase();
-    cout << "demo avmuxer end" << endl;
-    return 0;
-}
-
 int main(int argc, char *argv[])
 {
     constexpr int minRequiredArgCount = 2;
@@ -126,8 +113,7 @@ int main(int argc, char *argv[])
     cout << "2:avmetadatahelper" << endl;
     cout << "3:codeclist" << endl;
     cout << "4:video-encoder" << endl;
-    cout << "5:avmuxer" << endl;
-    cout << "6:recorder_profiles" << endl;
+    cout << "5:recorder_profiles" << endl;
 
     string mode;
     (void)getline(cin, mode);
@@ -142,8 +128,6 @@ int main(int argc, char *argv[])
     } else if (mode == "4") {
         (void)RunVideoEncoder(false);
     } else if (mode == "5") {
-        (void)RunAVMuxer();
-    } else if (mode == "6") {
         (void)RunMediaProfile(path);
     } else {
         cout << "no that selection" << endl;

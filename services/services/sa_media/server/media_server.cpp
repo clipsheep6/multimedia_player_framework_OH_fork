@@ -82,9 +82,6 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
         case MediaSystemAbility::RECORDER_PROFILES: {
             return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
         }
-        case MediaSystemAbility::MEDIA_AVMUXER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVMUXER);
-        }
         default: {
             MEDIA_LOGE("default case, media client need check subSystemId");
             return nullptr;

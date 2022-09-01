@@ -45,7 +45,6 @@ public:
         AVMETADATAHELPER,
         AVCODECLIST,
         AVCODEC,
-        AVMUXER,
         RECORDERPROFILES,
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
@@ -63,14 +62,12 @@ private:
     sptr<IRemoteObject> CreateAVCodecListStubObject();
     sptr<IRemoteObject> CreateAVCodecStubObject();
     sptr<IRemoteObject> CreateRecorderProfilesStubObject();
-    sptr<IRemoteObject> CreateAVMuxerStubObject();
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avmuxerStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
 
     std::mutex mutex_;

@@ -23,7 +23,6 @@
 #include "i_avcodec_service.h"
 #include "i_avcodeclist_service.h"
 #include "i_recorder_profiles_service.h"
-#include "i_avmuxer_service.h"
 
 namespace OHOS {
 namespace Media {
@@ -98,17 +97,6 @@ public:
     virtual std::shared_ptr<IAVCodecService> CreateAVCodecService() = 0;
 
     /**
-     * @brief Create an avmuxer service.
-     *
-     * All avmuxer functions must be created and obtained first.
-     *
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.2
-     * @version 3.2
-     */
-    virtual std::shared_ptr<IAVMuxerService> CreateAVMuxerService() = 0;
-
-    /**
      * @brief Destroy a recorder service.
      *
      * call the API to destroy the recorder service.
@@ -179,18 +167,6 @@ public:
      * @version 3.2
      */
     virtual int32_t DestroyMediaProfileService(std::shared_ptr<IRecorderProfilesService> recorderProfiles) = 0;
-    
-    /**
-     * @brief Destroy a avmuxer service.
-     *
-     * call the API to destroy the avmuxer service.
-     *
-     * @param pointer to the avmuxer service.
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.2
-     * @version 3.2
-     */
-    virtual int32_t DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer) = 0;
 };
 
 class __attribute__((visibility("default"))) MediaServiceFactory {
