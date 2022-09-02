@@ -184,6 +184,8 @@ extern const char *OH_MD_KEY_PIXEL_FORMAT;
 extern const char *OH_MD_KEY_AUDIO_SAMPLE_FORMAT;
 /* Key for video frame rate, value type is double. */
 extern const char *OH_MD_KEY_FRAME_RATE;
+/* Key for the interval of key frame. value type is int32_t, the unit is milliseconds. */
+extern const char *OH_MD_KEY_I_FRAME_INTERVAL;
 /* video encode bitrate mode, the value type is int32_t, see @OH_VideoEncodeBitrateMode */
 extern const char *OH_MD_KEY_VIDEO_ENCODE_BITRATE_MODE;
 /* encode profile, the value type is number. see @OH_AVCProfile, OH_AACProfile. */

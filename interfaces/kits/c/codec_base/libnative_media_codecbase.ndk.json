@@ -13,6 +13,7 @@
     { "name": "OH_MD_KEY_PIXEL_FORMAT" },
     { "name": "OH_MD_KEY_AUDIO_SAMPLE_FORMAT" },
     { "name": "OH_MD_KEY_FRAME_RATE" },
+    { "name": "OH_MD_KEY_I_FRAME_INTERVAL" },
     { "name": "OH_MD_KEY_VIDEO_ENCODE_BITRATE_MODE" },
     { "name": "OH_MD_KEY_PROFILE" },
     { "name": "OH_MD_KEY_AUD_CHANNEL_COUNT" },
