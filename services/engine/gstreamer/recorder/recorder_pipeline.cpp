@@ -46,10 +46,10 @@ void RecorderPipeline::SetNotifier(RecorderMsgNotifier notifier)
     notifier_ = notifier;
 }
 
-void RecorderPipeline::SetCmdQ(RecorderExecuteInCmdQ cmdQ)
+void RecorderPipeline::SetExecuteInCmdQ(RecorderExecuteInCmdQ executeInCmdQ)
 {
-    std::unique_lock<std::mutex> lock(gstPipeMutex_);
-    cmdQ_ = cmdQ;
+    std::unique_lock<std::mutex> lock(cmdQMutex_);
+    executeInCmdQ_ = executeInCmdQ;
 }
 
 int32_t RecorderPipeline::Init()
@@ -450,18 +450,19 @@ void RecorderPipeline::StopForError(const RecorderMessage &msg)
     errorState_.store(true);
     gstPipeCond_.notify_all();
 
-    std::unique_lock<std::mutex> lock(gstPipeMutex_);
-    if (cmdQ_ != nullptr) {
-        auto stopforErrorTask = std::make_shared<TaskHandler<int32_t>>([this] { 
-            (void)DoElemAction(&RecorderElement::Stop, false);
-            DrainBuffer(false);
-            (void)SyncWaitChangeState(GST_STATE_NULL); 
-            return MSERR_OK;
-        });
+    auto stopforErrorTask = std::make_shared<TaskHandler<int32_t>>([this] { 
+        (void)DoElemAction(&RecorderElement::Stop, false);
+        DrainBuffer(false);
+        (void)SyncWaitChangeState(GST_STATE_NULL); 
+        return MSERR_OK;
+    });
 
-        cmdQ_(stopforErrorTask, true);
+    std::unique_lock<std::mutex> lock(cmdQMutex_);
+    if (executeInCmdQ_ != nullptr) {
+        (void)executeInCmdQ_(stopforErrorTask, true);
+    } else {
+        stopforErrorTask->Execute();
     }
-    lock.unlock();
     
     isStarted_ = false;
     NotifyMessage(msg);

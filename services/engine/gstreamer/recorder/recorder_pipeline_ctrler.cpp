@@ -65,7 +65,7 @@ void RecorderPipelineCtrler::SetPipeline(std::shared_ptr<RecorderPipeline> pipel
     pipeline_->SetNotifier(notifier);
 
     auto cmdQ = std::bind(&RecorderPipelineCtrler::executeInCmdQ, this, std::placeholders::_1, std::placeholders::_2);
-    pipeline_->SetCmdQ(cmdQ);
+    pipeline_->SetExecuteInCmdQ(cmdQ);
 }
 
 int32_t RecorderPipelineCtrler::Init()
@@ -185,20 +185,6 @@ int32_t RecorderPipelineCtrler::Reset()
     return MSERR_OK;
 }
 
-int32_t RecorderPipelineCtrler::executeInCmdQ(const std::shared_ptr<ITaskHandler> &task, const bool &cancelNotExecuted)
-{
-    MEDIA_LOGD("enter");
-
-    int ret = cmdQ_->EnqueueTask(task, cancelNotExecuted);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
-    CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
-
-    return MSERR_OK;
-}
-
 void RecorderPipelineCtrler::Notify(const RecorderMessage &msg)
 {
     auto notifyTask = std::make_shared<TaskHandler<void>>([this, msg] {
@@ -215,6 +201,20 @@ void RecorderPipelineCtrler::Notify(const RecorderMessage &msg)
 
     int ret = msgQ_->EnqueueTask(notifyTask);
     CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Enqueue message failed !");
+}
+
+int32_t RecorderPipelineCtrler::executeInCmdQ(const std::shared_ptr<TaskHandler<int32_t>> &task, const bool &cancelNotExecuted)
+{
+    MEDIA_LOGD("enter");
+
+    int ret = cmdQ_->EnqueueTask(task, cancelNotExecuted);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
+
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS
