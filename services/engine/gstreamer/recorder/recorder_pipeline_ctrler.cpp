@@ -205,8 +205,6 @@ void RecorderPipelineCtrler::Notify(const RecorderMessage &msg)
 
 int32_t RecorderPipelineCtrler::executeInCmdQ(const std::shared_ptr<TaskHandler<int32_t>> &task, const bool &cancelNotExecuted)
 {
-    MEDIA_LOGD("enter");
-
     int ret = cmdQ_->EnqueueTask(task, cancelNotExecuted);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
