@@ -46,6 +46,12 @@ void RecorderPipeline::SetNotifier(RecorderMsgNotifier notifier)
     notifier_ = notifier;
 }
 
+void RecorderPipeline::SetCmdQ(RecorderExecuteInCmdQ cmdQ)
+{
+    std::unique_lock<std::mutex> lock(gstPipeMutex_);
+    cmdQ_ = cmdQ;
+}
+
 int32_t RecorderPipeline::Init()
 {
     if (desc_ == nullptr) {
@@ -269,7 +275,13 @@ bool RecorderPipeline::SyncWaitEOS()
 {
     MEDIA_LOGI("Wait EOS finished........................");
     std::unique_lock<std::mutex> lock(gstPipeMutex_);
-    gstPipeCond_.wait(lock, [this] { return eosDone_ || errorState_.load(); });
+    if (errorState_.load()) {
+        static constexpr int32_t timeout = 1; // wait 1s for eos finished
+        gstPipeCond_.wait_for(lock, std::chrono::seconds(timeout), [this] { return eosDone_; });
+    } else {
+        gstPipeCond_.wait(lock, [this] { return eosDone_ || errorState_.load(); });
+    }
+    
     if (!eosDone_) {
         MEDIA_LOGE("error happened, wait eos done failed !");
         return false;
@@ -436,13 +448,22 @@ void RecorderPipeline::StopForError(const RecorderMessage &msg)
                msg.code, msg.detail);
 
     errorState_.store(true);
-    (void)DoElemAction(&RecorderElement::Stop, false);
-    DrainBuffer(false);
-    (void)SyncWaitChangeState(GST_STATE_NULL);
-
-    isStarted_ = false;
     gstPipeCond_.notify_all();
 
+    std::unique_lock<std::mutex> lock(gstPipeMutex_);
+    if (cmdQ_ != nullptr) {
+        auto stopforErrorTask = std::make_shared<TaskHandler<int32_t>>([this] { 
+            (void)DoElemAction(&RecorderElement::Stop, false);
+            DrainBuffer(false);
+            (void)SyncWaitChangeState(GST_STATE_NULL); 
+            return MSERR_OK;
+        });
+
+        cmdQ_(stopforErrorTask, true);
+    }
+    lock.unlock();
+    
+    isStarted_ = false;
     NotifyMessage(msg);
 }
 

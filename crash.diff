@@ -1,0 +1,127 @@
+diff --git a/services/engine/gstreamer/recorder/recorder_pipeline.cpp b/services/engine/gstreamer/recorder/recorder_pipeline.cpp
+index 69fd76cf..43204ed3 100644
+--- a/services/engine/gstreamer/recorder/recorder_pipeline.cpp
++++ b/services/engine/gstreamer/recorder/recorder_pipeline.cpp
+@@ -46,6 +46,12 @@ void RecorderPipeline::SetNotifier(RecorderMsgNotifier notifier)
+     notifier_ = notifier;
+ }
+ 
++void RecorderPipeline::SetCmdQ(RecorderExecuteInCmdQ cmdQ)
++{
++    std::unique_lock<std::mutex> lock(gstPipeMutex_);
++    cmdQ_ = cmdQ;
++}
++
+ int32_t RecorderPipeline::Init()
+ {
+     if (desc_ == nullptr) {
+@@ -269,7 +275,13 @@ bool RecorderPipeline::SyncWaitEOS()
+ {
+     MEDIA_LOGI("Wait EOS finished........................");
+     std::unique_lock<std::mutex> lock(gstPipeMutex_);
+-    gstPipeCond_.wait(lock, [this] { return eosDone_ || errorState_.load(); });
++    if (errorState_.load()) {
++        static constexpr int32_t timeout = 1; // wait 1s for eos finished
++        gstPipeCond_.wait_for(lock, std::chrono::seconds(timeout), [this] { return eosDone_; });
++    } else {
++        gstPipeCond_.wait(lock, [this] { return eosDone_ || errorState_.load(); });
++    }
++    
+     if (!eosDone_) {
+         MEDIA_LOGE("error happened, wait eos done failed !");
+         return false;
+@@ -436,13 +448,22 @@ void RecorderPipeline::StopForError(const RecorderMessage &msg)
+                msg.code, msg.detail);
+ 
+     errorState_.store(true);
+-    (void)DoElemAction(&RecorderElement::Stop, false);
+-    DrainBuffer(false);
+-    (void)SyncWaitChangeState(GST_STATE_NULL);
+-
+-    isStarted_ = false;
+     gstPipeCond_.notify_all();
+ 
++    std::unique_lock<std::mutex> lock(gstPipeMutex_);
++    if (cmdQ_ != nullptr) {
++        auto stopforErrorTask = std::make_shared<TaskHandler<int32_t>>([this] { 
++            (void)DoElemAction(&RecorderElement::Stop, false);
++            DrainBuffer(false);
++            (void)SyncWaitChangeState(GST_STATE_NULL); 
++            return MSERR_OK;
++        });
++
++        cmdQ_(stopforErrorTask, true);
++    }
++    lock.unlock();
++    
++    isStarted_ = false;
+     NotifyMessage(msg);
+ }
+ 
+diff --git a/services/engine/gstreamer/recorder/recorder_pipeline.h b/services/engine/gstreamer/recorder/recorder_pipeline.h
+index 727a4b48..4b19d73b 100644
+--- a/services/engine/gstreamer/recorder/recorder_pipeline.h
++++ b/services/engine/gstreamer/recorder/recorder_pipeline.h
+@@ -35,6 +35,7 @@
+ namespace OHOS {
+ namespace Media {
+ using RecorderMsgNotifier = std::function<void(const RecorderMessage &)>;
++using RecorderExecuteInCmdQ = std::function<void(const std::shared_ptr<ITaskHandler> &, const bool &)>;
+ 
+ struct RecorderPipelineDesc {
+     struct LinkDesc {
+@@ -89,6 +90,7 @@ private:
+ 
+     std::shared_ptr<RecorderPipelineDesc> desc_;
+     RecorderMsgNotifier notifier_;
++    RecorderExecuteInCmdQ cmdQ_;
+     std::unique_ptr<RecorderMsgProcessor> msgProcessor_;
+ 
+     GstPipeline *gstPipeline_ = nullptr;
+diff --git a/services/engine/gstreamer/recorder/recorder_pipeline_ctrler.cpp b/services/engine/gstreamer/recorder/recorder_pipeline_ctrler.cpp
+index 48de9247..7353ef84 100644
+--- a/services/engine/gstreamer/recorder/recorder_pipeline_ctrler.cpp
++++ b/services/engine/gstreamer/recorder/recorder_pipeline_ctrler.cpp
+@@ -63,6 +63,9 @@ void RecorderPipelineCtrler::SetPipeline(std::shared_ptr<RecorderPipeline> pipel
+ 
+     auto notifier = std::bind(&RecorderPipelineCtrler::Notify, this, std::placeholders::_1);
+     pipeline_->SetNotifier(notifier);
++
++    auto cmdQ = std::bind(&RecorderPipelineCtrler::executeInCmdQ, this, std::placeholders::_1, std::placeholders::_2);
++    pipeline_->SetCmdQ(cmdQ);
+ }
+ 
+ int32_t RecorderPipelineCtrler::Init()
+@@ -182,6 +185,20 @@ int32_t RecorderPipelineCtrler::Reset()
+     return MSERR_OK;
+ }
+ 
++int32_t RecorderPipelineCtrler::executeInCmdQ(const std::shared_ptr<ITaskHandler> &task, const bool &cancelNotExecuted)
++{
++    MEDIA_LOGD("enter");
++
++    int ret = cmdQ_->EnqueueTask(task, cancelNotExecuted);
++    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
++
++    auto result = task->GetResult();
++    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
++    CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
++
++    return MSERR_OK;
++}
++
+ void RecorderPipelineCtrler::Notify(const RecorderMessage &msg)
+ {
+     auto notifyTask = std::make_shared<TaskHandler<void>>([this, msg] {
+diff --git a/services/engine/gstreamer/recorder/recorder_pipeline_ctrler.h b/services/engine/gstreamer/recorder/recorder_pipeline_ctrler.h
+index 32f86b45..f8263488 100644
+--- a/services/engine/gstreamer/recorder/recorder_pipeline_ctrler.h
++++ b/services/engine/gstreamer/recorder/recorder_pipeline_ctrler.h
+@@ -42,6 +42,7 @@ public:
+ 
+ private:
+     void Notify(const RecorderMessage &msg);
++    int32_t executeInCmdQ(const std::shared_ptr<ITaskHandler> &task, const bool &cancelNotExecuted);
+ 
+     std::weak_ptr<IRecorderEngineObs> obs_;
+     std::shared_ptr<RecorderPipeline> pipeline_;

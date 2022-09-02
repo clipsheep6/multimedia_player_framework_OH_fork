@@ -63,6 +63,9 @@ void RecorderPipelineCtrler::SetPipeline(std::shared_ptr<RecorderPipeline> pipel
 
     auto notifier = std::bind(&RecorderPipelineCtrler::Notify, this, std::placeholders::_1);
     pipeline_->SetNotifier(notifier);
+
+    auto cmdQ = std::bind(&RecorderPipelineCtrler::executeInCmdQ, this, std::placeholders::_1, std::placeholders::_2);
+    pipeline_->SetCmdQ(cmdQ);
 }
 
 int32_t RecorderPipelineCtrler::Init()
@@ -179,6 +182,20 @@ int32_t RecorderPipelineCtrler::Reset()
 {
     MEDIA_LOGD("enter");
     pipeline_ = nullptr;
+    return MSERR_OK;
+}
+
+int32_t RecorderPipelineCtrler::executeInCmdQ(const std::shared_ptr<ITaskHandler> &task, const bool &cancelNotExecuted)
+{
+    MEDIA_LOGD("enter");
+
+    int ret = cmdQ_->EnqueueTask(task, cancelNotExecuted);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET(result.Value() == MSERR_OK, result.Value());
+
     return MSERR_OK;
 }
 
