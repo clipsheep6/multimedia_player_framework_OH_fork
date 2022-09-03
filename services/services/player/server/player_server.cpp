@@ -237,6 +237,11 @@ int32_t PlayerServer::HandlePrepare()
 {
     int32_t ret = playerEngine_->Prepare();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
+    if (config_.leftVolume <= 1.0f || config_.rightVolume <= 1.0f) {
+        ret = playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
+        MEDIA_LOGD("Prepared SetVolume leftVolume:%{public}f rightVolume:%{public}f, ret:%{public}d", \
+                   config_.leftVolume, config_.rightVolume, ret);
+    }
     (void)playerEngine_->SetLooping(config_.looping);
     return MSERR_OK;
 }
@@ -430,10 +435,16 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
         return MSERR_INVALID_OPERATION;
     }
 
-    config_.leftVolume = leftVolume;
-    config_.rightVolume = rightVolume;
     if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
         MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
+        Format format;
+        OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
+        return MSERR_OK;
+    }
+    config_.leftVolume = leftVolume;
+    config_.rightVolume = rightVolume;
+    if (GetCurrState() == preparingState_) {
+        MEDIA_LOGI("Preparing state can not SetVolume, SetVolume after prepared");
         Format format;
         OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
         return MSERR_OK;
