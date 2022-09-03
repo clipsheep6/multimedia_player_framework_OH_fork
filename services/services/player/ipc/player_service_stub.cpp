@@ -52,12 +52,16 @@ PlayerServiceStub::~PlayerServiceStub()
 
 int32_t PlayerServiceStub::Init()
 {
+#ifdef SUPPORT_HISTREAMER
     char useHistreamer[10] = {0}; // 10 for system parameter usage
     auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
     if (res == 1 && useHistreamer[0] == '1') {
         MEDIA_LOGD("use histreamer");
         playerServer_ = PlayerServerHi::Create();
-    } else {
+    }
+#endif
+
+    if (playerServer_ == nullptr) {
         playerServer_ = PlayerServer::Create();
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
@@ -79,7 +83,9 @@ int32_t PlayerServiceStub::Init()
     playerFuncs_[GET_DURATION] = &PlayerServiceStub::GetDuration;
     playerFuncs_[SET_PLAYERBACK_SPEED] = &PlayerServiceStub::SetPlaybackSpeed;
     playerFuncs_[GET_PLAYERBACK_SPEED] = &PlayerServiceStub::GetPlaybackSpeed;
+#ifdef SUPPORT_VIDEO
     playerFuncs_[SET_VIDEO_SURFACE] = &PlayerServiceStub::SetVideoSurface;
+#endif
     playerFuncs_[IS_PLAYING] = &PlayerServiceStub::IsPlaying;
     playerFuncs_[IS_LOOPING] = &PlayerServiceStub::IsLooping;
     playerFuncs_[SET_LOOPING] = &PlayerServiceStub::SetLooping;
@@ -298,6 +304,7 @@ int32_t PlayerServiceStub::SelectBitRate(uint32_t bitRate)
     return playerServer_->SelectBitRate(bitRate);
 }
 
+#ifdef SUPPORT_VIDEO
 int32_t PlayerServiceStub::SetVideoSurface(sptr<Surface> surface)
 {
     MediaTrace Trace("binder::SetVideoSurface");
@@ -305,6 +312,7 @@ int32_t PlayerServiceStub::SetVideoSurface(sptr<Surface> surface)
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetVideoSurface(surface);
 }
+#endif
 
 bool PlayerServiceStub::IsPlaying()
 {
@@ -534,6 +542,7 @@ int32_t PlayerServiceStub::SelectBitRate(MessageParcel &data, MessageParcel &rep
     return MSERR_OK;
 }
 
+#ifdef SUPPORT_VIDEO
 int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
@@ -551,6 +560,7 @@ int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &r
     reply.WriteInt32(SetVideoSurface(surface));
     return MSERR_OK;
 }
+#endif
 
 int32_t PlayerServiceStub::IsPlaying(MessageParcel &data, MessageParcel &reply)
 {

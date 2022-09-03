@@ -27,19 +27,31 @@ namespace {
 static napi_value Export(napi_env env, napi_value exports)
 {
     MEDIA_LOGD("Export() is called");
+
+    OHOS::Media::MediaCapsNapi::Init(env, exports);
+    OHOS::Media::MediaEnumNapi::Init(env, exports);
+
+#ifdef SUPPORT_PLAYER
+    OHOS::Media::AudioPlayerNapi::Init(env, exports);
+    OHOS::Media::MediaDataSourceNapi::Init(env, exports);
+#ifdef SUPPORT_VIDEO
+    OHOS::Media::VideoPlayerNapi::Init(env, exports);
+#endif
+#endif
+#ifdef SUPPORT_RECORDER
+    OHOS::Media::AudioRecorderNapi::Init(env, exports);
+    OHOS::Media::VideoRecorderNapi::Init(env, exports);
+#endif
+#ifdef SUPPORT_CODEC
     OHOS::Media::AudioDecoderNapi::Init(env, exports);
     OHOS::Media::AudioEncoderNapi::Init(env, exports);
-    OHOS::Media::AudioPlayerNapi::Init(env, exports);
-    OHOS::Media::AudioRecorderNapi::Init(env, exports);
-    OHOS::Media::MediaCapsNapi::Init(env, exports);
-    OHOS::Media::MediaCapabilityVCapsNapi::Init(env, exports);
-    OHOS::Media::MediaDataSourceNapi::Init(env, exports);
     OHOS::Media::VideoDecoderNapi::Init(env, exports);
     OHOS::Media::VideoEncoderNapi::Init(env, exports);
-    OHOS::Media::VideoPlayerNapi::Init(env, exports);
-    OHOS::Media::VideoRecorderNapi::Init(env, exports);
+    OHOS::Media::MediaCapabilityVCapsNapi::Init(env, exports);
+#endif
+#ifdef SUPPORT_MUXER
     OHOS::Media::AVMuxerNapi::Init(env, exports);
-    OHOS::Media::MediaEnumNapi::Init(env, exports);
+#endif
     return exports;
 }
 

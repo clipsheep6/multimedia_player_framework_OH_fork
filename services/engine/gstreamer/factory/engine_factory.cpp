@@ -37,12 +37,22 @@ public:
     ~GstEngineFactory() = default;
 
     int32_t Score(Scene scene, const std::string &uri) override;
+#ifdef SUPPORT_PLAYER
     std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0) override;
+#endif
+#ifdef SUPPORT_RECORDER
     std::unique_ptr<IRecorderEngine> CreateRecorderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId) override;
+#endif
+#ifdef SUPPORT_METADATA
     std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine() override;
+#endif
+#ifdef SUPPORT_CODEC
     std::unique_ptr<IAVCodecEngine> CreateAVCodecEngine() override;
     std::unique_ptr<IAVCodecListEngine> CreateAVCodecListEngine() override;
+#endif
+#ifdef SUPPORT_MUXER
     std::unique_ptr<IAVMuxerEngine> CreateAVMuxerEngine() override;
+#endif
 };
 
 int32_t GstEngineFactory::Score(Scene scene, const std::string &uri)
@@ -52,18 +62,23 @@ int32_t GstEngineFactory::Score(Scene scene, const std::string &uri)
     return MIN_SCORE + 1;
 }
 
+#ifdef SUPPORT_PLAYER
 std::unique_ptr<IPlayerEngine> GstEngineFactory::CreatePlayerEngine(int32_t uid, int32_t pid)
 {
     GstLoader::Instance().UpdateLogLevel();
     return std::make_unique<PlayerEngineGstImpl>(uid, pid);
 }
+#endif
 
+#ifdef SUPPORT_METADATA
 std::unique_ptr<IAVMetadataHelperEngine> GstEngineFactory::CreateAVMetadataHelperEngine()
 {
     GstLoader::Instance().UpdateLogLevel();
     return std::make_unique<AVMetadataHelperEngineGstImpl>();
 }
+#endif
 
+#ifdef SUPPORT_RECORDER
 std::unique_ptr<IRecorderEngine> GstEngineFactory::CreateRecorderEngine(
     int32_t appUid, int32_t appPid, uint32_t appTokenId)
 {
@@ -76,7 +91,9 @@ std::unique_ptr<IRecorderEngine> GstEngineFactory::CreateRecorderEngine(
     }
     return engine;
 }
+#endif
 
+#ifdef SUPPORT_CODEC
 std::unique_ptr<IAVCodecEngine> GstEngineFactory::CreateAVCodecEngine()
 {
     GstLoader::Instance().UpdateLogLevel();
@@ -88,19 +105,21 @@ std::unique_ptr<IAVCodecListEngine> GstEngineFactory::CreateAVCodecListEngine()
     GstLoader::Instance().UpdateLogLevel();
     return std::make_unique<AVCodecListEngineGstImpl>();
 }
+#endif
 
+#ifdef SUPPORT_MUXER
 std::unique_ptr<IAVMuxerEngine> GstEngineFactory::CreateAVMuxerEngine()
 {
     GstLoader::Instance().UpdateLogLevel();
     return std::make_unique<AVMuxerEngineGstImpl>();
 }
+#endif
 } // namespace Media
 } // namespace OHOS
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 __attribute__((visibility("default"))) OHOS::Media::IEngineFactory *CreateEngineFactory()
 {
     int32_t ret = OHOS::Media::GstLoader::Instance().SetUp();
@@ -110,7 +129,6 @@ __attribute__((visibility("default"))) OHOS::Media::IEngineFactory *CreateEngine
     }
     return new (std::nothrow) OHOS::Media::GstEngineFactory();
 }
-
 #ifdef __cplusplus
 }
 #endif

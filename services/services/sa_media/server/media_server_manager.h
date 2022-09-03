@@ -18,11 +18,9 @@
 
 #include <memory>
 #include <functional>
+#include <map>
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
-#include "recorder_service_stub.h"
-#include "player_service_stub.h"
-#include "avcodec_service_stub.h"
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -34,6 +32,7 @@ struct Dumper {
     DumperEntry entry_;
     sptr<IRemoteObject> remoteObject_;
 };
+
 class MediaServerManager : public NoCopyable {
 public:
     static MediaServerManager &GetInstance();
@@ -57,13 +56,23 @@ public:
 
 private:
     MediaServerManager();
+#ifdef SUPPORT_PLAYER
     sptr<IRemoteObject> CreatePlayerStubObject();
+#endif
+#ifdef SUPPORT_RECORDER
     sptr<IRemoteObject> CreateRecorderStubObject();
+    sptr<IRemoteObject> CreateRecorderProfilesStubObject();
+#endif
+#ifdef SUPPORT_METADATA
     sptr<IRemoteObject> CreateAVMetadataHelperStubObject();
+#endif
+#ifdef SUPPORT_CODEC
     sptr<IRemoteObject> CreateAVCodecListStubObject();
     sptr<IRemoteObject> CreateAVCodecStubObject();
-    sptr<IRemoteObject> CreateRecorderProfilesStubObject();
+#endif
+#ifdef SUPPORT_MUXER
     sptr<IRemoteObject> CreateAVMuxerStubObject();
+#endif
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;

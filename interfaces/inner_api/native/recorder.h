@@ -636,7 +636,14 @@ public:
 
 class __attribute__((visibility("default"))) RecorderFactory {
 public:
+#ifdef UNSUPPORT_RECORDER
+    static std::shared_ptr<Recorder> CreateRecorder()
+    {
+        return nullptr;
+    }
+#else
     static std::shared_ptr<Recorder> CreateRecorder();
+#endif
 private:
     RecorderFactory() = default;
     ~RecorderFactory() = default;

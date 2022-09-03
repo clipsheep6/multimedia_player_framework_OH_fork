@@ -17,13 +17,23 @@
 #define I_MEDIA_SERVICE_H
 
 #include <memory>
+#ifdef SUPPORT_RECORDER
 #include "i_recorder_service.h"
+#include "i_recorder_profiles_service.h"
+#endif
+#ifdef SUPPORT_PLAYER
 #include "i_player_service.h"
+#endif
+#ifdef SUPPORT_METADATA
 #include "i_avmetadatahelper_service.h"
+#endif
+#ifdef SUPPORT_CODEC
 #include "i_avcodec_service.h"
 #include "i_avcodeclist_service.h"
-#include "i_recorder_profiles_service.h"
+#endif
+#ifdef SUPPORT_MUXER
 #include "i_avmuxer_service.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -31,6 +41,7 @@ class IMediaService {
 public:
     virtual ~IMediaService() = default;
 
+#ifdef SUPPORT_RECORDER
     /**
      * @brief Create a recorder service.
      *
@@ -41,72 +52,6 @@ public:
      * @version 1.0
      */
     virtual std::shared_ptr<IRecorderService> CreateRecorderService() = 0;
-
-    /**
-     * @brief Create a player service.
-     *
-     * All player functions must be created and obtained first.
-     *
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual std::shared_ptr<IPlayerService> CreatePlayerService() = 0;
-
-    /**
-     * @brief Create a codeclist service.
-     *
-     * All player functions must be created and obtained first.
-     *
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual std::shared_ptr<IAVCodecListService> CreateAVCodecListService() = 0;
-
-    /**
-     * @brief Create a mediaprofile service.
-     *
-     * All player functions must be created and obtained first.
-     *
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.2
-     * @version 3.2
-     */
-    virtual std::shared_ptr<IRecorderProfilesService> CreateRecorderProfilesService() = 0;
-
-    /**
-     * @brief Create an avmetadatahelper service.
-     *
-     * All player functions must be created and obtained first.
-     *
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() = 0;
-
-    /**
-     * @brief Create an avcodec service.
-     *
-     * All player functions must be created and obtained first.
-     *
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.1
-     * @version 3.1
-     */
-    virtual std::shared_ptr<IAVCodecService> CreateAVCodecService() = 0;
-
-    /**
-     * @brief Create an avmuxer service.
-     *
-     * All avmuxer functions must be created and obtained first.
-     *
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.2
-     * @version 3.2
-     */
-    virtual std::shared_ptr<IAVMuxerService> CreateAVMuxerService() = 0;
 
     /**
      * @brief Destroy a recorder service.
@@ -121,6 +66,42 @@ public:
     virtual int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) = 0;
 
     /**
+     * @brief Create a mediaprofile service.
+     *
+     * All player functions must be created and obtained first.
+     *
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual std::shared_ptr<IRecorderProfilesService> CreateRecorderProfilesService() = 0;
+
+    /**
+     * @brief Destroy a mediaprofile service.
+     *
+     * call the API to destroy the mediaprofile service.
+     *
+     * @param pointer to the mediaprofile service.
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t DestroyMediaProfileService(std::shared_ptr<IRecorderProfilesService> recorderProfiles) = 0;
+#endif
+
+#ifdef SUPPORT_PLAYER
+    /**
+     * @brief Create a player service.
+     *
+     * All player functions must be created and obtained first.
+     *
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual std::shared_ptr<IPlayerService> CreatePlayerService() = 0;
+
+    /**
      * @brief Destroy a player service.
      *
      * call the API to destroy the player service.
@@ -131,30 +112,19 @@ public:
      * @version 1.0
      */
     virtual int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) = 0;
+#endif
 
+#ifdef SUPPORT_CODEC
     /**
-     * @brief Destroy a avmetadatahelper service.
+     * @brief Create a codeclist service.
      *
-     * call the API to destroy the avmetadatahelper service.
+     * All player functions must be created and obtained first.
      *
-     * @param pointer to the avmetadatahelper service.
      * @return Returns a valid pointer if the setting is successful;
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) = 0;
-
-    /**
-     * @brief Destroy a avcodec service.
-     *
-     * call the API to destroy the avcodec service.
-     *
-     * @param pointer to the avcodec service.
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.1
-     * @version 3.1
-     */
-    virtual int32_t DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCodec) = 0;
+    virtual std::shared_ptr<IAVCodecListService> CreateAVCodecListService() = 0;
 
     /**
      * @brief Destroy a codeclist service.
@@ -169,17 +139,66 @@ public:
     virtual int32_t DestroyAVCodecListService(std::shared_ptr<IAVCodecListService> avCodecList) = 0;
 
     /**
-     * @brief Destroy a mediaprofile service.
+     * @brief Create an avcodec service.
      *
-     * call the API to destroy the mediaprofile service.
+     * All player functions must be created and obtained first.
      *
-     * @param pointer to the mediaprofile service.
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 3.1
+     * @version 3.1
+     */
+    virtual std::shared_ptr<IAVCodecService> CreateAVCodecService() = 0;
+
+    /**
+     * @brief Destroy a avcodec service.
+     *
+     * call the API to destroy the avcodec service.
+     *
+     * @param pointer to the avcodec service.
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 3.1
+     * @version 3.1
+     */
+    virtual int32_t DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCodec) = 0;
+#endif
+
+#ifdef SUPPORT_METADATA
+    /**
+     * @brief Create an avmetadatahelper service.
+     *
+     * All player functions must be created and obtained first.
+     *
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() = 0;
+
+    /**
+     * @brief Destroy a avmetadatahelper service.
+     *
+     * call the API to destroy the avmetadatahelper service.
+     *
+     * @param pointer to the avmetadatahelper service.
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) = 0;
+#endif
+
+#ifdef SUPPORT_MUXER
+    /**
+     * @brief Create an avmuxer service.
+     *
+     * All avmuxer functions must be created and obtained first.
+     *
      * @return Returns a valid pointer if the setting is successful;
      * @since 3.2
      * @version 3.2
      */
-    virtual int32_t DestroyMediaProfileService(std::shared_ptr<IRecorderProfilesService> recorderProfiles) = 0;
-    
+    virtual std::shared_ptr<IAVMuxerService> CreateAVMuxerService() = 0;
+
     /**
      * @brief Destroy a avmuxer service.
      *
@@ -191,6 +210,7 @@ public:
      * @version 3.2
      */
     virtual int32_t DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer) = 0;
+#endif
 };
 
 class __attribute__((visibility("default"))) MediaServiceFactory {
