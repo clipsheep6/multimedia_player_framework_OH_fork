@@ -165,7 +165,7 @@ PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateVideoSink()
     (void)producerSurface_->SetQueueSize(DEFAULT_BUFFER_NUM);
     queueSize_ = DEFAULT_BUFFER_NUM;
 
-    return GST_ELEMENT_CAST(gst_object_ref(videoSink_));
+    return videoSink_;
 }
 
 GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpointer userData)
@@ -175,7 +175,7 @@ GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpo
     CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
     PlayerSinkProvider *sinkProvider = reinterpret_cast<PlayerSinkProvider *>(userData);
 
-    auto sink = gst_element_factory_make("videodisplaysink", "sink");
+    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("videodisplaysink", "sink")));
     CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
     gst_base_sink_set_async_enabled(GST_BASE_SINK(sink), FALSE);
 

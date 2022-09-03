@@ -618,11 +618,6 @@ void PlayBinCtrlerBase::ExitInitializedState()
     }
     signalIds_.clear();
 
-    if (videoSink_ != nullptr) {
-        gst_object_unref(videoSink_);
-        videoSink_ = nullptr;
-    }
-
     MEDIA_LOGD("unref playbin start");
     if (playbin_ != nullptr) {
         (void)gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_NULL);
