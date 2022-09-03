@@ -203,7 +203,8 @@ void RecorderPipelineCtrler::Notify(const RecorderMessage &msg)
     CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Enqueue message failed !");
 }
 
-int32_t RecorderPipelineCtrler::executeInCmdQ(const std::shared_ptr<TaskHandler<int32_t>> &task, const bool &cancelNotExecuted)
+int32_t RecorderPipelineCtrler::executeInCmdQ(const std::shared_ptr<TaskHandler<int32_t>> &task,
+                                              const bool &cancelNotExecuted)
 {
     int ret = cmdQ_->EnqueueTask(task, cancelNotExecuted);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);

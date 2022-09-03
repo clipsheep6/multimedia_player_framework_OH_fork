@@ -444,10 +444,10 @@ void RecorderPipeline::StopForError(const RecorderMessage &msg)
     errorState_.store(true);
     gstPipeCond_.notify_all();
 
-    auto stopforErrorTask = std::make_shared<TaskHandler<int32_t>>([this] { 
+    auto stopforErrorTask = std::make_shared<TaskHandler<int32_t>>([this] {
         (void)DoElemAction(&RecorderElement::Stop, false);
         DrainBuffer(false);
-        (void)SyncWaitChangeState(GST_STATE_NULL); 
+        (void)SyncWaitChangeState(GST_STATE_NULL);
         return MSERR_OK;
     });
 
