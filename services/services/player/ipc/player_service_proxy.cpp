@@ -635,5 +635,23 @@ int32_t PlayerServiceProxy::SetPlayerCallback()
     }
     return reply.ReadInt32();
 }
+
+void PlayerServiceProxy::SetFreezerState(bool isCallback)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return;
+    }
+
+    data.WriteBool(isCallback);
+    int error = Remote()->SendRequest(SET_FREEZER_CALLBACK, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("set callback failed, error: %{public}d", error);
+    }
+}
 } // namespace Media
 } // namespace OHOS

@@ -17,6 +17,7 @@
 #define FREEZER_SERVICE_SERVER_H
 
 #include <unordered_set>
+#include <vector>
 #include <mutex>
 
 #include "singleton.h"

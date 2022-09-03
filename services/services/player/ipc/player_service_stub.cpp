@@ -531,6 +531,13 @@ int32_t PlayerServiceStub::SetVideoSurface(MessageParcel &data, MessageParcel &r
     return MSERR_OK;
 }
 
+void PlayerServiceStub::SetFreezerState(MessageParcel &data, MessageParcel &reply)
+{
+    (void)reply;
+    bool isCallback = data.ReadBool();
+    SetFreezerState(isCallback);
+}
+
 int32_t PlayerServiceStub::IsPlaying(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;

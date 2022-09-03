@@ -21,7 +21,7 @@
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
 #include "recorder_service_stub.h"
-#include "player_service_stub.h"
+#include "i_standard_player_service.h"
 #include "avcodec_service_stub.h"
 #include "nocopyable.h"
 
@@ -55,7 +55,7 @@ public:
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args);
     void DestroyDumper(StubType type, sptr<IRemoteObject> object);
     void DestroyDumperForPid(pid_t pid);
-    sptr<PlayerServiceStub> processFreezer(int32_t pid);
+    void GetPlayerStubByPid(int32_t pid, std::vector<sptr<IStandardPlayerService>>& playerStubVec);
 
 private:
     MediaServerManager();

@@ -564,16 +564,14 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
         MEDIA_LOGW("failed to call InstanceDump");
     }
 }
-sptr<PlayerServiceStub> MediaServerManager::processFreezer(int32_t pid)
+void MediaServerManager::GetPlayerStubByPid(int32_t pid, std::vector<sptr<IStandardPlayerService>>& playerStubVec)
 {
-    sptr<PlayerServiceStub> playStub = nullptr;
     MEDIA_LOGD("MediaServerManager::processFreezer pid is%{public}d", pid);
     for (auto itPlayer = playerStubMap_.begin(); itPlayer != playerStubMap_.end(); itPlayer++) {
         if (itPlayer->second == pid) {
-            playStub = iface_cast<PlayerServiceStub>(itPlayer->first);
+            playerStubVec.emplace_back(iface_cast<IStandardPlayerService>(itPlayer->first));
         }
     }
-    return playStub;
 }
 } // namespace Media
 } // namespace OHOS

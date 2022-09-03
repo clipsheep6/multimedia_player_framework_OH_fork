@@ -56,6 +56,7 @@ public:
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetPlayerCallback() = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
+    virtual void SetFreezerState(bool isCallback) = 0;
     /**
      * IPC code ID
      */
@@ -84,6 +85,7 @@ public:
         SET_RENDERER_DESC,
         DESTROY,
         SET_CALLBACK,
+        SET_FREEZER_CALLBACK,
         GET_VIDEO_TRACK_INFO,
         GET_AUDIO_TRACK_INFO,
         GET_VIDEO_WIDTH,

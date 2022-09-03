@@ -33,15 +33,25 @@ int32_t FreezerServer::ProxyApp(const std::unordered_set<int32_t>& pidSet, const
     std::lock_guard<std::mutex> lock(freezeMutex_);
     for (const auto& pid : pidSet) {
         if (isFreeze && !freezePids.count(pid)) {
-            freezePids.insert(pid);
-            auto playStub = MediaServerManager::GetInstance().processFreezer(pid);
-            playStub->SetFreezerState(false);
-            playStub->Pause();
+            freezePids.emplace(pid);
+            std::vector<sptr<IStandardPlayerService>> playerStubVec;
+            MediaServerManager::GetInstance().GetPlayerStubByPid(pid, playerStubVec);
+            MEDIA_LOGD("playerStubVec size is : %{public}lu", playerStubVec.size());
+            for (const auto& playerStub : playerStubVec) {
+                CHECK_AND_RETURN_RET_LOG(playerStub != nullptr, MSERR_INVALID_VAL, "failed to get playerStub");
+                playerStub->SetFreezerState(false);
+                playerStub->Pause();
+            }
         } else if (!isFreeze && freezePids.count(pid)) {
             freezePids.erase(pid);
-            auto playStub = MediaServerManager::GetInstance().processFreezer(pid);
-            playStub->Play();
-            playStub->SetFreezerState(true);
+            std::vector<sptr<IStandardPlayerService>> playerStubVec;
+            MediaServerManager::GetInstance().GetPlayerStubByPid(pid, playerStubVec);
+            MEDIA_LOGD("playerStubVec size is : %{public}lu", playerStubVec.size());
+            for (const auto& playerStub : playerStubVec) {
+                CHECK_AND_RETURN_RET_LOG(playerStub != nullptr, MSERR_INVALID_VAL, "failed to get playerStub");
+                playerStub->Play();
+                playerStub->SetFreezerState(true);
+            }
         }
     }
     return MSERR_OK;
@@ -52,9 +62,14 @@ int32_t FreezerServer::ResetAll()
     MEDIA_LOGD("FreezerServer: ResetAll");
     for (const auto& pid : freezePids) {
         MEDIA_LOGD("resume pid is : %{public}d", pid);
-        auto playStub = MediaServerManager::GetInstance().processFreezer(pid);
-        playStub->Play();
-        playStub->SetFreezerState(true);
+        std::vector<sptr<IStandardPlayerService>> playerStubVec;
+        MediaServerManager::GetInstance().GetPlayerStubByPid(pid, playerStubVec);
+        MEDIA_LOGD("playerStubVec size is : %{public}lu", playerStubVec.size());
+        for (const auto& playerStub : playerStubVec) {
+            CHECK_AND_RETURN_RET_LOG(playerStub != nullptr, MSERR_INVALID_VAL, "failed to get playerStub");
+            playerStub->Play();
+            playerStub->SetFreezerState(true);
+        }
     }
     freezePids.clear();
     return MSERR_OK;
