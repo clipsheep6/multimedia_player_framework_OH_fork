@@ -26,7 +26,6 @@
 
 namespace OHOS {
 namespace Media {
-
 class FreezerServer : public IFreezerService, public NoCopyable {
     DECLARE_DELAYED_SINGLETON(FreezerServer);
 public:
