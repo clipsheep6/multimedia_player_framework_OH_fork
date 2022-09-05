@@ -62,6 +62,7 @@ private:
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     sptr<MediaListenerStub> listenerStub_ = nullptr;
     sptr<MediaDeathRecipient> deathRecipient_ = nullptr;
+    sptr<IStandardFreezerService> freezerProxy_ = nullptr;
     std::list<std::shared_ptr<IRecorderService>> recorderClientList_;
     std::list<std::shared_ptr<IPlayerService>> playerClientList_;
     std::list<std::shared_ptr<IAVMetadataHelperService>> avMetadataHelperClientList_;
