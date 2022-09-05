@@ -16,13 +16,10 @@
 #ifndef FREEZER_H
 #define FREEZER_H
 
-#include <cstdint>
 #include <string>
-#include <unordered_set>
 
 namespace OHOS {
 namespace Media {
-
 enum FreezerErrorType : int32_t {
     /* Valid error, error code reference defined in media_errors.h */
     FREEZER_ERROR,
@@ -32,7 +29,8 @@ enum FreezerErrorType : int32_t {
        the application will be transparently transmitted by the service. */
     FREEZER_ERROR_EXTEND_START = 0X10000,
 };
-class Freezer{
+
+class Freezer {
 public:
     virtual ~Freezer() = default;
     virtual int32_t ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze) = 0;
@@ -50,4 +48,4 @@ private:
 __attribute__((visibility("default"))) std::string FreezerErrorTypeToString(FreezerErrorType type);
 } // namespace Media
 } // namespace OHOS
-#endif //FREEZER_H
+#endif // FREEZER_H

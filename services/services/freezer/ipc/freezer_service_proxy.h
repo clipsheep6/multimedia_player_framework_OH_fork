@@ -23,7 +23,7 @@ namespace OHOS {
 namespace Media {
 class FreezerServiceProxy : public IRemoteProxy<IStandardFreezerService> {
 public:
-    FreezerServiceProxy(const sptr<IRemoteObject> &impl);
+    explicit FreezerServiceProxy(const sptr<IRemoteObject> &impl);
     ~FreezerServiceProxy() override = default;
     int32_t ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze) override;
     int32_t ResetAll() override;

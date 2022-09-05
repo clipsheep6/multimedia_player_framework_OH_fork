@@ -33,7 +33,7 @@ public:
     /**
      * IPC code ID
      */
-    enum FreezerServiceMsg {
+    enum class FreezerServiceMsg {
         PROXY_APP = 0,
         RESET_ALL,
     };

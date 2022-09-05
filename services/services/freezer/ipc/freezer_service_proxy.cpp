@@ -34,7 +34,7 @@ int32_t FreezerServiceProxy::ProxyApp(const std::unordered_set<int32_t>& pidSet,
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option = {MessageOption::TF_SYNC};
+    MessageOption option = {MessageOption::TF_ASYNC};
 
     if (!data.WriteInterfaceToken(FreezerServiceProxy::GetDescriptor())) {
         MEDIA_LOGE("Failed to write descriptor");
@@ -47,7 +47,7 @@ int32_t FreezerServiceProxy::ProxyApp(const std::unordered_set<int32_t>& pidSet,
         data.WriteInt32(pid);
     }
     data.WriteBool(isFreeze);
-    int error = Remote()->SendRequest(PROXY_APP, data, reply, option);
+    int error = Remote()->SendRequest(FreezerServiceMsg::PROXY_APP, data, reply, option);
     if (error != MSERR_OK) {
         MEDIA_LOGE("ProxyApp failed, error: %{public}d", error);
         return error;
@@ -59,14 +59,14 @@ int32_t FreezerServiceProxy::ResetAll()
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option = {MessageOption::TF_SYNC};
+    MessageOption option = {MessageOption::TF_ASYNC};
 
     if (!data.WriteInterfaceToken(FreezerServiceProxy::GetDescriptor())) {
         MEDIA_LOGE("Failed to write descriptor");
         return MSERR_UNKNOWN;
     }
 
-    int error = Remote()->SendRequest(RESET_ALL, data, reply, option);
+    int error = Remote()->SendRequest(FreezerServiceMsg::RESET_ALL, data, reply, option);
     if (error != MSERR_OK) {
         MEDIA_LOGE("ResetAll obj failed, error: %{public}d", error);
         return error;

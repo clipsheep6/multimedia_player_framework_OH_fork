@@ -51,8 +51,8 @@ FreezerServiceStub::~FreezerServiceStub()
 
 int32_t FreezerServiceStub::Init()
 {
-    freezerFuncs_[PROXY_APP] = &FreezerServiceStub::HandleProxyApp;
-    freezerFuncs_[RESET_ALL] = &FreezerServiceStub::HandleResetAll;
+    freezerFuncs_[FreezerServiceMsg::PROXY_APP] = &FreezerServiceStub::HandleProxyApp;
+    freezerFuncs_[FreezerServiceMsg::RESET_ALL] = &FreezerServiceStub::HandleResetAll;
     return MSERR_OK;
 }
 
