@@ -598,13 +598,11 @@ int32_t PlayerEngineGstImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 
 int32_t PlayerEngineGstImpl::GetVideoWidth()
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     return videoWidth_;
 }
 
 int32_t PlayerEngineGstImpl::GetVideoHeight()
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     return videoHeight_;
 }
 
