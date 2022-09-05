@@ -468,6 +468,20 @@ declare namespace media {
    */
    interface AudioPlayerV9 {
     /**
+     * prepare audio playback, it will request resource for playing.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @param callback A callback instance used to return when prepare completed.
+     */
+     prepare(callback: AsyncCallback<void>): void;
+    /**
+     * prepare audio playback, it will request resource for playing.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @return A Promise instance used to return when prepare completed.
+     */
+    prepare(): Promise<void>;
+    /**
      * Starts audio playback.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
@@ -660,13 +674,13 @@ declare namespace media {
      */
     on(type: 'timeUpdate', callback: Callback<number>): void;
     /**
-     * Listens for audio playback events.
+     * Listens for audio playback unExpectedStateChange which may caused by other services like api manager.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return AudioState.
      */
-    on(type: 'stateChange', callback: AsyncCallback<AudioState>): void;
+    on(type: 'unExpectedStateChange', callback: AsyncCallback<AudioState>): void;
     /**
      * Listens for audio interrupt event, refer to {@link #audio.InterruptEvent}
      * @since 9
@@ -684,13 +698,6 @@ declare namespace media {
      */
     on(type: 'error', callback: ErrorCallback): void;
   }
-
-  /**
-  * Describes audio recorder states.
-  * @since 9
-  * @syscap SystemCapability.Multimedia.Media.AudioRecorder
-  */
-   type AudioRecordState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'error';
 
    /**
     * Manages and record audio. Before calling an AudioRecorderV9 method, you must use createAudioRecorderV9()
@@ -807,14 +814,6 @@ declare namespace media {
      * @return A Promise instance used to return when reset completed.
      */
      reset(): Promise<void>;
-     /**
-      * Listens for audio recording stateChange events.
-      * @since 9
-      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
-      * @param type Type of the playback event to listen for.
-      * @param callback Callback used to listen for the playback event return AudioRecordStateV9.
-      */
-     on(type: 'stateChange', callback: AsyncCallback<AudioRecordState>): void;
      /**
       * Listens for audio recording error events.
       * @since 9
@@ -955,14 +954,6 @@ declare namespace media {
       */
     reset(): Promise<void>;
     /**
-     * Listens for audio recording stateChange events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AudioRecorder
-     * @param type Type of the playback event to listen for.
-     * @param callback Callback used to listen for the playback event return AudioRecordStateV9.
-     */
-    on(type: 'stateChange', callback: AsyncCallback<VideoRecordState>): void;
-    /**
      * Listens for video recording error events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
@@ -975,7 +966,7 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      */
-    readonly state: VideoRecorderV9;
+    readonly state: VideoRecordState;
   }
 
   /**
@@ -1340,16 +1331,16 @@ declare namespace media {
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event.
      */
-     on(type: 'timeUpdate', callback: Callback<number>): void;
+    on(type: 'timeUpdate', callback: Callback<number>): void;
 
     /**
-     * Listens for video playback events.
+     * Listens for video playback unExpectedStateChange which may caused by other services like api manager.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return VideoPlayState.
      */
-     on(type: 'stateChange', callback: AsyncCallback<VideoPlayState>): void;
+    on(type: 'unExpectedStateChange', callback: AsyncCallback<VideoPlayState>): void;
 
     /**
      * Listens for playback error events.
