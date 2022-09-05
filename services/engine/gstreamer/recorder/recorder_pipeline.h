@@ -67,7 +67,7 @@ public:
     int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam);
     int32_t GetParameter(int32_t sourceId, RecorderParam &recParam);
     void SetNotifier(RecorderMsgNotifier notifier);
-    void SetExecuteInCmdQ(RecorderExecuteInCmdQ cmdQ);
+    void SetExecuteInCmdQ(RecorderExecuteInCmdQ executeInCmdQ);
     void Dump();
 
 private:
