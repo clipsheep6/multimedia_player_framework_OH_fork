@@ -17,6 +17,7 @@
 #define FREEZER_H
 
 #include <string>
+#include <unordered_set>
 
 namespace OHOS {
 namespace Media {
