@@ -148,8 +148,8 @@ private:
     std::unique_ptr<UriHelper> uriHelper_;
     struct ConfigInfo {
         std::atomic<bool> looping = false;
-        float leftVolume = 1.0f; // audiotrack volume range [0, 1]
-        float rightVolume = 1.0f; // audiotrack volume range [0, 1]
+        float leftVolume = 2.0f; // 2.0f: invalid initial value, audiotrack volume range [0, 1]
+        float rightVolume = 2.0f; // 2.0f: invalid initial value, audiotrack volume range [0, 1]
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
         std::string url;
     } config_;

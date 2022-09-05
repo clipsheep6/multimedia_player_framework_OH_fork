@@ -237,7 +237,7 @@ int32_t PlayerServer::HandlePrepare()
 {
     int32_t ret = playerEngine_->Prepare();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
-    if (config_.leftVolume < 1.0f || config_.rightVolume < 1.0f) {
+    if (config_.leftVolume <= 1.0f || config_.rightVolume <= 1.0f) {
         ret = playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
         MEDIA_LOGD("Prepared SetVolume leftVolume:%{public}f rightVolume:%{public}f, ret:%{public}d", \
                    config_.leftVolume, config_.rightVolume, ret);
