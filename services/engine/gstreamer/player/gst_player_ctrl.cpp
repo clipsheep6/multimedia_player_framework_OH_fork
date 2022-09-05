@@ -192,7 +192,7 @@ void GstPlayerCtrl::OnElementSetupCb(const GstPlayer *player, GstElement *src, G
     }
 
     if (metaStr.find("Sink/Video") != std::string::npos && playerGst->isHardWare_) {
-        GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12", nullptr);
+        GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV21", nullptr);
         g_object_set(G_OBJECT(src), "caps", caps, nullptr);
         return;
     }

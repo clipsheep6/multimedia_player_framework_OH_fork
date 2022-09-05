@@ -21,7 +21,7 @@
 #include <gst/gst.h>
 #include <gst/player/player.h>
 #include "gst_player_ctrl.h"
-#include "gst_player_video_renderer_ctrl.h"
+#include "gst_player_video_renderer_hisi.h"
 
 namespace OHOS {
 namespace Media {

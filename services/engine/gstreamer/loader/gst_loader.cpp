@@ -166,7 +166,7 @@ static void SetGstLogLevelFromSysPara()
     std::string levelPara;
     int res = OHOS::system::GetStringParameter("sys.media.log.level", levelPara, "");
     if (res != 0 || levelPara.empty()) {
-        gst_debug_set_default_threshold (GST_LEVEL_WARNING);
+        gst_debug_set_default_threshold (GST_LEVEL_DEBUG);
         MEDIA_LOGD("sys.media.log.level not find");
         return;
     }

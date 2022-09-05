@@ -201,7 +201,8 @@ int32_t PlayerImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
 
-    return playerService_->SetPlaybackSpeed(mode);
+//    return playerService_->SetPlaybackSpeed(mode);
+    return 0;
 }
 
 int32_t PlayerImpl::GetPlaybackSpeed(PlaybackRateMode &mode)
