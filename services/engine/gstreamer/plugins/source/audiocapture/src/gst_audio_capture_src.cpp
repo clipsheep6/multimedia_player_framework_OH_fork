@@ -197,6 +197,7 @@ static void gst_audio_capture_src_set_property(GObject *object, guint prop_id,
         case PROP_BYPASS_AUDIO_SERVICE:
             src->bypass_audio = g_value_get_boolean(value);
             if (src->bypass_audio) {
+                // Mutually exclusive protection is provided at the frame layer
                 if (src->audio_capture) {
                     src->audio_capture->WakeUpAudioThreads();
                 }

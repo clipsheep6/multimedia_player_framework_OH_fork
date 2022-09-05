@@ -452,11 +452,8 @@ void RecorderPipeline::StopForError(const RecorderMessage &msg)
     });
 
     std::unique_lock<std::mutex> lock(cmdQMutex_);
-    if (executeInCmdQ_ != nullptr) {
-        (void)executeInCmdQ_(stopforErrorTask, true);
-    } else {
-        stopforErrorTask->Execute();
-    }
+    CHECK_AND_RETURN(executeInCmdQ_ != nullptr);
+    (void)executeInCmdQ_(stopforErrorTask, true);
     
     isStarted_ = false;
     NotifyMessage(msg);
