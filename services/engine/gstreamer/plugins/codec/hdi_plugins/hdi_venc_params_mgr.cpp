@@ -359,7 +359,8 @@ int32_t HdiVencParamsMgr::InitAvcParamters(GstElement *element)
         avcType.nBFrames = 0;
         // when have b frame default ref frame is 2
         avcType.nRefFrames = avcType.nBFrames == 0 ? 1 : 2;
-        avcType.nPFrames = (uint32_t)(base->frame_rate * base->i_frame_interval_new / MSEC_PER_S) / (avcType.nBFrames + 1) - 1;
+        avcType.nPFrames =
+            (uint32_t)(base->frame_rate * base->i_frame_interval_new / MSEC_PER_S) / (avcType.nBFrames + 1) - 1;
         avcType.bEntropyCodingCABAC = OMX_TRUE;
         avcType.bWeightedPPrediction = OMX_TRUE;
         avcType.bconstIpred = OMX_TRUE;
