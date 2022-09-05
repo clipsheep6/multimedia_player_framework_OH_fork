@@ -26,7 +26,7 @@ namespace Media {
 void RecorderProfilesDemo::PrintInputInfo() const
 {
     cout << "Please select a test api: " << endl;
-    cout << "1:IsAudioRecoderConfigSupported" << endl;
+    cout << "1:IsAudioRecorderConfigSupported" << endl;
     cout << "2:HasVideoRecorderProfile" << endl;
     cout << "3:GetAudioRecorderCaps" << endl;
     cout << "4:GetVideoRecorderCaps" << endl;
@@ -44,11 +44,11 @@ void RecorderProfilesDemo::DoNext()
 
     PrintInputInfo();
     while (std::getline(std::cin, cmd)) {
-        if (cmd.find("1") != std::string::npos || cmd.find("IsAudioRecoderConfigSupported") != std::string::npos) {
+        if (cmd.find("1") != std::string::npos || cmd.find("IsAudioRecorderConfigSupported") != std::string::npos) {
             if (CreatProfile()) {
-                result = OHOS::Media::RecorderProfilesFactory::CreateRecorderProfiles().IsAudioRecoderConfigSupported(
+                result = OHOS::Media::RecorderProfilesFactory::CreateRecorderProfiles().IsAudioRecorderConfigSupported(
                     *profile_);
-                cout << "IsAudioRecoderConfigSupported : " << result << endl;
+                cout << "IsAudioRecorderConfigSupported : " << result << endl;
                 profile_ = nullptr;
             }
         } else if (cmd.find("2") != std::string::npos || cmd.find("HasVideoRecorderProfile") != std::string::npos) {

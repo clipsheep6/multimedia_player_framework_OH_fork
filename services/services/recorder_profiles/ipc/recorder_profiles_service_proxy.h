@@ -28,7 +28,7 @@ public:
     explicit RecorderProfilesServiceProxy(const sptr<IRemoteObject> &impl);
     virtual ~RecorderProfilesServiceProxy();
 
-    bool IsAudioRecoderConfigSupported(const RecorderProfilesData &profile) override;
+    bool IsAudioRecorderConfigSupported(const RecorderProfilesData &profile) override;
     bool HasVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel) override;
     std::vector<RecorderProfilesData> GetAudioRecorderCapsInfo() override;
     std::vector<RecorderProfilesData> GetVideoRecorderCapsInfo() override;

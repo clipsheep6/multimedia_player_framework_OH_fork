@@ -32,7 +32,7 @@ public:
     virtual ~RecorderProfilesServiceStub();
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
-    bool IsAudioRecoderConfigSupported(const RecorderProfilesData &profile) override;
+    bool IsAudioRecorderConfigSupported(const RecorderProfilesData &profile) override;
     bool HasVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel) override;
     std::vector<RecorderProfilesData> GetAudioRecorderCapsInfo() override;
     std::vector<RecorderProfilesData> GetVideoRecorderCapsInfo() override;
@@ -42,7 +42,7 @@ public:
 private:
     RecorderProfilesServiceStub();
     int32_t Init();
-    int32_t IsAudioRecoderConfigSupported(MessageParcel &data, MessageParcel &reply);
+    int32_t IsAudioRecorderConfigSupported(MessageParcel &data, MessageParcel &reply);
     int32_t HasVideoRecorderProfile(MessageParcel &data, MessageParcel &reply);
     int32_t GetAudioRecorderCapsInfo(MessageParcel &data, MessageParcel &reply);
     int32_t GetVideoRecorderCapsInfo(MessageParcel &data, MessageParcel &reply);

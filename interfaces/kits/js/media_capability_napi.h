@@ -44,7 +44,7 @@ private:
     static napi_value GetVideoEncoderCaps(napi_env env, napi_callback_info info);
     static napi_value FindVideoEncoder(napi_env env, napi_callback_info info);
     static napi_value GetAudioRecorderCaps(napi_env env, napi_callback_info info);
-    static napi_value IsAudioRecoderConfigSupported(napi_env env, napi_callback_info info);
+    static napi_value IsAudioRecorderConfigSupported(napi_env env, napi_callback_info info);
     static napi_value GetVideoRecorderCaps(napi_env env, napi_callback_info info);
     static napi_value GetVideoRecorderProfile(napi_env env, napi_callback_info info);
     static napi_value HasVideoRecorderProfile(napi_env env, napi_callback_info info);
