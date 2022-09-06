@@ -64,7 +64,7 @@ void RecorderPipelineCtrler::SetPipeline(std::shared_ptr<RecorderPipeline> pipel
     auto notifier = std::bind(&RecorderPipelineCtrler::Notify, this, std::placeholders::_1);
     pipeline_->SetNotifier(notifier);
 
-    auto cmdQ = std::bind(&RecorderPipelineCtrler::executeInCmdQ, this, std::placeholders::_1, std::placeholders::_2);
+    auto cmdQ = std::bind(&RecorderPipelineCtrler::ExecuteInCmdQ, this, std::placeholders::_1, std::placeholders::_2);
     pipeline_->SetExecuteInCmdQ(cmdQ);
 }
 
@@ -203,7 +203,7 @@ void RecorderPipelineCtrler::Notify(const RecorderMessage &msg)
     CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Enqueue message failed !");
 }
 
-int32_t RecorderPipelineCtrler::executeInCmdQ(const std::shared_ptr<TaskHandler<int32_t>> &task,
+int32_t RecorderPipelineCtrler::ExecuteInCmdQ(const std::shared_ptr<TaskHandler<int32_t>> &task,
                                               const bool &cancelNotExecuted)
 {
     int ret = cmdQ_->EnqueueTask(task, cancelNotExecuted);
