@@ -57,7 +57,6 @@ enum PlayBinMsgAudioSink : int32_t {
     PLAYBIN_MSG_INTERRUPT_EVENT,
     PLAYBIN_MSG_AUDIO_STATE_EVENT,
     PLAYBIN_MSG_AUDIO_ERROR_EVENT,
-    PLAYBIN_MSG_VOLUME_CHANGE,
 };
 
 enum PlayBinState : int32_t {
