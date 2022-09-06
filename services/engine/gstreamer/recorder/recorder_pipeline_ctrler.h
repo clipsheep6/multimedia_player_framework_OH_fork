@@ -42,6 +42,7 @@ public:
 
 private:
     void Notify(const RecorderMessage &msg);
+    int32_t ExecuteInCmdQ(const std::shared_ptr<TaskHandler<int32_t>> &task, const bool &cancelNotExecuted);
 
     std::weak_ptr<IRecorderEngineObs> obs_;
     std::shared_ptr<RecorderPipeline> pipeline_;
