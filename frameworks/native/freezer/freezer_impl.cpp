@@ -26,25 +26,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "FreezerImp
 
 namespace OHOS {
 namespace Media {
-const std::map<FreezerErrorType, std::string> FREEZER_ERRTYPE_INFOS = {
-    {FREEZER_ERROR, "internal freezer error"},
-    {FREEZER_ERROR_UNKNOWN, "unknown freezer error"},
-    {FREEZER_ERROR_EXTEND_START, "freezer extend start error type"},
-};
-
-std::string FreezerErrorTypeToString(FreezerErrorType type)
-{
-    if (FREEZER_ERRTYPE_INFOS.count(type) != 0) {
-        return FREEZER_ERRTYPE_INFOS.at(type);
-    }
-
-    if (type > FREEZER_ERROR_EXTEND_START) {
-        return "extend error type:" + std::to_string(static_cast<int32_t>(type - FREEZER_ERROR_EXTEND_START));
-    }
-
-    return "invalid error type:" + std::to_string(static_cast<int32_t>(type));
-}
-
 std::shared_ptr<Freezer> FreezerFactory::CreateFreezer()
 {
     std::shared_ptr<FreezerImpl> impl = std::make_shared<FreezerImpl>();

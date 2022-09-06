@@ -18,7 +18,6 @@
 
 #include "nocopyable.h"
 #include "iremote_object.h"
-
 #include "freezer.h"
 #include "i_freezer_service.h"
 

@@ -21,16 +21,6 @@
 
 namespace OHOS {
 namespace Media {
-enum FreezerErrorType : int32_t {
-    /* Valid error, error code reference defined in media_errors.h */
-    FREEZER_ERROR,
-    /* Unknown error */
-    FREEZER_ERROR_UNKNOWN,
-    /* extend error type start,The extension error type agreed upon by the plug-in and
-       the application will be transparently transmitted by the service. */
-    FREEZER_ERROR_EXTEND_START = 0X10000,
-};
-
 class Freezer {
 public:
     virtual ~Freezer() = default;
@@ -38,7 +28,7 @@ public:
     virtual int32_t ResetAll() = 0;
 };
 
-class __attribute__((visibility("default"))) FreezerFactory {
+class FreezerFactory {
 public:
     static std::shared_ptr<Freezer> CreateFreezer();
 
@@ -46,7 +36,6 @@ private:
     FreezerFactory() = default;
     ~FreezerFactory() = default;
 };
-__attribute__((visibility("default"))) std::string FreezerErrorTypeToString(FreezerErrorType type);
 } // namespace Media
 } // namespace OHOS
 #endif // FREEZER_H
