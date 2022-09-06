@@ -35,6 +35,7 @@
 namespace OHOS {
 namespace Media {
 using RecorderMsgNotifier = std::function<void(const RecorderMessage &)>;
+using RecorderExecuteInCmdQ = std::function<int32_t(const std::shared_ptr<TaskHandler<int32_t>> &, const bool &)>;
 
 struct RecorderPipelineDesc {
     struct LinkDesc {
@@ -66,6 +67,7 @@ public:
     int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam);
     int32_t GetParameter(int32_t sourceId, RecorderParam &recParam);
     void SetNotifier(RecorderMsgNotifier notifier);
+    void SetExecuteInCmdQ(RecorderExecuteInCmdQ executeInCmdQ);
     void Dump();
 
 private:
@@ -89,11 +91,13 @@ private:
 
     std::shared_ptr<RecorderPipelineDesc> desc_;
     RecorderMsgNotifier notifier_;
+    RecorderExecuteInCmdQ executeInCmdQ_;
     std::unique_ptr<RecorderMsgProcessor> msgProcessor_;
 
     GstPipeline *gstPipeline_ = nullptr;
     std::condition_variable gstPipeCond_;
     std::mutex gstPipeMutex_;
+    std::mutex cmdQMutex_;
     bool asyncDone_ = false;
     bool eosDone_ = false;
     bool isStarted_ = false;
