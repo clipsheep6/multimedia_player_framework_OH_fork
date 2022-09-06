@@ -60,7 +60,6 @@ void MediaServer::OnStop()
 sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
     const sptr<IRemoteObject> &listener)
 {
-    MEDIA_LOGE("enter MediaServer::GetSubSystemAbility");
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");
 

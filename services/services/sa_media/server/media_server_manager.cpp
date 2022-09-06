@@ -118,7 +118,6 @@ MediaServerManager::~MediaServerManager()
 
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
-    MEDIA_LOGE("enter MediaServerManager::CreateStubObject()");
     std::lock_guard<std::mutex> lock(mutex_);
     switch (type) {
         case RECORDER: {
@@ -352,7 +351,6 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMuxerStubObject()
 
 sptr<IRemoteObject> MediaServerManager::CreateFreezerStubObject()
 {
-    MEDIA_LOGE("enter MediaServerManager::CreateFreezerStubObject()");
     sptr<FreezerServiceStub> freezerStub = FreezerServiceStub::Create();
     if (freezerStub == nullptr) {
         MEDIA_LOGE("failed to create FreezerServiceStub");
