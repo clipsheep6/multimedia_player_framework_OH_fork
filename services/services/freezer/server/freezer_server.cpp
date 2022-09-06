@@ -29,14 +29,14 @@ FreezerServer::~FreezerServer() {}
 
 int32_t FreezerServer::ProxyApp(const std::unordered_set<int32_t>& pidSet, const bool isFreeze)
 {
-    MEDIA_LOGD("FreezerServer: ProxyApp, pidset size is %{public}u, isFreeze is %{public}d", pidSet.size(), isFreeze);
+    MEDIA_LOGD("FreezerServer: ProxyApp, pidset size is %{public}lu, isFreeze is %{public}d", pidSet.size(), isFreeze);
     std::lock_guard<std::mutex> lock(freezeMutex_);
     for (const auto& pid : pidSet) {
         if (isFreeze && !freezePids.count(pid)) {
             freezePids.emplace(pid);
             std::vector<sptr<IStandardPlayerService>> playerStubVec;
             MediaServerManager::GetInstance().GetPlayerStubByPid(pid, playerStubVec);
-            MEDIA_LOGD("playerStubVec size is : %{public}u", playerStubVec.size());
+            MEDIA_LOGD("playerStubVec size is : %{public}lu", playerStubVec.size());
             for (const auto& playerStub : playerStubVec) {
                 CHECK_AND_RETURN_RET_LOG(playerStub != nullptr, MSERR_INVALID_VAL, "failed to get playerStub");
                 playerStub->SetFreezerState(false);
@@ -46,7 +46,7 @@ int32_t FreezerServer::ProxyApp(const std::unordered_set<int32_t>& pidSet, const
             freezePids.erase(pid);
             std::vector<sptr<IStandardPlayerService>> playerStubVec;
             MediaServerManager::GetInstance().GetPlayerStubByPid(pid, playerStubVec);
-            MEDIA_LOGD("playerStubVec size is : %{public}u", playerStubVec.size());
+            MEDIA_LOGD("playerStubVec size is : %{public}lu", playerStubVec.size());
             for (const auto& playerStub : playerStubVec) {
                 CHECK_AND_RETURN_RET_LOG(playerStub != nullptr, MSERR_INVALID_VAL, "failed to get playerStub");
                 playerStub->Play();
@@ -64,7 +64,7 @@ int32_t FreezerServer::ResetAll()
         MEDIA_LOGD("resume pid is : %{public}d", pid);
         std::vector<sptr<IStandardPlayerService>> playerStubVec;
         MediaServerManager::GetInstance().GetPlayerStubByPid(pid, playerStubVec);
-        MEDIA_LOGD("playerStubVec size is : %{public}u", playerStubVec.size());
+        MEDIA_LOGD("playerStubVec size is : %{public}lu", playerStubVec.size());
         for (const auto& playerStub : playerStubVec) {
             CHECK_AND_RETURN_RET_LOG(playerStub != nullptr, MSERR_INVALID_VAL, "failed to get playerStub");
             playerStub->Play();
