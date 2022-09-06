@@ -373,10 +373,6 @@ void PlayerEngineGstImpl::HandleAudioMessage(const PlayBinMessage &msg)
             HandleAudioErrorMessage(msg);
             break;
         }
-        case PLAYBIN_MSG_VOLUME_CHANGE: {
-            HandleVolumeChangedMessage(msg);
-            break;
-        }
         default: {
             break;
         }
@@ -393,18 +389,6 @@ void PlayerEngineGstImpl::HandleAudioErrorMessage(const PlayBinMessage &msg)
 {
     std::pair<int32_t, std::string> errorPair = std::any_cast<std::pair<int32_t, std::string>>(msg.extra);
     MEDIA_LOGE("HandleAudioErrorMessage:%{public}d, %{public}s", errorPair.first, errorPair.second.c_str());
-}
-
-void PlayerEngineGstImpl::HandleVolumeChangedMessage(const PlayBinMessage &msg)
-{
-    (void)msg;
-    MEDIA_LOGI("volume changed");
-
-    Format format;
-    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
-    if (notifyObs != nullptr) {
-        notifyObs->OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
-    }
 }
 
 void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
