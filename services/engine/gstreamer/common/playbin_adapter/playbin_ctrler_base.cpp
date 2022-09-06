@@ -670,17 +670,6 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
     return MSERR_OK;
 }
 
-void PlayBinCtrlerBase::SetupVolumeChangedCb()
-{
-    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
-    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
-
-    gulong id = g_signal_connect_data(audioSink_, "notify::volume",
-        G_CALLBACK(&PlayBinCtrlerBase::OnVolumeChangedCb), wrapper,
-        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(audioSink_), id });
-}
-
 void PlayBinCtrlerBase::SetupInterruptEventCb()
 {
     PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
@@ -721,7 +710,6 @@ void PlayBinCtrlerBase::SetupCustomElement()
         audioSink_ = sinkProvider_->CreateAudioSink();
         if (audioSink_ != nullptr) {
             g_object_set(playbin_, "audio-sink", audioSink_, nullptr);
-            SetupVolumeChangedCb();
             SetupInterruptEventCb();
             SetupAudioStateEventCb();
             SetupAudioErrorEventCb();
@@ -1081,20 +1069,6 @@ void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
 
     if (listener != nullptr) {
         listener(elem);
-    }
-}
-
-void PlayBinCtrlerBase::OnVolumeChangedCb(const GstElement *playbin, GstElement *elem, gpointer userdata)
-{
-    (void)playbin;
-    if (elem == nullptr || userdata == nullptr) {
-        return;
-    }
-
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
-    if (thizStrong != nullptr && thizStrong->GetCurrState() != thizStrong->preparingState_) {
-        PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_VOLUME_CHANGE, 0, {} };
-        thizStrong->ReportMessage(msg);
     }
 }
 
