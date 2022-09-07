@@ -262,8 +262,14 @@ public:
 
 class __attribute__((visibility("default"))) AVMetadataHelperFactory {
 public:
+#ifdef UNSUPPORT_METADATA
+    static std::shared_ptr<AVMetadataHelper> CreateAVMetadataHelper()
+    {
+        return nullptr;
+    }
+#else
     static std::shared_ptr<AVMetadataHelper> CreateAVMetadataHelper();
-
+#endif
 private:
     AVMetadataHelperFactory() = default;
     ~AVMetadataHelperFactory() = default;

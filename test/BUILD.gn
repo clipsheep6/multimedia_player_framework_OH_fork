@@ -12,18 +12,39 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 group("media_unit_test") {
   testonly = true
+  deps = []
+  if (multimedia_player_framework_support_test) {
+    deps += [
+      "unittest/avcodec_test:avcodec_list_native_unit_test",
+      "unittest/avcodec_test:vcodec_native_unit_test",
+      "unittest/avmetadata_test:avmetadata_unit_test",
+      "unittest/player_test:player_unit_test",
+      "unittest/recorder_test:recorder_unit_test",
+      "//foundation/multimedia/player_framework/frameworks/native/recorder_profiles/test/unittest:unittest",
+    ]
+  }
+}
 
-  deps = [
-    "unittest/avcodec_test:acodec_capi_unit_test",
-    "unittest/avcodec_test:acodec_native_unit_test",
-    "unittest/avcodec_test:avcodec_list_native_unit_test",
-    "unittest/avcodec_test:vcodec_capi_unit_test",
-    "unittest/avcodec_test:vcodec_native_unit_test",
-    "unittest/avmetadata_test:avmetadata_unit_test",
-    "unittest/player_test:player_unit_test",
-    "unittest/recorder_test:recorder_unit_test",
-  ]
+group("media_fuzz_test") {
+  testonly = true
+  deps = []
+  if (multimedia_player_framework_support_test) {
+    deps += [
+      "fuzztest:fuzztest",
+    ]
+  }
+}
+
+group("media_demo_test") {
+  testonly = true
+  deps = []
+  if (multimedia_player_framework_support_test) {
+    deps += [
+      "nativedemo:media_demo",
+    ]
+  }
 }

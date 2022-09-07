@@ -95,7 +95,7 @@ ohos_shared_library("gst_codec_plugin_hdi") {
     "//drivers/peripheral/codec/hal:libcodec_hdi_omx_client",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
-    "//foundation/multimedia/player_framework/services/engine/common:media_engine_common",
+    "//foundation/multimedia/player_framework/services/engine/common:media_engine_capability",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common:gst_media_common",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
