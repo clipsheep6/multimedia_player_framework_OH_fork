@@ -403,8 +403,13 @@ HWTEST_F(PlayerUnitTest, Player_Freezer_001, TestSize.Level0)
     EXPECT_TRUE(player_->IsPlaying());
     pid_t pid = getpid();
     ASSERT_EQ(MSERR_OK, FreezerFactory::CreateFreezer()->ProxyApp(pid, false));
+    EXPECT_FALSE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, FreezerFactory::CreateFreezer()->ProxyApp(pid, true));
+    EXPECT_TRUE(player_->IsPlaying());
+    ASSERT_EQ(MSERR_OK, FreezerFactory::CreateFreezer()->ProxyApp(pid, false));
+    EXPECT_FALSE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, FreezerFactory::CreateFreezer()->ResetAll());
+    EXPECT_TRUE(player_->IsPlaying());
 }
 } // namespace Media
 } // namespace OHOS
