@@ -30,6 +30,7 @@ inline constexpr int32_t WAITSECOND = 6;
 inline constexpr int32_t DELTA_TIME = 1000;
 const std::string MEDIA_ROOT = "file:///data/test/";
 const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
+const std::unordered_set<int32_t> pidSet {};
 } // namespace PlayerTestParam
 namespace AVMetadataTestParam {
 inline constexpr int32_t PARA_MAX_LEN = 256;

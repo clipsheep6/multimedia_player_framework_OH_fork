@@ -13,8 +13,10 @@
  * limitations under the License.
  */
 
+#include "unistd.h"
 #include "player_unit_test.h"
 #include "media_errors.h"
+#include "freezer.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -383,6 +385,26 @@ HWTEST_F(PlayerUnitTest, Player_SelectBitRate_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_NE(MSERR_OK, player_->SelectBitRate(0));
+}
+
+/**
+ * @tc.name  : Test Player Freezer API
+ * @tc.number: Player_Freezer_001
+ * @tc.desc  : Test Player Freezer interface
+ */
+HWTEST_F(PlayerUnitTest, Player_Freezer_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+    pid_t pid = getpid();
+    ASSERT_EQ(MSERR_OK, FreezerFactory::CreateFreezer()->ProxyApp(pid, false));
+    EXPECT_EQ(MSERR_OK, FreezerFactory::CreateFreezer()->ProxyApp(pid, true));
+    EXPECT_EQ(MSERR_OK, FreezerFactory::CreateFreezer()->ResetAll());
 }
 } // namespace Media
 } // namespace OHOS

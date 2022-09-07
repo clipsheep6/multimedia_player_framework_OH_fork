@@ -717,7 +717,7 @@ void PlayerServerHi::OnError(PlayerErrorType errorType, int32_t errorCode)
     std::lock_guard<std::mutex> lockCb(mutexCb_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     FaultEventWrite(lastErrMsg_, "Player");
-    if (playerCb_ != nullptr) {
+    if (playerCb_ != nullptr && isFreezeCallback_) {
         playerCb_->OnError(errorType, errorCode);
     }
 }
