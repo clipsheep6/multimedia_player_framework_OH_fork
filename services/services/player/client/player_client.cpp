@@ -226,6 +226,11 @@ int32_t PlayerClient::SelectBitRate(uint32_t bitRate)
     return playerProxy_->SelectBitRate(bitRate);
 }
 
+void PlayerClient::SetFreezerState(bool isCallback)
+{
+    (void)isCallback;
+}
+
 int32_t PlayerClient::GetDuration(int32_t &duration)
 {
     std::lock_guard<std::mutex> lock(mutex_);

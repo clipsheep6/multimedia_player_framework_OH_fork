@@ -744,9 +744,14 @@ void PlayerServerHi::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &
         MediaTrace::TraceEnd("Player::Seek", SEEK_TASK_ID);
     }
 
-    if (playerCb_ != nullptr) {
+    if (playerCb_ != nullptr && isFreezeCallback_) {
         playerCb_->OnInfo(type, extra, infoBody);
     }
+}
+
+void PlayerServerHi::SetFreezerState(bool isCallback)
+{
+    isFreezeCallback_ = isCallback;
 }
 
 const std::string &PlayerServerHi::GetStatusDescription(int32_t status)

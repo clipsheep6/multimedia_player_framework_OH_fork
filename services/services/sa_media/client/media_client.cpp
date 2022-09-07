@@ -20,6 +20,7 @@
 #include "ipc_skeleton.h"
 #include "i_standard_recorder_service.h"
 #include "i_standard_player_service.h"
+#include "i_standard_freezer_service.h"
 #include "i_standard_avmetadatahelper_service.h"
 #include "i_standard_avmuxer_service.h"
 #include "media_log.h"
@@ -99,6 +100,27 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
     std::lock_guard<std::mutex> lock(mutex_);
     playerClientList_.push_back(player);
     return player;
+}
+
+std::shared_ptr<IFreezerService> MediaClient::CreateFreezerService()
+{
+    if (!IsAlived()) {
+        MEDIA_LOGE("media service does not exist.");
+        return nullptr;
+    }
+
+    if (!freezerProxy_) {
+        sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
+            IStandardMediaService::MediaSystemAbility::MEDIA_FREEZER, listenerStub_->AsObject());
+        CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "freezer proxy object is nullptr.");
+
+        freezerProxy_ = iface_cast<IStandardFreezerService>(object);
+        CHECK_AND_RETURN_RET_LOG(freezerProxy_ != nullptr, nullptr, "freezer proxy is nullptr.");
+    }
+    
+    std::shared_ptr<FreezerClient> freezer = FreezerClient::Create(freezerProxy_);
+    CHECK_AND_RETURN_RET_LOG(freezer != nullptr, nullptr, "failed to create freezer client.");
+    return freezer;
 }
 
 std::shared_ptr<IAVCodecListService> MediaClient::CreateAVCodecListService()
@@ -360,6 +382,7 @@ void MediaClient::DoMediaServerDied()
             avmuxer->MediaServerDied();
         }
     }
+    freezerProxy_ = nullptr;
 }
 } // namespace Media
 } // namespace OHOS

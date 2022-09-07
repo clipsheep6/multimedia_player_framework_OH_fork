@@ -22,6 +22,7 @@
 #include "media_listener_stub.h"
 #include "recorder_client.h"
 #include "player_client.h"
+#include "freezer_client.h"
 #include "avcodeclist_client.h"
 #include "recorder_profiles_client.h"
 #include "avmetadatahelper_client.h"
@@ -43,6 +44,7 @@ public:
     std::shared_ptr<IAVCodecListService> CreateAVCodecListService() override;
     std::shared_ptr<IRecorderProfilesService> CreateRecorderProfilesService() override;
     std::shared_ptr<IAVMuxerService> CreateAVMuxerService() override;
+    std::shared_ptr<IFreezerService> CreateFreezerService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
     int32_t DestroyPlayerService(std::shared_ptr<IPlayerService> player) override;
     int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;
@@ -60,6 +62,7 @@ private:
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     sptr<MediaListenerStub> listenerStub_ = nullptr;
     sptr<MediaDeathRecipient> deathRecipient_ = nullptr;
+    sptr<IStandardFreezerService> freezerProxy_ = nullptr;
     std::list<std::shared_ptr<IRecorderService>> recorderClientList_;
     std::list<std::shared_ptr<IPlayerService>> playerClientList_;
     std::list<std::shared_ptr<IAVMetadataHelperService>> avMetadataHelperClientList_;

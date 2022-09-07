@@ -17,6 +17,7 @@
 #include <unordered_set>
 #include "recorder_service_stub.h"
 #include "player_service_stub.h"
+#include "freezer_service_stub.h"
 #include "avmetadatahelper_service_stub.h"
 #include "avcodeclist_service_stub.h"
 #include "recorder_profiles_service_stub.h"
@@ -139,6 +140,9 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         }
         case AVMUXER: {
             return CreateAVMuxerStubObject();
+        }
+        case FREEZER: {
+            return CreateFreezerStubObject();
         }
         default: {
             MEDIA_LOGE("default case, media server manager failed");
@@ -345,6 +349,17 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMuxerStubObject()
     return object;
 }
 
+sptr<IRemoteObject> MediaServerManager::CreateFreezerStubObject()
+{
+    sptr<FreezerServiceStub> freezerStub = FreezerServiceStub::Create();
+    if (freezerStub == nullptr) {
+        MEDIA_LOGE("failed to create FreezerServiceStub");
+        return nullptr;
+    }
+    sptr<IRemoteObject> object = freezerStub->AsObject();
+    return object;
+}
+
 void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -545,6 +560,15 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
     }
     if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
         MEDIA_LOGW("failed to call InstanceDump");
+    }
+}
+void MediaServerManager::GetPlayerStubByPid(int32_t pid, std::vector<sptr<IStandardPlayerService>>& playerStubVec)
+{
+    MEDIA_LOGD("MediaServerManager::processFreezer pid is%{public}d", pid);
+    for (auto itPlayer = playerStubMap_.begin(); itPlayer != playerStubMap_.end(); itPlayer++) {
+        if (itPlayer->second == pid) {
+            playerStubVec.emplace_back(iface_cast<IStandardPlayerService>(itPlayer->first));
+        }
     }
 }
 } // namespace Media

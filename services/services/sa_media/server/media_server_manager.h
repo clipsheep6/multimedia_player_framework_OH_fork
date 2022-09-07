@@ -21,7 +21,7 @@
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
 #include "recorder_service_stub.h"
-#include "player_service_stub.h"
+#include "i_standard_player_service.h"
 #include "avcodec_service_stub.h"
 #include "nocopyable.h"
 
@@ -47,6 +47,7 @@ public:
         AVCODEC,
         AVMUXER,
         RECORDERPROFILES,
+        FREEZER,
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -54,6 +55,7 @@ public:
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args);
     void DestroyDumper(StubType type, sptr<IRemoteObject> object);
     void DestroyDumperForPid(pid_t pid);
+    void GetPlayerStubByPid(int32_t pid, std::vector<sptr<IStandardPlayerService>>& playerStubVec);
 
 private:
     MediaServerManager();
@@ -64,6 +66,7 @@ private:
     sptr<IRemoteObject> CreateAVCodecStubObject();
     sptr<IRemoteObject> CreateRecorderProfilesStubObject();
     sptr<IRemoteObject> CreateAVMuxerStubObject();
+    sptr<IRemoteObject> CreateFreezerStubObject();
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
