@@ -88,6 +88,7 @@ ohos_executable("media_demo") {
     "ipc:ipc_core",
     "multimedia_player_framework:media_client",
   ]
+  install_enable = false
 
   part_name = "multimedia_player_framework"
   subsystem_name = "multimedia"

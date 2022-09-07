@@ -80,6 +80,8 @@ private:
     AudioStandard::AudioRendererOptions rendererOptions_ = {};
     void InitChannelRange(GstCaps *caps) const;
     void InitRateRange(GstCaps *caps) const;
+    void SetMuteVolumeBySysParam();
+    bool isMute_ = false;
     std::shared_ptr<AudioRendererMediaCallback> audioRendererMediaCallback_ = nullptr;
 };
 } // namespace Media
