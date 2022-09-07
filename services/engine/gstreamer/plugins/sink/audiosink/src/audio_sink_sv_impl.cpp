@@ -18,6 +18,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_dfx.h"
+#include "param_wrapper.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioSinkSvImpl"};
@@ -115,11 +116,29 @@ void AudioSinkSvImpl::InitRateRange(GstCaps *caps) const
     g_value_unset(&list);
 }
 
+void AudioSinkSvImpl::SetMuteVolumeBySysParam()
+{
+    std::string onMute;
+    int32_t res = OHOS::system::GetStringParameter("sys.media.set.mute", onMute, "");
+    if (res == 0 && !onMute.empty()) {
+        if (onMute == "TRUE") {
+            isMute_ = true;
+            (void)SetVolume(0.0);
+            MEDIA_LOGD("SetVolume as 0");
+        } else if (onMute == "FALSE") {
+            isMute_ = false;
+            (void)SetVolume(1.0);
+            MEDIA_LOGD("SetVolume as 1");
+        }
+    }
+}
+
 int32_t AudioSinkSvImpl::SetVolume(float volume)
 {
     MediaTrace trace("AudioSink::SetVolume");
     MEDIA_LOGD("audioRenderer SetVolume(%{public}lf) In", volume);
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED, "audioRenderer_ is nullptr");
+    volume = (isMute_ == false) ? volume : 0.0;
     int32_t ret = audioRenderer_->SetVolume(volume);
     CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED, "audio server setvolume failed!");
     MEDIA_LOGD("audioRenderer SetVolume(%{public}lf) Out", volume);
@@ -171,6 +190,7 @@ int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid)
     rendererOptions_.streamInfo.channels = AudioStandard::MONO;
     audioRenderer_ = AudioStandard::AudioRenderer::Create(rendererOptions_, appInfo);
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
+    SetMuteVolumeBySysParam();
     MEDIA_LOGD("audioRenderer Prepare Out");
     return MSERR_OK;
 }
