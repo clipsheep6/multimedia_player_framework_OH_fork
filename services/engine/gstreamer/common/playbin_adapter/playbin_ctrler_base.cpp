@@ -205,7 +205,7 @@ int32_t PlayBinCtrlerBase::Prepare()
                 return GetCurrState() == preparedState_ || isErrorHappened_;
             });
         } else {
-            static constexpr int32_t timeout = 2;
+            static constexpr int32_t timeout = 5;
             stateCond_.wait_for(condLock, std::chrono::seconds(timeout), [this]() { // Prevent deadlock
                 return GetCurrState() == preparedState_ || isErrorHappened_;
             });
