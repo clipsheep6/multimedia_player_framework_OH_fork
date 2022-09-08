@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <string>
+#include "av_common.h"
 
 namespace OHOS {
 namespace Media {
