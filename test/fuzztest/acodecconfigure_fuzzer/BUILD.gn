@@ -1,0 +1,113 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/test.gni")
+module_output_path = "player_framework/fuzztest"
+MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
+MEDIA_AVCODEC_TEST_DIR = "//foundation/multimedia/player_framework/test/unittest/avcodec_test/"
+
+acodec_fuzztest_include_dirs = [
+  "//graphic/graphic_2d/interfaces/innerkits/surface",
+  "//foundation//window/window_manager/interfaces/innerkits/wm",
+  "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/audiodecoder/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/audioencoder/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/avcodec_info/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/avcodec_list/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/avformat/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/avmemory/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/enum/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/surface/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/videodecoder/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/videoencoder/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/acodec_test/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/vcodec_test/",
+  "$MEDIA_ROOT_DIR/test/unittest/common/include/",
+]
+
+acodec_fuzztest_cflags = [
+  "-std=c++17",
+  "-std=c++17",
+  "-fno-rtti",
+  "-fno-exceptions",
+  "-Wall",
+  "-fno-common",
+  "-fstack-protector-strong",
+  "-Wshadow",
+  "-FPIC",
+  "-FS",
+  "-O2",
+  "-D_FORTIFY_SOURCE=2",
+  "-fvisibility=hidden",
+  "-Wformat=2",
+  "-Wdate-time",
+  "-Werror",
+  "-Wextra",
+  "-Wimplicit-fallthrough",
+  "-Wsign-compare",
+  "-Wunused-parameter",
+]
+
+
+##############################fuzztest##########################################
+ohos_fuzztest("ACodecConfigureFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file = "//foundation//multimedia/player_framework/test/fuzztest/acodecconfigure_fuzzer"
+
+  resource_config_file = "//foundation/multimedia/player_framework/test/fuzztest/resource/ohos_test.xml"
+  include_dirs = acodec_fuzztest_include_dirs
+  include_dirs += [
+    "//foundation/multimedia/player_framework/services/utils/include",
+    "//foundation/multimedia/player_framework/test/fuzztest/",
+    "$MEDIA_ROOT_DIR/test/fuzztest/acodecconfigure_fuzzer",
+  ]
+  cflags = acodec_fuzztest_cflags
+  cflags += [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "acodecconfigure_fuzzer.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/native/avcodec_mock_factory.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/native/avformat/avformat_native_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/native/avmemory/avmemory_native_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/native/surface/surface_native_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/native/videodecoder/videodec_native_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/native/videoencoder/videoenc_native_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/vcodec_test/vdec_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/vcodec_test/venc_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/native/audiodecoder/audiodec_native_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/native/audioencoder/audioenc_native_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/acodec_test/acodec_mock.cpp",
+  ]
+  deps = [
+    "//foundation/graphic/graphic_2d:libsurface",
+    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/window/window_manager/wm:libwm",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+  ]
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "ipc:ipc_core",
+    "multimedia_player_framework:media_client",
+  ]
+}
+
+###############################################################################
+
