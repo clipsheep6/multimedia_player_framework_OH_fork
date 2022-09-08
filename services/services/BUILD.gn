@@ -107,9 +107,7 @@ ohos_shared_library("media_service") {
     ]
   }
   if (multimedia_player_framework_support_histreamer) {
-    sources += [
-      "player/server/player_server_hi.cpp",
-    ]
+    sources += [ "player/server/player_server_hi.cpp" ]
   }
   if (multimedia_player_framework_support_recorder) {
     sources += [

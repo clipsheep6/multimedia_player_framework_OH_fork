@@ -58,9 +58,7 @@ ohos_executable("media_demo") {
     "-Wunused-parameter",
   ]
 
-  sources = [
-    "./media_demo.cpp",
-  ]
+  sources = [ "./media_demo.cpp" ]
 
   if (multimedia_player_framework_support_player) {
     sources += [

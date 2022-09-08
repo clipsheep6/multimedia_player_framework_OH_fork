@@ -18,7 +18,7 @@ group("media_engine_package") {
   deps = []
   if (multimedia_player_framework_support_gstreamer) {
     deps += [
-      "common:media_engine_capability",
+      "common:media_engine_common",
       "gstreamer:media_engine_gst_package",
     ]
   }
