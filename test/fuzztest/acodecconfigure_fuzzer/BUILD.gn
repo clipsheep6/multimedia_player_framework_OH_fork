@@ -16,7 +16,8 @@ import("//build/config/features.gni")
 import("//build/test.gni")
 module_output_path = "player_framework/fuzztest"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
-MEDIA_AVCODEC_TEST_DIR = "//foundation/multimedia/player_framework/test/unittest/avcodec_test/"
+MEDIA_AVCODEC_TEST_DIR =
+    "//foundation/multimedia/player_framework/test/unittest/avcodec_test/"
 
 acodec_fuzztest_include_dirs = [
   "//graphic/graphic_2d/interfaces/innerkits/surface",
@@ -61,7 +62,6 @@ acodec_fuzztest_cflags = [
   "-Wunused-parameter",
 ]
 
-
 ##############################fuzztest##########################################
 ohos_fuzztest("ACodecConfigureFuzzTest") {
   module_out_path = module_output_path
@@ -82,7 +82,9 @@ ohos_fuzztest("ACodecConfigureFuzzTest") {
     "-fno-omit-frame-pointer",
   ]
   sources = [
-    "acodecconfigure_fuzzer.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/acodec_test/acodec_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/native/audiodecoder/audiodec_native_mock.cpp",
+    "$MEDIA_AVCODEC_TEST_DIR/native/audioencoder/audioenc_native_mock.cpp",
     "$MEDIA_AVCODEC_TEST_DIR/native/avcodec_mock_factory.cpp",
     "$MEDIA_AVCODEC_TEST_DIR/native/avformat/avformat_native_mock.cpp",
     "$MEDIA_AVCODEC_TEST_DIR/native/avmemory/avmemory_native_mock.cpp",
@@ -91,16 +93,14 @@ ohos_fuzztest("ACodecConfigureFuzzTest") {
     "$MEDIA_AVCODEC_TEST_DIR/native/videoencoder/videoenc_native_mock.cpp",
     "$MEDIA_AVCODEC_TEST_DIR/vcodec_test/vdec_mock.cpp",
     "$MEDIA_AVCODEC_TEST_DIR/vcodec_test/venc_mock.cpp",
-    "$MEDIA_AVCODEC_TEST_DIR/native/audiodecoder/audiodec_native_mock.cpp",
-    "$MEDIA_AVCODEC_TEST_DIR/native/audioencoder/audioenc_native_mock.cpp",
-    "$MEDIA_AVCODEC_TEST_DIR/acodec_test/acodec_mock.cpp",
+    "acodecconfigure_fuzzer.cpp",
   ]
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/wm:libwm",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    "//foundation/window/window_manager/wm:libwm",
   ]
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
