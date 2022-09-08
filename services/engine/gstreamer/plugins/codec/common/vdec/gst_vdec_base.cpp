@@ -1305,7 +1305,6 @@ static gboolean gst_vdec_base_push_out_buffers(GstVdecBase *self)
         GST_ELEMENT_ERROR(self, STREAM, DECODE, ("hardware decoder error!"), ("%s", "acquire buffer"));
         return FALSE;
     }
-    g_return_val_if_fail(flow == GST_FLOW_EOS, FALSE);
     return TRUE;
 }
 
