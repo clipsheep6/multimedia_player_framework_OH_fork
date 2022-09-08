@@ -35,6 +35,7 @@ private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
     static napi_value GetMediaCapability(napi_env env, napi_callback_info info);
+#ifdef SUPPORT_CODEC
     static napi_value GetAudioDecoderCaps(napi_env env, napi_callback_info info);
     static napi_value FindAudioDecoder(napi_env env, napi_callback_info info);
     static napi_value GetAudioEncoderCaps(napi_env env, napi_callback_info info);
@@ -43,12 +44,17 @@ private:
     static napi_value FindVideoDecoder(napi_env env, napi_callback_info info);
     static napi_value GetVideoEncoderCaps(napi_env env, napi_callback_info info);
     static napi_value FindVideoEncoder(napi_env env, napi_callback_info info);
+#endif
+#ifdef SUPPORT_RECORDER
     static napi_value GetAudioRecorderCaps(napi_env env, napi_callback_info info);
     static napi_value IsAudioRecoderConfigSupported(napi_env env, napi_callback_info info);
     static napi_value GetVideoRecorderCaps(napi_env env, napi_callback_info info);
     static napi_value GetVideoRecorderProfile(napi_env env, napi_callback_info info);
     static napi_value HasVideoRecorderProfile(napi_env env, napi_callback_info info);
+#endif
+#ifdef SUPPORT_MUXER
     static napi_value GetAVMuxerFormatList(napi_env env, napi_callback_info info);
+#endif
 
     MediaCapsNapi();
     ~MediaCapsNapi();
