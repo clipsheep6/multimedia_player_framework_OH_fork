@@ -97,6 +97,7 @@ int32_t PlayerServiceStub::Init()
 int32_t PlayerServiceStub::DestroyStub()
 {
     playerCallback_ = nullptr;
+    (void)playerServer->Release();
     playerServer_ = nullptr;
 
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, AsObject());
