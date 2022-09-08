@@ -47,6 +47,10 @@ PlayerServiceStub::PlayerServiceStub()
 
 PlayerServiceStub::~PlayerServiceStub()
 {
+    if (playerServer_ != nullptr) {
+        (void)playerServer_->Release();
+        playerServer_ = nullptr;
+    }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -97,7 +101,10 @@ int32_t PlayerServiceStub::Init()
 int32_t PlayerServiceStub::DestroyStub()
 {
     playerCallback_ = nullptr;
-    playerServer_ = nullptr;
+    if (playerServer_ != nullptr) {
+        (void)playerServer_->Release();
+        playerServer_ = nullptr;
+    }
 
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, AsObject());
     return MSERR_OK;
