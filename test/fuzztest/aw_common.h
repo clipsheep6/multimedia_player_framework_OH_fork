@@ -21,6 +21,28 @@
 #include "recorder.h"
 namespace OHOS {
 namespace Media {
+#define CHECK_INSTANCE_AND_RETURN_RET(cond, ret, ...)       \
+    do {                                                       \
+        if (cond == nullptr) {                                 \
+            cout << cond << "is nullptr" << endl;              \
+            return ret;                                        \
+        }                                                      \
+    } while (0)
+
+#define CHECK_BOOL_AND_RETURN_RET(cond, ret, ...)                \
+    do {                                                        \
+        if (!(cond)) {                                          \
+            return ret;                                         \
+        }                                                       \
+    } while (0)
+
+#define CHECK_STATE_AND_RETURN_RET(cond, ret, ...)               \
+    do {                                                        \
+        if (cond != 0) {                                        \
+            return ret;                                         \
+        }                                                       \
+    } while (0)
+constexpr int32_t WAITTINGTIME = 2;
 namespace PlayerTestParam {
     int32_t WriteDataToFile(const std::string &path, const std::uint8_t *data, std::size_t size);
     int32_t ProduceRandomNumberCrypt(void);

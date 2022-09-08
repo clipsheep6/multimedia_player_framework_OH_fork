@@ -38,7 +38,7 @@ ACodecFileFuzzer::~ACodecFileFuzzer()
 
 bool ACodecFileFuzzer::FuzzAudioFile(uint8_t* data, size_t size)
 {
-    while(true) {
+    while (true) {
         std::shared_ptr<ACodecSignal> acodecSignal = std::make_shared<ACodecSignal>();
         adecCallback_ = std::make_shared<ADecCallbackTest>(acodecSignal);
         CHECK_INSTANCE_AND_RETURN_RET(adecCallback_, false);
@@ -67,7 +67,7 @@ bool ACodecFileFuzzer::FuzzAudioFile(uint8_t* data, size_t size)
         audioCodec_->PrepareEnc();
         audioCodec_->StartDec();
         audioCodec_->StartEnc();
-        sleep(3);
+        sleep(WAITTING_TIME);
         break;
     }
     if (audioCodec_ != nullptr) {

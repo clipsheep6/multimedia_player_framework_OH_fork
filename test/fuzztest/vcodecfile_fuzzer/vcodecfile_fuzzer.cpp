@@ -38,7 +38,7 @@ VCodecFileFuzzer::~VCodecFileFuzzer()
 
 bool VCodecFileFuzzer::FuzzVideoFile(uint8_t* data, size_t size)
 {
-    while(true) {
+    while (true) {
         std::shared_ptr<VDecSignal> vdecSignal = std::make_shared<VDecSignal>();
         vdecCallback_ = std::make_shared<VDecCallbackTest>(vdecSignal);
         CHECK_INSTANCE_AND_RETURN_RET(vdecCallback_, false);
@@ -75,24 +75,6 @@ bool VCodecFileFuzzer::FuzzVideoFile(uint8_t* data, size_t size)
         videoEnc_->Start();
         sleep(3);
         break;
-    }
-    if (videoEnc_ != nullptr) {
-        cout << "videoEnc_ is not nullptr" << endl;
-        int32_t ret = videoEnc_->Reset();
-        if (ret == 0) {
-            cout << "enc reset success" << endl;
-        } else {
-            cout << "enc reset fail" << endl;
-            return false;
-        }
-        ret = videoEnc_->Release();
-        if (ret == 0) {
-            cout << "enc release success" << endl;
-        } else {
-            cout << "enc release fail" << endl;
-            return false;
-        }
-        cout << "exit enc release" << endl;
     }
     if (videoDec_ != nullptr) {
         videoDec_->Reset();

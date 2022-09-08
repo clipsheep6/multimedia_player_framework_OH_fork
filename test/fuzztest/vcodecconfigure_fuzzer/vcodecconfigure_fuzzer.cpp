@@ -37,7 +37,7 @@ VCodecConfigureFuzzer::~VCodecConfigureFuzzer()
 
 bool VCodecConfigureFuzzer::FuzzVideoConfigure(uint8_t* data, size_t size)
 {
-    while(true) {
+    while (true) {
         std::shared_ptr<VDecSignal> vdecSignal = std::make_shared<VDecSignal>();
         vdecCallback_ = std::make_shared<VDecCallbackTest>(vdecSignal);
         CHECK_INSTANCE_AND_RETURN_RET(vdecCallback_, false);
@@ -57,15 +57,11 @@ bool VCodecConfigureFuzzer::FuzzVideoConfigure(uint8_t* data, size_t size)
         videoEnc_->SetOutPath("/data/test/media/avc_configurefuzz_out.es");
         std::shared_ptr<FormatMock> format = AVCodecMockFactory::CreateFormat();
         CHECK_INSTANCE_AND_RETURN_RET(format, false);
-        string width = "width";
-        string height = "height";
-        string pixelFormat = "pixel_format";
-        string frame_rate = "frame_rate";
         int32_t data_ = *reinterpret_cast<int32_t *>(data);
-        (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
-        (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
-        (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-        (void)format->PutIntValue(frame_rate.c_str(), data_);
+        (void)format->PutIntValue("width", DEFAULT_WIDTH);
+        (void)format->PutIntValue("height", DEFAULT_HEIGHT);
+        (void)format->PutIntValue("pixel_format", NV12);
+        (void)format->PutIntValue("frame_rate", data_);
         videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
         videoEnc_->Configure(format);
         videoDec_->Configure(format);
@@ -74,26 +70,17 @@ bool VCodecConfigureFuzzer::FuzzVideoConfigure(uint8_t* data, size_t size)
         videoDec_->Prepare();
         videoEnc_->Prepare();
         videoDec_->Start();
-        cout << "test 1" << endl;
         videoEnc_->Start();
-        cout << "test 2" << endl;
-        sleep(3);
-        cout << "test 3" << endl;
+        sleep(WAITTING_TIME);
         break;
     }
     if (videoDec_ != nullptr) {
-        cout << "test 4" << endl;
         videoDec_->Reset();
-        cout << "test 4-2" << endl;
         videoDec_->Release();
-        cout << "test 5" << endl;
     }
     if (videoEnc_ != nullptr) {
-        cout << "test 6" << endl;
         videoEnc_->Reset();
-        cout << "test 6-2" << endl;
         videoEnc_->Release();
-        cout << "test 7" << endl;
     }
     return true;
 }
