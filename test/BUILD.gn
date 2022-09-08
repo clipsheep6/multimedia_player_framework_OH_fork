@@ -12,18 +12,19 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-
+MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
 group("media_unit_test") {
   testonly = true
 
   deps = [
+    "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/test/unittest:avmetadata_unit_test",
+    "$MEDIA_ROOT_DIR/frameworks/native/player/test/unittest:player_unit_test",
+    "$MEDIA_ROOT_DIR/frameworks/native/recorder/test/unittest:recorder_unit_test",
+    "$MEDIA_ROOT_DIR/frameworks/native/recorder_profiles/test/unittest:recorder_profiles_unit_test",
     "unittest/avcodec_test:acodec_capi_unit_test",
     "unittest/avcodec_test:acodec_native_unit_test",
     "unittest/avcodec_test:avcodec_list_native_unit_test",
     "unittest/avcodec_test:vcodec_capi_unit_test",
     "unittest/avcodec_test:vcodec_native_unit_test",
-    "unittest/avmetadata_test:avmetadata_unit_test",
-    "unittest/player_test:player_unit_test",
-    "unittest/recorder_test:recorder_unit_test",
   ]
 }

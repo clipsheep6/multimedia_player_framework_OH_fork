@@ -19,11 +19,19 @@
 #include "player.h"
 #include "media_data_source_test_noseek.h"
 #include "media_data_source_test_seekable.h"
-#include "test_params_config.h"
 #include "window.h"
 
 namespace OHOS {
 namespace Media {
+namespace PlayerTestParam {
+inline constexpr int32_t SEEK_TIME_5_SEC = 5000;
+inline constexpr int32_t SEEK_TIME_2_SEC = 2000;
+inline constexpr int32_t WAITSECOND = 6;
+inline constexpr int32_t DELTA_TIME = 1000;
+const std::string MEDIA_ROOT = "file:///data/test/";
+const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
+} // namespace PlayerTestParam
+
 class PlayerSignal {
 protected:
     PlayerStates state_ = PLAYER_IDLE;
