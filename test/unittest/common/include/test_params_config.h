@@ -18,7 +18,6 @@
 
 #include <cstdint>
 #include <string>
-#include "recorder.h"
 
 namespace OHOS {
 namespace Media {
