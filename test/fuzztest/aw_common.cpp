@@ -33,6 +33,33 @@ using namespace PlayerTestParam;
 namespace OHOS {
 namespace Media {
 namespace PlayerTestParam {
+int32_t WriteDataToFile(const std::string &path, const std::uint8_t *data, std::size_t size)
+{
+    FILE *file = nullptr;
+    file = fopen(path.c_str(), "w+");
+    if (file == nullptr) {
+        return -1;
+    }
+    if (fwrite(data, 1, size, file) != size) {
+        (void)fclose(file);
+        return -1;
+    }
+    (void)fclose(file);
+    return 0;
+}
+
+int32_t ProduceRandomNumberCrypt(void)
+{
+    int32_t r = 0;
+    int fd = open("/dev/random", O_RDONLY);
+    if (fd > 0) {
+        read(fd, &r, sizeof(int32_t));
+    }
+    close(fd);
+    return r;
+}
+}
+namespace RecorderTestParam {
     constexpr uint32_t STUB_STREAM_SIZE = 602;
     constexpr uint32_t FRAME_RATE = 30000;
     constexpr uint32_t CODEC_BUFFER_WIDTH = 1024;
@@ -81,31 +108,6 @@ namespace PlayerTestParam {
         166, 3453, 318, 206, 162, 3696, 341, 200, 176, 3386, 320, 192, 176, 3903, 373, 207, 187, 3305, 361, 200,
         202, 3110, 367, 220, 197, 2357, 332, 196, 201, 1827, 377, 187, 199, 860, 472, 173, 223, 238
     };
-int32_t WriteDataToFile(const std::string &path, const std::uint8_t *data, std::size_t size)
-{
-    FILE *file = nullptr;
-    file = fopen(path.c_str(), "w+");
-    if (file == nullptr) {
-        return -1;
-    }
-    if (fwrite(data, 1, size, file) != size) {
-        (void)fclose(file);
-        return -1;
-    }
-    (void)fclose(file);
-    return 0;
-}
-
-int32_t ProduceRandomNumberCrypt(void)
-{
-    int32_t r = 0;
-    int fd = open("/dev/random", O_RDONLY);
-    if (fd > 0) {
-        read(fd, &r, sizeof(int32_t));
-    }
-    close(fd);
-    return r;
-}
 }
 }
 }
