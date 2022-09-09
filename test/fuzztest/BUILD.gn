@@ -24,6 +24,8 @@ group("fuzztest") {
     "playerfile_fuzzer:PlayerFileFuzzTest",
     "playerseek_fuzzer:PlayerSeekFuzzTest",
     "playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
+"recordersetaudiochannels_fuzzer:RecorderSetAudioChannelsFuzzTest",
+"recordersetaudiosource_fuzzer:RecorderSetAudioSourceFuzzTest",
   ]
 }
 ###############################################################################
