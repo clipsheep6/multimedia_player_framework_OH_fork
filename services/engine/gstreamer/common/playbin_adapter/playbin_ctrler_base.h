@@ -154,6 +154,7 @@ private:
     std::vector<SignalInfo> signalIds_;
     std::vector<uint32_t> bitRateVec_;
     bool isInitialized_ = false;
+    bool isStopped_ = false;
 
     bool isErrorHappened_ = false;
     std::mutex condMutex_;

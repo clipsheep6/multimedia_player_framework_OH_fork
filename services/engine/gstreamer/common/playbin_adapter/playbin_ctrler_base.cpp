@@ -302,6 +302,7 @@ int32_t PlayBinCtrlerBase::StopInternal()
 {
     if (appsrcWrap_ != nullptr) {
         appsrcWrap_->Stop();
+        isStopped_ = true;
     }
 
     auto state = GetCurrState();
@@ -561,6 +562,11 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
 int32_t PlayBinCtrlerBase::EnterInitializedState()
 {
     if (isInitialized_) {
+        if (isStopped_) {
+            int32_t ret = DoInitializeForDataSource();
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "DoInitializeForDataSource failed!");
+            isStopped_ = false;
+        }
         return MSERR_OK;
     }
     MediaTrace("PlayBinCtrlerBase::InitializedState");
