@@ -39,6 +39,7 @@ RecorderSetAudioSourceFuzzer::~RecorderSetAudioSourceFuzzer()
 bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, size_t size)
 {
     constexpr int32_t AUDIO_SOURCE_TYPES_LIST = 3;
+    constexpr uint32_t RECORDER_TIME = 5;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig g_videoRecorderConfig;

@@ -39,6 +39,7 @@ RecorderSetAudioChannelsFuzzer::~RecorderSetAudioChannelsFuzzer()
 bool RecorderSetAudioChannelsFuzzer::FuzzRecorderSetAudioChannels(uint8_t *data, size_t size)
 {
     bool retFlags = TestRecorder::CreateRecorder();
+    constexpr uint32_t RECORDER_TIME = 5;
     RETURN_IF(retFlags, false);
 
     static VideoRecorderConfig g_videoRecorderConfig;
