@@ -20,6 +20,7 @@
 #include "i_recorder_engine.h"
 #include "time_monitor.h"
 #include "nocopyable.h"
+#include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
@@ -79,7 +80,6 @@ private:
     int32_t Init();
     bool CheckPermission();
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);
-    void ExitProcessor();
 
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
@@ -88,6 +88,7 @@ private:
     std::mutex cbMutex_;
     TimeMonitor startTimeMonitor_;
     TimeMonitor stopTimeMonitor_;
+    TaskQueue taskQue_;
     struct ConfigInfo {
         VideoSourceType videoSource;
         AudioSourceType audioSource;

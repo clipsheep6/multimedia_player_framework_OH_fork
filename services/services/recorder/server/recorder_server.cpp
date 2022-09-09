@@ -61,23 +61,23 @@ std::shared_ptr<IRecorderService> RecorderServer::Create()
 
 RecorderServer::RecorderServer()
     : startTimeMonitor_(START_TAG),
-      stopTimeMonitor_(STOP_TAG)
+      stopTimeMonitor_(STOP_TAG),
+      taskQue_("RecorderServer")
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    taskQue_.Start();
 }
 
 RecorderServer::~RecorderServer()
 {
-    std::unique_ptr<std::thread> thread = std::make_unique<std::thread>(&RecorderServer::ExitProcessor, this);
-    if (thread != nullptr && thread->joinable()) {
-        thread->join();
-    }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-}
-
-void RecorderServer::ExitProcessor()
-{
-    recorderEngine_ = nullptr;
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto task = std::make_shared<TaskHandler<void>>([&, this] {
+        recorderEngine_ = nullptr;
+    });
+    (void)taskQue_.EnqueueTask(task);
+    (void)task->GetResult();
+    taskQue_.Stop();
 }
 
 int32_t RecorderServer::Init()
@@ -88,11 +88,21 @@ int32_t RecorderServer::Init()
     int32_t appUid = IPCSkeleton::GetCallingUid();
     int32_t appPid = IPCSkeleton::GetCallingPid();
 
-    auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_RECORDER);
-    CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_REC_ENGINE_FAILED, "failed to get factory");
-    recorderEngine_ = engineFactory->CreateRecorderEngine(appUid, appPid, tokenId);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_CREATE_REC_ENGINE_FAILED,
-        "failed to create recorder engine");
+    auto task = std::make_shared<TaskHandler<MediaServiceErrCode>>([&, this] {
+        auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_RECORDER);
+        CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_REC_ENGINE_FAILED,
+            "failed to get factory");
+        recorderEngine_ = engineFactory->CreateRecorderEngine(appUid, appPid, tokenId);
+        CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_CREATE_REC_ENGINE_FAILED,
+            "failed to create recorder engine");
+        return MSERR_OK;
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.Value() == MSERR_OK, result.Value(), "Result failed");
+
     status_ = REC_INITIALIZED;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return MSERR_OK;
@@ -154,7 +164,14 @@ int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.videoSource = source;
-    return recorderEngine_->SetVideoSource(source, sourceId);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->SetVideoSource(source, sourceId);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
@@ -164,7 +181,14 @@ int32_t RecorderServer::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encod
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.videoCodec = encoder;
     VidEnc vidEnc(encoder);
-    return recorderEngine_->Configure(sourceId, vidEnc);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, vidEnc);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
@@ -175,7 +199,14 @@ int32_t RecorderServer::SetVideoSize(int32_t sourceId, int32_t width, int32_t he
     config_.width = width;
     config_.height = height;
     VidRectangle vidSize(width, height);
-    return recorderEngine_->Configure(sourceId, vidSize);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, vidSize);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
@@ -185,7 +216,14 @@ int32_t RecorderServer::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.frameRate = frameRate;
     VidFrameRate vidFrameRate(frameRate);
-    return recorderEngine_->Configure(sourceId, vidFrameRate);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, vidFrameRate);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
@@ -195,7 +233,14 @@ int32_t RecorderServer::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.bitRate = rate;
     VidBitRate vidBitRate(rate);
-    return recorderEngine_->Configure(sourceId, vidBitRate);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, vidBitRate);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetCaptureRate(int32_t sourceId, double fps)
@@ -205,7 +250,14 @@ int32_t RecorderServer::SetCaptureRate(int32_t sourceId, double fps)
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.captureRate = fps;
     CaptureRate captureRate(fps);
-    return recorderEngine_->Configure(sourceId, captureRate);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, captureRate);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
@@ -214,7 +266,14 @@ sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
         nullptr);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, nullptr, "engine is nullptr");
-    return recorderEngine_->GetSurface(sourceId);
+    auto task = std::make_shared<TaskHandler<sptr<OHOS::Surface>>>([&, this] {
+        return recorderEngine_->GetSurface(sourceId);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId)
@@ -228,7 +287,14 @@ int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId
         return MSERR_INVALID_VAL;
     }
     config_.audioSource = source;
-    return recorderEngine_->SetAudioSource(source, sourceId);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->SetAudioSource(source, sourceId);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
@@ -239,7 +305,14 @@ int32_t RecorderServer::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encod
     config_.audioCodec = encoder;
     AudEnc audEnc(encoder);
     MEDIA_LOGD("set audio encoder sourceId:%{public}d, encoder:%{public}d", sourceId, encoder);
-    return recorderEngine_->Configure(sourceId, audEnc);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, audEnc);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetAudioSampleRate(int32_t sourceId, int32_t rate)
@@ -250,7 +323,14 @@ int32_t RecorderServer::SetAudioSampleRate(int32_t sourceId, int32_t rate)
     config_.audioSampleRate = rate;
     AudSampleRate audSampleRate(rate);
     MEDIA_LOGD("set audio sampleRate sourceId:%{public}d, rate:%{public}d", sourceId, rate);
-    return recorderEngine_->Configure(sourceId, audSampleRate);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, audSampleRate);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetAudioChannels(int32_t sourceId, int32_t num)
@@ -260,7 +340,14 @@ int32_t RecorderServer::SetAudioChannels(int32_t sourceId, int32_t num)
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.audioChannel = num;
     AudChannel audChannel(num);
-    return recorderEngine_->Configure(sourceId, audChannel);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, audChannel);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
@@ -270,7 +357,14 @@ int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRat
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.audioBitRate = bitRate;
     AudBitRate audBitRate(bitRate);
-    return recorderEngine_->Configure(sourceId, audBitRate);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, audBitRate);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetDataSource(DataSourceType dataType, int32_t &sourceId)
@@ -287,7 +381,14 @@ int32_t RecorderServer::SetMaxDuration(int32_t duration)
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.maxDuration = duration;
     MaxDuration maxDuration(duration);
-    return recorderEngine_->Configure(DUMMY_SOURCE_ID, maxDuration);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(DUMMY_SOURCE_ID, maxDuration);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
@@ -296,7 +397,14 @@ int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.format = format;
-    int32_t ret = recorderEngine_->SetOutputFormat(format);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->SetOutputFormat(format);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_CONFIGURED : REC_INITIALIZED);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
@@ -308,7 +416,14 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     OutFd outFileFd(fd);
-    return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFileFd);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFileFd);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetNextOutputFile(int32_t fd)
@@ -317,7 +432,14 @@ int32_t RecorderServer::SetNextOutputFile(int32_t fd)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     NextOutFd nextFileFd(fd);
-    return recorderEngine_->Configure(DUMMY_SOURCE_ID, nextFileFd);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(DUMMY_SOURCE_ID, nextFileFd);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetMaxFileSize(int64_t size)
@@ -327,7 +449,14 @@ int32_t RecorderServer::SetMaxFileSize(int64_t size)
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     config_.maxFileSize = size;
     MaxFileSize maxFileSize(size);
-    return recorderEngine_->Configure(DUMMY_SOURCE_ID, maxFileSize);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(DUMMY_SOURCE_ID, maxFileSize);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 void RecorderServer::SetLocation(float latitude, float longitude)
@@ -338,7 +467,13 @@ void RecorderServer::SetLocation(float latitude, float longitude)
     }
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
     GeoLocation geoLocation(latitude, longitude);
-    recorderEngine_->Configure(DUMMY_SOURCE_ID, geoLocation);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(DUMMY_SOURCE_ID, geoLocation);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "EnqueueTask failed");
+
+    (void)task->GetResult();
     return;
 }
 
@@ -350,7 +485,14 @@ void RecorderServer::SetOrientationHint(int32_t rotation)
     }
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
     RotationAngle rotationAngle(rotation);
-    recorderEngine_->Configure(DUMMY_SOURCE_ID, rotationAngle);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(DUMMY_SOURCE_ID, rotationAngle);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "EnqueueTask failed");
+
+    (void)task->GetResult();
+    return;
 }
 
 int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
@@ -365,8 +507,14 @@ int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallba
 
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     std::shared_ptr<IRecorderEngineObs> obs = shared_from_this();
-    (void)recorderEngine_->SetObs(obs);
-    return MSERR_OK;
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->SetObs(obs);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::Prepare()
@@ -379,7 +527,14 @@ int32_t RecorderServer::Prepare()
     }
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    int32_t ret = recorderEngine_->Prepare();
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Prepare();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PREPARED : REC_ERROR);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
@@ -395,8 +550,14 @@ int32_t RecorderServer::Start()
     }
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Start();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
-    int32_t ret = recorderEngine_->Start();
+    auto result = task->GetResult();
+    ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
 
@@ -414,7 +575,14 @@ int32_t RecorderServer::Pause()
     }
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    int32_t ret = recorderEngine_->Pause();
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Pause();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PAUSED : REC_ERROR);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
@@ -430,7 +598,14 @@ int32_t RecorderServer::Resume()
     }
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING && status_ != REC_PAUSED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    int32_t ret = recorderEngine_->Resume();
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Resume();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
@@ -444,7 +619,14 @@ int32_t RecorderServer::Stop(bool block)
     stopTimeMonitor_.StartTime();
 
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    int32_t ret = recorderEngine_->Stop(block);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Stop(block);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
@@ -455,7 +637,14 @@ int32_t RecorderServer::Reset()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::Reset");
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
-    int32_t ret = recorderEngine_->Reset();
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Reset();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
 
@@ -466,10 +655,11 @@ int32_t RecorderServer::Reset()
 int32_t RecorderServer::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    std::unique_ptr<std::thread> thread = std::make_unique<std::thread>(&RecorderServer::ExitProcessor, this);
-    if (thread != nullptr && thread->joinable()) {
-        thread->join();
-    }
+    auto task = std::make_shared<TaskHandler<void>>([&, this] {
+        recorderEngine_ = nullptr;
+    });
+    (void)taskQue_.EnqueueTask(task);
+    (void)task->GetResult();
     return MSERR_OK;
 }
 
