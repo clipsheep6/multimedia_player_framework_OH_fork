@@ -13,18 +13,22 @@
 
 import("//build/test.gni")
 
-module_output_path = "multimedia_player_framework/player"
+module_output_path = "multimedia_player_framework/avmetadata"
 
-ohos_unittest("player_unit_test") {
+ohos_unittest("avmetadata_unit_test") {
   module_out_path = module_output_path
   include_dirs = [
     "./include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
-    "//foundation/multimedia/player_framework/frameworks/native/player",
+    "//foundation/multimedia/player_framework/services/utils/include",
     "//graphic/graphic_2d/interfaces/innerkits/surface",
+    "//foundation/graphic/graphic_2d/utils/sync_fence/export",
+    "//drivers/peripheral/display/interfaces/include",
+    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//foundation/window/window_manager/interfaces/innerkits/wm",
+    "//third_party/libjpeg",
+    "//foundation/multimedia/player_framework/frameworks/native/player",
     "//foundation/multimedia/player_framework/test/unittest/common/include",
-    "src/data_source",
   ]
 
   cflags = [
@@ -33,19 +37,23 @@ ohos_unittest("player_unit_test") {
   ]
 
   sources = [
-    "//foundation/multimedia/player_framework/test/unittest/common/src/test_params_config.cpp",
-    "src/data_source/media_data_source_test_noseek.cpp",
-    "src/data_source/media_data_source_test_seekable.cpp",
-    "src/player_mock.cpp",
-    "src/player_unit_test.cpp",
+    "src/avmetadata_mock.cpp",
+    "src/avmetadata_unit_test.cpp",
   ]
-
+  external_deps = [
+    "c_utils:utils",
+    "init:libbegetutil",
+  ]
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/graphic/graphic_2d/utils:sync_fence",
+    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//foundation/window/window_manager/wm:libwm",
+    "//third_party/libjpeg-turbo:turbojpeg_static",
   ]
 
   resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"

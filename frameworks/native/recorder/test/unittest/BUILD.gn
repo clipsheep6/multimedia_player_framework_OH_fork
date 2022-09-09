@@ -32,7 +32,6 @@ ohos_unittest("recorder_unit_test") {
   ]
 
   sources = [
-    "//foundation/multimedia/player_framework/test/unittest/common/src/test_params_config.cpp",
     "src/recorder_mock.cpp",
     "src/recorder_unit_test.cpp",
   ]

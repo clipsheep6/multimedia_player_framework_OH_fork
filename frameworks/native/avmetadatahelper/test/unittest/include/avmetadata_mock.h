@@ -18,11 +18,34 @@
 
 #include "securec.h"
 #include "jpeglib.h"
-#include "test_params_config.h"
+#include "avmetadatahelper.h"
 #include "unittest_log.h"
 
 namespace OHOS {
 namespace Media {
+namespace AVMetadataTestParam {
+inline constexpr int32_t PARA_MAX_LEN = 256;
+#define AVMETA_KEY_TO_STRING_MAP_ITEM(key) { key, #key }
+static const std::unordered_map<int32_t, std::string_view> AVMETA_KEY_TO_STRING_MAP = {
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_ALBUM),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_ALBUM_ARTIST),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_DATE_TIME),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_ARTIST),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_AUTHOR),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_COMPOSER),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_DURATION),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_GENRE),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_HAS_AUDIO),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_HAS_VIDEO),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_MIME_TYPE),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_NUM_TRACKS),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_SAMPLE_RATE),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_TITLE),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_VIDEO_HEIGHT),
+    AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_VIDEO_WIDTH),
+};
+} // namespace AVMetadataTestParam
+
 static const int RGB888_PIXEL_BYTES = 3;
 static const int RGB565_PIXEL_BYTES = 2;
 static const unsigned short RGB565_MASK_RED = 0x001F;
