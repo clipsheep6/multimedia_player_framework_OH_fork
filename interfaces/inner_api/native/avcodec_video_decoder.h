@@ -197,6 +197,19 @@ public:
 
 class __attribute__((visibility("default"))) VideoDecoderFactory {
 public:
+#ifdef UNSUPPORT_CODEC
+    static std::shared_ptr<AVCodecVideoDecoder> CreateByMime(const std::string &mime)
+    {
+        (void)mime;
+        return nullptr;
+    }
+
+    static std::shared_ptr<AVCodecVideoDecoder> CreateByName(const std::string &name)
+    {
+        (void)name;
+        return nullptr;
+    }
+#else
     /**
      * @brief Instantiate the preferred decoder of the given mime type.
      *
@@ -216,6 +229,7 @@ public:
      * @version 3.1
      */
     static std::shared_ptr<AVCodecVideoDecoder> CreateByName(const std::string &name);
+#endif
 private:
     VideoDecoderFactory() = default;
     ~VideoDecoderFactory() = default;
