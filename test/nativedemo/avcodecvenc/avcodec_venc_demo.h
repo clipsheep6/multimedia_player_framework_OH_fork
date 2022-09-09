@@ -30,6 +30,7 @@ public:
     std::mutex mutex_;
     std::condition_variable cond_;
     std::queue<uint32_t> bufferQueue_;
+    std::queue<uint32_t> sizeQueue_;
 };
 
 class VEncDemoCallback : public AVCodecCallback, public NoCopyable {
@@ -66,6 +67,7 @@ private:
     int32_t Release();
     sptr<Surface> GetVideoSurface();
     void LoopFunc();
+    int32_t String2Int(const std::string &str);
 
     std::atomic<bool> isRunning_ = false;
     std::unique_ptr<std::thread> readLoop_;
@@ -74,6 +76,8 @@ private:
     std::shared_ptr<VEncDemoCallback> cb_;
     sptr<Surface> surface_ = nullptr;
     int64_t timestampNs_ = 0;
+    std::string codername = "";
+    int32_t isKeyFrame_ = 1;
 };
 } // namespace Media
 } // namespace OHOS

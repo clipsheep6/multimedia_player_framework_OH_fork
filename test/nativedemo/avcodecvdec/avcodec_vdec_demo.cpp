@@ -32,7 +32,16 @@ namespace {
     constexpr uint32_t DEFAULT_FRAME_RATE = 30;
     constexpr uint32_t MAX_INPUT_BUFFER_SIZE = 30000;
     constexpr uint32_t FRAME_DURATION_US = 33000;
-    constexpr uint32_t DEFAULT_FRAME_COUNT = 1;
+
+    // The size of each frame varies with the file
+    const uint32_t AVC_DATA_SIZE[] = {
+        612, 15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15, 15, 15,
+        15, 15, 15, 613, 15, 15, 15, 15, 15,
+        15, 15, 15, 15, 15, 15, 15,
+    };
+    constexpr uint32_t DEFAULT_AVC_FRAME_COUNT = sizeof(AVC_DATA_SIZE) / sizeof(uint32_t);
 }
 
 void VDecDemo::RunCase()
@@ -50,15 +59,15 @@ void VDecDemo::RunCase()
     DEMO_CHECK_AND_RETURN_LOG(SetSurface() == MSERR_OK, "Fatal: SetSurface fail");
     DEMO_CHECK_AND_RETURN_LOG(Prepare() == MSERR_OK, "Fatal: Prepare fail");
     DEMO_CHECK_AND_RETURN_LOG(Start() == MSERR_OK, "Fatal: Start fail");
-    sleep(3); // start run 3s
+    sleep(3); // 3s
     DEMO_CHECK_AND_RETURN_LOG(Stop() == MSERR_OK, "Fatal: Stop fail");
     DEMO_CHECK_AND_RETURN_LOG(Release() == MSERR_OK, "Fatal: Release fail");
 }
 
 int32_t VDecDemo::CreateVdec()
 {
-    vdec_ = VideoDecoderFactory::CreateByMime("video/avc");
-    DEMO_CHECK_AND_RETURN_RET_LOG(vdec_ != nullptr, MSERR_UNKNOWN, "Fatal: CreateByMime fail");
+    vdec_ = VideoDecoderFactory::CreateByName("avdec_h264");
+    DEMO_CHECK_AND_RETURN_RET_LOG(vdec_ != nullptr, MSERR_UNKNOWN, "Fatal: CreateByName fail");
 
     signal_ = make_shared<VDecSignal>();
     DEMO_CHECK_AND_RETURN_RET_LOG(signal_ != nullptr, MSERR_UNKNOWN, "Fatal: No memory");
@@ -86,7 +95,7 @@ int32_t VDecDemo::Start()
 
     testFile_ = std::make_unique<std::ifstream>();
     DEMO_CHECK_AND_RETURN_RET_LOG(testFile_ != nullptr, MSERR_UNKNOWN, "Fatal: No memory");
-    testFile_->open("/data/media/video.es", std::ios::in | std::ios::binary);
+    testFile_->open("/data/media/avc.h264", std::ios::in | std::ios::binary);
 
     inputLoop_ = make_unique<thread>(&VDecDemo::InputFunc, this);
     DEMO_CHECK_AND_RETURN_RET_LOG(inputLoop_ != nullptr, MSERR_UNKNOWN, "Fatal: No memory");
@@ -170,8 +179,8 @@ void VDecDemo::InputFunc()
         auto buffer = vdec_->GetInputBuffer(index);
         DEMO_CHECK_AND_BREAK_LOG(buffer != nullptr, "Fatal: GetInputBuffer fail");
         DEMO_CHECK_AND_BREAK_LOG(testFile_ != nullptr && testFile_->is_open(), "Fatal: open file fail");
-
-        constexpr uint32_t bufferSize = 0; // replace with the actual size
+        uint32_t bufferSize = 0;
+        bufferSize = AVC_DATA_SIZE[frameCount_];
         char *fileBuffer = (char *)malloc(sizeof(char) * bufferSize + 1);
         DEMO_CHECK_AND_BREAK_LOG(fileBuffer != nullptr, "Fatal: malloc fail");
 
@@ -200,7 +209,7 @@ void VDecDemo::InputFunc()
         signal_->inQueue_.pop();
 
         frameCount_++;
-        if (frameCount_ == DEFAULT_FRAME_COUNT) {
+        if (frameCount_ == DEFAULT_AVC_FRAME_COUNT) {
             cout << "Finish decode, exit" << endl;
             break;
         }
