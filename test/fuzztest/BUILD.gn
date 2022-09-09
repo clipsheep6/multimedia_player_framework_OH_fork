@@ -26,7 +26,6 @@ group("fuzztest") {
     "playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
 "recordersetaudiochannels_fuzzer:RecorderSetAudioChannelsFuzzTest",
 "recordersetaudiosource_fuzzer:RecorderSetAudioSourceFuzzTest",
-"recorderstop_fuzzer:RecorderStopFuzzTest",
   ]
 }
 ###############################################################################
