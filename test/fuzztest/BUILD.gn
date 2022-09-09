@@ -23,9 +23,10 @@ group("fuzztest") {
     "avmetadatasetsource_fuzzer:AVmetadataSetSource",
     "playerfile_fuzzer:PlayerFileFuzzTest",
     "playerseek_fuzzer:PlayerSeekFuzzTest",
+    "playerservicestub_fuzzer:PlayerServiceStubFuzzTest",
     "playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
-"recordersetaudiochannels_fuzzer:RecorderSetAudioChannelsFuzzTest",
-"recordersetaudiosource_fuzzer:RecorderSetAudioSourceFuzzTest",
+    "recordersetaudiochannels_fuzzer:RecorderSetAudioChannelsFuzzTest",
+    "recordersetaudiosource_fuzzer:RecorderSetAudioSourceFuzzTest",
   ]
 }
 ###############################################################################
