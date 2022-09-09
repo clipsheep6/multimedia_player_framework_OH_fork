@@ -23,6 +23,7 @@
 #include "avmuxer_service_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "gmemdfxdump.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};
@@ -100,6 +101,12 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     if (WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false) != OHOS::NO_ERROR) {
         MEDIA_LOGW("Failed to write AVMetaServer information");
         return OHOS::INVALID_OPERATION;
+    }
+
+    dumpString += "------------------DumpMem------------------\n";
+    GetGMemDump(dumpString);
+    if (fd != -1) {
+        write(fd, dumpString.c_str(), dumpString.size());
     }
 
     return OHOS::NO_ERROR;
