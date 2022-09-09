@@ -436,7 +436,6 @@ uint64_t TestRecorder::GetPts()
 
 void TestRecorder::HDICreateESBuffer()
 {
-    constexpr int32_t SLEEP_TIME = 100;
     const uint32_t *frameLenArray = HIGH_VIDEO_FRAME_SIZE;
     while (nowFrame < STUB_STREAM_SIZE) {
         if (isExit_.load()) {
@@ -454,7 +453,7 @@ void TestRecorder::HDICreateESBuffer()
         }
 
         sptr<SyncFence> syncFence = new SyncFence(releaseFence);
-        syncFence->Wait(SLEEP_TIME);
+        syncFence->Wait(100); // 100ms
 
         auto addrGetVirAddr = static_cast<uint8_t *>(buffer->GetVirAddr());
         if (addrGetVirAddr == nullptr) {
