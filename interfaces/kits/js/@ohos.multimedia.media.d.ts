@@ -58,21 +58,22 @@ declare namespace media {
   function createVideoPlayer() : Promise<VideoPlayer>;
 
   /**
-   * Creates an VideoRecorder instance.
+   * Creates an MediaPlayer instance.
    * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+   * @syscap SystemCapability.Multimedia.Media.MediaPlayer
    * @import import media from '@ohos.multimedia.media'
-   * @param callback Callback used to return AudioPlayer instance if the operation is successful; returns null otherwise.
+   * @return Returns an MediaPlayer instance if the operation is successful; returns null otherwise.
    */
-  function createVideoRecorder(callback: AsyncCallback<VideoRecorder>): void;
-  /**
-   * Creates an VideoRecorder instance.
-   * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-   * @import import media from '@ohos.multimedia.media'
-   * @return A Promise instance used to return VideoRecorder instance if the operation is successful; returns null otherwise.
-   */
-  function createVideoRecorder(): Promise<VideoRecorder>;
+   function createMediaPlayer(): MediaPlayer;
+
+   /**
+    * Creates an MediaRecorder instance.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+    * @import import media from '@ohos.multimedia.media'
+    * @return Returns an MediaRecorder instance if the operation is successful; returns null otherwise.
+    */
+   function createMediaRecorder(): MediaRecorder;
 
   /**
    * Enumerates ErrorCode types, return in BusinessError::code
@@ -212,6 +213,439 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.Core
      */
     length?: number
+  }
+
+  /**
+   * Describes media playback states.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+   * @import import media from '@ohos.multimedia.media'
+   */
+   type MediaPlayerState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'released' | 'error';
+
+   /**
+    * Manages and plays media. Before calling an MediaPlayer method, you must use createMediaPlayer()
+    * to create an MediaPlayer instance.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+    */
+   interface MediaPlayer {
+     /**
+      * Prepare media playback.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @throws {BusinessError} if prepare failed
+      */
+     prepare(): void;
+
+     /**
+      * Starts media playback.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @throws {BusinessError} if play failed
+      */
+     play(): void;
+ 
+     /**
+      * Pauses media playback.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @throws {BusinessError} if pause failed
+      */
+     pause(): void;
+ 
+     /**
+      * Stops media playback.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @throws {BusinessError} if stop failed
+      */
+     stop(): void;
+ 
+     /**
+      * Resets media playback.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @throws {BusinessError} if reset failed
+      */
+     reset(): void;
+ 
+     /**
+      * Jumps to the specified playback position.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @param timeMs Playback position to jump
+      * @param mode seek mode, see @SeekMode .
+      * @throws {BusinessError} if type of timeMs is not number or type of timeMs is not SeekMode
+      * or timeMs is out of [0, 2147483647].
+      * @throws {BusinessError} if seek failed
+      */
+     seek(timeMs: number, mode?:SeekMode): void;
+ 
+     /**
+      * Sets the volume.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @param vol Relative volume. The value ranges from 0.00 to 1.00. The value 1 indicates the maximum volume (100%).
+      * @throws {BusinessError} if type of vol is not number or vol is out of [0.00, 1.00]
+      * @throws {BusinessError} if setVolume failed
+      */
+     setVolume(vol: number): void;
+ 
+     /**
+      * Releases resources used for audio playback.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @throws {BusinessError} if release failed
+      */
+     release(): void;
+
+     /**
+     * get all track infos in MediaDescription, should be called after data loaded callback.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+     * @param callback async callback return track info in MediaDescription.
+     */
+     getTrackDescription(callback: AsyncCallback<Array<MediaDescription>>): void;
+ 
+     /**
+     * get all track infos in MediaDescription, should be called after data loaded callback..
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+     * @return A Promise instance used to return the track info in MediaDescription.
+     */
+     getTrackDescription() : Promise<Array<MediaDescription>>;
+ 
+     /**
+      * Listens for audio playback buffering events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @param type Type of the playback buffering update event to listen for.
+      * @param callback Callback used to listen for the buffering update event, return BufferingInfoType and the value.
+      */
+     on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
+ 
+     /**
+      * Media URI. Mainstream media formats are supported.
+      * network:http://xxx
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      */
+      url: string;
+ 
+     /**
+      * Media file descriptor. Mainstream media formats are supported.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      */
+     fdSrc: AVFileDescriptor;
+ 
+     /**
+      * Whether to loop media playback. The value true means to loop playback.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      */
+     loop: boolean;
+ 
+     /**
+      * Describes audio interrupt mode, refer to {@link #audio.InterruptMode}. If it is not
+      * set, the default mode will be used. Set it before calling the {@link #play()} in the
+      * first time in order for the interrupt mode to become effective thereafter.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      */
+     audioInterruptMode ?: audio.InterruptMode;
+
+    /**
+     * SurfaceId surface id, video player will use this id get a surface instance.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+     */
+     surfaceId ?: string;
+ 
+     /**
+      * Current playback position.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      */
+     readonly currentTime: number;
+ 
+     /**
+      * Playback duration, When the data source does not support seek, it returns - 1, such as a live broadcast scenario.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      */
+     readonly duration: number;
+ 
+     /**
+      * Playback state.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      */
+     readonly state: MediaPlayerState;
+
+    /**
+     * video width, valid after prepared.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+     */
+     readonly width: number;
+
+     /**
+      * video height, valid after prepared.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      */
+     readonly height: number;
+
+    /**
+     * video scale type. Defaultly, the {@link #VIDEO_SCALE_TYPE_FIT} will be used, for more
+     * information, refer to {@link #VideoScaleType}
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+     */
+     videoScaleType ?: VideoScaleType;
+
+    /**
+     * set payback speed.
+     * @since 8
+     * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+     * @param speed playback speed, see @PlaybackSpeed .
+     */
+     setSpeed(speed:number): void;
+
+    /**
+     * select a specified bitrate to playback, only valid for HLS protocal network stream. Defaulty, the
+     * player will select the appropriate bitrate according to the network connection speed. The
+     * available bitrates list reported by {@link #on('availableBitratesCollect')}. Set it to select
+     * a specified bitrate. If the specified bitrate is not in the list of available bitrates, the player
+     * will select the minimal and closest one from the available bitrates list.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @param bitrate the playback bitrate must be expressed in bits per second.
+     */
+     selectBitrate(bitrate: number): void;
+
+     /**
+      * Listens for media playback events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback stateChange event.
+      */
+     on(type: 'stateChange', callback: (state: MediaPlayerState, causedByUser: boolean) => void): void;
+     /**
+      * Listens for media playback events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback volume event.
+      */
+     on(type: 'volumeChange', callback: Callback<number>): void;
+     /**
+      * Listens for media playback events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback playComplete event.
+      */
+     on(type: 'playComplete', callback: Callback<void>): void;
+     /**
+      * Listens for media playback events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback seekDone event.
+      */
+     on(type: 'seekDone', callback: Callback<number>): void;
+     /**
+      * Listens for media playback events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback speedDone event.
+      */
+     on(type: 'speedDone', callback: Callback<number>): void;
+     /**
+      * Listens for media playback events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback selectBitrateDone event.
+      */
+     on(type: 'selectBitrateDone', callback: Callback<number>): void;
+     /**
+      * Listens for media playback events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback timeUpdate event.
+      */
+     on(type: 'timeUpdate', callback: Callback<number>): void;
+ 
+    /**
+     * Listens for video playback buffering events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @param type Type of the playback buffering update event to listen for.
+     * @param callback Callback used to listen for the buffering update event, return BufferingInfoType and the value.
+     */
+     on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
+
+     /**
+      * Listens for start render video frame events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback event return .
+      */
+     on(type: 'startRenderFrame', callback: Callback<void>): void;
+ 
+     /**
+      * Listens for video size changed event.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback event return video size.
+      */
+     on(type: 'videoSizeChanged', callback: (width: number, height: number) => void): void;
+ 
+     /**
+      * Listens for audio interrupt event, refer to {@link #audio.InterruptEvent}
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback event return audio interrupt info.
+      */
+     on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
+ 
+     /**
+      * Listens for available bitrates collect completed events for HLS protocal stream playback.
+      * This event will be reported after the {@link #prepare} called.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+      * @param type Type of the playback event to listen for.
+      * @param callback Callback used to listen for the playback event return available bitrates.
+      */
+     on(type: 'availableBitratesCollect', callback: (bitrates: Array<number>) => void): void;
+ 
+     /**
+      * Listens for playback error events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+      * @param type Type of the playback error event to listen for.
+      * @param callback Callback used to listen for the playback error event.
+      */
+     on(type: 'error', callback: ErrorCallback): void;
+   }
+  /**
+   * Describes media playback states.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+   * @import import media from '@ohos.multimedia.media'
+   */
+   type MediaRecorderState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'released' | 'error';
+
+  /**
+   * Manages and record audio/video. Before calling an MediaRecorder method, you must use createMediaRecorder()
+   * to create an MediaRecorder instance.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+   */
+   interface MediaRecorder {
+    /**
+     * Prepares for recording.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+     * @param config Recording parameters.
+     * @throws {BusinessError} if type of config is not MediaRecorderConfig or MediaRecorderConfig property type is not right.
+     * @throws {BusinessError} if prepare failed
+     * @permission ohos.permission.MICROPHONE
+     */
+    prepare(config: MediaRecorderConfig): void;
+
+    /**
+     * get input surface.it must be called between prepare completed and start.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+     * @param callback Callback used to return the input surface id in string.
+     */
+     getInputSurface(callback: AsyncCallback<string>): void;
+     /**
+      * get input surface. it must be called between prepare completed and start.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+      * @return A Promise instance used to return the input surface id in string.
+      */
+     getInputSurface(): Promise<string>;
+
+    /**
+     * Starts audio recording.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+     * @throws {BusinessError} if start failed
+     */
+    start(): void;
+
+    /**
+     * Pauses audio recording.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+     * @throws {BusinessError} if pause failed
+     */
+    pause(): void;
+
+    /**
+     * Resumes audio recording.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+     * @throws {BusinessError} if resume failed
+     */
+    resume(): void;
+
+    /**
+     * Stops audio recording.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+     * @throws {BusinessError} if stop failed
+     */
+    stop(): void;
+
+    /**
+     * Releases resources used for audio recording.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+     * @throws {BusinessError} if release failed
+     */
+    release(): void;
+
+    /**
+     * Resets audio recording.
+     * Before resetting audio recording, you must call stop() to stop recording. After audio recording is reset,
+     * you must call prepare() to set the recording configurations for another recording.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+     * @throws {BusinessError} if reset failed
+     */
+    reset(): void;
+
+    /**
+     * Listens for audio recording events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
+     * @param type Type of the audio recording event to listen for.
+     * @param callback Callback used to listen for the audio recording event.
+     */
+     on(type: 'stateChange', callback: (state: MediaRecorderState, causedByUser: boolean) => void): void;
+
+    /**
+     * Listens for audio recording error events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @param type Type of the audio recording error event to listen for.
+     * @param callback Callback used to listen for the audio recording error event.
+     */
+    on(type: 'error', callback: ErrorCallback): void;
   }
 
   /**
@@ -659,157 +1093,6 @@ declare namespace media {
   }
 
   /**
-  * Describes video recorder states.
-  * @since 9
-  * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-  */
-  type VideoRecordState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'error';
-
-  /**
-   * Manages and record video. Before calling an VideoRecorder method, you must use createVideoRecorder()
-   * to create an VideoRecorder instance.
-   * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-   */
-  interface VideoRecorder {
-    /**
-     * Prepares for recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @param config Recording parameters.
-     * @param callback A callback instance used to return when prepare completed.
-     * @permission ohos.permission.MICROPHONE
-     */
-    prepare(config: VideoRecorderConfig, callback: AsyncCallback<void>): void;
-    /**
-     * Prepares for recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @param config Recording parameters.
-     * @return A Promise instance used to return when prepare completed.
-     * @permission ohos.permission.MICROPHONE
-     */
-    prepare(config: VideoRecorderConfig): Promise<void>;
-    /**
-     * get input surface.it must be called between prepare completed and start.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @param callback Callback used to return the input surface id in string.
-     */
-    getInputSurface(callback: AsyncCallback<string>): void;
-    /**
-     * get input surface. it must be called between prepare completed and start.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @return A Promise instance used to return the input surface id in string.
-     */
-    getInputSurface(): Promise<string>;
-    /**
-     * Starts video recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @param callback A callback instance used to return when start completed.
-     */
-    start(callback: AsyncCallback<void>): void;
-    /**
-     * Starts video recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @return A Promise instance used to return when start completed.
-     */
-    start(): Promise<void>;
-    /**
-     * Pauses video recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @param callback A callback instance used to return when pause completed.
-     */
-    pause(callback: AsyncCallback<void>): void;
-    /**
-     * Pauses video recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @return A Promise instance used to return when pause completed.
-     */
-    pause(): Promise<void>;
-    /**
-     * Resumes video recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @param callback A callback instance used to return when resume completed.
-     */
-    resume(callback: AsyncCallback<void>): void;
-    /**
-     * Resumes video recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @return A Promise instance used to return when resume completed.
-     */
-    resume(): Promise<void>;
-    /**
-     * Stops video recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @param callback A callback instance used to return when stop completed.
-     */
-    stop(callback: AsyncCallback<void>): void;
-    /**
-     * Stops video recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @return A Promise instance used to return when stop completed.
-     */
-    stop(): Promise<void>;
-    /**
-     * Releases resources used for video recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @param callback A callback instance used to return when release completed.
-     */
-    release(callback: AsyncCallback<void>): void;
-    /**
-      * Releases resources used for video recording.
-      * @since 9
-      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-      * @return A Promise instance used to return when release completed.
-      */
-    release(): Promise<void>;
-    /**
-     * Resets video recording.
-     * Before resetting video recording, you must call stop() to stop recording. After video recording is reset,
-     * you must call prepare() to set the recording configurations for another recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @param callback A callback instance used to return when reset completed.
-     */
-    reset(callback: AsyncCallback<void>): void;
-     /**
-      * Resets video recording.
-      * Before resetting video recording, you must call stop() to stop recording. After video recording is reset,
-      * you must call prepare() to set the recording configurations for another recording.
-      * @since 9
-      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-      * @return A Promise instance used to return when reset completed.
-      */
-    reset(): Promise<void>;
-    /**
-     * Listens for video recording error events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @param type Type of the video recording error event to listen for.
-     * @param callback Callback used to listen for the video recording error event.
-     */
-    on(type: 'error', callback: ErrorCallback): void;
-
-    /**
-     * video recorder state.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     */
-     readonly state: VideoRecordState;
-  }
-
-  /**
    * Describes video playback states.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
@@ -1209,7 +1492,7 @@ declare namespace media {
   /**
    * Enumerates video scale type.
    * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+   * @syscap SystemCapability.Multimedia.Media.MediaPlayer
    * @import import media from '@ohos.multimedia.media'
    */
   enum VideoScaleType {
@@ -1218,7 +1501,7 @@ declare namespace media {
      * the aspect ratio of the content is not same as the display surface, the aspect
      * of the content is not maintained. This is the default scale type.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @syscap SystemCapability.Multimedia.Media.MediaPlayer
      */
     VIDEO_SCALE_TYPE_FIT = 0,
 
@@ -1227,7 +1510,7 @@ declare namespace media {
      * the aspect ratio of the content is not the same as the display surface, content's
      * aspect ratio is maintained and the content is cropped to fit the display surface.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @syscap SystemCapability.Multimedia.Media.MediaPlayer
      */
     VIDEO_SCALE_TYPE_FIT_CROP = 1,
   }
@@ -1354,78 +1637,78 @@ declare namespace media {
   }
 
   /**
-   * Provides the video recorder profile definitions.
+   * Provides the media recorder profile definitions.
    * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+   * @syscap SystemCapability.Multimedia.Media.MediaRecorder
    */
-  interface VideoRecorderProfile {
+  interface MediaRecorderProfile {
     /**
      * Indicates the audio bit rate.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     readonly audioBitrate: number;
 
     /**
      * Indicates the number of audio channels.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     readonly audioChannels: number;
 
     /**
      * Indicates the audio encoding format.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     readonly audioCodec: CodecMimeType;
 
     /**
      * Indicates the audio sampling rate.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     readonly audioSampleRate: number;
 
     /**
      * Indicates the output file format.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     readonly fileFormat: ContainerFormatType;
 
     /**
      * Indicates the video bit rate.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     readonly videoBitrate: number;
 
     /**
      * Indicates the video encoding format.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     readonly videoCodec: CodecMimeType;
 
     /**
      * Indicates the video width.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     readonly videoFrameWidth: number;
 
     /**
      * Indicates the video height.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     readonly videoFrameHeight: number;
 
     /**
      * Indicates the video frame rate.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     readonly videoFrameRate: number;
   }
@@ -1433,20 +1716,20 @@ declare namespace media {
   /**
    * Enumerates audio source type for recorder.
    * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+   * @syscap SystemCapability.Multimedia.Media.MediaRecorder
    * @import import media from '@ohos.multimedia.media'
    */
   enum AudioSourceType {
     /**
      * default audio source type.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
     */
     AUDIO_SOURCE_TYPE_DEFAULT = 0,
     /**
      * source type mic.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
     */
     AUDIO_SOURCE_TYPE_MIC = 1,
   }
@@ -1454,68 +1737,68 @@ declare namespace media {
   /**
    * Enumerates video source type for recorder.
    * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+   * @syscap SystemCapability.Multimedia.Media.MediaRecorder
    * @import import media from '@ohos.multimedia.media'
    */
   enum VideoSourceType {
     /**
      * surface raw data.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     VIDEO_SOURCE_TYPE_SURFACE_YUV = 0,
     /**
      * surface ES data.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
     */
     VIDEO_SOURCE_TYPE_SURFACE_ES = 1,
   }
 
   /**
-   * Provides the video recorder configuration definitions.
+   * Provides the media recorder configuration definitions.
    * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+   * @syscap SystemCapability.Multimedia.Media.MediaRecorder
    */
-  interface VideoRecorderConfig {
+  interface MediaRecorderConfig {
     /**
      * audio source type, details see @AudioSourceType .
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     audioSourceType: AudioSourceType;
     /**
      * video source type, details see @VideoSourceType .
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
-    videoSourceType: VideoSourceType;
+    videoSourceType?: VideoSourceType;
     /**
-     * video recorder profile, can get by "getVideoRecorderProfile", details see @VideoRecorderProfile .
+     * video recorder profile, can get by "getMediaRecorderProfile", details see @MediaRecorderProfile .
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
-    profile: VideoRecorderProfile;
+    profile: MediaRecorderProfile;
     /**
      * video output uri.support two kind of uri now.
      * format like: scheme + "://" + "context".
      * file:  file://path
      * fd:    fd://fd
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     url: string;
     /**
      * Sets the video rotation angle in output file, and for the file to playback. mp4 support.
      * the range of rotation angle should be {0, 90, 180, 270}, default is 0.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     rotation?: number;
     /**
      * geographical location information.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @syscap SystemCapability.Multimedia.Media.MediaRecorder
      */
     location?: Location;
   }
