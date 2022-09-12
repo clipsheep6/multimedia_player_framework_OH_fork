@@ -18,12 +18,22 @@
 
 #include <string>
 #include <memory>
+#ifdef SUPPORT_PLAYER
 #include "i_player_engine.h"
+#endif
+#ifdef SUPPORT_RECORDER
 #include "i_recorder_engine.h"
+#endif
+#ifdef SUPPORT_METADATA
 #include "i_avmetadatahelper_engine.h"
+#endif
+#ifdef SUPPORT_CODEC
 #include "i_avcodec_engine.h"
 #include "i_avcodeclist_engine.h"
+#endif
+#ifdef SUPPORT_MUXER
 #include "i_avmuxer_engine.h"
+#endif
 
 namespace OHOS {
 namespace Media {
@@ -46,13 +56,16 @@ public:
         return 0;
     }
 
+#ifdef SUPPORT_PLAYER
     virtual std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0)
     {
         (void)uid;
         (void)pid;
         return nullptr;
     }
+#endif
 
+#ifdef SUPPORT_RECORDER
     virtual std::unique_ptr<IRecorderEngine> CreateRecorderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId)
     {
         (void)appUid;
@@ -60,12 +73,16 @@ public:
         (void)appTokenId;
         return nullptr;
     }
+#endif
 
+#ifdef SUPPORT_METADATA
     virtual std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine()
     {
         return nullptr;
     }
+#endif
 
+#ifdef SUPPORT_CODEC
     virtual std::unique_ptr<IAVCodecEngine> CreateAVCodecEngine()
     {
         return nullptr;
@@ -75,11 +92,14 @@ public:
     {
         return nullptr;
     }
+#endif
 
+#ifdef SUPPORT_MUXER
     virtual std::unique_ptr<IAVMuxerEngine> CreateAVMuxerEngine()
     {
         return nullptr;
     }
+#endif
 
 protected:
     static constexpr int32_t MAX_SCORE = 100;

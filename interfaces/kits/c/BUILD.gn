@@ -12,7 +12,23 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
+
+group("capi_packages") {
+  deps = []
+  if (multimedia_player_framework_support_capi) {
+    deps += [
+      "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_adec",
+      "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_aenc",
+      "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_codecbase",
+      "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
+      "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_vdec",
+      "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_venc",
+    ]
+  }
+}
 
 config("media_capi_config") {
   include_dirs = [
