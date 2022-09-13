@@ -38,7 +38,6 @@ ACodecFileFuzzer::~ACodecFileFuzzer()
 
 bool ACodecFileFuzzer::FuzzAudioFile(uint8_t *data, size_t size)
 {
-
     std::shared_ptr<ACodecSignal> acodecSignal = std::make_shared<ACodecSignal>();
     adecCallback_ = std::make_shared<ADecCallbackTest>(acodecSignal);
     CHECK_INSTANCE_AND_RETURN_RET(adecCallback_, false);
