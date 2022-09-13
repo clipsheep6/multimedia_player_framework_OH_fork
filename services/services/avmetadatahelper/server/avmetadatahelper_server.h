@@ -21,6 +21,7 @@
 #include "i_avmetadatahelper_engine.h"
 #include "nocopyable.h"
 #include "uri_helper.h"
+#include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
@@ -42,6 +43,7 @@ private:
     std::shared_ptr<IAVMetadataHelperEngine> avMetadataHelperEngine_ = nullptr;
     std::mutex mutex_;
     std::unique_ptr<UriHelper> uriHelper_;
+    TaskQueue taskQue_;
 };
 } // namespace Media
 } // namespace OHOS
