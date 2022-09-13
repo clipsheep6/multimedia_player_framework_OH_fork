@@ -52,6 +52,12 @@ void PlayerCallbackNapi::SaveCallbackReference(const std::string &name, std::wea
     refMap_[name] = ref;
 }
 
+void PlayerCallbackNapi::ClearCallbackReference()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    refMap_.clear();
+}
+
 void PlayerCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode, const std::string &info)
 {
     MEDIA_LOGE("in ErrorCallback: %{public}s", info.c_str());
