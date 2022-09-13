@@ -13,28 +13,29 @@
  * limitations under the License.
  */
 
-#ifndef ACODECFILE_FUZZER_H
-#define ACODECFILE_FUZZER_H
+#ifndef VCODECCONFIGURE_FUZZER_H
+#define VCODECCONFIGURE_FUZZER_H
 
-#define FUZZ_PROJECT_NAME "acodecfile_fuzzer"
-#include "acodec_mock.h"
+#define FUZZ_PROJECT_NAME "vcodecconfigure_fuzzer"
+#include "vdec_mock.h"
+#include "venc_mock.h"
 
 namespace OHOS {
 namespace Media {
-bool FuzzACodecFile(uint8_t *data, size_t size);
+bool FuzzVCodecConfigure(uint8_t *data, size_t size);
 
-class ACodecFileFuzzer : public NoCopyable {
+class VCodecConfigureFuzzer : public NoCopyable {
 public:
-    ACodecFileFuzzer();
-    ~ACodecFileFuzzer();
-    bool FuzzAudioFile(uint8_t *data, size_t size);
+    VCodecConfigureFuzzer();
+    ~VCodecConfigureFuzzer();
+    bool FuzzVideoConfigure(uint8_t *data, size_t size);
 protected:
-    std::shared_ptr<ACodecMock> audioCodec_ = nullptr;
-    std::shared_ptr<ADecCallbackTest> adecCallback_ = nullptr;
-    std::shared_ptr<AEncCallbackTest> aencCallback_ = nullptr;
-    std::shared_ptr<FormatMock> defaultFormat_ = nullptr;
+    std::shared_ptr<VDecMock> videoDec_ = nullptr;
+    std::shared_ptr<VDecCallbackTest> vdecCallback_ = nullptr;
+    std::shared_ptr<VEncMock> videoEnc_ = nullptr;
+    std::shared_ptr<VEncCallbackTest> vencCallback_ = nullptr;
 };
 }
 }
-#endif
+#endif // VCODECCONFIGURE_FUZZER_H
 
