@@ -66,6 +66,7 @@ private:
     static napi_value GetState(napi_env env, napi_callback_info info);
     void ErrorCallback(MediaServiceExtErrCode errCode);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
+    void CancelCallback();
     VideoRecorderNapi();
     ~VideoRecorderNapi();
 

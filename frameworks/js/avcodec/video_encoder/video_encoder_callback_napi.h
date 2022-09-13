@@ -35,6 +35,7 @@ public:
     virtual ~VideoEncoderCallbackNapi();
 
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
+    void ClearCallbackReference();
     void SendErrorCallback(MediaServiceExtErrCode errCode);
 
 protected:

@@ -39,11 +39,9 @@ VideoRecorderNapi::VideoRecorderNapi()
 
 VideoRecorderNapi::~VideoRecorderNapi()
 {
+    CancelCallback();
     if (wrapper_ != nullptr) {
         napi_delete_reference(env_, wrapper_);
-    }
-    if (recorder_ != nullptr) {
-        (void)recorder_->SetRecorderCallback(nullptr);
     }
     recorder_ = nullptr;
     callbackNapi_ = nullptr;
@@ -551,6 +549,7 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Release");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_IDLE;
+        threadCtx->napi->CancelCallback();
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
@@ -775,6 +774,15 @@ void VideoRecorderNapi::SetCallbackReference(const std::string &callbackName, st
     if (callbackNapi_ != nullptr) {
         auto napiCb = std::static_pointer_cast<RecorderCallbackNapi>(callbackNapi_);
         napiCb->SaveCallbackReference(callbackName, ref);
+    }
+}
+
+void VideoRecorderNapi::CancelCallback()
+{
+    refMap_.clear();
+    if (callbackNapi_ != nullptr) {
+        auto napiCb = std::static_pointer_cast<RecorderCallbackNapi>(callbackNapi_);
+        napiCb->ClearCallbackReference();
     }
 }
 } // namespace Media

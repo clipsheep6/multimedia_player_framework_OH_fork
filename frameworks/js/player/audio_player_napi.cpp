@@ -43,6 +43,7 @@ AudioPlayerNapi::AudioPlayerNapi()
 
 AudioPlayerNapi::~AudioPlayerNapi()
 {
+    CancelCallback();
     nativePlayer_ = nullptr;
     callbackNapi_ = nullptr;
     dataSrcCallBack_ = nullptr;
@@ -598,6 +599,7 @@ napi_value AudioPlayerNapi::Release(napi_env env, napi_callback_info info)
         player->dataSrcCallBack_->Release();
     }
     (void)player->nativePlayer_->Release();
+    player->CancelCallback();
     player->callbackNapi_ = nullptr;
     player->nativePlayer_ = nullptr;
     player->uri_.clear();
@@ -1092,6 +1094,15 @@ void AudioPlayerNapi::SetCallbackReference(const std::string &callbackName, std:
     if (callbackNapi_ != nullptr) {
         std::shared_ptr<PlayerCallbackNapi> napiCb = std::static_pointer_cast<PlayerCallbackNapi>(callbackNapi_);
         napiCb->SaveCallbackReference(callbackName, ref);
+    }
+}
+
+void AudioPlayerNapi::CancelCallback()
+{
+    refMap_.clear();
+    if (callbackNapi_ != nullptr) {
+        std::shared_ptr<PlayerCallbackNapi> napiCb = std::static_pointer_cast<PlayerCallbackNapi>(callbackNapi_);
+        napiCb->ClearCallbackReference();
     }
 }
 } // namespace Media
