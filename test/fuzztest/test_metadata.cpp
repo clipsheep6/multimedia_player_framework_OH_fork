@@ -33,14 +33,12 @@ int32_t TestMetadata::MetaDataSetSource(const string &path)
 {
     int32_t fdMetaDataSetSource = open(path.c_str(), O_RDONLY);
     if (fdMetaDataSetSource < 0) {
-        cout << "Open file failed" << endl;
         (void)close(fdMetaDataSetSource);
         return -1;
     }
     int64_t offsetMetaDataSetSource = 0;
     struct stat64 buffer;
     if (fstat64(fdMetaDataSetSource, &buffer) != 0) {
-        cout << "Get file state failed" << endl;
         (void)close(fdMetaDataSetSource);
         return -1;
     }
@@ -49,7 +47,6 @@ int32_t TestMetadata::MetaDataSetSource(const string &path)
     int32_t retSetSource = avmetadata -> SetSource(fdMetaDataSetSource,
         offsetMetaDataSetSource, sizeMetaDataSetSource, usageMetaDataSetSource);
     if (retSetSource != 0) {
-        cout << "SetSource fail!" << endl;
         (void)close(fdMetaDataSetSource);
         return -1;
     }
