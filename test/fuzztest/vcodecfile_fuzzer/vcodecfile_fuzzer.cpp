@@ -73,7 +73,7 @@ bool VCodecFileFuzzer::FuzzVideoFile(uint8_t *data, size_t size)
         videoEnc_->Prepare();
         videoDec_->Start();
         videoEnc_->Start();
-        sleep(3);
+        sleep(WAITTING_TIME);
         break;
     }
     if (videoDec_ != nullptr) {
