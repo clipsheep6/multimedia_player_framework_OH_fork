@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 module_output_path = "multimedia_player_framework/avcodec"
@@ -82,20 +83,22 @@ ohos_unittest("vcodec_native_unit_test") {
 
   cflags = avcodec_unittest_cflags
 
-  sources = [
-    "./native/avcodec_info/avcodec_info_native_mock.cpp",
-    "./native/avcodec_list/avcodec_list_native_mock.cpp",
-    "./native/avcodec_mock_factory.cpp",
-    "./native/avformat/avformat_native_mock.cpp",
-    "./native/avmemory/avmemory_native_mock.cpp",
-    "./native/enum/enum_native_mock.cpp",
-    "./native/surface/surface_native_mock.cpp",
-    "./native/videodecoder/videodec_native_mock.cpp",
-    "./native/videoencoder/videoenc_native_mock.cpp",
-    "./vcodec_test/vcodec_unit_test.cpp",
-    "./vcodec_test/vdec_mock.cpp",
-    "./vcodec_test/venc_mock.cpp",
-  ]
+  if (multimedia_player_framework_support_codec) {
+    sources = [
+      "./native/avcodec_info/avcodec_info_native_mock.cpp",
+      "./native/avcodec_list/avcodec_list_native_mock.cpp",
+      "./native/avcodec_mock_factory.cpp",
+      "./native/avformat/avformat_native_mock.cpp",
+      "./native/avmemory/avmemory_native_mock.cpp",
+      "./native/enum/enum_native_mock.cpp",
+      "./native/surface/surface_native_mock.cpp",
+      "./native/videodecoder/videodec_native_mock.cpp",
+      "./native/videoencoder/videoenc_native_mock.cpp",
+      "./vcodec_test/vcodec_unit_test.cpp",
+      "./vcodec_test/vdec_mock.cpp",
+      "./vcodec_test/venc_mock.cpp",
+    ]
+  }
 
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
@@ -119,19 +122,21 @@ ohos_unittest("acodec_native_unit_test") {
 
   cflags = avcodec_unittest_cflags
 
-  sources = [
-    "./acodec_test/acodec_mock.cpp",
-    "./acodec_test/acodec_unit_test.cpp",
-    "./native/audiodecoder/audiodec_native_mock.cpp",
-    "./native/audioencoder/audioenc_native_mock.cpp",
-    "./native/avcodec_info/avcodec_info_native_mock.cpp",
-    "./native/avcodec_list/avcodec_list_native_mock.cpp",
-    "./native/avcodec_mock_factory.cpp",
-    "./native/avformat/avformat_native_mock.cpp",
-    "./native/avmemory/avmemory_native_mock.cpp",
-    "./native/enum/enum_native_mock.cpp",
-    "./native/surface/surface_native_mock.cpp",
-  ]
+  if (multimedia_player_framework_support_codec) {
+    sources = [
+      "./acodec_test/acodec_mock.cpp",
+      "./acodec_test/acodec_unit_test.cpp",
+      "./native/audiodecoder/audiodec_native_mock.cpp",
+      "./native/audioencoder/audioenc_native_mock.cpp",
+      "./native/avcodec_info/avcodec_info_native_mock.cpp",
+      "./native/avcodec_list/avcodec_list_native_mock.cpp",
+      "./native/avcodec_mock_factory.cpp",
+      "./native/avformat/avformat_native_mock.cpp",
+      "./native/avmemory/avmemory_native_mock.cpp",
+      "./native/enum/enum_native_mock.cpp",
+      "./native/surface/surface_native_mock.cpp",
+    ]
+  }
 
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
@@ -155,14 +160,16 @@ ohos_unittest("avcodec_list_native_unit_test") {
 
   cflags = avcodec_unittest_cflags
 
-  sources = [
-    "./avcodec_list_test/avcodec_list_unit_test.cpp",
-    "./native/avcodec_info/avcodec_info_native_mock.cpp",
-    "./native/avcodec_list/avcodec_list_native_mock.cpp",
-    "./native/avcodec_mock_factory.cpp",
-    "./native/avformat/avformat_native_mock.cpp",
-    "./native/enum/enum_native_mock.cpp",
-  ]
+  if (multimedia_player_framework_support_codec) {
+    sources = [
+      "./avcodec_list_test/avcodec_list_unit_test.cpp",
+      "./native/avcodec_info/avcodec_info_native_mock.cpp",
+      "./native/avcodec_list/avcodec_list_native_mock.cpp",
+      "./native/avcodec_mock_factory.cpp",
+      "./native/avformat/avformat_native_mock.cpp",
+      "./native/enum/enum_native_mock.cpp",
+    ]
+  }
 
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
@@ -186,17 +193,19 @@ ohos_unittest("vcodec_capi_unit_test") {
 
   cflags = avcodec_unittest_cflags
 
-  sources = [
-    "./capi/avcodec_mock_factory.cpp",
-    "./capi/avformat/avformat_capi_mock.cpp",
-    "./capi/avmemory/avmemory_capi_mock.cpp",
-    "./capi/surface/surface_capi_mock.cpp",
-    "./capi/videodecoder/videodec_capi_mock.cpp",
-    "./capi/videoencoder/videoenc_capi_mock.cpp",
-    "./vcodec_test/vcodec_unit_test.cpp",
-    "./vcodec_test/vdec_mock.cpp",
-    "./vcodec_test/venc_mock.cpp",
-  ]
+  if (multimedia_player_framework_support_codec) {
+    sources = [
+      "./capi/avcodec_mock_factory.cpp",
+      "./capi/avformat/avformat_capi_mock.cpp",
+      "./capi/avmemory/avmemory_capi_mock.cpp",
+      "./capi/surface/surface_capi_mock.cpp",
+      "./capi/videodecoder/videodec_capi_mock.cpp",
+      "./capi/videoencoder/videoenc_capi_mock.cpp",
+      "./vcodec_test/vcodec_unit_test.cpp",
+      "./vcodec_test/vdec_mock.cpp",
+      "./vcodec_test/venc_mock.cpp",
+    ]
+  }
 
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
@@ -224,15 +233,17 @@ ohos_unittest("acodec_capi_unit_test") {
 
   cflags = avcodec_unittest_cflags
 
-  sources = [
-    "./acodec_test/acodec_mock.cpp",
-    "./acodec_test/acodec_unit_test.cpp",
-    "./capi/audiodecoder/audiodec_capi_mock.cpp",
-    "./capi/audioencoder/audioenc_capi_mock.cpp",
-    "./capi/avcodec_mock_factory.cpp",
-    "./capi/avformat/avformat_capi_mock.cpp",
-    "./capi/avmemory/avmemory_capi_mock.cpp",
-  ]
+  if (multimedia_player_framework_support_codec) {
+    sources = [
+      "./acodec_test/acodec_mock.cpp",
+      "./acodec_test/acodec_unit_test.cpp",
+      "./capi/audiodecoder/audiodec_capi_mock.cpp",
+      "./capi/audioencoder/audioenc_capi_mock.cpp",
+      "./capi/avcodec_mock_factory.cpp",
+      "./capi/avformat/avformat_capi_mock.cpp",
+      "./capi/avmemory/avmemory_capi_mock.cpp",
+    ]
+  }
 
   deps = [
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
