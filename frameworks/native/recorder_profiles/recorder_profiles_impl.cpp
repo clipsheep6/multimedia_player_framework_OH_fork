@@ -82,6 +82,8 @@ bool RecorderProfilesImpl::HasVideoRecorderProfile(int32_t sourceId, int32_t qua
 
 std::vector<std::shared_ptr<AudioRecorderCaps>> RecorderProfilesImpl::GetAudioRecorderCaps()
 {
+    CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr,
+        std::vector<std::shared_ptr<AudioRecorderCaps>>(), "RecorderProfiles service does not exist.");
     std::vector<RecorderProfilesData> capabilityArray = recorderProfilesService_->GetAudioRecorderCapsInfo();
     std::vector<std::shared_ptr<AudioRecorderCaps>> audioRecorderCapsArray;
     for (auto iter = capabilityArray.begin(); iter != capabilityArray.end(); iter++) {
@@ -94,6 +96,8 @@ std::vector<std::shared_ptr<AudioRecorderCaps>> RecorderProfilesImpl::GetAudioRe
 
 std::vector<std::shared_ptr<VideoRecorderCaps>> RecorderProfilesImpl::GetVideoRecorderCaps()
 {
+    CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr,
+        std::vector<std::shared_ptr<VideoRecorderCaps>>(), "RecorderProfiles service does not exist.");
     std::vector<RecorderProfilesData> capabilityArray = recorderProfilesService_->GetVideoRecorderCapsInfo();
     std::vector<std::shared_ptr<VideoRecorderCaps>> videoRecorderCapsArray;
     for (auto iter = capabilityArray.begin(); iter != capabilityArray.end(); iter++) {
@@ -107,6 +111,8 @@ std::vector<std::shared_ptr<VideoRecorderCaps>> RecorderProfilesImpl::GetVideoRe
 std::shared_ptr<VideoRecorderProfile> RecorderProfilesImpl::GetVideoRecorderProfile(int32_t sourceId,
     int32_t qualityLevel)
 {
+    CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr,
+        nullptr, "RecorderProfiles service does not exist.");
     RecorderProfilesData capability = recorderProfilesService_->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
