@@ -131,6 +131,7 @@ private:
     void HandleCacheCtrlCb(const InnerMessage &msg);
     void HandleCacheCtrlWhenNoBuffering(int32_t percent);
     void HandleCacheCtrlWhenBuffering(int32_t percent);
+    bool IsPrepareWaitEnable() const;
 
     std::mutex mutex_;
     std::mutex cacheCtrlMutex_;

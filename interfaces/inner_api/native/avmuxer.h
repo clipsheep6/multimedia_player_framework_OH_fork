@@ -41,7 +41,14 @@ public:
 
 class __attribute__((visibility("default"))) AVMuxerFactory {
 public:
+#ifdef UNSUPPORT_MUXER
+    static std::shared_ptr<AVMuxer> CreateAVMuxer()
+    {
+        return nullptr;
+    }
+#else
     static std::shared_ptr<AVMuxer> CreateAVMuxer();
+#endif
 private:
     AVMuxerFactory() = default;
     ~AVMuxerFactory() = default;

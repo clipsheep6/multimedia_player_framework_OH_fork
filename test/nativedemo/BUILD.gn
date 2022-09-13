@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 ohos_executable("media_demo") {
   include_dirs = [
@@ -57,19 +58,38 @@ ohos_executable("media_demo") {
     "-Wunused-parameter",
   ]
 
-  sources = [
-    "./avcodeclist/avcodeclist_demo.cpp",
-    "./avcodecvdec/avcodec_vdec_demo.cpp",
-    "./avcodecvenc/avcodec_venc_demo.cpp",
-    "./avmetadatahelper/avmetadatahelper_demo.cpp",
-    "./avmuxer/avmuxer_demo.cpp",
-    "./media_demo.cpp",
-    "./player/data_source/media_data_source_demo_noseek.cpp",
-    "./player/data_source/media_data_source_demo_seekable.cpp",
-    "./player/player_demo.cpp",
-    "./recorder/recorder_demo.cpp",
-    "./recorder_profiles/recorder_profiles_demo.cpp",
-  ]
+  sources = [ "./media_demo.cpp" ]
+
+  if (multimedia_player_framework_support_player) {
+    sources += [
+      "./player/data_source/media_data_source_demo_noseek.cpp",
+      "./player/data_source/media_data_source_demo_seekable.cpp",
+      "./player/player_demo.cpp",
+    ]
+  }
+
+  if (multimedia_player_framework_support_recorder) {
+    sources += [
+      "./recorder/recorder_demo.cpp",
+      "./recorder_profiles/recorder_profiles_demo.cpp",
+    ]
+  }
+
+  if (multimedia_player_framework_support_codec) {
+    sources += [
+      "./avcodeclist/avcodeclist_demo.cpp",
+      "./avcodecvdec/avcodec_vdec_demo.cpp",
+      "./avcodecvenc/avcodec_venc_demo.cpp",
+    ]
+  }
+
+  if (multimedia_player_framework_support_muxer) {
+    sources += [ "./avmuxer/avmuxer_demo.cpp" ]
+  }
+
+  if (multimedia_player_framework_support_metadata) {
+    sources += [ "./avmetadatahelper/avmetadatahelper_demo.cpp" ]
+  }
 
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
@@ -88,6 +108,7 @@ ohos_executable("media_demo") {
     "ipc:ipc_core",
     "multimedia_player_framework:media_client",
   ]
+  install_enable = false
 
   part_name = "multimedia_player_framework"
   subsystem_name = "multimedia"

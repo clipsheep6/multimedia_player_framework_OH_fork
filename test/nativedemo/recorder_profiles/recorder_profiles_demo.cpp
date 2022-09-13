@@ -73,9 +73,11 @@ void RecorderProfilesDemo::DoNext()
                 PrintVideoRecorderProfile(videoRecorderProfile);
             }
         } else if (cmd.find("6") != std::string::npos || cmd.find("GetAVMuxerFormatList") != std::string::npos) {
+#ifdef SUPPORT_MUXER
             std::vector<std::string> muxerFormatList =
                 OHOS::Media::AVMuxerFactory::CreateAVMuxer()->GetAVMuxerFormatList();
             PrintMuxerFormatList(muxerFormatList);
+#endif
         }
         cout << endl;
         PrintInputInfo();

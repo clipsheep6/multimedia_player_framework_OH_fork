@@ -15,12 +15,23 @@
 
 #include "media_server_manager.h"
 #include <unordered_set>
+#ifdef SUPPORT_RECORDER
 #include "recorder_service_stub.h"
-#include "player_service_stub.h"
-#include "avmetadatahelper_service_stub.h"
-#include "avcodeclist_service_stub.h"
 #include "recorder_profiles_service_stub.h"
+#endif
+#ifdef SUPPORT_PLAYER
+#include "player_service_stub.h"
+#endif
+#ifdef SUPPORT_METADATA
+#include "avmetadatahelper_service_stub.h"
+#endif
+#ifdef SUPPORT_CODEC
+#include "avcodec_service_stub.h"
+#include "avcodeclist_service_stub.h"
+#endif
+#ifdef SUPPORT_MUXER
 #include "avmuxer_service_stub.h"
+#endif
 #include "media_log.h"
 #include "media_errors.h"
 #include "gmemdfxdump.h"
@@ -32,7 +43,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServe
 namespace OHOS {
 namespace Media {
 constexpr uint32_t SERVER_MAX_NUMBER = 16;
-constexpr uint32_t RECORDER_MAX_NUMBER = 2;
 MediaServerManager &MediaServerManager::GetInstance()
 {
     static MediaServerManager instance;
@@ -126,27 +136,37 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     switch (type) {
+#ifdef SUPPORT_RECORDER
         case RECORDER: {
             return CreateRecorderStubObject();
         }
+        case RECORDERPROFILES: {
+            return CreateRecorderProfilesStubObject();
+        }
+#endif
+#ifdef SUPPORT_PLAYER
         case PLAYER: {
             return CreatePlayerStubObject();
         }
+#endif
+#ifdef SUPPORT_METADATA
         case AVMETADATAHELPER: {
             return CreateAVMetadataHelperStubObject();
         }
+#endif
+#ifdef SUPPORT_CODEC
         case AVCODECLIST: {
             return CreateAVCodecListStubObject();
         }
         case AVCODEC: {
             return CreateAVCodecStubObject();
         }
-        case RECORDERPROFILES: {
-            return CreateRecorderProfilesStubObject();
-        }
+#endif
+#ifdef SUPPORT_MUXER
         case AVMUXER: {
             return CreateAVMuxerStubObject();
         }
+#endif
         default: {
             MEDIA_LOGE("default case, media server manager failed");
             return nullptr;
@@ -154,6 +174,7 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
     }
 }
 
+#ifdef SUPPORT_PLAYER
 sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
 {
     if (playerStubMap_.size() >= SERVER_MAX_NUMBER) {
@@ -188,9 +209,12 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
     }
     return object;
 }
+#endif
 
+#ifdef SUPPORT_RECORDER
 sptr<IRemoteObject> MediaServerManager::CreateRecorderStubObject()
 {
+    constexpr uint32_t RECORDER_MAX_NUMBER = 2;
     if (recorderStubMap_.size() >= RECORDER_MAX_NUMBER) {
         MEDIA_LOGE("The number of recorder services(%{public}zu) has reached the upper limit."
             "Please release the applied resources.", recorderStubMap_.size());
@@ -223,6 +247,29 @@ sptr<IRemoteObject> MediaServerManager::CreateRecorderStubObject()
     return object;
 }
 
+sptr<IRemoteObject> MediaServerManager::CreateRecorderProfilesStubObject()
+{
+    if (recorderProfilesStubMap_.size() >= SERVER_MAX_NUMBER) {
+        MEDIA_LOGE("The number of recorder_profiles services(%{public}zu) has reached the upper limit."
+            "Please release the applied resources.", recorderProfilesStubMap_.size());
+        return nullptr;
+    }
+    sptr<RecorderProfilesServiceStub> recorderProfilesStub = RecorderProfilesServiceStub::Create();
+    if (recorderProfilesStub == nullptr) {
+        MEDIA_LOGE("failed to create recorderProfilesStub");
+        return nullptr;
+    }
+    sptr<IRemoteObject> object = recorderProfilesStub->AsObject();
+    if (object != nullptr) {
+        pid_t pid = IPCSkeleton::GetCallingPid();
+        recorderProfilesStubMap_[object] = pid;
+        MEDIA_LOGD("The number of recorder_profiles services(%{public}zu).", recorderProfilesStubMap_.size());
+    }
+    return object;
+}
+#endif
+
+#ifdef SUPPORT_METADATA
 sptr<IRemoteObject> MediaServerManager::CreateAVMetadataHelperStubObject()
 {
     constexpr uint32_t metadataHelperNumMax = 32;
@@ -255,7 +302,9 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMetadataHelperStubObject()
     }
     return object;
 }
+#endif
 
+#ifdef SUPPORT_CODEC
 sptr<IRemoteObject> MediaServerManager::CreateAVCodecListStubObject()
 {
     if (avCodecListStubMap_.size() >= SERVER_MAX_NUMBER) {
@@ -309,28 +358,9 @@ sptr<IRemoteObject> MediaServerManager::CreateAVCodecStubObject()
     }
     return object;
 }
+#endif
 
-sptr<IRemoteObject> MediaServerManager::CreateRecorderProfilesStubObject()
-{
-    if (recorderProfilesStubMap_.size() >= SERVER_MAX_NUMBER) {
-        MEDIA_LOGE("The number of recorder_profiles services(%{public}zu) has reached the upper limit."
-            "Please release the applied resources.", recorderProfilesStubMap_.size());
-        return nullptr;
-    }
-    sptr<RecorderProfilesServiceStub> recorderProfilesStub = RecorderProfilesServiceStub::Create();
-    if (recorderProfilesStub == nullptr) {
-        MEDIA_LOGE("failed to create recorderProfilesStub");
-        return nullptr;
-    }
-    sptr<IRemoteObject> object = recorderProfilesStub->AsObject();
-    if (object != nullptr) {
-        pid_t pid = IPCSkeleton::GetCallingPid();
-        recorderProfilesStubMap_[object] = pid;
-        MEDIA_LOGD("The number of recorder_profiles services(%{public}zu).", recorderProfilesStubMap_.size());
-    }
-    return object;
-}
-
+#ifdef SUPPORT_MUXER
 sptr<IRemoteObject> MediaServerManager::CreateAVMuxerStubObject()
 {
     if (avmuxerStubMap_.size() >= SERVER_MAX_NUMBER) {
@@ -351,6 +381,7 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMuxerStubObject()
     }
     return object;
 }
+#endif
 
 void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
 {
