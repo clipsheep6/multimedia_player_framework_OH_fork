@@ -80,7 +80,7 @@ ohos_fuzztest("VCodecConfigureFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  if(multimedia_player_framework_support_codec) {
+  if (multimedia_player_framework_support_codec) {
     sources = [
       "$MEDIA_AVCODEC_TEST_DIR/native/avcodec_mock_factory.cpp",
       "$MEDIA_AVCODEC_TEST_DIR/native/avformat/avformat_native_mock.cpp",

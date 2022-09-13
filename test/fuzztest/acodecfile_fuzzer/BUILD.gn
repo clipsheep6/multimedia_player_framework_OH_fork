@@ -82,7 +82,7 @@ ohos_fuzztest("ACodecFileFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  if(multimedia_player_framework_support_codec) {
+  if (multimedia_player_framework_support_codec) {
     sources = [
       "$MEDIA_AVCODEC_TEST_DIR/acodec_test/acodec_mock.cpp",
       "$MEDIA_AVCODEC_TEST_DIR/native/audiodecoder/audiodec_native_mock.cpp",

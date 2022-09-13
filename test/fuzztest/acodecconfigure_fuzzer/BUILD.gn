@@ -82,21 +82,21 @@ ohos_fuzztest("ACodecConfigureFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  if(multimedia_player_framework_support_codec) {
-	sources = [
-	  "$MEDIA_AVCODEC_TEST_DIR/acodec_test/acodec_mock.cpp",
-	  "$MEDIA_AVCODEC_TEST_DIR/native/audiodecoder/audiodec_native_mock.cpp",
+  if (multimedia_player_framework_support_codec) {
+    sources = [
+      "$MEDIA_AVCODEC_TEST_DIR/acodec_test/acodec_mock.cpp",
+      "$MEDIA_AVCODEC_TEST_DIR/native/audiodecoder/audiodec_native_mock.cpp",
       "$MEDIA_AVCODEC_TEST_DIR/native/audioencoder/audioenc_native_mock.cpp",
-	  "$MEDIA_AVCODEC_TEST_DIR/native/avcodec_mock_factory.cpp",
-	  "$MEDIA_AVCODEC_TEST_DIR/native/avformat/avformat_native_mock.cpp",
-	  "$MEDIA_AVCODEC_TEST_DIR/native/avmemory/avmemory_native_mock.cpp",
-	  "$MEDIA_AVCODEC_TEST_DIR/native/surface/surface_native_mock.cpp",
-	  "$MEDIA_AVCODEC_TEST_DIR/native/videodecoder/videodec_native_mock.cpp",
-	  "$MEDIA_AVCODEC_TEST_DIR/native/videoencoder/videoenc_native_mock.cpp",
-	  "$MEDIA_AVCODEC_TEST_DIR/vcodec_test/vdec_mock.cpp",
-	  "$MEDIA_AVCODEC_TEST_DIR/vcodec_test/venc_mock.cpp",
-	  "acodecconfigure_fuzzer.cpp",
-	]
+      "$MEDIA_AVCODEC_TEST_DIR/native/avcodec_mock_factory.cpp",
+      "$MEDIA_AVCODEC_TEST_DIR/native/avformat/avformat_native_mock.cpp",
+      "$MEDIA_AVCODEC_TEST_DIR/native/avmemory/avmemory_native_mock.cpp",
+      "$MEDIA_AVCODEC_TEST_DIR/native/surface/surface_native_mock.cpp",
+      "$MEDIA_AVCODEC_TEST_DIR/native/videodecoder/videodec_native_mock.cpp",
+      "$MEDIA_AVCODEC_TEST_DIR/native/videoencoder/videoenc_native_mock.cpp",
+      "$MEDIA_AVCODEC_TEST_DIR/vcodec_test/vdec_mock.cpp",
+      "$MEDIA_AVCODEC_TEST_DIR/vcodec_test/venc_mock.cpp",
+      "acodecconfigure_fuzzer.cpp",
+    ]
   }
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
