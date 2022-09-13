@@ -36,7 +36,7 @@ ACodecConfigureFuzzer::~ACodecConfigureFuzzer()
 {
 }
 
-bool ACodecConfigureFuzzer::FuzzAudioConfigure(uint8_t* data, size_t size)
+bool ACodecConfigureFuzzer::FuzzAudioConfigure(uint8_t *data, size_t size)
 {
     while (true) {
         std::shared_ptr<ACodecSignal> acodecSignal = std::make_shared<ACodecSignal>();
@@ -53,7 +53,9 @@ bool ACodecConfigureFuzzer::FuzzAudioConfigure(uint8_t* data, size_t size)
 
         defaultFormat_ = AVCodecMockFactory::CreateFormat();
         CHECK_INSTANCE_AND_RETURN_RET(defaultFormat_, false);
+        cout << "initial data " << data << endl;
         int32_t data_ = *reinterpret_cast<int32_t *>(data);
+        cout << "configure data " << data_ << endl;
         (void)defaultFormat_->PutIntValue("channel_count", 2); // 2 common channel count
         (void)defaultFormat_->PutIntValue("sample_rate", data_); // fuzz sample rate
         (void)defaultFormat_->PutIntValue("audio_sample_format", 1); // 1 AudioStandard::SAMPLE_S16LE
@@ -75,7 +77,7 @@ bool ACodecConfigureFuzzer::FuzzAudioConfigure(uint8_t* data, size_t size)
     return true;
 }
 
-bool OHOS::Media::FuzzACodecConfigure(uint8_t* data, size_t size)
+bool OHOS::Media::FuzzACodecConfigure(uint8_t *data, size_t size)
 {
     auto codecfuzzer = std::make_unique<ACodecConfigureFuzzer>();
     if (codecfuzzer == nullptr) {
@@ -86,7 +88,7 @@ bool OHOS::Media::FuzzACodecConfigure(uint8_t* data, size_t size)
 }
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
     OHOS::Media::FuzzACodecConfigure(data, size);

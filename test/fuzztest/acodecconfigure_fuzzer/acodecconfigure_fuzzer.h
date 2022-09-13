@@ -21,13 +21,13 @@
 
 namespace OHOS {
 namespace Media {
-bool FuzzACodecConfigure(uint8_t* data, size_t size);
+bool FuzzACodecConfigure(uint8_t *data, size_t size);
 
 class ACodecConfigureFuzzer : public NoCopyable {
 public:
     ACodecConfigureFuzzer();
     ~ACodecConfigureFuzzer();
-    bool FuzzAudioConfigure(uint8_t* data, size_t size);
+    bool FuzzAudioConfigure(uint8_t *data, size_t size);
 protected:
     std::shared_ptr<ACodecMock> audioCodec_ = nullptr;
     std::shared_ptr<ADecCallbackTest> adecCallback_ = nullptr;

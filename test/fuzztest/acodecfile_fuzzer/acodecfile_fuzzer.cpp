@@ -36,7 +36,7 @@ ACodecFileFuzzer::~ACodecFileFuzzer()
 {
 }
 
-bool ACodecFileFuzzer::FuzzAudioFile(uint8_t* data, size_t size)
+bool ACodecFileFuzzer::FuzzAudioFile(uint8_t *data, size_t size)
 {
     while (true) {
         std::shared_ptr<ACodecSignal> acodecSignal = std::make_shared<ACodecSignal>();
@@ -77,7 +77,7 @@ bool ACodecFileFuzzer::FuzzAudioFile(uint8_t* data, size_t size)
     return true;
 }
 
-bool OHOS::Media::FuzzACodecFile(uint8_t* data, size_t size)
+bool OHOS::Media::FuzzACodecFile(uint8_t *data, size_t size)
 {
     auto codecfuzzer = std::make_unique<ACodecFileFuzzer>();
     if (codecfuzzer == nullptr) {
@@ -88,7 +88,7 @@ bool OHOS::Media::FuzzACodecFile(uint8_t* data, size_t size)
 }
 
 /* Fuzzer entry point */
-extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
+extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
     OHOS::Media::FuzzACodecFile(data, size);
