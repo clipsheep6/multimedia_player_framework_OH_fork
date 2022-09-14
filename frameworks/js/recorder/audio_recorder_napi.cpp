@@ -56,6 +56,7 @@ AudioRecorderNapi::AudioRecorderNapi()
 
 AudioRecorderNapi::~AudioRecorderNapi()
 {
+    CancelCallback();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy in ", FAKE_POINTER(this));
     if (taskQue_ != nullptr) {
         (void)taskQue_->Stop();
@@ -576,6 +577,7 @@ napi_value AudioRecorderNapi::Release(napi_env env, napi_callback_info info)
         } else {
             napi->ErrorCallback(MSERR_EXT_UNKNOWN);
         }
+        napi->CancelCallback();
         MEDIA_LOGD("Release success");
     });
     (void)recorderNapi->taskQue_->EnqueueTask(task);
@@ -681,6 +683,15 @@ void AudioRecorderNapi::SetCallbackReference(const std::string &callbackName, st
     if (callbackNapi_ != nullptr) {
         std::shared_ptr<RecorderCallbackNapi> napiCb = std::static_pointer_cast<RecorderCallbackNapi>(callbackNapi_);
         napiCb->SaveCallbackReference(callbackName, ref);
+    }
+}
+
+void AudioRecorderNapi::CancelCallback()
+{
+    refMap_.clear();
+    if (callbackNapi_ != nullptr) {
+        std::shared_ptr<RecorderCallbackNapi> napiCb = std::static_pointer_cast<RecorderCallbackNapi>(callbackNapi_);
+        napiCb->ClearCallbackReference();
     }
 }
 } // namespace Media
