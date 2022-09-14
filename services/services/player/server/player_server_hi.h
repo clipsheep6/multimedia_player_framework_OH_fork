@@ -50,7 +50,9 @@ public:
     int32_t GetDuration(int32_t &duration) override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
+#ifdef SUPPORT_VIDEO
     int32_t SetVideoSurface(sptr<Surface> surface) override;
+#endif
     bool IsPlaying() override;
     bool IsLooping() override;
     int32_t SetLooping(bool loop) override;
@@ -75,7 +77,9 @@ private:
 
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
+#ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
+#endif
     PlayerStates status_ = PLAYER_IDLE;
     std::mutex mutex_;
     std::mutex mutexCb_;

@@ -38,9 +38,7 @@ AudioDecoderNapi::AudioDecoderNapi()
 
 AudioDecoderNapi::~AudioDecoderNapi()
 {
-    if (adec_ != nullptr) {
-        (void)adec_->SetCallback(nullptr);
-    }
+    CancelCallback();
     adec_ = nullptr;
     callback_ = nullptr;
     if (wrap_ != nullptr) {
@@ -563,6 +561,7 @@ napi_value AudioDecoderNapi::Release(napi_env env, napi_callback_info info)
             if (asyncCtx->napi->adec_->Release() != MSERR_OK) {
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Release");
             }
+            asyncCtx->napi->CancelCallback();
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
@@ -866,6 +865,15 @@ void AudioDecoderNapi::SetCallbackReference(const std::string &callbackName, std
     if (callback_ != nullptr) {
         auto napiCb = std::static_pointer_cast<AudioDecoderCallbackNapi>(callback_);
         napiCb->SaveCallbackReference(callbackName, ref);
+    }
+}
+
+void AudioDecoderNapi::CancelCallback()
+{
+    refMap_.clear();
+    if (callback_ != nullptr) {
+        auto napiCb = std::static_pointer_cast<AudioDecoderCallbackNapi>(callback_);
+        napiCb->ClearCallbackReference();
     }
 }
 } // namespace Media

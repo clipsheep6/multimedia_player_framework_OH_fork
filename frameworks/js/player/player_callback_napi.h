@@ -35,6 +35,7 @@ public:
     explicit PlayerCallbackNapi(napi_env env);
     virtual ~PlayerCallbackNapi();
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
+    void ClearCallbackReference();
     void SendErrorCallback(MediaServiceExtErrCode errCode, const std::string &info = "error");
     virtual PlayerStates GetCurrentState() const;
     void OnError(PlayerErrorType errType, int32_t errCode) override;

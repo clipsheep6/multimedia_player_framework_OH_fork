@@ -103,12 +103,14 @@ static int RunMediaProfile(const string &path)
 
 static int RunAVMuxer()
 {
+#ifdef SUPPORT_MUXER
     auto avmuxer = std::make_unique<AVMuxerDemo>();
     if (avmuxer == nullptr) {
         cout << "avmuxer is null" << endl;
         return 0;
     }
     avmuxer->RunCase();
+#endif
     cout << "demo avmuxer end" << endl;
     return 0;
 }

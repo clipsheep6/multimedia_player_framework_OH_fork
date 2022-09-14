@@ -47,6 +47,7 @@ VideoPlayerNapi::VideoPlayerNapi()
 
 VideoPlayerNapi::~VideoPlayerNapi()
 {
+    CancelCallback();
     nativePlayer_ = nullptr;
     jsCallback_ = nullptr;
     dataSrcCallBack_ = nullptr;
@@ -515,7 +516,6 @@ napi_value VideoPlayerNapi::SetDisplaySurface(napi_env env, napi_callback_info i
 int32_t VideoPlayerNapi::ProcessWork(napi_env env, napi_status status, void *data)
 {
     auto asyncContext = reinterpret_cast<VideoPlayerAsyncContext *>(data);
-    auto cb = std::static_pointer_cast<VideoCallbackNapi>(asyncContext->jsPlayer->jsCallback_);
 
     int32_t ret = MSERR_OK;
     auto player = asyncContext->jsPlayer->nativePlayer_;
@@ -781,6 +781,7 @@ napi_value VideoPlayerNapi::Release(napi_env env, napi_callback_info info)
     } else {
         asyncContext->jsPlayer->ReleaseDataSource(asyncContext->jsPlayer->dataSrcCallBack_);
         (void)asyncContext->jsPlayer->nativePlayer_->Release();
+        asyncContext->jsPlayer->CancelCallback();
         asyncContext->jsPlayer->jsCallback_ = nullptr;
         asyncContext->jsPlayer->nativePlayer_ = nullptr;
         asyncContext->jsPlayer->url_.clear();
@@ -1511,6 +1512,16 @@ void VideoPlayerNapi::SetCallbackReference(const std::string &callbackName, std:
     if (jsCallback_ != nullptr) {
         std::shared_ptr<PlayerCallbackNapi> napiCb = std::static_pointer_cast<PlayerCallbackNapi>(jsCallback_);
         napiCb->SaveCallbackReference(callbackName, ref);
+    }
+}
+
+void VideoPlayerNapi::CancelCallback()
+{
+    refMap_.clear();
+    if (jsCallback_ != nullptr) {
+        std::shared_ptr<VideoCallbackNapi> napiCb = std::static_pointer_cast<VideoCallbackNapi>(jsCallback_);
+        napiCb->ClearCallbackReference();
+        napiCb->ClearAsyncWork(false, "the requests was aborted because user called release");
     }
 }
 } // namespace Media

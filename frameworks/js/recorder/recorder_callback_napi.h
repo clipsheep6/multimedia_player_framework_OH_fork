@@ -38,6 +38,7 @@ public:
     virtual ~RecorderCallbackNapi();
 
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
+    void ClearCallbackReference();
     void SendErrorCallback(MediaServiceExtErrCode errCode);
     void SendStateCallback(const std::string &callbackName);
 

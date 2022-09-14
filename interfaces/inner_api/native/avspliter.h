@@ -165,7 +165,14 @@ public:
 
 class __attribute__((visibility("default"))) AVSpliterFactory {
 public:
+#ifdef UNSUPPORT_MUXER
+    static std::shared_ptr<AVSpliter> CreateAVSpliter()
+    {
+        return nullptr;
+    }
+#else
     static std::shared_ptr<AVSpliter> CreateAVSpliter();
+#endif
 private:
     AVSpliterFactory() = default;
     ~AVSpliterFactory() = default;
