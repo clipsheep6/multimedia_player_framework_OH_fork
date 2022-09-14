@@ -86,7 +86,6 @@ private:
     napi_env env_ = nullptr;
     PlayerStates currentState_ = PLAYER_IDLE;
     std::map<AsyncWorkType, std::queue<VideoPlayerAsyncContext *>> contextMap_;
-    std::queue<VideoPlayerAsyncContext *> contextStateQue_;
     int32_t width_ = 0;
     int32_t height_ = 0;
 };

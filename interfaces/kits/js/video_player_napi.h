@@ -169,6 +169,7 @@ private:
     void ErrorCallback(MediaServiceExtErrCode errCode, std::string errMsg = "unknown");
     void ReleaseDataSource(std::shared_ptr<MediaDataSourceCallback> dataSourceCb);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
+    void CancelCallback();
     VideoPlayerNapi();
     ~VideoPlayerNapi();
 

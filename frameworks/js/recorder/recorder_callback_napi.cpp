@@ -41,6 +41,12 @@ void RecorderCallbackNapi::SaveCallbackReference(const std::string &name, std::w
     refMap_[name] = ref;
 }
 
+void RecorderCallbackNapi::ClearCallbackReference()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    refMap_.clear();
+}
+
 void RecorderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
 {
     std::lock_guard<std::mutex> lock(mutex_);

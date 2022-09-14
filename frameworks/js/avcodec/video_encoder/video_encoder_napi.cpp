@@ -39,9 +39,7 @@ VideoEncoderNapi::VideoEncoderNapi()
 
 VideoEncoderNapi::~VideoEncoderNapi()
 {
-    if (venc_ != nullptr) {
-        (void)venc_->SetCallback(nullptr);
-    }
+    CancelCallback();
     venc_ = nullptr;
     callback_ = nullptr;
     if (wrap_ != nullptr) {
@@ -603,6 +601,7 @@ napi_value VideoEncoderNapi::Release(napi_env env, napi_callback_info info)
             if (asyncCtx->napi->venc_->Release() != MSERR_OK) {
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Release");
             }
+            asyncCtx->napi->CancelCallback();
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
@@ -965,6 +964,15 @@ void VideoEncoderNapi::SetCallbackReference(const std::string &callbackName, std
     if (callback_ != nullptr) {
         auto napiCb = std::static_pointer_cast<VideoEncoderCallbackNapi>(callback_);
         napiCb->SaveCallbackReference(callbackName, ref);
+    }
+}
+
+void VideoEncoderNapi::CancelCallback()
+{
+    refMap_.clear();
+    if (callback_ != nullptr) {
+        auto napiCb = std::static_pointer_cast<VideoEncoderCallbackNapi>(callback_);
+        napiCb->ClearCallbackReference();
     }
 }
 } // namespace Media

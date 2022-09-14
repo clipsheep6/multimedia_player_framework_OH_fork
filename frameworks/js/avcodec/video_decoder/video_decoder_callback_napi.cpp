@@ -46,6 +46,12 @@ void VideoDecoderCallbackNapi::SaveCallbackReference(const std::string &name, st
     refMap_[name] = ref;
 }
 
+void VideoDecoderCallbackNapi::ClearCallbackReference()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    refMap_.clear();
+}
+
 void VideoDecoderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
 {
     std::lock_guard<std::mutex> lock(mutex_);

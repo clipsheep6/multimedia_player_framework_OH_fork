@@ -33,10 +33,11 @@ const std::string OUTPUT_CALLBACK_NAME = "newOutputData";
 class AudioEncoderCallbackNapi : public AVCodecCallback {
 public:
     explicit AudioEncoderCallbackNapi(napi_env env, std::weak_ptr<AVCodecAudioEncoder> aenc,
-        const std::shared_ptr<AVCodecNapiHelper>& codecHelper);
+        const std::shared_ptr<AVCodecNapiHelper> &codecHelper);
     virtual ~AudioEncoderCallbackNapi();
 
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
+    void ClearCallbackReference();
     void SendErrorCallback(MediaServiceExtErrCode errCode);
 
 protected:
