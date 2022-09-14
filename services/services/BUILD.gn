@@ -128,6 +128,7 @@ ohos_shared_library("media_service") {
   deps = [
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_dump_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_format",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:g_mem_dfx",

@@ -44,6 +44,7 @@ config("media_engine_gst_loader_config") {
     "//third_party/glib",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
+    "//foundation/multimedia/player_framework/services/engine/dfx/",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
   ]
@@ -59,6 +60,7 @@ ohos_static_library("media_engine_gst_loader") {
 
   deps = [
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
+    "//foundation/multimedia/player_framework/services/engine/dfx:media_engine_dfx",
     "//third_party/glib:glib",
     "//third_party/glib:gobject",
     "//third_party/gstreamer/gstreamer:gstreamer",

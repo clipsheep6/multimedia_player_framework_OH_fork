@@ -23,7 +23,7 @@
 #include "avmuxer_service_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "gmemdfxdump.h"
+#include "service_dump_manager.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};
@@ -103,10 +103,9 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         return OHOS::INVALID_OPERATION;
     }
 
-    dumpString += "------------------DumpMem------------------\n";
-    GetGMemDump(dumpString);
-    if (fd != -1) {
-        write(fd, dumpString.c_str(), dumpString.size());
+    if (ServiceDumpManager::GetInstance().Dump(fd, argSets) != OHOS::NO_ERROR) {
+        MEDIA_LOGW("Failed to write dfx dump information");
+        return OHOS::INVALID_OPERATION;
     }
 
     return OHOS::NO_ERROR;
