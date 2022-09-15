@@ -20,7 +20,7 @@ MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 MEDIA_AVCODEC_TEST_DIR =
     "//foundation/multimedia/player_framework/test/unittest/avcodec_test/"
 
-vcodec_fuzztest_include_dirs = [
+acodec_fuzztest_include_dirs = [
   "//graphic/graphic_2d/interfaces/innerkits/surface",
   "//foundation//window/window_manager/interfaces/innerkits/wm",
   "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
@@ -35,11 +35,13 @@ vcodec_fuzztest_include_dirs = [
   "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/surface/",
   "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/videodecoder/",
   "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/native/videoencoder/",
+  "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/acodec_test/",
   "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/vcodec_test/",
   "$MEDIA_ROOT_DIR/test/unittest/common/include/",
 ]
 
-vcodec_fuzztest_cflags = [
+acodec_fuzztest_cflags = [
+  "-std=c++17",
   "-std=c++17",
   "-fno-rtti",
   "-fno-exceptions",
@@ -62,18 +64,18 @@ vcodec_fuzztest_cflags = [
 ]
 
 ##############################fuzztest##########################################
-ohos_fuzztest("VCodecFileFuzzTest") {
+ohos_fuzztest("ACodecConfigureFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//foundation//multimedia/player_framework/test/fuzztest/vcodecfile_fuzzer"
+  fuzz_config_file = "//foundation//multimedia/player_framework/test/fuzztest/avcodec_fuzztest/acodecconfigure_fuzzer"
 
   resource_config_file = "//foundation/multimedia/player_framework/test/fuzztest/resource/ohos_test.xml"
-  include_dirs = vcodec_fuzztest_include_dirs
+  include_dirs = acodec_fuzztest_include_dirs
   include_dirs += [
     "//foundation/multimedia/player_framework/services/utils/include",
-    "//foundation/multimedia/player_framework/test/fuzztest/",
-    "$MEDIA_ROOT_DIR/test/fuzztest/vcodecfile_fuzzer",
+    "//foundation/multimedia/player_framework/test/fuzztest/common/",
+    "$MEDIA_ROOT_DIR/test/fuzztest/acodecconfigure_fuzzer",
   ]
-  cflags = vcodec_fuzztest_cflags
+  cflags = acodec_fuzztest_cflags
   cflags += [
     "-g",
     "-O0",
@@ -82,6 +84,9 @@ ohos_fuzztest("VCodecFileFuzzTest") {
   ]
   if (multimedia_player_framework_support_codec) {
     sources = [
+      "$MEDIA_AVCODEC_TEST_DIR/acodec_test/acodec_mock.cpp",
+      "$MEDIA_AVCODEC_TEST_DIR/native/audiodecoder/audiodec_native_mock.cpp",
+      "$MEDIA_AVCODEC_TEST_DIR/native/audioencoder/audioenc_native_mock.cpp",
       "$MEDIA_AVCODEC_TEST_DIR/native/avcodec_mock_factory.cpp",
       "$MEDIA_AVCODEC_TEST_DIR/native/avformat/avformat_native_mock.cpp",
       "$MEDIA_AVCODEC_TEST_DIR/native/avmemory/avmemory_native_mock.cpp",
@@ -90,8 +95,7 @@ ohos_fuzztest("VCodecFileFuzzTest") {
       "$MEDIA_AVCODEC_TEST_DIR/native/videoencoder/videoenc_native_mock.cpp",
       "$MEDIA_AVCODEC_TEST_DIR/vcodec_test/vdec_mock.cpp",
       "$MEDIA_AVCODEC_TEST_DIR/vcodec_test/venc_mock.cpp",
-      "../aw_common.cpp",
-      "vcodecfile_fuzzer.cpp",
+      "acodecconfigure_fuzzer.cpp",
     ]
   }
   deps = [

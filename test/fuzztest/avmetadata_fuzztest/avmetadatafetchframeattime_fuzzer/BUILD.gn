@@ -14,19 +14,20 @@
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
 import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/avmetadata"
-
+MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 ##############################fuzztest##########################################
 ohos_fuzztest("AVmetadataFetchFrameAtTimeFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "//foundation//multimedia/player_framework/test/fuzztest/avmetadatafetchframeattime_fuzzer"
+  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/avmetadata_fuzztest/avmetadatafetchframeattime_fuzzer"
 
-  resource_config_file = "//foundation/multimedia/player_framework/test/fuzztest/resource/ohos_test.xml"
+  resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
-    "//foundation/multimedia/player_framework/services/utils/include",
-    "//foundation/multimedia/player_framework/test/fuzztest/",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_ROOT_DIR/services/utils/include",
+    "$MEDIA_ROOT_DIR/test/fuzztest/common/",
     "//foundation/windowmanager/interfaces/innerkits/wm",
     "//graphic/graphic_2d/interfaces/innerkits/surface",
   ]
@@ -52,11 +53,13 @@ ohos_fuzztest("AVmetadataFetchFrameAtTimeFuzzTest") {
     "-Wsign-compare",
     "-Wunused-parameter",
   ]
-  sources = [
-    "../aw_common.cpp",
-    "../test_metadata.cpp",
-    "avmetadatafetchframeattime_fuzzer.cpp",
-  ]
+  if (multimedia_player_framework_support_metadata) {
+    sources = [
+      "../../common/aw_common.cpp",
+      "../../common/test_metadata.cpp",
+      "avmetadatafetchframeattime_fuzzer.cpp",
+    ]
+  }
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
