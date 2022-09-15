@@ -38,6 +38,7 @@ VCodecFileFuzzer::~VCodecFileFuzzer()
 
 bool VCodecFileFuzzer::FuzzVideoFile(uint8_t *data, size_t size)
 {
+    constexpr int32_t WAITTING_TIME = 2;
     std::shared_ptr<VDecSignal> vdecSignal = std::make_shared<VDecSignal>();
     vdecCallback_ = std::make_shared<VDecCallbackTest>(vdecSignal);
     CHECK_INSTANCE_AND_RETURN_RET(vdecCallback_, false);

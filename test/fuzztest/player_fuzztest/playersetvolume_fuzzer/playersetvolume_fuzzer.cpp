@@ -71,8 +71,8 @@ bool PlayerSetVolumeFuzzer::FuzzSetVolume(uint8_t* data, size_t size)
     }
     if (size >= sizeof(float)) {
         ret = player_->SetVolume(*reinterpret_cast<float *>(data), *reinterpret_cast<float *>(data));
-        sleep(1); 
-    } 
+        sleep(1);
+    }
 
     ret = player_->Release();
     if (ret != 0) {

@@ -42,7 +42,6 @@ namespace Media {
             return ret;                                         \
         }                                                       \
     } while (0)
-constexpr int32_t WAITTING_TIME = 2;
 namespace PlayerTestParam {
     int32_t WriteDataToFile(const std::string &path, const std::uint8_t *data, std::size_t size);
     int32_t ProduceRandomNumberCrypt(void);

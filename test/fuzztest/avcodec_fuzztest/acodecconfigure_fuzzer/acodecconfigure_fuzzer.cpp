@@ -38,6 +38,7 @@ ACodecConfigureFuzzer::~ACodecConfigureFuzzer()
 
 bool ACodecConfigureFuzzer::FuzzAudioConfigure(uint8_t *data, size_t size)
 {
+    constexpr int32_t WAITTING_TIME = 2;
     std::shared_ptr<ACodecSignal> acodecSignal = std::make_shared<ACodecSignal>();
     adecCallback_ = std::make_shared<ADecCallbackTest>(acodecSignal);
     CHECK_INSTANCE_AND_RETURN_RET(adecCallback_, false);
