@@ -60,7 +60,7 @@ ohos_static_library("media_engine_gst_loader") {
 
   deps = [
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
-    "//foundation/multimedia/player_framework/services/engine/dfx:media_engine_dfx",
+    "//foundation/multimedia/player_framework/services/engine/gstreamer/dfx:media_engine_dfx",
     "//third_party/glib:glib",
     "//third_party/glib:gobject",
     "//third_party/gstreamer/gstreamer:gstreamer",
