@@ -20,6 +20,8 @@ group("fuzztest") {
     # deps file
     "$MEDIA_ROOT_DIR/avcodec_fuzztest/acodecconfigure_fuzzer:ACodecConfigureFuzzTest",
     "$MEDIA_ROOT_DIR/avcodec_fuzztest/acodecfile_fuzzer:ACodecFileFuzzTest",
+    "$MEDIA_ROOT_DIR/avcodec_fuzztest/vcodecconfigure_fuzzer:VCodecConfigureFuzzTest",
+    "$MEDIA_ROOT_DIR/avcodec_fuzztest/vcodecfile_fuzzer:VCodecFileFuzzTest",
     "$MEDIA_ROOT_DIR/avmetadata_fuzztest/avmetadatafetchframeattime_fuzzer:AVmetadataFetchFrameAtTimeFuzzTest",
     "$MEDIA_ROOT_DIR/avmetadata_fuzztest/avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
     "$MEDIA_ROOT_DIR/avmetadata_fuzztest/avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",
@@ -27,8 +29,6 @@ group("fuzztest") {
     "$MEDIA_ROOT_DIR/player_fuzztest/playerfile_fuzzer:PlayerFileFuzzTest",
     "$MEDIA_ROOT_DIR/player_fuzztest/playerseek_fuzzer:PlayerSeekFuzzTest",
     "$MEDIA_ROOT_DIR/player_fuzztest/playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
-    "$MEDIA_ROOT_DIR/avcodec_fuzztest/vcodecconfigure_fuzzer:VCodecConfigureFuzzTest",
-    "$MEDIA_ROOT_DIR/avcodec_fuzztest/vcodecfile_fuzzer:VCodecFileFuzzTest",
   ]
 }
 ###############################################################################
