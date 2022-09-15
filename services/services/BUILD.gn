@@ -147,12 +147,12 @@ ohos_shared_library("media_service") {
 
   configs = [
     ":media_service_config",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx_public_config",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]
 
   deps = [
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dump_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_format",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:g_mem_dfx",

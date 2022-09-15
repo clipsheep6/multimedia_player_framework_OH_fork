@@ -13,9 +13,7 @@
 
 import("//build/ohos.gni")
 
-ohos_shared_library("media_engine_dfx") {
-  install_enable = true
-
+ohos_static_library("media_engine_dfx") {
   sources = [ "engine_dump_manager.cpp" ]
 
   include_dirs = [
@@ -50,7 +48,7 @@ ohos_shared_library("media_engine_dfx") {
   ]
 
   deps = [
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dump_dfx",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
     "//third_party/glib:g_mem_dfx",
   ]
   subsystem_name = "multimedia"

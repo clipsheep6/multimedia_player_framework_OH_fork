@@ -55,11 +55,11 @@ ohos_static_library("media_engine_gst_loader") {
 
   configs = [
     ":media_engine_gst_loader_config",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx_public_config",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]
 
   deps = [
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/engine/dfx:media_engine_dfx",
     "//third_party/glib:glib",
     "//third_party/glib:gobject",
