@@ -38,9 +38,7 @@ AudioEncoderNapi::AudioEncoderNapi()
 
 AudioEncoderNapi::~AudioEncoderNapi()
 {
-    if (aenc_ != nullptr) {
-        (void)aenc_->SetCallback(nullptr);
-    }
+    CancelCallback();
     aenc_ = nullptr;
     callback_ = nullptr;
     if (wrap_ != nullptr) {
@@ -563,6 +561,7 @@ napi_value AudioEncoderNapi::Release(napi_env env, napi_callback_info info)
             if (asyncCtx->napi->aenc_->Release() != MSERR_OK) {
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Release");
             }
+            asyncCtx->napi->CancelCallback();
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
 
@@ -865,6 +864,14 @@ void AudioEncoderNapi::SetCallbackReference(const std::string &callbackName, std
     if (callback_ != nullptr) {
         auto napiCb = std::static_pointer_cast<AudioEncoderCallbackNapi>(callback_);
         napiCb->SaveCallbackReference(callbackName, ref);
+    }
+}
+
+void AudioEncoderNapi::CancelCallback()
+{
+    if (callback_ != nullptr) {
+        auto napiCb = std::static_pointer_cast<AudioEncoderCallbackNapi>(callback_);
+        napiCb->ClearCallbackReference();
     }
 }
 } // namespace Media

@@ -57,7 +57,7 @@ private:
     void ErrorCallback(MediaServiceExtErrCode errCode);
     void StateCallback(const std::string &callbackName);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
-
+    void CancelCallback();
     struct AudioRecorderProperties {
         AudioRecorderProperties();
         ~AudioRecorderProperties();

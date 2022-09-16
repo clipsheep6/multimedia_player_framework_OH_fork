@@ -65,6 +65,7 @@ void VideoCallbackNapi::ClearAsyncWork(bool error, const std::string &msg)
             VideoCallbackNapi::OnJsCallBack(context);
         }
     }
+    contextMap_.clear();
 }
 
 void VideoCallbackNapi::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -115,7 +116,7 @@ void VideoCallbackNapi::OnError(PlayerErrorType errType, int32_t errCode)
 void VideoCallbackNapi::OnSeekDoneCb(int32_t position)
 {
     if (contextMap_.find(AsyncWorkType::ASYNC_WORK_SEEK) == contextMap_.end())  {
-        MEDIA_LOGE("OnSpeedDoneCb is called, But context is empty");
+        MEDIA_LOGE("OnSeekDoneCb is called, But context is empty");
         return;
     }
 
