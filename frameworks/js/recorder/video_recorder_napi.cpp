@@ -779,7 +779,6 @@ void VideoRecorderNapi::SetCallbackReference(const std::string &callbackName, st
 
 void VideoRecorderNapi::CancelCallback()
 {
-    refMap_.clear();
     if (callbackNapi_ != nullptr) {
         auto napiCb = std::static_pointer_cast<RecorderCallbackNapi>(callbackNapi_);
         napiCb->ClearCallbackReference();

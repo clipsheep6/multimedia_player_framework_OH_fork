@@ -688,7 +688,6 @@ void AudioRecorderNapi::SetCallbackReference(const std::string &callbackName, st
 
 void AudioRecorderNapi::CancelCallback()
 {
-    refMap_.clear();
     if (callbackNapi_ != nullptr) {
         std::shared_ptr<RecorderCallbackNapi> napiCb = std::static_pointer_cast<RecorderCallbackNapi>(callbackNapi_);
         napiCb->ClearCallbackReference();
