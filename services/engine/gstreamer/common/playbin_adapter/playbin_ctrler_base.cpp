@@ -543,19 +543,21 @@ void PlayBinCtrlerBase::SetAutoPlugSortListener(AutoPlugSortListener listener)
 
 void PlayBinCtrlerBase::DoInitializeForHttp()
 {
-    g_object_set(playbin_, "ring-buffer-max-size", RING_BUFFER_MAX_SIZE, nullptr);
-    g_object_set(playbin_, "buffering-flags", true, "buffer-size", PLAYBIN_QUEUE_MAX_SIZE,
-        "buffer-duration", BUFFER_DURATION, "low-percent", BUFFER_LOW_PERCENT_DEFAULT,
-        "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, nullptr);
-    g_object_set(playbin_, "timeout", HTTP_TIME_OUT_DEFAULT, nullptr);
+    if (isNetWorkPlay_) {
+        g_object_set(playbin_, "ring-buffer-max-size", RING_BUFFER_MAX_SIZE, nullptr);
+        g_object_set(playbin_, "buffering-flags", true, "buffer-size", PLAYBIN_QUEUE_MAX_SIZE,
+            "buffer-duration", BUFFER_DURATION, "low-percent", BUFFER_LOW_PERCENT_DEFAULT,
+            "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, nullptr);
+        g_object_set(playbin_, "timeout", HTTP_TIME_OUT_DEFAULT, nullptr);
 
-    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
-    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+        PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+        CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
 
-    gulong id = g_signal_connect_data(playbin_, "bitrate-parse-complete",
-        G_CALLBACK(&PlayBinCtrlerBase::OnBitRateParseCompleteCb), wrapper,
-        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
+        gulong id = g_signal_connect_data(playbin_, "bitrate-parse-complete",
+            G_CALLBACK(&PlayBinCtrlerBase::OnBitRateParseCompleteCb), wrapper,
+            (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+        (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
+    }
 }
 
 int32_t PlayBinCtrlerBase::EnterInitializedState()

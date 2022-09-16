@@ -1517,7 +1517,6 @@ void VideoPlayerNapi::SetCallbackReference(const std::string &callbackName, std:
 
 void VideoPlayerNapi::CancelCallback()
 {
-    refMap_.clear();
     if (jsCallback_ != nullptr) {
         std::shared_ptr<VideoCallbackNapi> napiCb = std::static_pointer_cast<VideoCallbackNapi>(jsCallback_);
         napiCb->ClearCallbackReference();

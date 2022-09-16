@@ -870,7 +870,6 @@ void AudioDecoderNapi::SetCallbackReference(const std::string &callbackName, std
 
 void AudioDecoderNapi::CancelCallback()
 {
-    refMap_.clear();
     if (callback_ != nullptr) {
         auto napiCb = std::static_pointer_cast<AudioDecoderCallbackNapi>(callback_);
         napiCb->ClearCallbackReference();

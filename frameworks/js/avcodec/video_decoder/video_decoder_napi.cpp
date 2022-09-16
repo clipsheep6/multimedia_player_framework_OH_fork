@@ -993,7 +993,6 @@ void VideoDecoderNapi::SetCallbackReference(const std::string &callbackName, std
 
 void VideoDecoderNapi::CancelCallback()
 {
-    refMap_.clear();
     if (callback_ != nullptr) {
         auto napiCb = std::static_pointer_cast<VideoDecoderCallbackNapi>(callback_);
         napiCb->ClearCallbackReference();
