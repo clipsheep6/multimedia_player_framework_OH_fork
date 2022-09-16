@@ -16,6 +16,7 @@
 #define SERVICE_DUMP_MANAGER_H
 #include <functional>
 #include <map>
+#include <unordered_set>
 #include <string>
 
 namespace OHOS {
