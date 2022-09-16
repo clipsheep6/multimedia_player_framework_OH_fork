@@ -88,6 +88,7 @@ public:
     int32_t SetPlaybackSpeed(PlaybackRateMode mode);
     int32_t GetPlaybackSpeed(PlaybackRateMode &mode);
     int32_t SelectBitRate(uint32_t bitRate);
+    ini32_t GetCurrentState()uint32_t stateNuber;
     bool IsPlaying();
     bool IsLooping();
     int32_t SetParameter(const Format &param);
