@@ -57,7 +57,6 @@ MediaClient::~MediaClient()
 
 bool MediaClient::IsAlived()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     if (mediaProxy_ == nullptr) {
         mediaProxy_ = GetMediaProxy();
     }
@@ -68,6 +67,7 @@ bool MediaClient::IsAlived()
 #ifdef SUPPORT_RECORDER
 std::shared_ptr<IRecorderService> MediaClient::CreateRecorderService()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!IsAlived()) {
         MEDIA_LOGE("media service does not exist.");
         return nullptr;
@@ -83,7 +83,6 @@ std::shared_ptr<IRecorderService> MediaClient::CreateRecorderService()
     std::shared_ptr<RecorderClient> recorder = RecorderClient::Create(recorderProxy);
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, nullptr, "failed to create recorder client.");
 
-    std::lock_guard<std::mutex> lock(mutex_);
     recorderClientList_.push_back(recorder);
     return recorder;
 }
@@ -106,6 +105,7 @@ int32_t MediaClient::DestroyRecorderService(std::shared_ptr<IRecorderService> re
 
 std::shared_ptr<IRecorderProfilesService> MediaClient::CreateRecorderProfilesService()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!IsAlived()) {
         MEDIA_LOGE("media service does not exist.");
         return nullptr;
@@ -121,7 +121,6 @@ std::shared_ptr<IRecorderProfilesService> MediaClient::CreateRecorderProfilesSer
     std::shared_ptr<RecorderProfilesClient> recorderProfiles = RecorderProfilesClient::Create(recorderProfilesProxy);
     CHECK_AND_RETURN_RET_LOG(recorderProfiles != nullptr, nullptr, "failed to create recorderProfiles client.");
 
-    std::lock_guard<std::mutex> lock(mutex_);
     recorderProfilesClientList_.push_back(recorderProfiles);
     return recorderProfiles;
 }
@@ -130,6 +129,7 @@ std::shared_ptr<IRecorderProfilesService> MediaClient::CreateRecorderProfilesSer
 #ifdef SUPPORT_PLAYER
 std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!IsAlived()) {
         MEDIA_LOGE("media service does not exist.");
         return nullptr;
@@ -145,7 +145,6 @@ std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
     std::shared_ptr<PlayerClient> player = PlayerClient::Create(playerProxy);
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "failed to create player client.");
 
-    std::lock_guard<std::mutex> lock(mutex_);
     playerClientList_.push_back(player);
     return player;
 }
@@ -162,6 +161,7 @@ int32_t MediaClient::DestroyPlayerService(std::shared_ptr<IPlayerService> player
 #ifdef SUPPORT_CODEC
 std::shared_ptr<IAVCodecListService> MediaClient::CreateAVCodecListService()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!IsAlived()) {
         MEDIA_LOGE("media service does not exist.");
         return nullptr;
@@ -177,7 +177,6 @@ std::shared_ptr<IAVCodecListService> MediaClient::CreateAVCodecListService()
     std::shared_ptr<AVCodecListClient> avCodecList = AVCodecListClient::Create(avCodecListProxy);
     CHECK_AND_RETURN_RET_LOG(avCodecList != nullptr, nullptr, "failed to create avcodeclist client.");
 
-    std::lock_guard<std::mutex> lock(mutex_);
     avCodecListClientList_.push_back(avCodecList);
     return avCodecList;
 }
@@ -192,6 +191,7 @@ int32_t MediaClient::DestroyAVCodecListService(std::shared_ptr<IAVCodecListServi
 
 std::shared_ptr<IAVCodecService> MediaClient::CreateAVCodecService()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!IsAlived()) {
         MEDIA_LOGE("media service does not exist.");
         return nullptr;
@@ -207,7 +207,6 @@ std::shared_ptr<IAVCodecService> MediaClient::CreateAVCodecService()
     std::shared_ptr<AVCodecClient> avCodec = AVCodecClient::Create(avCodecProxy);
     CHECK_AND_RETURN_RET_LOG(avCodec != nullptr, nullptr, "failed to create avcodec client.");
 
-    std::lock_guard<std::mutex> lock(mutex_);
     avCodecClientList_.push_back(avCodec);
     return avCodec;
 }
@@ -224,6 +223,7 @@ int32_t MediaClient::DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCo
 #ifdef SUPPORT_METADATA
 std::shared_ptr<IAVMetadataHelperService> MediaClient::CreateAVMetadataHelperService()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!IsAlived()) {
         MEDIA_LOGE("media service does not exist.");
         return nullptr;
@@ -239,7 +239,6 @@ std::shared_ptr<IAVMetadataHelperService> MediaClient::CreateAVMetadataHelperSer
     std::shared_ptr<AVMetadataHelperClient> avMetadataHelper = AVMetadataHelperClient::Create(avMetadataHelperProxy);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelper != nullptr, nullptr, "failed to create avmetadatahelper client.");
 
-    std::lock_guard<std::mutex> lock(mutex_);
     avMetadataHelperClientList_.push_back(avMetadataHelper);
     return avMetadataHelper;
 }
@@ -257,6 +256,7 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
 #ifdef SUPPORT_MUXER
 std::shared_ptr<IAVMuxerService> MediaClient::CreateAVMuxerService()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!IsAlived()) {
         MEDIA_LOGE("media service does not exist.");
         return nullptr;
@@ -272,7 +272,6 @@ std::shared_ptr<IAVMuxerService> MediaClient::CreateAVMuxerService()
     std::shared_ptr<AVMuxerClient> avmuxer = AVMuxerClient::Create(avmuxerProxy);
     CHECK_AND_RETURN_RET_LOG(avmuxer != nullptr, nullptr, "failed to create avmuxer client.");
 
-    std::lock_guard<std::mutex> lock(mutex_);
     avmuxerClientList_.push_back(avmuxer);
     return avmuxer;
 }
