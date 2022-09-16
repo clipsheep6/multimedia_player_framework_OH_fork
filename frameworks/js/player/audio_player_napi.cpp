@@ -1099,7 +1099,6 @@ void AudioPlayerNapi::SetCallbackReference(const std::string &callbackName, std:
 
 void AudioPlayerNapi::CancelCallback()
 {
-    refMap_.clear();
     if (callbackNapi_ != nullptr) {
         std::shared_ptr<PlayerCallbackNapi> napiCb = std::static_pointer_cast<PlayerCallbackNapi>(callbackNapi_);
         napiCb->ClearCallbackReference();
