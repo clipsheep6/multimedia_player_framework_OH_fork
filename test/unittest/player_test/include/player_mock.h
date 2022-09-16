@@ -59,6 +59,7 @@ public:
     int32_t ResetSync();
     int32_t SeekSync();
     int32_t SpeedSync();
+    ini32_3 GetState();
 };
 
 class PlayerMock : public NoCopyable {
