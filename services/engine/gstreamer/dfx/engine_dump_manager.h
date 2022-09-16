@@ -14,11 +14,10 @@
  */
 #ifndef ENGINE_DUMP_MANAGER_H
 #define ENGINE_DUMP_MANAGER_H
-#include <stdint.h>
+#include <cstdint>
 
 namespace OHOS {
 namespace Media {
-
 class __attribute__((visibility("default"))) EngineDumpManager {
 public:
     static EngineDumpManager &GetInstance();

@@ -38,7 +38,7 @@ int32_t ServiceDumpManager::Dump(int32_t fd, std::unordered_set<std::u16string> 
     for (auto iter : dfxDumper_) {
         if (args.find(static_cast<std::u16string>(iter.first)) != args.end()) {
             dumpString += "-----";
-            dumpString += std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t>{}.to_bytes(iter.first);
+            dumpString += std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> {}.to_bytes(iter.first);
             dumpString += "-----\n";
             if (fd != -1) {
                 write(fd, dumpString.c_str(), dumpString.size());
