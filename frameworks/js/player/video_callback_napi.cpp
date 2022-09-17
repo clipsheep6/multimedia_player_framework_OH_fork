@@ -31,6 +31,7 @@ VideoCallbackNapi::VideoCallbackNapi(napi_env env)
     : PlayerCallbackNapi(env), env_(env)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    contextMap_.clear();
 }
 
 VideoCallbackNapi::~VideoCallbackNapi()
@@ -115,7 +116,8 @@ void VideoCallbackNapi::OnError(PlayerErrorType errType, int32_t errCode)
 
 void VideoCallbackNapi::OnSeekDoneCb(int32_t position)
 {
-    if (contextMap_.find(AsyncWorkType::ASYNC_WORK_SEEK) == contextMap_.end())  {
+    if (contextMap_.find(AsyncWorkType::ASYNC_WORK_SEEK) == contextMap_.end() ||
+        contextMap_.at(AsyncWorkType::ASYNC_WORK_SEEK).empty())  {
         MEDIA_LOGE("OnSeekDoneCb is called, But context is empty");
         return;
     }
@@ -135,7 +137,8 @@ void VideoCallbackNapi::OnSpeedDoneCb(int32_t speedMode)
         MEDIA_LOGE("OnSpeedDoneCb mode:%{public}d error", speedMode);
     }
 
-    if (contextMap_.find(AsyncWorkType::ASYNC_WORK_SPEED) == contextMap_.end())  {
+    if (contextMap_.find(AsyncWorkType::ASYNC_WORK_SPEED) == contextMap_.end() ||
+        contextMap_.at(AsyncWorkType::ASYNC_WORK_SPEED).empty())  {
         MEDIA_LOGE("OnSpeedDoneCb is called, But context is empty");
         return;
     }
@@ -151,7 +154,8 @@ void VideoCallbackNapi::OnSpeedDoneCb(int32_t speedMode)
 
 void VideoCallbackNapi::OnBitRateDoneCb(int32_t bitRate)
 {
-    if (contextMap_.find(AsyncWorkType::ASYNC_WORK_BITRATE) == contextMap_.end())  {
+    if (contextMap_.find(AsyncWorkType::ASYNC_WORK_BITRATE) == contextMap_.end() ||
+        contextMap_.at(AsyncWorkType::ASYNC_WORK_BITRATE).empty())  {
         MEDIA_LOGE("OnBitRateDoneCb is called, But context is empty");
         return;
     }
@@ -167,7 +171,8 @@ void VideoCallbackNapi::OnBitRateDoneCb(int32_t bitRate)
 
 void VideoCallbackNapi::OnVolumeDoneCb()
 {
-    if (contextMap_.find(AsyncWorkType::ASYNC_WORK_VOLUME) == contextMap_.end())  {
+    if (contextMap_.find(AsyncWorkType::ASYNC_WORK_VOLUME) == contextMap_.end() ||
+        contextMap_.at(AsyncWorkType::ASYNC_WORK_VOLUME).empty())  {
         MEDIA_LOGE("OnVolumeDoneCb is called, But context is empty");
         return;
     }
@@ -255,7 +260,8 @@ void VideoCallbackNapi::DequeueAsyncWork()
             break;
     }
 
-    if (contextMap_.find(asyncWork) == contextMap_.end()) {
+    if (contextMap_.find(asyncWork) == contextMap_.end() ||
+        contextMap_.at(asyncWork).empty()) {
         MEDIA_LOGE("OnStateChanged(%{public}d) is called, But contextState is empty", currentState_);
         return;
     }
