@@ -26,7 +26,7 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
 #ifdef SUPPORT_VIDEO
-    constexpr uint32_t VIDEO_MAX_NUMBER = 13; //max video player
+    constexpr uint32_t VIDEO_MAX_NUMBER = 13; // max video player
 #endif
 }
 
