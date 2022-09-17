@@ -55,11 +55,11 @@ void RecorderProfilesClient::MediaServerDied()
     recorderProfilesProxy_ = nullptr;
 }
 
-bool RecorderProfilesClient::IsAudioRecoderConfigSupported(const RecorderProfilesData &profile)
+bool RecorderProfilesClient::IsAudioRecorderConfigSupported(const RecorderProfilesData &profile)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderProfilesProxy_ != nullptr, false, "recorder_profiles service does not exist.");
-    return recorderProfilesProxy_->IsAudioRecoderConfigSupported(profile);
+    return recorderProfilesProxy_->IsAudioRecorderConfigSupported(profile);
 }
 
 bool RecorderProfilesClient::HasVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel)
