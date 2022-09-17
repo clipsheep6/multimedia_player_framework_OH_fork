@@ -67,7 +67,10 @@ VideoPlayerManager &VideoPlayerManager::GetInstance()
 int32_t VideoPlayerManager::RegisterVideoPlayer(PlayerServer *player)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(videoPlayerList.size() <= VIDEO_MAX_NUMBER, MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR,
+    if (videoPlayerList.find(player) != videoPlayerList.end()) {
+        return MSERR_OK;
+    }
+    CHECK_AND_RETURN_RET_LOG(videoPlayerList.size() < VIDEO_MAX_NUMBER, MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR,
         "failed to start VideoPlayer");
     videoPlayerList.insert(player);
     return MSERR_OK;
@@ -750,7 +753,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(VideoPlayerManager::GetInstance().RegisterVideoPlayer(this) == MSERR_OK,
-        MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR, "video player is no more than 10");
+        MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR, "video player is no more than 13");
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
 
     if (lastOpStatus_ != PLAYER_INITIALIZED) {
