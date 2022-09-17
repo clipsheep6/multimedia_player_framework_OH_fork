@@ -41,7 +41,7 @@ RecorderProfilesServer::~RecorderProfilesServer()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-bool RecorderProfilesServer::IsAudioRecoderConfigSupported(const RecorderProfilesData &profile)
+bool RecorderProfilesServer::IsAudioRecorderConfigSupported(const RecorderProfilesData &profile)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     bool ret = false;

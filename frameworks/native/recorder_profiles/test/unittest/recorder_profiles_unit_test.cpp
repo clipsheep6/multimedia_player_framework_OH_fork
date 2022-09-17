@@ -35,12 +35,12 @@ void RecorderProfilesUnitTest::TearDown(void)
 }
 
 /**
- * @tc.name: recorder_profile_IsAudioRecoderConfigSupported_0100
- * @tc.desc: recorde profile IsAudioRecoderConfigSupported
+ * @tc.name: recorder_profile_IsAudioRecorderConfigSupported_0100
+ * @tc.desc: recorde profile IsAudioRecorderConfigSupported
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderProfilesUnitTest, recorder_profile_IsAudioRecoderConfigSupported_0100, TestSize.Level0)
+HWTEST_F(RecorderProfilesUnitTest, recorder_profile_IsAudioRecorderConfigSupported_0100, TestSize.Level0)
 {
     std::shared_ptr<AudioRecorderProfile> profile  = std::make_shared<AudioRecorderProfile>();
     profile->containerFormatType = ContainerFormatType::CFT_MPEG_4;
@@ -48,7 +48,7 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_IsAudioRecoderConfigSupporte
     profile->audioBitrate = 96000; // 96000 common bitrate
     profile->audioSampleRate = 48000; // 48000 common sample rate
     profile->audioChannels = 2; // 2 common channels
-    EXPECT_TRUE(RecorderProfilesFactory::CreateRecorderProfiles().IsAudioRecoderConfigSupported(*profile));
+    EXPECT_TRUE(RecorderProfilesFactory::CreateRecorderProfiles().IsAudioRecorderConfigSupported(*profile));
 }
 
 /**

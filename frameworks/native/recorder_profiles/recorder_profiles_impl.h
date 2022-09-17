@@ -24,7 +24,7 @@ namespace Media {
 class RecorderProfilesImpl : public RecorderProfiles, public NoCopyable {
 public:
     ~RecorderProfilesImpl();
-    bool IsAudioRecoderConfigSupported(const AudioRecorderProfile &profile) override;
+    bool IsAudioRecorderConfigSupported(const AudioRecorderProfile &profile) override;
     bool HasVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel) override;
     std::vector<std::shared_ptr<AudioRecorderCaps>> GetAudioRecorderCaps() override;
     std::vector<std::shared_ptr<VideoRecorderCaps>> GetVideoRecorderCaps() override;

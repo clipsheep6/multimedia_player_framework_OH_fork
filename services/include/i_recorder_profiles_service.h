@@ -45,7 +45,7 @@ struct RecorderProfilesData {
 class IRecorderProfilesService {
 public:
     virtual ~IRecorderProfilesService() = default;
-    virtual bool IsAudioRecoderConfigSupported(const RecorderProfilesData &profile) = 0;
+    virtual bool IsAudioRecorderConfigSupported(const RecorderProfilesData &profile) = 0;
     virtual bool HasVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel) = 0;
     virtual std::vector<RecorderProfilesData> GetAudioRecorderCapsInfo() = 0;
     virtual std::vector<RecorderProfilesData> GetVideoRecorderCapsInfo() = 0;

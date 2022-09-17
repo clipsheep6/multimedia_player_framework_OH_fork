@@ -248,7 +248,7 @@ public:
      * @since 3.2
      * @version 3.2
      */
-    virtual bool IsAudioRecoderConfigSupported(const AudioRecorderProfile &profile) = 0;
+    virtual bool IsAudioRecorderConfigSupported(const AudioRecorderProfile &profile) = 0;
 
     /**
      * @brief Checks if there is a profile of the recorder used for a specified sourceId and video record quality.
