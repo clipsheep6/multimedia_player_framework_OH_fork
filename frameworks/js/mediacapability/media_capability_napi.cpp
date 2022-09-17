@@ -48,6 +48,7 @@ MediaCapsNapi::~MediaCapsNapi()
 napi_value MediaCapsNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor properties[] = {
+#ifdef SUPPORT_CODEC
         DECLARE_NAPI_FUNCTION("getAudioDecoderCaps", GetAudioDecoderCaps),
         DECLARE_NAPI_FUNCTION("findAudioDecoder", FindAudioDecoder),
         DECLARE_NAPI_FUNCTION("getAudioEncoderCaps", GetAudioEncoderCaps),
@@ -57,6 +58,7 @@ napi_value MediaCapsNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getVideoEncoderCaps", GetVideoEncoderCaps),
         DECLARE_NAPI_FUNCTION("findVideoEncoder", FindVideoEncoder),
         DECLARE_NAPI_FUNCTION("getAVMuxerFormatList", GetAVMuxerFormatList),
+#endif
     };
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("getMediaCapability", GetMediaCapability),
@@ -148,6 +150,7 @@ napi_value MediaCapsNapi::GetMediaCapability(napi_env env, napi_callback_info in
     return result;
 }
 
+#ifdef SUPPORT_CODEC
 napi_value MediaCapsNapi::GetAudioDecoderCaps(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
@@ -535,7 +538,9 @@ napi_value MediaCapsNapi::FindVideoEncoder(napi_env env, napi_callback_info info
 
     return result;
 }
+#endif
 
+#ifdef SUPPORT_RECORDER
 napi_value MediaCapsNapi::GetAudioRecorderCaps(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
@@ -779,7 +784,9 @@ napi_value MediaCapsNapi::HasVideoRecorderProfile(napi_env env, napi_callback_in
 
     return result;
 }
+#endif
 
+#ifdef SUPPORT_MUXER
 napi_value MediaCapsNapi::GetAVMuxerFormatList(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
@@ -825,5 +832,6 @@ napi_value MediaCapsNapi::GetAVMuxerFormatList(napi_env env, napi_callback_info 
 
     return result;
 }
+#endif
 }  // namespace Media
 }  // namespace OHOS

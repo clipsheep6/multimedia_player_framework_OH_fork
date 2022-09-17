@@ -50,7 +50,7 @@ private:
 
     void ErrorCallback(MediaServiceExtErrCode errCode);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
-
+    void CancelCallback();
     AudioDecoderNapi();
     ~AudioDecoderNapi();
 

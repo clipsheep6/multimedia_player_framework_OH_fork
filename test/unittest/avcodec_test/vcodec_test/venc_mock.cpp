@@ -240,7 +240,6 @@ void VEncMock::OutLoopFunc()
             cout << "Fatal: GetOutputBuffer fail, exit" << endl;
             break;
         }
-        cout << "GetOutputBuffer size : " << size << " frameCount_ =  " << frameCount_ << endl;
         frameCount_++;
 
         if (NEED_DUMP) {

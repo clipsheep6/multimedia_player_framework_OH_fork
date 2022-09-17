@@ -98,27 +98,27 @@ int32_t PlayBinCtrlerBase::BaseState::ChangePlayBinState(GstState targetState)
 
 void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
 {
-    GstState targetState = static_cast<GstState>(msg.detail2);
-    MEDIA_LOGI("state changed from %{public}s to %{public}s",
-        gst_element_state_get_name(static_cast<GstState>(msg.detail1)),
-        gst_element_state_get_name(targetState));
-
-    if (targetState == GST_STATE_PLAYING) {
-        int32_t tickType = INNER_MSG_POSITION_UPDATE;
-        uint32_t interval = DEFAULT_POSITION_UPDATE_INTERVAL_MS;
-        ctrler_.msgProcessor_->AddTickSource(tickType, interval);
-    } else if (targetState == GST_STATE_PAUSED) {
-        int32_t tickType = INNER_MSG_POSITION_UPDATE;
-        ctrler_.msgProcessor_->RemoveTickSource(tickType);
-        if (!ctrler_.isSeeking_ && !ctrler_.isRating_) {
-            int64_t position = ctrler_.QueryPositionInternal(false) / USEC_PER_MSEC;
-            PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, 0, static_cast<int32_t>(position), {} };
-            ctrler_.ReportMessage(posUpdateMsg);
-        }
-    }
-
-    Dumper::DumpDotGraph(*ctrler_.playbin_, msg.detail1, msg.detail2);
     if (msg.extend.has_value() && std::any_cast<GstPipeline *>(msg.extend) == ctrler_.playbin_) {
+        GstState targetState = static_cast<GstState>(msg.detail2);
+        MEDIA_LOGI("state changed from %{public}s to %{public}s",
+            gst_element_state_get_name(static_cast<GstState>(msg.detail1)),
+            gst_element_state_get_name(targetState));
+        if (targetState == GST_STATE_PLAYING) {
+            int32_t tickType = INNER_MSG_POSITION_UPDATE;
+            uint32_t interval = DEFAULT_POSITION_UPDATE_INTERVAL_MS;
+            ctrler_.msgProcessor_->AddTickSource(tickType, interval);
+        } else if (targetState == GST_STATE_PAUSED) {
+            int32_t tickType = INNER_MSG_POSITION_UPDATE;
+            ctrler_.msgProcessor_->RemoveTickSource(tickType);
+            if (!ctrler_.isSeeking_ && !ctrler_.isRating_) {
+                int64_t position = ctrler_.QueryPositionInternal(false) / USEC_PER_MSEC;
+                PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, 0, static_cast<int32_t>(position), {} };
+                ctrler_.ReportMessage(posUpdateMsg);
+            }
+        }
+
+        Dumper::DumpDotGraph(*ctrler_.playbin_, msg.detail1, msg.detail2);
+
         ProcessStateChange(msg);
         if ((msg.detail1 == GST_STATE_PAUSED && msg.detail2 == GST_STATE_PLAYING) && ctrler_.isNetWorkPlay_) {
             ctrler_.HandleCacheCtrl(ctrler_.cachePercent_);

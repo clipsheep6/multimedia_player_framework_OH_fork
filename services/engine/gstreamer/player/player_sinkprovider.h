@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <gst/gst.h>
 #include "gst_mem_sink.h"
 #include "playbin_sink_provider.h"

@@ -60,7 +60,6 @@ PlayerServer::PlayerServer()
 
 PlayerServer::~PlayerServer()
 {
-    (void)Release();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -72,9 +71,11 @@ void PlayerServer::ResetProcessor()
 
 void PlayerServer::ReleaseProcessor()
 {
+#ifdef SUPPORT_VIDEO
     if (surface_ != nullptr) {
         surface_ = nullptr;
     }
+#endif
 }
 
 int32_t PlayerServer::Init()
@@ -210,10 +211,13 @@ int32_t PlayerServer::OnPrepare()
     if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
         CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
         int32_t ret = MSERR_OK;
+
+#ifdef SUPPORT_VIDEO
         if (surface_ != nullptr) {
             ret = playerEngine_->SetVideoSurface(surface_);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetVideoSurface Failed!");
         }
+#endif
 
         lastOpStatus_ = PLAYER_PREPARED;
 
@@ -435,17 +439,12 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
         return MSERR_INVALID_OPERATION;
     }
 
-    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
-        MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
-        Format format;
-        OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
-        return MSERR_OK;
-    }
+    Format format;
     config_.leftVolume = leftVolume;
     config_.rightVolume = rightVolume;
-    if (GetCurrState() == preparingState_) {
-        MEDIA_LOGI("Preparing state can not SetVolume, SetVolume after prepared");
-        Format format;
+    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED ||
+        GetCurrState() == preparingState_) {
+        MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
         OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
         return MSERR_OK;
     }
@@ -454,6 +453,7 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
         int32_t ret = playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVolume Failed!");
     }
+    OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
     return MSERR_OK;
 }
 
@@ -703,6 +703,7 @@ int32_t PlayerServer::SelectBitRate(uint32_t bitRate)
     return MSERR_OK;
 }
 
+#ifdef SUPPORT_VIDEO
 int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -716,6 +717,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
     surface_ = surface;
     return MSERR_OK;
 }
+#endif
 
 bool PlayerServer::IsPlaying()
 {
@@ -757,7 +759,7 @@ int32_t PlayerServer::SetLooping(bool loop)
         }
     }
 
-    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED) {
+    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || GetCurrState() == preparingState_) {
         MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
         config_.looping = loop;
         return MSERR_OK;

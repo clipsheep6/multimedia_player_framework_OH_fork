@@ -46,6 +46,12 @@ void RecorderPipeline::SetNotifier(RecorderMsgNotifier notifier)
     notifier_ = notifier;
 }
 
+void RecorderPipeline::SetExecuteInCmdQ(RecorderExecuteInCmdQ executeInCmdQ)
+{
+    std::unique_lock<std::mutex> lock(cmdQMutex_);
+    executeInCmdQ_ = executeInCmdQ;
+}
+
 int32_t RecorderPipeline::Init()
 {
     if (desc_ == nullptr) {
@@ -442,13 +448,20 @@ void RecorderPipeline::StopForError(const RecorderMessage &msg)
                msg.code, msg.detail);
 
     errorState_.store(true);
-    (void)DoElemAction(&RecorderElement::Stop, false);
-    DrainBuffer(false);
-    (void)SyncWaitChangeState(GST_STATE_NULL);
-
-    isStarted_ = false;
     gstPipeCond_.notify_all();
 
+    auto stopforErrorTask = std::make_shared<TaskHandler<int32_t>>([this] {
+        (void)DoElemAction(&RecorderElement::Stop, false);
+        DrainBuffer(false);
+        (void)SyncWaitChangeState(GST_STATE_NULL);
+        return MSERR_OK;
+    });
+
+    std::unique_lock<std::mutex> lock(cmdQMutex_);
+    CHECK_AND_RETURN(executeInCmdQ_ != nullptr);
+    (void)executeInCmdQ_(stopforErrorTask, true);
+    
+    isStarted_ = false;
     NotifyMessage(msg);
 }
 

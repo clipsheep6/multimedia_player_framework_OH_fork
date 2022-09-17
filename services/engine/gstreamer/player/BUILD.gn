@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 config("media_engine_gst_player_config") {
   visibility = [ ":*" ]
@@ -68,6 +69,8 @@ config("media_engine_gst_player_config") {
     "//third_party/glib/gmodule",
     "//commonlibrary/c_utils/base/include",
   ]
+  defines = []
+  defines += player_framework_defines
 }
 
 ohos_static_library("media_engine_gst_player") {
@@ -81,14 +84,14 @@ ohos_static_library("media_engine_gst_player") {
   configs = [
     ":media_engine_gst_player_config",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx_public_config",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils_public_config",
   ]
 
   deps = [
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
     "//third_party/glib:gobject",

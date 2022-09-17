@@ -60,6 +60,7 @@ private:
     static void AsyncGetTrackDescription(napi_env env, void *data);
     void ErrorCallback(MediaServiceExtErrCode errCode, std::string errMsg = "unknown");
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
+    void CancelCallback();
     AudioPlayerNapi();
     ~AudioPlayerNapi();
 

@@ -102,7 +102,6 @@ private:
     static void ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userdata);
     static void ElementUnSetup(const GstElement *playbin, GstElement *subbin, GstElement *child, gpointer userdata);
     static void SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userdata);
-    static void OnVolumeChangedCb(const GstElement *playbin, GstElement *elem, gpointer userdata);
     static void OnBitRateParseCompleteCb(const GstElement *playbin, uint32_t *bitrateInfo,
         uint32_t bitrateNum, gpointer userdata);
     static GValueArray *AutoPlugSort(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
@@ -111,7 +110,6 @@ private:
         const uint32_t hintType, gpointer userdata);
     static void OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userdata);
     static void OnAudioErrorEventCb(const GstElement *audioSink, const gchar *errMsg, gpointer userdata);
-    void SetupVolumeChangedCb();
     void SetupInterruptEventCb();
     void SetupAudioStateEventCb();
     void SetupAudioErrorEventCb();
@@ -133,6 +131,7 @@ private:
     void HandleCacheCtrlCb(const InnerMessage &msg);
     void HandleCacheCtrlWhenNoBuffering(int32_t percent);
     void HandleCacheCtrlWhenBuffering(int32_t percent);
+    bool IsPrepareWaitEnable() const;
 
     std::mutex mutex_;
     std::mutex cacheCtrlMutex_;

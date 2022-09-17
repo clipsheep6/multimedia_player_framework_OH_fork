@@ -26,6 +26,7 @@
 #include "playbin_state.h"
 #include "gst_utils.h"
 #include "media_dfx.h"
+#include "param_wrapper.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinCtrlerBase"};
@@ -173,6 +174,21 @@ int32_t PlayBinCtrlerBase::SetSource(const std::shared_ptr<GstAppsrcWrap> &appsr
     return MSERR_OK;
 }
 
+bool PlayBinCtrlerBase::IsPrepareWaitEnable() const
+{
+    std::string enable;
+    int32_t res = OHOS::system::GetStringParameter("sys.media.player.prepare.wait", enable, "");
+    if (res != 0 || enable.empty()) {
+        return false;
+    }
+
+    MEDIA_LOGI("KPI-TRACE: sys.media.player.prepare.wait.enable=%{public}s", enable.c_str());
+    if (enable != "true") {
+        return false;
+    }
+    return true;
+}
+
 int32_t PlayBinCtrlerBase::Prepare()
 {
     MEDIA_LOGD("enter");
@@ -184,9 +200,16 @@ int32_t PlayBinCtrlerBase::Prepare()
 
     {
         std::unique_lock<std::mutex> condLock(condMutex_);
-        stateCond_.wait(condLock, [this]() {
-            return GetCurrState() == preparedState_ || isErrorHappened_;
-        });
+        if (IsPrepareWaitEnable()) {
+            stateCond_.wait(condLock, [this]() {
+                return GetCurrState() == preparedState_ || isErrorHappened_;
+            });
+        } else {
+            static constexpr int32_t timeout = 5;
+            stateCond_.wait_for(condLock, std::chrono::seconds(timeout), [this]() { // Prevent deadlock
+                return GetCurrState() == preparedState_ || isErrorHappened_;
+            });
+        }
     }
 
     if (GetCurrState() != preparedState_) {
@@ -520,19 +543,21 @@ void PlayBinCtrlerBase::SetAutoPlugSortListener(AutoPlugSortListener listener)
 
 void PlayBinCtrlerBase::DoInitializeForHttp()
 {
-    g_object_set(playbin_, "ring-buffer-max-size", RING_BUFFER_MAX_SIZE, nullptr);
-    g_object_set(playbin_, "buffering-flags", true, "buffer-size", PLAYBIN_QUEUE_MAX_SIZE,
-        "buffer-duration", BUFFER_DURATION, "low-percent", BUFFER_LOW_PERCENT_DEFAULT,
-        "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, nullptr);
-    g_object_set(playbin_, "timeout", HTTP_TIME_OUT_DEFAULT, nullptr);
+    if (isNetWorkPlay_) {
+        g_object_set(playbin_, "ring-buffer-max-size", RING_BUFFER_MAX_SIZE, nullptr);
+        g_object_set(playbin_, "buffering-flags", true, "buffer-size", PLAYBIN_QUEUE_MAX_SIZE,
+            "buffer-duration", BUFFER_DURATION, "low-percent", BUFFER_LOW_PERCENT_DEFAULT,
+            "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, nullptr);
+        g_object_set(playbin_, "timeout", HTTP_TIME_OUT_DEFAULT, nullptr);
 
-    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
-    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+        PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+        CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
 
-    gulong id = g_signal_connect_data(playbin_, "bitrate-parse-complete",
-        G_CALLBACK(&PlayBinCtrlerBase::OnBitRateParseCompleteCb), wrapper,
-        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
+        gulong id = g_signal_connect_data(playbin_, "bitrate-parse-complete",
+            G_CALLBACK(&PlayBinCtrlerBase::OnBitRateParseCompleteCb), wrapper,
+            (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+        (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
+    }
 }
 
 int32_t PlayBinCtrlerBase::EnterInitializedState()
@@ -670,17 +695,6 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
     return MSERR_OK;
 }
 
-void PlayBinCtrlerBase::SetupVolumeChangedCb()
-{
-    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
-    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
-
-    gulong id = g_signal_connect_data(audioSink_, "notify::volume",
-        G_CALLBACK(&PlayBinCtrlerBase::OnVolumeChangedCb), wrapper,
-        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(audioSink_), id });
-}
-
 void PlayBinCtrlerBase::SetupInterruptEventCb()
 {
     PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
@@ -721,7 +735,6 @@ void PlayBinCtrlerBase::SetupCustomElement()
         audioSink_ = sinkProvider_->CreateAudioSink();
         if (audioSink_ != nullptr) {
             g_object_set(playbin_, "audio-sink", audioSink_, nullptr);
-            SetupVolumeChangedCb();
             SetupInterruptEventCb();
             SetupAudioStateEventCb();
             SetupAudioErrorEventCb();
@@ -1081,20 +1094,6 @@ void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
 
     if (listener != nullptr) {
         listener(elem);
-    }
-}
-
-void PlayBinCtrlerBase::OnVolumeChangedCb(const GstElement *playbin, GstElement *elem, gpointer userdata)
-{
-    (void)playbin;
-    if (elem == nullptr || userdata == nullptr) {
-        return;
-    }
-
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
-    if (thizStrong != nullptr && thizStrong->GetCurrState() != thizStrong->preparingState_) {
-        PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_VOLUME_CHANGE, 0, {} };
-        thizStrong->ReportMessage(msg);
     }
 }
 
