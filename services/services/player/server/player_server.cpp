@@ -77,7 +77,7 @@ void VideoPlayerManager::UnRegisterVideoPlayer(PlayerServer *player)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (videoPlayerList.erase(player) == 0) {
-        MEDIA_LOGW("0x%{public}06" PRIXPTR " Not in videoPlayer list", FAKE_POINTER(player));
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Not in videoPlayer list", FAKE_POINTER(player));
     }
 }
 #endif
