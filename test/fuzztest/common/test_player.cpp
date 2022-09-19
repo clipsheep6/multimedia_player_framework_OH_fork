@@ -77,7 +77,7 @@ TestPlayer::~TestPlayer()
 sptr<Surface> TestPlayer::GetVideoSurface()
 {
     sptr<Rosen::WindowOption> option = new Rosen::WindowOption();
-    option->SetWindowRect({0, 0, 640, 480});
+    option->SetWindowRect({ 0, 0, 640, 480 });
     option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_LAUNCHING);
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
     previewWindow_ = Rosen::Window::Create("xcomponent_window_fuzztest", option);
