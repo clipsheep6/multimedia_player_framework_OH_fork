@@ -58,13 +58,6 @@ napi_value MediaCapsNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getVideoEncoderCaps", GetVideoEncoderCaps),
         DECLARE_NAPI_FUNCTION("findVideoEncoder", FindVideoEncoder),
 #endif
-#ifdef SUPPORT_RECORDER
-        DECLARE_NAPI_FUNCTION("getAudioRecorderCaps", GetAudioRecorderCaps),
-        DECLARE_NAPI_FUNCTION("isAudioRecoderConfigSupported", IsAudioRecoderConfigSupported),
-        DECLARE_NAPI_FUNCTION("getVideoRecorderCaps", GetVideoRecorderCaps),
-        DECLARE_NAPI_FUNCTION("getVideoRecorderProfile", GetVideoRecorderProfile),
-        DECLARE_NAPI_FUNCTION("hasVideoRecorderProfile", HasVideoRecorderProfile),
-#endif
 #ifdef SUPPORT_MUXER
         DECLARE_NAPI_FUNCTION("getAVMuxerFormatList", GetAVMuxerFormatList),
 #endif
@@ -594,7 +587,7 @@ napi_value MediaCapsNapi::GetAudioRecorderCaps(napi_env env, napi_callback_info 
     return result;
 }
 
-napi_value MediaCapsNapi::IsAudioRecoderConfigSupported(napi_env env, napi_callback_info info)
+napi_value MediaCapsNapi::IsAudioRecorderConfigSupported(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -622,7 +615,7 @@ napi_value MediaCapsNapi::IsAudioRecoderConfigSupported(napi_env env, napi_callb
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncCtx->napi));
 
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, "IsAudioRecoderConfigSupported", NAPI_AUTO_LENGTH, &resource);
+    napi_create_string_utf8(env, "IsAudioRecorderConfigSupported", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void* data) {
             auto asyncCtx = reinterpret_cast<MediaCapsAsyncContext *>(data);
@@ -633,7 +626,7 @@ napi_value MediaCapsNapi::IsAudioRecoderConfigSupported(napi_env env, napi_callb
                 asyncCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
                 return;
             }
-            bool outResult = RecorderProfilesFactory::CreateRecorderProfiles().IsAudioRecoderConfigSupported(
+            bool outResult = RecorderProfilesFactory::CreateRecorderProfiles().IsAudioRecorderConfigSupported(
                 asyncCtx->profile);
             asyncCtx->JsResult = std::make_unique<MediaJsResultBoolean>(outResult);
         },
