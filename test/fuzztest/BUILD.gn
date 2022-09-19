@@ -12,22 +12,23 @@
 # limitations under the License.
 
 ###############################################################################
+MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/test/fuzztest/"
 group("fuzztest") {
   testonly = true
   deps = []
   deps += [
     # deps file
-    "acodecconfigure_fuzzer:ACodecConfigureFuzzTest",
-    "acodecfile_fuzzer:ACodecFileFuzzTest",
-    "avmetadatafetchframeattime_fuzzer:AVmetadataFetchFrameAtTimeFuzzTest",
-    "avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
-    "avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",
-    "avmetadatasetsource_fuzzer:AVmetadataSetSource",
-    "playerfile_fuzzer:PlayerFileFuzzTest",
-    "playerseek_fuzzer:PlayerSeekFuzzTest",
-    "playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
-    "vcodecconfigure_fuzzer:VCodecConfigureFuzzTest",
-    "vcodecfile_fuzzer:VCodecFileFuzzTest",
+    "$MEDIA_ROOT_DIR/avcodec_fuzztest/acodecconfigure_fuzzer:ACodecConfigureFuzzTest",
+    "$MEDIA_ROOT_DIR/avcodec_fuzztest/acodecfile_fuzzer:ACodecFileFuzzTest",
+    "$MEDIA_ROOT_DIR/avcodec_fuzztest/vcodecconfigure_fuzzer:VCodecConfigureFuzzTest",
+    "$MEDIA_ROOT_DIR/avcodec_fuzztest/vcodecfile_fuzzer:VCodecFileFuzzTest",
+    "$MEDIA_ROOT_DIR/avmetadata_fuzztest/avmetadatafetchframeattime_fuzzer:AVmetadataFetchFrameAtTimeFuzzTest",
+    "$MEDIA_ROOT_DIR/avmetadata_fuzztest/avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
+    "$MEDIA_ROOT_DIR/avmetadata_fuzztest/avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",
+    "$MEDIA_ROOT_DIR/avmetadata_fuzztest/avmetadatasetsource_fuzzer:AVmetadataSetSourceFuzzTest",
+    "$MEDIA_ROOT_DIR/player_fuzztest/playerfile_fuzzer:PlayerFileFuzzTest",
+    "$MEDIA_ROOT_DIR/player_fuzztest/playerseek_fuzzer:PlayerSeekFuzzTest",
+    "$MEDIA_ROOT_DIR/player_fuzztest/playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
   ]
 }
 ###############################################################################
