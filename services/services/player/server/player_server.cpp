@@ -15,6 +15,7 @@
 
 #include "player_server.h"
 #include <map>
+#include <unordered_set>
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
@@ -24,6 +25,9 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
+#ifdef SUPPORT_VIDEO
+    constexpr uint32_t VIDEO_MAX_NUMBER = 13; // max video player
+#endif
 }
 
 namespace OHOS {
@@ -41,7 +45,45 @@ static const std::unordered_map<int32_t, std::string> STATUS_TO_STATUS_DESCRIPTI
     {PLAYER_STOPPED, "PLAYER_STOPPED"},
     {PLAYER_PLAYBACK_COMPLETE, "PLAYER_PLAYBACK_COMPLETE"},
 };
+#ifdef SUPPORT_VIDEO
+class VideoPlayerManager : public NoCopyable {
+public:
+    static VideoPlayerManager &GetInstance();
+    int32_t RegisterVideoPlayer(PlayerServer *player);
+    void UnRegisterVideoPlayer(PlayerServer *player);
+private:
+    VideoPlayerManager() = default;
+    ~VideoPlayerManager() = default;
+    std::unordered_set<PlayerServer *> videoPlayerList;
+    std::mutex mutex_;
+};
 
+VideoPlayerManager &VideoPlayerManager::GetInstance()
+{
+    static VideoPlayerManager instance;
+    return instance;
+}
+
+int32_t VideoPlayerManager::RegisterVideoPlayer(PlayerServer *player)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (videoPlayerList.find(player) != videoPlayerList.end()) {
+        return MSERR_OK;
+    }
+    CHECK_AND_RETURN_RET_LOG(videoPlayerList.size() < VIDEO_MAX_NUMBER, MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR,
+        "failed to start VideoPlayer");
+    videoPlayerList.insert(player);
+    return MSERR_OK;
+}
+
+void VideoPlayerManager::UnRegisterVideoPlayer(PlayerServer *player)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (videoPlayerList.erase(player) == 0) {
+        MEDIA_LOGI("0x%{public}06" PRIXPTR " Not in videoPlayer list", FAKE_POINTER(player));
+    }
+}
+#endif
 std::shared_ptr<IPlayerService> PlayerServer::Create()
 {
     std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
@@ -61,6 +103,9 @@ PlayerServer::PlayerServer()
 PlayerServer::~PlayerServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+#ifdef SUPPORT_VIDEO
+    VideoPlayerManager::GetInstance().UnRegisterVideoPlayer(this);
+#endif
 }
 
 void PlayerServer::ResetProcessor()
@@ -707,6 +752,8 @@ int32_t PlayerServer::SelectBitRate(uint32_t bitRate)
 int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(VideoPlayerManager::GetInstance().RegisterVideoPlayer(this) == MSERR_OK,
+        MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR, "video player is no more than 13");
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
 
     if (lastOpStatus_ != PLAYER_INITIALIZED) {
