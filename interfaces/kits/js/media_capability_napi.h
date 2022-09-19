@@ -47,7 +47,7 @@ private:
 #endif
 #ifdef SUPPORT_RECORDER
     static napi_value GetAudioRecorderCaps(napi_env env, napi_callback_info info);
-    static napi_value IsAudioRecoderConfigSupported(napi_env env, napi_callback_info info);
+    static napi_value IsAudioRecorderConfigSupported(napi_env env, napi_callback_info info);
     static napi_value GetVideoRecorderCaps(napi_env env, napi_callback_info info);
     static napi_value GetVideoRecorderProfile(napi_env env, napi_callback_info info);
     static napi_value HasVideoRecorderProfile(napi_env env, napi_callback_info info);

@@ -35,7 +35,7 @@ RecorderProfilesServiceProxy::~RecorderProfilesServiceProxy()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-bool RecorderProfilesServiceProxy::IsAudioRecoderConfigSupported(const RecorderProfilesData &profile)
+bool RecorderProfilesServiceProxy::IsAudioRecorderConfigSupported(const RecorderProfilesData &profile)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -49,7 +49,7 @@ bool RecorderProfilesServiceProxy::IsAudioRecoderConfigSupported(const RecorderP
     (void)RecorderProfilesParcel::Marshalling(data, profile);
     uint32_t code = static_cast<uint32_t>(RecorderProfilesServiceMsg::RECORDER_PROFILES_IS_AUDIO_RECORDER_SUPPORT);
     int32_t ret = Remote()->SendRequest(code, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, false, "IsAudioRecoderConfigSupported failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, false, "IsAudioRecorderConfigSupported failed");
     return reply.ReadBool();
 }
 
