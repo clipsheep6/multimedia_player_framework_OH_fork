@@ -91,29 +91,27 @@ sptr<Surface> TestPlayer::GetVideoSurface()
 
 int32_t TestPlayer::SetFdSource(const string &path)
 {
-    int32_t fd = open(path.c_str(), O_RDONLY);
-    if (fd < 0) {
+    int32_t fdValue = open(path.c_str(), O_RDONLY);
+    if (fdValue < 0) {
         cout << "Open file failed" << endl;
-        (void)close(fd);
+        (void)close(fdValue);
         return -1;
     }
-    int32_t offset = 0;
+    int32_t offsetValue = 0;
 
     struct stat64 buffer;
-    if (fstat64(fd, &buffer) != 0) {
+    if (fstat64(fdValue, &buffer) != 0) {
         cout << "Get file state failed" << endl;
-        (void)close(fd);
+        (void)close(fdValue);
         return -1;
     }
-    int64_t length = static_cast<int64_t>(buffer.st_size);
-    cout << "fd = " << fd << ", offset = " << offset << ", length = " << length << endl;
-
-    int32_t ret = player_->SetSource(fd, offset, length);
-    if (ret != 0) {
+    int64_t lengthValue = static_cast<int64_t>(buffer.st_size);
+    int32_t retValue = player_->SetSource(fdValue, offsetValue, lengthValue);
+    if (retValue != 0) {
         cout << "SetSource fail" << endl;
-        (void)close(fd);
+        (void)close(fdValue);
         return -1;
     }
-    (void)close(fd);
+    (void)close(fdValue);
     return 0;
 }
