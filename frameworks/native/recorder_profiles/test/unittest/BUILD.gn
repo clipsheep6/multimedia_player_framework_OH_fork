@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 module_output_path = "multimedia_player_framework/recorder_profiles"
 
@@ -45,7 +46,9 @@ ohos_unittest("recorder_profiles_unit_test") {
     "-Wunused-parameter",
   ]
 
-  sources = [ "recorder_profiles_unit_test.cpp" ]
+  if (multimedia_player_framework_support_recorder) {
+    sources = [ "recorder_profiles_unit_test.cpp" ]
+  }
 
   deps = [ "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client" ]
 }

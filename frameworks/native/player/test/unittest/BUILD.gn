@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 module_output_path = "multimedia_player_framework/player"
 
@@ -32,13 +33,14 @@ ohos_unittest("player_unit_test") {
     "-Werror",
   ]
 
-  sources = [
-    "//foundation/multimedia/player_framework/test/unittest/common/src/test_params_config.cpp",
-    "src/data_source/media_data_source_test_noseek.cpp",
-    "src/data_source/media_data_source_test_seekable.cpp",
-    "src/player_mock.cpp",
-    "src/player_unit_test.cpp",
-  ]
+  if (multimedia_player_framework_support_player) {
+    sources = [
+      "src/data_source/media_data_source_test_noseek.cpp",
+      "src/data_source/media_data_source_test_seekable.cpp",
+      "src/player_mock.cpp",
+      "src/player_unit_test.cpp",
+    ]
+  }
 
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
