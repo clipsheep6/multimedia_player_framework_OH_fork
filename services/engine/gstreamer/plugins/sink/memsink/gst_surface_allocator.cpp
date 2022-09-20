@@ -24,6 +24,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_surface_allocator_debug_category);
 #define gst_surface_allocator_parent_class parent_class
 G_DEFINE_TYPE(GstSurfaceAllocator, gst_surface_allocator, GST_TYPE_ALLOCATOR);
 
+using namespace OHOS;
 using namespace OHOS::Media;
 
 enum class VideoScaleType {
@@ -68,7 +69,8 @@ static bool gst_surface_request_buffer(const GstSurfaceAllocator *allocator, Gst
     int32_t wait_time = param.dont_wait ? 0 : INT_MAX; // wait forever or no wait.
     OHOS::BufferRequestConfig request_config = {
         param.width, param.height, stride_alignment, param.format,
-        static_cast<uint32_t>(param.usage) | HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA, wait_time
+        static_cast<uint64_t>(param.usage) | BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
+        wait_time
     };
     int32_t release_fence = -1;
     OHOS::SurfaceError ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config);
