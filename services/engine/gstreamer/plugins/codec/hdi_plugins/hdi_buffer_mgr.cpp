@@ -182,5 +182,26 @@ void HdiBufferMgr::NotifyAvailable()
         freeCond_.notify_all();
     }
 }
+
+void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
+{
+    GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffer);
+    if (bufferType == nullptr) {
+        MEDIA_LOGW("bufferType is null, set flag %{public}d to gstbuffer fail", flag);
+        return;
+    }
+    if (flag & OMX_BUFFERFLAG_EOS) {
+        bufferType->bufferFlag = BUFFER_FLAG_EOS;
+    } else if (flag & OMX_BUFFERFLAG_SYNCFRAME) {
+        bufferType->bufferFlag = BUFFER_FLAG_SYNC_FRAME;
+    } else if (flag & OMX_BUFFERFLAG_ENDOFFRAME) {
+        bufferType->bufferFlag = BUFFER_FLAG_PARTIAL_FRAME;
+    } else if (flag & OMX_BUFFERFLAG_CODECCONFIG) {
+        bufferType->bufferFlag = BUFFER_FLAG_CODEC_DATA;
+    } else {
+        bufferType->bufferFlag = BUFFER_FLAG_NONE;
+    }
+    MEDIA_LOGW("ljw set flag %{public}d to buffer %{public}d", flag, bufferType->bufferFlag);
+}
 }  // namespace Media
 }  // namespace OHOS

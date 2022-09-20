@@ -25,6 +25,7 @@
 #include "i_avcodec_engine.h"
 #include "media_errors.h"
 #include "surface.h"
+#include "buffer_type_meta.h"
 
 namespace OHOS {
 namespace Media {
@@ -86,6 +87,32 @@ public:
 
 protected:
     GstElement *sink_ = nullptr;
+    void GetFlagFromBuffer(GstBuffer *buffer, AVCodecBufferFlag &flag)
+    {
+        GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffer);
+        if (bufferType == nullptr) {
+            flag = AVCODEC_BUFFER_FLAG_NONE;
+            return;
+        }
+        switch (static_cast<BufferFlags>(bufferType->bufferFlag))
+        {
+            case BUFFER_FLAG_EOS:
+                flag = AVCODEC_BUFFER_FLAG_EOS;
+                break;
+            case BUFFER_FLAG_SYNC_FRAME:
+                flag = AVCODEC_BUFFER_FLAG_SYNC_FRAME;
+                break;
+            case BUFFER_FLAG_PARTIAL_FRAME:
+                flag = AVCODEC_BUFFER_FLAG_PARTIAL_FRAME;
+                break;
+            case BUFFER_FLAG_CODEC_DATA:
+                flag = AVCODEC_BUFFER_FLAG_CODEC_DATA;
+                break;
+            default:
+                flag = AVCODEC_BUFFER_FLAG_NONE;
+                break;
+        }
+    }
 };
 } // namespace Media
 } // namespace OHOS

@@ -50,7 +50,7 @@ public:
     void OnError(AVCodecErrorType errorType, int32_t errorCode) override
     {
         (void)errorType;
-        if (codec_ != nullptr) {
+        if (codec_ != nullptr && callback_.onError != nullptr) {
             int32_t extErr = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
             callback_.onError(codec_, extErr, userData_);
         }
@@ -58,7 +58,7 @@ public:
 
     void OnOutputFormatChanged(const Format &format) override
     {
-        if (codec_ != nullptr) {
+        if (codec_ != nullptr && callback_.onStreamChanged != nullptr) {
             OHOS::sptr<OH_AVFormat> object = new(std::nothrow) OH_AVFormat(format);
             // The object lifecycle is controlled by the current function stack
             callback_.onStreamChanged(codec_, reinterpret_cast<OH_AVFormat *>(object.GetRefPtr()), userData_);
@@ -67,7 +67,7 @@ public:
 
     void OnInputBufferAvailable(uint32_t index) override
     {
-        if (codec_ != nullptr) {
+        if (codec_ != nullptr && callback_.onNeedInputData != nullptr) {
             struct AudioDecoderObject *audioDecObj = reinterpret_cast<AudioDecoderObject *>(codec_);
             CHECK_AND_RETURN_LOG(audioDecObj->audioDecoder_ != nullptr, "audioDecoder_ is nullptr!");
             if (audioDecObj->isFlushing_.load() || audioDecObj->isStop_.load() || audioDecObj->isEOS_.load()) {
@@ -84,7 +84,7 @@ public:
 
     void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override
     {
-        if (codec_ != nullptr) {
+        if (codec_ != nullptr && callback_.onNeedOutputData != nullptr) {
             struct AudioDecoderObject *audioDecObj = reinterpret_cast<AudioDecoderObject *>(codec_);
             CHECK_AND_RETURN_LOG(audioDecObj->audioDecoder_ != nullptr, "audioDecoder_ is nullptr!");
             if (audioDecObj->isFlushing_.load() || audioDecObj->isStop_.load()) {

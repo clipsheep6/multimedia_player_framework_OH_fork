@@ -106,6 +106,7 @@ protected:
     virtual std::shared_ptr<HdiBufferWrap> GetCodecBuffer(GstBuffer *buffer);
     virtual void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<HdiBufferWrap> &codecBuffer);
     void NotifyAvailable();
+    void SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag);
 };
 } // namespace Media
 } // namespace OHOS
