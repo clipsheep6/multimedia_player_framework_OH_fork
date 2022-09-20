@@ -94,8 +94,7 @@ protected:
             flag = AVCODEC_BUFFER_FLAG_NONE;
             return;
         }
-        switch (static_cast<BufferFlags>(bufferType->bufferFlag))
-        {
+        switch (static_cast<BufferFlags>(bufferType->bufferFlag)) {
             case BUFFER_FLAG_EOS:
                 flag = AVCODEC_BUFFER_FLAG_EOS;
                 break;
