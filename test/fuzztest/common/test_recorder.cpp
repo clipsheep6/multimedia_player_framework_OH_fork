@@ -562,7 +562,7 @@ void TestRecorder::HDICreateYUVBuffer()
 
         char *tempBuffer = (char *)(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color, YUV_BUFFER_SIZE);
-        srand((int)time(nullptr));
+        srand(static_cast<int>time(nullptr));
         for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += (YUV_BUFFER_SIZE - 1)) {
             if (i >= YUV_BUFFER_SIZE - 1) {
                 break;
