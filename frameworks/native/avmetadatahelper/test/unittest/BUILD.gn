@@ -27,7 +27,7 @@ ohos_unittest("avmetadata_unit_test") {
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     "//foundation/window/window_manager/interfaces/innerkits/wm",
-    "//third_party/libjpeg",
+    "//third_party/libjpeg-turbo",
     "//foundation/multimedia/player_framework/frameworks/native/player",
     "//foundation/multimedia/player_framework/test/unittest/common/include",
   ]
