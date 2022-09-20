@@ -87,7 +87,7 @@ extern "C" GstBuffer *SurfaceBufferToGstBuffer(void *surface, guint width, guint
     requestConfig.height = static_cast<int32_t>(height);
     requestConfig.strideAlignment = DEFAULT_HDI_ALIGNMENT;
     requestConfig.format = static_cast<int32_t>(PIXEL_FMT_YCRCB_420_SP);
-    requestConfig.usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA;
+    requestConfig.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA;
     requestConfig.timeout = 0;
     SurfaceError ret = producerSurface->RequestBuffer(surfaceBuffer, releaseFence, requestConfig);
     if (ret != SURFACE_ERROR_OK) {
