@@ -31,7 +31,7 @@ ohos_executable("media_demo") {
     "//graphic/graphic_2d/interfaces/innerkits/surface",
     "//foundation/graphic/graphic_2d/utils/sync_fence/export",
     "//drivers/peripheral/display/interfaces/include",
-    "//foundation/multimedia/image_standard/interfaces/innerkits/include",
+    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     "//foundation/window/window_manager/interfaces/innerkits/wm",
     "//third_party/libjpeg-turbo",
   ]
@@ -96,7 +96,7 @@ ohos_executable("media_demo") {
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
-    "//foundation/multimedia/image_standard/interfaces/innerkits:image_native",
+    "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//foundation/window/window_manager/wm:libwm",
     "//third_party/libjpeg-turbo:turbojpeg_static",
