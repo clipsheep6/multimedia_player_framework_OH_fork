@@ -47,7 +47,7 @@ namespace PlayerTestParam {
     int32_t ProduceRandomNumberCrypt(void);
 } // namespace PlayerTestParam
 namespace RecorderTestParam {
-    struct VideoRecorderConfig {
+    struct VideoRecorderConfig_ {
         int32_t audioSourceId = 0;
         int32_t videoSourceId = 0;
         int32_t dataSourceId = 0;
@@ -68,7 +68,7 @@ namespace RecorderTestParam {
         VideoSourceType vSource = VIDEO_SOURCE_SURFACE_YUV;
         VideoCodecFormat videoFormat = MPEG4;
     };
-    struct AudioRecorderConfig {
+    struct AudioRecorderConfig_ {
         int32_t outputFd = 0;
         int32_t audioSourceId = 0;
         int32_t audioEncodingBitRate = 48000;

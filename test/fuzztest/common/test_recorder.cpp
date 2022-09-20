@@ -131,7 +131,7 @@ TestRecorder::~TestRecorder()
 {
 }
 
-bool TestRecorder::SetVideoSource(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetVideoSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetVideoSource(recorderConfig.vSource, recorderConfig.videoSourceId);
     if (retValue != 0) {
@@ -142,7 +142,7 @@ bool TestRecorder::SetVideoSource(RecorderTestParam::VideoRecorderConfig &record
     return true;
 }
 
-bool TestRecorder::SetAudioSource(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetAudioSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetAudioSource(recorderConfig.aSource, recorderConfig.audioSourceId);
     if (retValue != 0) {
@@ -153,7 +153,7 @@ bool TestRecorder::SetAudioSource(RecorderTestParam::VideoRecorderConfig &record
     return true;
 }
 
-bool TestRecorder::SetOutputFormat(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetOutputFormat(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetOutputFormat(recorderConfig.outPutFormat);
     if (retValue != 0) {
@@ -164,7 +164,7 @@ bool TestRecorder::SetOutputFormat(RecorderTestParam::VideoRecorderConfig &recor
     return true;
 }
 
-bool TestRecorder::SetAudioEncoder(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetAudioEncoder(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetAudioEncoder(recorderConfig.audioSourceId, recorderConfig.audioFormat);
     if (retValue != 0) {
@@ -175,7 +175,7 @@ bool TestRecorder::SetAudioEncoder(RecorderTestParam::VideoRecorderConfig &recor
     return true;
 }
 
-bool TestRecorder::SetAudioSampleRate(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetAudioSampleRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetAudioSampleRate(recorderConfig.audioSourceId, recorderConfig.sampleRate);
     if (retValue != 0) {
@@ -186,7 +186,7 @@ bool TestRecorder::SetAudioSampleRate(RecorderTestParam::VideoRecorderConfig &re
     return true;
 }
 
-bool TestRecorder::SetAudioChannels(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetAudioChannels(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetAudioChannels(recorderConfig.audioSourceId, recorderConfig.channelCount);
     if (retValue != 0) {
@@ -197,7 +197,7 @@ bool TestRecorder::SetAudioChannels(RecorderTestParam::VideoRecorderConfig &reco
     return true;
 }
 
-bool TestRecorder::SetAudioEncodingBitRate(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetAudioEncodingBitRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetAudioEncodingBitRate(recorderConfig.audioSourceId,
         recorderConfig.audioEncodingBitRate);
@@ -209,7 +209,7 @@ bool TestRecorder::SetAudioEncodingBitRate(RecorderTestParam::VideoRecorderConfi
     return true;
 }
 
-bool TestRecorder::SetMaxDuration(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetMaxDuration(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetMaxDuration(recorderConfig.duration);
     if (retValue != 0) {
@@ -220,7 +220,7 @@ bool TestRecorder::SetMaxDuration(RecorderTestParam::VideoRecorderConfig &record
     return true;
 }
 
-bool TestRecorder::SetOutputFile(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetOutputFile(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetOutputFile(recorderConfig.outputFd);
     if (retValue != 0) {
@@ -231,7 +231,7 @@ bool TestRecorder::SetOutputFile(RecorderTestParam::VideoRecorderConfig &recorde
     return true;
 }
 
-bool TestRecorder::SetRecorderCallback(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetRecorderCallback(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     std::shared_ptr<TestRecorderCallbackTest> cb = std::make_shared<TestRecorderCallbackTest>();
     int32_t retValue = recorder->SetRecorderCallback(cb);
@@ -243,7 +243,7 @@ bool TestRecorder::SetRecorderCallback(RecorderTestParam::VideoRecorderConfig &r
     return true;
 }
 
-bool TestRecorder::Prepare(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::Prepare(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->Prepare();
     if (retValue != 0) {
@@ -254,7 +254,7 @@ bool TestRecorder::Prepare(RecorderTestParam::VideoRecorderConfig &recorderConfi
     return true;
 }
 
-bool TestRecorder::Start(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::Start(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->Start();
     if (retValue != 0) {
@@ -265,7 +265,7 @@ bool TestRecorder::Start(RecorderTestParam::VideoRecorderConfig &recorderConfig)
     return true;
 }
 
-bool TestRecorder::Stop(bool block, RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::Stop(bool block, RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->Stop(block);
     if (retValue != 0) {
@@ -276,7 +276,7 @@ bool TestRecorder::Stop(bool block, RecorderTestParam::VideoRecorderConfig &reco
     return true;
 }
 
-bool TestRecorder::Reset(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::Reset(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->Reset();
     if (retValue != 0) {
@@ -287,7 +287,7 @@ bool TestRecorder::Reset(RecorderTestParam::VideoRecorderConfig &recorderConfig)
     return true;
 }
 
-bool TestRecorder::Release(RecorderTestParam::VideoRecorderConfig &recorderConfig)
+bool TestRecorder::Release(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->Release();
     if (retValue != 0) {
@@ -307,7 +307,7 @@ bool TestRecorder::CreateRecorder()
     return true;
 }
 
-bool TestRecorder::SetVideoEncoder(VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetVideoEncoder(VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetVideoEncoder(recorderConfig.videoSourceId,
         recorderConfig.videoFormat);
@@ -319,7 +319,7 @@ bool TestRecorder::SetVideoEncoder(VideoRecorderConfig &recorderConfig)
     return true;
 }
 
-bool TestRecorder::SetVideoSize(VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetVideoSize(VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetVideoSize(recorderConfig.videoSourceId,
         recorderConfig.width, recorderConfig.height);
@@ -331,7 +331,7 @@ bool TestRecorder::SetVideoSize(VideoRecorderConfig &recorderConfig)
     return true;
 }
 
-bool TestRecorder::SetVideoFrameRate(VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetVideoFrameRate(VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetVideoFrameRate(recorderConfig.videoSourceId,
         recorderConfig.frameRate);
@@ -343,7 +343,7 @@ bool TestRecorder::SetVideoFrameRate(VideoRecorderConfig &recorderConfig)
     return true;
 }
 
-bool TestRecorder::SetVideoEncodingBitRate(VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetVideoEncodingBitRate(VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetVideoEncodingBitRate(recorderConfig.videoSourceId,
         recorderConfig.videoEncodingBitRate);
@@ -355,7 +355,7 @@ bool TestRecorder::SetVideoEncodingBitRate(VideoRecorderConfig &recorderConfig)
     return true;
 }
 
-bool TestRecorder::SetCaptureRate(VideoRecorderConfig &recorderConfig, double fps)
+bool TestRecorder::SetCaptureRate(VideoRecorderConfig_ &recorderConfig, double fps)
 {
     int32_t retValue = recorder->SetCaptureRate(recorderConfig.videoSourceId, fps);
     if (retValue != 0) {
@@ -366,7 +366,7 @@ bool TestRecorder::SetCaptureRate(VideoRecorderConfig &recorderConfig, double fp
     return true;
 }
 
-bool TestRecorder::SetNextOutputFile(VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetNextOutputFile(VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetNextOutputFile(recorderConfig.outputFd);
     if (retValue != 0) {
@@ -377,7 +377,7 @@ bool TestRecorder::SetNextOutputFile(VideoRecorderConfig &recorderConfig)
     return true;
 }
 
-bool TestRecorder::SetMaxFileSize(int64_t size, VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetMaxFileSize(int64_t size, VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetMaxFileSize(size);
     if (retValue != 0) {
@@ -388,7 +388,7 @@ bool TestRecorder::SetMaxFileSize(int64_t size, VideoRecorderConfig &recorderCon
     return true;
 }
 
-bool TestRecorder::GetSurface(VideoRecorderConfig &recorderConfig)
+bool TestRecorder::GetSurface(VideoRecorderConfig_ &recorderConfig)
 {
     OHOS::sptr<OHOS::Surface> retValue = recorder->GetSurface(recorderConfig.videoSourceId);
     if (retValue == nullptr) {
@@ -399,7 +399,7 @@ bool TestRecorder::GetSurface(VideoRecorderConfig &recorderConfig)
     return true;
 }
 
-bool TestRecorder::CameraServicesForVideo(VideoRecorderConfig &recorderConfig)
+bool TestRecorder::CameraServicesForVideo(VideoRecorderConfig_ &recorderConfig)
 {
     RETURN_IF(TestRecorder::SetVideoEncoder(recorderConfig), false);
     RETURN_IF(TestRecorder::SetVideoSize(recorderConfig), false);
@@ -408,7 +408,7 @@ bool TestRecorder::CameraServicesForVideo(VideoRecorderConfig &recorderConfig)
     return true;
 }
 
-bool TestRecorder::CameraServicesForAudio(VideoRecorderConfig &recorderConfig)
+bool TestRecorder::CameraServicesForAudio(VideoRecorderConfig_ &recorderConfig)
 {
     RETURN_IF(TestRecorder::SetAudioEncoder(recorderConfig), false);
     RETURN_IF(TestRecorder::SetAudioSampleRate(recorderConfig), false);
@@ -418,7 +418,7 @@ bool TestRecorder::CameraServicesForAudio(VideoRecorderConfig &recorderConfig)
 }
 
 bool TestRecorder::SetFileSplitDuration(FileSplitType type, int64_t timestamp,
-    uint32_t duration, VideoRecorderConfig &recorderConfig)
+    uint32_t duration, VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetFileSplitDuration(type, timestamp, duration);
     if (retValue != 0) {
@@ -429,7 +429,7 @@ bool TestRecorder::SetFileSplitDuration(FileSplitType type, int64_t timestamp,
     return true;
 }
 
-bool TestRecorder::SetParameter(int32_t sourceId, const Format &format, VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetParameter(int32_t sourceId, const Format &format, VideoRecorderConfig_ &recorderConfig)
 {
     int32_t retValue = recorder->SetParameter(sourceId, format);
     if (retValue != 0) {
@@ -440,7 +440,7 @@ bool TestRecorder::SetParameter(int32_t sourceId, const Format &format, VideoRec
     return true;
 }
 
-bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig &recorderConfig)
+bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig_ &recorderConfig)
 {
     if (recorderType != PURE_AUDIO) {
         RETURN_IF(TestRecorder::GetSurface(recorderConfig), false);
@@ -593,7 +593,7 @@ void TestRecorder::StopBuffer(const std::string &recorderType)
     }
 }
 
-bool TestRecorder::SetConfig(const std::string &recorderType, VideoRecorderConfig &recorderConfig)
+bool TestRecorder::SetConfig(const std::string &recorderType, VideoRecorderConfig_ &recorderConfig)
 {
     if (recorderType == PURE_VIDEO) {
         RETURN_IF(TestRecorder::SetVideoSource(recorderConfig), false);
