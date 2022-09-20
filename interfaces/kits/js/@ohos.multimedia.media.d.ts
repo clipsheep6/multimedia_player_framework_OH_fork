@@ -459,7 +459,7 @@ declare namespace media {
      * set payback speed.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param speed playback speed, see @PlaybackSpeed .
+     * @param speed playback speed, see @AVPlayerSpeed .
      * @throws {BusinessError} if type of speed is not number or not in PlaybackSpeed.
      */
      setSpeed(speed:number): void;
