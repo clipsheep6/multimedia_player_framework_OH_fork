@@ -234,6 +234,28 @@ declare namespace media {
   }
 
   /**
+   * Enumerates state change reason.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   * @import import media from '@ohos.multimedia.media'
+   */
+   enum StateChangeReason {
+    /**
+     * state change by user operation
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.Core
+     */
+    USER = 1,
+
+    /**
+     * state change by system manager
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.Core
+     */
+    SYSTEM = 2,
+  }
+
+  /**
    * Describes media playback states.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.AVPlayer
@@ -461,7 +483,7 @@ declare namespace media {
       * @param type Type of the playback event to listen for.
       * @param callback Callback used to listen for the playback stateChange event.
       */
-     on(type: 'stateChange', callback: (state: AVPlayerState, causedByUser: boolean) => void): void;
+     on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
      /**
       * Listens for media playback events.
       * @since 9
@@ -673,7 +695,7 @@ declare namespace media {
      * @param type Type of the audio recording event to listen for.
      * @param callback Callback used to listen for the audio recording event.
      */
-     on(type: 'stateChange', callback: (state: MediaRecorderState, causedByUser: boolean) => void): void;
+     on(type: 'stateChange', callback: (state: AVRecorderState, reason: StateChangeReason) => void): void;
 
     /**
      * Listens for audio recording error events.
