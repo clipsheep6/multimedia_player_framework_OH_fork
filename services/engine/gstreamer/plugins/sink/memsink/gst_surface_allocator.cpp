@@ -24,6 +24,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_surface_allocator_debug_category);
 #define gst_surface_allocator_parent_class parent_class
 G_DEFINE_TYPE(GstSurfaceAllocator, gst_surface_allocator, GST_TYPE_ALLOCATOR);
 
+using namespace OHOS;
 using namespace OHOS::Media;
 
 enum class VideoScaleType {

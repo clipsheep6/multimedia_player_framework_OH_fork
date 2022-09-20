@@ -27,6 +27,7 @@
 #include "display_type.h"
 
 using namespace std;
+using namespace OHOS;
 using namespace OHOS::Media;
 using namespace testing::ext;
 using namespace OHOS::Media::RecorderTestParam;
