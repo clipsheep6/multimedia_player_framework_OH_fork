@@ -23,7 +23,7 @@ import audio from "./@ohos.multimedia.audio";
  */
 declare namespace media {
   /**
-   * Creates an AudioPlayer instance.
+   * Creates an AudioPlayer instance, it will be deprecated after API10, use @createAVPlayer to replace.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
    * @import import media from '@ohos.multimedia.media'
@@ -32,7 +32,7 @@ declare namespace media {
   function createAudioPlayer(): AudioPlayer;
 
   /**
-   * Creates an AudioRecorder instance.
+   * Creates an AudioRecorder instance, it will be deprecated after API10, use @createAVRecorder to replace.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    * @import import media from '@ohos.multimedia.media'
@@ -41,7 +41,7 @@ declare namespace media {
   function createAudioRecorder(): AudioRecorder;
 
   /**
-   * Creates an VideoPlayer instance.
+   * Creates an VideoPlayer instance, it will be deprecated after API10, use @createAVPlayer to replace.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @import import media from '@ohos.multimedia.media'
@@ -49,7 +49,7 @@ declare namespace media {
    */
   function createVideoPlayer(callback: AsyncCallback<VideoPlayer>): void;
   /**
-   * Creates an VideoPlayer instance.
+   * Creates an VideoPlayer instance, it will be deprecated after API10, use @createAVPlayer to replace.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @import import media from '@ohos.multimedia.media'
@@ -94,7 +94,8 @@ declare namespace media {
    function createAVRecorder() : Promise<AVRecorder>;
 
   /**
-   * Enumerates ErrorCode types, return in BusinessError::code
+   * Enumerates ErrorCode types, return in BusinessError::code, it will be deprecated after API10,
+   * see ErrorCode in wiki.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.Core
    * @import import media from '@ohos.multimedia.media'
@@ -588,6 +589,7 @@ declare namespace media {
       */
      on(type: 'error', callback: ErrorCallback): void;
    }
+
   /**
    * Describes media recorder states.
    * @since 9
@@ -597,8 +599,8 @@ declare namespace media {
    type AVRecorderState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'released' | 'error';
 
   /**
-   * Manages and record audio/video. Before calling an MediaRecorder method, you must use createMediaRecorder()
-   * to create an MediaRecorder instance.
+   * Manages and record audio/video. Before calling an AVRecorder method, you must use createAVRecorder()
+   * to create an AVRecorder instance.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.AVRecorder
    */
@@ -708,7 +710,7 @@ declare namespace media {
   }
 
   /**
-   * Describes audio playback states.
+   * Describes audio playback states, it will be deprecated after API10, use @AVPlayerState instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
    * @import import media from '@ohos.multimedia.media'
@@ -717,7 +719,7 @@ declare namespace media {
 
   /**
    * Manages and plays audio. Before calling an AudioPlayer method, you must use createAudioPlayer()
-   * to create an AudioPlayer instance.
+   * to create an AudioPlayer instance, it will be deprecated after API10, use @AVPlayer instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
    */
@@ -997,7 +999,8 @@ declare namespace media {
   }
 
   /**
-   * Provides the audio recorder configuration definitions.
+   * Provides the audio recorder configuration definitions, it will be deprecated after API10,
+   * use @AVRecorderConfig instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    */
@@ -1074,7 +1077,7 @@ declare namespace media {
 
   /**
    * Manages and record audio. Before calling an AudioRecorder method, you must use createAudioRecorder()
-   * to create an AudioRecorder instance.
+   * to create an AudioRecorder instance, it will be deprecated after API10, use @AVRecorder instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    */
@@ -1152,14 +1155,14 @@ declare namespace media {
   }
 
   /**
-   * Describes video playback states.
+   * Describes video playback states, it will be deprecated after API10, use @AVPlayerState instead.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    */
   type VideoPlayState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'error';
 
   /**
-   * Enumerates playback speed.
+   * Enumerates playback speed, it will be deprecated after API10, use @AVPlayerSpeed instead.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    */
@@ -1197,8 +1200,46 @@ declare namespace media {
   }
 
   /**
+   * Enumerates AVPlayer speed.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.AVPlayer
+   */
+   enum AVPlayerSpeed {
+    /**
+     * playback at 0.75x normal speed
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    SPEED_FORWARD_0_75_X = 0,
+    /**
+     * playback at normal speed
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    SPEED_FORWARD_1_00_X = 1,
+    /**
+     * playback at 1.25x normal speed
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    SPEED_FORWARD_1_25_X = 2,
+    /**
+     * playback at 1.75x normal speed
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    SPEED_FORWARD_1_75_X = 3,
+    /**
+     * playback at 2.0x normal speed
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    SPEED_FORWARD_2_00_X = 4,
+  }
+
+  /**
    * Manages and plays video. Before calling an video method, you must use createVideoPlayer() to create an VideoPlayer
-   * instance.
+   * instance, it will be deprecated after API10, use @AVPlayer instead.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @import import media from '@ohos.multimedia.media'
@@ -1518,25 +1559,6 @@ declare namespace media {
      * @param callback Callback used to listen for the playback event return video size.
      */
     on(type: 'videoSizeChanged', callback: (width: number, height: number) => void): void;
-
-    /**
-     * Listens for audio interrupt event, refer to {@link #audio.InterruptEvent}
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
-     * @param type Type of the playback event to listen for.
-     * @param callback Callback used to listen for the playback event return audio interrupt info.
-     */
-    on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
-
-    /**
-     * Listens for available bitrates collect completed events for HLS protocal stream playback.
-     * This event will be reported after the {@link #prepare} called.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
-     * @param type Type of the playback event to listen for.
-     * @param callback Callback used to listen for the playback event return available bitrates.
-     */
-    on(type: 'availableBitratesCollect', callback: (bitrates: Array<number>) => void): void;
 
     /**
      * Listens for playback error events.
