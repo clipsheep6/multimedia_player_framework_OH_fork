@@ -89,6 +89,13 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
 
 bool FuzzTestAVMetadataSetSource(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(int64_t)) {
+        return 0;
+    }
     AVMetadataSetSourceFuzzer metadata;
     return metadata.FuzzAVMetadataSetSource(data, size);
 }

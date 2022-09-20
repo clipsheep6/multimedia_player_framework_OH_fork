@@ -45,7 +45,42 @@ namespace Media {
 namespace PlayerTestParam {
     int32_t WriteDataToFile(const std::string &path, const std::uint8_t *data, std::size_t size);
     int32_t ProduceRandomNumberCrypt(void);
-}
-}
-}
+} // namespace PlayerTestParam
+namespace RecorderTestParam {
+    struct VideoRecorderConfig {
+        int32_t audioSourceId = 0;
+        int32_t videoSourceId = 0;
+        int32_t dataSourceId = 0;
+        int32_t audioEncodingBitRate = 48000;
+        int32_t channelCount = 2;
+        int32_t duration = 60;
+        int32_t width = 1280;
+        int32_t height = 768;
+        int32_t frameRate = 30;
+        int32_t videoEncodingBitRate = 48000;
+        int32_t sampleRate = 48000;
+        double captureFps = 30;
+        int32_t outputFd = 0;
+        AudioCodecFormat audioFormat = AAC_LC;
+        AudioSourceType aSource = AUDIO_MIC;
+        DataSourceType dataType = METADATA;
+        OutputFormatType outPutFormat = FORMAT_MPEG_4;
+        VideoSourceType vSource = VIDEO_SOURCE_SURFACE_YUV;
+        VideoCodecFormat videoFormat = MPEG4;
+    };
+    struct AudioRecorderConfig {
+        int32_t outputFd = 0;
+        int32_t audioSourceId = 0;
+        int32_t audioEncodingBitRate = 48000;
+        int32_t channelCount = 2;
+        int32_t duration = 60;
+        int32_t sampleRate = 48000;
+        AudioCodecFormat audioFormat = AAC_LC;
+        AudioSourceType inputSource = AUDIO_MIC;
+        OutputFormatType outPutFormat = FORMAT_M4A;
+    };
+} // namespace RecorderTestParam
+} // namespace Media
+} // namespace OHOS
+
 #endif

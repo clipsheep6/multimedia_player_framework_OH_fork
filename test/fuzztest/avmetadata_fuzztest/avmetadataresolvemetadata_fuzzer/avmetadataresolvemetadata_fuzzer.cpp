@@ -82,6 +82,13 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
 
 bool FuzzTestAVMetadataResolveMetadata(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(int64_t)) {
+        return 0;
+    }
     AVMetadataResolveMetadataFuzzer metadata;
     return metadata.FuzzAVMetadataResolveMetadata(data, size);
 }

@@ -79,6 +79,9 @@ bool AVMetadataFileFuzzer::FuzzAVMetadataFile(uint8_t *data, size_t size)
 
 bool FuzzTestavMetadataFile(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
     AVMetadataFileFuzzer metadata;
     return metadata.FuzzAVMetadataFile(data, size);
 }
