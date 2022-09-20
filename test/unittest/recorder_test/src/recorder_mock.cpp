@@ -48,7 +48,7 @@ static OHOS::BufferRequestConfig g_esRequestConfig = {
     .height = CODEC_BUFFER_HEIGHT,
     .strideAlignment = STRIDE_ALIGN,
     .format = PIXEL_FMT_RGBA_8888,
-    .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+    .usage =  OHOS::BUFFER_USAGE_CPU_READ |  OHOS::BUFFER_USAGE_CPU_WRITE,
     .timeout = 0
 };
 
@@ -69,7 +69,7 @@ static OHOS::BufferRequestConfig g_yuvRequestConfig = {
     .height = YUV_BUFFER_HEIGHT,
     .strideAlignment = STRIDE_ALIGN,
     .format = PIXEL_FMT_YCRCB_420_SP,
-    .usage = HBM_USE_CPU_READ | HBM_USE_CPU_WRITE | HBM_USE_MEM_DMA,
+    .usage =  OHOS::BUFFER_USAGE_CPU_READ |  OHOS::BUFFER_USAGE_CPU_WRITE,
     .timeout = 0
 };
 void RecorderCallbackTest::OnError(RecorderErrorType errorType, int32_t errorCode)
