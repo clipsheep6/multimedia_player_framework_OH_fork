@@ -129,8 +129,7 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
                 gst_buffer_resize(iter->second, buffer->offset, buffer->filledLen);
             }
             bufferWarp.gstBuffer = iter->second;
-            MEDIA_LOGD("ljw buffer.flag = %{public}d", buffer->flag);
-            SetFlagToBuffer(bufferWarp.gstBuffer, buffer->flag); // set flag from meta
+            SetFlagToBuffer(bufferWarp.gstBuffer, buffer->flag);
             mBuffers.push_back(bufferWarp);
             (void)codingBuffers_.erase(iter);
             break;

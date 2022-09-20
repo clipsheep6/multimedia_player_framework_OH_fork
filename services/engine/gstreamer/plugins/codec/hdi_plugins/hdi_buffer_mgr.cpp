@@ -201,7 +201,6 @@ void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
     } else {
         bufferType->bufferFlag = BUFFER_FLAG_NONE;
     }
-    MEDIA_LOGW("ljw set flag %{public}d to buffer %{public}d", flag, bufferType->bufferFlag);
 }
 }  // namespace Media
 }  // namespace OHOS
