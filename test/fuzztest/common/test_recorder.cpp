@@ -513,7 +513,7 @@ void TestRecorder::HDICreateESBuffer()
         (void)memcpy_s(addrGetVirAddr, *frameLenArray, tempBuffer, *frameLenArray);
 
         if (isStart_.load()) {
-            pts=GetPts();
+            pts = GetPts();
             isStart_.store(false);
         }
 
