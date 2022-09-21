@@ -129,6 +129,7 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
                 gst_buffer_resize(iter->second, buffer->offset, buffer->filledLen);
             }
             bufferWarp.gstBuffer = iter->second;
+            SetFlagToBuffer(bufferWarp.gstBuffer, buffer->flag);
             mBuffers.push_back(bufferWarp);
             (void)codingBuffers_.erase(iter);
             break;
