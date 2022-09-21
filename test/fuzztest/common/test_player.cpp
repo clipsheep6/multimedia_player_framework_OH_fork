@@ -108,7 +108,6 @@ int32_t TestPlayer::SetFdSource(const string &path)
     int64_t lengthValue = static_cast<int64_t>(buffer.st_size);
     int32_t retValue = player_->SetSource(fdValue, offsetValue, lengthValue);
     if (retValue != 0) {
-        cout << "SetSource fail" << endl;
         (void)close(fdValue);
         return -1;
     }
