@@ -488,12 +488,8 @@ void TestRecorder::HDICreateESBuffer()
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError retValue = producerSurface->RequestBuffer(buffer, releaseFence, g_esRequestConfig);
-        if (retValue == OHOS::SURFACE_ERROR_NO_BUFFER) {
-            continue;
-        }
-        if (retValue == SURFACE_ERROR_OK && buffer != nullptr) {
-            break;
-        }
+        DO_IF(retValue == OHOS::SURFACE_ERROR_NO_BUFFER, continue);
+        DO_IF(retValue == SURFACE_ERROR_OK && buffer != nullptr, break);
 
         sptr<SyncFence> syncFence = new SyncFence(releaseFence);
         syncFence->Wait(100); // 100ms
@@ -517,7 +513,7 @@ void TestRecorder::HDICreateESBuffer()
         (void)memcpy_s(addrGetVirAddr, *frameLenArray, tempBuffer, *frameLenArray);
 
         if (isStart_.load()) {
-            pts= GetPts();
+            pts=GetPts();
             isStart_.store(false);
         }
 
@@ -537,10 +533,9 @@ void TestRecorder::HDICreateESBuffer()
 
 void TestRecorder::HDICreateYUVBuffer()
 {
-    constexpr int32_t COUNT_ABSTRACT = 3;
-    constexpr int32_t COUNT_SPLIT = 30;
-    constexpr int32_t COUNT_COLOR = 255;
-    constexpr int32_t TIME_WAIT = 100;
+    constexpr int32_t countAbstract = 3;
+    constexpr int32_t countSplit = 30;
+    constexpr int32_t countColor = 255;
     while (nowFrame < STUB_STREAM_SIZE) {
         if (!isExit_.load()) {
             break;
@@ -558,7 +553,7 @@ void TestRecorder::HDICreateYUVBuffer()
         }
 
         sptr<SyncFence> syncFence = new SyncFence(releaseFence);
-        syncFence->Wait(TIME_WAIT);
+        syncFence->Wait(timeWait);  // 100ms
 
         char *tempBuffer = (char *)(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color, YUV_BUFFER_SIZE);
@@ -566,10 +561,10 @@ void TestRecorder::HDICreateYUVBuffer()
             if (i >= YUV_BUFFER_SIZE - 1) {
                 break;
             }
-            tempBuffer[i] = static_cast<unsigned char>(PlayerTestParam::ProduceRandomNumberCrypt() % COUNT_COLOR);
+            tempBuffer[i] = static_cast<unsigned char>(PlayerTestParam::ProduceRandomNumberCrypt() % countColor);
         }
 
-        color = color - COUNT_ABSTRACT;
+        color = color - countAbstract;
 
         if (color <= 0) {
             color = 0xFF;
@@ -580,7 +575,7 @@ void TestRecorder::HDICreateYUVBuffer()
         (void)buffer->GetExtraData()->ExtraSet("timeStamp", pts);
         (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
         nowFrame++;
-        (nowFrame % COUNT_SPLIT) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0);
+        (nowFrame % countSplit) == 0 ? (isKeyFrame = 1) : (isKeyFrame = 0);
         (void)producerSurface->FlushBuffer(buffer, -1, g_yuvFlushConfig);
     }
 }

@@ -28,6 +28,12 @@ do {                                     \
         return ret;                      \
     }                                    \
 } while (0)
+#define DO_IF(cond, ret, ...)            \
+do {                                     \
+    if (cond) {                          \
+        ret;                             \
+    }                                    \
+} while (0)
 
 class TestRecorder : public NoCopyable {
 public:
