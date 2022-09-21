@@ -14,9 +14,9 @@
  */
 
 #include <fcntl.h>
-#include "avmetadata_mock.h"
 #include "gtest/gtest.h"
 #include "media_errors.h"
+#include "avmetadata_mock.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
