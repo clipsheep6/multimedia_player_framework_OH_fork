@@ -45,52 +45,47 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
 
     avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
-        cout << "avmetadata is null" << endl;
         avmetadata->Release();
         return false;
     }
 
     const string path = "/data/test/media/H264_AAC.mp4";
     if (MetaDataSetSource(path) != 0) {
-        cout << "avmetadata SetSource file" << endl;
         avmetadata->Release();
         return false;
     }
 
-    if (size >= sizeof(int64_t)) {
-        int32_t avMetadataQueryOption[AV_METADATA_QUERY_OPTION_LIST] {
-            AV_META_QUERY_NEXT_SYNC,
-            AV_META_QUERY_PREVIOUS_SYNC,
-            AV_META_QUERY_CLOSEST_SYNC,
-            AV_META_QUERY_CLOSEST
-        };
+    int32_t avMetadataQueryOption[AV_METADATA_QUERY_OPTION_LIST] {
+        AV_META_QUERY_NEXT_SYNC,
+        AV_META_QUERY_PREVIOUS_SYNC,
+        AV_META_QUERY_CLOSEST_SYNC,
+        AV_META_QUERY_CLOSEST
+    };
 
-        int32_t option = avMetadataQueryOption[ProduceRandomNumberCrypt() % AV_METADATA_QUERY_OPTION_LIST];
-        PixelFormat colorFormats[AV_COLOR_FORMAT_LIST] {
-            PixelFormat::UNKNOWN,
-            PixelFormat::ARGB_8888,
-            PixelFormat::RGB_565,
-            PixelFormat::RGBA_8888,
-            PixelFormat::BGRA_8888,
-            PixelFormat::RGB_888,
-            PixelFormat::ALPHA_8,
-            PixelFormat::RGBA_F16,
-            PixelFormat::NV21,
-            PixelFormat::NV12,
-            PixelFormat::CMYK
-        };
-        PixelFormat colorFormat = colorFormats[ProduceRandomNumberCrypt() % AV_COLOR_FORMAT_LIST];
+    int32_t option = avMetadataQueryOption[ProduceRandomNumberCrypt() % AV_METADATA_QUERY_OPTION_LIST];
+    PixelFormat colorFormats[AV_COLOR_FORMAT_LIST] {
+        PixelFormat::UNKNOWN,
+        PixelFormat::ARGB_8888,
+        PixelFormat::RGB_565,
+        PixelFormat::RGBA_8888,
+        PixelFormat::BGRA_8888,
+        PixelFormat::RGB_888,
+        PixelFormat::ALPHA_8,
+        PixelFormat::RGBA_F16,
+        PixelFormat::NV21,
+        PixelFormat::NV12,
+        PixelFormat::CMYK
+    };
+    PixelFormat colorFormat = colorFormats[ProduceRandomNumberCrypt() % AV_COLOR_FORMAT_LIST];
 
-        struct PixelMapParams pixelMapParams = {ProduceRandomNumberCrypt(), ProduceRandomNumberCrypt(), colorFormat};
-        
-        std::shared_ptr<PixelMap> retFetchFrameAtTime =
-            avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), option, pixelMapParams);
+    struct PixelMapParams pixelMapParams = {ProduceRandomNumberCrypt(), ProduceRandomNumberCrypt(), colorFormat};
+    
+    std::shared_ptr<PixelMap> retFetchFrameAtTime =
+        avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), option, pixelMapParams);
 
-        if (retFetchFrameAtTime != 0) {
-            cout << "expect avmetadata FetchFrameAtTime fail" << endl;
-            avmetadata->Release();
-            return true;
-        }
+    if (retFetchFrameAtTime != 0) {
+        avmetadata->Release();
+        return true;
     }
     avmetadata->Release();
     return true;
@@ -99,6 +94,13 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
 
 bool FuzzTestAVMetadataFetchFrameAtTime(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(int64_t)) {
+        return 0;
+    }
     AVMetadataFetchFrameAtTimeFuzzer metadata;
     return metadata.FuzzAVMetadataFetchFrameAtTime(data, size);
 }
