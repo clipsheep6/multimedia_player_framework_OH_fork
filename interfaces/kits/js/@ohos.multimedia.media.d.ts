@@ -28,6 +28,7 @@ declare namespace media {
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
    * @import import media from '@ohos.multimedia.media'
    * @return Returns an AudioPlayer instance if the operation is successful; returns null otherwise.
+   * @deprecated since 10
    */
   function createAudioPlayer(): AudioPlayer;
 
@@ -37,6 +38,7 @@ declare namespace media {
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    * @import import media from '@ohos.multimedia.media'
    * @return Returns an AudioRecorder instance if the operation is successful; returns null otherwise.
+   * @deprecated since 10
    */
   function createAudioRecorder(): AudioRecorder;
 
@@ -46,6 +48,7 @@ declare namespace media {
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @import import media from '@ohos.multimedia.media'
    * @param callback Callback used to return AudioPlayer instance if the operation is successful; returns null otherwise.
+   * @deprecated since 10
    */
   function createVideoPlayer(callback: AsyncCallback<VideoPlayer>): void;
   /**
@@ -54,6 +57,7 @@ declare namespace media {
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @import import media from '@ohos.multimedia.media'
    * @return A Promise instance used to return VideoPlayer instance if the operation is successful; returns null otherwise.
+   * @deprecated since 10
    */
   function createVideoPlayer() : Promise<VideoPlayer>;
 
@@ -99,6 +103,7 @@ declare namespace media {
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.Core
    * @import import media from '@ohos.multimedia.media'
+   * @deprecated since 10
    */
   enum MediaErrorCode {
     /**
@@ -306,13 +311,22 @@ declare namespace media {
       * @syscap SystemCapability.Multimedia.Media.AVPlayer
       */
      stop(): void;
- 
+
      /**
-      * Resets media playback.
+      * reset AVPlayer, it will to idle state and can set src again.
       * @since 9
       * @syscap SystemCapability.Multimedia.Media.AVPlayer
+      * @param callback A callback instance used to return when reset completed.
       */
-     reset(): void;
+      reset(callback: AsyncCallback<void>): void;
+
+     /**
+      * reset AVPlayer, it will to idle state and can set src again.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.AVPlayer
+      * @return A Promise instance used to return when reset completed.
+      */
+      reset(): Promise<void>;
  
      /**
       * Jumps to the specified playback position.
@@ -681,14 +695,21 @@ declare namespace media {
      */
     release(): Promise<void>;
 
-    /**
-     * Resets audio recording.
-     * Before resetting audio recording, you must call stop() to stop recording. After audio recording is reset,
-     * you must call prepare() to set the recording configurations for another recording.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVRecorder
-     */
-    reset(): void;
+   /**
+    * reset AVRecorder, it will to idle state.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.AVPlayer
+    * @param callback A callback instance used to return when reset completed.
+    */
+    reset(callback: AsyncCallback<void>): void;
+
+   /**
+    * reset AVRecorder, it will to idle state.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.AVPlayer
+    * @return A Promise instance used to return when reset completed.
+    */
+    reset(): Promise<void>;
 
     /**
      * Listens for audio recording events.
@@ -714,6 +735,7 @@ declare namespace media {
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
    * @import import media from '@ohos.multimedia.media'
+   * @deprecated since 10
    */
   type AudioState = 'idle' | 'playing' | 'paused' | 'stopped' | 'error';
 
@@ -722,6 +744,7 @@ declare namespace media {
    * to create an AudioPlayer instance, it will be deprecated after API10, use @AVPlayer instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+   * @deprecated since 10
    */
   interface AudioPlayer {
     /**
@@ -1003,6 +1026,7 @@ declare namespace media {
    * use @AVRecorderConfig instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+   * @deprecated since 10
    */
   interface AudioRecorderConfig {
     /**
@@ -1080,6 +1104,7 @@ declare namespace media {
    * to create an AudioRecorder instance, it will be deprecated after API10, use @AVRecorder instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+   * @deprecated since 10
    */
   interface AudioRecorder {
     /**
@@ -1158,6 +1183,7 @@ declare namespace media {
    * Describes video playback states, it will be deprecated after API10, use @AVPlayerState instead.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+   * @deprecated since 10
    */
   type VideoPlayState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'error';
 
@@ -1165,6 +1191,7 @@ declare namespace media {
    * Enumerates playback speed, it will be deprecated after API10, use @AVPlayerSpeed instead.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+   * @deprecated since 10
    */
   enum PlaybackSpeed {
     /**
@@ -1243,6 +1270,7 @@ declare namespace media {
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @import import media from '@ohos.multimedia.media'
+   * @deprecated since 10
    */
   interface VideoPlayer {
     /**
