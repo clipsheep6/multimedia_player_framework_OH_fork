@@ -194,8 +194,6 @@ void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
         bufferType->bufferFlag = BUFFER_FLAG_EOS;
     } else if (flag & OMX_BUFFERFLAG_SYNCFRAME) {
         bufferType->bufferFlag = BUFFER_FLAG_SYNC_FRAME;
-    } else if (flag & OMX_BUFFERFLAG_ENDOFFRAME) {
-        bufferType->bufferFlag = BUFFER_FLAG_PARTIAL_FRAME;
     } else if (flag & OMX_BUFFERFLAG_CODECCONFIG) {
         bufferType->bufferFlag = BUFFER_FLAG_CODEC_DATA;
     } else {
