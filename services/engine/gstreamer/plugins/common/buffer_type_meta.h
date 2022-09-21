@@ -36,7 +36,11 @@ typedef enum {
 } AVShmemFlags;
 
 typedef enum {
-    BUFFER_FLAG_EOS = 0x1,
+    BUFFER_FLAG_NONE = 0,
+    BUFFER_FLAG_EOS = 1 << 0,
+    BUFFER_FLAG_SYNC_FRAME = 1 << 1,
+    BUFFER_FLAG_PARTIAL_FRAME = 1 << 2,
+    BUFFER_FLAG_CODEC_DATA = 1 << 3,
 } BufferFlags;
 
 typedef enum {
