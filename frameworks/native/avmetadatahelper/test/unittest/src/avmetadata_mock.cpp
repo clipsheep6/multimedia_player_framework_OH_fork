@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <fcntl.h>
 #include "avmetadata_mock.h"
 #include "gtest/gtest.h"
 #include "media_errors.h"
