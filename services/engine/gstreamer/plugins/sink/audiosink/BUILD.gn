@@ -69,11 +69,11 @@ ohos_shared_library("gst_audio_server_sink") {
 
   configs = [
     ":gst_audio_server_sink_config",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx_public_config",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]
 
   deps = [
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",

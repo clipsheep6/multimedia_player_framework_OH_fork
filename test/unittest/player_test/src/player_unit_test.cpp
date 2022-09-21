@@ -388,7 +388,7 @@ HWTEST_F(PlayerUnitTest, Player_SelectBitRate_001, TestSize.Level0)
  * @tc.name: Player_Performance_Prepared_001
  * @tc.desc: test player start
  * @tc.type: PERFORMANCE
- * @tc.require: I5NYBJ
+ * @tc.require: issueI5NYBJ
  */
 HWTEST_F(PlayerUnitTest, Player_Performance_Prepared_001, TestSize.Level0)
 {

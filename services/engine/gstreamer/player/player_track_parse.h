@@ -55,7 +55,7 @@ private:
         GstPad *pad;
         gulong probeId;
     };
-    std::vector<PadInfo> padProbes_;
+    std::unordered_map<GstPad *, gulong> padProbes_;
     std::mutex signalIdMutex_;
     std::mutex padProbeMutex_;
     std::mutex trackInfoMutex_;

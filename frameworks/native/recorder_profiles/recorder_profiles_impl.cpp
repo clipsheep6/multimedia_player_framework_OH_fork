@@ -62,7 +62,7 @@ RecorderProfilesImpl::~RecorderProfilesImpl()
     MEDIA_LOGD("RecorderProfilesImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-bool RecorderProfilesImpl::IsAudioRecoderConfigSupported(const AudioRecorderProfile &profile)
+bool RecorderProfilesImpl::IsAudioRecorderConfigSupported(const AudioRecorderProfile &profile)
 {
     CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr, false, "RecorderProfiles service does not exist.");
     RecorderProfilesData profileData;
@@ -71,7 +71,7 @@ bool RecorderProfilesImpl::IsAudioRecoderConfigSupported(const AudioRecorderProf
     profileData.recorderProfile.audioBitrate = profile.audioBitrate;
     profileData.recorderProfile.audioSampleRate = profile.audioSampleRate;
     profileData.recorderProfile.audioChannels = profile.audioChannels;
-    return recorderProfilesService_->IsAudioRecoderConfigSupported(profileData);
+    return recorderProfilesService_->IsAudioRecorderConfigSupported(profileData);
 }
 
 bool RecorderProfilesImpl::HasVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel)

@@ -51,7 +51,7 @@ int32_t RecorderProfilesServiceStub::Init()
     CHECK_AND_RETURN_RET_LOG(
         mediaProfileServer_ != nullptr, MSERR_NO_MEMORY, "failed to create RecorderProfilesServer");
     mediaProfileFuncs_[static_cast<int>(RecorderProfilesServiceMsg::RECORDER_PROFILES_IS_AUDIO_RECORDER_SUPPORT)]
-        = &RecorderProfilesServiceStub::IsAudioRecoderConfigSupported;
+        = &RecorderProfilesServiceStub::IsAudioRecorderConfigSupported;
     mediaProfileFuncs_[static_cast<int>(RecorderProfilesServiceMsg::RECORDER_PROFILES_HAS_VIDEO_RECORD_PROFILE)]
         = &RecorderProfilesServiceStub::HasVideoRecorderProfile;
     mediaProfileFuncs_[static_cast<int>(RecorderProfilesServiceMsg::RECORDER_PROFILES_GET_AUDIO_RECORDER_CAPS)]
@@ -99,10 +99,10 @@ int RecorderProfilesServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &d
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
-bool RecorderProfilesServiceStub::IsAudioRecoderConfigSupported(const RecorderProfilesData &profile)
+bool RecorderProfilesServiceStub::IsAudioRecorderConfigSupported(const RecorderProfilesData &profile)
 {
     CHECK_AND_RETURN_RET_LOG(mediaProfileServer_ != nullptr, false, "recorder_profiles server is nullptr");
-    return mediaProfileServer_->IsAudioRecoderConfigSupported(profile);
+    return mediaProfileServer_->IsAudioRecorderConfigSupported(profile);
 }
 
 bool RecorderProfilesServiceStub::HasVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel)
@@ -132,11 +132,11 @@ std::vector<RecorderProfilesData> RecorderProfilesServiceStub::GetVideoRecorderC
     return mediaProfileServer_->GetVideoRecorderCapsInfo();
 }
 
-int32_t RecorderProfilesServiceStub::IsAudioRecoderConfigSupported(MessageParcel &data, MessageParcel &reply)
+int32_t RecorderProfilesServiceStub::IsAudioRecorderConfigSupported(MessageParcel &data, MessageParcel &reply)
 {
     RecorderProfilesData profile;
     (void)RecorderProfilesParcel::Unmarshalling(data, profile);
-    reply.WriteBool(IsAudioRecoderConfigSupported(profile));
+    reply.WriteBool(IsAudioRecorderConfigSupported(profile));
     return MSERR_OK;
 }
 

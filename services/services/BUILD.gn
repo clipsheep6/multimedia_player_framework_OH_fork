@@ -72,6 +72,7 @@ config("media_service_config") {
     "//foundation/multimedia/image_standard/interfaces/innerkits/include",
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
+    "//third_party/glib/glibmemdfx",
   ]
 
   defines = []
@@ -146,13 +147,15 @@ ohos_shared_library("media_service") {
 
   configs = [
     ":media_service_config",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx_public_config",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]
 
   deps = [
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_format",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "//third_party/glib:g_mem_dfx",
     "//third_party/libxml2:xml2",
   ]
 
