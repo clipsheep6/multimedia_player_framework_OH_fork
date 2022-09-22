@@ -76,7 +76,6 @@ bool RecorderSetAudioEncodingBitRateFuzzer::FuzzRecorderSetAudioEncodingBitRate(
     }
     close(g_videoRecorderConfig.outputFd);
     return false;
-
 }
 }
 bool FuzzTestRecorderSetAudioEncodingBitRate(uint8_t *data, size_t size)
