@@ -32,16 +32,16 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VIDEO_CAPTURE_POOL))
 #define GST_VIDEO_CAPTURE_POOL_CAST(obj) ((GstVideoCapturePool*)(obj))
 
-struct GstVideoCapturePool {
+struct _GstVideoCapturePool {
     GstConsumerSurfacePool element;
 };
 
-struct GstVideoCapturePoolClass {
+struct _GstVideoCapturePoolClass {
     GstConsumerSurfacePoolClass parent_class;
 };
 
-using GstVideoCapturePool = struct GstVideoCapturePool;
-using GstVideoCapturePoolClass = struct GstVideoCapturePoolClass;
+using GstVideoCapturePool = struct _GstVideoCapturePool;
+using GstVideoCapturePoolClass = struct _GstVideoCapturePoolClass;
 
 GType gst_video_capture_pool_get_type(void);
 
