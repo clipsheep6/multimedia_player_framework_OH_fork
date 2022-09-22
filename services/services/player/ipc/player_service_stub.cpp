@@ -41,16 +41,23 @@ sptr<PlayerServiceStub> PlayerServiceStub::Create()
 }
 
 PlayerServiceStub::PlayerServiceStub()
+    : taskQue_("PlayerServer")
 {
+    (void)taskQue_.Start();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 PlayerServiceStub::~PlayerServiceStub()
 {
     if (playerServer_ != nullptr) {
-        (void)playerServer_->Release();
-        playerServer_ = nullptr;
+        auto task = std::make_shared<TaskHandler<void>>([&, this] {
+            (void)playerServer_->Release();
+            playerServer_ = nullptr;
+        });
+        (void)taskQue_.EnqueueTask(task);
+        (void)task->GetResult();
     }
+    (void)taskQue_.Stop();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -108,8 +115,12 @@ int32_t PlayerServiceStub::DestroyStub()
 {
     playerCallback_ = nullptr;
     if (playerServer_ != nullptr) {
-        (void)playerServer_->Release();
-        playerServer_ = nullptr;
+        auto task = std::make_shared<TaskHandler<void>>([&, this] {
+            (void)playerServer_->Release();
+            playerServer_ = nullptr;
+        });
+        (void)taskQue_.EnqueueTask(task);
+        (void)task->GetResult();
     }
 
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, AsObject());
@@ -119,7 +130,7 @@ int32_t PlayerServiceStub::DestroyStub()
 int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
+    MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}u is received", code);
 
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (PlayerServiceStub::GetDescriptor() != remoteDescriptor) {
@@ -140,7 +151,14 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
     }
     MEDIA_LOGW("PlayerServiceStub: no member func supporting, applying default process");
 
-    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    auto task = std::make_shared<TaskHandler<int>>([&, this] {
+        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    });
+    (void)taskQue_.EnqueueTask(task);
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "failed to OnRemoteRequest code: %{public}u", code);
+    
+    return result.Value();
 }
 
 int32_t PlayerServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
