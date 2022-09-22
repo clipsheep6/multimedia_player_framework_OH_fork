@@ -38,8 +38,8 @@ RecorderSetAudioSourceFuzzer::~RecorderSetAudioSourceFuzzer()
 }
 bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, size_t size)
 {
-    constexpr int32_t AUDIO_SOURCE_TYPES_LIST = 3;
-    constexpr uint32_t RECORDER_TIME = 5;
+    constexpr int32_t audioSourceTypesList = 3;
+    constexpr uint32_t recorderTime = 5;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
@@ -51,7 +51,7 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
         AUDIO_MIC,
     };
 
-    int32_t sourcesubscript = abs((ProduceRandomNumberCrypt()) % (AUDIO_SOURCE_TYPES_LIST));
+    int32_t sourcesubscript = abs((ProduceRandomNumberCrypt()) % (audioSourceTypesList));
     int32_t sourceId = *reinterpret_cast<int32_t *>(data);
 
     g_videoRecorderConfig.aSource = AudioSourceType[sourcesubscript];
@@ -66,7 +66,7 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
         RETURN_IF(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
-        sleep(RECORDER_TIME);
+        sleep(recorderTime);
         RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Release(g_videoRecorderConfig), true);
     }

@@ -39,7 +39,7 @@ RecorderSetAudioChannelsFuzzer::~RecorderSetAudioChannelsFuzzer()
 bool RecorderSetAudioChannelsFuzzer::FuzzRecorderSetAudioChannels(uint8_t *data, size_t size)
 {
     bool retFlags = TestRecorder::CreateRecorder();
-    constexpr uint32_t RECORDER_TIME = 5;
+    constexpr uint32_t recorderTime = 5;
     RETURN_IF(retFlags, false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
@@ -66,7 +66,7 @@ bool RecorderSetAudioChannelsFuzzer::FuzzRecorderSetAudioChannels(uint8_t *data,
         RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
-        sleep(RECORDER_TIME);
+        sleep(recorderTime);
         RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
         StopBuffer(PURE_VIDEO);
         RETURN_IF(TestRecorder::Reset(g_videoRecorderConfig), true);

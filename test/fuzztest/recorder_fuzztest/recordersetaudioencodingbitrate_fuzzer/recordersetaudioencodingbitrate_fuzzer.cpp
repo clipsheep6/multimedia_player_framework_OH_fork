@@ -38,7 +38,7 @@ RecorderSetAudioEncodingBitRateFuzzer::~RecorderSetAudioEncodingBitRateFuzzer()
 }
 bool RecorderSetAudioEncodingBitRateFuzzer::FuzzRecorderSetAudioEncodingBitRate(uint8_t *data, size_t size)
 {
-    constexpr uint32_t RECORDER_TIME = 5;
+    constexpr uint32_t recorderTime = 5;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
@@ -68,7 +68,7 @@ bool RecorderSetAudioEncodingBitRateFuzzer::FuzzRecorderSetAudioEncodingBitRate(
         RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
-        sleep(RECORDER_TIME);
+        sleep(recorderTime);
         RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
         StopBuffer(PURE_VIDEO);
         RETURN_IF(TestRecorder::Reset(g_videoRecorderConfig), true);

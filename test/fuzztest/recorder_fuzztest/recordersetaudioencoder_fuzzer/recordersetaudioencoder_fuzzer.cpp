@@ -38,8 +38,8 @@ RecorderSetAudioEncoderFuzzer::~RecorderSetAudioEncoderFuzzer()
 }
 bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, size_t size)
 {
-    constexpr int32_t AUDIO_CODEC_FORMAT_LIST = 3;
-    constexpr uint32_t RECORDER_TIME = 5;
+    constexpr int32_t audioCodecFormatList = 3;
+    constexpr uint32_t recorderTime = 5;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
@@ -56,7 +56,7 @@ bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, s
         RETURN_IF(TestRecorder::SetVideoFrameRate(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetVideoEncodingBitRate(g_videoRecorderConfig), false);
 
-        AudioCodecFormat audioCodecFormat[AUDIO_CODEC_FORMAT_LIST] {
+        AudioCodecFormat audioCodecFormat[audioCodecFormatList] {
             AUDIO_DEFAULT,
             AAC_LC,
             AUDIO_CODEC_FORMAT_BUTT,
@@ -75,7 +75,7 @@ bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, s
         RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
-        sleep(RECORDER_TIME);
+        sleep(recorderTime);
         RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
         StopBuffer(PURE_VIDEO);
         RETURN_IF(TestRecorder::Reset(g_videoRecorderConfig), true);
