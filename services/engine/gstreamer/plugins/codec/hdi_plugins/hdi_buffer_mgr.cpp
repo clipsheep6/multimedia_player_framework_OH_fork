@@ -190,14 +190,15 @@ void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
         MEDIA_LOGW("bufferType is null, set flag %{public}d to gstbuffer fail", flag);
         return;
     }
+    bufferType->bufferFlag = BUFFER_FLAG_NONE;
     if (flag & OMX_BUFFERFLAG_EOS) {
-        bufferType->bufferFlag = BUFFER_FLAG_EOS;
-    } else if (flag & OMX_BUFFERFLAG_SYNCFRAME) {
-        bufferType->bufferFlag = BUFFER_FLAG_SYNC_FRAME;
-    } else if (flag & OMX_BUFFERFLAG_CODECCONFIG) {
-        bufferType->bufferFlag = BUFFER_FLAG_CODEC_DATA;
-    } else {
-        bufferType->bufferFlag = BUFFER_FLAG_NONE;
+        bufferType->bufferFlag |= BUFFER_FLAG_EOS;
+    } 
+    if (flag & OMX_BUFFERFLAG_SYNCFRAME) {
+        bufferType->bufferFlag |= BUFFER_FLAG_SYNC_FRAME;
+    } 
+    if (flag & OMX_BUFFERFLAG_CODECCONFIG) {
+        bufferType->bufferFlag |= BUFFER_FLAG_CODEC_DATA;
     }
 }
 }  // namespace Media
