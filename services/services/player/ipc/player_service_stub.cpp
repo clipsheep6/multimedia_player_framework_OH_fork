@@ -156,7 +156,8 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
     });
     (void)taskQue_.EnqueueTask(task);
     auto result = task->GetResult();
-    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "failed to OnRemoteRequest code: %{public}u", code);
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION,
+        "failed to OnRemoteRequest code: %{public}u", code);
     
     return result.Value();
 }
