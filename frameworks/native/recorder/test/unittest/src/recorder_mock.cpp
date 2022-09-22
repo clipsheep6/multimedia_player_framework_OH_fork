@@ -75,7 +75,8 @@ static OHOS::BufferRequestConfig g_yuvRequestConfig = {
 };
 void RecorderCallbackTest::OnError(RecorderErrorType errorType, int32_t errorCode)
 {
-    cout << "Error received, errorType:" << errorType << " errorCode:" << errorCode << endl;
+    std::string errorTypeMsg = RecorderErrorTypeToString(errorType);
+    cout << "Error received, errorType:" << errorTypeMsg << " errorCode:" << errorCode << endl;
 }
 
 void RecorderCallbackTest::OnInfo(int32_t type, int32_t extra)
