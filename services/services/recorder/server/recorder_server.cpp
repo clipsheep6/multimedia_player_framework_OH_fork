@@ -74,6 +74,7 @@ RecorderServer::~RecorderServer()
     std::lock_guard<std::mutex> lock(mutex_);
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         recorderEngine_ = nullptr;
+        StopWatchDog();
     });
     (void)taskQue_.EnqueueTask(task);
     (void)task->GetResult();
@@ -102,6 +103,8 @@ int32_t RecorderServer::Init()
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.Value() == MSERR_OK, result.Value(), "Result failed");
+
+    watchDogThread_ = std::make_unique<std::thread>(&RecorderServer::WatchDog, this);
 
     status_ = REC_INITIALIZED;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
@@ -406,6 +409,7 @@ int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_CONFIGURED : REC_INITIALIZED);
+    ResetWatchDog();
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
@@ -536,6 +540,7 @@ int32_t RecorderServer::Prepare()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PREPARED : REC_ERROR);
+    ResetWatchDog();
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
@@ -559,6 +564,7 @@ int32_t RecorderServer::Start()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
+    ResetWatchDog();
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
 
     startTimeMonitor_.FinishTime();
@@ -584,6 +590,7 @@ int32_t RecorderServer::Pause()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PAUSED : REC_ERROR);
+    ResetWatchDog();
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
@@ -607,6 +614,7 @@ int32_t RecorderServer::Resume()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
+    ResetWatchDog();
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
@@ -628,6 +636,7 @@ int32_t RecorderServer::Stop(bool block)
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
+    ResetWatchDog();
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
@@ -646,6 +655,7 @@ int32_t RecorderServer::Reset()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
+    ResetWatchDog();
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
 
     stopTimeMonitor_.FinishTime();
@@ -657,10 +667,82 @@ int32_t RecorderServer::Release()
     std::lock_guard<std::mutex> lock(mutex_);
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         recorderEngine_ = nullptr;
+        StopWatchDog();
     });
     (void)taskQue_.EnqueueTask(task);
     (void)task->GetResult();
     return MSERR_OK;
+}
+
+int32_t RecorderServer::HeartBeat()
+{
+    watchDogCount.store(0);
+    return MSERR_OK;
+}
+
+void RecorderServer::WatchDog()
+{
+    static constexpr uint8_t timeInterval = 1; // Detect once per second
+    static constexpr uint8_t maxTimes = 3; // Maximum number of unanswered
+
+    while (true) {
+        std::unique_lock<std::mutex> lockWatchDog(watchDogMutex_);
+        watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] { return (watchDogstatus_ == WATCHDOG_STOP); });
+
+        if (watchDogstatus_ == WATCHDOG_STOP) {
+            break;
+        }
+
+        if (watchDogstatus_ == WATCHDOG_WATCHING) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (status_ != REC_RECORDING) {
+                continue;
+            }
+
+            watchDogCount++;
+            MEDIA_LOGD("WatchDog Count: %u", watchDogCount.load());
+            if (watchDogCount.load() >= maxTimes) {
+                MEDIA_LOGE("Watchdog triggered, recording paused");
+                Pause();
+                watchDogstatus_ = WATCHDOG_PAUSE;
+                recorderCb_->OnError(RECORDER_ERROR_INTERNAL, MSERR_UNKNOWN);
+                continue;
+            }
+        }
+
+        if (watchDogstatus_ == WATCHDOG_PAUSE) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (status_ != REC_PAUSED) {
+                continue;
+            }
+
+            if (watchDogCount.load() < maxTimes) {
+                MEDIA_LOGE("Watchdog resumes, recording continues");
+                Resume();
+                watchDogstatus_ = WATCHDOG_WATCHING;
+                recorderCb_->OnError(RECORDER_ERROR_INTERNAL, MSERR_UNKNOWN);
+            }       
+        }
+    }
+}
+
+void RecorderServer::ResetWatchDog() {
+        std::unique_lock<std::mutex> lockWatchDog(watchDogMutex_);
+        watchDogstatus_ = WATCHDOG_WATCHING;
+}
+
+void RecorderServer::StopWatchDog() {
+    if (watchDogThread_ != nullptr && watchDogThread_->joinable()) {
+        {
+            std::unique_lock<std::mutex> lockWatchDog(watchDogMutex_);
+            watchDogstatus_ = WATCHDOG_STOP;
+        }
+
+        watchDogCond_.notify_all();
+        watchDogThread_->join();
+        watchDogThread_.reset();
+        watchDogThread_ = nullptr;
+    }
 }
 
 int32_t RecorderServer::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)

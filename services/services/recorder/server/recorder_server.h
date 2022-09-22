@@ -39,6 +39,12 @@ public:
         REC_ERROR,
     };
 
+    enum WatchDogStatus {
+        WATCHDOG_WATCHING = 0,
+        WATCHDOG_PAUSE,
+        WATCHDOG_STOP,
+    };
+
     // IRecorderService override
     int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId) override;
     int32_t SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder) override;
@@ -70,7 +76,11 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
+    int32_t HeartBeat() override;
     int32_t DumpInfo(int32_t fd);
+    void WatchDog();
+    void StopWatchDog();
+    void ResetWatchDog();
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
@@ -107,6 +117,12 @@ private:
         int64_t maxFileSize;
     } config_;
     std::string lastErrMsg_;
+
+    std::unique_ptr<std::thread> watchDogThread_;
+    WatchDogStatus watchDogstatus_ = WATCHDOG_WATCHING;
+    std::atomic<uint32_t> watchDogCount = 0;
+    std::condition_variable watchDogCond_;
+    std::mutex watchDogMutex_;
 };
 } // namespace Media
 } // namespace OHOS
