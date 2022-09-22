@@ -361,7 +361,8 @@ void RecorderClient::CreateWatchDog()
     watchDogThread_ = std::make_unique<std::thread>(&RecorderClient::WatchDog, this);
 }
 
-void RecorderClient::StopWatchDog() {
+void RecorderClient::StopWatchDog() 
+{
     if (watchDogThread_ != nullptr && watchDogThread_->joinable()) {
         stopWatchDog.store(true);
         watchDogCond_.notify_all();
@@ -385,6 +386,5 @@ void RecorderClient::WatchDog()
         CHECK_AND_BREAK_LOG(ret == MSERR_OK, "failed to heartbeat..");
     }
 }
-
 } // namespace Media
 } // namespace OHOS

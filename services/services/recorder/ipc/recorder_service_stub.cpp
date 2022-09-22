@@ -570,6 +570,5 @@ int32_t RecorderServiceStub::HeartBeat(MessageParcel &data, MessageParcel &reply
     reply.WriteInt32(HeartBeat());
     return MSERR_OK;
 }
-
 } // namespace Media
 } // namespace OHOS

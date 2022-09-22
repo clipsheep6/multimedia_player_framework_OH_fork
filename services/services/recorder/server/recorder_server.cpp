@@ -703,7 +703,8 @@ void RecorderServer::WatchDog()
 
     while (true) {
         std::unique_lock<std::mutex> lockWatchDog(watchDogMutex_);
-        watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] { return stopWatchDog.load(); });
+        watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] { 
+            return stopWatchDog.load(); });
         CHECK_AND_BREAK(stopWatchDog.load() == false);
 
         std::lock_guard<std::mutex> lock(mutex_);
@@ -734,12 +735,13 @@ void RecorderServer::WatchDog()
                 ResumeAct();
                 watchDogstatus_ = WATCHDOG_WATCHING;
                 recorderCb_->OnError(RECORDER_ERROR_INTERNAL, MSERR_UNKNOWN);
-            }       
+            }
         }
     }
 }
 
-void RecorderServer::StopWatchDog() {
+void RecorderServer::StopWatchDog() 
+{
     if (watchDogThread_ != nullptr && watchDogThread_->joinable()) {
         stopWatchDog.store(true);
         watchDogCond_.notify_all();
