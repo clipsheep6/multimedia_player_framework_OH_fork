@@ -94,7 +94,7 @@ const GstMetaInfo *gst_buffer_type_meta_get_info(void)
 
 GstBufferTypeMeta *gst_buffer_get_buffer_type_meta(GstBuffer *buffer)
 {
-    g_return_val_if_fail(buffer != NULL, FALSE);
+    g_return_val_if_fail(buffer != NULL, NULL);
     gpointer state = NULL;
     GstBufferTypeMeta *buffer_meta = NULL;
     GstMeta *meta;
@@ -111,7 +111,7 @@ GstBufferTypeMeta *gst_buffer_get_buffer_type_meta(GstBuffer *buffer)
 
 GstBufferTypeMeta *gst_buffer_add_buffer_vir_meta(GstBuffer *buffer, intptr_t buf, uint32_t bufferFlag)
 {
-    g_return_val_if_fail(buffer != NULL, FALSE);
+    g_return_val_if_fail(buffer != NULL, NULL);
     GstBufferTypeMeta *buffer_meta = NULL;
 
     buffer_meta = (GstBufferTypeMeta *)gst_buffer_add_meta(buffer, GST_BUFFER_TYPE_META_INFO, NULL);
@@ -126,7 +126,7 @@ GstBufferTypeMeta *gst_buffer_add_buffer_vir_meta(GstBuffer *buffer, intptr_t bu
 GstBufferTypeMeta *gst_buffer_add_buffer_handle_meta(GstBuffer *buffer, intptr_t buf,
     GstBufferHandleConfig config)
 {
-    g_return_val_if_fail(buffer != NULL, FALSE);
+    g_return_val_if_fail(buffer != NULL, NULL);
     GstBufferTypeMeta *buffer_meta = NULL;
 
     buffer_meta = (GstBufferTypeMeta *)gst_buffer_add_meta(buffer, GST_BUFFER_TYPE_META_INFO, NULL);
@@ -144,7 +144,7 @@ GstBufferTypeMeta *gst_buffer_add_buffer_handle_meta(GstBuffer *buffer, intptr_t
 
 GstBufferTypeMeta *gst_buffer_add_buffer_fd_meta(GstBuffer *buffer, intptr_t buf, GstBufferFdConfig config)
 {
-    g_return_val_if_fail(buffer != NULL, FALSE);
+    g_return_val_if_fail(buffer != NULL, NULL);
     GstBufferTypeMeta *buffer_meta = NULL;
 
     buffer_meta = (GstBufferTypeMeta *)gst_buffer_add_meta(buffer, GST_BUFFER_TYPE_META_INFO, NULL);
