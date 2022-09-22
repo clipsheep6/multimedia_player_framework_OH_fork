@@ -18,6 +18,7 @@
 
 #include "media_data_source.h"
 #include "callback_works.h"
+#include "common_napi.h"
 
 namespace OHOS {
 namespace Media {
@@ -36,7 +37,7 @@ public:
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
-    static napi_value CreateMediaDataSource(napi_env env, napi_callback_info info);
+    static napi_value CreateAVDataSource(napi_env env, napi_callback_info info);
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value SetSize(napi_env env, napi_callback_info info);
     static napi_value GetSize(napi_env env, napi_callback_info info);
@@ -49,6 +50,11 @@ private:
     std::shared_ptr<JsCallback> readAt_ = nullptr;
     int64_t size_ = -1;
     bool noChange_ = false;
+};
+
+struct AVDataSourceAsyncContext : public MediaAsyncContext {
+    explicit AVDataSourceAsyncContext(napi_env env) : MediaAsyncContext(env) {}
+    ~AVDataSourceAsyncContext() = default;
 };
 } // namespace Media
 } // namespace OHOS

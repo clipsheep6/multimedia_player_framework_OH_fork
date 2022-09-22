@@ -588,6 +588,7 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
     if (ret != MSERR_OK) {
         cb->ClearAsyncWork(true, "the request was aborted because videoplayer ProcessWork error");
     }
+    MediaAsyncContext::CompleteCallback(env, status, data);
 }
 
 napi_value VideoPlayerNapi::Prepare(napi_env env, napi_callback_info info)
