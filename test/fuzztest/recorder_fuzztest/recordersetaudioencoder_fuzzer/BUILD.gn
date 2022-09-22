@@ -17,6 +17,7 @@ import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/recorder"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
+
 ##############################fuzztest##########################################
 ohos_fuzztest("RecorderSetAudioEncoderFuzzTest") {
   module_out_path = module_output_path
@@ -60,11 +61,11 @@ ohos_fuzztest("RecorderSetAudioEncoderFuzzTest") {
     ]
   }
   deps = [
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
-    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
   ]
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
