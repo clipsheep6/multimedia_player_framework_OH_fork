@@ -282,7 +282,7 @@ int32_t PlayBinCtrlerBase::Stop()
     if (GetCurrState() == preparingState_) {
         MEDIA_LOGD("begin wait stop for current status is preparing");
         static constexpr int32_t timeout = 2;
-        preparingCond_.wait_for(lock, std::chrono::seconds(timeout));
+        preparedCond_.wait_for(lock, std::chrono::seconds(timeout));
         MEDIA_LOGD("end wait stop for current status is preparing");
     }
 
