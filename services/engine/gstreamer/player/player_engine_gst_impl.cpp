@@ -463,9 +463,6 @@ void PlayerEngineGstImpl::PlayBinCtrlerDeInit()
 {
     url_.clear();
     appsrcWrap_ = nullptr;
-    if (trackParse_ != nullptr) {
-        trackParse_->Stop();
-    }
 
     if (playBinCtrler_ != nullptr) {
         playBinCtrler_->SetElemSetupListener(nullptr);
@@ -703,6 +700,9 @@ int32_t PlayerEngineGstImpl::Stop()
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
     MEDIA_LOGD("Stop in");
+    if (trackParse_ != nullptr) {
+        trackParse_->Stop();
+    }
     playBinCtrler_->Stop();
     return MSERR_OK;
 }
