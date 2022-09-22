@@ -120,9 +120,11 @@ private:
 
     int32_t Init();
     bool IsValidSeekMode(PlayerSeekMode mode);
-    int32_t OnReset();
     int32_t InitPlayEngine(const std::string &url);
-    int32_t OnPrepare();
+    int32_t OnPrepare(bool sync);
+    int32_t OnPlay();
+    int32_t OnStop(bool sync);
+    int32_t OnReset();
     int32_t HandlePrepare();
     int32_t HandlePlay();
     int32_t HandlePause();
@@ -133,8 +135,6 @@ private:
     void HandleEos();
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     const std::string &GetStatusDescription(int32_t status);
-    void ResetProcessor();
-    void ReleaseProcessor();
     void OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {});
 
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
@@ -146,8 +146,6 @@ private:
     PlayerServerTaskMgr taskMgr_;
     std::mutex mutex_;
     std::mutex mutexCb_;
-    TimeMonitor startTimeMonitor_;
-    TimeMonitor stopTimeMonitor_;
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
     std::unique_ptr<UriHelper> uriHelper_;
     struct ConfigInfo {
@@ -162,10 +160,6 @@ private:
     int32_t streamUsage_ = 0;
     int32_t rendererFlag_ = 0;
     std::string lastErrMsg_;
-    int32_t resetRet_ = 0;
-
-    std::mutex condMutex_;
-    std::condition_variable stateCond_;
 
     std::shared_ptr<IdleState> idleState_;
     std::shared_ptr<InitializedState> initializedState_;
