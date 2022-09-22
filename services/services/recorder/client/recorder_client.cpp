@@ -361,7 +361,7 @@ void RecorderClient::CreateWatchDog()
     watchDogThread_ = std::make_unique<std::thread>(&RecorderClient::WatchDog, this);
 }
 
-void RecorderClient::StopWatchDog() 
+void RecorderClient::StopWatchDog()
 {
     if (watchDogThread_ != nullptr && watchDogThread_->joinable()) {
         stopWatchDog.store(true);

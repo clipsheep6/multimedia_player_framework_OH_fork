@@ -703,7 +703,7 @@ void RecorderServer::WatchDog()
 
     while (true) {
         std::unique_lock<std::mutex> lockWatchDog(watchDogMutex_);
-        watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] { 
+        watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] {
             return stopWatchDog.load(); });
         CHECK_AND_BREAK(stopWatchDog.load() == false);
 
@@ -740,7 +740,7 @@ void RecorderServer::WatchDog()
     }
 }
 
-void RecorderServer::StopWatchDog() 
+void RecorderServer::StopWatchDog()
 {
     if (watchDogThread_ != nullptr && watchDogThread_->joinable()) {
         stopWatchDog.store(true);
