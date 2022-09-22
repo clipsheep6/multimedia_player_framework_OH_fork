@@ -305,8 +305,11 @@ int32_t PlayBinCtrlerBase::PreparingState::Stop()
 void PlayBinCtrlerBase::PreparingState::ProcessStateChange(const InnerMessage &msg)
 {
     if ((msg.detail1 == GST_STATE_READY) && (msg.detail2 == GST_STATE_PAUSED)) {
+        std::unique_lock<std::mutex> lock(ctrler_.mutex_);
         ctrler_.ChangeState(ctrler_.preparedState_);
-        ctrler_.stateCond_.notify_one(); // awake the stateCond_'s waiter in Prepare()
+        ctrler_.preparingCond_.notify_one(); // awake the prepaingCond_'s waiter in Prepare()
+        ctrler_.preparedCond_.notify_one(); // awake the preparedCond_'s waiter in Prepare()
+        MEDIA_LOGD("preparingCond_.notify_one");
     }
 }
 
@@ -507,8 +510,10 @@ int32_t PlayBinCtrlerBase::StoppingState::Stop()
 void PlayBinCtrlerBase::StoppingState::ProcessStateChange(const InnerMessage &msg)
 {
     if (msg.detail2 == GST_STATE_READY) {
+        std::unique_lock<std::mutex> lock(ctrler_.mutex_);
         ctrler_.ChangeState(ctrler_.stoppedState_);
-        ctrler_.stateCond_.notify_one(); // awake the stateCond_'s waiter in Stop()
+        ctrler_.stoppingCond_.notify_one(); // awake the stoppingCond_'s waiter in Stop()
+        MEDIA_LOGD("stoppingCond_.notify_one");
     }
 }
 
