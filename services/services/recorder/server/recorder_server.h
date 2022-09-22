@@ -42,7 +42,6 @@ public:
     enum WatchDogStatus {
         WATCHDOG_WATCHING = 0,
         WATCHDOG_PAUSE,
-        WATCHDOG_STOP,
     };
 
     // IRecorderService override
@@ -80,7 +79,6 @@ public:
     int32_t DumpInfo(int32_t fd);
     void WatchDog();
     void StopWatchDog();
-    void ResetWatchDog();
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
@@ -90,6 +88,8 @@ private:
     int32_t Init();
     bool CheckPermission();
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);
+    int32_t ResumeAct();
+    int32_t PauseAct();
 
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
@@ -120,6 +120,7 @@ private:
 
     std::unique_ptr<std::thread> watchDogThread_;
     WatchDogStatus watchDogstatus_ = WATCHDOG_WATCHING;
+    std::atomic<bool> stopWatchDog = false;
     std::atomic<uint32_t> watchDogCount = 0;
     std::condition_variable watchDogCond_;
     std::mutex watchDogMutex_;
