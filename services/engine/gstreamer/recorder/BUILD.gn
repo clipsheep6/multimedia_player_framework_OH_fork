@@ -93,7 +93,6 @@ ohos_static_library("media_engine_gst_recorder") {
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
   ]
 
   subsystem_name = "multimedia"
