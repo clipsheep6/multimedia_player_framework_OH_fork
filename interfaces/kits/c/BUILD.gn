@@ -36,6 +36,7 @@ config("media_capi_config") {
     "$MEDIA_ROOT_DIR/interfaces/kits/c",
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec",
     "$MEDIA_ROOT_DIR/frameworks/native/capi/common",
+    "$MEDIA_ROOT_DIR/services/utils/include",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
   ]
 
@@ -71,7 +72,6 @@ ohos_shared_library("native_media_core") {
   deps = [
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/services/utils:media_format",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
@@ -87,8 +87,6 @@ ohos_shared_library("native_media_codecbase") {
   ]
 
   public_configs = [ ":media_capi_config" ]
-
-  deps = [ "//foundation/multimedia/player_framework/services/utils:media_service_utils" ]
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   output_extension = "so"
@@ -108,7 +106,6 @@ ohos_shared_library("native_media_adec") {
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_codecbase",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 
   external_deps = [
@@ -132,7 +129,6 @@ ohos_shared_library("native_media_aenc") {
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_codecbase",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 
   external_deps = [
@@ -160,7 +156,6 @@ ohos_shared_library("native_media_vdec") {
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_codecbase",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 
   external_deps = [
@@ -187,9 +182,7 @@ ohos_shared_library("native_media_venc") {
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_codecbase",
-    "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
-  ]
+    "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",  ]
 
   external_deps = [
     "c_utils:utils",

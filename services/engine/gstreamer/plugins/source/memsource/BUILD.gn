@@ -74,13 +74,11 @@ ohos_shared_library("gst_mem_src") {
 
   configs = [
     ":gst_mem_src_config",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]
 
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common:gst_media_common",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
@@ -93,7 +91,6 @@ ohos_shared_library("gst_mem_src") {
 
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
   ]
 
   relative_install_dir = "media/plugins"

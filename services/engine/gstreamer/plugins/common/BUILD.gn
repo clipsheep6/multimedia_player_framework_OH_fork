@@ -41,6 +41,7 @@ config("gst_plugins_common_config") {
     "include",
     "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/services/utils/include",
+    "//foundation/multimedia/player_framework/services/dfx",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
@@ -68,7 +69,6 @@ ohos_shared_library("gst_media_common") {
   ]
 
   deps = [
-    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/codec/common:gst_codec_plugins_common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink:gst_mem_sink_base",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/source/memsource:gst_mem_src_base",

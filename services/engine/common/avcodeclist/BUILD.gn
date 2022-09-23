@@ -60,20 +60,17 @@ ohos_static_library("media_engine_common_avcodeclist") {
   configs = [
     ":media_engine_common_avcodeclist_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils_public_config",
-  ]
+ ]
 
   deps = [
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_format",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/libxml2:xml2",
   ]
 
   external_deps = [
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
   ]
 
   subsystem_name = "multimedia"
