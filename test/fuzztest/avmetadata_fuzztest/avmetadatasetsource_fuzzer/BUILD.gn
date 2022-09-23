@@ -17,6 +17,7 @@ import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/avmetadata"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
+
 ##############################fuzztest##########################################
 ohos_fuzztest("AVmetadataSetSourceFuzzTest") {
   module_out_path = module_output_path
