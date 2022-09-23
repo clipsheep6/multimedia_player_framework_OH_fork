@@ -63,11 +63,11 @@ ohos_static_library("media_engine_gst_avmuxer") {
 
   configs = [
     ":media_engine_gst_avmuxer_config",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx_public_config",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]
 
   deps = [
-    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
+    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common:gst_media_common",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]

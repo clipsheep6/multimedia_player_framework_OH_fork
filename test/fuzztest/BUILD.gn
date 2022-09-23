@@ -17,6 +17,8 @@ group("fuzztest") {
   deps = []
   deps += [
     # deps file
+    "acodecconfigure_fuzzer:ACodecConfigureFuzzTest",
+    "acodecfile_fuzzer:ACodecFileFuzzTest",
     "avmetadatafetchframeattime_fuzzer:AVmetadataFetchFrameAtTimeFuzzTest",
     "avmetadatafile_fuzzer:AVmetadataFileFuzzTest",
     "avmetadataresolvemetadata_fuzzer:AVmetadataResolveMetadataFuzzTest",
@@ -24,6 +26,8 @@ group("fuzztest") {
     "playerfile_fuzzer:PlayerFileFuzzTest",
     "playerseek_fuzzer:PlayerSeekFuzzTest",
     "playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
+    "vcodecconfigure_fuzzer:VCodecConfigureFuzzTest",
+    "vcodecfile_fuzzer:VCodecFileFuzzTest",
   ]
 }
 ###############################################################################

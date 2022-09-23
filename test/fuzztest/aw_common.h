@@ -21,22 +21,22 @@
 #include "recorder.h"
 namespace OHOS {
 namespace Media {
-#define CHECK_INSTANCE_AND_RETURN_RET(cond, ret, ...)       \
-    do {                                                       \
-        if (cond == nullptr) {                                 \
-            cout << cond << "is nullptr" << endl;              \
-            return ret;                                        \
-        }                                                      \
+#define CHECK_INSTANCE_AND_RETURN_RET(cond, ret, ...)           \
+    do {                                                        \
+        if (cond == nullptr) {                                  \
+            cout << cond << "is nullptr" << endl;               \
+            return ret;                                         \
+        }                                                       \
     } while (0)
 
-#define CHECK_BOOL_AND_RETURN_RET(cond, ret, ...)                \
+#define CHECK_BOOL_AND_RETURN_RET(cond, ret, ...)               \
     do {                                                        \
         if (!(cond)) {                                          \
             return ret;                                         \
         }                                                       \
     } while (0)
 
-#define CHECK_STATE_AND_RETURN_RET(cond, ret, ...)               \
+#define CHECK_STATE_AND_RETURN_RET(cond, ret, ...)              \
     do {                                                        \
         if (cond != 0) {                                        \
             return ret;                                         \

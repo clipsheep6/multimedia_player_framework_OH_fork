@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Copyright (C) 2022 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,62 +13,15 @@
 
 import("//build/ohos.gni")
 
-config("media_service_log_dfx_public_config") {
-  cflags = [ "-DOHOS_MEDIA_LOG_DFX" ]
-  include_dirs = [ "//foundation/multimedia/player_framework/services/dfx" ]
-}
-
-ohos_shared_library("media_service_log_dfx") {
-  install_enable = true
-
-  sources = [ "dfx_log_dump.cpp" ]
-
-  include_dirs = [
-    ".",
-    "//commonlibrary/c_utils/base/include",
-  ]
-
-  cflags = [
-    "-std=c++17",
-    "-fno-rtti",
-    "-fno-exceptions",
-    "-Wall",
-    "-fno-common",
-    "-fstack-protector-strong",
-    "-Wshadow",
-    "-FPIC",
-    "-FS",
-    "-O2",
-    "-D_FORTIFY_SOURCE=2",
-    "-fvisibility=hidden",
-    "-Wformat=2",
-    "-Wfloat-equal",
-    "-Wdate-time",
-    "-Werror",
-    "-Wextra",
-    "-Wimplicit-fallthrough",
-    "-Wsign-compare",
-    "-Wunused-parameter",
-  ]
-
-  external_deps = [
-    "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
-  ]
-
-  subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
-}
-
-ohos_shared_library("media_service_dfx") {
-  install_enable = true
-
-  sources = [ "service_dump_manager.cpp" ]
+ohos_static_library("media_engine_dfx") {
+  sources = [ "engine_dump_manager.cpp" ]
 
   include_dirs = [
     ".",
     "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "//foundation/multimedia/player_framework/services/dfx",
+    "//third_party/glib/glibmemdfx",
   ]
 
   cflags = [
@@ -94,11 +47,10 @@ ohos_shared_library("media_service_dfx") {
     "-Wunused-parameter",
   ]
 
-  external_deps = [
-    "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+  deps = [
+    "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
+    "//third_party/glib:g_mem_dfx",
   ]
-
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"
 }

@@ -23,6 +23,7 @@
 #include "param_wrapper.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "engine_dump_manager.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstLoader"};
@@ -293,6 +294,7 @@ int32_t GstLoader::SetUp()
     if (isInit_) {
         return MSERR_OK;
     }
+    EngineDumpManager::GetInstance().Init();
 
     EnableGLog(GLogCallbackFunc);
     gst_debug_remove_log_function(gst_debug_log_default);
