@@ -17,10 +17,12 @@ import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/media_player"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
+
 ##############################fuzztest##########################################
 ohos_fuzztest("PlayerSeekFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest/playerseek_fuzzer"
+  fuzz_config_file =
+      "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest/playerseek_fuzzer"
 
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
