@@ -72,9 +72,7 @@ ohos_shared_library("gst_mem_src") {
     "gst_surface_src.cpp",
   ]
 
-  configs = [
-    ":gst_mem_src_config",
-  ]
+  configs = [ ":gst_mem_src_config" ]
 
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
@@ -89,9 +87,7 @@ ohos_shared_library("gst_mem_src") {
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
