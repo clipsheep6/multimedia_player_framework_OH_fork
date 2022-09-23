@@ -182,7 +182,8 @@ ohos_shared_library("native_media_venc") {
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_codecbase",
-    "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",  ]
+    "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
+    ]
 
   external_deps = [
     "c_utils:utils",
