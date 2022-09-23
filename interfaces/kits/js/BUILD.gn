@@ -146,7 +146,7 @@ ohos_shared_library("media") {
   external_deps = [
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
+    # "ipc:ipc_core",
   ]
 
   relative_install_dir = "module/multimedia"
