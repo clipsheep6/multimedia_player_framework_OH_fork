@@ -29,6 +29,10 @@ group("fuzztest") {
     "$MEDIA_ROOT_DIR/player_fuzztest/playerfile_fuzzer:PlayerFileFuzzTest",
     "$MEDIA_ROOT_DIR/player_fuzztest/playerseek_fuzzer:PlayerSeekFuzzTest",
     "$MEDIA_ROOT_DIR/player_fuzztest/playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiochannels_fuzzer:RecorderSetAudioChannelsFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudioencoder_fuzzer:RecorderSetAudioEncoderFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudioencodingbitrate_fuzzer:RecorderSetAudioEncodingBitRateFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiosource_fuzzer:RecorderSetAudioSourceFuzzTest",
   ]
 }
 ###############################################################################
