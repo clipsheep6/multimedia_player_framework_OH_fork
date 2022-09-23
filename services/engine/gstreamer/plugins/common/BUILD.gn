@@ -75,8 +75,8 @@ ohos_shared_library("gst_media_common") {
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
-    "//third_party/gstreamer/gstplugins_base:gstvideo",
-    "//third_party/gstreamer/gstreamer:gstbase",
+    # "//third_party/gstreamer/gstplugins_base:gstvideo",
+    # "//third_party/gstreamer/gstreamer:gstbase",
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
