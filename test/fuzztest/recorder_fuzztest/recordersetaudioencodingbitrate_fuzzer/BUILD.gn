@@ -55,8 +55,8 @@ ohos_fuzztest("RecorderSetAudioEncodingBitRateFuzzTest") {
   ]
   if (multimedia_player_framework_support_recorder) {
     sources = [
-      "../../common/aw_common.cpp",
-      "../../common/test_recorder.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_recorder.cpp",
       "recordersetaudioencodingbitrate_fuzzer.cpp",
     ]
   }

@@ -55,7 +55,7 @@ ohos_fuzztest("AVmetadataResolveMetadataFuzzTest") {
   ]
   if (multimedia_player_framework_support_metadata) {
     sources = [
-      "../../common/test_metadata.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_metadata.cpp",
       "avmetadataresolvemetadata_fuzzer.cpp",
     ]
   }
