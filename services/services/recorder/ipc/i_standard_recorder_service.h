@@ -57,6 +57,7 @@ public:
     virtual int32_t Release() = 0;
     virtual int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) = 0;
     virtual int32_t DestroyStub() = 0;
+    virtual int32_t HeartBeat() = 0;
     /**
      * IPC code ID
      */
@@ -91,6 +92,7 @@ public:
         RELEASE,
         SET_FILE_SPLIT_DURATION,
         DESTROY,
+        HEARTBEAT,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderService");

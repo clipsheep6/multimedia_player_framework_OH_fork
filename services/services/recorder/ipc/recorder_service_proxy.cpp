@@ -657,5 +657,24 @@ int32_t RecorderServiceProxy::DestroyStub()
     }
     return reply.ReadInt32();
 }
+
+int32_t RecorderServiceProxy::HeartBeat()
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
+    int error = Remote()->SendRequest(HEARTBEAT, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("heartbeat failed, error: %{public}d", error);
+        return error;
+    }
+    return reply.ReadInt32();
+}
 } // namespace Media
 } // namespace OHOS
