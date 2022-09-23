@@ -161,7 +161,7 @@ void PlayerTrackParse::AddProbeToPad(GstPad *pad)
                 GST_ELEMENT_NAME(GST_PAD_PARENT(pad)), PAD_NAME(pad));
             return;
         }
-        (void)padProbes_.emplace_back(PadInfo { pad, probeId });
+        (void)padProbes_.emplace(pad, probeId);
     }
     {
         std::unique_lock<std::mutex> lock(trackInfoMutex_);
@@ -208,8 +208,8 @@ void PlayerTrackParse::Stop()
     {
         std::unique_lock<std::mutex> lock(padProbeMutex_);
         // PlayerTrackParse::ProbeCallback
-        for (auto &item : padProbes_) {
-            gst_pad_remove_probe(item.pad, item.probeId);
+        for (auto &[pad, probeId] : padProbes_) {
+            gst_pad_remove_probe(pad, probeId);
         }
         padProbes_.clear();
     }

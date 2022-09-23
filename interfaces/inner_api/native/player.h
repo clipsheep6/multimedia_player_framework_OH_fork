@@ -262,7 +262,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t Prepare() = 0;
+    __attribute__((deprecated)) virtual int32_t Prepare() = 0;
 
     /**
      * @brief Prepare the playback environment and buffers media data asynchronous.

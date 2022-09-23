@@ -26,7 +26,6 @@
 #include "playbin_state.h"
 #include "gst_utils.h"
 #include "media_dfx.h"
-#include "param_wrapper.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinCtrlerBase"};
@@ -174,21 +173,6 @@ int32_t PlayBinCtrlerBase::SetSource(const std::shared_ptr<GstAppsrcWrap> &appsr
     return MSERR_OK;
 }
 
-bool PlayBinCtrlerBase::IsPrepareWaitEnable() const
-{
-    std::string enable;
-    int32_t res = OHOS::system::GetStringParameter("sys.media.player.prepare.wait", enable, "");
-    if (res != 0 || enable.empty()) {
-        return false;
-    }
-
-    MEDIA_LOGI("KPI-TRACE: sys.media.player.prepare.wait.enable=%{public}s", enable.c_str());
-    if (enable != "true") {
-        return false;
-    }
-    return true;
-}
-
 int32_t PlayBinCtrlerBase::Prepare()
 {
     MEDIA_LOGD("enter");
@@ -199,26 +183,18 @@ int32_t PlayBinCtrlerBase::Prepare()
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
     {
-        std::unique_lock<std::mutex> condLock(condMutex_);
-        if (IsPrepareWaitEnable()) {
-            stateCond_.wait(condLock, [this]() {
-                return GetCurrState() == preparedState_ || isErrorHappened_;
-            });
-        } else {
-            static constexpr int32_t timeout = 5;
-            stateCond_.wait_for(condLock, std::chrono::seconds(timeout), [this]() { // Prevent deadlock
-                return GetCurrState() == preparedState_ || isErrorHappened_;
-            });
-        }
+        MEDIA_LOGD("Prepare Start");
+        preparingCond_.wait(lock);
+        MEDIA_LOGD("Prepare End");
     }
 
-    if (GetCurrState() != preparedState_) {
+    if (isErrorHappened_) {
         MEDIA_LOGE("Prepare failed");
         GstStateChangeReturn gstRet = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_READY);
         if (gstRet == GST_STATE_CHANGE_FAILURE) {
             MEDIA_LOGE("Failed to change playbin's state to %{public}s", gst_element_state_get_name(GST_STATE_READY));
         }
-        return MSERR_UNKNOWN;
+        return MSERR_INVALID_STATE;
     }
 
     MEDIA_LOGD("exit");
@@ -298,45 +274,37 @@ int32_t PlayBinCtrlerBase::Seek(int64_t timeUs, int32_t seekOption)
     return MSERR_OK;
 }
 
-int32_t PlayBinCtrlerBase::StopInternal()
+int32_t PlayBinCtrlerBase::Stop()
 {
+    MEDIA_LOGD("enter");
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    if (GetCurrState() == preparingState_) {
+        MEDIA_LOGD("begin wait stop for current status is preparing");
+        static constexpr int32_t timeout = 2;
+        preparedCond_.wait_for(lock, std::chrono::seconds(timeout));
+        MEDIA_LOGD("end wait stop for current status is preparing");
+    }
+
     if (appsrcWrap_ != nullptr) {
         appsrcWrap_->Stop();
     }
 
-    auto state = GetCurrState();
-    if (state == idleState_ || state == stoppingState_ || state == stoppedState_ || state == initializedState_ ||
-        state == preparingState_) {
-        MEDIA_LOGI("curr state is %{public}s, skip", state->GetStateName().c_str());
-        return MSERR_OK;
-    }
-
     g_object_set(playbin_, "exit-block", 1, nullptr);
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-    int32_t ret = currState->Stop();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Stop failed");
+    (void)currState->Stop();
+
     {
-        std::unique_lock<std::mutex> condLock(condMutex_);
         MEDIA_LOGD("Stop Start");
-        stateCond_.wait(condLock, [this]() {
-            return GetCurrState() == stoppedState_;
-        });
+        stoppingCond_.wait(lock);
         MEDIA_LOGD("Stop End");
     }
 
     if (GetCurrState() != stoppedState_) {
         MEDIA_LOGE("Stop failed");
-        return MSERR_UNKNOWN;
+        return MSERR_INVALID_STATE;
     }
     return MSERR_OK;
-}
-
-int32_t PlayBinCtrlerBase::Stop()
-{
-    MEDIA_LOGD("enter");
-
-    std::unique_lock<std::mutex> lock(mutex_);
-    return StopInternal();
 }
 
 int64_t PlayBinCtrlerBase::GetDuration()
@@ -488,7 +456,6 @@ int32_t PlayBinCtrlerBase::Reset() noexcept
         elemUnSetupListener_ = nullptr;
         autoPlugSortListener_ = nullptr;
     }
-    (void)StopInternal();
     // Do it here before the ChangeState to IdleState, for avoding the deadlock when msg handler
     // try to call the ChangeState.
     ExitInitializedState();
@@ -1181,9 +1148,13 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
     if (msg.type == PlayBinMsgType::PLAYBIN_MSG_ERROR) {
         MEDIA_LOGE("error happend, error code: %{public}d", msg.code);
 
-        std::unique_lock<std::mutex> condLock(condMutex_);
-        isErrorHappened_ = true;
-        stateCond_.notify_all();
+        {
+            std::unique_lock<std::mutex> lock(mutex_);
+            isErrorHappened_ = true;
+            preparingCond_.notify_all();
+            stoppingCond_.notify_all();
+            return;
+        }
     }
 
     MEDIA_LOGD("report msg, type: %{public}d", msg.type);

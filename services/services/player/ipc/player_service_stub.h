@@ -104,6 +104,7 @@ private:
     std::shared_ptr<IPlayerService> playerServer_ = nullptr;
     using PlayerStubFunc = int32_t(PlayerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, PlayerStubFunc> playerFuncs_;
+    TaskQueue taskQue_;
 };
 } // namespace Media
 } // namespace OHOS
