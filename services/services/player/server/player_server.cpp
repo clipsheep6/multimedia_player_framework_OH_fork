@@ -270,6 +270,15 @@ int32_t PlayerServer::HandlePrepare()
                    config_.leftVolume, config_.rightVolume, ret);
     }
     (void)playerEngine_->SetLooping(config_.looping);
+
+    {
+        auto rateTask = std::make_shared<TaskHandler<void>>([this]() {
+            auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+            (void)currState->SetPlaybackSpeed(config_.speedMode);
+        });
+
+        (void)taskMgr_.LaunchTask(rateTask, PlayerServerTaskType::RATE_CHANGE);
+    }
     return MSERR_OK;
 }
 
