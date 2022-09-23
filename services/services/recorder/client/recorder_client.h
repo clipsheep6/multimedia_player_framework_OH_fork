@@ -16,6 +16,7 @@
 #ifndef RECORDER_SERVICE_CLIENT_H
 #define RECORDER_SERVICE_CLIENT_H
 
+#include <thread>
 #include "i_recorder_service.h"
 #include "i_standard_recorder_service.h"
 #include "recorder_listener_stub.h"
@@ -58,8 +59,12 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
+    int32_t HeartBeat() override;
     // RecorderClient
     void MediaServerDied();
+    void CreateWatchDog();
+    void StopWatchDog();
+    void WatchDog();
 
 private:
     int32_t CreateListenerObject();
@@ -68,6 +73,11 @@ private:
     sptr<RecorderListenerStub> listenerStub_ = nullptr;
     std::shared_ptr<RecorderCallback> callback_ = nullptr;
     std::mutex mutex_;
+
+    std::unique_ptr<std::thread> watchDogThread_;
+    std::atomic<bool> stopWatchDog = false;
+    std::condition_variable watchDogCond_;
+    std::mutex watchDogMutex_;
 };
 } // namespace Media
 } // namespace OHOS

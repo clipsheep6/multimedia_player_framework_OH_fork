@@ -24,6 +24,10 @@
 
 namespace OHOS {
 namespace Media {
+enum class RecorderWatchDogStatus : int32_t {
+    WATCHDOG_WATCHING = 0,
+    WATCHDOG_PAUSE,
+};
 class RecorderServer : public IRecorderService, public IRecorderEngineObs, public NoCopyable {
 public:
     static std::shared_ptr<IRecorderService> Create();
@@ -70,7 +74,10 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
+    int32_t HeartBeat() override;
     int32_t DumpInfo(int32_t fd);
+    void WatchDog();
+    void StopWatchDog();
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
@@ -80,6 +87,8 @@ private:
     int32_t Init();
     bool CheckPermission();
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);
+    int32_t ResumeAct();
+    int32_t PauseAct();
 
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
@@ -107,6 +116,13 @@ private:
         int64_t maxFileSize;
     } config_;
     std::string lastErrMsg_;
+
+    std::unique_ptr<std::thread> watchDogThread_;
+    RecorderWatchDogStatus watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
+    std::atomic<bool> stopWatchDog = false;
+    std::atomic<uint32_t> watchDogCount = 0;
+    std::condition_variable watchDogCond_;
+    std::mutex watchDogMutex_;
 };
 } // namespace Media
 } // namespace OHOS
