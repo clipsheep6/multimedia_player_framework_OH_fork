@@ -39,7 +39,7 @@ ohos_fuzztest("PlayerSeekFuzzTest") {
   ]
   if (multimedia_player_framework_support_player) {
     sources = [
-      "../../common/test_player.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_player.cpp",
       "playerseek_fuzzer.cpp",
     ]
   }
