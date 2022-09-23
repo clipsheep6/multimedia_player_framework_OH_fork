@@ -704,7 +704,8 @@ void RecorderServer::WatchDog()
     while (true) {
         std::unique_lock<std::mutex> lockWatchDog(watchDogMutex_);
         watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] {
-            return stopWatchDog.load(); });
+            return stopWatchDog.load(); 
+        });
         CHECK_AND_BREAK(stopWatchDog.load() == false);
 
         std::lock_guard<std::mutex> lock(mutex_);

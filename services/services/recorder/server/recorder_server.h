@@ -24,6 +24,11 @@
 
 namespace OHOS {
 namespace Media {
+
+enum class RecorderWatchDogStatus : int32_t {
+    WATCHDOG_WATCHING = 0,
+    WATCHDOG_PAUSE,
+};
 class RecorderServer : public IRecorderService, public IRecorderEngineObs, public NoCopyable {
 public:
     static std::shared_ptr<IRecorderService> Create();
@@ -37,11 +42,6 @@ public:
         REC_RECORDING,
         REC_PAUSED,
         REC_ERROR,
-    };
-
-    enum WatchDogStatus {
-        WATCHDOG_WATCHING = 0,
-        WATCHDOG_PAUSE,
     };
 
     // IRecorderService override
@@ -119,7 +119,7 @@ private:
     std::string lastErrMsg_;
 
     std::unique_ptr<std::thread> watchDogThread_;
-    WatchDogStatus watchDogstatus_ = WATCHDOG_WATCHING;
+    RecorderWatchDogStatus watchDogstatus_ = WATCHDOG_WATCHING;
     std::atomic<bool> stopWatchDog = false;
     std::atomic<uint32_t> watchDogCount = 0;
     std::condition_variable watchDogCond_;
