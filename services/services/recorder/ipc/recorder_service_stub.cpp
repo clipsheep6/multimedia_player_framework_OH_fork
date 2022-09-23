@@ -81,6 +81,7 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[RELEASE] = &RecorderServiceStub::Release;
     recFuncs_[SET_FILE_SPLIT_DURATION] = &RecorderServiceStub::SetFileSplitDuration;
     recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
+    recFuncs_[HEARTBEAT] = &RecorderServiceStub::HeartBeat;
     return MSERR_OK;
 }
 
@@ -302,6 +303,12 @@ int32_t RecorderServiceStub::SetFileSplitDuration(FileSplitType type, int64_t ti
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return recorderServer_->SetFileSplitDuration(type, timestamp, duration);
+}
+
+int32_t RecorderServiceStub::HeartBeat()
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    return recorderServer_->HeartBeat();
 }
 
 int32_t RecorderServiceStub::DumpInfo(int32_t fd)
@@ -554,6 +561,13 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::HeartBeat(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    reply.WriteInt32(HeartBeat());
     return MSERR_OK;
 }
 } // namespace Media

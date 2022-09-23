@@ -438,6 +438,17 @@ public:
      * @version 1.0
      */
     virtual int32_t SetParameter(int32_t sourceId, const Format &format) = 0;
+
+    /**
+     * @brief Called periodically during recording. Notifies the recording module that the application is running
+     *  normally.
+     *
+     * @return Returns {@link SUCCESS} if notification complete; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t HeartBeat() = 0;
 };
 } // namespace Media
 } // namespace OHOS

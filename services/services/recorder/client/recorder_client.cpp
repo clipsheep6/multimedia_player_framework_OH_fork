@@ -33,6 +33,8 @@ std::shared_ptr<RecorderClient> RecorderClient::Create(const sptr<IStandardRecor
     int32_t ret = recorder->CreateListenerObject();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to create listener object..");
 
+    recorder->CreateWatchDog();
+
     return recorder;
 }
 
@@ -47,6 +49,7 @@ RecorderClient::~RecorderClient()
     std::lock_guard<std::mutex> lock(mutex_);
     if (recorderProxy_ != nullptr) {
         (void)recorderProxy_->DestroyStub();
+        StopWatchDog();
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -56,6 +59,7 @@ void RecorderClient::MediaServerDied()
     std::lock_guard<std::mutex> lock(mutex_);
     recorderProxy_ = nullptr;
     listenerStub_ = nullptr;
+    StopWatchDog();
     if (callback_ != nullptr) {
         callback_->OnError(RECORDER_ERROR_INTERNAL, MSERR_SERVICE_DIED);
     }
@@ -341,6 +345,46 @@ int32_t RecorderClient::SetFileSplitDuration(FileSplitType type, int64_t timesta
 int32_t RecorderClient::SetParameter(int32_t sourceId, const Format &format)
 {
     return MSERR_INVALID_OPERATION;
+}
+
+int32_t RecorderClient::HeartBeat()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
+
+    MEDIA_LOGD("HeartBeat");
+    return recorderProxy_->HeartBeat();
+}
+
+void RecorderClient::CreateWatchDog()
+{
+    watchDogThread_ = std::make_unique<std::thread>(&RecorderClient::WatchDog, this);
+}
+
+void RecorderClient::StopWatchDog()
+{
+    if (watchDogThread_ != nullptr && watchDogThread_->joinable()) {
+        stopWatchDog.store(true);
+        watchDogCond_.notify_all();
+        watchDogThread_->join();
+        watchDogThread_.reset();
+        watchDogThread_ = nullptr;
+    }
+}
+
+void RecorderClient::WatchDog()
+{
+    static constexpr uint8_t timeInterval = 1; // Heartbeat once per second
+
+    while (true) {
+        std::unique_lock<std::mutex> lock(watchDogMutex_);
+        watchDogCond_.wait_for(lock, std::chrono::seconds(timeInterval), [this] { return stopWatchDog.load(); });
+
+        CHECK_AND_BREAK(stopWatchDog.load() == false);
+
+        int32_t ret = HeartBeat();
+        CHECK_AND_BREAK_LOG(ret == MSERR_OK, "failed to heartbeat..");
+    }
 }
 } // namespace Media
 } // namespace OHOS
