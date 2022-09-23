@@ -24,7 +24,6 @@
 
 namespace OHOS {
 namespace Media {
-
 enum class RecorderWatchDogStatus : int32_t {
     WATCHDOG_WATCHING = 0,
     WATCHDOG_PAUSE,
