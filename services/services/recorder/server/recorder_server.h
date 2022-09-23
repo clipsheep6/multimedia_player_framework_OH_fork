@@ -118,7 +118,7 @@ private:
     std::string lastErrMsg_;
 
     std::unique_ptr<std::thread> watchDogThread_;
-    RecorderWatchDogStatus watchDogstatus_ = WATCHDOG_WATCHING;
+    RecorderWatchDogStatus watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
     std::atomic<bool> stopWatchDog = false;
     std::atomic<uint32_t> watchDogCount = 0;
     std::condition_variable watchDogCond_;
