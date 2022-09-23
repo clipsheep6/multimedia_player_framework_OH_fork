@@ -183,7 +183,7 @@ ohos_shared_library("native_media_venc") {
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_codecbase",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
-    ]
+  ]
 
   external_deps = [
     "c_utils:utils",
