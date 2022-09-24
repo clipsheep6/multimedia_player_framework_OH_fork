@@ -115,12 +115,8 @@ int32_t PlayerServiceStub::DestroyStub()
 {
     playerCallback_ = nullptr;
     if (playerServer_ != nullptr) {
-        auto task = std::make_shared<TaskHandler<void>>([&, this] {
-            (void)playerServer_->Release();
-            playerServer_ = nullptr;
-        });
-        (void)taskQue_.EnqueueTask(task);
-        (void)task->GetResult();
+        (void)playerServer_->Release();
+        playerServer_ = nullptr;
     }
 
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, AsObject());
@@ -149,7 +145,6 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
             auto result = task->GetResult();
             CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION,
                 "failed to OnRemoteRequest code: %{public}u", code);
-            
             return result.Value();
         }
     }
