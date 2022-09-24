@@ -26,6 +26,7 @@ private:
     EngineDumpManager() = default;
     ~EngineDumpManager() = default;
     int32_t DumpGlibMemInfo(int32_t fd);
+    int32_t DumpGlibMemPoolInfo(int32_t fd);
 };
 } // namespace Media
 } // namespace OHOS
