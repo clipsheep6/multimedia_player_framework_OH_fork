@@ -21,7 +21,6 @@
 #include "directory_ex.h"
 #include "audio_system_manager.h"
 #include "player_sinkprovider.h"
-#include "glib_mem_protect.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerEngineGstImpl"};
@@ -51,7 +50,6 @@ PlayerEngineGstImpl::~PlayerEngineGstImpl()
 {
     (void)Reset();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-    GlibMemProtect::GetInstance().EngineExit();
 }
 
 bool PlayerEngineGstImpl::IsFileUrl(const std::string &url) const
