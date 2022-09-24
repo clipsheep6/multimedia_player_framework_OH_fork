@@ -93,10 +93,7 @@ ohos_shared_library("gst_mem_sink") {
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-    "init:libbegetutil",
-  ]
+  external_deps = [ "init:libbegetutil" ]
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
