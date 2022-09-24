@@ -49,6 +49,7 @@ config("media_engine_gst_player_config") {
     "//foundation/multimedia/player_framework/services/common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/playbin_adapter",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/appsrc_wrap",
+    "//foundation/multimedia/player_framework/services/engine/gstreamer/common/glib_mem_protect",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/metadata",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/utils",
     "//foundation/multimedia/audio_framework/frameworks/innerkitsimpl/common/include",

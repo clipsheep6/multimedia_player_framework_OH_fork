@@ -68,6 +68,7 @@ config("media_engine_gst_common_config") {
 ohos_static_library("media_engine_gst_common") {
   sources = [
     "appsrc_wrap/gst_appsrc_wrap.cpp",
+    "glib_mem_protect/glib_mem_protect.cpp",
     "message/gst_msg_converter.cpp",
     "message/gst_msg_processor.cpp",
     "metadata/gst_meta_parser.cpp",

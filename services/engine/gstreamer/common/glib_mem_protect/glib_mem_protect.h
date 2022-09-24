@@ -12,21 +12,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ENGINE_DUMP_MANAGER_H
-#define ENGINE_DUMP_MANAGER_H
+#ifndef GLIB_MEM_PROTECT_H
+#define GLIB_MEM_PROTECT_H
 #include <cstdint>
 
 namespace OHOS {
 namespace Media {
-class __attribute__((visibility("default"))) EngineDumpManager {
+class __attribute__((visibility("default"))) GlibMemProtect {
 public:
-    static EngineDumpManager &GetInstance();
-    void Init();
+    static GlibMemProtect &GetInstance();
+    void EngineExit();
 private:
-    EngineDumpManager() = default;
-    ~EngineDumpManager() = default;
-    int32_t DumpGlibMemInfo(int32_t fd);
-    int32_t DumpGlibMemPoolInfo(int32_t fd);
+    GlibMemProtect() = default;
+    ~GlibMemProtect() = default;
+    void ExitProcess();
 };
 } // namespace Media
 } // namespace OHOS
