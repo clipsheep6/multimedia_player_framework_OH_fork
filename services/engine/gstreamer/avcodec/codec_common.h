@@ -111,6 +111,8 @@ struct ProcessorConfig {
     bool needFilter_ = false;
     bool isEncoder_ = false;
     uint32_t bufferSize_ = 0;
+    uint32_t height_ = 0;
+    uint32_t width_ = 0;
     BufferFilterMode filterMode_ = BUFFER_FILTER_MODE_INVALID;
     AdtsFixedHeader adtsHead_;
 };
