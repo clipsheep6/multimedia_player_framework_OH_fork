@@ -39,7 +39,7 @@ RecorderSetAudioSampleRateFuzzer::~RecorderSetAudioSampleRateFuzzer()
 bool RecorderSetAudioSampleRateFuzzer::FuzzRecorderSetAudioSampleRatee(uint8_t *data, size_t size)
 {
     RETURN_IF(TestRecorder::CreateRecorder(), false);
-    constexpr uint32_t RECORDER_TIME = 5;
+    constexpr uint32_t recorderTime = 5;
     static VideoRecorderConfig_ g_videoRecorderConfig;
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
@@ -67,7 +67,7 @@ bool RecorderSetAudioSampleRateFuzzer::FuzzRecorderSetAudioSampleRatee(uint8_t *
         RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
-        sleep(RECORDER_TIME);
+        sleep(recorderTime);
         RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
         StopBuffer(PURE_VIDEO);
         RETURN_IF(TestRecorder::Reset(g_videoRecorderConfig), true);
