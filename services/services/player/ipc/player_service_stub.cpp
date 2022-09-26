@@ -115,12 +115,8 @@ int32_t PlayerServiceStub::DestroyStub()
 {
     playerCallback_ = nullptr;
     if (playerServer_ != nullptr) {
-        auto task = std::make_shared<TaskHandler<void>>([&, this] {
-            (void)playerServer_->Release();
-            playerServer_ = nullptr;
-        });
-        (void)taskQue_.EnqueueTask(task);
-        (void)task->GetResult();
+        (void)playerServer_->Release();
+        playerServer_ = nullptr;
     }
 
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, AsObject());
@@ -142,24 +138,18 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
     if (itFunc != playerFuncs_.end()) {
         auto memberFunc = itFunc->second;
         if (memberFunc != nullptr) {
-            int32_t ret = (this->*memberFunc)(data, reply);
-            if (ret != MSERR_OK) {
-                MEDIA_LOGE("calling memberFunc is failed.");
-            }
-            return MSERR_OK;
+            auto task = std::make_shared<TaskHandler<int>>([&, this] {
+                return (this->*memberFunc)(data, reply);
+            });
+            (void)taskQue_.EnqueueTask(task);
+            auto result = task->GetResult();
+            CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION,
+                "failed to OnRemoteRequest code: %{public}u", code);
+            return result.Value();
         }
     }
     MEDIA_LOGW("PlayerServiceStub: no member func supporting, applying default process");
-
-    auto task = std::make_shared<TaskHandler<int>>([&, this] {
-        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
-    });
-    (void)taskQue_.EnqueueTask(task);
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION,
-        "failed to OnRemoteRequest code: %{public}u", code);
-    
-    return result.Value();
+    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
 }
 
 int32_t PlayerServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
