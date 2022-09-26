@@ -238,6 +238,9 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
         audioCacheCtrl_->resumeTime_ = bufferOut->timestamp;
         MEDIA_LOGD("audio resume timestamp %{public}" PRIu64 "", audioCacheCtrl_->resumeTime_);
         audioCacheCtrl_->persistTime_ = std::fabs(audioCacheCtrl_->resumeTime_ - audioCacheCtrl_->pausedTime_);
+        if (audioCacheCtrl_->persistTime_ > bufferDurationNs_) {
+            audioCacheCtrl_->persistTime_ -= bufferDurationNs_;
+        }
         audioCacheCtrl_->pausedTime_ = 1; // reset the pause time
         audioCacheCtrl_->totalPauseTime_ += audioCacheCtrl_->persistTime_;
         MEDIA_LOGD("audio has %{public}d times pause, total PauseTime: %{public}" PRIu64 "",
