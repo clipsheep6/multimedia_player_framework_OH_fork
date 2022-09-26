@@ -550,6 +550,8 @@ void PlayBinCtrlerBase::PlaybackCompletedState::StateEnter()
 int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
 {
     ctrler_.isDuration_ = false;
+    PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, 0, 0, {} };
+    ctrler_.ReportMessage(posUpdateMsg);
     return ctrler_.SeekInternal(0, IPlayBinCtrler::PlayBinSeekMode::PREV_SYNC);
 }
 
