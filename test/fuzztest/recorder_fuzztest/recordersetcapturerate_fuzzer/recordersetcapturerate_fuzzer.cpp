@@ -37,6 +37,7 @@ RecorderSetCaptureRateFuzzer::~RecorderSetCaptureRateFuzzer()
 }
 bool RecorderSetCaptureRateFuzzer::FuzzRecorderSetCaptureRate(uint8_t *data, size_t size)
 {
+    constexpr int32_t audioMaxFileSize = 5000;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
@@ -44,8 +45,7 @@ bool RecorderSetCaptureRateFuzzer::FuzzRecorderSetCaptureRate(uint8_t *data, siz
     g_videoRecorderConfig.videoFormat = MPEG4;
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_video_SetMaxFileSize_001.mp4", O_RDWR);
 
-    if (g_videoRecorderConfig.outputFd > 0)
-    {
+    if (g_videoRecorderConfig.outputFd > 0) {
         RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
@@ -53,7 +53,7 @@ bool RecorderSetCaptureRateFuzzer::FuzzRecorderSetCaptureRate(uint8_t *data, siz
         g_videoRecorderConfig.videoSourceId = ProduceRandomNumberCrypt();
 
         RETURN_IF(TestRecorder::SetCaptureRate(g_videoRecorderConfig, *reinterpret_cast<double *>(data)), true);
-        RETURN_IF(TestRecorder::SetMaxFileSize(5000, g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::SetMaxFileSize(audioMaxFileSize, g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::SetNextOutputFile(g_videoRecorderConfig), true);
     }
     close(g_videoRecorderConfig.outputFd);

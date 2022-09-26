@@ -37,7 +37,9 @@ RecorderSetFileSplitDurationFuzzer::~RecorderSetFileSplitDurationFuzzer()
 }
 bool RecorderSetFileSplitDurationFuzzer::FuzzRecorderSetFileSplitDuration(uint8_t *data, size_t size)
 {
-    constexpr int32_t FILE_SPLIT_TYPE_LIST = 4;
+    constexpr int32_t fileSplitTypeList = 4;
+    constexpr int32_t audioFps = 30;
+    constexpr int32_t audioMaxFileSize = 5000;
     recorder = RecorderFactory::CreateRecorder();
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
@@ -46,29 +48,29 @@ bool RecorderSetFileSplitDurationFuzzer::FuzzRecorderSetFileSplitDuration(uint8_
     g_videoRecorderConfig.videoFormat = MPEG4;
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_video_SetMaxFileSize_001.mp4", O_RDWR);
 
-    if (g_videoRecorderConfig.outputFd > 0)
-    {
+    if (g_videoRecorderConfig.outputFd > 0) {
         RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetMaxDuration(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetOutputFile(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), false);
-        recorder->SetCaptureRate(0, 30);
-        RETURN_IF(TestRecorder::SetMaxFileSize(5000, g_videoRecorderConfig), false);
+        recorder->SetCaptureRate(0, audioFps);
+        RETURN_IF(TestRecorder::SetMaxFileSize(audioMaxFileSize, g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetNextOutputFile(g_videoRecorderConfig), false);
 
-        FileSplitType fileSplitType[FILE_SPLIT_TYPE_LIST] {
+        FileSplitType fileSplitType[fileSplitTypeList] {
             FileSplitType::FILE_SPLIT_POST,
             FileSplitType::FILE_SPLIT_PRE,
             FileSplitType::FILE_SPLIT_NORMAL,
             FileSplitType::FILE_SPLIT_BUTT,
         };
-        int32_t  indexValue = *reinterpret_cast<int32_t *>(data) % (FILE_SPLIT_TYPE_LIST);
+        int32_t  indexValue = *reinterpret_cast<int32_t *>(data) % (fileSplitTypeList);
         int64_t timestampValue = static_cast<int64_t>(ProduceRandomNumberCrypt());
         uint32_t durationValue = static_cast<uint32_t>(ProduceRandomNumberCrypt());
 
-        RETURN_IF(TestRecorder::SetFileSplitDuration(fileSplitType[indexValue], timestampValue, durationValue, g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::SetFileSplitDuration(fileSplitType[indexValue], 
+            timestampValue, durationValue, g_videoRecorderConfig), true);
     }
     close(g_videoRecorderConfig.outputFd);
     return false;

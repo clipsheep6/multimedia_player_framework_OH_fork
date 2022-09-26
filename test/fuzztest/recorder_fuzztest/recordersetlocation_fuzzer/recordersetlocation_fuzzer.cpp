@@ -37,7 +37,8 @@ RecorderSetLocationFuzzer::~RecorderSetLocationFuzzer()
 }
 bool RecorderSetLocationFuzzer::FuzzRecorderSetLocation(uint8_t *data, size_t size)
 {
-    constexpr uint32_t RECORDER_TIME = 5;
+    constexpr uint32_t recorderTime = 5;
+    constexpr uint32_t setRotation = 90;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
@@ -45,8 +46,7 @@ bool RecorderSetLocationFuzzer::FuzzRecorderSetLocation(uint8_t *data, size_t si
     g_videoRecorderConfig.videoFormat = MPEG4;
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_video_SetOrientationHint_001.mp4", O_RDWR);
     
-    if (g_videoRecorderConfig.outputFd >= 0)
-    {
+    if (g_videoRecorderConfig.outputFd >= 0) {
         RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
@@ -55,11 +55,11 @@ bool RecorderSetLocationFuzzer::FuzzRecorderSetLocation(uint8_t *data, size_t si
         float longitudeValue = static_cast<float>(ProduceRandomNumberCrypt());
 
         recorder->SetLocation(latitudeValue, longitudeValue);
-        recorder->SetOrientationHint(90);
+        recorder->SetOrientationHint(setRotation);
         RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
-        sleep(RECORDER_TIME);
+        sleep(recorderTime);
         RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
         StopBuffer(PURE_VIDEO);
         RETURN_IF(TestRecorder::Reset(g_videoRecorderConfig), true);
