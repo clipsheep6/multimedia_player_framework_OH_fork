@@ -29,8 +29,8 @@ group("fuzztest") {
     "$MEDIA_ROOT_DIR/player_fuzztest/playerfile_fuzzer:PlayerFileFuzzTest",
     "$MEDIA_ROOT_DIR/player_fuzztest/playerseek_fuzzer:PlayerSeekFuzzTest",
     "$MEDIA_ROOT_DIR/player_fuzztest/playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
-    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiochannels_fuzzer:RecorderSetAudioChannelsFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordergetsurface_fuzzer:RecorderGetSurfaceFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiochannels_fuzzer:RecorderSetAudioChannelsFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiosamplerate_fuzzer:RecorderSetAudioSampleRateFuzzTest",
   ]
 }

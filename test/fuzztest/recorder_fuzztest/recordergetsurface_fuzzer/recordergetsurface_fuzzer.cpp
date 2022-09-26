@@ -37,9 +37,10 @@ RecorderGetSurfaceFuzzer::~RecorderGetSurfaceFuzzer()
 }
 bool RecorderGetSurfaceFuzzer::FuzzRecorderGetSurface(uint8_t *data, size_t size)
 {
+    constexpr uint32_t RECORDER_TIME = 5;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
-    static VideoRecorderConfig g_videoRecorderConfig;
+    static VideoRecorderConfig_ g_videoRecorderConfig;
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_video_yuv_mpeg4.mp4", O_RDWR);
