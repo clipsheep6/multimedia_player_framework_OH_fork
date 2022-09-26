@@ -54,8 +54,8 @@ bool RecorderGetSurfaceFuzzer::FuzzRecorderGetSurface(uint8_t *data, size_t size
         RETURN_IF(TestRecorder::GetSurface(g_videoRecorderConfig), true);
 
         if (g_videoRecorderConfig.vSource == VIDEO_SOURCE_SURFACE_ES) {
-            int32_t ret = GetStubFile();
-            if(ret != 0) {
+            int32_t retValue = GetStubFile();
+            if (retValue != 0) {
                 return true;
             }
             camereHDIThread.reset(new(std::nothrow) std::thread(&TestRecorder::HDICreateESBuffer, this));
