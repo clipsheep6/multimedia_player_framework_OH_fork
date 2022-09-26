@@ -30,8 +30,13 @@ EngineDumpManager &EngineDumpManager::GetInstance()
 void EngineDumpManager::Init()
 {
     auto MemInfoDump = std::bind(&EngineDumpManager::DumpGlibMemInfo, this, std::placeholders::_1);
-    std::u16string key = u"glibmem";
-    ServiceDumpManager::GetInstance().RegisterDfxDumper(key, MemInfoDump);
+    std::u16string keyMem = u"glibmem";
+    ServiceDumpManager::GetInstance().RegisterDfxDumper(keyMem, MemInfoDump);
+
+    auto MemPoolInfoDump = std::bind(&EngineDumpManager::DumpGlibMemPoolInfo, this, std::placeholders::_1);
+    std::u16string keyPool = u"glibpool";
+    ServiceDumpManager::GetInstance().RegisterDfxDumper(keyPool, MemPoolInfoDump);
+
     std::string dumpString;
     GetGMemDump(dumpString);
 }
@@ -40,6 +45,17 @@ int32_t EngineDumpManager::DumpGlibMemInfo(int32_t fd)
 {
     std::string dumpString;
     GetGMemDump(dumpString);
+    if (fd != -1) {
+        write(fd, dumpString.c_str(), dumpString.size());
+        dumpString.clear();
+    }
+    return MSERR_OK;
+}
+
+int32_t EngineDumpManager::DumpGlibMemPoolInfo(int32_t fd)
+{
+    std::string dumpString;
+    GetGMemPoolDump(dumpString);
     if (fd != -1) {
         write(fd, dumpString.c_str(), dumpString.size());
         dumpString.clear();
