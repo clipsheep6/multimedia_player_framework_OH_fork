@@ -76,6 +76,13 @@ bool RecorderGetSurfaceFuzzer::FuzzRecorderGetSurface(uint8_t *data, size_t size
 }
 bool FuzzTestRecorderGetSurface(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(int32_t)) {
+        return 0;
+    }
     RecorderGetSurfaceFuzzer testRecorder;
     return testRecorder.FuzzRecorderGetSurface(data, size);
 }

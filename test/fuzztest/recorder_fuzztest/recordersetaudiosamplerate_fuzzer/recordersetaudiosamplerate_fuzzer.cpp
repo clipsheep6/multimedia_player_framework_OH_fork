@@ -79,6 +79,13 @@ bool RecorderSetAudioSampleRateFuzzer::FuzzRecorderSetAudioSampleRatee(uint8_t *
 }
 bool FuzzTestRecorderSetAudioSampleRate(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(int32_t)) {
+        return 0;
+    }
     RecorderSetAudioSampleRateFuzzer testRecorder;
     return testRecorder.FuzzRecorderSetAudioSampleRatee(data, size);
 }
