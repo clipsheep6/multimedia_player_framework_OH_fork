@@ -152,7 +152,6 @@ void GstMsgProcessor::AddTickSource(int32_t type, uint32_t interval)
 
 void GstMsgProcessor::RemoveTickSource(int32_t type)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     auto iter = tickSource_.find(type);
     if (iter == tickSource_.end()) {
         return;
