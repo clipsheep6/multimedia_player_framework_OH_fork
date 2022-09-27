@@ -31,6 +31,7 @@ public:
     std::vector<CapabilityData> GetCapabilityDataArray();
 
 private:
+    bool isParsered_ = false;
     int32_t hdiCapLen_ = 0;
     AVCodecAbilitySingleton();
     std::vector<CapabilityData> capabilityDataArray_;
