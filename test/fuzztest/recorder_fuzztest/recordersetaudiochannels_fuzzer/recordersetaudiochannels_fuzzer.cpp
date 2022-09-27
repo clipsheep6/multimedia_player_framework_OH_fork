@@ -33,9 +33,11 @@ namespace Media {
 RecorderSetAudioChannelsFuzzer::RecorderSetAudioChannelsFuzzer()
 {
 }
+
 RecorderSetAudioChannelsFuzzer::~RecorderSetAudioChannelsFuzzer()
 {
 }
+
 bool RecorderSetAudioChannelsFuzzer::FuzzRecorderSetAudioChannels(uint8_t *data, size_t size)
 {
     bool retFlags = TestRecorder::CreateRecorder();
@@ -75,6 +77,7 @@ bool RecorderSetAudioChannelsFuzzer::FuzzRecorderSetAudioChannels(uint8_t *data,
     return true;
 }
 }
+
 bool FuzzTestRecorderSetAudioChannels(uint8_t *data, size_t size)
 {
     if (data == nullptr) {

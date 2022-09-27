@@ -33,9 +33,11 @@ namespace Media {
 RecorderSetAudioSampleRateFuzzer::RecorderSetAudioSampleRateFuzzer()
 {
 }
+
 RecorderSetAudioSampleRateFuzzer::~RecorderSetAudioSampleRateFuzzer()
 {
 }
+
 bool RecorderSetAudioSampleRateFuzzer::FuzzRecorderSetAudioSampleRatee(uint8_t *data, size_t size)
 {
     RETURN_IF(TestRecorder::CreateRecorder(), false);
@@ -76,6 +78,7 @@ bool RecorderSetAudioSampleRateFuzzer::FuzzRecorderSetAudioSampleRatee(uint8_t *
     return false;
 }
 }
+
 bool FuzzTestRecorderSetAudioSampleRate(uint8_t *data, size_t size)
 {
     if (data == nullptr) {

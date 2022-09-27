@@ -32,9 +32,11 @@ namespace Media {
 RecorderGetSurfaceFuzzer::RecorderGetSurfaceFuzzer()
 {
 }
+
 RecorderGetSurfaceFuzzer::~RecorderGetSurfaceFuzzer()
 {
 }
+
 bool RecorderGetSurfaceFuzzer::FuzzRecorderGetSurface(uint8_t *data, size_t size)
 {
     constexpr uint32_t recorderTime = 5;
@@ -74,6 +76,7 @@ bool RecorderGetSurfaceFuzzer::FuzzRecorderGetSurface(uint8_t *data, size_t size
     return false;
 }
 }
+
 bool FuzzTestRecorderGetSurface(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
