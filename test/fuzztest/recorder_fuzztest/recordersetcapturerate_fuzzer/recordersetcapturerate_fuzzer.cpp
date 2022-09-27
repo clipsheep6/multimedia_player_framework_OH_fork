@@ -62,6 +62,13 @@ bool RecorderSetCaptureRateFuzzer::FuzzRecorderSetCaptureRate(uint8_t *data, siz
 }
 bool FuzzTestRecorderSetCaptureRate(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(double)) {
+        return 0;
+    }
     RecorderSetCaptureRateFuzzer testRecorder;
     return testRecorder.FuzzRecorderSetCaptureRate(data, size);
 }

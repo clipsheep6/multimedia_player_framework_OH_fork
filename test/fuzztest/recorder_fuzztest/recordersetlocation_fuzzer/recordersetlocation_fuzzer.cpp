@@ -71,6 +71,13 @@ bool RecorderSetLocationFuzzer::FuzzRecorderSetLocation(uint8_t *data, size_t si
 }
 bool FuzzTestRecorderSetLocation(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(float)) {
+        return 0;
+    }
     RecorderSetLocationFuzzer testRecorder;
     return testRecorder.FuzzRecorderSetLocation(data, size);
 }
