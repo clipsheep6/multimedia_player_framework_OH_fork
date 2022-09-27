@@ -56,7 +56,6 @@ bool RecorderSetAudioSampleRateFuzzer::FuzzRecorderSetAudioSampleRatee(uint8_t *
         RETURN_IF(TestRecorder::SetAudioEncoder(g_videoRecorderConfig), false);
 
         g_videoRecorderConfig.audioSourceId = *reinterpret_cast<int32_t *>(data);
-        g_videoRecorderConfig.sampleRate = ProduceRandomNumberCrypt();
         
         RETURN_IF(TestRecorder::SetAudioSampleRate(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::SetAudioChannels(g_videoRecorderConfig), true);

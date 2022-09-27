@@ -56,7 +56,6 @@ bool RecorderSetAudioChannelsFuzzer::FuzzRecorderSetAudioChannels(uint8_t *data,
         RETURN_IF(TestRecorder::SetAudioSampleRate(g_videoRecorderConfig), false);
 
         g_videoRecorderConfig.audioSourceId = *reinterpret_cast<int32_t *>(data);
-        g_videoRecorderConfig.channelCount =  ProduceRandomNumberCrypt();
 
         RETURN_IF(TestRecorder::SetAudioChannels(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::SetAudioEncodingBitRate(g_videoRecorderConfig), true);
