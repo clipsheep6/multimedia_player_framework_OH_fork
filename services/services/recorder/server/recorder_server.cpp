@@ -596,6 +596,11 @@ int32_t RecorderServer::PauseAct()
 int32_t RecorderServer::Pause()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (watchDogstatus_ == RecorderWatchDogStatus::WATCHDOG_PAUSE) {
+        watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
+        return MSERR_OK;
+    }
+
     int32_t ret = PauseAct();
     if (ret == MSERR_OK) {
         watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
@@ -721,7 +726,6 @@ void RecorderServer::WatchDog()
                 MEDIA_LOGE("Watchdog triggered, recording paused");
                 PauseAct();
                 watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_PAUSE;
-                recorderCb_->OnError(RECORDER_ERROR_INTERNAL, MSERR_UNKNOWN);
                 continue;
             }
         }
@@ -735,7 +739,6 @@ void RecorderServer::WatchDog()
                 MEDIA_LOGE("Watchdog resumes, recording continues");
                 ResumeAct();
                 watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
-                recorderCb_->OnError(RECORDER_ERROR_INTERNAL, MSERR_UNKNOWN);
             }
         }
     }
