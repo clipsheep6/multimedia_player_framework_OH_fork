@@ -274,12 +274,12 @@ int32_t PlayBinCtrlerBase::Seek(int64_t timeUs, int32_t seekOption)
     return MSERR_OK;
 }
 
-int32_t PlayBinCtrlerBase::Stop()
+int32_t PlayBinCtrlerBase::Stop(bool needWait)
 {
     MEDIA_LOGD("enter");
     std::unique_lock<std::mutex> lock(mutex_);
 
-    if (GetCurrState() == preparingState_) {
+    if (GetCurrState() == preparingState_ && needWait) {
         MEDIA_LOGD("begin wait stop for current status is preparing");
         static constexpr int32_t timeout = 2;
         preparedCond_.wait_for(lock, std::chrono::seconds(timeout));
