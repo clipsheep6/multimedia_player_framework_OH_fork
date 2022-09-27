@@ -44,7 +44,6 @@ public:
     static napi_ref CreateReference(napi_env env, napi_value arg);
     static napi_deferred CreatePromise(napi_env env, napi_ref ref, napi_value &result);
     static bool SetPropertyInt32(napi_env env, napi_value &obj, const std::string &key, int32_t value);
-    static bool SetPropertyInt64(napi_env env, napi_value &obj, const std::string &key, int64_t value);
     static bool SetPropertyString(napi_env env, napi_value &obj, const std::string &key, const std::string &value);
     static napi_value CreateFormatBuffer(napi_env env, Format &format);
     static bool CreateFormatBufferByRef(napi_env env, Format &format, napi_value &result);
