@@ -553,7 +553,7 @@ void TestRecorder::HDICreateYUVBuffer()
         }
 
         sptr<SyncFence> syncFence = new SyncFence(releaseFence);
-        syncFence->Wait(timeWait);  // 100ms
+        syncFence->Wait(100);  // 100ms
 
         char *tempBuffer = (char *)(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color, YUV_BUFFER_SIZE);
