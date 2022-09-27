@@ -87,6 +87,13 @@ bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, s
 }
 bool FuzzTestRecorderSetAudioEncoder(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(int32_t)) {
+        return 0;
+    }
     RecorderSetAudioEncoderFuzzer testRecorder;
     return testRecorder.FuzzRecorderSetAudioEncoder(data, size);
 }
