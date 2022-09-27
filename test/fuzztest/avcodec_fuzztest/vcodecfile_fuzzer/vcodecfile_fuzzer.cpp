@@ -92,6 +92,9 @@ bool OHOS::Media::FuzzVCodecFile(uint8_t *data, size_t size)
         cout << "codecfuzzer is null" << endl;
         return 0;
     }
+    if (size < sizeof(int32_t)) {
+        return 0;
+    }
     return codecfuzzer->FuzzVideoFile(data, size);
 }
 
