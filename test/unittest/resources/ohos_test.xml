@@ -18,6 +18,7 @@
         <depend resource="test_videofile/H264_AAC.mp4" pushpath="/data/test" findpath="res" presetcmd=""/>
         <preparer>
             <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MP4_ROTATE_90.mp4 -> /data/test" src="res"/>
         </preparer>
     </target>
     <target name="recorder_unit_test">

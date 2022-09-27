@@ -353,22 +353,6 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_001, TestSize.Level0)
 }
 
 /**
- * @tc.name  : Test SetDataSource API
- * @tc.number: Player_SetDataSource_002
- * @tc.desc  : Test Player SetDataSource
- */
-HWTEST_F(PlayerUnitTest, Player_SetDataSource_002, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", -1, false));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-}
-
-/**
  * @tc.name  : Test Player SelectBitRate API
  * @tc.number: Player_SelectBitRate_001
  * @tc.desc  : Test Player SelectBitRate interface
@@ -411,6 +395,22 @@ HWTEST_F(PlayerUnitTest, Player_Performance_Prepared_001, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Reset());
     }
     EXPECT_LE(deltaTime / runTimes, 300); // less than 300ms
+}
+
+/**
+ * @tc.name  : Test Player Play mp4 with rotation
+ * @tc.number: Player_Rotate_001
+ * @tc.desc  : Test PlayerPlay interface
+ */
+HWTEST_F(PlayerUnitTest, Player_Rotate_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
 }
 } // namespace Media
 } // namespace OHOS
