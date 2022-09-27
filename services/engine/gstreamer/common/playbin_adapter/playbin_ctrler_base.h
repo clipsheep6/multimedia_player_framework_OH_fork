@@ -53,7 +53,7 @@ public:
     int32_t Play() override;
     int32_t Pause() override;
     int32_t Seek(int64_t timeUs, int32_t seekOption) override;
-    int32_t Stop() override;
+    int32_t Stop(bool needWait) override;
     int64_t GetDuration() override;
     int64_t GetPosition() override;
     int32_t SetRate(double rate) override;
