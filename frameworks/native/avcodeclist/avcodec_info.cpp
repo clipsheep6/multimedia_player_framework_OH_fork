@@ -434,15 +434,13 @@ ImgSize VideoCaps::MatchClosestSize(const ImgSize &imgSize)
 {
     int64_t targetBlockNum = DivCeil(imgSize.width, blockWidth_) * 
         static_cast<int64_t>(DivCeil(imgSize.height, blockHeight_));
-    int64_t blockNum;
-    int64_t diffBlockNum = INT32_MAX;
     int64_t minDiffBlockNum = INT32_MAX;
 
     ImgSize closestSize;
     for (auto iter = data_.measuredFrameRate.begin(); iter != data_.measuredFrameRate.end(); iter++) {
-        blockNum = DivCeil(iter->first.width, blockWidth_) * 
+        int64_t blockNum = DivCeil(iter->first.width, blockWidth_) * 
             static_cast<int64_t>(DivCeil(iter->first.height, blockHeight_));
-        diffBlockNum = abs(targetBlockNum - blockNum);
+        int64_t diffBlockNum = abs(targetBlockNum - blockNum);
         if (minDiffBlockNum > diffBlockNum) {
             minDiffBlockNum = diffBlockNum;
             closestSize = iter->first;
