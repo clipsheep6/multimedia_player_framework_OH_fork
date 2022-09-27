@@ -80,6 +80,13 @@ bool RecorderSetVideoEncoderFuzzer::RecorderSetVideoEncoderFuzz(uint8_t *data, s
 }
 bool FuzzTestRecorderSetVideoEncoder(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(int32_t)) {
+        return 0;
+    }
     RecorderSetVideoEncoderFuzzer testRecorder;
     return testRecorder.RecorderSetVideoEncoderFuzz(data, size);
 }

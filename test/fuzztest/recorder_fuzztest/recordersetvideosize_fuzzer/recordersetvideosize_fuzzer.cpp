@@ -52,8 +52,6 @@ bool RecorderSetVideoSizeFuzzer::RecorderSetVideoSizeFuzz(uint8_t *data, size_t 
         RETURN_IF(TestRecorder::SetVideoEncoder(g_videoRecorderConfig), false);
 
         g_videoRecorderConfig.videoSourceId = *reinterpret_cast<int32_t *>(data);
-        g_videoRecorderConfig.width = ProduceRandomNumberCrypt();
-        g_videoRecorderConfig.height = ProduceRandomNumberCrypt();
 
         RETURN_IF(TestRecorder::SetVideoSize(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::SetVideoFrameRate(g_videoRecorderConfig), true);
@@ -73,6 +71,13 @@ bool RecorderSetVideoSizeFuzzer::RecorderSetVideoSizeFuzz(uint8_t *data, size_t 
 }
 bool FuzzTestRecorderSetVideoSize(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(int32_t)) {
+        return 0;
+    }
     RecorderSetVideoSizeFuzzer testRecorder;
     return testRecorder.RecorderSetVideoSizeFuzz(data, size);
 }

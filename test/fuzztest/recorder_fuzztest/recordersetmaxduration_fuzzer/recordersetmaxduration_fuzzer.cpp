@@ -74,6 +74,13 @@ bool RecorderSetMaxDurationFuzzer::FuzzRecorderSetMaxDuration(uint8_t *data, siz
 
 bool FuzzTestRecorderSetMaxDuration(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(int32_t)) {
+        return 0;
+    }
     RecorderSetMaxDurationFuzzer testrecorder;
     return testrecorder.FuzzRecorderSetMaxDuration(data, size);
 }
