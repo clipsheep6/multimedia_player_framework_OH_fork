@@ -65,8 +65,8 @@ bool RecorderSetFileSplitDurationFuzzer::FuzzRecorderSetFileSplitDuration(uint8_
             FileSplitType::FILE_SPLIT_NORMAL,
             FileSplitType::FILE_SPLIT_BUTT,
         };
-        int32_t  indexValue = *reinterpret_cast<int32_t *>(data) % (fileSplitTypeList);
-        int64_t timestampValue = static_cast<int64_t>(ProduceRandomNumberCrypt());
+        int32_t  indexValue = ProduceRandomNumberCrypt() % (fileSplitTypeList);
+        int64_t timestampValue = *reinterpret_cast<int32_t *>(data);
         uint32_t durationValue = static_cast<uint32_t>(ProduceRandomNumberCrypt());
 
         RETURN_IF(TestRecorder::SetFileSplitDuration(fileSplitType[indexValue],

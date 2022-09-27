@@ -49,9 +49,6 @@ bool RecorderSetCaptureRateFuzzer::FuzzRecorderSetCaptureRate(uint8_t *data, siz
         RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
-
-        g_videoRecorderConfig.videoSourceId = ProduceRandomNumberCrypt();
-
         RETURN_IF(TestRecorder::SetCaptureRate(g_videoRecorderConfig, *reinterpret_cast<double *>(data)), true);
         RETURN_IF(TestRecorder::SetMaxFileSize(audioMaxFileSize, g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::SetNextOutputFile(g_videoRecorderConfig), true);
