@@ -703,7 +703,7 @@ int32_t PlayerEngineGstImpl::Stop()
     if (trackParse_ != nullptr) {
         trackParse_->Stop();
     }
-    playBinCtrler_->Stop();
+    playBinCtrler_->Stop(true);
     return MSERR_OK;
 }
 
