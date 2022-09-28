@@ -17,6 +17,7 @@
 #include "securec.h"
 
 #define gst_vdec_h264_parent_class parent_class
+#define SPECIAL_FRAME_MAX_LENGTH 500
 G_DEFINE_TYPE(GstVdecH264, gst_vdec_h264, GST_TYPE_VDEC_BASE);
 
 static gboolean get_slice_flag(GstMapInfo *info, bool &ready_push, gboolean &is_slice_buffer);
@@ -71,6 +72,10 @@ static gboolean get_slice_flag(GstMapInfo *info, bool &ready_push, gboolean &is_
             if ((info->data[i + 1] & 0x1F) == 0x06 || // 0x1F is the mask of last 5 bits, 0x06 is SEI flag
                 (info->data[i + 1] & 0x1F) == 0x07 || // 0x1F is the mask of last 5 bits, 0x07 is SPS flag
                 (info->data[i + 1] & 0x1F) == 0x08) { // 0x1F is the mask of last 5 bits, 0x08 is PPS flag
+                if (info->size > SPECIAL_FRAME_MAX_LENGTH) {
+                    GST_DEBUG("Treat extra long special frames as multi-slice frame, size is %d ", info->size);
+                    return true;
+                }
                 is_data_frame = false;
             }
             if (is_data_frame == false && is_slice_buffer == false) {
