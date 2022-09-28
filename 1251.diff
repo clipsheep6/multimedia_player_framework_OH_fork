@@ -1,0 +1,93 @@
+diff --git a/services/services/recorder/client/recorder_client.cpp b/services/services/recorder/client/recorder_client.cpp
+index ce31fbeaec779acc2506468df556921f2be8365e..ed0887a16543ad062b3d4f624383f9765b37dff7 100644
+--- a/services/services/recorder/client/recorder_client.cpp
++++ b/services/services/recorder/client/recorder_client.cpp
+@@ -49,8 +49,10 @@ RecorderClient::~RecorderClient()
+     std::lock_guard<std::mutex> lock(mutex_);
+     if (recorderProxy_ != nullptr) {
+         (void)recorderProxy_->DestroyStub();
+-        StopWatchDog();
++        recorderProxy_ = nullptr;
+     }
++    lock.unlock();
++    StopWatchDog();
+     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+ }
+ 
+@@ -59,10 +61,11 @@ void RecorderClient::MediaServerDied()
+     std::lock_guard<std::mutex> lock(mutex_);
+     recorderProxy_ = nullptr;
+     listenerStub_ = nullptr;
+-    StopWatchDog();
+     if (callback_ != nullptr) {
+         callback_->OnError(RECORDER_ERROR_INTERNAL, MSERR_SERVICE_DIED);
+     }
++    lock.unlock();
++    StopWatchDog();
+ }
+ 
+ int32_t RecorderClient::CreateListenerObject()
+@@ -380,7 +383,10 @@ void RecorderClient::WatchDog()
+         std::unique_lock<std::mutex> lock(watchDogMutex_);
+         watchDogCond_.wait_for(lock, std::chrono::seconds(timeInterval), [this] { return stopWatchDog.load(); });
+ 
+-        CHECK_AND_BREAK(stopWatchDog.load() == false);
++        if (stopWatchDog.load() == true) {
++            MEDIA_LOGD("WatchDog Stop.");
++            break;
++        }
+ 
+         int32_t ret = HeartBeat();
+         CHECK_AND_BREAK_LOG(ret == MSERR_OK, "failed to heartbeat..");
+diff --git a/services/services/recorder/server/recorder_server.cpp b/services/services/recorder/server/recorder_server.cpp
+index e677f39f003b9f49d0f3738428330bca114fa1a2..84c247385ffa32302692277d1458ca98091ceab3 100644
+--- a/services/services/recorder/server/recorder_server.cpp
++++ b/services/services/recorder/server/recorder_server.cpp
+@@ -74,11 +74,12 @@ RecorderServer::~RecorderServer()
+     std::lock_guard<std::mutex> lock(mutex_);
+     auto task = std::make_shared<TaskHandler<void>>([&, this] {
+         recorderEngine_ = nullptr;
+-        StopWatchDog();
+     });
+     (void)taskQue_.EnqueueTask(task);
+     (void)task->GetResult();
+     taskQue_.Stop();
++    lock.unlock();
++    StopWatchDog();
+ }
+ 
+ int32_t RecorderServer::Init()
+@@ -683,10 +684,11 @@ int32_t RecorderServer::Release()
+     std::lock_guard<std::mutex> lock(mutex_);
+     auto task = std::make_shared<TaskHandler<void>>([&, this] {
+         recorderEngine_ = nullptr;
+-        StopWatchDog();
+     });
+     (void)taskQue_.EnqueueTask(task);
+     (void)task->GetResult();
++    lock.unlock();
++    StopWatchDog();
+     return MSERR_OK;
+ }
+ 
+@@ -706,10 +708,19 @@ void RecorderServer::WatchDog()
+         watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] {
+             return stopWatchDog.load();
+         });
+-        CHECK_AND_BREAK(stopWatchDog.load() == false);
++
++        if (stopWatchDog.load() == true) {
++            MEDIA_LOGD("WatchDog Stop.");
++            break;
++        }
+ 
+         std::lock_guard<std::mutex> lock(mutex_);
+ 
++        if (recorderEngine_ == nullptr) {
++            MEDIA_LOGD("Engine is empty. WatchDog stop.");
++            break;
++        }
++
+         if (watchDogstatus_ == RecorderWatchDogStatus::WATCHDOG_WATCHING) {
+             if (status_ != REC_RECORDING) {
+                 continue;

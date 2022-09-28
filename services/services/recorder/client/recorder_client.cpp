@@ -46,25 +46,27 @@ RecorderClient::RecorderClient(const sptr<IStandardRecorderService> &ipcProxy)
 
 RecorderClient::~RecorderClient()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (recorderProxy_ != nullptr) {
-        (void)recorderProxy_->DestroyStub();
-        recorderProxy_ = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (recorderProxy_ != nullptr) {
+            (void)recorderProxy_->DestroyStub();
+            recorderProxy_ = nullptr;
+        }
     }
-    lock.unlock();
     StopWatchDog();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 void RecorderClient::MediaServerDied()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    recorderProxy_ = nullptr;
-    listenerStub_ = nullptr;
-    if (callback_ != nullptr) {
-        callback_->OnError(RECORDER_ERROR_INTERNAL, MSERR_SERVICE_DIED);
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        recorderProxy_ = nullptr;
+        listenerStub_ = nullptr;
+        if (callback_ != nullptr) {
+            callback_->OnError(RECORDER_ERROR_INTERNAL, MSERR_SERVICE_DIED);
+        }
     }
-    lock.unlock();
     StopWatchDog();
 }
 

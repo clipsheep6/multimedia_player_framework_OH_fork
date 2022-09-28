@@ -71,14 +71,15 @@ RecorderServer::RecorderServer()
 RecorderServer::~RecorderServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto task = std::make_shared<TaskHandler<void>>([&, this] {
-        recorderEngine_ = nullptr;
-    });
-    (void)taskQue_.EnqueueTask(task);
-    (void)task->GetResult();
-    taskQue_.Stop();
-    lock.unlock();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto task = std::make_shared<TaskHandler<void>>([&, this] {
+            recorderEngine_ = nullptr;
+        });
+        (void)taskQue_.EnqueueTask(task);
+        (void)task->GetResult();
+        taskQue_.Stop();
+    }
     StopWatchDog();
 }
 
@@ -681,13 +682,14 @@ int32_t RecorderServer::Reset()
 
 int32_t RecorderServer::Release()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto task = std::make_shared<TaskHandler<void>>([&, this] {
-        recorderEngine_ = nullptr;
-    });
-    (void)taskQue_.EnqueueTask(task);
-    (void)task->GetResult();
-    lock.unlock();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto task = std::make_shared<TaskHandler<void>>([&, this] {
+            recorderEngine_ = nullptr;
+        });
+        (void)taskQue_.EnqueueTask(task);
+        (void)task->GetResult();
+    }
     StopWatchDog();
     return MSERR_OK;
 }
