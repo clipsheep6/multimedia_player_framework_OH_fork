@@ -50,6 +50,7 @@ RecorderClient::~RecorderClient()
     if (recorderProxy_ != nullptr) {
         (void)recorderProxy_->DestroyStub();
     }
+    recorderProxy_ = nullptr;
     lock.unlock();
     StopWatchDog();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
@@ -385,6 +386,11 @@ void RecorderClient::WatchDog()
         if (stopWatchDog.load() == true) {
             MEDIA_LOGD("WatchDog Stop.");
             break;
+        }
+
+        if (recorderProxy_ == nullptr) {
+            MEDIA_LOGD("Proxy is empty. WatchDog stop.");
+            break;    
         }
 
         int32_t ret = HeartBeat();

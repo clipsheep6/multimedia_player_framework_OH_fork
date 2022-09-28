@@ -716,6 +716,11 @@ void RecorderServer::WatchDog()
 
         std::lock_guard<std::mutex> lock(mutex_);
 
+        if (recorderEngine_ == nullptr) {
+            MEDIA_LOGD("Engine is empty. WatchDog stop.");
+            break;
+        }
+
         if (watchDogstatus_ == RecorderWatchDogStatus::WATCHDOG_WATCHING) {
             if (status_ != REC_RECORDING) {
                 continue;
