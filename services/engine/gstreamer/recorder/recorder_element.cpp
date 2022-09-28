@@ -58,7 +58,7 @@ int32_t RecorderElementFactory::RegisterElement(const std::string &key, const El
 }
 
 std::shared_ptr<RecorderElement> RecorderElementFactory::CreateElement(
-    const std::string key, const RecorderElement::CreateParam &param)
+    const std::string &key, const RecorderElement::CreateParam &param)
 {
     std::shared_ptr<RecorderElement> elem;
     {
