@@ -296,7 +296,9 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
 
     {
         MEDIA_LOGD("Stop Start");
-        stoppingCond_.wait(lock);
+        if (GetCurrState() != stoppedState_) {
+            stoppingCond_.wait(lock);
+        }
         MEDIA_LOGD("Stop End");
     }
 
