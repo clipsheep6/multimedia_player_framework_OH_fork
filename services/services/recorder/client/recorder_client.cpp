@@ -390,7 +390,7 @@ void RecorderClient::WatchDog()
 
         if (recorderProxy_ == nullptr) {
             MEDIA_LOGD("Proxy is empty. WatchDog stop.");
-            break;    
+            break;
         }
 
         int32_t ret = HeartBeat();
