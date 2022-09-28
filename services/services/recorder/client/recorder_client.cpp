@@ -49,8 +49,9 @@ RecorderClient::~RecorderClient()
     std::lock_guard<std::mutex> lock(mutex_);
     if (recorderProxy_ != nullptr) {
         (void)recorderProxy_->DestroyStub();
-        StopWatchDog();
     }
+    lock.unlock();
+    StopWatchDog();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -59,10 +60,11 @@ void RecorderClient::MediaServerDied()
     std::lock_guard<std::mutex> lock(mutex_);
     recorderProxy_ = nullptr;
     listenerStub_ = nullptr;
-    StopWatchDog();
     if (callback_ != nullptr) {
         callback_->OnError(RECORDER_ERROR_INTERNAL, MSERR_SERVICE_DIED);
     }
+    lock.unlock();
+    StopWatchDog();
 }
 
 int32_t RecorderClient::CreateListenerObject()
@@ -380,7 +382,10 @@ void RecorderClient::WatchDog()
         std::unique_lock<std::mutex> lock(watchDogMutex_);
         watchDogCond_.wait_for(lock, std::chrono::seconds(timeInterval), [this] { return stopWatchDog.load(); });
 
-        CHECK_AND_BREAK(stopWatchDog.load() == false);
+        if (stopWatchDog.load() == true) {
+            MEDIA_LOGD("WatchDog Stop.");
+            break;
+        }
 
         int32_t ret = HeartBeat();
         CHECK_AND_BREAK_LOG(ret == MSERR_OK, "failed to heartbeat..");

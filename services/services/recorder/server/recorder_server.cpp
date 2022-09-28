@@ -74,11 +74,12 @@ RecorderServer::~RecorderServer()
     std::lock_guard<std::mutex> lock(mutex_);
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         recorderEngine_ = nullptr;
-        StopWatchDog();
     });
     (void)taskQue_.EnqueueTask(task);
     (void)task->GetResult();
     taskQue_.Stop();
+    lock.unlock();
+    StopWatchDog();
 }
 
 int32_t RecorderServer::Init()
@@ -683,10 +684,11 @@ int32_t RecorderServer::Release()
     std::lock_guard<std::mutex> lock(mutex_);
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         recorderEngine_ = nullptr;
-        StopWatchDog();
     });
     (void)taskQue_.EnqueueTask(task);
     (void)task->GetResult();
+    lock.unlock();
+    StopWatchDog();
     return MSERR_OK;
 }
 
@@ -706,7 +708,11 @@ void RecorderServer::WatchDog()
         watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] {
             return stopWatchDog.load();
         });
-        CHECK_AND_BREAK(stopWatchDog.load() == false);
+
+        if (stopWatchDog.load() == true) {
+            MEDIA_LOGD("WatchDog Stop.");
+            break;
+        }
 
         std::lock_guard<std::mutex> lock(mutex_);
 
