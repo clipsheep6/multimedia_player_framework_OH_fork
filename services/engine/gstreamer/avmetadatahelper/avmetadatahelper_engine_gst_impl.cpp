@@ -360,7 +360,7 @@ void AVMetadataHelperEngineGstImpl::Reset()
         // Some msg maybe be reported by the playbinCtrler_ during the playbinCtler_ destroying.
         // unlock to avoid the deadlock.
         lock.unlock();
-        tmp->Stop();
+        tmp->Stop(false);
         tmp = nullptr;
         lock.lock();
     }
