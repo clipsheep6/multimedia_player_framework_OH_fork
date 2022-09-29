@@ -88,7 +88,6 @@ ohos_static_library("media_engine_gst_factory") {
   external_deps = [
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
   ]
 
   subsystem_name = "multimedia"
