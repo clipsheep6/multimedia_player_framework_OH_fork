@@ -160,7 +160,6 @@ ohos_static_library("media_gst_dfx") {
   deps = [
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_format",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
     "//third_party/glib:gobject",
     "//third_party/gstreamer/gstreamer:gstreamer",

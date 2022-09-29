@@ -97,19 +97,12 @@ ohos_shared_library("gst_codec_plugin_hdi") {
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/engine/common:media_engine_common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common:gst_media_common",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
-    "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
-    "//third_party/gstreamer/gstplugins_base:gstvideo",
-    "//third_party/gstreamer/gstreamer:gstbase",
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
-  ]
+  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
