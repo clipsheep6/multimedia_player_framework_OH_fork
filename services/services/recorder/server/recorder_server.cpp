@@ -71,14 +71,16 @@ RecorderServer::RecorderServer()
 RecorderServer::~RecorderServer()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto task = std::make_shared<TaskHandler<void>>([&, this] {
-        recorderEngine_ = nullptr;
-        StopWatchDog();
-    });
-    (void)taskQue_.EnqueueTask(task);
-    (void)task->GetResult();
-    taskQue_.Stop();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto task = std::make_shared<TaskHandler<void>>([&, this] {
+            recorderEngine_ = nullptr;
+        });
+        (void)taskQue_.EnqueueTask(task);
+        (void)task->GetResult();
+        taskQue_.Stop();
+    }
+    StopWatchDog();
 }
 
 int32_t RecorderServer::Init()
@@ -685,13 +687,15 @@ int32_t RecorderServer::Reset()
 
 int32_t RecorderServer::Release()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto task = std::make_shared<TaskHandler<void>>([&, this] {
-        recorderEngine_ = nullptr;
-        StopWatchDog();
-    });
-    (void)taskQue_.EnqueueTask(task);
-    (void)task->GetResult();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto task = std::make_shared<TaskHandler<void>>([&, this] {
+            recorderEngine_ = nullptr;
+        });
+        (void)taskQue_.EnqueueTask(task);
+        (void)task->GetResult();
+    }
+    StopWatchDog();
     return MSERR_OK;
 }
 
@@ -711,9 +715,18 @@ void RecorderServer::WatchDog()
         watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] {
             return stopWatchDog.load();
         });
-        CHECK_AND_BREAK(stopWatchDog.load() == false);
+
+        if (stopWatchDog.load() == true) {
+            MEDIA_LOGD("WatchDog Stop.");
+            break;
+        }
 
         std::lock_guard<std::mutex> lock(mutex_);
+
+        if (recorderEngine_ == nullptr) {
+            MEDIA_LOGD("Engine is empty. WatchDog stop.");
+            break;
+        }
 
         if (watchDogstatus_ == RecorderWatchDogStatus::WATCHDOG_WATCHING) {
             if (status_ != REC_RECORDING) {
