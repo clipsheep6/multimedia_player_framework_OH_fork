@@ -25,24 +25,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderIm
 
 namespace OHOS {
 namespace Media {
-const std::map<RecorderErrorType, std::string> RECORDER_ERRTYPE_INFOS = {
-    {RECORDER_ERROR_INTERNAL, "internal error type"},
-    {RECORDER_ERROR_EXTEND_START, "recorder extend start error type"},
-};
-
-std::string RecorderErrorTypeToString(RecorderErrorType type)
-{
-    if (RECORDER_ERRTYPE_INFOS.count(type) != 0) {
-        return RECORDER_ERRTYPE_INFOS.at(type);
-    }
-
-    if (type > RECORDER_ERROR_EXTEND_START) {
-        return "extend error type:" + std::to_string(static_cast<int32_t>(type - RECORDER_ERROR_EXTEND_START));
-    }
-
-    return "invalid error type:" + std::to_string(static_cast<int32_t>(type));
-}
-
 std::shared_ptr<Recorder> RecorderFactory::CreateRecorder()
 {
     std::shared_ptr<RecorderImpl> impl = std::make_shared<RecorderImpl>();

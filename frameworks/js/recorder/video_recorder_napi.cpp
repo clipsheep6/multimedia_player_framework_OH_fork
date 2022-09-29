@@ -708,9 +708,9 @@ int32_t VideoRecorderNapi::SetUrl(const std::string &urlPath)
 {
     CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "No memory");
     const std::string fdHead = "fd://";
-    int32_t fd = -1;
 
     if (urlPath.find(fdHead) != std::string::npos) {
+        int32_t fd = -1;
         std::string inputFd = urlPath.substr(fdHead.size());
         CHECK_AND_RETURN_RET(StrToInt(inputFd, fd) == true, MSERR_INVALID_VAL);
         CHECK_AND_RETURN_RET(fd >= 0, MSERR_INVALID_OPERATION);
@@ -748,7 +748,6 @@ napi_value VideoRecorderNapi::GetState(napi_env env, napi_callback_info info)
 
     std::string curState = VideoRecorderState::STATE_ERROR;
     if (recorderNapi->callbackNapi_ != nullptr) {
-        auto cb = std::static_pointer_cast<RecorderCallbackNapi>(recorderNapi->callbackNapi_);
         curState = recorderNapi->currentStates_;
         MEDIA_LOGD("GetState success, State: %{public}s", curState.c_str());
     }

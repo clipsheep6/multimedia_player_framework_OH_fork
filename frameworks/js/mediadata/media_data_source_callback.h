@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Media {
 class MediaDataSourceCallback : public IMediaDataSource, public NoCopyable {
 public:
-    static std::shared_ptr<MediaDataSourceCallback> Create(napi_env env, napi_value data);
+    static std::shared_ptr<MediaDataSourceCallback> Create(napi_env env, napi_value dataSrcNapi);
     MediaDataSourceCallback(napi_env env, napi_ref ref, MediaDataSourceNapi &src);
     virtual ~MediaDataSourceCallback();
 

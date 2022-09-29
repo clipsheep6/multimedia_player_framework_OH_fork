@@ -650,8 +650,6 @@ private:
     RecorderFactory() = default;
     ~RecorderFactory() = default;
 };
-
-__attribute__((visibility("default"))) std::string RecorderErrorTypeToString(RecorderErrorType type);
 } // namespace Media
 } // namespace OHOS
 #endif // RECORDER_H

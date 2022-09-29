@@ -99,8 +99,6 @@ public:
     virtual void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) = 0;
 };
 
-__attribute__((visibility("default"))) std::string AVCodecErrorTypeToString(AVCodecErrorType type);
-
 class SurfaceBufferExtratDataKey {
 public:
     /**
