@@ -100,7 +100,8 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetInputPortConfig()
     constexpr uint32_t alignment = 16;
     config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_),
         static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), alignment);
-
+    config->width_ = width_;
+    config->height_ = height_;
     return config;
 }
 

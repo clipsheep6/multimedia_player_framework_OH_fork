@@ -61,6 +61,7 @@ sptr<Surface> SrcSurfaceImpl::CreateInputSurface(const std::shared_ptr<Processor
     gpointer surfaceObj = g_value_get_pointer(&val);
     CHECK_AND_RETURN_RET_LOG(surfaceObj != nullptr, nullptr, "Failed to get surface");
     sptr<Surface> surface = reinterpret_cast<Surface *>(surfaceObj);
+    surface->SetDefaultWidthAndHeight(inputConfig->width_, inputConfig->height_);
     return surface;
 }
 
