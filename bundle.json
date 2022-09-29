@@ -50,7 +50,7 @@
           "hilog_native",
           "zlib",
           "access_token",
-          "multimedia_image_standard",
+          "multimedia_image_framework",
           "common"
         ],
         "third_party": [
