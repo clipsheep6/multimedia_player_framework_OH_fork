@@ -35,6 +35,9 @@ group("fuzztest") {
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudioencodingbitrate_fuzzer:RecorderSetAudioEncodingBitRateFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiosamplerate_fuzzer:RecorderSetAudioSampleRateFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiosource_fuzzer:RecorderSetAudioSourceFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetcapturerate_fuzzer:RecorderSetCaptureRateFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetfilesplitduration_fuzzer:RecorderSetFileSplitDurationFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetlocation_fuzzer:RecorderSetLocationFuzzTest",
   ]
 }
 ###############################################################################
