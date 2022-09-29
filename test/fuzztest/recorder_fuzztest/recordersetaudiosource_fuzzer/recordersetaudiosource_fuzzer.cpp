@@ -33,9 +33,11 @@ namespace Media {
 RecorderSetAudioSourceFuzzer::RecorderSetAudioSourceFuzzer()
 {
 }
+
 RecorderSetAudioSourceFuzzer::~RecorderSetAudioSourceFuzzer()
 {
 }
+
 bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, size_t size)
 {
     constexpr int32_t audioSourceTypesList = 3;
@@ -43,7 +45,7 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
-    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_audio_es.m4a", O_RDWR);
+    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_setAudioSource.m4a", O_RDWR);
 
     AudioSourceType AudioSourceType[audioSourceTypesList] {
         AUDIO_SOURCE_INVALID,
@@ -74,6 +76,7 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
     return true;
 }
 }
+
 bool FuzzTestRecorderSetAudioSource(uint8_t *data, size_t size)
 {
     if (data == nullptr) {

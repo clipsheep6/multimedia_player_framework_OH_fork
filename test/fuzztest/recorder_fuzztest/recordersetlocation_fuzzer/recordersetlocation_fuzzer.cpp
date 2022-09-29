@@ -46,7 +46,7 @@ bool RecorderSetLocationFuzzer::FuzzRecorderSetLocation(uint8_t *data, size_t si
     static VideoRecorderConfig_ g_videoRecorderConfig;
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
-    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_video_SetOrientationHint_001.mp4", O_RDWR);
+    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetLocation.mp4", O_RDWR);
     
     if (g_videoRecorderConfig.outputFd >= 0) {
         RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
