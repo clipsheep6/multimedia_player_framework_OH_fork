@@ -247,18 +247,18 @@ declare namespace media {
    */
    enum StateChangeReason {
     /**
-     * state change by user operation
+     * state change by user operation.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.Core
      */
     USER = 1,
 
     /**
-     * state change by system manager
+     * state change by background action.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.Core
      */
-    SYSTEM = 2,
+    BACKGROUND = 2,
   }
 
   /**
@@ -378,15 +378,6 @@ declare namespace media {
      * @return A Promise instance used to return the track info in MediaDescription.
      */
      getTrackDescription() : Promise<Array<MediaDescription>>;
- 
-     /**
-      * Listens for audio playback buffering events.
-      * @since 9
-      * @syscap SystemCapability.Multimedia.Media.AVPlayer
-      * @param type Type of the playback buffering update event to listen for.
-      * @param callback Callback used to listen for the buffering update event, return BufferingInfoType and the value.
-      */
-     on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
  
      /**
       * Media URI. Mainstream media formats are supported.
