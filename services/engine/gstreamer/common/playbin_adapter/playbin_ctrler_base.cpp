@@ -146,8 +146,9 @@ int32_t PlayBinCtrlerBase::Init()
     return ret;
 }
 
-bool PlayBinCtrlerBase::IsLiveSource() const
+bool PlayBinCtrlerBase::IsLiveSource()
 {
+    std::unique_lock<std::mutex> appsrcLock(appsrcMutex_);
     if (appsrcWrap_ != nullptr && appsrcWrap_->IsLiveMode()) {
         return true;
     }
@@ -392,7 +393,6 @@ double PlayBinCtrlerBase::GetRate()
 
 int32_t PlayBinCtrlerBase::SetLoop(bool loop)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     if (IsLiveSource()) {
         return MSERR_INVALID_OPERATION;
     }

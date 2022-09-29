@@ -665,7 +665,6 @@ int32_t PlayerEngineGstImpl::GetPlaybackSpeed(PlaybackRateMode &mode)
 
 int32_t PlayerEngineGstImpl::SetLooping(bool loop)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     if (playBinCtrler_ != nullptr) {
         MEDIA_LOGD("SetLooping in");
         return playBinCtrler_->SetLoop(loop);
