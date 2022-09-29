@@ -38,6 +38,7 @@ const char *OH_MD_KEY_PROFILE = "codec_profile";
 const char *OH_MD_KEY_AUD_CHANNEL_COUNT = "channel_count";
 const char *OH_MD_KEY_AUD_SAMPLE_RATE = "sample_rate";
 const char *OH_MD_KEY_I_FRAME_INTERVAL = "i_frame_interval";
+const char *OH_MD_KEY_ROTATION = "rotation_angle";
 
 #ifdef __cplusplus
 }
