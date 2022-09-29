@@ -72,10 +72,10 @@ int32_t AVMuxerImpl::SetOutput(int32_t fd, const std::string &format)
     return avmuxerService_->SetOutput(fd, format);
 }
 
-int32_t AVMuxerImpl::SetLocation(float latitude, float longitude)
+int32_t AVMuxerImpl::SetLocation(float latitude, float longtitude)
 {
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_INVALID_OPERATION, "AVMuxer Service does not exist");
-    return avmuxerService_->SetLocation(latitude, longitude);
+    return avmuxerService_->SetLocation(latitude, longtitude);
 }
 
 int32_t AVMuxerImpl::SetRotation(int32_t rotation)

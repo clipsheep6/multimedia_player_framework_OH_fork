@@ -270,9 +270,9 @@ bool AudioRecorderNapi::GetAudioEncAndFileFormat(napi_env env, napi_value args, 
         std::string outputFile = CommonNapi::GetPropertyString(env, args, "fileFormat");
         (void)MapExtensionNameToOutputFormat(outputFile, properties.outputFormatType);
     } else {
-        int32_t fileFormat = 0;
         status = napi_has_named_property(env, args, "format", &ret);
         if (status == napi_ok && ret) {
+            int32_t fileFormat = 0;
             (void)CommonNapi::GetPropertyInt32(env, args, "format", fileFormat);
             switch (fileFormat) {
                 case JS_DEFAULT_FILE_FORMAT:
@@ -293,9 +293,9 @@ bool AudioRecorderNapi::GetAudioEncAndFileFormat(napi_env env, napi_value args, 
         std::string audioMime = CommonNapi::GetPropertyString(env, args, "audioEncoderMime");
         (void)MapMimeToAudioCodecFormat(audioMime, properties.audioCodecFormat);
     } else {
-        int32_t audioEncoder = 0;
         status = napi_has_named_property(env, args, "audioEncoder", &ret);
         if (status == napi_ok && ret) {
+            int32_t audioEncoder = 0;
             (void)CommonNapi::GetPropertyInt32(env, args, "audioEncoder", audioEncoder);
             switch (audioEncoder) {
                 case JS_AAC_LC:
@@ -646,9 +646,9 @@ int32_t AudioRecorderNapi::SetUri(const std::string &uriPath)
 {
     CHECK_AND_RETURN_RET_LOG(recorderImpl_ != nullptr, MSERR_INVALID_OPERATION, "No memory");
     const std::string fdHead = "fd://";
-    int32_t fd = -1;
 
     if (uriPath.find(fdHead) != std::string::npos) {
+        int32_t fd = -1;
         std::string inputFd = uriPath.substr(fdHead.size());
         CHECK_AND_RETURN_RET(StrToInt(inputFd, fd) == true, MSERR_INVALID_VAL);
         CHECK_AND_RETURN_RET(fd >= 0, MSERR_INVALID_OPERATION);

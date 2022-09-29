@@ -34,7 +34,7 @@ public:
     int32_t SetArg(const std::shared_ptr<AVSharedMemory> &mem);
     const napi_value *GetArgs() const;
     size_t GetArgsCount() const;
-    void SetResult(napi_value val);
+    void SetResult(napi_value result);
     void GetResult(napi_value &result);
     std::string GetName() const;
     napi_value GetCallback() const;

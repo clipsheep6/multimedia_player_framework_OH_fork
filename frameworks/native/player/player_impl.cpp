@@ -24,25 +24,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl
 
 namespace OHOS {
 namespace Media {
-const std::map<PlayerErrorType, std::string> PLAYER_ERRTYPE_INFOS = {
-    {PLAYER_ERROR, "internal player error"},
-    {PLAYER_ERROR_UNKNOWN, "unknown player error"},
-    {PLAYER_ERROR_EXTEND_START, "player extend start error type"},
-};
-
-std::string PlayerErrorTypeToString(PlayerErrorType type)
-{
-    if (PLAYER_ERRTYPE_INFOS.count(type) != 0) {
-        return PLAYER_ERRTYPE_INFOS.at(type);
-    }
-
-    if (type > PLAYER_ERROR_EXTEND_START) {
-        return "extend error type:" + std::to_string(static_cast<int32_t>(type - PLAYER_ERROR_EXTEND_START));
-    }
-
-    return "invalid error type:" + std::to_string(static_cast<int32_t>(type));
-}
-
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
     std::shared_ptr<PlayerImpl> impl = std::make_shared<PlayerImpl>();
