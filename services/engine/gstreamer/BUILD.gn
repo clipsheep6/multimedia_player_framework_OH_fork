@@ -27,13 +27,6 @@ ohos_shared_library("media_engine_gst") {
     "factory:media_engine_gst_factory",
     "loader:media_engine_gst_loader",
     "plugins:media_engine_gst_plugins_common",
-    "//third_party/glib:glib_packages",
-    "//third_party/gstreamer/gst_libav:gst_libav_packages",
-    "//third_party/gstreamer/gstplugins_bad:gstplugins_bad_packages",
-    "//third_party/gstreamer/gstplugins_base:gstplugins_base_packages",
-    "//third_party/gstreamer/gstplugins_good:gstplugins_good_packages",
-    "//third_party/gstreamer/gstreamer:gstreamer_packages",
-    "//third_party/libffi:ffi",
   ]
 
   if (multimedia_player_framework_support_player) {

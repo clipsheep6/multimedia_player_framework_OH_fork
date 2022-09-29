@@ -155,7 +155,6 @@ ohos_shared_library("media_service") {
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_format",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
-    "//third_party/glib:g_mem_dfx",
     "//third_party/libxml2:xml2",
   ]
 
@@ -167,12 +166,10 @@ ohos_shared_library("media_service") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
-    "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
-    "samgr:samgr_proxy",
   ]
 
   subsystem_name = "multimedia"
