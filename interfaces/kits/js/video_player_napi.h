@@ -20,7 +20,6 @@
 #include "media_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "media_data_source_callback.h"
 #include "common_napi.h"
 #include "audio_info.h"
 
@@ -167,7 +166,6 @@ private:
     static void CompleteAsyncWork(napi_env env, napi_status status, void *data);
     static int32_t ProcessWork(napi_env env, napi_status status, void *data);
     void ErrorCallback(MediaServiceExtErrCode errCode, std::string errMsg = "unknown");
-    void ReleaseDataSource(std::shared_ptr<MediaDataSourceCallback> dataSourceCb);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallback();
     VideoPlayerNapi();
@@ -178,7 +176,6 @@ private:
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Player> nativePlayer_ = nullptr;
     std::shared_ptr<PlayerCallback> jsCallback_ = nullptr;
-    std::shared_ptr<MediaDataSourceCallback> dataSrcCallBack_ = nullptr;
     std::string url_ = "";
     int32_t videoScaleType_ = 0;
     std::vector<Format> videoTrackInfoVec_;
