@@ -22,10 +22,6 @@ namespace {
     constexpr int32_t MAX_SIZE = 3150000; // 3MB
     constexpr int32_t MAX_WIDTH = 8000;
     constexpr int32_t MAX_HEIGHT = 5000;
-    constexpr int32_t ROTATION_0 = 0;
-    constexpr int32_t ROTATION_90 = 90;
-    constexpr int32_t ROTATION_180 = 180;
-    constexpr int32_t ROTATION_270 = 270;
 }
 
 namespace OHOS {
@@ -60,8 +56,8 @@ int32_t ProcessorVdecImpl::ProcessOptional(const Format &format)
 
     if (format.GetValueType(std::string_view("rotation_angle")) == FORMAT_TYPE_INT32) {
         (void)format.GetIntValue("rotation_angle", videoRotation_);
-        if (videoRotation_ != ROTATION_0 && videoRotation_ != ROTATION_90 &&
-            videoRotation_ != ROTATION_180 && videoRotation_ != ROTATION_270) {
+        if (videoRotation_ != VIDEO_ROTATION_0 && videoRotation_ != VIDEO_ROTATION_90 &&
+            videoRotation_ != VIDEO_ROTATION_180 && videoRotation_ != VIDEO_ROTATION_270) {
             MEDIA_LOGE("The rotation angle can only be {0, 90, 180, 270}, current val is %{public}d", videoRotation_);
             return MSERR_UNSUPPORT_VID_PARAMS;
         }
