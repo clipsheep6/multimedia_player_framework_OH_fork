@@ -220,7 +220,8 @@ int32_t MuxSinkBin::ConfigureRotationAngle(const RecorderParam &recParam)
 {
     const RotationAngle &param = static_cast<const RotationAngle &>(recParam);
     bool setRotationToMux = true;
-    if (param.rotation != VIDEO_ROTATION_90 && param.rotation != VIDEO_ROTATION_180 && param.rotation != VIDEO_ROTATION_270) {
+    if (param.rotation != VIDEO_ROTATION_90 && param.rotation != VIDEO_ROTATION_180 &&
+        param.rotation != VIDEO_ROTATION_270) {
         setRotationToMux = false;
         MEDIA_LOGE("Invalid rotation: %{public}d, keep default 0", param.rotation);
     }
