@@ -260,6 +260,7 @@ static void gst_consumer_surface_pool_release_buffer(GstBufferPool *pool, GstBuf
 {
     g_return_if_fail(pool != nullptr && buffer != nullptr);
     GstMemory *mem = gst_buffer_peek_memory(buffer, 0);
+    g_return_if_fail(mem != nullptr);
     if (gst_is_consumer_surface_memory(mem)) {
         GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(buffer);
         if (meta != nullptr) {
@@ -331,6 +332,7 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
         GstFlowReturn result = pclass->alloc_buffer(pool, buffer, params);
         g_return_val_if_fail(result == GST_FLOW_OK && *buffer != nullptr, GST_FLOW_ERROR);
         GstMemory *mem = gst_buffer_peek_memory(*buffer, 0);
+        g_return_val_if_fail(mem != nullptr, GST_FLOW_ERROR);
         GstConsumerSurfaceMemory *surfacemem = nullptr;
         if (gst_is_consumer_surface_memory(mem)) {
             surfacemem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
