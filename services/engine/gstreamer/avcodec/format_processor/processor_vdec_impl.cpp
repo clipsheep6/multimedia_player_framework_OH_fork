@@ -63,7 +63,6 @@ int32_t ProcessorVdecImpl::ProcessOptional(const Format &format)
         if (videoRotation_ != ROTATION_0 && videoRotation_ != ROTATION_90 &&
             videoRotation_ != ROTATION_180 && videoRotation_ != ROTATION_270) {
             MEDIA_LOGE("The rotation angle can only be {0, 90, 180, 270}, current val is %{public}d", videoRotation_);
-            videoRotation_ = 0;
             return MSERR_UNSUPPORT_VID_PARAMS;
         }
     }
