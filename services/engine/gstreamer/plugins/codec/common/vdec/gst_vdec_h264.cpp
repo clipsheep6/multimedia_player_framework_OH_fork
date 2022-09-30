@@ -73,7 +73,7 @@ static gboolean get_slice_flag(GstMapInfo *info, bool &ready_push, gboolean &is_
                 (info->data[i + 1] & 0x1F) == 0x07 || // 0x1F is the mask of last 5 bits, 0x07 is SPS flag
                 (info->data[i + 1] & 0x1F) == 0x08) { // 0x1F is the mask of last 5 bits, 0x08 is PPS flag
                 if (info->size > SPECIAL_FRAME_MAX_LENGTH) {
-                    GST_DEBUG("Treat extra long special frames as multi-slice frame, size is %d ", info->size);
+                    GST_DEBUG("Treat extra long special frames as IDR frame, size is %lu ", info->size);
                     return true;
                 }
                 is_data_frame = false;
