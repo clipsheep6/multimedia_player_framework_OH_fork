@@ -16,12 +16,12 @@
 #ifndef MEDIA_ENUM_NAPI_H_
 #define MEDIA_ENUM_NAPI_H_
 
-#include "media_data_source.h"
-#include "callback_works.h"
+#include "napi/native_api.h"
+#include "napi/native_node_api.h"
 
 namespace OHOS {
 namespace Media {
-class MediaEnumNapi : public NoCopyable {
+class MediaEnumNapi {
 public:
     MediaEnumNapi() = default;
     ~MediaEnumNapi() = default;
