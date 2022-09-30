@@ -260,6 +260,7 @@ static void gst_consumer_surface_pool_release_buffer(GstBufferPool *pool, GstBuf
 {
     g_return_if_fail(pool != nullptr && buffer != nullptr);
     GstMemory *mem = gst_buffer_peek_memory(buffer, 0);
+    g_return_if_fail(mem != nullptr);
     if (gst_is_consumer_surface_memory(mem)) {
         GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(buffer);
         if (meta != nullptr) {
@@ -300,8 +301,7 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
     g_return_val_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr, GST_FLOW_ERROR);
     GstBufferPoolClass *pclass = GST_BUFFER_POOL_GET_CLASS(pool);
-    g_return_val_if_fail(pclass != nullptr, GST_FLOW_ERROR);
-    g_return_val_if_fail(pclass->alloc_buffer != nullptr, GST_FLOW_NOT_SUPPORTED);
+    g_return_val_if_fail(pclass != nullptr && pclass->alloc_buffer != nullptr, GST_FLOW_NOT_SUPPORTED);
     auto priv = surfacepool->priv;
     g_mutex_lock(&priv->pool_lock);
     ON_SCOPE_EXIT(0) { g_mutex_unlock(&priv->pool_lock); };
@@ -331,6 +331,7 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
         GstFlowReturn result = pclass->alloc_buffer(pool, buffer, params);
         g_return_val_if_fail(result == GST_FLOW_OK && *buffer != nullptr, GST_FLOW_ERROR);
         GstMemory *mem = gst_buffer_peek_memory(*buffer, 0);
+        g_return_val_if_fail(mem != nullptr, GST_FLOW_ERROR);
         GstConsumerSurfaceMemory *surfacemem = nullptr;
         if (gst_is_consumer_surface_memory(mem)) {
             surfacemem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
