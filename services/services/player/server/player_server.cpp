@@ -183,7 +183,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_PLAYBACK, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to get engine factory");
-    playerEngine_ = engineFactory->CreatePlayerEngine(appUid, appPid);
+    playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
 
