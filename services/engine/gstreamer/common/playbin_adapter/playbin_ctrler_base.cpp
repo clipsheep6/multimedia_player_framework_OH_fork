@@ -146,7 +146,7 @@ int32_t PlayBinCtrlerBase::Init()
     return ret;
 }
 
-bool PlayBinCtrlerBase::IsLiveSource()
+bool PlayBinCtrlerBase::IsLiveSource() const
 {
     if (appsrcWrap_ != nullptr && appsrcWrap_->IsLiveMode()) {
         return true;

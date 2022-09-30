@@ -124,7 +124,7 @@ private:
     GValueArray *OnAutoPlugSort(GValueArray &factories);
     void ReportMessage(const PlayBinMessage &msg);
     int32_t Reset() noexcept;
-    bool IsLiveSource();
+    bool IsLiveSource() const;
     int32_t DoInitializeForDataSource();
     void DoInitializeForHttp();
     void HandleCacheCtrl(int32_t percent);
