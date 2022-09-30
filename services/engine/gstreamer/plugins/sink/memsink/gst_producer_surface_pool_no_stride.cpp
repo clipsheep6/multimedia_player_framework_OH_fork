@@ -72,6 +72,7 @@ static void gst_producer_surface_pool_get_property(GObject *object, guint prop_i
 
 static void clear_preallocated_buffer(GstProducerSurfacePool *spool)
 {
+    g_return_if_fail(spool != nullptr);
     for (GList *node = g_list_first(spool->preAllocated); node != nullptr; node = g_list_next(node)) {
         GstBuffer *buffer = GST_BUFFER_CAST(node->data);
         if (buffer == nullptr) {
@@ -368,6 +369,7 @@ gboolean gst_producer_surface_pool_set_surface(GstProducerSurfacePool *pool, OHO
 
 static void gst_producer_surface_pool_statistics(GstProducerSurfacePool *spool)
 {
+    g_return_if_fail(spool != nullptr);
     if (spool->callCnt == 0) {
         gettimeofday(&(spool->beginTime), nullptr);
     }
@@ -511,6 +513,7 @@ static gboolean gst_producer_surface_pool_stop(GstBufferPool *pool)
 static GstFlowReturn do_alloc_memory_locked(GstProducerSurfacePool *spool,
     GstBufferPoolAcquireParams *params, GstSurfaceMemory **memory)
 {
+    g_return_val_if_fail(spool != nullptr, GST_FLOW_ERROR);
     GstVideoInfo *info = &spool->info;
     GstSurfaceAllocParam allocParam = {
         GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info), spool->format, spool->usage,

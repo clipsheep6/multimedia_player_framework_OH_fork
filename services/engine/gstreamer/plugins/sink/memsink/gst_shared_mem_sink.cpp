@@ -48,9 +48,9 @@ enum {
 };
 
 static void gst_shared_mem_sink_dispose(GObject *obj);
-static void gst_shared_mem_sink_finalize(GObject *object);
-static void gst_shared_mem_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_shared_mem_sink_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void gst_shared_mem_sink_finalize(GObject *obj);
+static void gst_shared_mem_sink_set_property(GObject *object, guint propId, const GValue *value, GParamSpec *pspec);
+static void gst_shared_mem_sink_get_property(GObject *object, guint propId, GValue *value, GParamSpec *pspec);
 static gboolean gst_shared_mem_sink_do_propose_allocation(GstMemSink *memsink, GstQuery *query);
 static GstFlowReturn gst_shared_mem_sink_do_stream_render(GstMemSink *memsink, GstBuffer **buffer);
 static gboolean gst_shared_mem_sink_unlock_start(GstBaseSink *bsink);
