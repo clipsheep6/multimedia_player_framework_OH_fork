@@ -26,9 +26,6 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MuxSinkBin"};
-    constexpr uint32_t ROTATION_90 = 90;
-    constexpr uint32_t ROTATION_180 = 180;
-    constexpr uint32_t ROTATION_270 = 270;
     constexpr int32_t MAX_LATITUDE = 90;
     constexpr int32_t MIN_LATITUDE = -90;
     constexpr int32_t MAX_LONGITUDE = 180;
@@ -223,7 +220,8 @@ int32_t MuxSinkBin::ConfigureRotationAngle(const RecorderParam &recParam)
 {
     const RotationAngle &param = static_cast<const RotationAngle &>(recParam);
     bool setRotationToMux = true;
-    if (param.rotation != ROTATION_90 && param.rotation != ROTATION_180 && param.rotation != ROTATION_270) {
+    if (param.rotation != VIDEO_ROTATION_90 && param.rotation != VIDEO_ROTATION_180 &&
+        param.rotation != VIDEO_ROTATION_270) {
         setRotationToMux = false;
         MEDIA_LOGE("Invalid rotation: %{public}d, keep default 0", param.rotation);
     }
