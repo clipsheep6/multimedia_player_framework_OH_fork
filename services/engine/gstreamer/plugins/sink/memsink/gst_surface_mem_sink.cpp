@@ -22,15 +22,10 @@
 #include "param_wrapper.h"
 #include "scope_guard.h"
 #include "media_dfx.h"
+#include "av_common.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
-
-namespace {
-    constexpr guint VIDEO_ROTATION_90 = 90;   // rotation, 90
-    constexpr guint VIDEO_ROTATION_180 = 180; // rotation, 180
-    constexpr guint VIDEO_ROTATION_270 = 270; // rotation, 270
-}
 
 struct _GstSurfaceMemSinkPrivate {
     OHOS::sptr<OHOS::Surface> surface;
