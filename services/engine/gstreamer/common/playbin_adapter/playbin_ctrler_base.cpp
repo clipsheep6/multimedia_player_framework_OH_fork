@@ -392,7 +392,6 @@ double PlayBinCtrlerBase::GetRate()
 
 int32_t PlayBinCtrlerBase::SetLoop(bool loop)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     if (IsLiveSource()) {
         return MSERR_INVALID_OPERATION;
     }
