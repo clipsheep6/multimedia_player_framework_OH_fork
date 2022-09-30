@@ -179,7 +179,6 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
     g_return_if_fail(value != nullptr);
     g_return_if_fail(pspec != nullptr);
     GstProducerSurfacePool *spool = GST_PRODUCER_SURFACE_POOL(object);
-    g_return_if_fail(spool != nullptr);
 
     switch (prop_id) {
         case PROP_DYNAMIC_BUFFER_NUM: {
@@ -229,7 +228,6 @@ static void gst_producer_surface_pool_get_property(GObject *object, guint prop_i
     g_return_if_fail(value != nullptr);
     g_return_if_fail(pspec != nullptr);
     GstProducerSurfacePool *spool = GST_PRODUCER_SURFACE_POOL(object);
-    g_return_if_fail(spool != nullptr);
 
     switch (prop_id) {
         case PROP_DYNAMIC_BUFFER_NUM: {
