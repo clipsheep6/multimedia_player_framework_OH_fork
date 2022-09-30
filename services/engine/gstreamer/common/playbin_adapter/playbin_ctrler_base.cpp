@@ -148,7 +148,6 @@ int32_t PlayBinCtrlerBase::Init()
 
 bool PlayBinCtrlerBase::IsLiveSource()
 {
-    std::unique_lock<std::mutex> appsrcLock(appsrcMutex_);
     if (appsrcWrap_ != nullptr && appsrcWrap_->IsLiveMode()) {
         return true;
     }
