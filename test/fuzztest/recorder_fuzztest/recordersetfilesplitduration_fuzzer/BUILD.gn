@@ -19,9 +19,9 @@ module_output_path = "player_framework/recorder"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("RecorderGetSurfaceFuzzTest") {
+ohos_fuzztest("RecorderSetFileSplitDurationFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/recorder_fuzztest/recordergetsurface_fuzzer"
+  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/recorder_fuzztest/recordersetfilesplitduration_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
@@ -53,19 +53,17 @@ ohos_fuzztest("RecorderGetSurfaceFuzzTest") {
     "-Wsign-compare",
     "-Wunused-parameter",
   ]
-  if (multimedia_player_framework_support_recorder) {
-    sources = [
-      "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
-      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_recorder.cpp",
-      "recordergetsurface_fuzzer.cpp",
-    ]
-  }
+  sources = [
+    "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
+    "$MEDIA_ROOT_DIR/test/fuzztest/common/test_recorder.cpp",
+    "recordersetfilesplitduration_fuzzer.cpp",
+  ]
   deps = [
-    "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
   ]
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",

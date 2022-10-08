@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RECORDERGETSURFACE_FUZZER
-#define RECORDERGETSURFACE_FUZZER
+#ifndef RECORDERSETFILESPLITDURATION_FUZZER
+#define RECORDERSETFILESPLITDURATION_FUZZER
 
 #include <cstdint>
 #include <unistd.h>
@@ -24,17 +24,17 @@
 #include <fcntl.h>
 #include "test_recorder.h"
 
-#define FUZZ_PROJECT_NAME "recordergetsurface_fuzzer"
+#define FUZZ_PROJECT_NAME "recordersetfilesplitduration_fuzzer"
 
 namespace OHOS {
 namespace Media {
-class RecorderGetSurfaceFuzzer : public TestRecorder {
+class RecorderSetFileSplitDurationFuzzer : public TestRecorder {
 public:
-    RecorderGetSurfaceFuzzer();
-    ~RecorderGetSurfaceFuzzer();
-    bool FuzzRecorderGetSurface(uint8_t *data, size_t size);
+RecorderSetFileSplitDurationFuzzer();
+~RecorderSetFileSplitDurationFuzzer();
+bool FuzzRecorderSetFileSplitDuration(uint8_t *data, size_t size);
 };
 }
-bool FuzzTestRecorderGetSurface(uint8_t *data, size_t size);
+bool FuzzTestRecorderSetFileSplitDuration(uint8_t *data, size_t size);
 }
 #endif

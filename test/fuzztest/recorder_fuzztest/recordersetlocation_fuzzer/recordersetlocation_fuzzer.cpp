@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "recordergetsurface_fuzzer.h"
+#include "recordersetlocation_fuzzer.h"
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"
@@ -29,42 +29,37 @@ using namespace RecorderTestParam;
 
 namespace OHOS {
 namespace Media {
-RecorderGetSurfaceFuzzer::RecorderGetSurfaceFuzzer()
+RecorderSetLocationFuzzer::RecorderSetLocationFuzzer()
 {
 }
 
-RecorderGetSurfaceFuzzer::~RecorderGetSurfaceFuzzer()
+RecorderSetLocationFuzzer::~RecorderSetLocationFuzzer()
 {
 }
 
-bool RecorderGetSurfaceFuzzer::FuzzRecorderGetSurface(uint8_t *data, size_t size)
+bool RecorderSetLocationFuzzer::FuzzRecorderSetLocation(uint8_t *data, size_t size)
 {
     constexpr uint32_t recorderTime = 5;
+    constexpr uint32_t setRotation = 90;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
-    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_video_yuv_mpeg4.mp4", O_RDWR);
-
+    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetLocation.mp4", O_RDWR);
+    
     if (g_videoRecorderConfig.outputFd >= 0) {
-        RETURN_IF(TestRecorder::SetConfig(PURE_VIDEO, g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), false);
+        RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
+        RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
+        RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
 
-        g_videoRecorderConfig.videoSourceId = *reinterpret_cast<int32_t *>(data);
+        float latitudeValue = *reinterpret_cast<float *>(data);
+        float longitudeValue = static_cast<float>(ProduceRandomNumberCrypt());
 
-        RETURN_IF(TestRecorder::GetSurface(g_videoRecorderConfig), true);
-
-        if (g_videoRecorderConfig.vSource == VIDEO_SOURCE_SURFACE_ES) {
-            int32_t retValue = GetStubFile();
-            if (retValue != 0) {
-                return true;
-            }
-            camereHDIThread.reset(new(std::nothrow) std::thread(&TestRecorder::HDICreateESBuffer, this));
-        } else {
-            camereHDIThread.reset(new(std::nothrow) std::thread(&TestRecorder::HDICreateYUVBuffer, this));
-        }
-
+        recorder->SetLocation(latitudeValue, longitudeValue);
+        recorder->SetOrientationHint(setRotation);
+        RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
+        RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
         sleep(recorderTime);
         RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
@@ -73,21 +68,21 @@ bool RecorderGetSurfaceFuzzer::FuzzRecorderGetSurface(uint8_t *data, size_t size
         RETURN_IF(TestRecorder::Release(g_videoRecorderConfig), true);
     }
     close(g_videoRecorderConfig.outputFd);
-    return false;
+    return true;
 }
 }
 
-bool FuzzTestRecorderGetSurface(uint8_t *data, size_t size)
+bool FuzzTestRecorderSetLocation(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
         return 0;
     }
 
-    if (size < sizeof(int32_t)) {
+    if (size < sizeof(float)) {
         return 0;
     }
-    RecorderGetSurfaceFuzzer testRecorder;
-    return testRecorder.FuzzRecorderGetSurface(data, size);
+    RecorderSetLocationFuzzer testRecorder;
+    return testRecorder.FuzzRecorderSetLocation(data, size);
 }
 }
 
@@ -95,7 +90,7 @@ bool FuzzTestRecorderGetSurface(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzTestRecorderGetSurface(data, size);
+    OHOS::FuzzTestRecorderSetLocation(data, size);
     return 0;
 }
 
