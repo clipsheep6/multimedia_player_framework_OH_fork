@@ -1476,8 +1476,8 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         return GST_FLOW_OK;
     }
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
-    bool ready_push_slice_buffer = false;
     if (kclass->handle_slice_buffer != nullptr && self->enable_slice_cat == true) {
+        bool ready_push_slice_buffer = false;
         GstBuffer *cat_buffer = kclass->handle_slice_buffer(self, nullptr, ready_push_slice_buffer, true);
         if (cat_buffer != nullptr && ready_push_slice_buffer == true) {
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
