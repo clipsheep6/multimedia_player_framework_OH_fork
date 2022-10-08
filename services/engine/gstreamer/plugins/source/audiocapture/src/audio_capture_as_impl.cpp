@@ -137,10 +137,6 @@ int32_t AudioCaptureAsImpl::GetSegmentInfo(uint64_t &start)
 void AudioCaptureAsImpl::GetAudioCaptureBuffer()
 {
     while (true) {
-        if (curState_.load() == RECORDER_STOP) {
-            break;
-        }
-
         {
             std::unique_lock<std::mutex> lock(pauseMutex_);
             audioCacheCtrl_->pauseCond_.wait(lock, [this]() {
@@ -153,9 +149,12 @@ void AudioCaptureAsImpl::GetAudioCaptureBuffer()
             break;
         }
 
-        if (audioCacheCtrl_->captureQueue_.size() >= MAX_QUEUE_SIZE) {
-            audioCacheCtrl_->captureCond_.notify_all();
-            continue;
+        {
+            std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
+            if (audioCacheCtrl_->captureQueue_.size() >= MAX_QUEUE_SIZE) {
+                audioCacheCtrl_->captureCond_.notify_all();
+                continue;
+            }
         }
 
         CHECK_AND_BREAK(audioCapturer_ != nullptr);
@@ -198,11 +197,6 @@ void AudioCaptureAsImpl::GetAudioCaptureBuffer()
 std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
 {
     std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
-    audioCacheCtrl_->captureCond_.wait(loopLock, [this]() { return audioCacheCtrl_->captureQueue_.size() > 0; });
-
-    if (curState_.load() == RECORDER_STOP) {
-        return nullptr;
-    }
 
     if (curState_.load() == RECORDER_RESUME && audioCacheCtrl_->pausedTime_ == 1) {
         audioCacheCtrl_->pausedTime_ = audioCacheCtrl_->lastTimeStamp_;
@@ -215,7 +209,14 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
             }
             audioCacheCtrl_->captureQueue_.pop();
         }
-        audioCacheCtrl_->captureCond_.wait(loopLock, [this]() { return audioCacheCtrl_->captureQueue_.size() > 0; });
+    }
+
+    audioCacheCtrl_->captureCond_.wait(loopLock, [this]() {
+        return ((audioCacheCtrl_->captureQueue_.size() > 0) || (curState_.load() == RECORDER_STOP)); 
+    });
+
+    if (curState_.load() == RECORDER_STOP) {
+        return nullptr;
     }
 
     std::shared_ptr<AudioBuffer> bufferOut = audioCacheCtrl_->captureQueue_.front();
@@ -271,14 +272,12 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
     curState_.store(RECORDER_STOP);
 
     if (captureLoop_ != nullptr && captureLoop_->joinable()) {
-        std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
-        audioCacheCtrl_->captureQueue_.push(nullptr); // to wake up the loop thread
-        audioCacheCtrl_->captureCond_.notify_all();
         audioCacheCtrl_->pauseCond_.notify_all();
-        loopLock.unlock();
         captureLoop_->join();
         captureLoop_.reset();
     }
+
+    audioCacheCtrl_->captureCond_.notify_all();
 
     CHECK_AND_RETURN_RET(audioCapturer_ != nullptr, MSERR_INVALID_OPERATION);
     if (audioCapturer_->GetStatus() == AudioStandard::CapturerState::CAPTURER_RUNNING) {
@@ -288,6 +287,7 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
         CHECK_AND_RETURN_RET(audioCapturer_->Release(), MSERR_UNKNOWN);
     }
 
+    std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
     while (!audioCacheCtrl_->captureQueue_.empty()) {
         auto iter = audioCacheCtrl_->captureQueue_.front();
         if (iter != nullptr) {
@@ -295,6 +295,7 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
         }
         audioCacheCtrl_->captureQueue_.pop();
     }
+    loopLock.unlock();
 
     audioCapturer_ = nullptr;
     audioCacheCtrl_ = nullptr;
@@ -352,7 +353,6 @@ int32_t AudioCaptureAsImpl::WakeUpAudioThreads()
 
     {
         std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
-        audioCacheCtrl_->captureQueue_.push(nullptr); // to wake up the loop thread
         audioCacheCtrl_->captureCond_.notify_all();
     }
 
