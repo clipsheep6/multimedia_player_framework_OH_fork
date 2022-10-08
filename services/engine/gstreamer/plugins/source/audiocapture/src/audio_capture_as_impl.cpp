@@ -212,7 +212,7 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
     }
 
     audioCacheCtrl_->captureCond_.wait(loopLock, [this]() {
-        return ((audioCacheCtrl_->captureQueue_.size() > 0) || (curState_.load() == RECORDER_STOP)); 
+        return ((audioCacheCtrl_->captureQueue_.size() > 0) || (curState_.load() == RECORDER_STOP));
     });
 
     if (curState_.load() == RECORDER_STOP) {
