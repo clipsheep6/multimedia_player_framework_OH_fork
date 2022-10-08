@@ -61,7 +61,3 @@ The structure of the repository directory is as follows:
 ## Repositories Involved<a name="section1533973044317"></a>
 
 [multimedia\_player\_framework](https://gitee.com/openharmony/multimedia_player_framework)
-[multimedia\_audio\_framework](https://gitee.com/openharmony/multimedia_audio_framework)
-[multimedia\_camera\_framework](https://gitee.com/openharmony/multimedia_camera_framework)
-[multimedia\_medialibrary\_standard](https://gitee.com/openharmony/multimedia_medialibrary_standard)
-[graphic\_graphic\_2d](https://gitee.com/openharmony/graphic_graphic_2d)
