@@ -63,8 +63,7 @@ bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, s
             AAC_LC,
             AUDIO_CODEC_FORMAT_BUTT,
         };
-        int32_t audioFormat = abs((ProduceRandomNumberCrypt()) % (audioCodecFormatList));
-        g_videoRecorderConfig.audioSourceId = *reinterpret_cast<int32_t *>(data);
+        int32_t audioFormat = *reinterpret_cast<int32_t *>(data) % (audioCodecFormatList);
         g_videoRecorderConfig.audioFormat = audioCodecFormat[audioFormat];
 
         RETURN_IF(TestRecorder::SetAudioEncoder(g_videoRecorderConfig), true);

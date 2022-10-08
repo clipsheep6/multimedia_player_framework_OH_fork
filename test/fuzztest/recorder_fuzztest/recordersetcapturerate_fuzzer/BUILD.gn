@@ -53,11 +53,13 @@ ohos_fuzztest("RecorderSetCaptureRateFuzzTest") {
     "-Wsign-compare",
     "-Wunused-parameter",
   ]
-  sources = [
-    "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
-    "$MEDIA_ROOT_DIR/test/fuzztest/common/test_recorder.cpp",
-    "recordersetcapturerate_fuzzer.cpp",
-  ]
+  if (multimedia_player_framework_support_recorder) {
+    sources = [
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_recorder.cpp",
+      "recordersetcapturerate_fuzzer.cpp",
+    ]
+  }
   deps = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "//foundation/graphic/graphic_2d:libsurface",

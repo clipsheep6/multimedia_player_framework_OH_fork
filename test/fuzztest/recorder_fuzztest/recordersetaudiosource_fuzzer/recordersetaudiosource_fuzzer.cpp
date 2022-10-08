@@ -53,11 +53,9 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
         AUDIO_MIC,
     };
 
-    int32_t sourcesubscript = abs((ProduceRandomNumberCrypt()) % (audioSourceTypesList));
-    int32_t sourceId = *reinterpret_cast<int32_t *>(data);
+    int32_t sourcesubscript = *reinterpret_cast<int32_t *>(data) % (audioSourceTypesList));
 
     g_videoRecorderConfig.aSource = AudioSourceType[sourcesubscript];
-    g_videoRecorderConfig.audioSourceId = sourceId;
     
     if (g_videoRecorderConfig.outputFd > 0) {
         RETURN_IF(TestRecorder::SetAudioSource(g_videoRecorderConfig), true);

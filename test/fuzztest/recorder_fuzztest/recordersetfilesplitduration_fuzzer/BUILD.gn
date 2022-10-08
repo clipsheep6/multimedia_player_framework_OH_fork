@@ -53,11 +53,13 @@ ohos_fuzztest("RecorderSetFileSplitDurationFuzzTest") {
     "-Wsign-compare",
     "-Wunused-parameter",
   ]
-  sources = [
-    "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
-    "$MEDIA_ROOT_DIR/test/fuzztest/common/test_recorder.cpp",
-    "recordersetfilesplitduration_fuzzer.cpp",
-  ]
+  if (multimedia_player_framework_support_recorder) {
+    sources = [
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_recorder.cpp",
+      "recordersetfilesplitduration_fuzzer.cpp",
+    ]
+  }
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
