@@ -33,9 +33,11 @@ namespace Media {
 RecorderSetAudioEncodingBitRateFuzzer::RecorderSetAudioEncodingBitRateFuzzer()
 {
 }
+
 RecorderSetAudioEncodingBitRateFuzzer::~RecorderSetAudioEncodingBitRateFuzzer()
 {
 }
+
 bool RecorderSetAudioEncodingBitRateFuzzer::FuzzRecorderSetAudioEncodingBitRate(uint8_t *data, size_t size)
 {
     constexpr uint32_t recorderTime = 5;
@@ -44,7 +46,7 @@ bool RecorderSetAudioEncodingBitRateFuzzer::FuzzRecorderSetAudioEncodingBitRate(
     static VideoRecorderConfig_ g_videoRecorderConfig;
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
-    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_video_yuv_mpeg4.mp4", O_RDWR);
+    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetAudioEncodingBitRate.mp4", O_RDWR);
     
     if (g_videoRecorderConfig.outputFd >= 0) {
         RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
@@ -77,6 +79,7 @@ bool RecorderSetAudioEncodingBitRateFuzzer::FuzzRecorderSetAudioEncodingBitRate(
     return false;
 }
 }
+
 bool FuzzTestRecorderSetAudioEncodingBitRate(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
