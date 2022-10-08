@@ -53,7 +53,7 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
         AUDIO_MIC,
     };
 
-    int32_t sourcesubscript = *reinterpret_cast<int32_t *>(data) % (audioSourceTypesList));
+    int32_t sourcesubscript = *reinterpret_cast<int32_t *>(data) % (audioSourceTypesList);
 
     g_videoRecorderConfig.aSource = AudioSourceType[sourcesubscript];
     
