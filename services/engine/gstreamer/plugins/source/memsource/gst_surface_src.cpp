@@ -216,6 +216,12 @@ static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, Gs
         case GST_STATE_CHANGE_READY_TO_NULL:
             gst_surface_src_destroy_pool(surfacesrc);
             gst_surface_src_destroy_surface(surfacesrc);
+            if (surfacesrc->dump.enable_dump == TRUE) {
+                if (surfacesrc->dump.dump_file != nullptr) {
+                    fclose(surfacesrc->dump.dump_file);
+                    surfacesrc->dump.dump_file = nullptr;
+                }
+            }
             GST_OBJECT_LOCK(surfacesrc);
             surfacesrc->need_flush = FALSE;
             GST_OBJECT_UNLOCK(surfacesrc);
