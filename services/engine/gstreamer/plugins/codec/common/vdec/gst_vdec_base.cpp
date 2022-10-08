@@ -1311,7 +1311,8 @@ static gboolean gst_vdec_base_push_out_buffers(GstVdecBase *self)
 static void gst_vdec_base_loop(GstVdecBase *self)
 {
     GST_DEBUG_OBJECT(self, "Loop in");
-    g_return_if_fail(self != nullptr && self->decoder != nullptr);
+    g_return_if_fail(self != nullptr);
+    g_return_if_fail(self->decoder != nullptr);
 
     GstBuffer *gst_buffer = nullptr;
     if (gst_vdec_base_push_out_buffers(self) != TRUE) {

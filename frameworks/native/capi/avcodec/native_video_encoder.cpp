@@ -77,9 +77,8 @@ public:
                 MEDIA_LOGD("At flush, eos or stop, no buffer available");
                 return;
             }
+            callback_.onNeedInputData(codec_, index, nullptr, userData_);
         }
-
-        callback_.onNeedInputData(codec_, index, nullptr, userData_);
     }
 
     void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override
