@@ -163,7 +163,7 @@ int32_t AVMetaFrameExtractor::StartExtract(
 
     static constexpr int32_t timeout = 5;
     cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
-        return seekDone_ || !startExtracting_;
+        return (!originalFrames_.empty() && seekDone_) || !startExtracting_;
     });
     CHECK_AND_RETURN_RET(startExtracting_, MSERR_INVALID_OPERATION);
 
@@ -172,7 +172,7 @@ int32_t AVMetaFrameExtractor::StartExtract(
         ClearCache();
         mode = IPlayBinCtrler::PlayBinSeekMode::PREV_SYNC;
         ret = playbin_->Seek(timeUs, mode);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "sek failed, cancel extract frames");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "seek failed, cancel extract frames");
     }
 
     CANCEL_SCOPE_EXIT_GUARD(0);
