@@ -74,7 +74,7 @@ private:
 
     void GetAudioCaptureBuffer();
     void EmptyCaptureQueue();
-    std::shared_ptr<AudioBuffer> GetSegmentData()
+    std::shared_ptr<AudioBuffer> GetSegmentData();
     std::unique_ptr<AudioCacheCtrl> audioCacheCtrl_;
     std::unique_ptr<std::thread> captureLoop_;
     std::mutex pauseMutex_;
