@@ -201,14 +201,7 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
     if (curState_.load() == RECORDER_RESUME && audioCacheCtrl_->pausedTime_ == 1) {
         audioCacheCtrl_->pausedTime_ = audioCacheCtrl_->lastTimeStamp_;
         MEDIA_LOGD("audio pause timestamp %{public}" PRIu64 "", audioCacheCtrl_->pausedTime_);
-        MEDIA_LOGD("%{public}zu audio buffer has been dropped", audioCacheCtrl_->captureQueue_.size());
-        while (!audioCacheCtrl_->captureQueue_.empty()) {
-            auto iter = audioCacheCtrl_->captureQueue_.front();
-            if (iter != nullptr) {
-                gst_buffer_unref(iter->gstBuffer);
-            }
-            audioCacheCtrl_->captureQueue_.pop();
-        }
+        EmptyCaptureQueue();
     }
 
     audioCacheCtrl_->captureCond_.wait(loopLock, [this]() {
@@ -225,14 +218,7 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
     if (curState_.load() == RECORDER_PAUSED) {
         audioCacheCtrl_->pausedTime_ = bufferOut->timestamp;
         MEDIA_LOGD("audio pause timestamp %{public}" PRIu64 "", audioCacheCtrl_->pausedTime_);
-        MEDIA_LOGD("%{public}zu audio buffer has been dropped", audioCacheCtrl_->captureQueue_.size());
-        while (!audioCacheCtrl_->captureQueue_.empty()) {
-            auto iter = audioCacheCtrl_->captureQueue_.front();
-            if (iter != nullptr) {
-                gst_buffer_unref(iter->gstBuffer);
-            }
-            audioCacheCtrl_->captureQueue_.pop();
-        }
+        EmptyCaptureQueue();
     }
     if (curState_.load() == RECORDER_RESUME) {
         curState_.store(RECORDER_RUNNING);
@@ -288,13 +274,7 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
     }
 
     std::unique_lock<std::mutex> loopLock(audioCacheCtrl_->captureMutex_);
-    while (!audioCacheCtrl_->captureQueue_.empty()) {
-        auto iter = audioCacheCtrl_->captureQueue_.front();
-        if (iter != nullptr) {
-            gst_buffer_unref(iter->gstBuffer);
-        }
-        audioCacheCtrl_->captureQueue_.pop();
-    }
+    EmptyCaptureQueue();
     loopLock.unlock();
 
     audioCapturer_ = nullptr;
@@ -357,6 +337,18 @@ int32_t AudioCaptureAsImpl::WakeUpAudioThreads()
     }
 
     return MSERR_OK;
+}
+
+void AudioCaptureAsImpl::EmptyCaptureQueue()
+{
+    MEDIA_LOGD("%{public}zu audio buffer has been dropped", audioCacheCtrl_->captureQueue_.size());
+    while (!audioCacheCtrl_->captureQueue_.empty()) {
+        auto iter = audioCacheCtrl_->captureQueue_.front();
+        if (iter != nullptr) {
+            gst_buffer_unref(iter->gstBuffer);
+        }
+        audioCacheCtrl_->captureQueue_.pop();
+    }
 }
 } // namespace Media
 } // namespace OHOS
