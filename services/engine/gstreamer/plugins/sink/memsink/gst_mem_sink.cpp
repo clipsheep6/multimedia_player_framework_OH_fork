@@ -49,7 +49,7 @@ static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
     GST_STATIC_CAPS_ANY);
 
 static void gst_mem_sink_dispose(GObject *obj);
-static void gst_mem_sink_finalize(GObject *object);
+static void gst_mem_sink_finalize(GObject *obj);
 static void gst_mem_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_mem_sink_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstCaps *gst_mem_sink_get_caps(GstBaseSink *basesink, GstCaps *filter);
@@ -62,7 +62,7 @@ static gboolean gst_mem_sink_start(GstBaseSink *basesink);
 static gboolean gst_mem_sink_stop(GstBaseSink *basesink);
 static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *basesink, GstBuffer *buffer);
 static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *basesink, GstBuffer *buffer);
-static gboolean gst_mem_sink_propose_allocation(GstBaseSink *bsink, GstQuery *query);
+static gboolean gst_mem_sink_propose_allocation(GstBaseSink *basesink, GstQuery *query);
 
 #define gst_mem_sink_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE(GstMemSink, gst_mem_sink, GST_TYPE_BASE_SINK, G_ADD_PRIVATE(GstMemSink));
@@ -315,9 +315,9 @@ static GstCaps *gst_mem_sink_getcaps(GstMemSink *mem_sink)
     return caps;
 }
 
-static gboolean gst_mem_sink_start(GstBaseSink *bsink)
+static gboolean gst_mem_sink_start(GstBaseSink *basesink)
 {
-    GstMemSink *mem_sink = GST_MEM_SINK(bsink);
+    GstMemSink *mem_sink = GST_MEM_SINK(basesink);
     g_return_val_if_fail(mem_sink != nullptr, FALSE);
     GstMemSinkPrivate *priv = mem_sink->priv;
     g_return_val_if_fail(priv != nullptr, FALSE);
@@ -330,9 +330,9 @@ static gboolean gst_mem_sink_start(GstBaseSink *bsink)
     return TRUE;
 }
 
-static gboolean gst_mem_sink_stop(GstBaseSink *bsink)
+static gboolean gst_mem_sink_stop(GstBaseSink *basesink)
 {
-    GstMemSink *mem_sink = GST_MEM_SINK(bsink);
+    GstMemSink *mem_sink = GST_MEM_SINK(basesink);
     g_return_val_if_fail(mem_sink != nullptr, FALSE);
     GstMemSinkPrivate *priv = mem_sink->priv;
     g_return_val_if_fail(priv != nullptr, FALSE);
@@ -345,9 +345,9 @@ static gboolean gst_mem_sink_stop(GstBaseSink *bsink)
     return TRUE;
 }
 
-static gboolean gst_mem_sink_event(GstBaseSink *bsink, GstEvent *event)
+static gboolean gst_mem_sink_event(GstBaseSink *basesink, GstEvent *event)
 {
-    GstMemSink *mem_sink = GST_MEM_SINK_CAST(bsink);
+    GstMemSink *mem_sink = GST_MEM_SINK_CAST(basesink);
     g_return_val_if_fail(mem_sink != nullptr, FALSE);
     GstMemSinkPrivate *priv = mem_sink->priv;
     g_return_val_if_fail(priv != nullptr, FALSE);
@@ -364,12 +364,12 @@ static gboolean gst_mem_sink_event(GstBaseSink *bsink, GstEvent *event)
         default:
             break;
     }
-    return GST_BASE_SINK_CLASS(parent_class)->event(bsink, event);
+    return GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
 }
 
-static gboolean gst_mem_sink_query(GstBaseSink *bsink, GstQuery *query)
+static gboolean gst_mem_sink_query(GstBaseSink *basesink, GstQuery *query)
 {
-    GstMemSink *mem_sink = GST_MEM_SINK_CAST(bsink);
+    GstMemSink *mem_sink = GST_MEM_SINK_CAST(basesink);
     g_return_val_if_fail(mem_sink != nullptr, FALSE);
     GstMemSinkPrivate *priv = mem_sink->priv;
     g_return_val_if_fail(priv != nullptr, FALSE);
@@ -385,16 +385,16 @@ static gboolean gst_mem_sink_query(GstBaseSink *bsink, GstQuery *query)
             break;
         }
         default:
-            ret = GST_BASE_SINK_CLASS(parent_class)->query(bsink, query);
+            ret = GST_BASE_SINK_CLASS(parent_class)->query(basesink, query);
             break;
     }
 
     return ret;
 }
 
-static gboolean gst_mem_sink_set_caps(GstBaseSink *sink, GstCaps *caps)
+static gboolean gst_mem_sink_set_caps(GstBaseSink *basesink, GstCaps *caps)
 {
-    GstMemSink *mem_sink = GST_MEM_SINK_CAST(sink);
+    GstMemSink *mem_sink = GST_MEM_SINK_CAST(basesink);
     g_return_val_if_fail(mem_sink != nullptr, FALSE);
     GstMemSinkPrivate *priv = mem_sink->priv;
     g_return_val_if_fail(priv != nullptr, FALSE);
@@ -416,9 +416,9 @@ static gboolean gst_mem_sink_set_caps(GstBaseSink *sink, GstCaps *caps)
     return ret;
 }
 
-static GstCaps *gst_mem_sink_get_caps(GstBaseSink *sink, GstCaps *filter)
+static GstCaps *gst_mem_sink_get_caps(GstBaseSink *basesink, GstCaps *filter)
 {
-    GstMemSink *mem_sink = GST_MEM_SINK_CAST(sink);
+    GstMemSink *mem_sink = GST_MEM_SINK_CAST(basesink);
     g_return_val_if_fail(mem_sink != nullptr, nullptr);
     GstMemSinkPrivate *priv = mem_sink->priv;
     g_return_val_if_fail(priv != nullptr, nullptr);
@@ -438,9 +438,9 @@ static GstCaps *gst_mem_sink_get_caps(GstBaseSink *sink, GstCaps *filter)
     return caps;
 }
 
-static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *bsink, GstBuffer *buffer)
+static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *basesink, GstBuffer *buffer)
 {
-    GstMemSink *mem_sink = GST_MEM_SINK_CAST(bsink);
+    GstMemSink *mem_sink = GST_MEM_SINK_CAST(basesink);
     g_return_val_if_fail(mem_sink != nullptr, GST_FLOW_ERROR);
     GstMemSinkPrivate *priv = mem_sink->priv;
     g_return_val_if_fail(priv != nullptr, GST_FLOW_ERROR);
@@ -463,9 +463,9 @@ static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *bsink, GstBuffer *buffer)
     return ret;
 }
 
-static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *bsink, GstBuffer *buffer)
+static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *basesink, GstBuffer *buffer)
 {
-    GstMemSink *mem_sink = GST_MEM_SINK_CAST(bsink);
+    GstMemSink *mem_sink = GST_MEM_SINK_CAST(basesink);
     g_return_val_if_fail(mem_sink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
     GstMemSinkPrivate *priv = mem_sink->priv;
     g_return_val_if_fail(priv != nullptr, GST_FLOW_ERROR);
@@ -496,9 +496,9 @@ static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *bsink, GstBuffer *b
     return ret;
 }
 
-static gboolean gst_mem_sink_propose_allocation(GstBaseSink *bsink, GstQuery *query)
+static gboolean gst_mem_sink_propose_allocation(GstBaseSink *basesink, GstQuery *query)
 {
-    GstMemSink *mem_sink = GST_MEM_SINK_CAST(bsink);
+    GstMemSink *mem_sink = GST_MEM_SINK_CAST(basesink);
     g_return_val_if_fail(mem_sink != nullptr && query != nullptr, FALSE);
     GstMemSinkClass *mem_sink_class = GST_MEM_SINK_GET_CLASS(mem_sink);
     g_return_val_if_fail(mem_sink_class != nullptr, FALSE);
