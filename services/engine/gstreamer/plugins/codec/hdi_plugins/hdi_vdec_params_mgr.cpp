@@ -190,8 +190,8 @@ int32_t HdiVdecParamsMgr::VideoSurfaceInit(GstElement *element)
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
 
     GstVdecBase *base = GST_VDEC_BASE(element);
-    base->usage = (int32_t)usageParams.usage;
-    MEDIA_LOGD("Usage %{public}d", base->usage);
+    base->usage = usageParams.usage;
+    MEDIA_LOGD("Usage %{public}" PRIu64" ", base->usage);
     return GST_CODEC_OK;
 }
 

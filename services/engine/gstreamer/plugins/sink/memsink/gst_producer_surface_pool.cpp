@@ -286,7 +286,7 @@ static gboolean parse_config_usage(GstProducerSurfacePool *spool, GstStructure *
 {
     g_return_val_if_fail(spool != nullptr, FALSE);
     g_return_val_if_fail(config != nullptr, FALSE);
-    if (!gst_structure_get_int(config, "usage", &spool->usage)) {
+    if (!gst_structure_get_uint64(config, "usage", &spool->usage)) {
         GST_INFO_OBJECT(spool, "no usage available");
         spool->usage = 0;
     }
@@ -315,7 +315,7 @@ static gboolean gst_producer_surface_pool_set_config(GstBufferPool *pool, GstStr
         return FALSE;
     }
     g_return_val_if_fail(parse_config_usage(spool, config), FALSE);
-    GST_DEBUG_OBJECT(pool, "get usage %u", spool->usage);
+    GST_INFO_OBJECT(pool, "get usage %" G_GUINT64_FORMAT " ", spool->usage);
 
     GST_BUFFER_POOL_LOCK(spool);
 
