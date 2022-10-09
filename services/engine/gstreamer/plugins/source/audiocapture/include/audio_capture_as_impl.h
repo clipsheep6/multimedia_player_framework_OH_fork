@@ -73,6 +73,7 @@ private:
     static constexpr int MAX_QUEUE_SIZE = 100;
 
     void GetAudioCaptureBuffer();
+    void EmptyCaptureQueue();
     std::unique_ptr<AudioCacheCtrl> audioCacheCtrl_;
     std::unique_ptr<std::thread> captureLoop_;
     std::mutex pauseMutex_;
