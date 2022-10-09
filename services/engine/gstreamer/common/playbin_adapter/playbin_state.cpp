@@ -180,6 +180,8 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
                 ctrler_.ReportMessage(posUpdateMsg);
             } else {
                 MEDIA_LOGD("Async done, not seeking or rating!");
+                PlayBinMessage playBinMsg { PLAYBIN_MSG_ASYNC_DONE, 0, 0, {} };
+                ctrler_.ReportMessage(playBinMsg);
             }
         }
     }
