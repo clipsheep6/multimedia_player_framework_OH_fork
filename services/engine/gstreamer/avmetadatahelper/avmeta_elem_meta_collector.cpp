@@ -317,9 +317,6 @@ void AVMetaElemMetaCollector::ParseTagList(const GstTagList &tagList, TrackInfo 
             return;
         }
         globalTagCatched_ = true;
-    }
-
-    if (scope == GST_TAG_SCOPE_GLOBAL) {
         GstMetaParser::ParseTagList(tagList, fileInnerMeta_);
         ConvertToAVMeta(fileInnerMeta_, fileUploadMeta_);
         ReportMeta(fileUploadMeta_);

@@ -60,7 +60,7 @@ private:
     static void NeedData(const GstElement *appSrc, uint32_t size, gpointer self);
     static gboolean SeekData(const GstElement *appSrc, uint64_t seekPos, gpointer self);
     void NeedDataInner(uint32_t size);
-    gboolean SeekDataInner(uint64_t seekPos);
+    gboolean SeekDataInner(uint64_t pos);
     void SeekAndFreeBuffers(uint64_t pos);
     int32_t ReadAndGetMem();
     void AnalyzeSize(int32_t size);

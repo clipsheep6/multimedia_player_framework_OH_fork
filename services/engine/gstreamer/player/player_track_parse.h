@@ -42,7 +42,7 @@ private:
     GstPadProbeReturn GetTrackParse(GstPad *pad, GstPadProbeInfo *info);
     void ConvertToPlayerKeys(const Format &innerMeta, Format &outMeta) const;
     void AddProbeToPad(GstPad *pad);
-    static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer usrdata);
+    static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userdata);
     bool demuxerElementFind_ = false;
     std::unordered_map<GstPad *, Format> trackInfos_;
     int32_t trackcount_ = 0;
