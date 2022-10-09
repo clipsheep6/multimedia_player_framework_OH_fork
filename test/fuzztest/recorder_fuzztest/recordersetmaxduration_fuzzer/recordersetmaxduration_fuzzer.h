@@ -28,7 +28,6 @@
 
 namespace OHOS {
 namespace Media {
-
 class RecorderSetMaxDurationFuzzer : public TestRecorder {
 public:
     RecorderSetMaxDurationFuzzer();
