@@ -72,6 +72,7 @@ static void gst_producer_surface_pool_get_property(GObject *object, guint prop_i
 
 static void clear_preallocated_buffer(GstProducerSurfacePool *spool)
 {
+    g_return_if_fail(spool != nullptr);
     for (GList *node = g_list_first(spool->preAllocated); node != nullptr; node = g_list_next(node)) {
         GstBuffer *buffer = GST_BUFFER_CAST(node->data);
         if (buffer == nullptr) {
