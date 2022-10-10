@@ -70,7 +70,7 @@ bool RecorderSetRecorderCallbackFuzzer::FuzzRecorderSetRecorderCallback(uint8_t 
         std::shared_ptr<TestRecorderCallbackTest> cb = nullptr;
         bool boolIndex = boolValue[*reinterpret_cast<int32_t *>(data) % (boolValueList)];
         if (boolIndex == true) {
-            cb = std::make_shared<TestRecorderCallbackTest>(); 
+            cb = std::make_shared<TestRecorderCallbackTest>();
         }
 
         int32_t retValue = recorder->SetRecorderCallback(cb);
