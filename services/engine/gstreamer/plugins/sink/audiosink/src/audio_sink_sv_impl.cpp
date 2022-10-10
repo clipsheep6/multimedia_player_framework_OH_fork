@@ -52,9 +52,6 @@ void AudioRendererMediaCallback::OnInterrupt(const AudioStandard::InterruptEvent
 void AudioRendererMediaCallback::OnStateChange(const AudioStandard::RendererState state)
 {
     MEDIA_LOGD("RenderState is %{public}d", static_cast<int32_t>(state));
-    if (stateCb_ != nullptr) {
-        stateCb_(audioSink_, static_cast<guint>(state));
-    }
 }
 
 AudioSinkSvImpl::AudioSinkSvImpl(GstBaseSink *sink)
