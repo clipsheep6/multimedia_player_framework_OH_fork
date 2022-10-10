@@ -33,9 +33,11 @@ namespace Media {
 RecorderStopFuzzer::RecorderStopFuzzer()
 {
 }
+
 RecorderStopFuzzer::~RecorderStopFuzzer()
 {
 }
+
 bool RecorderStopFuzzer::FuzzRecorderStop(uint8_t *data, size_t size)
 {
     constexpr uint32_t recorderTime = 5;
@@ -69,6 +71,7 @@ bool RecorderStopFuzzer::FuzzRecorderStop(uint8_t *data, size_t size)
     return true;
 }
 }
+
 bool FuzzTestRecorderStop(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
