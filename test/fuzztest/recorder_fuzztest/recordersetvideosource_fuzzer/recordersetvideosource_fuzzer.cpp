@@ -56,9 +56,7 @@ bool RecorderSetVideoSourceFuzzer::FuzzRecorderSetVideoSource(uint8_t *data, siz
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetVideoSource.mp4", O_RDWR);
     
     if (g_videoRecorderConfig.outputFd >= 0) {
-        cout << "1" << endl;
         RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), true);
-        cout << "2" << endl;
         RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), true);
         RETURN_IF(TestRecorder::SetMaxDuration(g_videoRecorderConfig), true);
