@@ -33,9 +33,11 @@ namespace Media {
 RecorderSetVideoFrameRateFuzzer::RecorderSetVideoFrameRateFuzzer()
 {
 }
+
 RecorderSetVideoFrameRateFuzzer::~RecorderSetVideoFrameRateFuzzer()
 {
 }
+
 bool RecorderSetVideoFrameRateFuzzer::RecorderSetVideoFrameRateFuzz(uint8_t *data, size_t size)
 {
     constexpr uint32_t recorderTime = 5;

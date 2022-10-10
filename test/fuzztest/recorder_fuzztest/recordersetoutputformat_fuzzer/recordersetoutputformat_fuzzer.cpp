@@ -33,9 +33,11 @@ namespace Media {
 RecorderSetOutputFormatFuzzer::RecorderSetOutputFormatFuzzer()
 {
 }
+
 RecorderSetOutputFormatFuzzer::~RecorderSetOutputFormatFuzzer()
 {
 }
+
 bool RecorderSetOutputFormatFuzzer::RecorderSetOutputFormatFuzz(uint8_t *data, size_t size)
 {
     constexpr uint32_t recorderTime = 5;
