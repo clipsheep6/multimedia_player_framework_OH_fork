@@ -83,7 +83,7 @@
     <target name="RecorderSetVideoSourceFuzzTest">
         <preparer>
             <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
-            <option name="push" value="recorder/recorder_video_yuv_mpeg4.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_SetVideoSource.mp4 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
@@ -94,44 +94,37 @@
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
-    <target name="RecorderSetDataSourceFuzzTest">
-        <preparer>
-            <option name="push" value="recorder/recorder_SetDataSource_001.mp4 -> /data/test/media" src="res"/>
-            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
-            <option name="shell" value="restorecon /data/test/media"/>
-        </preparer>
-    </target>
     <target name="RecorderSetVideoEncodingBitRateFuzzTest">
         <preparer>
-            <option name="push" value="recorder/recorder_video_yuv_mpeg4.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_SetVideoEncodingBitRate.mp4 -> /data/test/media" src="res"/>
             <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
     <target name="RecorderSetOutputFormatFuzzTest">
         <preparer>
-            <option name="push" value="recorder/recorder_video_yuv_mpeg4.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_SetOutputFormat.mp4 -> /data/test/media" src="res"/>
             <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
     <target name="RecorderSetVideoEncoderFuzzTest">
         <preparer>
-            <option name="push" value="recorder/recorder_video_yuv_mpeg4.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_SetVideoEncoder.mp4 -> /data/test/media" src="res"/>
             <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
     <target name="RecorderSetVideoSizeFuzzTest">
         <preparer>
-            <option name="push" value="recorder/recorder_video_yuv_mpeg4.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_SetVideoSize.mp4 -> /data/test/media" src="res"/>
             <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
     <target name="RecorderSetVideoFrameRateFuzzTest">
         <preparer>
-            <option name="push" value="recorder/recorder_video_yuv_mpeg4.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_SetVideoFrameRate.mp4 -> /data/test/media" src="res"/>
             <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
@@ -173,7 +166,7 @@
     </target>
     <target name="RecorderSetMaxDurationFuzzTest">
         <preparer>
-            <option name="push" value="recorder/recorder_video_yuv_mpeg4.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_SetMaxDuration.mp4 -> /data/test/media" src="res"/>
             <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
@@ -215,7 +208,7 @@
     </target>
     <target name="RecorderSetRecorderCallbackFuzzTest">
         <preparer>
-            <option name="push" value="recorder/recorder_video_yuv_mpeg4.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_SetRecorderCallback.mp4 -> /data/test/media" src="res"/>
             <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
@@ -229,7 +222,7 @@
     </target>
     <target name="RecorderSetFileSplitDurationFuzzTest">
         <preparer>
-            <option name="push" value="recorder/recorder_video_SetMaxFileSize_001.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_SetFileSplitDuration.mp4 -> /data/test/media" src="res"/>
             <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
