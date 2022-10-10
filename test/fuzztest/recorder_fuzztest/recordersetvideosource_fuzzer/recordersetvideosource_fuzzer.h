@@ -28,7 +28,6 @@
 
 namespace OHOS {
 namespace Media {
-
 class RecorderSetVideoSourceFuzzer : public TestRecorder {
 public:
     RecorderSetVideoSourceFuzzer();

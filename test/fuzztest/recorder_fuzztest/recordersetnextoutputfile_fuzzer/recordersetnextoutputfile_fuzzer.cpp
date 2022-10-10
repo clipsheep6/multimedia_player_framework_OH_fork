@@ -39,6 +39,7 @@ RecorderSetNextOutputFileFuzzer::~RecorderSetNextOutputFileFuzzer()
 
 bool RecorderSetNextOutputFileFuzzer::FuzzRecorderSetNextOutputFile(uint8_t *data, size_t size)
 {
+	constexpr uint32_t recorderRate = 30;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
@@ -47,12 +48,11 @@ bool RecorderSetNextOutputFileFuzzer::FuzzRecorderSetNextOutputFile(uint8_t *dat
     g_videoRecorderConfig.videoFormat = MPEG4;
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetNextOutputFile.mp4", O_RDWR);
 
-    if (g_videoRecorderConfig.outputFd > 0)
-    {
+    if (g_videoRecorderConfig.outputFd > 0) {
         RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetCaptureRate(g_videoRecorderConfig, 30), false);
+        RETURN_IF(TestRecorder::SetCaptureRate(g_videoRecorderConfig, recorderRate), false);
         RETURN_IF(TestRecorder::SetMaxFileSize(5000, g_videoRecorderConfig), false);
         
         g_videoRecorderConfig.outputFd = *reinterpret_cast<int32_t *>(data);

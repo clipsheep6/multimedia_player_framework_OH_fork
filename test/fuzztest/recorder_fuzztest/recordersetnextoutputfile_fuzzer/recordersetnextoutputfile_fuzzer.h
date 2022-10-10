@@ -28,7 +28,6 @@
 
 namespace OHOS {
 namespace Media {
-
 class RecorderSetNextOutputFileFuzzer : public TestRecorder {
 public:
     RecorderSetNextOutputFileFuzzer();
