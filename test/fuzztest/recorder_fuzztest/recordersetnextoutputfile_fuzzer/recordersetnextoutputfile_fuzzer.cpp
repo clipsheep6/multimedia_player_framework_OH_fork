@@ -39,8 +39,8 @@ RecorderSetNextOutputFileFuzzer::~RecorderSetNextOutputFileFuzzer()
 
 bool RecorderSetNextOutputFileFuzzer::FuzzRecorderSetNextOutputFile(uint8_t *data, size_t size)
 {
-	constexpr uint32_t recorderRate = 30;
-	constexpr uint32_t recorderSize = 5000;
+    constexpr uint32_t recorderRate = 30;
+    constexpr uint32_t recorderSize = 5000;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
