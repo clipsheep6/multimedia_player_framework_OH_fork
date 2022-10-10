@@ -28,7 +28,6 @@
 
 namespace OHOS {
 namespace Media {
-
 class RecorderSetMaxFileSizeFuzzer : public TestRecorder {
 public:
     RecorderSetMaxFileSizeFuzzer();
