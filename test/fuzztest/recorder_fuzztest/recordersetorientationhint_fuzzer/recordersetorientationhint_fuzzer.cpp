@@ -47,11 +47,10 @@ bool RecorderSetOrientationHintFuzzer::FuzzRecorderSetOrientationHint(uint8_t *d
     g_videoRecorderConfig.videoFormat = MPEG4;
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetOrientationHint.mp4", O_RDWR);
     
-    if (g_videoRecorderConfig.outputFd >= 0)
-    {
+    if (g_videoRecorderConfig.outputFd >= 0) {
         RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
         RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false); 
+        RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
         recorder->SetLocation(0.0, 0);
         
         int32_t rotationValue = *reinterpret_cast<int32_t *>(data);
