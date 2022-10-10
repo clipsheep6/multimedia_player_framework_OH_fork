@@ -34,6 +34,12 @@ G_BEGIN_DECLS
 
 typedef struct _GstSurfaceSrc GstSurfaceSrc;
 typedef struct _GstSurfaceSrcClass GstSurfaceSrcClass;
+typedef struct _GstSurfaceMemSrcDump GstSurfaceMemSrcDump;
+
+struct _GstSurfaceMemSrcDump {
+    gboolean enable_dump;
+    FILE *dump_file;
+};
 
 struct _GstSurfaceSrc {
     GstMemSrc memsrc;
@@ -43,6 +49,7 @@ struct _GstSurfaceSrc {
     guint stride;
     gboolean need_flush;
     gboolean flushing;
+    GstSurfaceMemSrcDump dump;
 };
 
 struct _GstSurfaceSrcClass {
