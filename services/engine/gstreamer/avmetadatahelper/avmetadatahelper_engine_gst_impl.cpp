@@ -264,7 +264,7 @@ int32_t AVMetadataHelperEngineGstImpl::PrepareInternel(bool async)
             return MSERR_OK;
         }
     }
-
+    asyncDone_ = false;
     int32_t ret = playBinCtrler_->PrepareAsync();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "prepare failed");
 
@@ -273,7 +273,7 @@ int32_t AVMetadataHelperEngineGstImpl::PrepareInternel(bool async)
         static constexpr int32_t timeout = 5;
         std::unique_lock<std::mutex> lock(mutex_);
         cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
-            return status_ == PLAYBIN_STATE_PREPARED || errHappened_;
+            return (status_ == PLAYBIN_STATE_PREPARED && asyncDone_) || errHappened_;
         });
         CHECK_AND_RETURN_RET_LOG(!errHappened_, MSERR_UNKNOWN, "prepare failed");
     }
@@ -373,6 +373,7 @@ void AVMetadataHelperEngineGstImpl::Reset()
     status_ = PLAYBIN_STATE_IDLE;
 
     firstFetch_ = true;
+    asyncDone_ = false;
 
     lock.unlock();
     lock.lock();
@@ -414,6 +415,12 @@ void AVMetadataHelperEngineGstImpl::OnNotifyMessage(const PlayBinMessage &msg)
             if (frameExtractor_ != nullptr) {
                 frameExtractor_->NotifyPlayBinMsg(msg);
             }
+            break;
+        }
+        case PLAYBIN_MSG_ASYNC_DONE: {
+            asyncDone_ = true;
+            cond_.notify_all();
+            MEDIA_LOGI("async done");
             break;
         }
         default:
