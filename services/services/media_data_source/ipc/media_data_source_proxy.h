@@ -24,7 +24,7 @@ namespace OHOS {
 namespace Media {
 class MediaDataCallback : public IMediaDataSource, public NoCopyable {
 public:
-    explicit MediaDataCallback(const sptr<IStandardMediaDataSource> &proxy);
+    explicit MediaDataCallback(const sptr<IStandardMediaDataSource> &ipcProxy);
     virtual ~MediaDataCallback();
 
     int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
