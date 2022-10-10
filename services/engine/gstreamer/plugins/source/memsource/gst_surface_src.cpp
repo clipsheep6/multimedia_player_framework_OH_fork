@@ -23,6 +23,7 @@
 #include "buffer_type_meta.h"
 #include "scope_guard.h"
 #include "display_type.h"
+#include "param_wrapper.h"
 
 #define gst_surface_src_parent_class parent_class
 using namespace OHOS;
@@ -67,6 +68,8 @@ static gboolean gst_surface_src_decide_allocation(GstBaseSrc *basesrc, GstQuery 
 static GstFlowReturn gst_surface_src_fill(GstBaseSrc *src, guint64 offset, guint size, GstBuffer *buf);
 static void gst_surface_src_init_surface(GstSurfaceSrc *src);
 static gboolean gst_surface_src_send_event(GstElement *element, GstEvent *event);
+static void gst_surface_mem_src_dump_buffer(GstBaseSrc *self, GstBuffer *buffer);
+static void gst_surface_mem_src_dump_from_sys_param(GstSurfaceSrc *src);
 
 static void gst_surface_src_class_init(GstSurfaceSrcClass *klass)
 {
@@ -123,6 +126,7 @@ static void gst_surface_src_init(GstSurfaceSrc *surfacesrc)
     surfacesrc->stride = STRIDE_ALIGN;
     surfacesrc->need_flush = FALSE;
     surfacesrc->flushing = FALSE;
+    gst_surface_mem_src_dump_from_sys_param(surfacesrc);
 }
 
 static void gst_surface_src_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
@@ -181,6 +185,8 @@ static GstFlowReturn gst_surface_src_fill(GstBaseSrc *src, guint64 offset, guint
     (void)src;
     (void)offset;
     (void)size;
+    gst_surface_mem_src_dump_buffer(src, buf);
+
     GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(buf);
     if (meta != nullptr && (meta->bufferFlag & BUFFER_FLAG_EOS)) {
         GST_DEBUG_OBJECT(src, "EOS buffer");
@@ -210,6 +216,12 @@ static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, Gs
         case GST_STATE_CHANGE_READY_TO_NULL:
             gst_surface_src_destroy_pool(surfacesrc);
             gst_surface_src_destroy_surface(surfacesrc);
+            if (surfacesrc->dump.enable_dump == TRUE) {
+                if (surfacesrc->dump.dump_file != nullptr) {
+                    fclose(surfacesrc->dump.dump_file);
+                    surfacesrc->dump.dump_file = nullptr;
+                }
+            }
             GST_OBJECT_LOCK(surfacesrc);
             surfacesrc->need_flush = FALSE;
             GST_OBJECT_UNLOCK(surfacesrc);
@@ -432,4 +444,47 @@ static gboolean gst_surface_src_decide_allocation(GstBaseSrc *basesrc, GstQuery 
         return TRUE;
     }
     return FALSE;
+}
+
+static void gst_surface_mem_src_dump_buffer(GstBaseSrc *self, GstBuffer *buffer)
+{
+    g_return_if_fail(self != nullptr);
+    GstSurfaceSrc *src = GST_SURFACE_SRC(self);
+    g_return_if_fail(src != nullptr);
+    g_return_if_fail(buffer != nullptr);
+
+    if (src->dump.enable_dump == FALSE) {
+        return;
+    }
+
+    GST_DEBUG_OBJECT(src, "Dump surface src buffer");
+    static std::string input_dump_file = "/data/media/surface-in.yuv";
+    if (src->dump.dump_file == nullptr) {
+        src->dump.dump_file = fopen(input_dump_file.c_str(), "wb+");
+    }
+    if (src->dump.dump_file == nullptr) {
+        GST_ERROR_OBJECT(self, "open file failed");
+        return;
+    }
+    GstMapInfo info = GST_MAP_INFO_INIT;
+    g_return_if_fail(gst_buffer_map(buffer, &info, GST_MAP_READ));
+    (void)fwrite(info.data, info.size, 1, src->dump.dump_file);
+    (void)fflush(src->dump.dump_file);
+    gst_buffer_unmap(buffer, &info);
+}
+
+static void gst_surface_mem_src_dump_from_sys_param(GstSurfaceSrc *src)
+{
+    std::string dump_enable;
+    src->dump.enable_dump = FALSE;
+    int32_t res = OHOS::system::GetStringParameter("sys.media.dump.surfacesrc.enable", dump_enable, "");
+    if (res != 0 || dump_enable.empty()) {
+        GST_DEBUG_OBJECT(src, "sys.media.dump.surfacesrc.enable");
+        return;
+    }
+    GST_DEBUG_OBJECT(src, "sys.media.dump.surfacesrc.enable=%s", dump_enable.c_str());
+
+    if (dump_enable == "true") {
+        src->dump.enable_dump = TRUE;
+    }
 }
