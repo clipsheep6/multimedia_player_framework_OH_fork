@@ -859,6 +859,7 @@ void PlayerServer::FormatToString(std::string &dumpString, std::vector<Format> &
 {
     for (auto iter = videoTrack.begin(); iter != videoTrack.end(); iter++) {
         dumpString += iter->Stringify();
+        dumpString += '\n';
     }
 }
 
