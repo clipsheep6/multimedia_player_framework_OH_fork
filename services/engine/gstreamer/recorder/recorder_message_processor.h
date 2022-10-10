@@ -39,7 +39,7 @@ public:
 private:
     static gboolean BusCallback(GstBus *bus, GstMessage *msg, gpointer data);
     void ProcessMessage(GstMessage &msg);
-    RecorderMsgProcResult ProcessExtendMessage(GstMessage &msg, RecorderMessage &prettyMsg) const;
+    RecorderMsgProcResult ProcessExtendMessage(const GstMessage &msg, const RecorderMessage &prettyMsg) const;
     RecorderMsgProcResult ProcessMessageFinal(GstMessage &msg, RecorderMessage &prettyMsg);
     void NotifyInternalError(RecorderMessage &msg);
     void ReportMsgProcResult(const RecorderMessage &msg);
