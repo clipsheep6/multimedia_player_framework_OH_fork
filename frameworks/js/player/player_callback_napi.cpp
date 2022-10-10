@@ -82,11 +82,11 @@ PlayerStates PlayerCallbackNapi::GetCurrentState() const
     return currentState_;
 }
 
-void PlayerCallbackNapi::OnError(PlayerErrorType errorType, int32_t errCode)
+void PlayerCallbackNapi::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
-    MEDIA_LOGD("OnError is called, name: %{public}d, message: %{public}d", errorType, errCode);
-    MediaServiceExtErrCode err = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
-    std::string errMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errCode));
+    MEDIA_LOGD("OnError is called, name: %{public}d, message: %{public}d", errorType, errorCode);
+    MediaServiceExtErrCode err = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
+    std::string errMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));
     return SendErrorCallback(err, errMsg);
 }
 
