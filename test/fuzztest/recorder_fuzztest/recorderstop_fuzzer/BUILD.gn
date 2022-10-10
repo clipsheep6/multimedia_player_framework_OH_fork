@@ -22,7 +22,7 @@ MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 ohos_fuzztest("RecorderStopFuzzTest") {
   module_out_path = module_output_path
   fuzz_config_file = 
-  	"$MEDIA_ROOT_DIR/test/fuzztest/recorder_fuzztest/recorderstop_fuzzer"
+      "$MEDIA_ROOT_DIR/test/fuzztest/recorder_fuzztest/recorderstop_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
