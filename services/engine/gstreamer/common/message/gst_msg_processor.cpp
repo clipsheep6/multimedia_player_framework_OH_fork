@@ -204,7 +204,6 @@ void GstMsgProcessor::DoReset()
     for (auto &[tickType, source] : tickSource_) {
         RemoveTickSource(tickType);
     }
-    tickSource_.clear();
 
     if (mainLoop_ != nullptr) {
         g_main_loop_unref(mainLoop_);
