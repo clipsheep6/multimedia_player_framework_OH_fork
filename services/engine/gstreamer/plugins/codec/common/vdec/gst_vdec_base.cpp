@@ -1477,8 +1477,8 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         return GST_FLOW_OK;
     }
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
-    bool ready_push_slice_buffer = false;
     if (kclass->handle_slice_buffer != nullptr && self->enable_slice_cat == true) {
+        bool ready_push_slice_buffer = false;
         GstBuffer *cat_buffer = kclass->handle_slice_buffer(self, nullptr, ready_push_slice_buffer, true);
         if (cat_buffer != nullptr && ready_push_slice_buffer == true) {
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
@@ -1626,7 +1626,7 @@ static void gst_vdec_base_update_out_pool(GstVdecBase *self, GstBufferPool **poo
     g_return_if_fail(config != nullptr);
     gst_buffer_pool_config_set_params(config, outcaps, size, self->out_buffer_cnt, self->out_buffer_cnt);
     if (self->memtype == GST_MEMTYPE_SURFACE) {
-        gst_structure_set(config, "usage", G_TYPE_INT, self->usage, nullptr);
+        gst_structure_set(config, "usage", G_TYPE_UINT64, self->usage, nullptr);
     }
     g_return_if_fail(gst_buffer_pool_set_config(*pool, config));
     CANCEL_SCOPE_EXIT_GUARD(0);

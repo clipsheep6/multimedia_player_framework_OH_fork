@@ -94,7 +94,7 @@ struct _GstVdecBase {
     gint width;
     gint height;
     gint memtype;
-    gint usage;
+    guint64 usage;
     GstBufferPool *inpool;
     GstBufferPool *outpool;
     guint coding_outbuf_cnt;

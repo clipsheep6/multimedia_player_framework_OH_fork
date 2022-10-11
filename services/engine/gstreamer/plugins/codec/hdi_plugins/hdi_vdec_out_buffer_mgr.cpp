@@ -53,7 +53,8 @@ int32_t HdiVdecOutBufferMgr::UseHandleMems(std::vector<GstBuffer *> &buffers)
         codecBuffer->hdiBuffer.bufferType = CodecBufferType::CODEC_BUFFER_TYPE_HANDLE;
         codecBuffer->hdiBuffer.buffer = reinterpret_cast<uint8_t *>(bufferType->buf);
         codecBuffer->hdiBuffer.bufferLen = bufferType->bufLen;
-        auto ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, &codecBuffer->hdiBuffer);
+        codecBuffer->hdiBuffer.allocLen = bufferType->bufLen;
+        ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, &codecBuffer->hdiBuffer);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "UseBuffer failed");
         availableBuffers_.push_back(codecBuffer);
         GstBufferWrap bufferWarp = {};

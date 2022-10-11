@@ -69,7 +69,7 @@ public:
     static gboolean InputNeedCopy();
     static gboolean PluginInit(GstPlugin *plugin);
 private:
-    static void SetCreateFuncs(GstElementClass *elementClass, CapabilityData &capData);
+    static void SetCreateFuncs(GstElementClass *elementClass, const CapabilityData &capData);
     static GstCaps *GetSrcCaps(CapabilityData &capData);
     static GstCaps *GetSinkCaps(CapabilityData &capData);
     static inline std::string GetH264Caps(CapabilityData &capData)
@@ -78,9 +78,9 @@ private:
         return DEFAULT_H264_CAPS;
     }
     static std::string GetRawCaps(CapabilityData &capData);
-    static void GetWidth(std::string &capStr, CapabilityData &capData);
-    static void GetHeight(std::string &capStr, CapabilityData &capData);
-    static void GetFrameRate(std::string &capStr, CapabilityData &capData);
+    static void GetWidth(std::string &capStr, const CapabilityData &capData);
+    static void GetHeight(std::string &capStr, const CapabilityData &capData);
+    static void GetFrameRate(std::string &capStr, const CapabilityData &capData);
     static void GetFormat(std::string &capStr, CapabilityData &capData);
     static void GstHdiCodecClassInit(gpointer kclass, gpointer data);
     static void UpdatePluginName(std::string &codecName);
@@ -146,7 +146,7 @@ gboolean GstHdiFactory::InputNeedCopy()
     return TRUE;
 }
 
-void GstHdiFactory::SetCreateFuncs(GstElementClass *elementClass, CapabilityData &capData)
+void GstHdiFactory::SetCreateFuncs(GstElementClass *elementClass, const CapabilityData &capData)
 {
     std::pair<int32_t, std::string> factoryPair = {capData.codecType, capData.mimeType};
     if (FUNCTIONS_MAP.find(factoryPair) == FUNCTIONS_MAP.end()) {
@@ -169,7 +169,7 @@ void GstHdiFactory::SetCreateFuncs(GstElementClass *elementClass, CapabilityData
     }
 }
 
-void GstHdiFactory::GetWidth(std::string &capStr, CapabilityData &capData)
+void GstHdiFactory::GetWidth(std::string &capStr, const CapabilityData &capData)
 {
     std::stringstream widthRange;
     widthRange << "(int) [ " << capData.width.minVal << ", " << capData.width.maxVal << " ]";
@@ -178,7 +178,7 @@ void GstHdiFactory::GetWidth(std::string &capStr, CapabilityData &capData)
     capStr += ", ";
 }
 
-void GstHdiFactory::GetHeight(std::string &capStr, CapabilityData &capData)
+void GstHdiFactory::GetHeight(std::string &capStr, const CapabilityData &capData)
 {
     std::stringstream heightRange;
     heightRange << "(int) [ " << capData.height.minVal << ", " << capData.height.maxVal << " ]";
@@ -187,7 +187,7 @@ void GstHdiFactory::GetHeight(std::string &capStr, CapabilityData &capData)
     capStr += ", ";
 }
 
-void GstHdiFactory::GetFrameRate(std::string &capStr, CapabilityData &capData)
+void GstHdiFactory::GetFrameRate(std::string &capStr, const CapabilityData &capData)
 {
     (void)capData;
     capStr += "framerate = (fraction) [ 0, max ]";

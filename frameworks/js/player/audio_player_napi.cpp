@@ -230,9 +230,10 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
     const std::string fdHead = "fd://";
     const std::string httpHead = "http";
     int32_t ret = MSERR_EXT_INVALID_VAL;
-    int32_t fd = -1;
+
     MEDIA_LOGD("input url is %{public}s!", player->uri_.c_str());
     if (player->uri_.find(fdHead) != std::string::npos) {
+        int32_t fd = -1;
         std::string inputFd = player->uri_.substr(fdHead.size());
         if (!StrToInt(inputFd, fd) || fd < 0) {
             player->ErrorCallback(MSERR_EXT_INVALID_VAL, "invalid parameters, please check the input parameters");

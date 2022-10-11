@@ -570,7 +570,7 @@ void TestRecorder::HDICreateYUVBuffer()
             color = 0xFF;
         }
 
-        pts= GetPts();
+        pts = GetPts();
         (void)buffer->GetExtraData()->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
         (void)buffer->GetExtraData()->ExtraSet("timeStamp", pts);
         (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame);
