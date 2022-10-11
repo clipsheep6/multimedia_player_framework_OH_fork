@@ -37,7 +37,6 @@ group("fuzztest") {
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetcapturerate_fuzzer:RecorderSetCaptureRateFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetfilesplitduration_fuzzer:RecorderSetFileSplitDurationFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetlocation_fuzzer:RecorderSetLocationFuzzTest",
-    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetmaxfilesize_fuzzer:RecorderSetMaxFileSizeFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetnextoutputfile_fuzzer:RecorderSetNextOutputFileFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetorientationhint_fuzzer:RecorderSetOrientationHintFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetoutputformat_fuzzer:RecorderSetOutputFormatFuzzTest",
