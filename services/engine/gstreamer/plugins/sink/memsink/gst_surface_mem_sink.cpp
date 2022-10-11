@@ -234,11 +234,6 @@ static void gst_surface_mem_sink_set_property(GObject *object, guint propId, con
         }
         case PROP_VIDEO_ROTATION: {
             priv->rotation = g_value_get_uint(value);
-            GST_DEBUG_OBJECT(surface_sink, "set rotation: %u", priv->rotation);
-            if (priv->surface) {
-                MediaTrace trace("Surface::SetTransform");
-                (void)priv->surface->SetTransform(gst_surface_mem_sink_get_rotation(priv->rotation));
-            }
             break;
         }
         default:
@@ -387,6 +382,18 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
         GST_OBJECT_UNLOCK(surface_sink);
         GST_DEBUG_OBJECT(surface_sink, "user set rate, drop same frame");
         return GST_FLOW_OK;
+    }
+
+    /* Make sure set rotation information for each video, avoid the rotation
+     * information of the previous video affecting the subsequent video
+     */
+    if (surface_sink->firstRenderFrame) {
+        GST_DEBUG_OBJECT(surface_sink, "set rotation: %u", surface_sink->priv->rotation);
+        if (surface_sink->priv->surface) {
+            MediaTrace trace("Surface::SetTransform");
+            (void)surface_sink->priv->surface->SetTransform(
+                gst_surface_mem_sink_get_rotation(surface_sink->priv->rotation));
+        }
     }
 
     if (surface_sink->firstRenderFrame && is_preroll) {
