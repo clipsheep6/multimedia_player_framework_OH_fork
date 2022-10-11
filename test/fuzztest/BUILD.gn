@@ -37,6 +37,18 @@ group("fuzztest") {
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetcapturerate_fuzzer:RecorderSetCaptureRateFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetfilesplitduration_fuzzer:RecorderSetFileSplitDurationFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetlocation_fuzzer:RecorderSetLocationFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetmaxduration_fuzzer:RecorderSetMaxDurationFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetmaxfilesize_fuzzer:RecorderSetMaxFileSizeFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetnextoutputfile_fuzzer:RecorderSetNextOutputFileFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetorientationhint_fuzzer:RecorderSetOrientationHintFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetoutputformat_fuzzer:RecorderSetOutputFormatFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetparameter_fuzzer:RecorderSetParameterFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetrecordercallback_fuzzer:RecorderSetRecorderCallbackFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideoencoder_fuzzer:RecorderSetVideoEncoderFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideoframerate_fuzzer:RecorderSetVideoFrameRateFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideosize_fuzzer:RecorderSetVideoSizeFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideosource_fuzzer:RecorderSetVideoSourceFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recorderstop_fuzzer:RecorderStopFuzzTest",
   ]
 }
 ###############################################################################
