@@ -23,41 +23,41 @@ import audio from "./@ohos.multimedia.audio";
  */
 declare namespace media {
   /**
-   * Creates an AudioPlayer instance, it will be deprecated after API10, use @createAVPlayer to replace.
+   * Creates an AudioPlayer instance, it will be deprecated after API9, use @createAVPlayer to replace.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
    * @import import media from '@ohos.multimedia.media'
    * @return Returns an AudioPlayer instance if the operation is successful; returns null otherwise.
-   * @deprecated since 10
+   * @deprecated since 9
    */
   function createAudioPlayer(): AudioPlayer;
 
   /**
-   * Creates an AudioRecorder instance, it will be deprecated after API10, use @createAVRecorder to replace.
+   * Creates an AudioRecorder instance, it will be deprecated after API9, use @createAVRecorder to replace.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    * @import import media from '@ohos.multimedia.media'
    * @return Returns an AudioRecorder instance if the operation is successful; returns null otherwise.
-   * @deprecated since 10
+   * @deprecated since 9
    */
   function createAudioRecorder(): AudioRecorder;
 
   /**
-   * Creates an VideoPlayer instance, it will be deprecated after API10, use @createAVPlayer to replace.
+   * Creates an VideoPlayer instance, it will be deprecated after API9, use @createAVPlayer to replace.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @import import media from '@ohos.multimedia.media'
    * @param callback Callback used to return AudioPlayer instance if the operation is successful; returns null otherwise.
-   * @deprecated since 10
+   * @deprecated since 9
    */
   function createVideoPlayer(callback: AsyncCallback<VideoPlayer>): void;
   /**
-   * Creates an VideoPlayer instance, it will be deprecated after API10, use @createAVPlayer to replace.
+   * Creates an VideoPlayer instance, it will be deprecated after API9, use @createAVPlayer to replace.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @import import media from '@ohos.multimedia.media'
    * @return A Promise instance used to return VideoPlayer instance if the operation is successful; returns null otherwise.
-   * @deprecated since 10
+   * @deprecated since 9
    */
   function createVideoPlayer() : Promise<VideoPlayer>;
 
@@ -98,12 +98,12 @@ declare namespace media {
    function createAVRecorder() : Promise<AVRecorder>;
 
   /**
-   * Enumerates ErrorCode types, return in BusinessError::code, it will be deprecated after API10,
+   * Enumerates ErrorCode types, return in BusinessError::code, it will be deprecated after API9,
    * see ErrorCode in wiki.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.Core
    * @import import media from '@ohos.multimedia.media'
-   * @deprecated since 10
+   * @deprecated since 9
    */
   enum MediaErrorCode {
     /**
@@ -334,7 +334,7 @@ declare namespace media {
       * @syscap SystemCapability.Multimedia.Media.AVPlayer
       * @param timeMs Playback position to jump
       * @param mode seek mode, see @SeekMode .
-      * @throws {BusinessError} if type of timeMs is not number or type of timeMs is not SeekMode
+      * @throws {BusinessError} 401 - if type of timeMs is not number or type of timeMs is not SeekMode
       * or timeMs is out of [0, 2147483647].
       */
      seek(timeMs: number, mode?:SeekMode): void;
@@ -344,7 +344,7 @@ declare namespace media {
       * @since 9
       * @syscap SystemCapability.Multimedia.Media.AVPlayer
       * @param vol Relative volume. The value ranges from 0.00 to 1.00. The value 1 indicates the maximum volume (100%).
-      * @throws {BusinessError} if type of vol is not number or vol is out of [0.00, 1.00]
+      * @throws {BusinessError} 401 - if type of vol is not number or vol is out of [0.00, 1.00]
       */
      setVolume(vol: number): void;
 
@@ -465,7 +465,7 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param speed playback speed, see @AVPlayerSpeed .
-     * @throws {BusinessError} if type of speed is not number or not in PlaybackSpeed.
+     * @throws {BusinessError} 401 - if type of speed is not number or not in PlaybackSpeed.
      */
      setSpeed(speed:number): void;
 
@@ -478,7 +478,7 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param bitrate the playback bitrate must be expressed in bits per second.
-     * @throws {BusinessError} if type of bitrate is not number or is out of [0, 2147483647].
+     * @throws {BusinessError} 401 - if type of bitrate is not number or is out of [0, 2147483647].
      */
      setBitrate(bitrate: number): void;
 
@@ -615,7 +615,7 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param config Recording parameters.
-     * @throws {BusinessError} if type of config is not AVRecorderConfig or AVRecorderConfig property type is not right.
+     * @throws {BusinessError} 401 - if type of config is not AVRecorderConfig or AVRecorderConfig property type is not right.
      * @permission ohos.permission.MICROPHONE
      */
      prepare(config: AVRecorderConfig, callback: AsyncCallback<void>): void;
@@ -624,7 +624,7 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param config Recording parameters.
-     * @throws {BusinessError} if type of config is not AVRecorderConfig or AVRecorderConfig property type is not right.
+     * @throws {BusinessError} 401 - if type of config is not AVRecorderConfig or AVRecorderConfig property type is not right.
      * @permission ohos.permission.MICROPHONE
      */
      prepare(config: AVRecorderConfig): Promise<void>;
@@ -722,20 +722,20 @@ declare namespace media {
   }
 
   /**
-   * Describes audio playback states, it will be deprecated after API10, use @AVPlayerState instead.
+   * Describes audio playback states, it will be deprecated after API9, use @AVPlayerState instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
    * @import import media from '@ohos.multimedia.media'
-   * @deprecated since 10
+   * @deprecated since 9
    */
   type AudioState = 'idle' | 'playing' | 'paused' | 'stopped' | 'error';
 
   /**
    * Manages and plays audio. Before calling an AudioPlayer method, you must use createAudioPlayer()
-   * to create an AudioPlayer instance, it will be deprecated after API10, use @AVPlayer instead.
+   * to create an AudioPlayer instance, it will be deprecated after API9, use @AVPlayer instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
-   * @deprecated since 10
+   * @deprecated since 9
    */
   interface AudioPlayer {
     /**
@@ -1013,11 +1013,11 @@ declare namespace media {
   }
 
   /**
-   * Provides the audio recorder configuration definitions, it will be deprecated after API10,
+   * Provides the audio recorder configuration definitions, it will be deprecated after API9,
    * use @AVRecorderConfig instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
-   * @deprecated since 10
+   * @deprecated since 9
    */
   interface AudioRecorderConfig {
     /**
@@ -1092,10 +1092,10 @@ declare namespace media {
 
   /**
    * Manages and record audio. Before calling an AudioRecorder method, you must use createAudioRecorder()
-   * to create an AudioRecorder instance, it will be deprecated after API10, use @AVRecorder instead.
+   * to create an AudioRecorder instance, it will be deprecated after API9, use @AVRecorder instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
-   * @deprecated since 10
+   * @deprecated since 9
    */
   interface AudioRecorder {
     /**
@@ -1171,18 +1171,18 @@ declare namespace media {
   }
 
   /**
-   * Describes video playback states, it will be deprecated after API10, use @AVPlayerState instead.
+   * Describes video playback states, it will be deprecated after API9, use @AVPlayerState instead.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
-   * @deprecated since 10
+   * @deprecated since 9
    */
   type VideoPlayState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'error';
 
   /**
-   * Enumerates playback speed, it will be deprecated after API10, use @AVPlayerSpeed instead.
+   * Enumerates playback speed, it will be deprecated after API9, use @AVPlayerSpeed instead.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
-   * @deprecated since 10
+   * @deprecated since 9
    */
   enum PlaybackSpeed {
     /**
@@ -1257,11 +1257,11 @@ declare namespace media {
 
   /**
    * Manages and plays video. Before calling an video method, you must use createVideoPlayer() to create an VideoPlayer
-   * instance, it will be deprecated after API10, use @AVPlayer instead.
+   * instance, it will be deprecated after API9, use @AVPlayer instead.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @import import media from '@ohos.multimedia.media'
-   * @deprecated since 10
+   * @deprecated since 9
    */
   interface VideoPlayer {
     /**
