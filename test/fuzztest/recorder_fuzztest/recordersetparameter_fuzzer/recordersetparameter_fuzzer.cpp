@@ -20,6 +20,7 @@
 #include "string_ex.h"
 #include "media_errors.h"
 #include "directory_ex.h"
+#include "player.h"
 #include "recorder.h"
 
 using namespace std;
@@ -57,7 +58,7 @@ bool RecorderSetParameterFuzzer::FuzzRecorderSetParameter(uint8_t *data, size_t 
 
         Format format;
         int32_t intValue = *reinterpret_cast<int32_t *>(data);
-        format.PutIntValue("SetParameter1", intValue);
+        format.PutIntValue("video_scale_type", intValue);
 
         RETURN_IF(TestRecorder::SetParameter(g_videoRecorderConfig.dataSourceId, format, g_videoRecorderConfig), true);
     }
