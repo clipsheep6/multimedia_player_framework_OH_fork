@@ -39,7 +39,6 @@ group("fuzztest") {
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetlocation_fuzzer:RecorderSetLocationFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetoutputformat_fuzzer:RecorderSetOutputFormatFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetparameter_fuzzer:RecorderSetParameterFuzzTest",
-    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetrecordercallback_fuzzer:RecorderSetRecorderCallbackFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideoencoder_fuzzer:RecorderSetVideoEncoderFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideoframerate_fuzzer:RecorderSetVideoFrameRateFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideosize_fuzzer:RecorderSetVideoSizeFuzzTest",
