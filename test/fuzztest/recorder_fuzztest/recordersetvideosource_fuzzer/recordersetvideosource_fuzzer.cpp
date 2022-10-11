@@ -49,9 +49,9 @@ bool RecorderSetVideoSourceFuzzer::FuzzRecorderSetVideoSource(uint8_t *data, siz
         VideoSourceType::VIDEO_SOURCE_SURFACE_ES,
         VideoSourceType::VIDEO_SOURCE_BUTT
     };
-    int32_t sourcesubscript = *reinterpret_cast<int32_t *>(data) % (videoSourceTypeList);
-
+    int32_t sourcesubscript = abs(ProduceRandomNumberCrypt) % (videoSourceTypeList);
     g_videoRecorderConfig.vSource = VideoSourceTypes[sourcesubscript];
+    g_videoRecorderConfig.videoSourceId = *reinterpret_cast<int32_t *>(data);
     g_videoRecorderConfig.videoFormat = MPEG4;
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetVideoSource.mp4", O_RDWR);
     
