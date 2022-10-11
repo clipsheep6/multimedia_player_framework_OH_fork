@@ -61,7 +61,4 @@
 
 ## 相关仓<a name="section1533973044317"></a>
 
-媒体组件仓
-
-**multimedia\player_framework**
-
+[multimedia\_player\_framework](https://gitee.com/openharmony/multimedia_player_framework)

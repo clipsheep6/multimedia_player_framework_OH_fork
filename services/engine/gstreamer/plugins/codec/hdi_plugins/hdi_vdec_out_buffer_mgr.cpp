@@ -53,7 +53,8 @@ int32_t HdiVdecOutBufferMgr::UseHandleMems(std::vector<GstBuffer *> &buffers)
         codecBuffer->hdiBuffer.bufferType = CodecBufferType::CODEC_BUFFER_TYPE_HANDLE;
         codecBuffer->hdiBuffer.buffer = reinterpret_cast<uint8_t *>(bufferType->buf);
         codecBuffer->hdiBuffer.bufferLen = bufferType->bufLen;
-        ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, &codecBuffer->hdiBuffer);
+        codecBuffer->hdiBuffer.allocLen = bufferType->bufLen;
+        auto ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, &codecBuffer->hdiBuffer);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "UseBuffer failed");
         availableBuffers_.push_back(codecBuffer);
         GstBufferWrap bufferWarp = {};
@@ -75,12 +76,11 @@ int32_t HdiVdecOutBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
     GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffers[0]);
     CHECK_AND_RETURN_RET_LOG(bufferType != nullptr, GST_CODEC_ERROR, "bufferType is nullptr");
     enableNativeBuffer_ = bufferType->type == GstBufferType::BUFFER_TYPE_HANDLE ? true : false;
-    int32_t ret = GST_CODEC_OK;
     if (enableNativeBuffer_) {
-        ret = UseHandleMems(buffers);
+        (void)UseHandleMems(buffers);
     } else {
         auto omxBuffers = PreUseAshareMems(buffers);
-        ret = UseHdiBuffers(omxBuffers);
+        (void)UseHdiBuffers(omxBuffers);
     }
     MEDIA_LOGD("UseBuffer end");
     return GST_CODEC_OK;

@@ -52,7 +52,7 @@ struct _GstProducerSurfacePool {
     GCond cond;
     GList *preAllocated;
     guint freeBufCnt;
-    gint usage;
+    guint64 usage;
     GstTask *task;
     GRecMutex taskLock;
     timeval beginTime;

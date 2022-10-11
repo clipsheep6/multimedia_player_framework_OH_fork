@@ -144,11 +144,12 @@ void HdiBufferMgr::FreeCodecBuffers()
     MEDIA_LOGD("Enter FreeCodecBuffers End");
 }
 
-int32_t HdiBufferMgr::Stop()
+int32_t HdiBufferMgr::Stop(bool isFormatChange)
 {
     MEDIA_LOGD("Enter Stop");
     std::unique_lock<std::mutex> lock(mutex_);
     isStart_ = false;
+    isFormatChange_ = isFormatChange;
     bufferCond_.notify_all();
     flushCond_.notify_all();
     return GST_CODEC_OK;

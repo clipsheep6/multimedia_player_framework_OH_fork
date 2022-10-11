@@ -154,7 +154,6 @@ bool RecorderProfilesXmlParser::SetCapabilityVectorData(std::unordered_map<std::
     bool ret = SpiltKeyList(capabilityValue, ",", spilt);
     CHECK_AND_RETURN_RET_LOG(ret != false, false, "failed:can not split %{public}s", capabilityValue.c_str());
     if (spilt.size() > 0) {
-        std::string probe = spilt[0];
         if (XmlParser::IsNumberArray(spilt)) {
             array = TransStrAsIntegerArray(spilt);
         } else {
@@ -170,7 +169,6 @@ bool RecorderProfilesXmlParser::SetCapabilityVectorData(std::unordered_map<std::
 bool RecorderProfilesXmlParser::ParseRecorderCapsData(xmlNode *node)
 {
     xmlNode *child = node->xmlChildrenNode;
-    std::string capabilityValue;
 
     for (; child; child = child->next) {
         if (0 == xmlStrcmp(child->name, reinterpret_cast<const xmlChar*>("ContainerFormat"))) {
@@ -194,13 +192,13 @@ bool RecorderProfilesXmlParser::ParseRecorderCapsData(xmlNode *node)
 bool RecorderProfilesXmlParser::ParseRecorderContainerFormatData(xmlNode *node)
 {
     ContainerFormatInfo containerFormatInfo;
-    bool ret = false;
+
     for (auto it = capabilityKeys_.begin(); it != capabilityKeys_.end(); it++) {
         std::string capabilityValue;
         if (xmlHasProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>((*it).c_str())))) {
             capabilityValue = std::string(reinterpret_cast<char*>(xmlGetProp(node,
                 reinterpret_cast<xmlChar*>(const_cast<char*>((*it).c_str())))));
-            ret = SetContainerFormat(containerFormatInfo, (*it), capabilityValue);
+            bool ret = SetContainerFormat(containerFormatInfo, (*it), capabilityValue);
             CHECK_AND_RETURN_RET_LOG(ret != false, false, "SetContainerFormat failed");
         }
     }
@@ -212,12 +210,13 @@ bool RecorderProfilesXmlParser::ParseRecorderContainerFormatData(xmlNode *node)
 bool RecorderProfilesXmlParser::ParseRecorderEncodeCapsData(xmlNode *node, bool isVideo)
 {
     RecorderProfilesData capabilityData;
-    bool ret = false;
+
     for (auto it = capabilityKeys_.begin(); it != capabilityKeys_.end(); it++) {
         std::string capabilityValue;
         if (xmlHasProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>((*it).c_str())))) {
             capabilityValue = std::string(reinterpret_cast<char*>(xmlGetProp(node,
                 reinterpret_cast<xmlChar*>(const_cast<char*>((*it).c_str())))));
+            bool ret = false;
             if (isVideo) {
                 ret = SetVideoRecorderCaps(capabilityData, (*it), capabilityValue);
                 CHECK_AND_RETURN_RET_LOG(ret != false, false, "SetVideoRecorderCaps failed");
@@ -376,10 +375,10 @@ void RecorderProfilesXmlParser::PackageAudioRecorderCaps(const std::string &form
 bool RecorderProfilesXmlParser::ParseRecorderProfilesData(xmlNode *node)
 {
     xmlNode *child = node->xmlChildrenNode;
-    bool ret = false;
+
     for (; child; child = child->next) {
         for (auto it = SOURCE_TYPE_ID_MAP.begin(); it != SOURCE_TYPE_ID_MAP.end(); it++) {
-            ret = ParseRecorderProfilesSourceData(it->first, child);
+            bool ret = ParseRecorderProfilesSourceData(it->first, child);
             CHECK_AND_RETURN_RET_LOG(ret != false, false, "ParseRecorderProfilesSourceData failed");
         }
     }
@@ -387,7 +386,7 @@ bool RecorderProfilesXmlParser::ParseRecorderProfilesData(xmlNode *node)
     return true;
 }
 
-bool RecorderProfilesXmlParser::ParseRecorderProfilesSourceData(const std::string sourceType, xmlNode *node)
+bool RecorderProfilesXmlParser::ParseRecorderProfilesSourceData(const std::string &sourceType, xmlNode *node)
 {
     if (0 == xmlStrcmp(node->name, reinterpret_cast<const xmlChar*>(sourceType.c_str()))) {
         std::string property = SOURCE_TYPE_ID_MAP.at(sourceType);

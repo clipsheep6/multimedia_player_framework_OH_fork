@@ -241,7 +241,8 @@ void RecorderMsgProcessor::ProcessMessage(GstMessage &msg)
     ReportMsgProcResult(prettyMsg);
 }
 
-RecorderMsgProcResult RecorderMsgProcessor::ProcessExtendMessage(GstMessage &msg, RecorderMessage &prettyMsg) const
+RecorderMsgProcResult RecorderMsgProcessor::ProcessExtendMessage(
+    const GstMessage &msg, const RecorderMessage &prettyMsg) const
 {
     (void)msg;
     (void)prettyMsg;
