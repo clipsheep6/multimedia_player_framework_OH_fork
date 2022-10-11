@@ -346,7 +346,6 @@ static gboolean gst_hdi_video_dec_negotiate(const GstHDIVideoDec *self)
     g_return_val_if_fail(GST_VIDEO_DECODER_SRC_PAD(self) != NULL, FALSE);
     GstCaps *templ_caps = NULL;
     GstCaps *intersection = NULL;
-    GstVideoFormat format;
     const gchar *format_str = NULL;
 
     GST_DEBUG_OBJECT(self, "Trying to negotiate a video format with downstream");
@@ -368,7 +367,7 @@ static gboolean gst_hdi_video_dec_negotiate(const GstHDIVideoDec *self)
 
     GstStructure *s = gst_caps_get_structure(intersection, 0);
     format_str = gst_structure_get_string(s, "format");
-    if (format_str == NULL || (format = gst_video_format_from_string (format_str)) == GST_VIDEO_FORMAT_UNKNOWN) {
+    if (format_str == NULL || (gst_video_format_from_string (format_str) == GST_VIDEO_FORMAT_UNKNOWN) {
         GST_ERROR_OBJECT(self, "Invalid caps");
         gst_caps_unref(intersection);
         return FALSE;
@@ -448,7 +447,6 @@ static GstFlowReturn gst_dec_get_gst_buffer_from_frame(GstHDIVideoDec *self,
     g_return_val_if_fail(self != NULL, GST_FLOW_ERROR);
     g_return_val_if_fail(frame != NULL, GST_FLOW_ERROR);
     g_return_val_if_fail(frame->input_buffer != NULL, GST_FLOW_ERROR);
-    gint ret = HDI_SUCCESS;
     GstClockTime timestamp = frame->pts;
     GST_DEBUG_OBJECT(self, "PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT
         ", dist %d", GST_TIME_ARGS(frame->pts), GST_TIME_ARGS (frame->dts),
@@ -457,7 +455,7 @@ static GstFlowReturn gst_dec_get_gst_buffer_from_frame(GstHDIVideoDec *self,
     if (self->inputBufferMode == GST_HDI_BUFFER_EXTERNAL_MODE) {
         *gst_buffer = frame->input_buffer;
     } else {
-        ret = gst_dec_deque_input_buffer(self, gst_buffer);
+        gint ret = gst_dec_deque_input_buffer(self, gst_buffer);
         if (ret == HDI_ERR_FRAME_BUF_EMPTY) {
             return GST_FLOW_FLUSHING;
         }
