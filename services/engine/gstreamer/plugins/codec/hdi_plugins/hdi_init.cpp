@@ -176,7 +176,6 @@ std::map<int32_t, std::vector<int32_t>> HdiInit::GetH264ProfileLevels(CodecCompC
 {
     std::map<int32_t, std::vector<int32_t>> profileLevelsMap;
     int32_t index = 0;
-    std::vector<int32_t> formats;
     while (index < PROFILE_NUM && hdiCap.supportProfiles[index] > 0) {
         if (AVC_PROFILE_MAP.find(hdiCap.supportProfiles[index]) == AVC_PROFILE_MAP.end()) {
             MEDIA_LOGW("Unknow profile %{public}d", hdiCap.supportProfiles[index]);
