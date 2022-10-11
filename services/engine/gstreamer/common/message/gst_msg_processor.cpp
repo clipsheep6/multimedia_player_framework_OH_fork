@@ -132,6 +132,7 @@ gboolean GstMsgProcessor::MainLoopRunDone(GstMsgProcessor *thiz)
 
 void GstMsgProcessor::AddTickSource(int32_t type, uint32_t interval)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     auto iter = tickSource_.find(type);
     if (iter != tickSource_.end()) {
         return;
@@ -151,6 +152,7 @@ void GstMsgProcessor::AddTickSource(int32_t type, uint32_t interval)
 
 void GstMsgProcessor::RemoveTickSource(int32_t type)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     auto iter = tickSource_.find(type);
     if (iter == tickSource_.end()) {
         return;
@@ -202,7 +204,6 @@ void GstMsgProcessor::DoReset()
     for (auto &[tickType, source] : tickSource_) {
         RemoveTickSource(tickType);
     }
-    tickSource_.clear();
 
     if (mainLoop_ != nullptr) {
         g_main_loop_unref(mainLoop_);
