@@ -21,7 +21,8 @@ MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 ##############################fuzztest##########################################
 ohos_fuzztest("PlayerServiceStubFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest/playerservicestub_fuzzer"
+  fuzz_config_file =
+      "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest/playerservicestub_fuzzer"
 
   include_dirs = [
     "//foundation/window/window_manager/interfaces/innerkits/wm",
@@ -80,33 +81,31 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "-Wimplicit-fallthrough",
     "-Wsign-compare",
     "-Wunused-parameter",
-    "-DBINDER_IPC_32BIT"
+    "-DBINDER_IPC_32BIT",
   ]
   if (multimedia_player_framework_support_player) {
-    sources = [
-      "playerservicestub_fuzzer.cpp",
-    ]
+    sources = [ "playerservicestub_fuzzer.cpp" ]
   }
   deps = [
     "$MEDIA_ROOT_DIR/services/services:media_service",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
-    "//foundation/window/window_manager/wm:libwm",
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_format",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "//foundation/window/window_manager/wm:libwm",
     "//third_party/libxml2:xml2",
   ]
   external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "c_utils:utils",
+    "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
     "multimedia_player_framework:media_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "access_token:libaccesstoken_sdk",
-    "c_utils:utils",
-    "hitrace_native:hitrace_meter",
-    "init:libbegetutil",
   ]
 }
