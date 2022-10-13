@@ -957,6 +957,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
                 return;
             }
         } else {
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_PAUSED, nullptr);
         }
 
