@@ -46,7 +46,7 @@ void PlayerUnitTest::TearDown(void)
 /**
  * @tc.name  : Test PlayerSetSource API
  * @tc.number: Player_SetSource_001
- * @tc.desc  : Test PlayerSetSource interface 
+ * @tc.desc  : Test PlayerSetSource interface
  */
 HWTEST_F(PlayerUnitTest, Player_SetSource_001, TestSize.Level0)
 {
@@ -499,7 +499,7 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GlibPool_001, TestSize.Level0)
 /**
  * @tc.name  : Test Player Histreamer
  * @tc.number: Player_Histreamer_001
- * @tc.desc  : Test Player function with Histreamer 
+ * @tc.desc  : Test Player function with Histreamer
  */
 HWTEST_F(PlayerUnitTest, Player_Histreamer_001, TestSize.Level0)
 {
