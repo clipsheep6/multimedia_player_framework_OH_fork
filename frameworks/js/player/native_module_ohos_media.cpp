@@ -39,7 +39,7 @@ static napi_value Export(napi_env env, napi_value exports)
     OHOS::Media::AudioRecorderNapi::Init(env, exports);
     OHOS::Media::VideoRecorderNapi::Init(env, exports);
 #endif
-#ifdef SUPPORT_CODEC
+#ifdef SUPPORT_CODEC_JS
     OHOS::Media::AudioDecoderNapi::Init(env, exports);
     OHOS::Media::AudioEncoderNapi::Init(env, exports);
     OHOS::Media::VideoDecoderNapi::Init(env, exports);
