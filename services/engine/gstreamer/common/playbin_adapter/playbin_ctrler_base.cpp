@@ -371,6 +371,7 @@ int32_t PlayBinCtrlerBase::SetRate(double rate)
 {
     MEDIA_LOGD("enter");
     std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> cacheLock(cacheCtrlMutex_);
 
     if (IsLiveSource()) {
         return MSERR_INVALID_OPERATION;
