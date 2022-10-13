@@ -16,7 +16,7 @@
 #include "video_decoder_napi.h"
 #include <climits>
 #include "avcodec_napi_utils.h"
-#include "media_capability_utils.h"
+#include "avcodec_capability_napi.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "video_decoder_callback_napi.h"
