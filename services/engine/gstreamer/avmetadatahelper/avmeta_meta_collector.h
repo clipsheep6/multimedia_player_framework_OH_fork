@@ -49,7 +49,7 @@ private:
     bool CheckCollectCompleted();
     void AdjustMimeType();
     void StopBlocker(bool unlock);
-    static void PadAdded(GstElement *elem, GstPad *pad, gpointer userdata);
+    static void PadAdded(GstElement *elem, GstPad *pad, gpointer userData);
 
     std::mutex mutex_;
     std::condition_variable cond_;

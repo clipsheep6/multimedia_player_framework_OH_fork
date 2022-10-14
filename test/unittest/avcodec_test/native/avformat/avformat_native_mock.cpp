@@ -99,15 +99,15 @@ const char *AVFormatNativeMock::DumpInfo()
         dumpInfo_ = nullptr;
     }
     std::string info = format_.Stringify();
-    constexpr uint32_t bufLength = 512;
-    if (info.empty() || info.size() > bufLength) {
+    if (info.empty()) {
         return nullptr;
     }
+    uint32_t bufLength = info.size() > 1024 ? 1024 : info.size(); // max buffer size set as 1024
     dumpInfo_ = (char *)malloc((bufLength + 1) * sizeof(char));
     if (dumpInfo_ == nullptr) {
         return nullptr;
     }
-    if (strcpy_s(dumpInfo_, info.size() + 1, info.c_str()) != 0) {
+    if (strcpy_s(dumpInfo_, bufLength + 1, info.c_str()) != 0) {
         free(dumpInfo_);
         dumpInfo_ = nullptr;
     }

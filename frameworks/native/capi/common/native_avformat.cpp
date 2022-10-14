@@ -179,16 +179,16 @@ bool OH_AVFormat_GetStringValue(struct OH_AVFormat *format, const char *key, con
     }
 
     std::string str;
-    constexpr uint32_t bufLength = 256;
     bool ret = format->format_.GetStringValue(key, str);
-    if (!ret || str.size() > bufLength) {
+    if (!ret) {
         return false;
     }
+    uint32_t bufLength = str.size() > 256 ? 256 : str.size(); // max string size set as 256
 
     format->outString_ = (char *)malloc((bufLength + 1) * sizeof(char));
     CHECK_AND_RETURN_RET_LOG(format->outString_ != nullptr, false, "malloc out string nullptr!");
 
-    if (strcpy_s(format->outString_, str.size() + 1, str.c_str()) != EOK) {
+    if (strcpy_s(format->outString_, bufLength + 1, str.c_str()) != EOK) {
         MEDIA_LOGE("Failed to strcpy_s");
         free(format->outString_);
         format->outString_ = nullptr;
@@ -218,13 +218,13 @@ const char *OH_AVFormat_DumpInfo(struct OH_AVFormat *format)
         format->dumpInfo_ = nullptr;
     }
     std::string info = format->format_.Stringify();
-    constexpr uint32_t bufLength = 512;
-    if (info.empty() || info.size() > bufLength) {
+    if (info.empty()) {
         return nullptr;
     }
+    uint32_t bufLength = info.size() > 1024 ? 1024 : info.size(); // max buffer size set as 1024
     format->dumpInfo_ = (char *)malloc((bufLength + 1) * sizeof(char));
     CHECK_AND_RETURN_RET_LOG(format->dumpInfo_ != nullptr, nullptr, "malloc dump info nullptr!");
-    if (strcpy_s(format->dumpInfo_, info.size() + 1, info.c_str()) != EOK) {
+    if (strcpy_s(format->dumpInfo_, bufLength + 1, info.c_str()) != EOK) {
         MEDIA_LOGE("Failed to strcpy_s");
         free(format->dumpInfo_);
         format->dumpInfo_ = nullptr;

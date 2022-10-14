@@ -140,7 +140,7 @@ public:
     void AddMetaSource(GstElement &elem) override;
 
 private:
-    static void HaveTypeCallback(GstElement *elem, guint probability, GstCaps *caps, gpointer userdata);
+    static void HaveTypeCallback(GstElement *elem, guint probability, GstCaps *caps, gpointer userData);
     void OnHaveType(const GstElement &elem, const GstCaps &caps);
 };
 
@@ -152,7 +152,7 @@ public:
     void AddMetaSource(GstElement &elem) override;
 
 private:
-    static void PadAddedCallback(GstElement *elem, GstPad *pad, gpointer userdata);
+    static void PadAddedCallback(GstElement *elem, GstPad *pad, gpointer userData);
     void OnPadAdded(GstElement &src, GstPad &pad);
 };
 

@@ -47,7 +47,7 @@ private:
     std::shared_ptr<AVSharedMemory> GetConvertResult();
     int32_t Reset();
     void OnNotifyMessage(const InnerMessage &msg);
-    static GstFlowReturn OnNotifyNewSample(GstMemSink *elem, GstBuffer *sample, gpointer userdata);
+    static GstFlowReturn OnNotifyNewSample(GstMemSink *elem, GstBuffer *sample, gpointer userData);
 
     OutputConfiguration outConfig_;
     GstPipeline *pipeline_ = nullptr;
