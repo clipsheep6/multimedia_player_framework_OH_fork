@@ -265,13 +265,12 @@ int32_t PlayerServer::HandlePrepare()
     int32_t ret = playerEngine_->PrepareAsync();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
 
-    if (config_.leftVolume != 1.0f) {
+    if (config_.leftVolume < 1.0f) {
         (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
     }
     if (config_.looping) {
         (void)playerEngine_->SetLooping(config_.looping);
     }
-
     if (config_.speedMode != SPEED_FORWARD_1_00_X) {
         auto rateTask = std::make_shared<TaskHandler<void>>([this]() {
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
