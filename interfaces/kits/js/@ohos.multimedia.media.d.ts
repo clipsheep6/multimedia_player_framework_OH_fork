@@ -482,7 +482,7 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param speed playback speed, see @AVPlayerSpeed .
      */
-     setSpeed(speed:number): void;
+     setSpeed(speed: number): void;
 
     /**
      * select a specified bitrate to playback, only valid for HLS protocal network stream. Defaulty, the
@@ -501,9 +501,9 @@ declare namespace media {
       * @since 9
       * @syscap SystemCapability.Multimedia.Media.AVPlayer
       * @param type Type of the playback event to listen for.
-      * @param callback Callback used to listen for the playback stateChange event.
+      * @param callback Callback used to listen for the playback stateChanged event.
       */
-     on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
+     on(type: 'stateChanged', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
      /**
       * Listens for media playback events.
       * @since 9
@@ -511,7 +511,7 @@ declare namespace media {
       * @param type Type of the playback event to listen for.
       * @param callback Callback used to listen for the playback volume event.
       */
-     on(type: 'volumeChange', callback: Callback<number>): void;
+     on(type: 'volumeChanged', callback: Callback<number>): void;
      /**
       * Listens for media playback events.
       * @since 9
@@ -519,7 +519,7 @@ declare namespace media {
       * @param type Type of the playback event to listen for.
       * @param callback Callback used to listen for the playback playComplete event.
       */
-     on(type: 'playComplete', callback: Callback<void>): void;
+     on(type: 'playCompleted', callback: Callback<void>): void;
      /**
       * Listens for media playback events.
       * @since 9
@@ -717,13 +717,20 @@ declare namespace media {
      getInputSurface(): Promise<string>;
 
     /**
+     * Recorder state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+     readonly state: AVRecorderState;
+
+    /**
      * Listens for audio recording events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param type Type of the audio recording event to listen for.
      * @param callback Callback used to listen for the audio recording event.
      */
-     on(type: 'stateChange', callback: (state: AVRecorderState, reason: StateChangeReason) => void): void;
+     on(type: 'stateChanged', callback: (state: AVRecorderState, reason: StateChangeReason) => void): void;
 
     /**
      * Listens for audio recording error events.
