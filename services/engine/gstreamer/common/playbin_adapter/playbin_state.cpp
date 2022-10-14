@@ -460,7 +460,7 @@ int32_t PlayBinCtrlerBase::PausedState::Play()
 {
     if (ctrler_.isBuffering_) {
         ChangeState(playingState_);
-        return;
+        return MSERR_OK;
     }
     return ChangePlayBinState(GST_STATE_PLAYING);
 }
