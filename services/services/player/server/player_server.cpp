@@ -207,7 +207,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 int32_t PlayerServer::Prepare()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGW("KPI-TRACE: PlayerServer Prepare in");
+    MEDIA_LOGD("KPI-TRACE: PlayerServer Prepare in");
 
     if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
         return OnPrepare(true);
@@ -215,14 +215,12 @@ int32_t PlayerServer::Prepare()
         MEDIA_LOGE("Can not Prepare, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
-
-    return MSERR_OK;
 }
 
 int32_t PlayerServer::PrepareAsync()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGW("KPI-TRACE: PlayerServer PrepareAsync in");
+    MEDIA_LOGD("KPI-TRACE: PlayerServer PrepareAsync in");
 
     if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
         return OnPrepare(false);
@@ -234,6 +232,7 @@ int32_t PlayerServer::PrepareAsync()
 
 int32_t PlayerServer::OnPrepare(bool sync)
 {
+    MEDIA_LOGD("KPI-TRACE: PlayerServer OnPrepare in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     int32_t ret = MSERR_OK;
 
@@ -258,6 +257,7 @@ int32_t PlayerServer::OnPrepare(bool sync)
     if (sync) {
         (void)preparedTask->GetResult(); // wait HandlePrpare
     }
+    MEDIA_LOGD("KPI-TRACE: PlayerServer OnPrepare out");
     return MSERR_OK;
 }
 
@@ -265,14 +265,14 @@ int32_t PlayerServer::HandlePrepare()
 {
     int32_t ret = playerEngine_->PrepareAsync();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Server Prepare Failed!");
-    if (config_.leftVolume <= 1.0f || config_.rightVolume <= 1.0f) {
-        ret = playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
-        MEDIA_LOGD("Prepared SetVolume leftVolume:%{public}f rightVolume:%{public}f, ret:%{public}d", \
-                   config_.leftVolume, config_.rightVolume, ret);
-    }
-    (void)playerEngine_->SetLooping(config_.looping);
 
-    {
+    if (config_.leftVolume < 1.0f) {
+        (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
+    }
+    if (config_.looping) {
+        (void)playerEngine_->SetLooping(config_.looping);
+    }
+    if (config_.speedMode != SPEED_FORWARD_1_00_X) {
         auto rateTask = std::make_shared<TaskHandler<void>>([this]() {
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->SetPlaybackSpeed(config_.speedMode);
@@ -377,6 +377,7 @@ int32_t PlayerServer::Stop()
 
 int32_t PlayerServer::OnStop(bool sync)
 {
+    MEDIA_LOGD("PlayerServer OnStop in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     taskMgr_.ClearAllTask();
 
@@ -391,6 +392,7 @@ int32_t PlayerServer::OnStop(bool sync)
         (void)stopTask->GetResult(); // wait HandleStop
     }
     lastOpStatus_ = PLAYER_STOPPED;
+    MEDIA_LOGD("PlayerServer OnStop out");
     return MSERR_OK;
 }
 

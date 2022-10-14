@@ -129,6 +129,7 @@ void PlayerServer::PreparingState::StateEnter()
 
 int32_t PlayerServer::PreparingState::Stop()
 {
+    (void)server_.HandleStop();
     server_.ChangeState(server_.stoppedState_);
     return MSERR_OK;
 }
