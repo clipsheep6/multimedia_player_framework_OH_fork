@@ -365,8 +365,10 @@ void VideoCaps::UpdateParams()
         horizontalBlockRange_.maxVal * verticalBlockRange_.maxVal));
     blockPerSecondRange_ = blockPerSecondRange_.Intersect(blockPerFrameRange_.minVal * frameRateRange_.minVal,
         blockPerFrameRange_.maxVal * frameRateRange_.maxVal);
-    frameRateRange_ = frameRateRange_.Intersect(blockPerSecondRange_.minVal / blockPerFrameRange_.maxVal,
-        blockPerSecondRange_.maxVal / blockPerFrameRange_.minVal);
+    if (blockPerFrameRange_.maxVal != 0 && blockPerFrameRange_.minVal != 0) {
+        frameRateRange_ = frameRateRange_.Intersect(blockPerSecondRange_.minVal / blockPerFrameRange_.maxVal,
+            blockPerSecondRange_.maxVal / blockPerFrameRange_.minVal);
+    }
 }
 
 Range VideoCaps::DivRange(const Range &range, const int32_t &divisor)
@@ -422,7 +424,7 @@ Range VideoCaps::GetPreferredFrameRate(int32_t width, int32_t height)
         return range;
     }
     int64_t targetBlockNum = DivCeil(width, blockWidth_) * static_cast<int64_t>(DivCeil(height, blockHeight_));
-    int64_t closestBlockNum = DivCeil(closestSize.width, blockWidth_) * 
+    int64_t closestBlockNum = DivCeil(closestSize.width, blockWidth_) *
         static_cast<int64_t>(DivCeil(closestSize.height, blockHeight_));
     Range closestFrameRate = data_.measuredFrameRate.at(closestSize);
     int64_t minTargetBlockNum = 1;
@@ -432,17 +434,15 @@ Range VideoCaps::GetPreferredFrameRate(int32_t width, int32_t height)
 
 ImgSize VideoCaps::MatchClosestSize(const ImgSize &imgSize)
 {
-    int64_t targetBlockNum = DivCeil(imgSize.width, blockWidth_) * 
+    int64_t targetBlockNum = DivCeil(imgSize.width, blockWidth_) *
         static_cast<int64_t>(DivCeil(imgSize.height, blockHeight_));
-    int64_t blockNum;
-    int64_t diffBlockNum = INT32_MAX;
     int64_t minDiffBlockNum = INT32_MAX;
 
     ImgSize closestSize;
     for (auto iter = data_.measuredFrameRate.begin(); iter != data_.measuredFrameRate.end(); iter++) {
-        blockNum = DivCeil(iter->first.width, blockWidth_) * 
+        int64_t blockNum = DivCeil(iter->first.width, blockWidth_) *
             static_cast<int64_t>(DivCeil(iter->first.height, blockHeight_));
-        diffBlockNum = abs(targetBlockNum - blockNum);
+        int64_t diffBlockNum = abs(targetBlockNum - blockNum);
         if (minDiffBlockNum > diffBlockNum) {
             minDiffBlockNum = diffBlockNum;
             closestSize = iter->first;

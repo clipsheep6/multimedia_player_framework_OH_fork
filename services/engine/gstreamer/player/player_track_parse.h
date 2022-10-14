@@ -41,7 +41,7 @@ public:
 private:
     GstPadProbeReturn GetTrackParse(GstPad *pad, GstPadProbeInfo *info);
     void ConvertToPlayerKeys(const Format &innerMeta, Format &outMeta) const;
-    void AddProbeToPad(GstPad *pad);
+    void AddProbeToPad(const GstElement *element, GstPad *pad);
     static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer usrdata);
     bool demuxerElementFind_ = false;
     std::unordered_map<GstPad *, Format> trackInfos_;
@@ -55,7 +55,7 @@ private:
         GstPad *pad;
         gulong probeId;
     };
-    std::vector<PadInfo> padProbes_;
+    std::unordered_map<GstPad *, gulong> padProbes_;
     std::mutex signalIdMutex_;
     std::mutex padProbeMutex_;
     std::mutex trackInfoMutex_;

@@ -94,15 +94,15 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_SPEEDDONE,
     /* return the message when select bitrate done */
     INFO_TYPE_BITRATEDONE,
-    /* return the message when playback is end of steam.  */
+    /* return the message when playback is end of steam. */
     INFO_TYPE_EOS,
-    /* return the message when PlayerStates changed.  */
+    /* return the message when PlayerStates changed. */
     INFO_TYPE_STATE_CHANGE,
-    /* return the current posion of playback automatically.  */
+    /* return the current posion of playback automatically. */
     INFO_TYPE_POSITION_UPDATE,
-    /* return the playback message.  */
+    /* return the playback message. */
     INFO_TYPE_MESSAGE,
-    /* return the message when volume changed.  */
+    /* return the message when volume changed. */
     INFO_TYPE_VOLUME_CHANGE,
     /* return the message when video size is first known or updated. */
     INFO_TYPE_RESOLUTION_CHANGE,
@@ -114,6 +114,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_BITRATE_COLLECT,
     /* return the message when audio focus changed. */
     INFO_TYPE_INTERRUPT_EVENT,
+    /* return the message when PlayerStates changed by audio. */
+    INFO_TYPE_STATE_CHANGE_BY_AUDIO,
     /* return the message with extra information in format. */
     INFO_TYPE_EXTRA_FORMAT
 };
@@ -262,7 +264,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t Prepare() = 0;
+    __attribute__((deprecated)) virtual int32_t Prepare() = 0;
 
     /**
      * @brief Prepare the playback environment and buffers media data asynchronous.
@@ -530,7 +532,6 @@ private:
     PlayerFactory() = default;
     ~PlayerFactory() = default;
 };
-__attribute__((visibility("default"))) std::string PlayerErrorTypeToString(PlayerErrorType type);
 } // namespace Media
 } // namespace OHOS
 #endif // PLAYER_H

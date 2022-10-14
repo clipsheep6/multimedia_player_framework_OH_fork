@@ -60,7 +60,7 @@ private:
     bool ParseRecorderContainerFormatData(xmlNode *node);
     bool ParseRecorderEncodeCapsData(xmlNode *node, bool isVideo);
     bool ParseRecorderProfilesData(xmlNode *node);
-    bool ParseRecorderProfilesSourceData(const std::string sourceType, xmlNode *node);
+    bool ParseRecorderProfilesSourceData(const std::string &sourceType, xmlNode *node);
     bool ParseRecorderProfileSettingsData(xmlNode *node, RecorderProfilesData &capabilityData);
     bool ParseRecorderProfileVideoAudioData(xmlNode *node, RecorderProfilesData &capabilityData);
     void PackageRecorderCaps();

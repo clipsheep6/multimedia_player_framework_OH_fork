@@ -144,11 +144,12 @@ void HdiBufferMgr::FreeCodecBuffers()
     MEDIA_LOGD("Enter FreeCodecBuffers End");
 }
 
-int32_t HdiBufferMgr::Stop()
+int32_t HdiBufferMgr::Stop(bool isFormatChange)
 {
     MEDIA_LOGD("Enter Stop");
     std::unique_lock<std::mutex> lock(mutex_);
     isStart_ = false;
+    isFormatChange_ = isFormatChange;
     bufferCond_.notify_all();
     flushCond_.notify_all();
     return GST_CODEC_OK;
@@ -180,6 +181,25 @@ void HdiBufferMgr::NotifyAvailable()
 {
     if (isStart_ == false && availableBuffers_.size() == mPortDef_.nBufferCountActual) {
         freeCond_.notify_all();
+    }
+}
+
+void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
+{
+    GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffer);
+    if (bufferType == nullptr) {
+        MEDIA_LOGW("bufferType is null, set flag %{public}d to gstbuffer fail", flag);
+        return;
+    }
+    bufferType->bufferFlag = BUFFER_FLAG_NONE;
+    if (flag & OMX_BUFFERFLAG_EOS) {
+        bufferType->bufferFlag |= BUFFER_FLAG_EOS;
+    }
+    if (flag & OMX_BUFFERFLAG_SYNCFRAME) {
+        bufferType->bufferFlag |= BUFFER_FLAG_SYNC_FRAME;
+    }
+    if (flag & OMX_BUFFERFLAG_CODECCONFIG) {
+        bufferType->bufferFlag |= BUFFER_FLAG_CODEC_DATA;
     }
 }
 }  // namespace Media

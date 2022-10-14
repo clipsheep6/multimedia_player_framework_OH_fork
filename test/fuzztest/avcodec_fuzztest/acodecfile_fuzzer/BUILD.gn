@@ -15,7 +15,7 @@
 import("//build/config/features.gni")
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
-module_output_path = "player_framework/fuzztest"
+module_output_path = "player_framework/avcodec"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 MEDIA_AVCODEC_TEST_DIR =
     "//foundation/multimedia/player_framework/test/unittest/avcodec_test/"

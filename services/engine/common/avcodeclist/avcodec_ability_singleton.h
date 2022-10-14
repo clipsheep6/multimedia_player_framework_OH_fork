@@ -28,7 +28,6 @@ public:
     bool ParseCodecXml();
     bool RegisterCapability(const std::vector<CapabilityData> &registerCapabilityDataArray);
     bool RegisterHdiCapability(const std::vector<CapabilityData> &registerCapabilityDataArray);
-    bool IsParsered();
     std::vector<CapabilityData> GetCapabilityDataArray();
 
 private:

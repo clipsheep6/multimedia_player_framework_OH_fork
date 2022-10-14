@@ -88,12 +88,6 @@ bool AVCodecAbilitySingleton::RegisterHdiCapability(const std::vector<Capability
     return true;
 }
 
-bool AVCodecAbilitySingleton::IsParsered()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    return isParsered_;
-}
-
 std::vector<CapabilityData> AVCodecAbilitySingleton::GetCapabilityDataArray()
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -354,7 +354,7 @@ static GstFlowReturn gst_video_capture_src_fill(GstBaseSrc *src, guint64 offset,
     (void)size;
     GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(buf);
     g_return_val_if_fail(meta != nullptr, GST_FLOW_ERROR);
-    if (meta != nullptr && (meta->bufferFlag & BUFFER_FLAG_EOS)) {
+    if (meta->bufferFlag & BUFFER_FLAG_EOS) {
         return GST_FLOW_EOS;
     }
 

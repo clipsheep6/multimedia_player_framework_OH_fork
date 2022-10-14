@@ -24,7 +24,7 @@ typedef struct _GstConsumerSurfaceMemory GstConsumerSurfaceMemory;
 struct _GstConsumerSurfaceMemory {
     GstMemory parent;
     OHOS::sptr<OHOS::SurfaceBuffer> surface_buffer;
-    intptr_t buffer_handle;
+    BufferHandle *buffer_handle;
     gint32 fencefd;
     gint64 timestamp;
     OHOS::Rect damage;

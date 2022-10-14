@@ -129,6 +129,7 @@ void PlayerServer::PreparingState::StateEnter()
 
 int32_t PlayerServer::PreparingState::Stop()
 {
+    (void)server_.HandleStop();
     server_.ChangeState(server_.stoppedState_);
     return MSERR_OK;
 }
@@ -143,7 +144,6 @@ void PlayerServer::PreparingState::HandleStateChange(int32_t newState)
         } else {
             server_.ChangeState(server_.preparedState_);
         }
-        server_.stateCond_.notify_one(); // awake the stateCond_'s waiter in Prepare()
         (void)server_.taskMgr_.MarkTaskDone();
     }
 }
@@ -178,19 +178,11 @@ void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
     if (newState == PLAYER_STARTED) {
         MediaTrace::TraceEnd("PlayerServer::Play", FAKE_POINTER(&server_));
         server_.ChangeState(server_.playingState_);
-        server_.startTimeMonitor_.FinishTime();
         (void)server_.taskMgr_.MarkTaskDone();
     } else if (newState == PLAYER_STOPPED) {
         MediaTrace::TraceEnd("PlayerServer::Stop", FAKE_POINTER(&server_));
         server_.ChangeState(server_.stoppedState_);
         (void)server_.taskMgr_.MarkTaskDone();
-    }
-}
-
-void PlayerServer::PreparedState::StateEnter()
-{
-    if (server_.config_.speedMode != SPEED_FORWARD_1_00_X) {
-        server_.playerEngine_->SetPlaybackSpeed(server_.config_.speedMode);
     }
 }
 

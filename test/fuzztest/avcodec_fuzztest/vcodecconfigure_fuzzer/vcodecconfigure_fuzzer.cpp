@@ -72,6 +72,10 @@ bool VCodecConfigureFuzzer::FuzzVideoConfigure(uint8_t *data, size_t size)
     videoDec_->Start();
     videoEnc_->Start();
     sleep(WAITTING_TIME);
+    videoDec_->Flush();
+    videoEnc_->Flush();
+    videoDec_->Stop();
+    videoEnc_->Stop();
     if (videoDec_ != nullptr) {
         videoDec_->Reset();
         videoDec_->Release();
@@ -88,6 +92,9 @@ bool OHOS::Media::FuzzVCodecConfigure(uint8_t *data, size_t size)
     auto codecfuzzer = std::make_unique<VCodecConfigureFuzzer>();
     if (codecfuzzer == nullptr) {
         cout << "codecfuzzer is null" << endl;
+        return 0;
+    }
+    if (size < sizeof(int32_t)) {
         return 0;
     }
     return codecfuzzer->FuzzVideoConfigure(data, size);

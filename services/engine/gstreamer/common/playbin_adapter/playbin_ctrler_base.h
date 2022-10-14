@@ -53,7 +53,7 @@ public:
     int32_t Play() override;
     int32_t Pause() override;
     int32_t Seek(int64_t timeUs, int32_t seekOption) override;
-    int32_t Stop() override;
+    int32_t Stop(bool needWait) override;
     int64_t GetDuration() override;
     int64_t GetPosition() override;
     int32_t SetRate(double rate) override;
@@ -131,7 +131,6 @@ private:
     void HandleCacheCtrlCb(const InnerMessage &msg);
     void HandleCacheCtrlWhenNoBuffering(int32_t percent);
     void HandleCacheCtrlWhenBuffering(int32_t percent);
-    bool IsPrepareWaitEnable() const;
 
     std::mutex mutex_;
     std::mutex cacheCtrlMutex_;
@@ -156,12 +155,9 @@ private:
     bool isInitialized_ = false;
 
     bool isErrorHappened_ = false;
-    std::mutex condMutex_;
-    std::condition_variable stateCond_;
-
-    bool isStopFinish_ = false;
-    std::mutex stopCondMutex_;
-    std::condition_variable stopCond_;
+    std::condition_variable preparingCond_;
+    std::condition_variable preparedCond_;
+    std::condition_variable stoppingCond_;
     
     PlayBinSinkProvider::SinkPtr audioSink_ = nullptr;
     PlayBinSinkProvider::SinkPtr videoSink_ = nullptr;

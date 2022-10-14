@@ -41,6 +41,11 @@ sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService
     MessageParcel reply;
     MessageOption option;
 
+    if (listener == nullptr) {
+        MEDIA_LOGE("listener is nullptr");
+        return nullptr;
+    }
+
     if (!data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor())) {
         MEDIA_LOGE("Failed to write descriptor");
         return nullptr;

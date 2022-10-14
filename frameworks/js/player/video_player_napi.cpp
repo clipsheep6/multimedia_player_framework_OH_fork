@@ -18,8 +18,6 @@
 #include "video_callback_napi.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "media_data_source_napi.h"
-#include "media_data_source_callback.h"
 #include "surface_utils.h"
 #include "string_ex.h"
 
@@ -50,7 +48,6 @@ VideoPlayerNapi::~VideoPlayerNapi()
     CancelCallback();
     nativePlayer_ = nullptr;
     jsCallback_ = nullptr;
-    dataSrcCallBack_ = nullptr;
     if (wrapper_ != nullptr) {
         napi_delete_reference(env_, wrapper_);
     }
@@ -78,7 +75,6 @@ napi_value VideoPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setSpeed", SetSpeed),
         DECLARE_NAPI_FUNCTION("selectBitrate", SelectBitrate),
 
-        DECLARE_NAPI_GETTER_SETTER("dataSrc", GetDataSrc, SetDataSrc),
         DECLARE_NAPI_GETTER_SETTER("url", GetUrl, SetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", GetFdSrc, SetFdSrc),
         DECLARE_NAPI_GETTER_SETTER("loop", GetLoop, SetLoop),
@@ -223,10 +219,10 @@ napi_value VideoPlayerNapi::SetUrl(napi_env env, napi_callback_info info)
     const std::string fdHead = "fd://";
     const std::string httpHead = "http";
     int32_t ret = MSERR_EXT_INVALID_VAL;
-    int32_t fd = -1;
     MEDIA_LOGD("input url is %{public}s!", jsPlayer->url_.c_str());
     if (jsPlayer->url_.find(fdHead) != std::string::npos) {
         std::string inputFd = jsPlayer->url_.substr(fdHead.size());
+        int32_t fd = -1;
         if (!StrToInt(inputFd, fd) || fd < 0) {
             jsPlayer->ErrorCallback(MSERR_EXT_INVALID_VAL, "invalid parameters, please check the input parameters");
             return undefinedResult;
@@ -271,82 +267,6 @@ napi_value VideoPlayerNapi::GetUrl(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "napi_create_string_utf8 error");
 
     MEDIA_LOGD("GetSrc success");
-    return jsResult;
-}
-
-napi_value VideoPlayerNapi::SetDataSrc(napi_env env, napi_callback_info info)
-{
-    MEDIA_LOGD("SetMediaDataSrc start");
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-
-    napi_value jsThis = nullptr;
-    napi_value args[1] = { nullptr };
-    size_t argCount = 1;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr && args[0] != nullptr,
-        undefinedResult, "Failed to retrieve details about the callback");
-
-    VideoPlayerNapi *jsPlayer = nullptr;
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&jsPlayer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsPlayer != nullptr, undefinedResult, "get player napi error");
-    if (jsPlayer->nativePlayer_ == nullptr) {
-        jsPlayer->ErrorCallback(MSERR_EXT_NO_MEMORY, "player is released(null), please create player again");
-        return undefinedResult;
-    }
-
-    if (jsPlayer->dataSrcCallBack_ != nullptr) {
-        jsPlayer->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to set source(Repeat settings)");
-        return undefinedResult;
-    }
-    napi_valuetype valueType = napi_undefined;
-    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
-        jsPlayer->ErrorCallback(MSERR_EXT_INVALID_VAL, "napi_typeof failed, please check the input parameters");
-        return undefinedResult;
-    }
-
-    jsPlayer->dataSrcCallBack_ = MediaDataSourceCallback::Create(env, args[0]);
-    if (jsPlayer->dataSrcCallBack_ == nullptr) {
-        jsPlayer->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to create datasource");
-        return undefinedResult;
-    }
-    int32_t ret = jsPlayer->nativePlayer_->SetSource(jsPlayer->dataSrcCallBack_);
-    if (ret != MSERR_OK) {
-        jsPlayer->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to set source");
-        return undefinedResult;
-    }
-    MEDIA_LOGD("SetMediaDataSrc success");
-    return undefinedResult;
-}
-
-napi_value VideoPlayerNapi::GetDataSrc(napi_env env, napi_callback_info info)
-{
-    napi_value undefinedResult = nullptr;
-    napi_get_undefined(env, &undefinedResult);
-
-    napi_value jsThis = nullptr;
-    napi_value jsResult = nullptr;
-    size_t argCount = 0;
-    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
-        undefinedResult, "Failed to retrieve details about the callback");
-
-    VideoPlayerNapi *jsPlayer = nullptr;
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&jsPlayer));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsPlayer != nullptr, undefinedResult, "Failed to retrieve instance");
-
-    if (jsPlayer->dataSrcCallBack_ == nullptr) {
-        jsPlayer->ErrorCallback(MSERR_EXT_NO_MEMORY, "data src is nullptr, please set data src again");
-        return undefinedResult;
-    }
-
-    jsResult = jsPlayer->dataSrcCallBack_->GetDataSrc();
-    if (jsResult == nullptr) {
-        jsPlayer->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to GetDataSrc");
-        return undefinedResult;
-    }
-
-    MEDIA_LOGD("GetDataSrc success");
     return jsResult;
 }
 
@@ -429,14 +349,6 @@ napi_value VideoPlayerNapi::GetFdSrc(napi_env env, napi_callback_info info)
 
     MEDIA_LOGD("GetFdSrc success");
     return jsResult;
-}
-
-void VideoPlayerNapi::ReleaseDataSource(std::shared_ptr<MediaDataSourceCallback> dataSourceCb)
-{
-    if (dataSourceCb != nullptr) {
-        dataSourceCb->Release();
-        dataSourceCb = nullptr;
-    }
 }
 
 void VideoPlayerNapi::AsyncSetDisplaySurface(napi_env env, void *data)
@@ -578,7 +490,6 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
     if (asyncContext->asyncWorkType == AsyncWorkType::ASYNC_WORK_RESET) {
         cb->ClearAsyncWork(false, "the requests was aborted because user called reset");
         cb->QueueAsyncWork(asyncContext);
-        asyncContext->jsPlayer->ReleaseDataSource(asyncContext->jsPlayer->dataSrcCallBack_);
         ret = asyncContext->jsPlayer->nativePlayer_->Reset();
     } else {
         cb->QueueAsyncWork(asyncContext);
@@ -779,7 +690,6 @@ napi_value VideoPlayerNapi::Release(napi_env env, napi_callback_info info)
     } else if (asyncContext->jsPlayer->nativePlayer_ == nullptr) {
         asyncContext->SignError(MSERR_EXT_NO_MEMORY, "nativePlayer is released(null), please create player again");
     } else {
-        asyncContext->jsPlayer->ReleaseDataSource(asyncContext->jsPlayer->dataSrcCallBack_);
         (void)asyncContext->jsPlayer->nativePlayer_->Release();
         asyncContext->jsPlayer->CancelCallback();
         asyncContext->jsPlayer->jsCallback_ = nullptr;

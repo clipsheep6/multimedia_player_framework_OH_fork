@@ -14,6 +14,7 @@
  */
 
 #include "avmetadata_mock.h"
+#include <fcntl.h>
 #include "gtest/gtest.h"
 #include "media_errors.h"
 

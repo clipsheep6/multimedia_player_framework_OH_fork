@@ -48,13 +48,6 @@ DfxLogDump::~DfxLogDump()
     }
 }
 
-void DfxLogDump::DumpLog()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    isDump_ = true;
-    cond_.notify_all();
-}
-
 static void AddNewLog(const char *level, const OHOS::HiviewDFX::HiLogLabel &label, std::string &logStr)
 {
     struct timeval time = {};

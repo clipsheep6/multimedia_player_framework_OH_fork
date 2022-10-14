@@ -50,7 +50,7 @@
           "hilog_native",
           "zlib",
           "access_token",
-          "multimedia_image_standard",
+          "multimedia_image_framework",
           "common"
         ],
         "third_party": [
@@ -100,6 +100,17 @@
                 "native_module_ohos_media.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/kits/js"
+            }
+          },
+          {
+            "type": "none",
+            "name": "//foundation/multimedia/audio_framework/frameworks/native/systemsound:audio_ringtone_client",
+            "header": {
+              "header_files": [
+                "iringtone_player.h",
+                "iringtone_sound_manager.h"
+              ],
+              "header_base": "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audioringtone/include"
             }
           }
         ],

@@ -41,7 +41,6 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
 
     avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
-        cout << "avmetadata is null" << endl;
         avmetadata->Release();
         return false;
     }
@@ -49,7 +48,6 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
     const string path = "/data/test/media/H264_AAC.mp4";
     int32_t retMetadataSetsource = MetaDataSetSource(path);
     if (retMetadataSetsource != 0) {
-        cout << "avmetadata SetSource file" << endl;
         avmetadata->Release();
         return false;
     }
@@ -82,6 +80,13 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
 
 bool FuzzTestAVMetadataResolveMetadata(uint8_t *data, size_t size)
 {
+    if (data == nullptr) {
+        return 0;
+    }
+
+    if (size < sizeof(int64_t)) {
+        return 0;
+    }
     AVMetadataResolveMetadataFuzzer metadata;
     return metadata.FuzzAVMetadataResolveMetadata(data, size);
 }

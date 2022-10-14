@@ -383,6 +383,14 @@ void PlayerEngineGstImpl::HandleAudioStateMessage(const PlayBinMessage &msg)
 {
     int32_t value = std::any_cast<int32_t>(msg.extra);
     MEDIA_LOGI("HandleAudioStateMessage:%{public}d", value);
+
+    if (value == AudioStandard::RendererState::RENDERER_PAUSED) {
+        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+        Format format;
+        if (notifyObs != nullptr) {
+            notifyObs->OnInfo(INFO_TYPE_STATE_CHANGE_BY_AUDIO, PlayerStates::PLAYER_PAUSED, format);
+        }
+    }
 }
 
 void PlayerEngineGstImpl::HandleAudioErrorMessage(const PlayBinMessage &msg)
@@ -463,9 +471,6 @@ void PlayerEngineGstImpl::PlayBinCtrlerDeInit()
 {
     url_.clear();
     appsrcWrap_ = nullptr;
-    if (trackParse_ != nullptr) {
-        trackParse_->Stop();
-    }
 
     if (playBinCtrler_ != nullptr) {
         playBinCtrler_->SetElemSetupListener(nullptr);
@@ -668,7 +673,6 @@ int32_t PlayerEngineGstImpl::GetPlaybackSpeed(PlaybackRateMode &mode)
 
 int32_t PlayerEngineGstImpl::SetLooping(bool loop)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     if (playBinCtrler_ != nullptr) {
         MEDIA_LOGD("SetLooping in");
         return playBinCtrler_->SetLoop(loop);
@@ -703,7 +707,10 @@ int32_t PlayerEngineGstImpl::Stop()
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
     MEDIA_LOGD("Stop in");
-    playBinCtrler_->Stop();
+    if (trackParse_ != nullptr) {
+        trackParse_->Stop();
+    }
+    playBinCtrler_->Stop(true);
     return MSERR_OK;
 }
 

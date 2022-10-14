@@ -38,18 +38,43 @@ void PlayerUnitTest::SetUp(void)
 
 void PlayerUnitTest::TearDown(void)
 {
-    EXPECT_EQ(MSERR_OK, player_->Release());
+    if (player_ != nullptr) {
+        EXPECT_EQ(MSERR_OK, player_->Release());
+    }
 }
 
 /**
  * @tc.name  : Test PlayerSetSource API
  * @tc.number: Player_SetSource_001
- * @tc.desc  : Test PlayerSetSource interface with valid parameters
+ * @tc.desc  : Test PlayerSetSource interface
  */
 HWTEST_F(PlayerUnitTest, Player_SetSource_001, TestSize.Level0)
 {
     int32_t ret = player_->SetSource(VIDEO_FILE1);
     EXPECT_EQ(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test PlayerSetSource API
+ * @tc.number: Player_SetSource_002
+ * @tc.desc  : Test PlayerSetSource interface with invalid path
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_002, TestSize.Level1)
+{
+    int32_t ret = player_->SetSource(MEDIA_ROOT + "kong.mp4");
+    EXPECT_NE(MSERR_OK, ret);
+}
+
+/**
+ * @tc.name  : Test PlayerSetSource API
+ * @tc.number: Player_SetSource_003
+ * @tc.desc  : Test PlayerSetSource interface with wrong mp3
+ */
+HWTEST_F(PlayerUnitTest, Player_SetSource_003, TestSize.Level2)
+{
+    int32_t ret = player_->SetSource(MEDIA_ROOT + "1kb.mp3");
+    EXPECT_EQ(MSERR_OK, ret);
+    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
 }
 
 /**
@@ -353,22 +378,6 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_001, TestSize.Level0)
 }
 
 /**
- * @tc.name  : Test SetDataSource API
- * @tc.number: Player_SetDataSource_002
- * @tc.desc  : Test Player SetDataSource
- */
-HWTEST_F(PlayerUnitTest, Player_SetDataSource_002, TestSize.Level0)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", -1, false));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-}
-
-/**
  * @tc.name  : Test Player SelectBitRate API
  * @tc.number: Player_SelectBitRate_001
  * @tc.desc  : Test Player SelectBitRate interface
@@ -411,6 +420,80 @@ HWTEST_F(PlayerUnitTest, Player_Performance_Prepared_001, TestSize.Level0)
         EXPECT_EQ(MSERR_OK, player_->Reset());
     }
     EXPECT_LE(deltaTime / runTimes, 300); // less than 300ms
+}
+
+/**
+ * @tc.name  : Test Player Play mp4 with rotation
+ * @tc.number: Player_Rotate_001
+ * @tc.desc  : Test PlayerPlay interface
+ */
+HWTEST_F(PlayerUnitTest, Player_Rotate_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_TRUE(player_->IsPlaying());
+}
+
+/**
+ * @tc.name  : Test Player Dump Dot
+ * @tc.number: Player_Dump_Dot_001
+ * @tc.desc  : Test Player Dump Dot
+ */
+HWTEST_F(PlayerUnitTest, Player_Dump_Dot_001, TestSize.Level0)
+{
+    system("setenforce 0");
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    system("param set sys.media.dump.dot.path /data/test/media");
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("param set sys.media.dump.dot.path /xx");
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    system("setenforce 1");
+}
+
+/**
+ * @tc.name  : Test Player Dump GlibMem
+ * @tc.number: Player_Dump_GlibMem_001
+ * @tc.desc  : Test Player Dump GlibMem
+ */
+HWTEST_F(PlayerUnitTest, Player_Dump_GlibMem_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    system("hidumper -s 3002 -a glibmem");
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+}
+
+/**
+ * @tc.name  : Test Player Dump GlibPool
+ * @tc.number: Player_Dump_GlibPool_001
+ * @tc.desc  : Test Player Dump GlibPool
+ */
+HWTEST_F(PlayerUnitTest, Player_Dump_GlibPool_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    system("hidumper -s 3002 -a glibpool");
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
 }
 } // namespace Media
 } // namespace OHOS

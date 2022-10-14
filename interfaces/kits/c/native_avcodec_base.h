@@ -194,6 +194,8 @@ extern const char *OH_MD_KEY_AUD_CHANNEL_COUNT;
 extern const char *OH_MD_KEY_AUD_SAMPLE_RATE;
 /* Key for the interval of key frame. value type is int32_t, the unit is milliseconds. */
 extern const char *OH_MD_KEY_I_FRAME_INTERVAL;
+/* Key of the surface rotation angle. value type is int32_t: should be {0, 90, 180, 270}, default is 0. */
+extern const char *OH_MD_KEY_ROTATION;
 
 /**
  * @brief Media type.

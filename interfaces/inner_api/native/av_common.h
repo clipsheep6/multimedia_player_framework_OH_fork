@@ -109,6 +109,31 @@ enum AVSeekMode : uint8_t {
      */
     AV_SEEK_CLOSEST = 3,
 };
+
+/**
+ * @brief Enumerates the video rotation.
+ *
+ * @since 3.2
+ * @version 3.2
+ */
+enum VideoRotation : uint32_t {
+/**
+ * Video without rotation
+ */
+VIDEO_ROTATION_0 = 0,
+/**
+ * Video rotated 90 degrees
+ */
+VIDEO_ROTATION_90 = 90,
+/**
+ * Video rotated 180 degrees
+ */
+VIDEO_ROTATION_180 = 180,
+/**
+ * Video rotated 270 degrees
+ */
+VIDEO_ROTATION_270 = 270,
+};
 } // namespace Media
 } // namespace OHOS
 #endif // AV_COMMOM_H

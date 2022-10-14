@@ -152,8 +152,8 @@ int32_t HdiCodec::Start()
 
 int32_t HdiCodec::Stop()
 {
-    inBufferMgr_->Stop();
-    outBufferMgr_->Stop();
+    inBufferMgr_->Stop(false);
+    outBufferMgr_->Stop(false);
     if (curState_ == OMX_StateExecuting) {
         CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "ChangeState failed");
         CHECK_AND_RETURN_RET_LOG(WaitForState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "Wait failed");
@@ -282,12 +282,20 @@ int32_t HdiCodec::UseOutputBuffers(std::vector<GstBuffer*> buffers)
 {
     MEDIA_LOGD("UseOutputBuffers");
     if (curState_ < OMX_StateIdle) {
-        CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "ChangeState failed");
+        CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateIdle) == GST_CODEC_OK,
+            GST_CODEC_ERROR, "ChangeState failed");
         // m40 need input and output allocate or use common
-        CHECK_AND_RETURN_RET_LOG(inBufferMgr_->Preprocessing() == GST_CODEC_OK, GST_CODEC_ERROR, "Allocatebuffer fail");
+        CHECK_AND_RETURN_RET_LOG(inBufferMgr_->Preprocessing() == GST_CODEC_OK,
+            GST_CODEC_ERROR, "Allocatebuffer fail");
+        CHECK_AND_RETURN_RET_LOG(outBufferMgr_->UseBuffers(buffers) == GST_CODEC_OK,
+            GST_CODEC_ERROR, "UseBuffers fail");
+        CHECK_AND_RETURN_RET_LOG(WaitForState(OMX_StateIdle) == GST_CODEC_OK,
+            GST_CODEC_ERROR, "Wait failed");
+    } else if (outState_ == ACTIVING) {
+        CHECK_AND_RETURN_RET_LOG(outBufferMgr_->UseBuffers(buffers) == GST_CODEC_OK,
+            GST_CODEC_ERROR, "Usebuffer fail");
+        WaitForEvent(OMX_CommandPortEnable);
     }
-    CHECK_AND_RETURN_RET_LOG(outBufferMgr_->UseBuffers(buffers) == GST_CODEC_OK, GST_CODEC_ERROR, "Usebuffer fail");
-    CHECK_AND_RETURN_RET_LOG(WaitForState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "Wait failed");
     return GST_CODEC_OK;
 }
 
@@ -407,6 +415,7 @@ void HdiCodec::HandelEventPortDisable(OMX_U32 data)
     } else {
         outState_ = DEACTIVATED;
     }
+    eventDone_ = true;
 }
 
 void HdiCodec::HandelEventPortEnable(OMX_U32 data)
@@ -416,6 +425,7 @@ void HdiCodec::HandelEventPortEnable(OMX_U32 data)
     } else {
         outState_ = ACTIVATED;
     }
+    eventDone_ = true;
 }
 
 void HdiCodec::HandelEventCmdComplete(OMX_U32 data1, OMX_U32 data2)
@@ -449,9 +459,9 @@ void HdiCodec::HandleEventPortSettingsChanged(OMX_U32 data1, OMX_U32 data2)
         MEDIA_LOGD("GST_CODEC_FORMAT_CHANGE");
         ret_ = GST_CODEC_FORMAT_CHANGE;
         if (data1 == inPortIndex_) {
-            inBufferMgr_->Stop();
+            inBufferMgr_->Stop(true);
         } else {
-            outBufferMgr_->Stop();
+            outBufferMgr_->Stop(true);
         }
     } else if (data2 == OMX_IndexConfigCommonOutputCrop) {
         needCrop_ = true;

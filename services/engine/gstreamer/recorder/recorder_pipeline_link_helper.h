@@ -32,8 +32,8 @@ public:
     int32_t ExecuteLink();
 
 private:
-    GstPad *GetGstPad(const std::shared_ptr<RecorderElement>& elem, bool isStaticPad, const std::string padName);
-    int32_t ExecuteOneLink(const std::shared_ptr<RecorderElement>& srcElem,
+    GstPad *GetGstPad(const std::shared_ptr<RecorderElement> &elem, bool isStaticPad, const std::string &padName);
+    int32_t ExecuteOneLink(const std::shared_ptr<RecorderElement> &srcElem,
                            const RecorderPipelineDesc::LinkDesc &linkDesc);
     void Clear();
 
