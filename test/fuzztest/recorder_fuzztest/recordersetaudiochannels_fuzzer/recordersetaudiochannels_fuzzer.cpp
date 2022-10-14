@@ -41,7 +41,6 @@ RecorderSetAudioChannelsFuzzer::~RecorderSetAudioChannelsFuzzer()
 bool RecorderSetAudioChannelsFuzzer::FuzzRecorderSetAudioChannels(uint8_t *data, size_t size)
 {
     bool retFlags = TestRecorder::CreateRecorder();
-    constexpr uint32_t recorderTime = 5;
     RETURN_IF(retFlags, false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
@@ -50,28 +49,28 @@ bool RecorderSetAudioChannelsFuzzer::FuzzRecorderSetAudioChannels(uint8_t *data,
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetAudioChannels.mp4", O_RDWR);
     
     if (g_videoRecorderConfig.outputFd >= 0) {
-        RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetAudioSource(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetAudioEncoder(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetAudioSampleRate(g_videoRecorderConfig), false);
+        TestRecorder::SetVideoSource(g_videoRecorderConfig);
+        TestRecorder::SetAudioSource(g_videoRecorderConfig);
+        TestRecorder::SetOutputFormat(g_videoRecorderConfig);
+        TestRecorder::CameraServicesForVideo(g_videoRecorderConfig);
+        TestRecorder::SetAudioEncoder(g_videoRecorderConfig);
+        TestRecorder::SetAudioSampleRate(g_videoRecorderConfig);
 
         g_videoRecorderConfig.audioSourceId = *reinterpret_cast<int32_t *>(data);
 
-        RETURN_IF(TestRecorder::SetAudioChannels(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetAudioEncodingBitRate(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetMaxDuration(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetOutputFile(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
+        TestRecorder::SetAudioChannels(g_videoRecorderConfig);
+        TestRecorder::SetAudioEncodingBitRate(g_videoRecorderConfig);
+        TestRecorder::SetMaxDuration(g_videoRecorderConfig);
+        TestRecorder::SetOutputFile(g_videoRecorderConfig);
+        TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
+        TestRecorder::Prepare(g_videoRecorderConfig);
+        TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig);
+        TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
-        RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
+        TestRecorder::Stop(false, g_videoRecorderConfig);
         StopBuffer(PURE_VIDEO);
-        RETURN_IF(TestRecorder::Reset(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Release(g_videoRecorderConfig), true);
+        TestRecorder::Reset(g_videoRecorderConfig);
+        TestRecorder::Release(g_videoRecorderConfig);
     }
     close(g_videoRecorderConfig.outputFd);
     return true;
@@ -81,11 +80,11 @@ bool RecorderSetAudioChannelsFuzzer::FuzzRecorderSetAudioChannels(uint8_t *data,
 bool FuzzTestRecorderSetAudioChannels(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
-        return 0;
+        return true;
     }
 
     if (size < sizeof(int32_t)) {
-        return 0;
+        return true;
     }
     RecorderSetAudioChannelsFuzzer testRecorder;
     return testRecorder.FuzzRecorderSetAudioChannels(data, size);
