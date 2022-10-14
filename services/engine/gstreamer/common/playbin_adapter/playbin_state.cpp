@@ -458,6 +458,10 @@ void PlayBinCtrlerBase::PausedState::StateEnter()
 
 int32_t PlayBinCtrlerBase::PausedState::Play()
 {
+    if (ctrler_.isBuffering_) {
+        ChangeState(playingState_);
+        return;
+    }
     return ChangePlayBinState(GST_STATE_PLAYING);
 }
 
