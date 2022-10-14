@@ -180,6 +180,30 @@ ohos_unittest("avcodec_list_native_unit_test") {
 }
 
 ##################################################################################################################
+ohos_unittest("format_native_unit_test") {
+  module_out_path = module_output_path
+  include_dirs = avcodec_unittest_native_include_dirs
+  include_dirs += [
+    "./",
+    "./format_test",
+  ]
+  cflags = avcodec_unittest_cflags
+
+  if (multimedia_player_framework_support_codec) {
+    sources = [
+      "./format_test/format_unit_test.cpp",
+      "./native/avformat/avformat_native_mock.cpp",
+      "./native/avcodec_mock_factory.cpp",
+    ]
+  }
+
+  deps = [
+    "//foundation/graphic/graphic_2d/rosen/modules/render_service_client:librender_service_client",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+  ]
+}
+
+##################################################################################################################
 ohos_unittest("vcodec_capi_unit_test") {
   module_out_path = module_output_path
   include_dirs = avcodec_unittest_capi_include_dirs
@@ -256,4 +280,29 @@ ohos_unittest("acodec_capi_unit_test") {
   ]
 
   resource_config_file = "//foundation/multimedia/player_framework/test/unittest/resources/ohos_test.xml"
+}
+
+##################################################################################################################
+ohos_unittest("format_capi_unit_test") {
+  module_out_path = module_output_path
+  include_dirs = avcodec_unittest_capi_include_dirs
+  include_dirs += [
+    "./",
+    "./format_test",
+  ]
+
+  cflags = avcodec_unittest_cflags
+
+  if (multimedia_player_framework_support_codec) {
+    sources = [
+      "./format_test/format_unit_test.cpp",
+      "./capi/avformat/avformat_capi_mock.cpp",
+      "./capi/avcodec_mock_factory.cpp",
+    ]
+  }
+  deps = [
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
+    "//foundation/window/window_manager/wm:libwm",
+  ]
 }
