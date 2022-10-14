@@ -19,12 +19,8 @@
 #define FUZZ_PROJECT_NAME "playerfile_fuzzer"
 #include "test_player.h"
 
-
 namespace OHOS {
 namespace Media {
-int32_t WriteDataToFile(const std::string &path, const uint8_t* data, size_t size);
-bool FuzzPlayerFile(const uint8_t* data, size_t size);
-
 class PlayerFileFuzzer : public TestPlayer {
 public:
     PlayerFileFuzzer();
@@ -32,6 +28,8 @@ public:
     bool FuzzFile(const uint8_t* data, size_t size);
 };
 }
+int32_t WriteDataToFile(const std::string &path, const uint8_t* data, size_t size);
+bool FuzzPlayerFile(const uint8_t* data, size_t size);
 }
 #endif
 

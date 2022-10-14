@@ -33,6 +33,8 @@ PlayerSeekFuzzer::~PlayerSeekFuzzer()
 {
 }
 
+namespace OHOS {
+namespace Media {
 bool PlayerSeekFuzzer::FuzzSeek(uint8_t* data, size_t size)
 {
     player_ = OHOS::Media::PlayerFactory::CreatePlayer();
@@ -46,61 +48,53 @@ bool PlayerSeekFuzzer::FuzzSeek(uint8_t* data, size_t size)
         cout << "SetPlayerCallback fail" << endl;
     }
     const string path = "/data/test/media/H264_AAC.mp4";
-    if ((SetFdSource(path)) != 0) {
-        cout << "SetFdSource fail" << endl;
-        return false;
-    }
+    SetFdSource(path);
     sptr<Surface> producerSurface = nullptr;
     producerSurface = GetVideoSurface();
-    if ((player_->SetVideoSurface(producerSurface)) != 0) {
-        cout << "SetVideoSurface fail" << endl;
-    }
-
-    if ((player_->PrepareAsync()) != 0) {
-        cout << "PrepareAsync fail" << endl;
-        return false;
-    }
+    player_->SetVideoSurface(producerSurface);
+    player_->PrepareAsync();
     sleep(1);
-    ret = player_->Play();
-    if (ret != 0) {
-        cout << "Play fail" << endl;
-        return false;
-    }
+    player_->Play();
     if (size >= sizeof(int32_t)) {
         int32_t data_ = *reinterpret_cast<int32_t *>(data);
-        cout << "seek to " << data_ << endl;
-        ret = player_->Seek(data_, SEEK_NEXT_SYNC);
-        if (ret != 0) {
-            cout << "seek fail" << endl;
-            return false;
-        } else {
-            sleep(1);
-        }
+        player_->Seek(data_, SEEK_NEXT_SYNC);
+        sleep(1);
     }
-        
-    ret = player_->Release();
-    if (ret != 0) {
-        cout << "Release fail" << endl;
-        return false;
-    }
+    int32_t time;
+    player_->GetCurrentTime(time);
+    std::vector<Format> videoTrack;
+    player_->GetVideoTrackInfo(videoTrack);
+    std::vector<Format> audioTrack;
+    player_->GetAudioTrackInfo(audioTrack);
+    player_->GetVideoWidth();
+    player_->GetVideoHeight();
+    int32_t duration = 0;
+    player_->GetDuration(duration);
+    player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X);
+    PlaybackRateMode mode;
+    player_->GetPlaybackSpeed(mode);
+    player_->SelectBitRate(0);
+    player_->Reset();
+    player_->Stop();
+    player_->Release();
     return true;
 }
+}
 
-bool OHOS::Media::FuzzPlayerSeek(uint8_t* data, size_t size)
+bool FuzzPlayerSeek(uint8_t* data, size_t size)
 {
     auto player = std::make_unique<PlayerSeekFuzzer>();
     if (player == nullptr) {
-        cout << "player is null" << endl;
-        return 0;
+        return true;
     }
     return player->FuzzSeek(data, size);
+}
 }
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t* data, size_t size)
 {
     /* Run your code on data */
-    OHOS::Media::FuzzPlayerSeek(data, size);
+    FuzzPlayerSeek(data, size);
     return 0;
 }
-
