@@ -495,57 +495,5 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GlibPool_001, TestSize.Level0)
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
-
-/**
- * @tc.name  : Test Player Histreamer
- * @tc.number: Player_Histreamer_001
- * @tc.desc  : Test Player function with Histreamer
- */
-HWTEST_F(PlayerUnitTest, Player_Histreamer_001, TestSize.Level0)
-{
-    EXPECT_EQ(MSERR_OK, player_->Release());
-    system("param set debug.media_service.histreamer 1");
-    callback_ = std::make_shared<PlayerCallbackTest>();
-    ASSERT_NE(nullptr, callback_);
-    player_ = std::make_shared<PlayerMock>(callback_);
-    ASSERT_NE(nullptr, player_);
-    EXPECT_TRUE(player_->CreatePlayer());
-    EXPECT_EQ(MSERR_OK, player_->SetPlayerCallback(callback_));
-
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    EXPECT_EQ(MSERR_OK, player_->Play());
-    EXPECT_TRUE(player_->IsPlaying());
-    EXPECT_EQ(MSERR_OK, player_->Pause());
-    int32_t time;
-    EXPECT_EQ(MSERR_OK, player_->GetCurrentTime(time));
-    std::vector<Format> videoTrack;
-    std::vector<Format> audioTrack;
-    EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
-    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
-    int32_t duration = 0;
-    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
-    EXPECT_NEAR(10000, duration, DELTA_TIME); // duration 10000ms
-    PlaybackRateMode mode;
-    player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X);
-    player_->GetPlaybackSpeed(mode);
-    EXPECT_EQ(MSERR_OK, player_->SetLooping(true));
-    EXPECT_EQ(true, player_->IsLooping());
-    EXPECT_EQ(MSERR_OK, player_->SetLooping(false));
-    EXPECT_EQ(false, player_->IsLooping());
-    EXPECT_EQ(MSERR_OK, player_->SetVolume(0.1, 0.1));
-    Format format;
-    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, VideoScaleType::VIDEO_SCALE_TYPE_FIT);
-    player_->SetParameter(format);
-    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
-    EXPECT_EQ(MSERR_OK, player_->Stop());
-    EXPECT_EQ(MSERR_OK, player_->Reset());
-    EXPECT_EQ(MSERR_OK, player_->Release());
-    player_ = nullptr;
-    system("param set debug.media_service.histreamer 0");
-}
 } // namespace Media
 } // namespace OHOS
