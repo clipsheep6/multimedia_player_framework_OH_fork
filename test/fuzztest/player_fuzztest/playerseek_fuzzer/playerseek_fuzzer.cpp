@@ -60,22 +60,6 @@ bool PlayerSeekFuzzer::FuzzSeek(uint8_t* data, size_t size)
         player_->Seek(data_, SEEK_NEXT_SYNC);
         sleep(1);
     }
-    int32_t time;
-    player_->GetCurrentTime(time);
-    std::vector<Format> videoTrack;
-    player_->GetVideoTrackInfo(videoTrack);
-    std::vector<Format> audioTrack;
-    player_->GetAudioTrackInfo(audioTrack);
-    player_->GetVideoWidth();
-    player_->GetVideoHeight();
-    int32_t duration = 0;
-    player_->GetDuration(duration);
-    player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X);
-    PlaybackRateMode mode;
-    player_->GetPlaybackSpeed(mode);
-    player_->SelectBitRate(0);
-    player_->Reset();
-    player_->Stop();
     player_->Release();
     return true;
 }
