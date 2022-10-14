@@ -192,8 +192,8 @@ ohos_unittest("format_native_unit_test") {
   if (multimedia_player_framework_support_codec) {
     sources = [
       "./format_test/format_unit_test.cpp",
-      "./native/avformat/avformat_native_mock.cpp",
       "./native/avcodec_mock_factory.cpp",
+      "./native/avformat/avformat_native_mock.cpp",
     ]
   }
 
@@ -295,9 +295,9 @@ ohos_unittest("format_capi_unit_test") {
 
   if (multimedia_player_framework_support_codec) {
     sources = [
-      "./format_test/format_unit_test.cpp",
-      "./capi/avformat/avformat_capi_mock.cpp",
       "./capi/avcodec_mock_factory.cpp",
+      "./capi/avformat/avformat_capi_mock.cpp",
+      "./format_test/format_unit_test.cpp",
     ]
   }
   deps = [
