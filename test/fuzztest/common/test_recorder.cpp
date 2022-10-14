@@ -35,6 +35,7 @@ constexpr uint32_t STRIDE_ALIGN = 8;
 constexpr uint32_t FRAME_DURATION = 40000000;
 constexpr uint32_t YUV_BUFFER_SIZE = YUV_BUFFER_WIDTH * YUV_BUFFER_HEIGHT * 3 / 2;
 constexpr uint32_t SEC_TO_NS = 1000000000;
+constexpr uint32_t recorderTime = 5;
 // this array contains each buffer size of the stub stream
 const uint32_t HIGH_VIDEO_FRAME_SIZE[STUB_STREAM_SIZE] = {
     13571, 321, 72, 472, 68, 76, 79, 509, 90, 677, 88, 956, 99, 347, 77, 452, 681, 81, 1263, 94, 106, 97, 998,

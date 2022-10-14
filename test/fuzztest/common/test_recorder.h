@@ -47,7 +47,6 @@ public:
     const std::string PURE_VIDEO = "video";
     const std::string PURE_AUDIO = "audio";
     const std::string AUDIO_VIDEO = "av";
-    constexpr uint32_t recorderTime = 5;
     uint32_t nowFrame = 0;
 
     void CameraServicesForAudio(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
