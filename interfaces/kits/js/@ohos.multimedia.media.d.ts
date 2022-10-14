@@ -1367,7 +1367,6 @@ declare namespace media {
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @deprecated since 9
-   * @systemapi
    */
   type VideoPlayState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'error';
 
