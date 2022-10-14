@@ -290,10 +290,9 @@ bool AVCodecXmlParser::SpiltKeyList(const std::string &str, const std::string &d
     if (str.back() != delim.back()) {
         strAddDelim = str + delim;
     }
-    size_t pos = 0;
     size_t size = strAddDelim.size();
     for (size_t i = 0; i < size; ++i) {
-        pos = strAddDelim.find(delim, i);
+        size_t pos = strAddDelim.find(delim, i);
         if (pos != strAddDelim.npos) {
             std::string s = strAddDelim.substr(i, pos - i);
             spilt.push_back(s);

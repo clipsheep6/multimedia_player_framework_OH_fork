@@ -460,6 +460,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             MEDIA_LOGE("find mediaprofile object failed, pid(%{public}d).", pid);
             break;
         }
+#ifdef SUPPORT_MUXER
         case AVMUXER: {
             for (auto it = avmuxerStubMap_.begin(); it != avmuxerStubMap_.end(); it++) {
                 if (it->first == object) {
@@ -472,6 +473,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             MEDIA_LOGE("find avmuxer object failed, pid(%{public}d).", pid);
             break;
         }
+#endif
         default: {
             MEDIA_LOGE("default case, media server manager failed, pid(%{public}d).", pid);
             break;
@@ -543,6 +545,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     }
     MEDIA_LOGD("mediaprofile stub services(%{public}zu).", recorderProfilesStubMap_.size());
 
+#ifdef SUPPORT_MUXER
     MEDIA_LOGD("avmuxer stub services(%{public}zu) pid(%{public}d).", avmuxerStubMap_.size(), pid);
     for (auto itAVMuxer = avmuxerStubMap_.begin(); itAVMuxer != avmuxerStubMap_.end();) {
         if (itAVMuxer->second == pid) {
@@ -552,6 +555,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
         }
     }
     MEDIA_LOGD("avmuxer stub services(%{public}zu).", avmuxerStubMap_.size());
+#endif
 }
 
 void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object)

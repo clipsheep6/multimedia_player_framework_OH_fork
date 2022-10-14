@@ -52,14 +52,13 @@ static gboolean gst_buffer_type_meta_transform(GstBuffer *dest, GstMeta *meta,
     g_return_val_if_fail(meta != NULL, FALSE);
     g_return_val_if_fail(data != NULL, FALSE);
     g_return_val_if_fail(buffer != NULL, FALSE);
-    GstBufferTypeMeta *dMeta, *sMeta;
-    sMeta = (GstBufferTypeMeta *)meta;
+    GstBufferTypeMeta *sMeta = (GstBufferTypeMeta *)meta;
 
     if (GST_META_TRANSFORM_IS_COPY(type)) {
         GstMetaTransformCopy *copy = data;
 
         if (!copy->region) {
-            dMeta = (GstBufferTypeMeta *)gst_buffer_add_meta(dest, GST_BUFFER_TYPE_META_INFO, NULL);
+            GstBufferTypeMeta *dMeta = (GstBufferTypeMeta *)gst_buffer_add_meta(dest, GST_BUFFER_TYPE_META_INFO, NULL);
             if (!dMeta) {
                 return FALSE;
             }

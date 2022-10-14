@@ -35,6 +35,7 @@ enum PlayBinMsgType : int32_t {
     PLAYBIN_MSG_SUBTYPE,
     PLAYBIN_MSG_AUDIO_SINK,
     PLAYBIN_MSG_EXTRA_FORMAT,
+    PLAYBIN_MSG_ASYNC_DONE,
 };
 
 enum PlayBinMsgSubType : int32_t {

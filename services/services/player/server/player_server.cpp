@@ -915,9 +915,13 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
 
-    int32_t ret = HandleMessage(type, extra, infoBody);
-    if (playerCb_ != nullptr && ret == MSERR_OK) {
-        playerCb_->OnInfo(type, extra, infoBody);
+    if (type == INFO_TYPE_STATE_CHANGE_BY_AUDIO && extra == PLAYER_PAUSED) {
+        Pause();
+    } else {
+        int32_t ret = HandleMessage(type, extra, infoBody);
+        if (playerCb_ != nullptr && ret == MSERR_OK) {
+            playerCb_->OnInfo(type, extra, infoBody);
+        }
     }
 }
 
