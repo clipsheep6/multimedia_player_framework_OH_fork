@@ -41,7 +41,7 @@ protected:
         (void)msg;
     }
     void ReportInvalidOperation();
-    int32_t ChangePlayBinState(GstState targetState);
+    int32_t ChangePlayBinState(GstState targetState, GstStateChangeReturn &ret);
     void HandleStateChange(const InnerMessage &msg);
     void HandleDurationChange();
     void HandleResolutionChange(const InnerMessage &msg);

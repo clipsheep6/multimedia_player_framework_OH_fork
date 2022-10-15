@@ -17,10 +17,12 @@ import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/media_player"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
+
 ##############################fuzztest##########################################
 ohos_fuzztest("PlayerSetVolumeFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest/playersetvolume_fuzzer"
+  fuzz_config_file =
+      "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest/playersetvolume_fuzzer"
 
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
@@ -39,7 +41,7 @@ ohos_fuzztest("PlayerSetVolumeFuzzTest") {
   ]
   if (multimedia_player_framework_support_player) {
     sources = [
-      "../../common/test_player.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_player.cpp",
       "playersetvolume_fuzzer.cpp",
     ]
   }

@@ -40,15 +40,14 @@ ohos_copy("media_declaration") {
 ohos_shared_library("media") {
   include_dirs = [
     "//foundation/multimedia/player_framework/interfaces/kits/js",
+    "//foundation/multimedia/player_framework/frameworks/js/avcodec",
     "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_decoder",
     "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_encoder",
     "//foundation/multimedia/player_framework/frameworks/js/avcodec/utils",
     "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_decoder",
     "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_encoder",
     "//foundation/multimedia/player_framework/frameworks/js/player",
-    "//foundation/multimedia/player_framework/frameworks/js/mediadata",
     "//foundation/multimedia/player_framework/frameworks/js/recorder",
-    "//foundation/multimedia/player_framework/frameworks/js/avmetadatahelper",
     "//foundation/multimedia/player_framework/frameworks/js/mediacapability",
     "//foundation/multimedia/player_framework/frameworks/js/common",
     "//foundation/multimedia/player_framework/services/utils/include",
@@ -60,12 +59,6 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/common/media_enum_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/mediacapability/media_capability_napi.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/mediacapability/media_capability_utils.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/mediadata/callback_warp.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/mediadata/callback_works.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/mediadata/jscallback.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/mediadata/media_data_source_callback.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/mediadata/media_data_source_napi.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/player/native_module_ohos_media.cpp",
   ]
 
@@ -91,24 +84,21 @@ ohos_shared_library("media") {
     ]
   }
 
-  if (multimedia_player_framework_support_codec) {
+  if (multimedia_player_framework_support_codec_js) {
     sources += [
       "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_decoder/audio_decoder_callback_napi.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_decoder/audio_decoder_napi.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_encoder/audio_encoder_callback_napi.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_encoder/audio_encoder_napi.cpp",
+      "//foundation/multimedia/player_framework/frameworks/js/avcodec/avcodec_capability_napi.cpp",
+      "//foundation/multimedia/player_framework/frameworks/js/avcodec/media_capability_vcaps_napi.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avcodec/utils/avcodec_napi_helper.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avcodec/utils/avcodec_napi_utils.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_decoder/video_decoder_callback_napi.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_decoder/video_decoder_napi.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_encoder/video_encoder_callback_napi.cpp",
       "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_encoder/video_encoder_napi.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/mediacapability/media_capability_vcaps_napi.cpp",
     ]
-  }
-
-  if (multimedia_player_framework_support_muxer) {
-    sources += [ "//foundation/multimedia/player_framework/frameworks/js/avmuxer/avmuxer_napi.cpp" ]
   }
 
   cflags = [
@@ -146,7 +136,6 @@ ohos_shared_library("media") {
   external_deps = [
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
   ]
 
   relative_install_dir = "module/multimedia"

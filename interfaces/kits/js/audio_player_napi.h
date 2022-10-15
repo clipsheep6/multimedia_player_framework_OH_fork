@@ -20,7 +20,6 @@
 #include "media_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
-#include "media_data_source_callback.h"
 #include "common_napi.h"
 #include "audio_info.h"
 
@@ -45,8 +44,6 @@ private:
     static napi_value On(napi_env env, napi_callback_info info);
     static napi_value SetSrc(napi_env env, napi_callback_info info);
     static napi_value GetSrc(napi_env env, napi_callback_info info);
-    static napi_value GetMediaDataSrc(napi_env env, napi_callback_info info);
-    static napi_value SetMediaDataSrc(napi_env env, napi_callback_info info);
     static napi_value SetFdSrc(napi_env env, napi_callback_info info);
     static napi_value GetFdSrc(napi_env env, napi_callback_info info);
     static napi_value SetLoop(napi_env env, napi_callback_info info);
@@ -65,7 +62,6 @@ private:
     ~AudioPlayerNapi();
 
     static thread_local napi_ref constructor_;
-    std::shared_ptr<MediaDataSourceCallback> dataSrcCallBack_ = nullptr;
     napi_env env_ = nullptr;
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Player> nativePlayer_ = nullptr;

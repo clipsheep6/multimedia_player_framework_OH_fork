@@ -226,10 +226,12 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, "Prepare", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
-        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+        CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
+        if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
+
         if (threadCtx->napi->recorder_->Prepare() != MSERR_OK) {
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Prepare");
         }
@@ -266,7 +268,8 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
     napi_create_string_utf8(env, "GetInputSurface", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
-        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+        CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
+        if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
@@ -317,7 +320,8 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, "Start", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
-        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+        CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
+        if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
@@ -359,7 +363,8 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, "Pause", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
-        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+        CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
+        if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
@@ -401,7 +406,8 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, "Resume", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
-        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+        CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
+        if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
@@ -443,7 +449,8 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, "Stop", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
-        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+        CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
+        if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
@@ -485,7 +492,8 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, "Reset", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
-        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+        CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
+        if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
@@ -532,9 +540,10 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Release", NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
-        if (threadCtx == nullptr || threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
+        CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
+        if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
             return;
         }
@@ -708,9 +717,9 @@ int32_t VideoRecorderNapi::SetUrl(const std::string &urlPath)
 {
     CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "No memory");
     const std::string fdHead = "fd://";
-    int32_t fd = -1;
 
     if (urlPath.find(fdHead) != std::string::npos) {
+        int32_t fd = -1;
         std::string inputFd = urlPath.substr(fdHead.size());
         CHECK_AND_RETURN_RET(StrToInt(inputFd, fd) == true, MSERR_INVALID_VAL);
         CHECK_AND_RETURN_RET(fd >= 0, MSERR_INVALID_OPERATION);
@@ -748,7 +757,6 @@ napi_value VideoRecorderNapi::GetState(napi_env env, napi_callback_info info)
 
     std::string curState = VideoRecorderState::STATE_ERROR;
     if (recorderNapi->callbackNapi_ != nullptr) {
-        auto cb = std::static_pointer_cast<RecorderCallbackNapi>(recorderNapi->callbackNapi_);
         curState = recorderNapi->currentStates_;
         MEDIA_LOGD("GetState success, State: %{public}s", curState.c_str());
     }

@@ -274,12 +274,12 @@ int32_t PlayBinCtrlerBase::Seek(int64_t timeUs, int32_t seekOption)
     return MSERR_OK;
 }
 
-int32_t PlayBinCtrlerBase::Stop()
+int32_t PlayBinCtrlerBase::Stop(bool needWait)
 {
     MEDIA_LOGD("enter");
     std::unique_lock<std::mutex> lock(mutex_);
 
-    if (GetCurrState() == preparingState_) {
+    if (GetCurrState() == preparingState_ && needWait) {
         MEDIA_LOGD("begin wait stop for current status is preparing");
         static constexpr int32_t timeout = 2;
         preparedCond_.wait_for(lock, std::chrono::seconds(timeout));
@@ -296,7 +296,9 @@ int32_t PlayBinCtrlerBase::Stop()
 
     {
         MEDIA_LOGD("Stop Start");
-        stoppingCond_.wait(lock);
+        if (GetCurrState() != stoppedState_) {
+            stoppingCond_.wait(lock);
+        }
         MEDIA_LOGD("Stop End");
     }
 
@@ -369,6 +371,7 @@ int32_t PlayBinCtrlerBase::SetRate(double rate)
 {
     MEDIA_LOGD("enter");
     std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> cacheLock(cacheCtrlMutex_);
 
     if (IsLiveSource()) {
         return MSERR_INVALID_OPERATION;
@@ -390,7 +393,6 @@ double PlayBinCtrlerBase::GetRate()
 
 int32_t PlayBinCtrlerBase::SetLoop(bool loop)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     if (IsLiveSource()) {
         return MSERR_INVALID_OPERATION;
     }
@@ -900,6 +902,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
             g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_BUFFERING, nullptr);
         }
         if (GetCurrState() == playingState_) {
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to paused", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
             if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -922,6 +925,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
                 std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
                 g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_PLAYING, nullptr);
             }
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to playing", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PLAYING);
             if (ret == GST_STATE_CHANGE_FAILURE) {

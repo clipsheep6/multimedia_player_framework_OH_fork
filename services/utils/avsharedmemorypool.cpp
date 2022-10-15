@@ -107,7 +107,6 @@ void AVSharedMemoryPool::ReleaseMemory(AVSharedMemory *memory)
         MEDIA_LOGD("0x%{public}06" PRIXPTR " released back to pool %{public}s",
                     FAKE_POINTER(memory), name_.c_str());
 
-        auto notifier = notifier_;
         lock.unlock();
         if (notifier_ != nullptr) {
             notifier_();

@@ -33,24 +33,18 @@ static napi_value Export(napi_env env, napi_value exports)
 
 #ifdef SUPPORT_PLAYER
     OHOS::Media::AudioPlayerNapi::Init(env, exports);
-    OHOS::Media::MediaDataSourceNapi::Init(env, exports);
-#ifdef SUPPORT_VIDEO
     OHOS::Media::VideoPlayerNapi::Init(env, exports);
-#endif
 #endif
 #ifdef SUPPORT_RECORDER
     OHOS::Media::AudioRecorderNapi::Init(env, exports);
     OHOS::Media::VideoRecorderNapi::Init(env, exports);
 #endif
-#ifdef SUPPORT_CODEC
+#ifdef SUPPORT_CODEC_JS
     OHOS::Media::AudioDecoderNapi::Init(env, exports);
     OHOS::Media::AudioEncoderNapi::Init(env, exports);
     OHOS::Media::VideoDecoderNapi::Init(env, exports);
     OHOS::Media::VideoEncoderNapi::Init(env, exports);
     OHOS::Media::MediaCapabilityVCapsNapi::Init(env, exports);
-#endif
-#ifdef SUPPORT_MUXER
-    OHOS::Media::AVMuxerNapi::Init(env, exports);
 #endif
     return exports;
 }

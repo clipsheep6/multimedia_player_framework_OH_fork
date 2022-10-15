@@ -80,4 +80,158 @@
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
+    <target name="RecorderSetVideoSourceFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_SetVideoSource.mp4 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetAudioSourceFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_setAudioSource.m4a -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetVideoEncodingBitRateFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetVideoEncodingBitRate.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetOutputFormatFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetOutputFormat.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetVideoEncoderFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetVideoEncoder.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetVideoSizeFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetVideoSize.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetVideoFrameRateFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetVideoFrameRate.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetCaptureRateFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetCaptureRate.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetAudioEncoderFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetAudioEncoder.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetAudioSampleRateFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetAudioSampleRate.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetAudioChannelsFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetAudioChannels.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetAudioEncodingBitRateFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetAudioEncodingBitRate.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetMaxDurationFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetMaxDuration.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetMaxFileSizeFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetMaxFileSize.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetOutputFileFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetOutputFile.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetNextOutputFileFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetNextOutputFile.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetLocationFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetLocation.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetOrientationHintFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetOrientationHint.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetRecorderCallbackFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetRecorderCallback.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderStopFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/recorder_Stop.m4a -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetFileSplitDurationFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetFileSplitDuration.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="RecorderSetParameterFuzzTest">
+        <preparer>
+            <option name="push" value="recorder/recorder_SetParameter.mp4 -> /data/test/media" src="res"/>
+            <option name="push" value="recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
 </configuration>

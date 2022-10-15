@@ -150,7 +150,6 @@ ohos_shared_library("media_client") {
 
     deps = [
       "$MEDIA_ROOT_DIR/services/utils:media_format",
-      "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
       "//third_party/bounds_checking_function:libsec_static",
     ]
 
@@ -236,7 +235,6 @@ ohos_shared_library("media_client") {
 
     deps = [
       "//foundation/multimedia/player_framework/services/utils:media_format",
-      "//foundation/multimedia/player_framework/services/utils:media_service_utils",
       "//third_party/bounds_checking_function:libsec_static",
     ]
 

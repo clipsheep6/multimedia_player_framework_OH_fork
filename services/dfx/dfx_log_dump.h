@@ -26,7 +26,7 @@ class __attribute__((visibility("default"))) DfxLogDump {
 public:
     static DfxLogDump &GetInstance();
     void SaveLog(const char *level, const OHOS::HiviewDFX::HiLogLabel &label, const char *fmt, ...);
-    void DumpLog();
+
 private:
     DfxLogDump();
     ~DfxLogDump();

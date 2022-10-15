@@ -66,6 +66,12 @@ bool ACodecConfigureFuzzer::FuzzAudioConfigure(uint8_t *data, size_t size)
     audioCodec_->StartDec();
     audioCodec_->StartEnc();
     sleep(WAITTING_TIME);
+    audioCodec_->FlushDec();
+    audioCodec_->FlushEnc();
+    audioCodec_->StopDec();
+    audioCodec_->StopEnc();
+    audioCodec_->ResetDec();
+    audioCodec_->ResetEnc();
     if (audioCodec_ != nullptr) {
         CHECK_STATE_AND_RETURN_RET(audioCodec_->ReleaseDec(), false);
         CHECK_STATE_AND_RETURN_RET(audioCodec_->ReleaseEnc(), false);
@@ -78,6 +84,9 @@ bool OHOS::Media::FuzzACodecConfigure(uint8_t *data, size_t size)
     auto codecfuzzer = std::make_unique<ACodecConfigureFuzzer>();
     if (codecfuzzer == nullptr) {
         cout << "codecfuzzer is null" << endl;
+        return 0;
+    }
+    if (size < sizeof(int32_t)) {
         return 0;
     }
     return codecfuzzer->FuzzAudioConfigure(data, size);

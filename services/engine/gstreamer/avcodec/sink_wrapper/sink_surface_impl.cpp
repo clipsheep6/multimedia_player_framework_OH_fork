@@ -53,7 +53,7 @@ int32_t SinkSurfaceImpl::Configure(std::shared_ptr<ProcessorConfig> config)
 
     g_object_set(G_OBJECT(sink_), "caps", config->caps_, nullptr);
     (void)CapsToFormat(config->caps_, bufferFormat_);
-
+    g_object_set(G_OBJECT(sink_), "video-rotation", config->videoRotation_, nullptr);
     GstMemSinkCallbacks sinkCallbacks = { EosCb, nullptr, NewSampleCb };
     gst_mem_sink_set_callback(GST_MEM_SINK(sink_), &sinkCallbacks, this, nullptr);
 

@@ -77,7 +77,7 @@ int32_t PlayBinCtrlerBase::BaseState::SetRate(double rate)
     return MSERR_INVALID_STATE;
 }
 
-int32_t PlayBinCtrlerBase::BaseState::ChangePlayBinState(GstState targetState)
+int32_t PlayBinCtrlerBase::BaseState::ChangePlayBinState(GstState targetState, GstStateChangeReturn &ret)
 {
     if (targetState < GST_STATE_PLAYING) {
         int64_t position = ctrler_.QueryPositionInternal(false) / USEC_PER_MSEC;
@@ -87,7 +87,7 @@ int32_t PlayBinCtrlerBase::BaseState::ChangePlayBinState(GstState targetState)
         ctrler_.ReportMessage(posUpdateMsg);
     }
 
-    GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(ctrler_.playbin_), targetState);
+    ret = gst_element_set_state(GST_ELEMENT_CAST(ctrler_.playbin_), targetState);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         MEDIA_LOGE("Failed to change playbin's state to %{public}s", gst_element_state_get_name(targetState));
         return MSERR_INVALID_OPERATION;
@@ -180,6 +180,8 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
                 ctrler_.ReportMessage(posUpdateMsg);
             } else {
                 MEDIA_LOGD("Async done, not seeking or rating!");
+                PlayBinMessage playBinMsg { PLAYBIN_MSG_ASYNC_DONE, 0, 0, {} };
+                ctrler_.ReportMessage(playBinMsg);
             }
         }
     }
@@ -290,7 +292,8 @@ void PlayBinCtrlerBase::PreparingState::StateEnter()
     PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BUFFERING_START, 0, {} };
     ctrler_.ReportMessage(msg);
 
-    (void)ChangePlayBinState(GST_STATE_PAUSED);
+    GstStateChangeReturn ret;
+    (void)ChangePlayBinState(GST_STATE_PAUSED, ret);
 
     MEDIA_LOGD("PreparingState::StateEnter finished");
 }
@@ -331,7 +334,8 @@ int32_t PlayBinCtrlerBase::PreparedState::Prepare()
 
 int32_t PlayBinCtrlerBase::PreparedState::Play()
 {
-    return ChangePlayBinState(GST_STATE_PLAYING);
+    GstStateChangeReturn ret;
+    return ChangePlayBinState(GST_STATE_PLAYING, ret);
 }
 
 int32_t PlayBinCtrlerBase::PreparedState::Seek(int64_t timeUs, int32_t option)
@@ -380,7 +384,8 @@ int32_t PlayBinCtrlerBase::PlayingState::Play()
 int32_t PlayBinCtrlerBase::PlayingState::Pause()
 {
     ctrler_.isUserSetPause_ = true;
-    return ChangePlayBinState(GST_STATE_PAUSED);
+    GstStateChangeReturn ret;
+    return ChangePlayBinState(GST_STATE_PAUSED, ret);
 }
 
 int32_t PlayBinCtrlerBase::PlayingState::Seek(int64_t timeUs, int32_t option)
@@ -455,7 +460,8 @@ void PlayBinCtrlerBase::PausedState::StateEnter()
 
 int32_t PlayBinCtrlerBase::PausedState::Play()
 {
-    return ChangePlayBinState(GST_STATE_PLAYING);
+    GstStateChangeReturn ret;
+    return ChangePlayBinState(GST_STATE_PLAYING, ret);
 }
 
 int32_t PlayBinCtrlerBase::PausedState::Pause()
@@ -490,8 +496,11 @@ void PlayBinCtrlerBase::PausedState::ProcessStateChange(const InnerMessage &msg)
 void PlayBinCtrlerBase::StoppingState::StateEnter()
 {
     // maybe need the deferred task to change state from ready to null, refer to gstplayer.
-
-    (void)ChangePlayBinState(GST_STATE_READY);
+    GstStateChangeReturn ret;
+    (void)ChangePlayBinState(GST_STATE_READY, ret);
+    if (ret == GST_STATE_CHANGE_SUCCESS) {
+        ctrler_.ChangeState(ctrler_.stoppedState_);
+    }
     ctrler_.isDuration_ = false;
 
     MEDIA_LOGD("StoppingState::StateEnter finished");

@@ -23,8 +23,8 @@
 
 namespace OHOS {
 namespace Media {
-int32_t MapMimeToAudioCodecFormat(const std::string &mime, AudioCodecFormat &audioCodecFormat);
-int32_t MapMimeToVideoCodecFormat(const std::string &mime, VideoCodecFormat &audioCodecFormat);
+int32_t MapMimeToAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
+int32_t MapMimeToVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
 int32_t MapExtensionNameToOutputFormat(const std::string &extension, OutputFormatType &type);
 } // namespace Media
 } // namespace OHOS
