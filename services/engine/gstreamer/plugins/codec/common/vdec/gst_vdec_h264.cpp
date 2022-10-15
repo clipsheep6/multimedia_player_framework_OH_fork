@@ -17,10 +17,9 @@
 #include "securec.h"
 
 #define gst_vdec_h264_parent_class parent_class
-#define SPECIAL_FRAME_MAX_LENGTH 500
 G_DEFINE_TYPE(GstVdecH264, gst_vdec_h264, GST_TYPE_VDEC_BASE);
 
-static gboolean get_slice_flag(GstMapInfo *info, bool &ready_push, gboolean &is_slice_buffer);
+static gboolean get_slice_flag(GstVdecH264 *self, GstMapInfo *info, bool &ready_push);
 static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool &ready_push, bool is_finish);
 static gboolean cat_slice_buffer(GstVdecBase *self, GstMapInfo *src_info);
 static void flush_cache_slice_buffer(GstVdecBase *self);
@@ -59,29 +58,34 @@ static void gst_vdec_h264_init(GstVdecH264 *self)
 {
     g_mutex_init(&self->cat_lock);
     self->is_slice_buffer = false;
+    self->has_data_after_sps = true;
     self->cache_offset = 0;
     self->cache_slice_buffer = nullptr;
 }
 
-static gboolean get_slice_flag(GstMapInfo *info, bool &ready_push, gboolean &is_slice_buffer)
+static gboolean get_slice_flag(GstVdecH264 *self, GstMapInfo *info, bool &ready_push)
 {
     guint8 offset = 2;
     for (gsize i = 0; i < info->size - offset; i++) {
         if (info->data[i] == 0x01) {
             gboolean is_data_frame = true;
+            // 0x1F is the mask of last 5 bits, 0x07 is SPS flag, continuous SPS header may be I frame.
+            if ((info->data[i + 1] & 0x1F) == 0x07 && self->has_data_after_sps == false) {
+                GST_DEBUG("continuous SPS header, which is regarded as I frame");
+                return true;
+            }
             if ((info->data[i + 1] & 0x1F) == 0x06 || // 0x1F is the mask of last 5 bits, 0x06 is SEI flag
                 (info->data[i + 1] & 0x1F) == 0x07 || // 0x1F is the mask of last 5 bits, 0x07 is SPS flag
                 (info->data[i + 1] & 0x1F) == 0x08) { // 0x1F is the mask of last 5 bits, 0x08 is PPS flag
-                if (info->size > SPECIAL_FRAME_MAX_LENGTH) {
-                    GST_DEBUG("Treat extra long special frames as IDR frame, size is %lu ", info->size);
-                    return true;
-                }
                 is_data_frame = false;
+                self->has_data_after_sps = false;
+            } else {
+                self->has_data_after_sps = true;
             }
-            if (is_data_frame == false && is_slice_buffer == false) {
+            if (is_data_frame == false && self->is_slice_buffer == false) {
                 ready_push = true;
                 return false;
-            } else if (is_data_frame == false && is_slice_buffer == true) {
+            } else if (is_data_frame == false && self->is_slice_buffer == true) {
                 return true;
             } else if (is_data_frame == true && (info->data[i + offset] & 0x80) == 0x80) {
                 return true;
@@ -113,7 +117,7 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
         g_mutex_unlock(&vdec_h264->cat_lock);
         return buffer;
     }
-    gboolean slice_flag = get_slice_flag(&info, ready_push, vdec_h264->is_slice_buffer);
+    gboolean slice_flag = get_slice_flag(vdec_h264, &info, ready_push);
     if (ready_push) {
         gst_buffer_unmap(buffer, &info);
         g_mutex_unlock(&vdec_h264->cat_lock);
@@ -178,6 +182,7 @@ static void flush_cache_slice_buffer(GstVdecBase *self)
         g_mutex_lock(&vdec_h264->cat_lock);
         vdec_h264->cache_offset = 0;
         vdec_h264->is_slice_buffer = false;
+        vdec_h264->has_data_after_sps = true;
         g_mutex_unlock(&vdec_h264->cat_lock);
     }
 }
@@ -195,6 +200,7 @@ static GstStateChangeReturn gst_vdec_h264_change_state(GstElement *element, GstS
                 vdec_h264->cache_slice_buffer = nullptr;
                 vdec_h264->cache_offset = 0;
                 vdec_h264->is_slice_buffer = false;
+                vdec_h264->has_data_after_sps = true;
             }
             g_mutex_unlock(&vdec_h264->cat_lock);
             break;
