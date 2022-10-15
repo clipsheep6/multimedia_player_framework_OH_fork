@@ -31,7 +31,7 @@ namespace OHOS {
 namespace Media {
 class HdiCodecUtil {
 public:
-    static OMX_VIDEO_CODINGTYPE CompressionGstToHdi(GstCompressionFormat format);
+    static int32_t CompressionGstToHdi(GstCompressionFormat format);
     static PixelFormat FormatGstToHdi(GstVideoFormat format);
     static GstVideoFormat FormatHdiToGst(PixelFormat format);
     static OMX_COLOR_FORMATTYPE FormatGstToOmx(GstVideoFormat format);

@@ -22,6 +22,10 @@
 #include "hdi_codec.h"
 #include "gst_vdec_h264.h"
 #include "gst_venc_h264.h"
+#include "gst_vdec_h265.h"
+#include "gst_venc_h265.h"
+#include "gst_vdec_mpeg4.h"
+#include "gst_venc_mpeg4.h"
 #include "hdi_init.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -37,6 +41,12 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "hdiPluginInit"};
     const std::string DEFAULT_H264_CAPS = "video/x-h264,"
+        "alignment=(string) nal,"
+        "stream-format=(string) byte-stream";
+    const std::string DEFAULT_H265_CAPS = "video/x-h265,"
+        "alignment=(string) nal,"
+        "stream-format=(string) byte-stream";
+    const std::string DEFAULT_MPEG4_CAPS = "video/mpeg,"
         "alignment=(string) nal,"
         "stream-format=(string) byte-stream";
     using namespace OHOS::Media;
@@ -64,8 +74,8 @@ class GstHdiFactory {
 public:
     GstHdiFactory() = delete;
     ~GstHdiFactory() = delete;
-    static std::shared_ptr<IGstCodec> CreateHdiVdecH264(GstElementClass *kclass);
-    static std::shared_ptr<IGstCodec> CreateHdiVencH264(GstElementClass *kclass);
+    static std::shared_ptr<IGstCodec> CreateHdiVdec(GstElementClass *kclass);
+    static std::shared_ptr<IGstCodec> CreateHdiVenc(GstElementClass *kclass);
     static gboolean InputNeedCopy();
     static gboolean PluginInit(GstPlugin *plugin);
 private:
@@ -76,6 +86,16 @@ private:
     {
         (void)capData;
         return DEFAULT_H264_CAPS;
+    }
+    static inline std::string GetH265Caps(CapabilityData &capData)
+    {
+        (void)capData;
+        return DEFAULT_H265_CAPS;
+    }
+    static inline std::string GetMpeg4Caps(CapabilityData &capData)
+    {
+        (void)capData;
+        return DEFAULT_MPEG4_CAPS;
     }
     static std::string GetRawCaps(CapabilityData &capData);
     static void GetWidth(std::string &capStr, CapabilityData &capData);
@@ -93,27 +113,47 @@ private:
 
 const std::map<std::pair<int32_t, std::string>, GType> GstHdiFactory::COMPONENT_MAP = {
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_AVC), GST_TYPE_VDEC_H264},
-    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC), GST_TYPE_VENC_H264}
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC), GST_TYPE_VENC_H264},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_HEVC), GST_TYPE_VDEC_H265},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_HEVC), GST_TYPE_VENC_H265},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_MPEG4), GST_TYPE_VDEC_MPEG4},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_MPEG4), GST_TYPE_VENC_MPEG4},
 };
 
 const std::map<std::pair<int32_t, std::string>, GetCapsStr> GstHdiFactory::SINK_CAPS_MAP = {
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_AVC), GetH264Caps},
-    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC), GetRawCaps}
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC), GetRawCaps},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_HEVC), GetH265Caps},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_HEVC), GetRawCaps},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_MPEG4), GetMpeg4Caps},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_MPEG4), GetRawCaps}
 };
 
 const std::map<std::pair<int32_t, std::string>, GetCapsStr> GstHdiFactory::SRC_CAPS_MAP = {
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_AVC), GetRawCaps},
-    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC), GetH264Caps}
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC), GetH264Caps},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_HEVC), GetRawCaps},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_HEVC), GetH265Caps},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_MPEG4), GetRawCaps},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_MPEG4), GetMpeg4Caps}
 };
 
 const std::map<std::pair<int32_t, std::string>, CreateCodecFunc> GstHdiFactory::FUNCTIONS_MAP = {
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_AVC),
-        &GstHdiFactory::CreateHdiVdecH264},
+        &GstHdiFactory::CreateHdiVdec},
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC),
-        &GstHdiFactory::CreateHdiVencH264}
+        &GstHdiFactory::CreateHdiVenc},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_HEVC),
+        &GstHdiFactory::CreateHdiVdec},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_HEVC),
+        &GstHdiFactory::CreateHdiVenc},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_MPEG4),
+        &GstHdiFactory::CreateHdiVdec},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_MPEG4),
+        &GstHdiFactory::CreateHdiVenc},
 };
 
-std::shared_ptr<IGstCodec> GstHdiFactory::CreateHdiVdecH264(GstElementClass *kclass)
+std::shared_ptr<IGstCodec> GstHdiFactory::CreateHdiVdec(GstElementClass *kclass)
 {
     std::string component = gst_element_class_get_metadata(kclass, GST_CODEC_NAME);
     std::shared_ptr<HdiCodec> hdiCodec = std::make_shared<HdiCodec>(component);
@@ -127,7 +167,7 @@ std::shared_ptr<IGstCodec> GstHdiFactory::CreateHdiVdecH264(GstElementClass *kcl
     return hdiCodec;
 }
 
-std::shared_ptr<IGstCodec> GstHdiFactory::CreateHdiVencH264(GstElementClass *kclass)
+std::shared_ptr<IGstCodec> GstHdiFactory::CreateHdiVenc(GstElementClass *kclass)
 {
     std::string component = gst_element_class_get_metadata(kclass, GST_CODEC_NAME);
     std::shared_ptr<HdiCodec> hdiCodec = std::make_shared<HdiCodec>(component);

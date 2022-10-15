@@ -45,6 +45,8 @@ private:
     static std::vector<int32_t> GetBitrateMode(CodecVideoPortCap &port);
     static std::map<ImgSize, Range> GetMeasuredFrameRate(CodecVideoPortCap &port);
     static std::map<int32_t, std::vector<int32_t>> GetH264ProfileLevels(CodecCompCapability &hdiCap);
+    static std::map<int32_t, std::vector<int32_t>> GetH265ProfileLevels(CodecCompCapability &hdiCap);
+    static std::map<int32_t, std::vector<int32_t>> GetMPEG4ProfileLevels(CodecCompCapability &hdiCap);
     static std::map<int32_t, std::vector<int32_t>> GetCodecProfileLevels(CodecCompCapability &hdiCap);
     void AddHdiCap(CodecCompCapability &hdiCap);
     void InitCaps();

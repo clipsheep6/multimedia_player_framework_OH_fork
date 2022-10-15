@@ -24,18 +24,18 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VENC_Mpeg4 \
+#define GST_TYPE_VENC_MPEG4 \
     (gst_venc_mpeg4_get_type())
-#define GST_VENC_Mpeg4(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VENC_Mpeg4, GstVencMpeg4))
-#define GST_VENC_Mpeg4_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VENC_Mpeg4, GstVencMpeg4Class))
-#define GST_VENC_Mpeg4_GET_CLASS(obj) \
-    (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VENC_Mpeg4, GstVencMpeg4Class))
-#define GST_IS_VENC_Mpeg4(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VENC_Mpeg4))
-#define GST_IS_VENC_Mpeg4_CLASS(obj) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VENC_Mpeg4))
+#define GST_VENC_MPEG4(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_VENC_MPEG4, GstVencMpeg4))
+#define GST_VENC_MPEG4_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_VENC_MPEG4, GstVencMpeg4Class))
+#define GST_VENC_MPEG4_GET_CLASS(obj) \
+    (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_VENC_MPEG4, GstVencMpeg4Class))
+#define GST_IS_VENC_MPEG4(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_VENC_MPEG4))
+#define GST_IS_VENC_MPEG4_CLASS(obj) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_VENC_MPEG4))
 
 typedef struct _GstVencMpeg4 GstVencMpeg4;
 typedef struct _GstVencMpeg4Class GstVencMpeg4Class;

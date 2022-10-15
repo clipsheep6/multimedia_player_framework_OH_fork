@@ -30,6 +30,28 @@ namespace {
         {OMX_VIDEO_AVCProfileHigh, AVC_PROFILE_HIGH},
         {OMX_VIDEO_AVCProfileExtended, AVC_PROFILE_EXTENDED},
     };
+    const std::unordered_map<int32_t, int32_t> HEVC_PROFILE_MAP = { // todo
+        {0, HEVC_PROFILE_MAIN},
+    };
+    const std::unordered_map<int32_t, int32_t> MPEG4_PROFILE_MAP = {
+        {OMX_VIDEO_MPEG4ProfileSimple, MPEG4_PROFILE_SIMPLE},
+        {OMX_VIDEO_MPEG4ProfileSimpleScalable, MPEG4_PROFILE_SIMPLE_SCALABLE},
+        {OMX_VIDEO_MPEG4ProfileCore, MPEG4_PROFILE_CORE},
+        {OMX_VIDEO_MPEG4ProfileMain, MPEG4_PROFILE_MAIN},
+        {OMX_VIDEO_MPEG4ProfileNbit, MPEG4_PROFILE_NBIT},
+        {OMX_VIDEO_MPEG4ProfileScalableTexture, MPEG4_PROFILE_SCALABLE_TEXTURE},
+        {OMX_VIDEO_MPEG4ProfileSimpleFace, MPEG4_PROFILE_SIMPLE_FACE},
+        {OMX_VIDEO_MPEG4ProfileSimpleFBA, MPEG4_PROFILE_SIMPLE_FBA},
+        {OMX_VIDEO_MPEG4ProfileBasicAnimated, MPEG4_PROFILE_BASIC_ANIMATED},
+        {OMX_VIDEO_MPEG4ProfileHybrid, MPEG4_PROFILE_HYBRID},
+        {OMX_VIDEO_MPEG4ProfileAdvancedRealTime, MPEG4_PROFILE_ADVANCED_REAL_TIME},
+        {OMX_VIDEO_MPEG4ProfileCoreScalable, MPEG4_PROFILE_CORE_SCALABLE},
+        {OMX_VIDEO_MPEG4ProfileAdvancedCoding, MPEG4_PROFILE_ADVANCED_CODING},
+        {OMX_VIDEO_MPEG4ProfileAdvancedCore, MPEG4_PROFILE_ADVANCED_CORE},
+        {OMX_VIDEO_MPEG4ProfileAdvancedScalable, MPEG4_PROFILE_ADVANCED_SCALABLE},
+        {OMX_VIDEO_MPEG4ProfileAdvancedSimple, MPEG4_PROFILE_ADVANCED_SIMPLE},
+    };
+
     const std::unordered_map<int32_t, int32_t> AVC_LEVEL_MAP = {
         {OMX_VIDEO_AVCLevel1, AVC_LEVEL_1},
         {OMX_VIDEO_AVCLevel1b, AVC_LEVEL_1b},
@@ -48,6 +70,33 @@ namespace {
         {OMX_VIDEO_AVCLevel5, AVC_LEVEL_5},
         {OMX_VIDEO_AVCLevel51, AVC_LEVEL_51},
     };
+
+    const std::unordered_map<int32_t, int32_t> HEVC_LEVEL_MAP = { // todo
+        {0, HEVC_LEVEL_1},
+        {1, HEVC_LEVEL_2},
+        {2, HEVC_LEVEL_21},
+        {3, HEVC_LEVEL_3}, 
+        {4, HEVC_LEVEL_31},
+        {5, HEVC_LEVEL_4},
+        {6, HEVC_LEVEL_41}, 
+        {7, HEVC_LEVEL_5},
+        {8, HEVC_LEVEL_51},
+        {9, HEVC_LEVEL_52},
+        {10, HEVC_LEVEL_6},
+        {11, HEVC_LEVEL_61},
+        {12, HEVC_LEVEL_62},
+    };
+
+    const std::unordered_map<int32_t, int32_t> MPEG4_LEVEL_MAP = {
+        {OMX_VIDEO_MPEG4Level0, MPEG4_LEVEL_0},
+        {OMX_VIDEO_MPEG4Level0b, MPEG4_LEVEL_0B},
+        {OMX_VIDEO_MPEG4Level1, MPEG4_LEVEL_1}, 
+        {OMX_VIDEO_MPEG4Level2, MPEG4_LEVEL_2},
+        {OMX_VIDEO_MPEG4Level3, MPEG4_LEVEL_3},
+        {OMX_VIDEO_MPEG4Level4, MPEG4_LEVEL_4}, 
+        {OMX_VIDEO_MPEG4Level4a, MPEG4_LEVEL_4A},
+        {OMX_VIDEO_MPEG4Level5, MPEG4_LEVEL_5},
+    };
     constexpr int32_t MAX_COMPONENT_NUM = 1024;
 }
 
@@ -55,6 +104,8 @@ namespace OHOS {
 namespace Media {
 const std::unordered_map<int32_t, HdiInit::GetProfileLevelsFunc> HdiInit::PROFILE_LEVEL_FUNC_MAP = {
     {MEDIA_ROLETYPE_VIDEO_AVC, HdiInit::GetH264ProfileLevels},
+    {MEDIA_ROLETYPE_VIDEO_HEVC, HdiInit::GetH265ProfileLevels},
+    {MEDIA_ROLETYPE_VIDEO_MPEG4, HdiInit::GetMPEG4ProfileLevels},
 };
 
 HdiInit &HdiInit::GetInstance()
@@ -100,6 +151,8 @@ std::string HdiInit::GetCodecMime(AvCodecRole &role)
             return "video/avc";
         case MEDIA_ROLETYPE_VIDEO_HEVC:
             return "video/hevc";
+        case MEDIA_ROLETYPE_VIDEO_MPEG4:
+            return "video/mp4v-es";
         default:
             MEDIA_LOGW("Unknow codecRole %{public}d", (int32_t)role);
             break;
@@ -179,7 +232,7 @@ std::map<int32_t, std::vector<int32_t>> HdiInit::GetH264ProfileLevels(CodecCompC
     std::vector<int32_t> formats;
     while (index < PROFILE_NUM && hdiCap.supportProfiles[index] > 0) {
         if (AVC_PROFILE_MAP.find(hdiCap.supportProfiles[index]) == AVC_PROFILE_MAP.end()) {
-            MEDIA_LOGW("Unknow profile %{public}d", hdiCap.supportProfiles[index]);
+            MEDIA_LOGW("Unknow AVC profile %{public}d", hdiCap.supportProfiles[index]);
             break;
         }
         int32_t profile = AVC_PROFILE_MAP.at(hdiCap.supportProfiles[index]);
@@ -188,10 +241,62 @@ std::map<int32_t, std::vector<int32_t>> HdiInit::GetH264ProfileLevels(CodecCompC
         }
         index++;
         if (AVC_LEVEL_MAP.find(hdiCap.supportProfiles[index]) == AVC_LEVEL_MAP.end()) {
-            MEDIA_LOGW("Unknow level %{public}d", hdiCap.supportProfiles[index]);
+            MEDIA_LOGW("Unknow AVC level %{public}d", hdiCap.supportProfiles[index]);
             break;
         }
         profileLevelsMap[profile].push_back(AVC_LEVEL_MAP.at(hdiCap.supportProfiles[index]));
+        index++;
+    }
+
+    return profileLevelsMap;
+}
+
+std::map<int32_t, std::vector<int32_t>> HdiInit::GetH265ProfileLevels(CodecCompCapability &hdiCap)
+{
+    std::map<int32_t, std::vector<int32_t>> profileLevelsMap;
+    int32_t index = 0;
+    std::vector<int32_t> formats;
+    while (index < PROFILE_NUM && hdiCap.supportProfiles[index] > 0) {
+        if (HEVC_PROFILE_MAP.find(hdiCap.supportProfiles[index]) == HEVC_PROFILE_MAP.end()) {
+            MEDIA_LOGW("Unknow HEVC profile %{public}d", hdiCap.supportProfiles[index]);
+            break;
+        }
+        int32_t profile = HEVC_PROFILE_MAP.at(hdiCap.supportProfiles[index]);
+        if (profileLevelsMap.find(profile) == profileLevelsMap.end()) {
+            profileLevelsMap[profile] = std::vector<int32_t>();
+        }
+        index++;
+        if (HEVC_LEVEL_MAP.find(hdiCap.supportProfiles[index]) == HEVC_LEVEL_MAP.end()) {
+            MEDIA_LOGW("Unknow HEVC level %{public}d", hdiCap.supportProfiles[index]);
+            break;
+        }
+        profileLevelsMap[profile].push_back(HEVC_LEVEL_MAP.at(hdiCap.supportProfiles[index]));
+        index++;
+    }
+
+    return profileLevelsMap;
+}
+
+std::map<int32_t, std::vector<int32_t>> HdiInit::GetMPEG4ProfileLevels(CodecCompCapability &hdiCap)
+{
+    std::map<int32_t, std::vector<int32_t>> profileLevelsMap;
+    int32_t index = 0;
+    std::vector<int32_t> formats;
+    while (index < PROFILE_NUM && hdiCap.supportProfiles[index] > 0) {
+        if (MPEG4_PROFILE_MAP.find(hdiCap.supportProfiles[index]) == MPEG4_PROFILE_MAP.end()) {
+            MEDIA_LOGW("Unknow MPEG4 profile %{public}d", hdiCap.supportProfiles[index]);
+            break;
+        }
+        int32_t profile = MPEG4_PROFILE_MAP.at(hdiCap.supportProfiles[index]);
+        if (profileLevelsMap.find(profile) == profileLevelsMap.end()) {
+            profileLevelsMap[profile] = std::vector<int32_t>();
+        }
+        index++;
+        if (MPEG4_LEVEL_MAP.find(hdiCap.supportProfiles[index]) == MPEG4_LEVEL_MAP.end()) {
+            MEDIA_LOGW("Unknow MPEG4 level %{public}d", hdiCap.supportProfiles[index]);
+            break;
+        }
+        profileLevelsMap[profile].push_back(MPEG4_LEVEL_MAP.at(hdiCap.supportProfiles[index]));
         index++;
     }
 

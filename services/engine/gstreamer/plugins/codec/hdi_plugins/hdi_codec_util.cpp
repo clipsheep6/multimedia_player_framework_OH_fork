@@ -25,8 +25,10 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-static const std::unordered_map<GstCompressionFormat, OMX_VIDEO_CODINGTYPE> COMPRESS_GST_OMX = {
-    {GST_AVC, OMX_VIDEO_CodingAVC}
+static const std::unordered_map<GstCompressionFormat, int32_t> COMPRESS_GST_OMX = {
+    {GST_AVC, OMX_VIDEO_CodingAVC},
+    {GST_HEVC, CODEC_OMX_VIDEO_CodingHEVC},
+    {GST_MPEG4, OMX_VIDEO_CodingMPEG4},
 };
 
 static const std::unordered_map<GstVideoFormat, PixelFormat> FORMAT_GST_HDI = {
@@ -49,7 +51,7 @@ static const std::unordered_map<OMX_COLOR_FORMATTYPE, GstVideoFormat> FORMAT_OMX
     {OMX_COLOR_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}
 };
 
-OMX_VIDEO_CODINGTYPE HdiCodecUtil::CompressionGstToHdi(GstCompressionFormat format)
+int32_t HdiCodecUtil::CompressionGstToHdi(GstCompressionFormat format)
 {
     if (COMPRESS_GST_OMX.find(format) != COMPRESS_GST_OMX.end()) {
         return COMPRESS_GST_OMX.at(format);
