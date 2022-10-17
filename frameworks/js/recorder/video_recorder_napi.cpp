@@ -286,12 +286,12 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
             SurfaceError error = SurfaceUtils::GetInstance()->Add(threadCtx->napi->surface_->GetUniqueId(),
                 threadCtx->napi->surface_);
             if (error != SURFACE_ERROR_OK) {
-                SignError(threadCtx, MSERR_EXT_API9_INVALID_PARAMETER, "GetInputSurface", "");
+                SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
             }
             auto surfaceId = std::to_string(threadCtx->napi->surface_->GetUniqueId());
             threadCtx->JsResult = std::make_unique<MediaJsResultString>(surfaceId);
         } else {
-            SignError(threadCtx, MSERR_EXT_API9_INVALID_PARAMETER, "GetInputSurface", "");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
         }
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
