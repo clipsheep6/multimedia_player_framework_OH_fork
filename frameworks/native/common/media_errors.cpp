@@ -322,7 +322,7 @@ MediaServiceExtErrCodeAPI9 MSErrorToExtErrorAPI9(MediaServiceErrCode code)
     if (MSERRCODE_INFOS.count(code) != 0 && MSERRCODE_TO_EXTERRORCODEAPI9.count(code) != 0) {
         return MSERRCODE_TO_EXTERRORCODEAPI9.at(code);
     }
-    // If error not in map, need add error should not return default MSERR_EXT_API9_IO.
+    // If error not in map, need add error and should not return default MSERR_EXT_API9_IO.
     return MSERR_EXT_API9_IO;
 }
 } // namespace Media
