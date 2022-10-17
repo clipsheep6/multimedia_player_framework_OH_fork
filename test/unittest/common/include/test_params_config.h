@@ -136,6 +136,11 @@ constexpr uint32_t ES[] = {
     383, 381, 399, 359, 386, 455, 368, 406, 377, 339, 381, 377, 373, 371, 338}; // replace of self frame length
 constexpr uint32_t ES_LENGTH = sizeof(ES) / sizeof(uint32_t);
 } // namespace ACodecTestParam
+
+namespace FormatTestParam {
+    constexpr float EPSINON_FLOAT = 0.0001;
+    constexpr double EPSINON_DOUBLE = 0.0001;
+} // namespace FormatTestParam
 } // namespace Media
 } // namespace OHOS
 

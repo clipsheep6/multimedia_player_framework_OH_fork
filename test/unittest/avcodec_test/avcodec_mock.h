@@ -45,8 +45,17 @@ public:
     virtual ~FormatMock() = default;
     virtual bool PutIntValue(const std::string_view &key, int32_t value) = 0;
     virtual bool GetIntValue(const std::string_view &key, int32_t &value) = 0;
+    virtual bool PutLongValue(const std::string_view &key, int64_t value) = 0;
+    virtual bool GetLongValue(const std::string_view &key, int64_t &value) = 0;
+    virtual bool PutFloatValue(const std::string_view &key, float value) = 0;
+    virtual bool GetFloatValue(const std::string_view &key, float &value) = 0;
+    virtual bool PutDoubleValue(const std::string_view &key, double value) = 0;
+    virtual bool GetDoubleValue(const std::string_view &key, double &value) = 0;
     virtual bool PutStringValue(const std::string_view &key, const std::string_view &value) = 0;
     virtual bool GetStringValue(const std::string_view &key, std::string &value) = 0;
+    virtual bool GetBuffer(const std::string_view &key, uint8_t **addr, size_t &size) = 0;
+    virtual bool PutBuffer(const std::string_view &key, const uint8_t *addr, size_t size) = 0;
+    virtual const char *DumpInfo() = 0;
     virtual void Destroy() = 0;
 };
 

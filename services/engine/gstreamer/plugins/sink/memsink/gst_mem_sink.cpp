@@ -250,7 +250,7 @@ static void gst_mem_sink_get_property(GObject *object, guint prop_id, GValue *va
 }
 
 void gst_mem_sink_set_callback(GstMemSink *mem_sink, GstMemSinkCallbacks *callbacks,
-                               gpointer userdata, GDestroyNotify notify)
+                               gpointer user_data, GDestroyNotify notify)
 {
     g_return_if_fail(GST_IS_MEM_SINK(mem_sink));
     g_return_if_fail(callbacks != nullptr);
@@ -270,7 +270,7 @@ void gst_mem_sink_set_callback(GstMemSink *mem_sink, GstMemSinkCallbacks *callba
     }
 
     priv->callbacks = *callbacks;
-    priv->userdata = userdata;
+    priv->userdata = user_data;
     priv->notify = notify;
     GST_OBJECT_UNLOCK(mem_sink);
 }

@@ -36,7 +36,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_vdec_base_debug_category);
 #define DEFAULT_SEEK_FRAME_RATE 1000
 #define BLOCKING_ACQUIRE_BUFFER_THRESHOLD 5
 
-static void gst_vdec_base_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
+static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static gboolean gst_vdec_base_open(GstVideoDecoder *decoder);
 static gboolean gst_vdec_base_close(GstVideoDecoder *decoder);
 static gboolean gst_vdec_base_start(GstVideoDecoder *decoder);

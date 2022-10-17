@@ -183,11 +183,10 @@ void GstAppsrcWrap::NeedData(const GstElement *appSrc, uint32_t size, gpointer s
 void GstAppsrcWrap::NeedDataInner(uint32_t size)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    int32_t ret = MSERR_OK;
     needDataSize_ = static_cast<int32_t>(size);
     if (!filledBuffers_.empty() && (needDataSize_ <= filledBufferSize_ || atEos_ ||
         streamType_ == GST_APP_STREAM_TYPE_STREAM) && !isExit_) {
-        ret = GetAndPushMem();
+        int32_t ret = GetAndPushMem();
         if (ret != MSERR_OK) {
             OnError(ret);
         }

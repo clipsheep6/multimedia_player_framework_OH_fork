@@ -367,14 +367,14 @@ void AVMetaFrameConverter::OnNotifyMessage(const InnerMessage &msg)
     }
 }
 
-GstFlowReturn AVMetaFrameConverter::OnNotifyNewSample(GstMemSink *elem, GstBuffer *sample, gpointer userdata)
+GstFlowReturn AVMetaFrameConverter::OnNotifyNewSample(GstMemSink *elem, GstBuffer *sample, gpointer userData)
 {
     CHECK_AND_RETURN_RET(sample != nullptr, GST_FLOW_ERROR);
     ON_SCOPE_EXIT(0) { gst_buffer_unref(sample); };
 
-    CHECK_AND_RETURN_RET(userdata != nullptr, GST_FLOW_ERROR);
+    CHECK_AND_RETURN_RET(userData != nullptr, GST_FLOW_ERROR);
     CHECK_AND_RETURN_RET(elem != nullptr, GST_FLOW_ERROR);
-    auto thiz = reinterpret_cast<AVMetaFrameConverter *>(userdata);
+    auto thiz = reinterpret_cast<AVMetaFrameConverter *>(userData);
 
     std::unique_lock<std::mutex> lock(thiz->mutex_);
     if (thiz->lastResult_ != nullptr) {

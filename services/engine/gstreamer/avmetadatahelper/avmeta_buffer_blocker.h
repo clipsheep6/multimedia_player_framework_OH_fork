@@ -44,7 +44,7 @@ public:
 
 private:
     static GstPadProbeReturn BlockCallback(GstPad *pad, GstPadProbeInfo *info, gpointer usrdata);
-    static void PadAdded(GstElement *elem, GstPad *pad, gpointer userdata);
+    static void PadAdded(GstElement *elem, GstPad *pad, gpointer userData);
     GstPadProbeReturn OnBlockCallback(GstPad &pad, GstPadProbeInfo &info);
     void OnPadAdded(GstElement &elem, GstPad &pad);
     bool CheckUpStreamBlocked(GstPad &pad);

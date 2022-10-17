@@ -192,15 +192,15 @@ int32_t SrcBytebufferImpl::HandleCodecBuffer(uint32_t index, AVCodecBufferInfo i
     return MSERR_OK;
 }
 
-GstFlowReturn SrcBytebufferImpl::BufferAvailable(GstMemSrc *memsrc, gpointer userdata)
+GstFlowReturn SrcBytebufferImpl::BufferAvailable(GstMemSrc *memsrc, gpointer userData)
 {
     CHECK_AND_RETURN_RET(memsrc != nullptr, GST_FLOW_ERROR);
-    CHECK_AND_RETURN_RET(userdata != nullptr, GST_FLOW_ERROR);
+    CHECK_AND_RETURN_RET(userData != nullptr, GST_FLOW_ERROR);
 
     GstBuffer *buffer = gst_mem_src_pull_buffer(memsrc);
     CHECK_AND_RETURN_RET(buffer != nullptr, GST_FLOW_ERROR);
 
-    SrcBytebufferImpl *thiz = reinterpret_cast<SrcBytebufferImpl *>(userdata);
+    SrcBytebufferImpl *thiz = reinterpret_cast<SrcBytebufferImpl *>(userData);
     int32_t ret = thiz->HandleBufferAvailable(buffer);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GST_FLOW_ERROR);
 
