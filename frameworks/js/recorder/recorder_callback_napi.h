@@ -39,11 +39,11 @@ public:
 
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void ClearCallbackReference();
-    void SendErrorCallback(MediaServiceExtErrCode errCode);
+    void SendErrorCallback(int32_t errCode);
     void SendStateCallback(const std::string &callbackName);
 
 protected:
-    void OnError(RecorderErrorType errorType, int32_t errCode) override;
+    void OnError(int32_t errorType, int32_t errCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
 
 private:
@@ -51,7 +51,7 @@ private:
         std::weak_ptr<AutoRef> autoRef;
         std::string callbackName = "unknown";
         std::string errorMsg = "unknown";
-        MediaServiceExtErrCode errorCode = MSERR_EXT_UNKNOWN;
+        int32_t errorCode = MSERR_EXT_UNKNOWN;
     };
     void OnJsErrorCallBack(RecordJsCallback *jsCb) const;
     void OnJsStateCallBack(RecordJsCallback *jsCb) const;

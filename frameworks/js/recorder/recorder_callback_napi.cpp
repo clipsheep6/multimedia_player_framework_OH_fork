@@ -47,7 +47,7 @@ void RecorderCallbackNapi::ClearCallbackReference()
     refMap_.clear();
 }
 
-void RecorderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
+void RecorderCallbackNapi::SendErrorCallback(int32_t errCode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(ERROR_CALLBACK_NAME) == refMap_.end()) {
@@ -60,9 +60,9 @@ void RecorderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
     cb->autoRef = refMap_.at(ERROR_CALLBACK_NAME);
     cb->callbackName = ERROR_CALLBACK_NAME;
     if (isVideo_) {
-        cb->errorMsg = MSExtErrorAPI9ToString(errCode, "", "");
+        cb->errorMsg = MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(errCode), "", "");
     } else {
-        cb->errorMsg = MSExtErrorToString(errCode);
+        cb->errorMsg = MSExtErrorToString(static_cast<MediaServiceExtErrCode>(errCode));
     }
     cb->errorCode = errCode;
     return OnJsErrorCallBack(cb);
@@ -188,7 +188,7 @@ void RecorderCallbackNapi::OnJsErrorCallBack(RecordJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "%{public}s fail to create error callback",
                 request.c_str());
 
-            nstatus = CommonNapi::FillErrorArgs(ref->env_, static_cast<int32_t>(event->errorCode), args[0]);
+            nstatus = CommonNapi::FillErrorArgs(ref->env_, event->errorCode, args[0]);
             CHECK_AND_RETURN_LOG(nstatus == napi_ok, "create error callback fail");
 
             // Call back function

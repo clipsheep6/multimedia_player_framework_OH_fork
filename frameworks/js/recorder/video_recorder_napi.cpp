@@ -172,10 +172,10 @@ napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_in
     return result;
 }
 
-static void SignError(const VideoRecorderAsyncContext *asyncCtx, int32_t code,
+static void SignError(VideoRecorderAsyncContext *asyncCtx, int32_t code,
     const std::string &param1, const std::string &param2)
 {
-    std::string message = MSExtErrorAPI9ToString(code, param1, param2);
+    std::string message = MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), param1, param2);
     asyncCtx->SignError(code, message);
 }
 
