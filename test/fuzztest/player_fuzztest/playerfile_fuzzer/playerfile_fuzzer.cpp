@@ -48,13 +48,17 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
     if (retWrite != 0) {
         return true;
     }
-    SetFdSource(path);
+    int32_t retValue = SetFdSource(path);
+    if (retValue != 0) {
+        return true;
+    }
     sptr<Surface> producerSurface = nullptr;
     producerSurface = GetVideoSurface();
     player_->SetVideoSurface(producerSurface);
     player_->PrepareAsync();
-    sleep(1);
+    sleep(10);
     player_->Play();
+    sleep(3);
     player_->Pause();
     player_->Seek(3000, SEEK_NEXT_SYNC); // seek 3000 ms
     player_->SetVolume(0.5, 0.5); // leftVolume is  0.5, rightVolume is 0.5
