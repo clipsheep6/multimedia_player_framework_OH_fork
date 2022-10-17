@@ -44,7 +44,6 @@ public:
 private:
     Format format_;
     char *dumpInfo_ = nullptr;
-    // std::string dumpInfo_;
 };
 } // Media
 } // OHOS
