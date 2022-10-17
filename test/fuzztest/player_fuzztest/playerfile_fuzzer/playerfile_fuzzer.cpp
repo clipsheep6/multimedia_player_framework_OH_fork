@@ -56,9 +56,9 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
     producerSurface = GetVideoSurface();
     player_->SetVideoSurface(producerSurface);
     player_->PrepareAsync();
-    sleep(10);
+    sleep(10); // wait PrepareAsync success, sleep 10 s
     player_->Play();
-    sleep(3);
+    sleep(3); // wait Play success, sleep 3 s
     player_->Pause();
     player_->Seek(3000, SEEK_NEXT_SYNC); // seek 3000 ms
     player_->SetVolume(0.5, 0.5); // leftVolume is  0.5, rightVolume is 0.5
