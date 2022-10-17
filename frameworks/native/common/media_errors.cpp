@@ -299,7 +299,7 @@ std::string MSErrorToExtErrorString(MediaServiceErrCode code)
 std::string MSErrorToExtErrorAPI9String(MediaServiceErrCode code, const std::string& param1, const std::string& param2)
 {
     if (MSERRCODE_INFOS.count(code) != 0 && MSERRCODE_TO_EXTERRORCODEAPI9.count(code) != 0) {
-        MediaServiceExtErrCode extCode = MSERRCODE_TO_EXTERRORCODEAPI9.at(code);
+        MediaServiceExtErrCodeAPI9 extCode = MSERRCODE_TO_EXTERRORCODEAPI9.at(code);
         if (MSEXTERRAPI9CODE_FUNCS.count(extCode) != 0) {
             return MSEXTERRAPI9CODE_FUNCS.at(extCode)(param1, param2);
         }
