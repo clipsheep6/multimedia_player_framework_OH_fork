@@ -42,14 +42,14 @@ public:
 
 private:
     uint8_t ProbeElemType(GstElement &source);
-    void AddElemCollector(GstElement &source, uint8_t elemType);
-    void AddElemBlocker(GstElement &source, uint8_t elemType);
+    void AddElemCollector(GstElement &source, uint8_t type);
+    void AddElemBlocker(GstElement &source, uint8_t type);
     void UpdateElemBlocker(GstElement &source, uint8_t elemType);
     void UpdataMeta(const Metadata &metadata);
     bool CheckCollectCompleted();
     void AdjustMimeType();
     void StopBlocker(bool unlock);
-    static void PadAdded(GstElement *elem, GstPad *pad, gpointer userdata);
+    static void PadAdded(GstElement *elem, GstPad *pad, gpointer userData);
 
     std::mutex mutex_;
     std::condition_variable cond_;

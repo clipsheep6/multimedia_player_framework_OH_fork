@@ -109,14 +109,14 @@ void PlayerTrackParse::ConvertToPlayerKeys(const Format &innerMeta, Format &outM
     }
 }
 
-GstPadProbeReturn PlayerTrackParse::ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userdata)
+GstPadProbeReturn PlayerTrackParse::ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData)
 {
-    if (pad == nullptr || info ==  nullptr || userdata == nullptr) {
+    if (pad == nullptr || info ==  nullptr || userData == nullptr) {
         MEDIA_LOGE("param is invalid");
         return GST_PAD_PROBE_OK;
     }
 
-    auto playerTrackParse = reinterpret_cast<PlayerTrackParse *>(userdata);
+    auto playerTrackParse = reinterpret_cast<PlayerTrackParse *>(userData);
     return playerTrackParse->GetTrackParse(pad, info);
 }
 
@@ -173,14 +173,14 @@ void PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
     }
 }
 
-void PlayerTrackParse::OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userdata)
+void PlayerTrackParse::OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData)
 {
-    if (element == nullptr || pad ==  nullptr || userdata == nullptr) {
+    if (element == nullptr || pad ==  nullptr || userData == nullptr) {
         MEDIA_LOGE("param is nullptr");
         return;
     }
 
-    auto playerTrackParse = reinterpret_cast<PlayerTrackParse *>(userdata);
+    auto playerTrackParse = reinterpret_cast<PlayerTrackParse *>(userData);
     playerTrackParse->AddProbeToPad(element, pad);
 }
 

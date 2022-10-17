@@ -300,19 +300,19 @@ std::string Format::Stringify() const
     for (auto iter = formatMap_.begin(); iter != formatMap_.end(); iter++) {
         switch (GetValueType(iter->first)) {
             case FORMAT_TYPE_INT32:
-                outString += iter->first + " = " + std::to_string(iter->second.val.int32Val) + "\n";
+                outString += iter->first + " = " + std::to_string(iter->second.val.int32Val) + " | ";
                 break;
             case FORMAT_TYPE_INT64:
-                outString += iter->first + " = " + std::to_string(iter->second.val.int64Val) + "\n";
+                outString += iter->first + " = " + std::to_string(iter->second.val.int64Val) + " | ";
                 break;
             case FORMAT_TYPE_FLOAT:
-                outString += iter->first + " = " + std::to_string(iter->second.val.floatVal) + "\n";
+                outString += iter->first + " = " + std::to_string(iter->second.val.floatVal) + " | ";
                 break;
             case FORMAT_TYPE_DOUBLE:
-                outString += iter->first + " = " + std::to_string(iter->second.val.doubleVal) + "\n";
+                outString += iter->first + " = " + std::to_string(iter->second.val.doubleVal) + " | ";
                 break;
             case FORMAT_TYPE_STRING:
-                outString += iter->first + " = " + iter->second.stringVal + "\n";
+                outString += iter->first + " = " + iter->second.stringVal + " | ";
                 break;
             case FORMAT_TYPE_ADDR:
                 break;

@@ -104,8 +104,8 @@ int32_t RecorderElement::DrainAll(bool isDrain)
     MEDIA_LOGI("perform drainAll for %{public}s", name_.c_str());
 
     if (!isDrain) {
-        auto block = [] (GstPad *pad, GstPadProbeInfo *info, gpointer userdata) {
-            (void)userdata;
+        auto block = [] (GstPad *pad, GstPadProbeInfo *info, gpointer userData) {
+            (void)userData;
             if (pad == nullptr || info == nullptr) {
                 return GST_PAD_PROBE_PASS;
             }

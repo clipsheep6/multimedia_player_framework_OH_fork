@@ -99,17 +99,17 @@ private:
     int64_t QueryPosition();
     int64_t QueryPositionInternal(bool isSeekDone);
     void ProcessEndOfStream();
-    static void ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userdata);
-    static void ElementUnSetup(const GstElement *playbin, GstElement *subbin, GstElement *child, gpointer userdata);
-    static void SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userdata);
+    static void ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userData);
+    static void ElementUnSetup(const GstElement *playbin, GstElement *subbin, GstElement *child, gpointer userData);
+    static void SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userData);
     static void OnBitRateParseCompleteCb(const GstElement *playbin, uint32_t *bitrateInfo,
-        uint32_t bitrateNum, gpointer userdata);
+        uint32_t bitrateNum, gpointer userData);
     static GValueArray *AutoPlugSort(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
-        GValueArray *factories, gpointer userdata);
+        GValueArray *factories, gpointer userData);
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
-        const uint32_t hintType, gpointer userdata);
-    static void OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userdata);
-    static void OnAudioErrorEventCb(const GstElement *audioSink, const gchar *errMsg, gpointer userdata);
+        const uint32_t hintType, gpointer userData);
+    static void OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData);
+    static void OnAudioErrorEventCb(const GstElement *audioSink, const gchar *errMsg, gpointer userData);
     void SetupInterruptEventCb();
     void SetupAudioStateEventCb();
     void SetupAudioErrorEventCb();

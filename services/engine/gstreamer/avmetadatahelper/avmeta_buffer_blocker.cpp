@@ -39,13 +39,13 @@ GstPadProbeReturn AVMetaBufferBlocker::BlockCallback(GstPad *pad, GstPadProbeInf
     return GST_PAD_PROBE_PASS;
 }
 
-void AVMetaBufferBlocker::PadAdded(GstElement *elem, GstPad *pad, gpointer userdata)
+void AVMetaBufferBlocker::PadAdded(GstElement *elem, GstPad *pad, gpointer userData)
 {
-    if (elem == nullptr || pad == nullptr || userdata == nullptr) {
+    if (elem == nullptr || pad == nullptr || userData == nullptr) {
         return;
     }
 
-    auto thizStrong = AVMetaBufferBlockerWrapper::TakeStrongThiz(userdata);
+    auto thizStrong = AVMetaBufferBlockerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
         return thizStrong->OnPadAdded(*elem, *pad);
     }

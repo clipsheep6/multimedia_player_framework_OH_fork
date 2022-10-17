@@ -47,6 +47,7 @@ struct OH_AVFormat : public AVObjectMagic {
     ~OH_AVFormat() override;
     OHOS::Media::Format format_;
     char *outString_ = nullptr;
+    char *dumpInfo_ = nullptr;
 };
 
 struct OH_AVMemory : public AVObjectMagic {
