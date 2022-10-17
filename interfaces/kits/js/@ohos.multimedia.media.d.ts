@@ -501,9 +501,9 @@ declare namespace media {
       * @since 9
       * @syscap SystemCapability.Multimedia.Media.AVPlayer
       * @param type Type of the playback event to listen for.
-      * @param callback Callback used to listen for the playback stateChanged event.
+      * @param callback Callback used to listen for the playback stateChange event.
       */
-     on(type: 'stateChanged', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
+     on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
      /**
       * Listens for media playback events.
       * @since 9
@@ -511,7 +511,7 @@ declare namespace media {
       * @param type Type of the playback event to listen for.
       * @param callback Callback used to listen for the playback volume event.
       */
-     on(type: 'volumeChanged', callback: Callback<number>): void;
+     on(type: 'volumeChange', callback: Callback<number>): void;
      /**
       * Listens for media playback events.
       * @since 9
@@ -519,7 +519,7 @@ declare namespace media {
       * @param type Type of the playback event to listen for.
       * @param callback Callback used to listen for the playback playComplete event.
       */
-     on(type: 'playCompleted', callback: Callback<void>): void;
+     on(type: 'playComplete', callback: Callback<void>): void;
      /**
       * Listens for media playback events.
       * @since 9
@@ -572,13 +572,13 @@ declare namespace media {
      on(type: 'startRenderFrame', callback: Callback<void>): void;
  
      /**
-      * Listens for video size changed event.
+      * Listens for video size change event.
       * @since 9
       * @syscap SystemCapability.Multimedia.Media.AVPlayer
       * @param type Type of the playback event to listen for.
       * @param callback Callback used to listen for the playback event return video size.
       */
-     on(type: 'videoSizeChanged', callback: (width: number, height: number) => void): void;
+     on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
  
      /**
       * Listens for audio interrupt event, refer to {@link #audio.InterruptEvent}
@@ -687,7 +687,7 @@ declare namespace media {
    /**
     * reset AVRecorder, it will to idle state.
     * @since 9
-    * @syscap SystemCapability.Multimedia.Media.AVPlayer
+    * @syscap SystemCapability.Multimedia.Media.AVRecorder
     * @param callback A callback instance used to return when reset completed.
     */
     reset(callback: AsyncCallback<void>): void;
@@ -695,7 +695,7 @@ declare namespace media {
    /**
     * reset AVRecorder, it will to idle state.
     * @since 9
-    * @syscap SystemCapability.Multimedia.Media.AVPlayer
+    * @syscap SystemCapability.Multimedia.Media.AVRecorder
     * @return A Promise instance used to return when reset completed.
     */
     reset(): Promise<void>;
@@ -728,16 +728,16 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param type Type of the audio recording event to listen for.
-     * @param callback Callback used to listen for the audio recording event.
+     * @param callback Callback used to listen for the recorder stateChange event.
      */
-     on(type: 'stateChanged', callback: (state: AVRecorderState, reason: StateChangeReason) => void): void;
+     on(type: 'stateChange', callback: (state: AVRecorderState, reason: StateChangeReason) => void): void;
 
     /**
      * Listens for audio recording error events.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param type Type of the audio recording error event to listen for.
-     * @param callback Callback used to listen for the audio recording error event.
+     * @param callback Callback used to listen for the recorder error event.
      */
     on(type: 'error', callback: ErrorCallback): void;
   }
@@ -1081,8 +1081,9 @@ declare namespace media {
     format?: AudioOutputFormat;
 
     /**
-     * Audio output uri.support a kind of uri now.
+     * Audio output uri.support two kind of uri now.
      * format like: scheme + "://" + "context".
+     * file:  file://path
      * fd:    fd://fd
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
@@ -2193,9 +2194,8 @@ declare namespace media {
      */
     profile: VideoRecorderProfile;
     /**
-     * video output uri.support two kind of uri now.
+     * video output uri.support a kind of uri now.
      * format like: scheme + "://" + "context".
-     * file:  file://path
      * fd:    fd://fd
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
