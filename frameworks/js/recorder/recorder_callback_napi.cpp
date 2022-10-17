@@ -24,8 +24,8 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-RecorderCallbackNapi::RecorderCallbackNapi(napi_env env)
-    : env_(env)
+RecorderCallbackNapi::RecorderCallbackNapi(napi_env env, bool isVideo)
+    : env_(env), isVideo_(isVideo)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -59,7 +59,11 @@ void RecorderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(ERROR_CALLBACK_NAME);
     cb->callbackName = ERROR_CALLBACK_NAME;
-    cb->errorMsg = MSExtErrorToString(errCode);
+    if (isVideo_) {
+        cb->errorMsg = MSExtErrorAPI9ToString(errCode, "", "");
+    } else {
+        cb->errorMsg = MSExtErrorToString(errCode);
+    }
     cb->errorCode = errCode;
     return OnJsErrorCallBack(cb);
 }
@@ -82,8 +86,13 @@ void RecorderCallbackNapi::SendStateCallback(const std::string &callbackName)
 void RecorderCallbackNapi::OnError(RecorderErrorType errorType, int32_t errCode)
 {
     MEDIA_LOGD("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
-    MediaServiceExtErrCode err = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
-    return SendErrorCallback(err);
+    if (isVideo_) {
+        MediaServiceExtErrCode err = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
+        return SendErrorCallback(err);
+    } else {
+        MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+        return SendErrorCallback(err);
+    }
 }
 
 void RecorderCallbackNapi::OnInfo(int32_t type, int32_t extra)

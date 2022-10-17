@@ -34,7 +34,7 @@ const std::string RESET_CALLBACK_NAME = "reset";
 const std::string RELEASE_CALLBACK_NAME = "release";
 class RecorderCallbackNapi : public RecorderCallback {
 public:
-    explicit RecorderCallbackNapi(napi_env env);
+    explicit RecorderCallbackNapi(napi_env env, bool isVideo);
     virtual ~RecorderCallbackNapi();
 
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
@@ -58,6 +58,7 @@ private:
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
+    bool isVideo_ = false;
 };
 } // namespace Media
 } // namespace OHOS

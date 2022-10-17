@@ -108,7 +108,7 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "failed to CreateRecorder");
 
     if (recorderNapi->callbackNapi_ == nullptr && recorderNapi->recorder_ != nullptr) {
-        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
+        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env, true);
         (void)recorderNapi->recorder_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
 
@@ -172,6 +172,13 @@ napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_in
     return result;
 }
 
+static void SignError(const VideoRecorderAsyncContext *asyncCtx, int32_t code,
+    const std::string &param1, const std::string &param2)
+{
+    std::string message = MSExtErrorAPI9ToString(code, param1, param2);
+    asyncCtx->SignError(code, message);
+}
+
 napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Prepare In");
@@ -187,7 +194,7 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     size_t argCount = 2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "");
     }
 
     // get recordernapi
@@ -196,7 +203,7 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     // get param
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
-        asyncCtx->SignError(MSERR_EXT_UNKNOWN, "set properties failed!");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "");
     }
 
     std::string urlPath = CommonNapi::GetPropertyString(env, args[0], "url");
@@ -206,15 +213,15 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     asyncCtx->napi->GetConfig(env, args[0], asyncCtx, videoProperties);
 
     if (asyncCtx->napi->GetVideoRecorderProperties(env, args[0], videoProperties) != MSERR_OK) {
-        asyncCtx->SignError(MSERR_EXT_UNKNOWN, "get properties failed!");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "");
     }
 
     // set param
     if (asyncCtx->napi->SetVideoRecorderProperties(asyncCtx, videoProperties) != MSERR_OK) {
-        asyncCtx->SignError(MSERR_EXT_UNKNOWN, "set properties failed!");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "prepare", "");
     }
     if (asyncCtx->napi->SetUrl(urlPath) != MSERR_OK) {
-        asyncCtx->SignError(MSERR_EXT_UNKNOWN, "set URL failed!");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "urlPath", "");
     }
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
@@ -228,12 +235,12 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            SignError(threadCtx, MSERR_EXT_API9_INVALID_PARAMETER, "urlPath", "");
             return;
         }
 
         if (threadCtx->napi->recorder_->Prepare() != MSERR_OK) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Prepare");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "prepare", "");
         }
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
@@ -255,7 +262,7 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "GetInputSurface", "");
     }
 
     // get recordernapi
@@ -270,7 +277,7 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
             return;
         }
 
@@ -279,12 +286,12 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
             SurfaceError error = SurfaceUtils::GetInstance()->Add(threadCtx->napi->surface_->GetUniqueId(),
                 threadCtx->napi->surface_);
             if (error != SURFACE_ERROR_OK) {
-                threadCtx->SignError(MSERR_EXT_NO_MEMORY, "add surface error");
+                SignError(threadCtx, MSERR_EXT_API9_INVALID_PARAMETER, "GetInputSurface", "");
             }
             auto surfaceId = std::to_string(threadCtx->napi->surface_->GetUniqueId());
             threadCtx->JsResult = std::make_unique<MediaJsResultString>(surfaceId);
         } else {
-            threadCtx->SignError(MSERR_EXT_NO_MEMORY, "failed to get surface");
+            SignError(threadCtx, MSERR_EXT_API9_INVALID_PARAMETER, "GetInputSurface", "");
         }
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
@@ -306,7 +313,7 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "Start", "");
     }
 
     // get recordernapi
@@ -322,11 +329,11 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Start", "");
             return;
         }
         if (threadCtx->napi->recorder_->Start() != MSERR_OK) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Start");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Start", "");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_PLAYING;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -349,7 +356,7 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "Pause", "");
     }
 
     // get recordernapi
@@ -365,11 +372,11 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Pause", "");
             return;
         }
         if (threadCtx->napi->recorder_->Pause() != MSERR_OK) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Pause");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Pause", "");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_PAUSED;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -392,7 +399,7 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "Resume", "");
     }
 
     // get recordernapi
@@ -408,11 +415,11 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Resume", "");
             return;
         }
         if (threadCtx->napi->recorder_->Resume() != MSERR_OK) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Resume");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Resume", "");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_PLAYING;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -435,7 +442,7 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "Stop", "");
     }
 
     // get recordernapi
@@ -451,11 +458,11 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Stop", "");
             return;
         }
         if (threadCtx->napi->recorder_->Stop(false) != MSERR_OK) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Stop");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Stop", "");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_STOPPED;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -478,7 +485,7 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "Reset", "");
     }
 
     // get recordernapi
@@ -494,7 +501,7 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Reset", "");
             return;
         }
         if (threadCtx->napi->surface_ != nullptr) {
@@ -505,7 +512,7 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
             threadCtx->napi->surface_ = nullptr;
         }
         if (threadCtx->napi->recorder_->Reset() != MSERR_OK) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Reset");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Reset", "");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_IDLE;
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
@@ -528,7 +535,7 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
-        asyncCtx->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
+        SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "Release", "");
     }
 
     // get recordernapi
@@ -544,7 +551,7 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "nullptr");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Release", "");
             return;
         }
         if (threadCtx->napi->surface_ != nullptr) {
@@ -555,7 +562,7 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
             threadCtx->napi->surface_ = nullptr;
         }
         if (threadCtx->napi->recorder_->Release() != MSERR_OK) {
-            threadCtx->SignError(MSERR_EXT_UNKNOWN, "Failed to Release");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Release", "");
         }
         threadCtx->napi->currentStates_ = VideoRecorderState::STATE_IDLE;
         threadCtx->napi->CancelCallback();
