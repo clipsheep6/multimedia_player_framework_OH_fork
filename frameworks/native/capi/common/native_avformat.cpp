@@ -22,6 +22,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "OH_AVFormat"};
+constexpr uint32_t MAX_STRING_LENGTH = 256;
+constexpr uint32_t MAX_DUMP_LENGTH = 1024;
 }
 
 using namespace OHOS::Media;
@@ -183,7 +185,7 @@ bool OH_AVFormat_GetStringValue(struct OH_AVFormat *format, const char *key, con
     if (!ret) {
         return false;
     }
-    uint32_t bufLength = str.size() > 256 ? 256 : str.size(); // max string size set as 256
+    uint32_t bufLength = str.size() > MAX_STRING_LENGTH ? MAX_STRING_LENGTH : str.size();
 
     format->outString_ = (char *)malloc((bufLength + 1) * sizeof(char));
     CHECK_AND_RETURN_RET_LOG(format->outString_ != nullptr, false, "malloc out string nullptr!");
@@ -221,8 +223,8 @@ const char *OH_AVFormat_DumpInfo(struct OH_AVFormat *format)
     if (info.empty()) {
         return nullptr;
     }
-    uint32_t bufLength = info.size() > 1024 ? 1024 : info.size(); // max buffer size set as 1024
-    format->dumpInfo_ = (char *)malloc((bufLength + 1) * sizeof(char));
+    uint32_t bufLength = info.size() > MAX_DUMP_LENGTH ? MAX_DUMP_LENGTH : info.size();
+    format->dumpInfo_ = static_cast<char *>(malloc((bufLength + 1) * sizeof(char)));
     CHECK_AND_RETURN_RET_LOG(format->dumpInfo_ != nullptr, nullptr, "malloc dump info nullptr!");
     if (strcpy_s(format->dumpInfo_, bufLength + 1, info.c_str()) != EOK) {
         MEDIA_LOGE("Failed to strcpy_s");

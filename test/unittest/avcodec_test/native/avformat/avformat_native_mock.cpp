@@ -102,8 +102,9 @@ const char *AVFormatNativeMock::DumpInfo()
     if (info.empty()) {
         return nullptr;
     }
-    uint32_t bufLength = info.size() > 1024 ? 1024 : info.size(); // max buffer size set as 1024
-    dumpInfo_ = (char *)malloc((bufLength + 1) * sizeof(char));
+    constexpr uint32_t maxDumpLength = 1024;
+    uint32_t bufLength = info.size() > maxDumpLength ? maxDumpLength : info.size();
+    dumpInfo_ = static_cast<char *>(malloc((bufLength + 1) * sizeof(char)));
     if (dumpInfo_ == nullptr) {
         return nullptr;
     }
