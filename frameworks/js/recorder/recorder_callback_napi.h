@@ -43,7 +43,7 @@ public:
     void SendStateCallback(const std::string &callbackName);
 
 protected:
-    void OnError(int32_t errorType, int32_t errCode) override;
+    void OnError(RecorderErrorType errorType, int32_t errCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
 
 private:
