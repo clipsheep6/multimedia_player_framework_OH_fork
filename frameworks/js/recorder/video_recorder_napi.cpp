@@ -235,7 +235,7 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
         auto threadCtx = reinterpret_cast<VideoRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            SignError(threadCtx, MSERR_EXT_API9_INVALID_PARAMETER, "urlPath", "");
+            SignError(threadCtx, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "prepare", "");
             return;
         }
 
