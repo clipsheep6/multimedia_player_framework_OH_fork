@@ -30,7 +30,6 @@ public:
     int32_t Init() override;
     int32_t Configure(const RecorderParam &recParam) override;
     int32_t CheckConfigReady() override;
-    int32_t Prepare() override;
     int32_t Reset() override;
     int32_t SetParameter(const RecorderParam &recParam) override;
     void Dump() override;
@@ -42,13 +41,10 @@ private:
     int32_t ConfigureMaxFileSize(const RecorderParam &recParam);
     int32_t ConfigureGeoLocation(const RecorderParam &recParam);
     int32_t ConfigureRotationAngle(const RecorderParam &recParam);
-    int32_t SetOutFilePath();
     int32_t CreateMuxerElement(const std::string &name);
-    int32_t SetFdToFdsink(const std::string &path);
 
     GstElement *gstMuxer_ = nullptr;
     GstElement *gstSink_ = nullptr;
-    std::string outPath_;
     bool isReg_ = false;
     int outFd_ = -1;
     int32_t format_ = OutputFormatType::FORMAT_MPEG_4;
