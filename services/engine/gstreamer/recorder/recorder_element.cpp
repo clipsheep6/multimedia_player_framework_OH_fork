@@ -36,7 +36,6 @@ static const std::unordered_map<uint32_t, std::string> PARAM_TYPE_NAME_MAP = {
     PARAM_TYPE_NAME_ITEM(AUD_BITRATE, "audio bitrate"),
     PARAM_TYPE_NAME_ITEM(MAX_DURATION, "max record duration"),
     PARAM_TYPE_NAME_ITEM(MAX_SIZE, "max record size"),
-    PARAM_TYPE_NAME_ITEM(OUT_PATH, "output path"),
     PARAM_TYPE_NAME_ITEM(OUT_FD, "out file descripter"),
     PARAM_TYPE_NAME_ITEM(NEXT_OUT_FD, "next out file descripter"),
     PARAM_TYPE_NAME_ITEM(OUTPUT_FORMAT, "output file format"),

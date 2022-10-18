@@ -74,8 +74,6 @@ int32_t MuxSinkBin::Configure(const RecorderParam &recParam)
         case RecorderPrivateParamType::OUTPUT_FORMAT:
             ret = ConfigureOutputFormat(recParam);
             break;
-        case RecorderPublicParamType::OUT_PATH:
-            /* fallthrough */
         case RecorderPublicParamType::OUT_FD:
             ret = ConfigureOutputTarget(recParam);
             break;
@@ -122,28 +120,6 @@ int32_t MuxSinkBin::ConfigureOutputFormat(const RecorderParam &recParam)
 int32_t MuxSinkBin::ConfigureOutputTarget(const RecorderParam &recParam)
 {
     isReg_ = false;
-    if (recParam.type == RecorderPublicParamType::OUT_PATH) {
-        const OutFilePath &param = static_cast<const OutFilePath &>(recParam);
-        std::string realPath;
-        if (!PathToRealPath(param.path, realPath)) {
-            MEDIA_LOGE("Configured output path invalid: %{public}s, ignore !", param.path.c_str());
-            return MSERR_INVALID_VAL;
-        }
-        struct stat s;
-        if (stat(realPath.c_str(), &s) != 0) {
-            MEDIA_LOGE("Configured output path invalid: %{public}s, ignore !", param.path.c_str());
-            return MSERR_INVALID_VAL;
-        }
-        if (((s.st_mode & S_IFREG) == 0) && ((s.st_mode & S_IFDIR) == 0)) {
-            MEDIA_LOGE("Configured output path invalid: %{public}s, ignore !", param.path.c_str());
-            return MSERR_INVALID_VAL;
-        }
-        if ((s.st_mode & S_IFREG) == S_IFREG) {
-            isReg_ = true;
-        }
-        outPath_ = realPath;
-        MEDIA_LOGI("Configure output path ok: %{public}s", outPath_.c_str());
-    }
 
     if (recParam.type == RecorderPublicParamType::OUT_FD) {
         const OutFd &param = static_cast<const OutFd &>(recParam);
@@ -236,78 +212,9 @@ int32_t MuxSinkBin::ConfigureRotationAngle(const RecorderParam &recParam)
 
 int32_t MuxSinkBin::CheckConfigReady()
 {
-    std::set<int32_t> expectedParam = { RecorderPrivateParamType::OUTPUT_FORMAT };
+    std::set<int32_t> expectedParam = { RecorderPrivateParamType::OUTPUT_FORMAT, RecorderPublicParamType::OUT_FD };
     bool configed = CheckAllParamsConfigured(expectedParam);
     CHECK_AND_RETURN_RET(configed == true, MSERR_INVALID_OPERATION);
-
-    std::set<int32_t>({ RecorderPublicParamType::OUT_PATH, RecorderPublicParamType::OUT_FD }).swap(expectedParam);
-    configed = CheckAnyParamConfiged(expectedParam);
-    CHECK_AND_RETURN_RET(configed == true, MSERR_INVALID_OPERATION);
-
-    return MSERR_OK;
-}
-
-int32_t MuxSinkBin::Prepare()
-{
-    int32_t ret = SetOutFilePath();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-
-    return MSERR_OK;
-}
-
-int32_t MuxSinkBin::SetFdToFdsink(const std::string &path)
-{
-    outFd_ = open(path.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
-    if (outFd_ < 0) {
-        MEDIA_LOGE("Open file failed! filePath: %{public}s", path.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
-
-    g_object_set(gstSink_, "fd", outFd_, nullptr);
-    return MSERR_OK;
-}
-
-int32_t MuxSinkBin::SetOutFilePath()
-{
-    if (outPath_.empty() || CheckParameter(RecorderPublicParamType::OUT_FD)) {
-        MEDIA_LOGI("fd mode or empty path");
-        return MSERR_OK;
-    }
-
-    if (isReg_) {
-        int32_t ret = SetFdToFdsink(outPath_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "set fd to fdsink failed");
-        return MSERR_OK;
-    }
-
-    struct tm now;
-    bool success = GetSystemCurrentTime(&now);
-    if (!success) {
-        MEDIA_LOGE("Get system current time failed !");
-        return MSERR_INVALID_OPERATION;
-    }
-
-    std::string outFilePath = IncludeTrailingPathDelimiter(outPath_);
-    std::string suffix;
-
-    if (format_ == OutputFormatType::FORMAT_MPEG_4) {
-        outFilePath += "video_";
-        suffix = ".mp4";
-    } else if (format_ == OutputFormatType::FORMAT_M4A) {
-        outFilePath += "audio_";
-        suffix = ".m4a";
-    } else {
-        MEDIA_LOGE("Output format type unsupported currently, format: %{public}d", format_);
-        return MSERR_INVALID_VAL;
-    }
-
-    outFilePath += std::to_string(now.tm_year) + std::to_string(now.tm_mon) + std::to_string(now.tm_mday) + "_";
-    outFilePath += std::to_string(now.tm_hour) + std::to_string(now.tm_min) + std::to_string(now.tm_sec);
-    outFilePath += suffix;
-    MEDIA_LOGI("out file path: %{public}s", outFilePath.c_str());
-
-    int32_t ret = SetFdToFdsink(outFilePath);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "set fd to fdsink failed");
 
     return MSERR_OK;
 }
@@ -342,8 +249,8 @@ int32_t MuxSinkBin::CreateMuxerElement(const std::string &name)
 void MuxSinkBin::Dump()
 {
     MEDIA_LOGI("file format = %{public}d, max duration = %{public}d, "
-               "max size = %{public}" PRId64 ", fd = %{public}d, path = %{public}s",
-               format_, maxDuration_,  maxSize_, outFd_, outPath_.c_str());
+               "max size = %{public}" PRId64 ", fd = %{public}d",
+               format_, maxDuration_,  maxSize_, outFd_);
 }
 
 REGISTER_RECORDER_ELEMENT(MuxSinkBin);
