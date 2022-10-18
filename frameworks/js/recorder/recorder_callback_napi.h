@@ -34,12 +34,12 @@ const std::string RESET_CALLBACK_NAME = "reset";
 const std::string RELEASE_CALLBACK_NAME = "release";
 class RecorderCallbackNapi : public RecorderCallback {
 public:
-    explicit RecorderCallbackNapi(napi_env env);
+    explicit RecorderCallbackNapi(napi_env env, bool isVideo);
     virtual ~RecorderCallbackNapi();
 
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void ClearCallbackReference();
-    void SendErrorCallback(MediaServiceExtErrCode errCode);
+    void SendErrorCallback(int32_t errCode);
     void SendStateCallback(const std::string &callbackName);
 
 protected:
@@ -51,13 +51,14 @@ private:
         std::weak_ptr<AutoRef> autoRef;
         std::string callbackName = "unknown";
         std::string errorMsg = "unknown";
-        MediaServiceExtErrCode errorCode = MSERR_EXT_UNKNOWN;
+        int32_t errorCode = MSERR_EXT_UNKNOWN;
     };
     void OnJsErrorCallBack(RecordJsCallback *jsCb) const;
     void OnJsStateCallBack(RecordJsCallback *jsCb) const;
     napi_env env_ = nullptr;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
+    bool isVideo_ = false;
 };
 } // namespace Media
 } // namespace OHOS
