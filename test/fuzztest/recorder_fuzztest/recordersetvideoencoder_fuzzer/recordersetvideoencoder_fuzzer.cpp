@@ -50,8 +50,8 @@ bool RecorderSetVideoEncoderFuzzer::RecorderSetVideoEncoderFuzz(uint8_t *data, s
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetVideoEncoder.mp4", O_RDWR);
     
     if (g_videoRecorderConfig.outputFd >= 0) {
-        RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
+        TestRecorder::SetVideoSource(g_videoRecorderConfig);
+        TestRecorder::SetOutputFormat(g_videoRecorderConfig);
 
         VideoCodecFormat videoCodecFormats[videoCodecFormatList] {
             VIDEO_DEFAULT,
@@ -63,21 +63,21 @@ bool RecorderSetVideoEncoderFuzzer::RecorderSetVideoEncoderFuzz(uint8_t *data, s
         int32_t videoFormat = abs((ProduceRandomNumberCrypt()) % (videoCodecFormatList));
         g_videoRecorderConfig.videoFormat = videoCodecFormats[videoFormat];
 
-        RETURN_IF(TestRecorder::SetVideoEncoder(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetVideoSize(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetVideoFrameRate(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetVideoEncodingBitRate(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
+        TestRecorder::SetVideoEncoder(g_videoRecorderConfig);
+        TestRecorder::SetVideoSize(g_videoRecorderConfig);
+        TestRecorder::SetVideoFrameRate(g_videoRecorderConfig);
+        TestRecorder::SetVideoEncodingBitRate(g_videoRecorderConfig);
+        TestRecorder::Prepare(g_videoRecorderConfig);
+        TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig);
+        TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
-        RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
+        TestRecorder::Stop(false, g_videoRecorderConfig);
         StopBuffer(PURE_VIDEO);
-        RETURN_IF(TestRecorder::Reset(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Release(g_videoRecorderConfig), true);
+        TestRecorder::Reset(g_videoRecorderConfig);
+        TestRecorder::Release(g_videoRecorderConfig);
     }
     close(g_videoRecorderConfig.outputFd);
-    return false;
+    return true;
 }
 }
 

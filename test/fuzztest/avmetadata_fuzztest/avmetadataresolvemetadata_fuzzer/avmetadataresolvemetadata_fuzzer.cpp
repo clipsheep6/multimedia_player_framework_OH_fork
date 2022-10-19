@@ -49,7 +49,7 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
     int32_t retMetadataSetsource = MetaDataSetSource(path);
     if (retMetadataSetsource != 0) {
         avmetadata->Release();
-        return false;
+        return true;
     }
 
     int32_t avMetadataCodes[AV_METADATA_CODELIST] {
@@ -72,7 +72,7 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
         AV_KEY_VIDEO_ORIENTATION
     };
     int32_t keyParameter = avMetadataCodes[*reinterpret_cast<int64_t *>(data) % AV_METADATA_CODELIST];
-    std::string retResolvemetadata = avmetadata->ResolveMetadata(keyParameter);
+    avmetadata->ResolveMetadata(keyParameter);
     avmetadata->Release();
     return true;
 }
@@ -81,11 +81,11 @@ bool AVMetadataResolveMetadataFuzzer::FuzzAVMetadataResolveMetadata(uint8_t *dat
 bool FuzzTestAVMetadataResolveMetadata(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
-        return 0;
+        return true;
     }
 
     if (size < sizeof(int64_t)) {
-        return 0;
+        return true;
     }
     AVMetadataResolveMetadataFuzzer metadata;
     return metadata.FuzzAVMetadataResolveMetadata(data, size);

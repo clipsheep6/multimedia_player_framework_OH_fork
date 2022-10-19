@@ -64,21 +64,10 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
     AVMetadataUsage usage[USAGE_LIST] {AVMetadataUsage::AV_META_USAGE_META_ONLY,
                                     AVMetadataUsage::AV_META_USAGE_PIXEL_MAP};
     int32_t setsourceusage = usage[ProduceRandomNumberCrypt() % USAGE_LIST];
-    int32_t retSetsource = avmetadata->SetSource(setsourcefd,
-        *reinterpret_cast<int64_t *>(data), setsourcesize, setsourceusage);
-    if (retSetsource != 0) {
-        (void)close(setsourcefd);
-        avmetadata->Release();
-        return true;
-    }
+    avmetadata->SetSource(setsourcefd, *reinterpret_cast<int64_t *>(data),
+        setsourcesize, setsourceusage);
     (void)close(setsourcefd);
-    std::unordered_map<int32_t, std::string> retResolvenetadata = avmetadata->ResolveMetadata();
-
-    if (retResolvenetadata.empty()) {
-        avmetadata->Release();
-        return true;
-    }
-    
+    avmetadata->ResolveMetadata();
     avmetadata->Release();
     return true;
 }
@@ -87,11 +76,11 @@ bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t si
 bool FuzzTestAVMetadataSetSource(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
-        return 0;
+        return true;
     }
 
     if (size < sizeof(int64_t)) {
-        return 0;
+        return true;
     }
     AVMetadataSetSourceFuzzer metadata;
     return metadata.FuzzAVMetadataSetSource(data, size);
@@ -102,6 +91,6 @@ bool FuzzTestAVMetadataSetSource(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzTestAVMetadataSetSource(data, size);
+    FuzzTestAVMetadataSetSource(data, size);
     return 0;
 }

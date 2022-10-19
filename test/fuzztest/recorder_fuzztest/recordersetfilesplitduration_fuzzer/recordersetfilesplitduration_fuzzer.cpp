@@ -53,15 +53,15 @@ bool RecorderSetFileSplitDurationFuzzer::FuzzRecorderSetFileSplitDuration(uint8_
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetFileSplitDuration.mp4", O_RDWR);
 
     if (g_videoRecorderConfig.outputFd > 0) {
-        RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetMaxDuration(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetOutputFile(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), false);
+        TestRecorder::SetVideoSource(g_videoRecorderConfig);
+        TestRecorder::SetOutputFormat(g_videoRecorderConfig);
+        TestRecorder::CameraServicesForVideo(g_videoRecorderConfig);
+        TestRecorder::SetMaxDuration(g_videoRecorderConfig);
+        TestRecorder::SetOutputFile(g_videoRecorderConfig);
+        TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
         recorder->SetCaptureRate(0, audioFps);
-        RETURN_IF(TestRecorder::SetMaxFileSize(audioMaxFileSize, g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetNextOutputFile(g_videoRecorderConfig), false);
+        TestRecorder::SetMaxFileSize(audioMaxFileSize, g_videoRecorderConfig);
+        TestRecorder::SetNextOutputFile(g_videoRecorderConfig);
 
         FileSplitType fileSplitType[fileSplitTypeList] {
             FileSplitType::FILE_SPLIT_POST,
@@ -72,21 +72,21 @@ bool RecorderSetFileSplitDurationFuzzer::FuzzRecorderSetFileSplitDuration(uint8_
         int32_t  indexValue = *reinterpret_cast<int32_t *>(data) % (fileSplitTypeList);
 
         RETURN_IF(TestRecorder::SetFileSplitDuration(fileSplitType[indexValue],
-            timestampValue, durationValue, g_videoRecorderConfig), true);
+            timestampValue, durationValue, g_videoRecorderConfig);
     }
     close(g_videoRecorderConfig.outputFd);
-    return false;
+    return true;
 }
 }
 
 bool FuzzTestRecorderSetFileSplitDuration(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
-        return 0;
+        return true;
     }
 
     if (size < sizeof(int32_t)) {
-        return 0;
+        return true;
     }
     RecorderSetFileSplitDurationFuzzer testRecorder;
     return testRecorder.FuzzRecorderSetFileSplitDuration(data, size);

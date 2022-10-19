@@ -49,21 +49,21 @@ bool RecorderSetParameterFuzzer::FuzzRecorderSetParameter(uint8_t *data, size_t 
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetParameter.mp4", O_RDWR);
     
     if (g_videoRecorderConfig.outputFd >= 0) {
-        RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetMaxDuration(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetOutputFile(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), false);
+        TestRecorder::SetVideoSource(g_videoRecorderConfig);
+        TestRecorder::SetOutputFormat(g_videoRecorderConfig);
+        TestRecorder::CameraServicesForVideo(g_videoRecorderConfig);
+        TestRecorder::SetMaxDuration(g_videoRecorderConfig);
+        TestRecorder::SetOutputFile(g_videoRecorderConfig);
+        TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
 
         Format format;
         int32_t intValue = *reinterpret_cast<int32_t *>(data);
         format.PutIntValue("video_scale_type", intValue);
 
-        RETURN_IF(TestRecorder::SetParameter(g_videoRecorderConfig.dataSourceId, format, g_videoRecorderConfig), true);
+        TestRecorder::SetParameter(g_videoRecorderConfig.dataSourceId, format, g_videoRecorderConfig);
     }
     close(g_videoRecorderConfig.outputFd);
-    return false;
+    return true;
 }
 }
 

@@ -52,7 +52,7 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
     const string path = "/data/test/media/H264_AAC.mp4";
     if (MetaDataSetSource(path) != 0) {
         avmetadata->Release();
-        return false;
+        return true;
     }
 
     int32_t avMetadataQueryOption[AV_METADATA_QUERY_OPTION_LIST] {
@@ -80,13 +80,7 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
 
     struct PixelMapParams pixelMapParams = {ProduceRandomNumberCrypt(), ProduceRandomNumberCrypt(), colorFormat};
     
-    std::shared_ptr<PixelMap> retFetchFrameAtTime =
-        avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), option, pixelMapParams);
-
-    if (retFetchFrameAtTime != 0) {
-        avmetadata->Release();
-        return true;
-    }
+    avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), option, pixelMapParams);
     avmetadata->Release();
     return true;
 }
@@ -95,11 +89,11 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
 bool FuzzTestAVMetadataFetchFrameAtTime(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
-        return 0;
+        return true;
     }
 
     if (size < sizeof(int64_t)) {
-        return 0;
+        return true;
     }
     AVMetadataFetchFrameAtTimeFuzzer metadata;
     return metadata.FuzzAVMetadataFetchFrameAtTime(data, size);
