@@ -35,6 +35,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "service_dump_manager.h"
+#include "player_xcollie.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};
@@ -115,6 +116,11 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
 
     if (ServiceDumpManager::GetInstance().Dump(fd, argSets) != OHOS::NO_ERROR) {
         MEDIA_LOGW("Failed to write dfx dump information");
+        return OHOS::INVALID_OPERATION;
+    }
+
+    if (PlayerXCollie::GetInstance().Dump(fd) != OHOS::NO_ERROR) {
+        MEDIA_LOGW("Failed to write xcollie dump information");
         return OHOS::INVALID_OPERATION;
     }
 

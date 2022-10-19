@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 config("media_service_log_dfx_public_config") {
   cflags = [ "-DOHOS_MEDIA_LOG_DFX" ]
@@ -63,13 +64,19 @@ ohos_shared_library("media_service_log_dfx") {
 ohos_shared_library("media_service_dfx") {
   install_enable = true
 
-  sources = [ "service_dump_manager.cpp" ]
+  sources = [
+    "player_xcollie.cpp",
+    "service_dump_manager.cpp",
+  ]
 
   include_dirs = [
     ".",
     "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
   ]
+
+  defines = []
+  defines += player_framework_defines
 
   cflags = [
     "-std=c++17",
@@ -96,7 +103,9 @@ ohos_shared_library("media_service_dfx") {
 
   external_deps = [
     "c_utils:utils",
+    "hicollie_native:libhicollie",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
   ]
 
   subsystem_name = "multimedia"
