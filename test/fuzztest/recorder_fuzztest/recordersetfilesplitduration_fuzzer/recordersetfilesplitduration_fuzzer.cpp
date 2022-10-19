@@ -71,7 +71,7 @@ bool RecorderSetFileSplitDurationFuzzer::FuzzRecorderSetFileSplitDuration(uint8_
         };
         int32_t  indexValue = *reinterpret_cast<int32_t *>(data) % (fileSplitTypeList);
 
-        RETURN_IF(TestRecorder::SetFileSplitDuration(fileSplitType[indexValue],
+        TestRecorder::SetFileSplitDuration(fileSplitType[indexValue],
             timestampValue, durationValue, g_videoRecorderConfig);
     }
     close(g_videoRecorderConfig.outputFd);
