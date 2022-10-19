@@ -1157,7 +1157,6 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
             isErrorHappened_ = true;
             preparingCond_.notify_all();
             stoppingCond_.notify_all();
-            return;
         }
     }
 
