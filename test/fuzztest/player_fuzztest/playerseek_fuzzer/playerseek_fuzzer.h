@@ -21,8 +21,6 @@
 
 namespace OHOS {
 namespace Media {
-bool FuzzPlayerSeek(uint8_t* data, size_t size);
-
 class PlayerSeekFuzzer : public TestPlayer {
 public:
     PlayerSeekFuzzer();
@@ -30,6 +28,7 @@ public:
     bool FuzzSeek(uint8_t* data, size_t size);
 };
 }
+bool FuzzPlayerSeek(uint8_t* data, size_t size);
 }
 #endif
 

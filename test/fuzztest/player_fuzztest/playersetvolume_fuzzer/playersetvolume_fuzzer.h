@@ -21,8 +21,6 @@
 
 namespace OHOS {
 namespace Media {
-bool FuzzPlayerSetVolume(uint8_t* data, size_t size);
-
 class PlayerSetVolumeFuzzer : public TestPlayer {
 public:
     PlayerSetVolumeFuzzer();
@@ -30,6 +28,7 @@ public:
     bool FuzzSetVolume(uint8_t* data, size_t size);
 };
 }
+bool FuzzPlayerSetVolume(uint8_t* data, size_t size);
 }
 #endif
 
