@@ -83,7 +83,7 @@ struct _GstVencBase {
     gint nstride;
     gint nslice_height;
     gint memtype;
-    gint usage;
+    guint64 usage;
     guint bitrate;
     GstBufferPool *inpool;
     GstBufferPool *outpool;

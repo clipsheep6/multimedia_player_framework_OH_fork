@@ -44,6 +44,7 @@ int32_t HdiOutBufferMgr::Start()
     std::unique_lock<std::mutex> lock(mutex_);
     isStart_ = true;
     isFlushed_ = false;
+    isFormatChange_ = false;
     while (!mBuffers.empty()) {
         GstBufferWrap buffer = mBuffers.front();
         std::shared_ptr<HdiBufferWrap> codecBuffer = GetCodecBuffer(buffer.gstBuffer);
@@ -63,6 +64,10 @@ int32_t HdiOutBufferMgr::PushBuffer(GstBuffer *buffer)
         mBuffers.size(), availableBuffers_.size(), codingBuffers_.size());
     std::unique_lock<std::mutex> lock(mutex_);
     ON_SCOPE_EXIT(0) { gst_buffer_unref(buffer); };
+    if (isFormatChange_) {
+        MEDIA_LOGD("It is formatchange");
+        return GST_CODEC_OK;
+    }
     if (isFlushed_ || !isStart_) {
         MEDIA_LOGD("isFlush %{public}d isStart %{public}d", isFlushed_, isStart_);
         return GST_CODEC_FLUSH;

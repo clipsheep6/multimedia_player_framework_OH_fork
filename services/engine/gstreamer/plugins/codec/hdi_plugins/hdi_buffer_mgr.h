@@ -83,7 +83,7 @@ public:
     }
 
     virtual int32_t Flush(bool enable) override;
-    virtual int32_t Stop();
+    virtual int32_t Stop(bool isFormatChange);
     virtual void WaitFlushed();
 
 protected:
@@ -91,6 +91,7 @@ protected:
     bool isFlushing_ = false;
     bool isFlushed_ = false;
     bool isStart_ = false;
+    bool isFormatChange_ = false;
     int32_t mPortIndex_ = 0;
     CompVerInfo verInfo_ = {};
     std::mutex mutex_;
