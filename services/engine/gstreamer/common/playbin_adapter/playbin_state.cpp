@@ -593,7 +593,6 @@ void PlayBinCtrlerBase::PlaybackCompletedState::ProcessStateChange(const InnerMe
     if (msg.detail2 == GST_STATE_PLAYING && ctrler_.isSeeking_) {
         int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
         ctrler_.isSeeking_ = false;
-        ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
         MEDIA_LOGI("Playing after seek done, pos = %{public}" PRIi64 "ms", position);
         PlayBinMessage playBinMsg { PLAYBIN_MSG_SEEKDONE, 0, static_cast<int32_t>(position), {} };
         ctrler_.ReportMessage(playBinMsg);
