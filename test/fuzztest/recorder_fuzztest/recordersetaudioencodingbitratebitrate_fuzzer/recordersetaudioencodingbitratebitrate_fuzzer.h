@@ -32,7 +32,7 @@ class RecorderSetAudioEncodingBitRateBitRateFuzzer : public TestRecorder {
 public:
     RecorderSetAudioEncodingBitRateBitRateFuzzer();
     ~RecorderSetAudioEncodingBitRateBitRateFuzzer();
-    bool FuzzRecorderSetAudioEncodingBitRateBitRate(uint8_t *data, size_t size);
+    bool FuzzRecorderSetAudioEncodingBitRateBR(uint8_t *data, size_t size);
 };
 }
 bool FuzzTestRecorderSetAudioEncodingBitRateBitRate(uint8_t *data, size_t size);

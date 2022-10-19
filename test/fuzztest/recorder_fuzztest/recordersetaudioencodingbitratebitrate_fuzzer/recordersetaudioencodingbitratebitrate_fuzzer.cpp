@@ -38,7 +38,7 @@ RecorderSetAudioEncodingBitRateBitRateFuzzer::~RecorderSetAudioEncodingBitRateBi
 {
 }
 
-bool RecorderSetAudioEncodingBitRateBitRateFuzzer::FuzzRecorderSetAudioEncodingBitRateBitRate(uint8_t *data, size_t size)
+bool RecorderSetAudioEncodingBitRateBitRateFuzzer::FuzzRecorderSetAudioEncodingBitRateBR(uint8_t *data, size_t size)
 {
     constexpr uint32_t recorderTime = 5;
     RETURN_IF(TestRecorder::CreateRecorder(), false);
@@ -86,7 +86,7 @@ bool FuzzTestRecorderSetAudioEncodingBitRateBitRate(uint8_t *data, size_t size)
         return true;
     }
     RecorderSetAudioEncodingBitRateBitRateFuzzer testRecorder;
-    return testRecorder.FuzzRecorderSetAudioEncodingBitRateBitRate(data, size);
+    return testRecorder.FuzzRecorderSetAudioEncodingBitRateBR(data, size);
 }
 }
 
