@@ -383,6 +383,13 @@ int32_t PlayBinCtrlerBase::PlayingState::Play()
 
 int32_t PlayBinCtrlerBase::PlayingState::Pause()
 {
+    GstState state = GST_STATE_NULL;
+    gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
+    if (state == GST_STATE_PAUSED) {
+        MEDIA_LOGD("Playbin already paused");
+        ctrler_.ChangeState(ctrler_.pausedState_);
+        return MSERR_OK;
+    }
     ctrler_.isUserSetPause_ = true;
     GstStateChangeReturn ret;
     return ChangePlayBinState(GST_STATE_PAUSED, ret);
@@ -407,8 +414,7 @@ int32_t PlayBinCtrlerBase::PlayingState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg)
 {
-    if ((msg.detail1 == GST_STATE_PLAYING) && (msg.detail2 == GST_STATE_PAUSED) &&
-        !ctrler_.isBuffering_ && ctrler_.isUserSetPause_) {
+    if ((msg.detail1 == GST_STATE_PLAYING) && (msg.detail2 == GST_STATE_PAUSED) && ctrler_.isUserSetPause_) {
         ctrler_.ChangeState(ctrler_.pausedState_);
         ctrler_.isUserSetPause_ = false;
         return;
@@ -591,8 +597,13 @@ void PlayBinCtrlerBase::PlaybackCompletedState::ProcessStateChange(const InnerMe
 {
     (void)msg;
     if (msg.detail2 == GST_STATE_PLAYING && ctrler_.isSeeking_) {
-        ctrler_.ChangeState(ctrler_.playingState_);
+        int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
         ctrler_.isSeeking_ = false;
+        ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
+        MEDIA_LOGI("Playing after seek done, pos = %{public}" PRIi64 "ms", position);
+        PlayBinMessage playBinMsg { PLAYBIN_MSG_SEEKDONE, 0, static_cast<int32_t>(position), {} };
+        ctrler_.ReportMessage(playBinMsg);
+        ctrler_.ChangeState(ctrler_.playingState_);
     }
 }
 
