@@ -57,8 +57,19 @@ bool AVMetadataFileFuzzer::FuzzAVMetadataFile(uint8_t *data, size_t size)
         avmetadata->Release();
         return true;
     }
-    avmetadata->ResolveMetadata();
-    avmetadata->FetchArtPicture();
+	
+    std::unordered_map<int32_t, std::string> retresolve = avmetadata->ResolveMetadata();
+    if (retresolve.empty()) {
+        avmetadata->Release();
+        return true;
+    }
+
+    std::shared_ptr<AVSharedMemory> retFetchartpicture = avmetadata->FetchArtPicture();
+    if (retFetchartpicture == nullptr) {
+        avmetadata->Release();
+        return true;
+    }
+	
     avmetadata->Release();
     return true;
 }

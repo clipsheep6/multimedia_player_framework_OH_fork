@@ -78,7 +78,13 @@ bool AVMetadataFetchFrameAtTimeFuzzer::FuzzAVMetadataFetchFrameAtTime(uint8_t *d
     };
     PixelFormat colorFormat = colorFormats[ProduceRandomNumberCrypt() % AV_COLOR_FORMAT_LIST];
 
-    struct PixelMapParams pixelMapParams = {ProduceRandomNumberCrypt(), ProduceRandomNumberCrypt(), colorFormat};
+    std::shared_ptr<PixelMap> retFetchFrameAtTime =
+        avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), option, pixelMapParams);
+
+    if (retFetchFrameAtTime != 0) {
+        avmetadata->Release();
+        return true;
+    }
     
     avmetadata->FetchFrameAtTime(*reinterpret_cast<int64_t *>(data), option, pixelMapParams);
     avmetadata->Release();
