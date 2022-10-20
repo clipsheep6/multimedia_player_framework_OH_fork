@@ -892,7 +892,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlCb(const InnerMessage &msg)
 void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
 {
     if (percent < static_cast<float>(BUFFER_LOW_PERCENT_DEFAULT) / BUFFER_HIGH_PERCENT_DEFAULT *
-        BUFFER_PERCENT_THRESHOLD && !isUserSetPause_ && !isSeeking_ && !isRating_) {
+        BUFFER_PERCENT_THRESHOLD && !isSeeking_ && !isRating_ && !isUserSetPause_) {
         isBuffering_ = true;
         {
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
