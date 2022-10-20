@@ -871,11 +871,7 @@ int32_t PlayBinCtrlerBase::DoInitializeForDataSource()
 void PlayBinCtrlerBase::HandleCacheCtrl(int32_t percent)
 {
     MEDIA_LOGI("HandleCacheCtrl percent is %{public}d", percent);
-    if (isSeeking_ || isRating_) {
-        MEDIA_LOGD("Rating or seeking");
-        return;
-    }
-    if (!isBuffering_ && !isUserSetPause_) {
+    if (!isBuffering_) {
         HandleCacheCtrlWhenNoBuffering(percent);
     } else {
         HandleCacheCtrlWhenBuffering(percent);
@@ -896,7 +892,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlCb(const InnerMessage &msg)
 void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
 {
     if (percent < static_cast<float>(BUFFER_LOW_PERCENT_DEFAULT) / BUFFER_HIGH_PERCENT_DEFAULT *
-        BUFFER_PERCENT_THRESHOLD) {
+        BUFFER_PERCENT_THRESHOLD && !isUserSetPause_ && !isSeeking_ && !isRating_) {
         isBuffering_ = true;
         {
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
