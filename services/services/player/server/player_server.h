@@ -160,6 +160,7 @@ private:
     int32_t streamUsage_ = 0;
     int32_t rendererFlag_ = 0;
     std::string lastErrMsg_;
+    bool errorCbOnce_ = false;
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
 
