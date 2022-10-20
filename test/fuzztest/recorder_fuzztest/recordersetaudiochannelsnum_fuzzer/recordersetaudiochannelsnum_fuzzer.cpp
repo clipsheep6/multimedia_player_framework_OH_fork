@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "recordersetaudiosource_fuzzer.h"
-#include <iostream>
+#include "recordersetaudiochannelsnum_fuzzer.h"
 #include <cmath>
+#include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -30,44 +30,47 @@ using namespace RecorderTestParam;
 
 namespace OHOS {
 namespace Media {
-RecorderSetAudioSourceFuzzer::RecorderSetAudioSourceFuzzer()
+RecorderSetAudioChannelsNumFuzzer::RecorderSetAudioChannelsNumFuzzer()
 {
 }
 
-RecorderSetAudioSourceFuzzer::~RecorderSetAudioSourceFuzzer()
+RecorderSetAudioChannelsNumFuzzer::~RecorderSetAudioChannelsNumFuzzer()
 {
 }
 
-bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, size_t size)
+bool RecorderSetAudioChannelsNumFuzzer::FuzzRecorderSetAudioChannelsNum(uint8_t *data, size_t size)
 {
-    constexpr int32_t audioSourceTypesList = 3;
+    bool retFlags = TestRecorder::CreateRecorder();
     constexpr uint32_t recorderTime = 5;
-    RETURN_IF(TestRecorder::CreateRecorder(), false);
+    RETURN_IF(retFlags, false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
-    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_setAudioSource.m4a", O_RDWR);
-
-    AudioSourceType AudioSourceType[audioSourceTypesList] {
-        AUDIO_SOURCE_INVALID,
-        AUDIO_SOURCE_DEFAULT,
-        AUDIO_MIC,
-    };
-
-    int32_t sourcesubscript = *reinterpret_cast<int32_t *>(data) % (audioSourceTypesList);
-
-    g_videoRecorderConfig.aSource = AudioSourceType[sourcesubscript];
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = MPEG4;
+    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetAudioChannelsNum.mp4", O_RDWR);
     
-    if (g_videoRecorderConfig.outputFd > 0) {
+    if (g_videoRecorderConfig.outputFd >= 0) {
+        TestRecorder::SetVideoSource(g_videoRecorderConfig);
         TestRecorder::SetAudioSource(g_videoRecorderConfig);
         TestRecorder::SetOutputFormat(g_videoRecorderConfig);
-        TestRecorder::CameraServicesForAudio(g_videoRecorderConfig);
+        TestRecorder::CameraServicesForVideo(g_videoRecorderConfig);
+        TestRecorder::SetAudioEncoder(g_videoRecorderConfig);
+        TestRecorder::SetAudioSampleRate(g_videoRecorderConfig);
+
+        g_videoRecorderConfig.channelCount = *reinterpret_cast<int32_t *>(data);
+
+        TestRecorder::SetAudioChannels(g_videoRecorderConfig);
+        TestRecorder::SetAudioEncodingBitRate(g_videoRecorderConfig);
         TestRecorder::SetMaxDuration(g_videoRecorderConfig);
         TestRecorder::SetOutputFile(g_videoRecorderConfig);
         TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
         TestRecorder::Prepare(g_videoRecorderConfig);
+        TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig);
         TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
         TestRecorder::Stop(false, g_videoRecorderConfig);
+        StopBuffer(PURE_VIDEO);
+        TestRecorder::Reset(g_videoRecorderConfig);
         TestRecorder::Release(g_videoRecorderConfig);
     }
     close(g_videoRecorderConfig.outputFd);
@@ -75,17 +78,13 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
 }
 }
 
-bool FuzzTestRecorderSetAudioSource(uint8_t *data, size_t size)
+bool FuzzTestRecorderSetAudioChannelsNum(uint8_t *data, size_t size)
 {
-    if (data == nullptr) {
+    if ((data == nullptr) || (size < sizeof(int32_t))) {
         return true;
     }
-
-    if (size < sizeof(int32_t)) {
-        return true;
-    }
-    RecorderSetAudioSourceFuzzer testRecorder;
-    return testRecorder.FuzzRecorderSetAudioSource(data, size);
+    RecorderSetAudioChannelsNumFuzzer testRecorder;
+    return testRecorder.FuzzRecorderSetAudioChannelsNum(data, size);
 }
 }
 
@@ -93,7 +92,6 @@ bool FuzzTestRecorderSetAudioSource(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzTestRecorderSetAudioSource(data, size);
+    OHOS::FuzzTestRecorderSetAudioChannelsNum(data, size);
     return 0;
 }
-
