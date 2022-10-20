@@ -443,6 +443,7 @@ int32_t PlayerServer::HandleReset()
     config_.looping = false;
     uriHelper_ = nullptr;
     lastErrMsg_.clear();
+    errorCbOnce_ = false;
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
     return MSERR_OK;
@@ -908,8 +909,9 @@ void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
     std::lock_guard<std::mutex> lockCb(mutexCb_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     FaultEventWrite(lastErrMsg_, "Player");
-    if (playerCb_ != nullptr) {
+    if (playerCb_ != nullptr && !errorCbOnce_) {
         playerCb_->OnError(errorType, errorCode);
+        errorCbOnce_ = true;
     }
 }
 
