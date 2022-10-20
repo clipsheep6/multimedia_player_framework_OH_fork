@@ -504,13 +504,19 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
             MEDIA_LOGD("GST_STATE_CHANGE_PAUSED_TO_PLAYING");
             g_return_val_if_fail(sink->audio_sink != nullptr, GST_STATE_CHANGE_FAILURE);
             if (sink->audio_sink->Start() != MSERR_OK) {
-                GST_ERROR_OBJECT(basesink, "audio sink start failed!");
+                GST_ERROR_OBJECT(sink, "audio sink Start failed!");
+                GST_ELEMENT_ERROR(sink, STREAM, FAILED, ("audio sink Start failed!"), (NULL));
+                return GST_STATE_CHANGE_FAILURE;
             }
 
             if (sink->pause_cache_buffer != nullptr) {
                 GST_INFO_OBJECT(basesink, "pause to play");
-                g_return_val_if_fail(gst_audio_server_sink_render(basesink,
-                    sink->pause_cache_buffer) == GST_FLOW_OK, GST_STATE_CHANGE_FAILURE);
+                if (gst_audio_server_sink_render(basesink, sink->pause_cache_buffer) != GST_FLOW_OK) {
+                    GST_ERROR_OBJECT(sink, "audio sink gst_audio_server_sink_render failed!");
+                    GST_ELEMENT_ERROR(sink, STREAM, FAILED,
+                        ("audio sink gst_audio_server_sink_render failed!"), (NULL));
+                    return GST_STATE_CHANGE_FAILURE;
+                }
                 gst_buffer_unref(sink->pause_cache_buffer);
                 sink->pause_cache_buffer = nullptr;
             }
@@ -526,7 +532,11 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
             {
                 std::unique_lock<std::mutex> lock(sink->mutex_);
                 g_return_val_if_fail(sink->audio_sink != nullptr, GST_STATE_CHANGE_FAILURE);
-                g_return_val_if_fail(sink->audio_sink->Pause() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
+                if (sink->audio_sink->Pause() != MSERR_OK) {
+                    GST_ERROR_OBJECT(sink, "audio sink Pause failed!");
+                    GST_ELEMENT_ERROR(sink, STREAM, FAILED, ("audio sink Pause failed!"), (NULL));
+                    return GST_STATE_CHANGE_FAILURE;
+                }
             }
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:

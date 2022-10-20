@@ -72,13 +72,13 @@ GST_API_EXPORT GType gst_mem_sink_get_type(void);
  *
  * @param mem_sink the sink element instance
  * @param callbacks callbacks, refer to {@GstMemSinkCallbacks}
- * @param userdata will be passed to callbacks
- * @param notify the function to be used to destroy the userdata when the mem_sink is disposed
+ * @param user_data will be passed to callbacks
+ * @param notify the function to be used to destroy the user_data when the mem_sink is disposed
  * @return GST_FLOW_OK if success, or error code.
  */
 GST_API_EXPORT void gst_mem_sink_set_callback(GstMemSink *mem_sink,
                                               GstMemSinkCallbacks *callbacks,
-                                              gpointer userdata,
+                                              gpointer user_data,
                                               GDestroyNotify notify);
 
 /**

@@ -22,15 +22,10 @@
 #include "param_wrapper.h"
 #include "scope_guard.h"
 #include "media_dfx.h"
+#include "av_common.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
-
-namespace {
-    constexpr guint VIDEO_ROTATION_90 = 90;   // rotation, 90
-    constexpr guint VIDEO_ROTATION_180 = 180; // rotation, 180
-    constexpr guint VIDEO_ROTATION_270 = 270; // rotation, 270
-}
 
 struct _GstSurfaceMemSinkPrivate {
     OHOS::sptr<OHOS::Surface> surface;
@@ -54,9 +49,9 @@ static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
     GST_STATIC_CAPS_ANY);
 
 static void gst_surface_mem_sink_dispose(GObject *obj);
-static void gst_surface_mem_sink_finalize(GObject *object);
-static void gst_surface_mem_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_surface_mem_sink_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
+static void gst_surface_mem_sink_finalize(GObject *obj);
+static void gst_surface_mem_sink_set_property(GObject *object, guint propId, const GValue *value, GParamSpec *pspec);
+static void gst_surface_mem_sink_get_property(GObject *object, guint propId, GValue *value, GParamSpec *pspec);
 static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, GstQuery *query);
 static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer, bool is_preroll);
 static void gst_surface_mem_sink_dump_from_sys_param(GstSurfaceMemSink *self);
@@ -234,11 +229,6 @@ static void gst_surface_mem_sink_set_property(GObject *object, guint propId, con
         }
         case PROP_VIDEO_ROTATION: {
             priv->rotation = g_value_get_uint(value);
-            GST_DEBUG_OBJECT(surface_sink, "set rotation: %u", priv->rotation);
-            if (priv->surface) {
-                MediaTrace trace("Surface::SetTransform");
-                (void)priv->surface->SetTransform(gst_surface_mem_sink_get_rotation(priv->rotation));
-            }
             break;
         }
         default:
@@ -387,6 +377,18 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
         GST_OBJECT_UNLOCK(surface_sink);
         GST_DEBUG_OBJECT(surface_sink, "user set rate, drop same frame");
         return GST_FLOW_OK;
+    }
+
+    /* Make sure set rotation information for each video, avoid the rotation
+     * information of the previous video affecting the subsequent video
+     */
+    if (surface_sink->firstRenderFrame) {
+        GST_DEBUG_OBJECT(surface_sink, "set rotation: %u", surface_sink->priv->rotation);
+        if (surface_sink->priv->surface) {
+            MediaTrace trace("Surface::SetTransform");
+            (void)surface_sink->priv->surface->SetTransform(
+                gst_surface_mem_sink_get_rotation(surface_sink->priv->rotation));
+        }
     }
 
     if (surface_sink->firstRenderFrame && is_preroll) {

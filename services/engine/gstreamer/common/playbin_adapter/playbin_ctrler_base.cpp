@@ -64,41 +64,41 @@ static const std::unordered_map<int32_t, int32_t> SEEK_OPTION_TO_GST_SEEK_FLAGS 
 
 using PlayBinCtrlerWrapper = ThizWrapper<PlayBinCtrlerBase>;
 
-void PlayBinCtrlerBase::ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userdata)
+void PlayBinCtrlerBase::ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userData)
 {
     (void)playbin;
-    if (elem == nullptr || userdata == nullptr) {
+    if (elem == nullptr || userData == nullptr) {
         return;
     }
 
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
         return thizStrong->OnElementSetup(*elem);
     }
 }
 
 void PlayBinCtrlerBase::ElementUnSetup(const GstElement *playbin, GstElement *subbin,
-    GstElement *child, gpointer userdata)
+    GstElement *child, gpointer userData)
 {
     (void)playbin;
     (void)subbin;
-    if (child == nullptr || userdata == nullptr) {
+    if (child == nullptr || userData == nullptr) {
         return;
     }
 
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
         return thizStrong->OnElementUnSetup(*child);
     }
 }
 
-void PlayBinCtrlerBase::SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userdata)
+void PlayBinCtrlerBase::SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userData)
 {
-    if (elem == nullptr || userdata == nullptr) {
+    if (elem == nullptr || userData == nullptr) {
         return;
     }
 
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
         return thizStrong->OnSourceSetup(playbin, elem, thizStrong);
     }
@@ -371,6 +371,7 @@ int32_t PlayBinCtrlerBase::SetRate(double rate)
 {
     MEDIA_LOGD("enter");
     std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> cacheLock(cacheCtrlMutex_);
 
     if (IsLiveSource()) {
         return MSERR_INVALID_OPERATION;
@@ -392,7 +393,6 @@ double PlayBinCtrlerBase::GetRate()
 
 int32_t PlayBinCtrlerBase::SetLoop(bool loop)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     if (IsLiveSource()) {
         return MSERR_INVALID_OPERATION;
     }
@@ -902,6 +902,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
             g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_BUFFERING, nullptr);
         }
         if (GetCurrState() == playingState_) {
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to paused", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
             if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -924,6 +925,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
                 std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
                 g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_PLAYING, nullptr);
             }
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to playing", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PLAYING);
             if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -954,14 +956,14 @@ void PlayBinCtrlerBase::RemoveGstPlaySinkVideoConvertPlugin()
 }
 
 GValueArray *PlayBinCtrlerBase::AutoPlugSort(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
-    GValueArray *factories, gpointer userdata)
+    GValueArray *factories, gpointer userData)
 {
     CHECK_AND_RETURN_RET_LOG(uriDecoder != nullptr, nullptr, "uriDecoder is null");
     CHECK_AND_RETURN_RET_LOG(pad != nullptr, nullptr, "pad is null");
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "caps is null");
     CHECK_AND_RETURN_RET_LOG(factories != nullptr, nullptr, "factories is null");
 
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     CHECK_AND_RETURN_RET_LOG(thizStrong != nullptr, nullptr, "thizStrong is null");
     return thizStrong->OnAutoPlugSort(*factories);
 }
@@ -1067,13 +1069,13 @@ void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
 }
 
 void PlayBinCtrlerBase::OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType,
-    const uint32_t forceType, const uint32_t hintType, gpointer userdata)
+    const uint32_t forceType, const uint32_t hintType, gpointer userData)
 {
     (void)audioSink;
-    if (userdata == nullptr) {
+    if (userData == nullptr) {
         return;
     }
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
         uint32_t value = 0;
         value = (((eventType << INTERRUPT_EVENT_SHIFT) | forceType) << INTERRUPT_EVENT_SHIFT) | hintType;
@@ -1082,13 +1084,13 @@ void PlayBinCtrlerBase::OnInterruptEventCb(const GstElement *audioSink, const ui
     }
 }
 
-void PlayBinCtrlerBase::OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userdata)
+void PlayBinCtrlerBase::OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData)
 {
     (void)audioSink;
-    if (userdata == nullptr) {
+    if (userData == nullptr) {
         return;
     }
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
         int32_t value = static_cast<int32_t>(audioState);
         PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_AUDIO_STATE_EVENT, 0, value };
@@ -1096,13 +1098,13 @@ void PlayBinCtrlerBase::OnAudioStateEventCb(const GstElement *audioSink, const u
     }
 }
 
-void PlayBinCtrlerBase::OnAudioErrorEventCb(const GstElement *audioSink, const gchar *errMsg, gpointer userdata)
+void PlayBinCtrlerBase::OnAudioErrorEventCb(const GstElement *audioSink, const gchar *errMsg, gpointer userData)
 {
     (void)audioSink;
-    if (userdata == nullptr) {
+    if (userData == nullptr) {
         return;
     }
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
         std::pair<int32_t, std::string> errorPair = { MSERR_AUD_RENDER_FAILED, errMsg };
         PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_AUDIO_ERROR_EVENT, 0, errorPair };
@@ -1111,10 +1113,10 @@ void PlayBinCtrlerBase::OnAudioErrorEventCb(const GstElement *audioSink, const g
 }
 
 void PlayBinCtrlerBase::OnBitRateParseCompleteCb(const GstElement *playbin, uint32_t *bitrateInfo,
-    uint32_t bitrateNum, gpointer userdata)
+    uint32_t bitrateNum, gpointer userData)
 {
     (void)playbin;
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userdata);
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
         MEDIA_LOGD("bitrateNum = %{public}u", bitrateNum);
         for (uint32_t i = 0; i < bitrateNum; i++) {
@@ -1155,7 +1157,6 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
             isErrorHappened_ = true;
             preparingCond_.notify_all();
             stoppingCond_.notify_all();
-            return;
         }
     }
 

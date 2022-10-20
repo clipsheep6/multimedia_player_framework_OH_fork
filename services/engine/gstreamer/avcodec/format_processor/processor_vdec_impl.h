@@ -40,6 +40,7 @@ private:
     int32_t frameRate_ = 0;
     std::string gstPixelFormat_;
     int32_t maxInputSize_ = 0;
+    int32_t videoRotation_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

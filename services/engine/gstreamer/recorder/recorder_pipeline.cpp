@@ -248,29 +248,6 @@ void RecorderPipeline::DrainBuffer(bool isDrainAll)
     }
 }
 
-int32_t RecorderPipeline::PostAndSyncWaitEOS()
-{
-    if (currState_ != GST_STATE_PLAYING) {
-        MEDIA_LOGE("curr state is not GST_STATE_PLAYING, ignore !");
-        return MSERR_OK;
-    }
-
-    GstEvent *eos = gst_event_new_eos();
-    if (eos == nullptr) {
-        MEDIA_LOGE("Create EOS event failed");
-        return MSERR_INVALID_OPERATION;
-    }
-
-    gboolean success = gst_element_send_event((GstElement *)gstPipeline_, eos);
-    if (!success) {
-        MEDIA_LOGE("Send EOS event failed");
-        return MSERR_INVALID_OPERATION;
-    }
-
-    (void)SyncWaitEOS();
-    return MSERR_OK;
-}
-
 bool RecorderPipeline::SyncWaitEOS()
 {
     MEDIA_LOGI("Wait EOS finished........................");

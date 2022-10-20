@@ -19,7 +19,7 @@
 #define gst_vdec_h264_parent_class parent_class
 G_DEFINE_TYPE(GstVdecH264, gst_vdec_h264, GST_TYPE_VDEC_BASE);
 
-static gboolean get_slice_flag(GstMapInfo *info, bool &ready_push, gboolean &is_slice_buffer);
+static gboolean get_slice_flag(GstMapInfo *info, bool &ready_push, gboolean is_slice_buffer);
 static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool &ready_push, bool is_finish);
 static gboolean cat_slice_buffer(GstVdecBase *self, GstMapInfo *src_info);
 static void flush_cache_slice_buffer(GstVdecBase *self);
@@ -62,7 +62,7 @@ static void gst_vdec_h264_init(GstVdecH264 *self)
     self->cache_slice_buffer = nullptr;
 }
 
-static gboolean get_slice_flag(GstMapInfo *info, bool &ready_push, gboolean &is_slice_buffer)
+static gboolean get_slice_flag(GstMapInfo *info, bool &ready_push, gboolean is_slice_buffer)
 {
     guint8 offset = 2;
     for (gsize i = 0; i < info->size - offset; i++) {

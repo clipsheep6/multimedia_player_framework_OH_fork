@@ -31,6 +31,16 @@ public:
     bool PutStringValue(const std::string_view &key, const std::string_view &value) override;
     bool GetStringValue(const std::string_view &key, std::string &value) override;
     void Destroy() override;
+    bool PutLongValue(const std::string_view &key, int64_t value) override;
+    bool GetLongValue(const std::string_view &key, int64_t &value) override;
+    bool PutFloatValue(const std::string_view &key, float value) override;
+    bool GetFloatValue(const std::string_view &key, float &value) override;
+    bool PutDoubleValue(const std::string_view &key, double value) override;
+    bool GetDoubleValue(const std::string_view &key, double &value) override;
+    bool GetBuffer(const std::string_view &key, uint8_t **addr, size_t &size) override;
+    bool PutBuffer(const std::string_view &key, const uint8_t *addr, size_t size) override;
+    const char *DumpInfo() override;
+    bool AVFormat_Copy(struct OH_AVFormat *to, struct OH_AVFormat *from);
     OH_AVFormat *GetFormat();
 
 private:

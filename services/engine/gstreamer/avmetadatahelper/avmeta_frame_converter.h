@@ -33,7 +33,7 @@ public:
     AVMetaFrameConverter();
     ~AVMetaFrameConverter();
 
-    int32_t Init(const OutputConfiguration &outConfig);
+    int32_t Init(const OutputConfiguration &config);
     std::shared_ptr<AVSharedMemory> Convert(GstCaps &inCaps, GstBuffer &inBuf);
 
 private:
@@ -47,7 +47,7 @@ private:
     std::shared_ptr<AVSharedMemory> GetConvertResult();
     int32_t Reset();
     void OnNotifyMessage(const InnerMessage &msg);
-    static GstFlowReturn OnNotifyNewSample(GstMemSink *elem, GstBuffer *sample, gpointer thiz);
+    static GstFlowReturn OnNotifyNewSample(GstMemSink *elem, GstBuffer *sample, gpointer userData);
 
     OutputConfiguration outConfig_;
     GstPipeline *pipeline_ = nullptr;

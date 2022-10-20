@@ -56,13 +56,13 @@ public:
     explicit ThizWrapper(std::weak_ptr<T> thiz) : thiz_(thiz) {}
     ~ThizWrapper() = default;
 
-    static std::shared_ptr<T> TakeStrongThiz(gpointer userdata)
+    static std::shared_ptr<T> TakeStrongThiz(gpointer userData)
     {
-        if (userdata == nullptr) {
+        if (userData == nullptr) {
             return nullptr;
         }
 
-        ThizWrapper<T> *wrapper = reinterpret_cast<ThizWrapper<T> *>(userdata);
+        ThizWrapper<T> *wrapper = reinterpret_cast<ThizWrapper<T> *>(userData);
         return wrapper->thiz_.lock();
     }
 

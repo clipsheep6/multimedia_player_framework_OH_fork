@@ -22,9 +22,6 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerEngineGstImpl"};
-    constexpr uint32_t ROTATION_90 = 90;
-    constexpr uint32_t ROTATION_180 = 180;
-    constexpr uint32_t ROTATION_270 = 270;
     constexpr int32_t MAX_LATITUDE = 90;
     constexpr int32_t MIN_LATITUDE = -90;
     constexpr int32_t MAX_LONGITUDE = 180;
@@ -147,7 +144,7 @@ int32_t AVMuxerEngineGstImpl::SetRotation(int32_t rotation)
     CHECK_AND_RETURN_RET_LOG(muxBin_ != nullptr, MSERR_INVALID_OPERATION, "Muxbin does not exist");
 
     bool setRotationToMux = true;
-    if (rotation != ROTATION_90 && rotation != ROTATION_180 && rotation != ROTATION_270) {
+    if (rotation != VIDEO_ROTATION_90 && rotation != VIDEO_ROTATION_180 && rotation != VIDEO_ROTATION_270) {
         setRotationToMux = false;
         MEDIA_LOGW("Invalid rotation: %{public}d, keep default 0", rotation);
     }

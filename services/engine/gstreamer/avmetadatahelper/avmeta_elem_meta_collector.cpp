@@ -317,9 +317,6 @@ void AVMetaElemMetaCollector::ParseTagList(const GstTagList &tagList, TrackInfo 
             return;
         }
         globalTagCatched_ = true;
-    }
-
-    if (scope == GST_TAG_SCOPE_GLOBAL) {
         GstMetaParser::ParseTagList(tagList, fileInnerMeta_);
         ConvertToAVMeta(fileInnerMeta_, fileUploadMeta_);
         ReportMeta(fileUploadMeta_);
@@ -477,15 +474,15 @@ void AVMetaElemMetaCollector::ConvertToAVMeta(const Format &innerMeta, Metadata 
  * Detail Element Meta Collector Implementation Begin.
  */
 
-void TypeFindMetaCollector::HaveTypeCallback(GstElement *elem, guint probability, GstCaps *caps, gpointer userdata)
+void TypeFindMetaCollector::HaveTypeCallback(GstElement *elem, guint probability, GstCaps *caps, gpointer userData)
 {
-    if (elem == nullptr || caps == nullptr || userdata == nullptr) {
+    if (elem == nullptr || caps == nullptr || userData == nullptr) {
         return;
     }
 
     MEDIA_LOGD("typefind %{public}s have type, probalibity = %{public}u", ELEM_NAME(elem), probability);
 
-    TypeFindMetaCollector *collector = reinterpret_cast<TypeFindMetaCollector *>(userdata);
+    TypeFindMetaCollector *collector = reinterpret_cast<TypeFindMetaCollector *>(userData);
     collector->OnHaveType(*elem, *caps);
 }
 
@@ -512,13 +509,13 @@ void TypeFindMetaCollector::AddMetaSource(GstElement &elem)
     (void)ConnectSignal(elem, "have-type", G_CALLBACK(&TypeFindMetaCollector::HaveTypeCallback));
 }
 
-void DemuxerMetaCollector::PadAddedCallback(GstElement *elem, GstPad *pad, gpointer userdata)
+void DemuxerMetaCollector::PadAddedCallback(GstElement *elem, GstPad *pad, gpointer userData)
 {
-    if (elem == nullptr || pad == nullptr || userdata == nullptr) {
+    if (elem == nullptr || pad == nullptr || userData == nullptr) {
         return;
     }
 
-    auto collector = reinterpret_cast<DemuxerMetaCollector *>(userdata);
+    auto collector = reinterpret_cast<DemuxerMetaCollector *>(userData);
     collector->OnPadAdded(*elem, *pad);
 }
 

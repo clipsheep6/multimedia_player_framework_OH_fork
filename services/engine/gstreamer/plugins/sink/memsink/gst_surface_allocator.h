@@ -55,7 +55,7 @@ typedef struct _GstSurfaceAllocParam {
     gint width;
     gint height;
     PixelFormat format;
-    gint usage;
+    guint64 usage;
     gboolean dont_wait;
     guint scale_type;
 } GstSurfaceAllocParam;

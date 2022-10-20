@@ -136,12 +136,11 @@ GstFlowReturn gst_mem_src_buffer_available(GstMemSrc *memsrc)
     g_return_val_if_fail(memsrc != nullptr && memsrc->priv != nullptr, GST_FLOW_ERROR);
     GstFlowReturn ret = GST_FLOW_OK;
     auto priv = memsrc->priv;
-    gboolean emit = FALSE;
     if (priv->buffer_available) {
         ret = priv->buffer_available(memsrc, priv->user_data);
     } else {
         GST_OBJECT_LOCK(memsrc);
-        emit = priv->emit_signals;
+        gboolean emit = priv->emit_signals;
         GST_OBJECT_UNLOCK(memsrc);
         if (emit) {
             g_signal_emit(memsrc, gst_mem_src_signals[SIGNAL_BUFFER_AVAILABLE], 0, &ret);

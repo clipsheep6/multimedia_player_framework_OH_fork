@@ -33,9 +33,11 @@ namespace Media {
 RecorderSetAudioEncoderFuzzer::RecorderSetAudioEncoderFuzzer()
 {
 }
+
 RecorderSetAudioEncoderFuzzer::~RecorderSetAudioEncoderFuzzer()
 {
 }
+
 bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, size_t size)
 {
     constexpr int32_t audioCodecFormatList = 3;
@@ -45,54 +47,54 @@ bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, s
     static VideoRecorderConfig_ g_videoRecorderConfig;
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = MPEG4;
-    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_video_yuv_mpeg4.mp4", O_RDWR);
+    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetAudioEncoder.mp4", O_RDWR);
     
     if (g_videoRecorderConfig.outputFd >= 0) {
-        RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetAudioSource(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetVideoEncoder(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetVideoSize(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetVideoFrameRate(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetVideoEncodingBitRate(g_videoRecorderConfig), false);
+        TestRecorder::SetVideoSource(g_videoRecorderConfig);
+        TestRecorder::SetAudioSource(g_videoRecorderConfig);
+        TestRecorder::SetOutputFormat(g_videoRecorderConfig);
+        TestRecorder::SetVideoEncoder(g_videoRecorderConfig);
+        TestRecorder::SetVideoSize(g_videoRecorderConfig);
+        TestRecorder::SetVideoFrameRate(g_videoRecorderConfig);
+        TestRecorder::SetVideoEncodingBitRate(g_videoRecorderConfig);
 
         AudioCodecFormat audioCodecFormat[audioCodecFormatList] {
             AUDIO_DEFAULT,
             AAC_LC,
             AUDIO_CODEC_FORMAT_BUTT,
         };
-        int32_t audioFormat = abs((ProduceRandomNumberCrypt()) % (audioCodecFormatList));
-        g_videoRecorderConfig.audioSourceId = *reinterpret_cast<int32_t *>(data);
+        int32_t audioFormat = *reinterpret_cast<int32_t *>(data) % (audioCodecFormatList);
         g_videoRecorderConfig.audioFormat = audioCodecFormat[audioFormat];
 
-        RETURN_IF(TestRecorder::SetAudioEncoder(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetAudioSampleRate(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetAudioChannels(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetAudioEncodingBitRate(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetMaxDuration(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetOutputFile(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
+        TestRecorder::SetAudioEncoder(g_videoRecorderConfig);
+        TestRecorder::SetAudioSampleRate(g_videoRecorderConfig);
+        TestRecorder::SetAudioChannels(g_videoRecorderConfig);
+        TestRecorder::SetAudioEncodingBitRate(g_videoRecorderConfig);
+        TestRecorder::SetMaxDuration(g_videoRecorderConfig);
+        TestRecorder::SetOutputFile(g_videoRecorderConfig);
+        TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
+        TestRecorder::Prepare(g_videoRecorderConfig);
+        TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig);
+        TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
-        RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
+        TestRecorder::Stop(false, g_videoRecorderConfig);
         StopBuffer(PURE_VIDEO);
-        RETURN_IF(TestRecorder::Reset(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Release(g_videoRecorderConfig), true);
+        TestRecorder::Reset(g_videoRecorderConfig);
+        TestRecorder::Release(g_videoRecorderConfig);
     }
     close(g_videoRecorderConfig.outputFd);
-    return false;
+    return true;
 }
 }
+
 bool FuzzTestRecorderSetAudioEncoder(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
-        return 0;
+        return true;
     }
 
     if (size < sizeof(int32_t)) {
-        return 0;
+        return true;
     }
     RecorderSetAudioEncoderFuzzer testRecorder;
     return testRecorder.FuzzRecorderSetAudioEncoder(data, size);

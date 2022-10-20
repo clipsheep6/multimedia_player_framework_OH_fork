@@ -14,6 +14,7 @@
  */
 
 #include "avformat_native_mock.h"
+#include "securec.h"
 
 namespace OHOS {
 namespace Media {
@@ -39,12 +40,79 @@ bool AVFormatNativeMock::GetStringValue(const std::string_view &key, std::string
 
 void AVFormatNativeMock::Destroy()
 {
+    if (dumpInfo_ != nullptr) {
+        free(dumpInfo_);
+        dumpInfo_ = nullptr;
+    }
     return;
 }
 
 Format &AVFormatNativeMock::GetFormat()
 {
     return format_;
+}
+
+bool AVFormatNativeMock::PutLongValue(const std::string_view &key, int64_t value)
+{
+    return format_.PutLongValue(key, value);
+}
+
+bool AVFormatNativeMock::GetLongValue(const std::string_view &key, int64_t &value)
+{
+    return format_.GetLongValue(key, value);
+}
+
+bool AVFormatNativeMock::PutFloatValue(const std::string_view &key, float value)
+{
+    return format_.PutFloatValue(key, value);
+}
+
+bool AVFormatNativeMock::GetFloatValue(const std::string_view &key, float &value)
+{
+    return format_.GetFloatValue(key, value);
+}
+
+bool AVFormatNativeMock::PutDoubleValue(const std::string_view &key, double value)
+{
+    return format_.PutDoubleValue(key, value);
+}
+
+bool AVFormatNativeMock::GetDoubleValue(const std::string_view &key, double &value)
+{
+    return format_.GetDoubleValue(key, value);
+}
+
+bool AVFormatNativeMock::GetBuffer(const std::string_view &key, uint8_t **addr, size_t &size)
+{
+    return format_.GetBuffer(key, addr, size);
+}
+
+bool AVFormatNativeMock::PutBuffer(const std::string_view &key, const uint8_t *addr, size_t size)
+{
+    return format_.PutBuffer(key, addr, size);
+}
+
+const char *AVFormatNativeMock::DumpInfo()
+{
+    if (dumpInfo_ != nullptr) {
+        free(dumpInfo_);
+        dumpInfo_ = nullptr;
+    }
+    std::string info = format_.Stringify();
+    if (info.empty()) {
+        return nullptr;
+    }
+    constexpr uint32_t maxDumpLength = 1024;
+    uint32_t bufLength = info.size() > maxDumpLength ? maxDumpLength : info.size();
+    dumpInfo_ = static_cast<char *>(malloc((bufLength + 1) * sizeof(char)));
+    if (dumpInfo_ == nullptr) {
+        return nullptr;
+    }
+    if (strcpy_s(dumpInfo_, bufLength + 1, info.c_str()) != 0) {
+        free(dumpInfo_);
+        dumpInfo_ = nullptr;
+    }
+    return dumpInfo_;
 }
 } // Media
 } // OHOS

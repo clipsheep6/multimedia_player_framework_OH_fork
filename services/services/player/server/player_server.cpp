@@ -118,6 +118,10 @@ int32_t PlayerServer::Init()
     pausedState_ = std::make_shared<PausedState>(*this);
     stoppedState_ = std::make_shared<StoppedState>(*this);
     playbackCompletedState_ = std::make_shared<PlaybackCompletedState>(*this);
+    appUid_ = IPCSkeleton::GetCallingUid();
+    appPid_ = IPCSkeleton::GetCallingPid();
+    MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d", appUid_, appPid_);
+
     return MSERR_OK;
 }
 
@@ -179,10 +183,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_PLAYBACK, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to get engine factory");
-    int32_t appUid = IPCSkeleton::GetCallingUid();
-    int32_t appPid = IPCSkeleton::GetCallingPid();
-    MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d", appUid, appPid);
-    playerEngine_ = engineFactory->CreatePlayerEngine(appUid, appPid);
+    playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
 
@@ -861,6 +862,7 @@ void PlayerServer::FormatToString(std::string &dumpString, std::vector<Format> &
 {
     for (auto iter = videoTrack.begin(); iter != videoTrack.end(); iter++) {
         dumpString += iter->Stringify();
+        dumpString += '\n';
     }
 }
 

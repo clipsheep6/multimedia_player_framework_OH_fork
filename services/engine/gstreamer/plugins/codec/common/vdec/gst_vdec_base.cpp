@@ -36,7 +36,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_vdec_base_debug_category);
 #define DEFAULT_SEEK_FRAME_RATE 1000
 #define BLOCKING_ACQUIRE_BUFFER_THRESHOLD 5
 
-static void gst_vdec_base_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec);
+static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static gboolean gst_vdec_base_open(GstVideoDecoder *decoder);
 static gboolean gst_vdec_base_close(GstVideoDecoder *decoder);
 static gboolean gst_vdec_base_start(GstVideoDecoder *decoder);
@@ -1477,8 +1477,8 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         return GST_FLOW_OK;
     }
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
-    bool ready_push_slice_buffer = false;
     if (kclass->handle_slice_buffer != nullptr && self->enable_slice_cat == true) {
+        bool ready_push_slice_buffer = false;
         GstBuffer *cat_buffer = kclass->handle_slice_buffer(self, nullptr, ready_push_slice_buffer, true);
         if (cat_buffer != nullptr && ready_push_slice_buffer == true) {
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
@@ -1626,7 +1626,7 @@ static void gst_vdec_base_update_out_pool(GstVdecBase *self, GstBufferPool **poo
     g_return_if_fail(config != nullptr);
     gst_buffer_pool_config_set_params(config, outcaps, size, self->out_buffer_cnt, self->out_buffer_cnt);
     if (self->memtype == GST_MEMTYPE_SURFACE) {
-        gst_structure_set(config, "usage", G_TYPE_INT, self->usage, nullptr);
+        gst_structure_set(config, "usage", G_TYPE_UINT64, self->usage, nullptr);
     }
     g_return_if_fail(gst_buffer_pool_set_config(*pool, config));
     CANCEL_SCOPE_EXIT_GUARD(0);
