@@ -41,7 +41,7 @@ int32_t PlayBinTaskMgr::Init()
         return MSERR_OK;
     }
 
-    taskThread_ = std::make_unique<TaskQueue>("playbin_task_mgr");
+    taskThread_ = std::make_unique<TaskQueue>("PlaybinTask");
     int32_t ret = taskThread_->Start();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "task thread start failed");
 

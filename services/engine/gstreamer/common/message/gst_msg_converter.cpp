@@ -107,7 +107,7 @@ static int32_t ConvertErrorMessage(GstMessage &gstMsg, InnerMessage &innerMsg)
     } else if (error->domain == GST_RESOURCE_ERROR) {
         innerMsg.detail1 = ResourceErrorParse(error);
     } else {
-        innerMsg.detail1 = MSERR_UNKNOWN;
+        innerMsg.detail1 = MSERR_UNSUPPORT_STREAM;
     }
 
     g_error_free(error);
