@@ -43,7 +43,6 @@ group("fuzztest") {
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetorientationhint_fuzzer:RecorderSetOrientationHintFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetparameter_fuzzer:RecorderSetParameterFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideoencoder_fuzzer:RecorderSetVideoEncoderFuzzTest",
-    
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideoframerate_fuzzer:RecorderSetVideoFrameRateFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideosize_fuzzer:RecorderSetVideoSizeFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideosource_fuzzer:RecorderSetVideoSourceFuzzTest",

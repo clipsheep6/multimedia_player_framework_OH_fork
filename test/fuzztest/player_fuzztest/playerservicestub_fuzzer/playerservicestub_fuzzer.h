@@ -17,7 +17,6 @@
 #define PLAYERSERVICESTUB_FUZZER
 
 #define FUZZ_PROJECT_NAME "playerservicestub_fuzzer"
-#include <cstdint.h>
 #include "display_type.h"
 
 namespace OHOS {
