@@ -15,7 +15,7 @@ declare_args() {
   multimedia_player_framework_support_player = true
   multimedia_player_framework_support_recorder = true
   multimedia_player_framework_support_codec = true
-  multimedia_player_framework_support_codec_js = true
+  multimedia_player_framework_support_codec_js = false
   multimedia_player_framework_support_muxer = false
   multimedia_player_framework_support_muxer_js = false
   multimedia_player_framework_support_metadata = true
