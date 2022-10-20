@@ -37,7 +37,8 @@ int32_t TaskQueue::Start()
     }
     isExit_ = false;
     thread_ = std::make_unique<std::thread>(&TaskQueue::TaskProcessor, this);
-
+    pthread_setname_np(thread_->native_handle(), name_.substr(0, 15).c_str());
+    MEDIA_LOGI("thread started, ignore ! [%{public}s]", name_.c_str());
     return MSERR_OK;
 }
 
