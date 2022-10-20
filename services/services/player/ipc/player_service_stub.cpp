@@ -23,6 +23,7 @@
 #include "media_parcel.h"
 #include "parameter.h"
 #include "media_dfx.h"
+#include "player_xcollie.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServiceStub"};
@@ -51,7 +52,9 @@ PlayerServiceStub::~PlayerServiceStub()
 {
     if (playerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
+            int32_t id = PlayerXCollie::GetInstance().SetTimer("PlayerServiceStub::~PlayerServiceStub");
             (void)playerServer_->Release();
+            PlayerXCollie::GetInstance().CancelTimer(id);
             playerServer_ = nullptr;
         });
         (void)taskQue_.EnqueueTask(task);
@@ -77,37 +80,37 @@ int32_t PlayerServiceStub::Init()
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
 
-    playerFuncs_[SET_LISTENER_OBJ] = &PlayerServiceStub::SetListenerObject;
-    playerFuncs_[SET_SOURCE] = &PlayerServiceStub::SetSource;
-    playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = &PlayerServiceStub::SetMediaDataSource;
-    playerFuncs_[SET_FD_SOURCE] = &PlayerServiceStub::SetFdSource;
-    playerFuncs_[PLAY] = &PlayerServiceStub::Play;
-    playerFuncs_[PREPARE] = &PlayerServiceStub::Prepare;
-    playerFuncs_[PREPAREASYNC] = &PlayerServiceStub::PrepareAsync;
-    playerFuncs_[PAUSE] = &PlayerServiceStub::Pause;
-    playerFuncs_[STOP] = &PlayerServiceStub::Stop;
-    playerFuncs_[RESET] = &PlayerServiceStub::Reset;
-    playerFuncs_[RELEASE] = &PlayerServiceStub::Release;
-    playerFuncs_[SET_VOLUME] = &PlayerServiceStub::SetVolume;
-    playerFuncs_[SEEK] = &PlayerServiceStub::Seek;
-    playerFuncs_[GET_CURRENT_TIME] = &PlayerServiceStub::GetCurrentTime;
-    playerFuncs_[GET_DURATION] = &PlayerServiceStub::GetDuration;
-    playerFuncs_[SET_PLAYERBACK_SPEED] = &PlayerServiceStub::SetPlaybackSpeed;
-    playerFuncs_[GET_PLAYERBACK_SPEED] = &PlayerServiceStub::GetPlaybackSpeed;
+    playerFuncs_[SET_LISTENER_OBJ] = { &PlayerServiceStub::SetListenerObject, "Player::SetListenerObject" };
+    playerFuncs_[SET_SOURCE] = { &PlayerServiceStub::SetSource, "Player::SetSource" };
+    playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = { &PlayerServiceStub::SetMediaDataSource, "Player::SetMediaDataSource" };
+    playerFuncs_[SET_FD_SOURCE] = { &PlayerServiceStub::SetFdSource, "Player::SetFdSource" };
+    playerFuncs_[PLAY] = { &PlayerServiceStub::Play, "Player::Play" };
+    playerFuncs_[PREPARE] = { &PlayerServiceStub::Prepare, "Player::Prepare" };
+    playerFuncs_[PREPAREASYNC] = { &PlayerServiceStub::PrepareAsync, "Player::PrepareAsync" };
+    playerFuncs_[PAUSE] = { &PlayerServiceStub::Pause, "Player::Pause" };
+    playerFuncs_[STOP] = { &PlayerServiceStub::Stop, "Player::Stop" };
+    playerFuncs_[RESET] = { &PlayerServiceStub::Reset, "Player::Reset" };
+    playerFuncs_[RELEASE] = { &PlayerServiceStub::Release, "Player::Release" };
+    playerFuncs_[SET_VOLUME] = { &PlayerServiceStub::SetVolume, "Player::SetVolume" };
+    playerFuncs_[SEEK] = { &PlayerServiceStub::Seek, "Player::Seek" };
+    playerFuncs_[GET_CURRENT_TIME] = { &PlayerServiceStub::GetCurrentTime, "Player::GetCurrentTime" };
+    playerFuncs_[GET_DURATION] = { &PlayerServiceStub::GetDuration, "Player::GetDuration" };
+    playerFuncs_[SET_PLAYERBACK_SPEED] = { &PlayerServiceStub::SetPlaybackSpeed, "Player::SetPlaybackSpeed" };
+    playerFuncs_[GET_PLAYERBACK_SPEED] = { &PlayerServiceStub::GetPlaybackSpeed, "Player::GetPlaybackSpeed" };
 #ifdef SUPPORT_VIDEO
-    playerFuncs_[SET_VIDEO_SURFACE] = &PlayerServiceStub::SetVideoSurface;
+    playerFuncs_[SET_VIDEO_SURFACE] = { &PlayerServiceStub::SetVideoSurface, "Player::SetVideoSurface" };
 #endif
-    playerFuncs_[IS_PLAYING] = &PlayerServiceStub::IsPlaying;
-    playerFuncs_[IS_LOOPING] = &PlayerServiceStub::IsLooping;
-    playerFuncs_[SET_LOOPING] = &PlayerServiceStub::SetLooping;
-    playerFuncs_[SET_RENDERER_DESC] = &PlayerServiceStub::SetParameter;
-    playerFuncs_[DESTROY] = &PlayerServiceStub::DestroyStub;
-    playerFuncs_[SET_CALLBACK] = &PlayerServiceStub::SetPlayerCallback;
-    playerFuncs_[GET_VIDEO_TRACK_INFO] = &PlayerServiceStub::GetVideoTrackInfo;
-    playerFuncs_[GET_AUDIO_TRACK_INFO] = &PlayerServiceStub::GetAudioTrackInfo;
-    playerFuncs_[GET_VIDEO_WIDTH] = &PlayerServiceStub::GetVideoWidth;
-    playerFuncs_[GET_VIDEO_HEIGHT] = &PlayerServiceStub::GetVideoHeight;
-    playerFuncs_[SELECT_BIT_RATE] = &PlayerServiceStub::SelectBitRate;
+    playerFuncs_[IS_PLAYING] = { &PlayerServiceStub::IsPlaying, "Player::IsPlaying" };
+    playerFuncs_[IS_LOOPING] = { &PlayerServiceStub::IsLooping, "Player::IsLooping" };
+    playerFuncs_[SET_LOOPING] = { &PlayerServiceStub::SetLooping, "Player::SetLooping" };
+    playerFuncs_[SET_RENDERER_DESC] = { &PlayerServiceStub::SetParameter, "Player::SetParameter" };
+    playerFuncs_[DESTROY] = { &PlayerServiceStub::DestroyStub, "Player::DestroyStub" };
+    playerFuncs_[SET_CALLBACK] = { &PlayerServiceStub::SetPlayerCallback, "Player::SetPlayerCallback" };
+    playerFuncs_[GET_VIDEO_TRACK_INFO] = { &PlayerServiceStub::GetVideoTrackInfo, "Player::GetVideoTrackInfo" };
+    playerFuncs_[GET_AUDIO_TRACK_INFO] = { &PlayerServiceStub::GetAudioTrackInfo, "Player::GetAudioTrackInfo" };
+    playerFuncs_[GET_VIDEO_WIDTH] = { &PlayerServiceStub::GetVideoWidth, "Player::GetVideoWidth" };
+    playerFuncs_[GET_VIDEO_HEIGHT] = { &PlayerServiceStub::GetVideoHeight, "Player::GetVideoHeight" };
+    playerFuncs_[SELECT_BIT_RATE] = { &PlayerServiceStub::SelectBitRate, "Player::SelectBitRate" };
     return MSERR_OK;
 }
 
@@ -126,8 +129,6 @@ int32_t PlayerServiceStub::DestroyStub()
 int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
-    MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}u is received", code);
-
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (PlayerServiceStub::GetDescriptor() != remoteDescriptor) {
         MEDIA_LOGE("Invalid descriptor");
@@ -136,10 +137,15 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
 
     auto itFunc = playerFuncs_.find(code);
     if (itFunc != playerFuncs_.end()) {
-        auto memberFunc = itFunc->second;
+        auto memberFunc = itFunc->second.first;
+        auto funcName = itFunc->second.second;
+        MEDIA_LOGI("Stub: OnRemoteRequest task: %{public}s is received", funcName.c_str());
         if (memberFunc != nullptr) {
             auto task = std::make_shared<TaskHandler<int>>([&, this] {
-                return (this->*memberFunc)(data, reply);
+                int32_t id = PlayerXCollie::GetInstance().SetTimer(funcName);
+                auto ret = (this->*memberFunc)(data, reply);
+                PlayerXCollie::GetInstance().CancelTimer(id);
+                return ret;
             });
             (void)taskQue_.EnqueueTask(task);
             auto result = task->GetResult();

@@ -25,6 +25,7 @@ declare_args() {
   multimedia_player_framework_support_jsapi = true
   multimedia_player_framework_support_capi = true
   multimedia_player_framework_support_test = true
+  multimedia_player_framework_support_xcollie = true
 }
 
 player_framework_defines = []
@@ -75,4 +76,8 @@ if (multimedia_player_framework_support_video) {
 
 if (multimedia_player_framework_support_histreamer) {
   player_framework_defines += [ "SUPPORT_HISTREAMER" ]
+}
+
+if (multimedia_player_framework_support_xcollie) {
+  player_framework_defines += [ "HICOLLIE_ENABLE" ]
 }
