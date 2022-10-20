@@ -48,25 +48,25 @@ bool RecorderSetOrientationHintFuzzer::FuzzRecorderSetOrientationHint(uint8_t *d
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetOrientationHint.mp4", O_RDWR);
     
     if (g_videoRecorderConfig.outputFd >= 0) {
-        RETURN_IF(TestRecorder::SetVideoSource(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), false);
-        RETURN_IF(TestRecorder::CameraServicesForVideo(g_videoRecorderConfig), false);
+        TestRecorder::SetVideoSource(g_videoRecorderConfig);
+        TestRecorder::SetOutputFormat(g_videoRecorderConfig);
+        TestRecorder::CameraServicesForVideo(g_videoRecorderConfig);
         recorder->SetLocation(0.0, 0);
         
         int32_t rotationValue = *reinterpret_cast<int32_t *>(data);
 
         recorder->SetOrientationHint(rotationValue);
-        RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
+        TestRecorder::Prepare(g_videoRecorderConfig);
+        TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig);
+        TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
-        RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
+        TestRecorder::Stop(false, g_videoRecorderConfig);
         StopBuffer(PURE_VIDEO);
-        RETURN_IF(TestRecorder::Reset(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Release(g_videoRecorderConfig), true);
+        TestRecorder::Reset(g_videoRecorderConfig);
+        TestRecorder::Release(g_videoRecorderConfig);
     }
     close(g_videoRecorderConfig.outputFd);
-    return false;
+    return true;
 }
 }
 
