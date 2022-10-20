@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef RECORDERGETSURFACE_FUZZER
-#define RECORDERGETSURFACE_FUZZER
+#ifndef RECORDERSETORIENTATIONHINT_FUZZER
+#define RECORDERSETORIENTATIONHINT_FUZZER
 
 #include <cstdint>
 #include <unistd.h>
@@ -24,17 +24,17 @@
 #include <fcntl.h>
 #include "test_recorder.h"
 
-#define FUZZ_PROJECT_NAME "recordergetsurface_fuzzer"
+#define FUZZ_PROJECT_NAME "recordersetorientationhint_fuzzer"
 
 namespace OHOS {
 namespace Media {
-class RecorderGetSurfaceFuzzer : public TestRecorder {
+class RecorderSetOrientationHintFuzzer : public TestRecorder {
 public:
-    RecorderGetSurfaceFuzzer();
-    ~RecorderGetSurfaceFuzzer();
-    bool FuzzRecorderGetSurface(uint8_t *data, size_t size);
+    RecorderSetOrientationHintFuzzer();
+    ~RecorderSetOrientationHintFuzzer();
+    bool FuzzRecorderSetOrientationHint(uint8_t *data, size_t size);
 };
 }
-bool FuzzTestRecorderGetSurface(uint8_t *data, size_t size);
+bool FuzzTestRecorderSetOrientationHint(uint8_t *data, size_t size);
 }
 #endif

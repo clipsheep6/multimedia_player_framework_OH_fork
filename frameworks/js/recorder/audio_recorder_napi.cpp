@@ -128,7 +128,7 @@ napi_value AudioRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     (void)recorderNapi->taskQue_->Start();
 
     if (recorderNapi->callbackNapi_ == nullptr && recorderNapi->recorderImpl_ != nullptr) {
-        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env);
+        recorderNapi->callbackNapi_ = std::make_shared<RecorderCallbackNapi>(env, false);
         (void)recorderNapi->recorderImpl_->SetRecorderCallback(recorderNapi->callbackNapi_);
     }
 

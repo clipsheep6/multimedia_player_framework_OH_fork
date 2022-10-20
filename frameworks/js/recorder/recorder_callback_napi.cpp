@@ -24,8 +24,8 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-RecorderCallbackNapi::RecorderCallbackNapi(napi_env env)
-    : env_(env)
+RecorderCallbackNapi::RecorderCallbackNapi(napi_env env, bool isVideo)
+    : env_(env), isVideo_(isVideo)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -47,7 +47,7 @@ void RecorderCallbackNapi::ClearCallbackReference()
     refMap_.clear();
 }
 
-void RecorderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
+void RecorderCallbackNapi::SendErrorCallback(int32_t errCode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(ERROR_CALLBACK_NAME) == refMap_.end()) {
@@ -59,7 +59,11 @@ void RecorderCallbackNapi::SendErrorCallback(MediaServiceExtErrCode errCode)
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(ERROR_CALLBACK_NAME);
     cb->callbackName = ERROR_CALLBACK_NAME;
-    cb->errorMsg = MSExtErrorToString(errCode);
+    if (isVideo_) {
+        cb->errorMsg = MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(errCode), "", "");
+    } else {
+        cb->errorMsg = MSExtErrorToString(static_cast<MediaServiceExtErrCode>(errCode));
+    }
     cb->errorCode = errCode;
     return OnJsErrorCallBack(cb);
 }
@@ -82,8 +86,13 @@ void RecorderCallbackNapi::SendStateCallback(const std::string &callbackName)
 void RecorderCallbackNapi::OnError(RecorderErrorType errorType, int32_t errCode)
 {
     MEDIA_LOGD("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
-    MediaServiceExtErrCode err = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
-    return SendErrorCallback(err);
+    if (isVideo_) {
+        MediaServiceExtErrCode err = MSErrorToExtError(static_cast<MediaServiceErrCode>(errCode));
+        return SendErrorCallback(err);
+    } else {
+        MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+        return SendErrorCallback(err);
+    }
 }
 
 void RecorderCallbackNapi::OnInfo(int32_t type, int32_t extra)
@@ -179,7 +188,7 @@ void RecorderCallbackNapi::OnJsErrorCallBack(RecordJsCallback *jsCb) const
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr, "%{public}s fail to create error callback",
                 request.c_str());
 
-            nstatus = CommonNapi::FillErrorArgs(ref->env_, static_cast<int32_t>(event->errorCode), args[0]);
+            nstatus = CommonNapi::FillErrorArgs(ref->env_, event->errorCode, args[0]);
             CHECK_AND_RETURN_LOG(nstatus == napi_ok, "create error callback fail");
 
             // Call back function

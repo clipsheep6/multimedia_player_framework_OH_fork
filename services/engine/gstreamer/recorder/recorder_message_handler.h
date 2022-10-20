@@ -77,9 +77,9 @@ public:
 
     virtual RecorderMsgProcResult OnMessageReceived(GstMessage &rawMsg, RecorderMessage &prettyMsg) = 0;
 
-    static RecorderMsgProcResult ProcessInfoMsgDefault(GstMessage &rawMsg, RecorderMessage &prettyMsg);
-    static RecorderMsgProcResult ProcessWarningMsgDefault(GstMessage &rawMsg, RecorderMessage &prettyMsg);
-    static RecorderMsgProcResult ProcessErrorMsgDefault(GstMessage &rawMsg, RecorderMessage &prettyMsg);
+    static RecorderMsgProcResult ProcessInfoMsgDefault(GstMessage &msg, RecorderMessage &prettyMsg);
+    static RecorderMsgProcResult ProcessWarningMsgDefault(GstMessage &msg, RecorderMessage &prettyMsg);
+    static RecorderMsgProcResult ProcessErrorMsgDefault(GstMessage &msg, RecorderMessage &prettyMsg);
 };
 
 // not MT-safe

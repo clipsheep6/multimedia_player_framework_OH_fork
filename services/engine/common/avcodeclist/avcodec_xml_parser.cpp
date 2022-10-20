@@ -201,7 +201,7 @@ bool AVCodecXmlParser::ParseInternal(xmlNode *node)
     return true;
 }
 
-bool AVCodecXmlParser::TransStrAsRange(const std::string &str, Range &range) const
+bool AVCodecXmlParser::TransStrAsRange(const std::string &str, Range &range)
 {
     if (str == "null" || str == "") {
         MEDIA_LOGD("str is null");
@@ -226,7 +226,7 @@ bool AVCodecXmlParser::TransStrAsRange(const std::string &str, Range &range) con
     return true;
 }
 
-bool AVCodecXmlParser::TransStrAsSize(const std::string &str, ImgSize &size) const
+bool AVCodecXmlParser::TransStrAsSize(const std::string &str, ImgSize &size)
 {
     if (str == "null" || str == "") {
         MEDIA_LOGD("str is null");
@@ -251,7 +251,7 @@ bool AVCodecXmlParser::TransStrAsSize(const std::string &str, ImgSize &size) con
     return true;
 }
 
-std::vector<int32_t> AVCodecXmlParser::TransStrAsIntegerArray(const std::vector<std::string> &spilt) const
+std::vector<int32_t> AVCodecXmlParser::TransStrAsIntegerArray(const std::vector<std::string> &spilt)
 {
     std::vector<int32_t> array;
     for (auto iter = spilt.begin(); iter != spilt.end(); iter++) {
@@ -267,7 +267,7 @@ std::vector<int32_t> AVCodecXmlParser::TransStrAsIntegerArray(const std::vector<
 
 std::vector<int32_t> AVCodecXmlParser::TransMapAsIntegerArray(
     const std::unordered_map<std::string, int> &capabilityMap,
-    const std::vector<std::string> &spilt) const
+    const std::vector<std::string> &spilt)
 {
     std::vector<int32_t> res;
     for (auto iter = spilt.begin(); iter != spilt.end(); iter++) {
@@ -281,7 +281,7 @@ std::vector<int32_t> AVCodecXmlParser::TransMapAsIntegerArray(
 }
 
 bool AVCodecXmlParser::SpiltKeyList(const std::string &str, const std::string &delim,
-    std::vector<std::string> &spilt) const
+    std::vector<std::string> &spilt)
 {
     if (str == "") {
         return false;
@@ -303,14 +303,14 @@ bool AVCodecXmlParser::SpiltKeyList(const std::string &str, const std::string &d
 }
 
 bool AVCodecXmlParser::SetCapabilityStringData(std::unordered_map<std::string, std::string&> dataMap,
-    const std::string &capabilityKey, const std::string &capabilityValue) const
+    const std::string &capabilityKey, const std::string &capabilityValue)
 {
     dataMap.at(capabilityKey) = capabilityValue;
     return true;
 }
 
 bool AVCodecXmlParser::SetCapabilityIntData(std::unordered_map<std::string, int32_t&> dataMap,
-    const std::string &capabilityKey, const std::string &capabilityValue) const
+    const std::string &capabilityKey, const std::string &capabilityValue)
 {
     if (CODEC_TYPE_MAP.find(capabilityValue) != CODEC_TYPE_MAP.end()) {
         dataMap.at(capabilityKey) = CODEC_TYPE_MAP.at(capabilityValue);
@@ -322,7 +322,7 @@ bool AVCodecXmlParser::SetCapabilityIntData(std::unordered_map<std::string, int3
 }
 
 bool AVCodecXmlParser::SetCapabilityBoolData(std::unordered_map<std::string, bool&> dataMap,
-    const std::string &capabilityKey, const std::string &capabilityValue) const
+    const std::string &capabilityKey, const std::string &capabilityValue)
 {
     if (capabilityValue == "true") {
         dataMap.at(capabilityKey) = true;
@@ -336,7 +336,7 @@ bool AVCodecXmlParser::SetCapabilityBoolData(std::unordered_map<std::string, boo
 }
 
 bool AVCodecXmlParser::SetCapabilityRangeData(std::unordered_map<std::string, Range&> dataMap,
-    const std::string &capabilityKey, const std::string &capabilityValue) const
+    const std::string &capabilityKey, const std::string &capabilityValue)
 {
     Range range;
     bool ret = TransStrAsRange(capabilityValue, range);
@@ -346,7 +346,7 @@ bool AVCodecXmlParser::SetCapabilityRangeData(std::unordered_map<std::string, Ra
 }
 
 bool AVCodecXmlParser::SetCapabilitySizeData(std::unordered_map<std::string, ImgSize&> dataMap,
-    const std::string &capabilityKey, const std::string &capabilityValue) const
+    const std::string &capabilityKey, const std::string &capabilityValue)
 {
     ImgSize size;
     bool ret = TransStrAsSize(capabilityValue, size);
@@ -356,7 +356,7 @@ bool AVCodecXmlParser::SetCapabilitySizeData(std::unordered_map<std::string, Img
 }
 
 bool AVCodecXmlParser::SetCapabilityHashRangeData(std::unordered_map<std::string, std::map<ImgSize, Range>&> dataMap,
-    const std::string &capabilityKey, const std::string &capabilityValue) const
+    const std::string &capabilityKey, const std::string &capabilityValue)
 {
     std::map<ImgSize, Range> resolutionFrameRateMap;
     std::vector<std::string> spilt;
@@ -380,7 +380,7 @@ bool AVCodecXmlParser::SetCapabilityHashRangeData(std::unordered_map<std::string
     return true;
 }
 
-bool AVCodecXmlParser::IsNumberArray(const std::vector<std::string> &strArray) const
+bool AVCodecXmlParser::IsNumberArray(const std::vector<std::string> &strArray)
 {
     for (auto iter = strArray.begin(); iter != strArray.end(); iter++) {
         for (char const &c : *iter) {
@@ -393,7 +393,7 @@ bool AVCodecXmlParser::IsNumberArray(const std::vector<std::string> &strArray) c
 }
 
 bool AVCodecXmlParser::SetCapabilityVectorData(std::unordered_map<std::string, std::vector<int32_t>&> dataMap,
-    const std::string &capabilityKey, const std::string &capabilityValue) const
+    const std::string &capabilityKey, const std::string &capabilityValue)
 {
     std::vector<std::string> spilt;
     std::vector<int32_t> array;
@@ -501,7 +501,7 @@ bool AVCodecXmlParser::ParseData(xmlNode *node)
     return true;
 }
 
-NodeName AVCodecXmlParser::GetNodeNameAsInt(xmlNode *node) const
+NodeName AVCodecXmlParser::GetNodeNameAsInt(xmlNode *node)
 {
     if (xmlStrEqual(node->name, reinterpret_cast<const xmlChar*>("Codecs"))) {
         return CODECS;

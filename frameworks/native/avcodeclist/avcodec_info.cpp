@@ -365,8 +365,10 @@ void VideoCaps::UpdateParams()
         horizontalBlockRange_.maxVal * verticalBlockRange_.maxVal));
     blockPerSecondRange_ = blockPerSecondRange_.Intersect(blockPerFrameRange_.minVal * frameRateRange_.minVal,
         blockPerFrameRange_.maxVal * frameRateRange_.maxVal);
-    frameRateRange_ = frameRateRange_.Intersect(blockPerSecondRange_.minVal / blockPerFrameRange_.maxVal,
-        blockPerSecondRange_.maxVal / blockPerFrameRange_.minVal);
+    if (blockPerFrameRange_.maxVal != 0 && blockPerFrameRange_.minVal != 0) {
+        frameRateRange_ = frameRateRange_.Intersect(blockPerSecondRange_.minVal / blockPerFrameRange_.maxVal,
+            blockPerSecondRange_.maxVal / blockPerFrameRange_.minVal);
+    }
 }
 
 Range VideoCaps::DivRange(const Range &range, const int32_t &divisor)

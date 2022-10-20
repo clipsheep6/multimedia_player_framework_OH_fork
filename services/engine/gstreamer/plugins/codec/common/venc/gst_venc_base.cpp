@@ -141,13 +141,13 @@ static void gst_venc_base_init_config(GObjectClass *gobject_class)
             0, G_MAXINT32, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 }
 
-static void gst_venc_base_set_property_next(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+static void gst_venc_base_set_property_next(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec)
 {
     (void)pspec;
     GstVencBase *self = GST_VENC_BASE(object);
     g_return_if_fail(value != nullptr);
     g_return_if_fail(self != nullptr);
-    switch (prop_id) {
+    switch (property_id) {
         case PROP_BITRATE_MODE:
             self->bitrate_mode = g_value_get_int(value);
             break;
@@ -165,14 +165,14 @@ static void gst_venc_base_set_property_next(GObject *object, guint prop_id, cons
     }
 }
 
-static void gst_venc_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+static void gst_venc_base_set_property(GObject *object, guint property_id, const GValue *value, GParamSpec *pspec)
 {
     GST_DEBUG_OBJECT(object, "Set Property");
     GstVencBase *self = GST_VENC_BASE(object);
     g_return_if_fail(value != nullptr);
     g_return_if_fail(self != nullptr);
     gint ret = GST_CODEC_OK;
-    switch (prop_id) {
+    switch (property_id) {
         case PROP_BITRATE: {
             GST_INFO_OBJECT(object, "Set dynamic bitrate");
             GST_OBJECT_LOCK(self);
@@ -213,16 +213,16 @@ static void gst_venc_base_set_property(GObject *object, guint prop_id, const GVa
         default:
             break;
     }
-    gst_venc_base_set_property_next(object, prop_id, value, pspec);
+    gst_venc_base_set_property_next(object, property_id, value, pspec);
 }
 
-static void gst_venc_base_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+static void gst_venc_base_get_property(GObject *object, guint property_id, GValue *value, GParamSpec *pspec)
 {
     (void)pspec;
     GST_DEBUG_OBJECT(object, "Get Property");
     g_return_if_fail(object != nullptr);
     GstVencBase *self = GST_VENC_BASE(object);
-    switch (prop_id) {
+    switch (property_id) {
         case PROP_BITRATE:
             GST_OBJECT_LOCK(self);
             g_value_set_uint(value, self->bitrate);
@@ -1026,7 +1026,7 @@ static void gst_venc_base_update_pool(GstVencBase *self, GstBufferPool **pool, G
     g_return_if_fail(config != nullptr);
     gst_buffer_pool_config_set_params(config, caps, size, buf_cnt, buf_cnt);
     if (self->memtype == GST_MEMTYPE_SURFACE) {
-        gst_structure_set(config, "usage", G_TYPE_INT, self->usage, nullptr);
+        gst_structure_set(config, "usage", G_TYPE_UINT64, self->usage, nullptr);
     }
     g_return_if_fail(gst_buffer_pool_set_config(*pool, config));
     CANCEL_SCOPE_EXIT_GUARD(0);

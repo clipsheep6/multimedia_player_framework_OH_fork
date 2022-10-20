@@ -36,7 +36,6 @@ static const std::unordered_map<uint32_t, std::string> PARAM_TYPE_NAME_MAP = {
     PARAM_TYPE_NAME_ITEM(AUD_BITRATE, "audio bitrate"),
     PARAM_TYPE_NAME_ITEM(MAX_DURATION, "max record duration"),
     PARAM_TYPE_NAME_ITEM(MAX_SIZE, "max record size"),
-    PARAM_TYPE_NAME_ITEM(OUT_PATH, "output path"),
     PARAM_TYPE_NAME_ITEM(OUT_FD, "out file descripter"),
     PARAM_TYPE_NAME_ITEM(NEXT_OUT_FD, "next out file descripter"),
     PARAM_TYPE_NAME_ITEM(OUTPUT_FORMAT, "output file format"),
@@ -58,7 +57,7 @@ int32_t RecorderElementFactory::RegisterElement(const std::string &key, const El
 }
 
 std::shared_ptr<RecorderElement> RecorderElementFactory::CreateElement(
-    const std::string key, const RecorderElement::CreateParam &param)
+    const std::string &key, const RecorderElement::CreateParam &param)
 {
     std::shared_ptr<RecorderElement> elem;
     {
@@ -104,8 +103,8 @@ int32_t RecorderElement::DrainAll(bool isDrain)
     MEDIA_LOGI("perform drainAll for %{public}s", name_.c_str());
 
     if (!isDrain) {
-        auto block = [] (GstPad *pad, GstPadProbeInfo *info, gpointer userdata) {
-            (void)userdata;
+        auto block = [] (GstPad *pad, GstPadProbeInfo *info, gpointer userData) {
+            (void)userData;
             if (pad == nullptr || info == nullptr) {
                 return GST_PAD_PROBE_PASS;
             }

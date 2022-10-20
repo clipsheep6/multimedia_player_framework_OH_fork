@@ -33,9 +33,11 @@ namespace Media {
 RecorderSetAudioSourceFuzzer::RecorderSetAudioSourceFuzzer()
 {
 }
+
 RecorderSetAudioSourceFuzzer::~RecorderSetAudioSourceFuzzer()
 {
 }
+
 bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, size_t size)
 {
     constexpr int32_t audioSourceTypesList = 3;
@@ -43,7 +45,7 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
-    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_audio_es.m4a", O_RDWR);
+    g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_setAudioSource.m4a", O_RDWR);
 
     AudioSourceType AudioSourceType[audioSourceTypesList] {
         AUDIO_SOURCE_INVALID,
@@ -51,37 +53,36 @@ bool RecorderSetAudioSourceFuzzer::FuzzRecorderSetAudioSource(uint8_t *data, siz
         AUDIO_MIC,
     };
 
-    int32_t sourcesubscript = abs((ProduceRandomNumberCrypt()) % (audioSourceTypesList));
-    int32_t sourceId = *reinterpret_cast<int32_t *>(data);
+    int32_t sourcesubscript = *reinterpret_cast<int32_t *>(data) % (audioSourceTypesList);
 
     g_videoRecorderConfig.aSource = AudioSourceType[sourcesubscript];
-    g_videoRecorderConfig.audioSourceId = sourceId;
     
     if (g_videoRecorderConfig.outputFd > 0) {
-        RETURN_IF(TestRecorder::SetAudioSource(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetOutputFormat(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::CameraServicesForAudio(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetMaxDuration(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetOutputFile(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::SetRecorderCallback(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Prepare(g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Start(g_videoRecorderConfig), true);
+        TestRecorder::SetAudioSource(g_videoRecorderConfig);
+        TestRecorder::SetOutputFormat(g_videoRecorderConfig);
+        TestRecorder::CameraServicesForAudio(g_videoRecorderConfig);
+        TestRecorder::SetMaxDuration(g_videoRecorderConfig);
+        TestRecorder::SetOutputFile(g_videoRecorderConfig);
+        TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
+        TestRecorder::Prepare(g_videoRecorderConfig);
+        TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
-        RETURN_IF(TestRecorder::Stop(false, g_videoRecorderConfig), true);
-        RETURN_IF(TestRecorder::Release(g_videoRecorderConfig), true);
+        TestRecorder::Stop(false, g_videoRecorderConfig);
+        TestRecorder::Release(g_videoRecorderConfig);
     }
     close(g_videoRecorderConfig.outputFd);
     return true;
 }
 }
+
 bool FuzzTestRecorderSetAudioSource(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
-        return 0;
+        return true;
     }
 
     if (size < sizeof(int32_t)) {
-        return 0;
+        return true;
     }
     RecorderSetAudioSourceFuzzer testRecorder;
     return testRecorder.FuzzRecorderSetAudioSource(data, size);

@@ -42,7 +42,7 @@ namespace Media {
     } while (false)
 
 GstPad *RecorderPipelineLinkHelper::GetGstPad(
-    const std::shared_ptr<RecorderElement> &elem, bool isStaticPad, const std::string padName)
+    const std::shared_ptr<RecorderElement> &elem, bool isStaticPad, const std::string &padName)
 {
     GstPad *pad = nullptr;
     if (isStaticPad) {
@@ -89,10 +89,10 @@ int32_t RecorderPipelineLinkHelper::ExecuteOneLink(
         UNREF_STATIC_PAD(sinkPad, linkDesc.isSinkPadStatic);
     };
 
-    srcPad = GetGstPad(srcElem, linkDesc.isSrcPadStatic, linkDesc.srcPad.c_str());
+    srcPad = GetGstPad(srcElem, linkDesc.isSrcPadStatic, linkDesc.srcPad);
     CHECK_AND_RETURN_RET(srcPad != nullptr, MSERR_INVALID_OPERATION);
 
-    sinkPad = GetGstPad(linkDesc.dstElem, linkDesc.isSinkPadStatic, linkDesc.sinkPad.c_str());
+    sinkPad = GetGstPad(linkDesc.dstElem, linkDesc.isSinkPadStatic, linkDesc.sinkPad);
     CHECK_AND_RETURN_RET(sinkPad != nullptr, MSERR_INVALID_OPERATION);
 
     GstPadLinkReturn ret = gst_pad_link(srcPad, sinkPad);

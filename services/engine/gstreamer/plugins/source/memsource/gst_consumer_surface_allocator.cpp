@@ -91,7 +91,7 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
     mem->pixel_format = pixel_format;
     mem->damage = damage;
     mem->is_eos_frame = end_of_stream;
-    mem->buffer_handle = reinterpret_cast<intptr_t>(surface_buffer->GetBufferHandle());
+    mem->buffer_handle = surface_buffer->GetBufferHandle();
     GST_INFO_OBJECT(allocator, "acquire surface buffer");
 
     CANCEL_SCOPE_EXIT_GUARD(0);

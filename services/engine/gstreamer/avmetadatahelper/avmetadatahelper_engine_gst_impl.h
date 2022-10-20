@@ -66,6 +66,7 @@ private:
     bool errHappened_ = false;
     int32_t status_ = PLAYBIN_STATE_IDLE;
     bool firstFetch_ = true;
+    bool asyncDone_ = false;
 };
 } // namespace Media
 } // namespace OHOS
