@@ -139,7 +139,7 @@ int32_t PlayBinCtrlerBase::Init()
 
     ChangeState(idleState_);
 
-    msgQueue_ = std::make_unique<TaskQueue>("playbin-ctrl-msg");
+    msgQueue_ = std::make_unique<TaskQueue>("PlaybinCtrl");
     int32_t ret = msgQueue_->Start();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "msgqueue start failed");
 
