@@ -92,6 +92,19 @@ private:
     int32_t value_;
 };
 
+class MediaJsResultIntVector : public MediaJsResult {
+public:
+    explicit MediaJsResultIntVector(const std::vector<int32_t> &value)
+        : value_(value)
+    {
+    }
+    ~MediaJsResultIntVector() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override;
+
+private:
+    std::vector<int32_t> value_;
+};
+
 class MediaJsResultString : public MediaJsResult {
 public:
     explicit MediaJsResultString(const std::string &value)

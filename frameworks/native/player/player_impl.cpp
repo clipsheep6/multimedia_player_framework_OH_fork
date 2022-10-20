@@ -164,6 +164,20 @@ int32_t PlayerImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return playerService_->GetAudioTrackInfo(audioTrack);
 }
 
+int32_t PlayerImpl::SetTrackIndex(int32_t index)
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
+
+    return playerService_->SetTrackIndex(index);
+}
+
+int32_t PlayerImpl::GetSelectedTrack(std::vector<int32_t> &trackIndex)
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
+
+    return playerService_->GetSelectedTrack(trackIndex);
+}
+
 int32_t PlayerImpl::GetVideoWidth()
 {
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");

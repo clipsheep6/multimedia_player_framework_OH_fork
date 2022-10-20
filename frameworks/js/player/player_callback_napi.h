@@ -28,6 +28,7 @@ struct AudioPlayerAsyncContext : public MediaAsyncContext {
     explicit AudioPlayerAsyncContext(napi_env env) : MediaAsyncContext(env) {}
     ~AudioPlayerAsyncContext() = default;
     AudioPlayerNapi *jsPlayer = nullptr;
+    int32_t track = 0;
 };
 
 class PlayerCallbackNapi : public PlayerCallback {

@@ -191,6 +191,20 @@ int32_t PlayerClient::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return playerProxy_->GetAudioTrackInfo(audioTrack);
 }
 
+int32_t PlayerClient::SetTrackIndex(int32_t index)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
+    return playerProxy_->SetTrackIndex(index);
+}
+
+int32_t PlayerClient::GetSelectedTrack(std::vector<int32_t> &trackIndex)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_NO_MEMORY, "player service does not exist..");
+    return playerProxy_->GetSelectedTrack(trackIndex);
+}
+
 int32_t PlayerClient::GetVideoWidth()
 {
     std::lock_guard<std::mutex> lock(mutex_);

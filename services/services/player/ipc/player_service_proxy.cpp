@@ -366,6 +366,46 @@ int32_t PlayerServiceProxy::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::SetTrackIndex(int32_t index)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
+    data.WriteInt32(index);
+    int error = Remote()->SendRequest(SET_TRACK_INDEX, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("Set track index failed, error: %{public}d", error);
+        return error;
+    }
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetSelectedTrack(std::vector<int32_t> &trackIndex)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor())) {
+        MEDIA_LOGE("Failed to write descriptor");
+        return MSERR_UNKNOWN;
+    }
+
+    int error = Remote()->SendRequest(GET_SELECTED_TRACK, data, reply, option);
+    if (error != MSERR_OK) {
+        MEDIA_LOGE("Get selected tracks failed, error: %{public}d", error);
+        return error;
+    }
+    reply.ReadInt32Vector(&trackIndex);
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::GetVideoWidth()
 {
     MessageParcel data;

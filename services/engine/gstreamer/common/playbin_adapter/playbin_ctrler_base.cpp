@@ -431,6 +431,44 @@ void PlayBinCtrlerBase::SetAudioInterruptMode(const int32_t interruptMode)
     }
 }
 
+int32_t PlayBinCtrlerBase::SelectVideoTrack(int32_t index)
+{
+    MEDIA_LOGD("enter");
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    g_object_set(playbin_, "current-video", index, nullptr);
+    return MSERR_OK;
+}
+
+int32_t PlayBinCtrlerBase::SelectAudioTrack(int32_t index)
+{
+    MEDIA_LOGD("enter");
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    g_object_set(playbin_, "current-audio", index, nullptr);
+    return MSERR_OK;
+}
+
+int32_t PlayBinCtrlerBase::GetSelectVideoTrackIndex()
+{
+    MEDIA_LOGD("enter");
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    int32_t index = -1;
+    g_object_get(playbin_, "current-video", &index, nullptr);
+    return index;
+}
+
+int32_t PlayBinCtrlerBase::GetSelectAudioTrackIndex()
+{
+    MEDIA_LOGD("enter");
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    int32_t index = -1;
+    g_object_get(playbin_, "current-audio", &index, nullptr);
+    return index;
+}
+
 int32_t PlayBinCtrlerBase::SelectBitRate(uint32_t bitRate)
 {
     std::unique_lock<std::mutex> lock(mutex_);

@@ -60,6 +60,10 @@ public:
     double GetRate() override;
     int32_t SetLoop(bool loop) override;
     void SetVolume(const float &leftVolume, const float &rightVolume) override;
+    int32_t SelectVideoTrack(int32_t index) override;
+    int32_t SelectAudioTrack(int32_t index) override;
+    int32_t GetSelectVideoTrackIndex() override;
+    int32_t GetSelectAudioTrackIndex() override;
     void SetAudioInterruptMode(const int32_t interruptMode) override;
     int32_t SetAudioRendererInfo(const uint32_t rendererInfo, const int32_t rendererFlag) override;
     int32_t SelectBitRate(uint32_t bitRate) override;

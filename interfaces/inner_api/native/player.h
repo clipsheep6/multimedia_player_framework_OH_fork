@@ -387,6 +387,28 @@ public:
     virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
 
     /**
+     * @brief Select a media track to be played.
+     *
+     * @param index the index of the track to be selected.
+     * @return Returns {@link MSERR_OK} if the track info is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t SetTrackIndex(int32_t index) = 0;
+
+    /**
+     * @brief Get the index of tracks currently selected.
+     *
+     * @param trackIndex track index vector.
+     * @return Returns {@link MSERR_OK} if the track info is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 3.2
+     * @version 3.2
+     */
+    virtual int32_t GetSelectedTrack(std::vector<int32_t> &trackIndex) = 0;
+
+    /**
      * @brief get the video width.
      *
      * @return Returns width if success; else returns 0

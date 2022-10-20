@@ -154,6 +154,16 @@ private:
      */
     static napi_value GetTrackDescription(napi_env env, napi_callback_info info);
     /**
+     * selectTrack(index: number, callback: AsyncCallback<number>): void
+     * selectTrack(index: number): Promise<number>
+     */
+    static napi_value SelectTrack(napi_env env, napi_callback_info info);
+    /**
+     * getSelectedTracks(): Promise<Array<number>>
+     * getSelectedTracks(callback: AsyncCallback<Array<number>>): void
+     */
+    static napi_value GetSelectedTracks(napi_env env, napi_callback_info info);
+    /**
      * on(type: 'playbackCompleted', callback: Callback<void>): void
      * on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, valut: number) => void): void
      * on(type: 'startRenderFrame', callback: Callback<void>): void
@@ -164,6 +174,8 @@ private:
     static void AsyncGetTrackDescription(napi_env env, void *data);
     static void AsyncSetDisplaySurface(napi_env env, void *data);
     static void CompleteAsyncWork(napi_env env, napi_status status, void *data);
+    static void AsyncGetSelectedTracks(napi_env env, void *data);
+    static void AsyncSelectTrack(napi_env env, void *data);
     static int32_t ProcessWork(napi_env env, napi_status status, void *data);
     void ErrorCallback(MediaServiceExtErrCode errCode, std::string errMsg = "unknown");
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);

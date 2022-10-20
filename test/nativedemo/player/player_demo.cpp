@@ -353,6 +353,28 @@ int32_t PlayerDemo::GetTrackInfo()
     return 0;
 }
 
+void PlayerDemo::SetTrackIndex()
+{
+    cout << "Please SetTrackIndex" << endl;
+    string index;
+    int32_t audiotrackindex;
+    (void)getline(cin, index);
+    if (index != "") {
+        StrToInt(index, audiotrackindex);
+        cout << "SetTrackIndex :" << audiotrackindex << endl;
+        player_->SetTrackIndex(audiotrackindex);
+    }
+}
+
+void PlayerDemo::GetSelectedTrack()
+{
+    std::vector<int32_t> trackIndex;
+    player_->GetSelectedTrack(trackIndex);
+    cout << "GetSelectedTrack size: " << trackIndex.size() << endl;
+    cout << "GetAudioTrackIndex :" << trackIndex.back() << endl;
+    cout << "GetVideoTrackIndex :" << trackIndex.front() << endl;
+}
+
 int32_t PlayerDemo::GetPlaybackSpeed() const
 {
     PlaybackRateMode mode;
@@ -481,6 +503,39 @@ void PlayerDemo::DoCmd(const std::string &cmd)
     }
 }
 
+bool PlayerDemo::DoSelectTrack(const std::string &cmd)
+{
+    bool cmdFound = true;
+    if (cmd.find("trackinfo") != std::string::npos) {
+        GetTrackInfo();
+    } else if (cmd.find("settrackindex") != std::string::npos) {
+        SetTrackIndex();
+    } else if (cmd.find("gettrackindex") != std::string::npos) {
+        GetSelectedTrack();
+    } else {
+        cmdFound = false;
+    }
+    return cmdFound;
+}
+
+bool PlayerDemo::DoSetSourceSeekVolume(const std::string &cmd)
+{
+    bool cmdFound = true;
+    if (cmd.find("source ") != std::string::npos) {
+        (void)SelectSource(cmd.substr(cmd.find("source ") + std::string("source ").length()));
+    } else if (cmd.find("seek ") != std::string::npos) {
+        Seek(cmd.substr(cmd.find("seek ") + std::string("seek ").length()));
+    } else if (cmd.find("volume ") != std::string::npos) {
+        std::string volume = cmd.substr(cmd.find("volume ") + std::string("volume ").length());
+        if (!volume.empty()) {
+            (void)player_->SetVolume(std::stof(volume.c_str()), std::stof(volume.c_str()));
+        }
+    } else {
+        cmdFound = false;
+    }
+    return cmdFound;
+}
+
 void PlayerDemo::DoNext()
 {
     std::string cmd;
@@ -494,6 +549,27 @@ void PlayerDemo::DoNext()
             if (cmd.find("stop") != std::string::npos && dataSrc_ != nullptr) {
                 dataSrc_->Reset();
             }
+            continue;
+        } else if (cmd.find("duration") != std::string::npos) {
+            int32_t duration = -1;
+            (void)player_->GetDuration(duration);
+            cout << "GetDuration:" << duration << endl;
+            continue;
+        } else if (cmd.find("time") != std::string::npos) {
+            GetCurrentTime();
+            continue;
+        } else if (cmd.find("loop ") != std::string::npos) {
+            SetLoop(cmd.substr(cmd.find("loop ") + std::string("loop ").length()));
+            continue;
+        } else if (cmd.find("speed ") != std::string::npos) {
+            SetPlaybackSpeed(cmd.substr(cmd.find("speed ") + std::string("speed ").length()));
+            continue;
+        } else if (cmd.find("videosize") != std::string::npos) {
+            cout << "video width: " << player_->GetVideoWidth() << ", height: " << player_->GetVideoHeight();
+            continue;
+        } else if (DoSetSourceSeekVolume(cmd)) {
+            continue;
+        } else if (DoSelectTrack(cmd)) {
             continue;
         } else if (cmd.find("quit") != std::string::npos || cmd == "q") {
             break;

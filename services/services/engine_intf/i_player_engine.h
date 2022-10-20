@@ -22,6 +22,7 @@
 #include <refbase.h>
 #include "player.h"
 #include "nocopyable.h"
+#include "media_errors.h"
 
 namespace OHOS {
 class Surface;
@@ -51,6 +52,8 @@ public:
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
     virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
+    virtual int32_t SetTrackIndex(int32_t index) = 0;
+    virtual int32_t GetSelectedTrack(std::vector<int32_t> &trackIndex) = 0;
     virtual int32_t GetVideoWidth() = 0;
     virtual int32_t GetVideoHeight() = 0;
     virtual int32_t GetDuration(int32_t &duration) = 0;
