@@ -28,15 +28,25 @@ group("fuzztest") {
     "$MEDIA_ROOT_DIR/avmetadata_fuzztest/avmetadatasetsource_fuzzer:AVmetadataSetSourceFuzzTest",
     "$MEDIA_ROOT_DIR/player_fuzztest/playerfile_fuzzer:PlayerFileFuzzTest",
     "$MEDIA_ROOT_DIR/player_fuzztest/playerseek_fuzzer:PlayerSeekFuzzTest",
+    "$MEDIA_ROOT_DIR/player_fuzztest/playerservicestub_fuzzer:PlayerServiceStubFuzzTest",
     "$MEDIA_ROOT_DIR/player_fuzztest/playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiochannels_fuzzer:RecorderSetAudioChannelsFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiochannelsnum_fuzzer:RecorderSetAudioChannelsNumFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudioencoder_fuzzer:RecorderSetAudioEncoderFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudioencodingbitrate_fuzzer:RecorderSetAudioEncodingBitRateFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudioencodingbitratebitrate_fuzzer:RecorderSetAudioEncodingBitRateBitRateFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiosamplerate_fuzzer:RecorderSetAudioSampleRateFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetaudiosource_fuzzer:RecorderSetAudioSourceFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetcapturerate_fuzzer:RecorderSetCaptureRateFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetfilesplitduration_fuzzer:RecorderSetFileSplitDurationFuzzTest",
     "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetlocation_fuzzer:RecorderSetLocationFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetorientationhint_fuzzer:RecorderSetOrientationHintFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetparameter_fuzzer:RecorderSetParameterFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideoencoder_fuzzer:RecorderSetVideoEncoderFuzzTest",
+    
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideoframerate_fuzzer:RecorderSetVideoFrameRateFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideosize_fuzzer:RecorderSetVideoSizeFuzzTest",
+    "$MEDIA_ROOT_DIR/recorder_fuzztest/recordersetvideosource_fuzzer:RecorderSetVideoSourceFuzzTest",
   ]
 }
 ###############################################################################
