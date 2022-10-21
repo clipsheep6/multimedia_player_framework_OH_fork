@@ -293,8 +293,10 @@ public:
     /**
      * @brief Sets a video encoder for recording.
      *
-     * If this function is not called, the output file does not contain the video track.
-     * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.
+     * If this function is not called, the output file does not contain the video track when the video source is 
+     * YUV or RGB.
+     * This function must be called after {@link SetOutputFormat} but before {@link Prepare}. It is valid when the
+     * video source is YUV or RGB.
      *
      * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
      * @param encoder Indicates the video encoder to set. For details, see {@link VideoCodecFormat}.

@@ -58,6 +58,7 @@ private:
     std::unique_ptr<RecorderPipelineLinkHelper> linkHelper_;
     size_t videoSrcCount_ = 0;
     size_t otherSrcCount_ = 0;
+    int32_t currentVideoSourceType_ = 0;
     int32_t currentCodeFormat_ = 0;
     int32_t appUid_;
     int32_t appPid_;

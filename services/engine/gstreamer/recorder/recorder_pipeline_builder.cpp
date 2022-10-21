@@ -139,6 +139,8 @@ int32_t RecorderPipelineBuilder::SetVideoSource(const RecorderSourceDesc &desc)
         ADD_LINK_DESC(videoParseElem_, muxSink_, "src", "video", true, false);
     }
 
+    currentVideoSourceType_ = desc.type_;
+
     return MSERR_OK;
 }
 
@@ -206,6 +208,10 @@ int32_t RecorderPipelineBuilder::Configure(int32_t sourceId, const RecorderParam
     }
 
     if (param.type == RecorderPublicParamType::VID_ENC_FMT) {
+        if (currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
+            return MSERR_OK;
+        }
+
         const VidEnc &tempParam = static_cast<const VidEnc &>(param);
         currentCodeFormat_ = tempParam.encFmt;
     }
