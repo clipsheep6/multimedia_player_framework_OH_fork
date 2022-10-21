@@ -269,6 +269,7 @@ std::shared_ptr<RecorderPipeline> RecorderPipelineBuilder::Build()
             }
         }
 
+        CHECK_AND_RETURN_RET(videoEncElem_ != nullptr, nullptr);
         ADD_LINK_DESC(videoEncElem_, videoParseElem_, "src", "sink", true, true);
         ADD_LINK_DESC(videoParseElem_, muxSink_, "src", "video", true, false);
     }
