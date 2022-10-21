@@ -211,8 +211,7 @@ int32_t RecorderPipelineBuilder::Configure(int32_t sourceId, const RecorderParam
         const VidEnc &tempParam = static_cast<const VidEnc &>(param);
         if ((currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) &&
             (tempParam.encFmt != VideoCodecFormat::MPEG4) &&
-            (tempParam.encFmt != VideoCodecFormat::VIDEO_DEFAULT))
-        {
+            (tempParam.encFmt != VideoCodecFormat::VIDEO_DEFAULT)) {
             return MSERR_INVALID_OPERATION;
         }
         currentCodeFormat_ = tempParam.encFmt;
