@@ -299,8 +299,7 @@ std::shared_ptr<RecorderPipeline> RecorderPipelineBuilder::Build()
      *    audio converter element into audio stream.
      */
 
-    int32_t ret;
-    ret = CheckPipeline();
+    int32_t ret = CheckPipeline();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
 
     for (auto &elem : pipelineDesc_->allElems) {
