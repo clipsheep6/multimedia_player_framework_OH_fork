@@ -200,6 +200,32 @@ int32_t RecorderPipelineBuilder::SetOutputFormat(OutputFormatType formatType)
     return MSERR_OK;
 }
 
+int32_t RecorderPipelineBuilder::CheckConfigure(int32_t sourceId, const RecorderParam &param)
+{
+    (void)sourceId;
+    if (param.type == RecorderPublicParamType::VID_ENC_FMT) {
+        const VidEnc &tempParam = static_cast<const VidEnc &>(param);
+
+        if (currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
+            if (tempParam.encFmt != VideoCodecFormat::H264) {
+                MEDIA_LOGE("When videosourcetype is ES, only H264 encoding format can be configured !");
+                return MSERR_INVALID_OPERATION;
+            }
+
+            needVideoParse_ = false;
+            return MSERR_OK;
+        }
+
+        if (tempParam.encFmt == VideoCodecFormat::H264) {
+            needVideoParse_ = true;
+        } else {
+            needVideoParse_ = false;
+        }
+    }
+
+    return MSERR_OK;
+}
+
 int32_t RecorderPipelineBuilder::Configure(int32_t sourceId, const RecorderParam &param)
 {
     if (!outputFormatConfiged_) {
@@ -207,23 +233,40 @@ int32_t RecorderPipelineBuilder::Configure(int32_t sourceId, const RecorderParam
         return MSERR_INVALID_OPERATION;
     }
 
-    if (param.type == RecorderPublicParamType::VID_ENC_FMT) {
-        const VidEnc &tempParam = static_cast<const VidEnc &>(param);
-        if ((currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) &&
-            (tempParam.encFmt != VideoCodecFormat::MPEG4) &&
-            (tempParam.encFmt != VideoCodecFormat::VIDEO_DEFAULT)) {
-            return MSERR_INVALID_OPERATION;
-        }
-        currentCodeFormat_ = tempParam.encFmt;
-    }
+    int32_t ret = MSERR_OK;
+    ret = CheckConfigure(sourceId, param);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
     // distribute parameters to elements
-    int32_t ret = MSERR_OK;
     for (auto &elem : pipelineDesc_->allElems) {
         if (elem->GetSourceId() == sourceId) {
             ret = elem->Configure(param);
             CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
         }
+    }
+
+    return MSERR_OK;
+}
+
+int32_t RecorderPipelineBuilder::CheckPipeline()
+{
+    if (needVideoParse_) {
+        RecorderSourceDesc desc {};
+        videoParseElem_ = CreateElement("VideoParse", desc, false);
+        CHECK_AND_RETURN_RET(videoParseElem_ != nullptr, MSERR_UNKNOWN);
+
+        for (auto iter = pipelineDesc_->allLinkDescs.begin(); iter != pipelineDesc_->allLinkDescs.end();) {
+            if (iter->first->GetName() == "VideoEncoder") {
+                pipelineDesc_->allLinkDescs.erase(iter++);
+                break;
+            } else {
+                iter++;
+            }
+        }
+
+        CHECK_AND_RETURN_RET(videoEncElem_ != nullptr, MSERR_INVALID_OPERATION);
+        ADD_LINK_DESC(videoEncElem_, videoParseElem_, "src", "sink", true, true);
+        ADD_LINK_DESC(videoParseElem_, muxSink_, "src", "video", true, false);
     }
 
     return MSERR_OK;
@@ -256,26 +299,10 @@ std::shared_ptr<RecorderPipeline> RecorderPipelineBuilder::Build()
      *    audio converter element into audio stream.
      */
 
-    if (currentCodeFormat_ == VideoCodecFormat::H264) {
-        RecorderSourceDesc desc {};
-        videoParseElem_ = CreateElement("VideoParse", desc, false);
-        CHECK_AND_RETURN_RET(videoParseElem_ != nullptr, nullptr);
-
-        for (auto iter = pipelineDesc_->allLinkDescs.begin(); iter != pipelineDesc_->allLinkDescs.end();) {
-            if (iter->first->GetName() == "VideoEncoder") {
-                pipelineDesc_->allLinkDescs.erase(iter++);
-                break;
-            } else {
-                iter++;
-            }
-        }
-
-        CHECK_AND_RETURN_RET(videoEncElem_ != nullptr, nullptr);
-        ADD_LINK_DESC(videoEncElem_, videoParseElem_, "src", "sink", true, true);
-        ADD_LINK_DESC(videoParseElem_, muxSink_, "src", "video", true, false);
-    }
-
     int32_t ret;
+    ret = CheckPipeline();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
+
     for (auto &elem : pipelineDesc_->allElems) {
         ret = elem->CheckConfigReady();  // Check whether the parameter fully configured
         CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
