@@ -207,11 +207,6 @@ int32_t RecorderPipelineBuilder::CheckConfigure(int32_t sourceId, const Recorder
         const VidEnc &tempParam = static_cast<const VidEnc &>(param);
 
         if (currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
-            if (tempParam.encFmt != VideoCodecFormat::H264) {
-                MEDIA_LOGE("When videosourcetype is ES, only H264 encoding format can be configured !");
-                return MSERR_INVALID_OPERATION;
-            }
-
             needVideoParse_ = false;
             return MSERR_OK;
         }
@@ -233,8 +228,7 @@ int32_t RecorderPipelineBuilder::Configure(int32_t sourceId, const RecorderParam
         return MSERR_INVALID_OPERATION;
     }
 
-    int32_t ret = MSERR_OK;
-    ret = CheckConfigure(sourceId, param);
+    int32_t ret = CheckConfigure(sourceId, param);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
     // distribute parameters to elements
