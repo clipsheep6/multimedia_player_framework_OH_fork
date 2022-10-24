@@ -13,22 +13,28 @@
  * limitations under the License.
  */
 
-#ifndef PLAYERSEEK_FUZZER_H
-#define PLAYERSEEK_FUZZER_H
+#ifndef RECORDERSETAUDIOCHANNELSNUM_FUZZER
+#define RECORDERSETAUDIOCHANNELSNUM_FUZZER
 
-#define FUZZ_PROJECT_NAME "playerseek_fuzzer"
-#include "test_player.h"
+#include <cstdint>
+#include <unistd.h>
+#include <climits>
+#include <cstdio>
+#include <cstdlib>
+#include <fcntl.h>
+#include "test_recorder.h"
+
+#define FUZZ_PROJECT_NAME "recordersetaudiochannelsnum_fuzzer"
 
 namespace OHOS {
 namespace Media {
-class PlayerSeekFuzzer : public TestPlayer {
+class RecorderSetAudioChannelsNumFuzzer : public TestRecorder {
 public:
-    PlayerSeekFuzzer();
-    ~PlayerSeekFuzzer();
-    bool FuzzSeek(uint8_t* data, size_t size);
+    RecorderSetAudioChannelsNumFuzzer();
+    ~RecorderSetAudioChannelsNumFuzzer();
+    bool FuzzRecorderSetAudioChannelsNum(uint8_t *data, size_t size);
 };
 }
-bool FuzzPlayerSeek(uint8_t* data, size_t size);
+bool FuzzTestRecorderSetAudioChannelsNum(uint8_t *data, size_t size);
 }
 #endif
-

@@ -28,8 +28,6 @@
 #include "system_ability_definition.h"
 
 
-#include <cstddef.h>
-#include <cstdint.h>
 #include <iostream>
 
 using namespace std;
