@@ -437,8 +437,7 @@ bool TestRecorder::SetParameter(int32_t sourceId, const Format &format, VideoRec
 bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig_ &recorderConfig)
 {
     if (recorderType != PURE_AUDIO) {
-        RETURN_IF(TestRecorder::GetSurface(recorderConfig), false);
-
+        TestRecorder::GetSurface(recorderConfig);
         if (recorderConfig.vSource == VIDEO_SOURCE_SURFACE_ES) {
             RETURN_IF(TestRecorder::GetStubFile(), false);
             camereHDIThread.reset(new(std::nothrow) std::thread(&TestRecorder::HDICreateESBuffer, this));
