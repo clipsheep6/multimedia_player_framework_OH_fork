@@ -80,7 +80,7 @@ public:
     bool SetVideoEncodingBitRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     bool SetCaptureRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig, double fps);
     bool SetNextOutputFile(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool GetSurface(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void GetSurface(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     bool SetMaxFileSize(int64_t size, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     bool SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration,
         RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
