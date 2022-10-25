@@ -29,6 +29,7 @@ declare namespace media {
    * @import import media from '@ohos.multimedia.media'
    * @return Returns an AudioPlayer instance if the operation is successful; returns null otherwise.
    * @deprecated since 9
+   * @useinstead ohos.multimedia.media#createAVPlayer
    */
   function createAudioPlayer(): AudioPlayer;
 
@@ -39,6 +40,7 @@ declare namespace media {
    * @import import media from '@ohos.multimedia.media'
    * @return Returns an AudioRecorder instance if the operation is successful; returns null otherwise.
    * @deprecated since 9
+   * @useinstead ohos.multimedia.media#createAVRecorder
    */
   function createAudioRecorder(): AudioRecorder;
 
@@ -49,6 +51,7 @@ declare namespace media {
    * @import import media from '@ohos.multimedia.media'
    * @param callback Callback used to return AudioPlayer instance if the operation is successful; returns null otherwise.
    * @deprecated since 9
+   * @useinstead ohos.multimedia.media#createAVPlayer
    */
   function createVideoPlayer(callback: AsyncCallback<VideoPlayer>): void;
   /**
@@ -58,6 +61,7 @@ declare namespace media {
    * @import import media from '@ohos.multimedia.media'
    * @return A Promise instance used to return VideoPlayer instance if the operation is successful; returns null otherwise.
    * @deprecated since 9
+   * @useinstead ohos.multimedia.media#createAVPlayer
    */
   function createVideoPlayer() : Promise<VideoPlayer>;
 
@@ -401,14 +405,14 @@ declare namespace media {
       * @since 9
       * @syscap SystemCapability.Multimedia.Media.AVPlayer
       */
-      url: string;
+      url ?: string;
  
      /**
       * Media file descriptor. Mainstream media formats are supported.
       * @since 9
       * @syscap SystemCapability.Multimedia.Media.AVPlayer
       */
-     fdSrc: AVFileDescriptor;
+     fdSrc ?: AVFileDescriptor;
  
      /**
       * Whether to loop media playback. The value true means to loop playback.
@@ -748,6 +752,7 @@ declare namespace media {
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
    * @import import media from '@ohos.multimedia.media'
    * @deprecated since 9
+   * @useinstead ohos.multimedia.media.AVPlayerState
    */
   type AudioState = 'idle' | 'playing' | 'paused' | 'stopped' | 'error';
 
@@ -757,12 +762,15 @@ declare namespace media {
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
    * @deprecated since 9
+   * @useinstead ohos.multimedia.media.AVPlayer
    */
   interface AudioPlayer {
     /**
      * Starts audio playback.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#play
      */
     play(): void;
 
@@ -770,6 +778,8 @@ declare namespace media {
      * Pauses audio playback.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#pause
      */
     pause(): void;
 
@@ -777,6 +787,8 @@ declare namespace media {
      * Stops audio playback.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#stop
      */
     stop(): void;
 
@@ -784,6 +796,8 @@ declare namespace media {
      * Resets audio playback.
      * @since 7
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#reset
      */
     reset(): void;
 
@@ -792,6 +806,8 @@ declare namespace media {
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
      * @param timeMs Playback position to jump
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#seek
      */
     seek(timeMs: number): void;
 
@@ -800,6 +816,8 @@ declare namespace media {
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
      * @param vol Relative volume. The value ranges from 0.00 to 1.00. The value 1 indicates the maximum volume (100%).
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#setVolume
      */
     setVolume(vol: number): void;
 
@@ -807,6 +825,8 @@ declare namespace media {
      * Releases resources used for audio playback.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#release
      */
     release(): void;
     /**
@@ -814,6 +834,8 @@ declare namespace media {
     * @since 8
     * @syscap SystemCapability.Multimedia.Media.AudioPlayer
     * @param callback async callback return track info in MediaDescription.
+    * @deprecated since 9
+    * @useinstead ohos.multimedia.media.AVPlayer#getTrackDescription
     */
     getTrackDescription(callback: AsyncCallback<Array<MediaDescription>>): void;
 
@@ -822,6 +844,8 @@ declare namespace media {
     * @since 8
     * @syscap SystemCapability.Multimedia.Media.AudioPlayer
     * @return A Promise instance used to return the track info in MediaDescription.
+    * @deprecated since 9
+    * @useinstead ohos.multimedia.media.AVPlayer#getTrackDescription
     */
     getTrackDescription() : Promise<Array<MediaDescription>>;
 
@@ -831,6 +855,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
      * @param type Type of the playback buffering update event to listen for.
      * @param callback Callback used to listen for the buffering update event, return BufferingInfoType and the value.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:bufferingUpdate
      */
     on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
 
@@ -840,6 +866,8 @@ declare namespace media {
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
      * @permission ohos.permission.READ_MEDIA or ohos.permission.INTERNET
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#src
      */
     src: string;
 
@@ -847,6 +875,8 @@ declare namespace media {
      * Audio file descriptor. Mainstream audio formats are supported.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#fdSrc
      */
     fdSrc: AVFileDescriptor;
 
@@ -854,6 +884,8 @@ declare namespace media {
      * Whether to loop audio playback. The value true means to loop playback.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#loop
      */
     loop: boolean;
 
@@ -863,6 +895,8 @@ declare namespace media {
      * first time in order for the interrupt mode to become effective thereafter.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#audioInterruptMode
      */
     audioInterruptMode ?: audio.InterruptMode;
 
@@ -870,6 +904,8 @@ declare namespace media {
      * Current playback position.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#currentTime
      */
     readonly currentTime: number;
 
@@ -877,6 +913,8 @@ declare namespace media {
      * Playback duration, When the data source does not support seek, it returns - 1, such as a live broadcast scenario.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#duration
      */
     readonly duration: number;
 
@@ -884,6 +922,8 @@ declare namespace media {
      * Playback state.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#state
      */
     readonly state: AudioState;
 
@@ -893,6 +933,10 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:stateChange
+     * @useinstead ohos.multimedia.media.AVPlayer#event:volumeChange
+     * @useinstead ohos.multimedia.media.AVPlayer#event:playComplete
      */
     on(type: 'play' | 'pause' | 'stop' | 'reset' | 'dataLoad' | 'finish' | 'volumeChange', callback: () => void): void;
 
@@ -902,6 +946,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:timeUpdate
      */
     on(type: 'timeUpdate', callback: Callback<number>): void;
 
@@ -911,6 +957,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return audio interrupt info.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:audioInterrupt
      */
     on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
 
@@ -920,6 +968,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioPlayer
      * @param type Type of the playback error event to listen for.
      * @param callback Callback used to listen for the playback error event.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:error
      */
     on(type: 'error', callback: ErrorCallback): void;
   }
@@ -1039,6 +1089,7 @@ declare namespace media {
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    * @deprecated since 9
+   * @useinstead ohos.multimedia.media.AVRecorderConfig
    */
   interface AudioRecorderConfig {
     /**
@@ -1054,6 +1105,7 @@ declare namespace media {
      * Audio encoding bit rate.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     audioEncodeBitRate?: number;
 
@@ -1061,6 +1113,7 @@ declare namespace media {
      * Audio sampling rate.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     audioSampleRate?: number;
 
@@ -1068,6 +1121,7 @@ declare namespace media {
      * Number of audio channels.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     numberOfChannels?: number;
 
@@ -1087,6 +1141,7 @@ declare namespace media {
      * fd:    fd://fd
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     uri: string;
 
@@ -1094,6 +1149,7 @@ declare namespace media {
      * Geographical location information.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     location?: Location;
 
@@ -1101,12 +1157,14 @@ declare namespace media {
      * audio encoding format MIME. it used to replace audioEncoder.
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     audioEncoderMime?: CodecMimeType;
     /**
      * output file format. see @ContainerFormatType , it used to replace "format".
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     fileFormat?: ContainerFormatType;
   }
@@ -1117,6 +1175,7 @@ declare namespace media {
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    * @deprecated since 9
+   * @useinstead ohos.multimedia.media.AVRecorder
    */
   interface AudioRecorder {
     /**
@@ -1125,6 +1184,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @param config Recording parameters.
      * @permission ohos.permission.MICROPHONE
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#prepare
      */
     prepare(config: AudioRecorderConfig): void;
 
@@ -1132,6 +1193,8 @@ declare namespace media {
      * Starts audio recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#start
      */
     start(): void;
 
@@ -1139,6 +1202,8 @@ declare namespace media {
      * Pauses audio recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#pause
      */
     pause(): void;
 
@@ -1146,6 +1211,8 @@ declare namespace media {
      * Resumes audio recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#resume
      */
     resume(): void;
 
@@ -1153,6 +1220,8 @@ declare namespace media {
      * Stops audio recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#stop
      */
     stop(): void;
 
@@ -1160,6 +1229,8 @@ declare namespace media {
      * Releases resources used for audio recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#release
      */
     release(): void;
 
@@ -1169,6 +1240,8 @@ declare namespace media {
      * you must call prepare() to set the recording configurations for another recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#reset
      */
     reset(): void;
 
@@ -1178,6 +1251,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @param type Type of the audio recording event to listen for.
      * @param callback Callback used to listen for the audio recording event.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#stateChange
      */
     on(type: 'prepare' | 'start' | 'pause' | 'resume' | 'stop' | 'release' | 'reset', callback: () => void): void;
 
@@ -1187,6 +1262,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @param type Type of the audio recording error event to listen for.
      * @param callback Callback used to listen for the audio recording error event.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#error
      */
     on(type: 'error', callback: ErrorCallback): void;
   }
@@ -1375,36 +1452,47 @@ declare namespace media {
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @deprecated since 9
+   * @useinstead ohos.multimedia.media.AVPlayerSpeed
    */
   enum PlaybackSpeed {
     /**
      * playback at 0.75x normal speed
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayerSpeed
      */
     SPEED_FORWARD_0_75_X = 0,
     /**
      * playback at normal speed
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayerSpeed
      */
     SPEED_FORWARD_1_00_X = 1,
     /**
      * playback at 1.25x normal speed
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayerSpeed
      */
     SPEED_FORWARD_1_25_X = 2,
     /**
      * playback at 1.75x normal speed
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayerSpeed
      */
     SPEED_FORWARD_1_75_X = 3,
     /**
      * playback at 2.0x normal speed
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayerSpeed
      */
     SPEED_FORWARD_2_00_X = 4,
   }
@@ -1454,6 +1542,7 @@ declare namespace media {
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
    * @import import media from '@ohos.multimedia.media'
    * @deprecated since 9
+   * @useinstead ohos.multimedia.media.AVPlayer
    */
   interface VideoPlayer {
     /**
@@ -1462,6 +1551,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param surfaceId surface id, video player will use this id get a surface instance.
      * @return A Promise instance used to return when release output buffer completed.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#surfaceId
      */
     setDisplaySurface(surfaceId: string, callback: AsyncCallback<void>): void;
     /**
@@ -1470,6 +1561,8 @@ declare namespace media {
     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
     * @param surfaceId surface id, video player will use this id get a surface instance.
     * @return A Promise instance used to return when release output buffer completed.
+    * @deprecated since 9
+    * @useinstead ohos.multimedia.media.AVPlayer#surfaceId
     */
     setDisplaySurface(surfaceId: string): Promise<void>;
     /**
@@ -1477,6 +1570,8 @@ declare namespace media {
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param callback A callback instance used to return when prepare completed.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#prepare
      */
     prepare(callback: AsyncCallback<void>): void;
      /**
@@ -1484,6 +1579,8 @@ declare namespace media {
       * @since 8
       * @syscap SystemCapability.Multimedia.Media.VideoPlayer
       * @return A Promise instance used to return when prepare completed.
+      * @deprecated since 9
+      * @useinstead ohos.multimedia.media.AVPlayer#prepare
       */
     prepare(): Promise<void>;
     /**
@@ -1491,6 +1588,8 @@ declare namespace media {
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param callback A callback instance used to return when start completed.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#play
      */
     play(callback: AsyncCallback<void>): void;
      /**
@@ -1498,6 +1597,8 @@ declare namespace media {
       * @since 8
       * @syscap SystemCapability.Multimedia.Media.VideoPlayer
       * @return A Promise instance used to return when start completed.
+      * @deprecated since 9
+      * @useinstead ohos.multimedia.media.AVPlayer#play
       */
     play(): Promise<void>;
     /**
@@ -1505,6 +1606,8 @@ declare namespace media {
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param callback A callback instance used to return when pause completed.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#pause
      */
     pause(callback: AsyncCallback<void>): void;
      /**
@@ -1512,6 +1615,8 @@ declare namespace media {
       * @since 8
       * @syscap SystemCapability.Multimedia.Media.VideoPlayer
       * @return A Promise instance used to return when pause completed.
+      * @deprecated since 9
+      * @useinstead ohos.multimedia.media.AVPlayer#pause
       */
     pause(): Promise<void>;
     /**
@@ -1519,6 +1624,8 @@ declare namespace media {
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param callback A callback instance used to return when stop completed.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#stop
      */
     stop(callback: AsyncCallback<void>): void;
      /**
@@ -1526,6 +1633,8 @@ declare namespace media {
       * @since 8
       * @syscap SystemCapability.Multimedia.Media.VideoPlayer
       * @return A Promise instance used to return when stop completed.
+      * @deprecated since 9
+      * @useinstead ohos.multimedia.media.AVPlayer#stop
       */
     stop(): Promise<void>;
     /**
@@ -1533,6 +1642,8 @@ declare namespace media {
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param callback A callback instance used to return when reset completed.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#reset
      */
     reset(callback: AsyncCallback<void>): void;
      /**
@@ -1540,6 +1651,8 @@ declare namespace media {
       * @since 8
       * @syscap SystemCapability.Multimedia.Media.VideoPlayer
       * @return A Promise instance used to return when reset completed.
+      * @deprecated since 9
+      * @useinstead ohos.multimedia.media.AVPlayer#reset
       */
     reset(): Promise<void>;
     /**
@@ -1550,6 +1663,8 @@ declare namespace media {
      * @param timeMs Playback position to jump
      * @param callback A callback instance used to return when seek completed
      * and return the seeking position result.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#seek
      */
     seek(timeMs: number, callback: AsyncCallback<number>): void;
     /**
@@ -1560,6 +1675,8 @@ declare namespace media {
      * @param mode seek mode, see @SeekMode .
      * @param callback A callback instance used to return when seek completed
      * and return the seeking position result.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#seek
      */
     seek(timeMs: number, mode:SeekMode, callback: AsyncCallback<number>): void;
      /**
@@ -1570,6 +1687,8 @@ declare namespace media {
       * @param mode seek mode, see @SeekMode .
       * @return A Promise instance used to return when seek completed
       * and return the seeking position result.
+      * @deprecated since 9
+      * @useinstead ohos.multimedia.media.AVPlayer#seek
       */
     seek(timeMs: number, mode?:SeekMode): Promise<number>;
     /**
@@ -1578,6 +1697,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param vol Relative volume. The value ranges from 0.00 to 1.00. The value 1 indicates the maximum volume (100%).
      * @param callback A callback instance used to return when set volume completed.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#setVolume
      */
     setVolume(vol: number, callback: AsyncCallback<void>): void;
      /**
@@ -1586,6 +1707,8 @@ declare namespace media {
       * @syscap SystemCapability.Multimedia.Media.VideoPlayer
       * @param vol Relative volume. The value ranges from 0.00 to 1.00. The value 1 indicates the maximum volume (100%).
       * @return A Promise instance used to return when set volume completed.
+      * @deprecated since 9
+      * @useinstead ohos.multimedia.media.AVPlayer#setVolume
       */
     setVolume(vol: number): Promise<void>;
     /**
@@ -1593,6 +1716,8 @@ declare namespace media {
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param callback A callback instance used to return when release completed.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#release
      */
     release(callback: AsyncCallback<void>): void;
      /**
@@ -1600,6 +1725,8 @@ declare namespace media {
       * @since 8
       * @syscap SystemCapability.Multimedia.Media.VideoPlayer
       * @return A Promise instance used to return when release completed.
+      * @deprecated since 9
+      * @useinstead ohos.multimedia.media.AVPlayer#release
       */
     release(): Promise<void>;
     /**
@@ -1607,6 +1734,8 @@ declare namespace media {
     * @since 8
     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
     * @param callback async callback return track info in MediaDescription.
+    * @deprecated since 9
+    * @useinstead ohos.multimedia.media.AVPlayer#getTrackDescription
     */
     getTrackDescription(callback: AsyncCallback<Array<MediaDescription>>): void;
 
@@ -1615,6 +1744,8 @@ declare namespace media {
     * @since 8
     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
     * @return A Promise instance used to return the track info in MediaDescription.
+    * @deprecated since 9
+    * @useinstead ohos.multimedia.media.AVPlayer#getTrackDescription
     */
     getTrackDescription() : Promise<Array<MediaDescription>>;
 
@@ -1623,6 +1754,8 @@ declare namespace media {
      * local:fd://XXX, file://XXX. network:http://xxx
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#url
      */
     url: string;
 
@@ -1630,6 +1763,8 @@ declare namespace media {
      * Video file descriptor. Mainstream video formats are supported.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#fdSrc
      */
     fdSrc: AVFileDescriptor;
 
@@ -1637,6 +1772,8 @@ declare namespace media {
      * Whether to loop video playback. The value true means to loop playback.
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#loop
      */
     loop: boolean;
 
@@ -1644,6 +1781,8 @@ declare namespace media {
      * Current playback position.
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#currentTime
      */
     readonly currentTime: number;
 
@@ -1651,6 +1790,8 @@ declare namespace media {
      * Playback duration, if -1 means cannot seek.
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#duration
      */
     readonly duration: number;
 
@@ -1658,6 +1799,8 @@ declare namespace media {
      * Playback state.
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#state
      */
     readonly state: VideoPlayState;
 
@@ -1665,6 +1808,8 @@ declare namespace media {
      * video width, valid after prepared.
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#width
      */
     readonly width: number;
 
@@ -1672,6 +1817,8 @@ declare namespace media {
      * video height, valid after prepared.
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#height
      */
     readonly height: number;
 
@@ -1681,6 +1828,8 @@ declare namespace media {
      * first time in order for the interrupt mode to become effective thereafter.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#audioInterruptMode
      */
     audioInterruptMode ?: audio.InterruptMode;
 
@@ -1689,6 +1838,8 @@ declare namespace media {
      * information, refer to {@link #VideoScaleType}
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#videoScaleType
      */
     videoScaleType ?: VideoScaleType;
 
@@ -1698,6 +1849,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param speed playback speed, see @PlaybackSpeed .
      * @param callback Callback used to return actually speed.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#setSpeed
      */
     setSpeed(speed:number, callback: AsyncCallback<number>): void;
     /**
@@ -1706,6 +1859,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param speed playback speed, see @PlaybackSpeed .
      * @return A Promise instance used to return actually speed.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#setSpeed
      */
     setSpeed(speed:number): Promise<number>;
 
@@ -1715,6 +1870,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return .
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:playComplete
      */
     on(type: 'playbackCompleted', callback: Callback<void>): void;
 
@@ -1724,6 +1881,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param type Type of the playback buffering update event to listen for.
      * @param callback Callback used to listen for the buffering update event, return BufferingInfoType and the value.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:bufferingUpdate
      */
     on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
 
@@ -1733,6 +1892,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return .
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:startRenderFrame
      */
     on(type: 'startRenderFrame', callback: Callback<void>): void;
 
@@ -1742,6 +1903,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return video size.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:videoSizeChange
      */
     on(type: 'videoSizeChanged', callback: (width: number, height: number) => void): void;
 
@@ -1751,6 +1914,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return audio interrupt info.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:audioInterrupt
      */
     on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
 
@@ -1760,6 +1925,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
      * @param type Type of the playback error event to listen for.
      * @param callback Callback used to listen for the playback error event.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVPlayer#event:error
      */
     on(type: 'error', callback: ErrorCallback): void;
   }
@@ -2010,28 +2177,28 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
-    audioBitrate: number;
+    audioBitrate?: number;
 
     /**
      * Indicates the number of audio channels.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
-    audioChannels: number;
+    audioChannels?: number;
 
     /**
      * Indicates the audio encoding format.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
-    audioCodec: CodecMimeType;
+    audioCodec?: CodecMimeType;
 
     /**
      * Indicates the audio sampling rate.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
-    audioSampleRate: number;
+    audioSampleRate?: number;
 
     /**
      * Indicates the output file format.
@@ -2045,35 +2212,35 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
-    videoBitrate: number;
+    videoBitrate?: number;
 
     /**
      * Indicates the video encoding format.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
-    videoCodec: CodecMimeType;
+    videoCodec?: CodecMimeType;
 
     /**
      * Indicates the video width.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
-    videoFrameWidth: number;
+    videoFrameWidth?: number;
 
     /**
      * Indicates the video height.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
-    videoFrameHeight: number;
+    videoFrameHeight?: number;
 
     /**
      * Indicates the video frame rate.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
-    videoFrameRate: number;
+    videoFrameRate?: number;
   }
 
   /**
@@ -2129,7 +2296,7 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
-    audioSourceType: AudioSourceType;
+    audioSourceType?: AudioSourceType;
     /**
      * video source type, details see @VideoSourceType .
      * @since 9
