@@ -43,6 +43,8 @@ private:
     std::shared_ptr<RecorderElement> CreateElement(
         const std::string &name, const RecorderSourceDesc &desc, bool isSource);
     void EnsureSourceOrder(bool isVideo);
+    int32_t CheckConfigure(int32_t sourceId, const RecorderParam &param);
+    int32_t CheckPipeline();
 
     int32_t ExecuteLink();
 
@@ -55,10 +57,11 @@ private:
     std::shared_ptr<RecorderElement> videoConverElem_;
 
     bool outputFormatConfiged_ = false;
+    bool needVideoParse_ = false;
     std::unique_ptr<RecorderPipelineLinkHelper> linkHelper_;
     size_t videoSrcCount_ = 0;
     size_t otherSrcCount_ = 0;
-    int32_t currentCodeFormat_ = 0;
+    int32_t currentVideoSourceType_ = 0;
     int32_t appUid_;
     int32_t appPid_;
     uint32_t appTokenId_;
