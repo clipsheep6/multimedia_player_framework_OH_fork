@@ -68,7 +68,6 @@ bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, s
         TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
         TestRecorder::Prepare(g_videoRecorderConfig);
         TestRecorder::RequesetBuffer(PURE_AUDIO, g_videoRecorderConfig);
-        cout << "RequesetBuffer" << endl;
         TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
         TestRecorder::Stop(false, g_videoRecorderConfig);
