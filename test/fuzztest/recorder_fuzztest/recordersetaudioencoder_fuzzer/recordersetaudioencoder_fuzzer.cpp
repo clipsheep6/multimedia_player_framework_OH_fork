@@ -45,18 +45,11 @@ bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, s
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
-    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = MPEG4;
     g_videoRecorderConfig.outputFd = open("/data/test/media/recorder_SetAudioEncoder.mp4", O_RDWR);
     
     if (g_videoRecorderConfig.outputFd >= 0) {
-        TestRecorder::SetVideoSource(g_videoRecorderConfig);
         TestRecorder::SetAudioSource(g_videoRecorderConfig);
         TestRecorder::SetOutputFormat(g_videoRecorderConfig);
-        TestRecorder::SetVideoEncoder(g_videoRecorderConfig);
-        TestRecorder::SetVideoSize(g_videoRecorderConfig);
-        TestRecorder::SetVideoFrameRate(g_videoRecorderConfig);
-        TestRecorder::SetVideoEncodingBitRate(g_videoRecorderConfig);
 
         AudioCodecFormat audioCodecFormat[audioCodecFormatList] {
             AUDIO_DEFAULT,
@@ -74,11 +67,12 @@ bool RecorderSetAudioEncoderFuzzer::FuzzRecorderSetAudioEncoder(uint8_t *data, s
         TestRecorder::SetOutputFile(g_videoRecorderConfig);
         TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
         TestRecorder::Prepare(g_videoRecorderConfig);
-        TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig);
+        TestRecorder::RequesetBuffer(PURE_AUDIO, g_videoRecorderConfig);
+        cout << "RequesetBuffer" << endl;
         TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
         TestRecorder::Stop(false, g_videoRecorderConfig);
-        StopBuffer(PURE_VIDEO);
+        StopBuffer(PURE_AUDIO);
         TestRecorder::Reset(g_videoRecorderConfig);
         TestRecorder::Release(g_videoRecorderConfig);
     }

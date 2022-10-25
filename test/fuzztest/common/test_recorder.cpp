@@ -388,15 +388,9 @@ bool TestRecorder::SetMaxFileSize(int64_t size, VideoRecorderConfig_ &recorderCo
     return true;
 }
 
-bool TestRecorder::GetSurface(VideoRecorderConfig_ &recorderConfig)
+void TestRecorder::GetSurface(VideoRecorderConfig_ &recorderConfig)
 {
-    OHOS::sptr<OHOS::Surface> retValue = recorder->GetSurface(recorderConfig.videoSourceId);
-    if (retValue == nullptr) {
-        recorder->Release();
-        close(recorderConfig.outputFd);
-        return false;
-    }
-    return true;
+    producerSurface = recorder->GetSurface(recorderConfig.videoSourceId);
 }
 
 bool TestRecorder::CameraServicesForVideo(VideoRecorderConfig_ &recorderConfig)
@@ -537,7 +531,7 @@ void TestRecorder::HDICreateYUVBuffer()
     constexpr int32_t countSplit = 30;
     constexpr int32_t countColor = 255;
     while (nowFrame < STUB_STREAM_SIZE) {
-        if (!isExit_.load()) {
+        if (isExit_.load()) {
             break;
         }
 
