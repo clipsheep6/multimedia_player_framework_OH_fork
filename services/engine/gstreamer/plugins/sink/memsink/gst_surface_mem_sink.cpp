@@ -393,10 +393,10 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
 
     if (surface_sink->firstRenderFrame && is_preroll) {
         GST_DEBUG_OBJECT(surface_sink, "first render frame");
+        surface_sink->firstRenderFrame = FALSE;
         GST_OBJECT_UNLOCK(surface_sink);
         return GST_FLOW_OK;
     }
-    surface_sink->firstRenderFrame = FALSE;
 
     (void)gst_surface_do_render_buffer(memsink, buffer, is_preroll);
 
