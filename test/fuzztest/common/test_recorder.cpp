@@ -30,7 +30,7 @@ constexpr uint32_t FRAME_RATE = 30000;
 constexpr uint32_t CODEC_BUFFER_WIDTH = 1024;
 constexpr uint32_t CODEC_BUFFER_HEIGHT = 25;
 constexpr uint32_t YUV_BUFFER_WIDTH = 1280;
-constexpr uint32_t YUV_BUFFER_HEIGHT = 720;
+constexpr uint32_t YUV_BUFFER_HEIGHT = 768;
 constexpr uint32_t STRIDE_ALIGN = 8;
 constexpr uint32_t FRAME_DURATION = 40000000;
 constexpr uint32_t YUV_BUFFER_SIZE = YUV_BUFFER_WIDTH * YUV_BUFFER_HEIGHT * 3 / 2;
@@ -388,15 +388,9 @@ bool TestRecorder::SetMaxFileSize(int64_t size, VideoRecorderConfig_ &recorderCo
     return true;
 }
 
-bool TestRecorder::GetSurface(VideoRecorderConfig_ &recorderConfig)
+void TestRecorder::GetSurface(VideoRecorderConfig_ &recorderConfig)
 {
-    OHOS::sptr<OHOS::Surface> retValue = recorder->GetSurface(recorderConfig.videoSourceId);
-    if (retValue == nullptr) {
-        recorder->Release();
-        close(recorderConfig.outputFd);
-        return false;
-    }
-    return true;
+    producerSurface = recorder->GetSurface(recorderConfig.videoSourceId);
 }
 
 bool TestRecorder::CameraServicesForVideo(VideoRecorderConfig_ &recorderConfig)
@@ -443,8 +437,7 @@ bool TestRecorder::SetParameter(int32_t sourceId, const Format &format, VideoRec
 bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig_ &recorderConfig)
 {
     if (recorderType != PURE_AUDIO) {
-        RETURN_IF(TestRecorder::GetSurface(recorderConfig), false);
-
+        TestRecorder::GetSurface(recorderConfig);
         if (recorderConfig.vSource == VIDEO_SOURCE_SURFACE_ES) {
             RETURN_IF(TestRecorder::GetStubFile(), false);
             camereHDIThread.reset(new(std::nothrow) std::thread(&TestRecorder::HDICreateESBuffer, this));
@@ -537,7 +530,7 @@ void TestRecorder::HDICreateYUVBuffer()
     constexpr int32_t countSplit = 30;
     constexpr int32_t countColor = 255;
     while (nowFrame < STUB_STREAM_SIZE) {
-        if (!isExit_.load()) {
+        if (isExit_.load()) {
             break;
         }
 
