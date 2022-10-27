@@ -92,6 +92,21 @@ int32_t PlayerXCollie::SetTimer(const std::string &name, bool recovery, uint32_t
 #endif
 }
 
+int32_t PlayerXCollie::SetTimerByLog(const std::string &name, uint32_t timeout)
+{
+#ifdef HICOLLIE_ENABLE
+    unsigned int flag = HiviewDFX::XCOLLIE_FLAG_LOG;
+    int32_t id = HiviewDFX::XCollie::GetInstance().SetTimer(name, timeout, nullptr, this, flag);
+    if (id != HiviewDFX::INVALID_ID) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        dfxDumper_.emplace(id, name);
+    }
+    return id;
+#else
+    return -1;
+#endif
+}
+
 void PlayerXCollie::CancelTimer(int32_t id)
 {
 #ifdef HICOLLIE_ENABLE

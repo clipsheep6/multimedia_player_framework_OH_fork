@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "media_dfx.h"
 #include "param_wrapper.h"
+#include "player_xcollie.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioSinkSvImpl"};
@@ -197,7 +198,9 @@ int32_t AudioSinkSvImpl::Start()
     MediaTrace trace("AudioSink::Start");
     MEDIA_LOGD("audioRenderer Start In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Start");
     (void)audioRenderer_->Start();
+    PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer Start Out");
     return MSERR_OK;
 }
@@ -207,7 +210,9 @@ int32_t AudioSinkSvImpl::Stop()
     MediaTrace trace("AudioSink::Stop");
     MEDIA_LOGD("audioRenderer Stop In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Stop");
     (void)audioRenderer_->Stop();
+    PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer Stop Out");
     return MSERR_OK;
 }
@@ -217,9 +222,11 @@ int32_t AudioSinkSvImpl::Pause()
     MediaTrace trace("AudioSink::Pause");
     MEDIA_LOGD("audioRenderer Pause In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Pause");
     if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
         CHECK_AND_RETURN_RET(audioRenderer_->Pause() == true, MSERR_AUD_RENDER_FAILED);
     }
+    PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer Pause Out");
     return MSERR_OK;
 }
@@ -229,7 +236,9 @@ int32_t AudioSinkSvImpl::Drain()
     MediaTrace trace("AudioSink::Drain");
     MEDIA_LOGD("Drain");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Pause");
     CHECK_AND_RETURN_RET(audioRenderer_->Drain() == true, MSERR_AUD_RENDER_FAILED);
+    PlayerXCollie::GetInstance().CancelTimer(id);
     return MSERR_OK;
 }
 
@@ -239,7 +248,9 @@ int32_t AudioSinkSvImpl::Flush()
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
         MEDIA_LOGD("Flush");
+        int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Flush");
         CHECK_AND_RETURN_RET(audioRenderer_->Flush() == true, MSERR_AUD_RENDER_FAILED);
+        PlayerXCollie::GetInstance().CancelTimer(id);
     }
     
     return MSERR_OK;
@@ -250,7 +261,9 @@ int32_t AudioSinkSvImpl::Release()
     MediaTrace trace("AudioSink::Release");
     MEDIA_LOGD("audioRenderer Release In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Release");
     (void)audioRenderer_->Release();
+    PlayerXCollie::GetInstance().CancelTimer(id);
     audioRenderer_ = nullptr;
     MEDIA_LOGD("audioRenderer Release Out");
     return MSERR_OK;
@@ -298,7 +311,9 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
     params.encodingType = AudioStandard::ENCODING_PCM;
     MEDIA_LOGD("SetParameters out, channels:%{public}d, sampleRate:%{public}d", params.channelCount, params.sampleRate);
     MEDIA_LOGD("audioRenderer SetParams In");
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::SetParams");
     CHECK_AND_RETURN_RET(audioRenderer_->SetParams(params) == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
+    PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer SetParams Out");
     return MSERR_OK;
 }
