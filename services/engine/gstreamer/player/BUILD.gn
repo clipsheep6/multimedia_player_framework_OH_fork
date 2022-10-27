@@ -39,6 +39,7 @@ config("media_engine_gst_player_config") {
     "-Wimplicit-fallthrough",
     "-Wsign-compare",
     "-Wunused-parameter",
+    "-Wno-deprecated-declarations",
   ]
 
   include_dirs = [
