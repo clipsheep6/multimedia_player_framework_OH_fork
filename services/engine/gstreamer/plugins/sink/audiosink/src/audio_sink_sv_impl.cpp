@@ -137,8 +137,10 @@ int32_t AudioSinkSvImpl::SetVolume(float volume)
     MEDIA_LOGD("audioRenderer SetVolume(%{public}lf) In", volume);
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED, "audioRenderer_ is nullptr");
     volume = (isMute_ == false) ? volume : 0.0;
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::SetVolume");
     int32_t ret = audioRenderer_->SetVolume(volume);
     CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED, "audio server setvolume failed!");
+    PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer SetVolume(%{public}lf) Out", volume);
     return MSERR_OK;
 }
