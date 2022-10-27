@@ -238,7 +238,7 @@ int32_t AudioSinkSvImpl::Drain()
     MediaTrace trace("AudioSink::Drain");
     MEDIA_LOGD("Drain");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
-    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Pause");
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Drain");
     CHECK_AND_RETURN_RET(audioRenderer_->Drain() == true, MSERR_AUD_RENDER_FAILED);
     PlayerXCollie::GetInstance().CancelTimer(id);
     return MSERR_OK;
