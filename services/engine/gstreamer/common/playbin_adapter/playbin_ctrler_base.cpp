@@ -26,6 +26,7 @@
 #include "playbin_state.h"
 #include "gst_utils.h"
 #include "media_dfx.h"
+#include "player_xcollie.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinCtrlerBase"};
@@ -297,7 +298,9 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     {
         MEDIA_LOGD("Stop Start");
         if (GetCurrState() != stoppedState_) {
+            int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("stoppingCond_.wait");
             stoppingCond_.wait(lock);
+            PlayerXCollie::GetInstance().CancelTimer(id);
         }
         MEDIA_LOGD("Stop End");
     }
