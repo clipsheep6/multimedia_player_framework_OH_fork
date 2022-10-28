@@ -35,6 +35,7 @@ public:
 protected:
     std::shared_ptr<PlayerMock> player_ = nullptr;
     std::shared_ptr<PlayerCallbackTest> callback_ = nullptr;
+    void PlayFunTest(const std::string &protocol = PlayerTestParam::LOCAL_PLAY);
 };
 } // namespace Media
 } // namespace OHOS
