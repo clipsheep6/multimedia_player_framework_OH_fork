@@ -67,7 +67,7 @@ bool RecorderSetAudioEncodingBitRateFuzzer::FuzzRecorderSetAudioEncodingBitRate(
         TestRecorder::SetOutputFile(g_videoRecorderConfig);
         TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
         TestRecorder::Prepare(g_videoRecorderConfig);
-        TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig);
+        RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), false);
         TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
         TestRecorder::Stop(false, g_videoRecorderConfig);
