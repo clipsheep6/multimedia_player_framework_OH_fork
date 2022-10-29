@@ -341,7 +341,7 @@ void TestRecorder::HDICreateESBuffer()
             continue;
         }
         if ((retValue == SURFACE_ERROR_OK) && (buffer != nullptr)) {
-            break;;
+            break;
         }
 
         sptr<SyncFence> syncFence = new SyncFence(releaseFence);
