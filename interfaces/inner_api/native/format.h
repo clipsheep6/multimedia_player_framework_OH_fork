@@ -187,12 +187,12 @@ public:
     bool GetStringValue(const std::string_view &key, std::string &value) const;
 
     /**
-     * @brief Obtains the metadata value of the string type.
+     * @brief Obtains the metadata value of the buffer type.
      *
      * @param key Indicates the metadata key.
      * @param addr Indicates the metadata addr to obtain, which is a uint8_t **.
      * @param size Indicates the metadata addr size to obtain, which is a size_t.
-     * @return Returns <b>true</b> if the string is successfully obtained; returns <b>false</b> otherwise.
+     * @return Returns <b>true</b> if the buffer is successfully obtained; returns <b>false</b> otherwise.
      * @since 1.0
      * @version 1.0
      */

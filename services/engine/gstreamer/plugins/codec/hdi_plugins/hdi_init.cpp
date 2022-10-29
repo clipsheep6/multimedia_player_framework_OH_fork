@@ -239,7 +239,7 @@ void HdiInit::InitCaps()
         MEDIA_LOGW("Component num is %{public}d", len);
         return;
     }
-    CodecCompCapability *hdiCaps = new CodecCompCapability[len];
+    CodecCompCapability *hdiCaps = new(std::nothrow) CodecCompCapability[len];
     CHECK_AND_RETURN_LOG(hdiCaps != nullptr, "New CodecCompCapability fail");
     ON_SCOPE_EXIT(0) { delete[] hdiCaps; };
     auto ret = mgr_->GetComponentCapabilityList(hdiCaps, len);

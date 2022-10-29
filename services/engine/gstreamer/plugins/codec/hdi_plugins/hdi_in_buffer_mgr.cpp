@@ -82,8 +82,7 @@ int32_t HdiInBufferMgr::FreeBuffers()
         return GST_CODEC_OK;
     }
     freeCond_.wait(lock, [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual; });
-    FreeCodecBuffers();
-    return GST_CODEC_OK;
+    return FreeCodecBuffers();
 }
 
 int32_t HdiInBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)

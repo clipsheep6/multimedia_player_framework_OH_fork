@@ -191,7 +191,7 @@ int32_t HdiVencParamsMgr::SetOutputVideoCommon(GstElement *element)
 int32_t HdiVencParamsMgr::SetVideoFormat(GstElement *element)
 {
     GstVencBase *base = GST_VENC_BASE(element);
-    videoFormat_.codecColorFormat = (uint32_t)HdiCodecUtil::FormatGstToHdi(base->format); // need to do
+    videoFormat_.codecColorFormat = (uint32_t)HdiCodecUtil::FormatGstToHdi(base->format);
     videoFormat_.framerate = (uint32_t)(base->frame_rate) << OMX_FRAME_RATE_MOVE;
     auto ret = HdiSetParameter(handle_, OMX_IndexCodecVideoPortFormat, videoFormat_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
@@ -248,7 +248,7 @@ int32_t HdiVencParamsMgr::VideoSurfaceInit(GstElement *element)
     SupportBufferType supportBufferTypes;
     InitHdiParam(supportBufferTypes, verInfo_);
     supportBufferTypes.portIndex = inPortDef_.nPortIndex;
-    auto ret = HdiGetParameter(handle_, OMX_IndexParamSupportBufferType, supportBufferTypes); // need to do
+    auto ret = HdiGetParameter(handle_, OMX_IndexParamSupportBufferType, supportBufferTypes);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
     if (!(supportBufferTypes.bufferTypes & CODEC_BUFFER_TYPE_DYNAMIC_HANDLE)) {
         MEDIA_LOGD("No CODEC_BUFFER_TYPE_DYNAMIC_HANDLE, support bufferType %{public}d",
@@ -260,7 +260,7 @@ int32_t HdiVencParamsMgr::VideoSurfaceInit(GstElement *element)
     InitHdiParam(useBufferTypes, verInfo_);
     useBufferTypes.portIndex = inPortDef_.nPortIndex;
     useBufferTypes.bufferType = CODEC_BUFFER_TYPE_DYNAMIC_HANDLE;
-    ret = HdiSetParameter(handle_, OMX_IndexParamUseBufferType, useBufferTypes); // need to do
+    ret = HdiSetParameter(handle_, OMX_IndexParamUseBufferType, useBufferTypes);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
     return GST_CODEC_OK;
 }
@@ -345,9 +345,8 @@ int32_t HdiVencParamsMgr::InitAvcParamters(GstElement *element)
     auto ret = HdiGetParameter(handle_, OMX_IndexParamVideoAvc, avcType);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoAvc Failed");
     InitAvcCommonParamters(element, avcType);
-
+    avcType.nBFrames = 0;
     if (avcType.eProfile == OMX_VIDEO_AVCProfileBaseline) {
-        avcType.nBFrames = 0;
         avcType.nRefFrames = 1;
         avcType.nPFrames = (uint32_t)(base->frame_rate * base->i_frame_interval_new / MSEC_PER_S - 1);
         avcType.bEntropyCodingCABAC = OMX_FALSE;
@@ -357,10 +356,8 @@ int32_t HdiVencParamsMgr::InitAvcParamters(GstElement *element)
         avcType.bDirectSpatialTemporal = OMX_FALSE;
         avcType.nCabacInitIdc = 0;
     } else {
-        // need more paramters
-        avcType.nBFrames = 0;
         // when have b frame default ref frame is 2
-        avcType.nRefFrames = avcType.nBFrames == 0 ? 1 : 2;
+        avcType.nRefFrames = 1;
         avcType.nPFrames =
             (uint32_t)(base->frame_rate * base->i_frame_interval_new / MSEC_PER_S) / (avcType.nBFrames + 1) - 1;
         avcType.bEntropyCodingCABAC = OMX_TRUE;

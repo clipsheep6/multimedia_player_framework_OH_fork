@@ -110,10 +110,10 @@ int32_t HdiOutBufferMgr::FreeBuffers()
     MEDIA_LOGD("FreeBuffers");
     std::unique_lock<std::mutex> lock(mutex_);
     freeCond_.wait(lock, [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual; });
-    FreeCodecBuffers();
+    int32_t ret = FreeCodecBuffers();
     std::for_each(mBuffers.begin(), mBuffers.end(), [&](GstBufferWrap buffer) { gst_buffer_unref(buffer.gstBuffer); });
     EmptyList(mBuffers);
-    return GST_CODEC_OK;
+    return ret;
 }
 
 int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)

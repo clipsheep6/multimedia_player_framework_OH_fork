@@ -189,8 +189,10 @@ void GstHdiFactory::GetHeight(std::string &capStr, const CapabilityData &capData
 
 void GstHdiFactory::GetFrameRate(std::string &capStr, const CapabilityData &capData)
 {
-    (void)capData;
-    capStr += "framerate = (fraction) [ 0, max ]";
+    std::stringstream frameRange;
+    frameRange << "(fraction) [ " << capData.frameRate.minVal << ", " << capData.frameRate.maxVal << " ]";
+    capStr += "framerate = ";
+    capStr += frameRange.str();
 }
 
 void GstHdiFactory::GetFormat(std::string &capStr, CapabilityData &capData)
@@ -326,7 +328,7 @@ gboolean GstHdiFactory::HdiClassRegister(GstPlugin *plugin, CapabilityData &capD
 
 gboolean GstHdiFactory::PluginInit(GstPlugin *plugin)
 {
-    // hdi recommand
+    // hdi recommend
     MEDIA_LOGD("Plugin init");
     std::vector<CapabilityData> &&capDatas = HdiInit::GetInstance().GetCapabilitys();
     std::vector<CapabilityData> newCapDatas;

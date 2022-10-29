@@ -76,7 +76,8 @@ int32_t HdiCodec::Init()
     callback_->EventHandler = &HdiCodec::Event;
     callback_->EmptyBufferDone = &HdiCodec::EmptyBufferDone;
     callback_->FillBufferDone = &HdiCodec::FillBufferDone;
-    appData_ = new AppData();
+    appData_ = new(std::nothrow) AppData();
+    CHECK_AND_RETURN_RET_LOG(appData_ != nullptr, GST_CODEC_ERROR, "new failed");
     appData_->instance = weak_from_this();
     auto ret = HdiInit::GetInstance().GetHandle(&handle_, id_, componentName_, appData_, callback_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "GetHandle failed");
@@ -352,6 +353,7 @@ int32_t HdiCodec::Event(CodecCallbackType *self, OMX_EVENTTYPE event, EventInfo 
             event, info->data1, info->data2);
     }
     AppData *mAppData = reinterpret_cast<AppData *>(info->appData);
+    CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, HDF_ERR_INVALID_PARAM, "mAppData is null");
     auto instance = mAppData->instance.lock();
     CHECK_AND_RETURN_RET_LOG(instance != nullptr, HDF_ERR_INVALID_PARAM, "HdiCodec is null");
     switch (event) {

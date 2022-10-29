@@ -131,17 +131,20 @@ int32_t HdiBufferMgr::UseHdiBuffers(std::vector<std::shared_ptr<HdiBufferWrap>> 
     return GST_CODEC_OK;
 }
 
-void HdiBufferMgr::FreeCodecBuffers()
+int32_t HdiBufferMgr::FreeCodecBuffers()
 {
     MEDIA_LOGD("Enter FreeCodecBuffers");
+    int32_t res = GST_CODEC_OK;
     for (auto codecBuffer : availableBuffers_) {
         auto ret = handle_->FreeBuffer(handle_, mPortIndex_, &codecBuffer->hdiBuffer);
         if (ret != HDF_SUCCESS) {
             MEDIA_LOGE("free buffer %{public}u fail", codecBuffer->hdiBuffer.bufferId);
+            res = GST_CODEC_ERROR;
         }
     }
     EmptyList(availableBuffers_);
     MEDIA_LOGD("Enter FreeCodecBuffers End");
+    return res;
 }
 
 int32_t HdiBufferMgr::Stop(bool isFormatChange)

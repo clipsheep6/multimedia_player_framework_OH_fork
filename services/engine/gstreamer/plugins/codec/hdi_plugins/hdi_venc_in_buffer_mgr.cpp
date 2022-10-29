@@ -56,10 +56,9 @@ std::vector<std::shared_ptr<HdiBufferWrap>> HdiVencInBufferMgr::PreUseHandleMems
 
 int32_t HdiVencInBufferMgr::Preprocessing()
 {
-    int32_t ret = GST_CODEC_OK;
     UseHdiBuffers(preBuffers_);
     EmptyList(preBuffers_);
-    return ret;
+    return GST_CODEC_OK;
 }
 
 int32_t HdiVencInBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
