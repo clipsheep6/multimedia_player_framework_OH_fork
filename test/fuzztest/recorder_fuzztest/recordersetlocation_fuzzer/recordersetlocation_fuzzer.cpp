@@ -58,7 +58,7 @@ bool RecorderSetLocationFuzzer::FuzzRecorderSetLocation(uint8_t *data, size_t si
         recorder->SetLocation(latitudeValue, 0);
         recorder->SetOrientationHint(setRotation);
         TestRecorder::Prepare(g_videoRecorderConfig);
-        TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig);
+        RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), false);
         TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
         TestRecorder::Stop(false, g_videoRecorderConfig);
