@@ -408,7 +408,7 @@ int32_t AudioSinkSvImpl::GetLatency(uint64_t &latency) const
 
 void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                      void (*stateCb)(GstBaseSink *, guint),
-                                     void (*errorCb)(GstBaseSink *, std::string))
+                                     void (*errorCb)(GstBaseSink *, const std::string &))
 {
     CHECK_AND_RETURN(audioRendererMediaCallback_ != nullptr);
     errorCb_ = errorCb;

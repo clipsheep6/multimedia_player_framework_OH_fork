@@ -346,7 +346,7 @@ static bool ImageMetaSetter(const GValue &gval, const std::string_view &key, For
 
 static bool DateTimeMetaSetter(const GValue &gval, const std::string_view &key, Format &metadata)
 {
-    GstDateTime *dateTime = (GstDateTime *)g_value_dup_boxed(&gval);
+    GstDateTime *dateTime = static_cast<GstDateTime *>(g_value_dup_boxed(&gval));
     CHECK_AND_RETURN_RET(dateTime != nullptr, false);
 
     std::stringstream time;

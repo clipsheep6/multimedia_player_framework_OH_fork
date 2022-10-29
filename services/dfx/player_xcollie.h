@@ -34,7 +34,6 @@ private:
     PlayerXCollie() = default;
     ~PlayerXCollie() = default;
     void TimerCallback(void *data);
-    bool EnableOnceMode() const;
 
     std::mutex mutex_;
     std::map<int32_t, std::string> dfxDumper_;

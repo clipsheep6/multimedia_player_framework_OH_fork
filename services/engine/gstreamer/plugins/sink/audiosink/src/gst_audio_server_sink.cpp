@@ -250,7 +250,7 @@ static void gst_audio_server_sink_state_callback(GstBaseSink *basesink, guint st
     g_signal_emit_by_name(sink, "audio-state-event", state);
 }
 
-static void gst_audio_server_sink_error_callback(GstBaseSink *basesink, std::string errMsg)
+static void gst_audio_server_sink_error_callback(GstBaseSink *basesink, const std::string &errMsg)
 {
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     MEDIA_LOGE("audio error: %{public}s", errMsg.c_str());

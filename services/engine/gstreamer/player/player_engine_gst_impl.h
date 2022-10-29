@@ -66,6 +66,7 @@ private:
     void OnNotifyMessage(const PlayBinMessage &msg);
     void OnNotifyElemSetup(GstElement &elem);
     void OnNotifyElemUnSetup(GstElement &elem);
+    void OnReset();
     GValueArray *OnNotifyAutoPlugSort(GValueArray &factories);
     double ChangeModeToSpeed(const PlaybackRateMode &mode) const;
     PlaybackRateMode ChangeSpeedToMode(double rate) const;

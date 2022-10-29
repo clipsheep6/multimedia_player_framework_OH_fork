@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Media {
 class MediaJsAudioRecorderCapsArray : public MediaJsResult {
 public:
-    explicit MediaJsAudioRecorderCapsArray(std::vector<std::shared_ptr<OHOS::Media::AudioRecorderCaps>> value)
+    explicit MediaJsAudioRecorderCapsArray(const std::vector<std::shared_ptr<OHOS::Media::AudioRecorderCaps>> &value)
         : value_(value)
     {
     }
@@ -38,7 +38,7 @@ private:
 
 class MediaJsVideoRecorderCapsArray : public MediaJsResult {
 public:
-    explicit MediaJsVideoRecorderCapsArray(std::vector<std::shared_ptr<OHOS::Media::VideoRecorderCaps>> value)
+    explicit MediaJsVideoRecorderCapsArray(const std::vector<std::shared_ptr<OHOS::Media::VideoRecorderCaps>> &value)
         : value_(value)
     {
     }

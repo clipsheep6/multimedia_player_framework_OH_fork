@@ -660,7 +660,7 @@ napi_value AudioDecoderNapi::ReleaseOutput(napi_env env, napi_callback_info info
         return result;
     }
 
-    if (asyncCtx->index < 0 || asyncCtx->napi == nullptr || asyncCtx->napi->adec_ == nullptr) {
+    if (asyncCtx->index < 0 || asyncCtx->napi->adec_ == nullptr) {
         asyncCtx->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "nullptr");
     } else {
         if (asyncCtx->napi->adec_->ReleaseOutputBuffer(asyncCtx->index) != MSERR_OK) {

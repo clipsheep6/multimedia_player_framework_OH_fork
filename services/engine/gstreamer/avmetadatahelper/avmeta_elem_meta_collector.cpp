@@ -97,7 +97,7 @@ std::string FormatDataTime(std::string &dataTime)
 
 void PopulateMeta(Metadata &meta)
 {
-    for (auto &item : AVMETA_KEY_TO_X_MAP) {
+    for (const auto &item : AVMETA_KEY_TO_X_MAP) {
         if (!meta.HasMeta(item.first)) {
             if (item.first == AV_KEY_DATE_TIME_FORMAT && meta.HasMeta(AV_KEY_DATE_TIME)) {
                 std::string dataTime = meta.GetMeta(AV_KEY_DATE_TIME);

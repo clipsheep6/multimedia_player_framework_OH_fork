@@ -33,10 +33,6 @@ std::shared_ptr<MediaDataSourceTest> MediaDataSourceTestNoSeek::Create(const std
         return nullptr;
     }
     std::shared_ptr<MediaDataSourceTestNoSeek> dataSrc = std::make_shared<MediaDataSourceTestNoSeek>(realPath, size);
-    if (dataSrc == nullptr) {
-        std::cout << "create source failed" << std::endl;
-        return nullptr;
-    }
     if (dataSrc->Init() != MSERR_OK) {
         std::cout << "init source failed" << std::endl;
         return nullptr;

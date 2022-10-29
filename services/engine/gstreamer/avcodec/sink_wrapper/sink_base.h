@@ -87,7 +87,7 @@ public:
 
 protected:
     GstElement *sink_ = nullptr;
-    void GetFlagFromBuffer(GstBuffer *buffer, AVCodecBufferFlag &flag)
+    static void GetFlagFromBuffer(GstBuffer *buffer, AVCodecBufferFlag &flag)
     {
         GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffer);
         if (bufferType == nullptr) {

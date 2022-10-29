@@ -227,14 +227,14 @@ static void SetGstLogLevelFromSysPara()
         if (item.size() < 2) { // module format:"tagname:level"
             continue;
         }
-        std::string &tag = item[0];
+        const std::string &tag = item[0];
         if (tag.size() >= 128) { // max tag size is 128
             continue;
         }
         if (logTagLevelMap.size() >= 512 && logTagLevelMap.count(tag) == 0) { // 512 is max tag number
             continue;
         }
-        std::string &level = item[1];
+        const std::string &level = item[1];
         if (level.empty() || LOG_LEVEL_TO_GST_LEVEL.count(level.c_str()[0]) == 0) {
             continue;
         }

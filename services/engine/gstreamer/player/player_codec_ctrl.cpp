@@ -85,7 +85,7 @@ void PlayerCodecCtrl::DetectCodecSetup(const std::string &metaStr, GstElement *s
     SetupCodecBufferNum(metaStr, src);
 }
 
-void PlayerCodecCtrl::SetupCodecBufferNum(const std::string &metaStr, GstElement *src)
+void PlayerCodecCtrl::SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const
 {
     if (metaStr.find("Sink/Video") != std::string::npos && !isHardwareDec_) {
         g_object_set(G_OBJECT(src), "max-pool-capacity", MAX_SOFT_BUFFERS, nullptr);

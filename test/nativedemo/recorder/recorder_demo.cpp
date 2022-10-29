@@ -246,7 +246,7 @@ void RecorderDemo::HDICreateYUVBuffer()
         sptr<SyncFence> tempFence = new SyncFence(releaseFence);
         tempFence->Wait(100); // 100ms
 
-        char *tempBuffer = (char *)(buffer->GetVirAddr());
+        char *tempBuffer = static_cast<char *>(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color_, YUV_BUFFER_SIZE);
 
         srand((int)time(0));
@@ -290,7 +290,7 @@ void RecorderDemo::HDICreateRGBABuffer()
         sptr<SyncFence> tempFence = new SyncFence(releaseFence);
         tempFence->Wait(100); // 100ms
 
-        char *tempBuffer = (char *)(buffer->GetVirAddr());
+        char *tempBuffer = static_cast<char *>(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, RGBA_BUFFER_SIZE, color_, RGBA_BUFFER_SIZE);
 
         srand((int)time(0));

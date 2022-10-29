@@ -35,8 +35,6 @@ protected:
 
     InnerCodecMimeType codecName_ = CODEC_MIME_TYPE_AUDIO_AAC;
     bool isSoftWare_ = false;
-private:
-    int32_t ProcessVendor(const Format &format);
 };
 } // namespace Media
 } // namespace OHOS

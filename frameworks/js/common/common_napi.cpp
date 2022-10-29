@@ -31,7 +31,7 @@ std::string CommonNapi::GetStringArgument(napi_env env, napi_value value)
     size_t bufLength = 0;
     napi_status status = napi_get_value_string_utf8(env, value, nullptr, 0, &bufLength);
     if (status == napi_ok && bufLength > 0 && bufLength < PATH_MAX) {
-        char *buffer = (char *)malloc((bufLength + 1) * sizeof(char));
+        char *buffer = static_cast<char *>(malloc((bufLength + 1) * sizeof(char)));
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, strValue, "no memory");
         status = napi_get_value_string_utf8(env, value, buffer, bufLength + 1, &bufLength);
         if (status == napi_ok) {
@@ -477,9 +477,8 @@ napi_status MediaJsResultStringVector::GetJsResult(napi_env env, napi_value &res
     napi_status status;
     size_t size = value_.size();
     napi_create_array_with_length(env, size, &result);
-    std::string format;
     for (unsigned int i = 0; i < size; ++i) {
-        format = value_[i];
+        std::string format = value_[i];
         napi_value value = nullptr;
         status = napi_create_string_utf8(env, format.c_str(), NAPI_AUTO_LENGTH, &value);
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, status,
@@ -521,7 +520,7 @@ MediaAsyncContext::~MediaAsyncContext()
     MEDIA_LOGD("MediaAsyncContext Destroy 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }
 
-void MediaAsyncContext::SignError(int32_t code, std::string message, bool del)
+void MediaAsyncContext::SignError(int32_t code, const std::string &message, bool del)
 {
     errMessage = message;
     errCode = code;
@@ -612,7 +611,7 @@ void MediaAsyncContext::CheckCtorResult(napi_env env, napi_value &result, MediaA
     }
 }
 
-bool CommonNapi::AddStringProperty(napi_env env, napi_value obj, const std::string &key, std::string value)
+bool CommonNapi::AddStringProperty(napi_env env, napi_value obj, const std::string &key, const std::string &value)
 {
     CHECK_AND_RETURN_RET(obj != nullptr, false);
 
