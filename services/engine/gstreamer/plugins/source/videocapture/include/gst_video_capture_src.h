@@ -50,6 +50,7 @@ struct _GstVideoCaptureSrc {
     GstCaps *src_caps;
     guint video_width;
     guint video_height;
+    guint min_buffer_size;
     guint video_frame_rate;
     gboolean is_first_buffer;
     VideoRecorderState cur_state;
