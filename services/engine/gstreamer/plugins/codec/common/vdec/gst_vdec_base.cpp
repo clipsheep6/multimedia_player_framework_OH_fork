@@ -819,7 +819,7 @@ static void gst_vdec_base_dump_input_buffer(GstVdecBase *self, GstBuffer *buffer
         return;
     }
     GST_DEBUG_OBJECT(self, "Dump input buffer");
-    const static std::string input_dump_file = "/data/media/vdecbase-in.es";
+    static const std::string input_dump_file = "/data/media/vdecbase-in.es";
     if (self->input.dump_file == nullptr) {
         self->input.dump_file = fopen(input_dump_file.c_str(), "wb+");
     }
@@ -842,7 +842,7 @@ static void gst_vdec_base_dump_output_buffer(GstVdecBase *self, GstBuffer *buffe
         return;
     }
     GST_DEBUG_OBJECT(self, "Dump output buffer");
-    const static std::string output_dump_file = "/data/media/vdecbase-out.yuv";
+    static const std::string output_dump_file = "/data/media/vdecbase-out.yuv";
     if (self->output.dump_file == nullptr) {
         self->output.dump_file = fopen(output_dump_file.c_str(), "wb+");
     }

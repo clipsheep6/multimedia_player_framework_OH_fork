@@ -459,7 +459,7 @@ static void gst_surface_mem_src_dump_buffer(GstBaseSrc *self, GstBuffer *buffer)
 
     GST_DEBUG_OBJECT(src, "Dump surface src buffer");
     static const std::string input_dump_file = "/data/media/surface-in.yuv";
-    if (src->dump.dump_file == nullptr) { 
+    if (src->dump.dump_file == nullptr) {
         src->dump.dump_file = fopen(input_dump_file.c_str(), "wb+");
     }
     if (src->dump.dump_file == nullptr) {
