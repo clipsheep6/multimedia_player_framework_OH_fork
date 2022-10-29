@@ -141,16 +141,17 @@ void AVCodecListUnitTest::CheckVideoCaps(const std::shared_ptr<VideoCapsMock> &v
 {
     std::shared_ptr<AVCodecInfoMock> videoCodecCaps;
     videoCodecCaps = videoCaps->GetCodecInfo();
-    std::string codecNmae = videoCodecCaps->GetName();
-    if (codecNmae.compare("avdec_h264") == 0) {
+    std::string codecName = videoCodecCaps->GetName();
+    cout << "codecName is : " << codecName << endl;
+    if (codecName.compare("avdec_h264") == 0) {
         CheckAVDecH264(videoCaps);
-    } else if (codecNmae.compare("avdec_h263") == 0) {
+    } else if (codecName.compare("avdec_h263") == 0) {
         CheckAVDecH263(videoCaps);
-    } else if (codecNmae.compare("avdec_mpeg2video") == 0) {
+    } else if (codecName.compare("avdec_mpeg2video") == 0) {
         CheckAVDecMpeg2Video(videoCaps);
-    } else if (codecNmae.compare("avdec_mpeg4") == 0) {
+    } else if (codecName.compare("avdec_mpeg4") == 0) {
         CheckAVDecMpeg4(videoCaps);
-    } else if (codecNmae.compare("avenc_mpeg4") == 0) {
+    } else if (codecName.compare("avenc_mpeg4") == 0) {
         CheckAVEncMpeg4(videoCaps);
     }
 }
@@ -251,6 +252,8 @@ void AVCodecListUnitTest::CheckAVDecMpeg2Video(const std::shared_ptr<VideoCapsMo
     EXPECT_EQ(false, videoCaps->IsSupportDynamicIframe());
     EXPECT_EQ(0, videoCaps->IsSizeAndRateSupported(videoCaps->GetSupportedWidth().minVal,
         videoCaps->GetSupportedHeight().maxVal, videoCaps->GetSupportedFrameRate().maxVal));
+    EXPECT_EQ(false, videoCaps->IsSizeAndRateSupported(videoCaps->GetSupportedWidth().minVal-1,
+        videoCaps->GetSupportedHeight().maxVal + 1, videoCaps->GetSupportedFrameRate().maxVal));
 }
 
 void AVCodecListUnitTest::CheckAVDecMpeg4(const std::shared_ptr<VideoCapsMock> &videoCaps) const
@@ -333,20 +336,20 @@ void AVCodecListUnitTest::CheckAudioCaps(const std::shared_ptr<AudioCapsMock> &a
 {
     std::shared_ptr<AVCodecInfoMock> audioCodecCaps;
     audioCodecCaps = audioCaps->GetCodecInfo();
-    std::string codecNmae = audioCodecCaps->GetName();
-    if (codecNmae.compare("avdec_mp3") == 0) {
+    std::string codecName = audioCodecCaps->GetName();
+    if (codecName.compare("avdec_mp3") == 0) {
         CheckAVDecMP3(audioCaps);
-    } else if (codecNmae.compare("avdec_aac") == 0) {
+    } else if (codecName.compare("avdec_aac") == 0) {
         CheckAVDecAAC(audioCaps);
-    } else if (codecNmae.compare("avdec_vorbis") == 0) {
+    } else if (codecName.compare("avdec_vorbis") == 0) {
         CheckAVDecVorbis(audioCaps);
-    } else if (codecNmae.compare("avdec_flac") == 0) {
+    } else if (codecName.compare("avdec_flac") == 0) {
         CheckAVDecFlac(audioCaps);
-    } else if (codecNmae.compare("avdec_opus") == 0) {
+    } else if (codecName.compare("avdec_opus") == 0) {
         CheckAVDecOpus(audioCaps);
-    } else if (codecNmae.compare("avenc_aac") == 0) {
+    } else if (codecName.compare("avenc_aac") == 0) {
         CheckAVEncAAC(audioCaps);
-    } else if (codecNmae.compare("avenc_opus") == 0) {
+    } else if (codecName.compare("avenc_opus") == 0) {
         CheckAVEncOpus(audioCaps);
     }
 }
@@ -568,6 +571,30 @@ HWTEST_F(AVCodecListUnitTest, AVCdecList_GetSupportedFrameRatesFor_0100, TestSiz
 }
 
 /**
+ * @tc.name: AVCdecList_GetSupportedFrameRatesFor_0200
+ * @tc.desc: AVCdecList GetSupportedFrameRatesFor not supported size
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(AVCodecListUnitTest, AVCdecList_GetSupportedFrameRatesFor_0200, TestSize.Level0)
+{
+    RangeMock ret;
+    std::vector<std::shared_ptr<VideoCapsMock>> videoDecoderArray = avCodecList_->GetVideoDecoderCaps();
+    for (auto iter = videoDecoderArray.begin(); iter != videoDecoderArray.end(); iter++) {
+        std::shared_ptr<VideoCapsMock> pVideoCaps = *iter;
+        ret = (*iter)->GetSupportedFrameRatesFor(MAX_WIDTH + 1, MAX_HEIGHT + 1);
+        EXPECT_GE(ret.minVal, 0);
+        EXPECT_LE(ret.maxVal, MAX_FRAME_RATE);
+    }
+    std::vector<std::shared_ptr<VideoCapsMock>> videoEncoderArray = avCodecList_->GetVideoEncoderCaps();
+    for (auto iter = videoEncoderArray.begin(); iter != videoEncoderArray.end(); iter++) {
+        ret = (*iter)->GetSupportedFrameRatesFor(MIN_WIDTH - 1, MIN_HEIGHT - 1);
+        EXPECT_GE(ret.minVal, 0);
+        EXPECT_LE(ret.maxVal, MAX_FRAME_RATE);
+    }
+}
+
+/**
  * @tc.name: AVCdecList_GetPreferredFrameRate_0100
  * @tc.desc: AVCdecList GetPreferredFrameRate
  * @tc.type: FUNC
@@ -584,6 +611,27 @@ HWTEST_F(AVCodecListUnitTest, AVCdecList_GetPreferredFrameRate_0100, TestSize.Le
     std::vector<std::shared_ptr<VideoCapsMock>> videoDecoderArray = avCodecList_->GetVideoDecoderCaps();
     for (auto iter = videoDecoderArray.begin(); iter != videoDecoderArray.end(); iter++) {
         ret = (*iter)->GetPreferredFrameRate(DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        EXPECT_GE(ret.minVal, 0);
+    }
+}
+
+/**
+ * @tc.name: AVCdecList_GetPreferredFrameRate_0200
+ * @tc.desc: AVCdecList GetPreferredFrameRate for not supported size
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(AVCodecListUnitTest, AVCdecList_GetPreferredFrameRate_0200, TestSize.Level0)
+{
+    RangeMock ret;
+    std::vector<std::shared_ptr<VideoCapsMock>> videoEncoderArray = avCodecList_->GetVideoEncoderCaps();
+    for (auto iter = videoEncoderArray.begin(); iter != videoEncoderArray.end(); iter++) {
+        ret = (*iter)->GetPreferredFrameRate(MAX_WIDTH + 1, MAX_HEIGHT + 1);
+        EXPECT_GE(ret.minVal, 0);
+    }
+    std::vector<std::shared_ptr<VideoCapsMock>> videoDecoderArray = avCodecList_->GetVideoDecoderCaps();
+    for (auto iter = videoDecoderArray.begin(); iter != videoDecoderArray.end(); iter++) {
+        ret = (*iter)->GetPreferredFrameRate(MIN_WIDTH - 1, MIN_HEIGHT - 1);
         EXPECT_GE(ret.minVal, 0);
     }
 }
