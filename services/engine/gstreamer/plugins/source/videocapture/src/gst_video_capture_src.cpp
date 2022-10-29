@@ -187,22 +187,22 @@ static void gst_video_capture_src_set_caps(GstVideoCaptureSrc *src, int32_t pixe
         case PIXEL_FMT_YCRCB_420_SP:
             GST_INFO("input pixel foramt is nv21");
             format = "NV21";
-            src->min_buffer_size = (src->video_width * src->video_height * 3) / 2;
+            src->min_buffer_size = (src->video_width * src->video_height * 3) / 2; // Storage format size*3/2
             break;
         case PIXEL_FMT_YCBCR_420_P:
             GST_INFO("input pixel foramt is I420");
             format = "I420";
-            src->min_buffer_size = (src->video_width * src->video_height * 3) / 2;
+            src->min_buffer_size = (src->video_width * src->video_height * 3) / 2; // Storage format size*3/2
             break;
         case PIXEL_FMT_YCBCR_420_SP:
             GST_INFO("input pixel foramt is nv12");
             format = "NV12";
-            src->min_buffer_size = (src->video_width * src->video_height * 3) / 2;
+            src->min_buffer_size = (src->video_width * src->video_height * 3) / 2; // Storage format size*3/2
             break;
         case PIXEL_FMT_RGBA_8888:
             GST_INFO("input pixel foramt is rgba");
             format = "RGBA";
-            src->min_buffer_size = src->video_width * src->video_height * 4;
+            src->min_buffer_size = src->video_width * src->video_height * 4; // Storage format size*4
             break;
         default:
             break;
