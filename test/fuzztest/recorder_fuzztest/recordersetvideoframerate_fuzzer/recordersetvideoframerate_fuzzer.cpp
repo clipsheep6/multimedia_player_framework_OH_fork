@@ -59,7 +59,7 @@ bool RecorderSetVideoFrameRateFuzzer::RecorderSetVideoFrameRateFuzz(uint8_t *dat
         TestRecorder::SetVideoFrameRate(g_videoRecorderConfig);
         TestRecorder::SetVideoEncodingBitRate(g_videoRecorderConfig);
         TestRecorder::Prepare(g_videoRecorderConfig);
-        TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig);
+        RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), false);
         TestRecorder::Start(g_videoRecorderConfig);
 
         sleep(recorderTime);

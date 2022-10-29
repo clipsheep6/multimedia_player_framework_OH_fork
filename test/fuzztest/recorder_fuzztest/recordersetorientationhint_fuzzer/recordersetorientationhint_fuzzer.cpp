@@ -57,7 +57,7 @@ bool RecorderSetOrientationHintFuzzer::FuzzRecorderSetOrientationHint(uint8_t *d
 
         recorder->SetOrientationHint(rotationValue);
         TestRecorder::Prepare(g_videoRecorderConfig);
-        TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig);
+        RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), false);
         TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
         TestRecorder::Stop(false, g_videoRecorderConfig);
