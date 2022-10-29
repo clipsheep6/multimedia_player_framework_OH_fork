@@ -574,7 +574,7 @@ HWTEST_F(VCodecUnitTest, video_codec_format_h263_0100, TestSize.Level0)
     (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
-    (void)format->PutIntValue(video_encode_bitrate_mode.c_str(), 2); //CQ
+    (void)format->PutIntValue(video_encode_bitrate_mode.c_str(), 2); // CQ
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     std::shared_ptr<SurfaceMock> surface = videoEnc_->GetInputSurface();
     ASSERT_NE(nullptr, surface);
