@@ -155,7 +155,7 @@ static gboolean cat_slice_buffer(GstVdecBase *self, GstMapInfo *src_info)
 {
     GstVdecH264 *vdec_h264 = GST_VDEC_H264(self);
     if (vdec_h264->cache_slice_buffer == nullptr) {
-        vdec_h264->cache_slice_buffer = gst_buffer_new_allocate (NULL, 2000000, nullptr);
+        vdec_h264->cache_slice_buffer = gst_buffer_new_allocate (NULL, 2000000, nullptr); // 2000000 size
         if (vdec_h264->cache_slice_buffer == nullptr) {
             GST_ERROR_OBJECT(self, "allocate buffer is nullptr");
             return false;
