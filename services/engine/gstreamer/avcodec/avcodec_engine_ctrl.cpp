@@ -369,7 +369,7 @@ int32_t AVCodecEngineCtrl::SetParameter(const Format &format)
 
             ON_SCOPE_EXIT(0) { gst_buffer_unref(buffer); };
 
-            gsize ret = gst_buffer_fill(buffer, 0, (char*)(addr), size);
+            gsize ret = gst_buffer_fill(buffer, 0, (char*)addr, size);
             CHECK_AND_RETURN_RET(ret == static_cast<gsize>(size), MSERR_UNKNOWN);
             g_object_set(codecBin_, "vendor", static_cast<gpointer>(buffer), nullptr);
         }

@@ -252,9 +252,9 @@ static void gst_audio_server_sink_state_callback(GstBaseSink *basesink, guint st
 
 static void gst_audio_server_sink_error_callback(GstBaseSink *basesink, const std::string &errMsg)
 {
+    MEDIA_LOGE("audio render error: %{public}s", errMsg.c_str());
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
-    MEDIA_LOGE("audio error: %{public}s", errMsg.c_str());
-    g_signal_emit_by_name(sink, "audio-error-event", errMsg.c_str());
+    GST_ELEMENT_ERROR(sink, STREAM, FAILED, (NULL), ("audio render error: %s", errMsg.c_str()));
 }
 
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
