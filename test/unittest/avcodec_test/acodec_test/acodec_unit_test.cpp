@@ -29,26 +29,16 @@ void ACodecUnitTest::TearDownTestCase(void) {}
 
 void ACodecUnitTest::SetUp(void)
 {
+    createCodecSuccess_ = false;
     std::shared_ptr<ACodecSignal> acodecSignal = std::make_shared<ACodecSignal>();
     adecCallback_ = std::make_shared<ADecCallbackTest>(acodecSignal);
     ASSERT_NE(nullptr, adecCallback_);
-    audioCodec_ = std::make_shared<ACodecMock>(acodecSignal);
-    ASSERT_NE(nullptr, audioCodec_);
-    if (createByMimeFlag_) {
-        ASSERT_TRUE(audioCodec_->CreateAudioDecMockByMime("audio/mp4a-latm"));
-    } else {
-        ASSERT_TRUE(audioCodec_->CreateAudioDecMockByName("avdec_aac"));
-    }
-    EXPECT_EQ(MSERR_OK, audioCodec_->SetCallbackDec(adecCallback_));
 
     aencCallback_ = std::make_shared<AEncCallbackTest>(acodecSignal);
     ASSERT_NE(nullptr, aencCallback_);
-    if (createByMimeFlag_) {
-        ASSERT_TRUE(audioCodec_->CreateAudioEncMockByMime("audio/mp4a-latm"));
-    } else {
-        ASSERT_TRUE(audioCodec_->CreateAudioEncMockByName("avenc_aac"));
-    }
-    EXPECT_EQ(MSERR_OK, audioCodec_->SetCallbackEnc(aencCallback_));
+
+    audioCodec_ = std::make_shared<ACodecMock>(acodecSignal);
+    ASSERT_NE(nullptr, audioCodec_);
 
     defaultFormat_ = AVCodecMockFactory::CreateFormat();
     ASSERT_NE(nullptr, defaultFormat_);
@@ -63,9 +53,33 @@ void ACodecUnitTest::SetUp(void)
     audioCodec_->SetOutPath(prefix + fileName + suffix);
 }
 
+bool ACodecUnitTest::CreateAudioCodecByMime(const std::string &decMime, const std::string &encMime)
+{
+    if (audioCodec_->CreateAudioDecMockByMime(decMime) == false ||
+        audioCodec_->CreateAudioEncMockByMime(encMime) == false ||
+        audioCodec_->SetCallbackDec(adecCallback_) != MSERR_OK ||
+        audioCodec_->SetCallbackEnc(aencCallback_) != MSERR_OK) {
+        return false;
+    }
+    createCodecSuccess_ = true;
+    return true;
+}
+
+bool ACodecUnitTest::CreateAudioCodecByName(const std::string &decName, const std::string &encName)
+{
+    if (audioCodec_->CreateAudioDecMockByName(decName) == false ||
+        audioCodec_->CreateAudioEncMockByName(encName) == false ||
+        audioCodec_->SetCallbackDec(adecCallback_) != MSERR_OK ||
+        audioCodec_->SetCallbackEnc(aencCallback_) != MSERR_OK) {
+        return false;
+    }
+    createCodecSuccess_ = true;
+    return true;
+}
+
 void ACodecUnitTest::TearDown(void)
 {
-    if (audioCodec_ != nullptr) {
+    if (audioCodec_ != nullptr && createCodecSuccess_) {
         EXPECT_EQ(MSERR_OK, audioCodec_->ReleaseDec());
         EXPECT_EQ(MSERR_OK, audioCodec_->ReleaseEnc());
     }
@@ -76,12 +90,13 @@ void ACodecUnitTest::TearDown(void)
 
 /**
  * @tc.name: audio_codec_Configure_0100
- * @tc.desc: video create
+ * @tc.desc: audio create
  * @tc.type: FUNC
  * @tc.require: issueI5OWXY issueI5OXCD
  */
 HWTEST_F(ACodecUnitTest, audio_codec_Configure_0100, TestSize.Level0)
 {
+    ASSERT_TRUE(CreateAudioCodecByName("avdec_aac", "avenc_aac"));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
 }
@@ -94,6 +109,8 @@ HWTEST_F(ACodecUnitTest, audio_codec_Configure_0100, TestSize.Level0)
  */
 HWTEST_F(ACodecUnitTest, audio_codec_0100, TestSize.Level0)
 {
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/mp4a-latm", "audio/mp4a-latm"));
+    ASSERT_TRUE(defaultFormat_->PutIntValue("profile", 0)); // 0 AAC_PROFILE_LC
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
@@ -113,6 +130,7 @@ HWTEST_F(ACodecUnitTest, audio_codec_0100, TestSize.Level0)
  */
 HWTEST_F(ACodecUnitTest, audio_decodec_flush_0100, TestSize.Level0)
 {
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/mp4a-latm", "audio/mp4a-latm"));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
@@ -134,6 +152,7 @@ HWTEST_F(ACodecUnitTest, audio_decodec_flush_0100, TestSize.Level0)
  */
 HWTEST_F(ACodecUnitTest, audio_encodec_flush_0100, TestSize.Level0)
 {
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/mp4a-latm", "audio/mp4a-latm"));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
@@ -155,6 +174,7 @@ HWTEST_F(ACodecUnitTest, audio_encodec_flush_0100, TestSize.Level0)
  */
 HWTEST_F(ACodecUnitTest, audio_codec_reset_0100, TestSize.Level0)
 {
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/mp4a-latm", "audio/mp4a-latm"));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
@@ -174,6 +194,7 @@ HWTEST_F(ACodecUnitTest, audio_codec_reset_0100, TestSize.Level0)
  */
 HWTEST_F(ACodecUnitTest, audio_codec_reset_0200, TestSize.Level0)
 {
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/mp4a-latm", "audio/mp4a-latm"));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
@@ -186,6 +207,27 @@ HWTEST_F(ACodecUnitTest, audio_codec_reset_0200, TestSize.Level0)
 }
 
 /**
+ * @tc.name: audio_codec_abnormal_0100
+ * @tc.desc: audio abnormal function switch
+ * @tc.type: FUNC
+ * @tc.require: issueI5OWXY issueI5OXCD
+ */
+HWTEST_F(ACodecUnitTest, audio_codec_abnormal_0100, TestSize.Level0)
+{
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/mp4a-latm", "audio/mp4a-latm"));
+    ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
+    ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
+    EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
+    EXPECT_EQ(MSERR_OK, audioCodec_->PrepareEnc());
+    EXPECT_EQ(MSERR_OK, audioCodec_->ResetDec());
+    EXPECT_EQ(MSERR_OK, audioCodec_->ResetEnc());
+    EXPECT_NE(MSERR_OK, audioCodec_->StopDec());
+    EXPECT_NE(MSERR_OK, audioCodec_->StopEnc());
+    EXPECT_NE(MSERR_OK, audioCodec_->FlushDec());
+    EXPECT_NE(MSERR_OK, audioCodec_->FlushEnc());
+}
+
+/**
  * @tc.name: audio_codec_SetParameter_0100
  * @tc.desc: audio codec SetParameter
  * @tc.type: FUNC
@@ -193,6 +235,7 @@ HWTEST_F(ACodecUnitTest, audio_codec_reset_0200, TestSize.Level0)
  */
 HWTEST_F(ACodecUnitTest, audio_codec_SetParameter_0100, TestSize.Level0)
 {
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/mp4a-latm", "audio/mp4a-latm"));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
@@ -214,6 +257,7 @@ HWTEST_F(ACodecUnitTest, audio_codec_SetParameter_0100, TestSize.Level0)
  */
 HWTEST_F(ACodecUnitTest, audio_codec_GetOutputMediaDescription_0100, TestSize.Level0)
 {
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/mp4a-latm", "audio/mp4a-latm"));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
     ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
@@ -225,4 +269,77 @@ HWTEST_F(ACodecUnitTest, audio_codec_GetOutputMediaDescription_0100, TestSize.Le
     EXPECT_NE(nullptr, audioCodec_->GetOutputMediaDescriptionEnc());
     EXPECT_EQ(MSERR_OK, audioCodec_->ResetDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->ResetEnc());
+}
+
+/**
+ * @tc.name: audio_codec_format_vorbis_0100
+ * @tc.desc: test audio codec format vorbis
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ACodecUnitTest, audio_codec_format_vorbis_0100, TestSize.Level0)
+{
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/vorbis", "audio/mp4a-latm"));
+    ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
+    ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
+    EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
+    EXPECT_EQ(MSERR_OK, audioCodec_->PrepareEnc());
+}
+
+/**
+ * @tc.name: audio_codec_format_flac_0100
+ * @tc.desc: test audio codec format flac
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ACodecUnitTest, audio_codec_format_flac_0100, TestSize.Level0)
+{
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/flac", "audio/mp4a-latm"));
+    ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
+    ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
+    EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
+    EXPECT_EQ(MSERR_OK, audioCodec_->PrepareEnc());
+}
+
+/**
+ * @tc.name: audio_codec_format_mp3_0100
+ * @tc.desc: test audio codec format flac
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ACodecUnitTest, audio_codec_format_mp3_0100, TestSize.Level0)
+{
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/mpeg", "audio/mp4a-latm"));
+    ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
+    ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
+    EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
+    EXPECT_EQ(MSERR_OK, audioCodec_->PrepareEnc());
+}
+
+/**
+ * @tc.name: audio_codec_format_opus_0100
+ * @tc.desc: test audio codec format opus
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ACodecUnitTest, audio_codec_format_opus_0100, TestSize.Level0)
+{
+    ASSERT_TRUE(CreateAudioCodecByMime("audio/opus", "audio/opus"));
+    ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureDec(defaultFormat_));
+    ASSERT_EQ(MSERR_OK, audioCodec_->ConfigureEnc(defaultFormat_));
+    EXPECT_EQ(MSERR_OK, audioCodec_->PrepareDec());
+    EXPECT_EQ(MSERR_OK, audioCodec_->PrepareEnc());
+}
+
+/**
+ * @tc.name: audio_codec_format_none_0100
+ * @tc.desc: test audio codec format none
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ACodecUnitTest, audio_codec_format_none_0100, TestSize.Level0)
+{
+    CreateAudioCodecByMime("", "");
+    ASSERT_NE(MSERR_OK, audioCodec_->ReleaseDec());
+    ASSERT_NE(MSERR_OK, audioCodec_->ReleaseEnc());
 }
