@@ -84,7 +84,7 @@ void AVMetadataUnitTest::GetThumbnail(const std::string uri)
 
 /**
  * @tc.number    : ResolveMetadata_Format_MP4_0100
- * @tc.name      : 01.MP4 format Get MetaData (H264+AAC)
+ * @tc.name      : 01.MP4 format Get MetaData(H264+AAC)
  * @tc.desc      : test ResolveMetadata
  */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0100, TestSize.Level0)
@@ -114,7 +114,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0100, TestSize.Level0)
 
 /**
     * @tc.number    : ResolveMetadata_Format_MP4_0200
-    * @tc.name      : 02.MP4 format Get MetaData (H264+MP3)
+    * @tc.name      : 02.MP4 format Get MetaData(H264+MP3)
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0200, Function | MediumTest | Level0)
@@ -144,7 +144,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0200, Function | MediumT
 
 /**
     * @tc.number    : ResolveMetadata_Format_MP4_0300
-    * @tc.name      : 03.MP4 format Get MetaData (MPEG2+AAC)
+    * @tc.name      : 03.MP4 format Get MetaData(MPEG2+AAC)
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0300, Function | MediumTest | Level0)
@@ -174,7 +174,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0300, Function | MediumT
 
 /**
     * @tc.number    : ResolveMetadata_Format_MP4_0400
-    * @tc.name      : 04.MP4 format Get MetaData (MPEG2+MP3)
+    * @tc.name      : 04.MP4 format Get MetaData(MPEG2+MP3)
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0400, Function | MediumTest | Level0)
@@ -204,7 +204,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0400, Function | MediumT
 
 /**
     * @tc.number    : ResolveMetadata_Format_MP4_0500
-    * @tc.name      : 05.MP4 format Get MetaData (MPEG4+AAC)
+    * @tc.name      : 05.MP4 format Get MetaData(MPEG4+AAC)
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0500, Function | MediumTest | Level0)
@@ -234,7 +234,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0500, Function | MediumT
 
 /**
     * @tc.number    : ResolveMetadata_Format_MP4_0600
-    * @tc.name      : 06.MP4 format Get MetaData (MPEG4+MP3)
+    * @tc.name      : 06.MP4 format Get MetaData(MPEG4+MP3)
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0600, Function | MediumTest | Level0)
@@ -264,7 +264,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0600, Function | MediumT
 
 /**
     * @tc.number    : ResolveMetadata_Format_M4A_0100
-    * @tc.name      : 01.M4A format Get MetaData 
+    * @tc.name      : 01.M4A format Get MetaData
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_M4A_0100, Function | MediumTest | Level0)
@@ -294,7 +294,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_M4A_0100, Function | MediumT
 
 /**
     * @tc.number    : ResolveMetadata_Format_MP3_0100
-    * @tc.name      : 01.MP3 format Get MetaData 
+    * @tc.name      : 01.MP3 format Get MetaData
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP3_0100, Function | MediumTest | Level0)
@@ -324,7 +324,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP3_0100, Function | MediumT
 
 /**
     * @tc.number    : ResolveMetadata_Format_AAC_0100
-    * @tc.name      : 01.AAC format Get MetaData 
+    * @tc.name      : 01.AAC format Get MetaData
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_AAC_0100, Function | MediumTest | Level0)
@@ -353,7 +353,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_AAC_0100, Function | MediumT
 
 /**
     * @tc.number    : ResolveMetadata_Format_OGG_0100
-    * @tc.name      : 01.OGG format Get MetaData 
+    * @tc.name      : 01.OGG format Get MetaData
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_OGG_0100, Function | MediumTest | Level0)
@@ -383,7 +383,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_OGG_0100, Function | MediumT
 
 /**
     * @tc.number    : ResolveMetadata_Format_WAV_0100
-    * @tc.name      : 01.WAV format Get MetaData 
+    * @tc.name      : 01.WAV format Get MetaData
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_WAV_0100, Function | MediumTest | Level0)
@@ -413,7 +413,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_WAV_0100, Function | MediumT
 
 /**
     * @tc.number    : ResolveMetadata_Format_WAV_0200
-    * @tc.name      : 01.WAV format Get MetaData 
+    * @tc.name      : 01.WAV format Get MetaData
     * @tc.desc      : test ResolveMetadata
 */
 HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_WAV_0200, Function | MediumTest | Level0)

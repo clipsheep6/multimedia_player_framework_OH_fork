@@ -257,8 +257,8 @@ void AVMetadataMock::FrameToJpeg(std::shared_ptr<PixelMap> frame,
     if (frame->GetPixelFormat() == PixelFormat::RGB_565) {
         uint32_t rgb888Size = (frame->GetByteCount() / RGB565_PIXEL_BYTES) * RGB888_PIXEL_BYTES;
         if (rgb888Size <= 0) {
-           std::cout << "invalid rgb888Size" << std::endl;
-            return; 
+            std::cout << "invalid rgb888Size" << std::endl;
+            return;
         }
         uint8_t *rgb888 = new (std::nothrow) uint8_t[rgb888Size];
         if (rgb888 == nullptr) {
