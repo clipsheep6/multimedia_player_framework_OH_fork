@@ -340,7 +340,7 @@ void TestRecorder::HDICreateESBuffer()
         if (retValue == OHOS::SURFACE_ERROR_NO_BUFFER) {
             continue;
         }
-        if ((retValue == SURFACE_ERROR_OK) && (buffer != nullptr)) {
+        if ((retValue != SURFACE_ERROR_OK) || (buffer == nullptr)) {
             break;
         }
 
