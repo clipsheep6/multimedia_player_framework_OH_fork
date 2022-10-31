@@ -30,14 +30,16 @@ public:
     void SetUp(void);
     // TearDown: Called after each test cases
     void TearDown(void);
+    bool CreateAudioCodecByMime(const std::string &decMime, const std::string &encMime);
+    bool CreateAudioCodecByName(const std::string &decName, const std::string &encName);
 
 protected:
     std::shared_ptr<ACodecMock> audioCodec_ = nullptr;
     std::shared_ptr<ADecCallbackTest> adecCallback_ = nullptr;
     std::shared_ptr<AEncCallbackTest> aencCallback_ = nullptr;
-    bool createByMimeFlag_ = true;
     const ::testing::TestInfo *testInfo_ = nullptr;
     std::shared_ptr<FormatMock> defaultFormat_ = nullptr;
+    bool createCodecSuccess_ = false;
 };
 } // namespace Media
 } // namespace OHOS
