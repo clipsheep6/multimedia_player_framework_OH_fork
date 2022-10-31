@@ -73,6 +73,7 @@ static OHOS::BufferRequestConfig g_yuvRequestConfig = {
     .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
     .timeout = 0
 };
+
 void RecorderCallbackTest::OnError(RecorderErrorType errorType, int32_t errorCode)
 {
     cout << "Error received, errorType:" << errorType << " errorCode:" << errorCode << endl;
@@ -483,7 +484,7 @@ int32_t RecorderMock::SetFormat(const std::string &recorderType, VideoRecorderCo
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetOutputFile failed ");
 
     std::shared_ptr<RecorderCallbackTest> cb = std::make_shared<RecorderCallbackTest>();
-    ret += recorder_->SetRecorderCallback(cb);
+    ret = recorder_->SetRecorderCallback(cb);
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetRecorderCallback failed ");
     cout << "set format finished" << endl;
     return ret;
