@@ -107,6 +107,7 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
         gst_buffer_set_size(buf, vdec_h264->cache_offset);
         vdec_h264->is_slice_buffer = false;
         ready_push = true;
+        gst_buffer_ref(buf);
         g_mutex_unlock(&vdec_h264->cat_lock);
         return buf;
     }
@@ -114,12 +115,14 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
     GstMapInfo info = GST_MAP_INFO_INIT;
     if (!gst_buffer_map(buffer, &info, GST_MAP_READ)) {
         GST_ERROR_OBJECT(self, "map buffer fail");
+        gst_buffer_ref(buffer);
         g_mutex_unlock(&vdec_h264->cat_lock);
         return buffer;
     }
     gboolean slice_flag = get_slice_flag(vdec_h264, &info, ready_push);
     if (ready_push) {
         gst_buffer_unmap(buffer, &info);
+        gst_buffer_ref(buffer);
         g_mutex_unlock(&vdec_h264->cat_lock);
         return buffer;
     }
@@ -152,9 +155,9 @@ static gboolean cat_slice_buffer(GstVdecBase *self, GstMapInfo *src_info)
 {
     GstVdecH264 *vdec_h264 = GST_VDEC_H264(self);
     if (vdec_h264->cache_slice_buffer == nullptr) {
-        GstFlowReturn flow_ret = gst_buffer_pool_acquire_buffer(self->inpool, &vdec_h264->cache_slice_buffer, nullptr);
-        if (flow_ret != GST_FLOW_OK || vdec_h264->cache_slice_buffer == nullptr) {
-            GST_ERROR_OBJECT(self, "Acquire buffer is nullptr");
+        vdec_h264->cache_slice_buffer = gst_buffer_new_allocate (NULL, 2000000, nullptr);
+        if (vdec_h264->cache_slice_buffer == nullptr) {
+            GST_ERROR_OBJECT(self, "allocate buffer is nullptr");
             return false;
         }
     }
