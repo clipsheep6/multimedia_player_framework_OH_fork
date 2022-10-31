@@ -144,6 +144,7 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
         (void)cat_slice_buffer(self, &info);
     } else {
         buf = buffer;
+        gst_buffer_ref(buffer);
         ready_push = true;
     }
 
@@ -156,7 +157,7 @@ static gboolean cat_slice_buffer(GstVdecBase *self, GstMapInfo *src_info)
 {
     GstVdecH264 *vdec_h264 = GST_VDEC_H264(self);
     if (vdec_h264->cache_slice_buffer == nullptr) {
-        vdec_h264->cache_slice_buffer = gst_buffer_new_allocate (NULL, src_info->size, NULL);
+        vdec_h264->cache_slice_buffer = gst_buffer_new_allocate (nullptr, src_info->size, nullptr);
         if (vdec_h264->cache_slice_buffer == nullptr) {
             GST_ERROR_OBJECT(self, "allocate buffer is nullptr");
             return false;
@@ -170,7 +171,7 @@ static gboolean cat_slice_buffer(GstVdecBase *self, GstMapInfo *src_info)
     }
 
     GstMapInfo cache_info = GST_MAP_INFO_INIT;
-    if (!gst_buffer_map(vdec_h264->cache_slice_buffer, &cache_info, GST_MAP_READ)) {
+    if (!gst_buffer_map(vdec_h264->cache_slice_buffer, &cache_info, GST_MAP_WRITE)) {
         GST_ERROR_OBJECT(self, "map buffer fail");
         return false;
     }
@@ -188,17 +189,23 @@ static gboolean cat_slice_buffer(GstVdecBase *self, GstMapInfo *src_info)
 
 static gboolean gst_buffer_extend(GstBuffer **buffer, gsize &size)
 {
-    g_return_val_if_fail(*buffer != NULL, FALSE);
-    GstBuffer *ext_buffer = gst_buffer_new_allocate (NULL, size, NULL);
-    g_return_val_if_fail(ext_buffer != NULL, FALSE);
+    g_return_val_if_fail(buffer != nullptr && *buffer != nullptr, FALSE);
+    GstBuffer *ext_buffer = gst_buffer_new_allocate (nullptr, size, nullptr);
+    g_return_val_if_fail(ext_buffer != nullptr, FALSE);
 
     GstMapInfo info = GST_MAP_INFO_INIT;
     GstMapInfo ext_info = GST_MAP_INFO_INIT;
-    if (!gst_buffer_map(*buffer, &info, GST_MAP_READ) ||
-        !gst_buffer_map(ext_buffer, &ext_info, GST_MAP_READ)) {
-            GST_ERROR("map buffer fail");
-            return false;
+    if (!gst_buffer_map(*buffer, &info, GST_MAP_READ)) {
+        GST_ERROR("map buffer fail");
+        return false;
     }
+
+    if (!gst_buffer_map(ext_buffer, &ext_info, GST_MAP_WRITE)) {
+        GST_ERROR("map buffer fail");
+        gst_buffer_unmap(*buffer, &info);
+        return false;
+    }
+
     errno_t ret = memcpy_s(ext_info.data, ext_info.size, info.data, info.size);
     gst_buffer_unmap(*buffer, &info);
     gst_buffer_unmap(ext_buffer, &ext_info);
@@ -219,6 +226,10 @@ static void flush_cache_slice_buffer(GstVdecBase *self)
         vdec_h264->cache_offset = 0;
         vdec_h264->is_slice_buffer = false;
         vdec_h264->has_data_after_sps = true;
+        if (vdec_h264->cache_slice_buffer != nullptr) {
+            gst_buffer_unref(vdec_h264->cache_slice_buffer);
+            vdec_h264->cache_slice_buffer = nullptr;
+        }
         g_mutex_unlock(&vdec_h264->cat_lock);
     }
 }
