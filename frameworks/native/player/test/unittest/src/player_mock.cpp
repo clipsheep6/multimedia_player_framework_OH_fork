@@ -16,6 +16,7 @@
 #include "player_mock.h"
 #include <sys/stat.h>
 #include "media_errors.h"
+#include "transaction/rs_transaction.h"
 #include "ui/rs_surface_node.h"
 #include "window_option.h"
 
@@ -60,7 +61,7 @@ int32_t PlayerCallbackTest::PlaySync()
     if (state_ != PLAYER_STARTED) {
         std::unique_lock<std::mutex> lockPlay(mutexCond_);
         condVarPlay_.wait_for(lockPlay, std::chrono::seconds(WAITSECOND));
-        if (state_ != PLAYER_STARTED) {
+        if (state_ != PLAYER_STARTED && state_ != PLAYER_PLAYBACK_COMPLETE) {
             return -1;
         }
     }
@@ -146,6 +147,15 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
         case INFO_TYPE_POSITION_UPDATE:
             seekPosition_ = extra;
             break;
+        case INFO_TYPE_BITRATE_COLLECT:
+            std::cout << "INFO_TYPE_BITRATE_COLLECT: " << extra << std::endl;
+            break;
+        case INFO_TYPE_INTERRUPT_EVENT:
+            std::cout << "INFO_TYPE_INTERRUPT_EVENT: " << extra << std::endl;
+            break;
+        case INFO_TYPE_RESOLUTION_CHANGE:
+            std::cout << "INFO_TYPE_RESOLUTION_CHANGE: " << extra << std::endl;
+            break;
         default:
             break;
     }
@@ -198,12 +208,16 @@ sptr<Surface> PlayerMock::GetVideoSurface()
     option->SetWindowRect({ 0, 0, width_, height_ });
     option->SetWindowType(Rosen::WindowType::WINDOW_TYPE_APP_LAUNCHING);
     option->SetWindowMode(Rosen::WindowMode::WINDOW_MODE_FLOATING);
-    previewWindow_ = Rosen::Window::Create("xcomponent_window_unittest", option);
+    previewWindow_ = Rosen::Window::Create("xcomponent_window", option);
     if (previewWindow_ == nullptr || previewWindow_->GetSurfaceNode() == nullptr) {
         return nullptr;
     }
+
     previewWindow_->Show();
-    return previewWindow_->GetSurfaceNode()->GetSurface();
+    auto surfaceNode = previewWindow_->GetSurfaceNode();
+    surfaceNode->SetFrameGravity(Rosen::Gravity::RESIZE);
+    Rosen::RSTransaction::FlushImplicitTransaction();
+    return surfaceNode->GetSurface();
 }
 
 PlayerMock::PlayerMock(std::shared_ptr<PlayerCallbackTest> &callback)
