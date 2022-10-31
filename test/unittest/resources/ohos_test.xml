@@ -18,6 +18,20 @@
         <depend resource="test_videofile/H264_AAC.mp4" pushpath="/data/test" findpath="res" presetcmd=""/>
         <preparer>
             <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/H264_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG2_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG2_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG4_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG4_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/out_170_170.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/aac_44100Hz_143kbs_stereo.aac -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/aac_48000Hz_70kbs_mono.m4a -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/mp3_48000Hz_64kbs_mono.mp3 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/pcm_s16le_48000Hz_768kbs_mono.wav-> /data/test" src="res"/>
+            <option name="push" value="test_videofile/vorbis_48000Hz_80kbs_mono.ogg -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/H264_AAC_320x240.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/ChineseColor_H264_AAC_480p_15fps.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/AVC_Baseline@L1.2_81.0Kbps_320x240.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/MP4_ROTATE_90.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/1kb.mp3 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/01.mp3 -> /data/test" src="res"/>
