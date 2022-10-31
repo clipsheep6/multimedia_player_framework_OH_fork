@@ -101,7 +101,7 @@ void PlayerUnitTest::GetSetParaFunTest()
         player_->GetPlaybackSpeed(mode);
         player_->SetLooping(true);
         player_->IsLooping();
-        player_->SetVolume(0.1, 0.1);
+        player_->SetVolume(0.1, 0.1);  // 0.1:volume
     }
 }
 
@@ -1465,7 +1465,7 @@ HWTEST_F(PlayerUnitTest, Player_Histreamer_001, TestSize.Level0)
     EXPECT_EQ(true, player_->IsLooping());
     EXPECT_EQ(MSERR_OK, player_->SetLooping(false));
     EXPECT_EQ(false, player_->IsLooping());
-    player_->SetVolume(0.1, 0.1);
+    player_->SetVolume(0.1, 0.1);            // 0.1:volume
     Format format;
     format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, VideoScaleType::VIDEO_SCALE_TYPE_FIT);
     player_->SetParameter(format);
