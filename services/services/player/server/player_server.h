@@ -156,6 +156,7 @@ private:
         std::string url;
     } config_;
     bool disableNextSeekDone_ = false;
+    bool errorCbOnce_ = false;
     int32_t contentType_ = 0;
     int32_t streamUsage_ = 0;
     int32_t rendererFlag_ = 0;
