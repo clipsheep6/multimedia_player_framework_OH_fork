@@ -18,6 +18,20 @@
         <depend resource="test_videofile/H264_AAC.mp4" pushpath="/data/test" findpath="res" presetcmd=""/>
         <preparer>
             <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/H264_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG2_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG2_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG4_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG4_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/out_170_170.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/aac_44100Hz_143kbs_stereo.aac -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/aac_48000Hz_70kbs_mono.m4a -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/mp3_48000Hz_64kbs_mono.mp3 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/pcm_s16le_48000Hz_768kbs_mono.wav-> /data/test" src="res"/>
+            <option name="push" value="test_videofile/vorbis_48000Hz_80kbs_mono.ogg -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/H264_AAC_320x240.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/ChineseColor_H264_AAC_480p_15fps.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/AVC_Baseline@L1.2_81.0Kbps_320x240.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/MP4_ROTATE_90.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/1kb.mp3 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/01.mp3 -> /data/test" src="res"/>
@@ -28,24 +42,42 @@
     <target name="recorder_unit_test">
         <preparer>
             <option name="push" value="res_recorder/out_320_240_10s.h264 -> /data/test/media" src="res"/>
-            <option name="push" value="res_recorder/recorder_video_pause_resume.mp4 -> /data/test/media" src="res"/>
-            <option name="push" value="res_recorder/recorder_video_es.mp4 -> /data/test/media" src="res"/>
-            <option name="push" value="res_recorder/recorder_audio_es.m4a -> /data/test/media" src="res"/>
-            <option name="push" value="res_recorder/recorder_av_yuv_mpeg4.mp4 -> /data/test/media" src="res"/>
-            <option name="push" value="res_recorder/recorder_video_yuv_mpeg4.mp4 -> /data/test/media" src="res"/>
-            <option name="push" value="res_recorder/recorder_video_SetOrientationHint_001.mp4 -> /data/test/media" src="res"/>
-            <option name="push" value="res_recorder/recorder_video_SetMaxFileSize_001.mp4 -> /data/test/media" src="res"/>
-            <option name="push" value="res_recorder/recorder_video_SetParameter_001.mp4 -> /data/test/media" src="res"/>
-            <option name="push" value="res_recorder/recorder_SetDataSource_001.mp4 -> /data/test/media" src="res"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_pause_resume.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_es.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_audio_es.m4a"/>
+            <option name="shell" value="touch /data/test/media/recorder_av_yuv_mpeg4.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_yuv_mpeg4.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_SetMaxFileSize_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_SetMaxFileSize_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_SetParameter_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetDataSource_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_SetOrientationHint_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_SetOrientationHint_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_av_yuv_h264.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_stop_start.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_configure.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_prepare.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_SetCaptureRate_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_SetCaptureRate_002.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
     <target name="avmetadata_unit_test">
         <preparer>
             <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/H264_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG2_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG2_MP3.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG4_AAC.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/MPEG4_MP3.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/out_480_320.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/out_170_170.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/aac_44100Hz_143kbs_stereo.aac -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/aac_48000Hz_70kbs_mono.m4a -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/mp3_48000Hz_64kbs_mono.mp3 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/pcm_s16le_48000Hz_768kbs_mono.wav-> /data/test" src="res"/>
+            <option name="push" value="test_videofile/pcm_s16le_48000Hz_768kbs_mono_date.wav -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/vorbis_48000Hz_80kbs_mono.ogg -> /data/test" src="res"/>
             <option name="push" value="res_avmetadata/MP3_SURFACE.mp3 -> /data/test" src="res"/>
         </preparer>
     </target>
