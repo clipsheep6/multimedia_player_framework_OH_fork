@@ -60,7 +60,7 @@ int32_t PlayerCallbackTest::PlaySync()
     if (state_ != PLAYER_STARTED) {
         std::unique_lock<std::mutex> lockPlay(mutexCond_);
         condVarPlay_.wait_for(lockPlay, std::chrono::seconds(WAITSECOND));
-        if (state_ != PLAYER_STARTED) {
+        if (state_ != PLAYER_STARTED && state_ != PLAYER_PLAYBACK_COMPLETE) {
             return -1;
         }
     }
@@ -145,6 +145,12 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             break;
         case INFO_TYPE_POSITION_UPDATE:
             seekPosition_ = extra;
+            break;
+        case INFO_TYPE_BITRATE_COLLECT:
+            std::cout << "INFO_TYPE_BITRATE_COLLECT: " << extra << std::endl;
+            break;
+        case INFO_TYPE_INTERRUPT_EVENT:
+            std::cout << "INFO_TYPE_INTERRUPT_EVENT: " << extra << std::endl;
             break;
         default:
             break;
