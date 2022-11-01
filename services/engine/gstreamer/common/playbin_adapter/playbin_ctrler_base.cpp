@@ -244,11 +244,6 @@ int32_t PlayBinCtrlerBase::Pause()
         return MSERR_OK;
     }
 
-    if (isBuffering_) {
-        ChangeState(pausedState_);
-        return MSERR_OK;
-    }
-
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     int32_t ret = currState->Pause();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Pause failed");
@@ -346,6 +341,8 @@ int32_t PlayBinCtrlerBase::SetRateInternal(double rate)
 
     gint64 position;
     gboolean ret;
+
+    isRating_ = true;
     if (isDuration_.load()) {
         position = duration_ * NANO_SEC_PER_USEC;
     } else {
@@ -357,7 +354,6 @@ int32_t PlayBinCtrlerBase::SetRateInternal(double rate)
     int64_t start = rate > 0 ? position : 0;
     int64_t stop = rate > 0 ? static_cast<int64_t>(GST_CLOCK_TIME_NONE) : position;
 
-    isRating_ = true;
     GstEvent *event = gst_event_new_seek(rate, GST_FORMAT_TIME, flags,
         GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_SET, stop);
     CHECK_AND_RETURN_RET_LOG(event != nullptr, MSERR_NO_MEMORY, "set rate failed");
@@ -923,7 +919,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
 {
     if (percent >= BUFFER_PERCENT_THRESHOLD) {
         isBuffering_ = false;
-        if (GetCurrState() == playingState_) {
+        if (GetCurrState() == playingState_ && !isUserSetPause_) {
             {
                 std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
                 g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_PLAYING, nullptr);
