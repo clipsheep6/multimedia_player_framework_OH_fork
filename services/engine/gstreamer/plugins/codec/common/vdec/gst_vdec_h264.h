@@ -43,6 +43,7 @@ typedef struct _GstVdecH264Class GstVdecH264Class;
 struct _GstVdecH264 {
     GstVdecBase parent;
     gboolean is_slice_buffer;
+    gboolean has_data_after_sps;
     guint cache_offset;
     GstBuffer *cache_slice_buffer;
     GMutex cat_lock;
