@@ -307,7 +307,6 @@ void VideoCallbackNapi::OnBitRateCollectedCb(const Format &infoBody) const
     if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_BITRATE))) {
         uint8_t *addr = nullptr;
         size_t size  = 0;
-        uint32_t bitrate = 0;
         infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_BITRATE), &addr, size);
         if (addr == nullptr) {
             delete cb;
@@ -320,7 +319,7 @@ void VideoCallbackNapi::OnBitRateCollectedCb(const Format &infoBody) const
                 break;
             }
 
-            bitrate = *(static_cast<uint32_t *>(static_cast<void *>(addr)));
+            uint32_t bitrate = *(static_cast<uint32_t *>(static_cast<void *>(addr)));
             MEDIA_LOGD("bitrate = %{public}u", bitrate);
             addr += sizeof(uint32_t);
             size -= sizeof(uint32_t);

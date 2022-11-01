@@ -187,7 +187,7 @@ bool OH_AVFormat_GetStringValue(struct OH_AVFormat *format, const char *key, con
     }
     uint32_t bufLength = str.size() > MAX_STRING_LENGTH ? MAX_STRING_LENGTH : str.size();
 
-    format->outString_ = (char *)malloc((bufLength + 1) * sizeof(char));
+    format->outString_ = static_cast<char *>(malloc((bufLength + 1) * sizeof(char)));
     CHECK_AND_RETURN_RET_LOG(format->outString_ != nullptr, false, "malloc out string nullptr!");
 
     if (strcpy_s(format->outString_, bufLength + 1, str.c_str()) != EOK) {

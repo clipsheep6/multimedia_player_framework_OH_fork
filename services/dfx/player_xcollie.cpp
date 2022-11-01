@@ -30,7 +30,7 @@ PlayerXCollie &PlayerXCollie::GetInstance()
     return instance;
 }
 
-bool PlayerXCollie::EnableOnceMode() const
+static bool EnableOnceMode()
 {
     std::string enable;
     int32_t res = OHOS::system::GetStringParameter("sys.media.player.xcollie.once.enable", enable, "");
@@ -58,7 +58,7 @@ int32_t PlayerXCollie::Dump(int32_t fd)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::string dumpString = "------------------XCollieDfx------------------\n";
-    for (auto &iter : dfxDumper_) {
+    for (const auto &iter : dfxDumper_) {
         dumpString += "WaitTask-----";
         dumpString += iter.second;
         dumpString += "-----\n";

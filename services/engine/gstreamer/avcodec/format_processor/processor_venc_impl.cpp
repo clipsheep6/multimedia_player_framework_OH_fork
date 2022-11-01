@@ -91,12 +91,6 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetInputPortConfig()
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
     auto config = std::make_shared<ProcessorConfig>(caps, true);
-    if (config == nullptr) {
-        MEDIA_LOGE("No memory");
-        gst_caps_unref(caps);
-        return nullptr;
-    }
-
     constexpr uint32_t alignment = 16;
     config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_),
         static_cast<uint32_t>(width_), static_cast<uint32_t>(height_), alignment);
@@ -131,12 +125,6 @@ std::shared_ptr<ProcessorConfig> ProcessorVencImpl::GetOutputPortConfig()
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
     auto config = std::make_shared<ProcessorConfig>(caps, true);
-    if (config == nullptr) {
-        MEDIA_LOGE("No memory");
-        gst_caps_unref(caps);
-        return nullptr;
-    }
-
     constexpr uint32_t alignment = 16;
     config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_), width_, height_, alignment);
 

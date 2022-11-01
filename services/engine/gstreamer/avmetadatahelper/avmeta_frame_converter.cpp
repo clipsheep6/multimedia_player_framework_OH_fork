@@ -146,7 +146,8 @@ std::shared_ptr<AVSharedMemory> AVMetaFrameConverter::GetConvertResult()
     CHECK_AND_RETURN_RET_LOG(videoMeta != nullptr, nullptr, "get video meta failed");
 
     GstShMemMemory *mem = reinterpret_cast<GstShMemMemory *>(info.memory);
-    CHECK_AND_RETURN_RET_LOG(mem != nullptr && mem->mem != nullptr, nullptr, "mem is nullptr");
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr, nullptr, "mem is nullptr");
+    CHECK_AND_RETURN_RET_LOG(mem->mem != nullptr, nullptr, "mem->mem is nullptr");
     CHECK_AND_RETURN_RET_LOG(mem->mem->GetBase() != nullptr, nullptr, "addr is nullptr");
 
     std::shared_ptr<AVSharedMemory> result = mem->mem;

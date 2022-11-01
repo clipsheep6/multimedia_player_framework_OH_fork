@@ -129,12 +129,6 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
     auto config = std::make_shared<ProcessorConfig>(caps, false);
-    if (config == nullptr) {
-        MEDIA_LOGE("No memory");
-        gst_caps_unref(caps);
-        return nullptr;
-    }
-
     config->needParser_ = (codecName_ == CODEC_MIME_TYPE_AUDIO_FLAC);
     config->needCodecData_ = (codecName_ == CODEC_MIME_TYPE_AUDIO_VORBIS);
     config->bufferSize_ = DEFAULT_BUFFER_SIZE;
@@ -154,12 +148,6 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetOutputPortConfig()
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
     auto config = std::make_shared<ProcessorConfig>(caps, false);
-    if (config == nullptr) {
-        MEDIA_LOGE("No memory");
-        gst_caps_unref(caps);
-        return nullptr;
-    }
-
     config->bufferSize_ = DEFAULT_BUFFER_SIZE;
 
     return config;
