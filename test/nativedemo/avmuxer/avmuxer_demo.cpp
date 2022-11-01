@@ -26,13 +26,14 @@ namespace {
     constexpr uint32_t VIDEO_AUDIO_MODE = 0;
     constexpr uint32_t VIDEO_MODE = 1;
     constexpr uint32_t AUDIO_MODE = 2;
+    constexpr uint32_t MULT_AUDIO_MODE = 3;
     constexpr uint32_t SLEEP_UTIME = 50000;
     constexpr uint32_t H264_WIDTH = 480;
     constexpr uint32_t H264_HEIGHT = 640;
     constexpr uint32_t H264_FRAME_RATE = 30;
     constexpr uint32_t MPEG4_WIDTH = 720;
     constexpr uint32_t MPEG4_HEIGHT = 480;
-    constexpr uint32_t MPEG4_FRAME_RATE = 60;
+    constexpr uint32_t MPEG4_FRAME_RATE = 30;
     constexpr uint32_t AAC_SAMPLE_RATE = 44100;
     constexpr uint32_t AAC_CHANNEL = 2;
     constexpr uint32_t MP3_SAMPLE_RATE = 48000;
@@ -41,7 +42,7 @@ namespace {
     constexpr float LONGITUDE = 150.2222;
     constexpr int32_t ROTATION = 90;
     constexpr uint32_t H264_FRAME_DURATION = 33333;
-    constexpr uint32_t MPEG4_FRAME_DURATION = 16666;
+    constexpr uint32_t MPEG4_FRAME_DURATION = 33333;
     constexpr uint32_t AAC_FRAME_DURATION = 23220;
     constexpr uint32_t MP3_FRAME_DURATION = 23220;
     
@@ -103,36 +104,57 @@ namespace {
         376, 381, 369, 378, 416, 366, 379, 363, 430, 368, 358, 470, 296, 358
     };
     const int32_t MPEG4_FRAME_SIZE[] = {
-        40629, 42109, 7513, 2414, 867, 1342, 676, 599, 698, 600, 657, 610, 15298, 615, 403, 433, 480, 458, 485,
-        536, 572, 524, 492, 608, 9497, 586, 423, 504, 526, 504, 538, 503, 494, 531, 534, 652, 9152, 682, 527,
-        559, 552, 571, 624, 776, 713, 687, 687, 685, 9301, 721, 599, 702, 786, 728, 715, 739, 711, 872, 748,
-        886, 9289, 777, 703, 716, 752, 807, 843, 827, 945, 880, 891, 803, 9334, 817, 758, 933, 917, 915, 935,
-        969, 959, 974, 1054, 1147, 9385, 912, 849, 989, 957, 1075, 997, 1060, 1108, 1077, 1011, 1107, 9467, 988,
-        1003, 1013, 1059, 1122, 1042, 1072, 1087, 1149, 1057, 1075, 9281, 948, 920, 1008, 1075, 1210, 1083, 1069,
-        1183, 1123, 1133, 1111, 9196, 1044, 982, 1153, 1235, 1160, 1179, 1124, 1272, 1175, 1180, 1285, 9072, 1113,
-        1000, 1045, 1147, 1033, 1057, 1240, 1241, 1127, 1065, 1118, 8856, 938, 882, 977, 1079, 1081, 1064, 964,
-        1059, 932, 1037, 1177, 8742, 970, 1007, 905, 976, 916, 984, 1039, 1076, 1055, 955, 1002, 8544, 861, 765,
-        854, 854, 902, 843, 757, 900, 720, 882, 914, 8272, 764, 627, 637, 736, 635, 751, 742, 841, 744, 822, 694,
-        8307, 567, 495, 612, 737, 701, 646, 585, 671, 626, 638, 816, 8173, 669, 524, 531, 616, 606, 637, 569, 645,
-        598, 650, 592, 8150, 606, 592, 503, 570, 577, 632, 585, 618, 678, 640, 617, 8062, 587, 527, 521, 578, 640,
-        648, 587, 610, 665, 658, 613, 7945, 623, 486, 471, 590, 566, 599, 542, 654, 546, 845, 587, 7956, 553, 470,
-        564, 553, 590, 558, 585, 619, 658, 628, 692, 7919, 633, 484, 556, 575, 637, 606, 615, 665, 643, 589, 654,
-        7964, 634, 543, 576, 583, 655, 563, 676, 594, 690, 522, 646, 7896, 595, 491, 525, 614, 678, 558, 641, 652,
-        673, 545, 683, 7834, 598, 457, 545, 574, 627, 553, 626, 664, 693, 604, 720, 7796, 591, 470, 566, 551, 592,
-        491, 653, 624, 601, 526, 700, 7724, 596, 438, 524, 512, 572, 537, 665, 669, 641, 561, 706, 7918, 661, 552,
-        579, 626, 628, 542, 664, 632, 711, 573, 767, 8016, 645, 472, 591, 573, 760, 607, 676, 628, 685, 596, 714,
-        8051, 672, 496, 561, 622, 599, 594, 696, 736, 737, 622, 705, 8017, 645, 536, 644, 642, 669, 625, 708, 699,
-        694, 758, 769, 8265, 715, 556, 629, 684, 684, 688, 674, 672, 667, 710, 643, 8383, 668, 598, 600, 673, 671,
-        690, 513, 730, 777, 660, 724, 8375, 692, 557, 631, 626, 733, 677, 771, 749, 843, 727, 794, 8508, 788, 576,
-        670, 706, 841, 714, 778, 744, 868, 765, 762, 8689, 752, 588, 749, 721, 825, 729, 794, 773, 875, 773, 898,
-        8797, 822, 654, 775, 780, 869, 777, 849, 854, 938, 772, 844, 8943, 835, 731, 729, 758, 837, 735, 782, 821,
-        896, 789, 848, 9095, 848, 652, 751, 818, 988, 828, 914, 854, 996, 888, 915, 9435, 909, 689, 767, 849, 966,
-        879, 914, 939, 1026, 888, 943, 9538, 893, 706, 868, 873, 951, 850, 808, 1072, 918, 932, 1166, 10145, 882,
-        815, 866, 886, 949, 990, 972, 943, 936, 1050, 955, 10352, 898, 916, 897, 904, 871, 962, 951, 945, 925, 1026,
-        931, 10486, 856, 806, 861, 918, 907, 1076, 970, 979, 945, 1007, 1041, 10717, 940, 902, 927, 968, 1041, 1176,
-        1139, 1101, 1121, 1187, 1068, 10897, 968, 973, 974, 990, 1040, 1162, 1053, 1075, 1214, 1262, 1141, 11030, 993,
-        917, 970, 1008, 1054, 1166, 1090, 1106, 1012, 1165, 1124, 11088, 1057, 1038, 990, 1045, 982, 1131, 1078, 1078,
-        1047, 1205, 1092, 10892, 928, 881, 962, 1001, 1004, 1058, 991, 1047, 1014, 1059, 1045, 10754, 984
+        40288,  32946,  8929,   2315,   821,    1240,   647,    578,    724,    595,    627,    647,
+        13350,  714,    425,    441,    509,    453,    501,    607,    589,    483,    521,    616,
+        8819,   643,    455,    612,    558,    534,    596,    527,    552,    503,    587,    637,
+        7794,   905,    718,    668,    606,    619,    697,    851,    799,    763,    735,    747,
+        7682,   1026,   700,    758,    899,    824,    795,    762,    770,    849,    797,    959,
+        9310,   755,    685,    693,    714,    783,    801,    810,    894,    834,    833,    814,
+        8007,   976,    808,    949,    1023,   905,    855,    854,    909,    913,    1011,   1093,
+        7931,   1160,   942,    978,    934,    1063,   972,    1057,   987,    987,    1019,   1019,
+        7805,   1250,   1074,   1019,   1003,   1086,   1007,   1008,   1069,   1151,   1009,   1018,
+        7875,   1221,   1009,   1017,   1095,   1108,   1049,   1011,   1119,   1089,   1023,   1011,
+        9214,   976,    935,    1124,   1157,   1094,   1135,   1080,   1150,   1084,   1092,   1246,
+        7798,   1340,   1050,   995,    1080,   987,    1038,   1192,   1183,   1007,   973,    1024,
+        7633,   1210,   875,    999,    1010,   1049,   1058,   879,    989,    826,    915,    991,
+        7436,   1256,   1006,   845,    986,    832,    905,    930,    918,    925,    837,    788,
+        7289,   1126,   784,    843,    876,    837,    809,    727,    847,    705,    767,    834,
+        8302,   712,    586,    651,    685,    617,    693,    686,    771,    694,    772,    587,
+        7294,   786,    572,    632,    708,    719,    638,    564,    624,    607,    611,    748,
+        7161,   996,    715,    547,    665,    557,    685,    494,    604,    549,    526,    547,
+        7093,   906,    722,    475,    598,    525,    631,    511,    548,    564,    577,    504,
+        7034,   940,    636,    544,    598,    581,    615,    555,    538,    606,    599,    605,
+        7974,   570,    461,    445,    540,    546,    582,    535,    602,    500,    821,    503,
+        7189,   778,    522,    560,    554,    568,    524,    530,    586,    607,    543,    622,
+        7032,   909,    533,    611,    559,    575,    607,    562,    559,    592,    553,    598,
+        6927,   924,    612,    576,    583,    575,    553,    620,    649,    653,    542,    571,
+        6871,   983,    492,    548,    593,    613,    477,    555,    620,    570,    521,    615,
+        7837,   583,    440,    510,    550,    567,    502,    638,    624,    561,    561,    627,
+        7035,   858,    507,    579,    550,    503,    470,    573,    560,    546,    482,    667,
+        6896,   864,    460,    598,    514,    558,    539,    618,    673,    579,    517,    591,
+        6872,   964,    585,    622,    618,    610,    504,    652,    614,    661,    545,    709,
+        6946,   894,    505,    652,    596,    693,    526,    671,    602,    623,    537,    686,
+        8042,   687,    448,    526,    572,    574,    557,    660,    704,    643,    567,    704,
+        6972,   874,    548,    652,    579,    691,    568,    638,    721,    600,    670,    698,
+        6999,   922,    573,    604,    639,    681,    672,    622,    662,    599,    627,    640,
+        7046,   951,    678,    605,    676,    615,    642,    508,    680,    753,    613,    650,
+        7058,   987,    633,    632,    645,    687,    622,    741,    648,    767,    638,    703,
+        8547,   779,    548,    674,    659,    812,    697,    776,    733,    825,    715,    723,
+        7344,   990,    625,    707,    738,    770,    693,    732,    721,    817,    724,    818,
+        7327,   1114,   680,    726,    740,    793,    821,    771,    731,    818,    707,    794,
+        7356,   1085,   748,    748,    731,    777,    699,    756,    743,    837,    777,    839,
+        7380,   1120,   740,    748,    786,    909,    818,    849,    819,    953,    744,    766,
+        9423,   829,    668,    771,    810,    915,    845,    894,    892,    983,    882,    872,
+        7751,   1131,   804,    830,    820,    887,    800,    775,    1082,   845,    874,    1034,
+        7872,   1115,   871,    884,    917,    856,    1010,   915,    837,    887,    993,    913,
+        7986,   1123,   980,    866,    928,    869,    907,    880,    842,    902,    910,    857,
+        7987,   1066,   877,    879,    904,    898,    994,    909,    893,    882,    972,    953,
+        10693,  913,    884,    906,    963,    977,    1103,   1097,   1114,   1047,   1124,   1056,
+        8313,   1183,   1076,   957,    948,    977,    1079,   989,    1000,   1044,   1129,   1090,
+        8338,   1206,   1013,   1003,   1043,   1091,   1153,   1012,   989,    970,    1025,   1004,
+        8281,   1376,   1092,   1012,   977,    971,    1020,   1004,   976,    993,    1010,   1035,
+        8213,   1241,   957,    967,    970,    989,    1017,   1001,   969,    933,    937,    942,
+        10633,  941,
     };
     const int32_t MP3_FRAME_SIZE[] = {
         192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192,
@@ -216,6 +238,7 @@ bool AVMuxerDemo::PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t 
     }
 
     if (avmuxer_->WriteTrackSample(aVMem, info) != MSERR_OK) {
+        std::cout << "WriteTrackSample failed" << std::endl;
         free(buffer);
         return false;
     };
@@ -229,6 +252,15 @@ std::shared_ptr<std::ifstream> OpenFile(const std::string &filePath)
 {
     auto file = std::make_unique<std::ifstream>();
     file->open(filePath, std::ios::in | std::ios::binary);
+    if (!file->good()) {
+      std::cout << "file: " << filePath << " is not exist." << std::endl;
+      return nullptr;
+    }
+    if (!file->is_open()) {
+      std::cout << "file: " << filePath << " open failed." << std::endl;
+      return nullptr;
+    }
+
     return file;
 }
 
@@ -236,10 +268,12 @@ void AVMuxerDemo::WriteTrackSample()
 {
     double videoStamp = 0;
     double audioStamp = 0;
+    double audioStamp_1 = 0;
     int32_t i = 0;
     int32_t videoLen = videoFile_ == nullptr ? INT32_MAX : videoFrameNum_;
     int32_t audioLen = audioFile_ == nullptr ? INT32_MAX : audioFrameNum_;
-    while (i < videoLen && i < audioLen) {
+    int32_t audioLen1 = audioFile_1_ == nullptr ? INT32_MAX : audioFrameNum_;
+    while (i < videoLen && i < audioLen && i < audioLen1) {
         if (videoFile_ != nullptr) {
             if (!PushBuffer(videoFile_, *videoFrameArray_, i, videoTrackId_, videoStamp)) {
                 break;
@@ -254,13 +288,21 @@ void AVMuxerDemo::WriteTrackSample()
             audioFrameArray_++;
             audioStamp += audioTimeDuration_;
         }
+        if (audioFile_1_ != nullptr) {
+            if (!PushBuffer(audioFile_1_, *audioFrameArray_1_, i, audioTrackId_1_, audioStamp_1)) {
+                break;
+            }
+            audioFrameArray_1_++;
+            audioStamp_1 += audioTimeDuration_1_;
+        }
         i++;
         std::cout << videoStamp << std::endl;
         std::cout << audioStamp << std::endl;
+        std::cout << audioStamp_1 << std::endl;
     }
 }
 
-void AVMuxerDemo::SetParameter(const std::string &type)
+void AVMuxerDemo::SetParameter(const std::string &type, int32_t trackNum)
 {
     if (type == "h264" || type == "mpeg4") {
         videoTimeDuration_ = CODEC_PARAMETER[type].frameDuration_;
@@ -268,10 +310,17 @@ void AVMuxerDemo::SetParameter(const std::string &type)
         videoFrameArray_ = CODEC_PARAMETER[type].framePointer_;
         videoFile_ = OpenFile(CODEC_PARAMETER[type].path_);
     } else {
-        audioTimeDuration_ = CODEC_PARAMETER[type].frameDuration_;
-        audioFrameNum_ = CODEC_PARAMETER[type].frameNum_;
-        audioFrameArray_ = CODEC_PARAMETER[type].framePointer_;
-        audioFile_ = OpenFile(CODEC_PARAMETER[type].path_);
+        if (trackNum == 0) {
+            audioTimeDuration_ = CODEC_PARAMETER[type].frameDuration_;
+            audioFrameNum_ = CODEC_PARAMETER[type].frameNum_;
+            audioFrameArray_ = CODEC_PARAMETER[type].framePointer_;
+            audioFile_ = OpenFile(CODEC_PARAMETER[type].path_);
+        } else {
+            audioTimeDuration_1_ = CODEC_PARAMETER[type].frameDuration_;
+            audioFrameNum_1_ = CODEC_PARAMETER[type].frameNum_;
+            audioFrameArray_1_ = CODEC_PARAMETER[type].framePointer_;
+            audioFile_1_ = OpenFile(CODEC_PARAMETER[type].path_);
+        }
     }
 }
 
@@ -302,27 +351,41 @@ bool AVMuxerDemo::AddTrackVideo(std::string &videoType)
     return true;
 }
 
-bool AVMuxerDemo::AddTrackAudio(std::string &audioType)
+bool AVMuxerDemo::AddTrackAudio(std::string &audioType, int32_t trackNum)
 {
     MediaDescription trackDesc;
+    int ret = MSERR_OK;
     if (audioType == "aac") {
         trackDesc.PutStringValue(MediaDescriptionKey::MD_KEY_CODEC_MIME, "audio/mp4a-latm");
         trackDesc.PutIntValue(MediaDescriptionKey::MD_KEY_SAMPLE_RATE, AAC_SAMPLE_RATE);
         trackDesc.PutIntValue(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, AAC_CHANNEL);
-        SetParameter("aac");
+        SetParameter("aac", trackNum);
     } else if (audioType == "mp3") {
         trackDesc.PutStringValue(MediaDescriptionKey::MD_KEY_CODEC_MIME, "audio/mpeg");
         trackDesc.PutIntValue(MediaDescriptionKey::MD_KEY_SAMPLE_RATE, MP3_SAMPLE_RATE);
         trackDesc.PutIntValue(MediaDescriptionKey::MD_KEY_CHANNEL_COUNT, MP3_CHANNEL);
-        SetParameter("mp3");
+        SetParameter("mp3", trackNum);
     } else {
         std::cout << "Failed to check audio type" << std::endl;
         return false;
     }
-    if (avmuxer_->AddTrack(trackDesc, audioTrackId_) != MSERR_OK) {
+
+    if (trackNum == 0) {
+        ret = avmuxer_->AddTrack(trackDesc, audioTrackId_);
+    } else {
+        ret = avmuxer_->AddTrack(trackDesc, audioTrackId_1_);
+    }
+
+    if (ret != MSERR_OK) {
+        std::cout << "Add Audio track: " << trackNum << "failed" << std::endl;
         return false;
     }
-    std::cout << "trackId is: " << audioTrackId_ << std::endl;
+
+    if (trackNum == 0) {
+        std::cout << "trackNum:0 trackId is: " << audioTrackId_ << std::endl;
+    } else {
+        std::cout << "trackNum:1 trackId is: " << audioTrackId_1_ << std::endl;
+    }
 
     return true;
 }
@@ -347,6 +410,16 @@ void AVMuxerDemo::SetMode(int32_t mode)
             std::cin >> audioType_;
             format_ = "m4a";
             break;
+        case MULT_AUDIO_MODE:
+            std::cout << "Please enter video type, note: only support h264 and mpeg4" << std::endl;
+            std::cin >> videoType_;
+            std::cout << "Please enter audio type, note: only support aac and mp3" << std::endl;
+            std::cin >> audioType_;
+            std::cout << "Please enter audio type, note: only support aac and mp3" << std::endl;
+            std::cin >> audioType_1_;
+            format_ = "mp4";
+            isMultAudioTrack = true;
+            break;
         default:
             std::cout << "Failed to check mode" << std::endl;
     }
@@ -354,13 +427,15 @@ void AVMuxerDemo::SetMode(int32_t mode)
 
 void AVMuxerDemo::DoNext()
 {
-    std::cout << "Please enter mode, 0: video + audio, 1: video, 2: audio" << std::endl;
+    std::cout << "Please enter mode, 0: video + audio, 1: video, 2: audio, 3: multiple audio track video" << std::endl;
     int32_t mode;
     std::cin >> mode;
     SetMode(mode);
-    
-    path_ = videoType_ + audioType_ + "." + format_;
-    int32_t fd = open(path_.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+
+    path_ = "/data/media/" + videoType_ + audioType_ + audioType_1_ + "." + format_;
+    std::cout << "filePath is: " << path_ << std::endl;
+    int32_t fd = open(path_.c_str(), O_CREAT | O_WRONLY, 0777);
+    std::cout << "fd is: " << fd << std::endl;
     if (fd < 0) {
         std::cout << "Open file failed! filePath is: " << path_ << std::endl;
         return;
@@ -369,28 +444,51 @@ void AVMuxerDemo::DoNext()
         avmuxer_->SetLocation(LATITUDE, LONGITUDE) != MSERR_OK ||
         avmuxer_->SetRotation(ROTATION) != MSERR_OK) {
         (void)::close(fd);
+        std::cout << "SetOutput failed!" << std::endl;
         return;
     }
 
     if ((mode == VIDEO_AUDIO_MODE && (AddTrackVideo(videoType_) == false ||
         AddTrackAudio(audioType_) == false)) ||
         (mode == VIDEO_MODE && (AddTrackVideo(videoType_) == false)) ||
-        (mode == AUDIO_MODE && (AddTrackAudio(audioType_) == false))) {
+        (mode == AUDIO_MODE && (AddTrackAudio(audioType_) == false)) ||
+        ((mode == MULT_AUDIO_MODE && (AddTrackVideo(videoType_) == false ||
+         AddTrackAudio(audioType_, 0) == false || AddTrackAudio(audioType_1_, 1) == false)))) {
         (void)::close(fd);
+        std::cout << "AddTrackVideo failed!" << std::endl;
         return;
     }
 
     if (avmuxer_->Start() != MSERR_OK) {
         (void)::close(fd);
+        std::cout << "Start failed!" << std::endl;
         return;
     }
     WriteTrackSample();
 
     if (avmuxer_->Stop() != MSERR_OK) {
         (void)::close(fd);
+        std::cout << "Stop failed!" << std::endl;
         return;
     }
     avmuxer_->Release();
+
+
+    if (audioFile_) {
+        audioFile_->close();
+        audioFile_ = nullptr;
+    }
+
+
+    if (videoFile_) {
+        videoFile_->close();
+        videoFile_ = nullptr;
+    }
+
+    if (audioFile_1_) {
+        audioFile_1_->close();
+        audioFile_1_ = nullptr;
+    }
 
     (void)::close(fd);
 }

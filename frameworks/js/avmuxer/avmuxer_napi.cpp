@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "common_napi.h"
 #include "avcodec_napi_utils.h"
+#include "string_ex.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerNapi"};
@@ -111,7 +112,6 @@ napi_value AVMuxerNapi::Constructor(napi_env env, napi_callback_info info)
     avmuxerNapi->env_ = env;
     avmuxerNapi->avmuxerImpl_ = AVMuxerFactory::CreateAVMuxer();
     if (avmuxerNapi->avmuxerImpl_ == nullptr) {
-        delete avmuxerNapi;
         MEDIA_LOGE("Failed to create avmuxerImpl");
         return result;
     }
@@ -181,6 +181,7 @@ void AVMuxerNapi::AsyncSetOutput(napi_env env, void *data)
         return;
     }
 
+    MEDIA_LOGD("asyncContext->fd_ is %{public}d", asyncContext->fd_);
     int32_t ret = asyncContext->jsAVMuxer->avmuxerImpl_->SetOutput(asyncContext->fd_, asyncContext->format_);
     if (ret != MSERR_OK) {
         asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "Failed to call SetOutput");
@@ -208,9 +209,19 @@ napi_value AVMuxerNapi::SetOutput(napi_env env, napi_callback_info info)
     }
  
     napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_number) {
-        status = napi_get_value_int32(env, args[0], &asyncContext->fd_);
-        CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get fd");
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
+        std::string path = CommonNapi::GetStringArgument(env, args[0]);
+        const std::string fdHead = "fd://";
+        MEDIA_LOGD("path is %{public}s", path.c_str());
+        if (path.find(fdHead) != std::string::npos) {
+            std::string inputFd = path.substr(fdHead.size());
+            MEDIA_LOGD("inputFd is %{public}s", inputFd.c_str());
+            CHECK_AND_RETURN_RET_LOG(StrToInt(inputFd, asyncContext->fd_) && asyncContext->fd_ >= 0,
+                result, "Failed to get fd");
+        } else {
+            MEDIA_LOGE("path format error");
+            return result;
+        }
     }
     if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_string) {
         asyncContext->format_ = CommonNapi::GetStringArgument(env, args[1]);
@@ -430,7 +441,7 @@ napi_value AVMuxerNapi::Start(napi_env env, napi_callback_info info)
     return result;
 }
 
-bool ExtractTrackSampleInfo(napi_env env, napi_value buffer, TrackSampleInfo &info)
+bool ExtractTrackSampleInfo(napi_env env, napi_value buffer, TrackSampleInfo &info, int32_t &offset)
 {
     CHECK_AND_RETURN_RET(buffer != nullptr, false);
 
@@ -441,9 +452,10 @@ bool ExtractTrackSampleInfo(napi_env env, napi_value buffer, TrackSampleInfo &in
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, trackSampleInfo, "flags", flags) == true, false);
     info.flags = static_cast<AVCodecBufferFlag>(flags);
     double milliTime;
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyDouble(env, trackSampleInfo, "timeUs", milliTime) == true, false);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyDouble(env, trackSampleInfo, "timeMs", milliTime) == true, false);
     constexpr int32_t MS_TO_US = 1000;
     info.timeUs = milliTime * MS_TO_US;
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, trackSampleInfo, "offset", offset) == true, false);
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyUint32(env, buffer, "trackIndex", info.trackIdx) == true, false);
 
     return true;
@@ -473,8 +485,8 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(asyncContext != nullptr, result, "Failed to create AVMuxerNapiAsyncContext instance");
 
     napi_value jsThis = nullptr;
-    napi_value args[4] = {nullptr};  // args[0]:arrayBuffer args[1]:offset args[2]:TrackSampleInfo args[3]:callback
-    size_t argCount = 4;
+    napi_value args[3] = {nullptr};  // args[0]:arrayBuffer args[1]:TrackSampleInfo args[2]:callback
+    size_t argCount = 3;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr,
         result, "Failed to retrieve details about the callback");
@@ -484,14 +496,12 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
     if (args[0] != nullptr && napi_is_arraybuffer(env, args[0], &isArrayBuffer) == napi_ok && isArrayBuffer == true) {
         napi_get_arraybuffer_info(env, args[0], &(asyncContext->arrayBuffer_), &(asyncContext->arrayBufferSize_));
     }
-    uint32_t offset;
-    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number) {
-        CHECK_AND_RETURN_RET(napi_get_value_uint32(env, args[1], &offset) == napi_ok, result);
+
+    int32_t offset;
+    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_object) {
+        (void)ExtractTrackSampleInfo(env, args[1], asyncContext->trackSampleInfo_, offset);  // args[1]:TrackSampleInfo
     }
-    if (args[2] != nullptr && napi_typeof(env, args[2], &valueType) == napi_ok && valueType == napi_object) {
-        (void)ExtractTrackSampleInfo(env, args[2], asyncContext->trackSampleInfo_);  // args[2]:TrackSampleInfo
-    }
-    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[3]);
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[2]);
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
 
     // get jsAVMuxer
@@ -505,6 +515,9 @@ napi_value AVMuxerNapi::WriteTrackSample(napi_env env, napi_callback_info info)
         avMem->SetRange(offset, asyncContext->trackSampleInfo_.size);
         asyncContext->writeSampleFlag_ =
             asyncContext->jsAVMuxer->avmuxerImpl_->WriteTrackSample(avMem, asyncContext->trackSampleInfo_);
+        if (asyncContext->writeSampleFlag_ != MSERR_OK) {
+            asyncContext->SignError(asyncContext->writeSampleFlag_, "Failed to call WriteTrackSample");
+        }
     }
 
     napi_value resource = nullptr;

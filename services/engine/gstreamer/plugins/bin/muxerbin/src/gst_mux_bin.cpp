@@ -49,6 +49,9 @@ static void gst_mux_bin_add_track(GstMuxBin *mux_bin, const char *src_name, cons
     g_return_if_fail(parse_name != nullptr);
     GstTrackInfo *info = g_new(GstTrackInfo, 1);
     g_return_if_fail(info != nullptr);
+    GST_INFO_OBJECT(mux_bin, "gst_mux_bin_add_track src_name %s", src_name);
+    GST_INFO_OBJECT(mux_bin, "gst_mux_bin_add_track parse_name %s", parse_name);
+    GST_INFO_OBJECT(mux_bin, "gst_mux_bin_add_track track_type %d", track_type);
     info->srcName_ = g_strdup((char *)src_name);
     info->parseName_ = g_strdup((char *)parse_name);
     switch (static_cast<OHOS::Media::MediaType>(track_type)) {
@@ -244,7 +247,7 @@ static GstElement *gst_mux_bin_create_parse(GstMuxBin *mux_bin, const char* pars
     } else if (strncmp(parse_name, "mpeg4videoparse", strlen("mpeg4videoparse")) == 0) {
         parse = GST_ELEMENT(gst_object_ref_sink(gst_element_factory_make("mpeg4videoparse", parse_name)));
         g_return_val_if_fail(parse != nullptr, nullptr);
-        g_object_set(parse, "config-interval", -1, "drop", false, nullptr);
+        g_object_set(parse, "config-interval", 0, "drop", false, nullptr);
     } else if (strncmp(parse_name, "aacparse", strlen("aacparse")) == 0) {
         parse = GST_ELEMENT(gst_object_ref_sink(gst_element_factory_make("aacparse", parse_name)));
         g_return_val_if_fail(parse != nullptr, nullptr);
@@ -271,7 +274,7 @@ static bool gst_mux_bin_create_src(GstMuxBin *mux_bin, OHOS::Media::MediaType tr
         default:
             break;
     }
-    while (iter != nullptr) {
+    while (iter != nullptr && iter->data != nullptr) {
         GstElement *app_src = GST_ELEMENT(gst_object_ref_sink(gst_element_factory_make(
             "appsrc", (reinterpret_cast<GstTrackInfo *>(iter->data))->srcName_)));
         g_return_val_if_fail(app_src != nullptr, false);
@@ -322,7 +325,7 @@ static bool gst_mux_bin_add_element_to_bin(GstMuxBin *mux_bin)
 
     bool ret;
     GSList *iter = mux_bin->video_src_list;
-    while (iter != nullptr) {
+    while (iter != nullptr && iter->data != nullptr) {
         ret = gst_bin_add(GST_BIN(mux_bin), (reinterpret_cast<GstTrackInfo *>(iter->data))->src_);
         g_return_val_if_fail(ret == TRUE, false);
         if ((reinterpret_cast<GstTrackInfo *>(iter->data))->parse_ != nullptr) {
@@ -332,7 +335,7 @@ static bool gst_mux_bin_add_element_to_bin(GstMuxBin *mux_bin)
         iter = iter->next;
     }
     iter = mux_bin->audio_src_list;
-    while (iter != nullptr) {
+    while (iter != nullptr && iter->data != nullptr) {
         ret = gst_bin_add(GST_BIN(mux_bin), (reinterpret_cast<GstTrackInfo *>(iter->data))->src_);
         g_return_val_if_fail(ret == TRUE, false);
         if ((reinterpret_cast<GstTrackInfo *>(iter->data))->parse_ != nullptr) {
