@@ -34,13 +34,6 @@ int32_t ProcessorBase::DoProcess(const Format &format)
 {
     CHECK_AND_RETURN_RET(ProcessMandatory(format) == MSERR_OK, MSERR_INVALID_VAL);
     CHECK_AND_RETURN_RET(ProcessOptional(format) == MSERR_OK, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(ProcessVendor(format) == MSERR_OK, MSERR_INVALID_VAL);
-    return MSERR_OK;
-}
-
-int32_t ProcessorBase::ProcessVendor(const Format &format)
-{
-    (void)format;
     return MSERR_OK;
 }
 } // namespace Media

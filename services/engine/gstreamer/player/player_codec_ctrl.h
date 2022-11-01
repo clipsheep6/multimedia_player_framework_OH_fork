@@ -35,7 +35,7 @@ public:
 private:
     void SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink);
     void HlsSwichSoftAndHardCodec(GstElement *videoSink);
-    void SetupCodecBufferNum(const std::string &metaStr, GstElement *src);
+    void SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const;
 
     bool isHardwareDec_ = false;
     GstElement *decoder_ = nullptr;

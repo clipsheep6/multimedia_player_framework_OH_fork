@@ -52,7 +52,7 @@ public:
     virtual bool Writeable() const;
     virtual void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                 void (*stateCb)(GstBaseSink *, guint),
-                                void (*errorCb)(GstBaseSink *, std::string)) = 0;
+                                void (*errorCb)(GstBaseSink *, const std::string &)) = 0;
     virtual void OnError(std::string errMsg);
 };
 } // namespace Media

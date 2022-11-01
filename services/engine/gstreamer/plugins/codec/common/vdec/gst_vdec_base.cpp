@@ -819,7 +819,7 @@ static void gst_vdec_base_dump_input_buffer(GstVdecBase *self, GstBuffer *buffer
         return;
     }
     GST_DEBUG_OBJECT(self, "Dump input buffer");
-    static std::string input_dump_file = "/data/media/vdecbase-in.es";
+    static const std::string input_dump_file = "/data/media/vdecbase-in.es";
     if (self->input.dump_file == nullptr) {
         self->input.dump_file = fopen(input_dump_file.c_str(), "wb+");
     }
@@ -842,7 +842,7 @@ static void gst_vdec_base_dump_output_buffer(GstVdecBase *self, GstBuffer *buffe
         return;
     }
     GST_DEBUG_OBJECT(self, "Dump output buffer");
-    static std::string output_dump_file = "/data/media/vdecbase-out.yuv";
+    static const std::string output_dump_file = "/data/media/vdecbase-out.yuv";
     if (self->output.dump_file == nullptr) {
         self->output.dump_file = fopen(output_dump_file.c_str(), "wb+");
     }
@@ -1709,10 +1709,8 @@ static gboolean gst_vdec_base_decide_allocation(GstVideoDecoder *decoder, GstQue
         gst_query_add_allocation_pool(query, pool, size, self->output.buffer_cnt, self->output.buffer_cnt);
     }
     GST_DEBUG_OBJECT(decoder, "Pool ref %u", (reinterpret_cast<GObject*>(pool)->ref_count));
-    if (pool) {
-        gst_object_unref(self->outpool);
-        self->outpool = pool;
-    }
+    gst_object_unref(self->outpool);
+    self->outpool = pool;
     return TRUE;
 }
 

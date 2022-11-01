@@ -172,7 +172,7 @@ void VDecDemo::InputFunc()
         DEMO_CHECK_AND_BREAK_LOG(testFile_ != nullptr && testFile_->is_open(), "Fatal: open file fail");
 
         constexpr uint32_t bufferSize = 0; // replace with the actual size
-        char *fileBuffer = (char *)malloc(sizeof(char) * bufferSize + 1);
+        char *fileBuffer = static_cast<char *>(malloc(sizeof(char) * bufferSize + 1));
         DEMO_CHECK_AND_BREAK_LOG(fileBuffer != nullptr, "Fatal: malloc fail");
 
         (void)testFile_->read(fileBuffer, bufferSize);

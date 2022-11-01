@@ -48,7 +48,7 @@ PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid)
 
 PlayerEngineGstImpl::~PlayerEngineGstImpl()
 {
-    (void)Reset();
+    (void)OnReset();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -85,10 +85,9 @@ int32_t PlayerEngineGstImpl::SetSource(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "input url is empty!");
     CHECK_AND_RETURN_RET_LOG(url.length() <= MAX_URI_SIZE, MSERR_INVALID_VAL, "input url length is invalid!");
 
-    std::string realUriPath;
     int32_t ret = MSERR_OK;
-
     if (IsFileUrl(url)) {
+        std::string realUriPath;
         ret = GetRealPath(url, realUriPath);
         if (ret != MSERR_OK) {
             return ret;
@@ -716,10 +715,15 @@ int32_t PlayerEngineGstImpl::Stop()
 
 int32_t PlayerEngineGstImpl::Reset()
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("Reset in");
-    PlayBinCtrlerDeInit();
+    OnReset();
     return MSERR_OK;
+}
+
+void PlayerEngineGstImpl::OnReset()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    PlayBinCtrlerDeInit();
 }
 
 int32_t PlayerEngineGstImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)

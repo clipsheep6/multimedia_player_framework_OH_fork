@@ -173,7 +173,7 @@ void GstMsgProcessor::FreeTickType(TickCallbackInfo *tickCbInfo)
 void GstMsgProcessor::AddMsgFilter(const std::string &filter)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    for (auto &elem : filters_)  {
+    for (const auto &elem : filters_)  {
         if (elem == filter) {
             return;
         }

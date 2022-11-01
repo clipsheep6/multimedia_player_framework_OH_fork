@@ -34,10 +34,6 @@ std::shared_ptr<MediaDataSourceTest> MediaDataSourceTestSeekable::Create(const s
     }
     std::shared_ptr<MediaDataSourceTestSeekable> dataSrc =
         std::make_shared<MediaDataSourceTestSeekable>(realPath, size);
-    if (dataSrc == nullptr) {
-        std::cout << "create source failed" << std::endl;
-        return nullptr;
-    }
     if (dataSrc->Init() != MSERR_OK) {
         std::cout << "init source failed" << std::endl;
         return nullptr;

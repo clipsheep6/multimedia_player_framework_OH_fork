@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef PLAYER_CALLBACK_NAPI_H_
-#define PLAYER_CALLBACK_NAPI_H_
+#ifndef PLAYER_CALLBACK_NAPI_H
+#define PLAYER_CALLBACK_NAPI_H
 
 #include "audio_player_napi.h"
 #include "player.h"
@@ -73,4 +73,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // PLAYER_CALLBACK_NAPI_H_
+#endif // PLAYER_CALLBACK_NAPI_H

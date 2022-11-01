@@ -192,7 +192,7 @@ bool AVMuxerDemo::PushBuffer(std::shared_ptr<std::ifstream> File, const int32_t 
         std::cout << "Frame size error" << std::endl;
         return false;
     }
-    uint8_t *buffer = (uint8_t *)malloc(sizeof(char) * (frameSize));
+    uint8_t *buffer = static_cast<uint8_t *>(malloc(sizeof(char) * (frameSize)));
     if (buffer == nullptr) {
         std::cout << "no memory" << std::endl;
         return false;

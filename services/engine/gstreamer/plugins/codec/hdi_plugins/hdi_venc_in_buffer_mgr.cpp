@@ -37,7 +37,8 @@ HdiVencInBufferMgr::~HdiVencInBufferMgr()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-std::vector<std::shared_ptr<HdiBufferWrap>> HdiVencInBufferMgr::PreUseHandleMems(std::vector<GstBuffer *> &buffers)
+std::vector<std::shared_ptr<HdiBufferWrap>> HdiVencInBufferMgr::PreUseHandleMems(
+    const std::vector<GstBuffer *> &buffers)
 {
     std::vector<std::shared_ptr<HdiBufferWrap>> preBuffers;
     auto ret = HdiGetParameter(handle_, OMX_IndexParamPortDefinition, mPortDef_);
