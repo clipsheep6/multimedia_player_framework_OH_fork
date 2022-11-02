@@ -295,6 +295,26 @@ static void gst_consumer_surface_pool_get_repeat_buffer(GstConsumerSurfacePool *
     priv->pre_timestamp = GST_BUFFER_PTS(*buffer);
 }
 
+static GstFlowReturn gst_consumer_surface_pool_alloc_buffer(GstBufferPool *pool, GstBuffer **buffer,
+    GstBufferPoolAcquireParams *params, GstConsumerSurfaceMemory **surfacemem)
+{
+    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
+    g_return_val_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr, GST_FLOW_ERROR);
+    GstBufferPoolClass *pclass = GST_BUFFER_POOL_GET_CLASS(pool);
+    g_return_val_if_fail(pclass != nullptr && pclass->alloc_buffer != nullptr, GST_FLOW_NOT_SUPPORTED);
+    g_return_val_if_fail(surfacemem != nullptr, GST_FLOW_ERROR);
+
+    GstFlowReturn result = pclass->alloc_buffer(pool, buffer, params);
+    g_return_val_if_fail(result == GST_FLOW_OK && *buffer != nullptr, GST_FLOW_ERROR);
+    GstMemory *mem = gst_buffer_peek_memory(*buffer, 0);
+    g_return_val_if_fail(mem != nullptr, GST_FLOW_ERROR);
+    if (gst_is_consumer_surface_memory(mem)) {
+        *surfacemem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
+        add_buffer_info(surfacepool, *surfacemem, *buffer);
+    }
+    return GST_FLOW_OK;
+}
+
 static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *pool, GstBuffer **buffer,
     GstBufferPoolAcquireParams *params)
 {
@@ -334,15 +354,10 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
             break;
         }
 
-        GstFlowReturn result = pclass->alloc_buffer(pool, buffer, params);
-        g_return_val_if_fail(result == GST_FLOW_OK && *buffer != nullptr, GST_FLOW_ERROR);
-        GstMemory *mem = gst_buffer_peek_memory(*buffer, 0);
-        g_return_val_if_fail(mem != nullptr, GST_FLOW_ERROR);
         GstConsumerSurfaceMemory *surfacemem = nullptr;
-        if (gst_is_consumer_surface_memory(mem)) {
-            surfacemem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
-            add_buffer_info(surfacepool, surfacemem, *buffer);
-        }
+        GstFlowReturn result = gst_consumer_surface_pool_alloc_buffer(pool, buffer, params, &surfacemem);
+        g_return_val_if_fail(result == GST_FLOW_OK, result);
+
         if (!repeat) {
             priv->available_buf_count--;
         }
