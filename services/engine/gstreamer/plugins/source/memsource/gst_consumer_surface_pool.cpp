@@ -316,6 +316,12 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
                 break;
             }
         }
+
+        if (priv->suspend && priv->start) {
+            g_cond_wait(&priv->buffer_available_con, &priv->pool_lock);
+            continue;
+        }
+
         if (priv->flushing || !priv->start) {
             return GST_FLOW_FLUSHING;
         }
