@@ -347,7 +347,7 @@ int32_t PlayBinCtrlerBase::SetRateInternal(double rate)
         position = duration_ * NANO_SEC_PER_USEC;
     } else {
         ret = gst_element_query_position(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &position);
-        if (ret == 0) {
+        if (!ret) {
             isRating_ = false;
             MEDIA_LOGE("query position failed");
             return MSERR_NO_MEMORY;
