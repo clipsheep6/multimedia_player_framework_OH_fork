@@ -414,7 +414,7 @@ void ACodecMock::InputFuncDec()
         uint32_t bufferSize = 0; // replace with the actual size
         if (decInCnt_ < ES_LENGTH) {
             bufferSize = ES[decInCnt_];
-            char *fileBuffer = static_cast<char *>(malloc(sizeof(char) * bufferSize + 1));
+            char *fileBuffer = (char *)malloc(sizeof(char) * bufferSize + 1);
             UNITTEST_CHECK_AND_RETURN_LOG(fileBuffer != nullptr, "Fatal: malloc fail");
 
             (void)testFile_->read(fileBuffer, bufferSize);
