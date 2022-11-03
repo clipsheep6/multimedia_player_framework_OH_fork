@@ -230,7 +230,7 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
         return nullptr;
     }
 
-    CHECK_AND_RETURN_RET((audioCacheCtrl_->captureQueue_.size() > 0) || (!curState_.load()), nullptr);
+    CHECK_AND_RETURN_RET((audioCacheCtrl_->captureQueue_.size() > 0) || (!captureLoopErr_.load()), nullptr);
 
     std::shared_ptr<AudioBuffer> bufferOut = audioCacheCtrl_->captureQueue_.front();
     audioCacheCtrl_->captureQueue_.pop();
