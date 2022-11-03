@@ -171,7 +171,7 @@ void AudioCaptureAsImpl::GetAudioCaptureBuffer()
         }
 
         if (curState_.load() == RECORDER_STOP) {
-            break;
+            return;
         }
 
         {
@@ -210,6 +210,8 @@ void AudioCaptureAsImpl::GetAudioCaptureBuffer()
             audioCacheCtrl_->captureCond_.notify_all();
         }
     }
+    captureLoopErr_.store(true);
+    audioCacheCtrl_->captureCond_.notify_all();
 }
 
 std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
@@ -221,11 +223,14 @@ std::shared_ptr<AudioBuffer> AudioCaptureAsImpl::GetBuffer()
     }
 
     audioCacheCtrl_->captureCond_.wait(loopLock, [this]() {
-        return ((audioCacheCtrl_->captureQueue_.size() > 0) || (curState_.load() == RECORDER_STOP));
+        return ((audioCacheCtrl_->captureQueue_.size() > 0) || (curState_.load() == RECORDER_STOP) ||
+            captureLoopErr_.load());
     });
     if (curState_.load() == RECORDER_STOP) {
         return nullptr;
     }
+
+    CHECK_AND_RETURN_RET((audioCacheCtrl_->captureQueue_.size() > 0) || (!curState_.load()), nullptr);
 
     std::shared_ptr<AudioBuffer> bufferOut = audioCacheCtrl_->captureQueue_.front();
     audioCacheCtrl_->captureQueue_.pop();
