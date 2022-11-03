@@ -110,7 +110,7 @@ int32_t AVMetadataHelperEngineGstImpl::SetSource(const std::string &uri, int32_t
     }
 
     int32_t ret = SetSourceInternel(uri, usage);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call SetSourceInternel");
 
     MEDIA_LOGI("set source success");
     return MSERR_OK;
@@ -122,7 +122,7 @@ std::string AVMetadataHelperEngineGstImpl::ResolveMetadata(int32_t key)
     std::string result;
 
     int32_t ret = ExtractMetadata();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, result);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "Failed to call ExtractMetadata");
 
     if (collectedMeta_.count(key) == 0 || collectedMeta_.at(key).empty()) {
         MEDIA_LOGE("The specified metadata %{public}d cannot be obtained from the specified stream.", key);
@@ -139,7 +139,7 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperEngineGstImpl::ResolveM
     MEDIA_LOGD("enter");
 
     int32_t ret = ExtractMetadata();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, {});
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, {}, "Failed to call ExtractMetadata");
 
     MEDIA_LOGD("exit");
     return collectedMeta_;
@@ -150,7 +150,7 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperEngineGstImpl::FetchArtPicture()
     MEDIA_LOGD("enter");
 
     int32_t ret = ExtractMetadata();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "Failed to call ExtractMetadata");
 
     auto result = metaCollector_->FetchArtPicture();
     MEDIA_LOGD("exit");
@@ -211,10 +211,10 @@ int32_t AVMetadataHelperEngineGstImpl::SetSourceInternel(const std::string &uri,
     };
 
     playBinCtrler_ = IPlayBinCtrler::Create(IPlayBinCtrler::PlayBinKind::PLAYBIN2, createParam);
-    CHECK_AND_RETURN_RET(playBinCtrler_ != nullptr, MSERR_UNKNOWN);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_UNKNOWN, "Failed to call IPlayBinCtrler::Create");
 
     int32_t ret = playBinCtrler_->SetSource(uri);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call playBinCtrler_->SetSource");
 
     metaCollector_ = std::make_unique<AVMetaMetaCollector>();
     auto listener = std::bind(&AVMetadataHelperEngineGstImpl::OnNotifyElemSetup, this, std::placeholders::_1);
@@ -241,7 +241,7 @@ int32_t AVMetadataHelperEngineGstImpl::SetSourceInternel(const std::string &uri,
     usage_ = usage;
 
     ret = PrepareInternel(true);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call PrepareInternel");
 
     std::string mimeType = metaCollector_->GetMetadata(AV_KEY_MIME_TYPE);
     if (mimeType.empty()) {
@@ -296,7 +296,7 @@ int32_t AVMetadataHelperEngineGstImpl::FetchFrameInternel(int64_t timeUsOrIndex,
     CHECK_AND_RETURN_RET_LOG(frameExtractor_ != nullptr, MSERR_INVALID_OPERATION, "frameExtractor is nullptr");
 
     int32_t ret = ExtractMetadata();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call ExtractMetadata");
 
     if (collectedMeta_.find(AV_KEY_HAS_VIDEO) == collectedMeta_.end() ||
         collectedMeta_[AV_KEY_HAS_VIDEO] != "yes") {
@@ -310,7 +310,7 @@ int32_t AVMetadataHelperEngineGstImpl::FetchFrameInternel(int64_t timeUsOrIndex,
     }
 
     ret = PrepareInternel(false);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to call PrepareInternel");
 
     auto frame = frameExtractor_->ExtractFrame(timeUsOrIndex, option, param);
     if (frame == nullptr) {
