@@ -78,6 +78,13 @@ void VideoSource::SetCaps(int32_t width, int32_t height)
             "alignment", G_TYPE_STRING, "nal",
             "stream-format", G_TYPE_STRING, "byte-stream",
             nullptr);
+    } else if (streamType_ == VideoStreamType::VIDEO_STREAM_TYPE_RGBA) {
+        caps = gst_caps_new_simple("video/x-raw",
+            "format", G_TYPE_STRING, "RGBA",
+            "width", G_TYPE_INT, width,
+            "height", G_TYPE_INT, height,
+            "framerate", GST_TYPE_FRACTION, DEFAULT_FRAME_RATE, 1,
+            nullptr);
     } else {
         caps = gst_caps_new_simple("video/x-raw",
             "format", G_TYPE_STRING, "NV21",
