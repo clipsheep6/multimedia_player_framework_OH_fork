@@ -92,7 +92,7 @@ constexpr uint32_t ES_LENGTH_MPEG2 = sizeof(ES_MPEG2) / sizeof(uint32_t);
 const std::string MPEG2_SRC_PATH = "/data/test/media/MPEG2_720_480.es";
 
 const uint32_t ES_MPEG4[] = {
-    11895, 8109, 1578, 1616, 1313, 572, 805, 837, 755, 706, 952, 879, 13193, 422, 389, 509, 725, 465, 479, 959, 
+    11895, 8109, 1578, 1616, 1313, 572, 805, 837, 755, 706, 952, 879, 13193, 422, 389, 509, 725, 465, 479, 959,
     677, 364, 541, 696, 9306, 322, 318, 767, 590, 422, 530, 403, 505, 566, 445, 508, 7783, 460, 405, 343, 451,
     608, 431, 411, 543, 487, 527, 400, 6287, 385, 418, 391, 592, 434, 412, 398, 504, 492, 479, 561, 5413, 317,
     355, 422, 467, 452, 476, 460, 490, 492, 485, 451, 5036, 312, 408, 460, 432, 502, 388, 475, 407, 544, 401,
@@ -110,7 +110,6 @@ const uint32_t ES_MPEG4[] = {
     232, 250, 248, 281, 219, 243, 293, 287, 253, 328, 3719};
 constexpr uint32_t ES_LENGTH_MPEG4 = sizeof(ES_MPEG4) / sizeof(uint32_t);
 const std::string MPEG4_SRC_PATH = "/data/test/media/mpeg4_320_240.es";
-
 } // namespace VCodecTestParam
 namespace ACodecTestParam {
 constexpr uint32_t SAMPLE_DURATION_US = 23000;
