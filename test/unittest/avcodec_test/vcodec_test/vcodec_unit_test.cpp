@@ -109,24 +109,24 @@ HWTEST_F(VCodecUnitTest, video_codec_Configure_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
-    string max_input_size = "max_input_size";
-    string rotation_angle = "rotation_angle";
-    string video_encode_bitrate_mode = "video_encode_bitrate_mode";
-    string i_frame_interval = "i_frame_interval";
-    string codec_quality = "codec_quality";
-    string codec_profile = "codec_profile";
+    string frameRate = "frame_rate";
+    string maxInputSize = "max_input_size";
+    string rotationAngle = "rotation_angle";
+    string videoEncodeBitrateMode = "video_encode_bitrate_mode";
+    string iFrameInterval = "i_frame_interval";
+    string codecQuality = "codec_quality";
+    string codecProfile = "codec_profile";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
-    (void)format->PutIntValue(rotation_angle.c_str(), 0); // set rotation_angle 0
-    (void)format->PutIntValue(max_input_size.c_str(), 15000); // set max input size 15000
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(rotationAngle.c_str(), 0); // set rotation_angle 0
+    (void)format->PutIntValue(maxInputSize.c_str(), 15000); // set max input size 15000
     EXPECT_EQ(MSERR_OK, videoDec_->Configure(format));
-    (void)format->PutIntValue(video_encode_bitrate_mode.c_str(), 0); // CBR
-    (void)format->PutIntValue(i_frame_interval.c_str(), 1); // i_frame_interval 1ms
-    (void)format->PutIntValue(codec_quality.c_str(), 0); // set codec_quality 0
-    (void)format->PutIntValue(codec_profile.c_str(), 0); // AVC_PROFILE_BASELINE
+    (void)format->PutIntValue(videoEncodeBitrateMode.c_str(), 0); // CBR
+    (void)format->PutIntValue(iFrameInterval.c_str(), 1); // i_frame_interval 1ms
+    (void)format->PutIntValue(codecQuality.c_str(), 0); // set codec_quality 0
+    (void)format->PutIntValue(codecProfile.c_str(), 0); // AVC_PROFILE_BASELINE
     EXPECT_EQ(MSERR_OK, videoEnc_->Configure(format));
     EXPECT_EQ(MSERR_OK, videoDec_->Prepare());
     EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
@@ -147,11 +147,11 @@ HWTEST_F(VCodecUnitTest, video_codec_start_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -180,11 +180,11 @@ HWTEST_F(VCodecUnitTest, video_codec_format_h264_h264_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -221,11 +221,11 @@ HWTEST_F(VCodecUnitTest, video_codec_format_h265_h265_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H265_SRC_PATH, ES_H265, ES_LENGTH_H265);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -257,11 +257,11 @@ HWTEST_F(VCodecUnitTest, video_decode_Flush_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -295,11 +295,11 @@ HWTEST_F(VCodecUnitTest, video_encode_Flush_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -334,15 +334,15 @@ HWTEST_F(VCodecUnitTest, video_codec_abnormal_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
-    string max_input_size = "max_input_size";
-    string rotation_angle = "rotation_angle";
+    string frameRate = "frame_rate";
+    string maxInputSize = "max_input_size";
+    string rotationAngle = "rotation_angle";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
-    (void)format->PutIntValue(rotation_angle.c_str(), 20); // invalid rotation_angle 20
-    (void)format->PutIntValue(max_input_size.c_str(), -1); // invalid max input size -1
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(rotationAngle.c_str(), 20); // invalid rotation_angle 20
+    (void)format->PutIntValue(maxInputSize.c_str(), -1); // invalid max input size -1
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     videoEnc_->Configure(format);
     videoDec_->Configure(format);
@@ -373,14 +373,14 @@ HWTEST_F(VCodecUnitTest, video_codec_SetParameter_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
-    string suspend_input_surface = "suspend_input_surface";
-    string max_encoder_fps = "max_encoder_fps";
-    string repeat_frame_after = "repeat_frame_after";
+    string frameRate = "frame_rate";
+    string suspendInputSurface = "suspend_input_surface";
+    string maxEncoderFps = "max_encoder_fps";
+    string repeatFrameAfter = "repeat_frame_after";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -391,9 +391,9 @@ HWTEST_F(VCodecUnitTest, video_codec_SetParameter_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
     EXPECT_EQ(MSERR_OK, videoDec_->Start());
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
-    (void)format->PutIntValue(suspend_input_surface.c_str(), 0); // set suspend_input_surface value 0
-    (void)format->PutIntValue(max_encoder_fps.c_str(), DEFAULT_FRAME_RATE);
-    (void)format->PutIntValue(repeat_frame_after.c_str(), 1); // set repeat_frame_after 1ms
+    (void)format->PutIntValue(suspendInputSurface.c_str(), 0); // set suspend_input_surface value 0
+    (void)format->PutIntValue(maxEncoderFps.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(repeatFrameAfter.c_str(), 1); // set repeat_frame_after 1ms
     EXPECT_EQ(MSERR_OK, videoEnc_->SetParameter(format));
     EXPECT_EQ(MSERR_OK, videoDec_->SetParameter(format));
     sleep(5); // start run 5s
@@ -416,11 +416,11 @@ HWTEST_F(VCodecUnitTest, video_codec_GetOutputMediaDescription_0100, TestSize.Le
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -453,11 +453,11 @@ HWTEST_F(VCodecUnitTest, video_NotifyEos_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -503,11 +503,11 @@ HWTEST_F(VCodecUnitTest, video_codec_format_mpeg2_mpeg4_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), 720); // set width 720
     (void)format->PutIntValue(height.c_str(), 480); // set height 480
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(MPEG2_SRC_PATH, ES_MPEG2, ES_LENGTH_MPEG2);
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
@@ -538,11 +538,11 @@ HWTEST_F(VCodecUnitTest, video_codec_format_mpeg4_mpeg4_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(MPEG4_SRC_PATH, ES_MPEG4, ES_LENGTH_MPEG4);
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
