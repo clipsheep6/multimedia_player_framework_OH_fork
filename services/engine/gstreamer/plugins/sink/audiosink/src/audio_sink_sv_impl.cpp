@@ -188,7 +188,9 @@ int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid)
     rendererOptions_.streamInfo.encoding = AudioStandard::ENCODING_PCM;
     rendererOptions_.streamInfo.format = AudioStandard::SAMPLE_S16LE;
     rendererOptions_.streamInfo.channels = AudioStandard::MONO;
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Create");
     audioRenderer_ = AudioStandard::AudioRenderer::Create(rendererOptions_, appInfo);
+    PlayerXCollie::GetInstance().CancelTimer(id);
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     SetMuteVolumeBySysParam();
     MEDIA_LOGD("audioRenderer Prepare Out");
@@ -326,7 +328,9 @@ int32_t AudioSinkSvImpl::GetParameters(uint32_t &bitsPerSample, uint32_t &channe
     MEDIA_LOGD("GetParameters");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     AudioStandard::AudioRendererParams params;
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetParams");
     CHECK_AND_RETURN_RET(audioRenderer_->GetParams(params) == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
+    PlayerXCollie::GetInstance().CancelTimer(id);
     channels = params.channelCount;
     sampleRate = params.sampleRate;
     return MSERR_OK;
@@ -337,7 +341,9 @@ int32_t AudioSinkSvImpl::GetMinimumBufferSize(uint32_t &bufferSize)
     MEDIA_LOGD("GetMinimumBufferSize");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     size_t size = 0;
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetBufferSize");
     CHECK_AND_RETURN_RET(audioRenderer_->GetBufferSize(size) == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
+    PlayerXCollie::GetInstance().CancelTimer(id);
     CHECK_AND_RETURN_RET(size > 0, MSERR_AUD_RENDER_FAILED);
     bufferSize = static_cast<uint32_t>(size);
     return MSERR_OK;
@@ -348,7 +354,9 @@ int32_t AudioSinkSvImpl::GetMinimumFrameCount(uint32_t &frameCount)
     MEDIA_LOGD("GetMinimumFrameCount");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     uint32_t count = 0;
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetFrameCount");
     CHECK_AND_RETURN_RET(audioRenderer_->GetFrameCount(count) == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
+    PlayerXCollie::GetInstance().CancelTimer(id);
     CHECK_AND_RETURN_RET(count > 0, MSERR_AUD_RENDER_FAILED);
     frameCount = count;
     return MSERR_OK;
@@ -357,7 +365,10 @@ int32_t AudioSinkSvImpl::GetMinimumFrameCount(uint32_t &frameCount)
 bool AudioSinkSvImpl::Writeable() const
 {
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, false);
-    return audioRenderer_->GetStatus() == AudioStandard::RENDERER_RUNNING;
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetStatus");
+    bool ret = audioRenderer_->GetStatus() == AudioStandard::RENDERER_RUNNING;
+    PlayerXCollie::GetInstance().CancelTimer(id);
+    return ret;
 }
 
 void AudioSinkSvImpl::OnError(std::string errMsg)
@@ -376,7 +387,9 @@ int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
 
     size_t bytesWritten = 0;
     while (bytesWritten < size) {
+        int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Write");
         int32_t bytesSingle = audioRenderer_->Write(buffer + bytesWritten, size - bytesWritten);
+        PlayerXCollie::GetInstance().CancelTimer(id);
         if (bytesSingle <= 0) {
             MEDIA_LOGE("[AudioSinkSvImpl] audioRenderer write failed, drop an audio packet!");
             return MSERR_OK;
@@ -392,7 +405,9 @@ int32_t AudioSinkSvImpl::GetAudioTime(uint64_t &time)
     MediaTrace trace("AudioSink::GetAudioTime");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     AudioStandard::Timestamp timeStamp;
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetAudioTime");
     bool ret = audioRenderer_->GetAudioTime(timeStamp, AudioStandard::Timestamp::Timestampbase::MONOTONIC);
+    PlayerXCollie::GetInstance().CancelTimer(id);
     CHECK_AND_RETURN_RET(ret == true, MSERR_AUD_RENDER_FAILED);
     time = static_cast<uint64_t>(timeStamp.time.tv_nsec);
     return MSERR_OK;
@@ -402,7 +417,9 @@ int32_t AudioSinkSvImpl::GetLatency(uint64_t &latency) const
 {
     MediaTrace trace("AudioSink::GetLatency");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetLatency");
     CHECK_AND_RETURN_RET(audioRenderer_->GetLatency(latency) == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
+    PlayerXCollie::GetInstance().CancelTimer(id);
     return MSERR_OK;
 }
 
