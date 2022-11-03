@@ -377,13 +377,24 @@ HWTEST_F(VCodecUnitTest, video_codec_SetParameter_0100, TestSize.Level0)
     string suspendInputSurface = "suspend_input_surface";
     string maxEncoderFps = "max_encoder_fps";
     string repeatFrameAfter = "repeat_frame_after";
+    string reqIFrame = "req_i_frame";
+    string bitrate = "bitrate";
+    string vendorCustom = "vendor.custom";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
     (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
-    ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
+    (void)format->PutIntValue(suspendInputSurface.c_str(), 0); // set suspend_input_surface value 0
+    (void)format->PutIntValue(maxEncoderFps.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(repeatFrameAfter.c_str(), 1); // set repeat_frame_after 1ms
+    (void)format->PutIntValue(reqIFrame.c_str(), 0); // set request i frame false
+    (void)format->PutIntValue(bitrate.c_str(), 1000000); // set bitrate 1Mbps
+    uint8_t *addr = nullptr;
+    size_t size = 0;
+    (void)format->PutBuffer(vendorCustom, addr, size);
+    ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     std::shared_ptr<SurfaceMock> surface = videoEnc_->GetInputSurface();
     ASSERT_NE(nullptr, surface);
     ASSERT_EQ(MSERR_OK, videoDec_->SetOutputSurface(surface));
@@ -391,9 +402,6 @@ HWTEST_F(VCodecUnitTest, video_codec_SetParameter_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
     EXPECT_EQ(MSERR_OK, videoDec_->Start());
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
-    (void)format->PutIntValue(suspendInputSurface.c_str(), 0); // set suspend_input_surface value 0
-    (void)format->PutIntValue(maxEncoderFps.c_str(), DEFAULT_FRAME_RATE);
-    (void)format->PutIntValue(repeatFrameAfter.c_str(), 1); // set repeat_frame_after 1ms
     EXPECT_EQ(MSERR_OK, videoEnc_->SetParameter(format));
     EXPECT_EQ(MSERR_OK, videoDec_->SetParameter(format));
     sleep(5); // start run 5s
