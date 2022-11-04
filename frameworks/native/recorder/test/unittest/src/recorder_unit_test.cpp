@@ -52,7 +52,7 @@ void RecorderUnitTest::TearDown(void)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_configure_001, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_configure_001, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -73,7 +73,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_001, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_configure_002, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_configure_002, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -94,7 +94,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_002, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_configure_003, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_configure_003, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -115,7 +115,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_003, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_configure_004, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_configure_004, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -136,7 +136,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_004, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_configure_005, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_configure_005, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -157,7 +157,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_005, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_configure_006, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_configure_006, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -178,7 +178,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_006, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_configure_007, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_configure_007, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -199,7 +199,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_007, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_configure_008, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_configure_008, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -220,7 +220,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_008, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_configure_009, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_configure_009, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -240,7 +240,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_009, TestSize.Level0)
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderUnitTest, recorder_configure_010, TestSize.Level0)
+HWTEST_F(RecorderUnitTest, recorder_configure_010, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
@@ -254,8 +254,78 @@ HWTEST_F(RecorderUnitTest, recorder_configure_010, TestSize.Level0)
 }
 
 /**
- * @tc.name: recorder_video_yuv_mpeg4
- * @tc.desc: record video with yuv mpeg4
+ * @tc.name: recorder_configure_011
+ * @tc.desc: record with videoFormat FORMAT_BUTT
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_011, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    videoRecorderConfig.videoFormat = MPEG4;
+    videoRecorderConfig.outPutFormat = FORMAT_BUTT;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure.mp4").c_str(), O_RDWR);
+
+    EXPECT_NE(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_012
+ * @tc.desc: record with videoFormat FORMAT_DEFAULT
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_012, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    videoRecorderConfig.videoFormat = MPEG4;
+    videoRecorderConfig.outPutFormat = FORMAT_DEFAULT;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_configure_013
+ * @tc.desc: record 
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_configure_013, TestSize.Level2)
+{
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+
+    EXPECT_NE(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_NE(MSERR_OK, recorder_->Pause());
+    EXPECT_NE(MSERR_OK, recorder_->Resume());
+    EXPECT_NE(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_prepare
+ * @tc.desc: record prepare
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -266,9 +336,14 @@ HWTEST_F(RecorderUnitTest, recorder_prepare, TestSize.Level0)
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_prepare.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
-    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Start());
-    EXPECT_NE(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
@@ -293,6 +368,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_yuv_mpeg4, TestSize.Level0)
 
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     sleep(RECORDER_TIME);
+    system("hidumper -s 3002 -a recorder");
     EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
     recorder_->StopBuffer(PURE_VIDEO);
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
@@ -344,6 +420,31 @@ HWTEST_F(RecorderUnitTest, recorder_audio_es, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_audio_es_0100
+ * @tc.desc: record audio with es
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_audio_es_0100, TestSize.Level0)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.outPutFormat = FORMAT_M4A;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_audio_es.m4a").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
 }
 
 /**
@@ -445,7 +546,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_001, TestSize.Level
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    recorder_->SetLocation(0.0, 0);
+    recorder_->SetLocation(1, 1);
     recorder_->SetOrientationHint(90);
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
@@ -474,8 +575,67 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_002, TestSize.Level
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    recorder_->SetLocation(0.0, 0);
+    recorder_->SetLocation(-91, 0);
     recorder_->SetOrientationHint(720);
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_video_SetOrientationHint_003
+ * @tc.desc: record video, SetOrientationHint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_003, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = MPEG4;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+        "recorder_video_SetOrientationHint_003.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    recorder_->SetLocation(91, 0);
+    recorder_->SetOrientationHint(180);
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
+
+    EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_video_SetOrientationHint_004
+ * @tc.desc: record video, SetOrientationHint
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_004, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = MPEG4;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+        "recorder_video_SetOrientationHint_004.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    recorder_->SetLocation(1, 181);
+    recorder_->SetLocation(1, -181);
+    recorder_->SetOrientationHint(270);
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
 
@@ -500,7 +660,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetCaptureRate_001, TestSize.Level0)
     g_videoRecorderConfig.videoFormat = MPEG4;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetCaptureRate_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-    EXPECT_NE(MSERR_OK, recorder_->SetCaptureRate(0, -0.1));
+    recorder_->SetCaptureRate(0, -0.1);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
@@ -522,6 +682,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetMaxFileSize_001, TestSize.Level0)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     recorder_->SetCaptureRate(0, 30);
+    EXPECT_NE(MSERR_OK, recorder_->SetMaxFileSize(-1));
     EXPECT_EQ(MSERR_OK, recorder_->SetMaxFileSize(5000));
     EXPECT_EQ(MSERR_OK, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
     recorder_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000);
