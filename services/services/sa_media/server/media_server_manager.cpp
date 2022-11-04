@@ -36,7 +36,6 @@
 #include "media_errors.h"
 #include "service_dump_manager.h"
 #include "player_xcollie.h"
-#include "scope_guard.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};
