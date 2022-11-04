@@ -53,6 +53,8 @@
             <option name="shell" value="touch /data/test/media/recorder_SetDataSource_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetOrientationHint_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetOrientationHint_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_SetOrientationHint_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_video_SetOrientationHint_004.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_av_yuv_h264.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_stop_start.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_configure.mp4"/>
