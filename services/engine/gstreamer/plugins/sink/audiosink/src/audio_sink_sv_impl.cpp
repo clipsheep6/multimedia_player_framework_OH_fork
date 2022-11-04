@@ -50,7 +50,8 @@ void AudioRendererMediaCallback::OnInterrupt(const AudioStandard::InterruptEvent
     }
 }
 
-void AudioRendererMediaCallback::OnStateChange(const AudioStandard::RendererState state)
+void AudioRendererMediaCallback::OnStateChange(const AudioStandard::RendererState state,
+    const AudioStandard::StateChangeCmdType __attribute__((unused)) cmdType)
 {
     MEDIA_LOGD("RenderState is %{public}d", static_cast<int32_t>(state));
 }
