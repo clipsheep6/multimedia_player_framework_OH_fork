@@ -796,6 +796,7 @@ static std::string GetJSState(PlayerStates currentState)
     switch (currentState) {
         case PLAYER_IDLE:
         case PLAYER_INITIALIZED:
+        case PLAYER_PREPARING:
         case PLAYER_PREPARED:
             result = STATE_IDLE;
             break;
