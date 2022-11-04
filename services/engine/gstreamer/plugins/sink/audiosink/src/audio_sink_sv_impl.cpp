@@ -397,6 +397,9 @@ int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
 
     size_t bytesWritten = 0;
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Write");
+    ON_SCOPE_EXIT(0) {
+        PlayerXCollie::GetInstance().CancelTimer(id);
+    };
     while (bytesWritten < size) {
         int32_t bytesSingle = audioRenderer_->Write(buffer + bytesWritten, size - bytesWritten);
         if (bytesSingle <= 0) {
@@ -407,9 +410,6 @@ int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
         CHECK_AND_RETURN_RET(bytesWritten >= static_cast<size_t>(bytesSingle), MSERR_AUD_RENDER_FAILED);
     }
     PlayerXCollie::GetInstance().CancelTimer(id);
-    ON_SCOPE_EXIT(0) {
-        PlayerXCollie::GetInstance().CancelTimer(id);
-    };
     return MSERR_OK;
 }
 
