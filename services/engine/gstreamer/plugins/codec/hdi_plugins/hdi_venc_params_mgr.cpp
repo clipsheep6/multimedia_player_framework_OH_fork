@@ -232,9 +232,11 @@ int32_t HdiVencParamsMgr::GetVideoFormat(GstElement *element)
     auto ret = HdiGetParameter(handle_, OMX_IndexCodecVideoPortFormat, videoFormat_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
 
-    while (HdiGetParameter(handle_, OMX_IndexCodecVideoPortFormat, videoFormat_) == HDF_SUCCESS) {
-        base->formats.push_back(HdiCodecUtil::FormatHdiToGst((PixelFormat)videoFormat_.codecColorFormat));
-        videoFormat_.portIndex++;
+    CodecVideoPortFormatParam videoFormat = videoFormat_;
+    while (HdiGetParameter(handle_, OMX_IndexCodecVideoPortFormat, videoFormat) == HDF_SUCCESS) {
+        base->formats.push_back(HdiCodecUtil::FormatHdiToGst((PixelFormat)videoFormat.codecColorFormat));
+        videoFormat.portIndex++;
+        MEDIA_LOGD("videoFormat_.portIndex %{public}d", videoFormat.portIndex);
     }
     return GST_CODEC_OK;
 }
