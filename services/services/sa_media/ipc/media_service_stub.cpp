@@ -140,7 +140,7 @@ int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &r
 {
     MediaSystemAbility id = static_cast<MediaSystemAbility>(data.ReadInt32());
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
-    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("MediaServiceStub::GetSystemAbility");
+    int32_t id = PlayerXCollie::GetInstance().SetTimer("MediaServiceStub::GetSystemAbility");
     (void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj));
     PlayerXCollie::GetInstance().CancelTimer(id);
     return MSERR_OK;
