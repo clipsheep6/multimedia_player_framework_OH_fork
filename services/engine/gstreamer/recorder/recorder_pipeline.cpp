@@ -197,7 +197,10 @@ int32_t RecorderPipeline::SyncWaitChangeState(GstState targetState)
     MEDIA_LOGI("change state to %{public}d", targetState);
 
     GstStateChangeReturn stateRet = gst_element_set_state((GstElement *)gstPipeline_, targetState);
-    CHECK_AND_RETURN_RET(stateRet != GST_STATE_CHANGE_FAILURE,  MSERR_INVALID_STATE);
+    if (stateRet == GST_STATE_CHANGE_FAILURE) {
+        errorState_.store(true);
+        return MSERR_INVALID_STATE;
+    }
 
     if (stateRet != GST_STATE_CHANGE_ASYNC) {
         MEDIA_LOGI("finish change gstpipeline state to %{public}d.", targetState);
@@ -218,13 +221,6 @@ int32_t RecorderPipeline::SyncWaitChangeState(GstState targetState)
 
 void RecorderPipeline::DrainBuffer(bool isDrainAll)
 {
-    if (inDrainBuffer_.load()) {
-        return;
-    }
-
-    inDrainBuffer_.store(true);
-    ON_SCOPE_EXIT(0) { inDrainBuffer_.store(false); };
-
     if (currState_ == GST_STATE_PAUSED) {
         if (isStarted_) {
             (void)SyncWaitChangeState(GST_STATE_PLAYING);

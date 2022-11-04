@@ -370,7 +370,13 @@ static GstFlowReturn gst_audio_capture_src_create(GstPushSrc *psrc, GstBuffer **
     g_return_val_if_fail(src->audio_capture != nullptr, GST_FLOW_ERROR);
 
     std::shared_ptr<AudioBuffer> audio_buffer = src->audio_capture->GetBuffer();
-    g_return_val_if_fail(audio_buffer != nullptr, GST_FLOW_ERROR);
+    if (audio_buffer == nullptr) {
+        if ((!src->bypass_audio) && src->is_start) {
+            GST_ELEMENT_ERROR (src, STREAM, FAILED, ("Input stream error, return null."),
+                ("Input stream error, return null."));
+        }
+        return GST_FLOW_ERROR;
+    }
     gst_base_src_set_blocksize(GST_BASE_SRC_CAST(src), audio_buffer->dataLen);
 
     *outbuf = audio_buffer->gstBuffer;

@@ -103,7 +103,6 @@ private:
     bool isStarted_ = false;
     GstState currState_ = GST_STATE_NULL;
     std::atomic<bool> errorState_ { false };
-    std::atomic<bool> inDrainBuffer_ { false };
     std::set<bool> errorSources_;
 };
 } // namespace Media
