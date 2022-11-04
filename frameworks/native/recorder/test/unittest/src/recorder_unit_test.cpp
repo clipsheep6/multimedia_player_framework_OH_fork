@@ -305,7 +305,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_012, TestSize.Level2)
 
 /**
  * @tc.name: recorder_configure_013
- * @tc.desc: record 
+ * @tc.desc: record
  * @tc.type: FUNC
  * @tc.require:
  */
