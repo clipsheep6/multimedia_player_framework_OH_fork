@@ -228,8 +228,12 @@ int32_t AudioSinkSvImpl::Pause()
     MediaTrace trace("AudioSink::Pause");
     MEDIA_LOGD("audioRenderer Pause In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
-    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Pause");
-    auto ret = audioRenderer_->Pause();
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::GetStatus");
+    auto ret = audioRenderer_->GetStatus();
+    PlayerXCollie::GetInstance().CancelTimer(id);
+    CHECK_AND_RETURN_RET(ret == OHOS::AudioStandard::RENDERER_RUNNING, MSERR_AUD_RENDER_FAILED);
+    id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Pause");
+    ret = audioRenderer_->Pause();
     PlayerXCollie::GetInstance().CancelTimer(id);
     CHECK_AND_RETURN_RET(ret == true, MSERR_AUD_RENDER_FAILED);
     MEDIA_LOGD("audioRenderer Pause Out");
