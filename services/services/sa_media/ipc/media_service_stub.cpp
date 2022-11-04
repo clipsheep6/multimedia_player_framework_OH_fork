@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_server_manager.h"
+#include "player_xcollie.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServiceStub"};
@@ -44,30 +45,32 @@ void MediaServiceStub::Init()
 
 int32_t MediaServiceStub::DestroyStubForPid(pid_t pid)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    sptr<MediaDeathRecipient> deathRecipient = nullptr;
-    sptr<IStandardMediaListener> mediaListener = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        sptr<MediaDeathRecipient> deathRecipient = nullptr;
+        sptr<IStandardMediaListener> mediaListener = nullptr;
 
-    auto itDeath = deathRecipientMap_.find(pid);
-    if (itDeath != deathRecipientMap_.end()) {
-        deathRecipient = itDeath->second;
+        auto itDeath = deathRecipientMap_.find(pid);
+        if (itDeath != deathRecipientMap_.end()) {
+            deathRecipient = itDeath->second;
 
-        if (deathRecipient != nullptr) {
-            deathRecipient->SetNotifyCb(nullptr);
+            if (deathRecipient != nullptr) {
+                deathRecipient->SetNotifyCb(nullptr);
+            }
+
+            (void)deathRecipientMap_.erase(itDeath);
         }
 
-        (void)deathRecipientMap_.erase(itDeath);
-    }
+        auto itListener = mediaListenerMap_.find(pid);
+        if (itListener != mediaListenerMap_.end()) {
+            mediaListener = itListener->second;
 
-    auto itListener = mediaListenerMap_.find(pid);
-    if (itListener != mediaListenerMap_.end()) {
-        mediaListener = itListener->second;
+            if (mediaListener != nullptr && mediaListener->AsObject() != nullptr && deathRecipient != nullptr) {
+                (void)mediaListener->AsObject()->RemoveDeathRecipient(deathRecipient);
+            }
 
-        if (mediaListener != nullptr && mediaListener->AsObject() != nullptr && deathRecipient != nullptr) {
-            (void)mediaListener->AsObject()->RemoveDeathRecipient(deathRecipient);
+            (void)mediaListenerMap_.erase(itListener);
         }
-
-        (void)mediaListenerMap_.erase(itListener);
     }
 
     MediaServerManager::GetInstance().DestroyStubObjectForPid(pid);
@@ -93,6 +96,7 @@ int MediaServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messag
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("Calling memberFunc is failed.");
             }
+            PlayerXCollie::GetInstance().CancelTimer(id);
             return MSERR_OK;
         }
     }
@@ -136,7 +140,9 @@ int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &r
 {
     MediaSystemAbility id = static_cast<MediaSystemAbility>(data.ReadInt32());
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("MediaServiceStub::GetSystemAbility");
     (void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj));
+    PlayerXCollie::GetInstance().CancelTimer(id);
     return MSERR_OK;
 }
 } // namespace Media
