@@ -82,10 +82,10 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
 
     pixel_format = surface_buffer->GetFormat();
 
-    gsize realsize = surface_buffer->GetSize() < size ? surface_buffer->GetSize() : size;
-
+    gsize realsize = surface_buffer->GetSize();
+    g_return_val_if_fail(realsize > 0, nullptr);
     gst_memory_init(GST_MEMORY_CAST(mem), GST_MEMORY_FLAG_NO_SHARE,
-        allocator, nullptr, surface_buffer->GetSize(), 0, 0, realsize);
+        allocator, nullptr, realsize, 0, 0, realsize);
     mem->surface_buffer = surface_buffer;
     mem->fencefd = fencefd;
     mem->timestamp = timestamp;
