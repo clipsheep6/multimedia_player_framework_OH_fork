@@ -409,7 +409,6 @@ int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
         bytesWritten += static_cast<size_t>(bytesSingle);
         CHECK_AND_RETURN_RET(bytesWritten >= static_cast<size_t>(bytesSingle), MSERR_AUD_RENDER_FAILED);
     }
-    PlayerXCollie::GetInstance().CancelTimer(id);
     return MSERR_OK;
 }
 
