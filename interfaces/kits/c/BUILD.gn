@@ -44,7 +44,7 @@ config("media_capi_config") {
     "-fno-exceptions",
     "-Wall",
     "-fno-common",
-    "-fstack-protector-strong",
+    "-fstack-protector-all",
     "-Wshadow",
     "-FPIC",
     "-FS",
