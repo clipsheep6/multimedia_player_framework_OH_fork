@@ -103,7 +103,7 @@ HWTEST_F(ACodecUnitTest, audio_codec_Configure_0100, TestSize.Level0)
 
 /**
  * @tc.name: audio_codec_0100
- * @tc.desc: audio decodec h264->mpeg4
+ * @tc.desc: audio decodec aac->aac
  * @tc.type: FUNC
  * @tc.require: issueI5OWXY issueI5OXCD
  */
@@ -117,6 +117,7 @@ HWTEST_F(ACodecUnitTest, audio_codec_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareEnc());
     EXPECT_EQ(MSERR_OK, audioCodec_->StartDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->StartEnc());
+    system("hidumper -s 3002 -a codec");
     sleep(10); // start run 10s
     EXPECT_EQ(MSERR_OK, audioCodec_->StopDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->StopEnc());
