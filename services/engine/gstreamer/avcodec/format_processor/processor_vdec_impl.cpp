@@ -107,11 +107,6 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetInputPortConfig()
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
     auto config = std::make_shared<ProcessorConfig>(caps, false);
-    if (config == nullptr) {
-        gst_caps_unref(caps);
-        return nullptr;
-    }
-
     config->needCodecData_ = (codecName_ == CODEC_MIME_TYPE_VIDEO_AVC && isSoftWare_);
     if (maxInputSize_ > 0) {
         config->bufferSize_ = (maxInputSize_ > MAX_SIZE) ? MAX_SIZE : maxInputSize_;
@@ -134,11 +129,6 @@ std::shared_ptr<ProcessorConfig> ProcessorVdecImpl::GetOutputPortConfig()
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "No memory");
 
     auto config = std::make_shared<ProcessorConfig>(caps, false);
-    if (config == nullptr) {
-        MEDIA_LOGE("No memory");
-        gst_caps_unref(caps);
-        return nullptr;
-    }
     // Memory is aligned to 16 bytes
     constexpr uint32_t alignment = 16;
     config->bufferSize_ = PixelBufferSize(static_cast<VideoPixelFormat>(pixelFormat_),

@@ -34,7 +34,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-static void StartFeed(GstElement *src, guint length, gpointer userData)
+static void StartFeed(const GstElement *src, guint length, gpointer userData)
 {
     (void)length;
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
@@ -48,7 +48,7 @@ static void StartFeed(GstElement *src, guint length, gpointer userData)
     }
 }
 
-static void StopFeed(GstElement *src, gpointer userData)
+static void StopFeed(const GstElement *src, gpointer userData)
 {
     CHECK_AND_RETURN_LOG(src != nullptr, "AppSrc does not exist");
     CHECK_AND_RETURN_LOG(userData != nullptr, "User data does not exist");

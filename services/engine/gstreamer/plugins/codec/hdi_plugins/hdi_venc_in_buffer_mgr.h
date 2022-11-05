@@ -31,7 +31,7 @@ protected:
     std::shared_ptr<HdiBufferWrap> GetCodecBuffer(GstBuffer *buffer) override;
 
 private:
-    std::vector<std::shared_ptr<HdiBufferWrap>> PreUseHandleMems(std::vector<GstBuffer *> &buffers);
+    std::vector<std::shared_ptr<HdiBufferWrap>> PreUseHandleMems(const std::vector<GstBuffer *> &buffers);
     bool enableNativeBuffer_ = false;
     std::condition_variable cond_;
 };

@@ -383,14 +383,11 @@ void RecorderMock::HDICreateYUVBuffer()
         sptr<SyncFence> tempFence = new SyncFence(releaseFence);
         tempFence->Wait(100); // 100ms
 
-        char *tempBuffer = (char *)(buffer->GetVirAddr());
+        char *tempBuffer = static_cast<char *>(buffer->GetVirAddr());
         (void)memset_s(tempBuffer, YUV_BUFFER_SIZE, color_, YUV_BUFFER_SIZE);
 
         (void)srand((int)time(0));
         for (uint32_t i = 0; i < YUV_BUFFER_SIZE - 1; i += (YUV_BUFFER_SIZE - 1)) {  // 100 is the steps between noise
-            if (i >= YUV_BUFFER_SIZE - 1) {
-                break;
-            }
             tempBuffer[i] = (unsigned char)(rand() % 255); // 255 is the size of yuv, add noise
         }
 

@@ -144,12 +144,6 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetInputPortConfig()
     CHECK_AND_RETURN_RET(caps != nullptr, nullptr);
 
     auto config = std::make_shared<ProcessorConfig>(caps, true);
-    if (config == nullptr) {
-        MEDIA_LOGE("No memory");
-        gst_caps_unref(caps);
-        return nullptr;
-    }
-
     config->bufferSize_ = DEFAULT_BUFFER_SIZE;
 
     return config;
@@ -179,12 +173,6 @@ std::shared_ptr<ProcessorConfig> ProcessorAencImpl::GetOutputPortConfig()
     CHECK_AND_RETURN_RET_LOG(caps != nullptr, nullptr, "Unsupported format");
 
     auto config = std::make_shared<ProcessorConfig>(caps, true);
-    if (config == nullptr) {
-        MEDIA_LOGE("No memory");
-        gst_caps_unref(caps);
-        return nullptr;
-    }
-
     config->bufferSize_ = DEFAULT_BUFFER_SIZE;
     if (codecName_ == CODEC_MIME_TYPE_AUDIO_AAC) {
         config->needFilter_ = true;

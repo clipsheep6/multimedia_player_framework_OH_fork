@@ -246,7 +246,7 @@ uint8_t AVMetaMetaCollector::ProbeElemType(GstElement &source)
         std::string detailLog = "metaKey: ";
         detailLog += matchDesc.metaKey;
         detailLog += ", expected field: ";
-        for (auto &fields : matchDesc.expectedFields) {
+        for (const auto &fields : matchDesc.expectedFields) {
             detailLog += fields;
             detailLog += " ";
         }

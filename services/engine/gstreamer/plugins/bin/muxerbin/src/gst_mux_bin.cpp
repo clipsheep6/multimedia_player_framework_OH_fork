@@ -49,8 +49,8 @@ static void gst_mux_bin_add_track(GstMuxBin *mux_bin, const char *src_name, cons
     g_return_if_fail(parse_name != nullptr);
     GstTrackInfo *info = g_new(GstTrackInfo, 1);
     g_return_if_fail(info != nullptr);
-    info->srcName_ = g_strdup((char *)src_name);
-    info->parseName_ = g_strdup((char *)parse_name);
+    info->srcName_ = g_strdup(static_cast<char *>(src_name));
+    info->parseName_ = g_strdup(static_cast<char *>(parse_name));
     switch (static_cast<OHOS::Media::MediaType>(track_type)) {
         case OHOS::Media::MEDIA_TYPE_VID:
             mux_bin->video_src_list = g_slist_append(mux_bin->video_src_list, info);

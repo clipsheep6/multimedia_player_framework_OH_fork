@@ -182,7 +182,7 @@ int32_t SrcBytebufferImpl::HandleCodecBuffer(uint32_t index, AVCodecBufferInfo i
 
     ON_SCOPE_EXIT(0) { gst_buffer_unref(codecBuffer); };
 
-    gsize size = gst_buffer_fill(codecBuffer, 0, (char *)address + info.offset, info.size);
+    gsize size = gst_buffer_fill(codecBuffer, 0, (char*)address + info.offset, info.size);
     CHECK_AND_RETURN_RET(size == static_cast<gsize>(info.size), MSERR_UNKNOWN);
 
     gst_caps_set_simple(caps_, "codec_data", GST_TYPE_BUFFER, codecBuffer, nullptr);

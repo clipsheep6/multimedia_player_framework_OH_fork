@@ -78,7 +78,7 @@ void gst_shmem_allocator_free(GstAllocator *allocator, GstMemory *memory)
     g_return_if_fail(gst_is_shmem_memory(memory));
 
     GstShMemAllocator *sAlloctor = GST_SHMEM_ALLOCATOR_CAST(allocator);
-    g_return_if_fail(sAlloctor != nullptr && sAlloctor->avShmemPool != nullptr);
+    g_return_if_fail(sAlloctor->avShmemPool != nullptr);
 
     GstShMemMemory *avSharedMem = reinterpret_cast<GstShMemMemory *>(memory);
     GST_LOG("free memory to %s for size: %" G_GSIZE_FORMAT ", gstmemory: 0x%06" PRIXPTR ", recount: %ld",
