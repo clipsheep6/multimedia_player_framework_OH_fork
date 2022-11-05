@@ -21,15 +21,15 @@ namespace OHOS {
 namespace Media {
 class Proxy {
 public:
-    static Proxy &GetInstance() 
+    static Proxy &GetInstance()
     {
         static Proxy proxy;
         return proxy;
     }
     template <typename T, typename R, typename... Args>
     typename std::enable_if<!std::is_same<R, void>::value, R>::type Execute(
-        const std::unique_ptr<T> &obj, R (T::*p)(Args...) const, std::string name,
-        Args&&... args) {
+        const std::unique_ptr<T> &obj, R (T::*p)(Args...) const, std::string name, Args&&... args)
+    {
         int32_t id = PlayerXCollie::GetInstance().SetTimerByLog(name);
         R ret = (*obj.*p)(std::forward<Args>(args)...);
         PlayerXCollie::GetInstance().CancelTimer(id);
@@ -38,8 +38,8 @@ public:
 
     template <typename T, typename R, typename... Args>
     typename std::enable_if<std::is_same<R, void>::value, void>::type Execute(
-        const std::unique_ptr<T> &obj, R (T::*p)(Args...) const, std::string name,
-        Args&&... args) {
+        const std::unique_ptr<T> &obj, R (T::*p)(Args...) const, std::string name, Args&&... args)
+    {
         int32_t id = PlayerXCollie::GetInstance().SetTimerByLog(name);
         (*obj.*p)(std::forward<Args>(args)...);
         PlayerXCollie::GetInstance().CancelTimer(id);
@@ -47,8 +47,8 @@ public:
 
     template <typename T, typename R, typename... Args>
     typename std::enable_if<!std::is_same<R, void>::value, R>::type Execute(
-        const std::unique_ptr<T> &obj, R (T::*p)(Args...), std::string name,
-        Args&&... args) {
+        const std::unique_ptr<T> &obj, R (T::*p)(Args...), std::string name, Args&&... args)
+    {
         int32_t id = PlayerXCollie::GetInstance().SetTimerByLog(name);
         R ret = (*obj.*p)(std::forward<Args>(args)...);
         PlayerXCollie::GetInstance().CancelTimer(id);
@@ -57,8 +57,8 @@ public:
 
     template <typename T, typename R, typename... Args>
     typename std::enable_if<std::is_same<R, void>::value, void>::type Execute(
-        const std::unique_ptr<T> &obj, R (T::*p)(Args...), std::string name,
-        Args&&... args) {
+        const std::unique_ptr<T> &obj, R (T::*p)(Args...), std::string name, Args&&... args)
+    {
         int32_t id = PlayerXCollie::GetInstance().SetTimerByLog(name);
         (*obj.*p)(std::forward<Args>(args)...);
         PlayerXCollie::GetInstance().CancelTimer(id);

@@ -141,7 +141,8 @@ int32_t AudioSinkSvImpl::SetVolume(float volume)
     MEDIA_LOGD("audioRenderer SetVolume(%{public}lf) In", volume);
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED, "audioRenderer_ is nullptr");
     volume = (isMute_ == false) ? volume : 0.0;
-    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::SetVolume, "AudioRenderer::SetVolume", (float)volume);
+    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::SetVolume,
+        "AudioRenderer::SetVolume", (float)volume);
     CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED, "audio server setvolume failed!");
     MEDIA_LOGD("audioRenderer SetVolume(%{public}lf) Out", volume);
     return MSERR_OK;
@@ -308,7 +309,8 @@ int32_t AudioSinkSvImpl::SetParameters(uint32_t bitsPerSample, uint32_t channels
     params.encodingType = AudioStandard::ENCODING_PCM;
     MEDIA_LOGD("SetParameters out, channels:%{public}d, sampleRate:%{public}d", params.channelCount, params.sampleRate);
     MEDIA_LOGD("audioRenderer SetParams In");
-    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::SetParams, "AudioRenderer::SetParams", (AudioStandard::AudioRendererParams)params);
+    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::SetParams,
+        "AudioRenderer::SetParams", (AudioStandard::AudioRendererParams)params);
     CHECK_AND_RETURN_RET(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
     MEDIA_LOGD("audioRenderer SetParams Out");
     return MSERR_OK;
@@ -320,7 +322,8 @@ int32_t AudioSinkSvImpl::GetParameters(uint32_t &bitsPerSample, uint32_t &channe
     MEDIA_LOGD("GetParameters");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     AudioStandard::AudioRendererParams params;
-    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::GetParams, "AudioRenderer::GetParams", params);
+    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::GetParams,
+        "AudioRenderer::GetParams", params);
     CHECK_AND_RETURN_RET(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
     channels = params.channelCount;
     sampleRate = params.sampleRate;
@@ -332,7 +335,8 @@ int32_t AudioSinkSvImpl::GetMinimumBufferSize(uint32_t &bufferSize)
     MEDIA_LOGD("GetMinimumBufferSize");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     size_t size = 0;
-    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::GetBufferSize, "AudioRenderer::GetBufferSize", size);
+    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::GetBufferSize,
+        "AudioRenderer::GetBufferSize", size);
     CHECK_AND_RETURN_RET(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
     CHECK_AND_RETURN_RET(size > 0, MSERR_AUD_RENDER_FAILED);
     bufferSize = static_cast<uint32_t>(size);
@@ -344,7 +348,8 @@ int32_t AudioSinkSvImpl::GetMinimumFrameCount(uint32_t &frameCount)
     MEDIA_LOGD("GetMinimumFrameCount");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     uint32_t count = 0;
-    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::GetFrameCount, "AudioRenderer::GetFrameCount", count);
+    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::GetFrameCount,
+        "AudioRenderer::GetFrameCount", count);
     CHECK_AND_RETURN_RET(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
     CHECK_AND_RETURN_RET(count > 0, MSERR_AUD_RENDER_FAILED);
     frameCount = count;
@@ -394,8 +399,8 @@ int32_t AudioSinkSvImpl::GetAudioTime(uint64_t &time)
     MediaTrace trace("AudioSink::GetAudioTime");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     AudioStandard::Timestamp timeStamp;
-    bool ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::GetAudioTime, "AudioRenderer::GetAudioTime", 
-        timeStamp, AudioStandard::Timestamp::Timestampbase::MONOTONIC);
+    bool ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::GetAudioTime,
+        "AudioRenderer::GetAudioTime", timeStamp, AudioStandard::Timestamp::Timestampbase::MONOTONIC);
     CHECK_AND_RETURN_RET(ret == true, MSERR_AUD_RENDER_FAILED);
     time = static_cast<uint64_t>(timeStamp.time.tv_nsec);
     return MSERR_OK;
@@ -405,14 +410,15 @@ int32_t AudioSinkSvImpl::GetLatency(uint64_t &latency) const
 {
     MediaTrace trace("AudioSink::GetLatency");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
-    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::GetLatency, "AudioRenderer::GetLatency", latency);
+    int32_t ret = Proxy::GetInstance().Execute(audioRenderer_, &Audio::GetLatency,
+        "AudioRenderer::GetLatency", latency);
     CHECK_AND_RETURN_RET(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED);
     return MSERR_OK;
 }
 
 void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                      void (*stateCb)(GstBaseSink *, guint),
-                                     void (*errorCb)(GstBaseSink *, std::string))
+                                     void (*errorCb)(GstBaseSink *, const std::string &))
 {
     CHECK_AND_RETURN(audioRendererMediaCallback_ != nullptr);
     errorCb_ = errorCb;
