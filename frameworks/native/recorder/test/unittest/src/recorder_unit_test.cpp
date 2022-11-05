@@ -606,6 +606,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_003, TestSize.Level
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     recorder_->SetLocation(91, 0);
     recorder_->SetOrientationHint(180);
+    system("param set sys.media.dump.surfacesrc.enable true");
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
 
@@ -636,6 +637,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_004, TestSize.Level
     recorder_->SetLocation(1, 181);
     recorder_->SetLocation(1, -181);
     recorder_->SetOrientationHint(270);
+    system("param set sys.media.dump.surfacesrc.enable false");
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
 
