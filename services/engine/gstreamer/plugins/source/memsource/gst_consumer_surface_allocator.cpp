@@ -47,6 +47,7 @@ gboolean gst_is_consumer_surface_memory(GstMemory *mem)
 
 static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, gsize size, GstAllocationParams *params)
 {
+    (void)size;
     g_return_val_if_fail(params != nullptr, nullptr);
     g_return_val_if_fail(allocator != nullptr, nullptr);
     GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
