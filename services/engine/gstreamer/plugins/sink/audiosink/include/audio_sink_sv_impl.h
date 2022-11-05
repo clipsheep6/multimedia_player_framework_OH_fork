@@ -20,6 +20,7 @@
 #include "audio_renderer.h"
 #include "audio_system_manager.h"
 #include "audio_errors.h"
+#include "player_xcollie.h"
 
 namespace OHOS {
 namespace Media {
@@ -83,6 +84,7 @@ private:
     void SetMuteVolumeBySysParam();
     bool isMute_ = false;
     std::shared_ptr<AudioRendererMediaCallback> audioRendererMediaCallback_ = nullptr;
+    using Audio = OHOS::AudioStandard::AudioRenderer;
 };
 } // namespace Media
 } // namespace OHOS
