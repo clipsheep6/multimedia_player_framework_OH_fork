@@ -69,7 +69,7 @@ public:
     void SetAudioInterruptMode(int32_t interruptMode) override;
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
-                        void (*errorCb)(GstBaseSink *, const std::string)) override;
+                        void (*errorCb)(GstBaseSink *, const std::string &)) override;
     void OnError(std::string errMsg) override;
     bool Writeable() const override;
 
