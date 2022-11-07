@@ -50,7 +50,7 @@ static OHOS::BufferRequestConfig g_esRequestConfig = {
     .strideAlignment = STRIDE_ALIGN,
     .format = PIXEL_FMT_RGBA_8888,
     .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
-    .timeout = 0
+    .timeout = INT_MAX
 };
 
 // config for surface buffer flush to the queue
@@ -71,7 +71,7 @@ static OHOS::BufferRequestConfig g_yuvRequestConfig = {
     .strideAlignment = STRIDE_ALIGN,
     .format = PIXEL_FMT_YCRCB_420_SP,
     .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
-    .timeout = 0
+    .timeout = INT_MAX
 };
 
 void RecorderCallbackTest::OnError(RecorderErrorType errorType, int32_t errorCode)
@@ -319,7 +319,7 @@ void RecorderMock::HDICreateESBuffer()
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError ret = producerSurface_->RequestBuffer(buffer, releaseFence, g_esRequestConfig);
-        UNITTEST_CHECK_AND_CONTINUE_LOG(ret != OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now");
+        UNITTEST_CHECK_AND_BREAK_LOG(ret != OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now");
         UNITTEST_CHECK_AND_BREAK_LOG(ret == SURFACE_ERROR_OK && buffer != nullptr, "RequestBuffer failed");
 
         sptr<SyncFence> tempFence = new SyncFence(releaseFence);
@@ -374,10 +374,7 @@ void RecorderMock::HDICreateYUVBuffer()
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError ret = producerSurface_->RequestBuffer(buffer, releaseFence, g_yuvRequestConfig);
-        if (ret == OHOS::SURFACE_ERROR_NO_BUFFER) {
-            continue;
-        }
-
+        UNITTEST_CHECK_AND_BREAK_LOG(ret != OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now");
         UNITTEST_CHECK_AND_BREAK_LOG(ret == SURFACE_ERROR_OK && buffer != nullptr, "RequestBuffer failed");
 
         sptr<SyncFence> tempFence = new SyncFence(releaseFence);

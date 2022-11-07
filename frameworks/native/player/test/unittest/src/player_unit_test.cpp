@@ -1603,6 +1603,7 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GlibMem_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->Play());
     system("hidumper -s 3002 -a glibmem");
+    system("param set sys.media.dump.codec.vdec ALL");
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
@@ -1622,6 +1623,7 @@ HWTEST_F(PlayerUnitTest, Player_HiDump_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Play());
     system("hidumper -s 3002");
     system("hidumper -s 3002 -a player");
+    system("param set sys.media.dump.codec.vdec INPUT");
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
@@ -1638,8 +1640,13 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GlibPool_001, TestSize.Level0)
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    system("param set sys.media.dump.frame.enable true");
+    system("param set sys.media.set.mute TRUE");
+    system("param set sys.media.kpi.avsync.log.enable true");
+    system("param set sys.media.kpi.opt.renderdelay.enable true");
     EXPECT_EQ(MSERR_OK, player_->Play());
     system("hidumper -s 3002 -a glibpool");
+    system("param set sys.media.dump.codec.vdec OUTPUT");
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
 }
@@ -1659,7 +1666,15 @@ HWTEST_F(PlayerUnitTest, Player_Dump_Log_001, TestSize.Level0)
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    system("param set sys.media.log.level *:l,multiqueue,decodecbin:,tsdemux:D,multiqueue:D,hlsdemux:D,souphttpsrc:" \
+        "D,basesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmm" \
+        "basesrcmmmbasesrcmmmbasesrcmmm:D,decodebin:D,uridecodebin:D,uridecodebin:L,decodecbin:L");
+    system("param set sys.media.dump.frame.enable false");
+    system("param set sys.media.set.mute FALSE");
+    system("param set sys.media.kpi.avsync.log.enable false");
+    system("param set sys.media.kpi.opt.renderdelay.enable false");
     EXPECT_EQ(MSERR_OK, player_->Play());
+    system("param set sys.media.dump.codec.vdec NULL");
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
     system("rm -rf /data/media/log");
@@ -1679,6 +1694,7 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GstBuffer_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     system("param set sys.media.dump.gstbuffer 1");
+    system("param set sys.media.set.mute null");
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
