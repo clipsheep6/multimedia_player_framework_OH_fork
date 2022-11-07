@@ -108,7 +108,6 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
         gst_buffer_set_size(buf, vdec_h264->cache_offset);
         vdec_h264->is_slice_buffer = false;
         ready_push = true;
-        gst_buffer_ref(buf);
         g_mutex_unlock(&vdec_h264->cat_lock);
         return buf;
     }
