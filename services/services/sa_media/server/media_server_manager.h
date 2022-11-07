@@ -18,7 +18,7 @@
 
 #include <memory>
 #include <functional>
-#include <map>
+#include "map.h"
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
 #include "nocopyable.h"
@@ -73,13 +73,13 @@ private:
 #ifdef SUPPORT_MUXER
     sptr<IRemoteObject> CreateAVMuxerStubObject();
 #endif
-    std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avmuxerStubMap_;
+    Map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
+    Map<sptr<IRemoteObject>, pid_t> playerStubMap_;
+    Map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
+    Map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
+    Map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
+    Map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
+    Map<sptr<IRemoteObject>, pid_t> avmuxerStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
 
     std::mutex mutex_;

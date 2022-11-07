@@ -139,7 +139,6 @@ MediaServerManager::~MediaServerManager()
 
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     switch (type) {
 #ifdef SUPPORT_RECORDER
         case RECORDER: {
