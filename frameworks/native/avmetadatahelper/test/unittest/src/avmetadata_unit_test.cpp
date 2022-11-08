@@ -23,6 +23,8 @@ using namespace OHOS::Media;
 using namespace testing::ext;
 using namespace AVMetadataTestParam;
 
+namespace OHOS {
+namespace Media {
 /**
     Function: compare metadata
     Description: test for metadata
@@ -64,17 +66,21 @@ void AVMetadataUnitTest::GetThumbnail(const std::string uri)
     helper->FrameToFile(frame, testInfo_->name(), timeUs, queryOption);
     helper->FrameToJpeg(frame, testInfo_->name(), timeUs, queryOption);
     timeUs = 5000000;  // 5000000us
+    queryOption = AVMetadataQueryOption::AV_META_QUERY_PREVIOUS_SYNC;
     frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     ASSERT_NE(nullptr, frame);
     helper->FrameToFile(frame, testInfo_->name(), timeUs, queryOption);
     helper->FrameToJpeg(frame, testInfo_->name(), timeUs, queryOption);
 
     param = {-1, -1, PixelFormat::RGB_888};
+    queryOption = AVMetadataQueryOption::AV_META_QUERY_CLOSEST_SYNC;
     frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     ASSERT_NE(nullptr, frame);
     helper->FrameToFile(frame, testInfo_->name(), timeUs, queryOption);
     helper->FrameToJpeg(frame, testInfo_->name(), timeUs, queryOption);
+
     timeUs = 0;
+    queryOption = AVMetadataQueryOption::AV_META_QUERY_CLOSEST;
     frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     ASSERT_NE(nullptr, frame);
     helper->FrameToFile(frame, testInfo_->name(), timeUs, queryOption);
@@ -507,3 +513,259 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0400, TestSize.Level0)
     std::string("MPEG4_AAC.mp4");
     GetThumbnail(uri);
 }
+
+/**
+    * @tc.number    : FetchFrameAtTime_API_0100
+    * @tc.name      : FetchFrameAtTime size
+    * @tc.desc      : FetchFrameAtTime API size
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0100, TestSize.Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+
+    struct PixelMapParams param = {-1, 316, PixelFormat::RGB_565};
+    int64_t timeUs = 0;
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
+    std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_NE(nullptr, frame);
+    param = {dstWidthMin - 1, 316, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    param = {dstWidthMin, 316, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_NE(nullptr, frame);
+    param = {dstWidthMax, 316, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_NE(nullptr, frame);
+    param = {dstWidthMax + 1, 316, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    param = {316, -1, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_NE(nullptr, frame);
+    param = {316, 0, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    param = {316, dstHeightMin - 1, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    param = {316, dstHeightMin, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_NE(nullptr, frame);
+    param = {316, dstHeightMax, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_NE(nullptr, frame);
+    param = {316, dstHeightMax + 1, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    timeUs = -1;
+    param = {316, 316, PixelFormat::RGB_565};
+    frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_NE(nullptr, frame);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : FetchFrameAtTime_API_0200
+    * @tc.name      : FetchFrameAtTime AVMetadataQueryOption
+    * @tc.desc      : FetchFrameAtTime API AVMetadataQueryOption
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0200, TestSize.Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+
+    struct PixelMapParams param = {-1, 316, PixelFormat::RGB_565};
+    int64_t timeUs = 0;
+    int32_t queryOption = AVMetadataQueryOption(100);
+    std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : FetchFrameAtTime_API_0300
+    * @tc.name      : FetchFrameAtTime PixelFormat
+    * @tc.desc      : FetchFrameAtTime API PixelFormat
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0300, TestSize.Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+
+    struct PixelMapParams param = {-1, 316, PixelFormat::UNKNOWN};
+    int64_t timeUs = 0;
+    int32_t queryOption = AVMetadataQueryOption(100);
+    std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : FetchFrameAtTime_API_0400
+    * @tc.name      : FetchFrameAtTime PixelFormat
+    * @tc.desc      : FetchFrameAtTime API PixelFormat RGBA_8888
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0400, TestSize.Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+
+    struct PixelMapParams param = {-1, 316, PixelFormat::RGBA_8888};
+    int64_t timeUs = 0;
+    int32_t queryOption = AVMetadataQueryOption(100);
+    std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : FetchFrameAtTime
+    * @tc.name      : FetchFrameAtTime AV_META_USAGE_META_ONLY
+    * @tc.desc      : FetchFrameAtTime API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0500, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_META_ONLY));
+
+    std::string value = helper->ResolveMetadata(AV_KEY_HAS_VIDEO);
+    EXPECT_NE(value, " ");
+    helper->ResolveMetadata();
+    struct PixelMapParams param = {-1, 316, PixelFormat::RGB_565};
+    int64_t timeUs = 0;
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
+    std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : SetSource_API_0100
+    * @tc.name      : SetSource AVMetadataUsage
+    * @tc.desc      : SetSource API AVMetadataUsage
+*/
+HWTEST_F(AVMetadataUnitTest, SetSource_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    EXPECT_NE(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage(100)));
+    helper->Release();
+}
+
+/**
+    * @tc.number    : SetSource_API_0200
+    * @tc.name      : SetSource
+    * @tc.desc      : SetSource API
+*/
+HWTEST_F(AVMetadataUnitTest, SetSource_API_0200, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string("H264_AAC.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    struct PixelMapParams param = {-1, 316, PixelFormat::RGB_565};
+    int64_t timeUs = 0;
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
+    std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    std::string value = helper->ResolveMetadata(AV_KEY_HAS_VIDEO);
+    EXPECT_NE(value, " ");
+    helper->ResolveMetadata();
+    helper->Release();
+}
+
+/**
+    * @tc.number    : SetSource_API_0300
+    * @tc.name      : SetSource 1kb.mp3
+    * @tc.desc      : SetSource API
+*/
+HWTEST_F(AVMetadataUnitTest, SetSource_API_0300, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string("1kb.mp3");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+
+    std::string value = helper->ResolveMetadata(AV_KEY_HAS_VIDEO);
+    EXPECT_EQ(value, "");
+    helper->ResolveMetadata(AV_KEY_HAS_AUDIO);
+    EXPECT_EQ(value, "");
+    helper->ResolveMetadata();
+    struct PixelMapParams param = {-1, 316, PixelFormat::RGB_565};
+    int64_t timeUs = 0;
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
+    std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : SetSource_API_0400
+    * @tc.name      : SetSource 1kb.mp3
+    * @tc.desc      : SetSource API
+*/
+HWTEST_F(AVMetadataUnitTest, SetSource_API_0400, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string("aac_44100Hz_143kbs_stereo.aac");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+
+    std::string value = helper->ResolveMetadata(AV_KEY_HAS_VIDEO);
+    EXPECT_EQ(value, "");
+    helper->ResolveMetadata(AV_KEY_HAS_AUDIO);
+    EXPECT_EQ(value, "");
+    helper->ResolveMetadata();
+    struct PixelMapParams param = {-1, 316, PixelFormat::RGB_565};
+    int64_t timeUs = 0;
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
+    std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_EQ(nullptr, frame);
+    helper->Release();
+}
+
+/**
+    * @tc.number    : SetSource_API_0500
+    * @tc.name      : SetSource error.mp4
+    * @tc.desc      : SetSource API
+*/
+HWTEST_F(AVMetadataUnitTest, SetSource_API_0500, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+    std::string("error.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_NE(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+}
+} // namespace Media
+} // namespace OHOS

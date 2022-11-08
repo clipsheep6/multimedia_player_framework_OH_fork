@@ -21,7 +21,8 @@ using namespace OHOS::Media;
 using namespace std;
 using namespace testing::ext;
 using namespace OHOS::Media::RecorderTestParam;
-
+namespace OHOS {
+namespace Media {
 // config for video to request buffer from surface
 static VideoRecorderConfig g_videoRecorderConfig;
 
@@ -572,7 +573,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_wrongsize, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_ERROR, g_videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Start());
+    recorder_->Start();
     sleep(RECORDER_TIME);
     EXPECT_NE(MSERR_OK, recorder_->Stop(false));
     recorder_->StopBuffer(PURE_VIDEO);
@@ -794,3 +795,5 @@ HWTEST_F(RecorderUnitTest, recorder_SetDataSource_001, TestSize.Level0)
     EXPECT_EQ(MSERR_INVALID_OPERATION,
         recorder_->SetDataSource(DataSourceType::METADATA, g_videoRecorderConfig.videoSourceId));
 }
+} // namespace Media
+} // namespace OHOS
