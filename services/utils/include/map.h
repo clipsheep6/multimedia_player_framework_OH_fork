@@ -25,20 +25,86 @@ public:
     Map(const Map&) = default;
     Map(Map&&) = default;
     ~Map() = default;
-    void insert(const std::pair<T, R> &p);
-    void erase(const T &key);
-    void erase(const typename std::map<T, R>::iterator positon);
-    typename std::map<T, R>::iterator begin();
-    typename std::map<T, R>::iterator end();
-    typename std::map<T, R>::iterator find(const T &key);
-    size_t count(const T &key);
-    size_t size();
-    R operator[](const T &key);
-    void clear();
+    void insert(const std::pair<T, R> &p)
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        map_.insert(p);
+    }
+
+    size_t erase(const T &key)
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return map_.erase(key);
+    }
+
+    const typename std::map<T, R>::iterator erase(const typename std::map<T, R>::iterator positon)
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        return map_.erase(positon);
+    }
+
+    typename std::map<T, R>::iterator begin()
+    {
+        return map_.begin();
+    }
+
+    typename std::map<T, R>::iterator end()
+    {
+        return map_.end();
+    }
+
+    typename std::map<T, R>::iterator find(const T &key)
+    {
+        return map_.find(key);
+    }
+    
+    size_t count(const T &key)
+    {
+        return map_.count(key);
+    }
+    
+    size_t size()
+    {
+        return map_.size();
+    }
+
+    R& operator[](const T &key)
+    {
+        auto iter = map_.lower_bound(key);
+        if (iter == map_.end()) {
+            iter = map_.emplace_hint(iter, key, R{});
+        }
+        return iter->second;
+    }
+
+    R& operator[](T&& key)
+    {
+        auto iter = map_.lower_bound(key);
+        if (iter == map_.end()) {
+            iter = map_.emplace_hint(iter, key, R{});
+        }
+        return iter->second;
+    }
+
+    Map& operator=(Map&& map)
+    {
+        map_ = std::move(map);
+        return *this;
+    }
+
+    Map& operator=(const Map& map)
+    {
+        map_ = map;
+        return *this;
+    }
+
+    void clear()
+    {
+        map_.clear();
+    }
     
 private:
     std::map<T, R> map_;
-    
     std::mutex mutex_;
 };
 } // namespace Media

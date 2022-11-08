@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <functional>
+#include <map>
 #include "map.h"
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
