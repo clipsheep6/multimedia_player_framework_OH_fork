@@ -19,6 +19,7 @@
 #include <memory>
 #include <functional>
 #include <map>
+#include <list>
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
 #include "nocopyable.h"
@@ -70,17 +71,26 @@ private:
     sptr<IRemoteObject> CreateAVCodecListStubObject();
     sptr<IRemoteObject> CreateAVCodecStubObject();
 #endif
-#ifdef SUPPORT_MUXER
-    sptr<IRemoteObject> CreateAVMuxerStubObject();
-#endif
+
+    class AsyncExecutor {
+    public:
+        AsyncExecutor() = default;
+        virtual ~AsyncExecutor() = default;
+        void Commit(sptr<IRemoteObject> obj);
+        void Clear();
+    private:
+        void HandleAsyncExecution();
+        std::list<sptr<IRemoteObject>> freeList_;
+        std::mutex listMutex_;
+    };
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avmuxerStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
+    AsyncExecutor executor_;
 
     std::mutex mutex_;
 };

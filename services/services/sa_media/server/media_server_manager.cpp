@@ -29,9 +29,6 @@
 #include "avcodec_service_stub.h"
 #include "avcodeclist_service_stub.h"
 #endif
-#ifdef SUPPORT_MUXER
-#include "avmuxer_service_stub.h"
-#endif
 #include "media_log.h"
 #include "media_errors.h"
 #include "service_dump_manager.h"
@@ -165,11 +162,6 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         }
         case AVCODEC: {
             return CreateAVCodecStubObject();
-        }
-#endif
-#ifdef SUPPORT_MUXER
-        case AVMUXER: {
-            return CreateAVMuxerStubObject();
         }
 #endif
         default: {
@@ -365,29 +357,6 @@ sptr<IRemoteObject> MediaServerManager::CreateAVCodecStubObject()
 }
 #endif
 
-#ifdef SUPPORT_MUXER
-sptr<IRemoteObject> MediaServerManager::CreateAVMuxerStubObject()
-{
-    if (avmuxerStubMap_.size() >= SERVER_MAX_NUMBER) {
-        MEDIA_LOGE("The number of avmuxer services(%{public}zu) has reached the upper limit."
-            "Please release the applied resources.", avmuxerStubMap_.size());
-        return nullptr;
-    }
-    sptr<AVMuxerServiceStub> avmuxerStub = AVMuxerServiceStub::Create();
-    if (avmuxerStub == nullptr) {
-        MEDIA_LOGE("failed to create AVMuxerServiceStub");
-        return nullptr;
-    }
-    sptr<IRemoteObject> object = avmuxerStub->AsObject();
-    if (object != nullptr) {
-        pid_t pid = IPCSkeleton::GetCallingPid();
-        avmuxerStubMap_[object] = pid;
-        MEDIA_LOGD("The number of avmuxer services(%{public}zu).", avmuxerStubMap_.size());
-    }
-    return object;
-}
-#endif
-
 void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -466,20 +435,6 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             MEDIA_LOGE("find mediaprofile object failed, pid(%{public}d).", pid);
             break;
         }
-#ifdef SUPPORT_MUXER
-        case AVMUXER: {
-            for (auto it = avmuxerStubMap_.begin(); it != avmuxerStubMap_.end(); it++) {
-                if (it->first == object) {
-                    MEDIA_LOGD("destory avmuxer stub services(%{public}zu) pid(%{public}d).",
-                        avmuxerStubMap_.size(), pid);
-                    (void)avmuxerStubMap_.erase(it);
-                    return;
-                }
-            }
-            MEDIA_LOGE("find avmuxer object failed, pid(%{public}d).", pid);
-            break;
-        }
-#endif
         default: {
             MEDIA_LOGE("default case, media server manager failed, pid(%{public}d).", pid);
             break;
@@ -494,6 +449,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     DestroyDumperForPid(pid);
     for (auto itRecorder = recorderStubMap_.begin(); itRecorder != recorderStubMap_.end();) {
         if (itRecorder->second == pid) {
+            executor_.Commit(itRecorder->first);
             itRecorder = recorderStubMap_.erase(itRecorder);
         } else {
             itRecorder++;
@@ -504,6 +460,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     MEDIA_LOGD("player stub services(%{public}zu) pid(%{public}d).", playerStubMap_.size(), pid);
     for (auto itPlayer = playerStubMap_.begin(); itPlayer != playerStubMap_.end();) {
         if (itPlayer->second == pid) {
+            executor_.Commit(itPlayer->first);
             itPlayer = playerStubMap_.erase(itPlayer);
         } else {
             itPlayer++;
@@ -514,6 +471,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     MEDIA_LOGD("avmetadatahelper stub services(%{public}zu) pid(%{public}d).", avMetadataHelperStubMap_.size(), pid);
     for (auto itAvMetadata = avMetadataHelperStubMap_.begin(); itAvMetadata != avMetadataHelperStubMap_.end();) {
         if (itAvMetadata->second == pid) {
+            executor_.Commit(itAvMetadata->first);
             itAvMetadata = avMetadataHelperStubMap_.erase(itAvMetadata);
         } else {
             itAvMetadata++;
@@ -524,6 +482,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     MEDIA_LOGD("avcodec stub services(%{public}zu) pid(%{public}d).", avCodecStubMap_.size(), pid);
     for (auto itAvCodec = avCodecStubMap_.begin(); itAvCodec != avCodecStubMap_.end();) {
         if (itAvCodec->second == pid) {
+            executor_.Commit(itAvCodec->first);
             itAvCodec = avCodecStubMap_.erase(itAvCodec);
         } else {
             itAvCodec++;
@@ -534,6 +493,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     MEDIA_LOGD("avcodeclist stub services(%{public}zu) pid(%{public}d).", avCodecListStubMap_.size(), pid);
     for (auto itAvCodecList = avCodecListStubMap_.begin(); itAvCodecList != avCodecListStubMap_.end();) {
         if (itAvCodecList->second == pid) {
+            executor_.Commit(itAvCodecList->first);
             itAvCodecList = avCodecListStubMap_.erase(itAvCodecList);
         } else {
             itAvCodecList++;
@@ -544,24 +504,14 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     MEDIA_LOGD("mediaprofile stub services(%{public}zu) pid(%{public}d).", recorderProfilesStubMap_.size(), pid);
     for (auto itMediaProfile = recorderProfilesStubMap_.begin(); itMediaProfile != recorderProfilesStubMap_.end();) {
         if (itMediaProfile->second == pid) {
+            executor_.Commit(itMediaProfile->first);
             itMediaProfile = recorderProfilesStubMap_.erase(itMediaProfile);
         } else {
             itMediaProfile++;
         }
     }
     MEDIA_LOGD("mediaprofile stub services(%{public}zu).", recorderProfilesStubMap_.size());
-
-#ifdef SUPPORT_MUXER
-    MEDIA_LOGD("avmuxer stub services(%{public}zu) pid(%{public}d).", avmuxerStubMap_.size(), pid);
-    for (auto itAVMuxer = avmuxerStubMap_.begin(); itAVMuxer != avmuxerStubMap_.end();) {
-        if (itAVMuxer->second == pid) {
-            itAVMuxer = avmuxerStubMap_.erase(itAVMuxer);
-        } else {
-            itAVMuxer++;
-        }
-    }
-    MEDIA_LOGD("avmuxer stub services(%{public}zu).", avmuxerStubMap_.size());
-#endif
+    executor_.Clear();
 }
 
 void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object)
@@ -593,6 +543,28 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
     if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
         MEDIA_LOGW("failed to call InstanceDump");
     }
+}
+
+void MediaServerManager::AsyncExecutor::Commit(sptr<IRemoteObject> obj)
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+    freeList_.push_back(obj);
+}
+
+void MediaServerManager::AsyncExecutor::Clear()
+{
+    std::thread(&MediaServerManager::AsyncExecutor::HandleAsyncExecution, this).detach();
+}
+
+void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
+{
+    std::list<sptr<IRemoteObject>> tempList;
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        tempList = freeList_;
+        freeList_.clear();
+    }
+    tempList.clear();
 }
 } // namespace Media
 } // namespace OHOS
