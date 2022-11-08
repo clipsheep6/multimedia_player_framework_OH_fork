@@ -32,6 +32,7 @@ public:
 
     Map(std::initializer_list<std::pair<const T, R>> list) : map_()
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         map_.insert(list.begin(), list.end());
     }
 
@@ -124,18 +125,21 @@ public:
 
     Map& operator=(Map&& map)
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         map_ = std::move(map);
         return *this;
     }
 
     Map& operator=(const Map& map)
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         map_ = map;
         return *this;
     }
 
     Map& operator=(std::initializer_list<std::pair<const T, R>> list)
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         map_.clear();
         map_.insert(list.begin(), list.end());
         return *this;
