@@ -608,7 +608,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0300, TestSize.Level2)
 
     struct PixelMapParams param = {-1, 316, PixelFormat::UNKNOWN};
     int64_t timeUs = 0;
-    int32_t queryOption = AVMetadataQueryOption(100);
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
     std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     EXPECT_EQ(nullptr, frame);
     helper->Release();
@@ -630,7 +630,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0400, TestSize.Level2)
 
     struct PixelMapParams param = {-1, 316, PixelFormat::RGBA_8888};
     int64_t timeUs = 0;
-    int32_t queryOption = AVMetadataQueryOption(100);
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
     std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     EXPECT_EQ(nullptr, frame);
     helper->Release();
