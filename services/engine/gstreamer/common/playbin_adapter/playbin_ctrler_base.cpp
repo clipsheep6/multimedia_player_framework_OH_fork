@@ -1165,7 +1165,11 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
 
     MEDIA_LOGD("report msg, type: %{public}d", msg.type);
 
-    auto msgReportHandler = std::make_shared<TaskHandler<void>>([this, msg]() { notifier_(msg); });
+    auto msgReportHandler = std::make_shared<TaskHandler<void>>([this, msg]() {
+        int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("PlayBinCtrlerBase::ReportMessage");
+        notifier_(msg);
+        PlayerXCollie::GetInstance().CancelTimer(id);
+    });
     int32_t ret = msgQueue_->EnqueueTask(msgReportHandler);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("async report msg failed, type: %{public}d, subType: %{public}d, code: %{public}d",
