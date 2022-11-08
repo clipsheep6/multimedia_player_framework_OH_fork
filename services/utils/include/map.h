@@ -23,11 +23,21 @@ namespace OHOS {
 namespace Media {
 template<typename T, typename R>
 class Map {
-public: 
+public:
     Map() = default;
-    Map(const Map&) = default;
-    Map(Map&&) = default;
+
+    Map(const Map& map) : map_(map) {}
+
+    Map(Map&& map) noexcept : map_(std::move(map)) {}
+
+    Map(std::initializer_list<std::pair<const T, R>> list) : map_()
+    {
+        map_.insert(list.begin(), list.end());
+    }
+
     ~Map() = default;
+
+
     void Insert(const std::pair<T, R> &p)
     {
         std::unique_lock<std::mutex> lock(mutex_);
@@ -60,7 +70,12 @@ public:
     {
         return map_.find(key);
     }
-    
+
+    bool Empty()
+    {
+        return map_.empty();
+    }
+
     size_t Count(const T &key)
     {
         return map_.count(key);
@@ -69,6 +84,24 @@ public:
     size_t Size()
     {
         return map_.size();
+    }
+
+    R& At(const T &key)
+    {
+        auto iter = map_.lower_bound(key);
+        if (iter == map_.end() || map_.key_comp()(iter->first, key)) {
+            //error
+        }
+        return iter->second;
+    }
+
+    const R& At(const T &key) const
+    {
+        const auto iter = map_.lower_bound(key);
+        if (iter == map_.end() || map_.key_comp()(iter->first, key)) {
+            //error
+        }
+        return iter->second;
     }
 
     R& operator[](const T &key)
@@ -101,11 +134,17 @@ public:
         return *this;
     }
 
+    Map& operator=(std::initializer_list<std::pair<const T, R>> list)
+    {
+        map_.clear();
+        map_.insert(list.begin(), list.end());
+        return *this;
+    }
+
     void Clear()
     {
         map_.clear();
     }
-    
 private:
     std::map<T, R> map_;
     std::mutex mutex_;
