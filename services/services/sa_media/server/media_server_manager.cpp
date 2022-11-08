@@ -389,7 +389,6 @@ sptr<IRemoteObject> MediaServerManager::CreateAVMuxerStubObject()
 
 void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     pid_t pid = IPCSkeleton::GetCallingPid();
     DestroyDumper(type, object);
     switch (type) {
@@ -488,7 +487,6 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
 
 void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("recorder stub services(%{public}zu) pid(%{public}d).", recorderStubMap_.Size(), pid);
     DestroyDumperForPid(pid);
     for (auto itRecorder = recorderStubMap_.Begin(); itRecorder != recorderStubMap_.End();) {

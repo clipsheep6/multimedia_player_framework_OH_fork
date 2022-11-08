@@ -82,8 +82,6 @@ private:
     Map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
     Map<sptr<IRemoteObject>, pid_t> avmuxerStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
-
-    std::mutex mutex_;
 };
 } // namespace Media
 } // namespace OHOS
