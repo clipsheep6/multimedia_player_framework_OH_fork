@@ -58,6 +58,10 @@ static const unsigned char SHIFT_11_BIT = 11;
 static const unsigned char R_INDEX = 2;
 static const unsigned char G_INDEX = 1;
 static const unsigned char B_INDEX = 0;
+static const int32_t dstWidthMin = 32;
+static const int32_t dstHeightMin = 32;
+static const int32_t dstWidthMax = 7680;
+static const int32_t dstHeightMax = 4320;
 
 class AVMetadataMock : public NoCopyable {
 public:
