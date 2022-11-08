@@ -74,7 +74,7 @@ public:
     R& operator[](const T &key)
     {
         auto iter = map_.lower_bound(key);
-        if (iter == map_.end()) {
+        if (iter == map_.end() || map_.key_comp()(iter->first, key)) {
             iter = map_.emplace_hint(iter, key, R{});
         }
         return iter->second;
@@ -83,8 +83,8 @@ public:
     R& operator[](T&& key)
     {
         auto iter = map_.lower_bound(key);
-        if (iter == map_.end()) {
-            iter = map_.emplace_hint(iter, key, R{});
+        if (iter == map_.end() || map_.key_comp()(iter->first, key)) {
+            iter = map_.emplace_hint(iter, std::move(key), R{});
         }
         return iter->second;
     }
