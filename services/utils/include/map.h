@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef MAP_H
+#define MAP_H
+
 #include <map>
 #include <mutex>
 
@@ -25,45 +28,45 @@ public:
     Map(const Map&) = default;
     Map(Map&&) = default;
     ~Map() = default;
-    void insert(const std::pair<T, R> &p)
+    void Insert(const std::pair<T, R> &p)
     {
         std::unique_lock<std::mutex> lock(mutex_);
         map_.insert(p);
     }
 
-    size_t erase(const T &key)
+    size_t Erase(const T &key)
     {
         std::unique_lock<std::mutex> lock(mutex_);
         return map_.erase(key);
     }
 
-    const typename std::map<T, R>::iterator erase(const typename std::map<T, R>::iterator positon)
+    const typename std::map<T, R>::iterator Erase(const typename std::map<T, R>::iterator positon)
     {
         std::unique_lock<std::mutex> lock(mutex_);
         return map_.erase(positon);
     }
 
-    typename std::map<T, R>::iterator begin()
+    typename std::map<T, R>::iterator Begin()
     {
         return map_.begin();
     }
 
-    typename std::map<T, R>::iterator end()
+    typename std::map<T, R>::iterator End()
     {
         return map_.end();
     }
 
-    typename std::map<T, R>::iterator find(const T &key)
+    typename std::map<T, R>::iterator Find(const T &key)
     {
         return map_.find(key);
     }
     
-    size_t count(const T &key)
+    size_t Count(const T &key)
     {
         return map_.count(key);
     }
     
-    size_t size()
+    size_t Size()
     {
         return map_.size();
     }
@@ -98,7 +101,7 @@ public:
         return *this;
     }
 
-    void clear()
+    void Clear()
     {
         map_.clear();
     }
@@ -109,3 +112,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
+#endif
