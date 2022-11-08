@@ -90,7 +90,6 @@ private:
     void HandleAudioMessage(const PlayBinMessage &msg);
     void HandleInterruptMessage(const PlayBinMessage &msg);
     void HandleAudioStateMessage(const PlayBinMessage &msg);
-    void HandleAudioErrorMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
 
     std::mutex mutex_;
