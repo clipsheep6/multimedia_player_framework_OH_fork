@@ -368,10 +368,6 @@ void PlayerEngineGstImpl::HandleAudioMessage(const PlayBinMessage &msg)
             HandleAudioStateMessage(msg);
             break;
         }
-        case PLAYBIN_MSG_AUDIO_ERROR_EVENT: {
-            HandleAudioErrorMessage(msg);
-            break;
-        }
         default: {
             break;
         }
@@ -390,12 +386,6 @@ void PlayerEngineGstImpl::HandleAudioStateMessage(const PlayBinMessage &msg)
             notifyObs->OnInfo(INFO_TYPE_STATE_CHANGE_BY_AUDIO, PlayerStates::PLAYER_PAUSED, format);
         }
     }
-}
-
-void PlayerEngineGstImpl::HandleAudioErrorMessage(const PlayBinMessage &msg)
-{
-    std::pair<int32_t, std::string> errorPair = std::any_cast<std::pair<int32_t, std::string>>(msg.extra);
-    MEDIA_LOGE("HandleAudioErrorMessage:%{public}d, %{public}s", errorPair.first, errorPair.second.c_str());
 }
 
 void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
