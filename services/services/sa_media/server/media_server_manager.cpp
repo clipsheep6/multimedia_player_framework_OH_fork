@@ -561,8 +561,7 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
     std::list<sptr<IRemoteObject>> tempList;
     {
         std::lock_guard<std::mutex> lock(listMutex_);
-        tempList = freeList_;
-        freeList_.clear();
+        freeList_.swap(tempList);
     }
     tempList.clear();
 }
