@@ -632,7 +632,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0400, TestSize.Level2)
     int64_t timeUs = 0;
     int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
     std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
-    EXPECT_EQ(nullptr, frame);
+    EXPECT_NE(nullptr, frame);
     helper->Release();
 }
 
