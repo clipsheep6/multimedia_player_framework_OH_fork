@@ -531,7 +531,7 @@ int32_t PlayerEngineGstImpl::Play()
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
-    MEDIA_LOGD("Play in");
+    MEDIA_LOGI("Play in");
     playBinCtrler_->Play();
     return MSERR_OK;
 }
@@ -541,6 +541,7 @@ int32_t PlayerEngineGstImpl::Pause()
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
+    MEDIA_LOGI("Pause in");
     (void)playBinCtrler_->Pause();
     return MSERR_OK;
 }
