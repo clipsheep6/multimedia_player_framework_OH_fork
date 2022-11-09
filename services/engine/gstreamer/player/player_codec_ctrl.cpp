@@ -14,6 +14,7 @@
  */
 
 #include "player_codec_ctrl.h"
+#include "surface.h"
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -58,7 +59,7 @@ void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, 
         // For performance mode.
         codecTypeList_.push_back(true);
 
-        g_object_set(G_OBJECT(src), "enable-slice-cat", FALSE, nullptr); // disEnable slice
+        g_object_set(G_OBJECT(src), "enable-slice-cat", TRUE, nullptr); // Enable slice
         g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
         g_object_set(G_OBJECT(videoSink), "performance-mode", TRUE, nullptr);
 
@@ -122,8 +123,12 @@ void PlayerCodecCtrl::HlsSwichSoftAndHardCodec(GstElement *videoSink)
     GstCaps *caps = nullptr;
     if (codecTypeList_.front()) {
         caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12", nullptr);
+        g_object_set(G_OBJECT(videoSink), "max-pool-capacity", SURFACE_MAX_QUEUE_SIZE, nullptr);
+        g_object_set(G_OBJECT(videoSink), "cache-buffers-num", 0, nullptr);
     } else {
         caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "RGBA", nullptr);
+        g_object_set(G_OBJECT(videoSink), "max-pool-capacity", MAX_SOFT_BUFFERS, nullptr);
+        g_object_set(G_OBJECT(videoSink), "cache-buffers-num", DEFAULT_CACHE_BUFFERS, nullptr);
     }
     g_object_set(G_OBJECT(videoSink), "caps", caps, nullptr);
     gst_caps_unref(caps);

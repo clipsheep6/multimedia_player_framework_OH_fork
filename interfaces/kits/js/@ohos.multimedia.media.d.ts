@@ -63,6 +63,8 @@ declare namespace media {
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
    * @import import media from '@ohos.multimedia.media'
    * @param callback Callback used to return AudioPlayer instance if the operation is successful; returns null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Return by callback.
+   * @systemapi
    */
   function createVideoRecorder(callback: AsyncCallback<VideoRecorder>): void;
   /**
@@ -71,6 +73,8 @@ declare namespace media {
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
    * @import import media from '@ohos.multimedia.media'
    * @return A Promise instance used to return VideoRecorder instance if the operation is successful; returns null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Return by promise.
+   * @systemapi
    */
   function createVideoRecorder(): Promise<VideoRecorder>;
 
@@ -662,6 +666,7 @@ declare namespace media {
   * Describes video recorder states.
   * @since 9
   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+  * @systemapi
   */
   type VideoRecordState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'error';
 
@@ -670,6 +675,7 @@ declare namespace media {
    * to create an VideoRecorder instance.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+   * @systemapi
    */
   interface VideoRecorder {
     /**
@@ -679,6 +685,11 @@ declare namespace media {
      * @param config Recording parameters.
      * @param callback A callback instance used to return when prepare completed.
      * @permission ohos.permission.MICROPHONE
+     * @throws { BusinessError } 201 - Permission denied. Return by callback.
+     * @throws { BusinessError } 401 - Parameter error. Return by callback.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     * @systemapi
      */
     prepare(config: VideoRecorderConfig, callback: AsyncCallback<void>): void;
     /**
@@ -688,6 +699,11 @@ declare namespace media {
      * @param config Recording parameters.
      * @return A Promise instance used to return when prepare completed.
      * @permission ohos.permission.MICROPHONE
+     * @throws { BusinessError } 201 - Permission denied. Return by promise.
+     * @throws { BusinessError } 401 - Parameter error. Return by promise.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
+     * @systemapi
      */
     prepare(config: VideoRecorderConfig): Promise<void>;
     /**
@@ -695,6 +711,10 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @param callback Callback used to return the input surface id in string.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     * @systemapi
      */
     getInputSurface(callback: AsyncCallback<string>): void;
     /**
@@ -702,6 +722,10 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @return A Promise instance used to return the input surface id in string.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400103 - IO error. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
+     * @systemapi
      */
     getInputSurface(): Promise<string>;
     /**
@@ -709,6 +733,10 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @param callback A callback instance used to return when start completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     * @systemapi
      */
     start(callback: AsyncCallback<void>): void;
     /**
@@ -716,6 +744,10 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @return A Promise instance used to return when start completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400103 - IO error. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
+     * @systemapi
      */
     start(): Promise<void>;
     /**
@@ -723,6 +755,10 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @param callback A callback instance used to return when pause completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     * @systemapi
      */
     pause(callback: AsyncCallback<void>): void;
     /**
@@ -730,6 +766,10 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @return A Promise instance used to return when pause completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400103 - IO error. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
+     * @systemapi
      */
     pause(): Promise<void>;
     /**
@@ -737,6 +777,10 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @param callback A callback instance used to return when resume completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     * @systemapi
      */
     resume(callback: AsyncCallback<void>): void;
     /**
@@ -744,6 +788,10 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @return A Promise instance used to return when resume completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400103 - IO error. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
+     * @systemapi
      */
     resume(): Promise<void>;
     /**
@@ -751,6 +799,10 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @param callback A callback instance used to return when stop completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     * @systemapi
      */
     stop(callback: AsyncCallback<void>): void;
     /**
@@ -758,6 +810,10 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @return A Promise instance used to return when stop completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400103 - IO error. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
+     * @systemapi
      */
     stop(): Promise<void>;
     /**
@@ -765,6 +821,8 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @param callback A callback instance used to return when release completed.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     * @systemapi
      */
     release(callback: AsyncCallback<void>): void;
     /**
@@ -772,6 +830,8 @@ declare namespace media {
       * @since 9
       * @syscap SystemCapability.Multimedia.Media.VideoRecorder
       * @return A Promise instance used to return when release completed.
+      * @throws { BusinessError } 5400105 - Service died. Return by callback.
+      * @systemapi
       */
     release(): Promise<void>;
     /**
@@ -781,6 +841,9 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @param callback A callback instance used to return when reset completed.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     * @systemapi
      */
     reset(callback: AsyncCallback<void>): void;
      /**
@@ -790,6 +853,9 @@ declare namespace media {
       * @since 9
       * @syscap SystemCapability.Multimedia.Media.VideoRecorder
       * @return A Promise instance used to return when reset completed.
+      * @throws { BusinessError } 5400103 - IO error. Return by promise.
+      * @throws { BusinessError } 5400105 - Service died. Return by promise.
+      * @systemapi
       */
     reset(): Promise<void>;
     /**
@@ -798,6 +864,9 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @param type Type of the video recording error event to listen for.
      * @param callback Callback used to listen for the video recording error event.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     * @systemapi
      */
     on(type: 'error', callback: ErrorCallback): void;
 
@@ -805,6 +874,7 @@ declare namespace media {
      * video recorder state.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
      readonly state: VideoRecordState;
   }
@@ -1116,32 +1186,6 @@ declare namespace media {
     setSpeed(speed:number): Promise<number>;
 
     /**
-     * select a specified bitrate to playback, only valid for HLS protocal network stream. Defaulty, the
-     * player will select the appropriate bitrate according to the network connection speed. The
-     * available bitrates list reported by {@link #on('availableBitratesCollect')}. Set it to select
-     * a specified bitrate. If the specified bitrate is not in the list of available bitrates, the player
-     * will select the minimal and closest one from the available bitrates list.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
-     * @param bitrate the playback bitrate must be expressed in bits per second.
-     * @return A Promise instance used to return actually selected bitrate.
-     */
-    selectBitrate(bitrate: number): Promise<number>;
-
-    /**
-     * select a specified bitrate to playback, only valid for HLS protocal network stream. Defaulty, the
-     * player will select the appropriate bitrate according to the network connection speed. The
-     * available bitrates list reported by {@link #on('availableBitratesCollect')}. Set it to select
-     * a specified bitrate. If the specified bitrate is not in the list of available bitrates, the player
-     * will select the minimal and closest one from the available bitrates list.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
-     * @param bitrate the playback bitrate must be expressed in bits per second.
-     * @param callback Callback used to return actually selected bitrate.
-     */
-    selectBitrate(bitrate: number, callback: AsyncCallback<number>): void;
-
-    /**
      * Listens for video playback completed events.
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
@@ -1185,16 +1229,6 @@ declare namespace media {
      * @param callback Callback used to listen for the playback event return audio interrupt info.
      */
     on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
-
-    /**
-     * Listens for available bitrates collect completed events for HLS protocal stream playback.
-     * This event will be reported after the {@link #prepare} called.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoPlayer
-     * @param type Type of the playback event to listen for.
-     * @param callback Callback used to listen for the playback event return available bitrates.
-     */
-    on(type: 'availableBitratesCollect', callback: (bitrates: Array<number>) => void): void;
 
     /**
      * Listens for playback error events.
@@ -1357,12 +1391,14 @@ declare namespace media {
    * Provides the video recorder profile definitions.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+   * @systemapi
    */
   interface VideoRecorderProfile {
     /**
      * Indicates the audio bit rate.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     readonly audioBitrate: number;
 
@@ -1370,6 +1406,7 @@ declare namespace media {
      * Indicates the number of audio channels.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     readonly audioChannels: number;
 
@@ -1377,6 +1414,7 @@ declare namespace media {
      * Indicates the audio encoding format.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     readonly audioCodec: CodecMimeType;
 
@@ -1384,6 +1422,7 @@ declare namespace media {
      * Indicates the audio sampling rate.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     readonly audioSampleRate: number;
 
@@ -1391,6 +1430,7 @@ declare namespace media {
      * Indicates the output file format.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     readonly fileFormat: ContainerFormatType;
 
@@ -1398,6 +1438,7 @@ declare namespace media {
      * Indicates the video bit rate.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     readonly videoBitrate: number;
 
@@ -1405,6 +1446,7 @@ declare namespace media {
      * Indicates the video encoding format.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     readonly videoCodec: CodecMimeType;
 
@@ -1412,6 +1454,7 @@ declare namespace media {
      * Indicates the video width.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     readonly videoFrameWidth: number;
 
@@ -1419,6 +1462,7 @@ declare namespace media {
      * Indicates the video height.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     readonly videoFrameHeight: number;
 
@@ -1426,6 +1470,7 @@ declare namespace media {
      * Indicates the video frame rate.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     readonly videoFrameRate: number;
   }
@@ -1435,19 +1480,22 @@ declare namespace media {
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
    * @import import media from '@ohos.multimedia.media'
+   * @systemapi
    */
   enum AudioSourceType {
     /**
      * default audio source type.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-    */
+     * @systemapi
+     */
     AUDIO_SOURCE_TYPE_DEFAULT = 0,
     /**
      * source type mic.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-    */
+     * @systemapi
+     */
     AUDIO_SOURCE_TYPE_MIC = 1,
   }
 
@@ -1456,19 +1504,22 @@ declare namespace media {
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
    * @import import media from '@ohos.multimedia.media'
+   * @systemapi
    */
   enum VideoSourceType {
     /**
      * surface raw data.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     VIDEO_SOURCE_TYPE_SURFACE_YUV = 0,
     /**
      * surface ES data.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-    */
+     * @systemapi
+     */
     VIDEO_SOURCE_TYPE_SURFACE_ES = 1,
   }
 
@@ -1476,33 +1527,37 @@ declare namespace media {
    * Provides the video recorder configuration definitions.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+   * @systemapi
    */
   interface VideoRecorderConfig {
     /**
      * audio source type, details see @AudioSourceType .
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
-    audioSourceType: AudioSourceType;
+    audioSourceType?: AudioSourceType;
     /**
      * video source type, details see @VideoSourceType .
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     videoSourceType: VideoSourceType;
     /**
      * video recorder profile, can get by "getVideoRecorderProfile", details see @VideoRecorderProfile .
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     profile: VideoRecorderProfile;
     /**
      * video output uri.support two kind of uri now.
      * format like: scheme + "://" + "context".
-     * file:  file://path
      * fd:    fd://fd
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     url: string;
     /**
@@ -1510,12 +1565,14 @@ declare namespace media {
      * the range of rotation angle should be {0, 90, 180, 270}, default is 0.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     rotation?: number;
     /**
      * geographical location information.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+     * @systemapi
      */
     location?: Location;
   }

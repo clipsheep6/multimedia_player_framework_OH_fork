@@ -79,6 +79,7 @@ private:
     std::unique_ptr<std::thread> captureLoop_;
     std::mutex pauseMutex_;
     std::atomic<int32_t> curState_ = RECORDER_INITIALIZED;
+    std::atomic<bool> captureLoopErr_ { false };
     uint64_t lastInputTime_ = 0;
 };
 } // namespace Media

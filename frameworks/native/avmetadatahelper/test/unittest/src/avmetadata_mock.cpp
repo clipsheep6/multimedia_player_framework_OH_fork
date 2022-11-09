@@ -142,9 +142,9 @@ int32_t AVMetadataMock::RGB565ToRGB888(const unsigned short *rgb565Buf, int rgb5
         rgb888Buf[i * RGB888_PIXEL_BYTES + R_INDEX] = (rgb565Buf[i] & RGB565_MASK_RED);
         rgb888Buf[i * RGB888_PIXEL_BYTES + G_INDEX] = (rgb565Buf[i] & RGB565_MASK_GREEN) >> SHIFT_5_BIT;
         rgb888Buf[i * RGB888_PIXEL_BYTES + B_INDEX] = (rgb565Buf[i] & RGB565_MASK_BLUE) >> SHIFT_11_BIT;
-        rgb888Buf[i  * RGB888_PIXEL_BYTES + R_INDEX] <<= SHIFT_3_BIT;
-        rgb888Buf[i  * RGB888_PIXEL_BYTES + G_INDEX] <<= SHIFT_2_BIT;
-        rgb888Buf[i  * RGB888_PIXEL_BYTES + B_INDEX] <<= SHIFT_3_BIT;
+        rgb888Buf[i * RGB888_PIXEL_BYTES + R_INDEX] <<= SHIFT_3_BIT;
+        rgb888Buf[i * RGB888_PIXEL_BYTES + G_INDEX] <<= SHIFT_2_BIT;
+        rgb888Buf[i * RGB888_PIXEL_BYTES + B_INDEX] <<= SHIFT_3_BIT;
     }
 
     return 0;
@@ -256,6 +256,10 @@ void AVMetadataMock::FrameToJpeg(std::shared_ptr<PixelMap> frame,
     }
     if (frame->GetPixelFormat() == PixelFormat::RGB_565) {
         uint32_t rgb888Size = (frame->GetByteCount() / RGB565_PIXEL_BYTES) * RGB888_PIXEL_BYTES;
+        if (rgb888Size <= 0) {
+            std::cout << "invalid rgb888Size" << std::endl;
+            return;
+        }
         uint8_t *rgb888 = new (std::nothrow) uint8_t[rgb888Size];
         if (rgb888 == nullptr) {
             std::cout << "alloc mem failed" << std::endl;
@@ -327,7 +331,7 @@ bool AVMetadataTestBase::CompareMetadata(int32_t key, const std::string &result,
             if (!StrToInt64(result, resultDuration) || !StrToInt64(expected, expectedDuration)) {
                 break;
             }
-            if (std::abs(resultDuration - expectedDuration) > 100) { // max allowed time margin is 100ms
+            if (std::abs(resultDuration - expectedDuration) > 1000) { // max allowed time margin is 1000ms
                 break;
             }
         } else {

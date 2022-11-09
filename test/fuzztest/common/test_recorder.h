@@ -28,12 +28,6 @@ do {                                     \
         return ret;                      \
     }                                    \
 } while (0)
-#define DO_IF(cond, ret, ...)            \
-do {                                     \
-    if (cond) {                          \
-        ret;                             \
-    }                                    \
-} while (0)
 
 class TestRecorder : public NoCopyable {
 public:
@@ -49,42 +43,41 @@ public:
     const std::string AUDIO_VIDEO = "av";
     uint32_t nowFrame = 0;
 
-    bool CameraServicesForAudio(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool CameraServicesForVideo(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void CameraServicesForAudio(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void CameraServicesForVideo(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     bool RequesetBuffer(const std::string &recorderType, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void StopBuffer(const std::string &recorderType);
-    bool SetConfig(const std::string &recorderType, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     bool GetStubFile();
     void HDICreateESBuffer();
     void HDICreateYUVBuffer();
     uint64_t GetPts();
-    bool SetVideoSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetAudioSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetOutputFormat(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetAudioEncoder(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetAudioSampleRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetAudioChannels(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetAudioEncodingBitRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetMaxDuration(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetOutputFile(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetRecorderCallback(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool Prepare(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool Start(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool Stop(bool block, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool Reset(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool Release(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetVideoSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetAudioSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetOutputFormat(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetAudioEncoder(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetAudioSampleRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetAudioChannels(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetAudioEncodingBitRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetMaxDuration(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetOutputFile(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetRecorderCallback(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void Prepare(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void Start(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void Stop(bool block, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void Reset(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void Release(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     bool CreateRecorder();
-    bool SetVideoEncoder(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetVideoSize(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetVideoFrameRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetVideoEncodingBitRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetCaptureRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig, double fps);
-    bool SetNextOutputFile(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetVideoEncoder(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetVideoSize(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetVideoFrameRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetVideoEncodingBitRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetCaptureRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig, double fps);
+    void SetNextOutputFile(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     bool GetSurface(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetMaxFileSize(int64_t size, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration,
+    void SetMaxFileSize(int64_t size, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration,
         RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
-    bool SetParameter(int32_t sourceId, const Format &format, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetParameter(int32_t sourceId, const Format &format, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
 
 private:
     std::atomic<bool> isExit_ { false };

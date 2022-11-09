@@ -56,6 +56,7 @@ ohos_executable("media_demo") {
     "-Wimplicit-fallthrough",
     "-Wsign-compare",
     "-Wunused-parameter",
+    "-Wno-deprecated-declarations",
   ]
 
   sources = [ "./media_demo.cpp" ]

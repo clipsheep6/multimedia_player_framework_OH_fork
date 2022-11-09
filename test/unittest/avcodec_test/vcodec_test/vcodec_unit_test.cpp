@@ -45,7 +45,6 @@ void VCodecUnitTest::SetUp(void)
     string fileName = testInfo_->name();
     string suffix = ".es";
     videoEnc_->SetOutPath(prefix + fileName + suffix);
-    createCodecSuccess_ = true;
 }
 
 bool VCodecUnitTest::CreateVideoCodecByMime(const std::string &decMime, const std::string &encMime)
@@ -86,12 +85,12 @@ void VCodecUnitTest::TearDown(void)
 }
 
 /**
- * @tc.name: video_codec_creat_0100
+ * @tc.name: video_codec_create_0100
  * @tc.desc: video create
  * @tc.type: FUNC
  * @tc.require: issueI5OX06 issueI5P8N0
  */
-HWTEST_F(VCodecUnitTest, video_codec_creat_0100, TestSize.Level0)
+HWTEST_F(VCodecUnitTest, video_codec_create_0100, TestSize.Level0)
 {
     ASSERT_TRUE(CreateVideoCodecByName("avdec_h264", "avenc_mpeg4"));
 }
@@ -110,13 +109,27 @@ HWTEST_F(VCodecUnitTest, video_codec_Configure_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
+    string maxInputSize = "max_input_size";
+    string rotationAngle = "rotation_angle";
+    string videoEncodeBitrateMode = "video_encode_bitrate_mode";
+    string iFrameInterval = "i_frame_interval";
+    string codecQuality = "codec_quality";
+    string codecProfile = "codec_profile";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
-    ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
-    ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(rotationAngle.c_str(), 0); // set rotation_angle 0
+    (void)format->PutIntValue(maxInputSize.c_str(), 15000); // set max input size 15000
+    EXPECT_EQ(MSERR_OK, videoDec_->Configure(format));
+    (void)format->PutIntValue(videoEncodeBitrateMode.c_str(), 0); // CBR
+    (void)format->PutIntValue(iFrameInterval.c_str(), 1); // i_frame_interval 1ms
+    (void)format->PutIntValue(codecQuality.c_str(), 0); // set codec_quality 0
+    (void)format->PutIntValue(codecProfile.c_str(), 0); // AVC_PROFILE_BASELINE
+    EXPECT_EQ(MSERR_OK, videoEnc_->Configure(format));
+    EXPECT_EQ(MSERR_OK, videoDec_->Prepare());
+    EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
     format->Destroy();
 }
 
@@ -134,11 +147,11 @@ HWTEST_F(VCodecUnitTest, video_codec_start_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -154,12 +167,12 @@ HWTEST_F(VCodecUnitTest, video_codec_start_0100, TestSize.Level0)
 }
 
 /**
- * @tc.name: video_codec_0100
- * @tc.desc: video decodec h264->mpeg4
+ * @tc.name: video_codec_format_h264_h264_0100
+ * @tc.desc: video decodec h264->h264
  * @tc.type: FUNC
  * @tc.require: issueI5OX06 issueI5P8N0
  */
-HWTEST_F(VCodecUnitTest, video_codec_0100, TestSize.Level0)
+HWTEST_F(VCodecUnitTest, video_codec_format_h264_h264_0100, TestSize.Level0)
 {
     ASSERT_TRUE(CreateVideoCodecByMime("video/avc", "video/avc"));
     std::shared_ptr<FormatMock> format = AVCodecMockFactory::CreateFormat();
@@ -167,11 +180,11 @@ HWTEST_F(VCodecUnitTest, video_codec_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -183,6 +196,7 @@ HWTEST_F(VCodecUnitTest, video_codec_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
     EXPECT_EQ(MSERR_OK, videoDec_->Start());
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
+    system("hidumper -s 3002 -a codec");
     sleep(10); // start run 10s
     EXPECT_EQ(MSERR_OK, videoDec_->Stop());
     EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
@@ -190,12 +204,12 @@ HWTEST_F(VCodecUnitTest, video_codec_0100, TestSize.Level0)
 }
 
 /**
- * @tc.name: video_codec_0200
+ * @tc.name: video_codec_format_h265_h265_0100
  * @tc.desc: video codec h265->h265
  * @tc.type: FUNC
  * @tc.require: issueI5OOKN issueI5OOKW issueI5OX06 issueI5P8N0
  */
-HWTEST_F(VCodecUnitTest, video_codec_0200, TestSize.Level0)
+HWTEST_F(VCodecUnitTest, video_codec_format_h265_h265_0100, TestSize.Level0)
 {
     if (!CreateVideoCodecByName("OMX_hisi_video_decoder_hevc", "OMX_hisi_video_encoder_hevc")) {
         std::cout << "This device does not support hard hevc" << std::endl;
@@ -207,11 +221,11 @@ HWTEST_F(VCodecUnitTest, video_codec_0200, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H265_SRC_PATH, ES_H265, ES_LENGTH_H265);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -243,11 +257,11 @@ HWTEST_F(VCodecUnitTest, video_decode_Flush_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -281,11 +295,11 @@ HWTEST_F(VCodecUnitTest, video_encode_Flush_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -305,6 +319,46 @@ HWTEST_F(VCodecUnitTest, video_encode_Flush_0100, TestSize.Level0)
     format->Destroy();
 }
 
+
+/**
+ * @tc.name: video_codec_abnormal_0100
+ * @tc.desc: video codec abnormal func
+ * @tc.type: FUNC
+ * @tc.require: issueI5NYCP issueI5OX06 issueI5P8N0
+ */
+HWTEST_F(VCodecUnitTest, video_codec_abnormal_0100, TestSize.Level0)
+{
+    ASSERT_TRUE(CreateVideoCodecByMime("video/avc", "video/avc"));
+    std::shared_ptr<FormatMock> format = AVCodecMockFactory::CreateFormat();
+    ASSERT_NE(nullptr, format);
+    string width = "width";
+    string height = "height";
+    string pixelFormat = "pixel_format";
+    string frameRate = "frame_rate";
+    string maxInputSize = "max_input_size";
+    string rotationAngle = "rotation_angle";
+    (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
+    (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
+    (void)format->PutIntValue(pixelFormat.c_str(), NV12);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(rotationAngle.c_str(), 20); // invalid rotation_angle 20
+    (void)format->PutIntValue(maxInputSize.c_str(), -1); // invalid max input size -1
+    videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
+    videoEnc_->Configure(format);
+    videoDec_->Configure(format);
+    videoDec_->Prepare();
+    videoEnc_->Prepare();
+    EXPECT_EQ(MSERR_OK, videoDec_->Reset());
+    EXPECT_EQ(MSERR_OK, videoEnc_->Reset());
+    ASSERT_NE(MSERR_OK, videoDec_->Start());
+    ASSERT_NE(MSERR_OK, videoEnc_->Start());
+    ASSERT_NE(MSERR_OK, videoDec_->Flush());
+    ASSERT_NE(MSERR_OK, videoEnc_->Flush());
+    ASSERT_NE(MSERR_OK, videoDec_->Stop());
+    ASSERT_NE(MSERR_OK, videoEnc_->Stop());
+    format->Destroy();
+}
+
 /**
  * @tc.name: video_codec_SetParameter_0100
  * @tc.desc: video codec SetParameter
@@ -319,14 +373,28 @@ HWTEST_F(VCodecUnitTest, video_codec_SetParameter_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
+    string suspendInputSurface = "suspend_input_surface";
+    string maxEncoderFps = "max_encoder_fps";
+    string repeatFrameAfter = "repeat_frame_after";
+    string reqIFrame = "req_i_frame";
+    string bitrate = "bitrate";
+    string vendorCustom = "vendor.custom";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
-    ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
+    (void)format->PutIntValue(suspendInputSurface.c_str(), 0); // set suspend_input_surface value 0
+    (void)format->PutIntValue(maxEncoderFps.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(repeatFrameAfter.c_str(), 1); // set repeat_frame_after 1ms
+    (void)format->PutIntValue(reqIFrame.c_str(), 0); // set request i frame false
+    (void)format->PutIntValue(bitrate.c_str(), 1000000); // set bitrate 1Mbps
+    uint8_t *addr = nullptr;
+    size_t size = 0;
+    (void)format->PutBuffer(vendorCustom, addr, size);
+    ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     std::shared_ptr<SurfaceMock> surface = videoEnc_->GetInputSurface();
     ASSERT_NE(nullptr, surface);
     ASSERT_EQ(MSERR_OK, videoDec_->SetOutputSurface(surface));
@@ -356,11 +424,11 @@ HWTEST_F(VCodecUnitTest, video_codec_GetOutputMediaDescription_0100, TestSize.Le
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -384,7 +452,7 @@ HWTEST_F(VCodecUnitTest, video_codec_GetOutputMediaDescription_0100, TestSize.Le
  * @tc.desc: video encodec NotifyEos
  * @tc.type: FUNC
  * @tc.require: issueI5NYCF issueI5OX06 issueI5P8N0
- */
+*/
 HWTEST_F(VCodecUnitTest, video_NotifyEos_0100, TestSize.Level0)
 {
     ASSERT_TRUE(CreateVideoCodecByMime("video/avc", "video/avc"));
@@ -393,11 +461,11 @@ HWTEST_F(VCodecUnitTest, video_NotifyEos_0100, TestSize.Level0)
     string width = "width";
     string height = "height";
     string pixelFormat = "pixel_format";
-    string frame_rate = "frame_rate";
+    string frameRate = "frame_rate";
     (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
     (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frame_rate.c_str(), DEFAULT_FRAME_RATE);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
     videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
     ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
     ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
@@ -411,6 +479,90 @@ HWTEST_F(VCodecUnitTest, video_NotifyEos_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
     sleep(10); // start run 10s
     EXPECT_EQ(MSERR_OK, videoEnc_->NotifyEos());
+    EXPECT_EQ(MSERR_OK, videoDec_->Stop());
+    EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
+    format->Destroy();
+}
+
+/**
+ * @tc.name: video_codec_format_none_0100
+ * @tc.desc: video format none
+ * @tc.type: FUNC
+ * @tc.require: issueI5OX06 issueI5P8N0
+*/
+HWTEST_F(VCodecUnitTest, video_codec_format_none_0100, TestSize.Level0)
+{
+    CreateVideoCodecByMime("", "");
+    videoDec_->Release();
+    videoEnc_->Release();
+}
+
+/**
+ * @tc.name: video_codec_format_mpeg2_mpeg4_0100
+ * @tc.desc: video format decoder-mpeg2 encoder-mpeg4
+ * @tc.type: FUNC
+ * @tc.require: issueI5OX06 issueI5P8N0
+ */
+HWTEST_F(VCodecUnitTest, video_codec_format_mpeg2_mpeg4_0100, TestSize.Level0)
+{
+    ASSERT_TRUE(CreateVideoCodecByMime("video/mpeg2", "video/mp4v-es"));
+    std::shared_ptr<FormatMock> format = AVCodecMockFactory::CreateFormat();
+    ASSERT_NE(nullptr, format);
+    string width = "width";
+    string height = "height";
+    string pixelFormat = "pixel_format";
+    string frameRate = "frame_rate";
+    (void)format->PutIntValue(width.c_str(), 720); // set width 720
+    (void)format->PutIntValue(height.c_str(), 480); // set height 480
+    (void)format->PutIntValue(pixelFormat.c_str(), NV12);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
+    videoDec_->SetSource(MPEG2_SRC_PATH, ES_MPEG2, ES_LENGTH_MPEG2);
+    ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
+    ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
+    std::shared_ptr<SurfaceMock> surface = videoEnc_->GetInputSurface();
+    ASSERT_NE(nullptr, surface);
+    ASSERT_EQ(MSERR_OK, videoDec_->SetOutputSurface(surface));
+    EXPECT_EQ(MSERR_OK, videoDec_->Prepare());
+    EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
+    EXPECT_EQ(MSERR_OK, videoDec_->Start());
+    EXPECT_EQ(MSERR_OK, videoEnc_->Start());
+    sleep(5); // start run 5s
+    EXPECT_EQ(MSERR_OK, videoDec_->Stop());
+    EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
+    format->Destroy();
+}
+
+/**
+ * @tc.name: video_codec_format_mpeg4_mpeg4_0100
+ * @tc.desc: video format decoder-mpeg4 encoder-mpeg4
+ * @tc.type: FUNC
+ * @tc.require: issueI5OX06 issueI5P8N0
+ */
+HWTEST_F(VCodecUnitTest, video_codec_format_mpeg4_mpeg4_0100, TestSize.Level0)
+{
+    ASSERT_TRUE(CreateVideoCodecByMime("video/mp4v-es", "video/mp4v-es"));
+    std::shared_ptr<FormatMock> format = AVCodecMockFactory::CreateFormat();
+    ASSERT_NE(nullptr, format);
+    string width = "width";
+    string height = "height";
+    string pixelFormat = "pixel_format";
+    string frameRate = "frame_rate";
+    (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
+    (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
+    (void)format->PutIntValue(pixelFormat.c_str(), NV12);
+    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
+    videoDec_->SetSource(MPEG4_SRC_PATH, ES_MPEG4, ES_LENGTH_MPEG4);
+    ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
+    ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
+    std::shared_ptr<SurfaceMock> surface = videoEnc_->GetInputSurface();
+    ASSERT_NE(nullptr, surface);
+    ASSERT_EQ(MSERR_OK, videoDec_->SetOutputSurface(surface));
+
+    EXPECT_EQ(MSERR_OK, videoDec_->Prepare());
+    EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
+    EXPECT_EQ(MSERR_OK, videoDec_->Start());
+    EXPECT_EQ(MSERR_OK, videoEnc_->Start());
+    sleep(5); // start run 5s
     EXPECT_EQ(MSERR_OK, videoDec_->Stop());
     EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
     format->Destroy();

@@ -55,7 +55,7 @@ namespace RecorderTestParam {
         int32_t channelCount = 2;
         int32_t duration = 60;
         int32_t width = 1280;
-        int32_t height = 768;
+        int32_t height = 720;
         int32_t frameRate = 30;
         int32_t videoEncodingBitRate = 48000;
         int32_t sampleRate = 48000;

@@ -32,8 +32,15 @@ void PlayBinCtrlerBase::BaseState::ReportInvalidOperation()
 {
     MEDIA_LOGE("invalid operation for %{public}s", GetStateName().c_str());
 
+    /*
+     * The ReportInvalidOperation function is locked before calling it. However,
+     * the ReportMessage function is also locked. Therefore, the ReportMessage function
+     * needs to be unlocked before using it.
+     */
+    ctrler_.mutex_.unlock();
     PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR, 0, MSERR_INVALID_STATE, {} };
     ctrler_.ReportMessage(msg);
+    ctrler_.mutex_.lock();
 }
 
 int32_t PlayBinCtrlerBase::BaseState::Prepare()
@@ -383,6 +390,13 @@ int32_t PlayBinCtrlerBase::PlayingState::Play()
 
 int32_t PlayBinCtrlerBase::PlayingState::Pause()
 {
+    GstState state = GST_STATE_NULL;
+    gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
+    if (state == GST_STATE_PAUSED) {
+        MEDIA_LOGD("Playbin already paused");
+        ctrler_.ChangeState(ctrler_.pausedState_);
+        return MSERR_OK;
+    }
     ctrler_.isUserSetPause_ = true;
     GstStateChangeReturn ret;
     return ChangePlayBinState(GST_STATE_PAUSED, ret);
@@ -407,8 +421,7 @@ int32_t PlayBinCtrlerBase::PlayingState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg)
 {
-    if ((msg.detail1 == GST_STATE_PLAYING) && (msg.detail2 == GST_STATE_PAUSED) &&
-        !ctrler_.isBuffering_ && ctrler_.isUserSetPause_) {
+    if ((msg.detail1 == GST_STATE_PLAYING) && (msg.detail2 == GST_STATE_PAUSED) && ctrler_.isUserSetPause_) {
         ctrler_.ChangeState(ctrler_.pausedState_);
         ctrler_.isUserSetPause_ = false;
         return;

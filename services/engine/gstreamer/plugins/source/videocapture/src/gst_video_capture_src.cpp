@@ -132,6 +132,7 @@ static void gst_video_capture_src_init(GstVideoCaptureSrc *videocapturesrc)
     videocapturesrc->video_width = 0;
 
     videocapturesrc->video_height = 0;
+    videocapturesrc->min_buffer_size = 0;
     videocapturesrc->cur_state = RECORDER_INITIALIZED;
     videocapturesrc->min_interval = 0;
 
@@ -186,18 +187,22 @@ static void gst_video_capture_src_set_caps(GstVideoCaptureSrc *src, int32_t pixe
         case PIXEL_FMT_YCRCB_420_SP:
             GST_INFO("input pixel foramt is nv21");
             format = "NV21";
+            src->min_buffer_size = (src->video_width * src->video_height * 3) / 2; // Storage format size*3/2
             break;
         case PIXEL_FMT_YCBCR_420_P:
             GST_INFO("input pixel foramt is I420");
             format = "I420";
+            src->min_buffer_size = (src->video_width * src->video_height * 3) / 2; // Storage format size*3/2
             break;
         case PIXEL_FMT_YCBCR_420_SP:
             GST_INFO("input pixel foramt is nv12");
             format = "NV12";
+            src->min_buffer_size = (src->video_width * src->video_height * 3) / 2; // Storage format size*3/2
             break;
         case PIXEL_FMT_RGBA_8888:
             GST_INFO("input pixel foramt is rgba");
             format = "RGBA";
+            src->min_buffer_size = src->video_width * src->video_height * 4; // Storage format size*4
             break;
         default:
             break;
@@ -210,6 +215,7 @@ static void gst_video_capture_src_set_caps(GstVideoCaptureSrc *src, int32_t pixe
             "alignment", G_TYPE_STRING, "nal",
             "stream-format", G_TYPE_STRING, "byte-stream",
             nullptr);
+        src->min_buffer_size = 0;
     } else {
         src->src_caps = gst_caps_new_simple("video/x-raw",
             "format", G_TYPE_STRING, format.c_str(),
@@ -305,7 +311,11 @@ static GstStateChangeReturn gst_video_capture_src_change_state(GstElement *eleme
 
 static GstBufferPool *gst_video_capture_create_pool()
 {
-    return gst_video_capture_pool_new();
+    GstBufferPool *bufferpool = gst_video_capture_pool_new();
+    if (bufferpool) {
+        g_object_set(bufferpool, "suspend", TRUE, nullptr);
+    }
+    return bufferpool;
 }
 
 static void gst_video_capture_deal_with_pts(GstVideoCaptureSrc *src, GstBuffer *buf)
@@ -364,6 +374,13 @@ static GstFlowReturn gst_video_capture_src_fill(GstBaseSrc *src, guint64 offset,
         capturesrc->is_first_buffer = false;
     }
 
+    if (gst_buffer_get_size(buf) < capturesrc->min_buffer_size) {
+        GST_ELEMENT_ERROR (src, STREAM, FAILED, ("Wrong data length on input streams."),
+            ("The minimum data length of video data input is %d, and the current input data length is "
+            "%" G_GSIZE_FORMAT ".", capturesrc->min_buffer_size, gst_buffer_get_size(buf)));
+        return GST_FLOW_ERROR;
+    }
+
     if (capturesrc->stream_type == VIDEO_STREAM_TYPE_ES_AVC) {
         gst_buffer_resize(buf, 0, meta->length); // es stream gstbuffer size is not equle to surface buffer size
     }
@@ -377,6 +394,10 @@ static GstFlowReturn gst_video_capture_src_fill(GstBaseSrc *src, guint64 offset,
 static void gst_video_capture_src_start(GstVideoCaptureSrc *src)
 {
     g_return_if_fail(src != nullptr);
+    GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(src);
+    g_return_if_fail(surfacesrc->pool != nullptr);
+
+    g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
     src->cur_state = RECORDER_RUNNING;
 }
 

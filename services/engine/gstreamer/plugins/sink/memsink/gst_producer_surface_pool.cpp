@@ -207,8 +207,14 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
         }
         case PROP_CACHE_BUFFERS_NUM: {
             GST_BUFFER_POOL_LOCK(spool);
-            spool->isDynamicCached = TRUE;
-            spool->cachedBuffers = g_value_get_uint(value);
+            guint cache_num = g_value_get_uint(value);
+            GST_DEBUG_OBJECT(spool, "set cache_num to: %u", cache_num);
+            if (cache_num == 0) {
+                spool->isDynamicCached = FALSE;
+            } else {
+                spool->isDynamicCached = TRUE;
+                spool->cachedBuffers = cache_num;
+            }
             GST_BUFFER_POOL_UNLOCK(spool);
             break;
         }
