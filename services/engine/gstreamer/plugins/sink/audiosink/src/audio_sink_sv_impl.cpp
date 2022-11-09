@@ -60,9 +60,11 @@ void AudioRendererMediaCallback::OnInterrupt(const AudioStandard::InterruptEvent
     (void)taskQue_.EnqueueTask(task);
 }
 
-void AudioRendererMediaCallback::OnStateChange(const AudioStandard::RendererState state, const AudioStandard::StateChangeCmdType cmdType)
+void AudioRendererMediaCallback::OnStateChange(const AudioStandard::RendererState state,
+    const AudioStandard::StateChangeCmdType cmdType)
 {
-    MEDIA_LOGD("RenderState is %{public}d, type is %{public}d", static_cast<int32_t>(state), static_cast<int32_t>(cmdType));
+    MEDIA_LOGD("RenderState is %{public}d, type is %{public}d",
+        static_cast<int32_t>(state), static_cast<int32_t>(cmdType));
     if (cmdType == AudioStandard::StateChangeCmdType::CMD_FROM_SYSTEM) {
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
             if (stateCb_ != nullptr) {

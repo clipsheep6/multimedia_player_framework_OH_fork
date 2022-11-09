@@ -33,7 +33,8 @@ public:
     void SaveInterruptCallback(InterruptCbFunc interruptCb);
     void SaveStateCallback(StateCbFunc stateCb);
     void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
-    void OnStateChange(const AudioStandard::RendererState state, const AudioStandard::StateChangeCmdType cmdType) override;
+    void OnStateChange(const AudioStandard::RendererState state,
+        const AudioStandard::StateChangeCmdType cmdType) override;
 private:
     GstBaseSink *audioSink_ = nullptr;
     InterruptCbFunc interruptCb_ = nullptr;
