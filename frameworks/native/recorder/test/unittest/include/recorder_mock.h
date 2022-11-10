@@ -45,6 +45,7 @@ namespace RecorderTestParam {
     const std::string PURE_VIDEO = "video";
     const std::string PURE_AUDIO = "audio";
     const std::string AUDIO_VIDEO = "av";
+    const std::string PURE_ERROR = "error";
     // this array contains each buffer size of the stub stream
     const uint32_t HIGH_VIDEO_FRAME_SIZE[STUB_STREAM_SIZE] = {
         13571, 321, 72, 472, 68, 76, 79, 509, 90, 677, 88, 956, 99, 347, 77, 452, 681, 81, 1263, 94, 106, 97, 998,
@@ -148,6 +149,7 @@ public:
     void StopBuffer(const std::string &recorderType);
     void HDICreateESBuffer();
     void HDICreateYUVBuffer();
+    void HDICreateYUVBufferError();
     int32_t CameraServicesForVideo(RecorderTestParam::VideoRecorderConfig &recorderConfig) const;
     int32_t CameraServicesForAudio(RecorderTestParam::VideoRecorderConfig &recorderConfig) const;
     int32_t SetFormat(const std::string &type, RecorderTestParam::VideoRecorderConfig &recorderConfig) const;

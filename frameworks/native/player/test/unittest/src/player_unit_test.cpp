@@ -1666,9 +1666,9 @@ HWTEST_F(PlayerUnitTest, Player_Dump_Log_001, TestSize.Level0)
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    system("param set sys.media.log.level *:l,multiqueue,decodecbin:,tsdemux:D,multiqueue:D,hlsdemux:D,souphttpsrc:" \
-        "D,basesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmm" \
-        "basesrcmmmbasesrcmmmbasesrcmmm:D,decodebin:D,uridecodebin:D,uridecodebin:L,decodecbin:L");
+    system("param set sys.media.log.level *:l,multiqueue,decodecbin:,tsdemux:D,multiqueue:D,hlsdemux:D,souphttpsrc:W");
+    system("param set sys.media.log.level *:l,basesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmm" \
+        "basesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmmbasesrcmmm:D");
     system("param set sys.media.dump.frame.enable false");
     system("param set sys.media.set.mute FALSE");
     system("param set sys.media.kpi.avsync.log.enable false");
@@ -1797,6 +1797,90 @@ HWTEST_F(PlayerUnitTest, Player_Histreamer_002, TestSize.Level0)
     player_->Pause();
     player_->Play();
     GetSetParaFunTest();
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    player_ = nullptr;
+    system("param set debug.media_service.histreamer 0");
+}
+
+/**
+ * @tc.name  : Test Histreamer
+ * @tc.number: Player_Histreamer_003
+ * @tc.desc  : Test Player Histreamer
+ */
+HWTEST_F(PlayerUnitTest, Player_Histreamer_003, TestSize.Level0)
+{
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    system("param set debug.media_service.histreamer 1");
+    callback_ = std::make_shared<PlayerCallbackTest>();
+    ASSERT_NE(nullptr, callback_);
+    player_ = std::make_shared<PlayerMock>(callback_);
+    ASSERT_NE(nullptr, player_);
+    EXPECT_TRUE(player_->CreatePlayer());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayerCallback(callback_));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "01.mp3", 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_NE(MSERR_OK, player_->SetVolume(1.1, 0.1));
+    EXPECT_NE(MSERR_OK, player_->SetVolume(0.1, 1.1));
+    EXPECT_NE(MSERR_OK, player_->SetVolume(-0.1, 0.1));
+    EXPECT_NE(MSERR_OK, player_->SetVolume(0.1, -0.1));
+    player_->Seek(0, SEEK_NEXT_SYNC);
+    player_->Seek(0, SEEK_PREVIOUS_SYNC);
+    player_->Seek(0, SEEK_CLOSEST_SYNC);
+    player_->IsPlaying();
+    player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC);
+    player_->Seek(SEEK_TIME_2_SEC, SEEK_PREVIOUS_SYNC);
+    player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST_SYNC);
+    player_->Seek(SEEK_TIME_2_SEC, (PlayerSeekMode)5);
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    player_ = nullptr;
+    system("param set debug.media_service.histreamer 0");
+}
+
+/**
+ * @tc.name  : Test Histreamer
+ * @tc.number: Player_Histreamer_004
+ * @tc.desc  : Test Player Histreamer
+ */
+HWTEST_F(PlayerUnitTest, Player_Histreamer_004, TestSize.Level0)
+{
+    PlaybackRateMode mode;
+    int32_t time = 0;
+    int32_t duration = 0;
+    std::vector<Format> videoTrack;
+    std::vector<Format> audioTrack;
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    system("param set debug.media_service.histreamer 1");
+    callback_ = std::make_shared<PlayerCallbackTest>();
+    ASSERT_NE(nullptr, callback_);
+    player_ = std::make_shared<PlayerMock>(callback_);
+    ASSERT_NE(nullptr, player_);
+    EXPECT_TRUE(player_->CreatePlayer());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayerCallback(callback_));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "1kb.mp3", 0, 0));
+    EXPECT_NE(MSERR_OK, player_->PrepareAsync());
+    EXPECT_NE(MSERR_OK, player_->Prepare());
+    Format format;
+    format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, VideoScaleType::VIDEO_SCALE_TYPE_FIT);
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    player_->SetVolume(1, 1);
+    EXPECT_NE(MSERR_OK, player_->Play());
+    EXPECT_EQ(false, player_->IsPlaying());
+    EXPECT_NE(MSERR_OK, player_->Pause());
+    EXPECT_NE(MSERR_OK, player_->Seek(0, SEEK_CLOSEST));
+    player_->SetLooping(true);
+    player_->IsLooping();
+    player_->SetVolume(1, 1);
+    player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X);
+    player_->GetPlaybackSpeed(mode);
+    player_->GetCurrentTime(time);
+    player_->GetDuration(duration);
+    player_->GetVideoTrackInfo(videoTrack);
+    player_->GetAudioTrackInfo(audioTrack);
+    player_->GetVideoHeight();
+    player_->GetVideoWidth();
+    EXPECT_NE(MSERR_OK, player_->Stop());
+    EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_EQ(MSERR_OK, player_->Release());
     player_ = nullptr;
     system("param set debug.media_service.histreamer 0");
