@@ -817,12 +817,13 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
     MEDIA_LOGD("get element_name %{public}s, get metadata %{public}s", GST_ELEMENT_NAME(&elem), metadata);
     std::string metaStr(metadata);
 
-    if (trackParse_ != nullptr) {
-        if (metaStr.find("Codec/Demuxer") != std::string::npos || metaStr.find("Codec/Parser") != std::string::npos) {
-            if (trackParse_->GetDemuxerElementFind() == false) {
-                trackParse_->SetUpDemuxerElementCb(elem);
-                trackParse_->SetDemuxerElementFind(true);
-            }
+    if (trackParse_ != nullptr && trackParse_->GetDemuxerElementFind() == false) {
+        if (metaStr.find("Codec/Demuxer") != std::string::npos) {
+            trackParse_->SetUpDemuxerElementCb(elem);
+            trackParse_->SetDemuxerElementFind(true);
+        } else if (metaStr.find("Codec/Parser") != std::string::npos) {
+            trackParse_->SetUpParseElementCb(elem);
+            trackParse_->SetDemuxerElementFind(true);
         }
     }
 
