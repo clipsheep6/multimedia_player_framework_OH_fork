@@ -30,8 +30,14 @@ namespace {
 namespace OHOS {
 namespace Media {
 AudioRendererMediaCallback::AudioRendererMediaCallback(GstBaseSink *audioSink)
+    : audioSink_(audioSink), taskQue_("AudioCallback")
 {
-    audioSink_ = audioSink;
+    (void)taskQue_.Start();
+}
+
+AudioRendererMediaCallback::~AudioRendererMediaCallback()
+{
+    (void)taskQue_.Stop();
 }
 
 void AudioRendererMediaCallback::SaveInterruptCallback(InterruptCbFunc interruptCb)
@@ -46,15 +52,27 @@ void AudioRendererMediaCallback::SaveStateCallback(StateCbFunc stateCb)
 
 void AudioRendererMediaCallback::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
-    if (interruptCb_ != nullptr) {
-        interruptCb_(audioSink_, interruptEvent.eventType, interruptEvent.forceType, interruptEvent.hintType);
-    }
+    auto task = std::make_shared<TaskHandler<void>>([&, this] {
+        if (interruptCb_ != nullptr) {
+            interruptCb_(audioSink_, interruptEvent.eventType, interruptEvent.forceType, interruptEvent.hintType);
+        }
+    });
+    (void)taskQue_.EnqueueTask(task);
 }
 
 void AudioRendererMediaCallback::OnStateChange(const AudioStandard::RendererState state,
-    const AudioStandard::StateChangeCmdType __attribute__((unused)) cmdType)
+    const AudioStandard::StateChangeCmdType cmdType)
 {
-    MEDIA_LOGD("RenderState is %{public}d", static_cast<int32_t>(state));
+    MEDIA_LOGD("RenderState is %{public}d, type is %{public}d",
+        static_cast<int32_t>(state), static_cast<int32_t>(cmdType));
+    if (cmdType == AudioStandard::StateChangeCmdType::CMD_FROM_SYSTEM) {
+        auto task = std::make_shared<TaskHandler<void>>([&, this] {
+            if (stateCb_ != nullptr) {
+                stateCb_(audioSink_, static_cast<guint>(state));
+            }
+        });
+        (void)taskQue_.EnqueueTask(task);
+    }
 }
 
 AudioSinkSvImpl::AudioSinkSvImpl(GstBaseSink *sink)
