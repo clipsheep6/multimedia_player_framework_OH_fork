@@ -18,6 +18,7 @@
 #include "avmetadatahelper.h"
 #include "nocopyable.h"
 #include "i_avmetadatahelper_service.h"
+#include "media_client.h"
 
 namespace OHOS {
 namespace Media {

@@ -19,7 +19,6 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "avsharedmemorybase.h"
-#include "media_client.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerImpl"};
@@ -27,6 +26,10 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+
+template std::shared_ptr<IAVMuxerService> MediaClient::CreateMediaService<IAVMuxerService>();
+template int32_t MediaClient::DestroyMediaService<IAVMuxerService>(std::shared_ptr<IAVMuxerService> media);
+
 std::shared_ptr<AVMuxer> AVMuxerFactory::CreateAVMuxer()
 {
     std::shared_ptr<AVMuxerImpl> impl = std::make_shared<AVMuxerImpl>();

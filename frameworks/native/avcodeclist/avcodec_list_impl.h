@@ -19,6 +19,7 @@
 #include "avcodec_list.h"
 #include "nocopyable.h"
 #include "i_avcodeclist_service.h"
+#include "media_client.h"
 
 namespace OHOS {
 namespace Media {

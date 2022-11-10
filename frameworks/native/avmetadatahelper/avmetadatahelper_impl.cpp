@@ -19,7 +19,6 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "scope_guard.h"
-#include "media_client.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadatahelperImpl"};
@@ -28,8 +27,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadata
 namespace OHOS {
 namespace Media {
 
-// template std::shared_ptr<IAVMetadataHelperService> MediaClient::CreateMediaService<IAVMetadataHelperService>();
-// template int32_t MediaClient::DestroyMediaService<IAVMetadataHelperService>();
+template std::shared_ptr<IAVMetadataHelperService> MediaClient::CreateMediaService<IAVMetadataHelperService>();
+template int32_t MediaClient::DestroyMediaService<IAVMetadataHelperService>(std::shared_ptr<IAVMetadataHelperService> media);
 
 struct PixelMapMemHolder {
     bool isShmem;

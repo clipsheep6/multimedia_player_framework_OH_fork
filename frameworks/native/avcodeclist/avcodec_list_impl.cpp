@@ -25,7 +25,7 @@ namespace OHOS {
 namespace Media {
 
 template std::shared_ptr<IAVCodecListService> MediaClient::CreateMediaService<IAVCodecListService>();
-template int32_t MediaClient::DestroyMediaService<IAVCodecListService>();
+template int32_t MediaClient::DestroyMediaService<IAVCodecListService>(std::shared_ptr<IAVCodecListService> media);
 
 std::shared_ptr<AVCodecList> AVCodecListFactory::CreateAVCodecList()
 {
