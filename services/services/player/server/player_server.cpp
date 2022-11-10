@@ -286,7 +286,7 @@ int32_t PlayerServer::HandlePrepare()
 int32_t PlayerServer::Play()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-
+    MEDIA_LOGD("PlayerServer Play in");
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
         lastOpStatus_ == PLAYER_PAUSED) {
         return OnPlay();
@@ -313,7 +313,7 @@ int32_t PlayerServer::OnPlay()
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Play();
     });
-
+    MEDIA_LOGD("PlayerServer OnPlay in");
     int ret = taskMgr_.LaunchTask(playingTask, PlayerServerTaskType::STATE_CHANGE);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Play failed");
 
@@ -332,14 +332,20 @@ int32_t PlayerServer::HandlePlay()
 int32_t PlayerServer::Pause()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-
-    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     MEDIA_LOGD("PlayerServer Pause in");
 
-    if (lastOpStatus_ != PLAYER_STARTED) {
+    if (lastOpStatus_ == PLAYER_STARTED) {
+        return OnPause();
+    } else {
         MEDIA_LOGE("Can not Pause, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
+}
+
+int32_t PlayerServer::OnPause()
+{
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGD("PlayerServer OnPause in");
 
     auto pauseTask = std::make_shared<TaskHandler<void>>([this]() {
         MediaTrace::TraceBegin("PlayerServer::Pause", FAKE_POINTER(this));
@@ -920,7 +926,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     std::lock_guard<std::mutex> lockCb(mutexCb_);
 
     if (type == INFO_TYPE_STATE_CHANGE_BY_AUDIO && extra == PLAYER_PAUSED) {
-        Pause();
+        OnPause();
     } else {
         int32_t ret = HandleMessage(type, extra, infoBody);
         if (playerCb_ != nullptr && ret == MSERR_OK) {
