@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "avsharedmemorybase.h"
+#include "media_client.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMuxerImpl"};
@@ -38,7 +39,7 @@ std::shared_ptr<AVMuxer> AVMuxerFactory::CreateAVMuxer()
 
 int32_t AVMuxerImpl::Init()
 {
-    avmuxerService_ = MediaServiceFactory::GetInstance().CreateAVMuxerService();
+    avmuxerService_ = MediaServiceFactory::GetInstance().CreateMediaService<IAVMuxerService>();
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "Failed to create avmuxer service");
     return MSERR_OK;
 }

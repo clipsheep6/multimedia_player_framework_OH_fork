@@ -19,6 +19,7 @@
 #include "recorder.h"
 #include "nocopyable.h"
 #include "i_recorder_service.h"
+#include "media_client.h"
 
 namespace OHOS {
 namespace Media {

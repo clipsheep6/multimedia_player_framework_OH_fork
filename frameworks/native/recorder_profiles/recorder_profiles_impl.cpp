@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "i_media_service.h"
+#include "media_client.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderProfilesImpl"};
@@ -24,6 +25,10 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderPr
 
 namespace OHOS {
 namespace Media {
+
+template std::shared_ptr<IRecorderProfilesService> MediaClient::CreateMediaService<IRecorderProfilesService>();
+template int32_t MediaClient::DestroyMediaService<IRecorderProfilesService>();
+
 RecorderProfiles& RecorderProfilesFactory::CreateRecorderProfiles()
 {
     return RecorderProfilesImpl::GetInstance();
@@ -40,7 +45,7 @@ int32_t RecorderProfilesImpl::Init()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (recorderProfilesService_ == nullptr) {
-        recorderProfilesService_ = MediaServiceFactory::GetInstance().CreateRecorderProfilesService();
+        recorderProfilesService_ = MediaServiceFactory::GetInstance().CreateMediaService<IRecorderProfilesService>();
     }
 
     CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr,
@@ -56,7 +61,7 @@ RecorderProfilesImpl::RecorderProfilesImpl()
 RecorderProfilesImpl::~RecorderProfilesImpl()
 {
     if (recorderProfilesService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyMediaProfileService(recorderProfilesService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService<IRecorderProfilesService>(recorderProfilesService_);
         recorderProfilesService_ = nullptr;
     }
     MEDIA_LOGD("RecorderProfilesImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));

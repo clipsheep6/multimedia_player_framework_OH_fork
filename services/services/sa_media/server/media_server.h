@@ -19,6 +19,7 @@
 #include "media_service_stub.h"
 #include "system_ability.h"
 #include "nocopyable.h"
+#include "media_server_manager.h"
 
 namespace OHOS {
 namespace Media {
@@ -38,6 +39,20 @@ protected:
     void OnStart() override;
     void OnStop() override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
+private:
+    using ServicePair = std::pair<IStandardMediaService::MediaSystemAbility, MediaServerManager::StubType>;
+    using Ability = IStandardMediaService::MediaSystemAbility;
+    using StubType = MediaServerManager::StubType; 
+    //IRemoteStub<IStandardPlayerService>
+    std::map<IStandardMediaService::MediaSystemAbility, MediaServerManager::StubType> serviceMap = {
+        {Ability::MEDIA_PLAYER, StubType::PLAYER},
+        {Ability::MEDIA_RECORDER, StubType::RECORDER},
+        {Ability::MEDIA_AVCODEC, StubType::AVCODEC},
+        {Ability::MEDIA_AVMUXER, StubType::AVMUXER},
+        {Ability::RECORDER_PROFILES, StubType::RECORDERPROFILES},
+        {Ability::MEDIA_AVMETADATAHELPER, StubType::AVMETADATAHELPER},
+        {Ability::MEDIA_CODECLIST, StubType::AVCODECLIST}
+    };
 };
 } // namespace Media
 } // namespace OHOS

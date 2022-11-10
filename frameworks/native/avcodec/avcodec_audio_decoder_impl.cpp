@@ -24,6 +24,10 @@ namespace {
 
 namespace OHOS {
 namespace Media {
+
+template std::shared_ptr<IAVCodecService> MediaClient::CreateMediaService<IAVCodecService>();
+template int32_t MediaClient::DestroyMediaService<IAVCodecService>(std::shared_ptr<IAVCodecService> media);
+
 std::shared_ptr<AVCodecAudioDecoder> AudioDecoderFactory::CreateByMime(const std::string &mime)
 {
     std::shared_ptr<AVCodecAudioDecoderImpl> impl = std::make_shared<AVCodecAudioDecoderImpl>();
@@ -48,7 +52,7 @@ std::shared_ptr<AVCodecAudioDecoder> AudioDecoderFactory::CreateByName(const std
 
 int32_t AVCodecAudioDecoderImpl::Init(AVCodecType type, bool isMimeType, const std::string &name)
 {
-    codecService_ = MediaServiceFactory::GetInstance().CreateAVCodecService();
+    codecService_ = MediaServiceFactory::GetInstance().CreateMediaService<IAVCodecService>();
     CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_UNKNOWN, "failed to create avcodec service");
 
     return codecService_->InitParameter(type, isMimeType, name);
@@ -62,7 +66,7 @@ AVCodecAudioDecoderImpl::AVCodecAudioDecoderImpl()
 AVCodecAudioDecoderImpl::~AVCodecAudioDecoderImpl()
 {
     if (codecService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyAVCodecService(codecService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService<IAVCodecService>(codecService_);
         codecService_ = nullptr;
     }
     MEDIA_LOGD("AVCodecAudioDecoderImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));

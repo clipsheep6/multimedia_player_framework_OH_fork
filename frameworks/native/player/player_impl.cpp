@@ -24,6 +24,10 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl
 
 namespace OHOS {
 namespace Media {
+
+template std::shared_ptr<IPlayerService> MediaClient::CreateMediaService<IPlayerService>();
+template int32_t MediaClient::DestroyMediaService<IPlayerService>();
+
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
     std::shared_ptr<PlayerImpl> impl = std::make_shared<PlayerImpl>();
@@ -50,7 +54,7 @@ PlayerImpl::PlayerImpl()
 PlayerImpl::~PlayerImpl()
 {
     if (playerService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService<IPlayerService>(playerService_);
         playerService_ = nullptr;
     }
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
@@ -124,7 +128,7 @@ int32_t PlayerImpl::Release()
 {
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
     (void)playerService_->Release();
-    (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+    (void)MediaServiceFactory::GetInstance().DestroyMediaService<IPlayerService>(playerService_);
     playerService_ = nullptr;
     return MSERR_OK;
 }

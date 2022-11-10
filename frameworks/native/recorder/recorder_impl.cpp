@@ -25,6 +25,10 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderIm
 
 namespace OHOS {
 namespace Media {
+
+template std::shared_ptr<IRecorderService> MediaClient::CreateMediaService<IRecorderService>();
+template int32_t MediaClient::DestroyMediaService<IRecorderService>(std::shared_ptr<IRecorderService> media);
+
 std::shared_ptr<Recorder> RecorderFactory::CreateRecorder()
 {
     std::shared_ptr<RecorderImpl> impl = std::make_shared<RecorderImpl>();
@@ -37,7 +41,7 @@ std::shared_ptr<Recorder> RecorderFactory::CreateRecorder()
 
 int32_t RecorderImpl::Init()
 {
-    recorderService_ = MediaServiceFactory::GetInstance().CreateRecorderService();
+    recorderService_ = MediaServiceFactory::GetInstance().CreateMediaService<IRecorderService>();
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NO_MEMORY, "failed to create recorder service");
     return MSERR_OK;
 }
@@ -50,7 +54,7 @@ RecorderImpl::RecorderImpl()
 RecorderImpl::~RecorderImpl()
 {
     if (recorderService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService<IRecorderService>(recorderService_);
         recorderService_ = nullptr;
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
@@ -225,7 +229,7 @@ int32_t RecorderImpl::Release()
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     (void)recorderService_->Release();
-    (void)MediaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
+    (void)MediaServiceFactory::GetInstance().DestroyMediaService<IRecorderService>(recorderService_);
     recorderService_ = nullptr;
     return MSERR_OK;
 }

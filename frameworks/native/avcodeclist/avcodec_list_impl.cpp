@@ -23,6 +23,10 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecLis
 }
 namespace OHOS {
 namespace Media {
+
+template std::shared_ptr<IAVCodecListService> MediaClient::CreateMediaService<IAVCodecListService>();
+template int32_t MediaClient::DestroyMediaService<IAVCodecListService>();
+
 std::shared_ptr<AVCodecList> AVCodecListFactory::CreateAVCodecList()
 {
     std::shared_ptr<AVCodecListImpl> impl = std::make_shared<AVCodecListImpl>();
@@ -36,7 +40,7 @@ std::shared_ptr<AVCodecList> AVCodecListFactory::CreateAVCodecList()
 
 int32_t AVCodecListImpl::Init()
 {
-    codecListService_ = MediaServiceFactory::GetInstance().CreateAVCodecListService();
+    codecListService_ = MediaServiceFactory::GetInstance().CreateMediaService<IAVCodecListService>();
     CHECK_AND_RETURN_RET_LOG(codecListService_ != nullptr, MSERR_UNKNOWN, "failed to create AVCodecList service");
     return MSERR_OK;
 }
@@ -49,7 +53,7 @@ AVCodecListImpl::AVCodecListImpl()
 AVCodecListImpl::~AVCodecListImpl()
 {
     if (codecListService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyAVCodecListService(codecListService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService<IAVCodecListService>(codecListService_);
         codecListService_ = nullptr;
     }
     MEDIA_LOGD("AVCodecListImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));

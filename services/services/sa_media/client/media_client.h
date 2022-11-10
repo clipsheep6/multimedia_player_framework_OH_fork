@@ -39,12 +39,41 @@
 #endif
 #include "nocopyable.h"
 
+#include "avmetadatahelper_client.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+#include "ipc_skeleton.h"
+#ifdef SUPPORT_RECORDER
+#include "i_standard_recorder_service.h"
+#endif
+#ifdef SUPPORT_PLAYER
+#include "i_standard_player_service.h"
+#endif
+#ifdef SUPPORT_METADATA
+#include "i_standard_avmetadatahelper_service.h"
+#endif
+#ifdef SUPPORT_MUXER
+#include "i_standard_avmuxer_service.h"
+#endif
+#include "media_log.h"
+#include "media_errors.h"
+
 namespace OHOS {
 namespace Media {
 class MediaClient : public IMediaService, public NoCopyable {
 public:
     MediaClient() noexcept;
     ~MediaClient();
+    template<typename T, typename R, typename S>
+    std::shared_ptr<T> CreateService(IStandardMediaService::MediaSystemAbility ability);
+
+    template<typename T>
+    std::shared_ptr<T> CreateMediaService();
+
+    template<typename T>
+    int32_t DestroyMediaService(std::shared_ptr<T> media);
+    
+
 #ifdef SUPPORT_RECORDER
     std::shared_ptr<IRecorderService> CreateRecorderService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;
@@ -98,6 +127,7 @@ private:
 #endif
     std::mutex mutex_;
 };
+
 } // namespace Media
 } // namespace OHOS
 #endif // MEDIA_CLIENT_H

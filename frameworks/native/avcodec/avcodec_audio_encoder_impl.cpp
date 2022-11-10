@@ -18,12 +18,17 @@
 #include "media_log.h"
 #include "media_errors.h"
 
+
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecAudioEncoderImpl"};
 }
 
 namespace OHOS {
 namespace Media {
+
+template std::shared_ptr<IAVCodecService> MediaClient::CreateMediaService<IAVCodecService>();
+template int32_t MediaClient::DestroyMediaService<IAVCodecService>(std::shared_ptr<IAVCodecService> media);
+
 std::shared_ptr<AVCodecAudioEncoder> AudioEncoderFactory::CreateByMime(const std::string &mime)
 {
     std::shared_ptr<AVCodecAudioEncoderImpl> impl = std::make_shared<AVCodecAudioEncoderImpl>();
@@ -48,7 +53,7 @@ std::shared_ptr<AVCodecAudioEncoder> AudioEncoderFactory::CreateByName(const std
 
 int32_t AVCodecAudioEncoderImpl::Init(AVCodecType type, bool isMimeType, const std::string &name)
 {
-    codecService_ = MediaServiceFactory::GetInstance().CreateAVCodecService();
+    codecService_ = MediaServiceFactory::GetInstance().CreateMediaService<IAVCodecService>();
     CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_UNKNOWN, "failed to create avcodec service");
 
     return codecService_->InitParameter(type, isMimeType, name);
@@ -62,7 +67,7 @@ AVCodecAudioEncoderImpl::AVCodecAudioEncoderImpl()
 AVCodecAudioEncoderImpl::~AVCodecAudioEncoderImpl()
 {
     if (codecService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyAVCodecService(codecService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService<IAVCodecService>(codecService_);
         codecService_ = nullptr;
     }
     MEDIA_LOGD("AVCodecAudioEncoderImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));

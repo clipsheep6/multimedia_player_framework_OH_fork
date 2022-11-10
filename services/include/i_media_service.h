@@ -41,6 +41,12 @@ class IMediaService {
 public:
     virtual ~IMediaService() = default;
 
+    template<typename T>
+    std::shared_ptr<T> CreateMediaService();
+
+    template<typename T>
+    int32_t DestroyMediaService(std::shared_ptr<T>);
+
 #ifdef SUPPORT_RECORDER
     /**
      * @brief Create a recorder service.

@@ -19,6 +19,23 @@
 #include "media_errors.h"
 #include "system_ability_definition.h"
 #include "media_server_manager.h"
+#ifdef SUPPORT_RECORDER
+#include "recorder_service_stub.h"
+#include "recorder_profiles_service_stub.h"
+#endif
+#ifdef SUPPORT_PLAYER
+#include "player_service_stub.h"
+#endif
+#ifdef SUPPORT_METADATA
+#include "avmetadatahelper_service_stub.h"
+#endif
+#ifdef SUPPORT_CODEC
+#include "avcodec_service_stub.h"
+#include "avcodeclist_service_stub.h"
+#endif
+#ifdef SUPPORT_MUXER
+#include "avmuxer_service_stub.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServer"};
@@ -57,39 +74,50 @@ void MediaServer::OnStop()
     MEDIA_LOGD("MediaServer OnStop");
 }
 
+// sptr<MediaStub> MediaServer::CreateStub()
+// {
+//     sptr<MediaStub> stub;
+//     if (subSystemId == MediaSystemAbility::MEDIA_PLAYER) {
+//         stub = PlayerServiceStub::Create();
+//     }
+//     return stub;
+// }
+
 sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
     const sptr<IRemoteObject> &listener)
 {
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");
+    
+    return MediaServerManager::GetInstance().CreateStubObject<PlayerServiceStub>(serviceMap[subSystemId]);
 
-    switch (subSystemId) {
-        case MediaSystemAbility::MEDIA_RECORDER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDER);
-        }
-        case MediaSystemAbility::MEDIA_PLAYER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
-        }
-        case MediaSystemAbility::MEDIA_AVMETADATAHELPER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVMETADATAHELPER);
-        }
-        case MediaSystemAbility::MEDIA_CODECLIST: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODECLIST);
-        }
-        case MediaSystemAbility::MEDIA_AVCODEC: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
-        }
-        case MediaSystemAbility::RECORDER_PROFILES: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
-        }
-        case MediaSystemAbility::MEDIA_AVMUXER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVMUXER);
-        }
-        default: {
-            MEDIA_LOGE("default case, media client need check subSystemId");
-            return nullptr;
-        }
-    }
+    // switch (subSystemId) {
+    //     case MediaSystemAbility::MEDIA_RECORDER: {
+    //         return MediaServerManager::GetInstance().CreateStubObject<RecorderServiceStub>(MediaServerManager::RECORDER);
+    //     }
+    //     case MediaSystemAbility::MEDIA_PLAYER: {
+    //         return MediaServerManager::GetInstance().CreateStubObject<PlayerServiceStub>(MediaServerManager::PLAYER);
+    //     }
+    //     case MediaSystemAbility::MEDIA_AVMETADATAHELPER: {
+    //         return MediaServerManager::GetInstance().CreateStubObject<AVMetadataHelperServiceStub>(MediaServerManager::AVMETADATAHELPER);
+    //     }
+    //     case MediaSystemAbility::MEDIA_CODECLIST: {
+    //         return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODECLIST);
+    //     }
+    //     case MediaSystemAbility::MEDIA_AVCODEC: {
+    //         return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
+    //     }
+    //     case MediaSystemAbility::RECORDER_PROFILES: {
+    //         return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
+    //     }
+    //     case MediaSystemAbility::MEDIA_AVMUXER: {
+    //         return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVMUXER);
+    //     }
+    //     default: {
+    //         MEDIA_LOGE("default case, media client need check subSystemId");
+    //         return nullptr;
+    //     }
+    // }
 }
 
 int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)

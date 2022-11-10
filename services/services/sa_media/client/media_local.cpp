@@ -79,7 +79,7 @@ int32_t MediaLocal::DestroyPlayerService(std::shared_ptr<IPlayerService> player)
     return MSERR_OK;
 }
 
-int32_t MediaLocal::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper)
+int32_t MediaLocal::DestroyMediaService<IAVMetadataHelperService>(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper)
 {
     (void)avMetadataHelper;
     return MSERR_OK;

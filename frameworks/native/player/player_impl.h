@@ -19,6 +19,8 @@
 #include "player.h"
 #include "nocopyable.h"
 #include "i_player_service.h"
+#include "media_client.h"
+
 
 namespace OHOS {
 namespace Media {

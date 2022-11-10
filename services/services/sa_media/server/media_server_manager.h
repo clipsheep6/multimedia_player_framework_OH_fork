@@ -22,9 +22,11 @@
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
 #include "nocopyable.h"
+#include <unistd.h>
 
 namespace OHOS {
 namespace Media {
+constexpr uint32_t SERVER_MAX_NUMBER = 16;
 using DumperEntry = std::function<int32_t(int32_t)>;
 struct Dumper {
     pid_t pid_;
@@ -47,6 +49,7 @@ public:
         AVMUXER,
         RECORDERPROFILES,
     };
+    template<typename T>
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
     void DestroyStubObjectForPid(pid_t pid);
@@ -56,23 +59,6 @@ public:
 
 private:
     MediaServerManager();
-#ifdef SUPPORT_PLAYER
-    sptr<IRemoteObject> CreatePlayerStubObject();
-#endif
-#ifdef SUPPORT_RECORDER
-    sptr<IRemoteObject> CreateRecorderStubObject();
-    sptr<IRemoteObject> CreateRecorderProfilesStubObject();
-#endif
-#ifdef SUPPORT_METADATA
-    sptr<IRemoteObject> CreateAVMetadataHelperStubObject();
-#endif
-#ifdef SUPPORT_CODEC
-    sptr<IRemoteObject> CreateAVCodecListStubObject();
-    sptr<IRemoteObject> CreateAVCodecStubObject();
-#endif
-#ifdef SUPPORT_MUXER
-    sptr<IRemoteObject> CreateAVMuxerStubObject();
-#endif
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
@@ -82,8 +68,48 @@ private:
     std::map<sptr<IRemoteObject>, pid_t> avmuxerStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
 
+    using StubMap = std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>>;
+    StubMap stubMap_;
     std::mutex mutex_;
 };
+
+template<typename T>
+sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto map = stubMap_[type];
+    if (map.size() >= SERVER_MAX_NUMBER) {
+        // MEDIA_LOGE("The number of player services(%{public}zu) has reached the upper limit."
+        //     "Please release the applied resources.", map.size());
+        return nullptr;
+    }
+    sptr<T> stub = T::Create();
+    if (stub == nullptr) {
+        // MEDIA_LOGE("failed to create PlayerServiceStub");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = stub->AsObject();
+    if (object != nullptr) {
+        pid_t pid = IPCSkeleton::GetCallingPid();
+        map[object] = pid;
+        Dumper dumper;
+        dumper.entry_ = [media = stub](int32_t fd) -> int32_t {
+            return media->DumpInfo(fd);
+        };
+        dumper.pid_ = pid;
+        dumper.uid_ = IPCSkeleton::GetCallingUid();
+        dumper.remoteObject_ = object;
+        dumperTbl_[type].emplace_back(dumper);
+        // MEDIA_LOGD("The number of player services(%{public}zu) pid(%{public}d).",
+        //     map.size(), pid);
+        if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
+            // MEDIA_LOGW("failed to call InstanceDump");
+        }
+    }
+    return object;
+}
+
 } // namespace Media
 } // namespace OHOS
 #endif // MEDIA_SERVER_MANAGER_H
