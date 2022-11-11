@@ -134,6 +134,10 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
                 gst_buffer_resize(iter->second, buffer->offset, buffer->filledLen);
             }
             bufferWarp.gstBuffer = iter->second;
+            if (bufferWarp.gstBuffer != nullptr) {
+                GST_BUFFER_PTS(bufferWarp.gstBuffer) = buffer->pts;
+                MEDIA_LOGE("ljw2 get from hdi, pts = %{public}lld", buffer->pts);
+            }
             SetFlagToBuffer(bufferWarp.gstBuffer, buffer->flag);
             mBuffers.push_back(bufferWarp);
             (void)codingBuffers_.erase(iter);

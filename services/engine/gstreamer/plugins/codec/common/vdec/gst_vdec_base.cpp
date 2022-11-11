@@ -206,7 +206,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->coding_outbuf_cnt = 0;
     self->input_state = nullptr;
     self->output_state = nullptr;
-    self->last_pts = GST_CLOCK_TIME_NONE;
+    // self->last_pts = GST_CLOCK_TIME_NONE;
     self->flushing_stoping = FALSE;
     self->decoder_start = FALSE;
     self->stride = 0;
@@ -285,7 +285,7 @@ static void gst_vdec_base_finalize(GObject *object)
     }
 
     std::list<GstClockTime> tempList;
-    tempList.swap(self->pts_list);
+    // tempList.swap(self->pts_list);
     std::vector<GstVideoFormat> tempVec;
     tempVec.swap(self->formats);
 
@@ -409,8 +409,8 @@ static gboolean gst_vdec_base_start(GstVideoDecoder *decoder)
     self->output.first_frame_time = 0;
     self->output.last_frame_time = 0;
     std::list<GstClockTime> empty;
-    self->pts_list.swap(empty);
-    self->last_pts = GST_CLOCK_TIME_NONE;
+    // self->pts_list.swap(empty);
+    // self->last_pts = GST_CLOCK_TIME_NONE;
     gst_vdec_base_dump_from_sys_param(self);
     return TRUE;
 }
@@ -867,31 +867,31 @@ static void gst_vdec_base_dump_output_buffer(GstVdecBase *self, GstBuffer *buffe
     gst_buffer_unmap(buffer, &info);
 }
 
-static void gst_vdec_base_input_frame_pts_to_list(GstVdecBase *self, GstVideoCodecFrame *frame)
-{
-    GST_DEBUG_OBJECT(self, "Input frame pts %" G_GUINT64_FORMAT, frame->pts);
-    g_mutex_lock(&self->lock);
-    if (frame->pts == GST_CLOCK_TIME_NONE) {
-        g_mutex_unlock(&self->lock);
-        return;
-    }
-    if (self->pts_list.empty() || frame->pts > self->pts_list.back()) {
-        self->pts_list.push_back(frame->pts);
-        self->last_pts = frame->pts;
-        g_mutex_unlock(&self->lock);
-        return;
-    }
-    for (auto iter = self->pts_list.begin(); iter != self->pts_list.end(); ++iter) {
-        if ((*iter) == frame->pts) {
-            break;
-        }
-        if ((*iter) > frame->pts) {
-            self->pts_list.insert(iter, frame->pts);
-            break;
-        }
-    }
-    g_mutex_unlock(&self->lock);
-}
+// static void gst_vdec_base_input_frame_pts_to_list(GstVdecBase *self, GstVideoCodecFrame *frame)
+// {
+//     GST_DEBUG_OBJECT(self, "Input frame pts %" G_GUINT64_FORMAT, frame->pts);
+//     g_mutex_lock(&self->lock);
+//     if (frame->pts == GST_CLOCK_TIME_NONE) {
+//         g_mutex_unlock(&self->lock);
+//         return;
+//     }
+//     if (self->pts_list.empty() || frame->pts > self->pts_list.back()) {
+//         self->pts_list.push_back(frame->pts);
+//         self->last_pts = frame->pts;
+//         g_mutex_unlock(&self->lock);
+//         return;
+//     }
+//     for (auto iter = self->pts_list.begin(); iter != self->pts_list.end(); ++iter) {
+//         if ((*iter) == frame->pts) {
+//             break;
+//         }
+//         if ((*iter) > frame->pts) {
+//             self->pts_list.insert(iter, frame->pts);
+//             break;
+//         }
+//     }
+//     g_mutex_unlock(&self->lock);
+// }
 
 static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstBuffer *src_buffer)
 {
@@ -941,7 +941,7 @@ static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, G
 {
     GstVdecBase *self = GST_VDEC_BASE(decoder);
     gst_vdec_debug_input_time(self);
-    gst_vdec_base_input_frame_pts_to_list(self, frame);
+    // gst_vdec_base_input_frame_pts_to_list(self, frame);
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
     GstBuffer *buf = nullptr;
     if (kclass->handle_slice_buffer != nullptr && self->enable_slice_cat == true) {
@@ -1060,16 +1060,16 @@ static GstVideoCodecFrame *gst_vdec_base_new_frame(GstVdecBase *self)
     frame->system_frame_number = 0;
     frame->decode_frame_number = 0;
     frame->dts = GST_CLOCK_TIME_NONE;
-    g_mutex_lock(&self->lock);
-    if (self->pts_list.empty()) {
-        frame->pts = self->last_pts;
-        GST_WARNING_OBJECT(self, "No pts available");
-    } else {
-        frame->pts = self->pts_list.front();
-        GST_DEBUG_OBJECT(self, "Pts %" G_GUINT64_FORMAT, frame->pts);
-        self->pts_list.pop_front();
-    }
-    g_mutex_unlock(&self->lock);
+    // g_mutex_lock(&self->lock);
+    // if (self->pts_list.empty()) {
+    //     frame->pts = self->last_pts;
+    //     GST_WARNING_OBJECT(self, "No pts available");
+    // } else {
+    //     frame->pts = self->pts_list.front();
+    //     GST_DEBUG_OBJECT(self, "Pts %" G_GUINT64_FORMAT, frame->pts);
+    //     self->pts_list.pop_front();
+    // }
+    // g_mutex_unlock(&self->lock);
     frame->duration = GST_CLOCK_TIME_NONE;
     frame->events = nullptr;
 
@@ -1148,6 +1148,9 @@ static GstFlowReturn push_output_buffer(GstVdecBase *self, GstBuffer *buffer)
     update_video_meta(self, buffer);
     GstVideoCodecFrame *frame = gst_vdec_base_new_frame(self);
     g_return_val_if_fail(frame != nullptr, GST_FLOW_ERROR);
+    g_mutex_lock(&self->lock);
+    frame->pts = GST_BUFFER_PTS(buffer);
+    g_mutex_unlock(&self->lock);
     gst_vdec_debug_output_time(self);
 
     if (self->resolution_changed == FALSE) {
@@ -1559,8 +1562,8 @@ static gboolean gst_vdec_base_event(GstVideoDecoder *decoder, GstEvent *event)
             {
                 g_mutex_lock(&self->lock);
                 std::list<GstClockTime> empty;
-                self->pts_list.swap(empty);
-                self->last_pts = GST_CLOCK_TIME_NONE;
+                // self->pts_list.swap(empty);
+                // self->last_pts = GST_CLOCK_TIME_NONE;
                 g_mutex_unlock(&self->lock);
             }
             gst_vdec_base_set_flushing(self, FALSE);

@@ -194,6 +194,7 @@ int32_t SinkBytebufferImpl::HandleNewSampleCb(GstBuffer *buffer)
     }
     constexpr uint64_t nsToUs = 1000;
     info.presentationTimeUs = static_cast<int64_t>(GST_BUFFER_PTS(buffer) / nsToUs);
+    MEDIA_LOGE("ljw3 sink bytebuffer, pts(us) =  %{public}lld ", info.presentationTimeUs);
     AVCodecBufferFlag flag = AVCODEC_BUFFER_FLAG_NONE;
     GetFlagFromBuffer(buffer, flag);
     obs->OnOutputBufferAvailable(index, info, flag);
