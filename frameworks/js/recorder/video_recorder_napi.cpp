@@ -759,7 +759,7 @@ napi_value VideoRecorderNapi::GetState(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to retrieve details about the callback");
 
     VideoRecorderNapi *recorderNapi = nullptr;
-    status = napi_unwrap(env, jsThis, (void **)&recorderNapi);
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to retrieve instance");
 
     std::string curState = VideoRecorderState::STATE_ERROR;

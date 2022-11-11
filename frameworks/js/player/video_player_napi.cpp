@@ -483,7 +483,7 @@ void VideoPlayerNapi::CompleteAsyncWork(napi_env env, napi_status status, void *
         return MediaAsyncContext::CompleteCallback(env, status, data);
     }
 
-    asyncContext->env = env;
+    asyncContext->env_ = env;
     auto cb = std::static_pointer_cast<VideoCallbackNapi>(asyncContext->jsPlayer->jsCallback_);
 
     int32_t ret = MSERR_OK;
@@ -1256,7 +1256,7 @@ napi_value VideoPlayerNapi::GetState(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "Failed to retrieve details about the callback");
 
     VideoPlayerNapi *jsPlayer = nullptr;
-    status = napi_unwrap(env, jsThis, (void **)&jsPlayer);
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&jsPlayer));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "Failed to retrieve instance");
 
     std::string curState = VideoPlayState::STATE_ERROR;
