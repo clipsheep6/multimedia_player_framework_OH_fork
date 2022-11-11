@@ -352,7 +352,7 @@ void AVCodecServer::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo in
         MediaTrace::TraceEnd("AVCodecServer::Frame", FAKE_POINTER(this));
     }
 
-    if (AVCODEC_BUFFER_FLAG_EOS == flag) {
+    if (flag == AVCODEC_BUFFER_FLAG_EOS) {
         ResetTrace();
     } else {
         MediaTrace::TraceBegin("AVCodecServer::Frame", FAKE_POINTER(this));

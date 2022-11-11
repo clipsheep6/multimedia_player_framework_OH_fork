@@ -32,8 +32,8 @@ XmlParser::~XmlParser()
 
 bool XmlParser::LoadConfiguration(const char *xmlPath)
 {
-    mDoc_ = xmlReadFile(xmlPath, NULL, 0);
-    if (mDoc_ == NULL) {
+    mDoc_ = xmlReadFile(xmlPath, nullptr, 0);
+    if (mDoc_ == nullptr) {
         MEDIA_LOGE("XmlParser xmlReadFile failed");
         return false;
     }
@@ -43,7 +43,7 @@ bool XmlParser::LoadConfiguration(const char *xmlPath)
 bool XmlParser::Parse()
 {
     xmlNode *root = xmlDocGetRootElement(mDoc_);
-    if (root == NULL) {
+    if (root == nullptr) {
         MEDIA_LOGE("XmlParser xmlDocGetRootElement failed");
         return false;
     }
@@ -52,7 +52,7 @@ bool XmlParser::Parse()
 
 void XmlParser::Destroy()
 {
-    if (mDoc_ != NULL) {
+    if (mDoc_ != nullptr) {
         xmlFreeDoc(mDoc_);
     }
     return;
