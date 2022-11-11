@@ -449,12 +449,12 @@ bool RecorderProfilesXmlParser::ParseRecorderProfileVideoAudioData(xmlNode *node
 {
     xmlNode *leafChild = node->xmlChildrenNode;
     for (; leafChild; leafChild = leafChild->next) {
-        if (0 == xmlStrcmp(leafChild->name, reinterpret_cast<const xmlChar*>("Video"))) {
+        if (xmlStrcmp(leafChild->name, reinterpret_cast<const xmlChar*>("Video")) == 0) {
             for (auto it = capabilityKeys_.begin(); it != capabilityKeys_.end(); it++) {
                 bool ret = ParseVideoRecorderProfilesForVideoAudioData(leafChild, capabilityData, *it);
                 CHECK_AND_RETURN_RET_LOG(ret != false, false, "ParseVideoRecorderProfilesForVideoAudioData failed");
             }
-        } else if (0 == xmlStrcmp(leafChild->name, reinterpret_cast<const xmlChar*>("Audio"))) {
+        } else if (xmlStrcmp(leafChild->name, reinterpret_cast<const xmlChar*>("Audio")) == 0) {
             for (auto it = capabilityKeys_.begin(); it != capabilityKeys_.end(); it++) {
                 bool ret = ParseAudioRecorderProfiles(leafChild, capabilityData, *it);
                 CHECK_AND_RETURN_RET_LOG(ret != false, false, "ParseAudioRecorderProfiles failed");
