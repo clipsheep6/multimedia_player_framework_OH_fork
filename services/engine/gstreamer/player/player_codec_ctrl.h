@@ -31,6 +31,7 @@ public:
     void DetectCodecSetup(const std::string &metaStr, GstElement *src, GstElement *videoSink);
     void DetectCodecUnSetup(GstElement *src, GstElement *videoSink);
     void EnhanceSeekPerformance(bool enable);
+    GstElement *GetVideoDecoder();
 
 private:
     void SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink);

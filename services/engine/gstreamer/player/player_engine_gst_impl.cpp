@@ -44,6 +44,9 @@ PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid)
     : appuid_(uid), apppid_(pid)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    taskQueue_ = std::make_unique<TaskQueue>("player-engine-task");
+    int32_t ret = taskQueue_->Start();
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "task queue start failed");
 }
 
 PlayerEngineGstImpl::~PlayerEngineGstImpl()
@@ -166,6 +169,7 @@ void PlayerEngineGstImpl::HandleErrorMessage(const PlayBinMessage &msg)
 
     PlayerErrorType errorType = PLAYER_ERROR;
     int32_t errorCode = msg.code;
+
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     Format format;
     if (notifyObs != nullptr) {
@@ -459,13 +463,23 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
 void PlayerEngineGstImpl::PlayBinCtrlerDeInit()
 {
     url_.clear();
+    useSoftDec_ = false;
     appsrcWrap_ = nullptr;
+
+    if (signalId_ != 0) {
+        g_signal_handler_disconnect(decoder_, signalId_);
+        signalId_ = 0;
+    }
 
     if (playBinCtrler_ != nullptr) {
         playBinCtrler_->SetElemSetupListener(nullptr);
         playBinCtrler_->SetElemUnSetupListener(nullptr);
         playBinCtrler_->SetAutoPlugSortListener(nullptr);
         playBinCtrler_ = nullptr;
+    }
+
+    if (taskQueue_ != nullptr) {
+        (void)taskQueue_->Stop();
     }
 
     {
@@ -792,17 +806,38 @@ GValueArray *PlayerEngineGstImpl::OnNotifyAutoPlugSort(GValueArray &factories)
         return nullptr;
     }
 
-    for (uint32_t i = 0; i < factories.n_values; i++) {
-        GstElementFactory *factory =
-            static_cast<GstElementFactory *>(g_value_get_object(g_value_array_get_nth(&factories, i)));
-        if (strstr(gst_element_factory_get_metadata(factory, GST_ELEMENT_METADATA_KLASS),
-            "Codec/Decoder/Video/Hardware")) {
-            MEDIA_LOGD("set remove GstPlaySinkVideoConvert plugins from pipeline");
-            playBinCtrler_->RemoveGstPlaySinkVideoConvertPlugin();
-            isPlaySinkFlagsSet_ = true;
-            break;
+    if (useSoftDec_) {
+        GValueArray *result = g_value_array_new(factories.n_values);
+
+        for (uint32_t i = 0; i < factories.n_values; i++) {
+            GstElementFactory *factory =
+                static_cast<GstElementFactory *>(g_value_get_object(g_value_array_get_nth(&factories, i)));
+            if (strstr(gst_element_factory_get_metadata(factory, GST_ELEMENT_METADATA_KLASS),
+                "Codec/Decoder/Video/Hardware")) {
+                MEDIA_LOGD("set remove hardware codec plugins from pipeline");
+                continue;
+            }
+            GValue val = G_VALUE_INIT;
+            g_value_init(&val, G_TYPE_OBJECT);
+            g_value_set_object(&val, factory);
+            result = g_value_array_append(result, &val);
+            g_value_unset(&val);
+        }
+        return result;
+    } else {
+        for (uint32_t i = 0; i < factories.n_values; i++) {
+            GstElementFactory *factory =
+                static_cast<GstElementFactory *>(g_value_get_object(g_value_array_get_nth(&factories, i)));
+            if (strstr(gst_element_factory_get_metadata(factory, GST_ELEMENT_METADATA_KLASS),
+                "Codec/Decoder/Video/Hardware")) {
+                MEDIA_LOGD("set remove GstPlaySinkVideoConvert plugins from pipeline");
+                playBinCtrler_->RemoveGstPlaySinkVideoConvertPlugin();
+                isPlaySinkFlagsSet_ = true;
+                break;
+            }
         }
     }
+
     return nullptr;
 }
 
@@ -831,6 +866,10 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
             GstElement *videoSink = sinkProvider_->GetVideoSink();
             CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
             codecCtrl_.DetectCodecSetup(metaStr, &elem, videoSink);
+            decoder_ = codecCtrl_.GetVideoDecoder();
+            CHECK_AND_RETURN_LOG(decoder_ != nullptr, "decoder_ is nullptr");
+            signalId_ = g_signal_connect(decoder_, "caps-fix-error",
+                G_CALLBACK(&PlayerEngineGstImpl::CapsFixErrorCb), this);
         }
     }
 }
@@ -853,6 +892,50 @@ void PlayerEngineGstImpl::OnNotifyElemUnSetup(GstElement &elem)
             codecCtrl_.DetectCodecUnSetup(&elem, videoSink);
         }
     }
+}
+
+void PlayerEngineGstImpl::CapsFixErrorCb(GstElement *decoder, gpointer userData)
+{
+    MEDIA_LOGD("CapsFixErrorCb in");
+    if (decoder == nullptr || userData == nullptr) {
+        MEDIA_LOGE("param is nullptr");
+        return;
+    }
+
+    auto playerEngine = static_cast<PlayerEngineGstImpl *>(userData);
+
+    playerEngine->useSoftDec_ = true;
+    auto resetTask = std::make_shared<TaskHandler<void>>([playerEngine]() {
+        playerEngine->ResetPlaybinToSoftDec();
+    });
+    (void)playerEngine->taskQueue_->EnqueueTask(resetTask);
+}
+
+// fix video with small resolution cannot play in hardware decoding
+// reset pipeline to use software decoder
+void PlayerEngineGstImpl::ResetPlaybinToSoftDec()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(playBinCtrler_ != nullptr, "playBinCtrler_ is nullptr");
+
+    MEDIA_LOGD("ResetPlaybinToSoftDec in");
+    isPlaySinkFlagsSet_ = false;
+
+    if (playBinCtrler_ != nullptr) {
+        playBinCtrler_->SetElemSetupListener(nullptr);
+        playBinCtrler_->SetElemUnSetupListener(nullptr);
+        playBinCtrler_->SetAutoPlugSortListener(nullptr);
+        playBinCtrler_ = nullptr;
+    }
+
+    {
+        std::unique_lock<std::mutex> lk(trackParseMutex_);
+        trackParse_ = nullptr;
+        sinkProvider_ = nullptr;
+    }
+
+    lock.unlock();
+    PrepareAsync();
 }
 } // namespace Media
 } // namespace OHOS

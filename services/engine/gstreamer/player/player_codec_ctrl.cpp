@@ -141,5 +141,11 @@ void PlayerCodecCtrl::EnhanceSeekPerformance(bool enable)
         g_object_set(decoder_, "seeking", enable, nullptr);
     }
 }
+
+GstElement *PlayerCodecCtrl::GetVideoDecoder()
+{
+    CHECK_AND_RETURN_RET_LOG(decoder_ != nullptr, nullptr, "VideoDec is nullptr");
+    return decoder_;
+}
 } // Media
 } // OHOS

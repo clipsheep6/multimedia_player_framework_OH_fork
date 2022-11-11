@@ -70,6 +70,13 @@ enum {
     PROP_SEEK,
 };
 
+enum {
+    SIGNAL_CAPS_FIX_ERROR,
+    SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0, };
+
 G_DEFINE_ABSTRACT_TYPE(GstVdecBase, gst_vdec_base, GST_TYPE_VIDEO_DECODER);
 
 static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
@@ -120,6 +127,10 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
     g_object_class_install_property(gobject_class, PROP_SEEK,
         g_param_spec_boolean("seeking", "Seeking", "Whether the decoder is in seek",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    signals[SIGNAL_CAPS_FIX_ERROR] =
+        g_signal_new ("caps-fix-error", G_TYPE_FROM_CLASS (klass),
+        G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
     const gchar *src_caps_string = GST_VIDEO_CAPS_MAKE(GST_VDEC_BASE_SUPPORTED_FORMATS);
     GST_DEBUG_OBJECT(klass, "Pad template caps %s", src_caps_string);
@@ -1413,7 +1424,10 @@ static gboolean gst_vdec_base_pre_init_surface(GstVdecBase *self)
     gint ret = self->decoder->SetParameter(GST_VIDEO_SURFACE_INIT, GST_ELEMENT(self));
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "GST_VIDEO_SURFACE_INIT", TRUE), FALSE);
 
-    g_return_val_if_fail(gst_vdec_caps_fix_sink_caps(self) != FALSE, FALSE);
+    if (!gst_vdec_caps_fix_sink_caps(self)) {
+        g_signal_emit(self, signals[SIGNAL_CAPS_FIX_ERROR], 0, nullptr);
+        return FALSE;
+    }
     gst_vdec_base_update_out_port_def(self, &size);
     gst_vdec_base_update_out_pool(self, &self->outpool, self->sink_caps, size);
     gst_buffer_pool_set_active(self->outpool, TRUE);
