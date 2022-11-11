@@ -1574,7 +1574,6 @@ HWTEST_F(PlayerUnitTest, Player_Rotate_001, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_Dump_Dot_001, TestSize.Level0)
 {
-    system("setenforce 0");
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -1586,7 +1585,6 @@ HWTEST_F(PlayerUnitTest, Player_Dump_Dot_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Pause());
     system("param set sys.media.dump.dot.path /xx");
     EXPECT_EQ(MSERR_OK, player_->Play());
-    system("setenforce 1");
 }
 
 /**
@@ -1658,7 +1656,6 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GlibPool_001, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_Dump_Log_001, TestSize.Level0)
 {
-    system("setenforce 0");
     system("mkdir /data/media/log");
     system("chmod 777 -R /data/media");
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
@@ -1678,7 +1675,6 @@ HWTEST_F(PlayerUnitTest, Player_Dump_Log_001, TestSize.Level0)
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
     system("rm -rf /data/media/log");
-    system("setenforce 1");
 }
 
 /**
