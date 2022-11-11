@@ -142,7 +142,7 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
     if (info.presentationTimeUs < 0) {
         MEDIA_LOGE("Invalid pts: < 0, use 0 as default");
         GST_BUFFER_PTS(bufWrapper->gstBuffer_) = 0;
-    } else if ((INT64_MAX / usToNs) <= info.presentationTimeUs) {
+    } else if (info.presentationTimeUs >= (INT64_MAX / usToNs)) {
         MEDIA_LOGE("Invalid pts: too big, use 0 as default");
         GST_BUFFER_PTS(bufWrapper->gstBuffer_) = 0;
     } else {

@@ -510,7 +510,7 @@ napi_status MediaJsResultArray::GetJsResult(napi_env env, napi_value &result)
 }
 
 MediaAsyncContext::MediaAsyncContext(napi_env env)
-    : env(env)
+    : env_(env)
 {
     MEDIA_LOGD("MediaAsyncContext Create 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
 }

@@ -42,7 +42,7 @@ public:
         URI_WRITE = 1 << 1,
     };
 
-    UriHelper(const std::string_view &uri);
+    explicit UriHelper(const std::string_view &uri);
     UriHelper(int32_t fd, int64_t offset, int64_t size);
     ~UriHelper();
 
