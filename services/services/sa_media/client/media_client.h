@@ -31,32 +31,14 @@
 #include "avcodeclist_client.h"
 #include "avcodec_client.h"
 #endif
-#ifdef SUPPORT_METADATA
+// #ifdef SUPPORT_METADATA
 #include "avmetadatahelper_client.h"
-#endif
-#ifdef SUPPORT_MUXER
+// #endif
+// #ifdef SUPPORT_MUXER
 #include "avmuxer_client.h"
-#endif
+// #endif
 #include "nocopyable.h"
 
-#include "avmetadatahelper_client.h"
-#include "iservice_registry.h"
-#include "system_ability_definition.h"
-#include "ipc_skeleton.h"
-#ifdef SUPPORT_RECORDER
-#include "i_standard_recorder_service.h"
-#endif
-#ifdef SUPPORT_PLAYER
-#include "i_standard_player_service.h"
-#endif
-#ifdef SUPPORT_METADATA
-#include "i_standard_avmetadatahelper_service.h"
-#endif
-#ifdef SUPPORT_MUXER
-#include "i_standard_avmuxer_service.h"
-#endif
-#include "media_log.h"
-#include "media_errors.h"
 
 namespace OHOS {
 namespace Media {
@@ -71,7 +53,7 @@ public:
      * @tparam R IMediaStandardService
      * @tparam S Client
      * @param ability
-     * @return std::shared_ptr<T>
+     * @return std::shared_ptr<IMedia>
      */
     template<typename R, typename S>
     std::shared_ptr<IMedia> CreateService(IStandardMediaService::MediaSystemAbility ability);

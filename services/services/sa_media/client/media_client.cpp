@@ -24,12 +24,12 @@
 #ifdef SUPPORT_PLAYER
 #include "i_standard_player_service.h"
 #endif
-#ifdef SUPPORT_METADATA
+// #ifdef SUPPORT_METADATA
 #include "i_standard_avmetadatahelper_service.h"
-#endif
-#ifdef SUPPORT_MUXER
+// #endif
+// #ifdef SUPPORT_MUXER
 #include "i_standard_avmuxer_service.h"
-#endif
+// #endif
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -92,12 +92,21 @@ std::shared_ptr<IMedia> MediaClient::CreateService(IStandardMediaService::MediaS
 
 std::shared_ptr<IMedia> MediaClient::CreateMediaService(IStandardMediaService::MediaSystemAbility ability)
 {
-    // switch (ability)
-    // {
-    //     case IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER:
-    //         return CreateService<IStandardPlayerService, PlayerClient>(ability);
-    //         break;
-    // }
+    if (ability == IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER) {
+        return CreateService<IStandardPlayerService, PlayerClient>(ability);        
+    } else if (ability == IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER) {
+        return CreateService<IStandardRecorderService, RecorderClient>(ability);
+    } else if (ability == IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES) {
+        return CreateService<IStandardRecorderProfilesService, RecorderProfilesClient>(ability);
+    } else if (ability == IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC) {
+        return CreateService<IStandardAVCodecService, AVCodecClient>(ability);
+    } else if (ability == IStandardMediaService::MediaSystemAbility::MEDIA_CODECLIST) {
+        return CreateService<IStandardAVCodecListService, AVCodecListClient>(ability);
+    } /*else if (ability == IStandardMediaService::MediaSystemAbility::MEDIA_AVMUXER) {
+        return CreateService<IStandardAVMuxerService, AVMuxerClient>(ability);
+    }else if (ability == IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER) {
+        return CreateService<IStandardPlayerService, AVMetadataHelperClient>(ability);
+    }*/
     return nullptr;
 }
 
