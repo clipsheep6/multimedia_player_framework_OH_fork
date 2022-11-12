@@ -132,10 +132,10 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
 void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGD("recorder stub services(%{public}zu) pid(%{public}d).", recorderStubMap_.size(), pid);
     DestroyDumperForPid(pid);
 
     for (auto iter : stubMap_) {
+        MEDIA_LOGD("(%{public}d) stub services(%{public}zu) pid(%{public}d).", iter.first, iter.second.size(), pid);
         for (auto it = iter.second.begin(); it != iter.second.end();) {
             if (it->second == pid) {
                 iter.second.erase(it);

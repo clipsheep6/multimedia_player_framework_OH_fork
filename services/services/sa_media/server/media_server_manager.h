@@ -59,13 +59,6 @@ public:
 
 private:
     MediaServerManager();
-    std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avmuxerStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
 
     using StubMap = std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>>;
