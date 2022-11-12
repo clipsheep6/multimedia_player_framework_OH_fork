@@ -24,10 +24,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-
-template std::shared_ptr<IAVCodecService> MediaClient::CreateMediaService<IAVCodecService>();
-template int32_t MediaClient::DestroyMediaService<IAVCodecService>(std::shared_ptr<IAVCodecService> media);
-
 std::shared_ptr<AVCodecVideoEncoder> VideoEncoderFactory::CreateByMime(const std::string &mime)
 {
     std::shared_ptr<AVCodecVideoEncoderImpl> impl = std::make_shared<AVCodecVideoEncoderImpl>();
@@ -52,7 +48,8 @@ std::shared_ptr<AVCodecVideoEncoder> VideoEncoderFactory::CreateByName(const std
 
 int32_t AVCodecVideoEncoderImpl::Init(AVCodecType type, bool isMimeType, const std::string &name)
 {
-    codecService_ = MediaServiceFactory::GetInstance().CreateMediaService<IAVCodecService>();
+    std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC);
+    codecService_ = std::static_pointer_cast<IAVCodecService>(p);
     CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_UNKNOWN, "failed to create avcodec service");
 
     return codecService_->InitParameter(type, isMimeType, name);
@@ -66,7 +63,7 @@ AVCodecVideoEncoderImpl::AVCodecVideoEncoderImpl()
 AVCodecVideoEncoderImpl::~AVCodecVideoEncoderImpl()
 {
     if (codecService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyMediaService<IAVCodecService>(codecService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService(codecService_, IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC);
         codecService_ = nullptr;
     }
     MEDIA_LOGD("AVCodecVideoEncoderImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));

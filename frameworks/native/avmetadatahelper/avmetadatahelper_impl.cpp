@@ -26,10 +26,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetadata
 
 namespace OHOS {
 namespace Media {
-
-template std::shared_ptr<IAVMetadataHelperService> MediaClient::CreateMediaService<IAVMetadataHelperService>();
-template int32_t MediaClient::DestroyMediaService<IAVMetadataHelperService>(std::shared_ptr<IAVMetadataHelperService> media);
-
 struct PixelMapMemHolder {
     bool isShmem;
     std::shared_ptr<AVSharedMemory> shmem;
@@ -151,7 +147,8 @@ std::shared_ptr<AVMetadataHelper> AVMetadataHelperFactory::CreateAVMetadataHelpe
 
 int32_t AVMetadataHelperImpl::Init()
 {
-    avMetadataHelperService_ = MediaServiceFactory::GetInstance().CreateMediaService<IAVMetadataHelperService>();
+    std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER);
+    avMetadataHelperService_ = std::static_pointer_cast<IAVMetadataHelperService>(p);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
         "failed to create avmetadatahelper service");
     return MSERR_OK;
@@ -165,7 +162,7 @@ AVMetadataHelperImpl::AVMetadataHelperImpl()
 AVMetadataHelperImpl::~AVMetadataHelperImpl()
 {
     if (avMetadataHelperService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyMediaService<IAVMetadataHelperService>(avMetadataHelperService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService(avMetadataHelperService_, IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER);
         avMetadataHelperService_ = nullptr;
     }
     MEDIA_LOGD("AVMetadataHelperImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
@@ -233,7 +230,7 @@ void AVMetadataHelperImpl::Release()
 {
     CHECK_AND_RETURN_LOG(avMetadataHelperService_ != nullptr, "avmetadatahelper service does not exist.");
     avMetadataHelperService_->Release();
-    (void)MediaServiceFactory::GetInstance().DestroyMediaService<IAVMetadataHelperService>(avMetadataHelperService_);
+    (void)MediaServiceFactory::GetInstance().DestroyMediaService(avMetadataHelperService_, IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER);
     avMetadataHelperService_ = nullptr;
 }
 } // namespace Media

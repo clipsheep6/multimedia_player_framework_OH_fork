@@ -64,95 +64,48 @@ bool MediaClient::IsAlived()
     return (mediaProxy_ != nullptr) ? true : false;
 }
 
-template<typename T>
-int32_t MediaClient::DestroyMediaService(std::shared_ptr<T> media)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    // CHECK_AND_RETURN_RET_LOG(media != nullptr, MSERR_NO_MEMORY, "input recorder is nullptr.");
-    if (std::is_same<T, IRecorderService>::value) {
-        recorderClientList_.remove(media);
-    } else if(std::is_same<T, IPlayerService>::value) {
-        playerClientList_.remove(media);
-    } else if(std::is_same<T, IRecorderProfilesService>::value) {
-        recorderProfilesClientList_.remove(media);
-    } else if(std::is_same<T, IAVCodecListService>::value) {
-        avCodecListClientList_.remove(media);
-    } else if(std::is_same<T, IAVCodecService>::value) {
-        avCodecClientList_.remove(media);
-    } else if(std::is_same<T, IAVMetadataHelperService>::value) {
-        avMetadataHelperClientList_.remove(media);
-    } 
-    // else if(std::is_same<T, IAVMuxerService>::value) {
-    //     avmuxerClientList_.remove(media);
-    // }
-    return MSERR_OK;
-}
-
 /**
  * @brief
  * 
- * @tparam T IMediaService
  * @tparam R IMediaStandardService
  * @tparam S Client
  * @param ability
- * @return std::shared_ptr<T>
+ * @return std::shared_ptr<IMedia>
  */
-template<typename T, typename R, typename S>
-std::shared_ptr<T> MediaClient::CreateService(IStandardMediaService::MediaSystemAbility ability)
+template<typename R, typename S>
+std::shared_ptr<IMedia> MediaClient::CreateService(IStandardMediaService::MediaSystemAbility ability)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!IsAlived()) {
-        // MEDIA_LOGE("media service does not exist.");
+        MEDIA_LOGE("media service does not exist.");
         return nullptr;
     }
     sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
         ability, listenerStub_->AsObject());
-    // CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "player proxy object is nullptr.");
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "player proxy object is nullptr.");
     sptr<R> proxy = iface_cast<R>(object);
-    // CHECK_AND_RETURN_RET_LOG(proxy != nullptr, nullptr, "player proxy is nullptr.");
+    CHECK_AND_RETURN_RET_LOG(proxy != nullptr, nullptr, "player proxy is nullptr.");
     std::shared_ptr<S> media = S::Create(proxy);
-    // CHECK_AND_RETURN_RET_LOG(media != nullptr, nullptr, "failed to create player client.");
+    CHECK_AND_RETURN_RET_LOG(media != nullptr, nullptr, "failed to create player client.");
     return media;
 }
 
-std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
+std::shared_ptr<IMedia> MediaClient::CreateMediaService(IStandardMediaService::MediaSystemAbility ability)
 {
-    auto player = CreateService<IPlayerService, IStandardPlayerService,
-        PlayerClient>(IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
-    playerClientList_.push_back(player);
-    return player;
+    // switch (ability)
+    // {
+    //     case IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER:
+    //         return CreateService<IStandardPlayerService, PlayerClient>(ability);
+    //         break;
+    // }
+    return nullptr;
 }
 
-template<typename T>
-std::shared_ptr<T> MediaClient::CreateMediaService()
+
+int32_t MediaClient::DestroyMediaService(std::shared_ptr<IMedia> media, IStandardMediaService::MediaSystemAbility ability)
 {
-    if (std::is_same<T, IPlayerService>::value) {
-        auto player = CreateService<IPlayerService, IStandardPlayerService,
-            PlayerClient>(IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
-        playerClientList_.push_back(player);
-        return player;
-    } else if (std::is_same<T, IRecorderService>::value) {
-        std::shared_ptr<IRecorderService> recorder = CreateService<IRecorderService, IStandardRecorderService,
-            RecorderClient>(IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER);
-        recorderClientList_.push_back(recorder);
-        return recorder;
-    } else if(std::is_same<T, IAVCodecListService>::value) {
-        auto avCodecList = CreateService<IAVCodecListService, IStandardAVCodecListService,
-        AVCodecListClient>(IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER);
-        avCodecListClientList_.push_back(avCodecList);
-        return avCodecList;
-    } else if(std::is_same<T, IRecorderProfilesService>::value) {
-        auto recorderProfiles = CreateService<IRecorderProfilesService, IStandardRecorderProfilesService,
-        RecorderProfilesClient>(IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES);
-        recorderProfilesClientList_.push_back(recorderProfiles);
-        return recorderProfiles;
-    } else if(std::is_same<T, IAVCodecService>::value) {
-        auto avCodec = CreateService<IAVCodecService, IStandardAVCodecService,
-        AVCodecClient>(IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC);
-        avCodecClientList_.push_back(avCodec);
-        return avCodec;
-    }
-    return ;
+    mediaClientMap[ability].remove(media);
+    return MSERR_OK;
 }
 
 sptr<IStandardMediaService> MediaClient::GetMediaProxy()
@@ -191,72 +144,72 @@ void MediaClient::MediaServerDied(pid_t pid)
 
 void MediaClient::DoMediaServerDied()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (mediaProxy_ != nullptr) {
-        (void)mediaProxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
-        mediaProxy_ = nullptr;
-    }
-    listenerStub_ = nullptr;
-    deathRecipient_ = nullptr;
+//     std::lock_guard<std::mutex> lock(mutex_);
+//     if (mediaProxy_ != nullptr) {
+//         (void)mediaProxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+//         mediaProxy_ = nullptr;
+//     }
+//     listenerStub_ = nullptr;
+//     deathRecipient_ = nullptr;
 
-#ifdef SUPPORT_RECORDER
-    for (auto &it : recorderClientList_) {
-        auto recorder = std::static_pointer_cast<RecorderClient>(it);
-        if (recorder != nullptr) {
-            recorder->MediaServerDied();
-        }
-    }
+// #ifdef SUPPORT_RECORDER
+//     for (auto &it : recorderClientList_) {
+//         auto recorder = std::static_pointer_cast<RecorderClient>(it);
+//         if (recorder != nullptr) {
+//             recorder->MediaServerDied();
+//         }
+//     }
 
-    for (auto &it : recorderProfilesClientList_) {
-        auto recorderProfilesClient = std::static_pointer_cast<RecorderProfilesClient>(it);
-        if (recorderProfilesClient != nullptr) {
-            recorderProfilesClient->MediaServerDied();
-        }
-    }
-#endif
+//     for (auto &it : recorderProfilesClientList_) {
+//         auto recorderProfilesClient = std::static_pointer_cast<RecorderProfilesClient>(it);
+//         if (recorderProfilesClient != nullptr) {
+//             recorderProfilesClient->MediaServerDied();
+//         }
+//     }
+// #endif
 
-#ifdef SUPPORT_PLAYER
-    for (auto &it : playerClientList_) {
-        auto player = std::static_pointer_cast<PlayerClient>(it);
-        if (player != nullptr) {
-            player->MediaServerDied();
-        }
-    }
-#endif
+// #ifdef SUPPORT_PLAYER
+//     for (auto &it : playerClientList_) {
+//         auto player = std::static_pointer_cast<PlayerClient>(it);
+//         if (player != nullptr) {
+//             player->MediaServerDied();
+//         }
+//     }
+// #endif
 
-#ifdef SUPPORT_METADATA
-    for (auto &it : avMetadataHelperClientList_) {
-        auto avMetadataHelper = std::static_pointer_cast<AVMetadataHelperClient>(it);
-        if (avMetadataHelper != nullptr) {
-            avMetadataHelper->MediaServerDied();
-        }
-    }
-#endif
+// #ifdef SUPPORT_METADATA
+//     for (auto &it : avMetadataHelperClientList_) {
+//         auto avMetadataHelper = std::static_pointer_cast<AVMetadataHelperClient>(it);
+//         if (avMetadataHelper != nullptr) {
+//             avMetadataHelper->MediaServerDied();
+//         }
+//     }
+// #endif
 
-#ifdef SUPPORT_CODEC
-    for (auto &it : avCodecClientList_) {
-        auto avCodecClient = std::static_pointer_cast<AVCodecClient>(it);
-        if (avCodecClient != nullptr) {
-            avCodecClient->MediaServerDied();
-        }
-    }
+// #ifdef SUPPORT_CODEC
+//     for (auto &it : avCodecClientList_) {
+//         auto avCodecClient = std::static_pointer_cast<AVCodecClient>(it);
+//         if (avCodecClient != nullptr) {
+//             avCodecClient->MediaServerDied();
+//         }
+//     }
 
-    for (auto &it : avCodecListClientList_) {
-        auto avCodecListClient = std::static_pointer_cast<AVCodecListClient>(it);
-        if (avCodecListClient != nullptr) {
-            avCodecListClient->MediaServerDied();
-        }
-    }
-#endif
+//     for (auto &it : avCodecListClientList_) {
+//         auto avCodecListClient = std::static_pointer_cast<AVCodecListClient>(it);
+//         if (avCodecListClient != nullptr) {
+//             avCodecListClient->MediaServerDied();
+//         }
+//     }
+// #endif
 
-#ifdef SUPPORT_MUXER
-    for (auto &it : avmuxerClientList_) {
-        auto avmuxer = std::static_pointer_cast<AVMuxerClient>(it);
-        if (avmuxer != nullptr) {
-            avmuxer->MediaServerDied();
-        }
-    }
-#endif
+// #ifdef SUPPORT_MUXER
+//     for (auto &it : avmuxerClientList_) {
+//         auto avmuxer = std::static_pointer_cast<AVMuxerClient>(it);
+//         if (avmuxer != nullptr) {
+//             avmuxer->MediaServerDied();
+//         }
+//     }
+// #endif
 }
 } // namespace Media
 } // namespace OHOS

@@ -22,10 +22,11 @@
 #include "avsharedmemory.h"
 #include "refbase.h"
 #include "surface.h"
+#include "i_media_service.h"
 
 namespace OHOS {
 namespace Media {
-class IAVCodecService {
+class IAVCodecService : public IMedia {
 public:
     virtual ~IAVCodecService() = default;
 

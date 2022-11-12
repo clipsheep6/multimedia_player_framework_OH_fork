@@ -18,10 +18,11 @@
 
 #include "avcodec_info.h"
 #include "avsharedmemory.h"
+#include "i_media_service.h"
 
 namespace OHOS {
 namespace Media {
-class IAVCodecListService {
+class IAVCodecListService : public IMedia {
 public:
     // AVCodecList
     virtual ~IAVCodecListService() = default;

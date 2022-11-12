@@ -26,10 +26,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-
-template std::shared_ptr<IAVMuxerService> MediaClient::CreateMediaService<IAVMuxerService>();
-template int32_t MediaClient::DestroyMediaService<IAVMuxerService>(std::shared_ptr<IAVMuxerService> media);
-
 std::shared_ptr<AVMuxer> AVMuxerFactory::CreateAVMuxer()
 {
     std::shared_ptr<AVMuxerImpl> impl = std::make_shared<AVMuxerImpl>();
@@ -42,7 +38,8 @@ std::shared_ptr<AVMuxer> AVMuxerFactory::CreateAVMuxer()
 
 int32_t AVMuxerImpl::Init()
 {
-    avmuxerService_ = MediaServiceFactory::GetInstance().CreateMediaService<IAVMuxerService>();
+    std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(IStandardMediaService::MediaSystemAbility::MEDIA_AVMUXER);
+    avmuxerService_ = std::static_pointer_cast<IAVMuxerService>(p);
     CHECK_AND_RETURN_RET_LOG(avmuxerService_ != nullptr, MSERR_NO_MEMORY, "Failed to create avmuxer service");
     return MSERR_OK;
 }
@@ -55,7 +52,7 @@ AVMuxerImpl::AVMuxerImpl()
 AVMuxerImpl::~AVMuxerImpl()
 {
     if (avmuxerService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyAVMuxerService(avmuxerService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService(avmuxerService_, IStandardMediaService::MediaSystemAbility::MEDIA_AVMUXER);
         avmuxerService_ = nullptr;
     }
     MEDIA_LOGD("AVMuxerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));

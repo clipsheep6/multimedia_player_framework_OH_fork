@@ -16,8 +16,8 @@
 #ifndef I_MEDIA_PROFILE_SERVICE_H
 #define I_MEDIA_PROFILE_SERVICE_H
 
-#include "i_recorder_profiles_service.h"
 #include "recorder_profiles.h"
+#include "i_media_service.h"
 
 namespace OHOS {
 namespace Media {
@@ -42,7 +42,7 @@ struct RecorderProfilesData {
     VideoRecorderProfile recorderProfile;
 };
 
-class IRecorderProfilesService {
+class IRecorderProfilesService : public IMedia{
 public:
     virtual ~IRecorderProfilesService() = default;
     virtual bool IsAudioRecorderConfigSupported(const RecorderProfilesData &profile) = 0;
