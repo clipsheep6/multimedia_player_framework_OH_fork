@@ -311,7 +311,11 @@ static GstStateChangeReturn gst_video_capture_src_change_state(GstElement *eleme
 
 static GstBufferPool *gst_video_capture_create_pool()
 {
-    return gst_video_capture_pool_new();
+    GstBufferPool *bufferpool = gst_video_capture_pool_new();
+    if (bufferpool) {
+        g_object_set(bufferpool, "suspend", TRUE, nullptr);
+    }
+    return bufferpool;
 }
 
 static void gst_video_capture_deal_with_pts(GstVideoCaptureSrc *src, GstBuffer *buf)
@@ -390,6 +394,10 @@ static GstFlowReturn gst_video_capture_src_fill(GstBaseSrc *src, guint64 offset,
 static void gst_video_capture_src_start(GstVideoCaptureSrc *src)
 {
     g_return_if_fail(src != nullptr);
+    GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(src);
+    g_return_if_fail(surfacesrc->pool != nullptr);
+
+    g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
     src->cur_state = RECORDER_RUNNING;
 }
 
