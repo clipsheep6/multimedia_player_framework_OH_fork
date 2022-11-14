@@ -1482,8 +1482,15 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         GstBuffer *cat_buffer = kclass->handle_slice_buffer(self, nullptr, ready_push_slice_buffer, true);
         if (cat_buffer != nullptr && ready_push_slice_buffer == true) {
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
-            if (self->decoder->PushInputBuffer(cat_buffer) != GST_CODEC_OK) {
-                GST_ERROR_OBJECT(self, "Failed to push the end of slice frame");
+            gint codec_ret = GST_CODEC_OK;
+            if (!gst_vdec_check_ashmem_buffer(cat_buffer) && self->input_need_ashmem) {
+                codec_ret = gst_vdec_base_push_input_buffer_with_copy(self, cat_buffer);
+            } else {
+                gst_vdec_base_dump_input_buffer(self, cat_buffer);
+                codec_ret = self->decoder->PushInputBuffer(cat_buffer);
+            }
+            if (codec_ret != GST_CODEC_OK) {
+                GST_ERROR_OBJECT(self, "Finish push buffer failed");
             }
             gst_buffer_unref(cat_buffer);
         }
