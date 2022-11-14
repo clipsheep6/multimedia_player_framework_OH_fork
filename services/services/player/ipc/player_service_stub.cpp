@@ -66,15 +66,6 @@ PlayerServiceStub::~PlayerServiceStub()
 
 int32_t PlayerServiceStub::Init()
 {
-#ifdef SUPPORT_HISTREAMER
-    char useHistreamer[10] = {0}; // 10 for system parameter usage
-    auto res = GetParameter("debug.media_service.histreamer", "0", useHistreamer, sizeof(useHistreamer));
-    if (res == 1 && useHistreamer[0] == '1') {
-        MEDIA_LOGD("use histreamer");
-        playerServer_ = PlayerServerHi::Create();
-    }
-#endif
-
     if (playerServer_ == nullptr) {
         playerServer_ = PlayerServer::Create();
     }
