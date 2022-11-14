@@ -110,7 +110,7 @@ bool RecorderProfilesXmlParser::ParseInternal(xmlNode *node)
 
     xmlNode *currNode = node;
     for (; currNode != nullptr; currNode = currNode->next) {
-        if (XML_ELEMENT_NODE == currNode->type) {
+        if (currNode->type == XML_ELEMENT_NODE) {
             switch (GetNodeNameAsInt(currNode)) {
                 case RecorderProfilesNodeName::RECORDER_CAPS: {
                     ParseRecorderCapsData(currNode);
