@@ -33,6 +33,7 @@ public:
     void SetDemuxerElementFind(bool isFind);
     bool GetDemuxerElementFind() const;
     void SetUpDemuxerElementCb(GstElement &elem);
+    void SetUpParseElementCb(GstElement &elem);
     void Stop();
     static void OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
     PlayerTrackParse();
@@ -41,7 +42,8 @@ public:
 private:
     GstPadProbeReturn GetTrackParse(GstPad *pad, GstPadProbeInfo *info);
     void ConvertToPlayerKeys(const Format &innerMeta, Format &outMeta) const;
-    void AddProbeToPad(const GstElement *element, GstPad *pad);
+    bool AddProbeToPad(const GstElement *element, GstPad *pad);
+    bool AddProbeToPadList(const GstElement *element, GList &list);
     static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
     bool demuxerElementFind_ = false;
     std::unordered_map<GstPad *, Format> trackInfos_;
