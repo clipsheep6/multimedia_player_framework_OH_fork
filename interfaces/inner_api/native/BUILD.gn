@@ -59,8 +59,6 @@ config("media_client_public_config") {
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/include",
     "$MEDIA_ROOT_DIR/services/utils/include",
-    "$MEDIA_ROOT_DIR/services/services/sa_media/client",
-    "$MEDIA_ROOT_DIR/services/services/sa_media/ipc",
     "//utils/system/safwk/native/include",
     "//third_party/bounds_checking_function/include",
     "//commonlibrary/c_utils/base/include",
