@@ -25,7 +25,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderIm
 
 namespace OHOS {
 namespace Media {
-
 std::shared_ptr<Recorder> RecorderFactory::CreateRecorder()
 {
     std::shared_ptr<RecorderImpl> impl = std::make_shared<RecorderImpl>();

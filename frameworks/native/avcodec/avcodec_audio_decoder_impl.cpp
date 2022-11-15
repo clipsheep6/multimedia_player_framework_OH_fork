@@ -17,7 +17,6 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "i_standard_media_service.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVCodecAudioDecoderImpl"};
@@ -25,7 +24,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-
 std::shared_ptr<AVCodecAudioDecoder> AudioDecoderFactory::CreateByMime(const std::string &mime)
 {
     std::shared_ptr<AVCodecAudioDecoderImpl> impl = std::make_shared<AVCodecAudioDecoderImpl>();

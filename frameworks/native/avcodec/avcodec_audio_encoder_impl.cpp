@@ -24,7 +24,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-
 std::shared_ptr<AVCodecAudioEncoder> AudioEncoderFactory::CreateByMime(const std::string &mime)
 {
     std::shared_ptr<AVCodecAudioEncoderImpl> impl = std::make_shared<AVCodecAudioEncoderImpl>();
