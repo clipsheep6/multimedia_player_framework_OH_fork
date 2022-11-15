@@ -200,6 +200,5 @@ void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
     }
     tempList.clear();
 }
-
 } // namespace Media
 } // namespace OHOS

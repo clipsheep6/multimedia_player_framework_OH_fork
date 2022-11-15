@@ -20,9 +20,6 @@
 #include "system_ability.h"
 #include "nocopyable.h"
 #include "media_server_manager.h"
-#ifdef SUPPORT_MUXER
-#include "avmuxer_service_stub.h"
-#endif
 
 namespace OHOS {
 namespace Media {
@@ -46,15 +43,24 @@ private:
     using ServicePair = std::pair<IStandardMediaService::MediaSystemAbility, MediaServerManager::StubType>;
     using Ability = IStandardMediaService::MediaSystemAbility;
     using StubType = MediaServerManager::StubType; 
-    //IRemoteStub<IStandardPlayerService>
     std::map<IStandardMediaService::MediaSystemAbility, MediaServerManager::StubType> serviceMap = {
+#ifdef SUPPORT_PLAYER
         {Ability::MEDIA_PLAYER, StubType::PLAYER},
-        {Ability::MEDIA_RECORDER, StubType::RECORDER},
-        {Ability::MEDIA_AVCODEC, StubType::AVCODEC},
-        {Ability::MEDIA_AVMUXER, StubType::AVMUXER},
+#endif
+#ifdef SUPPORT_RECORDER
         {Ability::RECORDER_PROFILES, StubType::RECORDERPROFILES},
+        {Ability::MEDIA_RECORDER, StubType::RECORDER},
+#endif
+#ifdef SUPPORT_CODEC
+        {Ability::MEDIA_AVCODEC, StubType::AVCODEC},
+        {Ability::MEDIA_CODECLIST, StubType::AVCODECLIST},
+#endif
+#ifdef SUPPORT_MUXER
+        {Ability::MEDIA_AVMUXER, StubType::AVMUXER},
+#endif
+#ifdef SUPPORT_AVMETA
         {Ability::MEDIA_AVMETADATAHELPER, StubType::AVMETADATAHELPER},
-        {Ability::MEDIA_CODECLIST, StubType::AVCODECLIST}
+#endif
     };
 };
 } // namespace Media

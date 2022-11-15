@@ -63,15 +63,15 @@ public:
 private:
     MediaServerManager();
     class AsyncExecutor {
-        public:
-            AsyncExecutor() = default;
-            virtual ~AsyncExecutor() = default;
-            void Commit(sptr<IRemoteObject> obj);
-            void Clear();
-        private:
-            void HandleAsyncExecution();
-            std::list<sptr<IRemoteObject>> freeList_;
-            std::mutex listMutex_;
+    public:
+        AsyncExecutor() = default;
+        virtual ~AsyncExecutor() = default;
+        void Commit(sptr<IRemoteObject> obj);
+        void Clear();
+    private:
+        void HandleAsyncExecution();
+        std::list<sptr<IRemoteObject>> freeList_;
+        std::mutex listMutex_;
     };
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     AsyncExecutor executor_;
