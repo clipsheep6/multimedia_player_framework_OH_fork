@@ -138,6 +138,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
         MEDIA_LOGD("(%{public}d) stub services(%{public}zu) pid(%{public}d).", iter.first, iter.second.size(), pid);
         for (auto it = iter.second.begin(); it != iter.second.end();) {
             if (it->second == pid) {
+                executor_.Commit(it->first);
                 iter.second.erase(it);
                 MEDIA_LOGD("destroy %{public}d stub services(%{public}zu) pid(%{public}d).", iter.first,
                         iter.second.size(), pid);
@@ -178,5 +179,27 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
         MEDIA_LOGW("failed to call InstanceDump");
     }
 }
+
+void MediaServerManager::AsyncExecutor::Commit(sptr<IRemoteObject> obj)
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+    freeList_.push_back(obj);
+}
+
+void MediaServerManager::AsyncExecutor::Clear()
+{
+    std::thread(&MediaServerManager::AsyncExecutor::HandleAsyncExecution, this).detach();
+}
+
+void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
+{
+    std::list<sptr<IRemoteObject>> tempList;
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        freeList_.swap(tempList);
+    }
+    tempList.clear();
+}
+
 } // namespace Media
 } // namespace OHOS
