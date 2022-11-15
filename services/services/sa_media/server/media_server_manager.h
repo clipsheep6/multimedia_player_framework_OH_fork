@@ -20,10 +20,10 @@
 #include <functional>
 #include <map>
 #include <list>
+#include <unistd.h>
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
 #include "nocopyable.h"
-#include <unistd.h>
 #include "media_log.h"
 #include "media_errors.h"
 

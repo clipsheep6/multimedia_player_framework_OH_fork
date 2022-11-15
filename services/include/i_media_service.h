@@ -34,7 +34,8 @@ public:
 
     virtual std::shared_ptr<IMedia> CreateMediaService(IStandardMediaService::MediaSystemAbility ability) = 0;
 
-    virtual int32_t DestroyMediaService(std::shared_ptr<IMedia> mediaService, IStandardMediaService::MediaSystemAbility ability) = 0;
+    virtual int32_t DestroyMediaService(std::shared_ptr<IMedia> mediaService,
+        IStandardMediaService::MediaSystemAbility ability) = 0;
 };
 
 class __attribute__((visibility("default"))) MediaServiceFactory {

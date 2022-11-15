@@ -15,11 +15,12 @@
 
 #include <unordered_set>
 #include <codecvt>
+
+#include "player_xcollie.h"
+#include "media_server_manager.h"
+#include "service_dump_manager.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "service_dump_manager.h"
-#include "media_server_manager.h"
-#include "player_xcollie.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};
@@ -71,7 +72,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     }
 
     auto to_utf16 = [=](std::string str) -> std::u16string {
-        return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(str);
+        return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{ }.from_bytes(str);
     };
     for (const auto &it : serverList) {
         dumpString += "------------------" + it.second.first + "------------------\n";
@@ -157,7 +158,7 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
         for (auto it = dumpers.second.begin(); it != dumpers.second.end();) {
             if (it->pid_ == pid) {
                 it = dumpers.second.erase(it);
-                MEDIA_LOGD("MediaServerManager::DestroyDumperForPid");
+                MEDIA_LOGD("MediaServerManager::DestroyDumperForPid (%{public}d)", pid);
             } else {
                 it++;
             }

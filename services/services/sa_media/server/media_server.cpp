@@ -82,27 +82,34 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
     switch (subSystemId) {
 #ifdef SUPPORT_RECORDER
         case MediaSystemAbility::MEDIA_RECORDER:
-            return MediaServerManager::GetInstance().CreateStubObject<RecorderServiceStub>(MediaServerManager::RECORDER);
+            return MediaServerManager::GetInstance().CreateStubObject<RecorderServiceStub>(
+                MediaServerManager::RECORDER);
         case MediaSystemAbility::RECORDER_PROFILES:
-            return MediaServerManager::GetInstance().CreateStubObject<RecorderProfilesServiceStub>(MediaServerManager::RECORDERPROFILES);
+            return MediaServerManager::GetInstance().CreateStubObject<RecorderProfilesServiceStub>(
+                MediaServerManager::RECORDERPROFILES);
 #endif
 #ifdef SUPPORT_PLAYER
         case MediaSystemAbility::MEDIA_PLAYER:
-            return MediaServerManager::GetInstance().CreateStubObject<PlayerServiceStub>(MediaServerManager::PLAYER);
+            return MediaServerManager::GetInstance().CreateStubObject<PlayerServiceStub>(
+                MediaServerManager::PLAYER);
 #endif
 #ifdef SUPPORT_AVMETA
         case MediaSystemAbility::MEDIA_AVMETADATAHELPER:
-            return MediaServerManager::GetInstance().CreateStubObject<AVMetadataHelperServiceStub>(MediaServerManager::AVMETADATAHELPER);
+            return MediaServerManager::GetInstance().CreateStubObject<AVMetadataHelperServiceStub>(
+                MediaServerManager::AVMETADATAHELPER);
 #endif
 #ifdef SUPPORT_CODEC
         case MediaSystemAbility::MEDIA_CODECLIST:
-            return MediaServerManager::GetInstance().CreateStubObject<AVCodecListServiceStub>(MediaServerManager::AVCODECLIST);
+            return MediaServerManager::GetInstance().CreateStubObject<AVCodecListServiceStub>(
+                MediaServerManager::AVCODECLIST);
         case MediaSystemAbility::MEDIA_AVCODEC:
-            return MediaServerManager::GetInstance().CreateStubObject<AVCodecServiceStub>(MediaServerManager::AVCODEC);
+            return MediaServerManager::GetInstance().CreateStubObject<AVCodecServiceStub>(
+                MediaServerManager::AVCODEC);
 #endif
 #ifdef SUPPORT_MUXER
         case MediaSystemAbility::MEDIA_AVMUXER:
-            return MediaServerManager::GetInstance().CreateStubObject<AVMuxerServiceStub>(MediaServerManager::AVMUXER);
+            return MediaServerManager::GetInstance().CreateStubObject<AVMuxerServiceStub>(
+                MediaServerManager::AVMUXER);
 #endif
         default: {
             MEDIA_LOGE("default case, media client need check subSystemId");

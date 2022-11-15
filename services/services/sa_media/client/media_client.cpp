@@ -93,8 +93,7 @@ std::shared_ptr<IMedia> MediaClient::CreateService(IStandardMediaService::MediaS
 
 std::shared_ptr<IMedia> MediaClient::CreateMediaService(IStandardMediaService::MediaSystemAbility ability)
 {
-    switch (ability)
-    {
+    switch (ability) {
 #ifdef SUPPORT_PLAYER
         case IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER: {
             auto player = CreateService<IStandardPlayerService, PlayerClient>(ability);
@@ -140,12 +139,13 @@ std::shared_ptr<IMedia> MediaClient::CreateMediaService(IStandardMediaService::M
             return metaData;
         }
 #endif
-    default:
-        return nullptr;
+        default:
+            return nullptr;
     }
 }
 
-int32_t MediaClient::DestroyMediaService(std::shared_ptr<IMedia> media, IStandardMediaService::MediaSystemAbility ability)
+int32_t MediaClient::DestroyMediaService(std::shared_ptr<IMedia> media,
+    IStandardMediaService::MediaSystemAbility ability)
 {
     mediaClientMap_[ability].remove(media);
     return MSERR_OK;

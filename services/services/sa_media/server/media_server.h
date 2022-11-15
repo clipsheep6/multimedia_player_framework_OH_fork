@@ -42,7 +42,7 @@ protected:
 private:
     using ServicePair = std::pair<IStandardMediaService::MediaSystemAbility, MediaServerManager::StubType>;
     using Ability = IStandardMediaService::MediaSystemAbility;
-    using StubType = MediaServerManager::StubType; 
+    using StubType = MediaServerManager::StubType;
     std::map<IStandardMediaService::MediaSystemAbility, MediaServerManager::StubType> serviceMap = {
 #ifdef SUPPORT_PLAYER
         {Ability::MEDIA_PLAYER, StubType::PLAYER},

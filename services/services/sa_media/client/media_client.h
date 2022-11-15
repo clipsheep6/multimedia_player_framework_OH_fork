@@ -41,7 +41,8 @@ public:
     template<typename R, typename S>
     std::shared_ptr<IMedia> CreateService(IStandardMediaService::MediaSystemAbility ability);
     std::shared_ptr<IMedia> CreateMediaService(IStandardMediaService::MediaSystemAbility ability) override;
-    int32_t DestroyMediaService(std::shared_ptr<IMedia> media, IStandardMediaService::MediaSystemAbility ability) override;
+    int32_t DestroyMediaService(std::shared_ptr<IMedia> media,
+        IStandardMediaService::MediaSystemAbility ability) override;
 private:
     sptr<IStandardMediaService> GetMediaProxy();
     bool IsAlived();
