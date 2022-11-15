@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace Media {
-class IRecorderService : public IMedia{
+class IRecorderService : public IMedia {
 public:
     virtual ~IRecorderService() = default;
 

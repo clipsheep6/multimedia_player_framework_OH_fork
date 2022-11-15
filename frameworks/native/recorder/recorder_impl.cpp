@@ -37,7 +37,8 @@ std::shared_ptr<Recorder> RecorderFactory::CreateRecorder()
 
 int32_t RecorderImpl::Init()
 {
-    std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER);
+    std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(
+        IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER);
     recorderService_ = std::static_pointer_cast<IRecorderService>(p);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NO_MEMORY, "failed to create recorder service");
     return MSERR_OK;
@@ -51,7 +52,8 @@ RecorderImpl::RecorderImpl()
 RecorderImpl::~RecorderImpl()
 {
     if (recorderService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyMediaService(recorderService_, IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService(recorderService_,
+            IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER);
         recorderService_ = nullptr;
     }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
@@ -226,7 +228,8 @@ int32_t RecorderImpl::Release()
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     (void)recorderService_->Release();
-    (void)MediaServiceFactory::GetInstance().DestroyMediaService(recorderService_, IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER);
+    (void)MediaServiceFactory::GetInstance().DestroyMediaService(recorderService_,
+        IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER);
     recorderService_ = nullptr;
     return MSERR_OK;
 }

@@ -38,7 +38,8 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 
 int32_t PlayerImpl::Init()
 {
-    std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
+    std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(
+        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
     playerService_ = std::static_pointer_cast<IPlayerService>(p);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_UNKNOWN, "failed to create player service");
     return MSERR_OK;
@@ -52,7 +53,8 @@ PlayerImpl::PlayerImpl()
 PlayerImpl::~PlayerImpl()
 {
     if (playerService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyMediaService(playerService_, IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService(playerService_,
+            IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
         playerService_ = nullptr;
     }
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
@@ -126,7 +128,8 @@ int32_t PlayerImpl::Release()
 {
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
     (void)playerService_->Release();
-    (void)MediaServiceFactory::GetInstance().DestroyMediaService(playerService_, IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
+    (void)MediaServiceFactory::GetInstance().DestroyMediaService(playerService_,
+        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
     playerService_ = nullptr;
     return MSERR_OK;
 }

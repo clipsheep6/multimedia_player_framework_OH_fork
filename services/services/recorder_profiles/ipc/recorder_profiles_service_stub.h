@@ -38,7 +38,7 @@ public:
     std::vector<RecorderProfilesData> GetVideoRecorderCapsInfo() override;
     RecorderProfilesData GetVideoRecorderProfileInfo(int32_t sourceId, int32_t qualityLevel) override;
     int32_t DestroyStub() override;
-    int32_t DumpInfo(int32_t fd) { (void)fd; return 0; }
+    int32_t DumpInfo(int32_t fd);
 
 private:
     RecorderProfilesServiceStub();

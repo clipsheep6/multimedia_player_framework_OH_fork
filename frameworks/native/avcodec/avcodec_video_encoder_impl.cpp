@@ -48,7 +48,8 @@ std::shared_ptr<AVCodecVideoEncoder> VideoEncoderFactory::CreateByName(const std
 
 int32_t AVCodecVideoEncoderImpl::Init(AVCodecType type, bool isMimeType, const std::string &name)
 {
-    std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC);
+    std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(
+        IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC);
     codecService_ = std::static_pointer_cast<IAVCodecService>(p);
     CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, MSERR_UNKNOWN, "failed to create avcodec service");
 
@@ -63,7 +64,8 @@ AVCodecVideoEncoderImpl::AVCodecVideoEncoderImpl()
 AVCodecVideoEncoderImpl::~AVCodecVideoEncoderImpl()
 {
     if (codecService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyMediaService(codecService_, IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService(codecService_,
+            IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC);
         codecService_ = nullptr;
     }
     MEDIA_LOGD("AVCodecVideoEncoderImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));

@@ -32,7 +32,7 @@ public:
     
     /**
      * @brief template CreateService
-     * 
+     *
      * @tparam R IMediaStandardService
      * @tparam S Client
      * @param ability

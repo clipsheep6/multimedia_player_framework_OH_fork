@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace Media {
-class IPlayerService : public IMedia{
+class IPlayerService : public IMedia {
 public:
     virtual ~IPlayerService() = default;
 

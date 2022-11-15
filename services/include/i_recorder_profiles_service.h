@@ -42,7 +42,7 @@ struct RecorderProfilesData {
     VideoRecorderProfile recorderProfile;
 };
 
-class IRecorderProfilesService : public IMedia{
+class IRecorderProfilesService : public IMedia {
 public:
     virtual ~IRecorderProfilesService() = default;
     virtual bool IsAudioRecorderConfigSupported(const RecorderProfilesData &profile) = 0;

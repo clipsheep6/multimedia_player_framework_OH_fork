@@ -229,5 +229,11 @@ int32_t AVMuxerServiceStub::DestroyStub(MessageParcel &data, MessageParcel &repl
     CHECK_AND_RETURN_RET(reply.WriteInt32(DestroyStub()), MSERR_UNKNOWN);
     return MSERR_OK;
 }
+
+int32_t AVMuxerServiceStub::DumpInfo(int32_t fd)
+{
+    (void)fd;
+    return MSERR_OK;
+}
 }  // namespace Media
 }  // namespace OHOS

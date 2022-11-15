@@ -29,7 +29,6 @@
 
 namespace OHOS {
 namespace Media {
-constexpr uint32_t SERVER_MAX_NUMBER = 16;
 using DumperEntry = std::function<int32_t(int32_t)>;
 struct Dumper {
     pid_t pid_;
@@ -73,12 +72,22 @@ private:
         std::list<sptr<IRemoteObject>> freeList_;
         std::mutex listMutex_;
     };
+
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     AsyncExecutor executor_;
+
+    std::list<std::pair<StubType, std::pair<std::string, std::string>>> serverList = {
+        {StubType::PLAYER, {"PlayerServer", "player"}},
+        {StubType::RECORDER, {"RecorderServer", "recorder"}},
+        {StubType::AVCODEC, {"CodecServer", "codec"}},
+        {StubType::AVMETADATAHELPER, {"AVMetaServer", "avmetahelper"}},
+    };
 
     using StubMap = std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>>;
     StubMap stubMap_;
     std::mutex mutex_;
+
+    static constexpr uint32_t SERVER_MAX_NUMBER = 16;
 };
 
 template<typename T>

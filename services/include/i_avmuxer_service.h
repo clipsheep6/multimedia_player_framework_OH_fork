@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace Media {
-class IAVMuxerService : public IMedia{
+class IAVMuxerService : public IMedia {
 public:
     virtual ~IAVMuxerService() = default;
 

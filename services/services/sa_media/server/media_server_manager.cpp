@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#include "media_server_manager.h"
 #include <unordered_set>
+#include <codecvt>
 #include "media_log.h"
 #include "media_errors.h"
 #include "service_dump_manager.h"
+#include "media_server_manager.h"
 #include "player_xcollie.h"
 
 namespace {
@@ -69,31 +70,18 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         argSets.insert(args[index]);
     }
 
-    dumpString += "------------------PlayerServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::PLAYER],
-        argSets.find(u"player") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write PlayerServer information");
-        return OHOS::INVALID_OPERATION;
-    }
-
-    dumpString += "------------------RecorderServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::RECORDER],
-        argSets.find(u"recorder") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write RecorderServer information");
-        return OHOS::INVALID_OPERATION;
-    }
-
-    dumpString += "------------------CodecServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::AVCODEC],
-        argSets.find(u"codec") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write CodecServer information");
-        return OHOS::INVALID_OPERATION;
-    }
-
-    dumpString += "------------------AVMetaServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write AVMetaServer information");
-        return OHOS::INVALID_OPERATION;
+    auto to_utf16 = [=](std::string str) -> std::u16string {
+        return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{}.from_bytes(str);
+    };
+    for (const auto &it : serverList) {
+        dumpString += "------------------" + it.second.first + "------------------\n";
+        std::u16string str = to_utf16(it.second.second);
+        if (WriteInfo(fd, dumpString, dumperTbl_[it.first],
+            argSets.find(str) != argSets.end()) != OHOS::NO_ERROR) {
+            std::string info = "Failed to write " + it.second.first +" information";
+            MEDIA_LOGW("%{public}s", info.c_str());
+            return OHOS::INVALID_OPERATION;
+        }
     }
 
     if (ServiceDumpManager::GetInstance().Dump(fd, argSets) != OHOS::NO_ERROR) {
@@ -140,8 +128,8 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
             if (it->second == pid) {
                 executor_.Commit(it->first);
                 iter.second.erase(it);
-                MEDIA_LOGD("destroy %{public}d stub services(%{public}zu) pid(%{public}d).", iter.first,
-                        iter.second.size(), pid);
+                MEDIA_LOGD("destroy %{public}d stub services(%{public}zu) pid(%{public}d).",
+                    iter.first, iter.second.size(), pid);
             } else {
                 it++;
             }
