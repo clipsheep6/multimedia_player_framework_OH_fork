@@ -24,6 +24,8 @@
 #include "ipc_skeleton.h"
 #include "nocopyable.h"
 #include <unistd.h>
+#include "media_log.h"
+#include "media_errors.h"
 
 namespace OHOS {
 namespace Media {
@@ -83,15 +85,16 @@ template<typename T>
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};
     auto map = stubMap_[type];
     if (map.size() >= SERVER_MAX_NUMBER) {
-        // MEDIA_LOGE("The number of player services(%{public}zu) has reached the upper limit."
-        //     "Please release the applied resources.", map.size());
+        MEDIA_LOGE("The number of (%{public}zu) services(%{public}zu) has reached the upper limit."
+            "Please release the applied resources.", static_cast<int32_t>(type), map.size());
         return nullptr;
     }
     sptr<T> stub = T::Create();
     if (stub == nullptr) {
-        // MEDIA_LOGE("failed to create PlayerServiceStub");
+        MEDIA_LOGE("failed to create (%{public}zu) stub", static_cast<int32_t>(type));
         return nullptr;
     }
 
@@ -107,15 +110,14 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         dumper.uid_ = IPCSkeleton::GetCallingUid();
         dumper.remoteObject_ = object;
         dumperTbl_[type].emplace_back(dumper);
-        // MEDIA_LOGD("The number of player services(%{public}zu) pid(%{public}d).",
-        //     map.size(), pid);
+        MEDIA_LOGD("The number of (%{public}zu) services(%{public}zu) pid(%{public}d).",
+            static_cast<int32_t>(type), map.size(), pid);
         if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
-            // MEDIA_LOGW("failed to call InstanceDump");
+            MEDIA_LOGW("failed to call InstanceDump");
         }
     }
     return object;
 }
-
 } // namespace Media
 } // namespace OHOS
 #endif // MEDIA_SERVER_MANAGER_H
