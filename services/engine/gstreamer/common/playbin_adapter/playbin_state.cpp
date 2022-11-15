@@ -32,8 +32,15 @@ void PlayBinCtrlerBase::BaseState::ReportInvalidOperation()
 {
     MEDIA_LOGE("invalid operation for %{public}s", GetStateName().c_str());
 
+    /*
+     * The ReportInvalidOperation function is locked before calling it. However,
+     * the ReportMessage function is also locked. Therefore, the ReportMessage function
+     * needs to be unlocked before using it.
+     */
+    ctrler_.mutex_.unlock();
     PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR, 0, MSERR_INVALID_STATE, {} };
     ctrler_.ReportMessage(msg);
+    ctrler_.mutex_.lock();
 }
 
 int32_t PlayBinCtrlerBase::BaseState::Prepare()
