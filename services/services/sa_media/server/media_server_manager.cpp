@@ -15,12 +15,11 @@
 
 #include <unordered_set>
 #include <codecvt>
-
 #include "player_xcollie.h"
-#include "media_server_manager.h"
 #include "service_dump_manager.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_server_manager.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};

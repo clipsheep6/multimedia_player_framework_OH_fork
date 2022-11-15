@@ -21,7 +21,6 @@
 
 namespace OHOS {
 namespace Media {
-
 class IMedia {
 public:
     virtual void MediaServerDied() = 0;
