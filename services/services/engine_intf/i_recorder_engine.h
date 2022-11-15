@@ -34,7 +34,7 @@ namespace Media {
  * required by the "Configure" interface of RecorderEngine. Then, internally use the DUMMY_SOURCE_ID
  * to represent the parameter is source-independent.
  */
-static constexpr int32_t DUMMY_SOURCE_ID = 0;
+constexpr int32_t DUMMY_SOURCE_ID = 0;
 
 /**
  * Recorder Engine Observer. This is a abstract class, engine's user need to implement it and register
