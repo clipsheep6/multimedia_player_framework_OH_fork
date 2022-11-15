@@ -71,7 +71,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     }
 
     auto to_utf16 = [=](std::string str) -> std::u16string {
-        return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t>{ }.from_bytes(str);
+        return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.from_bytes(str);
     };
     for (const auto &it : serverList) {
         dumpString += "------------------" + it.second.first + "------------------\n";
