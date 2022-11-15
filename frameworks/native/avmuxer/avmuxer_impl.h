@@ -19,7 +19,6 @@
 #include "avmuxer.h"
 #include "nocopyable.h"
 #include "i_avmuxer_service.h"
-#include "media_client.h"
 
 namespace OHOS {
 namespace Media {

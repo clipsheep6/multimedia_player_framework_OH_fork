@@ -19,7 +19,6 @@
 #include "avcodec_audio_encoder.h"
 #include "nocopyable.h"
 #include "i_avcodec_service.h"
-#include "media_client.h"
 
 namespace OHOS {
 namespace Media {
