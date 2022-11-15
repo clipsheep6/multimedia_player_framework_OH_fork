@@ -27,7 +27,7 @@ public:
     static std::shared_ptr<RecorderProfilesClient> Create(const sptr<IStandardRecorderProfilesService> &ipcProxy);
     explicit RecorderProfilesClient(const sptr<IStandardRecorderProfilesService> &ipcProxy);
     ~RecorderProfilesClient();
-    void MediaServerDied();
+    void MediaServerDied() override;
 
     bool IsAudioRecorderConfigSupported(const RecorderProfilesData &profile) override;
     bool HasVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel) override;

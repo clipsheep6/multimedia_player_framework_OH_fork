@@ -61,7 +61,7 @@ public:
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
     int32_t HeartBeat() override;
     // RecorderClient
-    void MediaServerDied();
+    void MediaServerDied() override;
     void CreateWatchDog();
     void StopWatchDog();
     void WatchDog();

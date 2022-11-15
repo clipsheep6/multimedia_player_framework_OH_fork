@@ -83,6 +83,7 @@ public:
     void OnError(ErrorType errorType, int32_t errorCode) override;
     void OnInfo(InfoType type, int32_t extra) override;
 
+    void MediaServerDied() override {}
 private:
     int32_t Init();
     bool CheckPermission();

@@ -60,7 +60,7 @@ public:
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
     // PlayerClient
-    void MediaServerDied();
+    void MediaServerDied() override;
 
 private:
     int32_t CreateListenerObject();

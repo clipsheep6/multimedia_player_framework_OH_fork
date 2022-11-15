@@ -34,7 +34,7 @@ public:
     std::string FindAudioDecoder(const Format &format) override;
     std::string FindAudioEncoder(const Format &format) override;
     std::vector<CapabilityData>  GetCodecCapabilityInfos() override;
-
+    void MediaServerDied() override {}
 private:
     int32_t Init();
     std::unique_ptr<IAVCodecListEngine> codecListEngine_;

@@ -74,50 +74,41 @@ void MediaServer::OnStop()
     MEDIA_LOGD("MediaServer OnStop");
 }
 
-// sptr<MediaStub> MediaServer::CreateStub()
-// {
-//     sptr<MediaStub> stub;
-//     if (subSystemId == MediaSystemAbility::MEDIA_PLAYER) {
-//         stub = PlayerServiceStub::Create();
-//     }
-//     return stub;
-// }
-
 sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
     const sptr<IRemoteObject> &listener)
 {
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");
-    
-    return MediaServerManager::GetInstance().CreateStubObject<PlayerServiceStub>(serviceMap[subSystemId]);
-
-    // switch (subSystemId) {
-    //     case MediaSystemAbility::MEDIA_RECORDER: {
-    //         return MediaServerManager::GetInstance().CreateStubObject<RecorderServiceStub>(MediaServerManager::RECORDER);
-    //     }
-    //     case MediaSystemAbility::MEDIA_PLAYER: {
-    //         return MediaServerManager::GetInstance().CreateStubObject<PlayerServiceStub>(MediaServerManager::PLAYER);
-    //     }
-    //     case MediaSystemAbility::MEDIA_AVMETADATAHELPER: {
-    //         return MediaServerManager::GetInstance().CreateStubObject<AVMetadataHelperServiceStub>(MediaServerManager::AVMETADATAHELPER);
-    //     }
-    //     case MediaSystemAbility::MEDIA_CODECLIST: {
-    //         return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODECLIST);
-    //     }
-    //     case MediaSystemAbility::MEDIA_AVCODEC: {
-    //         return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
-    //     }
-    //     case MediaSystemAbility::RECORDER_PROFILES: {
-    //         return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
-    //     }
-    //     case MediaSystemAbility::MEDIA_AVMUXER: {
-    //         return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVMUXER);
-    //     }
-    //     default: {
-    //         MEDIA_LOGE("default case, media client need check subSystemId");
-    //         return nullptr;
-    //     }
-    // }
+    switch (subSystemId) {
+#ifdef SUPPORT_RECORDER
+        case MediaSystemAbility::MEDIA_RECORDER:
+            return MediaServerManager::GetInstance().CreateStubObject<RecorderServiceStub>(MediaServerManager::RECORDER);
+        case MediaSystemAbility::RECORDER_PROFILES:
+            return MediaServerManager::GetInstance().CreateStubObject<RecorderProfilesServiceStub>(MediaServerManager::RECORDERPROFILES);
+#endif
+#ifdef SUPPORT_PLAYER
+        case MediaSystemAbility::MEDIA_PLAYER:
+            return MediaServerManager::GetInstance().CreateStubObject<PlayerServiceStub>(MediaServerManager::PLAYER);
+#endif
+#ifdef SUPPORT_AVMETA
+        case MediaSystemAbility::MEDIA_AVMETADATAHELPER:
+            return MediaServerManager::GetInstance().CreateStubObject<AVMetadataHelperServiceStub>(MediaServerManager::AVMETADATAHELPER);
+#endif
+#ifdef SUPPORT_CODEC
+        case MediaSystemAbility::MEDIA_CODECLIST:
+            return MediaServerManager::GetInstance().CreateStubObject<AVCodecListServiceStub>(MediaServerManager::AVCODECLIST);
+        case MediaSystemAbility::MEDIA_AVCODEC:
+            return MediaServerManager::GetInstance().CreateStubObject<AVCodecServiceStub>(MediaServerManager::AVCODEC);
+#endif
+#ifdef SUPPORT_MUXER
+        case MediaSystemAbility::MEDIA_AVMUXER:
+            return MediaServerManager::GetInstance().CreateStubObject<AVMuxerServiceStub>(MediaServerManager::AVMUXER);
+#endif
+        default: {
+            MEDIA_LOGE("default case, media client need check subSystemId");
+            return nullptr;
+        }
+    }
 }
 
 int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)

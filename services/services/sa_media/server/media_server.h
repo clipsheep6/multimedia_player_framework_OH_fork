@@ -20,6 +20,9 @@
 #include "system_ability.h"
 #include "nocopyable.h"
 #include "media_server_manager.h"
+#ifdef SUPPORT_MUXER
+#include "avmuxer_service_stub.h"
+#endif
 
 namespace OHOS {
 namespace Media {
