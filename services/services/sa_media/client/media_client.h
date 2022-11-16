@@ -29,7 +29,7 @@ class MediaClient : public IMediaService, public NoCopyable {
 public:
     MediaClient() noexcept;
     ~MediaClient();
-    
+
     /**
      * @brief template CreateService
      *
