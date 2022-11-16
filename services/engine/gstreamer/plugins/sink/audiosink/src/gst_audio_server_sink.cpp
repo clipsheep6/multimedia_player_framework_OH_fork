@@ -92,10 +92,6 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
         static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
         NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT); // 1 parameters
 
-    g_signal_new("audio-error-event", G_TYPE_FROM_CLASS(klass),
-        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
-        NULL, NULL, G_TYPE_NONE, 1, G_TYPE_STRING); // 1 parameters
-
     g_object_class_install_property(gobject_class, PROP_BITS_PER_SAMPLE,
         g_param_spec_uint("bps", "Bits Per Sample",
             "Audio Format", 0, G_MAXINT32, 0,

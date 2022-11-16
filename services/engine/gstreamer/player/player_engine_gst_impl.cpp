@@ -368,10 +368,6 @@ void PlayerEngineGstImpl::HandleAudioMessage(const PlayBinMessage &msg)
             HandleAudioStateMessage(msg);
             break;
         }
-        case PLAYBIN_MSG_AUDIO_ERROR_EVENT: {
-            HandleAudioErrorMessage(msg);
-            break;
-        }
         default: {
             break;
         }
@@ -390,12 +386,6 @@ void PlayerEngineGstImpl::HandleAudioStateMessage(const PlayBinMessage &msg)
             notifyObs->OnInfo(INFO_TYPE_STATE_CHANGE_BY_AUDIO, PlayerStates::PLAYER_PAUSED, format);
         }
     }
-}
-
-void PlayerEngineGstImpl::HandleAudioErrorMessage(const PlayBinMessage &msg)
-{
-    std::pair<int32_t, std::string> errorPair = std::any_cast<std::pair<int32_t, std::string>>(msg.extra);
-    MEDIA_LOGE("HandleAudioErrorMessage:%{public}d, %{public}s", errorPair.first, errorPair.second.c_str());
 }
 
 void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
@@ -541,7 +531,7 @@ int32_t PlayerEngineGstImpl::Play()
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
-    MEDIA_LOGD("Play in");
+    MEDIA_LOGI("Play in");
     playBinCtrler_->Play();
     return MSERR_OK;
 }
@@ -551,6 +541,7 @@ int32_t PlayerEngineGstImpl::Pause()
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
+    MEDIA_LOGI("Pause in");
     (void)playBinCtrler_->Pause();
     return MSERR_OK;
 }

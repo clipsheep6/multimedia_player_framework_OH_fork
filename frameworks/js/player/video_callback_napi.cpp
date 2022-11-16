@@ -350,7 +350,7 @@ void VideoCallbackNapi::UvWorkCallBack(uv_work_t *work, int status)
 
     auto asyncContext = reinterpret_cast<MediaAsyncContext *>(work->data);
     if (asyncContext != nullptr) {
-        MediaAsyncContext::CompleteCallback(asyncContext->env, nstatus, work->data);
+        MediaAsyncContext::CompleteCallback(asyncContext->env_, nstatus, work->data);
     }
     delete work;
 }

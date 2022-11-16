@@ -30,26 +30,12 @@ PlayerXCollie &PlayerXCollie::GetInstance()
     return instance;
 }
 
-static bool EnableOnceMode()
-{
-    std::string enable;
-    int32_t res = OHOS::system::GetStringParameter("sys.media.player.xcollie.once.enable", enable, "");
-    if (res != 0 || enable.empty()) {
-        return false;
-    }
-
-    if (enable != "true") {
-        return false;
-    }
-    return true;
-}
-
 void PlayerXCollie::TimerCallback(void *data)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     threadDeadlockCount_++;
     static constexpr uint32_t threshold = 5; // >5 Restart service
-    if (threadDeadlockCount_ >= threshold || EnableOnceMode()) {
+    if (threadDeadlockCount_ >= threshold) {
         _exit(-1);
     }
 }

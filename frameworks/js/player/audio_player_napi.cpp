@@ -796,6 +796,7 @@ static std::string GetJSState(PlayerStates currentState)
     switch (currentState) {
         case PLAYER_IDLE:
         case PLAYER_INITIALIZED:
+        case PLAYER_PREPARING:
         case PLAYER_PREPARED:
             result = STATE_IDLE;
             break;
@@ -831,7 +832,7 @@ napi_value AudioPlayerNapi::GetState(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "Failed to retrieve details about the callback");
 
     AudioPlayerNapi *player = nullptr;
-    status = napi_unwrap(env, jsThis, (void **)&player);
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&player));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "Failed to retrieve instance");
 
     if (player->callbackNapi_ == nullptr) {
