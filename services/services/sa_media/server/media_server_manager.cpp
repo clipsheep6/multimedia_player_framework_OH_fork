@@ -157,7 +157,7 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
         for (auto it = dumpers.second.begin(); it != dumpers.second.end();) {
             if (it->pid_ == pid) {
                 it = dumpers.second.erase(it);
-                MEDIA_LOGD("MediaServerManager::DestroyDumperForPid (%{public}d)", pid);
+                MEDIA_LOGD("MediaServerManager::DestroyDumperForPid");
             } else {
                 it++;
             }
