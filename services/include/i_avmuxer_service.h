@@ -22,10 +22,11 @@
 #include "avsharedmemory.h"
 #include "avcontainer_common.h"
 #include "media_description.h"
+#include "i_media_service.h"
 
 namespace OHOS {
 namespace Media {
-class IAVMuxerService {
+class IAVMuxerService : public IMedia {
 public:
     virtual ~IAVMuxerService() = default;
 

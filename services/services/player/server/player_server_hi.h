@@ -64,7 +64,7 @@ public:
     // IPlayerEngineObs override
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
-
+    void MediaServerDied() override {}
 private:
     int32_t Init();
     bool IsValidSeekMode(PlayerSeekMode mode);

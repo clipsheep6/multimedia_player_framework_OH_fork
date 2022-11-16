@@ -172,5 +172,11 @@ int32_t AVCodecListServiceStub::DestroyStub(MessageParcel &data, MessageParcel &
     reply.WriteInt32(DestroyStub());
     return MSERR_OK;
 }
+
+int32_t AVCodecListServiceStub::DumpInfo(int32_t fd)
+{
+    (void)fd;
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS

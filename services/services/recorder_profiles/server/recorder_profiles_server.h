@@ -33,7 +33,7 @@ public:
     std::vector<RecorderProfilesData> GetAudioRecorderCapsInfo() override;
     std::vector<RecorderProfilesData> GetVideoRecorderCapsInfo() override;
     RecorderProfilesData GetVideoRecorderProfileInfo(int32_t sourceId, int32_t qualityLevel) override;
-
+    void MediaServerDied() override {}
 private:
     bool CompareProfile(const RecorderProfilesData &compareProfile, const RecorderProfilesData &profile);
     std::vector<RecorderProfilesData> GetCapabilityInfos();

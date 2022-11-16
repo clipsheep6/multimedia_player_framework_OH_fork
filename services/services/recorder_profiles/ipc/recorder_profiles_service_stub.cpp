@@ -179,5 +179,11 @@ int32_t RecorderProfilesServiceStub::DestroyStub(MessageParcel &data, MessagePar
     reply.WriteInt32(DestroyStub());
     return MSERR_OK;
 }
+
+int32_t RecorderProfilesServiceStub::DumpInfo(int32_t fd)
+{
+    (void)fd;
+    return MSERR_OK;
+}
 }  // namespace Media
 }  // namespace OHOS

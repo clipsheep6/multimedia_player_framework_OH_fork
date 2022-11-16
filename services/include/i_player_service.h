@@ -18,10 +18,11 @@
 
 #include "player.h"
 #include "refbase.h"
+#include "i_media_service.h"
 
 namespace OHOS {
 namespace Media {
-class IPlayerService {
+class IPlayerService : public IMedia {
 public:
     virtual ~IPlayerService() = default;
 

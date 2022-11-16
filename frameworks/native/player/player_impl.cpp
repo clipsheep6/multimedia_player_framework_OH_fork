@@ -17,6 +17,7 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_client.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl"};
@@ -37,7 +38,9 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 
 int32_t PlayerImpl::Init()
 {
-    playerService_ = MediaServiceFactory::GetInstance().CreatePlayerService();
+    std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(
+        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
+    playerService_ = std::static_pointer_cast<IPlayerService>(p);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_UNKNOWN, "failed to create player service");
     return MSERR_OK;
 }
@@ -50,7 +53,8 @@ PlayerImpl::PlayerImpl()
 PlayerImpl::~PlayerImpl()
 {
     if (playerService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService(playerService_,
+            IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
         playerService_ = nullptr;
     }
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
@@ -125,7 +129,8 @@ int32_t PlayerImpl::Release()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
     MEDIA_LOGD("KPI-TRACE: PlayerImpl Release in");
     (void)playerService_->Release();
-    (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+    (void)MediaServiceFactory::GetInstance().DestroyMediaService(playerService_,
+        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER);
     playerService_ = nullptr;
     return MSERR_OK;
 }
