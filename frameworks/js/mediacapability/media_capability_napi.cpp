@@ -17,12 +17,6 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "common_napi.h"
-#ifdef SUPPORT_CODEC_JS
-#include "avcodec_capability_napi.h"
-#endif
-#ifdef SUPPORT_MUXER_JS
-#include "avmuxer_capability_napi.h"
-#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaCapsNapi"};
@@ -48,21 +42,7 @@ MediaCapsNapi::~MediaCapsNapi()
 
 napi_value MediaCapsNapi::Init(napi_env env, napi_value exports)
 {
-    napi_property_descriptor properties[] = {
-#ifdef SUPPORT_CODEC_JS
-        DECLARE_NAPI_FUNCTION("getAudioDecoderCaps", AVCodecCapabilityNapi::GetAudioDecoderCaps),
-        DECLARE_NAPI_FUNCTION("findAudioDecoder", AVCodecCapabilityNapi::FindAudioDecoder),
-        DECLARE_NAPI_FUNCTION("getAudioEncoderCaps", AVCodecCapabilityNapi::GetAudioEncoderCaps),
-        DECLARE_NAPI_FUNCTION("findAudioEncoder", AVCodecCapabilityNapi::FindAudioEncoder),
-        DECLARE_NAPI_FUNCTION("getVideoDecoderCaps", AVCodecCapabilityNapi::GetVideoDecoderCaps),
-        DECLARE_NAPI_FUNCTION("findVideoDecoder", AVCodecCapabilityNapi::FindVideoDecoder),
-        DECLARE_NAPI_FUNCTION("getVideoEncoderCaps", AVCodecCapabilityNapi::GetVideoEncoderCaps),
-        DECLARE_NAPI_FUNCTION("findVideoEncoder", AVCodecCapabilityNapi::FindVideoEncoder),
-#endif
-#ifdef SUPPORT_MUXER_JS
-        DECLARE_NAPI_FUNCTION("getAVMuxerFormatList", AVMuxerCapabilityNapi::GetAVMuxerFormatList),
-#endif
-    };
+    napi_property_descriptor properties[] = {};
     napi_property_descriptor staticProperty[] = {
         DECLARE_NAPI_STATIC_FUNCTION("getMediaCapability", GetMediaCapability),
     };
