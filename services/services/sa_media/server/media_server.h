@@ -40,7 +40,6 @@ protected:
     void OnStop() override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
 private:
-    using ServicePair = std::pair<IStandardMediaService::MediaSystemAbility, MediaServerManager::StubType>;
     using Ability = IStandardMediaService::MediaSystemAbility;
     using StubType = MediaServerManager::StubType;
     std::map<IStandardMediaService::MediaSystemAbility, MediaServerManager::StubType> serviceMap = {

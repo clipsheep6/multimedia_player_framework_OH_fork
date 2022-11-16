@@ -17,7 +17,6 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "media_client.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerImpl"};
