@@ -50,7 +50,7 @@ bool CommonNapi::GetPropertyInt32(napi_env env, napi_value configObj, const std:
     bool exist = false;
     napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
     if (status != napi_ok || !exist) {
-        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        MEDIA_LOGE("can not find %{public}s property, statu %{public}d, exit %{public}d", type.c_str(), status, exist);
         return false;
     }
 

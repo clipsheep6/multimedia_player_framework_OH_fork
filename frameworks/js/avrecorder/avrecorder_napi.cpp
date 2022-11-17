@@ -207,7 +207,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Prepare", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVRecorderAsyncContext * threadCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        AVRecorderAsyncContext* threadCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->AVRecorderSignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "", "");
@@ -259,7 +259,7 @@ napi_value AVRecorderNapi::JsGetInputSurface(napi_env env, napi_callback_info in
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "GetInputSurface", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVRecorderAsyncContext * threadCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        AVRecorderAsyncContext* threadCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->AVRecorderSignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "", "");
@@ -428,7 +428,7 @@ napi_value AVRecorderNapi::JsReset(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Reset", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVRecorderAsyncContext * threadCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        AVRecorderAsyncContext* threadCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->AVRecorderSignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "", "");
@@ -475,7 +475,7 @@ napi_value AVRecorderNapi::JsRelease(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Release", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVRecorderAsyncContext * threadCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        AVRecorderAsyncContext* threadCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
             threadCtx->AVRecorderSignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "", "");
@@ -572,14 +572,14 @@ int32_t AVRecorderNapi::GetConfig(napi_env env, napi_value args)
     if (ret) {
         config.audioSourceType = static_cast<AudioSourceType>(audioSource);
         withAudio_ = true;
-        MEDIA_LOGI("audioSource Type %d!", audioSource);
+        MEDIA_LOGI("audioSource Type %{public}d!", audioSource);
     }
     
     ret = CommonNapi::GetPropertyInt32(env, args, "videoSourceType", videoSource);
     if (ret) {
         config.videoSourceType = static_cast<VideoSourceType>(videoSource);
         withVideo_ = true;
-        MEDIA_LOGI("videoSource Type %d!", videoSource);
+        MEDIA_LOGI("videoSource Type %{public}d!", videoSource);
     }
 
     config.url = CommonNapi::GetPropertyString(env, args, "url");
@@ -601,6 +601,7 @@ int32_t AVRecorderNapi::GetProfile(napi_env env, napi_value args)
 {
     napi_value item = nullptr;
     napi_get_named_property(env, args, "profile", &item);
+    CHECK_AND_RETURN_RET_LOG(item != nullptr, MSERR_INVALID_VAL, "get profile error");
 
     AVRecorderProfile &profile = config.profile;
 
@@ -610,8 +611,9 @@ int32_t AVRecorderNapi::GetProfile(napi_env env, napi_value args)
         std::string audioCodec = CommonNapi::GetPropertyString(env, item, "audioCodec");
         (void)MapMimeToAudioCodecFormat(audioCodec, profile.audioCodecFormat);
         (void)CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.auidoSampleRate);
-        MEDIA_LOGI("audioBitrate %d, audioChannels %d, audioCodecFormat %d, audioSampleRate %d!",
-                   profile.audioBitrate, profile.audioChannels, profile.audioCodecFormat, profile.auidoSampleRate);
+        MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
+                   " audioSampleRate %{public}d!", profile.audioBitrate, profile.audioChannels,
+                   profile.audioCodecFormat, profile.auidoSampleRate);
     }
 
     if (withVideo_) {
@@ -621,14 +623,15 @@ int32_t AVRecorderNapi::GetProfile(napi_env env, napi_value args)
         (void)CommonNapi::GetPropertyInt32(env, item, "videoFrameWidth", profile.videoFrameWidth);
         (void)CommonNapi::GetPropertyInt32(env, item, "videoFrameHeight", profile.videoFrameHeight);
         (void)CommonNapi::GetPropertyInt32(env, item, "videoFrameRate", profile.videoFrameRate);
-        MEDIA_LOGI("videoBitrate %d, videoCodecFormat %d, videoFrameWidth %d, videoFrameHeight %d, videoFrameRate %d",
+        MEDIA_LOGI("videoBitrate %{public}d, videoCodecFormat %{public}d, videoFrameWidth %{public}d,"
+                   " videoFrameHeight %{public}d, videoFrameRate %{public}d",
                    profile.videoBitrate, profile.videoCodecFormat, profile.videoFrameWidth,
                    profile.videoFrameHeight, profile.videoFrameRate);
     }
 
     std::string outputFile = CommonNapi::GetPropertyString(env, item, "fileFormat");
     (void)MapExtensionNameToOutputFormat(outputFile, profile.fileFormat);
-    MEDIA_LOGI("fileFormat %d", profile.fileFormat);
+    MEDIA_LOGI("fileFormat %{public}d", profile.fileFormat);
 
     return MSERR_OK;
 }
