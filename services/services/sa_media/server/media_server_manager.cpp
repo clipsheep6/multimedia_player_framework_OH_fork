@@ -71,9 +71,9 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         dumpString += "------------------" + it.second.first + "------------------\n";
 
         bool ret = (it.first == StubType::AVMETADATAHELPER) ? false : 
-            (argSets.find(it.second.second) != argSets.end() != OHOS::NO_ERROR);
+            (argSets.find(it.second.second) != argSets.end());
 
-        if (WriteInfo(fd, dumpString, dumperTbl_[it.first], ret)) {
+        if (WriteInfo(fd, dumpString, dumperTbl_[it.first], ret) != OHOS::NO_ERROR) {
             std::string info = "Failed to write " + it.second.first +" information";
             MEDIA_LOGW("%{public}s", info.c_str());
             return OHOS::INVALID_OPERATION;
