@@ -152,6 +152,7 @@ napi_value AVRecorderNapi::JsCreateAVRecorder(napi_env env, napi_callback_info i
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
     std::unique_ptr<AVRecorderAsyncContext> asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
@@ -179,7 +180,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
     napi_value args[2] = { nullptr };
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx == nullptr, result, "failed to get AsyncContext");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
 
     // get args
     size_t argCount = 2;
@@ -239,7 +240,7 @@ napi_value AVRecorderNapi::JsGetInputSurface(napi_env env, napi_callback_info in
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx == nullptr, result, "failed to get AsyncContext");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
 
     // get args
     napi_value jsThis = nullptr;
@@ -408,6 +409,8 @@ napi_value AVRecorderNapi::JsReset(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+
     // get args
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -453,6 +456,8 @@ napi_value AVRecorderNapi::JsRelease(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+
     // get args
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
