@@ -27,7 +27,7 @@ public:
     static std::shared_ptr<AVCodecListClient> Create(const sptr<IStandardAVCodecListService> &ipcProxy);
     explicit AVCodecListClient(const sptr<IStandardAVCodecListService> &ipcProxy);
     ~AVCodecListClient();
-    void MediaServerDied();
+    void MediaServerDied() override;
     // IAVCodecListService override
     std::string FindVideoDecoder(const Format &format) override;
     std::string FindVideoEncoder(const Format &format) override;

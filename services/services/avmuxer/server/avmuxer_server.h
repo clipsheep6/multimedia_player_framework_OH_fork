@@ -46,6 +46,7 @@ public:
     int32_t WriteTrackSample(std::shared_ptr<AVSharedMemory> sampleData, const TrackSampleInfo &sampleInfo) override;
     int32_t Stop() override;
     void Release() override;
+    void MediaServerDied() override {}
 private:
     int32_t Init();
     std::mutex mutex_;

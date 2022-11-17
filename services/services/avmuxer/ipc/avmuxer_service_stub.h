@@ -39,6 +39,7 @@ public:
     int32_t Stop() override;
     void Release() override;
     int32_t DestroyStub() override;
+    int32_t DumpInfo(int32_t fd);
 private:
     AVMuxerServiceStub();
     int32_t Init();

@@ -18,6 +18,7 @@
 
 #include "avmetadatahelper.h"
 #include "avsharedmemory.h"
+#include "i_media_service.h"
 
 namespace OHOS {
 namespace Media {
@@ -55,7 +56,7 @@ struct OutputConfiguration {
     PixelFormat colorFormat = PixelFormat::RGB_565;
 };
 
-class IAVMetadataHelperService {
+class IAVMetadataHelperService : public IMedia {
 public:
     virtual ~IAVMetadataHelperService() = default;
 

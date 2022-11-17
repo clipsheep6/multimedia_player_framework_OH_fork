@@ -40,7 +40,9 @@ int32_t RecorderProfilesImpl::Init()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (recorderProfilesService_ == nullptr) {
-        recorderProfilesService_ = MediaServiceFactory::GetInstance().CreateRecorderProfilesService();
+        std::shared_ptr<IMedia> p = MediaServiceFactory::GetInstance().CreateMediaService(
+            IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES);
+        recorderProfilesService_ = std::static_pointer_cast<IRecorderProfilesService>(p);
     }
 
     CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr,
@@ -56,7 +58,8 @@ RecorderProfilesImpl::RecorderProfilesImpl()
 RecorderProfilesImpl::~RecorderProfilesImpl()
 {
     if (recorderProfilesService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyMediaProfileService(recorderProfilesService_);
+        (void)MediaServiceFactory::GetInstance().DestroyMediaService(recorderProfilesService_,
+            IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES);
         recorderProfilesService_ = nullptr;
     }
     MEDIA_LOGD("RecorderProfilesImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));

@@ -38,7 +38,7 @@ public:
     void Release() override;
 
     // AVMetadataHelperClient
-    void MediaServerDied();
+    void MediaServerDied() override;
 private:
     sptr<IStandardAVMetadataHelperService> avMetadataHelperProxy_ = nullptr;
     std::mutex mutex_;

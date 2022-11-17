@@ -47,7 +47,7 @@ public:
     int32_t SetParameter(const Format &format) override;
     int32_t SetCallback(const std::shared_ptr<AVCodecCallback> &callback) override;
     // AVCodecClient
-    void MediaServerDied();
+    void MediaServerDied() override;
 
 private:
     int32_t CreateListenerObject();

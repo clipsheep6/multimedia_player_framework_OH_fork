@@ -20,10 +20,11 @@
 #include "recorder.h"
 #include "refbase.h"
 #include "surface.h"
+#include "i_media_service.h"
 
 namespace OHOS {
 namespace Media {
-class IRecorderService {
+class IRecorderService : public IMedia {
 public:
     virtual ~IRecorderService() = default;
 

@@ -67,6 +67,7 @@ public:
     void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override;
     void ResetTrace();
 
+    void MediaServerDied() override {}
 private:
     int32_t Init();
     void ExitProcessor();

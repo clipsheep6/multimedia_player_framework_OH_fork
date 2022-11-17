@@ -38,7 +38,7 @@ public:
         int32_t option, const OutputConfiguration &param) override;
     void Release() override;
     int32_t DestroyStub() override;
-
+    int32_t DumpInfo(int32_t fd);
 private:
     AVMetadataHelperServiceStub();
     int32_t Init();
