@@ -76,11 +76,11 @@ private:
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     AsyncExecutor executor_;
 
-    std::list<std::pair<StubType, std::pair<std::string, std::string>>> serverList_ = {
-        {StubType::PLAYER, {"PlayerServer", "player"}},
-        {StubType::RECORDER, {"RecorderServer", "recorder"}},
-        {StubType::AVCODEC, {"CodecServer", "codec"}},
-        {StubType::AVMETADATAHELPER, {"AVMetaServer", "avmetahelper"}},
+    std::list<std::pair<StubType, std::pair<std::string, std::u16string>>> serverList_ = {
+        {StubType::PLAYER, {"PlayerServer", u"player"}},
+        {StubType::RECORDER, {"RecorderServer", u"recorder"}},
+        {StubType::AVCODEC, {"CodecServer", u"codec"}},
+        {StubType::AVMETADATAHELPER, {"AVMetaServer", u"avmetahelper"}},
     };
 
     using StubMap = std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>>;

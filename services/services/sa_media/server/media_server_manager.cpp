@@ -70,14 +70,10 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         argSets.insert(args[index]);
     }
 
-    auto to_utf16 = [=](std::string str) -> std::u16string {
-        return std::wstring_convert<std::codecvt_utf8_utf16<char16_t>, char16_t> {}.from_bytes(str);
-    };
     for (const auto &it : serverList_) {
         dumpString += "------------------" + it.second.first + "------------------\n";
-        std::u16string str = to_utf16(it.second.second);
         if (WriteInfo(fd, dumpString, dumperTbl_[it.first],
-            argSets.find(str) != argSets.end()) != OHOS::NO_ERROR) {
+            argSets.find(it.second.second) != argSets.end()) != OHOS::NO_ERROR) {
             std::string info = "Failed to write " + it.second.first +" information";
             MEDIA_LOGW("%{public}s", info.c_str());
             return OHOS::INVALID_OPERATION;
