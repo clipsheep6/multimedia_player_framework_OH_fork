@@ -14,7 +14,6 @@
  */
 
 #include <climits>
-#include "avrecorder_napi.h"
 #include "avrecorder_callback.h"
 #include "recorder_napi_utils.h"
 #include "media_log.h"
@@ -22,6 +21,7 @@
 #include "common_napi.h"
 #include "surface_utils.h"
 #include "string_ex.h"
+#include "avrecorder_napi.h"
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVRecorderNapi"};
 }
@@ -214,13 +214,25 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
         }
 
         int32_t ret = threadCtx->napi->SetProfile();
-        CHECK_AND_RETURN_SIGNERROR(ret == MSERR_OK, threadCtx, ret, "prepare");
+        if (ret != MSERR_OK) {
+            MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+            threadCtx->AVRecorderSignError(err, "prepare", "");
+            return;
+        }
 
         ret = threadCtx->napi->SetConfiguration();
-        CHECK_AND_RETURN_SIGNERROR(ret == MSERR_OK, threadCtx, ret, "prepare");
+        if (ret != MSERR_OK) {
+            MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+            threadCtx->AVRecorderSignError(err, "prepare", "");
+            return;
+        }
 
         ret = threadCtx->napi->recorder_->Prepare();
-        CHECK_AND_RETURN_SIGNERROR(ret == MSERR_OK, threadCtx, ret, "prepare");
+        if (ret != MSERR_OK) {
+            MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+            threadCtx->AVRecorderSignError(err, "prepare", "");
+            return;
+        }
 
         threadCtx->napi->StateCallback(AVRecorderState::STATE_PREPARED);
         MEDIA_LOGD("JsPrepare success");
@@ -436,7 +448,11 @@ napi_value AVRecorderNapi::JsReset(napi_env env, napi_callback_info info)
 
         threadCtx->napi->RemoveSurface();
         int32_t ret = threadCtx->napi->recorder_->Reset();
-        CHECK_AND_RETURN_SIGNERROR(ret == MSERR_OK, threadCtx, ret, "Reset");
+        if (ret != MSERR_OK) {
+            MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+            threadCtx->AVRecorderSignError(err, "Reset", "");
+            return;
+        }
 
         threadCtx->napi->StateCallback(AVRecorderState::STATE_IDLE);
         MEDIA_LOGD("Reset success");
@@ -483,7 +499,11 @@ napi_value AVRecorderNapi::JsRelease(napi_env env, napi_callback_info info)
 
         threadCtx->napi->RemoveSurface();
         int32_t ret = threadCtx->napi->recorder_->Release();
-        CHECK_AND_RETURN_SIGNERROR(ret == MSERR_OK, threadCtx, ret, "Release");
+        if (ret != MSERR_OK) {
+            MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+            threadCtx->AVRecorderSignError(err, "Release", "");
+            return;
+        }
 
         threadCtx->napi->StateCallback(AVRecorderState::STATE_RELEASED);
         threadCtx->napi->CancelCallback();

@@ -173,16 +173,6 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
 
     AVRecorderNapi *napi = nullptr;
 };
-
-
-#define CHECK_AND_RETURN_SIGNERROR(cond, ctx, ret, act)                                                     \
-    do {                                                                                                    \
-        if (!(cond)) {                                                                                      \
-            MediaServiceExtErrCodeAPI9 _err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)); \
-            (ctx)->AVRecorderSignError(_err, (act), "");                                                    \
-            return;                                                                                         \
-        }                                                                                                   \
-    } while (0)
 } // namespace Media
 } // namespace OHOS
 #endif // AV_RECORDER_NAPI_H
