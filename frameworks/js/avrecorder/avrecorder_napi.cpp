@@ -18,6 +18,7 @@
 #include "recorder_napi_utils.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "scope_guard.h"
 #include "common_napi.h"
 #include "surface_utils.h"
 #include "string_ex.h"
@@ -213,29 +214,23 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
             return;
         }
 
-        int32_t ret = threadCtx->napi->SetProfile();
-        if (ret != MSERR_OK) {
+        ON_SCOPE_EXIT(0) {
             MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
             threadCtx->AVRecorderSignError(err, "prepare", "");
-            return;
-        }
+        };
+
+        int32_t ret = threadCtx->napi->SetProfile();
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "threadCtx is nullptr!");
 
         ret = threadCtx->napi->SetConfiguration();
-        if (ret != MSERR_OK) {
-            MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
-            threadCtx->AVRecorderSignError(err, "prepare", "");
-            return;
-        }
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "threadCtx is nullptr!");
 
         ret = threadCtx->napi->recorder_->Prepare();
-        if (ret != MSERR_OK) {
-            MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
-            threadCtx->AVRecorderSignError(err, "prepare", "");
-            return;
-        }
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "threadCtx is nullptr!");
+        CANCEL_SCOPE_EXIT_GUARD(0);
 
         threadCtx->napi->StateCallback(AVRecorderState::STATE_PREPARED);
-        MEDIA_LOGD("JsPrepare success");
+        MEDIA_LOGD("Prepare success");
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
