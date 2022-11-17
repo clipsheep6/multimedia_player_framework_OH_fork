@@ -76,7 +76,7 @@ private:
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     AsyncExecutor executor_;
 
-    std::list<std::pair<StubType, std::pair<std::string, std::string>>> serverList = {
+    std::list<std::pair<StubType, std::pair<std::string, std::string>>> serverList_ = {
         {StubType::PLAYER, {"PlayerServer", "player"}},
         {StubType::RECORDER, {"RecorderServer", "recorder"}},
         {StubType::AVCODEC, {"CodecServer", "codec"}},
@@ -111,13 +111,14 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
     if (object != nullptr) {
         pid_t pid = IPCSkeleton::GetCallingPid();
         map[object] = pid;
-        Dumper dumper;
-        dumper.entry_ = [media = stub](int32_t fd) -> int32_t {
-            return media->DumpInfo(fd);
+        Dumper dumper = {
+            pid,
+            IPCSkeleton::GetCallingUid(),
+            [media = stub](int32_t fd) -> int32_t {
+                return media->DumpInfo(fd);
+            },
+            object
         };
-        dumper.pid_ = pid;
-        dumper.uid_ = IPCSkeleton::GetCallingUid();
-        dumper.remoteObject_ = object;
         dumperTbl_[type].emplace_back(dumper);
         MEDIA_LOGD("The number of (%{public}zu) services(%{public}zu) pid(%{public}d).",
             static_cast<int32_t>(type), map.size(), pid);
