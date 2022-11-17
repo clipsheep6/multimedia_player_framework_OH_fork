@@ -63,7 +63,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
 {
     std::string dumpString;
     std::unordered_set<std::u16string> argSets;
-    for (decltype(args.size()) index = 0; index < args.size(); ++index) {
+    for (size_t index = 0; index < args.size(); ++index) {
         argSets.insert(args[index]);
     }
 
