@@ -70,8 +70,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     for (const auto &it : serverList_) {
         dumpString += "------------------" + it.second.first + "------------------\n";
 
-        bool ret = (it.first == StubType::AVMETADATAHELPER) ? false : 
-            (argSets.find(it.second.second) != argSets.end());
+        bool ret = (it.first == StubType::AVMETADATAHELPER) ? false : (argSets.find(it.second.second) != argSets.end());
 
         if (WriteInfo(fd, dumpString, dumperTbl_[it.first], ret) != OHOS::NO_ERROR) {
             std::string info = "Failed to write " + it.second.first +" information";
