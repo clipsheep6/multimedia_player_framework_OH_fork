@@ -152,7 +152,7 @@ GstPadProbeReturn PlayerTrackParse::GetTrackParse(GstPad *pad, GstPadProbeInfo *
     return GST_PAD_PROBE_OK;
 }
 
-void PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
+bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
 {
     MEDIA_LOGD("AddProbeToPad element %{public}s, pad %{public}s", ELEM_NAME(element), PAD_NAME(pad));
     {
@@ -161,7 +161,7 @@ void PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
         if (probeId == 0) {
             MEDIA_LOGE("add probe for %{public}s's pad %{public}s failed",
                 GST_ELEMENT_NAME(GST_PAD_PARENT(pad)), PAD_NAME(pad));
-            return;
+            return false;
         }
         (void)padProbes_.emplace(pad, probeId);
         gst_object_ref(pad);
@@ -171,6 +171,25 @@ void PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
         Format innerMeta;
         (void)trackInfos_.emplace(pad, innerMeta);
     }
+
+    return true;
+}
+
+bool PlayerTrackParse::AddProbeToPadList(const GstElement *element, GList &list)
+{
+    MEDIA_LOGD("AddProbeToPadList element %{public}s", ELEM_NAME(element));
+    for (GList *padNode = g_list_first(&list); padNode != nullptr; padNode = padNode->next) {
+        if (padNode->data == nullptr) {
+            continue;
+        }
+
+        GstPad *pad = reinterpret_cast<GstPad *>(padNode->data);
+        if (!AddProbeToPad(element, pad)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void PlayerTrackParse::OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData)
@@ -181,7 +200,7 @@ void PlayerTrackParse::OnPadAddedCb(const GstElement *element, GstPad *pad, gpoi
     }
 
     auto playerTrackParse = reinterpret_cast<PlayerTrackParse *>(userData);
-    playerTrackParse->AddProbeToPad(element, pad);
+    (void)playerTrackParse->AddProbeToPad(element, pad);
 }
 
 void PlayerTrackParse::SetDemuxerElementFind(bool isFind)
@@ -197,10 +216,21 @@ bool PlayerTrackParse::GetDemuxerElementFind() const
 void PlayerTrackParse::SetUpDemuxerElementCb(GstElement &elem)
 {
     MEDIA_LOGD("SetUpDemuxerElementCb elem %{public}s", ELEM_NAME(&elem));
-    std::unique_lock<std::mutex> lock(signalIdMutex_);
-    gulong signalId = g_signal_connect(&elem, "pad-added", G_CALLBACK(PlayerTrackParse::OnPadAddedCb), this);
-    CHECK_AND_RETURN_LOG(signalId != 0, "listen to pad-added failed");
-    (void)signalIds_.emplace_back(SignalInfo { &elem, signalId });
+    if (!AddProbeToPadList(&elem, *elem.srcpads)) {
+        return;
+    }
+    {
+        std::unique_lock<std::mutex> lock(signalIdMutex_);
+        gulong signalId = g_signal_connect(&elem, "pad-added", G_CALLBACK(PlayerTrackParse::OnPadAddedCb), this);
+        CHECK_AND_RETURN_LOG(signalId != 0, "listen to pad-added failed");
+        (void)signalIds_.emplace_back(SignalInfo { &elem, signalId });
+    }
+}
+
+void PlayerTrackParse::SetUpParseElementCb(GstElement &elem)
+{
+    MEDIA_LOGD("SetUpParseElementCb elem %{public}s", ELEM_NAME(&elem));
+    (void)AddProbeToPadList(&elem, *elem.srcpads);
 }
 
 void PlayerTrackParse::Stop()

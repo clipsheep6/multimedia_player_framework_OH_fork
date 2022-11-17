@@ -21,7 +21,8 @@ using namespace OHOS::Media;
 using namespace std;
 using namespace testing::ext;
 using namespace OHOS::Media::RecorderTestParam;
-
+namespace OHOS {
+namespace Media {
 // config for video to request buffer from surface
 static VideoRecorderConfig g_videoRecorderConfig;
 
@@ -474,6 +475,32 @@ HWTEST_F(RecorderUnitTest, recorder_av_yuv_mpeg4, TestSize.Level0)
 }
 
 /**
+ * @tc.name: recorder_av_yuv_h264
+ * @tc.desc: record audio with yuv h264
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_av_yuv_h264, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_av_yuv_h264.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+
+    recorder_->Start();
+    sleep(RECORDER_TIME);
+    recorder_->Stop(false);
+    recorder_->StopBuffer(PURE_VIDEO);
+    recorder_->Reset();
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
  * @tc.name: recorder_video_pause_resume
  * @tc.desc: record video, then pause resume
  * @tc.type: FUNC
@@ -527,6 +554,30 @@ HWTEST_F(RecorderUnitTest, recorder_video_stop_start, TestSize.Level2)
     EXPECT_NE(MSERR_OK, recorder_->Start());
     recorder_->StopBuffer(PURE_VIDEO);
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_video_stop_start
+ * @tc.desc: record video, then stop start
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_video_wrongsize, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = MPEG4;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_wrongsize.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_ERROR, g_videoRecorderConfig));
+    recorder_->Start();
+    sleep(RECORDER_TIME);
+    EXPECT_NE(MSERR_OK, recorder_->Stop(false));
+    recorder_->StopBuffer(PURE_VIDEO);
+    recorder_->Reset();
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
@@ -606,6 +657,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_003, TestSize.Level
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     recorder_->SetLocation(91, 0);
     recorder_->SetOrientationHint(180);
+    system("param set sys.media.dump.surfacesrc.enable true");
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
 
@@ -636,6 +688,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_004, TestSize.Level
     recorder_->SetLocation(1, 181);
     recorder_->SetLocation(1, -181);
     recorder_->SetOrientationHint(270);
+    system("param set sys.media.dump.surfacesrc.enable false");
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
 
@@ -742,3 +795,5 @@ HWTEST_F(RecorderUnitTest, recorder_SetDataSource_001, TestSize.Level0)
     EXPECT_EQ(MSERR_INVALID_OPERATION,
         recorder_->SetDataSource(DataSourceType::METADATA, g_videoRecorderConfig.videoSourceId));
 }
+} // namespace Media
+} // namespace OHOS

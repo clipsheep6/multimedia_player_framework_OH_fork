@@ -124,6 +124,7 @@ private:
     int32_t InitPlayEngine(const std::string &url);
     int32_t OnPrepare(bool sync);
     int32_t OnPlay();
+    int32_t OnPause();
     int32_t OnStop(bool sync);
     int32_t OnReset();
     int32_t HandlePrepare();

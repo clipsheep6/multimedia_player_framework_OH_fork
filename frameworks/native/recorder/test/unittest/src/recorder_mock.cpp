@@ -50,7 +50,7 @@ static OHOS::BufferRequestConfig g_esRequestConfig = {
     .strideAlignment = STRIDE_ALIGN,
     .format = PIXEL_FMT_RGBA_8888,
     .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
-    .timeout = 0
+    .timeout = INT_MAX
 };
 
 // config for surface buffer flush to the queue
@@ -71,7 +71,7 @@ static OHOS::BufferRequestConfig g_yuvRequestConfig = {
     .strideAlignment = STRIDE_ALIGN,
     .format = PIXEL_FMT_YCRCB_420_SP,
     .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
-    .timeout = 0
+    .timeout = INT_MAX
 };
 
 void RecorderCallbackTest::OnError(RecorderErrorType errorType, int32_t errorCode)
@@ -272,7 +272,11 @@ int32_t RecorderMock::RequesetBuffer(const std::string &recorderType, VideoRecor
             UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "GetStubFile failed ");
             camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderMock::HDICreateESBuffer, this));
         } else {
-            camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderMock::HDICreateYUVBuffer, this));
+            if (recorderType == PURE_ERROR) {
+                camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderMock::HDICreateYUVBufferError, this));
+            } else {
+                camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderMock::HDICreateYUVBuffer, this));
+            }
         }
     }
     return MSERR_OK;
@@ -319,7 +323,7 @@ void RecorderMock::HDICreateESBuffer()
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError ret = producerSurface_->RequestBuffer(buffer, releaseFence, g_esRequestConfig);
-        UNITTEST_CHECK_AND_CONTINUE_LOG(ret != OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now");
+        UNITTEST_CHECK_AND_BREAK_LOG(ret != OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now");
         UNITTEST_CHECK_AND_BREAK_LOG(ret == SURFACE_ERROR_OK && buffer != nullptr, "RequestBuffer failed");
 
         sptr<SyncFence> tempFence = new SyncFence(releaseFence);
@@ -365,6 +369,48 @@ void RecorderMock::HDICreateESBuffer()
     }
 }
 
+void RecorderMock::HDICreateYUVBufferError()
+{
+    // camera hdi loop to requeset buffer
+    while (count_ < STUB_STREAM_SIZE) {
+        UNITTEST_CHECK_AND_BREAK_LOG(!isExit_.load(), "close camera hdi thread");
+        usleep(FRAME_RATE);
+        OHOS::sptr<OHOS::SurfaceBuffer> buffer;
+        int32_t releaseFence;
+        OHOS::BufferRequestConfig yuvRequestConfig = {
+            .width = YUV_BUFFER_WIDTH,
+            .height = 100,
+            .strideAlignment = STRIDE_ALIGN,
+            .format = PIXEL_FMT_YCRCB_420_SP,
+            .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
+            .timeout = INT_MAX
+        };
+        OHOS::SurfaceError ret = producerSurface_->RequestBuffer(buffer, releaseFence, yuvRequestConfig);
+        UNITTEST_CHECK_AND_BREAK_LOG(ret != OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now");
+        UNITTEST_CHECK_AND_BREAK_LOG(ret == SURFACE_ERROR_OK && buffer != nullptr, "RequestBuffer failed");
+
+        sptr<SyncFence> tempFence = new SyncFence(releaseFence);
+        tempFence->Wait(100); // 100ms
+
+        (void)srand((int)time(0));
+        color_ = color_ - 3; // 3 is the step of the pic change
+
+        if (color_ <= 0) {
+            color_ = 0xFF;
+        }
+
+        // get time
+        pts_= (int64_t)(GetPts());
+        (void)buffer->GetExtraData()->ExtraSet("dataSize", static_cast<int32_t>(YUV_BUFFER_SIZE));
+        (void)buffer->GetExtraData()->ExtraSet("timeStamp", pts_);
+        (void)buffer->GetExtraData()->ExtraSet("isKeyFrame", isKeyFrame_);
+        count_++;
+        (count_ % 30) == 0 ? (isKeyFrame_ = 1) : (isKeyFrame_ = 0); // keyframe every 30fps
+        (void)producerSurface_->FlushBuffer(buffer, -1, g_yuvFlushConfig);
+    }
+    cout << "exit camera hdi loop" << endl;
+}
+
 void RecorderMock::HDICreateYUVBuffer()
 {
     // camera hdi loop to requeset buffer
@@ -374,10 +420,7 @@ void RecorderMock::HDICreateYUVBuffer()
         OHOS::sptr<OHOS::SurfaceBuffer> buffer;
         int32_t releaseFence;
         OHOS::SurfaceError ret = producerSurface_->RequestBuffer(buffer, releaseFence, g_yuvRequestConfig);
-        if (ret == OHOS::SURFACE_ERROR_NO_BUFFER) {
-            continue;
-        }
-
+        UNITTEST_CHECK_AND_BREAK_LOG(ret != OHOS::SURFACE_ERROR_NO_BUFFER, "surface loop full, no buffer now");
         UNITTEST_CHECK_AND_BREAK_LOG(ret == SURFACE_ERROR_OK && buffer != nullptr, "RequestBuffer failed");
 
         sptr<SyncFence> tempFence = new SyncFence(releaseFence);
