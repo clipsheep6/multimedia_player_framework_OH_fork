@@ -111,15 +111,14 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
     if (object != nullptr) {
         pid_t pid = IPCSkeleton::GetCallingPid();
         map[object] = pid;
-        Dumper dumper = {
+        dumperTbl_[type].emplace_back(Dumper{
             pid,
             IPCSkeleton::GetCallingUid(),
             [media = stub](int32_t fd) -> int32_t {
                 return media->DumpInfo(fd);
             },
             object
-        };
-        dumperTbl_[type].emplace_back(dumper);
+        });
         MEDIA_LOGD("The number of (%{public}zu) services(%{public}zu) pid(%{public}d).",
             static_cast<int32_t>(type), map.size(), pid);
         if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
