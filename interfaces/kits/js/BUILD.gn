@@ -46,6 +46,8 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/frameworks/js/avcodec/utils",
     "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_decoder",
     "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_encoder",
+    "//foundation/multimedia/player_framework/frameworks/js/avplayer",
+    "//foundation/multimedia/player_framework/frameworks/js/avrecorder",
     "//foundation/multimedia/player_framework/frameworks/js/player",
     "//foundation/multimedia/player_framework/frameworks/js/recorder",
     "//foundation/multimedia/player_framework/frameworks/js/mediacapability",
@@ -73,6 +75,20 @@ ohos_shared_library("media") {
         "//foundation/multimedia/player_framework/frameworks/js/player/video_player_napi.cpp",
       ]
     }
+  }
+
+  if (multimedia_player_framework_support_player_js_api9) {
+    sources += [
+      "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_napi.cpp",
+      "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_callback.cpp",
+    ]
+  }
+
+  if (multimedia_player_framework_support_recorder_js_api9) {
+    sources += [
+      "//foundation/multimedia/player_framework/frameworks/js/avrecorder/avrecorder_napi.cpp",
+      "//foundation/multimedia/player_framework/frameworks/js/avrecorder/avrecorder_callback.cpp",
+    ]
   }
 
   if (multimedia_player_framework_support_recorder) {

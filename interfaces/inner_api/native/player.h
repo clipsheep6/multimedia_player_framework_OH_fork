@@ -185,12 +185,26 @@ class PlayerCallback {
 public:
     virtual ~PlayerCallback() = default;
     /**
-     * Called when an error occurred.
+     * Called when an error occurred for versions older than api9
      *
      * @param errorType Error type. For details, see {@link PlayerErrorType}.
      * @param errorCode Error code.
      */
     virtual void OnError(PlayerErrorType errorType, int32_t errorCode) = 0;
+
+    /**
+     * Called when an error occurred for versions above api9
+     *
+     * @param sourceId Resource where the error occurred
+     * @param errorCode Error code.
+     * @param errorMsg Error message.
+     */
+    virtual void OnError(int32_t sourceId, int32_t errorCode, std::string errorMsg)
+    {
+        (void)sourceId;
+        (void)errorCode;
+        (void)errorMsg;
+    }
 
     /**
      * Called when a player message or alarm is received.
