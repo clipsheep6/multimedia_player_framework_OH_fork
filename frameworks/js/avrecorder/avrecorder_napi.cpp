@@ -13,16 +13,15 @@
  * limitations under the License.
  */
 
+#include <climits>
 #include "avrecorder_napi.h"
 #include "avrecorder_callback.h"
 #include "recorder_napi_utils.h"
-#include <climits>
 #include "media_log.h"
 #include "media_errors.h"
 #include "common_napi.h"
 #include "surface_utils.h"
 #include "string_ex.h"
-
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVRecorderNapi"};
 }

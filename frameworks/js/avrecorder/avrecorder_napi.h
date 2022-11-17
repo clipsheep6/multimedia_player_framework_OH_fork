@@ -179,7 +179,7 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     do {                                                                                                    \
         if (!(cond)) {                                                                                      \
             MediaServiceExtErrCodeAPI9 _err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)); \
-            ctx->AVRecorderSignError(_err, act, "");                                                        \
+            (ctx)->AVRecorderSignError(_err, (act), "");                                                    \
             return;                                                                                         \
         }                                                                                                   \
     } while (0)
