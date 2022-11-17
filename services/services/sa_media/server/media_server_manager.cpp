@@ -37,12 +37,9 @@ int32_t WriteInfo(int32_t fd, std::string &dumpString, std::vector<Dumper> dumpe
 {
     int32_t i = 0;
     for (auto iter : dumpers) {
-        dumpString += "-----Instance #" + std::to_string(i) + ": ";
-        dumpString += "pid = ";
-        dumpString += std::to_string(iter.pid_);
-        dumpString += " uid = ";
-        dumpString += std::to_string(iter.uid_);
-        dumpString += "-----\n";
+        dumpString += "-----Instance #" + std::to_string(i) + ": " +
+             "pid = " + std::to_string(iter.pid_) + " "
+             "uid = " + std::to_string(iter.uid_) + "-----\n";
         if (fd != -1) {
             write(fd, dumpString.c_str(), dumpString.size());
             dumpString.clear();
