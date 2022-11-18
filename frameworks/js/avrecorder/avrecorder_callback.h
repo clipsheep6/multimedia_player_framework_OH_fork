@@ -30,7 +30,7 @@ public:
 
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void ClearCallbackReference();
-    void SendErrorCallback(int32_t errCode, const std::string& param1, const std::string& param2);
+    void SendErrorCallback(int32_t errCode, const std::string &param1, const std::string &param2);
     void SendStateCallback(const std::string &state, const StateChangeReason &reason);
     std::string GetState();
 

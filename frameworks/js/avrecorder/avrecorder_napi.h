@@ -53,6 +53,8 @@ const std::string EVENT_STATE_CHANGE = "stateChange";
 const std::string EVENT_ERROR = "error";
 }
 
+struct AVRecorderAsyncContext;
+
 class AVRecorderNapi {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -109,13 +111,18 @@ private:
     /**
      * readonly state: AVRecorderState;
      */
-    static napi_value GetState(napi_env env, napi_callback_info info);
+    static napi_value JsGetState(napi_env env, napi_callback_info info);
 
-    static AVRecorderNapi* GetAVRecorderNapi(napi_env env, napi_callback_info info);
+    static AVRecorderNapi* GetJsInstance(napi_env env, napi_callback_info info);
+    static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
+        size_t &argCount, napi_value *args);
+    static std::shared_ptr<AVRecorderAsyncContext> GetJsCtxWithPromise(napi_env env, napi_callback_info info,
+        size_t &argCount, napi_value *args, napi_value result);
+
     AVRecorderNapi();
     ~AVRecorderNapi();
 
-    void ErrorCallback(int32_t errCode, const std::string& param1);
+    void ErrorCallback(int32_t errCode, const std::string &param1);
     void StateCallback(const std::string &state);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallback();

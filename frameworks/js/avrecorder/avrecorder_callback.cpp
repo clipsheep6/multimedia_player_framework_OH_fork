@@ -15,6 +15,7 @@
 #include "avrecorder_callback.h"
 #include <uv.h>
 #include "media_errors.h"
+#include "scope_guard.h"
 #include "media_log.h"
 
 namespace {
@@ -46,7 +47,7 @@ void AVRecorderCallback::ClearCallbackReference()
     refMap_.clear();
 }
 
-void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string& param1, const std::string& param2)
+void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &param1, const std::string &param2)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(AVRecorderEvent::EVENT_ERROR) == refMap_.end()) {
@@ -100,20 +101,15 @@ void AVRecorderCallback::OnInfo(int32_t type, int32_t extra)
 
 void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
 {
+    ON_SCOPE_EXIT(0) { delete jsCb; };
+
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        MEDIA_LOGE("fail to get uv event loop");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("fail to new uv_work_t");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
+    ON_SCOPE_EXIT(1) { delete work; };
 
     work->data = reinterpret_cast<void *>(jsCb);
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -150,29 +146,23 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
         delete event;
         delete work;
     });
-    if (ret != 0) {
-        MEDIA_LOGE("fail to uv_queue_work task");
-        delete jsCb;
-        delete work;
-    }
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work task");
+    
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    CANCEL_SCOPE_EXIT_GUARD(1);
 }
 
 void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
 {
+    ON_SCOPE_EXIT(0) { delete jsCb; };
+
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        MEDIA_LOGE("Fail to get uv event loop");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to get uv event loop");
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("No memory");
-        delete jsCb;
-        return;
-    }
+    CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
+    ON_SCOPE_EXIT(1) { delete work; };
 
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
@@ -212,11 +202,10 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
         delete event;
         delete work;
     });
-    if (ret != 0) {
-        MEDIA_LOGE("Failed to execute libuv work queue");
-        delete jsCb;
-        delete work;
-    }
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work task");
+    
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    CANCEL_SCOPE_EXIT_GUARD(1);
 }
 } // namespace Media
 } // namespace OHOS
