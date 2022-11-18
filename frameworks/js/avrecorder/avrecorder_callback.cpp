@@ -101,7 +101,9 @@ void AVRecorderCallback::OnInfo(int32_t type, int32_t extra)
 
 void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
 {
-    ON_SCOPE_EXIT(0) { delete jsCb; };
+    ON_SCOPE_EXIT(0) {
+        delete jsCb;
+    };
 
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -109,7 +111,9 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
     CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) { delete work; };
+    ON_SCOPE_EXIT(1) {
+        delete work;
+    };
 
     work->data = reinterpret_cast<void *>(jsCb);
     int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
@@ -154,7 +158,9 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
 
 void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
 {
-    ON_SCOPE_EXIT(0) { delete jsCb; };
+    ON_SCOPE_EXIT(0) {
+        delete jsCb;
+    };
 
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -162,7 +168,9 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
     CHECK_AND_RETURN_LOG(work != nullptr, "fail to new uv_work_t");
-    ON_SCOPE_EXIT(1) { delete work; };
+    ON_SCOPE_EXIT(1) {
+        delete work;
+    };
 
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.

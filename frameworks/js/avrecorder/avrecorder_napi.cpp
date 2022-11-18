@@ -187,21 +187,6 @@ AVRecorderNapi* AVRecorderNapi::GetJsInstanceAndArgs(napi_env env, napi_callback
     return recorderNapi;
 }
 
-std::shared_ptr<AVRecorderAsyncContext> AVRecorderNapi::GetJsCtxWithPromise(napi_env env, napi_callback_info info,
-    size_t &argCount, napi_value *args, napi_value result)
-{
-    std::shared_ptr<AVRecorderAsyncContext> asyncCtx = std::make_shared<AVRecorderAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, nullptr, "failed to get AsyncContext");
-
-    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, nullptr, "failed to GetJsInstanceAndArgs");
-
-    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
-    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
-
-    return asyncCtx;
-}
-
 AVRecorderNapi* AVRecorderNapi::GetJsInstance(napi_env env, napi_callback_info info)
 {
     size_t argCount = 0;
@@ -223,10 +208,16 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, nullptr, "failed to get AsyncContext");
+
     napi_value args[2] = { nullptr };
     size_t argCount = 2;
-    auto asyncCtx = AVRecorderNapi::GetJsCtxWithPromise(env, info, argCount, args, result);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, nullptr, "failed to GetJsInstanceAndArgs");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     // set param
     napi_valuetype valueType = napi_undefined;
@@ -280,10 +271,16 @@ napi_value AVRecorderNapi::JsGetInputSurface(napi_env env, napi_callback_info in
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, nullptr, "failed to get AsyncContext");
+
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
-    auto asyncCtx = AVRecorderNapi::GetJsCtxWithPromise(env, info, argCount, args, result);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, nullptr, "failed to GetJsInstanceAndArgs");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "GetInputSurface", NAPI_AUTO_LENGTH, &resource);
@@ -427,10 +424,16 @@ napi_value AVRecorderNapi::JsReset(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, nullptr, "failed to get AsyncContext");
+
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
-    auto asyncCtx = AVRecorderNapi::GetJsCtxWithPromise(env, info, argCount, args, result);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, nullptr, "failed to GetJsInstanceAndArgs");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Reset", NAPI_AUTO_LENGTH, &resource);
@@ -466,10 +469,16 @@ napi_value AVRecorderNapi::JsRelease(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, nullptr, "failed to get AsyncContext");
+
     napi_value args[1] = {nullptr};
     size_t argCount = 1;
-    auto asyncCtx = AVRecorderNapi::GetJsCtxWithPromise(env, info, argCount, args, result);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, nullptr, "failed to GetJsInstanceAndArgs");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Release", NAPI_AUTO_LENGTH, &resource);

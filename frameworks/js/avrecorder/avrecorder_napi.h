@@ -116,8 +116,6 @@ private:
     static AVRecorderNapi* GetJsInstance(napi_env env, napi_callback_info info);
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
-    static std::shared_ptr<AVRecorderAsyncContext> GetJsCtxWithPromise(napi_env env, napi_callback_info info,
-        size_t &argCount, napi_value *args, napi_value result);
 
     AVRecorderNapi();
     ~AVRecorderNapi();
