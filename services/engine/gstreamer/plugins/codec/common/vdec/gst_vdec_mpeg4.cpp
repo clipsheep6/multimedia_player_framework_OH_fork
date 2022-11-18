@@ -28,8 +28,9 @@ static void gst_vdec_mpeg4_class_init(GstVdecMpeg4Class *klass)
         "Decode Mpeg4 video streams",
         "OpenHarmony");
     const gchar *sink_caps_string = "video/mpeg, "
-        "mpegversion=(int) 4, "
-        "systemstream=(boolean) false";
+        "mpegversion = (int) 4, "
+        "parsed = (boolean) true, "
+        "systemstream = (boolean) false";
     GstCaps *sink_caps = gst_caps_from_string(sink_caps_string);
 
     if (sink_caps != nullptr) {

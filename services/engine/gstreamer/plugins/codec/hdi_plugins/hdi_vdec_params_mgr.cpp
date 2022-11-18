@@ -77,6 +77,7 @@ int32_t HdiVdecParamsMgr::SetInputVideoCommon(GstElement *element)
     MEDIA_LOGD("SetInputVideoCommon");
     GstVdecBase *base = GST_VDEC_BASE(element);
     inPortDef_.format.video.eCompressionFormat = HdiCodecUtil::CompressionGstToHdi(base->compress_format);
+    // inPortDef_.format.video.eCompressionFormat = (OMX_VIDEO_CODINGTYPE)CODEC_OMX_VIDEO_CodingHEVC;
     inPortDef_.format.video.nFrameHeight = (uint32_t)base->height;
     inPortDef_.format.video.nFrameWidth = (uint32_t)base->width;
     inPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate) << HDI_FRAME_RATE_MOVE;

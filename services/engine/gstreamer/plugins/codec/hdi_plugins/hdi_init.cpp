@@ -30,9 +30,14 @@ namespace {
         {OMX_VIDEO_AVCProfileHigh, AVC_PROFILE_HIGH},
         {OMX_VIDEO_AVCProfileExtended, AVC_PROFILE_EXTENDED},
     };
-    const std::unordered_map<int32_t, int32_t> HEVC_PROFILE_MAP = { // todo
-        {0, HEVC_PROFILE_MAIN},
+
+    const std::unordered_map<int32_t, int32_t> HEVC_PROFILE_MAP = {
+        {CODEC_HEVC_PROFILE_MAIN, HEVC_PROFILE_MAIN},
+        {CODEC_HEVC_PROFILE_MAIN10, HEVC_PROFILE_MAIN_10},
+        {CODEC_HEVC_PROFILE_MAIN_STILL, HEVC_PROFILE_MAIN_STILL},
+        {CODEC_HEVC_PROFILE_MAIN10_HDR10, HEVC_PROFILE_MAIN_10_HDR10},
     };
+
     const std::unordered_map<int32_t, int32_t> MPEG4_PROFILE_MAP = {
         {OMX_VIDEO_MPEG4ProfileSimple, MPEG4_PROFILE_SIMPLE},
         {OMX_VIDEO_MPEG4ProfileSimpleScalable, MPEG4_PROFILE_SIMPLE_SCALABLE},
@@ -71,29 +76,29 @@ namespace {
         {OMX_VIDEO_AVCLevel51, AVC_LEVEL_51},
     };
 
-    const std::unordered_map<int32_t, int32_t> HEVC_LEVEL_MAP = { // todo
-        {0, HEVC_LEVEL_1},
-        {1, HEVC_LEVEL_2},
-        {2, HEVC_LEVEL_21},
-        {3, HEVC_LEVEL_3}, 
-        {4, HEVC_LEVEL_31},
-        {5, HEVC_LEVEL_4},
-        {6, HEVC_LEVEL_41}, 
-        {7, HEVC_LEVEL_5},
-        {8, HEVC_LEVEL_51},
-        {9, HEVC_LEVEL_52},
-        {10, HEVC_LEVEL_6},
-        {11, HEVC_LEVEL_61},
-        {12, HEVC_LEVEL_62},
+    const std::unordered_map<int32_t, int32_t> HEVC_LEVEL_MAP = {
+        {CODEC_HEVC_MAIN_TIER_LEVEL1, HEVC_LEVEL_1},
+        {CODEC_HEVC_MAIN_TIER_LEVEL2, HEVC_LEVEL_2},
+        {CODEC_HEVC_MAIN_TIER_LEVEL21, HEVC_LEVEL_21},
+        {CODEC_HEVC_MAIN_TIER_LEVEL3, HEVC_LEVEL_3},
+        {CODEC_HEVC_MAIN_TIER_LEVEL31, HEVC_LEVEL_31},
+        {CODEC_HEVC_MAIN_TIER_LEVEL4, HEVC_LEVEL_4},
+        {CODEC_HEVC_MAIN_TIER_LEVEL41, HEVC_LEVEL_41},
+        {CODEC_HEVC_MAIN_TIER_LEVEL5, HEVC_LEVEL_5},
+        {CODEC_HEVC_MAIN_TIER_LEVEL51, HEVC_LEVEL_51},
+        {CODEC_HEVC_MAIN_TIER_LEVEL52, HEVC_LEVEL_52},
+        {CODEC_HEVC_MAIN_TIER_LEVEL6, HEVC_LEVEL_6},
+        {CODEC_HEVC_MAIN_TIER_LEVEL61, HEVC_LEVEL_61},
+        {CODEC_HEVC_MAIN_TIER_LEVEL62, HEVC_LEVEL_62},
     };
 
     const std::unordered_map<int32_t, int32_t> MPEG4_LEVEL_MAP = {
         {OMX_VIDEO_MPEG4Level0, MPEG4_LEVEL_0},
         {OMX_VIDEO_MPEG4Level0b, MPEG4_LEVEL_0B},
-        {OMX_VIDEO_MPEG4Level1, MPEG4_LEVEL_1}, 
+        {OMX_VIDEO_MPEG4Level1, MPEG4_LEVEL_1},
         {OMX_VIDEO_MPEG4Level2, MPEG4_LEVEL_2},
         {OMX_VIDEO_MPEG4Level3, MPEG4_LEVEL_3},
-        {OMX_VIDEO_MPEG4Level4, MPEG4_LEVEL_4}, 
+        {OMX_VIDEO_MPEG4Level4, MPEG4_LEVEL_4},
         {OMX_VIDEO_MPEG4Level4a, MPEG4_LEVEL_4A},
         {OMX_VIDEO_MPEG4Level5, MPEG4_LEVEL_5},
     };

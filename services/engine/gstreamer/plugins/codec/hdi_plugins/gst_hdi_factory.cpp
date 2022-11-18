@@ -47,8 +47,9 @@ namespace {
         "alignment=(string) nal,"
         "stream-format=(string) byte-stream";
     const std::string DEFAULT_MPEG4_CAPS = "video/mpeg,"
-        "alignment=(string) nal,"
-        "stream-format=(string) byte-stream";
+        "mpegversion = (int) 4, "
+        "parsed = (boolean) true, "
+        "systemstream = (boolean) false";
     using namespace OHOS::Media;
     const std::unordered_map<int32_t, std::string> FORMAT_MAPPING = {
         { NV21, "NV21" },
@@ -156,6 +157,7 @@ const std::map<std::pair<int32_t, std::string>, CreateCodecFunc> GstHdiFactory::
 std::shared_ptr<IGstCodec> GstHdiFactory::CreateHdiVdec(GstElementClass *kclass)
 {
     std::string component = gst_element_class_get_metadata(kclass, GST_CODEC_NAME);
+    MEDIA_LOGD("CreateHdiVdec codec name = %{public}s", component.c_str());
     std::shared_ptr<HdiCodec> hdiCodec = std::make_shared<HdiCodec>(component);
     std::shared_ptr<HdiVdecInBufferMgr> inBufferMgr = std::make_shared<HdiVdecInBufferMgr>();
     std::shared_ptr<HdiVdecOutBufferMgr> outBufferMgr = std::make_shared<HdiVdecOutBufferMgr>();

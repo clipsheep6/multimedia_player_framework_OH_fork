@@ -44,6 +44,14 @@ const std::map<int32_t, OMX_VIDEO_AVCPROFILETYPE> AVC_PROFILE_MAP = {
     {AVC_PROFILE_MAIN, OMX_VIDEO_AVCProfileMain},
 };
 
+const std::map<int32_t, CodecHevcProfile> HEVC_PROFILE_MAP = {
+    {HEVC_PROFILE_MAIN, CODEC_HEVC_PROFILE_MAIN},
+    {HEVC_PROFILE_MAIN_10, CODEC_HEVC_PROFILE_MAIN10},
+    {HEVC_PROFILE_MAIN_STILL, CODEC_HEVC_PROFILE_MAIN_STILL},
+    {HEVC_PROFILE_MAIN_10_HDR10, CODEC_HEVC_PROFILE_MAIN10_HDR10},
+    {HEVC_PROFILE_MAIN_10_HDR10_PLUS, CODEC_HEVC_PROFILE_MAIN10_HDR10_PLUS},
+};
+
 const std::map<int32_t, OMX_VIDEO_AVCLEVELTYPE> AVC_LEVEL_MAP = {
     {AVC_LEVEL_1, OMX_VIDEO_AVCLevel1},
     {AVC_LEVEL_1b, OMX_VIDEO_AVCLevel1b},
@@ -61,6 +69,22 @@ const std::map<int32_t, OMX_VIDEO_AVCLEVELTYPE> AVC_LEVEL_MAP = {
     {AVC_LEVEL_42, OMX_VIDEO_AVCLevel42},
     {AVC_LEVEL_5, OMX_VIDEO_AVCLevel5},
     {AVC_LEVEL_51, OMX_VIDEO_AVCLevel51},
+};
+
+const std::map<int32_t, CodecHevcLevel> HEVC_LEVEL_MAP = {
+    {HEVC_LEVEL_1, CODEC_HEVC_MAIN_TIER_LEVEL1 },
+    {HEVC_LEVEL_2, CODEC_HEVC_MAIN_TIER_LEVEL2 },
+    {HEVC_LEVEL_21, CODEC_HEVC_MAIN_TIER_LEVEL21},
+    {HEVC_LEVEL_3, CODEC_HEVC_MAIN_TIER_LEVEL3 },
+    {HEVC_LEVEL_31, CODEC_HEVC_MAIN_TIER_LEVEL31},
+    {HEVC_LEVEL_4, CODEC_HEVC_MAIN_TIER_LEVEL4 },
+    {HEVC_LEVEL_41, CODEC_HEVC_MAIN_TIER_LEVEL41},
+    {HEVC_LEVEL_5, CODEC_HEVC_MAIN_TIER_LEVEL5 },
+    {HEVC_LEVEL_51, CODEC_HEVC_MAIN_TIER_LEVEL51},
+    {HEVC_LEVEL_52, CODEC_HEVC_MAIN_TIER_LEVEL52},
+    {HEVC_LEVEL_6, CODEC_HEVC_MAIN_TIER_LEVEL6 },
+    {HEVC_LEVEL_61, CODEC_HEVC_MAIN_TIER_LEVEL61},
+    {HEVC_LEVEL_62, CODEC_HEVC_MAIN_TIER_LEVEL62},
 };
 
 HdiVencParamsMgr::HdiVencParamsMgr()
@@ -128,6 +152,8 @@ int32_t HdiVencParamsMgr::ConfigEncoderParams(GstElement *element)
     switch (base->compress_format) {
         case GST_AVC:
             return InitAvcParamters(element);
+        case GST_HEVC:
+            return InitHevcParamters(element);
         default:
             break;
     }
@@ -377,6 +403,34 @@ int32_t HdiVencParamsMgr::InitAvcParamters(GstElement *element)
     }
     ret = HdiSetParameter(handle_, OMX_IndexParamVideoAvc, avcType);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoAvc Failed");
+    return GST_CODEC_OK;
+}
+
+int32_t HdiVencParamsMgr::InitHevcParamters(GstElement *element)
+{
+    (void)element;
+    GstVencBase *base = GST_VENC_BASE(element);
+    CodecVideoParamHevc hevcType;
+    InitHdiParam(hevcType, verInfo_);
+    hevcType.portIndex = outPortDef_.nPortIndex;
+    auto ret = HdiGetParameter(handle_, OMX_IndexParamVideoHevc, hevcType);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoHevc Failed");
+
+    if (HEVC_PROFILE_MAP.find(base->codec_profile) != HEVC_PROFILE_MAP.end()) {
+        hevcType.profile = HEVC_PROFILE_MAP.at(base->codec_profile);
+    } else {
+        hevcType.profile = CODEC_HEVC_PROFILE_MAIN;
+    }
+    if (HEVC_LEVEL_MAP.find(base->codec_level) != HEVC_LEVEL_MAP.end()) {
+        hevcType.level = HEVC_LEVEL_MAP.at(base->codec_level);
+    } else {
+        hevcType.level = CODEC_HEVC_MAIN_TIER_LEVEL41;
+    }
+
+    hevcType.keyFrameInterval = (uint32_t)(base->frame_rate * base->i_frame_interval_new / MSEC_PER_S - 1);
+
+    ret = HdiSetParameter(handle_, OMX_IndexParamVideoHevc, hevcType);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoHevc Failed");
     return GST_CODEC_OK;
 }
 
