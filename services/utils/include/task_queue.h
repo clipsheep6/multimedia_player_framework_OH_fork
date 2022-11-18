@@ -197,10 +197,10 @@ private:
     }
 
     enum TaskState {
-        IDLE,
-        RUNNING,
-        CANCELED,
-        FINISHED,
+        IDLE = 0,
+        RUNNING = 1,
+        CANCELED = 2,
+        FINISHED = 3,
     };
 
     TaskState state_ = TaskState::IDLE;

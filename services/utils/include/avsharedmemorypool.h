@@ -44,7 +44,7 @@ namespace Media {
 class __attribute__((visibility("default"))) AVSharedMemoryPool
     : public std::enable_shared_from_this<AVSharedMemoryPool>, public NoCopyable {
 public:
-    AVSharedMemoryPool(const std::string &name);
+    explicit AVSharedMemoryPool(const std::string &name);
     ~AVSharedMemoryPool();
 
     using MemoryAvailableNotifier = std::function<void(void)>;

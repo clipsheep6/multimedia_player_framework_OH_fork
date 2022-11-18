@@ -247,7 +247,7 @@ struct MediaAsyncContext {
     static void CheckCtorResult(napi_env env, napi_value &result, MediaAsyncContext *ctx, napi_value &args);
     void SignError(int32_t code, const std::string &message, bool del = true);
     std::string memoryTagHead = "safe";
-    napi_env env;
+    napi_env env_;
     napi_async_work work = nullptr;
     napi_deferred deferred = nullptr;
     napi_ref callbackRef = nullptr;

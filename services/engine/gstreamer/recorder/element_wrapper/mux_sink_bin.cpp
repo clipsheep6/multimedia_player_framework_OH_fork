@@ -176,8 +176,8 @@ int32_t MuxSinkBin::ConfigureGeoLocation(const RecorderParam &recParam)
 {
     const GeoLocation &param = static_cast<const GeoLocation &>(recParam);
     bool setLocationToMux = true;
-    if (param.latitude < MIN_LATITUDE || param.latitude > MAX_LATITUDE || param.longitude < MIN_LONGITUDE
-        || param.longitude > MAX_LONGITUDE) {
+    if (param.latitude < MIN_LATITUDE || param.latitude > MAX_LATITUDE ||
+        param.longitude < MIN_LONGITUDE || param.longitude > MAX_LONGITUDE) {
         setLocationToMux = false;
         MEDIA_LOGE("Invalid GeoLocation!");
     }

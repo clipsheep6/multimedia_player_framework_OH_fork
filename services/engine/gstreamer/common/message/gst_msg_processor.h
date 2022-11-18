@@ -63,7 +63,7 @@ private:
     GstBus *gstBus_ = nullptr;
     GMainLoop *mainLoop_ = nullptr;
     GMainContext *context_ = nullptr;
-    GSource *busSource_ = 0;
+    GSource *busSource_ = nullptr;
     InnerMsgNotifier notifier_;
     TaskQueue guardTask_;
     std::mutex mutex_;

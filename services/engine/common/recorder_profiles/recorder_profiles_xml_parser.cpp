@@ -110,7 +110,7 @@ bool RecorderProfilesXmlParser::ParseInternal(xmlNode *node)
 
     xmlNode *currNode = node;
     for (; currNode != nullptr; currNode = currNode->next) {
-        if (XML_ELEMENT_NODE == currNode->type) {
+        if (currNode->type == XML_ELEMENT_NODE) {
             switch (GetNodeNameAsInt(currNode)) {
                 case RecorderProfilesNodeName::RECORDER_CAPS: {
                     ParseRecorderCapsData(currNode);
@@ -171,13 +171,13 @@ bool RecorderProfilesXmlParser::ParseRecorderCapsData(xmlNode *node)
     xmlNode *child = node->xmlChildrenNode;
 
     for (; child; child = child->next) {
-        if (0 == xmlStrcmp(child->name, reinterpret_cast<const xmlChar*>("ContainerFormat"))) {
+        if (xmlStrcmp(child->name, reinterpret_cast<const xmlChar*>("ContainerFormat")) == 0) {
             bool ret = ParseRecorderContainerFormatData(child);
             CHECK_AND_RETURN_RET_LOG(ret != false, false, "ParseRecorderContainerFormatData failed");
-        } else if (0 == xmlStrcmp(child->name, reinterpret_cast<const xmlChar*>("VideoEncoderCaps"))) {
+        } else if (xmlStrcmp(child->name, reinterpret_cast<const xmlChar*>("VideoEncoderCaps")) == 0) {
             bool ret = ParseRecorderEncodeCapsData(child, true);
             CHECK_AND_RETURN_RET_LOG(ret != false, false, "ParseRecorderEncodeCapsData failed");
-        } else if (0 == xmlStrcmp(child->name, reinterpret_cast<const xmlChar*>("AudioEncoderCaps"))) {
+        } else if (xmlStrcmp(child->name, reinterpret_cast<const xmlChar*>("AudioEncoderCaps")) == 0) {
             bool ret = ParseRecorderEncodeCapsData(child, false);
             CHECK_AND_RETURN_RET_LOG(ret != false, false, "ParseRecorderEncodeCapsData failed");
         } else {
@@ -388,7 +388,7 @@ bool RecorderProfilesXmlParser::ParseRecorderProfilesData(xmlNode *node)
 
 bool RecorderProfilesXmlParser::ParseRecorderProfilesSourceData(const std::string &sourceType, xmlNode *node)
 {
-    if (0 == xmlStrcmp(node->name, reinterpret_cast<const xmlChar*>(sourceType.c_str()))) {
+    if (xmlStrcmp(node->name, reinterpret_cast<const xmlChar*>(sourceType.c_str())) == 0) {
         std::string property = SOURCE_TYPE_ID_MAP.at(sourceType);
         if (xmlHasProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(property.c_str())))) {
             std::string capabilityValue = std::string(reinterpret_cast<char*>(xmlGetProp(node,
@@ -417,7 +417,7 @@ bool RecorderProfilesXmlParser::ParseRecorderProfileSettingsData(xmlNode *node, 
 {
     xmlNode *child = node->xmlChildrenNode;
     for (; child; child = child->next) {
-        if (0 == xmlStrcmp(child->name, reinterpret_cast<const xmlChar*>("ProfileSettings"))) {
+        if (xmlStrcmp(child->name, reinterpret_cast<const xmlChar*>("ProfileSettings")) == 0) {
             bool ret = true;
             for (auto it = capabilityKeys_.begin(); it != capabilityKeys_.end(); it++) {
                 ret = ParseVideoRecorderProfiles(child, capabilityData, *it);
@@ -449,12 +449,12 @@ bool RecorderProfilesXmlParser::ParseRecorderProfileVideoAudioData(xmlNode *node
 {
     xmlNode *leafChild = node->xmlChildrenNode;
     for (; leafChild; leafChild = leafChild->next) {
-        if (0 == xmlStrcmp(leafChild->name, reinterpret_cast<const xmlChar*>("Video"))) {
+        if (xmlStrcmp(leafChild->name, reinterpret_cast<const xmlChar*>("Video")) == 0) {
             for (auto it = capabilityKeys_.begin(); it != capabilityKeys_.end(); it++) {
                 bool ret = ParseVideoRecorderProfilesForVideoAudioData(leafChild, capabilityData, *it);
                 CHECK_AND_RETURN_RET_LOG(ret != false, false, "ParseVideoRecorderProfilesForVideoAudioData failed");
             }
-        } else if (0 == xmlStrcmp(leafChild->name, reinterpret_cast<const xmlChar*>("Audio"))) {
+        } else if (xmlStrcmp(leafChild->name, reinterpret_cast<const xmlChar*>("Audio")) == 0) {
             for (auto it = capabilityKeys_.begin(); it != capabilityKeys_.end(); it++) {
                 bool ret = ParseAudioRecorderProfiles(leafChild, capabilityData, *it);
                 CHECK_AND_RETURN_RET_LOG(ret != false, false, "ParseAudioRecorderProfiles failed");
