@@ -121,7 +121,7 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
         std::string request = event->callbackName;
-        MEDIA_LOGD("OnJsStateCallBack %{public}s, state%{public}s, uv_queue_work start",
+        MEDIA_LOGD("OnJsStateCallBack %{public}s, state %{public}s, uv_queue_work start",
                    request.c_str(), event->state.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
