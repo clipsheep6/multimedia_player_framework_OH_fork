@@ -132,7 +132,7 @@ void VideoRecorderNapi::Destructor(napi_env env, void *nativeObject, void *final
         VideoRecorderNapi *napi = reinterpret_cast<VideoRecorderNapi *>(nativeObject);
         if (napi->surface_ != nullptr) {
             auto id = napi->surface_->GetUniqueId();
-            if (napi->isSurfaceIdVaild(id)) {
+            if (napi->IsSurfaceIdVaild(id)) {
                 (void)SurfaceUtils::GetInstance()->Remove(id);
             }
         }
@@ -506,7 +506,7 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
         }
         if (threadCtx->napi->surface_ != nullptr) {
             auto id = threadCtx->napi->surface_->GetUniqueId();
-            if (threadCtx->napi->isSurfaceIdVaild(id)) {
+            if (threadCtx->napi->IsSurfaceIdVaild(id)) {
                 (void)SurfaceUtils::GetInstance()->Remove(id);
             }
             threadCtx->napi->surface_ = nullptr;
@@ -556,7 +556,7 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
         }
         if (threadCtx->napi->surface_ != nullptr) {
             auto id = threadCtx->napi->surface_->GetUniqueId();
-            if (threadCtx->napi->isSurfaceIdVaild(id)) {
+            if (threadCtx->napi->IsSurfaceIdVaild(id)) {
                 (void)SurfaceUtils::GetInstance()->Remove(id);
             }
             threadCtx->napi->surface_ = nullptr;
@@ -739,7 +739,7 @@ int32_t VideoRecorderNapi::SetUrl(const std::string &urlPath)
     return MSERR_OK;
 }
 
-bool VideoRecorderNapi::isSurfaceIdVaild(uint64_t surfaceID)
+bool VideoRecorderNapi::IsSurfaceIdVaild(uint64_t surfaceID)
 {
     auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceID);
     if (surface == nullptr) {
@@ -759,7 +759,7 @@ napi_value VideoRecorderNapi::GetState(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to retrieve details about the callback");
 
     VideoRecorderNapi *recorderNapi = nullptr;
-    status = napi_unwrap(env, jsThis, (void **)&recorderNapi);
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to retrieve instance");
 
     std::string curState = VideoRecorderState::STATE_ERROR;

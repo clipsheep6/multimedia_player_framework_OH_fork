@@ -183,7 +183,7 @@ bool AVCodecXmlParser::ParseInternal(xmlNode *node)
 {
     xmlNode *currNode = node;
     for (; currNode != nullptr; currNode = currNode->next) {
-        if (XML_ELEMENT_NODE == currNode->type) {
+        if (currNode->type == XML_ELEMENT_NODE) {
             switch (GetNodeNameAsInt(currNode)) {
                 case AUDIO_DECODER:
                 case AUDIO_ENCODER:

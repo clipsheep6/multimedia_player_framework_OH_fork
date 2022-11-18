@@ -53,7 +53,6 @@ public:
     virtual void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                 void (*stateCb)(GstBaseSink *, guint),
                                 void (*errorCb)(GstBaseSink *, const std::string &)) = 0;
-    virtual void OnError(std::string errMsg);
 };
 } // namespace Media
 } // namespace OHOS

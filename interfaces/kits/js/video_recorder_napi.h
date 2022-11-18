@@ -99,7 +99,7 @@ private:
     void GetConfig(napi_env env, napi_value args, std::unique_ptr<VideoRecorderAsyncContext> &ctx,
         VideoRecorderProperties &properties);
     int32_t SetUrl(const std::string &UrlPath);
-    bool isSurfaceIdVaild(uint64_t surfaceID);
+    bool IsSurfaceIdVaild(uint64_t surfaceID);
 
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;

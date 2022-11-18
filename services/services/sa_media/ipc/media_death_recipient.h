@@ -26,7 +26,7 @@ public:
     explicit MediaDeathRecipient(pid_t pid) : pid_(pid) {}
     virtual ~MediaDeathRecipient() = default;
 
-    void OnRemoteDied(const wptr<IRemoteObject> &remote)
+    void OnRemoteDied(const wptr<IRemoteObject> &remote) override
     {
         (void)remote;
         if (diedCb_ != nullptr) {

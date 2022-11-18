@@ -39,13 +39,6 @@ static napi_value Export(napi_env env, napi_value exports)
     OHOS::Media::AudioRecorderNapi::Init(env, exports);
     OHOS::Media::VideoRecorderNapi::Init(env, exports);
 #endif
-#ifdef SUPPORT_CODEC_JS
-    OHOS::Media::AudioDecoderNapi::Init(env, exports);
-    OHOS::Media::AudioEncoderNapi::Init(env, exports);
-    OHOS::Media::VideoDecoderNapi::Init(env, exports);
-    OHOS::Media::VideoEncoderNapi::Init(env, exports);
-    OHOS::Media::MediaCapabilityVCapsNapi::Init(env, exports);
-#endif
     return exports;
 }
 
@@ -58,7 +51,7 @@ static napi_module g_module = {
     .nm_filename = nullptr,
     .nm_register_func = Export,
     .nm_modname = "multimedia.media",
-    .nm_priv = ((void*)0),
+    .nm_priv = (reinterpret_cast<void*>(0)),
     .reserved = {0}
 };
 

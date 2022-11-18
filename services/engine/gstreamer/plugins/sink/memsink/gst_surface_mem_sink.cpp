@@ -176,21 +176,21 @@ static void gst_surface_mem_sink_finalize(GObject *obj)
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
 
-static TransformType gst_surface_mem_sink_get_rotation(guint rotation)
+static GraphicTransformType gst_surface_mem_sink_get_rotation(guint rotation)
 {
     // We gets the rotation direction clockwise, but Surface needs it counterclockwise
     switch (rotation) {
         case VIDEO_ROTATION_90: {
-            return ROTATE_270;
+            return GRAPHIC_ROTATE_270;
         }
         case VIDEO_ROTATION_180: {
-            return ROTATE_180;
+            return GRAPHIC_ROTATE_180;
         }
         case VIDEO_ROTATION_270: {
-            return ROTATE_90;
+            return GRAPHIC_ROTATE_90;
         }
         default:
-            return ROTATE_NONE;
+            return GRAPHIC_ROTATE_NONE;
     }
 }
 
@@ -547,8 +547,9 @@ static void gst_surface_mem_sink_dump_buffer(GstSurfaceMemSink *self, GstBuffer 
             stride_size = (stride_width * stride_height * 3) / 2;  // 3 2 : NV12和NV21 size比例大小
         }
     }
-    GST_DEBUG_OBJECT(self, "format %s, stride width %d, stride height %d, stride_size %d, info.size %ld",
-        format, stride_width, stride_height, stride_size, (long)info.size);
+    GST_DEBUG_OBJECT(self, "format %s, stride width %u, stride height %u,"
+        "stride_size %u, info.size %" G_GSIZE_FORMAT,
+        format, stride_width, stride_height, stride_size, info.size);
     if (stride_size > info.size) {
         stride_size = info.size;
     }
@@ -585,4 +586,3 @@ static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *elemen
     }
     return GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
 }
-

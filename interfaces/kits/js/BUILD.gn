@@ -84,23 +84,6 @@ ohos_shared_library("media") {
     ]
   }
 
-  if (multimedia_player_framework_support_codec_js) {
-    sources += [
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_decoder/audio_decoder_callback_napi.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_decoder/audio_decoder_napi.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_encoder/audio_encoder_callback_napi.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_encoder/audio_encoder_napi.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/avcodec_capability_napi.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/media_capability_vcaps_napi.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/utils/avcodec_napi_helper.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/utils/avcodec_napi_utils.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_decoder/video_decoder_callback_napi.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_decoder/video_decoder_napi.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_encoder/video_encoder_callback_napi.cpp",
-      "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_encoder/video_encoder_napi.cpp",
-    ]
-  }
-
   cflags = [
     "-std=c++17",
     "-fno-rtti",

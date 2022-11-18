@@ -20,6 +20,7 @@
 #include "audio_renderer.h"
 #include "audio_system_manager.h"
 #include "audio_errors.h"
+#include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
@@ -27,22 +28,24 @@ class AudioRendererMediaCallback : public AudioStandard::AudioRendererCallback {
 public:
     using InterruptCbFunc = std::function<void(GstBaseSink *, guint, guint, guint)>;
     using StateCbFunc = std::function<void(GstBaseSink *, guint)>;
-    AudioRendererMediaCallback(GstBaseSink *audioSink);
-    ~AudioRendererMediaCallback() = default;
+    explicit AudioRendererMediaCallback(GstBaseSink *audioSink);
+    ~AudioRendererMediaCallback();
     void SaveInterruptCallback(InterruptCbFunc interruptCb);
     void SaveStateCallback(StateCbFunc stateCb);
     void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
-    void OnStateChange(const AudioStandard::RendererState state) override;
+    void OnStateChange(const AudioStandard::RendererState state,
+        const AudioStandard::StateChangeCmdType cmdType) override;
 private:
     GstBaseSink *audioSink_ = nullptr;
     InterruptCbFunc interruptCb_ = nullptr;
     StateCbFunc stateCb_ = nullptr;
+    TaskQueue taskQue_;
 };
 
 
 class AudioSinkSvImpl : public AudioSink {
 public:
-    AudioSinkSvImpl(GstBaseSink *audioSink);
+    explicit AudioSinkSvImpl(GstBaseSink *audioSink);
     virtual ~AudioSinkSvImpl();
 
     GstCaps *GetCaps() override;
@@ -69,10 +72,10 @@ public:
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
                         void (*errorCb)(GstBaseSink *, const std::string &)) override;
-    void OnError(std::string errMsg) override;
     bool Writeable() const override;
 
 private:
+    void OnError(std::string errMsg);
     using ErrorCbFunc = std::function<void(GstBaseSink *, const std::string &)>;
     ErrorCbFunc errorCb_ = nullptr;
     GstBaseSink *audioSink_ = nullptr;
