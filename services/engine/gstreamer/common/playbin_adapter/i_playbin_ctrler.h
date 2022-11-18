@@ -63,8 +63,6 @@ public:
     virtual int32_t Pause() = 0; // async
     virtual int32_t Seek(int64_t timeUs, int32_t seekOption) = 0; // async
     virtual int32_t Stop(bool needWait) = 0; // async
-    virtual int64_t GetDuration() = 0; // usec
-    virtual int64_t GetPosition() = 0; // usec
     virtual int32_t SetRate(double rate) = 0;
     virtual double GetRate() = 0;
     virtual int32_t SetLoop(bool loop) = 0;
