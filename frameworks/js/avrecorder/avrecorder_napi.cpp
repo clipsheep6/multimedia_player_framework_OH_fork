@@ -214,12 +214,13 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
             return;
         }
 
+        int32_t ret = MSERR_OK;
         ON_SCOPE_EXIT(0) {
             MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
             threadCtx->AVRecorderSignError(err, "prepare", "");
         };
 
-        int32_t ret = threadCtx->napi->SetProfile();
+        ret = threadCtx->napi->SetProfile();
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "threadCtx is nullptr!");
 
         ret = threadCtx->napi->SetConfiguration();
