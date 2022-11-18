@@ -52,7 +52,7 @@ void AudioRendererMediaCallback::SaveStateCallback(StateCbFunc stateCb)
 
 void AudioRendererMediaCallback::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
-    auto task = std::make_shared<TaskHandler<void>>([&, this] {
+    auto task = std::make_shared<TaskHandler<void>>([this, interruptEvent] {
         if (interruptCb_ != nullptr) {
             interruptCb_(audioSink_, interruptEvent.eventType, interruptEvent.forceType, interruptEvent.hintType);
         }
@@ -66,7 +66,7 @@ void AudioRendererMediaCallback::OnStateChange(const AudioStandard::RendererStat
     MEDIA_LOGD("RenderState is %{public}d, type is %{public}d",
         static_cast<int32_t>(state), static_cast<int32_t>(cmdType));
     if (cmdType == AudioStandard::StateChangeCmdType::CMD_FROM_SYSTEM) {
-        auto task = std::make_shared<TaskHandler<void>>([&, this] {
+        auto task = std::make_shared<TaskHandler<void>>([this, state] {
             if (stateCb_ != nullptr) {
                 stateCb_(audioSink_, static_cast<guint>(state));
             }
