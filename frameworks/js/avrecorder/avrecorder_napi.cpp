@@ -210,7 +210,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
         AVRecorderAsyncContext* threadCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
         if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            threadCtx->AVRecorderSignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "", "");
+            threadCtx->AVRecorderSignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Prepare", "");
             return;
         }
 
@@ -221,13 +221,13 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
         };
 
         ret = threadCtx->napi->SetProfile();
-        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "threadCtx is nullptr!");
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to SetProfile");
 
         ret = threadCtx->napi->SetConfiguration();
-        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "threadCtx is nullptr!");
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to SetConfiguration");
 
         ret = threadCtx->napi->recorder_->Prepare();
-        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "threadCtx is nullptr!");
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to Prepare");
         CANCEL_SCOPE_EXIT_GUARD(0);
 
         threadCtx->napi->StateCallback(AVRecorderState::STATE_PREPARED);
@@ -268,23 +268,22 @@ napi_value AVRecorderNapi::JsGetInputSurface(napi_env env, napi_callback_info in
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* threadCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(threadCtx != nullptr, "threadCtx is nullptr!");
-        if (threadCtx->napi == nullptr || threadCtx->napi->recorder_ == nullptr) {
-            threadCtx->AVRecorderSignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "", "");
-            return;
-        }
+
+        ON_SCOPE_EXIT(0) {
+            threadCtx->AVRecorderSignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
+        };
+
+        CHECK_AND_RETURN_LOG(threadCtx->napi != nullptr && threadCtx->napi->recorder_ != nullptr,
+                             "Failed to get recorder!");
 
         AVRecorderNapi *napi = threadCtx->napi;
         napi->surface_ = napi->recorder_->GetSurface(napi->videoSourceID);
-        if (napi->surface_ == nullptr) {
-            threadCtx->AVRecorderSignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
-            return;
-        }
+        CHECK_AND_RETURN_LOG(napi->surface_ != nullptr, "failed to GetSurface");
 
         SurfaceError error = SurfaceUtils::GetInstance()->Add(napi->surface_->GetUniqueId(), napi->surface_);
-        if (error != SURFACE_ERROR_OK) {
-            threadCtx->AVRecorderSignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
-            return;
-        }
+        CHECK_AND_RETURN_LOG(error == SURFACE_ERROR_OK, "failed to Add Surface");
+
+        CANCEL_SCOPE_EXIT_GUARD(0);
 
         auto surfaceId = std::to_string(napi->surface_->GetUniqueId());
         threadCtx->JsResult = std::make_unique<MediaJsResultString>(surfaceId);
