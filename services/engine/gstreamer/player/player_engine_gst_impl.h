@@ -92,7 +92,7 @@ private:
     void HandleInterruptMessage(const PlayBinMessage &msg);
     void HandleAudioStateMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
-    void CapsFixErrorCb(GstElement *decoder, gpointer userData);
+    void OnCapsFixError();
     void ResetPlaybinToSoftDec();
 
     std::mutex mutex_;

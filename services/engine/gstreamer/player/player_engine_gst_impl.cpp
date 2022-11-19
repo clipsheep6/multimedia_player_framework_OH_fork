@@ -861,9 +861,8 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
             GstElement *videoSink = sinkProvider_->GetVideoSink();
             CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
             codecCtrl_.DetectCodecSetup(metaStr, &elem, videoSink);
-            auto notifier = std::bind(&PlayerEngineGstImpl::CapsFixErrorCb, this,
-                std::placeholders::_1, std::placeholders::_2);
-            codecCtrl_.SetupCapsFixErrorCb(notifier);
+            auto notifier = std::bind(&PlayerEngineGstImpl::OnCapsFixError, this);
+            codecCtrl_.SetCapsFixErrorCb(notifier);
         }
     }
 }
@@ -888,21 +887,15 @@ void PlayerEngineGstImpl::OnNotifyElemUnSetup(GstElement &elem)
     }
 }
 
-void PlayerEngineGstImpl::CapsFixErrorCb(GstElement *decoder, gpointer userData)
+void PlayerEngineGstImpl::OnCapsFixError()
 {
-    MEDIA_LOGD("CapsFixErrorCb in");
-    if (decoder == nullptr || userData == nullptr) {
-        MEDIA_LOGE("param is nullptr");
-        return;
-    }
+    MEDIA_LOGD("OnCapsFixError in");
 
-    auto playerEngine = static_cast<PlayerEngineGstImpl *>(userData);
-
-    playerEngine->useSoftDec_ = true;
-    auto resetTask = std::make_shared<TaskHandler<void>>([playerEngine]() {
-        playerEngine->ResetPlaybinToSoftDec();
+    useSoftDec_ = true;
+    auto resetTask = std::make_shared<TaskHandler<void>>([this]() {
+        ResetPlaybinToSoftDec();
     });
-    (void)playerEngine->taskQueue_->EnqueueTask(resetTask);
+    (void)taskQueue_->EnqueueTask(resetTask);
 }
 
 // fix video with small resolution cannot play in hardware decoding

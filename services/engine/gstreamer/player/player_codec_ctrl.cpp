@@ -43,6 +43,7 @@ PlayerCodecCtrl::~PlayerCodecCtrl()
         gst_object_unref(decoder_);
         decoder_ = nullptr;
     }
+    notifier_ = nullptr;
 }
 
 void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink)
@@ -98,10 +99,25 @@ void PlayerCodecCtrl::SetupCodecBufferNum(const std::string &metaStr, GstElement
     }
 }
 
-void PlayerCodecCtrl::SetupCapsFixErrorCb(CapsFixErrorNotifier notifier)
+void PlayerCodecCtrl::SetCapsFixErrorCb(CapsFixErrorNotifier notifier)
 {
+    notifier_ = notifier;
     CHECK_AND_RETURN_LOG(decoder_ != nullptr, "decoder_ is nullptr");
-    signalId_ = g_signal_connect(decoder_, "caps-fix-error", G_CALLBACK(&notifier), this);
+    signalId_ = g_signal_connect(decoder_, "caps-fix-error", G_CALLBACK(&PlayerCodecCtrl::CapsFixErrorCb), this);
+}
+
+void PlayerCodecCtrl::CapsFixErrorCb(GstElement *decoder, gpointer userData)
+{
+    MEDIA_LOGD("CapsFixErrorCb in");
+    if (decoder == nullptr || userData == nullptr) {
+        MEDIA_LOGE("param is nullptr");
+        return;
+    }
+
+    auto playerCodecCtrl = static_cast<PlayerCodecCtrl *>(userData);
+    if (playerCodecCtrl->notifier_ != nullptr) {
+        playerCodecCtrl->notifier_();
+    }
 }
 
 void PlayerCodecCtrl::DetectCodecUnSetup(GstElement *src, GstElement *videoSink)
