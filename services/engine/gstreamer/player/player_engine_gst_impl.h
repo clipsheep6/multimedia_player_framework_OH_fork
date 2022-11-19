@@ -92,8 +92,8 @@ private:
     void HandleInterruptMessage(const PlayBinMessage &msg);
     void HandleAudioStateMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
+    void CapsFixErrorCb(GstElement *decoder, gpointer userData);
     void ResetPlaybinToSoftDec();
-    static void CapsFixErrorCb(GstElement *decoder, gpointer userData);
 
     std::mutex mutex_;
     std::mutex trackParseMutex_;
@@ -120,8 +120,6 @@ private:
     bool isPlaySinkFlagsSet_ = false;
     bool useSoftDec_ = false;
     std::unique_ptr<TaskQueue> taskQueue_;
-    GstElement *decoder_ = nullptr;
-    gulong signalId_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

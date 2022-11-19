@@ -466,11 +466,6 @@ void PlayerEngineGstImpl::PlayBinCtrlerDeInit()
     useSoftDec_ = false;
     appsrcWrap_ = nullptr;
 
-    if (signalId_ != 0) {
-        g_signal_handler_disconnect(decoder_, signalId_);
-        signalId_ = 0;
-    }
-
     if (playBinCtrler_ != nullptr) {
         playBinCtrler_->SetElemSetupListener(nullptr);
         playBinCtrler_->SetElemUnSetupListener(nullptr);
@@ -866,10 +861,9 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
             GstElement *videoSink = sinkProvider_->GetVideoSink();
             CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
             codecCtrl_.DetectCodecSetup(metaStr, &elem, videoSink);
-            decoder_ = codecCtrl_.GetVideoDecoder();
-            CHECK_AND_RETURN_LOG(decoder_ != nullptr, "decoder_ is nullptr");
-            signalId_ = g_signal_connect(decoder_, "caps-fix-error",
-                G_CALLBACK(&PlayerEngineGstImpl::CapsFixErrorCb), this);
+            auto notifier = std::bind(&PlayerEngineGstImpl::CapsFixErrorCb, this,
+                std::placeholders::_1, std::placeholders::_2);
+            codecCtrl_.SetupCapsFixErrorCb(notifier);
         }
     }
 }

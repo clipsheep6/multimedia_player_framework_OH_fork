@@ -36,6 +36,10 @@ PlayerCodecCtrl::~PlayerCodecCtrl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     if (decoder_ != nullptr) {
+        if (signalId_ != 0) {
+            g_signal_handler_disconnect(decoder_, signalId_);
+            signalId_ = 0;
+        }
         gst_object_unref(decoder_);
         decoder_ = nullptr;
     }
@@ -94,6 +98,12 @@ void PlayerCodecCtrl::SetupCodecBufferNum(const std::string &metaStr, GstElement
     }
 }
 
+void PlayerCodecCtrl::SetupCapsFixErrorCb(CapsFixErrorNotifier notifier)
+{
+    CHECK_AND_RETURN_LOG(decoder_ != nullptr, "decoder_ is nullptr");
+    signalId_ = g_signal_connect(decoder_, "caps-fix-error", G_CALLBACK(&notifier), this);
+}
+
 void PlayerCodecCtrl::DetectCodecUnSetup(GstElement *src, GstElement *videoSink)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -140,12 +150,6 @@ void PlayerCodecCtrl::EnhanceSeekPerformance(bool enable)
     if (isHardwareDec_ && decoder_ != nullptr) {
         g_object_set(decoder_, "seeking", enable, nullptr);
     }
-}
-
-GstElement *PlayerCodecCtrl::GetVideoDecoder()
-{
-    CHECK_AND_RETURN_RET_LOG(decoder_ != nullptr, nullptr, "VideoDec is nullptr");
-    return decoder_;
 }
 } // Media
 } // OHOS
