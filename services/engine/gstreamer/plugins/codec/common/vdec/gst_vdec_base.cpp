@@ -1275,6 +1275,7 @@ static void gst_vdec_base_pause_loop(GstVdecBase *self)
 
 static gboolean gst_vdec_base_push_out_buffers(GstVdecBase *self)
 {
+    MediaTrace trace("Surface::AcquireBuffer");
     GST_DEBUG_OBJECT(self, "Push out buffers");
     g_return_val_if_fail(self != nullptr, FALSE);
     g_return_val_if_fail(self->decoder != nullptr, FALSE);

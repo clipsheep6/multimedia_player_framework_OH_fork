@@ -157,6 +157,7 @@ int32_t HdiVdecParamsMgr::GetVideoFormat(GstElement *element)
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
 
     CodecVideoPortFormatParam videoFormat = videoFormat_;
+    videoFormat.codecColorIndex = 0;
     while (HdiGetParameter(handle_, OMX_IndexCodecVideoPortFormat, videoFormat) == HDF_SUCCESS) {
         base->formats.push_back(HdiCodecUtil::FormatHdiToGst((PixelFormat)videoFormat.codecColorFormat));
         videoFormat.portIndex++;

@@ -220,6 +220,7 @@ std::shared_ptr<AVSharedMemory> AVCodecServer::GetInputBuffer(uint32_t index)
 
 int32_t AVCodecServer::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
+    MediaTrace trace("AVCodecServer::QueueInputBuffer");
     std::lock_guard<std::mutex> lock(mutex_);
     firstFrameTraceId_ = FAKE_POINTER(this);
     if (isFirstFrameIn_) {
@@ -258,6 +259,7 @@ int32_t AVCodecServer::GetOutputFormat(Format &format)
 
 int32_t AVCodecServer::ReleaseOutputBuffer(uint32_t index, bool render)
 {
+    MediaTrace trace("AVCodecServer::ReleaseOutputBuffer");
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(status_ == AVCODEC_RUNNING || status_ == AVCODEC_END_OF_STREAM,
         MSERR_INVALID_OPERATION, "invalid state");

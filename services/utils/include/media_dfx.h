@@ -42,6 +42,7 @@ public:
     explicit MediaTrace(const std::string &funcName);
     static void TraceBegin(const std::string &funcName, int32_t taskId);
     static void TraceEnd(const std::string &funcName, int32_t taskId);
+    static void CounterTrace(const std::string &varName, int32_t val);
     ~MediaTrace();
 private:
     bool isSync_ = false;

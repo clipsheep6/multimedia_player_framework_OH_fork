@@ -22,6 +22,7 @@
 #include "gst/video/gstvideometa.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_dfx.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerSinkProvider"};
@@ -228,6 +229,7 @@ GstFlowReturn PlayerSinkProvider::NewPrerollCb(GstMemSink *memSink, GstBuffer *s
 {
     (void)userData;
     MEDIA_LOGI("NewPrerollCb in");
+    MediaTrace trace("PlayerSinkProvider::NewPrerollCb");
     CHECK_AND_RETURN_RET(gst_mem_sink_app_preroll_render(memSink, sample) == GST_FLOW_OK, GST_FLOW_ERROR);
     return GST_FLOW_OK;
 }
@@ -235,6 +237,7 @@ GstFlowReturn PlayerSinkProvider::NewPrerollCb(GstMemSink *memSink, GstBuffer *s
 GstFlowReturn PlayerSinkProvider::NewSampleCb(GstMemSink *memSink, GstBuffer *sample, gpointer userData)
 {
     MEDIA_LOGI("NewSampleCb in");
+    MediaTrace trace("PlayerSinkProvider::NewSampleCb");
     CHECK_AND_RETURN_RET(gst_mem_sink_app_render(memSink, sample) == GST_FLOW_OK, GST_FLOW_ERROR);
 
     FirstRenderFrame(userData);
