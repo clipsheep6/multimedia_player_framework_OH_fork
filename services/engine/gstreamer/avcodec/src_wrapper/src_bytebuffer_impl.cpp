@@ -16,8 +16,10 @@
 #include "src_bytebuffer_impl.h"
 #include <mutex>
 #include "gst_shmem_memory.h"
+#include "buffer_type_meta.h"
 #include "media_log.h"
 #include "scope_guard.h"
+#include "media_dfx.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "SrcBytebufferImpl"};
@@ -122,6 +124,12 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
     CHECK_AND_RETURN_RET(bufWrapper->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufWrapper->gstBuffer_ != nullptr, MSERR_INVALID_OPERATION);
     gst_buffer_resize(bufWrapper->gstBuffer_, info.offset, info.size);
+    GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(bufWrapper->gstBuffer_);
+    CHECK_AND_RETURN_RET(meta != nullptr, MSERR_INVALID_OPERATION);
+    meta->offset = info.offset;
+    meta->length = info.size;
+    MEDIA_LOGD("meta->offset change to: %{public}u, meta->length change to: %{public}u",
+        meta->offset, meta->length);
 
     if (needCodecData_) {
         if (HandleCodecBuffer(index, info, flag) == MSERR_OK) {
@@ -228,7 +236,9 @@ int32_t SrcBytebufferImpl::HandleBufferAvailable(GstBuffer *buffer)
 
     auto obs = obs_.lock();
     CHECK_AND_RETURN_RET_LOG(obs != nullptr, MSERR_UNKNOWN, "obs is nullptr");
+    MediaTrace::TraceBegin("Codec::OnInputBufferAvailable", FAKE_POINTER(this));
     obs->OnInputBufferAvailable(index);
+    MediaTrace::TraceEnd("Codec::OnInputBufferAvailable", FAKE_POINTER(this));
 
     MEDIA_LOGD("OnInputBufferAvailable, index:%{public}u", index);
     bufferList_[index]->owner_ = BufferWrapper::SERVER;

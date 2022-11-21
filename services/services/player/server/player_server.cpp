@@ -273,6 +273,7 @@ int32_t PlayerServer::HandlePrepare()
         (void)playerEngine_->SetLooping(config_.looping);
     }
     if (config_.speedMode != SPEED_FORWARD_1_00_X) {
+        MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
         auto rateTask = std::make_shared<TaskHandler<void>>([this]() {
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->SetPlaybackSpeed(config_.speedMode);
@@ -695,6 +696,7 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
     }
 
     auto rateTask = std::make_shared<TaskHandler<void>>([this, mode]() {
+        MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->SetPlaybackSpeed(mode);
     });
