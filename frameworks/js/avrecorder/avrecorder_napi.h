@@ -116,20 +116,22 @@ private:
     static AVRecorderNapi* GetJsInstance(napi_env env, napi_callback_info info);
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
+    static std::unique_ptr<AVRecorderAsyncContext> GetContextWithPromise(napi_env env, napi_callback_info info,
+        size_t &argCount, napi_value *args, napi_value &result);
 
     AVRecorderNapi();
     ~AVRecorderNapi();
 
-    void ErrorCallback(int32_t errCode, const std::string &param1);
+    void ErrorCallback(int32_t errCode, const std::string &operate);
     void StateCallback(const std::string &state);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallback();
     void RemoveSurface();
 
-    int32_t GetConfig(napi_env env, napi_value args);
-    int32_t GetProfile(napi_env env, napi_value args);
-    int32_t SetProfile();
-    int32_t SetConfiguration();
+    int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t SetProfile(AVRecorderAsyncContext *asyncCtx);
+    int32_t Configure(AVRecorderAsyncContext *asyncCtx);
 
     struct AVRecorderProfile {
         int32_t audioBitrate = AVRECORDER_DEFAULT_AUDIO_BIT_RATE;
@@ -174,7 +176,7 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     explicit AVRecorderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
     ~AVRecorderAsyncContext() = default;
 
-    void AVRecorderSignError(int32_t code, const std::string &param1, const std::string &param2);
+    void AVRecorderSignError(int32_t errCode, const std::string &operate, const std::string &param);
 
     AVRecorderNapi *napi = nullptr;
 };

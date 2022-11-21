@@ -47,7 +47,7 @@ void AVRecorderCallback::ClearCallbackReference()
     refMap_.clear();
 }
 
-void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &param1, const std::string &param2)
+void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &msg)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(AVRecorderEvent::EVENT_ERROR) == refMap_.end()) {
@@ -59,8 +59,8 @@ void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &p
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_ERROR);
     cb->callbackName = AVRecorderEvent::EVENT_ERROR;
-    cb->errorCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
-    cb->errorMsg = MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(cb->errorCode), param1, param2);
+    cb->errorCode = errCode;
+    cb->errorMsg = msg;
     return OnJsErrorCallBack(cb);
 }
 
@@ -90,7 +90,7 @@ std::string AVRecorderCallback::GetState()
 void AVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
 {
     MEDIA_LOGD("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
-    SendErrorCallback(errCode, "", "");
+    SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened");
     SendStateCallback(AVRecorderState::STATE_ERROR, StateChangeReason::BACKGROUND);
 }
 
