@@ -90,6 +90,11 @@ void MediaTrace::TraceEnd(const std::string &funcName, int32_t taskId)
     FinishAsyncTrace(HITRACE_TAG_ZMEDIA, funcName, taskId);
 }
 
+void MediaTrace::CounterTrace(const std::string &varName, int32_t val)
+{
+    CountTrace(HITRACE_TAG_ZMEDIA, varName, val);
+}
+
 MediaTrace::~MediaTrace()
 {
     if (isSync_) {

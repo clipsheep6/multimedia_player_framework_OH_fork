@@ -89,6 +89,7 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
         
     if (type == INFO_TYPE_SPEEDDONE) {
         (void)server_.taskMgr_.MarkTaskDone();
+        MediaTrace::TraceEnd("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(&server_));
         return MSERR_OK;
     }
 
