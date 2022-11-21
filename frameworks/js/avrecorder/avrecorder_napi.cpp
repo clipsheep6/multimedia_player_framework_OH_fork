@@ -681,7 +681,7 @@ int32_t AVRecorderNapi::Configure(AVRecorderAsyncContext *asyncCtx)
 
     ret = MSERR_INVALID_VAL;
     const std::string fdHead = "fd://";
-    CHECK_AND_RETURN_RET(config.url.find(fdHead) == std::string::npos,
+    CHECK_AND_RETURN_RET(config.url.find(fdHead) != std::string::npos,
         (asyncCtx->AVRecorderSignError(ret, "Getfd", "uri"), ret));
     int32_t fd = -1;
     std::string inputFd = config.url.substr(fdHead.size());
@@ -741,7 +741,7 @@ void AVRecorderNapi::RemoveSurface()
 
 void AVRecorderAsyncContext::AVRecorderSignError(int32_t errCode, const std::string &operate, const std::string &param)
 {
-    MEDIA_LOGE("file to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
+    MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
     std::string message;
     if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
