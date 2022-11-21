@@ -689,17 +689,6 @@ void PlayBinCtrlerBase::SetupAudioStateEventCb()
     (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(audioSink_), id });
 }
 
-void PlayBinCtrlerBase::SetupAudioErrorEventCb()
-{
-    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
-    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
-
-    gulong id = g_signal_connect_data(audioSink_, "audio-error-event",
-        G_CALLBACK(&PlayBinCtrlerBase::OnAudioErrorEventCb), wrapper,
-        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(audioSink_), id });
-}
-
 void PlayBinCtrlerBase::SetupCustomElement()
 {
     // There may be a risk of data competition, but the sinkProvider is unlikely to be reconfigured.
@@ -709,7 +698,6 @@ void PlayBinCtrlerBase::SetupCustomElement()
             g_object_set(playbin_, "audio-sink", audioSink_, nullptr);
             SetupInterruptEventCb();
             SetupAudioStateEventCb();
-            SetupAudioErrorEventCb();
         }
         videoSink_ = sinkProvider_->CreateVideoSink();
         if (videoSink_ != nullptr) {
@@ -1097,20 +1085,6 @@ void PlayBinCtrlerBase::OnAudioStateEventCb(const GstElement *audioSink, const u
     if (thizStrong != nullptr) {
         int32_t value = static_cast<int32_t>(audioState);
         PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_AUDIO_STATE_EVENT, 0, value };
-        thizStrong->ReportMessage(msg);
-    }
-}
-
-void PlayBinCtrlerBase::OnAudioErrorEventCb(const GstElement *audioSink, const gchar *errMsg, gpointer userData)
-{
-    (void)audioSink;
-    if (userData == nullptr) {
-        return;
-    }
-    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    if (thizStrong != nullptr) {
-        std::pair<int32_t, std::string> errorPair = { MSERR_AUD_RENDER_FAILED, errMsg };
-        PlayBinMessage msg { PLAYBIN_MSG_AUDIO_SINK, PLAYBIN_MSG_AUDIO_ERROR_EVENT, 0, errorPair };
         thizStrong->ReportMessage(msg);
     }
 }

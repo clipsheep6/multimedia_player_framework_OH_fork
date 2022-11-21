@@ -109,10 +109,8 @@ private:
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
         const uint32_t hintType, gpointer userData);
     static void OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData);
-    static void OnAudioErrorEventCb(const GstElement *audioSink, const gchar *errMsg, gpointer userData);
     void SetupInterruptEventCb();
     void SetupAudioStateEventCb();
-    void SetupAudioErrorEventCb();
     void OnElementSetup(GstElement &elem);
     void OnElementUnSetup(GstElement &elem);
     void OnSourceSetup(const GstElement *playbin, GstElement *src,

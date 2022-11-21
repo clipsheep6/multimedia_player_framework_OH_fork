@@ -151,6 +151,7 @@ void PlayerServer::PreparingState::HandleStateChange(int32_t newState)
 
 int32_t PlayerServer::PreparedState::Prepare()
 {
+    (void)server_.taskMgr_.MarkTaskDone();
     return MSERR_OK;
 }
 
@@ -189,6 +190,7 @@ void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
 
 int32_t PlayerServer::PlayingState::Play()
 {
+    (void)server_.taskMgr_.MarkTaskDone();
     return MSERR_OK;
 }
 
@@ -243,6 +245,7 @@ int32_t PlayerServer::PausedState::Play()
 
 int32_t PlayerServer::PausedState::Pause()
 {
+    (void)server_.taskMgr_.MarkTaskDone();
     return MSERR_OK;
 }
 
@@ -282,6 +285,7 @@ int32_t PlayerServer::StoppedState::Prepare()
 
 int32_t PlayerServer::StoppedState::Stop()
 {
+    (void)server_.taskMgr_.MarkTaskDone();
     return MSERR_OK;
 }
 
