@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "hdi_codec_util.h"
+#include "media_dfx.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiInBufferMgr"};
@@ -89,6 +90,7 @@ int32_t HdiInBufferMgr::FreeBuffers()
 int32_t HdiInBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
 {
     MEDIA_LOGD("Enter CodecBufferAvailable");
+    MediaTrace trace("HdiInBufferMgr::CodecBufferAvailable");
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "EmptyBufferDone failed");
     std::unique_lock<std::mutex> lock(mutex_);
     for (auto iter = codingBuffers_.begin(); iter != codingBuffers_.end(); ++iter) {
