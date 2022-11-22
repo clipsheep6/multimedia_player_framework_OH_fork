@@ -37,7 +37,6 @@ enum GstCodecDirect : int32_t {
 enum GstCompressionFormat : int32_t {
     GST_AVC,
     GST_HEVC,
-    GST_MPEG4,
 };
 
 enum GstCodecParamKey : int32_t {
