@@ -35,6 +35,7 @@ PlayerCodecCtrl::PlayerCodecCtrl()
 PlayerCodecCtrl::~PlayerCodecCtrl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    notifier_ = nullptr;
     if (decoder_ != nullptr) {
         if (signalId_ != 0) {
             g_signal_handler_disconnect(decoder_, signalId_);
@@ -43,7 +44,6 @@ PlayerCodecCtrl::~PlayerCodecCtrl()
         gst_object_unref(decoder_);
         decoder_ = nullptr;
     }
-    notifier_ = nullptr;
 }
 
 void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink)

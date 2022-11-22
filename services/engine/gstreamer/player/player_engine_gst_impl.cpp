@@ -473,10 +473,6 @@ void PlayerEngineGstImpl::PlayBinCtrlerDeInit()
         playBinCtrler_ = nullptr;
     }
 
-    if (taskQueue_ != nullptr) {
-        (void)taskQueue_->Stop();
-    }
-
     {
         std::unique_lock<std::mutex> lk(trackParseMutex_);
         trackParse_ = nullptr;
@@ -721,6 +717,10 @@ int32_t PlayerEngineGstImpl::Reset()
 
 void PlayerEngineGstImpl::OnReset()
 {
+    if (taskQueue_ != nullptr) {
+        (void)taskQueue_->Stop();
+    }
+
     std::unique_lock<std::mutex> lock(mutex_);
     PlayBinCtrlerDeInit();
 }
