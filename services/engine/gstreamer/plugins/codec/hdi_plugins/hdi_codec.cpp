@@ -22,6 +22,7 @@
 #include "hdi_init.h"
 #include "hdi_codec_util.h"
 #include "securec.h"
+#include "media_dfx.h"
 
 using namespace std;
 namespace {
@@ -78,12 +79,16 @@ int32_t HdiCodec::Init()
     callback_->FillBufferDone = &HdiCodec::FillBufferDone;
     appData_ = new AppData();
     appData_->instance = weak_from_this();
-    auto ret = HdiInit::GetInstance().GetHandle(&handle_, id_, componentName_, appData_, callback_);
-    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "GetHandle failed");
-    CHECK_AND_RETURN_RET_LOG(handle_ != nullptr, GST_CODEC_ERROR, "Handle is nullptr");
-    InitVersion();
-    InitParam(portParam_, verInfo_);
-    ret = HdiGetParameter(handle_, OMX_IndexParamVideoInit, portParam_);
+    int32_t ret;
+    {
+        MediaTrace trace("HdiCodec::Init");
+        ret = HdiInit::GetInstance().GetHandle(&handle_, id_, componentName_, appData_, callback_);
+        CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "GetHandle failed");
+        CHECK_AND_RETURN_RET_LOG(handle_ != nullptr, GST_CODEC_ERROR, "Handle is nullptr");
+        InitVersion();
+        InitParam(portParam_, verInfo_);
+        ret = HdiGetParameter(handle_, OMX_IndexParamVideoInit, portParam_);
+    }
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "VideoInit failed");
     inPortIndex_ = portParam_.nStartPortNumber;
     outPortIndex_ = portParam_.nStartPortNumber + 1;
@@ -96,7 +101,11 @@ void HdiCodec::Deinit()
     if (curState_ > OMX_StateLoaded) {
         (void)WaitForState(OMX_StateLoaded);
     }
-    auto ret = HdiInit::GetInstance().FreeHandle(id_);
+    int32_t ret;
+    {
+        MediaTrace trace("HdiCodec::Deinit");
+        ret = HdiInit::GetInstance().FreeHandle(id_);
+    }
     handle_ = nullptr;
     if (ret != HDF_SUCCESS) {
         MEDIA_LOGE("hdi freehandle failed");
@@ -142,8 +151,11 @@ int32_t HdiCodec::Start()
         CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateExecuting) == GST_CODEC_OK, GST_CODEC_ERROR, "Change failed");
         CHECK_AND_RETURN_RET_LOG(WaitForState(OMX_StateExecuting) == GST_CODEC_OK, GST_CODEC_ERROR, "Wait failed");
     }
-    inBufferMgr_->Start();
-    outBufferMgr_->Start();
+    {
+        MediaTrace trace("HdiCodec::Start");
+        inBufferMgr_->Start();
+        outBufferMgr_->Start();
+    }
     unique_lock<mutex> lock(mutex_);
     start_ = true;
     MEDIA_LOGD("Start end");
@@ -152,8 +164,11 @@ int32_t HdiCodec::Start()
 
 int32_t HdiCodec::Stop()
 {
-    inBufferMgr_->Stop(false);
-    outBufferMgr_->Stop(false);
+    {
+        MediaTrace trace("HdiCodec::Stop");
+        inBufferMgr_->Stop(false);
+        outBufferMgr_->Stop(false);
+    }
     if (curState_ == OMX_StateExecuting) {
         CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "ChangeState failed");
         CHECK_AND_RETURN_RET_LOG(WaitForState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "Wait failed");
@@ -184,6 +199,7 @@ int32_t HdiCodec::AllocateInputBuffers()
 
 int32_t HdiCodec::UseInputBuffers(std::vector<GstBuffer*> buffers)
 {
+    MediaTrace trace("HdiCodec::UseInputBuffers");
     return inBufferMgr_->UseBuffers(buffers);
 }
 
@@ -281,6 +297,7 @@ int32_t HdiCodec::AllocateOutputBuffers()
 int32_t HdiCodec::UseOutputBuffers(std::vector<GstBuffer*> buffers)
 {
     MEDIA_LOGD("UseOutputBuffers");
+    MediaTrace trace("HdiCodec::UseOutputBuffers");
     if (curState_ < OMX_StateIdle) {
         CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateIdle) == GST_CODEC_OK,
             GST_CODEC_ERROR, "ChangeState failed");

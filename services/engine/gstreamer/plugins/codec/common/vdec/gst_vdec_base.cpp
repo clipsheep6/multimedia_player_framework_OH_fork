@@ -718,25 +718,31 @@ static gboolean gst_vdec_base_update_out_port_def(GstVdecBase *self, guint *size
 
 static gboolean gst_vdec_base_allocate_out_buffers(GstVdecBase *self)
 {
-    MediaTrace::TraceBegin("VdecBase::AllocateOutPutBuffer", FAKE_POINTER(self));
     GST_DEBUG_OBJECT(self, "Allocate output buffers");
     g_return_val_if_fail(self != nullptr, FALSE);
     g_return_val_if_fail(self->decoder != nullptr, FALSE);
     std::vector<GstBuffer*> buffers;
     self->coding_outbuf_cnt = self->out_buffer_cnt;
-    for (guint i = 0; i < self->out_buffer_cnt; ++i) {
-        GST_DEBUG_OBJECT(self, "Allocate output buffer %u", i);
-        GstBuffer *buffer = gst_video_decoder_allocate_output_buffer(GST_VIDEO_DECODER(self));
-        if (buffer == nullptr) {
-            GST_WARNING_OBJECT(self, "Allocate buffer is nullptr");
-            continue;
+    {
+        MediaTrace trace("VdecBase::AllocateOutPutBuffer");
+        for (guint i = 0; i < self->out_buffer_cnt; ++i) {
+            GST_DEBUG_OBJECT(self, "Allocate output buffer %u", i);
+            GstBuffer *buffer = gst_video_decoder_allocate_output_buffer(GST_VIDEO_DECODER(self));
+            if (buffer == nullptr) {
+                GST_WARNING_OBJECT(self, "Allocate buffer is nullptr");
+                continue;
+            }
+            buffers.push_back(buffer);
         }
-        buffers.push_back(buffer);
     }
-    // give buffer ref to decoder
-    gint ret = self->decoder->UseOutputBuffers(buffers);
+
+    gint ret;
+    {
+        MediaTrace trace("VdecBase::UseOutputBuffers");
+        // give buffer ref to decoder
+        ret = self->decoder->UseOutputBuffers(buffers);
+    }
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "usebuffer", TRUE), FALSE);
-    MediaTrace::TraceEnd("VdecBase::AllocateOutPutBuffer", FAKE_POINTER(self));
     return TRUE;
 }
 
