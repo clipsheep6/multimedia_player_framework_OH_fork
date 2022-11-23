@@ -104,7 +104,7 @@ void HdiCodec::Deinit()
     int32_t ret;
     {
         MediaTrace trace("HdiCodec::Deinit");
-        ret = HdiInit::GetInstance().FreeHandle(id_);
+        ret = HdiInit::GetInstance().FreeHandle(handle_, id_);
     }
     handle_ = nullptr;
     if (ret != HDF_SUCCESS) {

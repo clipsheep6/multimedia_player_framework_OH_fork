@@ -33,7 +33,7 @@ public:
     ~HdiInit();
     int32_t GetHandle(CodecComponentType **component, uint32_t &id, std::string name,
         void *appData, CodecCallbackType *callbacks);
-    int32_t FreeHandle(uint32_t id);
+    int32_t FreeHandle(CodecComponentType *component, uint32_t id);
     std::vector<CapabilityData> GetCapabilitys();
     void CodecComponentManagerReset();
     void CodecComponentManagerInit();
@@ -56,6 +56,7 @@ private:
     std::vector<CapabilityData> capabilitys_;
     CodecComponentManager *mgr_ = nullptr;
     std::mutex mutex_;
+    std::map<CodecComponentType *, uint32_t> handleMap_;
 };
 }
 }
