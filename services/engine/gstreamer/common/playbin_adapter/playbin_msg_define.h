@@ -38,6 +38,11 @@ enum PlayBinMsgType : int32_t {
     PLAYBIN_MSG_ASYNC_DONE,
 };
 
+enum PlayBinMsgPositionUpdateSubType : int32_t {
+    PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE = 0,
+    PLAYBIN_SUB_MSG_POSITION_UPDATE_UNFORCE = 1,
+};
+
 enum PlayBinMsgSubType : int32_t {
     PLAYBIN_SUB_MSG_UNKONWN = 0,
     PLAYBIN_SUB_MSG_VIDEO_RENDING_START,

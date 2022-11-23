@@ -54,8 +54,6 @@ public:
     int32_t Pause() override;
     int32_t Seek(int64_t timeUs, int32_t seekOption) override;
     int32_t Stop(bool needWait) override;
-    int64_t GetDuration() override;
-    int64_t GetPosition() override;
     int32_t SetRate(double rate) override;
     double GetRate() override;
     int32_t SetLoop(bool loop) override;
@@ -96,7 +94,6 @@ private:
     int32_t SetupSignalMessage();
     int32_t SetupElementUnSetupSignal();
     void QueryDuration();
-    int64_t QueryPosition();
     int64_t QueryPositionInternal(bool isSeekDone);
     void ProcessEndOfStream();
     static void ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userData);

@@ -307,19 +307,6 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     return MSERR_OK;
 }
 
-int64_t PlayBinCtrlerBase::GetDuration()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    QueryDuration();
-    return duration_;
-}
-
-int64_t PlayBinCtrlerBase::GetPosition()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    return QueryPosition();
-}
-
 GstSeekFlags PlayBinCtrlerBase::ChooseSetRateFlags(double rate)
 {
     GstSeekFlags seekFlags;
@@ -782,29 +769,6 @@ void PlayBinCtrlerBase::QueryDuration()
 
     duration_ = duration / NANO_SEC_PER_USEC;
     MEDIA_LOGI("update the duration: %{public}" PRIi64 " microsecond", duration_);
-}
-
-int64_t PlayBinCtrlerBase::QueryPosition()
-{
-    auto state = GetCurrState();
-    if (state == playbackCompletedState_) {
-        if (IsLiveSource()) {
-            return lastTime_;
-        }
-        return duration_;
-    }
-
-    if (state != preparedState_ && state != playingState_ && state != pausedState_) {
-        MEDIA_LOGD("get position at state: %{public}s, return 0", state->GetStateName().c_str());
-        return 0;
-    }
-
-    if (isSeeking_ || isRating_) {
-        MEDIA_LOGI("in seeking or speeding, reuse the last postion: %{public}" PRIi64 "", lastTime_);
-        return lastTime_;
-    }
-
-    return QueryPositionInternal(false);
 }
 
 int64_t PlayBinCtrlerBase::QueryPositionInternal(bool isSeekDone)
