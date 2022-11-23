@@ -60,6 +60,7 @@ config("gst_codec_plugin_hdi_config") {
     "//drivers/peripheral/codec/hal/include",
     "//drivers/framework/include/utils",
     "//drivers/hdf_core/framework/include/utils",
+    "//drivers/hdf_core/adapter/uhdf2/include/hdi",
     "//drivers/hdf_core/adapter/uhdf2/osal/include",
     "//third_party/openmax/api/1.1.2",
     "//drivers/peripheral/display/interfaces/include",
@@ -92,6 +93,10 @@ ohos_shared_library("gst_codec_plugin_hdi") {
   ]
 
   deps = [
+    "//drivers/hdf_core/adapter/uhdf2/hdi:libhdi",
+    "//drivers/hdf_core/adapter/uhdf2/host:libhdf_host",
+    "//drivers/hdf_core/adapter/uhdf2/ipc:libhdf_ipc_adapter",
+    "//drivers/hdf_core/adapter/uhdf2/utils:libhdf_utils",
     "//drivers/peripheral/codec/hal:libcodec_hdi_omx_client",
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",

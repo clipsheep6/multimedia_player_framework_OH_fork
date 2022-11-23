@@ -22,7 +22,9 @@
 #include <mutex>
 #include "avcodec_info.h"
 #include "codec_component_manager.h"
-
+#include "hdf_remote_service.h"
+#include "codec_internal.h"
+#include "servmgr_hdi.h"
 namespace OHOS {
 namespace Media {
 class HdiInit {
@@ -33,6 +35,8 @@ public:
         void *appData, CodecCallbackType *callbacks);
     int32_t FreeHandle(uint32_t id);
     std::vector<CapabilityData> GetCapabilitys();
+    void CodecComponentManagerReset();
+    void CodecComponentManagerInit();
 
 private:
     HdiInit();
@@ -51,6 +55,7 @@ private:
     const static std::unordered_map<int32_t, GetProfileLevelsFunc> PROFILE_LEVEL_FUNC_MAP;
     std::vector<CapabilityData> capabilitys_;
     CodecComponentManager *mgr_ = nullptr;
+    std::mutex mutex_;
 };
 }
 }
