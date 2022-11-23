@@ -39,6 +39,7 @@ constexpr int32_t MSEC_PER_USEC = 1000;
 constexpr int32_t MSEC_PER_NSEC = 1000000;
 constexpr int32_t BUFFER_TIME_DEFAULT = 15000; // 15s
 constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
+constexpr int32_t POSITION_REPORT_PER_TIMES = 10;
 
 PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid)
     : appuid_(uid), apppid_(pid)
@@ -407,13 +408,24 @@ void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandlePositionUpdateMessage(const PlayBinMessage &msg)
 {
-    int32_t position = msg.code;
-    MEDIA_LOGD("position update to %{public}d ms", position);
+    currentTime_ = msg.code;
+    duration_ = std::any_cast<int32_t>(msg.extra);
+    MEDIA_LOGD("update position %{public}d ms, duration %{public}d ms", currentTime_, duration_);
 
-    Format format;
-    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
-    if (notifyObs != nullptr) {
-        notifyObs->OnInfo(INFO_TYPE_POSITION_UPDATE, position, format);
+    // 10: report once at 1000ms
+    if (currentTimeOnInfoCnt_ % POSITION_REPORT_PER_TIMES == 0 ||
+        msg.subType == PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE) {
+        Format format;
+        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+        if (notifyObs != nullptr) {
+            notifyObs->OnInfo(INFO_TYPE_POSITION_UPDATE, currentTime_, format);
+        }
+        if (currentTimeOnInfoCnt_ % POSITION_REPORT_PER_TIMES == 0) {
+            currentTimeOnInfoCnt_ = 0;
+        }
+    }
+    if (msg.subType == PLAYBIN_SUB_MSG_POSITION_UPDATE_UNFORCE) {
+        currentTimeOnInfoCnt_++;
     }
 }
 
@@ -548,14 +560,8 @@ int32_t PlayerEngineGstImpl::Pause()
 
 int32_t PlayerEngineGstImpl::GetCurrentTime(int32_t &currentTime)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
-
-    currentTime = -1;
-    if (playBinCtrler_ != nullptr) {
-        int64_t tempTime = playBinCtrler_->GetPosition();
-        currentTime = static_cast<int32_t>(tempTime / MSEC_PER_USEC);
-        MEDIA_LOGD("Time in milliseconds: %{public}d", currentTime);
-    }
+    currentTime = currentTime_;
+    MEDIA_LOGD("Time in milliseconds: %{public}d", currentTime);
     return MSERR_OK;
 }
 
@@ -587,14 +593,8 @@ int32_t PlayerEngineGstImpl::GetVideoHeight()
 
 int32_t PlayerEngineGstImpl::GetDuration(int32_t &duration)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
-
-    duration = 0;
-    if (playBinCtrler_ != nullptr) {
-        int64_t tempDura = playBinCtrler_->GetDuration();
-        duration = static_cast<int32_t>(tempDura / MSEC_PER_USEC);
-        MEDIA_LOGD("Duration in milliseconds: %{public}d", duration);
-    }
+    duration = duration_;
+    MEDIA_LOGD("Duration in milliseconds: %{public}d", duration);
     return MSERR_OK;
 }
 
