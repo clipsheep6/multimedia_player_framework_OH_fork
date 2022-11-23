@@ -242,7 +242,6 @@ int32_t PlayerServer::OnPrepare(bool sync)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetVideoSurface Failed!");
     }
 #endif
-
     lastOpStatus_ = PLAYER_PREPARED;
 
     auto preparedTask = std::make_shared<TaskHandler<int32_t>>([this]() {
@@ -571,13 +570,21 @@ int32_t PlayerServer::GetCurrentTime(int32_t &currentTime)
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not GetCurrentTime, currentState is PLAYER_STATE_ERROR");
+    currentTime = -1;
+    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not GetCurrentTime, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
 
-    MEDIA_LOGD("PlayerServer GetCurrentTime in");
-    currentTime = -1;
+    MEDIA_LOGD("PlayerServer GetCurrentTime in, currentState is %{public}s",
+        GetStatusDescription(lastOpStatus_).c_str());
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        currentTime = 0;
+        MEDIA_LOGD("get position at state: %{public}s, return 0", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_OK;
+    }
+
     if (playerEngine_ != nullptr) {
         int32_t ret = playerEngine_->GetCurrentTime(currentTime);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetCurrentTime Failed!");

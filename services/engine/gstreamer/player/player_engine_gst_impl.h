@@ -114,6 +114,9 @@ private:
     int32_t contentType_ = 0;
     int32_t streamUsage_ = 0;
     int32_t rendererFlag_ = 0;
+    int32_t currentTime_ = -1;
+    int32_t duration_ = -1;
+    int32_t currentTimeOnInfoCnt_ = 0;
     bool isPlaySinkFlagsSet_ = false;
 };
 } // namespace Media
