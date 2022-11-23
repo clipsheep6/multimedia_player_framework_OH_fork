@@ -36,6 +36,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_vdec_base_debug_category);
 #define DEFAULT_SEEK_FRAME_RATE 1000
 #define BLOCKING_ACQUIRE_BUFFER_THRESHOLD 5
 
+static void gst_vdec_base_class_install_property(GObjectClass *gobject_class);
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static gboolean gst_vdec_base_open(GstVideoDecoder *decoder);
 static gboolean gst_vdec_base_close(GstVideoDecoder *decoder);
@@ -70,6 +71,13 @@ enum {
     PROP_SEEK,
 };
 
+enum {
+    SIGNAL_CAPS_FIX_ERROR,
+    SIGNAL_LAST
+};
+
+static guint signals[SIGNAL_LAST] = { 0, };
+
 G_DEFINE_ABSTRACT_TYPE(GstVdecBase, gst_vdec_base, GST_TYPE_VIDEO_DECODER);
 
 static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
@@ -96,6 +104,25 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
     video_decoder_class->propose_allocation = gst_vdec_base_propose_allocation;
     element_class->change_state = gst_vdec_base_change_state;
 
+    gst_vdec_base_class_install_property(gobject_class);
+
+    signals[SIGNAL_CAPS_FIX_ERROR] =
+        g_signal_new ("caps-fix-error", G_TYPE_FROM_CLASS (klass),
+        G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+    const gchar *src_caps_string = GST_VIDEO_CAPS_MAKE(GST_VDEC_BASE_SUPPORTED_FORMATS);
+    GST_DEBUG_OBJECT(klass, "Pad template caps %s", src_caps_string);
+
+    GstCaps *src_caps = gst_caps_from_string(src_caps_string);
+    if (src_caps != nullptr) {
+        GstPadTemplate *src_templ = gst_pad_template_new("src", GST_PAD_SRC, GST_PAD_ALWAYS, src_caps);
+        gst_element_class_add_pad_template(element_class, src_templ);
+        gst_caps_unref(src_caps);
+    }
+}
+
+static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
+{
     g_object_class_install_property(gobject_class, PROP_VENDOR,
         g_param_spec_pointer("vendor", "Vendor property", "Vendor property",
             (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
@@ -120,16 +147,6 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
     g_object_class_install_property(gobject_class, PROP_SEEK,
         g_param_spec_boolean("seeking", "Seeking", "Whether the decoder is in seek",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
-
-    const gchar *src_caps_string = GST_VIDEO_CAPS_MAKE(GST_VDEC_BASE_SUPPORTED_FORMATS);
-    GST_DEBUG_OBJECT(klass, "Pad template caps %s", src_caps_string);
-
-    GstCaps *src_caps = gst_caps_from_string(src_caps_string);
-    if (src_caps != nullptr) {
-        GstPadTemplate *src_templ = gst_pad_template_new("src", GST_PAD_SRC, GST_PAD_ALWAYS, src_caps);
-        gst_element_class_add_pad_template(element_class, src_templ);
-        gst_caps_unref(src_caps);
-    }
 }
 
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -1420,7 +1437,10 @@ static gboolean gst_vdec_base_pre_init_surface(GstVdecBase *self)
     gint ret = self->decoder->SetParameter(GST_VIDEO_SURFACE_INIT, GST_ELEMENT(self));
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "GST_VIDEO_SURFACE_INIT", TRUE), FALSE);
 
-    g_return_val_if_fail(gst_vdec_caps_fix_sink_caps(self) != FALSE, FALSE);
+    if (!gst_vdec_caps_fix_sink_caps(self)) {
+        g_signal_emit(self, signals[SIGNAL_CAPS_FIX_ERROR], 0, nullptr);
+        return FALSE;
+    }
     gst_vdec_base_update_out_port_def(self, &size);
     gst_vdec_base_update_out_pool(self, &self->outpool, self->sink_caps, size);
     gst_buffer_pool_set_active(self->outpool, TRUE);
