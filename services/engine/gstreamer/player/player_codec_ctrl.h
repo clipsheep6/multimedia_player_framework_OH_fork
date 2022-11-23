@@ -26,21 +26,26 @@ namespace OHOS {
 namespace Media {
 class PlayerCodecCtrl {
 public:
+    using CapsFixErrorNotifier = std::function<void()>;
     PlayerCodecCtrl();
     ~PlayerCodecCtrl();
     void DetectCodecSetup(const std::string &metaStr, GstElement *src, GstElement *videoSink);
     void DetectCodecUnSetup(GstElement *src, GstElement *videoSink);
     void EnhanceSeekPerformance(bool enable);
+    void SetCapsFixErrorCb(CapsFixErrorNotifier notifier);
 
 private:
     void SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink);
     void HlsSwichSoftAndHardCodec(GstElement *videoSink);
     void SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const;
+    static void CapsFixErrorCb(GstElement *decoder, gpointer userData);
 
     bool isHardwareDec_ = false;
     GstElement *decoder_ = nullptr;
     std::list<bool> codecTypeList_;
     std::mutex mutex_;
+    CapsFixErrorNotifier notifier_;
+    gulong signalId_ = 0;
 };
 } // Media
 } // OHOS
