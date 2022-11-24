@@ -46,7 +46,7 @@ int32_t PlayerImpl::Init()
 
 PlayerImpl::PlayerImpl()
 {
-    MEDIA_LOGD("KPI-TRACE: PlayerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 PlayerImpl::~PlayerImpl()
@@ -55,7 +55,7 @@ PlayerImpl::~PlayerImpl()
         (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
         playerService_ = nullptr;
     }
-    MEDIA_LOGD("KPI-TRACE: PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
