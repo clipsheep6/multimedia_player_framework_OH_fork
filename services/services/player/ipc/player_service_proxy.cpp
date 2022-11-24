@@ -238,7 +238,7 @@ int32_t PlayerServiceProxy::Release()
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     if (!data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor())) {
         MEDIA_LOGE("Failed to write descriptor");
@@ -604,7 +604,7 @@ int32_t PlayerServiceProxy::DestroyStub()
 {
     MessageParcel data;
     MessageParcel reply;
-    MessageOption option;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     if (!data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor())) {
         MEDIA_LOGE("Failed to write descriptor");
