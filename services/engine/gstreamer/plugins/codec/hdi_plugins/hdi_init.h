@@ -56,7 +56,7 @@ private:
     std::vector<CapabilityData> capabilitys_;
     CodecComponentManager *mgr_ = nullptr;
     std::mutex mutex_;
-    std::map<CodecComponentType *, CodecComponentManager *> handleMap_;
+    std::map<CodecComponentType *, uint32_t> handleMap_;
 };
 }
 }

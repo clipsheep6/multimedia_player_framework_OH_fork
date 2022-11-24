@@ -315,7 +315,7 @@ int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, std::st
     int32_t ret = mgr_->CreateComponent(component, &id, const_cast<char *>(name.c_str()),
         reinterpret_cast<int64_t>(appData), callbacks);
     if (ret == HDF_SUCCESS) {
-        handleMap_[*component] = mgr_;
+        handleMap_[*component] = id;
     }
 
     return ret;
@@ -328,7 +328,7 @@ int32_t HdiInit::FreeHandle(CodecComponentType *component, uint32_t id)
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = handleMap_.find(component);
     CHECK_AND_RETURN_RET_LOG(iter != handleMap_.end(), HDF_SUCCESS, "The handle has been released!");
-    CHECK_AND_RETURN_RET_LOG(iter->second == mgr_, HDF_FAILURE, "Handle and mgr do not match!");
+    CHECK_AND_RETURN_RET_LOG(iter->second == id, HDF_FAILURE, "Handle and id do not match!");
     
     int32_t ret =  mgr_->DestroyComponent(id);
     if (ret == HDF_SUCCESS) {
