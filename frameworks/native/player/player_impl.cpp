@@ -26,7 +26,7 @@ namespace OHOS {
 namespace Media {
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " CreatePlayer in", FAKE_POINTER(this));
+    MEDIA_LOGD("PlayerImpl: CreatePlayer in");
     std::shared_ptr<PlayerImpl> impl = std::make_shared<PlayerImpl>();
     CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new PlayerImpl");
 
