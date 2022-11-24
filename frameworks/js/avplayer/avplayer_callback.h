@@ -27,9 +27,10 @@ namespace OHOS {
 namespace Media {
 class AVPlayerCallback : public PlayerCallback {
 public:
-    explicit AVPlayerCallback(napi_env env);
+    AVPlayerCallback(napi_env env, AVPlayerNotify *listener);
     virtual ~AVPlayerCallback();
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    void OnError(int32_t sourceId, int32_t errorCode, std::string errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     PlayerStates GetCurrentState() const;
@@ -38,7 +39,8 @@ public:
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void ClearCallbackReference();
     void Start();
-    void Stop();
+    void Pause();
+    void Release();
 
 private:
     void OnStateChangeCb(PlayerStates state);
@@ -58,9 +60,7 @@ private:
     std::mutex mutex_;
     napi_env env_ = nullptr;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
-    PlayerStates state_ = PLAYER_IDLE;
-    int32_t width_ = 0;
-    int32_t height_ = 0;
+    AVPlayerNotify *listener_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

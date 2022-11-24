@@ -24,8 +24,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerCa
 
 namespace OHOS {
 namespace Media {
-AVPlayerCallback::AVPlayerCallback(napi_env env)
-    : env_(env)
+AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
+    : env_(env), listener_(listener)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -40,6 +40,12 @@ void AVPlayerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     std::string msg = "avplayer error:";
     return AVPlayerCallback::OnErrorCb(err, msg);
+}
+
+void AVPlayerCallback::OnError(int32_t sourceId, int32_t errorCode, std::string errorMsg)
+{
+    MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
+    return AVPlayerCallback::OnErrorCb(err, errorMsg);
 }
 
 void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
@@ -65,6 +71,7 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("OnInfo is called, PlayerOnInfoType: %{public}d", type);
+
     switch (type) {
         case INFO_TYPE_STATE_CHANGE:
             AVPlayerCallback::OnStateChangeCb(static_cast<PlayerStates>(extra));
@@ -110,7 +117,10 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
 void AVPlayerCallback::OnStateChangeCb(PlayerStates state)
 {
     MEDIA_LOGD("OnStateChanged is called, current state: %{public}d", state);
-    state_ = state;
+
+    if (listener_ != nullptr) {
+        listener_->NotifyState(state);
+    }
 
     static std::map<PlayerStates, std::string> stateMap = {
         { PLAYER_IDLE, AVPlayerState::STATE_IDLE },
@@ -284,9 +294,16 @@ void AVPlayerCallback::OnStartRenderFrameCb() const
 
 void AVPlayerCallback::OnVideoSizeChangedCb(const Format &infoBody)
 {
-    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_WIDTH, width_);
-    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_HEIGHT, height_);
-    MEDIA_LOGD("OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d", width_, height_);
+    int32_t width = 0;
+    int32_t height = 0;
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_WIDTH, width);
+    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_HEIGHT, height);
+    MEDIA_LOGD("OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d", width, height);
+
+    if (listener_ != nullptr) {
+        listener_->NotifyVideoSize(width, height);
+    }
+
     if (refMap_.find(AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE) == refMap_.end()) {
         MEDIA_LOGW("can not find video size changed callback!");
         return;
@@ -296,8 +313,8 @@ void AVPlayerCallback::OnVideoSizeChangedCb(const Format &infoBody)
 
     event->callback = refMap_.at(AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE);
     event->callbackName = AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE;
-    event->valueVec.push_back(width_);
-    event->valueVec.push_back(height_);
+    event->valueVec.push_back(width);
+    event->valueVec.push_back(height);
     return MediaNapiCall::CallIntVec(env_, event);
 }
 
@@ -369,6 +386,17 @@ void AVPlayerCallback::OnBitRateCollectedCb(const Format &infoBody) const
 void AVPlayerCallback::OnEosCb(int32_t isLooping) const
 {
     MEDIA_LOGD("OnEndOfStream is called, isloop: %{public}d", isLooping);
+    if (refMap_.find(AVPlayerEvent::EVENT_END_OF_STREAM) == refMap_.end()) {
+        MEDIA_LOGW("can not find EndOfStream callback!");
+        return;
+    }
+
+    MediaNapiCall::EventBase *event = new(std::nothrow) MediaNapiCall::EventBase();
+    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventBase");
+
+    event->callback = refMap_.at(AVPlayerEvent::EVENT_END_OF_STREAM);
+    event->callbackName = AVPlayerEvent::EVENT_END_OF_STREAM;
+    MediaNapiCall::CallSignle(env_, event);
 }
 
 void AVPlayerCallback::SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref)
@@ -383,19 +411,22 @@ void AVPlayerCallback::ClearCallbackReference()
     refMap_.clear();
 }
 
-PlayerStates AVPlayerCallback::GetCurrentState() const
+void AVPlayerCallback::Start()
 {
-    return state_;
+    std::lock_guard<std::mutex> lock(mutex_);
 }
 
-int32_t AVPlayerCallback::GetVideoWidth() const
+void AVPlayerCallback::Pause()
 {
-    return width_;
+    std::lock_guard<std::mutex> lock(mutex_);
 }
 
-int32_t AVPlayerCallback::GetVideoHeight() const
+void AVPlayerCallback::Release()
 {
-    return height_;
+    std::lock_guard<std::mutex> lock(mutex_);
+    refMap_.clear();
+    env_ = nullptr;
+    listener_ = nullptr;
 }
 } // namespace Media
 } // namespace OHOS

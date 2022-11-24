@@ -106,7 +106,15 @@ public:
     static void CallPropertyInt(napi_env env, MediaNapiCall::EventPropertyInt *event);
 };
 
-class AVPlayerNapi {
+class AVPlayerNotify {
+public:
+    AVPlayerNotify() = default;
+    virtual ~AVPlayerNotify() = default;
+    virtual void NotifyState(PlayerStates state) = 0;
+    virtual void NotifyVideoSize(int32_t width, int32_t height) = 0;
+};
+
+class AVPlayerNapi : public AVPlayerNotify {
 public:
     static napi_value Init(napi_env env, napi_value exports);
 
@@ -239,12 +247,18 @@ private:
     ~AVPlayerNapi();
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void ClearCallbackReference();
-    void StartNonStatusEvents();
-    void PauseNonStatusEvents();
+    void StartListenCurrentResource();
+    void PauseListenCurrentResource();
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     void SetSource(std::string url);
     void SetSurface(const std::string &surfaceStr);
+    void ResetUserParameters();
+    void ReleasePlayer();
     std::string GetCurrentState();
+    bool IsEngineReadyStatus();
+
+    void NotifyState(PlayerStates state) override;
+    void NotifyVideoSize(int32_t width, int32_t height) override;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
@@ -256,17 +270,21 @@ private:
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
-    bool isReleased = false;
+    bool isReleased_ = false;
     std::string url_ = "";
+    struct AVFileDescriptor fileDescriptor_;
     std::string surface_ = "";
     bool loop_ = false;
     int32_t videoScaleType_ = 0;
     std::vector<Format> trackInfoVec_;
-    struct AVFileDescriptor fileDescriptor_;
     OHOS::AudioStandard::InterruptMode interruptMode_ = AudioStandard::InterruptMode::SHARE_MODE;
     std::unique_ptr<TaskQueue> taskQue_;
     std::mutex mutex_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
+    PlayerStates state_ = PLAYER_IDLE;
+    std::condition_variable preparingCond_;
+    int32_t width_ = 0;
+    int32_t height_ = 0;
 };
 } // namespace Media
 } // namespace OHOS
