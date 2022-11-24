@@ -35,7 +35,12 @@ PlayerCodecCtrl::PlayerCodecCtrl()
 PlayerCodecCtrl::~PlayerCodecCtrl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    notifier_ = nullptr;
     if (decoder_ != nullptr) {
+        if (signalId_ != 0) {
+            g_signal_handler_disconnect(decoder_, signalId_);
+            signalId_ = 0;
+        }
         gst_object_unref(decoder_);
         decoder_ = nullptr;
     }
@@ -91,6 +96,27 @@ void PlayerCodecCtrl::SetupCodecBufferNum(const std::string &metaStr, GstElement
     if (metaStr.find("Sink/Video") != std::string::npos && !isHardwareDec_) {
         g_object_set(G_OBJECT(src), "max-pool-capacity", MAX_SOFT_BUFFERS, nullptr);
         g_object_set(G_OBJECT(src), "cache-buffers-num", DEFAULT_CACHE_BUFFERS, nullptr);
+    }
+}
+
+void PlayerCodecCtrl::SetCapsFixErrorCb(CapsFixErrorNotifier notifier)
+{
+    notifier_ = notifier;
+    CHECK_AND_RETURN_LOG(decoder_ != nullptr, "decoder_ is nullptr");
+    signalId_ = g_signal_connect(decoder_, "caps-fix-error", G_CALLBACK(&PlayerCodecCtrl::CapsFixErrorCb), this);
+}
+
+void PlayerCodecCtrl::CapsFixErrorCb(GstElement *decoder, gpointer userData)
+{
+    MEDIA_LOGD("CapsFixErrorCb in");
+    if (decoder == nullptr || userData == nullptr) {
+        MEDIA_LOGE("param is nullptr");
+        return;
+    }
+
+    auto playerCodecCtrl = static_cast<PlayerCodecCtrl *>(userData);
+    if (playerCodecCtrl->notifier_ != nullptr) {
+        playerCodecCtrl->notifier_();
     }
 }
 

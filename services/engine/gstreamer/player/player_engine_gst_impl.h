@@ -26,6 +26,7 @@
 #include "gst_appsrc_wrap.h"
 #include "player_track_parse.h"
 #include "player_codec_ctrl.h"
+#include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
@@ -91,6 +92,8 @@ private:
     void HandleInterruptMessage(const PlayBinMessage &msg);
     void HandleAudioStateMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
+    void OnCapsFixError();
+    void ResetPlaybinToSoftDec();
 
     std::mutex mutex_;
     std::mutex trackParseMutex_;
@@ -118,6 +121,8 @@ private:
     int32_t duration_ = -1;
     int32_t currentTimeOnInfoCnt_ = 0;
     bool isPlaySinkFlagsSet_ = false;
+    bool useSoftDec_ = false;
+    std::unique_ptr<TaskQueue> taskQueue_;
 };
 } // namespace Media
 } // namespace OHOS
