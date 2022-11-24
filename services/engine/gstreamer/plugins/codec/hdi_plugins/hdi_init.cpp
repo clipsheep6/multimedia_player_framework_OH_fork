@@ -20,6 +20,9 @@
 #include "display_type.h"
 #include "scope_guard.h"
 #include "hdi_codec_util.h"
+#include "hdf_remote_service.h"
+#include "codec_internal.h"
+#include "servmgr_hdi.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiInit"};
@@ -66,13 +69,55 @@ HdiInit &HdiInit::GetInstance()
 HdiInit::HdiInit()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    mgr_ = GetCodecComponentManager();
+    CodecComponentManagerInit();
 }
 
 HdiInit::~HdiInit()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     CodecComponentManagerRelease();
+}
+
+static void HdiCodecOnRemoteDied(HdfDeathRecipient *deathRecipient, HdfRemoteService *remote)
+{
+    (void)deathRecipient;
+    (void)remote;
+    HdiInit::GetInstance().CodecComponentManagerReset();
+}
+
+void HdiInit::CodecComponentManagerInit()
+{
+    MEDIA_LOGD("CodecComponentManagerInit In");
+
+    mgr_ = GetCodecComponentManager();
+    CHECK_AND_RETURN_LOG(mgr_ != nullptr, "GetCodecComponentManager failed");
+
+    HDIServiceManager *serviceMgr = HDIServiceManagerGet();
+    CHECK_AND_RETURN_LOG(serviceMgr != nullptr, "HDIServiceManagerGet failed");
+
+    HdfRemoteService *remoteOmx = serviceMgr->GetService(serviceMgr, CODEC_HDI_OMX_SERVICE_NAME);
+    HDIServiceManagerRelease(serviceMgr);
+    CHECK_AND_RETURN_LOG(remoteOmx != nullptr, "HDIServiceManagerGet failed");
+
+    HdfDeathRecipient recipient = {
+        .OnRemoteDied = HdiCodecOnRemoteDied,
+    };
+
+    HdfRemoteServiceAddDeathRecipient(remoteOmx, &recipient);
+
+    MEDIA_LOGD("CodecComponentManagerInit End");
+}
+
+void HdiInit::CodecComponentManagerReset()
+{
+    MEDIA_LOGD("CodecComponentManagerReset In");
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    CodecComponentManagerRelease();
+    mgr_ = nullptr;
+    handleMap_.clear();
+
+    MEDIA_LOGD("CodecComponentManagerReset End");
 }
 
 int32_t HdiInit::GetCodecType(CodecType hdiType)
@@ -251,6 +296,7 @@ void HdiInit::InitCaps()
 
 std::vector<CapabilityData> HdiInit::GetCapabilitys()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(mgr_ != nullptr, capabilitys_, "mgr is nullptr");
     InitCaps();
     return capabilitys_;
@@ -259,16 +305,37 @@ std::vector<CapabilityData> HdiInit::GetCapabilitys()
 int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, std::string name,
     void *appData, CodecCallbackType *callbacks)
 {
-    CHECK_AND_RETURN_RET_LOG(mgr_ != nullptr, HDF_FAILURE, "mgr is nullptr");
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (mgr_ == nullptr) {
+        CodecComponentManagerInit();
+        CHECK_AND_RETURN_RET_LOG(mgr_ != nullptr, HDF_FAILURE, "mgr is nullptr");
+    }
+    
     CHECK_AND_RETURN_RET_LOG(component != nullptr, HDF_FAILURE, "component is nullptr");
-    return mgr_->CreateComponent(component, &id, const_cast<char *>(name.c_str()),
+    int32_t ret = mgr_->CreateComponent(component, &id, const_cast<char *>(name.c_str()),
         reinterpret_cast<int64_t>(appData), callbacks);
+    if (ret == HDF_SUCCESS) {
+        handleMap_[*component] = id;
+    }
+
+    return ret;
 }
 
-int32_t HdiInit::FreeHandle(uint32_t id)
+int32_t HdiInit::FreeHandle(CodecComponentType *component, uint32_t id)
 {
     CHECK_AND_RETURN_RET_LOG(mgr_ != nullptr, HDF_FAILURE, "mgr_ is nullptr");
-    return mgr_->DestroyComponent(id);
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto iter = handleMap_.find(component);
+    CHECK_AND_RETURN_RET_LOG(iter != handleMap_.end(), HDF_SUCCESS, "The handle has been released!");
+    CHECK_AND_RETURN_RET_LOG(iter->second == id, HDF_FAILURE, "Handle and id do not match!");
+    
+    int32_t ret =  mgr_->DestroyComponent(id);
+    if (ret == HDF_SUCCESS) {
+        handleMap_.erase(iter);
+    }
+
+    return ret;
 }
 }  // namespace Media
 }  // namespace OHOS
