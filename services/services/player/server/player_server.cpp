@@ -489,7 +489,6 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
         return MSERR_INVALID_OPERATION;
     }
 
-
     config_.leftVolume = leftVolume;
     config_.rightVolume = rightVolume;
     if (IsEngineStarted()) {
@@ -512,7 +511,7 @@ bool PlayerServer::IsEngineStarted()
     if (playerEngine_ != nullptr) {
         if (GetCurrState() == preparedState_ || GetCurrState() == playingState_ ||
             GetCurrState() == pausedState_ || GetCurrState() == playbackCompletedState_) {
-                return true;
+            return true;
         }
     }
     return false;
