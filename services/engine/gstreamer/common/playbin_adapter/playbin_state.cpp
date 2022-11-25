@@ -438,7 +438,7 @@ void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg
         GstStateChangeReturn stateRet = gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
             nullptr, static_cast<GstClockTime>(0));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state == GST_STATE_PLAYING)) {
-            if (ctrler_.isSeeking_ && ctrler_.seekType_ == SeekType::PLAYING_SEEK) {
+            if (ctrler_.isSeeking_) {
                 int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
                 ctrler_.isSeeking_ = false;
                 ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
