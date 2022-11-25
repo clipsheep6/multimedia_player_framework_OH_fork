@@ -134,14 +134,16 @@ int32_t PlayerImpl::Release()
 
 int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetVolume(%{public}f, %{public}f) in", FAKE_POINTER(this), leftVolume, rightVolume);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetVolume(%{public}f, %{public}f) in",
+        FAKE_POINTER(this), leftVolume, rightVolume);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
     return playerService_->SetVolume(leftVolume, rightVolume);
 }
 
 int32_t PlayerImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
-    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d", FAKE_POINTER(this), mSeconds, mode);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}d ms, mode is %{public}d",
+        FAKE_POINTER(this), mSeconds, mode);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_INVALID_OPERATION, "player service does not exist..");
     return playerService_->Seek(mSeconds, mode);
 }
