@@ -47,7 +47,7 @@ void MediaEvent::EventWrite(std::string eventName, OHOS::HiviewDFX::HiSysEvent::
 {
     int32_t pid = getpid();
     uint32_t uid = getuid();
-    OHOS::HiviewDFX::HiSysEvent::Write("MULTIMEDIA", eventName, type,
+    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
         "PID", pid,
         "UID", uid,
         "MODULE", module,
