@@ -107,9 +107,6 @@ ohos_shared_library("media_service") {
       "player/server/player_server_task_mgr.cpp",
     ]
   }
-  if (multimedia_player_framework_support_histreamer) {
-    sources += [ "player/server/player_server_hi.cpp" ]
-  }
   if (multimedia_player_framework_support_recorder) {
     sources += [
       "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles/recorder_profiles_ability_singleton.cpp",
