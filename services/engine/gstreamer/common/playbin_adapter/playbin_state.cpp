@@ -406,7 +406,8 @@ int32_t PlayBinCtrlerBase::PlayingState::Pause()
 int32_t PlayBinCtrlerBase::PlayingState::Seek(int64_t timeUs, int32_t option)
 {
     GstState state = GST_STATE_NULL;
-    gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
+    gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
+        nullptr, static_cast<GstClockTime>(0));
 
     ctrler_.seekType_ = (state == GST_STATE_PAUSED) ? SeekType::PAUSED_SEEK : SeekType::PLAYING_SEEK;
 
