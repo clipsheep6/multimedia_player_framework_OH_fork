@@ -123,11 +123,12 @@ int32_t SrcBytebufferImpl::QueueInputBuffer(uint32_t index, AVCodecBufferInfo in
     auto &bufWrapper = bufferList_[index];
     CHECK_AND_RETURN_RET(bufWrapper->owner_ == BufferWrapper::APP, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET(bufWrapper->gstBuffer_ != nullptr, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET(info.offset >= 0 && info.size >= 0, MSERR_INVALID_VAL);
     gst_buffer_resize(bufWrapper->gstBuffer_, info.offset, info.size);
     GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(bufWrapper->gstBuffer_);
     CHECK_AND_RETURN_RET(meta != nullptr, MSERR_INVALID_OPERATION);
-    meta->offset = info.offset;
-    meta->length = info.size;
+    meta->offset = static_cast<uint32_t>(info.offset);
+    meta->length = static_cast<uint32_t>(info.size);
     MEDIA_LOGD("meta->offset change to: %{public}u, meta->length change to: %{public}u",
         meta->offset, meta->length);
 
