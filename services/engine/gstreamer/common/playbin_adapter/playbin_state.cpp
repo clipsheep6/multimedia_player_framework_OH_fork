@@ -409,7 +409,8 @@ int32_t PlayBinCtrlerBase::PlayingState::Seek(int64_t timeUs, int32_t option)
     gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
         nullptr, static_cast<GstClockTime>(0));
 
-    ctrler_.seekType_ = (state == GST_STATE_PAUSED) ? SeekType::PAUSED_SEEK : SeekType::PLAYING_SEEK;
+    ctrler_.seekType_ = (state == GST_STATE_PAUSED) ?
+        SeekType::PAUSED_SEEK : SeekType::PLAYING_SEEK;
 
     return ctrler_.SeekInternal(timeUs, option);
 }
