@@ -14,11 +14,16 @@
  */
 
 #include "gst_video_display_sink.h"
+#include <string>
+#include "param_wrapper.h"
 
+using namespace OHOS;
 namespace {
     constexpr guint64 DEFAULT_MAX_WAIT_CLOCK_TIME = 1000000000; // ns, 1s
     constexpr gint64 DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD = 20000000; // ns, 20ms
     constexpr gint64 DEFAULT_EXTRA_RENDER_FRAME_DIFF = 20000000; // ns, 20ms
+    constexpr gint DEFAULT_DROP_BEHIND_VIDEO_BUF_FREQUENCY = 5; // drop 1 buffer every 5 buffers at most
+    constexpr gint64 DEFAULT_VIDEO_BEHIND_AUDIO_THD = 90000000; // 90ms, level B
 }
 
 enum {
@@ -30,8 +35,12 @@ enum {
 struct _GstVideoDisplaySinkPrivate {
     GstElement *audio_sink;
     gboolean enable_kpi_avsync_log;
+    gboolean enable_drop;
     GMutex mutex;
     guint64 render_time_diff_threshold;
+    guint buffer_count;
+    guint64 total_video_buffer_num;
+    guint64 dropped_video_buffer_num;
 };
 
 #define gst_video_display_sink_parent_class parent_class
@@ -46,7 +55,11 @@ static void gst_video_display_sink_finalize(GObject *obj);
 static void gst_video_display_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static GstFlowReturn gst_video_display_sink_do_app_render(GstSurfaceMemSink *surface_sink,
     GstBuffer *buffer, bool is_preroll);
-static GstClockTime gst_video_display_sink_update_reach_time(GstBaseSink *base_sink, GstClockTime reach_time);
+static GstClockTime gst_video_display_sink_update_reach_time(GstBaseSink *base_sink, GstClockTime reach_time,
+    gboolean *need_drop_this_buffer);
+static gboolean gst_video_display_sink_event(GstBaseSink *base_sink, GstEvent *event);
+static GstStateChangeReturn gst_video_display_sink_change_state(GstElement *element, GstStateChange transition);
+static void gst_video_display_sink_enable_drop_from_sys_param(GstVideoDisplaySink *sink);
 
 static void gst_video_display_sink_class_init(GstVideoDisplaySinkClass *klass)
 {
@@ -63,6 +76,7 @@ static void gst_video_display_sink_class_init(GstVideoDisplaySinkClass *klass)
     gobject_class->dispose = gst_video_display_sink_dispose;
     gobject_class->finalize = gst_video_display_sink_finalize;
     gobject_class->set_property = gst_video_display_sink_set_property;
+    element_class->change_state = gst_video_display_sink_change_state;
 
     g_object_class_install_property(gobject_class, PROP_AUDIO_SINK,
         g_param_spec_pointer("audio-sink", "audio sink", "audio sink",
@@ -74,6 +88,7 @@ static void gst_video_display_sink_class_init(GstVideoDisplaySinkClass *klass)
 
     surface_sink_class->do_app_render = gst_video_display_sink_do_app_render;
     base_sink_class->update_reach_time = gst_video_display_sink_update_reach_time;
+    base_sink_class->event = gst_video_display_sink_event;
     GST_DEBUG_CATEGORY_INIT(gst_video_display_sink_debug_category, "videodisplaysink", 0, "videodisplaysink class");
 }
 
@@ -89,6 +104,10 @@ static void gst_video_display_sink_init(GstVideoDisplaySink *sink)
     priv->enable_kpi_avsync_log = FALSE;
     g_mutex_init(&priv->mutex);
     priv->render_time_diff_threshold = DEFAULT_MAX_WAIT_CLOCK_TIME;
+    priv->buffer_count = 1;
+    priv->total_video_buffer_num = 0;
+    priv->dropped_video_buffer_num = 0;
+    gst_video_display_sink_enable_drop_from_sys_param(sink);
 }
 
 static void gst_video_display_sink_dispose(GObject *obj)
@@ -111,9 +130,10 @@ static void gst_video_display_sink_finalize(GObject *obj)
     g_return_if_fail(obj != nullptr);
     GstVideoDisplaySink *video_display_sink = GST_VIDEO_DISPLAY_SINK_CAST(obj);
     GstVideoDisplaySinkPrivate *priv = video_display_sink->priv;
-    g_return_if_fail(priv != nullptr);
+    if (priv != nullptr) {
+        g_mutex_clear(&priv->mutex);
+    }
 
-    g_mutex_clear(&priv->mutex);
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
 
@@ -154,6 +174,72 @@ static void gst_video_display_sink_set_property(GObject *object, guint prop_id, 
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
             break;
+    }
+}
+
+static gboolean gst_video_display_sink_event(GstBaseSink *base_sink, GstEvent *event)
+{
+    g_return_val_if_fail(event != nullptr, FALSE);
+    GstVideoDisplaySink *video_display_sink = GST_VIDEO_DISPLAY_SINK_CAST(base_sink);
+    g_return_val_if_fail(video_display_sink != nullptr, FALSE);
+    GstVideoDisplaySinkPrivate *priv = video_display_sink->priv;
+
+    switch (event->type) {
+        case GST_EVENT_FLUSH_STOP: {
+            if (priv != nullptr) {
+                g_mutex_lock(&priv->mutex);
+                priv->buffer_count = 1;
+                g_mutex_unlock(&priv->mutex);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+    return GST_BASE_SINK_CLASS(parent_class)->event(base_sink, event);
+}
+
+static GstStateChangeReturn gst_video_display_sink_change_state(GstElement *element, GstStateChange transition)
+{
+    g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
+    GstVideoDisplaySink *video_display_sink = GST_VIDEO_DISPLAY_SINK(element);
+    GstVideoDisplaySinkPrivate *priv = video_display_sink->priv;
+
+    switch (transition) {
+        case GST_STATE_CHANGE_PAUSED_TO_READY:
+            if (priv != nullptr) {
+                g_mutex_lock(&priv->mutex);
+                if (priv->total_video_buffer_num != 0) {
+                    GST_DEBUG_OBJECT(video_display_sink, "total video buffer num:%" G_GUINT64_FORMAT
+                        ", dropped video buffer num:%" G_GUINT64_FORMAT ", drop rate:%f",
+                        priv->total_video_buffer_num, priv->dropped_video_buffer_num,
+                        (gfloat)priv->dropped_video_buffer_num / priv->total_video_buffer_num);
+                }
+                priv->buffer_count = 1;
+                priv->total_video_buffer_num = 0;
+                priv->dropped_video_buffer_num = 0;
+                g_mutex_unlock(&priv->mutex);
+            }
+            break;
+        default:
+            break;
+    }
+    return GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
+}
+
+static void gst_video_display_sink_enable_drop_from_sys_param(GstVideoDisplaySink *video_display_sink)
+{
+    std::string drop_enable;
+    video_display_sink->priv->enable_drop = TRUE;
+    int32_t res = OHOS::system::GetStringParameter("sys.media.drop.video.buffer.enable", drop_enable, "");
+    if (res != 0 || drop_enable.empty()) {
+        GST_DEBUG_OBJECT(video_display_sink, "sys.media.drop.video.buffer.enable");
+        return;
+    }
+    GST_DEBUG_OBJECT(video_display_sink, "sys.media.drop.video.buffer.enable=%s", drop_enable.c_str());
+
+    if (drop_enable == "false") {
+        video_display_sink->priv->enable_drop = FALSE;
     }
 }
 
@@ -208,8 +294,52 @@ static GstFlowReturn gst_video_display_sink_do_app_render(GstSurfaceMemSink *sur
     return GST_FLOW_OK;
 }
 
-static GstClockTime gst_video_display_sink_adjust_reach_time_by_jitter(GstVideoDisplaySink *video_display_sink,
-    GstClockTime reach_time)
+static GstClockTime gst_video_get_current_running_time(GstBaseSink *base_sink)
+{
+    GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(base_sink)); // get base time
+    GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(base_sink)); // get current clock time
+    if (!GST_CLOCK_TIME_IS_VALID(base_time) || !GST_CLOCK_TIME_IS_VALID(cur_clock_time)) {
+        return GST_CLOCK_TIME_NONE;
+    }
+    if (cur_clock_time < base_time) {
+        return GST_CLOCK_TIME_NONE;
+    }
+    return cur_clock_time - base_time;
+}
+
+static void gst_video_display_sink_adjust_reach_time_handle(GstVideoDisplaySink *video_display_sink,
+    GstClockTime &reach_time, gint64 video_running_time_diff, gint64 audio_running_time_diff,
+    gboolean *need_drop_this_buffer)
+{
+    GstVideoDisplaySinkPrivate *priv = video_display_sink->priv;
+
+    if (video_running_time_diff - audio_running_time_diff > DEFAULT_VIDEO_BEHIND_AUDIO_THD) {
+        if (priv->enable_drop == TRUE) {
+            if (priv->buffer_count % DEFAULT_DROP_BEHIND_VIDEO_BUF_FREQUENCY == 0) {
+                GST_DEBUG_OBJECT(video_display_sink, "drop this video buffer, num:%" G_GUINT64_FORMAT,
+                    priv->total_video_buffer_num);
+                *need_drop_this_buffer = TRUE;
+                priv->dropped_video_buffer_num++;
+            } else {
+                priv->buffer_count++;
+                return;
+            }
+        }
+    } else if (video_running_time_diff < audio_running_time_diff &&
+               audio_running_time_diff > DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD) {
+        GST_DEBUG_OBJECT(video_display_sink, "audio is too late, adjust video reach_time, new reach_time=%"
+            G_GUINT64_FORMAT "audio_running_time_diff=%" G_GINT64_FORMAT,
+            reach_time + audio_running_time_diff, audio_running_time_diff);
+        reach_time += audio_running_time_diff;
+    }
+
+    if (priv->enable_drop == TRUE) {
+        priv->buffer_count = 1;
+    }
+}
+
+static GstClockTime gst_video_display_sink_adjust_reach_time_by_jitter(GstBaseSink *base_sink,
+    GstVideoDisplaySink *video_display_sink, GstClockTime reach_time, gboolean *need_drop_this_buffer)
 {
     GstVideoDisplaySinkPrivate *priv = video_display_sink->priv;
     if (priv == nullptr) {
@@ -220,18 +350,25 @@ static GstClockTime gst_video_display_sink_adjust_reach_time_by_jitter(GstVideoD
     if (priv->audio_sink != nullptr) {
         gint64 audio_running_time_diff = 0;
         g_object_get(priv->audio_sink, "last-running-time-diff", &audio_running_time_diff, nullptr);
-        if (audio_running_time_diff > DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD) {
-            GST_LOG_OBJECT(video_display_sink, "audio_running_time_diff=%" G_GINT64_FORMAT
-                ", old reach_time=%" G_GUINT64_FORMAT ", new reach_time=%" G_GUINT64_FORMAT,
-                audio_running_time_diff, reach_time, reach_time + audio_running_time_diff);
-            reach_time += audio_running_time_diff;
-        }
+        GstClockTime cur_running_time = gst_video_get_current_running_time(base_sink);
+        g_return_val_if_fail(GST_CLOCK_TIME_IS_VALID(cur_running_time), reach_time);
+        gint64 video_running_time_diff = cur_running_time - reach_time;
+
+        GST_LOG_OBJECT(video_display_sink, "videosink buffer num:%" G_GUINT64_FORMAT ", video_running_time_diff:%"
+            G_GINT64_FORMAT " = cur_running_time:%" G_GUINT64_FORMAT " - reach_time:%" G_GUINT64_FORMAT
+            ", audio_running_time_diff:%" G_GINT64_FORMAT ", buffer_count:%u", priv->total_video_buffer_num,
+            video_running_time_diff, cur_running_time, reach_time, audio_running_time_diff,
+            priv->buffer_count);
+
+        gst_video_display_sink_adjust_reach_time_handle(video_display_sink, reach_time,
+            video_running_time_diff, audio_running_time_diff, need_drop_this_buffer);
     }
     g_mutex_unlock(&priv->mutex);
     return reach_time;
 }
 
-static GstClockTime gst_video_display_sink_update_reach_time(GstBaseSink *base_sink, GstClockTime reach_time)
+static GstClockTime gst_video_display_sink_update_reach_time(GstBaseSink *base_sink, GstClockTime reach_time,
+    gboolean *need_drop_this_buffer)
 {
     g_return_val_if_fail(base_sink != nullptr, reach_time);
     g_return_val_if_fail(GST_CLOCK_TIME_IS_VALID(reach_time), reach_time);
@@ -240,21 +377,18 @@ static GstClockTime gst_video_display_sink_update_reach_time(GstBaseSink *base_s
     if (priv == nullptr || priv->render_time_diff_threshold == G_MAXUINT64) {
         return reach_time;
     }
+    priv->total_video_buffer_num++;
 
     // 1st: update reach_time by audio running time jitter
-    GstClockTime new_reach_time = gst_video_display_sink_adjust_reach_time_by_jitter(video_display_sink, reach_time);
+    GstClockTime new_reach_time = gst_video_display_sink_adjust_reach_time_by_jitter(base_sink, video_display_sink,
+        reach_time, need_drop_this_buffer);
+    if (!GST_CLOCK_TIME_IS_VALID(new_reach_time)) {
+        return new_reach_time;
+    }
 
     // 2ed: update reach_time if the running_time_diff exceeded the threshold
-    GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(base_sink)); // get base time
-    GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(base_sink)); // get current clock time
-    if (!GST_CLOCK_TIME_IS_VALID(base_time) || !GST_CLOCK_TIME_IS_VALID(cur_clock_time)) {
-        return new_reach_time;
-    }
-    if (cur_clock_time < base_time) {
-        return new_reach_time;
-    }
-    GstClockTime cur_running_time = cur_clock_time - base_time; // get running time
-    if (cur_running_time >= new_reach_time) {
+    GstClockTime cur_running_time = gst_video_get_current_running_time(base_sink); // get running time
+    if (!GST_CLOCK_TIME_IS_VALID(cur_running_time) || cur_running_time >= new_reach_time) {
         return new_reach_time;
     }
     GstClockTime running_time_diff = new_reach_time - cur_running_time;

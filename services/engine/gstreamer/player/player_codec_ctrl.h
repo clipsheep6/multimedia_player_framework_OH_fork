@@ -38,7 +38,7 @@ private:
     void SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink);
     void HlsSwichSoftAndHardCodec(GstElement *videoSink);
     void SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const;
-    static void CapsFixErrorCb(GstElement *decoder, gpointer userData);
+    static void CapsFixErrorCb(const GstElement *decoder, gpointer userData);
 
     bool isHardwareDec_ = false;
     GstElement *decoder_ = nullptr;
