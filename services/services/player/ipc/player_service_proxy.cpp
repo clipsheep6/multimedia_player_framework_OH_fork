@@ -18,6 +18,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
+#include "media_dfx.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServiceProxy"};
@@ -38,6 +39,7 @@ PlayerServiceProxy::~PlayerServiceProxy()
 
 int32_t PlayerServiceProxy::SetListenerObject(const sptr<IRemoteObject> &object)
 {
+    MediaTrace trace("binder::SetListenerObject");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -59,6 +61,7 @@ int32_t PlayerServiceProxy::SetListenerObject(const sptr<IRemoteObject> &object)
 
 int32_t PlayerServiceProxy::SetSource(const std::string &url)
 {
+    MediaTrace trace("binder::SetSource");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -79,6 +82,7 @@ int32_t PlayerServiceProxy::SetSource(const std::string &url)
 
 int32_t PlayerServiceProxy::SetSource(const sptr<IRemoteObject> &object)
 {
+    MediaTrace trace("binder::SetSource");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -100,6 +104,7 @@ int32_t PlayerServiceProxy::SetSource(const sptr<IRemoteObject> &object)
 
 int32_t PlayerServiceProxy::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
+    MediaTrace trace("binder::SetSource");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -122,6 +127,7 @@ int32_t PlayerServiceProxy::SetSource(int32_t fd, int64_t offset, int64_t size)
 
 int32_t PlayerServiceProxy::Play()
 {
+    MediaTrace trace("binder::Play");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -141,6 +147,7 @@ int32_t PlayerServiceProxy::Play()
 
 int32_t PlayerServiceProxy::Prepare()
 {
+    MediaTrace trace("binder::Prepare");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -160,6 +167,7 @@ int32_t PlayerServiceProxy::Prepare()
 
 int32_t PlayerServiceProxy::PrepareAsync()
 {
+    MediaTrace trace("binder::PrepareAsync");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -179,6 +187,7 @@ int32_t PlayerServiceProxy::PrepareAsync()
 
 int32_t PlayerServiceProxy::Pause()
 {
+    MediaTrace trace("binder::Pause");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -198,6 +207,7 @@ int32_t PlayerServiceProxy::Pause()
 
 int32_t PlayerServiceProxy::Stop()
 {
+    MediaTrace trace("binder::Stop");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -217,6 +227,7 @@ int32_t PlayerServiceProxy::Stop()
 
 int32_t PlayerServiceProxy::Reset()
 {
+    MediaTrace trace("binder::Reset");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -236,6 +247,7 @@ int32_t PlayerServiceProxy::Reset()
 
 int32_t PlayerServiceProxy::Release()
 {
+    MediaTrace trace("binder::Release");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -255,6 +267,7 @@ int32_t PlayerServiceProxy::Release()
 
 int32_t PlayerServiceProxy::SetVolume(float leftVolume, float rightVolume)
 {
+    MediaTrace trace("binder::SetVolume");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -276,6 +289,7 @@ int32_t PlayerServiceProxy::SetVolume(float leftVolume, float rightVolume)
 
 int32_t PlayerServiceProxy::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
+    MediaTrace trace("binder::Seek");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -297,6 +311,7 @@ int32_t PlayerServiceProxy::Seek(int32_t mSeconds, PlayerSeekMode mode)
 
 int32_t PlayerServiceProxy::GetCurrentTime(int32_t &currentTime)
 {
+    MediaTrace trace("binder::GetCurrentTime");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -317,6 +332,7 @@ int32_t PlayerServiceProxy::GetCurrentTime(int32_t &currentTime)
 
 int32_t PlayerServiceProxy::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
+    MediaTrace trace("binder::GetVideoTrackInfo");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -342,6 +358,7 @@ int32_t PlayerServiceProxy::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 
 int32_t PlayerServiceProxy::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
+    MediaTrace trace("binder::GetAudioTrackInfo");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -368,6 +385,7 @@ int32_t PlayerServiceProxy::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 
 int32_t PlayerServiceProxy::GetVideoWidth()
 {
+    MediaTrace trace("binder::GetVideoWidth");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -387,6 +405,7 @@ int32_t PlayerServiceProxy::GetVideoWidth()
 
 int32_t PlayerServiceProxy::GetVideoHeight()
 {
+    MediaTrace trace("binder::GetVideoHeight");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -406,6 +425,7 @@ int32_t PlayerServiceProxy::GetVideoHeight()
 
 int32_t PlayerServiceProxy::GetDuration(int32_t &duration)
 {
+    MediaTrace trace("binder::GetDuration");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -426,6 +446,7 @@ int32_t PlayerServiceProxy::GetDuration(int32_t &duration)
 
 int32_t PlayerServiceProxy::SetPlaybackSpeed(PlaybackRateMode mode)
 {
+    MediaTrace trace("binder::SetPlaybackSpeed");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -446,6 +467,7 @@ int32_t PlayerServiceProxy::SetPlaybackSpeed(PlaybackRateMode mode)
 
 int32_t PlayerServiceProxy::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
+    MediaTrace trace("binder::GetPlaybackSpeed");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -467,6 +489,7 @@ int32_t PlayerServiceProxy::GetPlaybackSpeed(PlaybackRateMode &mode)
 
 int32_t PlayerServiceProxy::SelectBitRate(uint32_t bitRate)
 {
+    MediaTrace trace("binder::SelectBitRate");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -488,6 +511,7 @@ int32_t PlayerServiceProxy::SelectBitRate(uint32_t bitRate)
 #ifdef SUPPORT_VIDEO
 int32_t PlayerServiceProxy::SetVideoSurface(sptr<Surface> surface)
 {
+    MediaTrace trace("binder::SetVideoSurface");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -520,6 +544,7 @@ int32_t PlayerServiceProxy::SetVideoSurface(sptr<Surface> surface)
 
 bool PlayerServiceProxy::IsPlaying()
 {
+    MediaTrace trace("binder::IsPlaying");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -540,6 +565,7 @@ bool PlayerServiceProxy::IsPlaying()
 
 bool PlayerServiceProxy::IsLooping()
 {
+    MediaTrace trace("binder::IsLooping");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -560,6 +586,7 @@ bool PlayerServiceProxy::IsLooping()
 
 int32_t PlayerServiceProxy::SetLooping(bool loop)
 {
+    MediaTrace trace("binder::SetLooping");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -580,6 +607,7 @@ int32_t PlayerServiceProxy::SetLooping(bool loop)
 
 int32_t PlayerServiceProxy::SetParameter(const Format &param)
 {
+    MediaTrace trace("binder::SetParameter");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -602,6 +630,7 @@ int32_t PlayerServiceProxy::SetParameter(const Format &param)
 
 int32_t PlayerServiceProxy::DestroyStub()
 {
+    MediaTrace trace("binder::DestroyStub");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -621,6 +650,7 @@ int32_t PlayerServiceProxy::DestroyStub()
 
 int32_t PlayerServiceProxy::SetPlayerCallback()
 {
+    MediaTrace trace("binder::SetPlayerCallback");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
