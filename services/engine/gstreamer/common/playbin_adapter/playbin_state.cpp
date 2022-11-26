@@ -172,7 +172,7 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
         GstStateChangeReturn stateRet = gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
             nullptr, static_cast<GstClockTime>(0));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state >= GST_STATE_PAUSED)) {
-            if (ctrler_.isSeeking_) {
+            if (ctrler_.isSeeking_ && ctrler_.seekType_ == SeekType::PAUSED_SEEK) {
                 int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
                 ctrler_.isSeeking_ = false;
                 ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
@@ -363,6 +363,7 @@ int32_t PlayBinCtrlerBase::PreparedState::Play()
 
 int32_t PlayBinCtrlerBase::PreparedState::Seek(int64_t timeUs, int32_t option)
 {
+    ctrler_.seekType_ = SeekType::PAUSED_SEEK;
     return ctrler_.SeekInternal(timeUs, option);
 }
 
@@ -407,8 +408,8 @@ int32_t PlayBinCtrlerBase::PlayingState::Play()
 int32_t PlayBinCtrlerBase::PlayingState::Pause()
 {
     GstState state = GST_STATE_NULL;
-    gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
-    if (state == GST_STATE_PAUSED) {
+    GstStateChangeReturn stateRet = gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
+    if (stateRet == GST_STATE_CHANGE_SUCCESS && state == GST_STATE_PAUSED) {
         MEDIA_LOGD("Playbin already paused");
         ctrler_.ChangeState(ctrler_.pausedState_);
         return MSERR_OK;
@@ -420,6 +421,13 @@ int32_t PlayBinCtrlerBase::PlayingState::Pause()
 
 int32_t PlayBinCtrlerBase::PlayingState::Seek(int64_t timeUs, int32_t option)
 {
+    GstState state = GST_STATE_NULL;
+    gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
+        nullptr, static_cast<GstClockTime>(0));
+
+    ctrler_.seekType_ = (state == GST_STATE_PAUSED) ?
+        SeekType::PAUSED_SEEK : SeekType::PLAYING_SEEK;
+
     return ctrler_.SeekInternal(timeUs, option);
 }
 
@@ -505,6 +513,7 @@ int32_t PlayBinCtrlerBase::PausedState::Pause()
 
 int32_t PlayBinCtrlerBase::PausedState::Seek(int64_t timeUs, int32_t option)
 {
+    ctrler_.seekType_ = SeekType::PAUSED_SEEK;
     return ctrler_.SeekInternal(timeUs, option);
 }
 
@@ -596,6 +605,7 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
     PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
         0, static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
     ctrler_.ReportMessage(posUpdateMsg);
+    ctrler_.seekType_ = SeekType::PAUSED_SEEK;
     return ctrler_.SeekInternal(0, IPlayBinCtrler::PlayBinSeekMode::PREV_SYNC);
 }
 

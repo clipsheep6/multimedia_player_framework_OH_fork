@@ -37,6 +37,11 @@ enum GstPlayerStatus : int32_t {
     GST_PLAYER_STATUS_PLAYING,
 };
 
+enum class SeekType {
+    PAUSED_SEEK,
+    PLAYING_SEEK
+};
+
 class PlayBinCtrlerBase
     : public IPlayBinCtrler,
       public StateMachine,
@@ -162,6 +167,7 @@ private:
     int64_t seekPos_ = 0;
     int64_t lastTime_ = 0;
 
+    SeekType seekType_ = SeekType::PLAYING_SEEK;
     bool isSeeking_ = false;
     bool isRating_ = false;
     bool isBuffering_ = false;
