@@ -72,6 +72,7 @@ private:
 
     static constexpr int MAX_QUEUE_SIZE = 100;
 
+    int32_t AudioCaptureLoop();
     void GetAudioCaptureBuffer();
     void EmptyCaptureQueue();
     std::shared_ptr<AudioBuffer> GetSegmentData();
