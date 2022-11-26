@@ -17,6 +17,7 @@
 #include <uv.h>
 #include "media_errors.h"
 #include "media_log.h"
+#include "scope_guard.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerCallback"};
@@ -24,6 +25,155 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerCa
 
 namespace OHOS {
 namespace Media {
+class NapiCallback {
+public:
+    struct Base {
+        std::weak_ptr<AutoRef> callback;
+        std::string callbackName = "unknown";
+        Base() = default;
+        virtual ~Base() = default;
+        virtual void UvWork()
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            // Call back function
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct Error : public Base {
+        std::string errorMsg = "unknown";
+        MediaServiceExtErrCodeAPI9 errorCode = MSERR_EXT_API9_UNSUPPORT_FORMAT;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value args[1] = { nullptr };
+            (void)CommonNapi::CreateError(ref->env_, errorCode, errorMsg, args[0]);
+
+            // Call back function
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct IntVec : public Base {
+        std::vector<int32_t> valueVec;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value array = nullptr;
+            (void)CommonNapi::AddArrayInt(ref->env_, array, valueVec);
+
+            napi_value result = nullptr;
+            napi_value args[1] = {array};
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct DoubleVec : public Base {
+        std::vector<double> valueVec;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value array = nullptr;
+            bool ret = CommonNapi::AddArrayDouble(ref->env_, array, valueVec);
+            CHECK_AND_RETURN_LOG(ret == true, "%{public}s failed to AddArrayDouble", callbackName.c_str());
+
+            napi_value result = nullptr;
+            napi_value args[1] = {array};
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct PropertyInt : public Base {
+        std::map<std::string, int32_t> valueMap;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+            
+            napi_value args[1] = {nullptr};
+            napi_create_object(ref->env_, &args[0]);
+            for (auto &it : valueMap) {
+                CommonNapi::SetPropertyInt32(ref->env_, args[0], it.first, it.second);
+            }
+
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    static void CompleteCallback(napi_env env, NapiCallback::Base *jsCb)
+    {
+        ON_SCOPE_EXIT(0) { delete jsCb; };
+
+        uv_loop_s *loop = nullptr;
+        napi_get_uv_event_loop(env, &loop);
+        CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
+
+        uv_work_t *work = new(std::nothrow) uv_work_t;
+        CHECK_AND_RETURN_LOG(work != nullptr, "Fail to new uv_work_t");
+
+        work->data = reinterpret_cast<void *>(jsCb);
+        // async callback, jsWork and jsWork->data should be heap object.
+        int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+            CHECK_AND_RETURN_LOG(work != nullptr, "Work thread is nullptr");
+            (void)status;
+            NapiCallback::Base *cb = reinterpret_cast<NapiCallback::Base *>(work->data);
+            if (cb != nullptr) {
+                MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", cb->callbackName.c_str());
+                cb->UvWork();
+                delete cb;
+            }
+            delete work;
+        });
+        if (ret != 0) {
+            MEDIA_LOGE("Failed to execute libuv work queue");
+            delete jsCb;
+            delete work;
+        }
+        CANCEL_SCOPE_EXIT_GUARD(0);
+    }
+};
+
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
@@ -39,13 +189,13 @@ void AVPlayerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     std::string msg = "avplayer error:";
-    return AVPlayerCallback::OnErrorCb(err, msg);
+    AVPlayerCallback::OnErrorCb(err, msg);
 }
 
 void AVPlayerCallback::OnError(int32_t sourceId, int32_t errorCode, std::string errorMsg)
 {
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
-    return AVPlayerCallback::OnErrorCb(err, errorMsg);
+    AVPlayerCallback::OnErrorCb(err, errorMsg);
 }
 
 void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
@@ -57,14 +207,14 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
         return;
     }
 
-    MediaNapiCall::EventError *event = new(std::nothrow) MediaNapiCall::EventError();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventError");
+    NapiCallback::Error *cb = new(std::nothrow) NapiCallback::Error();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Error");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_ERROR);
-    event->callbackName = AVPlayerEvent::EVENT_ERROR;
-    event->errorCode = errorCode;
-    event->errorMsg = errorMsg;
-    return MediaNapiCall::CallError(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_ERROR);
+    cb->callbackName = AVPlayerEvent::EVENT_ERROR;
+    cb->errorCode = errorCode;
+    cb->errorMsg = errorMsg;
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -133,105 +283,116 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state)
         { PLAYER_STATE_ERROR, AVPlayerState::STATE_ERROR },
     };
 
-    auto it = stateMap.find(state);
-    if (it != stateMap.end()) {
+    if (stateMap.find(state) != stateMap.end()) {
         std::string stateName = stateMap.at(state);
-        // int32_t reason = StateChangeReason::USER;
+        int32_t reason = StateChangeReason::USER;
         if (refMap_.find(AVPlayerEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
             MEDIA_LOGW("can not find state change callback!");
             return;
         }
-        // 发状态码
+        NapiCallback::PropertyInt *cb = new(std::nothrow) NapiCallback::PropertyInt();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new PropertyInt");
+
+        cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
+        cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
+        cb->valueMap[stateName] = reason;
+        NapiCallback::CompleteCallback(env_, cb);
     }
 }
 
 void AVPlayerCallback::OnVolumeChangeCb(double volumeLevel)
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGD("OnVolumeChangeCb in");
     if (refMap_.find(AVPlayerEvent::EVENT_VOLUME_CHANGE) == refMap_.end()) {
         MEDIA_LOGW("can not find vol change callback!");
         return;
     }
 
-    MediaNapiCall::EventDoubleVec *event = new(std::nothrow) MediaNapiCall::EventDoubleVec();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventDoubleVec");
+    NapiCallback::DoubleVec *cb = new(std::nothrow) NapiCallback::DoubleVec();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new DoubleVec");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_VOLUME_CHANGE);
-    event->callbackName = AVPlayerEvent::EVENT_VOLUME_CHANGE;
-    event->valueVec.push_back(volumeLevel);
-    return MediaNapiCall::CallDoubleVec(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_VOLUME_CHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_VOLUME_CHANGE;
+    cb->valueVec.push_back(volumeLevel);
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnSeekDoneCb(int32_t currentPositon) const
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGD("OnSeekDone is called, currentPositon: %{public}d", currentPositon);
     if (refMap_.find(AVPlayerEvent::EVENT_SEEK_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find seekdone callback!");
         return;
     }
 
-    MediaNapiCall::EventIntVec *event = new(std::nothrow) MediaNapiCall::EventIntVec();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventIntVec");
+    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_SEEK_DONE);
-    event->callbackName = AVPlayerEvent::EVENT_SEEK_DONE;
-    event->valueVec.push_back(currentPositon);
-    return MediaNapiCall::CallIntVec(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SEEK_DONE);
+    cb->callbackName = AVPlayerEvent::EVENT_SEEK_DONE;
+    cb->valueVec.push_back(currentPositon);
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnSpeedDoneCb(int32_t speedMode) const
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGD("OnSpeedDoneCb is called, speedMode: %{public}d", speedMode);
     if (refMap_.find(AVPlayerEvent::EVENT_SPEED_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find speeddone callback!");
         return;
     }
 
-    MediaNapiCall::EventIntVec *event = new(std::nothrow) MediaNapiCall::EventIntVec();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventIntVec");
+    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_SPEED_DONE);
-    event->callbackName = AVPlayerEvent::EVENT_SPEED_DONE;
-    event->valueVec.push_back(speedMode);
-    return MediaNapiCall::CallIntVec(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SPEED_DONE);
+    cb->callbackName = AVPlayerEvent::EVENT_SPEED_DONE;
+    cb->valueVec.push_back(speedMode);
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnBitRateDoneCb(int32_t bitRate) const
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGD("OnBitRateDoneCb is called, bitRate: %{public}d", bitRate);
     if (refMap_.find(AVPlayerEvent::EVENT_BITRATE_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find bitrate callback!");
         return;
     }
 
-    MediaNapiCall::EventIntVec *event = new(std::nothrow) MediaNapiCall::EventIntVec();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventIntVec");
+    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_BITRATE_DONE);
-    event->callbackName = AVPlayerEvent::EVENT_BITRATE_DONE;
-    event->valueVec.push_back(bitRate);
-    return MediaNapiCall::CallIntVec(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_BITRATE_DONE);
+    cb->callbackName = AVPlayerEvent::EVENT_BITRATE_DONE;
+    cb->valueVec.push_back(bitRate);
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnPositionUpdateCb(int32_t position) const
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGD("OnPositionUpdateCb is called, position: %{public}d", position);
     if (refMap_.find(AVPlayerEvent::EVENT_TIME_UPDATE) == refMap_.end()) {
         MEDIA_LOGW("can not find timeupdate callback!");
         return;
     }
 
-    MediaNapiCall::EventIntVec *event = new(std::nothrow) MediaNapiCall::EventIntVec();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventIntVec");
+    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_TIME_UPDATE);
-    event->callbackName = AVPlayerEvent::EVENT_TIME_UPDATE;
-    event->valueVec.push_back(position);
-    return MediaNapiCall::CallIntVec(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIME_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_TIME_UPDATE;
+    cb->valueVec.push_back(position);
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGD("OnBufferingUpdateCb is called");
     if (refMap_.find(AVPlayerEvent::EVENT_BUFFERING_UPDATE) == refMap_.end()) {
         MEDIA_LOGW("can not find buffering update callback!");
@@ -257,19 +418,19 @@ void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
     }
 
     MEDIA_LOGD("OnBufferingUpdateCb is called, buffering type: %{public}d value: %{public}d", bufferingType, value);
+    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
-    MediaNapiCall::EventIntVec *event = new(std::nothrow) MediaNapiCall::EventIntVec();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventIntVec");
-
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_BUFFERING_UPDATE);
-    event->callbackName = AVPlayerEvent::EVENT_BUFFERING_UPDATE;
-    event->valueVec.push_back(bufferingType);
-    event->valueVec.push_back(value);
-    return MediaNapiCall::CallIntVec(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_BUFFERING_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_BUFFERING_UPDATE;
+    cb->valueVec.push_back(bufferingType);
+    cb->valueVec.push_back(value);
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnMessageCb(int32_t extra, const Format &infoBody) const
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGD("OnMessageCb is called, extra: %{public}d", extra);
     if (extra == PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START) {
         AVPlayerCallback::OnStartRenderFrameCb();
@@ -279,21 +440,23 @@ void AVPlayerCallback::OnMessageCb(int32_t extra, const Format &infoBody) const
 void AVPlayerCallback::OnStartRenderFrameCb() const
 {
     MEDIA_LOGD("OnStartRenderFrameCb is called");
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_START_RENDER_FRAME) == refMap_.end()) {
         MEDIA_LOGW("can not find start render callback!");
         return;
     }
 
-    MediaNapiCall::EventBase *event = new(std::nothrow) MediaNapiCall::EventBase();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventBase");
+    NapiCallback::Base *cb = new(std::nothrow) NapiCallback::Base();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Base");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_START_RENDER_FRAME);
-    event->callbackName = AVPlayerEvent::EVENT_START_RENDER_FRAME;
-    MediaNapiCall::CallSignle(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_START_RENDER_FRAME);
+    cb->callbackName = AVPlayerEvent::EVENT_START_RENDER_FRAME;
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnVideoSizeChangedCb(const Format &infoBody)
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t width = 0;
     int32_t height = 0;
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_WIDTH, width);
@@ -308,28 +471,29 @@ void AVPlayerCallback::OnVideoSizeChangedCb(const Format &infoBody)
         MEDIA_LOGW("can not find video size changed callback!");
         return;
     }
-    MediaNapiCall::EventIntVec *event = new(std::nothrow) MediaNapiCall::EventIntVec();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventIntVec");
+    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE);
-    event->callbackName = AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE;
-    event->valueVec.push_back(width);
-    event->valueVec.push_back(height);
-    return MediaNapiCall::CallIntVec(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_VIDEO_SIZE_CHANGE;
+    cb->valueVec.push_back(width);
+    cb->valueVec.push_back(height);
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnAudioInterruptCb(const Format &infoBody) const
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_AUDIO_INTERRUPT) == refMap_.end()) {
         MEDIA_LOGW("can not find audio interrupt callback!");
         return;
     }
 
-    MediaNapiCall::EventPropertyInt *event = new(std::nothrow) MediaNapiCall::EventPropertyInt();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventPropertyInt");
+    NapiCallback::PropertyInt *cb = new(std::nothrow) NapiCallback::PropertyInt();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new PropertyInt");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_AUDIO_INTERRUPT);
-    event->callbackName = AVPlayerEvent::EVENT_AUDIO_INTERRUPT;
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_AUDIO_INTERRUPT);
+    cb->callbackName = AVPlayerEvent::EVENT_AUDIO_INTERRUPT;
     int32_t eventType = 0;
     int32_t forceType = 0;
     int32_t hintType = 0;
@@ -339,14 +503,15 @@ void AVPlayerCallback::OnAudioInterruptCb(const Format &infoBody) const
     MEDIA_LOGD("OnAudioInterruptCb is called, eventType = %{public}d, forceType = %{public}d, hintType = %{public}d",
         eventType, forceType, hintType);
     // ohos.multimedia.audio.d.ts interface InterruptEvent
-    event->valueVec["eventType"] = eventType;
-    event->valueVec["forceType"] = forceType;
-    event->valueVec["hintType"] = hintType;
-    return MediaNapiCall::CallPropertyInt(env_, event);
+    cb->valueMap["eventType"] = eventType;
+    cb->valueMap["forceType"] = forceType;
+    cb->valueMap["hintType"] = hintType;
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnBitRateCollectedCb(const Format &infoBody) const
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_AVAILABLE_BITRATES) == refMap_.end()) {
         MEDIA_LOGW("can not find bitrate collected callback!");
         return;
@@ -374,29 +539,30 @@ void AVPlayerCallback::OnBitRateCollectedCb(const Format &infoBody) const
         }
     }
 
-    MediaNapiCall::EventIntVec *event = new(std::nothrow) MediaNapiCall::EventIntVec();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventIntVec");
+    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_AVAILABLE_BITRATES);
-    event->callbackName = AVPlayerEvent::EVENT_AVAILABLE_BITRATES;
-    event->valueVec = bitrateVec;
-    return MediaNapiCall::CallIntArray(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_AVAILABLE_BITRATES);
+    cb->callbackName = AVPlayerEvent::EVENT_AVAILABLE_BITRATES;
+    cb->valueVec = bitrateVec;
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnEosCb(int32_t isLooping) const
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGD("OnEndOfStream is called, isloop: %{public}d", isLooping);
     if (refMap_.find(AVPlayerEvent::EVENT_END_OF_STREAM) == refMap_.end()) {
         MEDIA_LOGW("can not find EndOfStream callback!");
         return;
     }
 
-    MediaNapiCall::EventBase *event = new(std::nothrow) MediaNapiCall::EventBase();
-    CHECK_AND_RETURN_LOG(event != nullptr, "failed to new EventBase");
+    NapiCallback::Base *cb = new(std::nothrow) NapiCallback::Base();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Base");
 
-    event->callback = refMap_.at(AVPlayerEvent::EVENT_END_OF_STREAM);
-    event->callbackName = AVPlayerEvent::EVENT_END_OF_STREAM;
-    MediaNapiCall::CallSignle(env_, event);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_END_OF_STREAM);
+    cb->callbackName = AVPlayerEvent::EVENT_END_OF_STREAM;
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref)
@@ -413,12 +579,12 @@ void AVPlayerCallback::ClearCallbackReference()
 
 void AVPlayerCallback::Start()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    isloaded_ = true;
 }
 
 void AVPlayerCallback::Pause()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    isloaded_ = false;
 }
 
 void AVPlayerCallback::Release()

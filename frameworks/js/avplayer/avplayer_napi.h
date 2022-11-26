@@ -74,38 +74,6 @@ const std::string EVENT_AVAILABLE_BITRATES = "availableBitrates";
 const std::string EVENT_ERROR = "error";
 }
 
-class MediaNapiCall {
-public:
-    struct EventBase {
-        std::weak_ptr<AutoRef> callback;
-        std::string callbackName = "unknown";
-    };
-
-    struct EventError : public EventBase {
-        std::string errorMsg = "unknown";
-        MediaServiceExtErrCodeAPI9 errorCode = MSERR_EXT_API9_UNSUPPORT_FORMAT;
-    };
-
-    struct EventIntVec : public EventBase {
-        std::vector<int32_t> valueVec;
-    };
-
-    struct EventDoubleVec : public EventBase {
-        std::vector<double> valueVec;
-    };
-
-    struct EventPropertyInt : public EventBase {
-        std::map<std::string, int32_t> valueVec;
-    };
-
-    static void CallError(napi_env env, MediaNapiCall::EventError *event);
-    static void CallSignle(napi_env env, MediaNapiCall::EventBase *event);
-    static void CallIntVec(napi_env env, MediaNapiCall::EventIntVec *event);
-    static void CallDoubleVec(napi_env env, MediaNapiCall::EventDoubleVec *event);
-    static void CallIntArray(napi_env env, MediaNapiCall::EventIntVec *event);
-    static void CallPropertyInt(napi_env env, MediaNapiCall::EventPropertyInt *event);
-};
-
 class AVPlayerNotify {
 public:
     AVPlayerNotify() = default;
@@ -244,7 +212,7 @@ private:
     static AVPlayerNapi* GetJsInstance(napi_env env, napi_callback_info info);
     static AVPlayerNapi* GetJsInstanceWithParameter(napi_env env, napi_callback_info info, size_t &argc, napi_value *argv);
     AVPlayerNapi();
-    ~AVPlayerNapi();
+    virtual ~AVPlayerNapi();
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void ClearCallbackReference();
     void StartListenCurrentResource();

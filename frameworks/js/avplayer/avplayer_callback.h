@@ -61,6 +61,7 @@ private:
     napi_env env_ = nullptr;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
     AVPlayerNotify *listener_ = nullptr;
+    std::atomic<bool> isloaded_ = false;
 };
 } // namespace Media
 } // namespace OHOS
