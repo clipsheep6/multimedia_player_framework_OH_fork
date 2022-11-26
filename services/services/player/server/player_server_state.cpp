@@ -27,7 +27,7 @@ namespace Media {
 void PlayerServer::BaseState::ReportInvalidOperation() const
 {
     MEDIA_LOGE("invalid operation for %{public}s", GetStateName().c_str());
-    server_.OnError(PLAYER_ERROR, MSERR_INVALID_STATE);
+    (void)server_.taskMgr_.MarkTaskDone();
 }
 
 int32_t PlayerServer::BaseState::Prepare()
