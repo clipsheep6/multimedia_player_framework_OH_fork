@@ -122,6 +122,7 @@ int32_t PlayerServer::Init()
     appPid_ = IPCSkeleton::GetCallingPid();
     MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d", appUid_, appPid_);
 
+    PlayerServerStateMachine::Init(idleState_);
     return MSERR_OK;
 }
 
@@ -488,22 +489,32 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
         return MSERR_INVALID_OPERATION;
     }
 
-    Format format;
     config_.leftVolume = leftVolume;
     config_.rightVolume = rightVolume;
-    if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED ||
-        GetCurrState() == preparingState_) {
+    if (IsEngineStarted()) {
+        auto task = std::make_shared<TaskHandler<void>>([this]() {
+            (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
+            taskMgr_.MarkTaskDone();
+        });
+        (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE);
+    } else {
         MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
-        OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
-        return MSERR_OK;
     }
 
-    if (playerEngine_ != nullptr) {
-        int32_t ret = playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVolume Failed!");
-    }
+    Format format;
     OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
     return MSERR_OK;
+}
+
+bool PlayerServer::IsEngineStarted()
+{
+    if (playerEngine_ != nullptr) {
+        if (GetCurrState() == preparedState_ || GetCurrState() == playingState_ ||
+            GetCurrState() == pausedState_ || GetCurrState() == playbackCompletedState_) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool PlayerServer::IsValidSeekMode(PlayerSeekMode mode)
@@ -974,6 +985,11 @@ int32_t PlayerServerStateMachine::HandleMessage(PlayerOnInfoType type, int32_t e
         return currState_->OnMessageReceived(type, extra, infoBody);
     }
     return MSERR_OK;
+}
+
+void PlayerServerStateMachine::Init(const std::shared_ptr<PlayerServerState> &state)
+{
+    currState_ = state;
 }
 
 void PlayerServerStateMachine::ChangeState(const std::shared_ptr<PlayerServerState> &state)

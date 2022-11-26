@@ -54,12 +54,13 @@ public:
 
 protected:
     int32_t HandleMessage(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    void Init(const std::shared_ptr<PlayerServerState> &state);
     void ChangeState(const std::shared_ptr<PlayerServerState> &state);
     std::shared_ptr<PlayerServerState> GetCurrState();
 
 private:
     std::recursive_mutex recMutex_;
-    std::shared_ptr<PlayerServerState> currState_;
+    std::shared_ptr<PlayerServerState> currState_ = nullptr;
 };
 
 class PlayerServer
@@ -120,6 +121,7 @@ private:
 
     int32_t Init();
     bool IsValidSeekMode(PlayerSeekMode mode);
+    bool IsEngineStarted();
     int32_t InitPlayEngine(const std::string &url);
     int32_t OnPrepare(bool sync);
     int32_t OnPlay();

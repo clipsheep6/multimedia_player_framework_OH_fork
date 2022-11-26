@@ -107,6 +107,7 @@ int32_t PlayerServiceStub::Init()
 
 int32_t PlayerServiceStub::DestroyStub()
 {
+    MediaTrace trace("binder::DestroyStub");
     playerCallback_ = nullptr;
     if (playerServer_ != nullptr) {
         (void)playerServer_->Release();
@@ -151,6 +152,7 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
 
 int32_t PlayerServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
 {
+    MediaTrace trace("binder::SetListenerObject");
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set listener object is nullptr");
 
     sptr<IStandardPlayerListener> listener = iface_cast<IStandardPlayerListener>(object);
@@ -172,6 +174,7 @@ int32_t PlayerServiceStub::SetSource(const std::string &url)
 
 int32_t PlayerServiceStub::SetSource(const sptr<IRemoteObject> &object)
 {
+    MediaTrace trace("binder::SetSource(datasource)");
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set mediadatasrc object is nullptr");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
 
