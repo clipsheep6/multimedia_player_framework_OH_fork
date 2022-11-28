@@ -118,12 +118,12 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
         g_param_spec_boolean("enable-slice-cat", "enable slice cat", "enable slice cat",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobject_class, PROP_SEEK,
-        g_param_spec_boolean("seeking", "Seeking", "Whether the decoder is in seek",
-            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
-
     g_object_class_install_property(gobject_class, PROP_PLAYER_MODE,
         g_param_spec_boolean("player-mode", "player mode", "player mode",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_SEEK,
+        g_param_spec_boolean("seeking", "Seeking", "Whether the decoder is in seek",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     const gchar *src_caps_string = GST_VIDEO_CAPS_MAKE(GST_VDEC_BASE_SUPPORTED_FORMATS);
