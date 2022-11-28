@@ -24,6 +24,7 @@
 #include "scope_guard.h"
 #include "display_type.h"
 #include "param_wrapper.h"
+#include "media_log.h"
 
 #define gst_surface_src_parent_class parent_class
 using namespace OHOS;
@@ -121,6 +122,7 @@ static void gst_surface_src_class_init(GstSurfaceSrcClass *klass)
 
 static void gst_surface_src_init(GstSurfaceSrc *surfacesrc)
 {
+    GST_DEBUG_OBJECT(surfacesrc, "Init, id = %d", static_cast<int32_t>(FAKE_POINTER(surfacesrc)));
     g_return_if_fail(surfacesrc != nullptr);
     surfacesrc->pool = nullptr;
     surfacesrc->stride = STRIDE_ALIGN;
@@ -458,7 +460,8 @@ static void gst_surface_mem_src_dump_buffer(GstBaseSrc *self, GstBuffer *buffer)
     }
 
     GST_DEBUG_OBJECT(src, "Dump surface src buffer");
-    static const std::string input_dump_file = "/data/media/surface-in.yuv";
+    static const std::string input_dump_file = "/data/media/surface-in-" +
+        std::to_string(static_cast<int32_t>(FAKE_POINTER(self))) + ".yuv";
     if (src->dump.dump_file == nullptr) {
         src->dump.dump_file = fopen(input_dump_file.c_str(), "wb+");
     }
