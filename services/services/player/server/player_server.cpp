@@ -201,6 +201,8 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     lastOpStatus_ = PLAYER_INITIALIZED;
     ChangeState(initializedState_);
 
+    Format format;
+    OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_INITIALIZED, format);
     return MSERR_OK;
 }
 
