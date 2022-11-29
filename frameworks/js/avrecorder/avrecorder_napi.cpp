@@ -241,7 +241,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
             asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, "Prepare", ""));
 
         int32_t ret = asyncCtx->napi->Configure(asyncCtx);
-        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to SetConfiguration");
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to Configure");
 
         ret = asyncCtx->napi->recorder_->Prepare();
         CHECK_AND_RETURN_RET(ret == MSERR_OK, asyncCtx->AVRecorderSignError(ret, "Prepare", ""));
