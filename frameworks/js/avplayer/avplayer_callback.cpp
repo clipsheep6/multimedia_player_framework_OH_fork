@@ -62,7 +62,7 @@ public:
             CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
                 "%{public}s failed to napi_get_reference_value", callbackName.c_str());
 
-            napi_value args[1] = { nullptr };
+            napi_value args[1] = {nullptr};
             (void)CommonNapi::CreateError(ref->env_, errorCode, errorMsg, args[0]);
 
             // Call back function
@@ -72,7 +72,53 @@ public:
         }
     };
 
+    struct Int : public Base {
+        int32_t value;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+
+            napi_value args[1] = {nullptr}; // callback: (int)
+            (void)napi_create_int32(ref->env_, value, &args[0]);
+
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
     struct IntVec : public Base {
+        std::vector<int32_t> valueVec;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+
+            napi_value args[2] = {nullptr}; // callback: (int, int)
+            (void)napi_create_int32(ref->env_, valueVec[0], &args[0]);
+            (void)napi_create_int32(ref->env_, valueVec[1], &args[1]);
+
+            const int32_t argCount = valueVec.size();
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct IntArray : public Base {
         std::vector<int32_t> valueVec;
         void UvWork() override
         {
@@ -94,8 +140,8 @@ public:
         }
     };
 
-    struct DoubleVec : public Base {
-        std::vector<double> valueVec;
+    struct Double : public Base {
+        double value;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> ref = callback.lock();
@@ -106,12 +152,10 @@ public:
             CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
                 "%{public}s failed to napi_get_reference_value", callbackName.c_str());
 
-            napi_value array = nullptr;
-            bool ret = CommonNapi::AddArrayDouble(ref->env_, array, valueVec);
-            CHECK_AND_RETURN_LOG(ret == true, "%{public}s failed to AddArrayDouble", callbackName.c_str());
+            napi_value args[1] = {nullptr};
+            (void)napi_create_double(ref->env_, value, &args[0]);
 
             napi_value result = nullptr;
-            napi_value args[1] = {array};
             status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
         }
@@ -134,6 +178,29 @@ public:
             for (auto &it : valueMap) {
                 CommonNapi::SetPropertyInt32(ref->env_, args[0], it.first, it.second);
             }
+
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct StateChange : public Base {
+        std::string state;
+        int32_t reason;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+            
+            napi_value args[2] = {nullptr}; // callback: (state: AVPlayerState, reason: StateChangeReason)
+            (void)napi_create_string_utf8(ref->env_, state.c_str(), NAPI_AUTO_LENGTH, &args[0]);
+            (void)napi_create_int32(ref->env_, reason, &args[1]);
 
             napi_value result = nullptr;
             status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
@@ -284,18 +351,17 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state)
     };
 
     if (stateMap.find(state) != stateMap.end()) {
-        std::string stateName = stateMap.at(state);
-        int32_t reason = StateChangeReason::USER;
         if (refMap_.find(AVPlayerEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
             MEDIA_LOGW("can not find state change callback!");
             return;
         }
-        NapiCallback::PropertyInt *cb = new(std::nothrow) NapiCallback::PropertyInt();
-        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new PropertyInt");
+        NapiCallback::StateChange *cb = new(std::nothrow) NapiCallback::StateChange();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new StateChange");
 
         cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
         cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
-        cb->valueMap[stateName] = reason;
+        cb->state = stateMap.at(state);
+        cb->reason = StateChangeReason::USER;
         NapiCallback::CompleteCallback(env_, cb);
     }
 }
@@ -309,12 +375,12 @@ void AVPlayerCallback::OnVolumeChangeCb(double volumeLevel)
         return;
     }
 
-    NapiCallback::DoubleVec *cb = new(std::nothrow) NapiCallback::DoubleVec();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new DoubleVec");
+    NapiCallback::Double *cb = new(std::nothrow) NapiCallback::Double();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Double");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_VOLUME_CHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_VOLUME_CHANGE;
-    cb->valueVec.push_back(volumeLevel);
+    cb->value = volumeLevel;
     NapiCallback::CompleteCallback(env_, cb);
 }
 
@@ -327,12 +393,12 @@ void AVPlayerCallback::OnSeekDoneCb(int32_t currentPositon) const
         return;
     }
 
-    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
+    NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SEEK_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SEEK_DONE;
-    cb->valueVec.push_back(currentPositon);
+    cb->value = currentPositon;
     NapiCallback::CompleteCallback(env_, cb);
 }
 
@@ -345,12 +411,12 @@ void AVPlayerCallback::OnSpeedDoneCb(int32_t speedMode) const
         return;
     }
 
-    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
+    NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SPEED_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_SPEED_DONE;
-    cb->valueVec.push_back(speedMode);
+    cb->value = speedMode;
     NapiCallback::CompleteCallback(env_, cb);
 }
 
@@ -363,12 +429,12 @@ void AVPlayerCallback::OnBitRateDoneCb(int32_t bitRate) const
         return;
     }
 
-    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
+    NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_BITRATE_DONE);
     cb->callbackName = AVPlayerEvent::EVENT_BITRATE_DONE;
-    cb->valueVec.push_back(bitRate);
+    cb->value = bitRate;
     NapiCallback::CompleteCallback(env_, cb);
 }
 
@@ -381,12 +447,12 @@ void AVPlayerCallback::OnPositionUpdateCb(int32_t position) const
         return;
     }
 
-    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
+    NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_TIME_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_TIME_UPDATE;
-    cb->valueVec.push_back(position);
+    cb->value = position;
     NapiCallback::CompleteCallback(env_, cb);
 }
 
@@ -539,8 +605,8 @@ void AVPlayerCallback::OnBitRateCollectedCb(const Format &infoBody) const
         }
     }
 
-    NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
+    NapiCallback::IntArray *cb = new(std::nothrow) NapiCallback::IntArray();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntArray");
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_AVAILABLE_BITRATES);
     cb->callbackName = AVPlayerEvent::EVENT_AVAILABLE_BITRATES;
