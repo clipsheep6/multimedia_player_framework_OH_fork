@@ -198,12 +198,13 @@ public:
             CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
                 "%{public}s failed to napi_get_reference_value", callbackName.c_str());
             
-            napi_value args[2] = {nullptr}; // callback: (state: AVPlayerState, reason: StateChangeReason)
+            const int32_t argCount = 2;
+            napi_value args[argCount] = {nullptr}; // callback: (state: AVPlayerState, reason: StateChangeReason)
             (void)napi_create_string_utf8(ref->env_, state.c_str(), NAPI_AUTO_LENGTH, &args[0]);
             (void)napi_create_int32(ref->env_, reason, &args[1]);
 
             napi_value result = nullptr;
-            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            status = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
         }
     };
