@@ -119,7 +119,8 @@ int32_t AVCodecVideoEncoderImpl::Release()
 sptr<Surface> AVCodecVideoEncoderImpl::CreateInputSurface()
 {
     CHECK_AND_RETURN_RET_LOG(codecService_ != nullptr, nullptr, "service died");
-    return codecService_->CreateInputSurface();
+    surface_ = codecService_->CreateInputSurface();
+    return surface_;
 }
 
 std::shared_ptr<AVSharedMemory> AVCodecVideoEncoderImpl::GetInputBuffer(uint32_t index)
