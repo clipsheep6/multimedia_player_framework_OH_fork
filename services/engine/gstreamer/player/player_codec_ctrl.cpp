@@ -50,6 +50,7 @@ void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, 
             gst_object_unref(decoder_);
             decoder_ = nullptr;
         }
+        g_object_set(G_OBJECT(src), "player-mode", TRUE, nullptr);
         decoder_ = GST_ELEMENT_CAST(gst_object_ref(src));
         if (!codecTypeList_.empty()) {
             // For hls scene when change codec, the second codec should not go performance mode process.
@@ -62,7 +63,6 @@ void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, 
         g_object_set(G_OBJECT(src), "enable-slice-cat", TRUE, nullptr); // Enable slice
         g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
         g_object_set(G_OBJECT(videoSink), "performance-mode", TRUE, nullptr);
-        g_object_set(G_OBJECT(src), "player-mode", TRUE, nullptr);
 
         GstCaps *caps = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "NV12", nullptr);
         g_object_set(G_OBJECT(videoSink), "caps", caps, nullptr);
