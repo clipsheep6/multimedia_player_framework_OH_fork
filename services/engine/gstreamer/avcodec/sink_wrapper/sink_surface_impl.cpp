@@ -173,7 +173,6 @@ int32_t SinkSurfaceImpl::HandleNewSampleCb(GstBuffer *buffer)
     info.size = 0;
     constexpr uint64_t nsToUs = 1000;
     info.presentationTimeUs = static_cast<int64_t>(GST_BUFFER_PTS(buffer) / nsToUs);
-    MEDIA_LOGE("step3 sink surface, pts(us) =  %{public}lld ", info.presentationTimeUs);
     AVCodecBufferFlag flag = AVCODEC_BUFFER_FLAG_NONE;
     GetFlagFromBuffer(buffer, flag);
     obs->OnOutputBufferAvailable(index, info, flag);

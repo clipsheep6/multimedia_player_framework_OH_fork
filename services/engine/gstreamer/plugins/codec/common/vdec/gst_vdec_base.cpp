@@ -1072,7 +1072,6 @@ static GstVideoCodecFrame *gst_vdec_base_new_frame(GstVdecBase *self, GstBuffer 
     g_mutex_lock(&self->lock);
     if (self->player_mode == FALSE) {
         frame->pts = GST_BUFFER_PTS(buffer);
-        GST_WARNING_OBJECT(self, "player_mode is false, pts = %llu ", frame->pts);
     } else {
         if (self->pts_list.empty()) {
             frame->pts = self->last_pts;

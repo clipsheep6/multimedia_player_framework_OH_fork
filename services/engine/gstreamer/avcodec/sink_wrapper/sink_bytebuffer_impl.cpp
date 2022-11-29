@@ -194,12 +194,11 @@ int32_t SinkBytebufferImpl::HandleNewSampleCb(GstBuffer *buffer)
     }
     constexpr uint64_t nsToUs = 1000;
     info.presentationTimeUs = static_cast<int64_t>(GST_BUFFER_PTS(buffer) / nsToUs);
-    MEDIA_LOGE("step3 sink bytebuffer, pts(us) =  %{public}lld ", info.presentationTimeUs);
     AVCodecBufferFlag flag = AVCODEC_BUFFER_FLAG_NONE;
     GetFlagFromBuffer(buffer, flag);
     obs->OnOutputBufferAvailable(index, info, flag);
 
-    MEDIA_LOGD("OutputBufferAvailable, index:%{public}d", index);
+    MEDIA_LOGD("OutputBufferAvailable, index:%{public}d, pts:%{public}lld", index, info.presentationTimeUs);
     gst_buffer_unmap(buffer, &map);
     bufferList_[index]->owner_ = BufferWrapper::SERVER;
     bufferList_[index]->gstBuffer_ = gst_buffer_ref(buffer);
