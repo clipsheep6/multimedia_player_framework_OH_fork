@@ -129,6 +129,7 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
 static void gst_surface_mem_sink_init(GstSurfaceMemSink *sink)
 {
     g_return_if_fail(sink != nullptr);
+    GST_DEBUG_OBJECT(sink, "Init, id = %d", static_cast<int32_t>(FAKE_POINTER(sink)));
 
     auto priv = reinterpret_cast<GstSurfaceMemSinkPrivate *>(gst_surface_mem_sink_get_instance_private(sink));
     g_return_if_fail(priv != nullptr);
@@ -567,7 +568,8 @@ static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *elemen
     switch (transition) {
         case GST_STATE_CHANGE_READY_TO_PAUSED:
             if (self->dump.enable_dump == TRUE) {
-                static std::string dump_file = "/data/media/dump.yuv";
+                std::string dump_file = "/data/media/dump-" +
+                    std::to_string(static_cast<int32_t>(FAKE_POINTER(element))) + ".yuv";
                 if (self->dump.dump_file == nullptr) {
                     self->dump.dump_file = fopen(dump_file.c_str(), "wb+");
                 }

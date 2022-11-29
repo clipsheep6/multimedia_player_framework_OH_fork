@@ -61,6 +61,7 @@ public:
 
 private:
     std::shared_ptr<IRecorderService> recorderService_ = nullptr;
+    sptr<Surface> surface_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS
