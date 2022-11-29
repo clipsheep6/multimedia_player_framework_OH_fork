@@ -568,7 +568,7 @@ static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *elemen
     switch (transition) {
         case GST_STATE_CHANGE_READY_TO_PAUSED:
             if (self->dump.enable_dump == TRUE) {
-                static std::string dump_file = "/data/media/dump-" +
+                std::string dump_file = "/data/media/dump-" +
                     std::to_string(static_cast<int32_t>(FAKE_POINTER(element))) + ".yuv";
                 if (self->dump.dump_file == nullptr) {
                     self->dump.dump_file = fopen(dump_file.c_str(), "wb+");
