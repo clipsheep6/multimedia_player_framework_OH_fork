@@ -116,6 +116,7 @@ struct _GstVdecBase {
     GstCaps *sink_caps;
     gboolean input_need_ashmem;
     gboolean has_set_format;
+    gboolean player_mode;
 };
 
 struct _GstVdecBaseClass {
