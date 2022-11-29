@@ -69,6 +69,7 @@ enum {
     PROP_PERFORMANCE_MODE,
     PROP_ENABLE_SLICE_CAT,
     PROP_SEEK,
+    PROP_PLAYER_MODE,
 };
 
 enum {
@@ -144,6 +145,10 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
         g_param_spec_boolean("enable-slice-cat", "enable slice cat", "enable slice cat",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_PLAYER_MODE,
+        g_param_spec_boolean("player-mode", "player mode", "player mode",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     g_object_class_install_property(gobject_class, PROP_SEEK,
         g_param_spec_boolean("seeking", "Seeking", "Whether the decoder is in seek",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
@@ -189,6 +194,9 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             }
             GST_OBJECT_UNLOCK(self);
             g_return_if_fail(ret == GST_CODEC_OK);
+            break;
+        case PROP_PLAYER_MODE:
+            self->player_mode = g_value_get_boolean(value);
             break;
         default:
             break;
@@ -240,6 +248,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->resolution_changed = FALSE;
     self->input_need_ashmem = FALSE;
     self->has_set_format = FALSE;
+    self->player_mode = FALSE;
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -1074,7 +1083,7 @@ static void update_video_meta(const GstVdecBase *self, GstBuffer *buffer)
     }
 }
 
-static GstVideoCodecFrame *gst_vdec_base_new_frame(GstVdecBase *self)
+static GstVideoCodecFrame *gst_vdec_base_new_frame(GstVdecBase *self, GstBuffer *buffer)
 {
     GST_DEBUG_OBJECT(self, "New frame");
     GstVideoCodecFrame *frame = g_slice_new0(GstVideoCodecFrame);
@@ -1086,13 +1095,17 @@ static GstVideoCodecFrame *gst_vdec_base_new_frame(GstVdecBase *self)
     frame->decode_frame_number = 0;
     frame->dts = GST_CLOCK_TIME_NONE;
     g_mutex_lock(&self->lock);
-    if (self->pts_list.empty()) {
-        frame->pts = self->last_pts;
-        GST_WARNING_OBJECT(self, "No pts available");
+    if (self->player_mode == FALSE) {
+        frame->pts = GST_BUFFER_PTS(buffer);
     } else {
-        frame->pts = self->pts_list.front();
-        GST_DEBUG_OBJECT(self, "Pts %" G_GUINT64_FORMAT, frame->pts);
-        self->pts_list.pop_front();
+        if (self->pts_list.empty()) {
+            frame->pts = self->last_pts;
+            GST_WARNING_OBJECT(self, "No pts available");
+        } else {
+            frame->pts = self->pts_list.front();
+            GST_DEBUG_OBJECT(self, "Pts %" G_GUINT64_FORMAT, frame->pts);
+            self->pts_list.pop_front();
+        }
     }
     g_mutex_unlock(&self->lock);
     frame->duration = GST_CLOCK_TIME_NONE;
@@ -1171,7 +1184,7 @@ static GstFlowReturn push_output_buffer(GstVdecBase *self, GstBuffer *buffer)
     g_return_val_if_fail(self != nullptr, GST_FLOW_ERROR);
     g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
     update_video_meta(self, buffer);
-    GstVideoCodecFrame *frame = gst_vdec_base_new_frame(self);
+    GstVideoCodecFrame *frame = gst_vdec_base_new_frame(self, buffer);
     g_return_val_if_fail(frame != nullptr, GST_FLOW_ERROR);
     gst_vdec_debug_output_time(self);
 

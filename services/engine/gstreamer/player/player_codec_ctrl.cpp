@@ -55,6 +55,7 @@ void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, 
             gst_object_unref(decoder_);
             decoder_ = nullptr;
         }
+        g_object_set(G_OBJECT(src), "player-mode", TRUE, nullptr);
         decoder_ = GST_ELEMENT_CAST(gst_object_ref(src));
         if (!codecTypeList_.empty()) {
             // For hls scene when change codec, the second codec should not go performance mode process.
