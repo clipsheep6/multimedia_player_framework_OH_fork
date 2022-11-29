@@ -95,7 +95,8 @@ int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
 sptr<OHOS::Surface> RecorderImpl::GetSurface(int32_t sourceId)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, nullptr, "recorder service does not exist..");
-    return recorderService_->GetSurface(sourceId);
+    surface_ = recorderService_->GetSurface(sourceId);
+    return surface_;
 }
 
 int32_t RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
@@ -227,6 +228,7 @@ int32_t RecorderImpl::Release()
     (void)recorderService_->Release();
     (void)MediaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
     recorderService_ = nullptr;
+    surface_ = nullptr;
     return MSERR_OK;
 }
 
