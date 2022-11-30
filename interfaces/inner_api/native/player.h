@@ -199,9 +199,8 @@ public:
      * @param errorCode Error code.
      * @param errorMsg Error message.
      */
-    virtual void OnError(int32_t sourceId, int32_t errorCode, std::string errorMsg)
+    virtual void OnError(int32_t errorCode, std::string errorMsg)
     {
-        (void)sourceId;
         (void)errorCode;
         (void)errorMsg;
     }

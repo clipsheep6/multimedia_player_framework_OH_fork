@@ -131,7 +131,13 @@ public:
                 "%{public}s failed to napi_get_reference_value", callbackName.c_str());
 
             napi_value array = nullptr;
-            (void)CommonNapi::AddArrayInt(ref->env_, array, valueVec);
+            (void)napi_create_array_with_length(ref->env_, valueVec.size(), &array);
+
+            for (uint32_t i = 0; i < valueVec.size(); i++) {
+                napi_value number = nullptr;
+                (void)napi_create_int32(ref->env_, valueVec.at(i), &number);
+                (void)napi_set_element(ref->env_, array, i, number);
+            }
 
             napi_value result = nullptr;
             napi_value args[1] = {array};
@@ -260,10 +266,10 @@ void AVPlayerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)
     AVPlayerCallback::OnErrorCb(err, msg);
 }
 
-void AVPlayerCallback::OnError(int32_t sourceId, int32_t errorCode, std::string errorMsg)
+void AVPlayerCallback::OnError(int32_t errorCode, std::string errorMsg)
 {
-    MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
-    AVPlayerCallback::OnErrorCb(err, errorMsg);
+    MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
+    AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
 }
 
 void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
