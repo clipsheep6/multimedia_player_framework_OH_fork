@@ -86,6 +86,7 @@ private:
     void SetMuteVolumeBySysParam();
     bool isMute_ = false;
     std::shared_ptr<AudioRendererMediaCallback> audioRendererMediaCallback_ = nullptr;
+    using Audio = OHOS::AudioStandard::AudioRenderer;
 };
 } // namespace Media
 } // namespace OHOS
