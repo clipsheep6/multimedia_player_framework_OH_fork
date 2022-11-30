@@ -198,8 +198,7 @@ int32_t SinkBytebufferImpl::HandleNewSampleCb(GstBuffer *buffer)
     GetFlagFromBuffer(buffer, flag);
     obs->OnOutputBufferAvailable(index, info, flag);
 
-    MEDIA_LOGD("OutputBufferAvailable, index:%{public}d, pts:%{public}d",
-        index, static_cast<int32_t>(info.presentationTimeUs));
+    MEDIA_LOGD("OutputBufferAvailable, index:%{public}d, pts:%{public}" PRId64 "", index, info.presentationTimeUs);
     gst_buffer_unmap(buffer, &map);
     bufferList_[index]->owner_ = BufferWrapper::SERVER;
     bufferList_[index]->gstBuffer_ = gst_buffer_ref(buffer);
