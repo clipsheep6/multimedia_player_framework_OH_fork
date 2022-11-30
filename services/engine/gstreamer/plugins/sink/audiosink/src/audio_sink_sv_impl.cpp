@@ -87,7 +87,9 @@ AudioSinkSvImpl::~AudioSinkSvImpl()
         int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Release");
         (void)audioRenderer_->Release();
         PlayerXCollie::GetInstance().CancelTimer(id);
+        int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::~AudioRender");
         audioRenderer_ = nullptr;
+        PlayerXCollie::GetInstance().CancelTimer(id);
     }
 }
 
@@ -293,7 +295,9 @@ int32_t AudioSinkSvImpl::Release()
     int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::Release");
     (void)audioRenderer_->Release();
     PlayerXCollie::GetInstance().CancelTimer(id);
+    int32_t id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::~AudioRender");
     audioRenderer_ = nullptr;
+    PlayerXCollie::GetInstance().CancelTimer(id);
     MEDIA_LOGD("audioRenderer Release Out");
     return MSERR_OK;
 }
