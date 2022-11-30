@@ -202,11 +202,14 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
                     "current state is not stopped or initialized");
             }
 
-            {
-                std::unique_lock<std::mutex> lock(jsPlayer->mutex_);
+            auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+                MEDIA_LOGD("Prepare Task");
                 (void)jsPlayer->player_->PrepareAsync();
-                jsPlayer->preparingCond_.wait(lock);
-            }
+            });
+
+            std::unique_lock<std::mutex> lock(jsPlayer->mutex_);
+            (void)jsPlayer->taskQue_->EnqueueTask(task);
+            jsPlayer->preparingCond_.wait(lock);
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
@@ -325,9 +328,11 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
             }
 
             jsPlayer->preparingCond_.notify_all(); // stop prepare
+            (void)jsPlayer->taskQue_->Stop();
             jsPlayer->PauseListenCurrentResource(); // Pause event listening for the current resource
             (void)jsPlayer->player_->Reset(); // sync reset
             jsPlayer->ResetUserParameters();
+            (void)jsPlayer->taskQue_->Start();
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
