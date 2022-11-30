@@ -136,7 +136,7 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
             bufferWarp.gstBuffer = iter->second;
             if (bufferWarp.gstBuffer != nullptr) {
                 GST_BUFFER_PTS(bufferWarp.gstBuffer) = buffer->pts;
-                MEDIA_LOGD("get from hdi, pts = %{public}lld", buffer->pts);
+                MEDIA_LOGD("get from hdi, pts = %{public}d", static_cast<int32_t>(buffer->pts));
             }
             SetFlagToBuffer(bufferWarp.gstBuffer, buffer->flag);
             mBuffers.push_back(bufferWarp);
