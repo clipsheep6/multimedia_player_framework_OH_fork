@@ -14,7 +14,6 @@
  */
 
 #include "audio_sink_factory.h"
-#include <cstdlib>
 #include "audio_sink_sv_impl.h"
 #include "param_wrapper.h"
 
