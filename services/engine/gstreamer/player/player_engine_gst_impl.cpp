@@ -45,9 +45,6 @@ PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid)
     : appuid_(uid), apppid_(pid)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    taskQueue_ = std::make_unique<TaskQueue>("player-engine-task");
-    int32_t ret = taskQueue_->Start();
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "task queue start failed");
 }
 
 PlayerEngineGstImpl::~PlayerEngineGstImpl()
@@ -890,6 +887,12 @@ void PlayerEngineGstImpl::OnNotifyElemUnSetup(GstElement &elem)
 void PlayerEngineGstImpl::OnCapsFixError()
 {
     MEDIA_LOGD("OnCapsFixError in");
+
+    if (taskQueue_ == nullptr) {
+        taskQueue_ = std::make_unique<TaskQueue>("player-engine-task");
+        int32_t ret = taskQueue_->Start();
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "task queue start failed");
+    }
 
     useSoftDec_ = true;
     auto resetTask = std::make_shared<TaskHandler<void>>([this]() {
