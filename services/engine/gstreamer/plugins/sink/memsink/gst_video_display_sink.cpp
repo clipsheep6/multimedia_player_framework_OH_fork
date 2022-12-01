@@ -59,7 +59,7 @@ static GstClockTime gst_video_display_sink_update_reach_time(GstBaseSink *base_s
     gboolean *need_drop_this_buffer);
 static gboolean gst_video_display_sink_event(GstBaseSink *base_sink, GstEvent *event);
 static GstStateChangeReturn gst_video_display_sink_change_state(GstElement *element, GstStateChange transition);
-static void gst_video_display_sink_enable_drop_from_sys_param(GstVideoDisplaySink *sink);
+static void gst_video_display_sink_enable_drop_from_sys_param(GstVideoDisplaySink *video_display_sink);
 
 static void gst_video_display_sink_class_init(GstVideoDisplaySinkClass *klass)
 {
