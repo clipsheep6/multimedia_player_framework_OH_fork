@@ -27,7 +27,7 @@ static bool AudioSinkDisEnable()
     if (res != 0 || disenable.empty()) {
         return false;
     }
-    return (disenable == "true" ? true :false);
+    return (disenable == "true" ? true : false);
 }
 
 std::unique_ptr<AudioSink> AudioSinkFactory::CreateAudioSink(GstBaseSink *sink)

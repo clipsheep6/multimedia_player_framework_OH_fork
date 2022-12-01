@@ -100,17 +100,17 @@ public:
     }
     int32_t GetVolume(float &volume) override
     {
-        volume = 1.0; // default volume
+        volume = 1.0; // default volume 1.0
         return MSERR_OK;
     }
     int32_t GetMaxVolume(float &volume) override
     {
-        volume = 1.0; // default volume
+        volume = 1.0; // default max volume 1.0
         return MSERR_OK;
     }
     int32_t GetMinVolume(float &volume) override
     {
-        volume = 0.0; // default volume
+        volume = 0.0; // default min volume 0.0
         return MSERR_OK;
     }
     int32_t Prepare(int32_t appUid, int32_t appPid) override
@@ -152,19 +152,19 @@ public:
     }
     int32_t GetParameters(uint32_t &bitsPerSample, uint32_t &channels, uint32_t &sampleRate) override
     {
-        bitsPerSample = 16; // default bitsPerSample
-        channels = 2; // default channels
-        sampleRate = 44100; // default sampleRate
+        bitsPerSample = 16; // default bitsPerSample is 16
+        channels = 2; // default channels is 2
+        sampleRate = 44100; // default sampleRate is 44100
         return MSERR_OK;
     }
     int32_t GetMinimumBufferSize(uint32_t &bufferSize) override
     {
-        bufferSize = 3528; // default size
+        bufferSize = 3528; // default size is 3528
         return MSERR_OK;
     }
     int32_t GetMinimumFrameCount(uint32_t &frameCount) override
     {
-        frameCount = 882; // default count
+        frameCount = 882; // default count is 882
         return MSERR_OK;
     }
     int32_t Write(uint8_t *buffer, size_t size) override
