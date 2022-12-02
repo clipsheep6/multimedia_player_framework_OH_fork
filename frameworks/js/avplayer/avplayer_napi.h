@@ -217,7 +217,7 @@ private:
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
     void ReleasePlayer();
-    void ReleaseCallback(napi_env env, napi_status status, void *data);
+    static void ReleaseCallback(napi_env env, napi_status status, void *data);
     std::string GetCurrentState();
     bool IsEngineReadyStatus();
 

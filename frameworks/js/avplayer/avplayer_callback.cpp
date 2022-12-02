@@ -78,7 +78,7 @@ void NapiCallback::Int::UvWork()
     CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
 }
 
-void NapiCallback::IntVec::UvWork() override
+void NapiCallback::IntVec::UvWork()
 {
     std::shared_ptr<AutoRef> ref = callback.lock();
     CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());

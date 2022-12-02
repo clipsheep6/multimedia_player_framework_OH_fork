@@ -411,12 +411,12 @@ void AVPlayerNapi::ReleaseCallback(napi_env env, napi_status status, void *data)
     NapiCallback::StateChange *cb = new(std::nothrow) NapiCallback::StateChange();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new StateChange");
 
-    cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
+    cb->callback = jsPlayer->refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
     cb->state = AVPlayerState::STATE_RELEASED;
     cb->reason = StateChangeReason::USER;
     NapiCallback::CompleteCallback(env, cb);
-    MediaAsyncContext::CompleteCallback(env, status, data)
+    MediaAsyncContext::CompleteCallback(env, status, data);
 }
 
 napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
