@@ -28,6 +28,7 @@ namespace OHOS {
 namespace Media {
 class PlayerKeys {
 public:
+    static constexpr std::string_view PLAYER_STATE_CHANGED_REASON = "state_changed_reason";
     static constexpr std::string_view PLAYER_TRACK_INDEX = "track_index";
     static constexpr std::string_view PLAYER_TRACK_TYPE = "track_type";
     static constexpr std::string_view PLAYER_WIDTH = "width";
@@ -50,6 +51,11 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_TYPE = "audio_interrupt_type";
     static constexpr std::string_view AUDIO_INTERRUPT_FORCE = "audio_interrupt_force";
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
+};
+
+enum StateChangeReason {
+    USER = 1,
+    BACKGROUND = 2,
 };
 
 enum BufferingInfoType : int32_t {

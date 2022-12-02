@@ -26,11 +26,6 @@
 
 namespace OHOS {
 namespace Media {
-enum StateChangeReason {
-    USER = 1,
-    BACKGROUND = 2,
-};
-
 /* type AVPlayerState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'released' | 'error' */
 namespace AVPlayerState {
 const std::string STATE_IDLE = "idle";
@@ -222,6 +217,7 @@ private:
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
     void ReleasePlayer();
+    void ReleaseCallback(napi_env env, napi_status status, void *data);
     std::string GetCurrentState();
     bool IsEngineReadyStatus();
 

@@ -393,11 +393,30 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
             }
             jsPlayer->ReleasePlayer();
         },
-        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+        AVPlayerNapi::ReleaseCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
     promiseCtx.release();
     MEDIA_LOGD("JsRelease Out");
     return result;
+}
+
+void AVPlayerNapi::ReleaseCallback(napi_env env, napi_status status, void *data)
+{
+    auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+    CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+
+    auto jsPlayer = promiseCtx->napi;
+    CHECK_AND_RETURN_LOG(jsPlayer != nullptr, "jsPlayer is nullptr!");
+
+    NapiCallback::StateChange *cb = new(std::nothrow) NapiCallback::StateChange();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new StateChange");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
+    cb->state = AVPlayerState::STATE_RELEASED;
+    cb->reason = StateChangeReason::USER;
+    NapiCallback::CompleteCallback(env, cb);
+    MediaAsyncContext::CompleteCallback(env, status, data)
 }
 
 napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
