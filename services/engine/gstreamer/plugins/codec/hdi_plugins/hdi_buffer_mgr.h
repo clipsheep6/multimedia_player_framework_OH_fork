@@ -87,7 +87,7 @@ public:
     virtual void WaitFlushed();
 
 protected:
-    void FreeCodecBuffers();
+    int32_t FreeCodecBuffers();
     bool isFlushing_ = false;
     bool isFlushed_ = false;
     bool isStart_ = false;

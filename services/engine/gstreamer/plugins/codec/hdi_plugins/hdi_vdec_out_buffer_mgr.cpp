@@ -89,7 +89,7 @@ int32_t HdiVdecOutBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
 void HdiVdecOutBufferMgr::UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<HdiBufferWrap> &codecBuffer)
 {
     MEDIA_LOGD("Enter UpdateCodecMeta");
-    CHECK_AND_RETURN_LOG(codecBuffer != nullptr, "bufferType is nullptr");
+    CHECK_AND_RETURN_LOG(codecBuffer != nullptr, "codecBuffer is nullptr");
     CHECK_AND_RETURN_LOG(bufferType != nullptr, "bufferType is nullptr");
     if (enableNativeBuffer_) {
         codecBuffer->hdiBuffer.fenceFd = bufferType->fenceFd;

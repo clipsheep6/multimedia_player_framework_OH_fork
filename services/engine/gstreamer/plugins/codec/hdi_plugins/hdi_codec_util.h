@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef OMX_CODEC_UTIL_H
-#define OMX_CODEC_UTIL_H
+#ifndef HDI_CODEC_UTIL_H
+#define HDI_CODEC_UTIL_H
 
 #include <memory>
 #include <gst/gst.h>

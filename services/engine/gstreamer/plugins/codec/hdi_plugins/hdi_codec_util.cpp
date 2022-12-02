@@ -89,7 +89,7 @@ GstVideoFormat HdiCodecUtil::FormatOmxToGst(OMX_COLOR_FORMATTYPE format)
     if (FORMAT_OMX_GST.find(format) != FORMAT_OMX_GST.end()) {
         return FORMAT_OMX_GST.at(format);
     }
-    MEDIA_LOGW("Unknow PixelFormat %{public}d", format);
+    MEDIA_LOGW("Unknow FORMAT_OMX_GST %{public}d", format);
     return GST_VIDEO_FORMAT_UNKNOWN;
 }
 }  // namespace Media
