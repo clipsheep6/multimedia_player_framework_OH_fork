@@ -40,16 +40,13 @@ void RecorderListenerProxy::OnError(int32_t errorType, int32_t errorCode)
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(RecorderListenerProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return;
-    }
+    bool token = data.WriteInterfaceToken(RecorderListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
     data.WriteInt32(errorType);
     data.WriteInt32(errorCode);
     int error = Remote()->SendRequest(RecorderListenerMsg::ON_ERROR, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("on error failed, error: %{public}d", error);
-    }
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on error failed, error: %{public}d", error);
 }
 
 void RecorderListenerProxy::OnInfo(int32_t type, int32_t extra)
@@ -58,16 +55,13 @@ void RecorderListenerProxy::OnInfo(int32_t type, int32_t extra)
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(RecorderListenerProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return;
-    }
+    bool token = data.WriteInterfaceToken(RecorderListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
     data.WriteInt32(static_cast<int>(type));
     data.WriteInt32(static_cast<int>(extra));
     int error = Remote()->SendRequest(RecorderListenerMsg::ON_INFO, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("on info failed, error: %{public}d", error);
-    }
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
 }
 
 RecorderListenerCallback::RecorderListenerCallback(const sptr<IStandardRecorderListener> &listener)

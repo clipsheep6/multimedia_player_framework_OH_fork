@@ -41,24 +41,15 @@ sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService
     MessageParcel reply;
     MessageOption option;
 
-    if (listener == nullptr) {
-        MEDIA_LOGE("listener is nullptr");
-        return nullptr;
-    }
-
-    if (!data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(listener != nullptr, nullptr, "listener is nullptr!");
+    bool token = data.WriteInterfaceToken(MediaServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
 
     (void)data.WriteInt32(static_cast<int32_t>(subSystemId));
     (void)data.WriteRemoteObject(listener);
     int error = Remote()->SendRequest(MediaServiceMsg::GET_SUBSYSTEM, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("Create player proxy failed, error: %{public}d", error);
-        return nullptr;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
+        "Create player proxy failed, error: %{public}d", error);
     return reply.ReadRemoteObject();
 }
 } // namespace Media

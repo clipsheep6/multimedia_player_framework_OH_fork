@@ -70,19 +70,15 @@ int32_t MediaDataSourceProxy::ReadAt(int64_t pos, uint32_t length, const std::sh
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
-    if (!data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return MSERR_UNKNOWN;
-    }
+    bool token = data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     data.WriteInt64(pos);
     data.WriteUint32(length);
     CHECK_AND_RETURN_RET_LOG(WriteAVSharedMemoryToParcel(mem, data) == MSERR_OK, 0, "write parcel failed");
     int error = Remote()->SendRequest(ListenerMsg::READ_AT_POS, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("ReadAt failed, error: %{public}d", error);
-        return 0;
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, 0, "ReadAt failed, error: %{public}d", error);
+
     return reply.ReadInt32();
 }
 
@@ -92,18 +88,14 @@ int32_t MediaDataSourceProxy::ReadAt(uint32_t length, const std::shared_ptr<AVSh
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
-    if (!data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return MSERR_UNKNOWN;
-    }
+    bool token = data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     data.WriteUint32(length);
     CHECK_AND_RETURN_RET_LOG(WriteAVSharedMemoryToParcel(mem, data) == MSERR_OK, 0, "write parcel failed");
     int error = Remote()->SendRequest(ListenerMsg::READ_AT, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("ReadAt failed, error: %{public}d", error);
-        return 0;
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, 0, "ReadAt failed, error: %{public}d", error);
+
     return reply.ReadInt32();
 }
 
@@ -113,16 +105,12 @@ int32_t MediaDataSourceProxy::GetSize(int64_t &size)
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
-    if (!data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return MSERR_UNKNOWN;
-    }
+    bool token = data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     int error = Remote()->SendRequest(ListenerMsg::GET_SIZE, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("GetSize failed, error: %{public}d", error);
-        return -1;
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, -1, "GetSize failed, error: %{public}d", error);
+
     size = reply.ReadInt64();
     return reply.ReadInt32();
 }
