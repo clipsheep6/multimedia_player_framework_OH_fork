@@ -71,7 +71,8 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink);
 static gboolean gst_audio_server_sink_stop(GstBaseSink *basesink);
 static GstFlowReturn gst_audio_server_sink_render(GstBaseSink *basesink, GstBuffer *buffer);
 static void gst_audio_server_sink_clear_cache_buffer(GstAudioServerSink *sink);
-static GstClockTime gst_audio_server_sink_update_reach_time(GstBaseSink *basesink, GstClockTime reach_time);
+static GstClockTime gst_audio_server_sink_update_reach_time(GstBaseSink *basesink, GstClockTime reach_time,
+    gboolean *need_drop_this_buffer);
 
 static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
 {
@@ -349,8 +350,10 @@ static GstCaps *gst_audio_server_sink_get_caps(GstBaseSink *basesink, GstCaps *c
     return sink->audio_sink->GetCaps();
 }
 
-static GstClockTime gst_audio_server_sink_update_reach_time(GstBaseSink *basesink, GstClockTime reach_time)
+static GstClockTime gst_audio_server_sink_update_reach_time(GstBaseSink *basesink, GstClockTime reach_time,
+    gboolean *need_drop_this_buffer)
 {
+    (void)need_drop_this_buffer;
     g_return_val_if_fail(basesink != nullptr, reach_time);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(basesink)); // get base time
@@ -367,7 +370,7 @@ static GstClockTime gst_audio_server_sink_update_reach_time(GstBaseSink *basesin
         static_cast<GstClockTimeDiff>(cur_running_time) - static_cast<GstClockTimeDiff>(reach_time);
     g_mutex_unlock(&sink->render_lock);
 
-    return GST_BASE_SINK_CLASS(parent_class)->update_reach_time(basesink, reach_time);
+    return GST_BASE_SINK_CLASS(parent_class)->update_reach_time(basesink, reach_time, need_drop_this_buffer);
 }
 
 static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *caps)
