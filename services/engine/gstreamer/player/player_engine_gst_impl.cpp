@@ -889,7 +889,7 @@ void PlayerEngineGstImpl::OnCapsFixError()
     MEDIA_LOGD("OnCapsFixError in");
 
     if (taskQueue_ == nullptr) {
-        taskQueue_ = std::make_unique<TaskQueue>("player-engine-task");
+        taskQueue_ = std::make_unique<TaskQueue>("reset-playbin-task");
         int32_t ret = taskQueue_->Start();
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "task queue start failed");
     }
