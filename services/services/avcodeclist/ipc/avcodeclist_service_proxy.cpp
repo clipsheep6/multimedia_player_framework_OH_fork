@@ -41,10 +41,8 @@ std::string AVCodecListServiceProxy::FindVideoDecoder(const Format &format)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return "";
-    }
+    bool token = data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, "", "Failed to write descriptor!");
 
     (void)MediaParcel::Marshalling(data, format);
     int32_t ret = Remote()->SendRequest(FIND_VIDEO_DECODER, data, reply, option);
@@ -58,10 +56,8 @@ std::string AVCodecListServiceProxy::FindVideoEncoder(const Format &format)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return "";
-    }
+    bool token = data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, "", "Failed to write descriptor!");
 
     (void)MediaParcel::Marshalling(data, format);
     int32_t ret = Remote()->SendRequest(FIND_VIDEO_ENCODER, data, reply, option);
@@ -75,10 +71,8 @@ std::string AVCodecListServiceProxy::FindAudioDecoder(const Format &format)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return "";
-    }
+    bool token = data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, "", "Failed to write descriptor!");
 
     (void)MediaParcel::Marshalling(data, format);
     int32_t ret = Remote()->SendRequest(FIND_AUDIO_DECODER, data, reply, option);
@@ -93,10 +87,8 @@ std::string AVCodecListServiceProxy::FindAudioEncoder(const Format &format)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return "";
-    }
+    bool token = data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, "", "Failed to write descriptor!");
 
     (void)MediaParcel::Marshalling(data, format);
     int32_t ret = Remote()->SendRequest(FIND_AUDIO_ENCODER, data, reply, option);
@@ -113,15 +105,12 @@ std::vector<CapabilityData> AVCodecListServiceProxy::GetCodecCapabilityInfos()
     Format profileFormat;
     std::vector<CapabilityData> capabilityDataArray;
 
-    if (!data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return capabilityDataArray;
-    }
+    bool token = data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, capabilityDataArray, "Failed to write descriptor!");
 
     int32_t ret = Remote()->SendRequest(GET_CAPABILITY_INFOS, data, reply, option);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("GetCodecCapabilityInfos failed, error: %{public}d", ret);
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, capabilityDataArray,
+        "GetCodecCapabilityInfos failed, error: %{public}d", ret);
     (void)AVCodecListParcel::Unmarshalling(reply, capabilityDataArray); // MessageParcel to std::vector<CapabilityData>
 
     return capabilityDataArray;
@@ -133,15 +122,12 @@ int32_t AVCodecListServiceProxy::DestroyStub()
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return MSERR_UNKNOWN;
-    }
+    bool token = data.WriteInterfaceToken(AVCodecListServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     int32_t ret = Remote()->SendRequest(DESTROY, data, reply, option);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("destroy failed, error: %{public}d", ret);
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
+        "DestroyStub failed, error: %{public}d", ret);
     return reply.ReadInt32();
 }
 } // namespace Media
