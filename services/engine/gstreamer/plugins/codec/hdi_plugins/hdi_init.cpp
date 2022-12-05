@@ -85,7 +85,7 @@ static void HdiCodecOnRemoteDied(HdfDeathRecipient *deathRecipient, HdfRemoteSer
     HdiInit::GetInstance().CodecComponentManagerReset();
 }
 
-HdfDeathRecipient recipient = {
+HdfDeathRecipient HdiDeathRecipient = {
     .OnRemoteDied = HdiCodecOnRemoteDied,
 };
 
@@ -103,7 +103,7 @@ void HdiInit::CodecComponentManagerInit()
     HDIServiceManagerRelease(serviceMgr);
     CHECK_AND_RETURN_LOG(remoteOmx != nullptr, "HDIServiceManagerGet failed");
 
-    HdfRemoteServiceAddDeathRecipient(remoteOmx, &recipient);
+    HdfRemoteServiceAddDeathRecipient(remoteOmx, &HdiDeathRecipient);
 
     MEDIA_LOGD("CodecComponentManagerInit End");
 }
