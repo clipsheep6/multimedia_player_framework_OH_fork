@@ -167,6 +167,7 @@ int32_t HdiVencParamsMgr::SetDynamicBitrate(GstElement *element)
     InitParam(bitrateConfig, verInfo_);
     bitrateConfig.nPortIndex = outPortDef_.nPortIndex;
     bitrateConfig.nEncodeBitrate = base->bitrate;
+    MEDIA_LOGD("SetDynamicBitrate: bitrate mode %{public}d, bitrate %{public}u", base->bitrate_mode, base->bitrate);
     auto ret = HdiSetConfig(handle_, OMX_IndexConfigVideoBitrate, bitrateConfig);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetConfig failed");
     return GST_CODEC_OK;
@@ -180,6 +181,7 @@ int32_t HdiVencParamsMgr::SetInputVideoCommon(GstElement *element)
     inPortDef_.format.video.nFrameWidth = (uint32_t)base->width;
     inPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate) << OMX_FRAME_RATE_MOVE;
     inPortDef_.format.video.nSliceHeight = (uint32_t)base->nslice_height;
+    inPortDef_.format.video.nBitrate = base->bitrate;
     inPortDef_.format.video.nStride = base->nstride;
     inPortDef_.nBufferSize = base->input.buffer_size;
     inPortDef_.nBufferCountActual = base->input.buffer_cnt;
@@ -201,6 +203,7 @@ int32_t HdiVencParamsMgr::SetOutputVideoCommon(GstElement *element)
     outPortDef_.format.video.nFrameHeight = (uint32_t)base->height;
     outPortDef_.format.video.nFrameWidth = (uint32_t)base->width;
     outPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate) << OMX_FRAME_RATE_MOVE;
+    outPortDef_.format.video.nBitrate = base->bitrate;
     outPortDef_.nBufferCountActual = base->output.buffer_cnt;
     outPortDef_.nBufferSize = base->output.buffer_size;
     auto ret = HdiSetParameter(handle_, OMX_IndexParamPortDefinition, outPortDef_);
@@ -322,12 +325,12 @@ int32_t HdiVencParamsMgr::InitBitRateMode(GstElement *element)
         OMX_VIDEO_PARAM_BITRATETYPE bitrateConfig_ = {};
         InitParam(bitrateConfig_, verInfo_);
         bitrateConfig_.nPortIndex = outPortDef_.nPortIndex;
-        bitrateConfig_.eControlRate = BITRATE_MODE_MAP.at(base->bitrate_mode);
         auto ret = HdiGetParameter(handle_, OMX_IndexParamVideoBitrate, bitrateConfig_);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoBitrate Failed");
         if (base->bitrate != 0) {
             bitrateConfig_.nTargetBitrate = base->bitrate;
         }
+        bitrateConfig_.eControlRate = BITRATE_MODE_MAP.at(base->bitrate_mode);
         MEDIA_LOGD("set bitrate mode %{public}d, bitrate %{public}u", base->bitrate_mode, base->bitrate);
         ret = HdiSetParameter(handle_, OMX_IndexParamVideoBitrate, bitrateConfig_);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoBitrate Failed");
