@@ -405,7 +405,9 @@ void HdiCodec::WaitForEvent(OMX_U32 cmd)
     unique_lock<mutex> lock(mutex_);
     int32_t newCmd = static_cast<int32_t>(cmd);
     MEDIA_LOGD("wait eventdone %{public}d lastcmd %{public}d cmd %{public}u", eventDone_, lastCmd_, cmd);
-    cond_.wait(lock, [this, &newCmd]() { return eventDone_ && (lastCmd_ == newCmd || lastCmd_ == -1); });
+    static constexpr int32_t timeout = 2;
+    cond_.wait_for(lock, std::chrono::seconds(timeout),
+        [this, &newCmd]() { return eventDone_ && (lastCmd_ == newCmd || lastCmd_ == -1); });
     eventDone_ = false;
 }
 
