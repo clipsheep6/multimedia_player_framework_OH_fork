@@ -331,7 +331,7 @@ int32_t HdiVencParamsMgr::InitBitRateMode(GstElement *element)
             bitrateConfig_.nTargetBitrate = base->bitrate;
         }
         bitrateConfig_.eControlRate = BITRATE_MODE_MAP.at(base->bitrate_mode);
-        MEDIA_LOGD("set bitrate mode %{public}d, bitrate %{public}u", base->bitrate_mode, base->bitrate);
+        MEDIA_LOGD("InitBitRateMode:bitrate mode %{public}d, bitrate %{public}u", base->bitrate_mode, base->bitrate);
         ret = HdiSetParameter(handle_, OMX_IndexParamVideoBitrate, bitrateConfig_);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoBitrate Failed");
     }
