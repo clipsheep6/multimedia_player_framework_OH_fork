@@ -202,6 +202,8 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     lastOpStatus_ = PLAYER_INITIALIZED;
     ChangeState(initializedState_);
 
+    Format format;
+    OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_INITIALIZED, format);
     return MSERR_OK;
 }
 
@@ -427,6 +429,7 @@ int32_t PlayerServer::OnReset()
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED) {
+        disableStoppedCb_ = true;
         (void)OnStop(true);
     }
 
@@ -451,6 +454,8 @@ int32_t PlayerServer::HandleReset()
     uriHelper_ = nullptr;
     lastErrMsg_.clear();
     errorCbOnce_ = false;
+    disableStoppedCb_ = false;
+    isStateChangedBySystem_ = false;
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
     return MSERR_OK;
@@ -945,8 +950,9 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
 
-    if (type == INFO_TYPE_STATE_CHANGE_BY_AUDIO && extra == PLAYER_PAUSED) {
-        OnPause();
+    if (type == INFO_TYPE_STATE_CHANGE_BY_AUDIO && extra == PLAYER_PAUSED && lastOpStatus_ == PLAYER_STARTED) {
+        isStateChangedBySystem_ = true;
+        (void)OnPause();
     } else {
         int32_t ret = HandleMessage(type, extra, infoBody);
         if (playerCb_ != nullptr && ret == MSERR_OK) {
