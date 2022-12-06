@@ -28,6 +28,7 @@ namespace OHOS {
 namespace Media {
 class PlayerKeys {
 public:
+    static constexpr std::string_view PLAYER_STATE_CHANGED_REASON = "state_changed_reason";
     static constexpr std::string_view PLAYER_TRACK_INDEX = "track_index";
     static constexpr std::string_view PLAYER_TRACK_TYPE = "track_type";
     static constexpr std::string_view PLAYER_WIDTH = "width";
@@ -50,6 +51,11 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_TYPE = "audio_interrupt_type";
     static constexpr std::string_view AUDIO_INTERRUPT_FORCE = "audio_interrupt_force";
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
+};
+
+enum StateChangeReason {
+    USER = 1,
+    BACKGROUND = 2,
 };
 
 enum BufferingInfoType : int32_t {
@@ -100,6 +106,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_STATE_CHANGE,
     /* return the current posion of playback automatically. */
     INFO_TYPE_POSITION_UPDATE,
+    /* return the duration of playback. */
+    INFO_TYPE_DURATION_UPDATE,
     /* return the playback message. */
     INFO_TYPE_MESSAGE,
     /* return the message when volume changed. */
@@ -185,12 +193,25 @@ class PlayerCallback {
 public:
     virtual ~PlayerCallback() = default;
     /**
-     * Called when an error occurred.
+     * Called when an error occurred for versions older than api9
      *
      * @param errorType Error type. For details, see {@link PlayerErrorType}.
      * @param errorCode Error code.
      */
     virtual void OnError(PlayerErrorType errorType, int32_t errorCode) = 0;
+
+    /**
+     * Called when an error occurred for versions above api9
+     *
+     * @param sourceId Resource where the error occurred
+     * @param errorCode Error code.
+     * @param errorMsg Error message.
+     */
+    virtual void OnError(int32_t errorCode, std::string errorMsg)
+    {
+        (void)errorCode;
+        (void)errorMsg;
+    }
 
     /**
      * Called when a player message or alarm is received.

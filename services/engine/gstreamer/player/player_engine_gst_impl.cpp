@@ -410,8 +410,17 @@ void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
 void PlayerEngineGstImpl::HandlePositionUpdateMessage(const PlayBinMessage &msg)
 {
     currentTime_ = msg.code;
-    duration_ = std::any_cast<int32_t>(msg.extra);
-    MEDIA_LOGD("update position %{public}d ms, duration %{public}d ms", currentTime_, duration_);
+    int32_t duration = std::any_cast<int32_t>(msg.extra);
+    MEDIA_LOGD("update position %{public}d ms, duration %{public}d ms", currentTime_, duration);
+
+    if (duration != duration_) {
+        duration_ = duration;
+        Format format;
+        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+        if (notifyObs != nullptr) {
+            notifyObs->OnInfo(INFO_TYPE_DURATION_UPDATE, duration_, format);
+        }
+    }
 
     // 10: report once at 1000ms
     if (currentTimeOnInfoCnt_ % POSITION_REPORT_PER_TIMES == 0 ||
