@@ -25,6 +25,8 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVencParamsMgr"};
     constexpr uint32_t OMX_FRAME_RATE_MOVE = 16; // hdi frame rate need move 16
     constexpr uint32_t MSEC_PER_S = 1000;
+    constexpr OMX_U32 DEFAULT_BITRATE = 3000000;
+    constexpr uint32_t DEFAULT_CODEC_QUALITY = 64;
 }
 
 namespace OHOS {
@@ -181,7 +183,7 @@ int32_t HdiVencParamsMgr::SetInputVideoCommon(GstElement *element)
     inPortDef_.format.video.nFrameWidth = (uint32_t)base->width;
     inPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate) << OMX_FRAME_RATE_MOVE;
     inPortDef_.format.video.nSliceHeight = (uint32_t)base->nslice_height;
-    inPortDef_.format.video.nBitrate = base->bitrate;
+    inPortDef_.format.video.nBitrate = base->bitrate == 0 ? DEFAULT_BITRATE : static_cast<OMX_U32>(base->bitrate);
     inPortDef_.format.video.nStride = base->nstride;
     inPortDef_.nBufferSize = base->input.buffer_size;
     inPortDef_.nBufferCountActual = base->input.buffer_cnt;
@@ -203,7 +205,7 @@ int32_t HdiVencParamsMgr::SetOutputVideoCommon(GstElement *element)
     outPortDef_.format.video.nFrameHeight = (uint32_t)base->height;
     outPortDef_.format.video.nFrameWidth = (uint32_t)base->width;
     outPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate) << OMX_FRAME_RATE_MOVE;
-    outPortDef_.format.video.nBitrate = base->bitrate;
+    outPortDef_.format.video.nBitrate = base->bitrate == 0 ? DEFAULT_BITRATE : static_cast<OMX_U32>(base->bitrate);
     outPortDef_.nBufferCountActual = base->output.buffer_cnt;
     outPortDef_.nBufferSize = base->output.buffer_size;
     auto ret = HdiSetParameter(handle_, OMX_IndexParamPortDefinition, outPortDef_);
@@ -310,15 +312,18 @@ int32_t HdiVencParamsMgr::InitBitRateMode(GstElement *element)
 {
     MEDIA_LOGD("Init bitrate");
     GstVencBase *base = GST_VENC_BASE(element);
-    if (BITRATE_MODE_MAP.find(base->bitrate_mode) == BITRATE_MODE_MAP.end()) {
+    if (base->bitrate_mode == CQ) {
         ControlRateConstantQuality constantQualityConfig_ = {};
         InitHdiParam(constantQualityConfig_, verInfo_);
         constantQualityConfig_.portIndex = outPortDef_.nPortIndex;
         auto ret = HdiGetParameter(handle_, OMX_IndexParamControlRateConstantQuality, constantQualityConfig_);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexRateConstantQuality Failed");
-        if (base->bitrate != 0) {
-            constantQualityConfig_.qualityValue = (uint32_t)base->codec_quality;
+        if (base->codec_quality > 0) {
+            constantQualityConfig_.qualityValue = static_cast<uint32_t>(base->codec_quality);
+        } else {
+            constantQualityConfig_.qualityValue = DEFAULT_CODEC_QUALITY;
         }
+        MEDIA_LOGD("InitBitRateMode: constant quality value %{public}u", constantQualityConfig_.qualityValue);
         ret = HdiSetParameter(handle_, OMX_IndexParamControlRateConstantQuality, constantQualityConfig_);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexRateConstantQuality Failed");
     } else {
@@ -327,11 +332,14 @@ int32_t HdiVencParamsMgr::InitBitRateMode(GstElement *element)
         bitrateConfig_.nPortIndex = outPortDef_.nPortIndex;
         auto ret = HdiGetParameter(handle_, OMX_IndexParamVideoBitrate, bitrateConfig_);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoBitrate Failed");
-        if (base->bitrate != 0) {
-            bitrateConfig_.nTargetBitrate = base->bitrate;
+        bitrateConfig_.nTargetBitrate = base->bitrate == 0 ? DEFAULT_BITRATE : static_cast<OMX_U32>(base->bitrate);
+        if (BITRATE_MODE_MAP.find(base->bitrate_mode) == BITRATE_MODE_MAP.end()) {
+            bitrateConfig_.eControlRate = OMX_Video_ControlRateConstant;
+        } else {
+            bitrateConfig_.eControlRate = BITRATE_MODE_MAP.at(base->bitrate_mode);
         }
-        bitrateConfig_.eControlRate = BITRATE_MODE_MAP.at(base->bitrate_mode);
-        MEDIA_LOGD("InitBitRateMode:bitrate mode %{public}d, bitrate %{public}u", base->bitrate_mode, base->bitrate);
+        MEDIA_LOGD("InitBitRateMode:eControlRate %{public}d, nTargetBitrate %{public}u",
+            bitrateConfig_.eControlRate, bitrateConfig_.nTargetBitrate);
         ret = HdiSetParameter(handle_, OMX_IndexParamVideoBitrate, bitrateConfig_);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoBitrate Failed");
     }
@@ -366,6 +374,7 @@ void HdiVencParamsMgr::InitAvcCommonParamters(GstElement *element, OMX_VIDEO_PAR
 
 int32_t HdiVencParamsMgr::InitAvcParamters(GstElement *element)
 {
+    MEDIA_LOGD("InitAvcParamters");
     GstVencBase *base = GST_VENC_BASE(element);
     OMX_VIDEO_PARAM_AVCTYPE avcType;
     InitParam(avcType, verInfo_);
@@ -412,7 +421,7 @@ int32_t HdiVencParamsMgr::InitAvcParamters(GstElement *element)
 
 int32_t HdiVencParamsMgr::InitHevcParamters(GstElement *element)
 {
-    (void)element;
+    MEDIA_LOGD("InitHevcParamters");
     GstVencBase *base = GST_VENC_BASE(element);
     CodecVideoParamHevc hevcType;
     InitHdiParam(hevcType, verInfo_);
@@ -432,7 +441,6 @@ int32_t HdiVencParamsMgr::InitHevcParamters(GstElement *element)
     }
 
     hevcType.keyFrameInterval = (uint32_t)(base->frame_rate * base->i_frame_interval_new / MSEC_PER_S - 1);
-
     ret = HdiSetParameter(handle_, OMX_IndexParamVideoHevc, hevcType);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoHevc Failed");
     return GST_CODEC_OK;

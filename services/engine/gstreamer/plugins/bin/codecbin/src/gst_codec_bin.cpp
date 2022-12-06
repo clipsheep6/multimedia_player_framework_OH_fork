@@ -180,7 +180,7 @@ static void gst_codec_bin_init(GstCodecBin *bin)
     bin->bitrate_mode = -1;
     bin->codec_quality = -1;
     bin->i_frame_interval = -1;
-    bin->bitrate = -1;
+    bin->bitrate = 0;
 }
 
 static void gst_codec_bin_finalize(GObject *object)
