@@ -35,6 +35,7 @@ enum PlayerServerTaskType : uint8_t {
     STATE_CHANGE,
     SEEKING,
     RATE_CHANGE,
+    CANCEL_TASK,
     BUTT,
 };
 
@@ -45,6 +46,8 @@ public:
 
     int32_t Init();
     int32_t LaunchTask(const std::shared_ptr<ITaskHandler> &task, PlayerServerTaskType type, uint64_t delayUs = 0);
+    int32_t LaunchTask(const std::shared_ptr<ITaskHandler> &task, const std::shared_ptr<ITaskHandler> &cancelTask,
+        PlayerServerTaskType type);
     // only take effect when it is called at the task thread.
     int32_t MarkTaskDone();
     PlayerServerTaskType GetCurrTaskType();
@@ -55,6 +58,7 @@ private:
     struct TwoPhaseTaskItem {
         PlayerServerTaskType type;
         std::shared_ptr<ITaskHandler> task;
+        std::shared_ptr<ITaskHandler> cancelTask;
     };
 
     std::unique_ptr<TaskQueue> taskThread_;

@@ -563,7 +563,14 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
         (void)currState->Seek(mSeconds, mode);
     });
 
-    int ret = taskMgr_.LaunchTask(seekTask, PlayerServerTaskType::SEEKING);
+    auto cancelTask = std::make_shared<TaskHandler<void>>([this, mSeconds]() {
+        MEDIA_LOGI("Interrupted seek action");
+        Format format;
+        OnInfoNoChangeStatus(INFO_TYPE_SEEKDONE, mSeconds, format);
+        taskMgr_.MarkTaskDone();
+    });
+
+    int ret = taskMgr_.LaunchTask(seekTask, cancelTask, PlayerServerTaskType::SEEKING);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
 
     return MSERR_OK;
@@ -709,7 +716,7 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
     if (config_.speedMode == mode) {
         MEDIA_LOGD("The speed mode is same, mode = %{public}d", mode);
         Format format;
-        OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, 0, format);
+        OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
         return MSERR_OK;
     }
 
@@ -719,7 +726,14 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         (void)currState->SetPlaybackSpeed(mode);
     });
 
-    int ret = taskMgr_.LaunchTask(rateTask, PlayerServerTaskType::RATE_CHANGE);
+    auto cancelTask = std::make_shared<TaskHandler<void>>([this, mode]() {
+        MEDIA_LOGI("Interrupted speed action");
+        Format format;
+        OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
+        taskMgr_.MarkTaskDone();
+    });
+
+    int ret = taskMgr_.LaunchTask(rateTask, cancelTask, PlayerServerTaskType::RATE_CHANGE);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlaybackSpeed failed");
 
     return MSERR_OK;
@@ -739,11 +753,20 @@ void PlayerServer::HandleEos()
 {
     if (config_.looping.load()) {
         auto seekTask = std::make_shared<TaskHandler<void>>([this]() {
+            MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->Seek(0, SEEK_PREVIOUS_SYNC);
         });
+
+        auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
+            MEDIA_LOGI("Interrupted seek action");
+            Format format;
+            taskMgr_.MarkTaskDone();
+            disableNextSeekDone_ = false;
+        });
+
         disableNextSeekDone_ = true;
-        int ret = taskMgr_.LaunchTask(seekTask, PlayerServerTaskType::SEEKING);
+        int ret = taskMgr_.LaunchTask(seekTask, cancelTask, PlayerServerTaskType::SEEKING);
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Seek failed");
     }
 }
