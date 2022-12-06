@@ -17,7 +17,9 @@
 #include "avplayer_callback.h"
 #include "media_log.h"
 #include "media_errors.h"
+#ifdef SUPPORT_VIDEO
 #include "surface_utils.h"
+#endif
 #include "string_ex.h"
 
 namespace {
@@ -737,6 +739,7 @@ napi_value AVPlayerNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info 
     return result;
 }
 
+#ifdef SUPPORT_VIDEO
 void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
 {
     MEDIA_LOGD("get surface, surfaceStr = %{public}s", surfaceStr.c_str());
@@ -764,6 +767,12 @@ void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
     });
     (void)taskQue_->EnqueueTask(task);
 }
+#else
+void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
+{
+    (void)surfaceStr;
+}
+#endif
 
 napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
 {
@@ -1236,6 +1245,8 @@ void AVPlayerNapi::ResetUserParameters()
     fileDescriptor_.length = -1;
     width_ = 0;
     height_ = 0;
+    position_ = -1;
+    duration_ = -1;
 }
 
 void AVPlayerNapi::StartListenCurrentResource()

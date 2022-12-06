@@ -81,7 +81,7 @@ public:
 
 class AVPlayerNapi : public AVPlayerNotify {
 public:
-    static napi_value Init(napi_env env, napi_value exports);
+    __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
 
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
