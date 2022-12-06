@@ -38,6 +38,10 @@ if (multimedia_player_framework_support_player) {
   player_framework_defines += [ "UNSUPPORT_PLAYER" ]
 }
 
+if (multimedia_player_framework_support_player_js_api9) {
+  player_framework_defines += [ "SUPPORT_PLAYER_API9" ]
+}
+
 if (multimedia_player_framework_support_recorder) {
   player_framework_defines += [ "SUPPORT_RECORDER" ]
 } else {
