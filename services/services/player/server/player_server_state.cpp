@@ -107,6 +107,11 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
             MEDIA_LOGI("Callback State change, currentState is %{public}s",
                 server_.GetStatusDescription(extra).c_str());
         }
+
+        if (extra == PLAYER_STOPPED && server_.disableStoppedCb_) {
+            server_.disableStoppedCb_ = false;
+            return MSERR_UNSUPPORT;
+        }
     }
     return MSERR_OK;
 }
