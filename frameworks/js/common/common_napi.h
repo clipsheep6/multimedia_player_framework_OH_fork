@@ -280,6 +280,11 @@ struct AVFileDescriptor {
     int64_t offset = 0;
     int64_t length = -1;
 };
+
+enum StateChangeReason {
+    USER = 1,
+    BACKGROUND = 2,
+};
 } // namespace Media
 } // namespace OHOS
 #endif // COMMON_NAPI_H
