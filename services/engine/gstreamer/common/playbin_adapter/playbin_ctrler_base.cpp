@@ -36,7 +36,6 @@ namespace {
     constexpr int32_t BUFFER_LOW_PERCENT_DEFAULT = 1;
     constexpr int32_t BUFFER_HIGH_PERCENT_DEFAULT = 4;
     constexpr int32_t BUFFER_PERCENT_THRESHOLD = 100;
-    constexpr uint32_t HTTP_TIME_OUT_DEFAULT = 15; // 15s
     constexpr int32_t NANO_SEC_PER_USEC = 1000;
     constexpr double DEFAULT_RATE = 1.0;
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
@@ -507,7 +506,6 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         g_object_set(playbin_, "buffering-flags", true, "buffer-size", PLAYBIN_QUEUE_MAX_SIZE,
             "buffer-duration", BUFFER_DURATION, "low-percent", BUFFER_LOW_PERCENT_DEFAULT,
             "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, nullptr);
-        g_object_set(playbin_, "timeout", HTTP_TIME_OUT_DEFAULT, nullptr);
 
         PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
