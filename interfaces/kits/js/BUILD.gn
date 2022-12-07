@@ -40,15 +40,9 @@ ohos_copy("media_declaration") {
 ohos_shared_library("media") {
   include_dirs = [
     "//foundation/multimedia/player_framework/interfaces/kits/js",
-    "//foundation/multimedia/player_framework/frameworks/js/avcodec",
-    "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_decoder",
-    "//foundation/multimedia/player_framework/frameworks/js/avcodec/audio_encoder",
-    "//foundation/multimedia/player_framework/frameworks/js/avcodec/utils",
-    "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_decoder",
-    "//foundation/multimedia/player_framework/frameworks/js/avcodec/video_encoder",
     "//foundation/multimedia/player_framework/frameworks/js/player",
     "//foundation/multimedia/player_framework/frameworks/js/recorder",
-    "//foundation/multimedia/player_framework/frameworks/js/mediacapability",
+    "//foundation/multimedia/player_framework/frameworks/js/media",
     "//foundation/multimedia/player_framework/frameworks/js/common",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//third_party/libuv/include",
@@ -57,9 +51,9 @@ ohos_shared_library("media") {
 
   sources = [
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/common/media_enum_napi.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/mediacapability/media_capability_napi.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/player/native_module_ohos_media.cpp",
+    "//foundation/multimedia/player_framework/frameworks/js/media/media_capability_napi.cpp",
+    "//foundation/multimedia/player_framework/frameworks/js/media/media_enum_napi.cpp",
+    "//foundation/multimedia/player_framework/frameworks/js/media/native_module_ohos_media.cpp",
   ]
 
   if (multimedia_player_framework_support_player) {
@@ -110,11 +104,13 @@ ohos_shared_library("media") {
   deps = [
     "//base/hiviewdfx/hilog/interfaces/native/innerkits:libhilog",
     "//foundation/arkui/napi:ace_napi",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
+  if (multimedia_player_framework_support_video) {
+    deps += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface" ]
+  }
 
   external_deps = [
     "c_utils:utils",
