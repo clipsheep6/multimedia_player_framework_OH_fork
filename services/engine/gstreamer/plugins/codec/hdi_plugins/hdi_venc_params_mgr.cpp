@@ -318,11 +318,8 @@ int32_t HdiVencParamsMgr::InitBitRateMode(GstElement *element)
         constantQualityConfig_.portIndex = outPortDef_.nPortIndex;
         auto ret = HdiGetParameter(handle_, OMX_IndexParamControlRateConstantQuality, constantQualityConfig_);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexRateConstantQuality Failed");
-        if (base->codec_quality > 0) {
-            constantQualityConfig_.qualityValue = static_cast<uint32_t>(base->codec_quality);
-        } else {
-            constantQualityConfig_.qualityValue = DEFAULT_CODEC_QUALITY;
-        }
+        constantQualityConfig_.qualityValue =
+            base->codec_quality > 0 ? static_cast<uint32_t>(base->codec_quality) : DEFAULT_CODEC_QUALITY;
         MEDIA_LOGD("InitBitRateMode: constant quality value %{public}u", constantQualityConfig_.qualityValue);
         ret = HdiSetParameter(handle_, OMX_IndexParamControlRateConstantQuality, constantQualityConfig_);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexRateConstantQuality Failed");
@@ -333,9 +330,8 @@ int32_t HdiVencParamsMgr::InitBitRateMode(GstElement *element)
         auto ret = HdiGetParameter(handle_, OMX_IndexParamVideoBitrate, bitrateConfig_);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoBitrate Failed");
         bitrateConfig_.nTargetBitrate = base->bitrate == 0 ? DEFAULT_BITRATE : static_cast<OMX_U32>(base->bitrate);
-        if (BITRATE_MODE_MAP.find(base->bitrate_mode) == BITRATE_MODE_MAP.end()) {
-            bitrateConfig_.eControlRate = OMX_Video_ControlRateConstant;
-        } else {
+        bitrateConfig_.eControlRate = OMX_Video_ControlRateConstant;
+        if (BITRATE_MODE_MAP.find(base->bitrate_mode) != BITRATE_MODE_MAP.end()) {
             bitrateConfig_.eControlRate = BITRATE_MODE_MAP.at(base->bitrate_mode);
         }
         MEDIA_LOGD("InitBitRateMode:eControlRate %{public}d, nTargetBitrate %{public}u",
@@ -429,15 +425,14 @@ int32_t HdiVencParamsMgr::InitHevcParamters(GstElement *element)
     auto ret = HdiGetParameter(handle_, OMX_IndexParamVideoHevc, hevcType);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "OMX_IndexParamVideoHevc Failed");
 
+    hevcType.profile = CODEC_HEVC_PROFILE_MAIN;
     if (HEVC_PROFILE_MAP.find(base->codec_profile) != HEVC_PROFILE_MAP.end()) {
         hevcType.profile = HEVC_PROFILE_MAP.at(base->codec_profile);
-    } else {
-        hevcType.profile = CODEC_HEVC_PROFILE_MAIN;
     }
+
+    hevcType.level = CODEC_HEVC_MAIN_TIER_LEVEL41;
     if (HEVC_LEVEL_MAP.find(base->codec_level) != HEVC_LEVEL_MAP.end()) {
         hevcType.level = HEVC_LEVEL_MAP.at(base->codec_level);
-    } else {
-        hevcType.level = CODEC_HEVC_MAIN_TIER_LEVEL41;
     }
 
     hevcType.keyFrameInterval = (uint32_t)(base->frame_rate * base->i_frame_interval_new / MSEC_PER_S - 1);
