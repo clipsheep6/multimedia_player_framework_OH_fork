@@ -334,6 +334,12 @@ int32_t AVCodecEngineCtrl::SetConfigParameter(const Format &format)
             g_object_set(codecBin_, "codec-profile", value, nullptr);
         }
     }
+
+    if (format.GetValueType(std::string_view("bitrate")) == FORMAT_TYPE_INT32) {
+        if (format.GetIntValue("bitrate", value) && value >= 0) {
+            g_object_set(codecBin_, "bitrate", static_cast<uint32_t>(value), nullptr);
+        }
+    }
     return MSERR_OK;
 }
 

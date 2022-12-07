@@ -41,5 +41,6 @@ static void gst_vdec_h265_class_init(GstVdecH265Class *klass)
 
 static void gst_vdec_h265_init(GstVdecH265 *self)
 {
-    (void)self;
+    GstVdecBase *base = GST_VDEC_BASE(self);
+    base->compress_format = OHOS::Media::GstCompressionFormat::GST_HEVC;
 }
