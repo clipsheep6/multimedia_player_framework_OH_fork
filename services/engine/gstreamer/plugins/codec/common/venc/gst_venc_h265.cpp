@@ -47,7 +47,8 @@ static void gst_venc_h265_class_init(GstVencH265Class *klass)
 
 static void gst_venc_h265_init(GstVencH265 *self)
 {
-    (void)self;
+    GstVencBase *base = GST_VENC_BASE(self);
+    base->compress_format = OHOS::Media::GstCompressionFormat::GST_HEVC;
 }
 
 static GstCaps *gst_venc_h265_get_caps(GstVencBase *self, GstVideoCodecState *state)

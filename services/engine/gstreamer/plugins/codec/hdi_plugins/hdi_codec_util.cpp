@@ -26,7 +26,8 @@ namespace {
 namespace OHOS {
 namespace Media {
 static const std::unordered_map<GstCompressionFormat, OMX_VIDEO_CODINGTYPE> COMPRESS_GST_OMX = {
-    {GST_AVC, OMX_VIDEO_CodingAVC}
+    {GST_AVC, OMX_VIDEO_CodingAVC},
+    {GST_HEVC, static_cast<OMX_VIDEO_CODINGTYPE>(CODEC_OMX_VIDEO_CodingHEVC)}
 };
 
 static const std::unordered_map<GstVideoFormat, PixelFormat> FORMAT_GST_HDI = {

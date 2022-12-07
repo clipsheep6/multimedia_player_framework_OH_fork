@@ -59,6 +59,7 @@ struct _GstCodecBin {
     gint codec_quality;
     gint i_frame_interval;
     gint codec_profile;
+    guint bitrate;
 };
 
 struct _GstCodecBinClass {

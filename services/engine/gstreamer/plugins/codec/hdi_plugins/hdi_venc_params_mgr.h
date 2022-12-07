@@ -46,6 +46,7 @@ protected:
     int32_t InitBitRateMode(GstElement *element);
     int32_t InitAvcParamters(GstElement *element);
     void InitAvcCommonParamters(GstElement *element, OMX_VIDEO_PARAM_AVCTYPE &avcType);
+    int32_t InitHevcParamters(GstElement *element);
 private:
     CodecComponentType *handle_ = nullptr;
     OMX_PARAM_PORTDEFINITIONTYPE inPortDef_ = {};
