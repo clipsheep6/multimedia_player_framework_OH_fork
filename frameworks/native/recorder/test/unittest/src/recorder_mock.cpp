@@ -272,6 +272,11 @@ int32_t RecorderMock::RequesetBuffer(const std::string &recorderType, VideoRecor
             UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "GetStubFile failed ");
             camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderMock::HDICreateESBuffer, this));
         } else {
+            if (recorderConfig.videoFormat == H264) {
+                g_yuvRequestConfig.format = PIXEL_FMT_YCBCR_420_SP;
+            } else {
+                g_yuvRequestConfig.format = PIXEL_FMT_YCRCB_420_SP;
+            }
             if (recorderType == PURE_ERROR) {
                 camereHDIThread_.reset(new(std::nothrow) std::thread(&RecorderMock::HDICreateYUVBufferError, this));
             } else {
