@@ -255,7 +255,7 @@ public:
     virtual int32_t Play() = 0;
 
     /**
-     * @brief Prepares the playback environment and buffers media data.
+     * @brief Prepares the playback environment and buffers media data asynchronous.
      *
      * This function must be called after {@link SetSource}.
      *
