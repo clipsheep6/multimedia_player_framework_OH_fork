@@ -33,6 +33,14 @@ namespace {
         {OMX_VIDEO_AVCProfileHigh, AVC_PROFILE_HIGH},
         {OMX_VIDEO_AVCProfileExtended, AVC_PROFILE_EXTENDED},
     };
+
+    const std::unordered_map<int32_t, int32_t> HEVC_PROFILE_MAP = {
+        {CODEC_HEVC_PROFILE_MAIN, HEVC_PROFILE_MAIN},
+        {CODEC_HEVC_PROFILE_MAIN10, HEVC_PROFILE_MAIN_10},
+        {CODEC_HEVC_PROFILE_MAIN_STILL, HEVC_PROFILE_MAIN_STILL},
+        {CODEC_HEVC_PROFILE_MAIN10_HDR10, HEVC_PROFILE_MAIN_10_HDR10},
+    };
+
     const std::unordered_map<int32_t, int32_t> AVC_LEVEL_MAP = {
         {OMX_VIDEO_AVCLevel1, AVC_LEVEL_1},
         {OMX_VIDEO_AVCLevel1b, AVC_LEVEL_1b},
@@ -51,6 +59,22 @@ namespace {
         {OMX_VIDEO_AVCLevel5, AVC_LEVEL_5},
         {OMX_VIDEO_AVCLevel51, AVC_LEVEL_51},
     };
+
+    const std::unordered_map<int32_t, int32_t> HEVC_LEVEL_MAP = {
+        {CODEC_HEVC_MAIN_TIER_LEVEL1, HEVC_LEVEL_1},
+        {CODEC_HEVC_MAIN_TIER_LEVEL2, HEVC_LEVEL_2},
+        {CODEC_HEVC_MAIN_TIER_LEVEL21, HEVC_LEVEL_21},
+        {CODEC_HEVC_MAIN_TIER_LEVEL3, HEVC_LEVEL_3},
+        {CODEC_HEVC_MAIN_TIER_LEVEL31, HEVC_LEVEL_31},
+        {CODEC_HEVC_MAIN_TIER_LEVEL4, HEVC_LEVEL_4},
+        {CODEC_HEVC_MAIN_TIER_LEVEL41, HEVC_LEVEL_41},
+        {CODEC_HEVC_MAIN_TIER_LEVEL5, HEVC_LEVEL_5},
+        {CODEC_HEVC_MAIN_TIER_LEVEL51, HEVC_LEVEL_51},
+        {CODEC_HEVC_MAIN_TIER_LEVEL52, HEVC_LEVEL_52},
+        {CODEC_HEVC_MAIN_TIER_LEVEL6, HEVC_LEVEL_6},
+        {CODEC_HEVC_MAIN_TIER_LEVEL61, HEVC_LEVEL_61},
+        {CODEC_HEVC_MAIN_TIER_LEVEL62, HEVC_LEVEL_62},
+    };
     constexpr int32_t MAX_COMPONENT_NUM = 1024;
 }
 
@@ -58,6 +82,7 @@ namespace OHOS {
 namespace Media {
 const std::unordered_map<int32_t, HdiInit::GetProfileLevelsFunc> HdiInit::PROFILE_LEVEL_FUNC_MAP = {
     {MEDIA_ROLETYPE_VIDEO_AVC, HdiInit::GetH264ProfileLevels},
+    {MEDIA_ROLETYPE_VIDEO_HEVC, HdiInit::GetH265ProfileLevels},
 };
 
 HdiInit &HdiInit::GetInstance()
@@ -223,7 +248,7 @@ std::map<int32_t, std::vector<int32_t>> HdiInit::GetH264ProfileLevels(CodecCompC
     int32_t index = 0;
     while (index < PROFILE_NUM && hdiCap.supportProfiles[index] > 0) {
         if (AVC_PROFILE_MAP.find(hdiCap.supportProfiles[index]) == AVC_PROFILE_MAP.end()) {
-            MEDIA_LOGW("Unknow profile %{public}d", hdiCap.supportProfiles[index]);
+            MEDIA_LOGW("Unknow AVC profile %{public}d", hdiCap.supportProfiles[index]);
             break;
         }
         int32_t profile = AVC_PROFILE_MAP.at(hdiCap.supportProfiles[index]);
@@ -232,10 +257,36 @@ std::map<int32_t, std::vector<int32_t>> HdiInit::GetH264ProfileLevels(CodecCompC
         }
         index++;
         if (AVC_LEVEL_MAP.find(hdiCap.supportProfiles[index]) == AVC_LEVEL_MAP.end()) {
-            MEDIA_LOGW("Unknow level %{public}d", hdiCap.supportProfiles[index]);
+            MEDIA_LOGW("Unknow AVC level %{public}d", hdiCap.supportProfiles[index]);
             break;
         }
         profileLevelsMap[profile].push_back(AVC_LEVEL_MAP.at(hdiCap.supportProfiles[index]));
+        index++;
+    }
+
+    return profileLevelsMap;
+}
+
+std::map<int32_t, std::vector<int32_t>> HdiInit::GetH265ProfileLevels(CodecCompCapability &hdiCap)
+{
+    std::map<int32_t, std::vector<int32_t>> profileLevelsMap;
+    int32_t index = 0;
+    std::vector<int32_t> formats;
+    while (index < PROFILE_NUM && hdiCap.supportProfiles[index] > 0) {
+        if (HEVC_PROFILE_MAP.find(hdiCap.supportProfiles[index]) == HEVC_PROFILE_MAP.end()) {
+            MEDIA_LOGW("Unknow HEVC profile %{public}d", hdiCap.supportProfiles[index]);
+            break;
+        }
+        int32_t profile = HEVC_PROFILE_MAP.at(hdiCap.supportProfiles[index]);
+        if (profileLevelsMap.find(profile) == profileLevelsMap.end()) {
+            profileLevelsMap[profile] = std::vector<int32_t>();
+        }
+        index++;
+        if (HEVC_LEVEL_MAP.find(hdiCap.supportProfiles[index]) == HEVC_LEVEL_MAP.end()) {
+            MEDIA_LOGW("Unknow HEVC level %{public}d", hdiCap.supportProfiles[index]);
+            break;
+        }
+        profileLevelsMap[profile].push_back(HEVC_LEVEL_MAP.at(hdiCap.supportProfiles[index]));
         index++;
     }
 
