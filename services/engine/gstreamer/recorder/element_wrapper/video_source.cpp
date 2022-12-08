@@ -20,6 +20,8 @@
 #include "media_log.h"
 #include "recorder_private_param.h"
 #include "common_utils.h"
+#include "avcodec_ability_singleton.h"
+#include "avcodeclist_engine_gst_impl.h"
 
 namespace {
 using namespace OHOS::Media;
@@ -64,16 +66,19 @@ int32_t VideoSource::Configure(const RecorderParam &recParam)
     ret = ConfigureCaptureRate(recParam);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
+    ret = NoteVencFmt(recParam);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+
     return MSERR_OK;
 }
 
-void VideoSource::SetCaps(int32_t width, int32_t height)
+void VideoSource::SetCaps()
 {
     GstCaps *caps = nullptr;
     if (streamType_ == VideoStreamType::VIDEO_STREAM_TYPE_ES_AVC) {
         caps = gst_caps_new_simple("video/x-h264",
-            "width", G_TYPE_INT, width,
-            "height", G_TYPE_INT, height,
+            "width", G_TYPE_INT, width_,
+            "height", G_TYPE_INT, height_,
             "framerate", GST_TYPE_FRACTION, DEFAULT_FRAME_RATE, 1,
             "alignment", G_TYPE_STRING, "nal",
             "stream-format", G_TYPE_STRING, "byte-stream",
@@ -81,15 +86,17 @@ void VideoSource::SetCaps(int32_t width, int32_t height)
     } else if (streamType_ == VideoStreamType::VIDEO_STREAM_TYPE_RGBA) {
         caps = gst_caps_new_simple("video/x-raw",
             "format", G_TYPE_STRING, "RGBA",
-            "width", G_TYPE_INT, width,
-            "height", G_TYPE_INT, height,
+            "width", G_TYPE_INT, width_,
+            "height", G_TYPE_INT, height_,
             "framerate", GST_TYPE_FRACTION, DEFAULT_FRAME_RATE, 1,
             nullptr);
     } else {
+        std::string fmt = GetEncorderInputFormat();
+        MEDIA_LOGD("Set input format: %{public}s", fmt.c_str());
         caps = gst_caps_new_simple("video/x-raw",
-            "format", G_TYPE_STRING, "NV21",
-            "width", G_TYPE_INT, width,
-            "height", G_TYPE_INT, height,
+            "format", G_TYPE_STRING, fmt.c_str(),
+            "width", G_TYPE_INT, width_,
+            "height", G_TYPE_INT, height_,
             "framerate", GST_TYPE_FRACTION, DEFAULT_FRAME_RATE, 1,
             nullptr);
     }
@@ -113,8 +120,6 @@ int32_t VideoSource::ConfigureVideoRectangle(const RecorderParam &recParam)
     MEDIA_LOGI("configure video source width height: %{public}d * %{public}d", param.width, param.height);
     g_object_set(gstElem_, "surface-width", static_cast<uint32_t>(param.width),
                  "surface-height", static_cast<uint32_t>(param.height), nullptr);
-
-    SetCaps(param.width, param.height);
 
     MarkParameter(param.type);
     width_ = param.width;
@@ -155,6 +160,55 @@ int32_t VideoSource::ConfigureCaptureRate(const RecorderParam &recParam)
 
     MarkParameter(recParam.type);
     capRate_ = param.capRate;
+    return MSERR_OK;
+}
+
+int32_t VideoSource::NoteVencFmt(const RecorderParam &recParam)
+{
+    if (recParam.type == RecorderPublicParamType::VID_ENC_FMT) {
+        const VidEnc &param = static_cast<const VidEnc &>(recParam);
+        encoderFormat_ = param.encFmt;
+        return MSERR_OK;
+    }
+
+    return MSERR_OK;
+}
+
+std::string VideoSource::GetEncorderInputFormat()
+{
+    std::string fmt = "NV21";
+    CHECK_AND_RETURN_RET(encoderFormat_ == VideoCodecFormat::H264, fmt);
+
+    auto codecList = std::make_unique<AVCodecListEngineGstImpl>();
+    CHECK_AND_RETURN_RET(codecList != nullptr, fmt);
+
+    Format format;
+    format.PutStringValue("codec_mime", CodecMimeType::VIDEO_AVC);
+    std::string pluginName = codecList->FindVideoEncoder(format);
+
+    std::vector<CapabilityData> capabilityDataArray = AVCodecAbilitySingleton::GetInstance().GetCapabilityDataArray();
+
+    for (auto iter = capabilityDataArray.begin(); iter != capabilityDataArray.end(); ++iter) {
+        if ((*iter).codecName == pluginName) {
+            std::vector<int32_t> fmtVect = (*iter).format;
+            if (find(fmtVect.begin(), fmtVect.end(), VideoPixelFormat::NV21) != fmtVect.end()) {
+                break;
+            } else if (find(fmtVect.begin(), fmtVect.end(), VideoPixelFormat::NV12) != fmtVect.end()) {
+                fmt = "NV12";
+            } else if (find(fmtVect.begin(), fmtVect.end(), VideoPixelFormat::YUVI420) != fmtVect.end()) {
+                fmt = "YUVI420";
+            }
+            break;
+        }
+    }
+
+    return fmt;
+}
+
+int32_t VideoSource::Prepare()
+{
+    MEDIA_LOGD("videp source prepare enter");
+    SetCaps();
     return MSERR_OK;
 }
 
