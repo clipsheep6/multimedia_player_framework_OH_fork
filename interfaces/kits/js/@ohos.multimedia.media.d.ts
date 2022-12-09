@@ -320,7 +320,7 @@ declare namespace media {
      * set payback speed.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param speed playback speed, see @AVPlayerSpeed .
+     * @param speed playback speed, see @PlaybackSpeed .
      */
     setSpeed(speed: number): void;
 
@@ -441,44 +441,6 @@ declare namespace media {
      * @param callback Callback used to listen for the playback error event.
      */
     on(type: 'error', callback: ErrorCallback): void;
-  }
-
-  /**
-   * Enumerates AVPlayer speed.
-   * @since 9
-   * @syscap SystemCapability.Multimedia.Media.AVPlayer
-   */
-   enum AVPlayerSpeed {
-    /**
-     * playback at 0.75x normal speed
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    SPEED_FORWARD_0_75_X = 0,
-    /**
-     * playback at normal speed
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    SPEED_FORWARD_1_00_X = 1,
-    /**
-     * playback at 1.25x normal speed
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    SPEED_FORWARD_1_25_X = 2,
-    /**
-     * playback at 1.75x normal speed
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    SPEED_FORWARD_1_75_X = 3,
-    /**
-     * playback at 2.0x normal speed
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    SPEED_FORWARD_2_00_X = 4,
   }
 
   /**

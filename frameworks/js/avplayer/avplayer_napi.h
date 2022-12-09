@@ -210,7 +210,7 @@ private:
     static AVPlayerNapi* GetJsInstanceWithParameter(napi_env env, napi_callback_info info,
         size_t &argc, napi_value *argv);
     AVPlayerNapi();
-    ~AVPlayerNapi();
+    ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void ClearCallbackReference();
     void StartListenCurrentResource();
