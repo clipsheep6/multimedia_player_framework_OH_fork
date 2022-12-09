@@ -248,7 +248,7 @@ public:
             (void)status;
             NapiCallback::Base *cb = reinterpret_cast<NapiCallback::Base *>(work->data);
             if (cb != nullptr) {
-                MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", cb->callbackName.c_str());
+                MEDIA_LOGI("JsCallBack %{public}s, uv_queue_work start", cb->callbackName.c_str());
                 cb->UvWork();
                 delete cb;
             }
@@ -266,12 +266,12 @@ public:
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 AVPlayerCallback::~AVPlayerCallback()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 void AVPlayerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)
@@ -358,7 +358,7 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
 
 void AVPlayerCallback::OnStateChangeCb(PlayerStates state)
 {
-    MEDIA_LOGD("OnStateChanged is called, current state: %{public}d", state);
+    MEDIA_LOGI("OnStateChanged is called, current state: %{public}d", state);
 
     if (listener_ != nullptr) {
         listener_->NotifyState(state);
@@ -394,7 +394,7 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state)
 void AVPlayerCallback::OnVolumeChangeCb(double volumeLevel)
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGD("OnVolumeChangeCb in");
+    MEDIA_LOGI("OnVolumeChangeCb in");
     if (refMap_.find(AVPlayerEvent::EVENT_VOLUME_CHANGE) == refMap_.end()) {
         MEDIA_LOGW("can not find vol change callback!");
         return;
@@ -412,7 +412,7 @@ void AVPlayerCallback::OnVolumeChangeCb(double volumeLevel)
 void AVPlayerCallback::OnSeekDoneCb(int32_t currentPositon) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGD("OnSeekDone is called, currentPositon: %{public}d", currentPositon);
+    MEDIA_LOGI("OnSeekDone is called, currentPositon: %{public}d", currentPositon);
     if (refMap_.find(AVPlayerEvent::EVENT_SEEK_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find seekdone callback!");
         return;
@@ -430,7 +430,7 @@ void AVPlayerCallback::OnSeekDoneCb(int32_t currentPositon) const
 void AVPlayerCallback::OnSpeedDoneCb(int32_t speedMode) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGD("OnSpeedDoneCb is called, speedMode: %{public}d", speedMode);
+    MEDIA_LOGI("OnSpeedDoneCb is called, speedMode: %{public}d", speedMode);
     if (refMap_.find(AVPlayerEvent::EVENT_SPEED_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find speeddone callback!");
         return;
@@ -448,7 +448,7 @@ void AVPlayerCallback::OnSpeedDoneCb(int32_t speedMode) const
 void AVPlayerCallback::OnBitRateDoneCb(int32_t bitRate) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGD("OnBitRateDoneCb is called, bitRate: %{public}d", bitRate);
+    MEDIA_LOGI("OnBitRateDoneCb is called, bitRate: %{public}d", bitRate);
     if (refMap_.find(AVPlayerEvent::EVENT_BITRATE_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find bitrate callback!");
         return;
@@ -466,7 +466,7 @@ void AVPlayerCallback::OnBitRateDoneCb(int32_t bitRate) const
 void AVPlayerCallback::OnPositionUpdateCb(int32_t position) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGD("OnPositionUpdateCb is called, position: %{public}d", position);
+    MEDIA_LOGI("OnPositionUpdateCb is called, position: %{public}d", position);
 
     if (listener_ != nullptr) {
         listener_->NotifyPosition(position);
@@ -489,7 +489,7 @@ void AVPlayerCallback::OnPositionUpdateCb(int32_t position) const
 void AVPlayerCallback::OnDurationUpdateCb(int32_t duration) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGD("OnDurationUpdateCb is called, duration: %{public}d", duration);
+    MEDIA_LOGI("OnDurationUpdateCb is called, duration: %{public}d", duration);
 
     if (listener_ != nullptr) {
         listener_->NotifyDuration(duration);
@@ -499,7 +499,7 @@ void AVPlayerCallback::OnDurationUpdateCb(int32_t duration) const
 void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGD("OnBufferingUpdateCb is called");
+    MEDIA_LOGI("OnBufferingUpdateCb is called");
     if (refMap_.find(AVPlayerEvent::EVENT_BUFFERING_UPDATE) == refMap_.end()) {
         MEDIA_LOGW("can not find buffering update callback!");
         return;
@@ -523,7 +523,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
         return;
     }
 
-    MEDIA_LOGD("OnBufferingUpdateCb is called, buffering type: %{public}d value: %{public}d", bufferingType, value);
+    MEDIA_LOGI("OnBufferingUpdateCb is called, buffering type: %{public}d value: %{public}d", bufferingType, value);
     NapiCallback::IntVec *cb = new(std::nothrow) NapiCallback::IntVec();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new IntVec");
 
@@ -537,7 +537,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
 void AVPlayerCallback::OnMessageCb(int32_t extra, const Format &infoBody) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGD("OnMessageCb is called, extra: %{public}d", extra);
+    MEDIA_LOGI("OnMessageCb is called, extra: %{public}d", extra);
     if (extra == PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START) {
         AVPlayerCallback::OnStartRenderFrameCb();
     }
@@ -545,7 +545,7 @@ void AVPlayerCallback::OnMessageCb(int32_t extra, const Format &infoBody) const
 
 void AVPlayerCallback::OnStartRenderFrameCb() const
 {
-    MEDIA_LOGD("OnStartRenderFrameCb is called");
+    MEDIA_LOGI("OnStartRenderFrameCb is called");
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_START_RENDER_FRAME) == refMap_.end()) {
         MEDIA_LOGW("can not find start render callback!");
@@ -567,7 +567,7 @@ void AVPlayerCallback::OnVideoSizeChangedCb(const Format &infoBody)
     int32_t height = 0;
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_WIDTH, width);
     (void)infoBody.GetIntValue(PlayerKeys::PLAYER_HEIGHT, height);
-    MEDIA_LOGD("OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d", width, height);
+    MEDIA_LOGI("OnVideoSizeChangedCb is called, width = %{public}d, height = %{public}d", width, height);
 
     if (listener_ != nullptr) {
         listener_->NotifyVideoSize(width, height);
@@ -606,7 +606,7 @@ void AVPlayerCallback::OnAudioInterruptCb(const Format &infoBody) const
     (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_TYPE, eventType);
     (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, forceType);
     (void)infoBody.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_HINT, hintType);
-    MEDIA_LOGD("OnAudioInterruptCb is called, eventType = %{public}d, forceType = %{public}d, hintType = %{public}d",
+    MEDIA_LOGI("OnAudioInterruptCb is called, eventType = %{public}d, forceType = %{public}d, hintType = %{public}d",
         eventType, forceType, hintType);
     // ohos.multimedia.audio.d.ts interface InterruptEvent
     cb->valueMap["eventType"] = eventType;
@@ -631,14 +631,14 @@ void AVPlayerCallback::OnBitRateCollectedCb(const Format &infoBody) const
         infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_BITRATE), &addr, size);
         CHECK_AND_RETURN_LOG(addr != nullptr, "bitrate addr is nullptr");
 
-        MEDIA_LOGD("bitrate size = %{public}zu", size / sizeof(uint32_t));
+        MEDIA_LOGI("bitrate size = %{public}zu", size / sizeof(uint32_t));
         while (size > 0) {
             if ((size - sizeof(uint32_t)) < 0) {
                 break;
             }
 
             bitrate = *(static_cast<uint32_t *>(static_cast<void *>(addr)));
-            MEDIA_LOGD("bitrate = %{public}u", bitrate);
+            MEDIA_LOGI("bitrate = %{public}u", bitrate);
             addr += sizeof(uint32_t);
             size -= sizeof(uint32_t);
             bitrateVec.push_back(static_cast<int32_t>(bitrate));
@@ -657,7 +657,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(const Format &infoBody) const
 void AVPlayerCallback::OnEosCb(int32_t isLooping) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGD("OnEndOfStream is called, isloop: %{public}d", isLooping);
+    MEDIA_LOGI("OnEndOfStream is called, isloop: %{public}d", isLooping);
     if (refMap_.find(AVPlayerEvent::EVENT_END_OF_STREAM) == refMap_.end()) {
         MEDIA_LOGW("can not find EndOfStream callback!");
         return;
