@@ -213,7 +213,7 @@ int32_t PlayerServer::Prepare()
     MEDIA_LOGD("KPI-TRACE: PlayerServer Prepare in");
 
     if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
-        return OnPrepare(true);
+        return OnPrepare(false);
     } else {
         MEDIA_LOGE("Can not Prepare, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
