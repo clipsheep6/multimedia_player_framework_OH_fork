@@ -17,6 +17,7 @@ import("//build/ohos.gni")
 group("media_packages") {
   public_deps = [
     "interfaces/inner_api/native:media_client",
+    "frameworks/js/avrecorder:avrecorder",
     "services:media_service",
   ]
 }
