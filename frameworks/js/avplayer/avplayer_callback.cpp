@@ -25,194 +25,243 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerCa
 
 namespace OHOS {
 namespace Media {
-void NapiCallback::Base::UvWork()
-{
-    std::shared_ptr<AutoRef> ref = callback.lock();
-    CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+class NapiCallback {
+public:
+    struct Base {
+        std::weak_ptr<AutoRef> callback;
+        std::string callbackName = "unknown";
+        Base() = default;
+        virtual ~Base() = default;
+        virtual void UvWork()
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
 
-    napi_value jsCallback = nullptr;
-    napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-    CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
-        "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
 
-    // Call back function
-    napi_value result = nullptr;
-    status = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
-    CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
-}
-
-void NapiCallback::Error::UvWork()
-{
-    std::shared_ptr<AutoRef> ref = callback.lock();
-    CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
-
-    napi_value jsCallback = nullptr;
-    napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-    CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
-        "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-
-    napi_value args[1] = {nullptr};
-    (void)CommonNapi::CreateError(ref->env_, errorCode, errorMsg, args[0]);
-
-    // Call back function
-    napi_value result = nullptr;
-    status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
-    CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
-}
-
-void NapiCallback::Int::UvWork()
-{
-    std::shared_ptr<AutoRef> ref = callback.lock();
-    CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
-
-    napi_value jsCallback = nullptr;
-    napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-    CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
-        "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-
-    napi_value args[1] = {nullptr}; // callback: (int)
-    (void)napi_create_int32(ref->env_, value, &args[0]);
-
-    napi_value result = nullptr;
-    status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
-    CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
-}
-
-void NapiCallback::IntVec::UvWork()
-{
-    std::shared_ptr<AutoRef> ref = callback.lock();
-    CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
-
-    napi_value jsCallback = nullptr;
-    napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-    CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
-        "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-
-    napi_value args[2] = {nullptr}; // callback: (int, int)
-    (void)napi_create_int32(ref->env_, valueVec[0], &args[0]);
-    (void)napi_create_int32(ref->env_, valueVec[1], &args[1]);
-
-    const int32_t argCount = valueVec.size();
-    napi_value result = nullptr;
-    status = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
-    CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
-}
-
-void NapiCallback::IntArray::UvWork()
-{
-    std::shared_ptr<AutoRef> ref = callback.lock();
-    CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
-
-    napi_value jsCallback = nullptr;
-    napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-    CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
-        "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-
-    napi_value array = nullptr;
-    (void)napi_create_array_with_length(ref->env_, valueVec.size(), &array);
-
-    for (uint32_t i = 0; i < valueVec.size(); i++) {
-        napi_value number = nullptr;
-        (void)napi_create_int32(ref->env_, valueVec.at(i), &number);
-        (void)napi_set_element(ref->env_, array, i, number);
-    }
-
-    napi_value result = nullptr;
-    napi_value args[1] = {array};
-    status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
-    CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
-}
-
-void NapiCallback::Double::UvWork()
-{
-    std::shared_ptr<AutoRef> ref = callback.lock();
-    CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
-
-    napi_value jsCallback = nullptr;
-    napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-    CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
-        "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-
-    napi_value args[1] = {nullptr};
-    (void)napi_create_double(ref->env_, value, &args[0]);
-
-    napi_value result = nullptr;
-    status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
-    CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s failed to napi_call_function", callbackName.c_str());
-}
-
-void NapiCallback::PropertyInt::UvWork()
-{
-    std::shared_ptr<AutoRef> ref = callback.lock();
-    CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
-
-    napi_value jsCallback = nullptr;
-    napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-    CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
-        "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-
-    napi_value args[1] = {nullptr};
-    napi_create_object(ref->env_, &args[0]);
-    for (auto &it : valueMap) {
-        CommonNapi::SetPropertyInt32(ref->env_, args[0], it.first, it.second);
-    }
-
-    napi_value result = nullptr;
-    status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
-    CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
-}
-
-void NapiCallback::StateChange::UvWork()
-{
-    std::shared_ptr<AutoRef> ref = callback.lock();
-    CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
-
-    napi_value jsCallback = nullptr;
-    napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
-    CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
-        "%{public}s failed to napi_get_reference_value", callbackName.c_str());
-
-    const int32_t argCount = 2;
-    napi_value args[argCount] = {nullptr}; // callback: (state: AVPlayerState, reason: StateChangeReason)
-    (void)napi_create_string_utf8(ref->env_, state.c_str(), NAPI_AUTO_LENGTH, &args[0]);
-    (void)napi_create_int32(ref->env_, reason, &args[1]);
-
-    napi_value result = nullptr;
-    status = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
-    CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
-}
-
-void NapiCallback::CompleteCallback(napi_env env, NapiCallback::Base *jsCb)
-{
-    ON_SCOPE_EXIT(0) { delete jsCb; };
-
-    uv_loop_s *loop = nullptr;
-    napi_get_uv_event_loop(env, &loop);
-    CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
-
-    uv_work_t *work = new(std::nothrow) uv_work_t;
-    CHECK_AND_RETURN_LOG(work != nullptr, "Fail to new uv_work_t");
-
-    work->data = reinterpret_cast<void *>(jsCb);
-    // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
-        CHECK_AND_RETURN_LOG(work != nullptr, "Work thread is nullptr");
-        (void)status;
-        NapiCallback::Base *cb = reinterpret_cast<NapiCallback::Base *>(work->data);
-        if (cb != nullptr) {
-            MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", cb->callbackName.c_str());
-            cb->UvWork();
-            delete cb;
+            // Call back function
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
         }
-        delete work;
-    });
-    if (ret != 0) {
-        MEDIA_LOGE("Failed to execute libuv work queue");
-        delete jsCb;
-        delete work;
+    };
+
+    struct Error : public Base {
+        std::string errorMsg = "unknown";
+        MediaServiceExtErrCodeAPI9 errorCode = MSERR_EXT_API9_UNSUPPORT_FORMAT;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value args[1] = {nullptr};
+            (void)CommonNapi::CreateError(ref->env_, errorCode, errorMsg, args[0]);
+
+            // Call back function
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct Int : public Base {
+        int32_t value = 0;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value args[1] = {nullptr}; // callback: (int)
+            (void)napi_create_int32(ref->env_, value, &args[0]);
+
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct IntVec : public Base {
+        std::vector<int32_t> valueVec;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value args[2] = {nullptr}; // callback: (int, int)
+            (void)napi_create_int32(ref->env_, valueVec[0], &args[0]);
+            (void)napi_create_int32(ref->env_, valueVec[1], &args[1]);
+
+            const int32_t argCount = valueVec.size();
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct IntArray : public Base {
+        std::vector<int32_t> valueVec;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value array = nullptr;
+            (void)napi_create_array_with_length(ref->env_, valueVec.size(), &array);
+
+            for (uint32_t i = 0; i < valueVec.size(); i++) {
+                napi_value number = nullptr;
+                (void)napi_create_int32(ref->env_, valueVec.at(i), &number);
+                (void)napi_set_element(ref->env_, array, i, number);
+            }
+
+            napi_value result = nullptr;
+            napi_value args[1] = {array};
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct Double : public Base {
+        double value = 0.0;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value args[1] = {nullptr};
+            (void)napi_create_double(ref->env_, value, &args[0]);
+
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct PropertyInt : public Base {
+        std::map<std::string, int32_t> valueMap;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value args[1] = {nullptr};
+            napi_create_object(ref->env_, &args[0]);
+            for (auto &it : valueMap) {
+                CommonNapi::SetPropertyInt32(ref->env_, args[0], it.first, it.second);
+            }
+
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct StateChange : public Base {
+        std::string state = "";
+        int32_t reason = 0;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            const int32_t argCount = 2;
+            // callback: (state: AVPlayerState, reason: StateChangeReason)
+            napi_value args[argCount] = {nullptr};
+            (void)napi_create_string_utf8(ref->env_, state.c_str(), NAPI_AUTO_LENGTH, &args[0]);
+            (void)napi_create_int32(ref->env_, reason, &args[1]);
+
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    static void CompleteCallback(napi_env env, NapiCallback::Base *jsCb)
+    {
+        ON_SCOPE_EXIT(0) { delete jsCb; };
+
+        uv_loop_s *loop = nullptr;
+        napi_get_uv_event_loop(env, &loop);
+        CHECK_AND_RETURN_LOG(loop != nullptr, "Fail to napi_get_uv_event_loop");
+
+        uv_work_t *work = new(std::nothrow) uv_work_t;
+        CHECK_AND_RETURN_LOG(work != nullptr, "Fail to new uv_work_t");
+
+        work->data = reinterpret_cast<void *>(jsCb);
+        // async callback, jsWork and jsWork->data should be heap object.
+        int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+            CHECK_AND_RETURN_LOG(work != nullptr, "Work thread is nullptr");
+            (void)status;
+            NapiCallback::Base *cb = reinterpret_cast<NapiCallback::Base *>(work->data);
+            if (cb != nullptr) {
+                MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", cb->callbackName.c_str());
+                cb->UvWork();
+                delete cb;
+            }
+            delete work;
+        });
+        if (ret != 0) {
+            MEDIA_LOGE("Failed to execute libuv work queue");
+            delete jsCb;
+            delete work;
+        }
+        CANCEL_SCOPE_EXIT_GUARD(0);
     }
-    CANCEL_SCOPE_EXIT_GUARD(0);
-}
+};
 
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)

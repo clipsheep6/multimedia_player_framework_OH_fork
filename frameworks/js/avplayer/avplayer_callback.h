@@ -64,56 +64,6 @@ private:
     AVPlayerNotify *listener_ = nullptr;
     std::atomic<bool> isloaded_ = false;
 };
-
-class NapiCallback {
-public:
-    struct Base {
-        std::weak_ptr<AutoRef> callback;
-        std::string callbackName = "unknown";
-        Base() = default;
-        virtual ~Base() = default;
-        virtual void UvWork();
-    };
-
-    struct Error : public Base {
-        std::string errorMsg = "unknown";
-        MediaServiceExtErrCodeAPI9 errorCode = MSERR_EXT_API9_UNSUPPORT_FORMAT;
-        void UvWork() override;
-    };
-
-    struct Int : public Base {
-        int32_t value = 0;
-        void UvWork() override;
-    };
-
-    struct IntVec : public Base {
-        std::vector<int32_t> valueVec;
-        void UvWork() override;
-    };
-
-    struct IntArray : public Base {
-        std::vector<int32_t> valueVec;
-        void UvWork() override;
-    };
-
-    struct Double : public Base {
-        double value = 0.0;
-        void UvWork() override;
-    };
-
-    struct PropertyInt : public Base {
-        std::map<std::string, int32_t> valueMap;
-        void UvWork() override;
-    };
-
-    struct StateChange : public Base {
-        std::string state = "";
-        int32_t reason = 0;
-        void UvWork() override;
-    };
-
-    static void CompleteCallback(napi_env env, NapiCallback::Base *jsCb);
-};
 } // namespace Media
 } // namespace OHOS
 #endif // PLAYER_CALLBACK_NAPI_H_

@@ -207,9 +207,10 @@ private:
     static napi_value JsSetOnCallback(napi_env env, napi_callback_info info);
 
     static AVPlayerNapi* GetJsInstance(napi_env env, napi_callback_info info);
-    static AVPlayerNapi* GetJsInstanceWithParameter(napi_env env, napi_callback_info info, size_t &argc, napi_value *argv);
+    static AVPlayerNapi* GetJsInstanceWithParameter(napi_env env, napi_callback_info info,
+        size_t &argc, napi_value *argv);
     AVPlayerNapi();
-    virtual ~AVPlayerNapi();
+    ~AVPlayerNapi();
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void ClearCallbackReference();
     void StartListenCurrentResource();
@@ -218,7 +219,9 @@ private:
     void SetSource(std::string url);
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
-    void ReleasePlayer();
+    void PrepareTask();
+    void ResetTask();
+    void ReleaseTask();
     static void ReleaseCallback(napi_env env, napi_status status, void *data);
     std::string GetCurrentState();
     bool IsControllable();
@@ -238,7 +241,8 @@ private:
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
-    bool isReleased_ = false;
+    std::atomic<bool> isReleased_ = false;
+    std::atomic<bool> releasing_ = false;
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;
     std::string surface_ = "";
@@ -251,6 +255,7 @@ private:
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
     PlayerStates state_ = PLAYER_IDLE;
     std::condition_variable preparingCond_;
+    std::condition_variable resettingCond_;
     int32_t width_ = 0;
     int32_t height_ = 0;
     int32_t position_ = -1;
