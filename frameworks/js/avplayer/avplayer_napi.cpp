@@ -368,7 +368,6 @@ void AVPlayerNapi::ReleaseTask()
     auto task = std::make_shared<TaskHandler<void>>([this]() {
         MEDIA_LOGD("Release Task, CancelNotExecutedTask");
         if (!isReleased_.load()) {
-            PauseListenCurrentResource();
             ResetUserParameters();
             if (playerCb_ != nullptr) {
                 std::shared_ptr<AVPlayerCallback> cb = std::static_pointer_cast<AVPlayerCallback>(playerCb_);
@@ -496,7 +495,8 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     }
 
     if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not support seek");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport seek operation");
         return result;
     }
 
@@ -535,7 +535,8 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     }
 
     if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not support set speed");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport speed operation");
         return result;
     }
 
@@ -574,7 +575,8 @@ napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
     }
 
     if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not support set volume");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport volume operation");
         return result;
     }
 
@@ -613,7 +615,8 @@ napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
     }
 
     if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not support select bitrate");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport select bitrate operation");
         return result;
     }
 
@@ -874,12 +877,14 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
 
     napi_status status = napi_get_value_bool(env, args[0], &jsPlayer->loop_);
     if (status != napi_ok) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input loop");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the input loop");
         return result;
     }
 
     if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not support set Loop");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport loop operation");
         return result;
     }
 
@@ -935,7 +940,8 @@ napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info in
     jsPlayer->videoScaleType_ = videoScaleType;
 
     if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not support set video scale type");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport video scale operation");
         return result;
     }
 
@@ -997,7 +1003,7 @@ napi_value AVPlayerNapi::JsSetAudioInterruptMode(napi_env env, napi_callback_inf
 
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not support set audio interrupt mode");
+            "current state is not prepared/playing/paused/completed, unsupport audio interrupt operation");
         return result;
     }
 
@@ -1045,7 +1051,8 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
 
     napi_value value = nullptr;
     (void)napi_create_int32(env, currentTime, &value);
-    MEDIA_LOGD("JsGetCurrenTime Out, Current time: %{public}d", currentTime);
+    std::string curState = jsPlayer->GetCurrentState();
+    MEDIA_LOGD("JsGetCurrenTime Out, state %{public}s, time: %{public}d", curState.c_str(), currentTime);
     return value;
 }
 
@@ -1065,7 +1072,8 @@ napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
 
     napi_value value = nullptr;
     (void)napi_create_int32(env, duration, &value);
-    MEDIA_LOGD("JsGetDuration Out, Duration: %{public}d", duration);
+    std::string curState = jsPlayer->GetCurrentState();
+    MEDIA_LOGD("JsGetDuration Out, state %{public}s, duration %{public}d", curState.c_str(), duration);
     return value;
 }
 
@@ -1183,7 +1191,7 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
                 (void)jsPlayer->player_->GetVideoTrackInfo(trackInfo);
                 (void)jsPlayer->player_->GetAudioTrackInfo(trackInfo);
             } else {
-                MEDIA_LOGW("current state is not support get track description");
+                MEDIA_LOGW("current state unsupport get track description");
             }
             promiseCtx->JsResult = std::make_unique<MediaJsResultArray>(trackInfo);
         },
