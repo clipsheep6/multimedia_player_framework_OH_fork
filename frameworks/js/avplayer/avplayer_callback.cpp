@@ -276,14 +276,22 @@ AVPlayerCallback::~AVPlayerCallback()
 
 void AVPlayerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
-    MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
-    std::string msg = "avplayer error:";
-    AVPlayerCallback::OnErrorCb(err, msg);
+    (void)errorType;
+    (void)errorCode;
 }
 
 void AVPlayerCallback::OnError(int32_t errorCode, std::string errorMsg)
 {
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
+    if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
+        errorCodeApi9 == MSERR_EXT_API9_NO_MEMORY ||
+        errorCodeApi9 == MSERR_EXT_API9_TIMEOUT ||
+        errorCodeApi9 == MSERR_EXT_API9_SERVICE_DIED ||
+        errorCodeApi9 == MSERR_EXT_API9_UNSUPPORT_FORMAT) {
+        Format infoBody;
+        AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
+    }
+
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
 }
 
@@ -364,30 +372,33 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state)
         listener_->NotifyState(state);
     }
 
-    static std::map<PlayerStates, std::string> stateMap = {
-        { PLAYER_IDLE, AVPlayerState::STATE_IDLE },
-        { PLAYER_INITIALIZED, AVPlayerState::STATE_INITIALIZED },
-        { PLAYER_PREPARED, AVPlayerState::STATE_PREPARED },
-        { PLAYER_STARTED, AVPlayerState::STATE_PLAYING },
-        { PLAYER_PAUSED, AVPlayerState::STATE_PAUSED },
-        { PLAYER_STOPPED, AVPlayerState::STATE_STOPPED },
-        { PLAYER_PLAYBACK_COMPLETE, AVPlayerState::STATE_COMPLETED },
-        { PLAYER_STATE_ERROR, AVPlayerState::STATE_ERROR },
-    };
+    if (state_ != state) {
+        state_ = state;
+        static std::map<PlayerStates, std::string> stateMap = {
+            { PLAYER_IDLE, AVPlayerState::STATE_IDLE },
+            { PLAYER_INITIALIZED, AVPlayerState::STATE_INITIALIZED },
+            { PLAYER_PREPARED, AVPlayerState::STATE_PREPARED },
+            { PLAYER_STARTED, AVPlayerState::STATE_PLAYING },
+            { PLAYER_PAUSED, AVPlayerState::STATE_PAUSED },
+            { PLAYER_STOPPED, AVPlayerState::STATE_STOPPED },
+            { PLAYER_PLAYBACK_COMPLETE, AVPlayerState::STATE_COMPLETED },
+            { PLAYER_STATE_ERROR, AVPlayerState::STATE_ERROR },
+        };
 
-    if (stateMap.find(state) != stateMap.end()) {
-        if (refMap_.find(AVPlayerEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
-            MEDIA_LOGW("can not find state change callback!");
-            return;
+        if (stateMap.find(state) != stateMap.end()) {
+            if (refMap_.find(AVPlayerEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
+                MEDIA_LOGW("can not find state change callback!");
+                return;
+            }
+            NapiCallback::StateChange *cb = new(std::nothrow) NapiCallback::StateChange();
+            CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new StateChange");
+
+            cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
+            cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
+            cb->state = stateMap.at(state);
+            cb->reason = StateChangeReason::USER;
+            NapiCallback::CompleteCallback(env_, cb);
         }
-        NapiCallback::StateChange *cb = new(std::nothrow) NapiCallback::StateChange();
-        CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new StateChange");
-
-        cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
-        cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
-        cb->state = stateMap.at(state);
-        cb->reason = StateChangeReason::USER;
-        NapiCallback::CompleteCallback(env_, cb);
     }
 }
 

@@ -21,7 +21,7 @@ import audio from "./@ohos.multimedia.audio";
  * @since 6
  * @import import media from '@ohos.multimedia.media'
  */
-declare namespace media {
+declare namespace media  {
   /**
    * Creates an AudioPlayer instance.
    * @since 6
@@ -117,6 +117,84 @@ declare namespace media {
      */
     BACKGROUND = 2,
   }
+
+ /**
+   * Enumerates ErrorCode types, return in BusinessError::code
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   * @import import media from '@ohos.multimedia.media'
+   */
+ enum AVErrorCode {
+  /**
+   * operation success.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_OK = 0,
+
+  /**
+   * permission denied.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_NO_PERMISSION = 201,
+
+  /**
+   * invalid parameter.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_INVALID_PARAMETER = 401,
+
+  /**
+   * the api is not supported in the current version
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_UNSUPPORT_CAPABILITY = 801,
+
+  /**
+   * the system memory is insufficient or the number of services reaches the upper limit
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_NO_MEMORY = 5400101,
+
+  /**
+   * current status does not allow or do not have permission to perform this operation
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_OPERATE_NOT_PERMIT = 5400102,
+
+  /**
+   * data flow exception information
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_IO = 5400103,
+
+  /**
+   * system or network response timeout.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_TIMEOUT = 5400104,
+
+  /**
+   * service process died.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_SERVICE_DIED = 5400105,
+
+  /**
+   * unsupported media format
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_UNSUPPORT_FORMAT = 5400106,
+ }
 
   /**
    * Describes media playback states.

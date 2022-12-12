@@ -63,6 +63,7 @@ private:
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
     AVPlayerNotify *listener_ = nullptr;
     std::atomic<bool> isloaded_ = false;
+    PlayerStates state_ = PLAYER_IDLE;
 };
 } // namespace Media
 } // namespace OHOS

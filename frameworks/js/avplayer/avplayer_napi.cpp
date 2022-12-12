@@ -134,7 +134,6 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
         AVPlayerNapi *jsPlayer = reinterpret_cast<AVPlayerNapi *>(nativeObject);
         jsPlayer->ReleaseTask();
         jsPlayer->ClearCallbackReference();
-        (void)jsPlayer->taskQue_->Stop();
         if (jsPlayer->wrapper_ != nullptr) {
             napi_delete_reference(env, jsPlayer->wrapper_);
         }
@@ -367,27 +366,28 @@ void AVPlayerNapi::ReleaseTask()
 {
     auto task = std::make_shared<TaskHandler<void>>([this]() {
         MEDIA_LOGI("Release Task, CancelNotExecutedTask");
-        if (!isReleased_.load()) {
-            ResetUserParameters();
-            if (playerCb_ != nullptr) {
-                std::shared_ptr<AVPlayerCallback> cb = std::static_pointer_cast<AVPlayerCallback>(playerCb_);
-                cb->Release();
-                playerCb_ = nullptr;
-            }
+        ResetUserParameters();
+        if (playerCb_ != nullptr) {
+            std::shared_ptr<AVPlayerCallback> cb = std::static_pointer_cast<AVPlayerCallback>(playerCb_);
+            cb->Release();
+            playerCb_ = nullptr;
+        }
 
-            if (player_ != nullptr) {
-                (void)player_->Release();
-                player_ = nullptr;
-            }
-            isReleased_.store(true);
+        if (player_ != nullptr) {
+            (void)player_->Release();
+            player_ = nullptr;
         }
     });
 
     std::unique_lock<std::mutex> lock(mutex_);
-    preparingCond_.notify_all(); // stop wait prepare
-    resettingCond_.notify_all(); // stop wait reset
-    (void)taskQue_->EnqueueTask(task, true); // true mean CancelNotExecutedTask
-    (void)task->GetResult();
+    if (!isReleased_.load()) {
+        preparingCond_.notify_all(); // stop wait prepare
+        resettingCond_.notify_all(); // stop wait reset
+        (void)taskQue_->EnqueueTask(task, true); // true mean CancelNotExecutedTask
+        (void)task->GetResult();
+        (void)taskQue_->Stop();
+        isReleased_.store(true);
+    }
 }
 
 napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
@@ -1269,12 +1269,14 @@ void AVPlayerNapi::NotifyPosition(int32_t position)
 void AVPlayerNapi::NotifyState(PlayerStates state)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    state_ = state;
-    if (state_ == PLAYER_STATE_ERROR ||
-        state_ == PLAYER_PREPARED) {
-        preparingCond_.notify_all();
-    } else if (state_ == PLAYER_IDLE) {
-        resettingCond_.notify_all();
+    if (state_ != state) {
+        state_ = state;
+        if (state_ == PLAYER_STATE_ERROR ||
+            state_ == PLAYER_PREPARED) {
+            preparingCond_.notify_all();
+        } else if (state_ == PLAYER_IDLE) {
+            resettingCond_.notify_all();
+        }
     }
 }
 
