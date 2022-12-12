@@ -247,13 +247,13 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
 
     if (ret != MSERR_OK) {
         MEDIA_LOGE("input url error!");
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetSource");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetSource");
         return undefinedResult;
     }
 
     ret = player->nativePlayer_->PrepareAsync();
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to PrepareAsync");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to PrepareAsync");
         return undefinedResult;
     }
 
@@ -320,13 +320,13 @@ napi_value AudioPlayerNapi::SetFdSrc(napi_env env, napi_callback_info info)
 
     int32_t ret = player->nativePlayer_->SetSource(player->rawFd_.fd, player->rawFd_.offset, player->rawFd_.length);
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetSource rawFd");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetSource rawFd");
         return undefinedResult;
     }
 
     ret = player->nativePlayer_->PrepareAsync();
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to PrepareAsync");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to PrepareAsync");
         return undefinedResult;
     }
 
@@ -388,7 +388,7 @@ napi_value AudioPlayerNapi::Play(napi_env env, napi_callback_info info)
     }
     int32_t ret = player->nativePlayer_->Play();
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to Play");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to Play");
         return undefinedResult;
     }
     MEDIA_LOGD("Play success");
@@ -418,7 +418,7 @@ napi_value AudioPlayerNapi::Pause(napi_env env, napi_callback_info info)
     }
     int32_t ret = player->nativePlayer_->Pause();
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to Pause");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to Pause");
         return undefinedResult;
     }
     MEDIA_LOGD("Pause success");
@@ -448,7 +448,7 @@ napi_value AudioPlayerNapi::Stop(napi_env env, napi_callback_info info)
     }
     int32_t ret = player->nativePlayer_->Stop();
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to Stop");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to Stop");
         return undefinedResult;
     }
     MEDIA_LOGD("Stop success");
@@ -480,7 +480,7 @@ napi_value AudioPlayerNapi::Reset(napi_env env, napi_callback_info info)
 
     int32_t ret = player->nativePlayer_->Reset();
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to Reset");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to Reset");
         return undefinedResult;
     }
     MEDIA_LOGD("Reset success");
@@ -556,7 +556,7 @@ napi_value AudioPlayerNapi::Seek(napi_env env, napi_callback_info info)
 
     int32_t ret = player->nativePlayer_->Seek(position, SEEK_PREVIOUS_SYNC);
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to Seek");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to Seek");
         return undefinedResult;
     }
 
@@ -603,7 +603,7 @@ napi_value AudioPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
 
     int32_t ret = player->nativePlayer_->SetVolume(static_cast<float>(volumeLevel), static_cast<float>(volumeLevel));
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetVolume");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetVolume");
         return undefinedResult;
     }
     MEDIA_LOGD("SetVolume success");
@@ -684,7 +684,7 @@ napi_value AudioPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
 
     int32_t ret = player->nativePlayer_->SetLooping(loopFlag);
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetLooping");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetLooping");
         return undefinedResult;
     }
 
@@ -874,7 +874,8 @@ void AudioPlayerNapi::AsyncGetTrackDescription(napi_env env, void *data)
     audioInfo.clear();
     int32_t ret = player->GetAudioTrackInfo(audioInfo);
     if (ret != MSERR_OK) {
-        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to GetAudioTrackInfo");
+        asyncContext->SignError(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)),
+            "failed to GetAudioTrackInfo");
         return;
     }
 
@@ -963,7 +964,7 @@ napi_value AudioPlayerNapi::SetAudioInterruptMode(napi_env env, napi_callback_in
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, interruptMode);
     int32_t ret = player->nativePlayer_->SetParameter(format);
     if (ret != MSERR_OK) {
-        player->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetParameter");
+        player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetParameter");
         return undefinedResult;
     }
 
