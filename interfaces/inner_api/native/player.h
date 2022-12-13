@@ -147,6 +147,8 @@ enum PlayerStates : int32_t {
     PLAYER_STOPPED = 7,
     /* Play to the end states */
     PLAYER_PLAYBACK_COMPLETE = 8,
+    /* released states */
+    PLAYER_RELEASED = 9,
 };
 
 enum PlayerSeekMode : int32_t {

@@ -219,10 +219,9 @@ private:
     void SetSource(std::string url);
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
-    void PrepareTask();
-    void ResetTask();
-    void ReleaseTask();
-    static void ReleaseCallback(napi_env env, napi_status status, void *data);
+    std::shared_ptr<TaskHandler<void>> PrepareTask();
+    std::shared_ptr<TaskHandler<void>> ResetTask();
+    std::shared_ptr<TaskHandler<void>> ReleaseTask();
     std::string GetCurrentState();
     bool IsControllable();
 
@@ -234,7 +233,8 @@ private:
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
         ~AVPlayerContext() = default;
-        class AVPlayerNapi *napi = nullptr;
+        std::shared_ptr<TaskHandler<void>> asyncTask = nullptr;
+        AVPlayerNapi *napi = nullptr;
     };
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;

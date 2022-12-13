@@ -382,6 +382,7 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state)
             { PLAYER_PAUSED, AVPlayerState::STATE_PAUSED },
             { PLAYER_STOPPED, AVPlayerState::STATE_STOPPED },
             { PLAYER_PLAYBACK_COMPLETE, AVPlayerState::STATE_COMPLETED },
+            { PLAYER_RELEASED, AVPlayerState::STATE_RELEASED },
             { PLAYER_STATE_ERROR, AVPlayerState::STATE_ERROR },
         };
 
@@ -707,6 +708,8 @@ void AVPlayerCallback::Pause()
 void AVPlayerCallback::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+
+    AVPlayerCallback::OnStateChangeCb(PlayerStates::PLAYER_RELEASED);
     refMap_.clear();
     env_ = nullptr;
     listener_ = nullptr;
