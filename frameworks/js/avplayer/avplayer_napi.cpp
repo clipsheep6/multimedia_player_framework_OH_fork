@@ -135,9 +135,9 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
         jsPlayer->ClearCallbackReference();
         auto task = jsPlayer->ReleaseTask();
         if (task != nullptr) {
-            MEDIA_LOGI("Wait Release Task Start");
+            MEDIA_LOGI("Destructor Wait Release Task Start");
             task->GetResult(); // sync release
-            MEDIA_LOGI("Wait Release Task End");
+            MEDIA_LOGI("Destructor Wait Release Task End");
         }
         jsPlayer->taskQue_->Stop();
 
@@ -459,26 +459,28 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "seek args[0] is not number");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "seek time is not number");
         return result;
     }
 
     int32_t time = -1;
     napi_status status = napi_get_value_int32(env, args[0], &time);
     if (status != napi_ok || time < 0) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input time");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the input seek time");
         return result;
     }
 
     int32_t mode = SEEK_PREVIOUS_SYNC;
     if (args[1] != nullptr) {
         if (napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
-            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "seek args[1] is not number");
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "seek mode is not number");
             return result;
         }
         status = napi_get_value_int32(env, args[1], &mode);
         if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CLOSEST) {
-            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input mode");
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+                "invalid parameters, please check the input seek mode");
             return result;
         }
     }
@@ -512,14 +514,15 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "setSpeed args[0] is not number");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "speed mode is not number");
         return result;
     }
 
     int32_t mode = SPEED_FORWARD_1_00_X;
     napi_status status = napi_get_value_int32(env, args[0], &mode);
     if (status != napi_ok || mode < SPEED_FORWARD_0_75_X || mode > SPEED_FORWARD_2_00_X) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input mode");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the speed mode");
         return result;
     }
 
@@ -530,7 +533,7 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     }
 
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, mode]() {
-        MEDIA_LOGI("Seek Task");
+        MEDIA_LOGI("Speed Task");
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->player_->SetPlaybackSpeed(static_cast<PlaybackRateMode>(mode));
         }
@@ -552,14 +555,14 @@ napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "setVolume args[0] is not number");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "setVolume level is not number");
         return result;
     }
 
     double volumeLevel = 1.0f;
     napi_status status = napi_get_value_double(env, args[0], &volumeLevel);
     if (status != napi_ok || volumeLevel < 0.0f || volumeLevel > 1.0f) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, check it");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, check volume level");
         return result;
     }
 
@@ -592,7 +595,7 @@ napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "selectBitrate args[0] is not number");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "selectBitrate is not number");
         return result;
     }
 
@@ -629,17 +632,19 @@ void AVPlayerNapi::SetSource(std::string url)
             MEDIA_LOGI("SetNetworkSource Task");
             if (player_ != nullptr) {
                 if (player_->SetSource(url) != MSERR_OK) {
-                    OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player SetSourceUrl failed");
+                    OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
                 }
             }
         });
         (void)taskQue_->EnqueueTask(task);
+        task->GetResult();
     } else if (isFd) {
         const std::string fdHead = "fd://";
         std::string inputFd = url.substr(fdHead.size());
         int32_t fd = -1;
         if (!StrToInt(inputFd, fd) || fd < 0) {
-            OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input parameters");
+            OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+                "invalid parameters, The input parameter is not a fd://+numeric string");
             return;
         }
 
@@ -647,14 +652,15 @@ void AVPlayerNapi::SetSource(std::string url)
             MEDIA_LOGI("SetFdSource Task");
             if (player_ != nullptr) {
                 if (player_->SetSource(fd, 0, -1) != MSERR_OK) {
-                    OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player SetSourceFd failed");
+                    OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
                 }
             }
         });
         (void)taskQue_->EnqueueTask(task);
+        task->GetResult();
     } else {
-        MEDIA_LOGE("input url error!");
-        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input parameters");
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, The input parameter is not fd:// or network address");
     }
 }
 
@@ -670,14 +676,14 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
         return result;
     }
 
     jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetUrl args[0] is not string");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "url is not string");
         return result;
     }
 
@@ -717,20 +723,21 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set fd");
         return result;
     }
 
     jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAVFileDescriptor args[0] is not napi_object");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAVFileDescriptor is not napi_object");
         return result;
     }
 
     if (!CommonNapi::GetFdArgument(env, args[0], jsPlayer->fileDescriptor_)) {
         MEDIA_LOGE("get fileDescriptor argument failed!");
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input parameters");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the input parameters(fileDescriptor)");
         return result;
     }
 
@@ -739,11 +746,12 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
         if (jsPlayer->player_ != nullptr) {
             auto playerFd = jsPlayer->fileDescriptor_;
             if (jsPlayer->player_->SetSource(playerFd.fd, playerFd.offset, playerFd.length) != MSERR_OK) {
-                jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player SetSource FileDescriptor failed");
+                jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource FileDescriptor failed");
             }
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
+    task->GetResult();
 
     MEDIA_LOGI("JsSetAVFileDescriptor Out");
     return result;
@@ -774,7 +782,8 @@ void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
     MEDIA_LOGI("get surface, surfaceStr = %{public}s", surfaceStr.c_str());
     uint64_t surfaceId = 0;
     if (surfaceStr.empty() || surfaceStr[0] < '0' || surfaceStr[0] > '9') {
-        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "input surface id is invalid");
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "Please obtain the surface from XComponentController.getXComponentSurfaceId");
         return;
     }
     surfaceId = std::stoull(surfaceStr);
@@ -782,16 +791,14 @@ void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
 
     auto surface = SurfaceUtils::GetInstance()->GetSurface(surfaceId);
     if (surface == nullptr) {
-        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SurfaceUtils::GetSurface is nullptr");
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SurfaceUtils cannot convert ID to Surface");
         return;
     }
 
     auto task = std::make_shared<TaskHandler<void>>([this, surface]() {
         MEDIA_LOGI("SetSurface Task");
         if (player_ != nullptr) {
-            if (player_->SetVideoSurface(surface) != MSERR_OK) {
-                return OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player SetVideoSurface failed");
-            }
+            (void)player_->SetVideoSurface(surface);
         }
     });
     (void)taskQue_->EnqueueTask(task);
@@ -816,12 +823,13 @@ napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetUrl args[0] is not string");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "the attribute(SurfaceID) input is not string");
         return result;
     }
 
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_INITIALIZED) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not support set surface");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "the attribute(SurfaceID) can only be set in the initialized state");
         return result;
     }
 
@@ -860,7 +868,7 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetUrl args[0] is not napi_boolean");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetLoop is not napi_boolean");
         return result;
     }
 
@@ -916,7 +924,7 @@ napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info in
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetVideoScaleType args[0] is not napi_number");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetVideoScaleType is not napi_number");
         return result;
     }
 
@@ -975,7 +983,7 @@ napi_value AVPlayerNapi::JsSetAudioInterruptMode(napi_env env, napi_callback_inf
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetVideoScaleType args[0] is not napi_number");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAudioInterruptMode is not napi_number");
         return result;
     }
 
