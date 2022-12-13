@@ -37,6 +37,17 @@ const std::string STATE_RELEASED = "released";
 const std::string STATE_ERROR = "error";
 }
 
+namespace AVRecordergOpt {
+const std::string PREPARE = "Prepare";
+const std::string GETINPUTSURFACE = "GetInputSurface";
+const std::string START = "Start";
+const std::string PAUSE = "Pause";
+const std::string RESUME = "Resume";
+const std::string STOP = "Stop";
+const std::string RESET = "Reset";
+const std::string RELEASE = "Release";
+}
+
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_CHANNELS = 2;
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_SAMPLE_RATE = 48000;
@@ -59,6 +70,7 @@ struct AVRecorderAsyncContext;
 class AVRecorderNapi {
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
+    using AvRecorderPromiseFunc = void(AVRecorderNapi::*)(AVRecorderAsyncContext *ctx);
 
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
@@ -114,14 +126,19 @@ private:
      */
     static napi_value JsGetState(napi_env env, napi_callback_info info);
 
+    static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, size_t &argCount, const std::string &opt);
     static AVRecorderNapi* GetJsInstance(napi_env env, napi_callback_info info);
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
-    static std::unique_ptr<AVRecorderAsyncContext> GetContextWithPromise(napi_env env, napi_callback_info info,
-        size_t &argCount, napi_value *args, napi_value &result);
 
     AVRecorderNapi();
     ~AVRecorderNapi();
+
+    int32_t CheckStateMachine(const std::string &opt);
+    void Prepare(AVRecorderAsyncContext *asyncCtx);
+    void GetInputSurface(AVRecorderAsyncContext *asyncCtx);
+    void Reset(AVRecorderAsyncContext *asyncCtx);
+    void Release(AVRecorderAsyncContext *asyncCtx);
 
     void ErrorCallback(int32_t errCode, const std::string &operate);
     void StateCallback(const std::string &state);
@@ -168,6 +185,7 @@ private:
     std::shared_ptr<Recorder> recorder_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
+    static std::map<std::string, AvRecorderPromiseFunc> recFuncs_;
     sptr<Surface> surface_ = nullptr;
     int32_t videoSourceID = -1;
     int32_t audioSourceID = -1;
@@ -183,6 +201,8 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     void AVRecorderSignError(int32_t errCode, const std::string &operate, const std::string &param);
 
     AVRecorderNapi *napi = nullptr;
+    std::string opt_ = "";
+    std::shared_ptr<TaskHandler<void>> task_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

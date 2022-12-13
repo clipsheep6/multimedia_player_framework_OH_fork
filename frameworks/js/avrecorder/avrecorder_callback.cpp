@@ -45,6 +45,7 @@ void AVRecorderCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_.clear();
+    MEDIA_LOGD("ClearCallback");
 }
 
 void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &msg)
