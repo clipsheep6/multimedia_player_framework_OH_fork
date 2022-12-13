@@ -752,9 +752,8 @@ void ACodecMock::OutputFuncEnc()
                 cout << "dump data fail" << endl;
             } else {
                 fwrite(buffer->GetAddr(), 1, size, outFile);
+                fclose(outFile);
             }
-            fclose(outFile);
-
             if (audioEnc_->FreeOutputData(index) != MSERR_OK) {
                 cout << "Fatal: FreeOutputData fail" << endl;
                 acodecSignal_->errorNum_ += 1;

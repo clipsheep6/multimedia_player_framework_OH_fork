@@ -250,8 +250,8 @@ void VEncMock::OutLoopFunc()
                 cout << "dump data fail" << endl;
             } else {
                 fwrite(buffer->GetAddr(), 1, size, outFile);
+                fclose(outFile);
             }
-            fclose(outFile);
         }
         if (index != EOS_INDEX && videoEnc_->FreeOutputData(index) != MSERR_OK) {
             cout << "Fatal: FreeOutputData fail, exit" << endl;
