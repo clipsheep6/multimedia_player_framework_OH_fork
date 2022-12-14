@@ -190,7 +190,7 @@ napi_value AVRecorderNapi::JsCreateAVRecorder(napi_env env, napi_callback_info i
 
 napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsPrepare GetConfig In");
+    MEDIA_LOGD("JsPrepare GetConfig Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -251,7 +251,7 @@ napi_value AVRecorderNapi::JsRelease(napi_env env, napi_callback_info info)
 
 napi_value AVRecorderNapi::JsSetEventCallback(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsSetEventCallback In");
+    MEDIA_LOGD("JsSetEventCallback Start");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -269,7 +269,6 @@ napi_value AVRecorderNapi::JsSetEventCallback(napi_env env, napi_callback_info i
     }
 
     std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
-    MEDIA_LOGD("callbackName: %{public}s", callbackName.c_str());
 
     napi_ref ref = nullptr;
     napi_status status = napi_create_reference(env, args[1], 1, &ref);
@@ -319,7 +318,7 @@ AVRecorderNapi* AVRecorderNapi::GetJsInstanceAndArgs(napi_env env, napi_callback
 napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info info,
     size_t &argCount, const std::string &opt)
 {
-    MEDIA_LOGD("Js %{public}s In", opt.c_str());
+    MEDIA_LOGD("Js %{public}s Start", opt.c_str());
 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -338,7 +337,7 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
 
     asyncCtx->opt_ = opt;
     asyncCtx->task_ = std::make_shared<TaskHandler<void>>([ctx = asyncCtx.get(), option = opt]() {
-        MEDIA_LOGD("%{public}s In", option.c_str());
+        MEDIA_LOGD("%{public}s Start", option.c_str());
 
         CHECK_AND_RETURN_RET(ctx != nullptr && ctx->napi != nullptr && ctx->napi->recorder_ != nullptr,
             ctx->AVRecorderSignError(MSERR_INVALID_OPERATION, option, ""));
@@ -377,7 +376,7 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
 
 napi_value AVRecorderNapi::ExecuteByCallback(napi_env env, napi_callback_info info, const std::string &opt)
 {
-    MEDIA_LOGD("Js %{public}s In", opt.c_str());
+    MEDIA_LOGD("Js %{public}s Start", opt.c_str());
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -388,9 +387,9 @@ napi_value AVRecorderNapi::ExecuteByCallback(napi_env env, napi_callback_info in
     CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, result, "taskQue is nullptr!");
 
     auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi, option = opt]() {
-        MEDIA_LOGD("%{public}s In", option.c_str());
+        MEDIA_LOGD("%{public}s Start", option.c_str());
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
-            napi->ErrorCallback(MSERR_INVALID_OPERATION, "Start"));
+            napi->ErrorCallback(MSERR_INVALID_OPERATION, option));
 
         auto itFunc = callbackFuncs_.find(option);
         if (itFunc != callbackFuncs_.end()) {
@@ -784,7 +783,7 @@ void AVRecorderNapi::ErrorCallback(int32_t errCode, const std::string &operate, 
 
 void AVRecorderNapi::StateCallback(const std::string &state)
 {
-    MEDIA_LOGD("State switch to %{public}s", state.c_str());
+    MEDIA_LOGD("Change state to %{public}s", state.c_str());
     CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "recorderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
     napiCb->SendStateCallback(state, StateChangeReason::USER);

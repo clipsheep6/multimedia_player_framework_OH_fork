@@ -27,7 +27,6 @@ namespace Media {
 AVRecorderCallback::AVRecorderCallback(napi_env env) : env_(env)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
-    
 }
 
 AVRecorderCallback::~AVRecorderCallback()
@@ -39,14 +38,14 @@ void AVRecorderCallback::SaveCallbackReference(const std::string &name, std::wea
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
-    MEDIA_LOGD("callbackName: %{public}s", name.c_str());
+    MEDIA_LOGD("Set callback type: %{public}s", name.c_str());
 }
 
 void AVRecorderCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_.clear();
-    MEDIA_LOGD("ClearCallback");
+    MEDIA_LOGD("ClearCallback!");
 }
 
 void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &msg)
@@ -123,8 +122,7 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
         std::string request = event->callbackName;
-        MEDIA_LOGD("OnJsStateCallBack %{public}s, state %{public}s, uv_queue_work start",
-                   request.c_str(), event->state.c_str());
+        MEDIA_LOGD("uv_queue_work start, state changes to %{public}s", event->state.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
@@ -182,7 +180,8 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
         CHECK_AND_RETURN_LOG(work->data != nullptr, "workdata is nullptr");
         AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
         std::string request = event->callbackName;
-        MEDIA_LOGD("JsCallBack %{public}s, uv_queue_work start", request.c_str());
+        MEDIA_LOGD("uv_queue_work start, errorcode:%{public}d , errormessage:%{public}s:",
+            event->errorCode, event->errorMsg.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
