@@ -71,6 +71,7 @@ class AVRecorderNapi {
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
     using AvRecorderPromiseFunc = void(AVRecorderNapi::*)(AVRecorderAsyncContext *ctx);
+    using AvRecorderCallbackFunc = void(AVRecorderNapi::*)();
 
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
@@ -126,26 +127,31 @@ private:
      */
     static napi_value JsGetState(napi_env env, napi_callback_info info);
 
-    static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, size_t &argCount, const std::string &opt);
-    static AVRecorderNapi* GetJsInstance(napi_env env, napi_callback_info info);
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
+    static napi_value ExecuteByPromise(napi_env env, napi_callback_info info,
+        size_t &argCount, const std::string &opt);
+    static napi_value ExecuteByCallback(napi_env env, napi_callback_info info, const std::string &opt);
 
     AVRecorderNapi();
     ~AVRecorderNapi();
 
-    int32_t CheckStateMachine(const std::string &opt);
     void Prepare(AVRecorderAsyncContext *asyncCtx);
     void GetInputSurface(AVRecorderAsyncContext *asyncCtx);
     void Reset(AVRecorderAsyncContext *asyncCtx);
     void Release(AVRecorderAsyncContext *asyncCtx);
+    void Start();
+    void Pause();
+    void Resume();
+    void Stop();
 
-    void ErrorCallback(int32_t errCode, const std::string &operate);
+    void ErrorCallback(int32_t errCode, const std::string &operate, const std::string add = "");
     void StateCallback(const std::string &state);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallback();
     void RemoveSurface();
 
+    int32_t CheckStateMachine(const std::string &opt);
     int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
     int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
     int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
@@ -178,20 +184,22 @@ private:
         Location location; // Optional
     };
 
-    AVRecorderConfig config;
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Recorder> recorder_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
-    static std::map<std::string, AvRecorderPromiseFunc> recFuncs_;
+    std::unique_ptr<TaskQueue> taskQue_;
+    static std::map<std::string, AvRecorderPromiseFunc> promiseFuncs_;
+    static std::map<std::string, AvRecorderCallbackFunc> callbackFuncs_;
+    AVRecorderConfig config;
     sptr<Surface> surface_ = nullptr;
     int32_t videoSourceID = -1;
     int32_t audioSourceID = -1;
-    std::unique_ptr<TaskQueue> taskQue_;
     bool withVideo_ = false;
     bool withAudio_ = false;
+    bool getVideoInputSurface_ = false;
 };
 
 struct AVRecorderAsyncContext : public MediaAsyncContext {

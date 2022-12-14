@@ -33,11 +33,18 @@ namespace OHOS {
 namespace Media {
 thread_local napi_ref AVRecorderNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "AVRecorder";
-std::map<std::string, AVRecorderNapi::AvRecorderPromiseFunc> AVRecorderNapi::recFuncs_ = {
+std::map<std::string, AVRecorderNapi::AvRecorderPromiseFunc> AVRecorderNapi::promiseFuncs_ = {
     {AVRecordergOpt::PREPARE, &AVRecorderNapi::Prepare},
     {AVRecordergOpt::GETINPUTSURFACE, &AVRecorderNapi::GetInputSurface},
     {AVRecordergOpt::RESET, &AVRecorderNapi::Reset},
     {AVRecordergOpt::RELEASE, &AVRecorderNapi::Release},
+};
+
+std::map<std::string, AVRecorderNapi::AvRecorderCallbackFunc> AVRecorderNapi::callbackFuncs_ = {
+    {AVRecordergOpt::START, &AVRecorderNapi::Start},
+    {AVRecordergOpt::PAUSE, &AVRecorderNapi::Pause},
+    {AVRecordergOpt::RESUME, &AVRecorderNapi::Resume},
+    {AVRecordergOpt::STOP, &AVRecorderNapi::Stop},
 };
 
 AVRecorderNapi::AVRecorderNapi()
@@ -181,33 +188,13 @@ napi_value AVRecorderNapi::JsCreateAVRecorder(napi_env env, napi_callback_info i
     return result;
 }
 
-AVRecorderNapi* AVRecorderNapi::GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
-    size_t &argCount, napi_value *args)
-{
-    napi_value jsThis = nullptr;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
-
-    AVRecorderNapi *recorderNapi = nullptr;
-    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && recorderNapi != nullptr, nullptr, "failed to retrieve instance");
-
-    return recorderNapi;
-}
-
-AVRecorderNapi* AVRecorderNapi::GetJsInstance(napi_env env, napi_callback_info info)
-{
-    size_t argCount = 0;
-    return GetJsInstanceAndArgs(env, info, argCount, nullptr);
-}
-
 napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsPrepare In");
+    MEDIA_LOGD("JsPrepare GetConfig In");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    size_t argCount = 2;
+    size_t argCount = 2; // config + callbackRef
     napi_value args[2] = { nullptr };
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
@@ -226,139 +213,39 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
 
 napi_value AVRecorderNapi::JsGetInputSurface(napi_env env, napi_callback_info info)
 {
-    size_t argCount = 1;
+    size_t argCount = 1; // Only callbackRef parameter
     return ExecuteByPromise(env, info, argCount, AVRecordergOpt::GETINPUTSURFACE);
 }
 
 napi_value AVRecorderNapi::JsStart(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsStart In");
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    AVRecorderNapi *recorderNapi = AVRecorderNapi::GetJsInstance(env, info);
-    CHECK_AND_RETURN_RET_LOG(recorderNapi != nullptr, result, "failed to GetJsInstance");
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "recorder is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, result, "taskQue is nullptr!");
-
-    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi]() {
-        MEDIA_LOGD("Start In");
-        CHECK_AND_RETURN_RET(napi->CheckStateMachine(AVRecordergOpt::START) == MSERR_OK,
-            napi->ErrorCallback(MSERR_INVALID_OPERATION, "Start"));
-
-        int32_t ret = napi->recorder_->Start();
-        if (ret == MSERR_OK) {
-            napi->StateCallback(AVRecorderState::STATE_STARTED);
-            MEDIA_LOGD("Start success");
-        } else {
-            napi->ErrorCallback(ret, "Start");
-        }
-    });
-    (void)recorderNapi->taskQue_->EnqueueTask(task);
-
-    MEDIA_LOGD("JsStart End");
-    return result;
+    return ExecuteByCallback(env, info, AVRecordergOpt::START);
 }
 
 napi_value AVRecorderNapi::JsPause(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsPause In");
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    AVRecorderNapi *recorderNapi = AVRecorderNapi::GetJsInstance(env, info);
-    CHECK_AND_RETURN_RET_LOG(recorderNapi != nullptr, result, "failed to GetJsInstance");
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "recorder is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, result, "taskQue is nullptr!");
-
-    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi]() {
-        MEDIA_LOGD("Pause In");
-        CHECK_AND_RETURN_RET(napi->CheckStateMachine(AVRecordergOpt::PAUSE) == MSERR_OK,
-            napi->ErrorCallback(MSERR_INVALID_OPERATION, "Pause"));
-
-        int32_t ret = napi->recorder_->Pause();
-        if (ret == MSERR_OK) {
-            napi->StateCallback(AVRecorderState::STATE_PAUSED);
-            MEDIA_LOGD("Pause success");
-        } else {
-            napi->ErrorCallback(ret, "Pause");
-        }
-    });
-    (void)recorderNapi->taskQue_->EnqueueTask(task);
-
-    MEDIA_LOGD("JsPause End");
-    return result;
+    return ExecuteByCallback(env, info, AVRecordergOpt::PAUSE);
 }
 
 napi_value AVRecorderNapi::JsResume(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsResume In");
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    AVRecorderNapi *recorderNapi = AVRecorderNapi::GetJsInstance(env, info);
-    CHECK_AND_RETURN_RET_LOG(recorderNapi != nullptr, result, "failed to GetJsInstance");
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "recorder is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, result, "taskQue is nullptr!");
-
-    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi]() {
-        MEDIA_LOGD("Resume In");
-        CHECK_AND_RETURN_RET(napi->CheckStateMachine(AVRecordergOpt::RESUME) == MSERR_OK,
-            napi->ErrorCallback(MSERR_INVALID_OPERATION, "Resume"));
-
-        int32_t ret = napi->recorder_->Resume();
-        if (ret == MSERR_OK) {
-            napi->StateCallback(AVRecorderState::STATE_STARTED);
-            MEDIA_LOGD("Resume success");
-        } else {
-            napi->ErrorCallback(ret, "Resume");
-        }
-    });
-    (void)recorderNapi->taskQue_->EnqueueTask(task);
-
-    MEDIA_LOGD("JsResume End");
-    return result;
+    return ExecuteByCallback(env, info, AVRecordergOpt::RESUME);
 }
 
 napi_value AVRecorderNapi::JsStop(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsStop In");
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    AVRecorderNapi *recorderNapi = AVRecorderNapi::GetJsInstance(env, info);
-    CHECK_AND_RETURN_RET_LOG(recorderNapi != nullptr, result, "failed to GetJsInstance");
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "recorder is nullptr!");
-    CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, result, "taskQue is nullptr!");
-
-    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi]() {
-        MEDIA_LOGD("Stop In");
-        CHECK_AND_RETURN_RET(napi->CheckStateMachine(AVRecordergOpt::STOP) == MSERR_OK,
-            napi->ErrorCallback(MSERR_INVALID_OPERATION, "Stop"));
-
-        int32_t ret = napi->recorder_->Stop(false);
-        if (ret == MSERR_OK) {
-            napi->StateCallback(AVRecorderState::STATE_STOPPED);
-            MEDIA_LOGD("Stop success");
-        } else {
-            napi->ErrorCallback(ret, "Stop");
-        }
-    });
-    (void)recorderNapi->taskQue_->EnqueueTask(task);
-
-    MEDIA_LOGD("JsStop End");
-    return result;
+    return ExecuteByCallback(env, info, AVRecordergOpt::STOP);
 }
 
 napi_value AVRecorderNapi::JsReset(napi_env env, napi_callback_info info)
 {
-    size_t argCount = 1;
+    size_t argCount = 1; // Only callbackRef parameter
     return ExecuteByPromise(env, info, argCount, AVRecordergOpt::RESET);
 }
 
 napi_value AVRecorderNapi::JsRelease(napi_env env, napi_callback_info info)
 {
-    size_t argCount = 1;
+    size_t argCount = 1; // Only callbackRef parameter
     return ExecuteByPromise(env, info, argCount, AVRecordergOpt::RELEASE);
 }
 
@@ -400,7 +287,8 @@ napi_value AVRecorderNapi::JsGetState(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    AVRecorderNapi *recorderNapi = AVRecorderNapi::GetJsInstance(env, info);
+    size_t argCount = 0;
+    AVRecorderNapi *recorderNapi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, nullptr);
     CHECK_AND_RETURN_RET_LOG(recorderNapi != nullptr, result, "failed to GetJsInstance");
 
     auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderNapi->recorderCb_);
@@ -412,6 +300,206 @@ napi_value AVRecorderNapi::JsGetState(napi_env env, napi_callback_info info)
     napi_status status = napi_create_string_utf8(env, curState.c_str(), NAPI_AUTO_LENGTH, &jsResult);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_create_string_utf8 error");
     return jsResult;
+}
+
+AVRecorderNapi* AVRecorderNapi::GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
+    size_t &argCount, napi_value *args)
+{
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
+
+    AVRecorderNapi *recorderNapi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&recorderNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && recorderNapi != nullptr, nullptr, "failed to retrieve instance");
+
+    return recorderNapi;
+}
+
+napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info info,
+    size_t &argCount, const std::string &opt)
+{
+    MEDIA_LOGD("Js %{public}s In", opt.c_str());
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    napi_value args[2] = { nullptr };
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+
+    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCount - 1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    asyncCtx->opt_ = opt;
+    asyncCtx->task_ = std::make_shared<TaskHandler<void>>([ctx = asyncCtx.get(), option = opt]() {
+        MEDIA_LOGD("%{public}s In", option.c_str());
+
+        CHECK_AND_RETURN_RET(ctx != nullptr && ctx->napi != nullptr && ctx->napi->recorder_ != nullptr,
+            ctx->AVRecorderSignError(MSERR_INVALID_OPERATION, option, ""));
+        
+        CHECK_AND_RETURN_RET(ctx->napi->CheckStateMachine(option) == MSERR_OK,
+            ctx->AVRecorderSignError(MSERR_INVALID_OPERATION, option, ""));
+
+        auto itFunc = promiseFuncs_.find(option);
+        if (itFunc != promiseFuncs_.end()) {
+            auto memberFunc = itFunc->second;
+            if (memberFunc != nullptr) {
+                (ctx->napi->*memberFunc)(ctx);
+                MEDIA_LOGD("%{public}s End", option.c_str());
+                return;
+            }
+        }
+        MEDIA_LOGD("%{public}s error", option.c_str());
+    });
+    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
+        CHECK_AND_RETURN_RET(asyncCtx != nullptr && asyncCtx->task_ != nullptr,
+            asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, asyncCtx->opt_, ""));
+
+        (void)asyncCtx->task_->GetResult();
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    asyncCtx.release();
+
+    MEDIA_LOGD("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+napi_value AVRecorderNapi::ExecuteByCallback(napi_env env, napi_callback_info info, const std::string &opt)
+{
+    MEDIA_LOGD("Js %{public}s In", opt.c_str());
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    size_t argCount = 0;
+    AVRecorderNapi *recorderNapi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, nullptr);
+    CHECK_AND_RETURN_RET_LOG(recorderNapi != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "recorder is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi, option = opt]() {
+        MEDIA_LOGD("%{public}s In", option.c_str());
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            napi->ErrorCallback(MSERR_INVALID_OPERATION, "Start"));
+
+        auto itFunc = callbackFuncs_.find(option);
+        if (itFunc != callbackFuncs_.end()) {
+            auto memberFunc = itFunc->second;
+            if (memberFunc != nullptr) {
+                (napi->*memberFunc)();
+                MEDIA_LOGD("%{public}s End", option.c_str());
+                return;
+            }
+        }
+        MEDIA_LOGD("%{public}s error", option.c_str());
+    });
+    (void)recorderNapi->taskQue_->EnqueueTask(task);
+
+    MEDIA_LOGD("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+void AVRecorderNapi::Prepare(AVRecorderAsyncContext *asyncCtx)
+{
+    int32_t ret = Configure(asyncCtx);
+    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to Configure");
+
+    ret = recorder_->Prepare();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, asyncCtx->AVRecorderSignError(ret, "Prepare", ""));
+
+    StateCallback(AVRecorderState::STATE_PREPARED);
+}
+
+void AVRecorderNapi::GetInputSurface(AVRecorderAsyncContext *asyncCtx)
+{
+    if (surface_ == nullptr) {
+        surface_ = recorder_->GetSurface(videoSourceID);
+        CHECK_AND_RETURN_RET_LOG(surface_ != nullptr,
+            asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, "GetInputSurface", ""), "failed to GetSurface");
+
+        SurfaceError error = SurfaceUtils::GetInstance()->Add(surface_->GetUniqueId(), surface_);
+        CHECK_AND_RETURN_RET_LOG(error == SURFACE_ERROR_OK,
+            asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, "GetInputSurface", ""), "failed to AddSurface");
+    }
+
+    auto surfaceId = std::to_string(surface_->GetUniqueId());
+    asyncCtx->JsResult = std::make_unique<MediaJsResultString>(surfaceId);
+    getVideoInputSurface_ = true;
+}
+
+void AVRecorderNapi::Reset(AVRecorderAsyncContext *asyncCtx)
+{
+    RemoveSurface();
+    int32_t ret = recorder_->Reset();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, asyncCtx->AVRecorderSignError(ret, "Reset", ""));
+
+    StateCallback(AVRecorderState::STATE_IDLE);
+}
+
+void AVRecorderNapi::Release(AVRecorderAsyncContext *asyncCtx)
+{
+    RemoveSurface();
+    int32_t ret = recorder_->Release();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, asyncCtx->AVRecorderSignError(ret, "Release", ""));
+
+    StateCallback(AVRecorderState::STATE_RELEASED);
+    CancelCallback();
+}
+
+void AVRecorderNapi::Start()
+{
+    if (withVideo_ && !getVideoInputSurface_) {
+        ErrorCallback(MSERR_INVALID_OPERATION, "Start",
+            "Please get the video input surface through GetInputSurface first!");
+        return;
+    }
+
+    int32_t ret = recorder_->Start();
+    if (ret == MSERR_OK) {
+        StateCallback(AVRecorderState::STATE_STARTED);
+    } else {
+        ErrorCallback(ret, "Start");
+    }
+}
+
+void AVRecorderNapi::Pause()
+{
+    int32_t ret = recorder_->Pause();
+    if (ret == MSERR_OK) {
+        StateCallback(AVRecorderState::STATE_PAUSED);
+    } else {
+        ErrorCallback(ret, "Pause");
+    }
+}
+
+void AVRecorderNapi::Resume()
+{
+    int32_t ret = recorder_->Resume();
+    if (ret == MSERR_OK) {
+        StateCallback(AVRecorderState::STATE_STARTED);
+    } else {
+        ErrorCallback(ret, "Resume");
+    }
+}
+
+void AVRecorderNapi::Stop()
+{
+    int32_t ret = recorder_->Stop(false);
+    if (ret == MSERR_OK) {
+        StateCallback(AVRecorderState::STATE_STOPPED);
+    } else {
+        ErrorCallback(ret, "Stop");
+    }
 }
 
 int32_t AVRecorderNapi::CheckStateMachine(const std::string &opt)
@@ -462,112 +550,6 @@ int32_t AVRecorderNapi::CheckStateMachine(const std::string &opt)
     }
 
     return MSERR_OK;
-}
-
-napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info info,
-    size_t &argCount, const std::string &opt)
-{
-    MEDIA_LOGD("Js %{public}s In", opt.c_str());
-
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
-
-    napi_value args[2] = { nullptr };
-
-    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
-
-    asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
-
-    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCount - 1]);
-    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
-
-    asyncCtx->opt_ = opt;
-    asyncCtx->task_ = std::make_shared<TaskHandler<void>>([ctx = asyncCtx.get(), option = opt]() {
-        MEDIA_LOGD("%{public}s In", option.c_str());
-
-        CHECK_AND_RETURN_RET(ctx != nullptr && ctx->napi != nullptr && ctx->napi->recorder_ != nullptr,
-            ctx->AVRecorderSignError(MSERR_INVALID_OPERATION, option, ""));
-        
-        CHECK_AND_RETURN_RET(ctx->napi->CheckStateMachine(option) == MSERR_OK,
-            ctx->AVRecorderSignError(MSERR_INVALID_OPERATION, option, ""));
-
-        auto itFunc = recFuncs_.find(option);
-        if (itFunc != recFuncs_.end()) {
-            auto memberFunc = itFunc->second;
-            if (memberFunc != nullptr) {
-                (ctx->napi->*memberFunc)(ctx);
-                MEDIA_LOGD("%{public}s success", option.c_str());
-                return;
-            }
-        }
-        MEDIA_LOGD("%{public}s error", option.c_str());
-    });
-    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
-
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
-        CHECK_AND_RETURN_RET(asyncCtx != nullptr && asyncCtx->task_ != nullptr,
-            asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, asyncCtx->opt_, ""));
-
-        (void)asyncCtx->task_->GetResult();
-    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
-    asyncCtx.release();
-
-    MEDIA_LOGD("Js %{public}s End", opt.c_str());
-    return result;
-}
-
-void AVRecorderNapi::Prepare(AVRecorderAsyncContext *asyncCtx)
-{
-    int32_t ret = asyncCtx->napi->Configure(asyncCtx);
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to Configure");
-
-    ret = asyncCtx->napi->recorder_->Prepare();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, asyncCtx->AVRecorderSignError(ret, "Prepare", ""));
-
-    asyncCtx->napi->StateCallback(AVRecorderState::STATE_PREPARED);
-}
-
-void AVRecorderNapi::GetInputSurface(AVRecorderAsyncContext *asyncCtx)
-{
-    AVRecorderNapi *napi = asyncCtx->napi;
-    if (napi->surface_ == nullptr) {
-        napi->surface_ = napi->recorder_->GetSurface(napi->videoSourceID);
-        CHECK_AND_RETURN_RET_LOG(napi->surface_ != nullptr,
-            asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, "GetInputSurface", ""), "failed to GetSurface");
-
-        SurfaceError error = SurfaceUtils::GetInstance()->Add(napi->surface_->GetUniqueId(), napi->surface_);
-        CHECK_AND_RETURN_RET_LOG(error == SURFACE_ERROR_OK,
-            asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, "GetInputSurface", ""), "failed to AddSurface");
-    }
-
-    auto surfaceId = std::to_string(napi->surface_->GetUniqueId());
-    asyncCtx->JsResult = std::make_unique<MediaJsResultString>(surfaceId);
-}
-
-void AVRecorderNapi::Reset(AVRecorderAsyncContext *asyncCtx)
-{
-    asyncCtx->napi->RemoveSurface();
-    int32_t ret = asyncCtx->napi->recorder_->Reset();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, asyncCtx->AVRecorderSignError(ret, "Reset", ""));
-
-    asyncCtx->napi->StateCallback(AVRecorderState::STATE_IDLE);
-}
-
-void AVRecorderNapi::Release(AVRecorderAsyncContext *asyncCtx)
-{
-    asyncCtx->napi->RemoveSurface();
-    int32_t ret = asyncCtx->napi->recorder_->Release();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, asyncCtx->AVRecorderSignError(ret, "Release", ""));
-
-    asyncCtx->napi->StateCallback(AVRecorderState::STATE_RELEASED);
-    asyncCtx->napi->CancelCallback();
 }
 
 int32_t AVRecorderNapi::GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat)
@@ -789,14 +771,14 @@ int32_t AVRecorderNapi::Configure(AVRecorderAsyncContext *asyncCtx)
     return MSERR_OK;
 }
 
-void AVRecorderNapi::ErrorCallback(int32_t errCode, const std::string &operate)
+void AVRecorderNapi::ErrorCallback(int32_t errCode, const std::string &operate, const std::string add)
 {
     MEDIA_LOGE("failed to %{public}s, errCode = %{public}d", operate.c_str(), errCode);
     CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "recorderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
 
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
-    std::string msg = MSExtErrorAPI9ToString(err, operate, "");
+    std::string msg = MSExtErrorAPI9ToString(err, operate, "") + add;
     napiCb->SendErrorCallback(errCode, msg);
 }
 
