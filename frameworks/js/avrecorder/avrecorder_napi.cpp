@@ -21,9 +21,9 @@
 #include "common_napi.h"
 #include "surface_utils.h"
 #include "string_ex.h"
-#include "avrecorder_napi.h"
 #include "avcodec_info.h"
 #include "avcontainer_common.h"
+#include "avrecorder_napi.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVRecorderNapi"};
@@ -49,12 +49,12 @@ std::map<std::string, AVRecorderNapi::AvRecorderCallbackFunc> AVRecorderNapi::ca
 
 AVRecorderNapi::AVRecorderNapi()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
 }
 
 AVRecorderNapi::~AVRecorderNapi()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGD("0x%{public}06" PRIXPTR "Instances destroy", FAKE_POINTER(this));
 }
 
 napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
