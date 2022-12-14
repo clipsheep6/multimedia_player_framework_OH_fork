@@ -147,6 +147,8 @@ enum PlayerStates : int32_t {
     PLAYER_STOPPED = 7,
     /* Play to the end states */
     PLAYER_PLAYBACK_COMPLETE = 8,
+    /* released states */
+    PLAYER_RELEASED = 9,
 };
 
 enum PlayerSeekMode : int32_t {
@@ -198,7 +200,11 @@ public:
      * @param errorType Error type. For details, see {@link PlayerErrorType}.
      * @param errorCode Error code.
      */
-    virtual void OnError(PlayerErrorType errorType, int32_t errorCode) = 0;
+    __attribute__((deprecated)) virtual void OnError(PlayerErrorType errorType, int32_t errorCode)
+    {
+        (void)errorType;
+        (void)errorCode;
+    }
 
     /**
      * Called when an error occurred for versions above api9
@@ -207,7 +213,7 @@ public:
      * @param errorCode Error code.
      * @param errorMsg Error message.
      */
-    virtual void OnError(int32_t errorCode, std::string errorMsg)
+    virtual void OnError(int32_t errorCode, const std::string &errorMsg)
     {
         (void)errorCode;
         (void)errorMsg;

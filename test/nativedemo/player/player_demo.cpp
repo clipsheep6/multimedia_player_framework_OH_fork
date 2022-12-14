@@ -42,10 +42,9 @@ constexpr uint32_t TIME = 2;
 }
 
 // PlayerCallback override
-void PlayerCallbackDemo::OnError(PlayerErrorType errorType, int32_t errorCode)
+void PlayerCallbackDemo::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    (void)errorType;
-    cout << "Error received, errorCode:" << MSErrorToString(static_cast<MediaServiceErrCode>(errorCode)) << endl;
+    cout << "Error received, errorCode: " << errorCode << "errorMsg: " << errorMsg << endl;
 }
 
 void PlayerCallbackDemo::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
