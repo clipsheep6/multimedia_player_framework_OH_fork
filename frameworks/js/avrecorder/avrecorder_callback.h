@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef AVRECORDER_CALLBACK_H_
-#define AVRECORDER_CALLBACK_H_
+#ifndef AVRECORDER_CALLBACK_H
+#define AVRECORDER_CALLBACK_H
 
 #include "avrecorder_napi.h"
 #include "recorder.h"
@@ -57,4 +57,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // AVRECORDER_CALLBACK_H_
+#endif // AVRECORDER_CALLBACK_H
