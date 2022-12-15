@@ -109,6 +109,7 @@ static int32_t ConvertErrorMessage(GstMessage &gstMsg, InnerMessage &innerMsg)
     } else {
         innerMsg.detail1 = MSERR_UNSUPPORT_STREAM;
     }
+    innerMsg.extend = std::string(error->message);
 
     g_error_free(error);
     g_free(debug);
