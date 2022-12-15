@@ -108,10 +108,10 @@ void VideoCallbackNapi::OnInfo(PlayerOnInfoType type, int32_t extra, const Forma
     MEDIA_LOGD("send OnInfo callback success");
 }
 
-void VideoCallbackNapi::OnError(PlayerErrorType errType, int32_t errCode)
+void VideoCallbackNapi::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     ClearAsyncWork(true, "The request was aborted because en error occurred, please check event(error)");
-    return PlayerCallbackNapi::OnError(errType, errCode);
+    return PlayerCallbackNapi::OnError(errorCode, errorMsg);
 }
 
 void VideoCallbackNapi::OnSeekDoneCb(int32_t position)

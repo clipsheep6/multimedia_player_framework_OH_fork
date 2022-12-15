@@ -35,7 +35,7 @@ PlayerListenerProxy::~PlayerListenerProxy()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-void PlayerListenerProxy::OnError(PlayerErrorType errorType, int32_t errorCode)
+void PlayerListenerProxy::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -44,8 +44,8 @@ void PlayerListenerProxy::OnError(PlayerErrorType errorType, int32_t errorCode)
     bool token = data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor());
     CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
 
-    data.WriteInt32(errorType);
     data.WriteInt32(errorCode);
+    data.WriteString(errorMsg);
     int error = Remote()->SendRequest(PlayerListenerMsg::ON_ERROR, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on error failed, error: %{public}d", error);
 }
@@ -83,11 +83,11 @@ PlayerListenerCallback::~PlayerListenerCallback()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-void PlayerListenerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)
+void PlayerListenerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    MEDIA_LOGE("player callback onError, errorType: %{public}d, errorCode: %{public}d", errorType, errorCode);
+    MEDIA_LOGE("player callback onError, errorCode: %{public}d, errorMsg: %{public}s", errorCode, errorMsg.c_str());
     if (listener_ != nullptr) {
-        listener_->OnError(errorType, errorCode);
+        listener_->OnError(errorCode, errorMsg);
     }
 }
 

@@ -205,7 +205,7 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
 
 void PlayBinCtrlerBase::BaseState::HandleError(const InnerMessage &msg)
 {
-    PlayBinMessage playbinMsg { PLAYBIN_MSG_ERROR, 0, msg.detail1, {} };
+    PlayBinMessage playbinMsg { PLAYBIN_MSG_ERROR, 0, msg.detail1, msg.extend };
     ctrler_.ReportMessage(playbinMsg);
 }
 

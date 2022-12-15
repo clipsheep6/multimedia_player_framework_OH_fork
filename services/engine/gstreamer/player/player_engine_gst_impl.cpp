@@ -165,13 +165,13 @@ void PlayerEngineGstImpl::HandleErrorMessage(const PlayBinMessage &msg)
 {
     MEDIA_LOGE("error happended, cancel inprocessing job");
 
-    PlayerErrorType errorType = PLAYER_ERROR;
     int32_t errorCode = msg.code;
+    std::string errorMsg = std::any_cast<std::string>(msg.extra);
 
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     Format format;
     if (notifyObs != nullptr) {
-        notifyObs->OnError(errorType, errorCode);
+        notifyObs->OnErrorMessage(errorCode, errorMsg);
         notifyObs->OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, format);
     }
 }
@@ -264,7 +264,7 @@ void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
 void PlayerEngineGstImpl::HandleBufferingPercent(const PlayBinMessage &msg)
 {
     int32_t lastPercent = percent_;
-    percent_ =  msg.code;
+    percent_ = msg.code;
 
     if (lastPercent == percent_) {
         return;

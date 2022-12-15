@@ -55,7 +55,7 @@ public:
     ~VideoCallbackNapi() override;
 
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
-    void OnError(PlayerErrorType errType, int32_t errCode) override;
+    void OnError(int32_t errorCode, const std::string &errorMsg) override;
     PlayerStates GetCurrentState() const override;
     int32_t GetVideoWidth() const
     {

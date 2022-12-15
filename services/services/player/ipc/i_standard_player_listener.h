@@ -27,7 +27,7 @@ namespace Media {
 class IStandardPlayerListener : public IRemoteBroker {
 public:
     virtual ~IStandardPlayerListener() = default;
-    virtual void OnError(PlayerErrorType errorType, int32_t errorCode) = 0;
+    virtual void OnError(int32_t errorCode, const std::string &errorMsg) = 0;
     virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
 
     enum PlayerListenerMsg {
