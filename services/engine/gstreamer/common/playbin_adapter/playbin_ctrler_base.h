@@ -167,6 +167,7 @@ private:
     bool isBuffering_ = false;
     bool isNetWorkPlay_ = false;
     bool isUserSetPause_ = false;
+    bool isBufferPause_ = false;
     uint32_t rendererInfo_ = 0;
     int32_t rendererFlag_ = 0;
     int32_t cachePercent_ = 100; // 100% cache percent
