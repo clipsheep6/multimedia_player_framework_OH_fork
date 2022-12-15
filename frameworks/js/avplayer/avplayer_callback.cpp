@@ -274,13 +274,7 @@ AVPlayerCallback::~AVPlayerCallback()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-void AVPlayerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)
-{
-    (void)errorType;
-    (void)errorCode;
-}
-
-void AVPlayerCallback::OnError(int32_t errorCode, std::string errorMsg)
+void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errorCode));
     if (errorCodeApi9 == MSERR_EXT_API9_NO_PERMISSION ||
@@ -321,7 +315,7 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
 
     switch (type) {
         case INFO_TYPE_STATE_CHANGE:
-            AVPlayerCallback::OnStateChangeCb(static_cast<PlayerStates>(extra));
+            AVPlayerCallback::OnStateChangeCb(static_cast<PlayerStates>(extra), infoBody);
             break;
         case INFO_TYPE_VOLUME_CHANGE:
             AVPlayerCallback::OnVolumeChangeCb(extra);
@@ -364,7 +358,7 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
     }
 }
 
-void AVPlayerCallback::OnStateChangeCb(PlayerStates state)
+void AVPlayerCallback::OnStateChangeCb(PlayerStates state, const Format &infoBody)
 {
     MEDIA_LOGI("OnStateChanged is called, current state: %{public}d", state);
 
@@ -394,10 +388,19 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state)
             NapiCallback::StateChange *cb = new(std::nothrow) NapiCallback::StateChange();
             CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new StateChange");
 
+            int32_t reason = StateChangeReason::USER;
+            if (state == PLAYER_PLAYBACK_COMPLETE || state == PLAYER_STATE_ERROR) {
+                reason = StateChangeReason::BACKGROUND;
+            } else {
+                if (infoBody.ContainKey(PlayerKeys::PLAYER_STATE_CHANGED_REASON)) {
+                    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, reason);
+                }
+            }
+
             cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
             cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
             cb->state = stateMap.at(state);
-            cb->reason = StateChangeReason::USER;
+            cb->reason = reason;
             NapiCallback::CompleteCallback(env_, cb);
         }
     }
@@ -709,7 +712,8 @@ void AVPlayerCallback::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    AVPlayerCallback::OnStateChangeCb(PlayerStates::PLAYER_RELEASED);
+    Format infoBody;
+    AVPlayerCallback::OnStateChangeCb(PlayerStates::PLAYER_RELEASED, infoBody);
     refMap_.clear();
     env_ = nullptr;
     listener_ = nullptr;

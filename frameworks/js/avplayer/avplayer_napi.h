@@ -242,7 +242,6 @@ private:
     std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
     std::atomic<bool> isReleased_ = false;
-    std::atomic<bool> releasing_ = false;
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;
     std::string surface_ = "";

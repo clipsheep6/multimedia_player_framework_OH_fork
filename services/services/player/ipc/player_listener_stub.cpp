@@ -45,9 +45,9 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
 
     switch (code) {
         case PlayerListenerMsg::ON_ERROR: {
-            int32_t errorType = data.ReadInt32();
             int32_t errorCode = data.ReadInt32();
-            OnError(static_cast<PlayerErrorType>(errorType), errorCode);
+            std::string errorMsg = data.ReadString();
+            OnError(errorCode, errorMsg);
             return MSERR_OK;
         }
         case PlayerListenerMsg::ON_INFO: {
@@ -75,11 +75,11 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
     }
 }
 
-void PlayerListenerStub::OnError(PlayerErrorType errorType, int32_t errorCode)
+void PlayerListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
     if (cb != nullptr) {
-        cb->OnError(errorType, errorCode);
+        cb->OnError(errorCode, errorMsg);
     }
 }
 

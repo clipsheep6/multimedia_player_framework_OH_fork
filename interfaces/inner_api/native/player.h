@@ -200,16 +200,19 @@ public:
      * @param errorType Error type. For details, see {@link PlayerErrorType}.
      * @param errorCode Error code.
      */
-    virtual void OnError(PlayerErrorType errorType, int32_t errorCode) = 0;
+    __attribute__((deprecated)) virtual void OnError(PlayerErrorType errorType, int32_t errorCode)
+    {
+        (void)errorType;
+        (void)errorCode;
+    }
 
     /**
      * Called when an error occurred for versions above api9
      *
-     * @param sourceId Resource where the error occurred
      * @param errorCode Error code.
      * @param errorMsg Error message.
      */
-    virtual void OnError(int32_t errorCode, std::string errorMsg)
+    virtual void OnError(int32_t errorCode, const std::string &errorMsg)
     {
         (void)errorCode;
         (void)errorMsg;

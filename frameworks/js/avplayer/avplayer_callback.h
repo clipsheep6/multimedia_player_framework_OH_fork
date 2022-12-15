@@ -29,8 +29,7 @@ class AVPlayerCallback : public PlayerCallback {
 public:
     AVPlayerCallback(napi_env env, AVPlayerNotify *listener);
     virtual ~AVPlayerCallback();
-    void OnError(PlayerErrorType errorType, int32_t errorCode) override;
-    void OnError(int32_t errorCode, std::string errorMsg) override;
+    void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     PlayerStates GetCurrentState() const;
@@ -43,7 +42,7 @@ public:
     void Release();
 
 private:
-    void OnStateChangeCb(PlayerStates state);
+    void OnStateChangeCb(PlayerStates state, const Format &infoBody);
     void OnVolumeChangeCb(double volumeLevel);
     void OnSeekDoneCb(int32_t currentPositon) const;
     void OnSpeedDoneCb(int32_t speedMode) const;

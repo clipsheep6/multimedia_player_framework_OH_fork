@@ -21,7 +21,7 @@ import audio from "./@ohos.multimedia.audio";
  * @since 6
  * @import import media from '@ohos.multimedia.media'
  */
-declare namespace media  {
+declare namespace media {
   /**
    * Creates an AudioPlayer instance.
    * @since 6

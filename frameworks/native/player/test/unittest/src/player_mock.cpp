@@ -161,9 +161,9 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
     }
 }
 
-void PlayerCallbackTest::OnError(PlayerErrorType errorType, int32_t errorCode)
+void PlayerCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    std::cout << "Error received, errorType:" << errorType << " errorCode:" << errorCode << std::endl;
+    std::cout << "Error received, errorCode: " << errorCode << "errorMsg: " << errorMsg << std::endl;
 }
 
 void PlayerCallbackTest::Notify(PlayerStates currentState)
