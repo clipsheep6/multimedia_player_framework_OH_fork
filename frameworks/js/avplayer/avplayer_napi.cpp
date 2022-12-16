@@ -67,9 +67,9 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("videoScaleType", JsGetVideoScaleType, JsSetVideoScaleType),
         DECLARE_NAPI_GETTER_SETTER("audioInterruptMode", JsGetAudioInterruptMode, JsSetAudioInterruptMode),
 
+        DECLARE_NAPI_GETTER("state", JsGetState),
         DECLARE_NAPI_GETTER("currentTime", JsGetCurrentTime),
         DECLARE_NAPI_GETTER("duration", JsGetDuration),
-        DECLARE_NAPI_GETTER("state", JsGetState),
         DECLARE_NAPI_GETTER("width", JsGetWidth),
         DECLARE_NAPI_GETTER("height", JsGetHeight),
     };

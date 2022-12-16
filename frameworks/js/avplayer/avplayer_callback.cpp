@@ -509,6 +509,19 @@ void AVPlayerCallback::OnDurationUpdateCb(int32_t duration) const
     if (listener_ != nullptr) {
         listener_->NotifyDuration(duration);
     }
+
+    if (refMap_.find(AVPlayerEvent::EVENT_DURATION_UPDATE) == refMap_.end()) {
+        MEDIA_LOGW("can not find duration update callback!");
+        return;
+    }
+
+    NapiCallback::Int *cb = new(std::nothrow) NapiCallback::Int();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Int");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_DURATION_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_DURATION_UPDATE;
+    cb->value = duration;
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
