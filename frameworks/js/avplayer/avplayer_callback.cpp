@@ -389,14 +389,12 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state, const Format &infoBod
             CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new StateChange");
 
             int32_t reason = StateChangeReason::USER;
+            if (infoBody.ContainKey(PlayerKeys::PLAYER_STATE_CHANGED_REASON)) {
+                (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, reason);
+            }
             if (state == PLAYER_PLAYBACK_COMPLETE || state == PLAYER_STATE_ERROR) {
                 reason = StateChangeReason::BACKGROUND;
-            } else {
-                if (infoBody.ContainKey(PlayerKeys::PLAYER_STATE_CHANGED_REASON)) {
-                    (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, reason);
-                }
             }
-
             cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
             cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
             cb->state = stateMap.at(state);
