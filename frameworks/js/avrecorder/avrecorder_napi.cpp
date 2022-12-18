@@ -319,15 +319,12 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
     size_t &argCount, const std::string &opt)
 {
     MEDIA_LOGD("Js %{public}s Start", opt.c_str());
-
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-
     napi_value args[2] = { nullptr };
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
-
     asyncCtx->napi = AVRecorderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
     CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
@@ -335,37 +332,40 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCount - 1]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
-    asyncCtx->opt_ = opt;
-    asyncCtx->task_ = std::make_shared<TaskHandler<void>>([ctx = asyncCtx.get(), option = opt]() {
-        MEDIA_LOGD("%{public}s Start", option.c_str());
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
+        asyncCtx->task_ = std::make_shared<TaskHandler<void>>([ctx = asyncCtx.get(), option = opt]() {
+            MEDIA_LOGD("%{public}s Start", option.c_str());
+            CHECK_AND_RETURN_LOG(ctx != nullptr, "ctx is nullptr!");
+            CHECK_AND_RETURN_RET(ctx->napi != nullptr && ctx->napi->recorder_ != nullptr,
+                ctx->AVRecorderSignError(MSERR_INVALID_OPERATION, option, ""));
 
-        CHECK_AND_RETURN_RET(ctx != nullptr && ctx->napi != nullptr && ctx->napi->recorder_ != nullptr,
-            ctx->AVRecorderSignError(MSERR_INVALID_OPERATION, option, ""));
-        
-        CHECK_AND_RETURN_RET(ctx->napi->CheckStateMachine(option) == MSERR_OK,
-            ctx->AVRecorderSignError(MSERR_INVALID_OPERATION, option, ""));
-
-        auto itFunc = promiseFuncs_.find(option);
-        if (itFunc != promiseFuncs_.end()) {
-            auto memberFunc = itFunc->second;
-            if (memberFunc != nullptr) {
-                (ctx->napi->*memberFunc)(ctx);
-                MEDIA_LOGD("%{public}s End", option.c_str());
-                return;
+            auto itFunc = promiseFuncs_.find(option);
+            if (itFunc != promiseFuncs_.end()) {
+                auto memberFunc = itFunc->second;
+                if (memberFunc != nullptr) {
+                    (ctx->napi->*memberFunc)(ctx);
+                    MEDIA_LOGD("%{public}s End", option.c_str());
+                    return;
+                }
             }
-        }
-        MEDIA_LOGD("%{public}s error", option.c_str());
-    });
-    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+            MEDIA_LOGD("%{public}s error", option.c_str());
+        });
+        (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+        asyncCtx->opt_ = opt;
+    } else {
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, opt, "");
+    }
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
-        CHECK_AND_RETURN_RET(asyncCtx != nullptr && asyncCtx->task_ != nullptr,
-            asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, asyncCtx->opt_, ""));
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
 
-        (void)asyncCtx->task_->GetResult();
+        if (asyncCtx->task_) {
+            (void)asyncCtx->task_->GetResult();
+        }
+        MEDIA_LOGD("%{public}s js async work end", asyncCtx->opt_.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
@@ -386,11 +386,13 @@ napi_value AVRecorderNapi::ExecuteByCallback(napi_env env, napi_callback_info in
     CHECK_AND_RETURN_RET_LOG(recorderNapi->recorder_ != nullptr, result, "recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(recorderNapi->taskQue_ != nullptr, result, "taskQue is nullptr!");
 
+    if (recorderNapi->CheckStateMachine(opt) != MSERR_OK) {
+        recorderNapi->ErrorCallback(MSERR_INVALID_OPERATION, opt);
+        return result;
+    }
+
     auto task = std::make_shared<TaskHandler<void>>([napi = recorderNapi, option = opt]() {
         MEDIA_LOGD("%{public}s Start", option.c_str());
-        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
-            napi->ErrorCallback(MSERR_INVALID_OPERATION, option));
-
         auto itFunc = callbackFuncs_.find(option);
         if (itFunc != callbackFuncs_.end()) {
             auto memberFunc = itFunc->second;
@@ -421,6 +423,9 @@ void AVRecorderNapi::Prepare(AVRecorderAsyncContext *asyncCtx)
 
 void AVRecorderNapi::GetInputSurface(AVRecorderAsyncContext *asyncCtx)
 {
+    CHECK_AND_RETURN_RET_LOG(withVideo_,
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, "GetInputSurface", ""), "No video recording");
+
     if (surface_ == nullptr) {
         surface_ = recorder_->GetSurface(videoSourceID);
         CHECK_AND_RETURN_RET_LOG(surface_ != nullptr,

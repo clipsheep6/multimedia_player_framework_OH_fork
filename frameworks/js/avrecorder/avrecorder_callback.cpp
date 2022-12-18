@@ -67,8 +67,8 @@ void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &m
 
 void AVRecorderCallback::SendStateCallback(const std::string &state, const StateChangeReason &reason)
 {
-    currentState_ = state;
     std::lock_guard<std::mutex> lock(mutex_);
+    currentState_ = state;
     if (refMap_.find(AVRecorderEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
         MEDIA_LOGW("can not find statechange callback!");
         return;
@@ -85,6 +85,7 @@ void AVRecorderCallback::SendStateCallback(const std::string &state, const State
 
 std::string AVRecorderCallback::GetState()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     return currentState_;
 }
 
