@@ -40,6 +40,7 @@ ohos_copy("media_declaration") {
 ohos_shared_library("media") {
   include_dirs = [
     "//foundation/multimedia/player_framework/interfaces/kits/js",
+    "//foundation/multimedia/player_framework/frameworks/js/avplayer",
     "//foundation/multimedia/player_framework/frameworks/js/player",
     "//foundation/multimedia/player_framework/frameworks/js/recorder",
     "//foundation/multimedia/player_framework/frameworks/js/media",
@@ -108,6 +109,11 @@ ohos_shared_library("media") {
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/bounds_checking_function:libsec_shared",
   ]
+
+  if (multimedia_player_framework_support_player_js_api9) {
+    deps += [ "//foundation/multimedia/player_framework/frameworks/js/avplayer:media_avplayer" ]
+  }
+
   if (multimedia_player_framework_support_video) {
     deps += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface" ]
   }

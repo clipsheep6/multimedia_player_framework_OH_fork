@@ -23,6 +23,24 @@ import audio from "./@ohos.multimedia.audio";
  */
 declare namespace media {
   /**
+   * Creates an AVPlayer instance.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.AVPlayer
+   * @import import media from '@ohos.multimedia.media'
+   * @return callback Callback used to return an AVPlayer instance if the operation is successful; returns null otherwise.
+   */
+   function createAVPlayer(callback: AsyncCallback<AVPlayer>): void;
+
+  /**
+   * Creates an AVPlayer instance.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.AVPlayer
+   * @import import media from '@ohos.multimedia.media'
+   * @return A Promise instance used to return an AVPlayer instance if the operation is successful; returns null otherwise.
+   */
+   function createAVPlayer() : Promise<AVPlayer>;
+
+  /**
    * Creates an AudioPlayer instance.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
@@ -77,6 +95,439 @@ declare namespace media {
    * @systemapi
    */
   function createVideoRecorder(): Promise<VideoRecorder>;
+
+  /**
+   * Enumerates state change reason.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   * @import import media from '@ohos.multimedia.media'
+   */
+   enum StateChangeReason {
+    /**
+     * state change by user operation.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.Core
+     */
+    USER = 1,
+
+    /**
+     * state change by background action.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.Core
+     */
+    BACKGROUND = 2,
+  }
+
+ /**
+   * Enumerates ErrorCode types, return in BusinessError::code
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   * @import import media from '@ohos.multimedia.media'
+   */
+ enum AVErrorCode {
+  /**
+   * operation success.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_OK = 0,
+
+  /**
+   * permission denied.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_NO_PERMISSION = 201,
+
+  /**
+   * invalid parameter.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_INVALID_PARAMETER = 401,
+
+  /**
+   * the api is not supported in the current version
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_UNSUPPORT_CAPABILITY = 801,
+
+  /**
+   * the system memory is insufficient or the number of services reaches the upper limit
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_NO_MEMORY = 5400101,
+
+  /**
+   * current status does not allow or do not have permission to perform this operation
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_OPERATE_NOT_PERMIT = 5400102,
+
+  /**
+   * data flow exception information
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_IO = 5400103,
+
+  /**
+   * system or network response timeout.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_TIMEOUT = 5400104,
+
+  /**
+   * service process died.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_SERVICE_DIED = 5400105,
+
+  /**
+   * unsupported media format
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
+  AVERR_UNSUPPORT_FORMAT = 5400106,
+ }
+
+  /**
+   * Describes media playback states.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.AVPlayer
+   * @import import media from '@ohos.multimedia.media'
+   */
+   type AVPlayerState = 'idle' | 'initialized' | 'prepared' | 'playing' | 'paused' | 'completed' | 'stopped' | 'released' | 'error';
+
+   /**
+    * Manages and plays media. Before calling an AVPlayer method, you must use createAVPlayer()
+    * to create an AVPlayer instance.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.AVPlayer
+    */
+  interface AVPlayer {
+    /**
+     * prepare video playback, it will request resource for playing.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param callback A callback instance used to return when prepare completed.
+     */
+    prepare(callback: AsyncCallback<void>): void;
+
+    /**
+     * prepare video playback, it will request resource for playing.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @return A Promise instance used to return when prepare completed.
+     */
+    prepare(): Promise<void>;
+
+    /**
+     * Starts media playback.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    play(): void;
+ 
+    /**
+     * Pauses media playback.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    pause(): void;
+
+    /**
+     * Stops media playback.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    stop(): void;
+
+    /**
+     * reset AVPlayer, it will to idle state and can set src again.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param callback A callback instance used to return when reset completed.
+     */
+    reset(callback: AsyncCallback<void>): void;
+
+    /**
+     * reset AVPlayer, it will to idle state and can set src again.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @return A Promise instance used to return when reset completed.
+     */
+    reset(): Promise<void>;
+
+    /**
+     * Jumps to the specified playback position.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param timeMs Playback position to jump, should be in [0, 2147483647].
+     * @param mode seek mode, see @SeekMode .
+     */
+    seek(timeMs: number, mode?:SeekMode): void;
+
+    /**
+     * Sets the volume.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param vol Relative volume. The value ranges from 0.00 to 1.00. The value 1 indicates the maximum volume (100%).
+     */
+    setVolume(volume: number): void;
+
+    /**
+     * Releases resources used for AVPlayer.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param callback A callback instance used to return when release completed.
+     */
+    release(callback: AsyncCallback<void>): void;
+
+    /**
+     * Releases resources used for AVPlayer.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @return A Promise instance used to return when release completed.
+     */
+    release(): Promise<void>;
+
+    /**
+     * get all track infos in MediaDescription, should be called after data loaded callback.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param callback async callback return track info in MediaDescription.
+     */
+    getTrackDescription(callback: AsyncCallback<Array<MediaDescription>>): void;
+
+    /**
+     * get all track infos in MediaDescription, should be called after data loaded callback..
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @return A Promise instance used to return the track info in MediaDescription.
+     */
+    getTrackDescription() : Promise<Array<MediaDescription>>;
+
+    /**
+     * Media URI. Mainstream media formats are supported.
+     * network:http://xxx
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    url ?: string;
+
+    /**
+     * Media file descriptor. Mainstream media formats are supported.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    fdSrc ?: AVFileDescriptor;
+
+    /**
+     * Whether to loop media playback. The value true means to loop playback.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    loop: boolean;
+
+    /**
+     * Describes audio interrupt mode, refer to {@link #audio.InterruptMode}. If it is not
+     * set, the default mode will be used. Set it before calling the {@link #play()} in the
+     * first time in order for the interrupt mode to become effective thereafter.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    audioInterruptMode ?: audio.InterruptMode;
+
+    /**
+     * Current playback position.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    readonly currentTime: number;
+
+    /**
+     * Playback duration, When the data source does not support seek, it returns - 1, such as a live broadcast scenario.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    readonly duration: number;
+
+    /**
+     * Playback state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    readonly state: AVPlayerState;
+
+    /**
+     * SurfaceId surface id, video player will use this id get a surface instance.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    surfaceId ?: string;
+
+    /**
+     * video width, valid after prepared.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    readonly width: number;
+
+    /**
+     * video height, valid after prepared.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    readonly height: number;
+
+    /**
+     * video scale type. Defaultly, the {@link #VIDEO_SCALE_TYPE_FIT} will be used, for more
+     * information, refer to {@link #VideoScaleType}
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    videoScaleType ?: VideoScaleType;
+
+    /**
+     * set payback speed.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param speed playback speed, see @PlaybackSpeed .
+     */
+    setSpeed(speed: number): void;
+
+    /**
+     * select a specified bitrate to playback, only valid for HLS protocal network stream. Defaulty, the
+     * player will select the appropriate bitrate according to the network connection speed. The
+     * available bitrates list reported by {@link #on('availableBitrates')}. Set it to select
+     * a specified bitrate. If the specified bitrate is not in the list of available bitrates, the player
+     * will select the minimal and closest one from the available bitrates list.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param bitrate the playback bitrate must be expressed in bits per second.
+     */
+    setBitrate(bitrate: number): void;
+
+    /**
+     * Listens for media playback events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback stateChange event.
+     */
+    on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
+    /**
+     * Listens for media playback events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback volume event.
+     */
+    on(type: 'volumeChange', callback: Callback<number>): void;
+    /**
+     * Listens for media playback events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback end of stream
+     */
+    on(type: 'endOfStream', callback: Callback<void>): void;
+    /**
+     * Listens for media playback events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback seekDone event.
+     */
+    on(type: 'seekDone', callback: Callback<number>): void;
+    /**
+     * Listens for media playback events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback speedDone event.
+     */
+    on(type: 'speedDone', callback: Callback<number>): void;
+    /**
+     * Listens for media playback events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback setBitrateDone event.
+     */
+    on(type: 'bitrateDone', callback: Callback<number>): void;
+    /**
+     * Listens for media playback events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback timeUpdate event.
+     */
+    on(type: 'timeUpdate', callback: Callback<number>): void;
+    /**
+     * Listens for media playback events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback durationUpdate event.
+     */
+     on(type: 'durationUpdate', callback: Callback<number>): void;
+    /**
+     * Listens for video playback buffering events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback buffering update event to listen for.
+     * @param callback Callback used to listen for the buffering update event, return BufferingInfoType and the value.
+     */
+    on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
+    /**
+     * Listens for start render video frame events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback event return .
+     */
+    on(type: 'startRenderFrame', callback: Callback<void>): void;
+    /**
+     * Listens for video size change event.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback event return video size.
+     */
+    on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
+    /**
+     * Listens for audio interrupt event, refer to {@link #audio.InterruptEvent}
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback event return audio interrupt info.
+     */
+    on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
+    /**
+     * Listens for available bitrates collect completed events for HLS protocal stream playback.
+     * This event will be reported after the {@link #prepare} called.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback event return available bitrates.
+     */
+    on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
+    /**
+     * Listens for playback error events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback error event to listen for.
+     * @param callback Callback used to listen for the playback error event.
+     */
+    on(type: 'error', callback: ErrorCallback): void;
+  }
 
   /**
    * Enumerates ErrorCode types, return in BusinessError::code
