@@ -332,8 +332,8 @@ std::shared_ptr<TaskHandler<void>> AVPlayerNapi::ResetTask()
 
     {
         std::unique_lock<std::mutex> lock(mutex_);
-        preparingCond_.notify_all(); // stop prepare
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
+        preparingCond_.notify_all(); // stop prepare
     }
     return task;
 }
@@ -392,16 +392,15 @@ std::shared_ptr<TaskHandler<void>> AVPlayerNapi::ReleaseTask()
             }
 
             if (playerCb_ != nullptr) {
-                std::shared_ptr<AVPlayerCallback> cb = std::static_pointer_cast<AVPlayerCallback>(playerCb_);
-                cb->Release();
+                playerCb_->Release();
                 playerCb_ = nullptr;
             }
         });
 
         std::unique_lock<std::mutex> lock(mutex_);
+        (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
         preparingCond_.notify_all(); // stop wait prepare
         resettingCond_.notify_all(); // stop wait reset
-        (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
         isReleased_.store(true);
     }
     return task;
@@ -808,6 +807,7 @@ void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
 void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
 {
     (void)surfaceStr;
+    OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The music player does not need to support (Surface)");
 }
 #endif
 
@@ -1188,7 +1188,8 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
                 (void)jsPlayer->player_->GetVideoTrackInfo(trackInfo);
                 (void)jsPlayer->player_->GetAudioTrackInfo(trackInfo);
             } else {
-                MEDIA_LOGW("current state unsupport get track description");
+                return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "current state unsupport get track description");
             }
             promiseCtx->JsResult = std::make_unique<MediaJsResultArray>(trackInfo);
         },
@@ -1236,8 +1237,7 @@ void AVPlayerNapi::SaveCallbackReference(const std::string &callbackName, std::s
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[callbackName] = ref;
     if (playerCb_ != nullptr) {
-        std::shared_ptr<AVPlayerCallback> cb = std::static_pointer_cast<AVPlayerCallback>(playerCb_);
-        cb->SaveCallbackReference(callbackName, ref);
+        playerCb_->SaveCallbackReference(callbackName, ref);
     }
 }
 
@@ -1245,8 +1245,7 @@ void AVPlayerNapi::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (playerCb_ != nullptr) {
-        std::shared_ptr<AVPlayerCallback> cb = std::static_pointer_cast<AVPlayerCallback>(playerCb_);
-        cb->ClearCallbackReference();
+        playerCb_->ClearCallbackReference();
     }
     refMap_.clear();
 }
@@ -1302,8 +1301,7 @@ void AVPlayerNapi::StartListenCurrentResource()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (playerCb_ != nullptr) {
-        std::shared_ptr<AVPlayerCallback> cb = std::static_pointer_cast<AVPlayerCallback>(playerCb_);
-        cb->Start();
+        playerCb_->Start();
     }
 }
 
@@ -1311,8 +1309,7 @@ void AVPlayerNapi::PauseListenCurrentResource()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (playerCb_ != nullptr) {
-        std::shared_ptr<AVPlayerCallback> cb = std::static_pointer_cast<AVPlayerCallback>(playerCb_);
-        cb->Pause();
+        playerCb_->Pause();
     }
 }
 
@@ -1320,8 +1317,7 @@ void AVPlayerNapi::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::st
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (playerCb_ != nullptr) {
-        std::shared_ptr<AVPlayerCallback> cb = std::static_pointer_cast<AVPlayerCallback>(playerCb_);
-        cb->OnErrorCb(errorCode, errorMsg);
+        playerCb_->OnErrorCb(errorCode, errorMsg);
     }
 }
 

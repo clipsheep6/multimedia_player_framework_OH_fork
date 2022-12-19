@@ -19,12 +19,21 @@
 #include <map>
 #include <mutex>
 #include "player.h"
-#include "avplayer_napi.h"
 #include "media_errors.h"
 #include "common_napi.h"
 
 namespace OHOS {
 namespace Media {
+class AVPlayerNotify {
+public:
+    AVPlayerNotify() = default;
+    virtual ~AVPlayerNotify() = default;
+    virtual void NotifyDuration(int32_t duration) = 0;
+    virtual void NotifyPosition(int32_t position) = 0;
+    virtual void NotifyState(PlayerStates state) = 0;
+    virtual void NotifyVideoSize(int32_t width, int32_t height) = 0;
+};
+
 class AVPlayerCallback : public PlayerCallback {
 public:
     AVPlayerCallback(napi_env env, AVPlayerNotify *listener);

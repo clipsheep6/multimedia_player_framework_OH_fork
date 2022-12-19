@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "avplayer_callback.h"
 #include "common_napi.h"
 #include "audio_info.h"
 #include "task_queue.h"
@@ -70,16 +71,6 @@ const std::string EVENT_AUDIO_INTERRUPT = "audioInterrupt";
 const std::string EVENT_AVAILABLE_BITRATES = "availableBitrates";
 const std::string EVENT_ERROR = "error";
 }
-
-class AVPlayerNotify {
-public:
-    AVPlayerNotify() = default;
-    virtual ~AVPlayerNotify() = default;
-    virtual void NotifyDuration(int32_t duration) = 0;
-    virtual void NotifyPosition(int32_t position) = 0;
-    virtual void NotifyState(PlayerStates state) = 0;
-    virtual void NotifyVideoSize(int32_t width, int32_t height) = 0;
-};
 
 class AVPlayerNapi : public AVPlayerNotify {
 public:
@@ -243,7 +234,7 @@ private:
     napi_env env_ = nullptr;
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Player> player_ = nullptr;
-    std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
+    std::shared_ptr<AVPlayerCallback> playerCb_ = nullptr;
     std::atomic<bool> isReleased_ = false;
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;

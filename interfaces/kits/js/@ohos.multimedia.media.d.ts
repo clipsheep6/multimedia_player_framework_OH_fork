@@ -23,6 +23,24 @@ import audio from "./@ohos.multimedia.audio";
  */
 declare namespace media {
   /**
+   * Creates an AVPlayer instance.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.AVPlayer
+   * @import import media from '@ohos.multimedia.media'
+   * @return callback Callback used to return an AVPlayer instance if the operation is successful; returns null otherwise.
+   */
+   function createAVPlayer(callback: AsyncCallback<AVPlayer>): void;
+
+  /**
+   * Creates an AVPlayer instance.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.AVPlayer
+   * @import import media from '@ohos.multimedia.media'
+   * @return A Promise instance used to return an AVPlayer instance if the operation is successful; returns null otherwise.
+   */
+   function createAVPlayer() : Promise<AVPlayer>;
+
+  /**
    * Creates an AudioPlayer instance.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
@@ -77,24 +95,6 @@ declare namespace media {
    * @systemapi
    */
   function createVideoRecorder(): Promise<VideoRecorder>;
-
-  /**
-   * Creates an AVPlayer instance.
-   * @since 9
-   * @syscap SystemCapability.Multimedia.Media.AVPlayer
-   * @import import media from '@ohos.multimedia.media'
-   * @return callback Callback used to return an AVPlayer instance if the operation is successful; returns null otherwise.
-   */
-   function createAVPlayer(callback: AsyncCallback<AVPlayer>): void;
-
-  /**
-   * Creates an AVPlayer instance.
-   * @since 9
-   * @syscap SystemCapability.Multimedia.Media.AVPlayer
-   * @import import media from '@ohos.multimedia.media'
-   * @return A Promise instance used to return an AVPlayer instance if the operation is successful; returns null otherwise.
-   */
-   function createAVPlayer() : Promise<AVPlayer>;
 
   /**
    * Enumerates state change reason.
@@ -470,6 +470,14 @@ declare namespace media {
      * @param callback Callback used to listen for the playback timeUpdate event.
      */
     on(type: 'timeUpdate', callback: Callback<number>): void;
+    /**
+     * Listens for media playback events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback durationUpdate event.
+     */
+     on(type: 'durationUpdate', callback: Callback<number>): void;
     /**
      * Listens for video playback buffering events.
      * @since 9
