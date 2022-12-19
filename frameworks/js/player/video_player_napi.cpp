@@ -235,7 +235,7 @@ napi_value VideoPlayerNapi::SetUrl(napi_env env, napi_callback_info info)
 
     if (ret != MSERR_OK) {
         MEDIA_LOGE("input url error!");
-        jsPlayer->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to set source");
+        jsPlayer->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to set source");
         return undefinedResult;
     }
 
@@ -310,7 +310,7 @@ napi_value VideoPlayerNapi::SetFdSrc(napi_env env, napi_callback_info info)
     int32_t ret = jsPlayer->nativePlayer_->SetSource(jsPlayer->rawFd_.fd, jsPlayer->rawFd_.offset,
         jsPlayer->rawFd_.length);
     if (ret != MSERR_OK) {
-        jsPlayer->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetSource");
+        jsPlayer->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetSource");
         return undefinedResult;
     }
 
@@ -872,13 +872,15 @@ void VideoPlayerNapi::AsyncGetTrackDescription(napi_env env, void *data)
     videoInfo.clear();
     int32_t ret = player->GetVideoTrackInfo(videoInfo);
     if (ret != MSERR_OK) {
-        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to GetVideoTrackInfo");
+        asyncContext->SignError(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)),
+            "failed to GetVideoTrackInfo");
         return;
     }
 
     ret = player->GetAudioTrackInfo(videoInfo);
     if (ret != MSERR_OK) {
-        asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to GetAudioTrackInfo");
+        asyncContext->SignError(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)),
+            "failed to GetAudioTrackInfo");
         return;
     }
 
@@ -1037,7 +1039,7 @@ napi_value VideoPlayerNapi::SetLoop(napi_env env, napi_callback_info info)
 
     int32_t ret = jsPlayer->nativePlayer_->SetLooping(loopFlag);
     if (ret != MSERR_OK) {
-        jsPlayer->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetLooping");
+        jsPlayer->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetLooping");
         return undefinedResult;
     }
     MEDIA_LOGD("SetLoop success");
@@ -1120,7 +1122,7 @@ napi_value VideoPlayerNapi::SetVideoScaleType(napi_env env, napi_callback_info i
     (void)format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, videoScaleType);
     int32_t ret = jsPlayer->nativePlayer_->SetParameter(format);
     if (ret != MSERR_OK) {
-        jsPlayer->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetParameter");
+        jsPlayer->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetParameter");
         return undefinedResult;
     }
     MEDIA_LOGD("SetVideoScaleType success");
@@ -1379,7 +1381,7 @@ napi_value VideoPlayerNapi::SetAudioInterruptMode(napi_env env, napi_callback_in
     (void)format.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, interruptMode);
     int32_t ret = jsPlayer->nativePlayer_->SetParameter(format);
     if (ret != MSERR_OK) {
-        jsPlayer->ErrorCallback(MSERR_EXT_OPERATE_NOT_PERMIT, "failed to SetParameter");
+        jsPlayer->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetParameter");
         return undefinedResult;
     }
 

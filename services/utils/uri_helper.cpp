@@ -292,10 +292,10 @@ bool UriHelper::AccessCheck(uint8_t flag) const
         }
         return true;
     } else if (type_ == URI_TYPE_FD) {
-        CHECK_AND_RETURN_RET_LOG(fd_ > 0, false, "Fail to get file descriptor from uri");
+        CHECK_AND_RETURN_RET_LOG(fd_ > 0, false, "Fail to get file descriptor from uri, fd %{public}d", fd_);
 
         int flags = fcntl(fd_, F_GETFL);
-        CHECK_AND_RETURN_RET_LOG(flags != -1, false, "Fail to get File Status Flags");
+        CHECK_AND_RETURN_RET_LOG(flags != -1, false, "Fail to get File Status Flags, fd %{public}d", fd_);
 
         uint32_t mode = (flag & URI_WRITE) ? O_RDWR : O_RDONLY;
         if ((static_cast<unsigned int>(flags) & mode) != mode) {
