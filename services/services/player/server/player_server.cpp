@@ -929,7 +929,7 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
             write(fd, dumpString.c_str(), dumpString.size());
         return MSERR_OK;
     }
-    dumpString += "PlayerServer current state is: " + std::to_string(lastOpStatus_) + "\n";
+    dumpString += "PlayerServer current state is: " + GetStatusDescription(lastOpStatus_) + "\n";
     if (lastErrMsg_.size() != 0) {
         dumpString += "PlayerServer last error is: " + lastErrMsg_ + "\n";
     }
@@ -941,17 +941,17 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
         std::to_string(config_.leftVolume) + ", " + std::to_string(config_.rightVolume) + "\n";
 
     std::vector<Format> videoTrack;
-    CHECK_AND_RETURN_RET(GetVideoTrackInfo(videoTrack) == MSERR_OK, MSERR_INVALID_OPERATION);
+    (void)GetVideoTrackInfo(videoTrack);
     dumpString += "PlayerServer video tracks info: \n";
     FormatToString(dumpString, videoTrack);
     
     std::vector<Format> audioTrack;
-    CHECK_AND_RETURN_RET(GetAudioTrackInfo(audioTrack) == MSERR_OK, MSERR_INVALID_OPERATION);
+    (void)GetAudioTrackInfo(audioTrack);
     dumpString += "PlayerServer audio tracks info: \n";
     FormatToString(dumpString, audioTrack);
     
-    int32_t currentTime;
-    CHECK_AND_RETURN_RET(GetCurrentTime(currentTime) == MSERR_OK, MSERR_INVALID_OPERATION);
+    int32_t currentTime = -1;
+    (void)GetCurrentTime(currentTime);
     dumpString += "PlayerServer current time is: " + std::to_string(currentTime) + "\n";
     write(fd, dumpString.c_str(), dumpString.size());
 
