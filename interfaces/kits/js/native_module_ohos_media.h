@@ -20,6 +20,7 @@
 #include "avplayer_napi.h"
 #include "audio_player_napi.h"
 #include "video_player_napi.h"
+#include "avrecorder_napi.h"
 #include "audio_recorder_napi.h"
 #include "video_recorder_napi.h"
 #include "media_capability_napi.h"
