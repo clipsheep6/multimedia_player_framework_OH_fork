@@ -166,7 +166,10 @@ void PlayerEngineGstImpl::HandleErrorMessage(const PlayBinMessage &msg)
     MEDIA_LOGE("error happended, cancel inprocessing job");
 
     int32_t errorCode = msg.code;
-    std::string errorMsg = std::any_cast<std::string>(msg.extra);
+    std::string errorMsg = "Unknown Error";
+    if (msg.subType == PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE) {
+        errorMsg = std::any_cast<std::string>(msg.extra);
+    }
 
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     Format format;

@@ -529,14 +529,16 @@ int32_t PlayBinCtrlerBase::EnterInitializedState()
 
     ON_SCOPE_EXIT(0) {
         ExitInitializedState();
-        PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR, 0, MSERR_UNKNOWN, {} };
+        PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR,
+            PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
+            MSERR_CREATE_PLAYER_ENGINE_FAILED, "failed to EnterInitializedState" };
         ReportMessage(msg);
         MEDIA_LOGE("enter initialized state failed");
     };
 
     int32_t ret = OnInit();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
-    CHECK_AND_RETURN_RET(playbin_ != nullptr, static_cast<int32_t>(MSERR_UNKNOWN));
+    CHECK_AND_RETURN_RET(playbin_ != nullptr, static_cast<int32_t>(MSERR_CREATE_PLAYER_ENGINE_FAILED));
 
     ret = DoInitializeForDataSource();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "DoInitializeForDataSource failed!");
@@ -1074,7 +1076,10 @@ void PlayBinCtrlerBase::OnBitRateParseCompleteCb(const GstElement *playbin, uint
 
 void PlayBinCtrlerBase::OnAppsrcErrorMessageReceived(int32_t errorCode)
 {
-    PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR, 0, errorCode, {} };
+    (void)errorCode;
+    PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR,
+        PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
+        MSERR_DATA_SOURCE_IO_ERROR, "PlayBinCtrlerBase::OnAppsrcErrorMessageReceived" };
     ReportMessage(msg);
 }
 
