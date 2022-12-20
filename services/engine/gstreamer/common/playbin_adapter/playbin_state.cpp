@@ -38,7 +38,9 @@ void PlayBinCtrlerBase::BaseState::ReportInvalidOperation()
      * needs to be unlocked before using it.
      */
     ctrler_.mutex_.unlock();
-    PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR, 0, MSERR_INVALID_STATE, {} };
+    PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR,
+        PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
+        MSERR_INVALID_STATE, "PlayBinCtrlerBase::BaseState::ReportInvalidOperation" };
     ctrler_.ReportMessage(msg);
     ctrler_.mutex_.lock();
 }
@@ -205,7 +207,7 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
 
 void PlayBinCtrlerBase::BaseState::HandleError(const InnerMessage &msg)
 {
-    PlayBinMessage playbinMsg { PLAYBIN_MSG_ERROR, 0, msg.detail1, msg.extend };
+    PlayBinMessage playbinMsg { PLAYBIN_MSG_ERROR, PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE, msg.detail1, msg.extend };
     ctrler_.ReportMessage(playbinMsg);
 }
 
