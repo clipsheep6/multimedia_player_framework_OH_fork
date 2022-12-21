@@ -194,7 +194,8 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    size_t argCount = 2; // config + callbackRef
+    const int32_t paramCount = 2; // config + callbackRef
+    size_t argCount = paramCount;
     napi_value args[2] = { nullptr };
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
@@ -207,8 +208,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
     asyncCtx.reset();
     MEDIA_LOGI("JsPrepare GetConfig End");
 
-    // async work
-    argCount = 2;
+    argCount = paramCount;
     return ExecuteByPromise(env, info, argCount, AVRecordergOpt::PREPARE);
 }
 
@@ -322,7 +322,8 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
     MEDIA_LOGI("Js %{public}s Start", opt.c_str());
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    napi_value args[2] = { nullptr };
+    const int32_t maxParam = 2; // The maximum number of parameters is 2. config + callbackRef
+    napi_value args[maxParam] = { nullptr };
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
@@ -331,6 +332,7 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
     CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
 
     // The actual parameter list is followed by the callback pointer object
+    CHECK_AND_RETURN_RET_LOG(argCount >=0 && argCount < maxParam, result, "argCount error: %{public}d!", argCount);
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCount]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
@@ -346,15 +348,11 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
                 ctx->AVRecorderSignError(MSERR_INVALID_OPERATION, option, ""));
 
             auto itFunc = promiseFuncs_.find(option);
-            if (itFunc != promiseFuncs_.end()) {
-                auto memberFunc = itFunc->second;
-                if (memberFunc != nullptr) {
-                    (ctx->napi->*memberFunc)(ctx);
-                    MEDIA_LOGI("%{public}s End", option.c_str());
-                    return;
-                }
-            }
-            MEDIA_LOGI("%{public}s error", option.c_str());
+            CHECK_AND_RETURN_LOG(itFunc != promiseFuncs_.end(), "%{public}s not found in map!", option.c_str());
+            auto memberFunc = itFunc->second;
+            CHECK_AND_RETURN_LOG(memberFunc != nullptr, "memberFunc is nullptr!");
+            (ctx->napi->*memberFunc)(ctx);
+            MEDIA_LOGI("%{public}s End", option.c_str());
         });
         (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
         asyncCtx->opt_ = opt;
@@ -371,7 +369,7 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
         if (asyncCtx->task_) {
             (void)asyncCtx->task_->GetResult();
         }
-        MEDIA_LOGI("%{public}s js async work end", asyncCtx->opt_.c_str());
+        MEDIA_LOGI("%{public}s The execution of the js thread ends and returns", asyncCtx->opt_.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
     asyncCtx.release();
