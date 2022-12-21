@@ -26,26 +26,26 @@ namespace OHOS {
 namespace Media {
 AVRecorderCallback::AVRecorderCallback(napi_env env) : env_(env)
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
 }
 
 AVRecorderCallback::~AVRecorderCallback()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR "Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances destroy", FAKE_POINTER(this));
 }
 
 void AVRecorderCallback::SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;
-    MEDIA_LOGD("Set callback type: %{public}s", name.c_str());
+    MEDIA_LOGI("Set callback type: %{public}s", name.c_str());
 }
 
 void AVRecorderCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_.clear();
-    MEDIA_LOGD("ClearCallback!");
+    MEDIA_LOGI("ClearCallback!");
 }
 
 void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &msg)
@@ -91,14 +91,14 @@ std::string AVRecorderCallback::GetState()
 
 void AVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
 {
-    MEDIA_LOGD("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
+    MEDIA_LOGI("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
     SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened");
     SendStateCallback(AVRecorderState::STATE_ERROR, StateChangeReason::BACKGROUND);
 }
 
 void AVRecorderCallback::OnInfo(int32_t type, int32_t extra)
 {
-    MEDIA_LOGD("OnInfo() is called, type: %{public}d, extra: %{public}d", type, extra);
+    MEDIA_LOGI("OnInfo() is called, type: %{public}d, extra: %{public}d", type, extra);
 }
 
 void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
@@ -123,7 +123,7 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
         std::string request = event->callbackName;
-        MEDIA_LOGD("uv_queue_work start, state changes to %{public}s", event->state.c_str());
+        MEDIA_LOGI("uv_queue_work start, state changes to %{public}s", event->state.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
@@ -181,7 +181,7 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
         CHECK_AND_RETURN_LOG(work->data != nullptr, "workdata is nullptr");
         AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
         std::string request = event->callbackName;
-        MEDIA_LOGD("uv_queue_work start, errorcode:%{public}d , errormessage:%{public}s:",
+        MEDIA_LOGI("uv_queue_work start, errorcode:%{public}d , errormessage:%{public}s:",
             event->errorCode, event->errorMsg.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
