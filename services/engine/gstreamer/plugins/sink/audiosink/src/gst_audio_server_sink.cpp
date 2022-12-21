@@ -439,6 +439,10 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
         case GST_EVENT_FLUSH_STOP:
             GST_DEBUG_OBJECT(basesink, "received FLUSH_STOP");
             break;
+        case GST_EVENT_STREAM_GROUP_DONE:
+            basesink->have_preroll = TRUE;
+            GST_DEBUG_OBJECT(basesink, "received STREAM_GROUP_DONE, set have_preroll TRUE");
+            break;
         default:
             break;
     }
