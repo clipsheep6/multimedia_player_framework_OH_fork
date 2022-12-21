@@ -91,7 +91,7 @@ int32_t PlayBinCtrlerBase::BaseState::ChangePlayBinState(GstState targetState, G
     if (targetState < GST_STATE_PLAYING) {
         int64_t position = ctrler_.QueryPositionInternal(false) / USEC_PER_MSEC;
         int32_t tickType = INNER_MSG_POSITION_UPDATE;
-        ctrler_.msgProcessor_->RemoveTickSource(tickType);
+        ctrler_.msgProcessor_->RemoveTickSourceByType(tickType);
         PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
             static_cast<int32_t>(position), static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
         ctrler_.ReportMessage(posUpdateMsg);
@@ -119,7 +119,7 @@ void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
             ctrler_.msgProcessor_->AddTickSource(tickType, interval);
         } else if (targetState == GST_STATE_PAUSED) {
             int32_t tickType = INNER_MSG_POSITION_UPDATE;
-            ctrler_.msgProcessor_->RemoveTickSource(tickType);
+            ctrler_.msgProcessor_->RemoveTickSourceByType(tickType);
             if (!ctrler_.isSeeking_ && !ctrler_.isRating_) {
                 int64_t position = ctrler_.QueryPositionInternal(false) / USEC_PER_MSEC;
                 PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
@@ -218,7 +218,7 @@ void PlayBinCtrlerBase::BaseState::HandleEos()
         position = ctrler_.QueryPositionInternal(false) / USEC_PER_MSEC;
     }
     int32_t tickType = INNER_MSG_POSITION_UPDATE;
-    ctrler_.msgProcessor_->RemoveTickSource(tickType);
+    ctrler_.msgProcessor_->RemoveTickSourceByType(tickType);
     PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
         static_cast<int32_t>(position), static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
     ctrler_.ReportMessage(posUpdateMsg);

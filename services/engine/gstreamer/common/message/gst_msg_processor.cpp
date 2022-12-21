@@ -150,7 +150,7 @@ void GstMsgProcessor::AddTickSource(int32_t type, uint32_t interval)
     (void)tickSource_.emplace(type, source);
 }
 
-void GstMsgProcessor::RemoveTickSource(int32_t type)
+void GstMsgProcessor::RemoveTickSourceByType(int32_t type)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     auto iter = tickSource_.find(type);
@@ -163,6 +163,18 @@ void GstMsgProcessor::RemoveTickSource(int32_t type)
     g_source_unref(source);
     source = nullptr;
     (void)tickSource_.erase(iter);
+}
+
+void GstMsgProcessor::RemoveTickSourceAll()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    for (auto &[tickType, source] : tickSource_) {
+        g_source_destroy(source);
+        g_source_unref(source);
+        source = nullptr;
+    }
+
+    (void)tickSource_.clear();
 }
 
 void GstMsgProcessor::FreeTickType(TickCallbackInfo *tickCbInfo)
@@ -201,9 +213,7 @@ void GstMsgProcessor::DoReset()
         busSource_ = nullptr;
     }
 
-    for (auto &[tickType, source] : tickSource_) {
-        RemoveTickSource(tickType);
-    }
+    RemoveTickSourceAll();
 
     if (mainLoop_ != nullptr) {
         g_main_loop_unref(mainLoop_);
