@@ -427,6 +427,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             g_mutex_unlock(&sink->render_lock);
             break;
         case GST_EVENT_FLUSH_START:
+            basesink->stream_group_done = FALSE;
             gst_audio_server_sink_clear_cache_buffer(sink);
             if (sink->audio_sink == nullptr) {
                 break;
@@ -440,8 +441,12 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             GST_DEBUG_OBJECT(basesink, "received FLUSH_STOP");
             break;
         case GST_EVENT_STREAM_GROUP_DONE:
-            basesink->have_preroll = TRUE;
-            GST_DEBUG_OBJECT(basesink, "received STREAM_GROUP_DONE, set have_preroll TRUE");
+            basesink->stream_group_done = TRUE;
+            GST_DEBUG_OBJECT(basesink, "received STREAM_GROUP_DONE, set stream_group_done TRUE");
+            break;
+        case GST_EVENT_STREAM_START:
+            basesink->stream_group_done = FALSE;
+            GST_DEBUG_OBJECT(basesink, "received STREAM_START, set stream_group_done FALSE");
             break;
         default:
             break;
