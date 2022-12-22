@@ -414,12 +414,12 @@ int32_t PlayBinCtrlerBase::PlayingState::Pause()
     GstStateChangeReturn stateRet = gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
         nullptr, static_cast<GstClockTime>(0));
     if (stateRet == GST_STATE_CHANGE_SUCCESS && state == GST_STATE_PAUSED) {
-        MEDIA_LOGD("playbin already paused");
+        MEDIA_LOGI("playbin already paused");
         ctrler_.ChangeState(ctrler_.pausedState_);
         return MSERR_OK;
     } else if (stateRet == GST_STATE_CHANGE_ASYNC && ctrler_.isBufferPause_) {
-        MEDIA_LOGD("playbin is changing to paused asynchronously");
-        ctrler_.ChangeState(ctrler_.pausedState_);
+        ctrler_.isUserSetPause_ = true;
+        MEDIA_LOGI("playbin is changing to paused asynchronously");
         return MSERR_OK;
     }
     ctrler_.isUserSetPause_ = true;
