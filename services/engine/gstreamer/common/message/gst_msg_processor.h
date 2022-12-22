@@ -49,7 +49,8 @@ public:
     void FlushEnd();
     void Reset() noexcept;
     void AddTickSource(int32_t type, uint32_t interval);
-    void RemoveTickSource(int32_t type);
+    void RemoveTickSourceByType(int32_t type);
+    void RemoveTickSourceAll();
 
 private:
     int32_t DoInit();

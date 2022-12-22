@@ -62,6 +62,8 @@ static void gst_vdec_h264_init(GstVdecH264 *self)
     self->has_data_after_sps = true;
     self->cache_offset = 0;
     self->cache_slice_buffer = nullptr;
+    GstVdecBase *base = GST_VDEC_BASE(self);
+    base->compress_format = OHOS::Media::GstCompressionFormat::GST_AVC;
 }
 
 static gboolean get_slice_flag(GstVdecH264 *self, GstMapInfo *info, bool &ready_push)

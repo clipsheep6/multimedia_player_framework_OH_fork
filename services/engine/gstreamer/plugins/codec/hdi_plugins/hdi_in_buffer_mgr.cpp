@@ -67,7 +67,7 @@ int32_t HdiInBufferMgr::PushBuffer(GstBuffer *buffer)
         codecBuffer = GetCodecBuffer(buffer);
     }
     CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
-    MEDIA_LOGD("id %{public}d, fillLen %{public}d, pts %{public}lld",
+    MEDIA_LOGD("id %{public}d, fillLen %{public}d, pts %{public} " PRId64 "",
         codecBuffer->hdiBuffer.bufferId, codecBuffer->hdiBuffer.filledLen, codecBuffer->hdiBuffer.pts);
     auto ret = HdiEmptyThisBuffer(handle_, &codecBuffer->hdiBuffer);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "EmptyThisBuffer failed");
@@ -83,7 +83,9 @@ int32_t HdiInBufferMgr::FreeBuffers()
         EmptyList(preBuffers_);
         return GST_CODEC_OK;
     }
-    freeCond_.wait(lock, [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual; });
+    static constexpr int32_t timeout = 2;
+    freeCond_.wait_for(lock, std::chrono::seconds(timeout),
+        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual; });
     FreeCodecBuffers();
     return GST_CODEC_OK;
 }

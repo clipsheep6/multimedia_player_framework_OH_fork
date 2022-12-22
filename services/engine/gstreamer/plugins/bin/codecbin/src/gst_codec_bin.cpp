@@ -180,6 +180,7 @@ static void gst_codec_bin_init(GstCodecBin *bin)
     bin->bitrate_mode = -1;
     bin->codec_quality = -1;
     bin->i_frame_interval = -1;
+    bin->bitrate = 0;
 }
 
 static void gst_codec_bin_finalize(GObject *object)
@@ -253,6 +254,7 @@ static void gst_codec_bin_set_property(GObject *object, guint prop_id,
             g_object_set(bin->coder, "req-i-frame", g_value_get_uint(value), nullptr);
             break;
         case PROP_BITRATE:
+            bin->bitrate = g_value_get_uint(value);
             g_return_if_fail(bin->coder != nullptr);
             g_object_set(bin->coder, "bitrate", g_value_get_uint(value), nullptr);
             break;
@@ -470,6 +472,7 @@ static gboolean operate_element(GstCodecBin *bin)
         g_object_set(bin->coder, "codec-quality", bin->codec_quality, nullptr);
         g_object_set(bin->coder, "i-frame-interval-new", bin->i_frame_interval, nullptr);
         g_object_set(bin->coder, "codec-profile", bin->codec_profile, nullptr);
+        g_object_set(bin->coder, "bitrate", bin->bitrate, nullptr);
     }
     return TRUE;
 }

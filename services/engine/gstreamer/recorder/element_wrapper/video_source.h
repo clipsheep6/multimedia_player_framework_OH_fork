@@ -30,18 +30,22 @@ public:
     int32_t CheckConfigReady() override;
     int32_t GetParameter(RecorderParam &recParam) override;
     void Dump() override;
+    int32_t Prepare() override;
+    std::string GetEncorderInputFormat();
 
 private:
-    void SetCaps(int32_t width, int32_t height);
+    void SetCaps();
     int32_t ConfigureVideoRectangle(const RecorderParam &recParam);
     int32_t ConfigureVideoFrameRate(const RecorderParam &recParam);
     int32_t ConfigureCaptureRate(const RecorderParam &recParam);
+    int32_t NoteVencFmt(const RecorderParam &recParam);
 
     int32_t width_ = 0;
     int32_t height_ = 0;
     int32_t frameRate_ = 0;
     double capRate_ = 0;
     int32_t streamType_ = 0;
+    VideoCodecFormat encoderFormat_ = VideoCodecFormat::H264;
 };
 } // namespace Media
 } // namespace OHOS
