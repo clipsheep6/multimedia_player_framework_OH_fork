@@ -418,7 +418,7 @@ void AVPlayerCallback::OnVolumeChangeCb(const Format &infoBody)
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Double");
 
     float volumeLevel = 0.0;
-    (void)infoBody.GetFloatValue(PLAYER_VOLUME_LEVEL, volumeLevel);
+    (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, volumeLevel);
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_VOLUME_CHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_VOLUME_CHANGE;
     cb->value = static_cast<double>(volumeLevel);
