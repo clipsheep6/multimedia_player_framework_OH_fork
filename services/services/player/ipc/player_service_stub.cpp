@@ -243,6 +243,11 @@ int32_t PlayerServiceStub::Release()
     return playerServer_->Release();
 }
 
+int32_t PlayerServiceStub::ReleaseSync()
+{
+    return MSERR_OK;
+}
+
 int32_t PlayerServiceStub::SetVolume(float leftVolume, float rightVolume)
 {
     MediaTrace trace("binder::SetVolume");

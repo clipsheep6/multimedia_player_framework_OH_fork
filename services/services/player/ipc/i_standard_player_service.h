@@ -38,6 +38,7 @@ public:
     virtual int32_t Stop() = 0;
     virtual int32_t Reset() = 0;
     virtual int32_t Release() = 0;
+    virtual int32_t ReleaseSync() = 0;
     virtual int32_t SetVolume(float leftVolume, float rightVolume) = 0;
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) = 0;
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;

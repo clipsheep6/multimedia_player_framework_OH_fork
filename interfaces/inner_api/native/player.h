@@ -340,7 +340,11 @@ public:
     virtual int32_t Reset() = 0;
 
     /**
-     * @brief Releases player resources
+     * @brief Releases player resources async
+     *
+     *  Asynchronous release guarantees the performance
+     *  but cannot ensure whether the surfacebuffer is released.
+     *  The caller needs to ensure the life cycle security of the sufrace
      *
      * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
      * in {@link media_errors.h} otherwise.
@@ -348,6 +352,20 @@ public:
      * @version 1.0
      */
     virtual int32_t Release() = 0;
+
+    /**
+     * @brief Releases player resources sync
+     *
+     * Synchronous release ensures effective release of surfacebuffer
+     * but this interface will take a long time (when the engine is not idle state)
+     * requiring the caller to design an asynchronous mechanism by itself
+     *
+     * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t ReleaseSync() = 0;
 
     /**
      * @brief Sets the volume of the player.

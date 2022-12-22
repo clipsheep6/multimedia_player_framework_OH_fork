@@ -40,6 +40,7 @@ public:
     int32_t Stop() override;
     int32_t Reset() override;
     int32_t Release() override;
+    int32_t ReleaseSync() override;
     int32_t SetVolume(float leftVolume, float rightVolume) override;
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t GetCurrentTime(int32_t &currentTime) override;

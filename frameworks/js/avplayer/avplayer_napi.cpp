@@ -388,7 +388,7 @@ std::shared_ptr<TaskHandler<void>> AVPlayerNapi::ReleaseTask()
             ResetUserParameters();
 
             if (player_ != nullptr) {
-                (void)player_->Release();
+                (void)player_->ReleaseSync();
                 player_ = nullptr;
             }
 

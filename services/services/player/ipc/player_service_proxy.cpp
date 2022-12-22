@@ -222,6 +222,22 @@ int32_t PlayerServiceProxy::Release()
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::ReleaseSync()
+{
+    MediaTrace trace("binder::ReleaseSync");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int error = Remote()->SendRequest(RELEASE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "Release failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::SetVolume(float leftVolume, float rightVolume)
 {
     MediaTrace trace("binder::SetVolume");
