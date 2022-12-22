@@ -57,8 +57,9 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("seek", JsSeek),
         DECLARE_NAPI_FUNCTION("on", JsSetOnCallback),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
-        DECLARE_NAPI_FUNCTION("getTrackDescription", JsGetTrackDescription),
         DECLARE_NAPI_FUNCTION("setSpeed", JsSetSpeed),
+        DECLARE_NAPI_FUNCTION("setBitrate", JsSelectBitrate),
+        DECLARE_NAPI_FUNCTION("getTrackDescription", JsGetTrackDescription),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -614,7 +615,7 @@ napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, bitrate]() {
         MEDIA_LOGI("SelectBitRate Task");
         if (jsPlayer->player_ != nullptr) {
-            (void)jsPlayer->player_->SelectBitRate(bitrate);
+            (void)jsPlayer->player_->SelectBitRate(static_cast<uint32_t>(bitrate));
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
