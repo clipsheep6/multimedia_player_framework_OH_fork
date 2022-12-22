@@ -29,6 +29,7 @@ namespace Media {
 class PlayerKeys {
 public:
     static constexpr std::string_view PLAYER_STATE_CHANGED_REASON = "state_changed_reason";
+    static constexpr std::string_view PLAYER_VOLUME_LEVEL = "volume_level";
     static constexpr std::string_view PLAYER_TRACK_INDEX = "track_index";
     static constexpr std::string_view PLAYER_TRACK_TYPE = "track_type";
     static constexpr std::string_view PLAYER_WIDTH = "width";

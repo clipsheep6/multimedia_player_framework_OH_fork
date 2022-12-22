@@ -319,7 +319,7 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
             AVPlayerCallback::OnStateChangeCb(static_cast<PlayerStates>(extra), infoBody);
             break;
         case INFO_TYPE_VOLUME_CHANGE:
-            AVPlayerCallback::OnVolumeChangeCb(extra);
+            AVPlayerCallback::OnVolumeChangeCb(infoBody);
             break;
         case INFO_TYPE_SEEKDONE:
             AVPlayerCallback::OnSeekDoneCb(extra);
@@ -405,7 +405,7 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state, const Format &infoBod
     }
 }
 
-void AVPlayerCallback::OnVolumeChangeCb(double volumeLevel)
+void AVPlayerCallback::OnVolumeChangeCb(const Format &infoBody)
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGI("OnVolumeChangeCb in");
@@ -417,9 +417,11 @@ void AVPlayerCallback::OnVolumeChangeCb(double volumeLevel)
     NapiCallback::Double *cb = new(std::nothrow) NapiCallback::Double();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Double");
 
+    float volumeLevel = 0.0;
+    (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, volumeLevel);
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_VOLUME_CHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_VOLUME_CHANGE;
-    cb->value = volumeLevel;
+    cb->value = static_cast<double>(volumeLevel);
     NapiCallback::CompleteCallback(env_, cb);
 }
 
