@@ -567,7 +567,9 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         auto ret = currState->Seek(mSeconds, mode);
         if (ret != MSERR_OK) {
+            Format format;
             OnErrorMessage(MSERR_INVALID_OPERATION, "seek failed for some reason");
+            OnInfoNoChangeStatus(INFO_TYPE_SEEKDONE, mSeconds, format);
             taskMgr_.MarkTaskDone();
         }
     });
@@ -734,7 +736,9 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         auto ret = currState->SetPlaybackSpeed(mode);
         if (ret != MSERR_OK) {
+            Format format;
             OnErrorMessage(MSERR_INVALID_OPERATION, "speed failed for some reason");
+            OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
             taskMgr_.MarkTaskDone();
         }
     });
