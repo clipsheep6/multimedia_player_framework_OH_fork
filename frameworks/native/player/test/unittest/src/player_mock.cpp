@@ -384,6 +384,16 @@ int32_t PlayerMock::Release()
     return player_->Release();
 }
 
+int32_t PlayerMock::ReleaseSync()
+{
+    if (previewWindow_ != nullptr) {
+        previewWindow_->Destroy();
+        previewWindow_ = nullptr;
+    }
+    callback_ = nullptr;
+    return player_->ReleaseSync();
+}
+
 int32_t PlayerMock::SetVolume(float leftVolume, float rightVolume)
 {
     std::unique_lock<std::mutex> lock(mutex_);

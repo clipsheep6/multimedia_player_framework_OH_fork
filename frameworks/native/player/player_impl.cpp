@@ -132,6 +132,16 @@ int32_t PlayerImpl::Release()
     return MSERR_OK;
 }
 
+int32_t PlayerImpl::ReleaseSync()
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " ReleaseSync in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    (void)playerService_->ReleaseSync();
+    (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+    playerService_ = nullptr;
+    return MSERR_OK;
+}
+
 int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetVolume(%{public}f, %{public}f) in",

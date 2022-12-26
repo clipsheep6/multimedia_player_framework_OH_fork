@@ -1370,7 +1370,7 @@ HWTEST_F(PlayerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
     sleep(PLAYING_TIME);
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME);
-    EXPECT_EQ(MSERR_OK, player->Release());
+    EXPECT_EQ(MSERR_OK, player->ReleaseSync());
 }
 
 /**

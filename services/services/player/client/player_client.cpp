@@ -157,6 +157,17 @@ int32_t PlayerClient::Release()
     return playerProxy_->Release();
 }
 
+int32_t PlayerClient::ReleaseSync()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    callback_ = nullptr;
+    listenerStub_ = nullptr;
+    dataSrcStub_ = nullptr;
+
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->ReleaseSync();
+}
+
 int32_t PlayerClient::SetVolume(float leftVolume, float rightVolume)
 {
     std::lock_guard<std::mutex> lock(mutex_);
