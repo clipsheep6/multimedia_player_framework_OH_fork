@@ -166,6 +166,19 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_UNKNOWN,                             MSERR_EXT_API9_IO},
 };
 
+const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
+    {MSERR_EXT_API9_OK, "Success: "},
+    {MSERR_EXT_API9_NO_PERMISSION, "No Permission: "},
+    {MSERR_EXT_API9_INVALID_PARAMETER, "Invalid Parameter: "},
+    {MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Unsupport Capability: "},
+    {MSERR_EXT_API9_NO_MEMORY, "No Memory: "},
+    {MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Operate Not Permit: "},
+    {MSERR_EXT_API9_IO, "IO Error: "},
+    {MSERR_EXT_API9_TIMEOUT, "Network Timeout: "},
+    {MSERR_EXT_API9_SERVICE_DIED, "Service Died: "},
+    {MSERR_EXT_API9_UNSUPPORT_FORMAT, "Unsupport Format: "},
+};
+
 std::string ErrorMessageOk(const std::string& param1, const std::string& param2)
 {
     (void)param1;
@@ -282,6 +295,15 @@ std::string MSExtErrorAPI9ToString(MediaServiceExtErrCodeAPI9 code,
     }
 
     return "invalid error code:" + std::to_string(static_cast<int32_t>(code));
+}
+
+std::string MSExtAVErrorToString(MediaServiceExtErrCodeAPI9 code)
+{
+    if (MSEXTERRCODE_API9_INFOS.count(code) != 0) {
+        return MSEXTERRCODE_API9_INFOS.at(code);
+    }
+
+    return "invalid error code:";
 }
 
 std::string MSErrorToExtErrorString(MediaServiceErrCode code)

@@ -56,6 +56,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("release", JsRelease),
         DECLARE_NAPI_FUNCTION("seek", JsSeek),
         DECLARE_NAPI_FUNCTION("on", JsSetOnCallback),
+        DECLARE_NAPI_FUNCTION("off", JsClearOnCallback),
         DECLARE_NAPI_FUNCTION("setVolume", JsSetVolume),
         DECLARE_NAPI_FUNCTION("setSpeed", JsSetSpeed),
         DECLARE_NAPI_FUNCTION("setBitrate", JsSelectBitrate),
@@ -1233,6 +1234,31 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     return result;
 }
 
+napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsClearOnCallback In");
+
+    napi_value args[2] = { nullptr }; // args[0]:type, args[1]:callback
+    size_t argCount = 2; // args[0]:type, args[1]:callback
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    napi_valuetype valueType0 = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "napi_typeof failed, please check the input parameters");
+        return result;
+    }
+
+    std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+    MEDIA_LOGI("set callbackName: %{public}s", callbackName.c_str());
+
+    jsPlayer->ClearCallbackReference(callbackName);
+    MEDIA_LOGI("JsClearOnCallback Out");
+    return result;
+}
+
 void AVPlayerNapi::SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -1249,6 +1275,15 @@ void AVPlayerNapi::ClearCallbackReference()
         playerCb_->ClearCallbackReference();
     }
     refMap_.clear();
+}
+
+void AVPlayerNapi::ClearCallbackReference(const std::string &callbackName)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (playerCb_ != nullptr) {
+        playerCb_->ClearCallbackReference(callbackName);
+    }
+    refMap_.erase(callbackName);
 }
 
 void AVPlayerNapi::NotifyDuration(int32_t duration)

@@ -115,6 +115,8 @@ __attribute__((visibility("default"))) std::string MSExtErrorAPI9ToString(MediaS
 __attribute__((visibility("default"))) std::string MSErrorToExtErrorAPI9String(MediaServiceErrCode code,
     const std::string& param1, const std::string& param2);
 __attribute__((visibility("default"))) MediaServiceExtErrCodeAPI9 MSErrorToExtErrorAPI9(MediaServiceErrCode code);
+
+__attribute__((visibility("default"))) std::string MSExtAVErrorToString(MediaServiceExtErrCodeAPI9 code);
 } // namespace Media
 } // namespace OHOS
 #endif // MEDIA_ERRORS_H
