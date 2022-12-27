@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "native_module_ohos_media.h"
+#include "avrecorder_napi.h"
 #include "media_log.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "JSMediaModule"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVRecorderModule"};
 }
 
 /*
@@ -28,19 +28,8 @@ static napi_value Export(napi_env env, napi_value exports)
 {
     MEDIA_LOGD("Export() is called");
 
-    OHOS::Media::MediaCapsNapi::Init(env, exports);
-    OHOS::Media::MediaEnumNapi::Init(env, exports);
-
-#ifdef SUPPORT_PLAYER
-    OHOS::Media::AudioPlayerNapi::Init(env, exports);
-    OHOS::Media::VideoPlayerNapi::Init(env, exports);
-#endif
-#ifdef SUPPORT_PLAYER_API9
-    OHOS::Media::AVPlayerNapi::Init(env, exports);
-#endif
-#ifdef SUPPORT_RECORDER
-    OHOS::Media::AudioRecorderNapi::Init(env, exports);
-    OHOS::Media::VideoRecorderNapi::Init(env, exports);
+#ifdef SUPPORT_RECORDER_API9
+    OHOS::Media::AVRecorderNapi::Init(env, exports);
 #endif
     return exports;
 }

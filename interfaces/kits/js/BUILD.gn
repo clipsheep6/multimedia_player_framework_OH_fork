@@ -19,6 +19,7 @@ group("napi_packages") {
   deps = []
   if (multimedia_player_framework_support_jsapi) {
     deps += [
+      "//foundation/multimedia/player_framework/frameworks/js/avrecorder:media_avrecorder",
       "//foundation/multimedia/player_framework/interfaces/kits/js:media",
       "//foundation/multimedia/player_framework/interfaces/kits/js:media_js",
     ]

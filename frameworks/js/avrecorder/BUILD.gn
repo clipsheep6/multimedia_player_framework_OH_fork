@@ -28,6 +28,7 @@ ohos_shared_library("media_avrecorder") {
   sources = [
     "//foundation/multimedia/player_framework/frameworks/js/avrecorder/avrecorder_callback.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/avrecorder/avrecorder_napi.cpp",
+    "//foundation/multimedia/player_framework/frameworks/js/avrecorder/register.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
   ]
 
