@@ -19,7 +19,7 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 
 export default function AVPlayerHttpSeekTest() {
     describe('AVPlayerHttpSeekTest', function () {
-        const HTTP_PATH = 'http://123.57.24.33:8000/';
+        const HTTP_PATH = 'http://xxx.xx.xx.xx:xxxx/';
         const VIDEO_PATH = HTTP_PATH + '01.video/';
         const AUDIO_PATH = HTTP_PATH + '02.audio/';
         const VIDEOPLAYER_PATH = HTTP_PATH + '03.videoplayer/';

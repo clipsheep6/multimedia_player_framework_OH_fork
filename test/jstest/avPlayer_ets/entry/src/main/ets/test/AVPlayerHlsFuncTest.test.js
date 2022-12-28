@@ -19,7 +19,7 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 
 export default function AVPlayerHlsFuncTest() {
     describe('AVPlayerHlsFuncTest', function () {
-        const HTTP_PATH = 'http://123.57.24.33:8000/';
+        const HTTP_PATH = 'http://xxx.xx.xx.xx:xxxx/';
         const PLAY_TIME = 3000;
         let avPlayer = null;
         let expectBitrateArray = [];
