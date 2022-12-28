@@ -427,187 +427,115 @@ declare namespace media {
     setBitrate(bitrate: number): void;
 
     /**
-     * Listens for media playback events.
+     * Register or unregister listens for media playback events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback stateChange event.
      */
     on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
+    off(type: 'stateChange', callback?: (state: AVPlayerState, reason: StateChangeReason) => void): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'stateChange', callback: Callback<void>): void;
-    /**
-     * Listens for media playback events.
+     * Register or unregister listens for media playback events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback volume event.
      */
     on(type: 'volumeChange', callback: Callback<number>): void;
+    off(type: 'volumeChange', callback?: Callback<number>): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'volumeChange', callback: Callback<void>): void;
-    /**
-     * Listens for media playback events.
+     * Register or unregister listens for media playback events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback end of stream
      */
     on(type: 'endOfStream', callback: Callback<void>): void;
+    off(type: 'endOfStream', callback?: Callback<void>): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'endOfStream', callback: Callback<void>): void;
-    /**
-     * Listens for media playback events.
+     * Register or unregister listens for media playback events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback seekDone event.
      */
     on(type: 'seekDone', callback: Callback<number>): void;
+    off(type: 'seekDone', callback?: Callback<number>): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'seekDone', callback: Callback<void>): void;
-    /**
-     * Listens for media playback events.
+     * Register or unregister listens for media playback events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback speedDone event.
      */
     on(type: 'speedDone', callback: Callback<number>): void;
+    off(type: 'speedDone', callback?: Callback<number>): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'speedDone', callback: Callback<void>): void;
-    /**
-     * Listens for media playback events.
+     * Register or unregister listens for media playback events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback setBitrateDone event.
      */
     on(type: 'bitrateDone', callback: Callback<number>): void;
+    off(type: 'bitrateDone', callback?: Callback<number>): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'bitrateDone', callback: Callback<void>): void;
-    /**
-     * Listens for media playback events.
+     * LRegister or unregister listens for media playback events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback timeUpdate event.
      */
     on(type: 'timeUpdate', callback: Callback<number>): void;
+    off(type: 'timeUpdate', callback?: Callback<number>): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'timeUpdate', callback: Callback<void>): void;
-    /**
-     * Listens for media playback events.
+     * Register or unregister listens for media playback events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback durationUpdate event.
      */
     on(type: 'durationUpdate', callback: Callback<number>): void;
+    off(type: 'durationUpdate', callback?: Callback<number>): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'durationUpdate', callback: Callback<void>): void;
-    /**
-     * Listens for video playback buffering events.
+     * Register or unregister listens for video playback buffering events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback buffering update event to listen for.
      * @param callback Callback used to listen for the buffering update event, return BufferingInfoType and the value.
      */
     on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
+    off(type: 'bufferingUpdate', callback?: (infoType: BufferingInfoType, value: number) => void): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'bufferingUpdate', callback: Callback<void>): void;
-    /**
-     * Listens for start render video frame events.
+     * Register or unregister listens for start render video frame events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return .
      */
     on(type: 'startRenderFrame', callback: Callback<void>): void;
+    off(type: 'startRenderFrame', callback?: Callback<void>): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'startRenderFrame', callback: Callback<void>): void;
-    /**
-     * Listens for video size change event.
+     * Register or unregister listens for video size change event.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return video size.
      */
     on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
+    off(type: 'videoSizeChange', callback?: (width: number, height: number) => void): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'videoSizeChange', callback: Callback<void>): void;
-    /**
-     * Listens for audio interrupt event, refer to {@link #audio.InterruptEvent}
+     * Register or unregister listens for audio interrupt event, refer to {@link #audio.InterruptEvent}
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
      * @param callback Callback used to listen for the playback event return audio interrupt info.
      */
     on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
+    off(type: 'audioInterrupt', callback?: (info: audio.InterruptEvent) => void): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'audioInterrupt', callback: Callback<void>): void;
-    /**
-     * Listens for available bitrates collect completed events for HLS protocal stream playback.
+     * Register or unregister listens for available bitrates collect completed events for HLS protocal stream playback.
      * This event will be reported after the {@link #prepare} called.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
@@ -615,28 +543,25 @@ declare namespace media {
      * @param callback Callback used to listen for the playback event return available bitrates.
      */
     on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
+    off(type: 'availableBitrates', callback?: (bitrates: Array<number>) => void): void;
     /**
-     * Cancel Listens for media playback events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
-     */
-    off(type: 'availableBitrates', callback: Callback<void>): void;
-    /**
-     * Listens for playback error events.
+     * Register or unregister listens for playback error events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback error event to listen for.
      * @param callback Callback used to listen for the playback error event.
      */
     on(type: 'error', callback: ErrorCallback): void;
+    off(type: 'error', callback?: ErrorCallback): void;
     /**
-     * Cancel Listens for media playback events.
+     * Register or unregister listens for playback illegal events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback event to Cancel listen for.
+     * @param type Type of the playback illegal event to listen for.
+     * @param callback Callback used to listen for the playback illegal event.
      */
-    off(type: 'error', callback: Callback<void>): void;
+    on (type: 'illegal', callback: ErrorCallback): void;
+    off(type: 'illegal', callback?: ErrorCallback): void;
   }
 
   /**
