@@ -43,6 +43,7 @@ declare namespace media {
    function createAVPlayer() : Promise<AVPlayer>;
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVPlayer
    * Creates an AudioPlayer instance.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
@@ -52,6 +53,7 @@ declare namespace media {
   function createAudioPlayer(): AudioPlayer;
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVRecorder
    * Creates an AudioRecorder instance.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
@@ -61,6 +63,7 @@ declare namespace media {
   function createAudioRecorder(): AudioRecorder;
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVPlayer
    * Creates an VideoPlayer instance.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
@@ -68,7 +71,9 @@ declare namespace media {
    * @param callback Callback used to return AudioPlayer instance if the operation is successful; returns null otherwise.
    */
   function createVideoPlayer(callback: AsyncCallback<VideoPlayer>): void;
+
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVPlayer
    * Creates an VideoPlayer instance.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
@@ -78,6 +83,7 @@ declare namespace media {
   function createVideoPlayer() : Promise<VideoPlayer>;
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVRecorder
    * Creates an VideoRecorder instance.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
@@ -87,7 +93,9 @@ declare namespace media {
    * @systemapi
    */
   function createVideoRecorder(callback: AsyncCallback<VideoRecorder>): void;
+
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVRecorder
    * Creates an VideoRecorder instance.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
@@ -199,7 +207,7 @@ declare namespace media {
  }
 
   /**
-   * Describes media playback states.
+   * Describes AVPlayer states.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.AVPlayer
    * @import import media from '@ohos.multimedia.media'
@@ -234,25 +242,64 @@ declare namespace media {
     prepare(): Promise<void>;
 
     /**
-     * Starts media playback.
+     * play video playback
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param callback A callback instance used to return when play completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400106 - unsupported media format. Return by callback.
      */
-    play(): void;
- 
-    /**
-     * Pauses media playback.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    pause(): void;
+    play(callback: AsyncCallback<void>): void;
 
     /**
-     * Stops media playback.
+     * play video playback
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @return A Promise instance used to return when play completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400106 - unsupported media format. Return by callback.
      */
-    stop(): void;
+    play(): Promise<void>;
+
+    /**
+     * pause video playback
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param callback A callback instance used to return when pause completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400106 - unsupported media format. Return by callback.
+     */
+    pause(callback: AsyncCallback<void>): void;
+
+    /**
+     * pause video playback
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @return A Promise instance used to return when pause completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400106 - unsupported media format. Return by callback.
+     */
+    pause(): Promise<void>;
+
+    /**
+     * stop audio/video playback
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param callback A callback instance used to return when stop completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400106 - unsupported media format. Return by callback.
+     */
+    stop(callback: AsyncCallback<void>): void;
+
+     /**
+      * stop audio/video playback
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.AVPlayer
+      * @return A Promise instance used to return when stop completed.
+      * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+      * @throws { BusinessError } 5400106 - unsupported media format. Return by callback.
+      */
+    stop(): Promise<void>;
 
     /**
      * reset AVPlayer, it will to idle state and can set src again.
@@ -273,6 +320,24 @@ declare namespace media {
     reset(): Promise<void>;
 
     /**
+     * releases resources used for AVPlayer.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param callback A callback instance used to return when release completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     */
+    release(callback: AsyncCallback<void>): void;
+
+    /**
+     * releases resources used for AVPlayer.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @return A Promise instance used to return when release completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     */
+    release(): Promise<void>;
+
+    /**
      * Jumps to the specified playback position.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
@@ -288,24 +353,6 @@ declare namespace media {
      * @param vol Relative volume. The value ranges from 0.00 to 1.00. The value 1 indicates the maximum volume (100%).
      */
     setVolume(volume: number): void;
-
-    /**
-     * Releases resources used for AVPlayer.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param callback A callback instance used to return when release completed.
-     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
-     */
-    release(callback: AsyncCallback<void>): void;
-
-    /**
-     * Releases resources used for AVPlayer.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @return A Promise instance used to return when release completed.
-     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
-     */
-    release(): Promise<void>;
 
     /**
      * get all track infos in MediaDescription, should be called after data loaded callback.
@@ -434,7 +481,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback stateChange event.
      */
     on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
-    off(type: 'stateChange', callback?: (state: AVPlayerState, reason: StateChangeReason) => void): void;
+    off(type: 'stateChange'): void;
     /**
      * Register or unregister listens for media playback events.
      * @since 9
@@ -443,7 +490,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback volume event.
      */
     on(type: 'volumeChange', callback: Callback<number>): void;
-    off(type: 'volumeChange', callback?: Callback<number>): void;
+    off(type: 'volumeChange'): void;
     /**
      * Register or unregister listens for media playback events.
      * @since 9
@@ -452,7 +499,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback end of stream
      */
     on(type: 'endOfStream', callback: Callback<void>): void;
-    off(type: 'endOfStream', callback?: Callback<void>): void;
+    off(type: 'endOfStream'): void;
     /**
      * Register or unregister listens for media playback events.
      * @since 9
@@ -461,7 +508,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback seekDone event.
      */
     on(type: 'seekDone', callback: Callback<number>): void;
-    off(type: 'seekDone', callback?: Callback<number>): void;
+    off(type: 'seekDone'): void;
     /**
      * Register or unregister listens for media playback events.
      * @since 9
@@ -470,7 +517,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback speedDone event.
      */
     on(type: 'speedDone', callback: Callback<number>): void;
-    off(type: 'speedDone', callback?: Callback<number>): void;
+    off(type: 'speedDone'): void;
     /**
      * Register or unregister listens for media playback events.
      * @since 9
@@ -479,7 +526,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback setBitrateDone event.
      */
     on(type: 'bitrateDone', callback: Callback<number>): void;
-    off(type: 'bitrateDone', callback?: Callback<number>): void;
+    off(type: 'bitrateDone'): void;
     /**
      * LRegister or unregister listens for media playback events.
      * @since 9
@@ -488,7 +535,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback timeUpdate event.
      */
     on(type: 'timeUpdate', callback: Callback<number>): void;
-    off(type: 'timeUpdate', callback?: Callback<number>): void;
+    off(type: 'timeUpdate'): void;
     /**
      * Register or unregister listens for media playback events.
      * @since 9
@@ -497,7 +544,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback durationUpdate event.
      */
     on(type: 'durationUpdate', callback: Callback<number>): void;
-    off(type: 'durationUpdate', callback?: Callback<number>): void;
+    off(type: 'durationUpdate'): void;
     /**
      * Register or unregister listens for video playback buffering events.
      * @since 9
@@ -506,7 +553,7 @@ declare namespace media {
      * @param callback Callback used to listen for the buffering update event, return BufferingInfoType and the value.
      */
     on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
-    off(type: 'bufferingUpdate', callback?: (infoType: BufferingInfoType, value: number) => void): void;
+    off(type: 'bufferingUpdate'): void;
     /**
      * Register or unregister listens for start render video frame events.
      * @since 9
@@ -515,7 +562,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback event return .
      */
     on(type: 'startRenderFrame', callback: Callback<void>): void;
-    off(type: 'startRenderFrame', callback?: Callback<void>): void;
+    off(type: 'startRenderFrame'): void;
     /**
      * Register or unregister listens for video size change event.
      * @since 9
@@ -524,7 +571,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback event return video size.
      */
     on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
-    off(type: 'videoSizeChange', callback?: (width: number, height: number) => void): void;
+    off(type: 'videoSizeChange'): void;
     /**
      * Register or unregister listens for audio interrupt event, refer to {@link #audio.InterruptEvent}
      * @since 9
@@ -533,7 +580,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback event return audio interrupt info.
      */
     on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
-    off(type: 'audioInterrupt', callback?: (info: audio.InterruptEvent) => void): void;
+    off(type: 'audioInterrupt'): void;
     /**
      * Register or unregister listens for available bitrates collect completed events for HLS protocal stream playback.
      * This event will be reported after the {@link #prepare} called.
@@ -543,7 +590,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback event return available bitrates.
      */
     on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
-    off(type: 'availableBitrates', callback?: (bitrates: Array<number>) => void): void;
+    off(type: 'availableBitrates'): void;
     /**
      * Register or unregister listens for playback error events.
      * @since 9
@@ -552,7 +599,7 @@ declare namespace media {
      * @param callback Callback used to listen for the playback error event.
      */
     on(type: 'error', callback: ErrorCallback): void;
-    off(type: 'error', callback?: ErrorCallback): void;
+    off(type: 'error'): void;
     /**
      * Register or unregister listens for playback illegal events.
      * @since 9
@@ -560,11 +607,12 @@ declare namespace media {
      * @param type Type of the playback illegal event to listen for.
      * @param callback Callback used to listen for the playback illegal event.
      */
-    on (type: 'illegal', callback: ErrorCallback): void;
-    off(type: 'illegal', callback?: ErrorCallback): void;
+    on(type: 'illegal', callback: ErrorCallback): void;
+    off(type: 'illegal'): void;
   }
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVErrorCode
    * Enumerates ErrorCode types, return in BusinessError::code
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.Core
@@ -705,6 +753,7 @@ declare namespace media {
   }
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVPlayer
    * Describes audio playback states.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioPlayer
@@ -713,6 +762,7 @@ declare namespace media {
   type AudioState = 'idle' | 'playing' | 'paused' | 'stopped' | 'error';
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVPlayer.
    * Manages and plays audio. Before calling an AudioPlayer method, you must use createAudioPlayer()
    * to create an AudioPlayer instance.
    * @since 6
@@ -1070,6 +1120,7 @@ declare namespace media {
   }
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVRecorder.
    * Manages and record audio. Before calling an AudioRecorder method, you must use createAudioRecorder()
    * to create an AudioRecorder instance.
    * @since 6
@@ -1149,6 +1200,7 @@ declare namespace media {
   }
 
   /**
+  * The maintenance of this interface has been stopped since version api 9. Please use AVRecorder.
   * Describes video recorder states.
   * @since 9
   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
@@ -1157,6 +1209,7 @@ declare namespace media {
   type VideoRecordState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'error';
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVRecorder.
    * Manages and record video. Before calling an VideoRecorder method, you must use createVideoRecorder()
    * to create an VideoRecorder instance.
    * @since 9
@@ -1366,6 +1419,7 @@ declare namespace media {
   }
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVPlayer.
    * Describes video playback states.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
@@ -1411,6 +1465,7 @@ declare namespace media {
   }
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVPlayer.
    * Manages and plays video. Before calling an video method, you must use createVideoPlayer() to create an VideoPlayer
    * instance.
    * @since 8
