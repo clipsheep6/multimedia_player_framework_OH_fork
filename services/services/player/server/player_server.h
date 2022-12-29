@@ -101,6 +101,8 @@ public:
     int32_t SetLooping(bool loop) override;
     int32_t SetParameter(const Format &param) override;
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
+    void SetPlayerCallbackInner(const std::shared_ptr<PlayerCallback> &callback);
+    int32_t SetObs(const std::weak_ptr<IPlayerEngineObs> &obs);
     int32_t DumpInfo(int32_t fd);
     int32_t SelectBitRate(uint32_t bitRate) override;
 
@@ -143,6 +145,7 @@ private:
 
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
+    std::weak_ptr<IPlayerEngineObs> obs_;
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
 #endif
