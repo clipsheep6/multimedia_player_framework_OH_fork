@@ -304,5 +304,6 @@ ohos_unittest("format_capi_unit_test") {
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
     "//foundation/window/window_manager/wm:libwm",
+    "//third_party/bounds_checking_function:libsec_shared",
   ]
 }
