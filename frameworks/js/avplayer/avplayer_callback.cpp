@@ -286,13 +286,13 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
-
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
 }
 
 void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
 {
-    MEDIA_LOGE("OnErrorCb:errorCode %{public}d, errorMsg %{public}s", errorCode, errorMsg.c_str());
+    std::string message = MSExtAVErrorToString(errorCode) + errorMsg;
+    MEDIA_LOGE("OnErrorCb:errorCode %{public}d, errorMsg %{public}s", errorCode, message.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(AVPlayerEvent::EVENT_ERROR) == refMap_.end()) {
         MEDIA_LOGW("can not find error callback!");
@@ -305,7 +305,7 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_ERROR);
     cb->callbackName = AVPlayerEvent::EVENT_ERROR;
     cb->errorCode = errorCode;
-    cb->errorMsg = errorMsg;
+    cb->errorMsg = message;
     NapiCallback::CompleteCallback(env_, cb);
 }
 
@@ -392,9 +392,6 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state, const Format &infoBod
             int32_t reason = StateChangeReason::USER;
             if (infoBody.ContainKey(PlayerKeys::PLAYER_STATE_CHANGED_REASON)) {
                 (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, reason);
-            }
-            if (state == PLAYER_PLAYBACK_COMPLETE || state == PLAYER_STATE_ERROR) {
-                reason = StateChangeReason::BACKGROUND;
             }
             cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
             cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
@@ -710,6 +707,12 @@ void AVPlayerCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_.clear();
+}
+
+void AVPlayerCallback::ClearCallbackReference(const std::string &name)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    refMap_.erase(name);
 }
 
 void AVPlayerCallback::Start()
