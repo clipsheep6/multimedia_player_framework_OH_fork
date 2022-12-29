@@ -63,6 +63,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
+        DECLARE_NAPI_GETTER_SETTER("fileSize", JsGetfileSize, JsSetfileSize),
         DECLARE_NAPI_GETTER_SETTER("surfaceId", JsGetSurfaceID, JsSetSurfaceID),
         DECLARE_NAPI_GETTER_SETTER("loop", JsGetLoop, JsSetLoop),
         DECLARE_NAPI_GETTER_SETTER("videoScaleType", JsGetVideoScaleType, JsSetVideoScaleType),
@@ -395,6 +396,9 @@ std::shared_ptr<TaskHandler<void>> AVPlayerNapi::ReleaseTask()
             if (playerCb_ != nullptr) {
                 playerCb_->Release();
                 playerCb_ = nullptr;
+            }
+            if (dataSrcCb_ != nullptr) {
+                dataSrcCb_ = nullptr;
             }
         });
 
@@ -773,7 +777,68 @@ napi_value AVPlayerNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info 
     (void)CommonNapi::AddNumberPropInt64(env, value, "length", jsPlayer->fileDescriptor_.length);
 
     MEDIA_LOGI("JsGetAVFileDescriptor Out");
+    return value;
+}
+
+napi_value AVPlayerNapi::JsSetfileSize(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetfileSize In");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set fd");
+        return result;
+    }
+
+    jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAVFileDescriptor is not napi_object");
+        return result;
+    }
+
+    napi_status status = napi_get_value_int64(env, args[0], &jsPlayer->fileSize_);
+    if (status != napi_ok || jsPlayer->fileSize_ < -1 || jsPlayer->fileSize_ == 0) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input fileSize");
+        return result;
+    }
+
+    jsPlayer->dataSrcCb_ = std::make_shared<MediaDataSourceCallback>(env, jsPlayer->fileSize_);
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+        MEDIA_LOGI("SetDataSrc Task");
+        if (jsPlayer->player_ != nullptr) {
+            if (jsPlayer->player_->SetSource(jsPlayer->dataSrcCb_) != MSERR_OK) {
+                jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
+            }
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    task->GetResult();
+
+    MEDIA_LOGI("JsSetfileSize Out");
     return result;
+}
+
+napi_value AVPlayerNapi::JsGetfileSize(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetfileSize In");
+
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+
+    napi_value value = nullptr;
+    (void)napi_create_int64(env, jsPlayer->fileSize_, &value);
+
+    MEDIA_LOGI("JsGetfileSize Out");
+    return value;
 }
 
 #ifdef SUPPORT_VIDEO
@@ -1237,8 +1302,14 @@ void AVPlayerNapi::SaveCallbackReference(const std::string &callbackName, std::s
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[callbackName] = ref;
-    if (playerCb_ != nullptr) {
-        playerCb_->SaveCallbackReference(callbackName, ref);
+    if (callbackName == "ReadAt") {
+        if (dataSrcCb_ != nullptr) {
+            dataSrcCb_->SaveCallbackReference(callbackName, ref);
+        }
+    } else {
+        if (playerCb_ != nullptr) {
+            playerCb_->SaveCallbackReference(callbackName, ref);
+        }
     }
 }
 
@@ -1247,6 +1318,9 @@ void AVPlayerNapi::ClearCallbackReference()
     std::lock_guard<std::mutex> lock(mutex_);
     if (playerCb_ != nullptr) {
         playerCb_->ClearCallbackReference();
+    }
+    if (dataSrcCb_ != nullptr) {
+        dataSrcCb_->ClearCallbackReference();
     }
     refMap_.clear();
 }

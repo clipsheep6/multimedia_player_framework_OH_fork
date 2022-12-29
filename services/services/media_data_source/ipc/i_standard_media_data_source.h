@@ -28,13 +28,12 @@ namespace Media {
 class IStandardMediaDataSource : public IRemoteBroker {
 public:
     virtual ~IStandardMediaDataSource() = default;
-    virtual int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
-    virtual int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
+    virtual int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1) = 0;
+    // virtual int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
     virtual int32_t GetSize(int64_t &size) = 0;
 
     enum ListenerMsg {
-        READ_AT = 0,
-        READ_AT_POS,
+        READ_AT_POS = 0,
         GET_SIZE,
     };
 

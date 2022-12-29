@@ -52,7 +52,7 @@ public:
      * The length of the filled memory must match the actual length returned.
      * @return The actual length of stream mem filled, if failed or no mem return MediaDataSourceError.
      */
-    virtual int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
+    virtual int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1) = 0;
 
     /**
      * @brief One-to-one use with getMem.
@@ -65,7 +65,7 @@ public:
      * The length of the filled memory must match the actual length returned.
      * @return The actual length of stream mem filled, if failed or no mem return MediaDataSourceError.
      */
-    virtual int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
+    // virtual int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
 
     /**
      * @brief Get the total size of the stream.
