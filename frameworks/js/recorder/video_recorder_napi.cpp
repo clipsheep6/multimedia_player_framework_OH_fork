@@ -755,10 +755,6 @@ int32_t VideoRecorderNapi::SetVideoRecorderProperties(std::unique_ptr<VideoRecor
 int32_t VideoRecorderNapi::SetUrl(const std::string &urlPath)
 {
     CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "No memory");
-
-    if (!SystemPermission()) {
-
-    }
     const std::string fdHead = "fd://";
 
     if (urlPath.find(fdHead) != std::string::npos) {
