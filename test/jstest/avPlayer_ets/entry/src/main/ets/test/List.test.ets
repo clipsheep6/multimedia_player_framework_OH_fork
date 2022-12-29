@@ -15,9 +15,11 @@
 import AVPlayerHlsFuncTest from './AVPlayerHlsFuncTest.test.js'
 import AVPlayerHttpCompatibilityTest from './AVPlayerHttpCompatibilityTest.test.ets'
 import AVPlayerHttpSeekTest from './AVPlayerHttpSeekTest.test.ets'
+import AVPlayerLocalTest from './AVPlayerLocalTest.test.ets'
 
 export default function testsuite() {
   AVPlayerHlsFuncTest()
   AVPlayerHttpCompatibilityTest();
   AVPlayerHttpSeekTest();
+  AVPlayerLocalTest();
 }

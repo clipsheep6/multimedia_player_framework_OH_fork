@@ -14,6 +14,26 @@
  */
 
 
+const CODECMIMEVALUE = ['video/avc', 'audio/mp4a-latm', 'audio/mpeg']
+// File operation
+export async function getFileDescriptor(fileName) {
+    let fileDescriptor = undefined;
+    let mgr = globalThis.abilityContext.resourceManager
+    await mgr.getRawFileDescriptor(fileName).then(value => {
+        fileDescriptor = {fd: value.fd, offset: value.offset, length: value.length};
+        console.log('case getRawFileDescriptor success fileName: ' + fileName);
+    }).catch(error => {
+        console.log('case getRawFileDescriptor err: ' + error);
+    });
+    return fileDescriptor;
+}
+export async function closeFileDescriptor(fileName) {
+    await globalThis.abilityContext.resourceManager.closeRawFileDescriptor(fileName).then(()=> {
+        console.log('case closeRawFileDescriptor ' + fileName);
+    }).catch(error => {
+        console.log('case closeRawFileDescriptor err: ' + error);
+    });
+}
 // wait asynchronously
 export async function msleepAsync(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
