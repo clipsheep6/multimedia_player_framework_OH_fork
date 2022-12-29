@@ -497,3 +497,287 @@ export async function testAVPlayerSeek(src, avPlayer, playTest, playTime, done) 
         }
     });
 }
+
+export function setAVPlayerTrackCb(avPlayer, descriptionKey, descriptionValue, done) {
+    let arrayDescription;
+    let surfaceID = globalThis.value;
+    avPlayer.on('stateChange', async (state, reason) => {
+        switch (state) {
+            case AV_PLAYER_STATE.INITIALIZED:
+                console.info(`case AV_PLAYER_STATE.INITIALIZED`);
+                avPlayer.surfaceId = surfaceID;
+                expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.INITIALIZED);
+                avPlayer.prepare((err) => {
+                    console.info('case prepare called' + err);
+                    if (err != null) {
+                        console.error(`case prepare error, errMessage is ${err.message}`);
+                        expect().assertFail();
+                        done();
+                    } else {
+                        //console.info('case avPlayer state is:' + avPlayer.state)
+                        console.info('case avPlayer.duration: ' + avPlayer.duration);
+                    }
+                });
+                break;
+            case AV_PLAYER_STATE.PREPARED:
+                await avPlayer.getTrackDescription().then((arrayList) => {
+                    console.info('case getTrackDescription called!!');
+                    if (typeof (arrayList) != 'undefined') {
+                        arrayDescription = arrayList;
+                    } else {
+                        console.info('case getTrackDescription is failed');
+                        expect().assertFail();
+                    }
+                }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+                for (let i = 0; i < arrayDescription.length; i++) {
+                    mediaTestBase.checkDescription(arrayDescription[i], descriptionKey[i], descriptionValue[i]);
+                }
+                avPlayer.getTrackDescription((error, arrayList) => {
+                    if (error == null) {
+                        for (let i = 0; i < arrayList.length; i++) {
+                            mediaTestBase.checkDescription(arrayList[i], descriptionKey[i], descriptionValue[i]);
+                        }
+                    } else {
+                        console.info('getTrackDescription failed, message is:' + error.message);
+                    }
+                    avPlayer.release();
+                })
+                
+                break;
+            case AV_PLAYER_STATE.RELEASED:
+                done();
+                break;
+            case AV_PLAYER_STATE.ERROR:
+                expect().assertFail();
+                avPlayer.release().then(() => {
+                }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+                break;
+            default:
+                break; 
+        }
+    })
+
+}
+
+export async function testCheckTrackDescription(src, avPlayer, descriptionKey, descriptionValue, done) {
+    console.info(`case media source: ${src}`)
+    media.createAVPlayer((err, video) => {
+        console.info(`case media err: ${err}`)
+        if (typeof (video) != 'undefined') {
+            console.info('case createAVPlayer success');
+            avPlayer = video;
+            setAVPlayerTrackCb(avPlayer, descriptionKey, descriptionValue, done)
+            setSource(avPlayer, src);
+        }
+        if (err != null) {
+            console.error(`case createAVPlayer error, errMessage is ${err.message}`);
+            expect().assertFail();
+            done();
+        }
+    });
+}
+
+export async function setAVPlayerScaleCb(avPlayer, done) {
+    let surfaceID = globalThis.value;
+    let count = 0;
+    avPlayer.on('stateChange', async (state, reason) => {
+        switch (state) {
+            case AV_PLAYER_STATE.INITIALIZED:
+                console.info(`case AV_PLAYER_STATE.INITIALIZED`);
+                expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.INITIALIZED);
+                avPlayer.surfaceId = surfaceID;
+                avPlayer.prepare((err) => {
+                    console.info('case prepare called' + err);
+                    avPlayer.loop = true;
+                    if (err != null) {
+                        console.error(`case prepare error, errMessage is ${err.message}`);
+                        expect().assertFail();
+                        done();
+                    } else {
+                        console.info('case avPlayer.duration: ' + avPlayer.duration);
+                    }
+                });
+                break;
+            case AV_PLAYER_STATE.PREPARED:
+                console.info('case prepare called');
+                avPlayer.play();
+                break;
+            case AV_PLAYER_STATE.PLAYING:
+                console.info('case playing called');
+                for (let i = 0; i < 20; i++) {
+                    if (count == 0) {
+                        console.info('case set  videoScaleType : 1');
+                        avPlayer.videoScaleType = media.VideoScaleType.VIDEO_SCALE_TYPE_FIT_CROP;
+                        count = 1;
+                    } else {
+                        console.info('case set  videoScaleType : 0');
+                        avPlayer.videoScaleType = media.VideoScaleType.VIDEO_SCALE_TYPE_FIT;
+                        count = 0;
+                    }
+                    mediaTestBase.msleep(500);
+                }
+                avPlayer.loop = false;
+                break;
+            case AV_PLAYER_STATE.COMPLETED:
+                expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.COMPLETED);
+                expect(avPlayer.currentTime).assertEqual(avPlayer.duration);
+                avPlayer.release();
+                break;
+            case AV_PLAYER_STATE.RELEASED:
+                done();
+                break;
+            case AV_PLAYER_STATE.ERROR:
+                expect().assertFail();
+                avPlayer.release().then(() => {
+                }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+                break;
+            default:
+                break; 
+        }
+    })
+}
+
+export async function testVideoScaleType(src, avPlayer, done) {
+    console.info(`case media source: ${src}`)
+    media.createAVPlayer((err, video) => {
+        console.info(`case media err: ${err}`)
+        if (typeof (video) != 'undefined') {
+            console.info('case createAVPlayer success');
+            avPlayer = video;
+            setAVPlayerScaleCb(avPlayer, done)
+            setSource(avPlayer, src);
+        }
+        if (err != null) {
+            console.error(`case createAVPlayer error, errMessage is ${err.message}`);
+            expect().assertFail();
+            done();
+        }
+    });
+}
+
+export async function testAudioInterruptMode(audioSource, videoSource, done) {
+    let testAVPlayer01 = await media.createAVPlayer();
+    let testAVPlayer02 = await media.createAVPlayer();
+    let surfaceID = globalThis.value;
+    testAVPlayer01.on('stateChange', async (state, reason) => {
+        switch (state) {
+            case AV_PLAYER_STATE.INITIALIZED:
+                console.info(`case AV_PLAYER_STATE.INITIALIZED`);
+                expect(testAVPlayer01.state).assertEqual(AV_PLAYER_STATE.INITIALIZED);
+                testAVPlayer01.prepare((err) => {
+                    console.info('case prepare called' + err);
+                    if (err != null) {
+                        console.error(`case prepare error, errMessage is ${err.message}`);
+                        expect().assertFail();
+                        done();
+                    } else {
+                        console.info('case avPlayer.duration: ' + testAVPlayer01.duration);
+                    }
+                });
+                break;
+            case AV_PLAYER_STATE.PREPARED:
+                testAVPlayer01.audioInterruptMode = 1;
+                testAVPlayer01.play();             
+                break;
+            case AV_PLAYER_STATE.PLAYING:
+                testAVPlayer02.fdSrc = videoSource;   
+                break;
+            case AV_PLAYER_STATE.RELEASED:
+                break;
+            case AV_PLAYER_STATE.ERROR:
+                expect().assertFail();
+                testAVPlayer01.release().then(() => {
+                }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+                break;
+            default:
+                break; 
+        }
+    })
+
+    testAVPlayer01.on('audioInterrupt', async (info) => {
+        console.info('case audioInterrupt1 is called, info is :' + JSON.stringify(info));
+        await testAVPlayer02.release();
+        await testAVPlayer01.release().then(() => {
+            console.info('case release called!!');
+            done();
+        }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+    });
+
+    testAVPlayer02.on('stateChange', async (state, reason) => {
+        switch (state) {
+            case AV_PLAYER_STATE.INITIALIZED:
+                console.info(`case AV_PLAYER_STATE.INITIALIZED`);
+                expect(testAVPlayer02.state).assertEqual(AV_PLAYER_STATE.INITIALIZED);
+                testAVPlayer02.surfaceId = surfaceID;
+                testAVPlayer02.prepare((err) => {
+                    console.info('case prepare called' + err);
+                    if (err != null) {
+                        console.error(`case prepare error, errMessage is ${err.message}`);
+                        expect().assertFail();
+                        done();
+                    } else {
+                        console.info('case avPlayer.duration: ' + testAVPlayer02.duration);
+                    }
+                });
+                break;
+            case AV_PLAYER_STATE.PREPARED:
+                testAVPlayer02.play();             
+                break;
+            case AV_PLAYER_STATE.PLAYING:         
+                break;
+            case AV_PLAYER_STATE.RELEASED:
+                break;
+            case AV_PLAYER_STATE.ERROR:
+                expect().assertFail();
+                testAVPlayer02.release().then(() => {
+                }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+                break;
+            default:
+                break; 
+        }
+    })
+    testAVPlayer01.fdSrc = audioSource;
+}
+
+export async function testErrorAudioInterruptMode(videoSource, done) {
+    let testAVPlayer = await media.createAVPlayer();
+    let surfaceID = globalThis.value;
+    testAVPlayer.on('stateChange', async (state, reason) => {
+        switch (state) {
+            case AV_PLAYER_STATE.INITIALIZED:
+                console.info(`case AV_PLAYER_STATE.INITIALIZED`);
+                expect(testAVPlayer.state).assertEqual(AV_PLAYER_STATE.INITIALIZED);
+                testAVPlayer.surfaceId = surfaceID;
+                testAVPlayer.prepare((err) => {
+                    console.info('case prepare called' + err);
+                    if (err != null) {
+                        console.error(`case prepare error, errMessage is ${err.message}`);
+                        expect().assertFail();
+                        done();
+                    } else {
+                        console.info('case avPlayer.duration: ' + testAVPlayer.duration);
+                    }
+                });
+                break;
+            case AV_PLAYER_STATE.PREPARED:
+                testAVPlayer.audioInterruptMode = -1;           
+                break;
+            case AV_PLAYER_STATE.RELEASED:
+                done();
+                break;
+            case AV_PLAYER_STATE.ERROR:
+                expect().assertFail();
+                testAVPlayer.release().then(() => {
+                }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+                break;
+            default:
+                break; 
+        }
+    })
+
+    testAVPlayer.on('error', async (error) => {
+        console.info('audioInterruptMode value is error, error message is :' + error.message)
+        testAVPlayer.release();
+    })
+    testAVPlayer.fdSrc = videoSource;
+}
