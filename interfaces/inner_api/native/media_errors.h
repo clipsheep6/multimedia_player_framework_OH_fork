@@ -94,7 +94,8 @@ enum MediaServiceExtErrCode : ErrCode {
 // media api9 error code
 enum MediaServiceExtErrCodeAPI9 : ErrCode {
     MSERR_EXT_API9_OK = 0,                          // use for determine error
-    MSERR_EXT_API9_NO_PERMISSION = 201,             // permission denied.
+    MSERR_EXT_API9_NO_PERMISSION = 201,             // permission denied (AccessToken).
+    MSERR_EXT_API9_PERMISSION_DENIED = 202,         // permission denied (system API).
     MSERR_EXT_API9_INVALID_PARAMETER = 401,         // invalid parameter.
     MSERR_EXT_API9_UNSUPPORT_CAPABILITY = 801,      // unsupport api.
     MSERR_EXT_API9_NO_MEMORY = 5400101,             // no memory.

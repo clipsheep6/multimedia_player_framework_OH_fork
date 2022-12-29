@@ -169,6 +169,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
     {MSERR_EXT_API9_OK, "Success: "},
     {MSERR_EXT_API9_NO_PERMISSION, "No Permission: "},
+    {MSERR_EXT_API9_PERMISSION_DENIED, "Permission Denied"},
     {MSERR_EXT_API9_INVALID_PARAMETER, "Invalid Parameter: "},
     {MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Unsupport Capability: "},
     {MSERR_EXT_API9_NO_MEMORY, "No Memory: "},

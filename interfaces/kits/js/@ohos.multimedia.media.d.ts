@@ -600,15 +600,6 @@ declare namespace media {
      */
     on(type: 'error', callback: ErrorCallback): void;
     off(type: 'error'): void;
-    /**
-     * Register or unregister listens for playback illegal events.
-     * @since 9
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param type Type of the playback illegal event to listen for.
-     * @param callback Callback used to listen for the playback illegal event.
-     */
-    on(type: 'illegal', callback: ErrorCallback): void;
-    off(type: 'illegal'): void;
   }
 
   /**

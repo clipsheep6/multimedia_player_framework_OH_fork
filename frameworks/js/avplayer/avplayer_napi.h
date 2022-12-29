@@ -248,6 +248,9 @@ private:
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
     std::shared_ptr<TaskHandler<void>> PrepareTask();
+    std::shared_ptr<TaskHandler<void>> PlayTask();
+    std::shared_ptr<TaskHandler<void>> PauseTask();
+    std::shared_ptr<TaskHandler<void>> StopTask();
     std::shared_ptr<TaskHandler<void>> ResetTask();
     std::shared_ptr<TaskHandler<void>> ReleaseTask();
     std::string GetCurrentState();
@@ -282,6 +285,7 @@ private:
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
     PlayerStates state_ = PLAYER_IDLE;
     std::condition_variable preparingCond_;
+    std::condition_variable stateChangeCond_;
     std::condition_variable resettingCond_;
     int32_t width_ = 0;
     int32_t height_ = 0;
