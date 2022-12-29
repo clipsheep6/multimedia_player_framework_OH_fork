@@ -286,9 +286,9 @@ int32_t GstAppsrcWrap::ReadAndGetMem()
             emptyBuffers_.pop();
         }
         if (size_ == INVALID_SIZE) {
-            size = dataSrc_->ReadAt(bufferSize_, appSrcMem->mem);
+            size = dataSrc_->ReadAt(appSrcMem->mem, bufferSize_);
         } else {
-            size = dataSrc_->ReadAt(static_cast<int64_t>(appSrcMem->pos), bufferSize_, appSrcMem->mem);
+            size = dataSrc_->ReadAt(appSrcMem->mem, bufferSize_, static_cast<int64_t>(appSrcMem->pos));
         }
         if (size > appSrcMem->mem->GetSize()) {
             ret = MSERR_INVALID_VAL;

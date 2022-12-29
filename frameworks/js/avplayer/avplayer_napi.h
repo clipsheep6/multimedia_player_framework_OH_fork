@@ -21,6 +21,7 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "avplayer_callback.h"
+#include "media_data_source_callback.h"
 #include "common_napi.h"
 #include "audio_info.h"
 #include "task_queue.h"
@@ -138,6 +139,11 @@ private:
     static napi_value JsGetAVFileDescriptor(napi_env env, napi_callback_info info);
     static napi_value JsSetAVFileDescriptor(napi_env env, napi_callback_info info);
     /**
+     * fileSize: int64_t
+     */
+    static napi_value JsGetfileSize(napi_env env, napi_callback_info info);
+    static napi_value JsSetfileSize(napi_env env, napi_callback_info info);
+    /**
      * surfaceId?: string
      */
     static napi_value JsSetSurfaceID(napi_env env, napi_callback_info info);
@@ -235,8 +241,10 @@ private:
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<AVPlayerCallback> playerCb_ = nullptr;
+    std::shared_ptr<MediaDataSourceCallback> dataSrcCb_ = nullptr;
     std::atomic<bool> isReleased_ = false;
     std::string url_ = "";
+    int64_t fileSize_ = -1;
     struct AVFileDescriptor fileDescriptor_;
     std::string surface_ = "";
     bool loop_ = false;

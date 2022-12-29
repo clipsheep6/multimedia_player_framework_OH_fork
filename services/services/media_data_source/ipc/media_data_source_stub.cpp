@@ -46,18 +46,11 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     }
 
     switch (code) {
-        case ListenerMsg::READ_AT: {
-            uint32_t length = data.ReadUint32();
-            std::shared_ptr<AVSharedMemory> mem = ReadAVSharedMemoryFromParcel(data);
-            int32_t realLen = ReadAt(length, mem);
-            reply.WriteInt32(realLen);
-            return MSERR_OK;
-        }
         case ListenerMsg::READ_AT_POS: {
             int64_t pos = data.ReadInt64();
             uint32_t length = data.ReadUint32();
             std::shared_ptr<AVSharedMemory> mem = ReadAVSharedMemoryFromParcel(data);
-            int32_t realLen = ReadAt(pos, length, mem);
+            int32_t realLen = ReadAt(mem, length, pos);
             reply.WriteInt32(realLen);
             return MSERR_OK;
         }
@@ -75,17 +68,17 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     }
 }
 
-int32_t MediaDataSourceStub::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+int32_t MediaDataSourceStub::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
     CHECK_AND_RETURN_RET_LOG(dataSrc_ != nullptr, SOURCE_ERROR_IO, "dataSrc_ is nullptr");
-    return dataSrc_->ReadAt(pos, length, mem);
+    return dataSrc_->ReadAt(mem, length, pos);
 }
 
-int32_t MediaDataSourceStub::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
-{
-    CHECK_AND_RETURN_RET_LOG(dataSrc_ != nullptr, SOURCE_ERROR_IO, "dataSrc_ is nullptr");
-    return dataSrc_->ReadAt(length, mem);
-}
+// int32_t MediaDataSourceStub::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+// {
+//     CHECK_AND_RETURN_RET_LOG(dataSrc_ != nullptr, SOURCE_ERROR_IO, "dataSrc_ is nullptr");
+//     return dataSrc_->ReadAt(length, mem);
+// }
 
 int32_t MediaDataSourceStub::GetSize(int64_t &size)
 {
