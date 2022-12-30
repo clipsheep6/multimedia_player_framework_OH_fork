@@ -68,8 +68,6 @@ function toPreparePromise(avPlayer, playTest) {
         console.info('case prepare called');
         console.info('case avPlayer.duration: ' + avPlayer.duration);
         checkPlayTest(avPlayer, playTest);
-        expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PREPARED);
-        expect(avPlayer.currentTime).assertEqual(0);
     }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
 }
 
@@ -432,8 +430,6 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
                         done();
                     } else {
                         checkPlayTest(avPlayer, playTest);
-                        expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PREPARED);
-                        expect(avPlayer.currentTime).assertEqual(0);
                     }
                 });
                 break;
