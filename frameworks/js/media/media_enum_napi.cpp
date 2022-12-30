@@ -54,6 +54,19 @@ static const std::vector<struct JsEnumInt> g_mediaErrorCode = {
     { "MSERR_UNSUPPORTED", MediaServiceExtErrCode::MSERR_EXT_UNSUPPORT },
 };
 
+static const std::vector<struct JsEnumInt> g_AVErrorCode = {
+    { "AVERR_OK", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_OK },
+    { "AVERR_NO_PERMISSION", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_NO_PERMISSION },
+    { "AVERR_INVALID_PARAMETER", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_INVALID_PARAMETER },
+    { "AVERR_UNSUPPORT_CAPABILITY", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_UNSUPPORT_CAPABILITY },
+    { "AVERR_NO_MEMORY", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_NO_MEMORY },
+    { "AVERR_OPERATE_NOT_PERMIT", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_OPERATE_NOT_PERMIT },
+    { "AVERR_IO", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_IO },
+    { "AVERR_TIMEOUT", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_TIMEOUT },
+    { "AVERR_SERVICE_DIED", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_SERVICE_DIED },
+    { "AVERR_UNSUPPORT_FORMAT", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_UNSUPPORT_FORMAT },
+};
+
 static const std::vector<struct JsEnumInt> g_avDataSourceError = {
     { "SOURCE_ERROR_IO", MediaDataSourceError::SOURCE_ERROR_IO },
     { "SOURCE_ERROR_EOF", MediaDataSourceError::SOURCE_ERROR_EOF },
@@ -290,6 +303,7 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
+    { "AVErrorCode", g_AVErrorCode},
     { "MediaErrorCode", g_mediaErrorCode },
     { "AVDataSourceError", g_avDataSourceError },
     { "BufferingInfoType", g_bufferingInfoType },
