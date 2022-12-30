@@ -50,3 +50,49 @@ export function catchCallback(error) {
     expect().assertFail();
     console.info(`case error catch called,errMessage is ${error.message}`);
 }
+
+export async function getFd(pathName, fileType) {
+    let fdObject = {
+        fileAsset : null,
+        fdNumber : null
+    }
+    let displayName = pathName;
+    console.info('[mediaLibrary] fileType is ' + fileType);
+    const mediaTest = mediaLibrary.getMediaLibrary(globalThis.abilityContext);
+    let fileKeyObj = mediaLibrary.FileKey;
+    let mediaType;
+    let publicPath;
+    if (fileType == 'audio') {
+        mediaType = mediaLibrary.MediaType.AUDIO;
+        publicPath = await mediaTest.getPublicDirectory(mediaLibrary.DirectoryType.DIR_AUDIO);
+    } else {
+        mediaType = mediaLibrary.MediaType.VIDEO;
+        publicPath = await mediaTest.getPublicDirectory(mediaLibrary.DirectoryType.DIR_VIDEO);
+    }
+    console.info('[mediaLibrary] publicPath is ' + publicPath);
+    let dataUri = await mediaTest.createAsset(mediaType, displayName, publicPath);
+    if (dataUri != undefined) {
+        let args = dataUri.id.toString();
+        let fetchOp = {
+            selections : fileKeyObj.ID + "=?",
+            selectionArgs : [args],
+        }
+        let fetchFileResult = await mediaTest.getFileAssets(fetchOp);
+        fdObject.fileAsset = await fetchFileResult.getAllObject();
+        fdObject.fdNumber = await fdObject.fileAsset[0].open('rw');
+        console.info('case getFd number is: ' + fdObject.fdNumber);
+    }
+    return fdObject;
+}
+
+export async function closeFd(fileAsset, fdNumber) {
+    if (fileAsset != null) {
+        await fileAsset[0].close(fdNumber).then(() => {
+            console.info('[mediaLibrary] case close fd success');
+        }).catch((err) => {
+            console.info('[mediaLibrary] case close fd failed');
+        });
+    } else {
+        console.info('[mediaLibrary] case fileAsset is null');
+    }
+}
