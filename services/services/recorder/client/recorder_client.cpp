@@ -254,13 +254,13 @@ void RecorderClient::SetLocation(float latitude, float longitude)
     recorderProxy_->SetLocation(latitude, longitude);
 }
 
-void RecorderClient::SetOrientationHint(int32_t rotation)
+int32_t RecorderClient::SetOrientationHint(int32_t rotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_LOG(recorderProxy_ != nullptr, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
     MEDIA_LOGD ("SetLocation orientation hint: %{public}d", rotation);
-    recorderProxy_->SetOrientationHint(rotation);
+    return recorderProxy_->SetOrientationHint(rotation);
 }
 
 int32_t RecorderClient::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)

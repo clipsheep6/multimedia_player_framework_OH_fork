@@ -190,7 +190,7 @@ void RecorderMock::SetLocation(float latitude, float longitude)
     return recorder_->SetLocation(latitude, longitude);
 }
 
-void RecorderMock::SetOrientationHint(int32_t rotation)
+int32_t RecorderMock::SetOrientationHint(int32_t rotation)
 {
     return recorder_->SetOrientationHint(rotation);
 }
