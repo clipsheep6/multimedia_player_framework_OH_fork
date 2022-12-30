@@ -52,11 +52,8 @@ export default function AVRecorderFuncTest(recorderContxt) {
         let fdPath;
         let fdObject;
         let playerSurfaceId = '';
-        let pageId = 0;
         let videoProfiles;
         let previewProfiles;
-        const pagePath1 = 'pages/surfaceTest/surfaceTest';
-        const pagePath2 = 'pages/surfaceTest2/surfaceTest2';
         let avRecorder = null;
         let surfaceID = '';
         let videoOutput;
@@ -172,19 +169,6 @@ export default function AVRecorderFuncTest(recorderContxt) {
     
         beforeEach(async function () {
             console.info('beforeEach case In');
-            await mediaTestBase.toNewPage(pagePath1, pagePath2, pageId);
-            pageId = (pageId + 1) % 2;
-            if (previewProfiles[0].format == camera.CameraFormat.CAMERA_FORMAT_YUV_420_SP) {
-                if (pageId == 0) {
-                    avProfile.videoCodec = media.CodecMimeType.VIDEO_MPEG4;
-                } else {
-                    avProfile.videoCodec = media.CodecMimeType.VIDEO_AVC;
-                }
-            } else {
-                avProfile.videoCodec = media.CodecMimeType.VIDEO_MPEG4;
-            }
-            await mediaTestBase.msleepAsync(1000).then(
-                () => {}, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
             playerSurfaceId = globalThis.value;
             avRecorder = undefined;
             surfaceID = '';
@@ -197,7 +181,6 @@ export default function AVRecorderFuncTest(recorderContxt) {
     
         afterEach(async function () {
             console.info('afterEach case In');
-            await router.clear();
             mySteps = new Array();
             await releaseByPromise();
             await mediaTestBase.closeFd(fdObject.fileAsset, fdObject.fdNumber);
@@ -207,11 +190,6 @@ export default function AVRecorderFuncTest(recorderContxt) {
         afterAll(function () {
             console.info('afterAll case');
         })
-    
-        function callbackError(error) {
-            expect().assertFail();
-            console.error(`case callback error called,errMessage is ${error.message}`);
-        }
     
         function printFailure(error) {
             console.info(`case failureCallback called,errMessage is ${error.message}`);
@@ -277,7 +255,7 @@ export default function AVRecorderFuncTest(recorderContxt) {
                     setCallbackOn(done);
                     nextStep(done);
                 } else {
-                    callbackError(err);
+                    mediaTestBase.failureCallback(err);
                 }
             });
         }
@@ -295,7 +273,7 @@ export default function AVRecorderFuncTest(recorderContxt) {
                 if (typeof (err) == 'undefined') {
                     console.info('case recorder prepare by callback called');
                 } else {
-                    callbackError(err);
+                    mediaTestBase.failureCallback(err);
                 }
             });
         }
@@ -319,7 +297,7 @@ export default function AVRecorderFuncTest(recorderContxt) {
                     console.info('case outputSurface surfaceID is: ' + surfaceID);
                     nextStep(done);
                 } else {
-                    callbackError(err);
+                    mediaTestBase.failureCallback(err);
                 }
             });
         }
@@ -337,7 +315,7 @@ export default function AVRecorderFuncTest(recorderContxt) {
                 if (typeof (err) == 'undefined') {
                     console.info('case recorder start by callback called');
                 } else {
-                    callbackError(err);
+                    mediaTestBase.failureCallback(err);
                 }
             });
         }
@@ -355,7 +333,7 @@ export default function AVRecorderFuncTest(recorderContxt) {
                 if (typeof (err) == 'undefined') {
                     console.info('case recorder pause by callback called');
                 } else {
-                    callbackError(err);
+                    mediaTestBase.failureCallback(err);
                 }
             });
         }
@@ -373,7 +351,7 @@ export default function AVRecorderFuncTest(recorderContxt) {
                 if (typeof (err) == 'undefined') {
                     console.info('case recorder resume by callback called');
                 } else {
-                    callbackError(err);
+                    mediaTestBase.failureCallback(err);
                 }
             });
         }
@@ -391,7 +369,7 @@ export default function AVRecorderFuncTest(recorderContxt) {
                 if (typeof (err) == 'undefined') {
                     console.info('case recorder stop by callback called');
                 } else {
-                    callbackError(err);
+                    mediaTestBase.failureCallback(err);
                 }
             });
         }
@@ -409,7 +387,7 @@ export default function AVRecorderFuncTest(recorderContxt) {
                 if (typeof (err) == 'undefined') {
                     console.info('case recorder reset by callback called');
                 } else {
-                    callbackError(err);
+                    mediaTestBase.failureCallback(err);
                 }
             });
         }
@@ -435,7 +413,7 @@ export default function AVRecorderFuncTest(recorderContxt) {
                         console.info('case recorder release by callback called');
                         avRecorder = undefined;
                     } else {
-                        callbackError(err);
+                        mediaTestBase.failureCallback(err);
                     }
                 });
             }

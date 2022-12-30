@@ -51,23 +51,6 @@ export function catchCallback(error) {
     console.info(`case error catch called,errMessage is ${error.message}`);
 }
 
-export async function toNewPage(pagePath1, pagePath2, page) {
-    let path = '';
-    if (page == 0) {
-        path = pagePath1;
-    } else {
-        path = pagePath2;
-    }
-    let options = {
-        uri: path,
-    }
-    try {
-        await router.push(options);
-    } catch {
-        console.info('case route failed');
-    }
-}
-
 export async function getFd(pathName, fileType) {
     let fdObject = {
         fileAsset : null,
