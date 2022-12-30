@@ -79,7 +79,7 @@ function addCnt(countArr) {
     }
 }
 
-function setCallback(avPlayer, type, countArr) {
+export function setCallback(avPlayer, type, countArr) {
     if (avPlayer == null) {
         return;
     }
@@ -152,6 +152,61 @@ function setCallback(avPlayer, type, countArr) {
     }
 }
 
+export function offCallback(avPlayer, typeArr)
+{
+    if (avPlayer == null) {
+        return;
+    }
+    for (let i = 0; i < typeArr.length; i++) { 
+        switch (typeArr[i]) {
+            case 'stateChange':
+                avPlayer.off('stateChange');
+                break;
+            case 'volumeChange':
+                avPlayer.off('volumeChange');
+                break;
+            case 'endOfStream':
+                avPlayer.off('endOfStream');
+                break;
+            case 'seekDone':
+                avPlayer.off('seekDone');
+                break;
+            case 'speedDone':
+                avPlayer.off('speedDone');
+                break;
+            case 'speedDone':
+                avPlayer.off('speedDone');
+                break;
+            case 'timeUpdate':
+                avPlayer.off('timeUpdate');
+                break;
+            case 'durationUpdate':
+                avPlayer.off('durationUpdate');
+                break;
+            case 'bufferingUpdate':
+                avPlayer.off('bufferingUpdate');
+                break;
+            case 'startRenderFrame':
+                avPlayer.off('startRenderFrame');
+                break;
+            case 'videoSizeChange':
+                avPlayer.off('videoSizeChange');
+                break;
+            case 'audioInterrupt':
+                avPlayer.off('audioInterrupt');
+                break;
+            case 'availableBitrates':
+                avPlayer.off('availableBitrates');
+                break;
+            case 'error':
+                avPlayer.off('error');
+                break;
+            default:
+                break;
+        }
+    }
+}
+
 export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
     let volumeCnt = [0];
     let endOfStreamCnt = [0];
@@ -167,7 +222,7 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
     console.info(`case setAVPlayerFunCb in, surfaceID is ${surfaceID}`);
     avPlayer.on('stateChange', async (state, reason) => {
         console.info(`case stateChange called, state is ${state}, reason is ${reason}`);
-        if (reason == media.StateChangeReason.BACKGROUND && state != AV_PLAYER_STATE.COMPLETED) {
+        if (reason == media.StateChangeReason.BACKGROUND) {
             console.info(`case media.StateChangeReason.BACKGROUND`);
             await avPlayer.release().then(() => {
             }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
@@ -187,7 +242,8 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
                 expect(avPlayer.currentTime).assertEqual(0);
                 if (prepareCnt == 1) {
                     // step 2: prepared -> playing
-                    avPlayer.play();
+                    avPlayer.play().then(() => {
+                    }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
                 } else {
                     // step 14: prepared -> seek
                     avPlayer.seek(avPlayer.duration);
@@ -206,7 +262,8 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
                     avPlayer.seek(avPlayer.duration, media.SeekMode.SEEK_NEXT_SYNC);
                 } else if (playCnt == 3) {
                     // step 10: playing -> stop
-                    avPlayer.stop();
+                    avPlayer.stop().then(() => {
+                    }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
                 }
                 break;
             case AV_PLAYER_STATE.PAUSED:
@@ -243,6 +300,9 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
                 break;
             case AV_PLAYER_STATE.RELEASED:
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.RELEASED);
+                offCallback(avPlayer, ['stateChange', 'volumeChange', 'endOfStream', 'seekDone', 'speedDone',
+                'bitrateDone', 'timeUpdate', 'durationUpdate', 'bufferingUpdate', 'startRenderFrame', 'videoSizeChange',
+            'audioInterrupt', 'availableBitrates', 'error']);
                 // step 18: release -> done
                 avPlayer = null;
                 expect(volumeCnt[0]).assertLarger(0);
@@ -283,7 +343,8 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
             case 1:
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PLAYING);
                 // step 4: seek(playing) -> pause
-                avPlayer.pause();
+                avPlayer.pause().then(() => {
+                }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
                 break;
             case 3:
             case 4:
@@ -353,7 +414,7 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
     console.info(`case setCallback in, surfaceID is ${surfaceID}`);
     avPlayer.on('stateChange', async (state, reason) => {
         console.info(`case stateChange called, state is ${state}, reason is ${reason}`);
-        if (reason == media.StateChangeReason.BACKGROUND && state != AV_PLAYER_STATE.COMPLETED) {
+        if (reason == media.StateChangeReason.BACKGROUND) {
             avPlayer.release().then(() => {
             }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
         }
@@ -362,7 +423,7 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.INITIALIZED);
                 avPlayer.surfaceId = surfaceID;
                 console.info('case initialized -> prepared');
-                // step 1: initialized -> prepared
+                // step 1,10: initialized -> prepared
                 avPlayer.prepare((err) => {
                     avPlayer.loop = true;
                     if (err != null) {
@@ -380,7 +441,8 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PREPARED);
                 checkPlayTest(avPlayer, playTest);
                 expect(avPlayer.currentTime).assertEqual(0);
-                // step 2: prepared -> seek 0
+                offCallback(avPlayer, ['volumeChange']);
+                // step 2,11: prepared -> seek 0
                 avPlayer.seek(0, media.SeekMode.SEEK_CLOSEST_SYNC);
                 break;
             case AV_PLAYER_STATE.PLAYING:
@@ -389,16 +451,34 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
                     // step 4: seek + pause
                     expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PLAYING);
                     avPlayer.seek(avPlayer.duration / 2, media.SeekMode.SEEK_PREV_SYNC);
-                    avPlayer.pause();
+                    // avPlayer.pause();
+                    avPlayer.pause((err) => {
+                        if (err != null) {
+                            mediaTestBase.assertErr('pause', err, done);
+                        }
+                    });
+                } else if (playCnt == 3) {
+                    // step 12: seek duration
+                    avPlayer.seek(avPlayer.duration, media.SeekMode.SEEK_PREV_SYNC);
+                    avPlayer.stop((err) => {
+                        if (err == null) {
+                            avPlayer.release((err) => {
+                                if (err != null) {
+                                    mediaTestBase.assertErr('release', err, done);
+                                }
+                            })
+                        }  else {
+                            mediaTestBase.assertErr('stop', err, done);
+                        }
+                    });
                 }
                 break;
             case AV_PLAYER_STATE.RELEASED:
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.RELEASED);
                 // step 18: release -> done
                 avPlayer = null;
-                expect(volumeCnt[0]).assertLarger(0);
+                expect(volumeCnt[0]).assertEqual(0);
                 expect(endOfStreamCnt).assertLarger(0);
-                expect(speedDoneCnt[0]).assertLarger(0);
                 done();
                 break;
             case AV_PLAYER_STATE.ERROR:
@@ -420,11 +500,6 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
             if (err == null) {
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.IDLE);
                 console.info('case reset success!!');
-                avPlayer.release((err) => {
-                    if (err != null) {
-                        mediaTestBase.assertErr('release', err, done);
-                    }
-                })
             }  else {
                 mediaTestBase.assertErr('reset', err, done);
             }
@@ -437,7 +512,11 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
             case 1:
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PREPARED);
                 // step 3: seek(prepared) -> play
-                avPlayer.play();
+                avPlayer.play((err) => {
+                    if (err != null) {
+                        mediaTestBase.assertErr('play', err, done);
+                    }
+                });
                 break;
             case 2:
                 // step 5: seek + play
@@ -445,11 +524,9 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
                 avPlayer.play();
                 break;
             case 3:
-                // step 6: seek + setSpeed + setVolume
-                avPlayer.setSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_75_X);
+                // step 6: seek  + setVolume
                 avPlayer.setVolume(0.5);
                 avPlayer.seek(avPlayer.duration / 2, media.SeekMode.SEEK_CLOSEST_SYNC);
-                avPlayer.setSpeed(media.PlaybackSpeed.SPEED_FORWARD_2_00_X);
                 avPlayer.play();
                 break;
             case 4:
@@ -461,7 +538,9 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
             case 5:
                 // step 8: seek duration
                 avPlayer.seek(avPlayer.duration, media.SeekMode.SEEK_PREV_SYNC);
+                break;
             default:
+                avPlayer.play();
                 break;
         }
     });
