@@ -715,7 +715,7 @@ int32_t VideoRecorderNapi::SetVideoRecorderProperties(std::unique_ptr<VideoRecor
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Fail to set videoBitrate");
 
     recorder_->SetLocation(properties.location.latitude, properties.location.longitude);
-    recorder_->SetOrientationHint(properties.orientationHint);
+    (void)recorder_->SetOrientationHint(properties.orientationHint);
 
     return MSERR_OK;
 }

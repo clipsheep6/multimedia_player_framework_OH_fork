@@ -508,10 +508,11 @@ public:
      * the range of orientation should be {0, 90, 180, 270}, default is 0.
      *
      * @param rotation int32_t: should be {0, 90, 180, 270}, default is 0.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
      * @since openharmony 3.1
      * @version 1.0
      */
-    virtual void SetOrientationHint(int32_t rotation) = 0;
+    virtual int32_t SetOrientationHint(int32_t rotation) = 0;
 
     /**
      * @brief Registers a recording listener.
