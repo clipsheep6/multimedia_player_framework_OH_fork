@@ -134,7 +134,7 @@ public:
     int32_t SetOutputFile(int32_t fd);
     int32_t SetNextOutputFile(int32_t fd);
     void SetLocation(float latitude, float longitude);
-    void SetOrientationHint(int32_t rotation);
+    int32_t SetOrientationHint(int32_t rotation);
     int32_t SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback);
     int32_t Prepare();
     int32_t Start();
