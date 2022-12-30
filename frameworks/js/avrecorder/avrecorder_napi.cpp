@@ -56,7 +56,7 @@ AVRecorderNapi::AVRecorderNapi()
 
 AVRecorderNapi::~AVRecorderNapi()
 {
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances  destroy", FAKE_POINTER(this));
 }
 
 napi_value AVRecorderNapi::Init(napi_env env, napi_value exports)
