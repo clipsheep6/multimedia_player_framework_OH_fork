@@ -78,21 +78,23 @@ declare namespace media {
   function createVideoPlayer() : Promise<VideoPlayer>;
 
   /**
-  * Creates an AVRecorder instance.
-  * @since 9
-  * @syscap SystemCapability.Multimedia.Media.AVRecorder
-  * @import import media from '@ohos.multimedia.media'
-  * @return callback Callback used to return an AVRecorder instance if the operation is successful; returns null otherwise.
-  */
+   * Creates an AVRecorder instance.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.AVRecorder
+   * @import import media from '@ohos.multimedia.media'
+   * @param callback Callback used to return AVRecorder instance if the operation is successful; returns null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Return by callback.
+   */
   function createAVRecorder(callback: AsyncCallback<AVRecorder>): void;
 
   /**
-  * Creates an AVRecorder instance.
-  * @since 9
-  * @syscap SystemCapability.Multimedia.Media.AVRecorder
-  * @import import media from '@ohos.multimedia.media'
-  * @return A Promise instance used to return an AVRecorder instance if the operation is successful; returns null otherwise.
-  */
+   * Creates an AVRecorder instance.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.AVRecorder
+   * @import import media from '@ohos.multimedia.media'
+   * @return A Promise instance used to return AVRecorder instance if the operation is successful; returns null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Return by promise.
+   */
   function createAVRecorder() : Promise<AVRecorder>;
 
   /**
@@ -889,7 +891,12 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param config Recording parameters.
+     * @param callback A callback instance used to return when prepare completed.
      * @permission ohos.permission.MICROPHONE
+     * @throws { BusinessError } 201 - Permission denied. Return by callback.
+     * @throws { BusinessError } 401 - Parameter error. Return by callback.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
      */
     prepare(config: AVRecorderConfig, callback: AsyncCallback<void>): void;
 
@@ -898,23 +905,34 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param config Recording parameters.
+     * @return A Promise instance used to return when prepare completed.
      * @permission ohos.permission.MICROPHONE
+     * @throws { BusinessError } 201 - Permission denied. Return by promise.
+     * @throws { BusinessError } 401 - Parameter error. Return by promise.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
      */
     prepare(config: AVRecorderConfig): Promise<void>;
 
     /**
-    * get input surface.it must be called between prepare completed and start.
-    * @since 9
-    * @syscap SystemCapability.Multimedia.Media.AVRecorder
-    * @param callback Callback used to return the input surface id in string.
-    */
-     getInputSurface(callback: AsyncCallback<string>): void;
+     * get input surface.it must be called between prepare completed and start.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param callback Callback used to return the input surface id in string.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     */
+    getInputSurface(callback: AsyncCallback<string>): void;
 
     /**
      * get input surface. it must be called between prepare completed and start.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @return A Promise instance used to return the input surface id in string.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400103 - IO error. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
      */
     getInputSurface(): Promise<string>;
     
@@ -923,6 +941,9 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param callback A callback instance used to return when start completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
      */
     start(callback: AsyncCallback<void>): void;
 
@@ -931,6 +952,9 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @return A Promise instance used to return when start completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400103 - IO error. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
      */
     start(): Promise<void>;
 
@@ -939,6 +963,9 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param callback A callback instance used to return when pause completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
      */
     pause(callback: AsyncCallback<void>): void;
 
@@ -947,6 +974,9 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @return A Promise instance used to return when pause completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400103 - IO error. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
      */
     pause(): Promise<void>;
 
@@ -955,6 +985,9 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param callback A callback instance used to return when resume completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
      */
     resume(callback: AsyncCallback<void>): void;
 
@@ -963,6 +996,9 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @return A Promise instance used to return when resume completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400103 - IO error. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
      */
     resume(): Promise<void>;
 
@@ -971,6 +1007,9 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param callback A callback instance used to return when stop completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by callback.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
      */
     stop(callback: AsyncCallback<void>): void;
 
@@ -979,6 +1018,9 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @return A Promise instance used to return when stop completed.
+     * @throws { BusinessError } 5400102 - Operate not permit. Return by promise.
+     * @throws { BusinessError } 5400103 - IO error. Return by promise.
+     * @throws { BusinessError } 5400105 - Service died. Return by promise.
      */
     stop(): Promise<void>;
 
@@ -987,6 +1029,8 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param callback A callback instance used to return when reset completed.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
      */
      reset(callback: AsyncCallback<void>): void;
 
@@ -995,6 +1039,8 @@ declare namespace media {
       * @since 9
       * @syscap SystemCapability.Multimedia.Media.AVRecorder
       * @return A Promise instance used to return when reset completed.
+      * @throws { BusinessError } 5400103 - IO error. Return by promise.
+      * @throws { BusinessError } 5400105 - Service died. Return by promise.
       */
      reset(): Promise<void>;
 
@@ -1003,56 +1049,62 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param callback A callback instance used to return when release completed.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
      */
     release(callback: AsyncCallback<void>): void;
 
     /**
-    * Releases resources used for AVRecorder, it will to released state.
-    * @since 9
-    * @syscap SystemCapability.Multimedia.Media.AVRecorder
-    * @return A Promise instance used to return when release completed.
-    */
+     * Releases resources used for AVRecorder, it will to released state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @return A Promise instance used to return when release completed.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     */
     release(): Promise<void>;
 
     /**
-    * Recorder state.
-    * @since 9
-    * @syscap SystemCapability.Multimedia.Media.AVRecorder
-    */
+     * Recorder state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
     readonly state: AVRecorderState;
 
     /**
-    * Listens for recording stateChange events.
-    * @since 9
-    * @syscap SystemCapability.Multimedia.Media.AVRecorder
-    * @param type Type of the recording event to listen for.
-    * @param callback Callback used to listen for the recorder stateChange event.
-    */
+     * Listens for recording stateChange events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param type Type of the recording event to listen for.
+     * @param callback Callback used to listen for the recorder stateChange event.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     */
     on(type: 'stateChange', callback: (state: AVRecorderState, reason: StateChangeReason) => void): void;
 
     /**
-    * Listens for recording error events.
-    * @since 9
-    * @syscap SystemCapability.Multimedia.Media.AVRecorder
-    * @param type Type of the recording error event to listen for.
-    * @param callback Callback used to listen for the recorder error event.
-    */
-    on(type: 'error', callback: ErrorCallback): void;
-
-    /**
-    * Cancel Listens for recording stateChange events.
-    * @since 9
-    * @syscap SystemCapability.Multimedia.Media.AVRecorder
-    * @param type Type of the recording event to listen for.
-    */
-     off(type: 'stateChange'): void;
-
-     /**
-     * Cancel Listens for recording error events.
+     * Listens for recording error events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
      * @param type Type of the recording error event to listen for.
+     * @param callback Callback used to listen for the recorder error event.
+     * @throws { BusinessError } 5400103 - IO error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
      */
+    on(type: 'error', callback: ErrorCallback): void;
+
+    /**
+     * Cancel Listens for recording stateChange events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param type Type of the recording stateChange event to listen for.
+     */
+     off(type: 'stateChange'): void;
+
+     /**
+      * Cancel Listens for recording error events.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.AVRecorder
+      * @param type Type of the recording error event to listen for.
+      */
      off(type: 'error'): void;
   }
 
