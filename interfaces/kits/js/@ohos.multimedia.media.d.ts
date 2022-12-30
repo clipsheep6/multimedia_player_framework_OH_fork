@@ -55,6 +55,8 @@ declare namespace media {
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    * @import import media from '@ohos.multimedia.media'
    * @return Returns an AudioRecorder instance if the operation is successful; returns null otherwise.
+   * @deprecated since 9
+   * @useinstead ohos.multimedia.media#createAVRecorder
    */
   function createAudioRecorder(): AudioRecorder;
 
@@ -74,6 +76,24 @@ declare namespace media {
    * @return A Promise instance used to return VideoPlayer instance if the operation is successful; returns null otherwise.
    */
   function createVideoPlayer() : Promise<VideoPlayer>;
+
+  /**
+  * Creates an AVRecorder instance.
+  * @since 9
+  * @syscap SystemCapability.Multimedia.Media.AVRecorder
+  * @import import media from '@ohos.multimedia.media'
+  * @return callback Callback used to return an AVRecorder instance if the operation is successful; returns null otherwise.
+  */
+  function createAVRecorder(callback: AsyncCallback<AVRecorder>): void;
+
+  /**
+  * Creates an AVRecorder instance.
+  * @since 9
+  * @syscap SystemCapability.Multimedia.Media.AVRecorder
+  * @import import media from '@ohos.multimedia.media'
+  * @return A Promise instance used to return an AVRecorder instance if the operation is successful; returns null otherwise.
+  */
+  function createAVRecorder() : Promise<AVRecorder>;
 
   /**
    * Creates an VideoRecorder instance.
@@ -850,6 +870,193 @@ declare namespace media {
   }
 
   /**
+  * Describes media recorder states.
+  * @since 9
+  * @syscap SystemCapability.Multimedia.Media.AVRecorder
+  * @import import media from '@ohos.multimedia.media'
+  */
+   type AVRecorderState = 'idle' | 'prepared' | 'started' | 'paused' | 'stopped' | 'released' | 'error';
+
+   /**
+    * Manages and record audio/video. Before calling an AVRecorder method, you must use createAVRecorder()
+    * to create an AVRecorder instance.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.AVRecorder
+    */
+  interface AVRecorder {
+    /**
+     * Prepares for recording.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param config Recording parameters.
+     * @permission ohos.permission.MICROPHONE
+     */
+    prepare(config: AVRecorderConfig, callback: AsyncCallback<void>): void;
+
+    /**
+     * Prepares for recording.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param config Recording parameters.
+     * @permission ohos.permission.MICROPHONE
+     */
+    prepare(config: AVRecorderConfig): Promise<void>;
+
+    /**
+    * get input surface.it must be called between prepare completed and start.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.AVRecorder
+    * @param callback Callback used to return the input surface id in string.
+    */
+     getInputSurface(callback: AsyncCallback<string>): void;
+
+    /**
+     * get input surface. it must be called between prepare completed and start.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @return A Promise instance used to return the input surface id in string.
+     */
+    getInputSurface(): Promise<string>;
+    
+    /**
+     * start AVRecorder, it will to started state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param callback A callback instance used to return when start completed.
+     */
+    start(callback: AsyncCallback<void>): void;
+
+    /**
+     * start AVRecorder, it will to started state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @return A Promise instance used to return when start completed.
+     */
+    start(): Promise<void>;
+
+    /**
+     * start AVRecorder, it will to paused state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param callback A callback instance used to return when pause completed.
+     */
+    pause(callback: AsyncCallback<void>): void;
+
+    /**
+     * start AVRecorder, it will to paused state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @return A Promise instance used to return when pause completed.
+     */
+    pause(): Promise<void>;
+
+    /**
+     * start AVRecorder, it will to started state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param callback A callback instance used to return when resume completed.
+     */
+    resume(callback: AsyncCallback<void>): void;
+
+    /**
+     * start AVRecorder, it will to started state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @return A Promise instance used to return when resume completed.
+     */
+    resume(): Promise<void>;
+
+    /**
+     * start AVRecorder, it will to stopped state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param callback A callback instance used to return when stop completed.
+     */
+    stop(callback: AsyncCallback<void>): void;
+
+    /**
+     * start AVRecorder, it will to stopped state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @return A Promise instance used to return when stop completed.
+     */
+    stop(): Promise<void>;
+
+    /**
+     * reset AVRecorder, it will to idle state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param callback A callback instance used to return when reset completed.
+     */
+     reset(callback: AsyncCallback<void>): void;
+
+     /**
+      * reset AVRecorder, it will to idle state.
+      * @since 9
+      * @syscap SystemCapability.Multimedia.Media.AVRecorder
+      * @return A Promise instance used to return when reset completed.
+      */
+     reset(): Promise<void>;
+
+    /**
+     * Releases resources used for AVRecorder, it will to released state.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param callback A callback instance used to return when release completed.
+     */
+    release(callback: AsyncCallback<void>): void;
+
+    /**
+    * Releases resources used for AVRecorder, it will to released state.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.AVRecorder
+    * @return A Promise instance used to return when release completed.
+    */
+    release(): Promise<void>;
+
+    /**
+    * Recorder state.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.AVRecorder
+    */
+    readonly state: AVRecorderState;
+
+    /**
+    * Listens for recording stateChange events.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.AVRecorder
+    * @param type Type of the recording event to listen for.
+    * @param callback Callback used to listen for the recorder stateChange event.
+    */
+    on(type: 'stateChange', callback: (state: AVRecorderState, reason: StateChangeReason) => void): void;
+
+    /**
+    * Listens for recording error events.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.AVRecorder
+    * @param type Type of the recording error event to listen for.
+    * @param callback Callback used to listen for the recorder error event.
+    */
+    on(type: 'error', callback: ErrorCallback): void;
+
+    /**
+    * Cancel Listens for recording stateChange events.
+    * @since 9
+    * @syscap SystemCapability.Multimedia.Media.AVRecorder
+    * @param type Type of the recording event to listen for.
+    */
+     off(type: 'stateChange'): void;
+
+     /**
+     * Cancel Listens for recording error events.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     * @param type Type of the recording error event to listen for.
+     */
+     off(type: 'error'): void;
+  }
+
+  /**
    * Enumerates audio encoding formats, it will be deprecated after API8, use @CodecMimeType to replace.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
@@ -959,9 +1166,12 @@ declare namespace media {
   }
 
   /**
-   * Provides the audio recorder configuration definitions.
+   * Provides the audio recorder configuration definitions, it will be deprecated after API9,
+   * use @AVRecorderConfig instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+   * @deprecated since 9
+   * @useinstead ohos.multimedia.media.AVRecorderConfig
    */
   interface AudioRecorderConfig {
     /**
@@ -977,6 +1187,7 @@ declare namespace media {
      * Audio encoding bit rate.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     audioEncodeBitRate?: number;
 
@@ -984,6 +1195,7 @@ declare namespace media {
      * Audio sampling rate.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     audioSampleRate?: number;
 
@@ -991,6 +1203,7 @@ declare namespace media {
      * Number of audio channels.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     numberOfChannels?: number;
 
@@ -1010,6 +1223,7 @@ declare namespace media {
      * fd:    fd://fd
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     uri: string;
 
@@ -1017,6 +1231,7 @@ declare namespace media {
      * Geographical location information.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     location?: Location;
 
@@ -1024,21 +1239,25 @@ declare namespace media {
      * audio encoding format MIME. it used to replace audioEncoder.
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     audioEncoderMime?: CodecMimeType;
     /**
      * output file format. see @ContainerFormatType , it used to replace "format".
      * @since 8
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
      */
     fileFormat?: ContainerFormatType;
   }
 
   /**
    * Manages and record audio. Before calling an AudioRecorder method, you must use createAudioRecorder()
-   * to create an AudioRecorder instance.
+   * to create an AudioRecorder instance, it will be deprecated after API9, use @AVRecorder instead.
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+   * @deprecated since 9
+   * @useinstead ohos.multimedia.media.AVRecorder
    */
   interface AudioRecorder {
     /**
@@ -1047,6 +1266,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @param config Recording parameters.
      * @permission ohos.permission.MICROPHONE
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#prepare
      */
     prepare(config: AudioRecorderConfig): void;
 
@@ -1054,6 +1275,8 @@ declare namespace media {
      * Starts audio recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#start
      */
     start(): void;
 
@@ -1061,6 +1284,8 @@ declare namespace media {
      * Pauses audio recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#pause
      */
     pause(): void;
 
@@ -1068,6 +1293,8 @@ declare namespace media {
      * Resumes audio recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#resume
      */
     resume(): void;
 
@@ -1075,6 +1302,8 @@ declare namespace media {
      * Stops audio recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#stop
      */
     stop(): void;
 
@@ -1082,6 +1311,8 @@ declare namespace media {
      * Releases resources used for audio recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#release
      */
     release(): void;
 
@@ -1091,6 +1322,8 @@ declare namespace media {
      * you must call prepare() to set the recording configurations for another recording.
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#reset
      */
     reset(): void;
 
@@ -1100,6 +1333,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @param type Type of the audio recording event to listen for.
      * @param callback Callback used to listen for the audio recording event.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#on
      */
     on(type: 'prepare' | 'start' | 'pause' | 'resume' | 'stop' | 'release' | 'reset', callback: () => void): void;
 
@@ -1109,6 +1344,8 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @param type Type of the audio recording error event to listen for.
      * @param callback Callback used to listen for the audio recording error event.
+     * @deprecated since 9
+     * @useinstead ohos.multimedia.media.AVRecorder#on
      */
     on(type: 'error', callback: ErrorCallback): void;
   }
@@ -1929,23 +2166,20 @@ declare namespace media {
   /**
    * Enumerates audio source type for recorder.
    * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+   * @syscap SystemCapability.Multimedia.Media.AVRecorder
    * @import import media from '@ohos.multimedia.media'
-   * @systemapi
    */
   enum AudioSourceType {
     /**
      * default audio source type.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @systemapi
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
     AUDIO_SOURCE_TYPE_DEFAULT = 0,
     /**
      * source type mic.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @systemapi
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
     AUDIO_SOURCE_TYPE_MIC = 1,
   }
@@ -1953,23 +2187,20 @@ declare namespace media {
   /**
    * Enumerates video source type for recorder.
    * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+   * @syscap SystemCapability.Multimedia.Media.AVRecorder
    * @import import media from '@ohos.multimedia.media'
-   * @systemapi
    */
   enum VideoSourceType {
     /**
      * surface raw data.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @systemapi
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
     VIDEO_SOURCE_TYPE_SURFACE_YUV = 0,
     /**
      * surface ES data.
      * @since 9
-     * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-     * @systemapi
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
     VIDEO_SOURCE_TYPE_SURFACE_ES = 1,
   }
@@ -2003,7 +2234,7 @@ declare namespace media {
      */
     profile: VideoRecorderProfile;
     /**
-     * video output uri.support two kind of uri now.
+     * video output uri.support a kind of uri now.
      * format like: scheme + "://" + "context".
      * fd:    fd://fd
      * @since 9
@@ -2024,6 +2255,130 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
+     */
+    location?: Location;
+  }
+
+  /**
+   * Provides the media recorder profile definitions.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.AVRecorder
+   */
+  interface AVRecorderProfile {
+    /**
+     * Indicates the audio bit rate.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    audioBitrate?: number;
+
+    /**
+     * Indicates the number of audio channels.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    audioChannels?: number;
+
+    /**
+     * Indicates the audio encoding format.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    audioCodec?: CodecMimeType;
+
+    /**
+     * Indicates the audio sampling rate.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    audioSampleRate?: number;
+
+    /**
+     * Indicates the output file format.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    fileFormat: ContainerFormatType;
+
+    /**
+     * Indicates the video bit rate.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    videoBitrate?: number;
+
+    /**
+     * Indicates the video encoding format.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    videoCodec?: CodecMimeType;
+
+    /**
+     * Indicates the video width.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    videoFrameWidth?: number;
+
+    /**
+     * Indicates the video height.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    videoFrameHeight?: number;
+
+    /**
+     * Indicates the video frame rate.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    videoFrameRate?: number;
+  }
+
+  /**
+   * Provides the media recorder configuration definitions.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.AVRecorder
+   */
+  interface AVRecorderConfig {
+    /**
+     * audio source type, details see @AudioSourceType .
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    audioSourceType?: AudioSourceType;
+    /**
+     * video source type, details see @VideoSourceType .
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    videoSourceType?: VideoSourceType;
+    /**
+     * video recorder profile, can get by "getMediaRecorderProfile", details see @MediaRecorderProfile .
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    profile: AVRecorderProfile;
+    /**
+     * video output uri.support a kind of uri now.
+     * format like: scheme + "://" + "context".
+     * fd:    fd://fd
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    url: string;
+    /**
+     * Sets the video rotation angle in output file, and for the file to playback. mp4 support.
+     * the range of rotation angle should be {0, 90, 180, 270}, default is 0.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
+     */
+    rotation?: number;
+    /**
+     * geographical location information.
+     * @since 9
+     * @syscap SystemCapability.Multimedia.Media.AVRecorder
      */
     location?: Location;
   }

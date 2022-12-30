@@ -253,8 +253,7 @@ int32_t RecorderServiceStub::SetLocation(float latitude, float longitude)
 int32_t RecorderServiceStub::SetOrientationHint(int32_t rotation)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    recorderServer_->SetOrientationHint(rotation);
-    return MSERR_OK;
+    return recorderServer_->SetOrientationHint(rotation);
 }
 
 int32_t RecorderServiceStub::Prepare()
@@ -494,8 +493,7 @@ int32_t RecorderServiceStub::SetOrientationHint(MessageParcel &data, MessageParc
 {
     (void)reply;
     int32_t rotation = data.ReadInt32();
-    SetOrientationHint(rotation);
-    return MSERR_OK;
+    return SetOrientationHint(rotation);
 }
 
 int32_t RecorderServiceStub::Prepare(MessageParcel &data, MessageParcel &reply)

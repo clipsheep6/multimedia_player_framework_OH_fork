@@ -54,11 +54,6 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
 };
 
-enum StateChangeReason {
-    USER = 1,
-    BACKGROUND = 2,
-};
-
 enum BufferingInfoType : int32_t {
     /* begin to b buffering */
     BUFFERING_START = 1,
