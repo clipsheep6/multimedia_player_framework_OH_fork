@@ -2322,21 +2322,18 @@ declare namespace media {
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.AVRecorder
    * @import import media from '@ohos.multimedia.media'
-   * @systemapi
    */
   enum VideoSourceType {
     /**
      * surface raw data.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
-     * @systemapi
      */
     VIDEO_SOURCE_TYPE_SURFACE_YUV = 0,
     /**
      * surface ES data.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVRecorder
-     * @systemapi
      */
     VIDEO_SOURCE_TYPE_SURFACE_ES = 1,
   }
