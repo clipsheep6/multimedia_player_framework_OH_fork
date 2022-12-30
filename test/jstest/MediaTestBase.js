@@ -19,6 +19,11 @@ export async function msleepAsync(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+export function assertErr(opera, err, done) {
+    console.info(`case ${opera} error,errMessage is ${err.message}`);
+    expect().assertFail();
+    done();
+}
 // callback function for promise call back error
 export function failureCallback(error) {
     expect().assertFail();
