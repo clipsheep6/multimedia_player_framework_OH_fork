@@ -483,22 +483,20 @@ void RecorderServer::SetLocation(float latitude, float longitude)
     return;
 }
 
-void RecorderServer::SetOrientationHint(int32_t rotation)
+int32_t RecorderServer::SetOrientationHint(int32_t rotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (status_ != REC_CONFIGURED) {
-        return;
-    }
-    CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_CONFIGURED, MSERR_INVALID_OPERATION, "status_ error");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     RotationAngle rotationAngle(rotation);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, rotationAngle);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
-    (void)task->GetResult();
-    return;
+    auto result = task->GetResult();
+    return result.Value();
 }
 
 int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)

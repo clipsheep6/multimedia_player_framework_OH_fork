@@ -172,11 +172,10 @@ void RecorderImpl::SetLocation(float latitude, float longitude)
     return;
 }
 
-void RecorderImpl::SetOrientationHint(int32_t rotation)
+int32_t RecorderImpl::SetOrientationHint(int32_t rotation)
 {
-    CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist..");
-    recorderService_->SetOrientationHint(rotation);
-    return;
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_VAL, "recorder service does not exist..");
+    return recorderService_->SetOrientationHint(rotation);
 }
 
 int32_t RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
