@@ -99,10 +99,6 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
-    CHECK_AND_RETURN_RET(!SystemPermission(), (SignError(asyncCtx.get(),
-        MSERR_EXT_API9_NO_PERMISSION, "Not system app!", ""), result));
-
     napi_value jsThis = nullptr;
     size_t argCount = 0;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
