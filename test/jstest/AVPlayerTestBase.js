@@ -439,7 +439,7 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
                 expect(avPlayer.currentTime).assertEqual(0);
                 offCallback(avPlayer, ['volumeChange']);
                 // step 2,11: prepared -> seek 0
-                avPlayer.seek(0, media.SeekMode.SEEK_CLOSEST_SYNC);
+                avPlayer.seek(0, 2);  // 2: CLOSEST SYNC
                 break;
             case AV_PLAYER_STATE.PLAYING:
                 playCnt++;
@@ -491,11 +491,12 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
         console.info(`case endOfStream called`);
         endOfStreamCnt++;
         // step 9: seek + reset
-        avPlayer.seek(avPlayer.duration / 2, media.SeekMode.SEEK_CLOSEST);
+        avPlayer.seek(avPlayer.duration / 2, 3); // 3: CLOSEST
         avPlayer.reset((err) => {
             if (err == null) {
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.IDLE);
                 console.info('case reset success!!');
+                setSource(avPlayer, src);
             }  else {
                 mediaTestBase.assertErr('reset', err, done);
             }
