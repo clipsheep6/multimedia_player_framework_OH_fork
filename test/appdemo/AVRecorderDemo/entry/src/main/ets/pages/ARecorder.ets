@@ -1,8 +1,7 @@
-import { CommonConstants } from '../common/constants/CommonConstants';
-import { TabItemData } from '../common/bean/TabItemData';
-import { ListAreaComponent } from '../view/ListAreaComponent';
-import PageViewModel from '../viewmodel/PageViewModel';
-
+import router from '@ohos.router';
+import camera from '@ohos.multimedia.camera'
+import media from '@ohos.multimedia.media';
+import
 /**
  * ListPage is the entry of application and shows how to develop a list page.The page consists of the search component,
  * list, and tabs. The list component is ListAreaComponent, and each item in the list corresponds to ListItemComponent.

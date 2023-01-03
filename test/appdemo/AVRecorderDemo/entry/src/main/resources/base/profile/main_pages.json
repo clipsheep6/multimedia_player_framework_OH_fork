@@ -1,0 +1,7 @@
+{
+  "src": [
+    "pages/ListPage",
+    "pages/DetailPage",
+    "pages/VRecorder"
+  ]
+}

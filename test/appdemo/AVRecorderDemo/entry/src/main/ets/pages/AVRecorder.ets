@@ -48,6 +48,15 @@ struct videoRecording {
   switchCameraBtn: any = $r('app.media.small_switch_camera');
   settingBtn: any = $r('app.media.setting');
 
+  // 接口调用时长
+  @State createTakeTime: number = 0;
+  @State prepareTakeTime: number = 0;
+  @State startTakeTime: number = 0;
+  @State pauseTakeTime: number = 0;
+  @State stopTakeTime: number = 0;
+  @State resetTakeTime: number = 0;
+  @State releaseTakeTime: number = 0;
+
   private cameraOutputCapability: camera.CameraOutputCapability = undefined; // 摄像头能力
   private videoProfiles: any = undefined; // 录制配置参数
   private previewProfiles: any = undefined; // 预览界面配置参数
@@ -591,6 +600,13 @@ struct videoRecording {
             }
           }
         }
+      }
+      Row({space: '20px'}) {
+        Text('create: ').fontSize(16).width('220px');
+        Text('prepare: ').fontSize(16).width('220px');
+        Text('getInputSurface: ').fontSize(16).width('220px');
+        Text('reset: ').fontSize(16).width('220px');
+        Text('release: ').fontSize(16).width('220px');
       }
     }
   }
