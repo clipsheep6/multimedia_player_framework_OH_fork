@@ -181,8 +181,8 @@ napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_in
     return result;
 }
 
-napi_value VideoRecorderNapi::Prepare(napi_env env,
-    napi_callback_info info)
+napi_value VideoRecorderNapi::Prepare(
+    napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Prepare In");
 
