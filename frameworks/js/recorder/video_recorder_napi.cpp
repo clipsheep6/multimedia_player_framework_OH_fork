@@ -45,6 +45,13 @@ VideoRecorderNapi::~VideoRecorderNapi()
     MEDIA_LOGD("0x%{public}06" PRIXPTR "Instances destroy", FAKE_POINTER(this));
 }
 
+static void SignError(VideoRecorderAsyncContext *asyncCtx, int32_t code,
+    const std::string &param1, const std::string &param2)
+{
+    std::string message = MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), param1, param2);
+    asyncCtx->SignError(code, message);
+}
+
 napi_value VideoRecorderNapi::Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor properties[] = {
@@ -153,6 +160,8 @@ napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_in
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
     std::unique_ptr<VideoRecorderAsyncContext> asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system"), result));
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
@@ -169,13 +178,6 @@ napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_in
     return result;
 }
 
-static void SignError(VideoRecorderAsyncContext *asyncCtx, int32_t code,
-    const std::string &param1, const std::string &param2)
-{
-    std::string message = MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), param1, param2);
-    asyncCtx->SignError(code, message);
-}
-
 napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGD("Prepare In");
@@ -186,6 +188,8 @@ napi_value VideoRecorderNapi::Prepare(napi_env env, napi_callback_info info)
     napi_value args[2] = { nullptr };
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "prepare", "system"), result));
 
     // get args
     size_t argCount = 2;
@@ -253,6 +257,8 @@ napi_value VideoRecorderNapi::GetInputSurface(napi_env env, napi_callback_info i
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "getInputSurface", "system"), result));
     // get args
     napi_value jsThis = nullptr;
     napi_value args[1] = {nullptr};
@@ -304,6 +310,8 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "start", "system"), result));
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -347,6 +355,8 @@ napi_value VideoRecorderNapi::Pause(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "pause", "system"), result));
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -390,6 +400,8 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "resume", "system"), result));
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -433,6 +445,8 @@ napi_value VideoRecorderNapi::Stop(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "stop", "system"), result));
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -476,6 +490,8 @@ napi_value VideoRecorderNapi::Reset(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "reset", "system"), result));
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -526,6 +542,8 @@ napi_value VideoRecorderNapi::Release(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "release", "system"), result));
 
     napi_value jsThis = nullptr;
     napi_value args[1] = { nullptr };
@@ -573,6 +591,10 @@ napi_value VideoRecorderNapi::On(napi_env env, napi_callback_info info)
 {
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "on", "system"), result));
 
     static constexpr size_t minArgCount = 2;
     size_t argCount = minArgCount;
@@ -750,6 +772,10 @@ napi_value VideoRecorderNapi::GetState(napi_env env, napi_callback_info info)
     napi_value jsThis = nullptr;
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
+    CHECK_AND_RETURN_RET(SystemPermission(), (SignError(asyncCtx.get(),
+        MSERR_EXT_API9_PERMISSION_DENIED, "getState", "system"), result));
 
     size_t argCount = 0;
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
