@@ -16,7 +16,13 @@
 #include "recorder_napi_utils.h"
 #include <map>
 #include <string>
+#include "tokenid_kit.h"
+#include "ipc_skeleton.h"
+#include "access_token.h"
+#include "accesstoken_kit.h"
 #include "media_errors.h"
+
+using namespace OHOS::Security::AccessToken;
 
 namespace OHOS {
 namespace Media {
@@ -30,6 +36,23 @@ const std::map<std::string, OutputFormatType> g_extensionToOutputFormat = {
     { "mp4", OutputFormatType::FORMAT_MPEG_4 },
     { "m4a", OutputFormatType::FORMAT_M4A },
 };
+
+bool IsSystemApp()
+{
+    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
+    bool isSystemApp = TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
+    return isSystemApp;
+}
+
+bool SystemPermission()
+{
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType == Security::AccessToken::TOKEN_NATIVE || tokenType == Security::AccessToken::TOKEN_SHELL) {
+        return true;
+    }
+    return IsSystemApp();
+}
 
 int32_t MapMimeToAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat)
 {
