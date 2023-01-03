@@ -1523,7 +1523,7 @@ declare namespace media {
   }
 
   /**
-  * The maintenance of this interface has been stopped since version api 9. Please use AVRecorder.
+  * The maintenance of this interface has been stopped since version api 9. Please use AVRecorderState.
   * Describes video recorder states.
   * @since 9
   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
@@ -1742,7 +1742,7 @@ declare namespace media {
   }
 
   /**
-   * The maintenance of this interface has been stopped since version api 9. Please use AVPlayer.
+   * The maintenance of this interface has been stopped since version api 9. Please use AVPlayerState.
    * Describes video playback states.
    * @since 8
    * @syscap SystemCapability.Multimedia.Media.VideoPlayer
