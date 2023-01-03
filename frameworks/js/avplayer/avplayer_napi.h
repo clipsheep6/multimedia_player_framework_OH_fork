@@ -27,7 +27,6 @@
 
 namespace OHOS {
 namespace Media {
-/* type AVPlayerState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'released' | 'error' */
 namespace AVPlayerState {
 const std::string STATE_IDLE = "idle";
 const std::string STATE_INITIALIZED = "initialized";
@@ -40,21 +39,6 @@ const std::string STATE_ERROR = "error";
 const std::string STATE_COMPLETED = "completed";
 }
 
-/**
- * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
- * on(type: 'volumeChange', callback: Callback<number>): void;
- * on(type: 'seekDone', callback: Callback<number>): void;
- * on(type: 'speedDone', callback: Callback<number>): void;
- * on(type: 'bitrateDone', callback: Callback<number>): void;
- * on(type: 'timeUpdate', callback: Callback<number>): void;
- * on(type: 'durationUpdate', callback: Callback<number>): void;
- * on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
- * on(type: 'startRenderFrame', callback: Callback<void>): void;
- * on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
- * on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
- * on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
- * on(type: 'error', callback: ErrorCallback): void;
- */
 namespace AVPlayerEvent {
 const std::string EVENT_STATE_CHANGE = "stateChange";
 const std::string EVENT_VOLUME_CHANGE = "volumeChange";
@@ -90,15 +74,18 @@ private:
      */
     static napi_value JsPrepare(napi_env env, napi_callback_info info);
     /**
-     * play(): void
+     * play(callback: AsyncCallback<void>): void
+     * play(): Promise<void>
      */
     static napi_value JsPlay(napi_env env, napi_callback_info info);
     /**
-     * pause(): void
+     * pause(callback: AsyncCallback<void>): void
+     * pause(): Promise<void>
      */
     static napi_value JsPause(napi_env env, napi_callback_info info);
     /**
-     * stop(): void
+     * stop(callback: AsyncCallback<void>): void
+     * stop(): Promise<void>
      */
     static napi_value JsStop(napi_env env, napi_callback_info info);
     /**
@@ -183,22 +170,37 @@ private:
      */
     static napi_value JsGetTrackDescription(napi_env env, napi_callback_info info);
     /**
-     * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
-     * on(type: 'volumeChange', callback: Callback<number>): void;
-     * on(type: 'playComplete', callback: Callback<void>): void;
-     * on(type: 'seekDone', callback: Callback<number>): void;
-     * on(type: 'speedDone', callback: Callback<number>): void;
-     * on(type: 'bitrateDone', callback: Callback<number>): void;
-     * on(type: 'timeUpdate', callback: Callback<number>): void;
-     * on(type: 'durationUpdate', callback: Callback<number>): void;
-     * on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
-     * on(type: 'startRenderFrame', callback: Callback<void>): void;
-     * on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
-     * on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
-     * on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
-     * on(type: 'error', callback: ErrorCallback): void;
+    * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
+    * off(type: 'stateChange'): void;
+    * on(type: 'volumeChange', callback: Callback<number>): void;
+    * off(type: 'volumeChange'): void;
+    * on(type: 'endOfStream', callback: Callback<void>): void;
+    * off(type: 'endOfStream'): void;
+    * on(type: 'seekDone', callback: Callback<number>): void;
+    * off(type: 'seekDone'): void;
+    * on(type: 'speedDone', callback: Callback<number>): void;
+    * off(type: 'speedDone'): void;
+    * on(type: 'bitrateDone', callback: Callback<number>): void;
+    * off(type: 'bitrateDone'): void;
+    * on(type: 'timeUpdate', callback: Callback<number>): void;
+    * off(type: 'timeUpdate'): void;
+    * on(type: 'durationUpdate', callback: Callback<number>): void;
+    * off(type: 'durationUpdate'): void;
+    * on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
+    * off(type: 'bufferingUpdate'): void;
+    * on(type: 'startRenderFrame', callback: Callback<void>): void;
+    * off(type: 'startRenderFrame'): void;
+    * on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
+    * off(type: 'videoSizeChange'): void;
+    * on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
+    * off(type: 'audioInterrupt'): void;
+    * on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
+    * off(type: 'availableBitrates'): void;
+    * on(type: 'error', callback: ErrorCallback): void;
+    * off(type: 'error'): void;
     */
     static napi_value JsSetOnCallback(napi_env env, napi_callback_info info);
+    static napi_value JsClearOnCallback(napi_env env, napi_callback_info info);
 
     static AVPlayerNapi* GetJsInstance(napi_env env, napi_callback_info info);
     static AVPlayerNapi* GetJsInstanceWithParameter(napi_env env, napi_callback_info info,
@@ -207,6 +209,7 @@ private:
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void ClearCallbackReference();
+    void ClearCallbackReference(const std::string &callbackName);
     void StartListenCurrentResource();
     void PauseListenCurrentResource();
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
@@ -214,6 +217,9 @@ private:
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
     std::shared_ptr<TaskHandler<void>> PrepareTask();
+    std::shared_ptr<TaskHandler<void>> PlayTask();
+    std::shared_ptr<TaskHandler<void>> PauseTask();
+    std::shared_ptr<TaskHandler<void>> StopTask();
     std::shared_ptr<TaskHandler<void>> ResetTask();
     std::shared_ptr<TaskHandler<void>> ReleaseTask();
     std::string GetCurrentState();
@@ -248,6 +254,7 @@ private:
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
     PlayerStates state_ = PLAYER_IDLE;
     std::condition_variable preparingCond_;
+    std::condition_variable stateChangeCond_;
     std::condition_variable resettingCond_;
     int32_t width_ = 0;
     int32_t height_ = 0;
