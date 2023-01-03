@@ -34,6 +34,8 @@ export async function closeFileDescriptor(fileName) {
         console.log('case closeRawFileDescriptor err: ' + error);
     });
 }
+
+
 // wait asynchronously
 export async function msleepAsync(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -50,6 +52,21 @@ export function catchCallback(error) {
     expect().assertFail();
     console.info(`case error catch called,errMessage is ${error.message}`);
 }
+export function checkDescription(actualDescription, descriptionKey, descriptionValue) {
+    for (let i = 0; i < descriptionKey.length; i++) {
+        let property = actualDescription[descriptionKey[i]];
+        console.info('case key is  '+ descriptionKey[i]);
+        console.info('case actual value is  '+ property);
+        console.info('case hope value is  '+ descriptionValue[i]);
+        if (descriptionKey[i] == 'codec_mime') {
+            expect(property).assertEqual(CODECMIMEVALUE[descriptionValue[i]]);
+        } else {
+            expect(property).assertEqual(descriptionValue[i]);
+        }
+        
+    }
+}
+
 
 export async function getFd(pathName, fileType) {
     let fdObject = {
