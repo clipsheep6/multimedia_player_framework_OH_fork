@@ -118,7 +118,7 @@ napi_value AVPlayerNapi::Constructor(napi_env env, napi_callback_info info)
     (void)jsPlayer->player_->SetPlayerCallback(jsPlayer->playerCb_);
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsPlayer),
-        AVPlayerNapi::Destructor, nullptr, &(jsPlayer->wrapper_));
+        AVPlayerNapi::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsPlayer;
         MEDIA_LOGE("Failed to wrap native instance");
@@ -142,10 +142,6 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
             MEDIA_LOGI("Destructor Wait Release Task End");
         }
         jsPlayer->taskQue_->Stop();
-
-        if (jsPlayer->wrapper_ != nullptr) {
-            napi_delete_reference(env, jsPlayer->wrapper_);
-        }
         delete jsPlayer;
     }
     MEDIA_LOGI("Destructor success");
@@ -177,7 +173,7 @@ napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
     NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
     asyncContext.release();
-
+    MEDIA_LOGI("JsCreateAVPlayer Out");
     return result;
 }
 
@@ -634,6 +630,7 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("JsSetSpeed Out");
     return result;
 }
 
@@ -674,6 +671,7 @@ napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("JsSetVolume Out");
     return result;
 }
 
@@ -933,6 +931,7 @@ napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
     // get url from js
     jsPlayer->surface_ = CommonNapi::GetStringArgument(env, args[0]);
     jsPlayer->SetSurface(jsPlayer->surface_);
+    MEDIA_LOGI("JsSetSurfaceID Out");
     return result;
 }
 
@@ -1292,6 +1291,7 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
     NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
     promiseCtx.release();
+    MEDIA_LOGI("GetTrackDescription Out");
     return result;
 }
 
