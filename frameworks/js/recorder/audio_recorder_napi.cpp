@@ -63,9 +63,7 @@ AudioRecorderNapi::~AudioRecorderNapi()
     }
     callbackNapi_ = nullptr;
     recorderImpl_ = nullptr;
-    if (wrapper_ != nullptr) {
-        napi_delete_reference(env_, wrapper_);
-    }
+
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy out ", FAKE_POINTER(this));
 }
 
@@ -133,7 +131,7 @@ napi_value AudioRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     }
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(recorderNapi),
-        AudioRecorderNapi::Destructor, nullptr, &(recorderNapi->wrapper_));
+        AudioRecorderNapi::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         napi_get_undefined(env, &result);
         delete recorderNapi;

@@ -48,9 +48,7 @@ VideoPlayerNapi::~VideoPlayerNapi()
     CancelCallback();
     nativePlayer_ = nullptr;
     jsCallback_ = nullptr;
-    if (wrapper_ != nullptr) {
-        napi_delete_reference(env_, wrapper_);
-    }
+
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -133,7 +131,7 @@ napi_value VideoPlayerNapi::Constructor(napi_env env, napi_callback_info info)
     }
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsPlayer),
-        VideoPlayerNapi::Destructor, nullptr, &(jsPlayer->wrapper_));
+        VideoPlayerNapi::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         napi_get_undefined(env, &result);
         delete jsPlayer;
