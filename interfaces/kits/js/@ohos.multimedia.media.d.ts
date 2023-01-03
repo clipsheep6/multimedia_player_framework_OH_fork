@@ -57,7 +57,7 @@ declare namespace media {
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    * @returns Returns an AudioRecorder instance if the operation is successful; returns null otherwise.
    * @deprecated since 9
-   * @useinstead ohos.multimedia.media#createAVRecorder
+   * @useinstead ohos.multimedia.media/media.createAVRecorder
    */
   function createAudioRecorder(): AudioRecorder;
 
@@ -1340,7 +1340,7 @@ declare namespace media {
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    * @deprecated since 9
-   * @useinstead ohos.multimedia.media.AVRecorderConfig
+   * @useinstead ohos.multimedia.media/media.AVRecorderConfig
    */
   interface AudioRecorderConfig {
     /**
@@ -1429,7 +1429,7 @@ declare namespace media {
    * @since 6
    * @syscap SystemCapability.Multimedia.Media.AudioRecorder
    * @deprecated since 9
-   * @useinstead ohos.multimedia.media.AVRecorder
+   * @useinstead ohos.multimedia.media/media.AVRecorder
    */
   interface AudioRecorder {
     /**
@@ -1439,7 +1439,7 @@ declare namespace media {
      * @param config Recording parameters.
      * @permission ohos.permission.MICROPHONE
      * @deprecated since 9
-     * @useinstead ohos.multimedia.media.AVRecorder#prepare
+     * @useinstead ohos.multimedia.media/media.AVRecorder#prepare
      */
     prepare(config: AudioRecorderConfig): void;
 
@@ -1448,7 +1448,7 @@ declare namespace media {
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @deprecated since 9
-     * @useinstead ohos.multimedia.media.AVRecorder#start
+     * @useinstead ohos.multimedia.media/media.AVRecorder#start
      */
     start(): void;
 
@@ -1457,7 +1457,7 @@ declare namespace media {
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @deprecated since 9
-     * @useinstead ohos.multimedia.media.AVRecorder#pause
+     * @useinstead ohos.multimedia.media/media.AVRecorder#pause
      */
     pause(): void;
 
@@ -1466,7 +1466,7 @@ declare namespace media {
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @deprecated since 9
-     * @useinstead ohos.multimedia.media.AVRecorder#resume
+     * @useinstead ohos.multimedia.media/media.AVRecorder#resume
      */
     resume(): void;
 
@@ -1475,7 +1475,7 @@ declare namespace media {
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @deprecated since 9
-     * @useinstead ohos.multimedia.media.AVRecorder#stop
+     * @useinstead ohos.multimedia.media/media.AVRecorder#stop
      */
     stop(): void;
 
@@ -1484,7 +1484,7 @@ declare namespace media {
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @deprecated since 9
-     * @useinstead ohos.multimedia.media.AVRecorder#release
+     * @useinstead ohos.multimedia.media/media.AVRecorder#release
      */
     release(): void;
 
@@ -1495,7 +1495,7 @@ declare namespace media {
      * @since 6
      * @syscap SystemCapability.Multimedia.Media.AudioRecorder
      * @deprecated since 9
-     * @useinstead ohos.multimedia.media.AVRecorder#reset
+     * @useinstead ohos.multimedia.media/media.AVRecorder#reset
      */
     reset(): void;
 
@@ -1506,7 +1506,7 @@ declare namespace media {
      * @param type Type of the audio recording event to listen for.
      * @param callback Callback used to listen for the audio recording event.
      * @deprecated since 9
-     * @useinstead ohos.multimedia.media.AVRecorder#on
+     * @useinstead ohos.multimedia.media/media.AVRecorder#on
      */
     on(type: 'prepare' | 'start' | 'pause' | 'resume' | 'stop' | 'release' | 'reset', callback: () => void): void;
 
@@ -1517,7 +1517,7 @@ declare namespace media {
      * @param type Type of the audio recording error event to listen for.
      * @param callback Callback used to listen for the audio recording error event.
      * @deprecated since 9
-     * @useinstead ohos.multimedia.media.AVRecorder#on
+     * @useinstead ohos.multimedia.media/media.AVRecorder#on
      */
     on(type: 'error', callback: ErrorCallback): void;
   }
