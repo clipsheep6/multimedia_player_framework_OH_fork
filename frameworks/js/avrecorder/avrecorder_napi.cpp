@@ -124,7 +124,7 @@ napi_value AVRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     (void)jsRecorder->recorder_->SetRecorderCallback(jsRecorder->recorderCb_);
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsRecorder),
-                       AVRecorderNapi::Destructor, nullptr, &(jsRecorder->wrapper_));
+                       AVRecorderNapi::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete jsRecorder;
         MEDIA_LOGE("Failed to wrap native instance");
@@ -151,10 +151,6 @@ void AVRecorderNapi::Destructor(napi_env env, void *nativeObject, void *finalize
         if (napi->recorder_) {
             napi->recorder_->Release();
             napi->recorder_ = nullptr;
-        }
-
-        if (napi->wrapper_ != nullptr) {
-            napi_delete_reference(env, napi->wrapper_);
         }
 
         delete napi;
