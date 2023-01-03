@@ -29,6 +29,7 @@ namespace Media {
 class PlayerKeys {
 public:
     static constexpr std::string_view PLAYER_STATE_CHANGED_REASON = "state_changed_reason";
+    static constexpr std::string_view PLAYER_VOLUME_LEVEL = "volume_level";
     static constexpr std::string_view PLAYER_TRACK_INDEX = "track_index";
     static constexpr std::string_view PLAYER_TRACK_TYPE = "track_type";
     static constexpr std::string_view PLAYER_WIDTH = "width";
@@ -51,11 +52,6 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_TYPE = "audio_interrupt_type";
     static constexpr std::string_view AUDIO_INTERRUPT_FORCE = "audio_interrupt_force";
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
-};
-
-enum StateChangeReason {
-    USER = 1,
-    BACKGROUND = 2,
 };
 
 enum BufferingInfoType : int32_t {
@@ -339,7 +335,11 @@ public:
     virtual int32_t Reset() = 0;
 
     /**
-     * @brief Releases player resources
+     * @brief Releases player resources async
+     *
+     *  Asynchronous release guarantees the performance
+     *  but cannot ensure whether the surfacebuffer is released.
+     *  The caller needs to ensure the life cycle security of the sufrace
      *
      * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
      * in {@link media_errors.h} otherwise.
@@ -347,6 +347,20 @@ public:
      * @version 1.0
      */
     virtual int32_t Release() = 0;
+
+    /**
+     * @brief Releases player resources sync
+     *
+     * Synchronous release ensures effective release of surfacebuffer
+     * but this interface will take a long time (when the engine is not idle state)
+     * requiring the caller to design an asynchronous mechanism by itself
+     *
+     * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t ReleaseSync() = 0;
 
     /**
      * @brief Sets the volume of the player.

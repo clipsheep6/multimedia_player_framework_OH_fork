@@ -46,13 +46,14 @@ public:
     int32_t GetVideoHeight() const;
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void ClearCallbackReference();
+    void ClearCallbackReference(const std::string &name);
     void Start();
     void Pause();
     void Release();
 
 private:
     void OnStateChangeCb(PlayerStates state, const Format &infoBody);
-    void OnVolumeChangeCb(double volumeLevel);
+    void OnVolumeChangeCb(const Format &infoBody);
     void OnSeekDoneCb(int32_t currentPositon) const;
     void OnSpeedDoneCb(int32_t speedMode) const;
     void OnBitRateDoneCb(int32_t bitRate) const;
