@@ -454,7 +454,7 @@ declare namespace media {
     readonly height: number;
 
     /**
-     * video scale type. Defaultly, the {@link #VIDEO_SCALE_TYPE_FIT} will be used, for more
+     * video scale type. By default, the {@link #VIDEO_SCALE_TYPE_FIT_CROP} will be used, for more
      * information, refer to {@link #VideoScaleType}
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
@@ -470,11 +470,11 @@ declare namespace media {
     setSpeed(speed: PlaybackSpeed): void;
 
     /**
-     * select a specified bitrate to playback, only valid for HLS protocal network stream. Defaulty, the
+     * select a specified bitrate to playback, only valid for HLS protocol network stream. By default, the
      * player will select the appropriate bitrate according to the network connection speed. The
-     * available bitrates list reported by {@link #on('availableBitrates')}. Set it to select
-     * a specified bitrate. If the specified bitrate is not in the list of available bitrates, the player
-     * will select the minimal and closest one from the available bitrates list.
+     * available bitrate list reported by {@link #on('availableBitrates')}. Set it to select
+     * a specified bitrate. If the specified bitrate is not in the list of available bitrate, the player
+     * will select the minimal and closest one from the available bitrate list.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param bitrate the playback bitrate must be expressed in bits per second.
@@ -590,12 +590,12 @@ declare namespace media {
     on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
     off(type: 'audioInterrupt'): void;
     /**
-     * Register or unregister listens for available bitrates collect completed events for HLS protocal stream playback.
+     * Register or unregister listens for available bitrate list collect completed events for HLS protocol stream playback.
      * This event will be reported after the {@link #prepare} called.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
-     * @param callback Callback used to listen for the playback event return available bitrates.
+     * @param callback Callback used to listen for the playback event return available bitrate list.
      */
     on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
     off(type: 'availableBitrates'): void;
@@ -2088,7 +2088,7 @@ declare namespace media {
     audioInterruptMode ?: audio.InterruptMode;
 
     /**
-     * video scale type. By default, the {@link #VIDEO_SCALE_TYPE_FIT} will be used, for more
+     * video scale type. By default, the {@link #VIDEO_SCALE_TYPE_FIT_CROP} will be used, for more
      * information, refer to {@link #VideoScaleType}
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoPlayer
