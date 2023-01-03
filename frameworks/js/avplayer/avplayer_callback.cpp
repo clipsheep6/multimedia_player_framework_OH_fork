@@ -117,7 +117,7 @@ public:
             (void)napi_create_int32(ref->env_, valueVec[0], &args[0]);
             (void)napi_create_int32(ref->env_, valueVec[1], &args[1]);
 
-            const int32_t argCount = valueVec.size();
+            const int32_t argCount = static_cast<int32_t>(valueVec.size());
             napi_value result = nullptr;
             status = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,

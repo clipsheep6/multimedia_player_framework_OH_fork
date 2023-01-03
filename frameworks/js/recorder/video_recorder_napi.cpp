@@ -40,9 +40,6 @@ VideoRecorderNapi::VideoRecorderNapi()
 VideoRecorderNapi::~VideoRecorderNapi()
 {
     CancelCallback();
-    if (wrapper_ != nullptr) {
-        napi_delete_reference(env_, wrapper_);
-    }
     recorder_ = nullptr;
     callbackNapi_ = nullptr;
     MEDIA_LOGD("0x%{public}06" PRIXPTR "Instances destroy", FAKE_POINTER(this));
@@ -113,7 +110,7 @@ napi_value VideoRecorderNapi::Constructor(napi_env env, napi_callback_info info)
     }
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(recorderNapi),
-        VideoRecorderNapi::Destructor, nullptr, &(recorderNapi->wrapper_));
+        VideoRecorderNapi::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         delete recorderNapi;
         MEDIA_LOGE("Failed to warp native instance!");
