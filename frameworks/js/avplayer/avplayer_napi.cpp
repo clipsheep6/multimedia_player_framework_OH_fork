@@ -222,7 +222,8 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     auto state = jsPlayer->GetCurrentState();
     if (state != AVPlayerState::STATE_INITIALIZED &&
-        state != AVPlayerState::STATE_STOPPED) {
+        state != AVPlayerState::STATE_STOPPED &&
+        state != AVPlayerState::STATE_PREPARED) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not stopped or initialized, unsupport prepare operation");
     } else {
@@ -292,7 +293,8 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
     auto state = jsPlayer->GetCurrentState();
     if (state != AVPlayerState::STATE_PREPARED &&
         state != AVPlayerState::STATE_PAUSED &&
-        state != AVPlayerState::STATE_COMPLETED) {
+        state != AVPlayerState::STATE_COMPLETED &&
+        state != AVPlayerState::STATE_PLAYING) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/paused/completed, unsupport play operation");
     } else {
@@ -358,7 +360,8 @@ napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     auto state = jsPlayer->GetCurrentState();
-    if (state != AVPlayerState::STATE_PLAYING) {
+    if (state != AVPlayerState::STATE_PLAYING &&
+        state != AVPlayerState::STATE_PAUSED) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not playing, unsupport pause operation");
     } else {
@@ -422,7 +425,11 @@ napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
 
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
-    if (!jsPlayer->IsControllable()) {
+    auto state = jsPlayer->GetCurrentState();
+    if (state == AVPlayerState::STATE_IDLE ||
+        state == AVPlayerState::STATE_INITIALIZED ||
+        state == AVPlayerState::STATE_RELEASED ||
+        state == AVPlayerState::STATE_ERROR) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport stop operation");
     } else {
@@ -562,12 +569,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
-    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is released, unsupport double release");
-    } else {
-        promiseCtx->asyncTask = jsPlayer->ReleaseTask();
-    }
+    promiseCtx->asyncTask = jsPlayer->ReleaseTask();
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsRelease", NAPI_AUTO_LENGTH, &resource);
