@@ -56,6 +56,8 @@ const std::string EVENT_AVAILABLE_BITRATES = "availableBitrates";
 const std::string EVENT_ERROR = "error";
 }
 
+using TaskRet = std::pair<int32_t, std::string>;
+
 class AVPlayerNapi : public AVPlayerNotify {
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
@@ -216,12 +218,13 @@ private:
     void SetSource(std::string url);
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
-    std::shared_ptr<TaskHandler<void>> PrepareTask();
-    std::shared_ptr<TaskHandler<void>> PlayTask();
-    std::shared_ptr<TaskHandler<void>> PauseTask();
-    std::shared_ptr<TaskHandler<void>> StopTask();
-    std::shared_ptr<TaskHandler<void>> ResetTask();
-    std::shared_ptr<TaskHandler<void>> ReleaseTask();
+
+    std::shared_ptr<TaskHandler<TaskRet>> PrepareTask();
+    std::shared_ptr<TaskHandler<TaskRet>> PlayTask();
+    std::shared_ptr<TaskHandler<TaskRet>> PauseTask();
+    std::shared_ptr<TaskHandler<TaskRet>> StopTask();
+    std::shared_ptr<TaskHandler<TaskRet>> ResetTask();
+    std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     std::string GetCurrentState();
     bool IsControllable();
 
@@ -233,7 +236,16 @@ private:
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
         ~AVPlayerContext() = default;
-        std::shared_ptr<TaskHandler<void>> asyncTask = nullptr;
+        void CheckTaskResult()
+        {
+            if (asyncTask != nullptr) {
+                auto result = asyncTask->GetResult();
+                if (result.Value().first != MSERR_EXT_API9_OK) {
+                    SignError(result.Value().first, result.Value().second);
+                }
+            }
+        }
+        std::shared_ptr<TaskHandler<TaskRet>> asyncTask = nullptr;
         AVPlayerNapi *napi = nullptr;
     };
     static thread_local napi_ref constructor_;

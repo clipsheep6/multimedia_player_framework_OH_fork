@@ -177,16 +177,29 @@ napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
     return result;
 }
 
-std::shared_ptr<TaskHandler<void>> AVPlayerNapi::PrepareTask()
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
 {
-    auto task = std::make_shared<TaskHandler<void>>([this]() {
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Prepare Task In");
         std::unique_lock<std::mutex> lock(mutex_);
-        (void)player_->PrepareAsync();
-        if (state_ != PLAYER_STATE_ERROR && state_ != PLAYER_PREPARED) {
-            preparingCond_.wait(lock);
+
+        auto state = GetCurrentState();
+        if (state == AVPlayerState::STATE_INITIALIZED ||
+            state == AVPlayerState::STATE_STOPPED) {
+            (void)player_->PrepareAsync();
+            preparingCond_.wait(lock, [this]() {
+                auto state = GetCurrentState();
+                return state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_ERROR;
+            });
+        } else if (state == AVPlayerState::STATE_PREPARED) {
+            MEDIA_LOGI("current state is prepared, invalid operation");
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not stopped or initialized, unsupport prepare operation");
         }
+
         MEDIA_LOGI("Prepare Task Out");
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
 
     (void)taskQue_->EnqueueTask(task);
@@ -209,7 +222,8 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     auto state = jsPlayer->GetCurrentState();
     if (state != AVPlayerState::STATE_INITIALIZED &&
-        state != AVPlayerState::STATE_STOPPED) {
+        state != AVPlayerState::STATE_STOPPED &&
+        state != AVPlayerState::STATE_PREPARED) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not stopped or initialized, unsupport prepare operation");
     } else {
@@ -223,9 +237,7 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait Prepare Task Start");
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-            if (promiseCtx->asyncTask != nullptr) {
-                promiseCtx->asyncTask->GetResult();
-            }
+            promiseCtx->CheckTaskResult();
             MEDIA_LOGI("Wait Prepare Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
@@ -235,16 +247,30 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
     return result;
 }
 
-std::shared_ptr<TaskHandler<void>> AVPlayerNapi::PlayTask()
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
 {
-    auto task = std::make_shared<TaskHandler<void>>([this]() {
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Play Task In");
         std::unique_lock<std::mutex> lock(mutex_);
-        (void)player_->Play();
-        if (state_ != PLAYER_STATE_ERROR && state_ != PLAYER_STARTED) {
-            stateChangeCond_.wait(lock);
+
+        auto state = GetCurrentState();
+        if (state == AVPlayerState::STATE_PREPARED ||
+            state == AVPlayerState::STATE_PAUSED ||
+            state == AVPlayerState::STATE_COMPLETED) {
+            (void)player_->Play();
+            stateChangeCond_.wait(lock, [this]() {
+                auto state = GetCurrentState();
+                return state == AVPlayerState::STATE_PLAYING || state == AVPlayerState::STATE_ERROR;
+            });
+        } else if (state == AVPlayerState::STATE_PLAYING) {
+            MEDIA_LOGI("current state is playing, invalid operation");
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not prepared/paused/completed, unsupport play operation");
         }
+
         MEDIA_LOGI("Play Task Out");
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)taskQue_->EnqueueTask(task);
     return task;
@@ -267,7 +293,8 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
     auto state = jsPlayer->GetCurrentState();
     if (state != AVPlayerState::STATE_PREPARED &&
         state != AVPlayerState::STATE_PAUSED &&
-        state != AVPlayerState::STATE_COMPLETED) {
+        state != AVPlayerState::STATE_COMPLETED &&
+        state != AVPlayerState::STATE_PLAYING) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/paused/completed, unsupport play operation");
     } else {
@@ -281,9 +308,7 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait JsPlay Task Start");
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-            if (promiseCtx->asyncTask != nullptr) {
-                promiseCtx->asyncTask->GetResult();
-            }
+            promiseCtx->CheckTaskResult();
             MEDIA_LOGI("Wait JsPlay Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
@@ -293,16 +318,28 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
     return result;
 }
 
-std::shared_ptr<TaskHandler<void>> AVPlayerNapi::PauseTask()
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
 {
-    auto task = std::make_shared<TaskHandler<void>>([this]() {
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Pause Task In");
         std::unique_lock<std::mutex> lock(mutex_);
-        (void)player_->Pause();
-        if (state_ != PLAYER_STATE_ERROR && state_ != PLAYER_PAUSED) {
-            stateChangeCond_.wait(lock);
+
+        auto state = GetCurrentState();
+        if (state == AVPlayerState::STATE_PLAYING) {
+            (void)player_->Pause();
+            stateChangeCond_.wait(lock, [this]() {
+                auto state = GetCurrentState();
+                return state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_ERROR;
+            });
+        } else if (state == AVPlayerState::STATE_PAUSED) {
+            MEDIA_LOGI("current state is paused, invalid operation");
+        } else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not playing, unsupport pause operation");
         }
+
         MEDIA_LOGI("Pause Task Out");
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)taskQue_->EnqueueTask(task);
     return task;
@@ -323,7 +360,8 @@ napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     auto state = jsPlayer->GetCurrentState();
-    if (state != AVPlayerState::STATE_PLAYING) {
+    if (state != AVPlayerState::STATE_PLAYING &&
+        state != AVPlayerState::STATE_PAUSED) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not playing, unsupport pause operation");
     } else {
@@ -337,9 +375,7 @@ napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait JsPause Task Start");
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-            if (promiseCtx->asyncTask != nullptr) {
-                promiseCtx->asyncTask->GetResult();
-            }
+            promiseCtx->CheckTaskResult();
             MEDIA_LOGI("Wait JsPause Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
@@ -349,16 +385,27 @@ napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
     return result;
 }
 
-std::shared_ptr<TaskHandler<void>> AVPlayerNapi::StopTask()
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
 {
-    auto task = std::make_shared<TaskHandler<void>>([this]() {
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Stop Task In");
         std::unique_lock<std::mutex> lock(mutex_);
-        (void)player_->Stop();
-        if (state_ != PLAYER_STATE_ERROR && state_ != PLAYER_STOPPED) {
-            stateChangeCond_.wait(lock);
+
+        if (IsControllable()) {
+            (void)player_->Stop();
+            stateChangeCond_.wait(lock, [this]() {
+                auto state = GetCurrentState();
+                return state == AVPlayerState::STATE_STOPPED || state == AVPlayerState::STATE_ERROR;
+            });
+        } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
+            MEDIA_LOGI("current state is stopped, invalid operation");
+        }  else {
+            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state is not prepared/playing/paused/completed, unsupport stop operation");
         }
+
         MEDIA_LOGI("Stop Task Out");
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)taskQue_->EnqueueTask(task);
     return task;
@@ -378,7 +425,11 @@ napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
 
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
-    if (!jsPlayer->IsControllable()) {
+    auto state = jsPlayer->GetCurrentState();
+    if (state == AVPlayerState::STATE_IDLE ||
+        state == AVPlayerState::STATE_INITIALIZED ||
+        state == AVPlayerState::STATE_RELEASED ||
+        state == AVPlayerState::STATE_ERROR) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport stop operation");
     } else {
@@ -392,9 +443,7 @@ napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait JsStop Task Start");
             auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
-            if (promiseCtx->asyncTask != nullptr) {
-                promiseCtx->asyncTask->GetResult();
-            }
+            promiseCtx->CheckTaskResult();
             MEDIA_LOGI("Wait JsStop Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
@@ -404,20 +453,28 @@ napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
     return result;
 }
 
-std::shared_ptr<TaskHandler<void>> AVPlayerNapi::ResetTask()
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
 {
-    auto task = std::make_shared<TaskHandler<void>>([this]() {
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Reset Task In");
         PauseListenCurrentResource(); // Pause event listening for the current resource
         ResetUserParameters();
         {
             std::unique_lock<std::mutex> lock(mutex_);
-            (void)player_->Reset();
-            if (state_ != PLAYER_IDLE) {
-                resettingCond_.wait(lock);
+            if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "current state is not playing, unsupport pause operation");
+            } else if (GetCurrentState() == AVPlayerState::STATE_IDLE) {
+                MEDIA_LOGI("current state is idle, invalid operation");
+            } else {
+                (void)player_->Reset();
+                resettingCond_.wait(lock, [this]() {
+                    return GetCurrentState() == AVPlayerState::STATE_IDLE;
+                });
             }
         }
         MEDIA_LOGI("Reset Task Out");
+        return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
 
     {
@@ -456,7 +513,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
             if (promiseCtx->asyncTask != nullptr) {
                 MEDIA_LOGI("Wait Reset Task Start");
-                promiseCtx->asyncTask->GetResult();
+                promiseCtx->CheckTaskResult();
                 MEDIA_LOGI("Wait Reset Task Stop");
             }
         },
@@ -467,11 +524,11 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
     return result;
 }
 
-std::shared_ptr<TaskHandler<void>> AVPlayerNapi::ReleaseTask()
+std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
 {
-    std::shared_ptr<TaskHandler<void>> task = nullptr;
+    std::shared_ptr<TaskHandler<TaskRet>> task = nullptr;
     if (!isReleased_.load()) {
-        task = std::make_shared<TaskHandler<void>>([this]() {
+        task = std::make_shared<TaskHandler<TaskRet>>([this]() {
             MEDIA_LOGI("Release Task In");
             PauseListenCurrentResource(); // Pause event listening for the current resource
             ResetUserParameters();
@@ -486,6 +543,7 @@ std::shared_ptr<TaskHandler<void>> AVPlayerNapi::ReleaseTask()
                 playerCb_ = nullptr;
             }
             MEDIA_LOGI("Release Task Out");
+            return TaskRet(MSERR_EXT_API9_OK, "Success");
         });
 
         std::unique_lock<std::mutex> lock(mutex_);
@@ -511,12 +569,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
-    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is released, unsupport double release");
-    } else {
-        promiseCtx->asyncTask = jsPlayer->ReleaseTask();
-    }
+    promiseCtx->asyncTask = jsPlayer->ReleaseTask();
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsRelease", NAPI_AUTO_LENGTH, &resource);
@@ -526,7 +579,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
             CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
             if (promiseCtx->asyncTask != nullptr) {
                 MEDIA_LOGI("Wait Release Task Start");
-                promiseCtx->asyncTask->GetResult();
+                promiseCtx->CheckTaskResult();
                 MEDIA_LOGI("Wait Release Task Stop");
             }
         },
