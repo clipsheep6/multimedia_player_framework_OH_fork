@@ -126,10 +126,6 @@ void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
             }
         }
 
-        if (ctrler_.isBufferPause_ && msg.detail2 == GST_STATE_PAUSED) {
-            ctrler_.isBufferPause_ = false;
-        }
-
         Dumper::DumpDotGraph(*ctrler_.playbin_, msg.detail1, msg.detail2);
 
         ProcessStateChange(msg);
@@ -418,10 +414,6 @@ int32_t PlayBinCtrlerBase::PlayingState::Pause()
     if (stateRet == GST_STATE_CHANGE_SUCCESS && state == GST_STATE_PAUSED) {
         MEDIA_LOGI("playbin already paused");
         ctrler_.ChangeState(ctrler_.pausedState_);
-        return MSERR_OK;
-    } else if (stateRet == GST_STATE_CHANGE_ASYNC && ctrler_.isBufferPause_) {
-        ctrler_.isUserSetPause_ = true;
-        MEDIA_LOGI("playbin is changing to paused asynchronously");
         return MSERR_OK;
     }
     ctrler_.isUserSetPause_ = true;
