@@ -13,8 +13,32 @@
  * limitations under the License.
  */
 
-
+import featureAbility from '@ohos.ability.featureAbility'
+import { UiDriver, BY, PointerMatrix } from '@ohos.uitest'
 const CODECMIMEVALUE = ['video/avc', 'audio/mp4a-latm', 'audio/mpeg']
+
+export async function getPermission(permissionNames) {
+    featureAbility.getContext().requestPermissionsFromUser(permissionNames, 0, async (data) => {
+        console.info("case request success" + JSON.stringify(data));
+    })
+}
+
+export async function driveFn(num) {
+    console.info(`case come in driveFn 111`);
+    let driver = UiDriver.create();
+    console.info(`case come in driveFn 222`);
+    console.info(`driver is ${JSON.stringify(driver)}`);
+    await msleepAsync(2000);
+    console.info(`UiDriver start`);
+    for (let i = 0; i < num; i++) {
+        let button = await driver.findComponent(BY.text('允许'));
+        console.info(`button is ${JSON.stringify(button)}`);
+        await msleepAsync(2000);
+        await button.click();
+    }
+    await msleepAsync(2000);
+}
+
 // File operation
 export async function getFileDescriptor(fileName) {
     let fileDescriptor = undefined;

@@ -130,6 +130,15 @@ export default function AVRecorderFuncTest(recorderContxt) {
     
         beforeAll(async function () {
             console.info('beforeAll case In');
+            let permissionName1 = 'ohos.permission.MICROPHONE';
+            let permissionName2 = 'ohos.permission.MEDIA_LOCATION';
+            let permissionName3 = 'ohos.permission.READ_MEDIA';
+            let permissionName4 = 'ohos.permission.WRITE_MEDIA';
+            let permissionName5 = 'ohos.permission.CAMERA';
+            let permissionNames = [permissionName1, permissionName2, permissionName3, permissionName4, permissionName5];
+            await mediaTestBase.getPermission(permissionNames);
+            await mediaTestBase.msleepAsync(2000);
+            await mediaTestBase.driveFn(3);
             cameraManager = await camera.getCameraManager(null);
             if (cameraManager != null) {
                 console.info('[camera] case getCameraManager success');
@@ -576,14 +585,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         }
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_0100
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0100
         * @tc.name      : 01. test avRecorder basic function by promise interfaces
         * @tc.desc      : test avRecorder operation: start-pause-resume-stop-reset-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_Promise_0100', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0100', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             console.info('case avConfig.videoSourceType is: ' + avConfig.videoSourceType);
@@ -593,14 +602,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_0200
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0200
         * @tc.name      : 01. test avRecorder basic function by callback interfaces
         * @tc.desc      : test avRecorder operation: start-pause-resume-stop-reset-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_0200', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0200', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, PAUSE_CALLBACK,
@@ -609,14 +618,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_0300
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0300
         * @tc.name      : 01. test avRecorder basic function by promise interfaces
         * @tc.desc      : test avRecorder operation: start-pause-resume-pause-reset-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_0300', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0300', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, PAUSE_PROMISE,
@@ -625,14 +634,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_0400
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0400
         * @tc.name      : 01. test avRecorder basic function by callback interfaces
         * @tc.desc      : test avRecorder operation: start-pause-resume-pause-reset-release 
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_0400', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0400', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, PAUSE_CALLBACK,
@@ -641,14 +650,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_0500
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0500
         * @tc.name      : 01. test avRecorder basic function by promise interfaces
         * @tc.desc      : test avRecorder operation: start-stop-reset-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_0500', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0500', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, RESET_PROMISE,
@@ -658,14 +667,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
     
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_0600
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0600
         * @tc.name      : 01. test avRecorder basic function by callback interfaces
         * @tc.desc      : test avRecorder operation: start-stop-reset-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_0600', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0600', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, RESET_CALLBACK,
@@ -675,14 +684,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
     
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_0700
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0700
         * @tc.name      : 01. test avRecorder basic function by promise interfaces
         * @tc.desc      : test avRecorder operation: start-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_0700', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0700', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE,
@@ -691,14 +700,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_0800
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0800
         * @tc.name      : 01. test avRecorder basic function by callback interfaces
         * @tc.desc      : test avRecorder operation: start-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_0800', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0800', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK,
@@ -707,14 +716,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_0900
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0900
         * @tc.name      : 01. test avRecorder basic function by promise interfaces
         * @tc.desc      : test avRecorder operation: getInputSurface-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_0900', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0900', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, RELEASE_PROMISE, END);
@@ -722,14 +731,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_1000
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1000
         * @tc.name      : 01. test avRecorder basic function by callback interfaces
         * @tc.desc      : test avRecorder operation: getInputSurface-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_1000', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1000', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, RELEASE_CALLBACK, END);
@@ -738,14 +747,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
     
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_1100
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1100
         * @tc.name      : 01. test avRecorder basic function by promise interfaces
         * @tc.desc      : test avRecorder operation: start-pause-stop-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_1100', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1100', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, PAUSE_PROMISE, 
@@ -754,14 +763,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_1200
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1200
         * @tc.name      : 01. test avRecorder basic function by callback interfaces
         * @tc.desc      : test avRecorder operation: start-pause-stop-release
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_1200', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1200', 0, async function (done) {
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, PAUSE_CALLBACK,
@@ -770,14 +779,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_1300
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1300
         * @tc.name      : 01. test avRecorder compatibility with mixed interfaces
         * @tc.desc      : test avRecorder different avConfig
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_1300', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1300', 0, async function (done) {
             avConfig.rotation = 90;
             avConfig.profile.audioChannels = 1;
             avConfig.profile.audioSampleRate = 44100;
@@ -790,14 +799,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_1400
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1400
         * @tc.name      : 01. test avRecorder compatibility with mixed interfaces
         * @tc.desc      : test avRecorder different avConfig
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_1400', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1400', 0, async function (done) {
             avConfig.rotation = 180;
             avConfig.profile.audioChannels = 2;
             avConfig.profile.audioSampleRate = 36000;
@@ -810,14 +819,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_1500
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1500
         * @tc.name      : 01. test avRecorder compatibility with mixed interfaces
         * @tc.desc      : test avRecorder different avConfig
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_1500', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1500', 0, async function (done) {
             avConfig.rotation = 270;
             avConfig.profile.audioChannels = 1;
             avConfig.profile.audioSampleRate = 24000;
@@ -830,14 +839,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_1600
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1600
         * @tc.name      : 01. test avRecorder compatibility with mixed interfaces
         * @tc.desc      : test avRecorder different avConfig
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_1600', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1600', 0, async function (done) {
             avConfig.rotation = 0;
             avConfig.profile.audioChannels = 1;
             avConfig.profile.audioSampleRate = 18000;
@@ -850,14 +859,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
         
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_1700
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1700
         * @tc.name      : 01. test avRecorder prepare configs
         * @tc.desc      : test avRecorder prepare configs without necessary parameters
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_1700', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1700', 0, async function (done) {
             avConfig = wrongConfig1;
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
@@ -871,14 +880,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AVRecorder_Func_1800
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1800
         * @tc.name      : 01. test avRecorder prepare configs
         * @tc.desc      : test avRecorder prepare configs with parameters not permitted
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AVRecorder_Func_1800', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1800', 0, async function (done) {
             avConfig = wrongConfig2;
             let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
@@ -892,14 +901,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AudioRecorder_Func_0100
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AUDIORECORDER_FUNC_0100
         * @tc.name      : 01. test only audioRecorder basic function by promise interfaces
         * @tc.desc      : test only audioRecorder operation: start-pause-resume-stop 
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AudioRecorder_Func_0100', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AUDIORECORDER_FUNC_0100', 0, async function (done) {
             avConfig = audioConfig;
             caseCount = 1;
             let fileName = 'audioRecorder_func_0'+ caseCount +'.m4a';
@@ -910,14 +919,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_AudioRecorder_Func_0200
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_AUDIORECORDER_FUNC_0200
         * @tc.name      : 01. test only audioRecorder basic function by callback interfaces
         * @tc.desc      : test only audioRecorder operation: start-pause-resume-stop 
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_AudioRecorder_Func_0200', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_AUDIORECORDER_FUNC_0200', 0, async function (done) {
             let fileName = 'audioRecorder_func_0'+ caseCount +'.m4a';
             await getRecorderFileFd(fileName, 'audio');
             mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, START_CALLBACK, PAUSE_CALLBACK,
@@ -926,14 +935,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_VideoRecorder_Func_0100
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_VIDEORECORDER_FUNC_0100
         * @tc.name      : 01. test only videoRecorder basic function by promise interfaces
         * @tc.desc      : test only videoRecorder operation: start-pause-resume-stop 
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_VideoRecorder_Func_0100', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_VIDEORECORDER_FUNC_0100', 0, async function (done) {
             avConfig = videoConfig;
             caseCount = 1;
             let fileName = 'videoRecorder_func_0'+ caseCount +'.mp4';
@@ -945,14 +954,14 @@ export default function AVRecorderFuncTest(recorderContxt) {
         })
     
         /* *
-        * @tc.number    : Sub_Multimedia_Media_VideoRecorder_Func_0200
+        * @tc.number    : SUB_MULTIMEDIA_MEDIA_VIDEORECORDER_FUNC_0200
         * @tc.name      : 01. test only videoRecorder basic function by callback interfaces
         * @tc.desc      : test only videoRecorder operation: start-pause-resume-stop 
         * @tc.size      : MediumTest
         * @tc.type      : Function
         * @tc.level     : Level0
         */
-        it('Sub_Multimedia_Media_VideoRecorder_Func_0200', 0, async function (done) {
+        it('SUB_MULTIMEDIA_MEDIA_VIDEORECORDER_FUNC_0200', 0, async function (done) {
             let fileName = 'videoRecorder_func_0'+ caseCount +'.mp4';
             await getRecorderFileFd(fileName, 'video');
             console.info('case avConfig.videoSourceType is: ' + avConfig.videoSourceType);
