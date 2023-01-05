@@ -186,7 +186,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_INITIALIZED ||
             state == AVPlayerState::STATE_STOPPED) {
-            (void)player_->PrepareAsync();
+            int32_t ret = player_->PrepareAsync();
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to prepare");
+            }
             preparingCond_.wait(lock, [this]() {
                 auto state = GetCurrentState();
                 return state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_ERROR;
@@ -257,7 +261,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
         if (state == AVPlayerState::STATE_PREPARED ||
             state == AVPlayerState::STATE_PAUSED ||
             state == AVPlayerState::STATE_COMPLETED) {
-            (void)player_->Play();
+            int32_t ret = player_->Play();
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to Play");
+            }
             stateChangeCond_.wait(lock, [this]() {
                 auto state = GetCurrentState();
                 return state == AVPlayerState::STATE_PLAYING || state == AVPlayerState::STATE_ERROR;
@@ -326,7 +334,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
 
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_PLAYING) {
-            (void)player_->Pause();
+            int32_t ret = player_->Pause();
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to Pause");
+            }
             stateChangeCond_.wait(lock, [this]() {
                 auto state = GetCurrentState();
                 return state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_ERROR;
@@ -392,7 +404,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
         std::unique_lock<std::mutex> lock(mutex_);
 
         if (IsControllable()) {
-            (void)player_->Stop();
+            int32_t ret = player_->Stop();
+            if (ret != MSERR_OK) {
+                auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                return TaskRet(errCode, "failed to Stop");
+            }
             stateChangeCond_.wait(lock, [this]() {
                 auto state = GetCurrentState();
                 return state == AVPlayerState::STATE_STOPPED || state == AVPlayerState::STATE_ERROR;
@@ -467,7 +483,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
             } else if (GetCurrentState() == AVPlayerState::STATE_IDLE) {
                 MEDIA_LOGI("current state is idle, invalid operation");
             } else {
-                (void)player_->Reset();
+                int32_t ret = player_->Reset();
+                if (ret != MSERR_OK) {
+                    auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+                    return TaskRet(errCode, "failed to Reset");
+                }
                 resettingCond_.wait(lock, [this]() {
                     return GetCurrentState() == AVPlayerState::STATE_IDLE;
                 });
