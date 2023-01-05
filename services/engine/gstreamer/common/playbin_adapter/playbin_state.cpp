@@ -362,6 +362,7 @@ int32_t PlayBinCtrlerBase::PreparedState::Prepare()
 int32_t PlayBinCtrlerBase::PreparedState::Play()
 {
     GstStateChangeReturn ret;
+    ctrler_.isUserSetPlay_ = true;
     return ChangePlayBinState(GST_STATE_PLAYING, ret);
 }
 
@@ -384,7 +385,8 @@ int32_t PlayBinCtrlerBase::PreparedState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PreparedState::ProcessStateChange(const InnerMessage &msg)
 {
-    if ((msg.detail1 == GST_STATE_PAUSED) && (msg.detail2 == GST_STATE_PLAYING)) {
+    if ((msg.detail1 == GST_STATE_PAUSED) && (msg.detail2 == GST_STATE_PLAYING) && ctrler_.isUserSetPlay_) {
+        ctrler_.isUserSetPlay_ = false;
         ctrler_.ChangeState(ctrler_.playingState_);
         return;
     }
@@ -504,6 +506,7 @@ void PlayBinCtrlerBase::PausedState::StateEnter()
 int32_t PlayBinCtrlerBase::PausedState::Play()
 {
     GstStateChangeReturn ret;
+    ctrler_.isUserSetPlay_ = true;
     return ChangePlayBinState(GST_STATE_PLAYING, ret);
 }
 
@@ -531,7 +534,8 @@ int32_t PlayBinCtrlerBase::PausedState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PausedState::ProcessStateChange(const InnerMessage &msg)
 {
-    if ((msg.detail1 == GST_STATE_PAUSED) && (msg.detail2 == GST_STATE_PLAYING)) {
+    if ((msg.detail1 == GST_STATE_PAUSED) && (msg.detail2 == GST_STATE_PLAYING) && ctrler_.isUserSetPlay_) {
+        ctrler_.isUserSetPlay_ = false;
         ctrler_.ChangeState(ctrler_.playingState_);
     }
 }
@@ -605,6 +609,7 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
     PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
         0, static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
     ctrler_.ReportMessage(posUpdateMsg);
+    ctrler_.isUserSetPlay_ = true;
     return ctrler_.SeekInternal(0, IPlayBinCtrler::PlayBinSeekMode::PREV_SYNC);
 }
 
@@ -634,7 +639,8 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::SetRate(double rate)
 void PlayBinCtrlerBase::PlaybackCompletedState::ProcessStateChange(const InnerMessage &msg)
 {
     (void)msg;
-    if (msg.detail2 == GST_STATE_PLAYING && ctrler_.isSeeking_) {
+    if (msg.detail2 == GST_STATE_PLAYING && ctrler_.isSeeking_ && ctrler_.isUserSetPlay_) {
+        ctrler_.isUserSetPlay_ = false;
         ctrler_.ChangeState(ctrler_.playingState_);
         ctrler_.isSeeking_ = false;
     }
