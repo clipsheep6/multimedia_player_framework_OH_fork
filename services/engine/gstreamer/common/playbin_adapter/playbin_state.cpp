@@ -40,7 +40,7 @@ void PlayBinCtrlerBase::BaseState::ReportInvalidOperation()
     ctrler_.mutex_.unlock();
     PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR,
         PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
-        MSERR_INVALID_STATE, "PlayBinCtrlerBase::BaseState::ReportInvalidOperation" };
+        MSERR_INVALID_STATE, std::string("PlayBinCtrlerBase::BaseState::ReportInvalidOperation") };
     ctrler_.ReportMessage(msg);
     ctrler_.mutex_.lock();
 }

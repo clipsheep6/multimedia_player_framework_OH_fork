@@ -531,7 +531,7 @@ int32_t PlayBinCtrlerBase::EnterInitializedState()
         ExitInitializedState();
         PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR,
             PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
-            MSERR_CREATE_PLAYER_ENGINE_FAILED, "failed to EnterInitializedState" };
+            MSERR_CREATE_PLAYER_ENGINE_FAILED, std::string("failed to EnterInitializedState") };
         ReportMessage(msg);
         MEDIA_LOGE("enter initialized state failed");
     };
@@ -1079,7 +1079,7 @@ void PlayBinCtrlerBase::OnAppsrcErrorMessageReceived(int32_t errorCode)
     (void)errorCode;
     PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR,
         PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
-        MSERR_DATA_SOURCE_IO_ERROR, "PlayBinCtrlerBase::OnAppsrcErrorMessageReceived" };
+        MSERR_DATA_SOURCE_IO_ERROR, std::string("PlayBinCtrlerBase::OnAppsrcErrorMessageReceived") };
     ReportMessage(msg);
 }
 
