@@ -179,7 +179,7 @@ sptr<OHOS::Surface> RecorderServiceProxy::GetSurface(int32_t sourceId)
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to read surface object");
 
     sptr<IBufferProducer> producer = iface_cast<IBufferProducer>(object);
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to convert object to producer");
+    CHECK_AND_RETURN_RET_LOG(producer != nullptr, nullptr, "failed to convert object to producer");
 
     return OHOS::Surface::CreateSurfaceAsProducer(producer);
 }
