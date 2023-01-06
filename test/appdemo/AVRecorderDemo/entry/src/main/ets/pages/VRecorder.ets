@@ -1,13 +1,13 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Copyright (C) 2022-2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the 'License');
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
+ * distributed under the License is distributed on an 'AS IS' BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
@@ -26,7 +26,6 @@ import SaveCameraAsset from '../Utils/SaveCameraAsset';
 struct videoRecording {
   private surfaceId: string = '';
   xcomponentController: XComponentController = new XComponentController();
-  private xComponentChangeFlag: string = '0';
   private videoRecorder: media.AVRecorder;
   private cameraManager: camera.CameraManager;
   private cameras: any = undefined;
@@ -48,31 +47,11 @@ struct videoRecording {
   @State videoResolution: object = {'frameWidth':640, 'frameHeight':480}
   private tag: string = '[videoRecorder]';
   @State displayLog: string = undefined;
-
   private recorderState: string = 'free';
   @State isStartRecording: boolean = false;
   @State isPauseRecording: boolean = false;
-
   private mSaveCameraAsset: SaveCameraAsset = new SaveCameraAsset(this.tag);
   private mFileAssetId: number = 0;
-
-  // 按钮图标
-  startRecordingBtn: any = $r('app.media.take_video_normal');
-  stopRecordingBtn: any = $r('app.media.take_video_stop');
-  pauseRecordingBtn: any = $r('app.media.take_video_pause');
-  resumeRecordingBtn: any = $r('app.media.take_video_resume');
-  switchCameraBtn: any = $r('app.media.small_switch_camera');
-  settingBtn: any = $r('app.media.setting');
-
-  // 接口调用时长
-  @State createTakeTime: number = 0;
-  @State prepareTakeTime: number = 0;
-  @State startTakeTime: number = 0;
-  @State pauseTakeTime: number = 0;
-  @State stopTakeTime: number = 0;
-  @State resetTakeTime: number = 0;
-  @State releaseTakeTime: number = 0;
-
   private cameraOutputCapability: camera.CameraOutputCapability = undefined; // 摄像头能力
   private videoProfiles: any = undefined; // 录制配置参数
   private previewProfiles: any = undefined; // 预览界面配置参数
@@ -98,6 +77,14 @@ struct videoRecording {
     rotation : 0,
     location : { latitude : 30, longitude : 130 }
   }
+
+  // 按钮图标
+  startRecordingBtn: any = $r('app.media.take_video_normal');
+  stopRecordingBtn: any = $r('app.media.take_video_stop');
+  pauseRecordingBtn: any = $r('app.media.take_video_pause');
+  resumeRecordingBtn: any = $r('app.media.take_video_resume');
+  switchCameraBtn: any = $r('app.media.small_switch_camera');
+  settingBtn: any = $r('app.media.setting');
 
   aboutToAppear(): void {
     console.info(this.tag + 'aboutToAppear called');
@@ -505,7 +492,7 @@ struct videoRecording {
     await this.initCamera(); // 获取设备相机信息
     await this.createCameraInput(); // 打开相机
     await this.createPreviewOutput(); // 预览流
-    await this.createCaptureSession(); // 拍照会话，保存一次相机运行需要的所有资源，并向相机设备社情完成相机功能
+    await this.createCaptureSession(); // 相机会话，保存一次相机运行需要的所有资源，并向相机设备社情完成相机功能
     await this.startCaptureSession();
     console.info(this.tag + 'exit enterInit');
   }
@@ -569,37 +556,20 @@ struct videoRecording {
     Column() {
       Row() {
         Stack({alignContent: Alignment.Bottom}) {
-          if (this.xComponentChangeFlag === '0') {
-            XComponent({
-              id: 'xcomponent1',
-              type: 'surface',
-              controller: this.xcomponentController
+          XComponent({
+            id: 'xcomponent1',
+            type: 'surface',
+            controller: this.xcomponentController
+          })
+            .onLoad(() => {
+              this.xcomponentController.setXComponentSurfaceSize({ surfaceWidth: 1920, surfaceHeight: 1080 });
+              this.surfaceId = this.xcomponentController.getXComponentSurfaceId();
+              console.info(this.tag + '[VideoRecorder] surfaceId: ' + this.surfaceId);
+              console.info(this.tag + 'XComponent1 loaded ');
+              this.enterInit();
             })
-              .onLoad(() => {
-                this.xcomponentController.setXComponentSurfaceSize({ surfaceWidth: 1920, surfaceHeight: 1080 });
-                this.surfaceId = this.xcomponentController.getXComponentSurfaceId();
-                console.info(this.tag + '[VideoRecorder] surfaceId: ' + this.surfaceId);
-                console.info(this.tag + 'XComponent1 loaded ');
-                this.enterInit();
-              })
-              .width('100%')
-              .height('100%')
-          } else {
-            XComponent({
-              id: 'xcomponent2',
-              type: 'surface',
-              controller: this.xcomponentController
-            })
-              .onLoad(() => {
-                this.xcomponentController.setXComponentSurfaceSize({ surfaceWidth: 1920, surfaceHeight: 1080 });
-                this.surfaceId = this.xcomponentController.getXComponentSurfaceId();
-                console.info(this.tag + '[VideoRecorder] surfaceId: ' + this.surfaceId);
-                console.info(this.tag + 'XComponent2 loaded ');
-                this.enterInit();
-              })
-              .width('100%')
-              .height('100%')
-          }
+            .width('100%')
+            .height('100%')
           Text(this.videoRecorderTimeText).fontSize(24).fontColor('white').margin({bottom: 700})
           Row({space:100}) {
             if (!this.isStartRecording) {
