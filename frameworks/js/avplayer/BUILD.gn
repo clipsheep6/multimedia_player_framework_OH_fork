@@ -71,7 +71,6 @@ ohos_shared_library("media_avplayer") {
     "hiviewdfx_hilog_native:libhilog",
   ]
 
-  relative_install_dir = "module/multimedia"
   part_name = "multimedia_player_framework"
   subsystem_name = "multimedia"
 }
