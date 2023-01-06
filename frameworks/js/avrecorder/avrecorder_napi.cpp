@@ -451,6 +451,7 @@ void AVRecorderNapi::Prepare(AVRecorderAsyncContext *asyncCtx)
         return;
     }
 
+    RemoveSurface();
     StateCallback(AVRecorderState::STATE_PREPARED);
     getVideoInputSurface_ = false;
     withVideo_ = asyncCtx->config_->withVideo;
@@ -536,6 +537,7 @@ int32_t AVRecorderNapi::CheckStateMachine(const std::string &opt)
     const std::map<std::string, std::vector<std::string>> stateCtrl = {
         {AVRecorderState::STATE_IDLE, {
             AVRecordergOpt::PREPARE,
+            AVRecordergOpt::RESET,
             AVRecordergOpt::RELEASE
         }},
         {AVRecorderState::STATE_PREPARED, {
