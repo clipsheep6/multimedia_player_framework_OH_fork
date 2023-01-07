@@ -434,7 +434,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetPromiseTask(AVRecorderN
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
 
-        RetInfo ret(MSERR_INVALID_OPERATION, "");
+        RetInfo ret(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "");
         auto itFunc = taskQFuncs_.find(option);
         CHECK_AND_RETURN_RET_LOG(itFunc != taskQFuncs_.end(), ret, "%{public}s not found in map!", option.c_str());
         auto memberFunc = itFunc->second;
