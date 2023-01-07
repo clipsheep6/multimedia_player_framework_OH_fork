@@ -193,8 +193,15 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
             }
             preparingCond_.wait(lock, [this]() {
                 auto state = GetCurrentState();
-                return state == AVPlayerState::STATE_PREPARED || state == AVPlayerState::STATE_ERROR;
+                return (state == AVPlayerState::STATE_PREPARED ||
+                        state == AVPlayerState::STATE_ERROR ||
+                        state == AVPlayerState::STATE_IDLE ||
+                        state == AVPlayerState::STATE_RELEASED);
             });
+
+            CHECK_AND_RETURN_RET_LOG(GetCurrentState() == AVPlayerState::STATE_PREPARED,
+                TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "The prepare operation was interrupted or an error occurred!"), "Prepare Task failed");
         } else if (state == AVPlayerState::STATE_PREPARED) {
             MEDIA_LOGI("current state is prepared, invalid operation");
         } else {
@@ -270,12 +277,13 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                 auto state = GetCurrentState();
                 return (state == AVPlayerState::STATE_PLAYING ||
                         state == AVPlayerState::STATE_ERROR ||
+                        state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
             });
 
-            if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Play operation interrupted by release!");
-            }
+            CHECK_AND_RETURN_RET_LOG(GetCurrentState() == AVPlayerState::STATE_PLAYING,
+                TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "The play operation was interrupted or an error occurred!"), "Play Task failed");
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -349,12 +357,13 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
                 auto state = GetCurrentState();
                 return (state == AVPlayerState::STATE_PAUSED ||
                         state == AVPlayerState::STATE_ERROR ||
+                        state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
             });
 
-            if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Pause operation interrupted by release!");
-            }
+            CHECK_AND_RETURN_RET_LOG(GetCurrentState() == AVPlayerState::STATE_PAUSED,
+                TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "The pause operation was interrupted or an error occurred!"), "Pause Task failed");
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -425,12 +434,13 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
                 auto state = GetCurrentState();
                 return (state == AVPlayerState::STATE_STOPPED ||
                         state == AVPlayerState::STATE_ERROR ||
+                        state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
             });
 
-            if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Stop operation interrupted by release!");
-            }
+            CHECK_AND_RETURN_RET_LOG(GetCurrentState() == AVPlayerState::STATE_STOPPED,
+                TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "The stop operation was interrupted or an error occurred!"), "Stop Task failed");
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
@@ -507,7 +517,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
                     return TaskRet(errCode, "failed to Reset");
                 }
                 resettingCond_.wait(lock, [this]() {
-                    return GetCurrentState() == AVPlayerState::STATE_IDLE;
+                    auto state = GetCurrentState();
+                    return state == AVPlayerState::STATE_IDLE || state == AVPlayerState::STATE_RELEASED;
                 });
             }
         }
