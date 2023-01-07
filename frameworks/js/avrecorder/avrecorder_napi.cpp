@@ -196,7 +196,7 @@ RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::strin
         message = MSExtErrorAPI9ToString(err, operate, "") + add;
     }
 
-    MEDIA_LOGD("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
+    MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
     return RetInfo(err, message);
 }
 
