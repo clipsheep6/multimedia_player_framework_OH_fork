@@ -268,8 +268,14 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
             }
             stateChangeCond_.wait(lock, [this]() {
                 auto state = GetCurrentState();
-                return state == AVPlayerState::STATE_PLAYING || state == AVPlayerState::STATE_ERROR;
+                return (state == AVPlayerState::STATE_PLAYING ||
+                        state == AVPlayerState::STATE_ERROR ||
+                        state == AVPlayerState::STATE_RELEASED);
             });
+
+            if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Play operation interrupted by release!");
+            }
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -341,8 +347,14 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
             }
             stateChangeCond_.wait(lock, [this]() {
                 auto state = GetCurrentState();
-                return state == AVPlayerState::STATE_PAUSED || state == AVPlayerState::STATE_ERROR;
+                return (state == AVPlayerState::STATE_PAUSED ||
+                        state == AVPlayerState::STATE_ERROR ||
+                        state == AVPlayerState::STATE_RELEASED);
             });
+
+            if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Pause operation interrupted by release!");
+            }
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -411,8 +423,14 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
             }
             stateChangeCond_.wait(lock, [this]() {
                 auto state = GetCurrentState();
-                return state == AVPlayerState::STATE_STOPPED || state == AVPlayerState::STATE_ERROR;
+                return (state == AVPlayerState::STATE_STOPPED ||
+                        state == AVPlayerState::STATE_ERROR ||
+                        state == AVPlayerState::STATE_RELEASED);
             });
+
+            if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Stop operation interrupted by release!");
+            }
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
