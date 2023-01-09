@@ -145,7 +145,6 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             condVarSpeed_.notify_all();
             break;
         case INFO_TYPE_POSITION_UPDATE:
-            seekPosition_ = extra;
             break;
         case INFO_TYPE_BITRATE_COLLECT:
             std::cout << "INFO_TYPE_BITRATE_COLLECT: " << extra << std::endl;
