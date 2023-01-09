@@ -918,6 +918,19 @@ int32_t PlayerServer::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &c
     return MSERR_OK;
 }
 
+void PlayerServer::SetPlayerCallbackInner(const std::shared_ptr<PlayerCallback> &callback)
+{
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
+    playerCb_ = callback;
+}
+
+int32_t PlayerServer::SetObs(const std::weak_ptr<IPlayerEngineObs> &obs)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    obs_ = obs;
+    return MSERR_OK;
+}
+
 void PlayerServer::FormatToString(std::string &dumpString, std::vector<Format> &videoTrack)
 {
     for (auto iter = videoTrack.begin(); iter != videoTrack.end(); iter++) {
@@ -993,6 +1006,10 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         int32_t ret = HandleMessage(type, extra, infoBody);
         if (playerCb_ != nullptr && ret == MSERR_OK) {
             playerCb_->OnInfo(type, extra, infoBody);
+        }
+        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+        if (notifyObs != nullptr) {
+            notifyObs->OnInfo(type, extra, infoBody);
         }
     }
 }

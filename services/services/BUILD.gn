@@ -45,6 +45,7 @@ config("media_service_config") {
     "sa_media/server",
     "common",
     "player/ipc",
+    "player/player_mem_manage",
     "player/server",
     "media_data_source/ipc",
     "media_data_source/server",
@@ -102,6 +103,9 @@ ohos_shared_library("media_service") {
       "media_data_source/ipc/media_data_source_proxy.cpp",
       "player/ipc/player_listener_proxy.cpp",
       "player/ipc/player_service_stub.cpp",
+      "player/player_mem_manage/app_state_listener.cpp",
+      "player/player_mem_manage/player_mem_manage.cpp",
+      "player/player_mem_manage/player_server_task.cpp",
       "player/server/player_server.cpp",
       "player/server/player_server_state.cpp",
       "player/server/player_server_task_mgr.cpp",
@@ -119,6 +123,7 @@ ohos_shared_library("media_service") {
       "sa_media/ipc/recorder_profiles_parcel.cpp",
     ]
   }
+
   if (multimedia_player_framework_support_codec) {
     sources += [
       "avcodec/ipc/avcodec_listener_proxy.cpp",
@@ -167,6 +172,8 @@ ohos_shared_library("media_service") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
+    "memmgr_plugin:memmgrclient",
+    "ability_runtime:app_manage",
   ]
 
   subsystem_name = "multimedia"
