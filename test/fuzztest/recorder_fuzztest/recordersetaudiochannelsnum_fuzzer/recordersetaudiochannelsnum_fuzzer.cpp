@@ -65,7 +65,10 @@ bool RecorderSetAudioChannelsNumFuzzer::FuzzRecorderSetAudioChannelsNum(uint8_t 
         TestRecorder::SetOutputFile(g_videoRecorderConfig);
         TestRecorder::SetRecorderCallback(g_videoRecorderConfig);
         TestRecorder::Prepare(g_videoRecorderConfig);
-        RETURN_IF(TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig), false);
+        if (TestRecorder::RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig) == false) {
+            TestRecorder::Release(g_videoRecorderConfig);
+            return false;
+        }
         TestRecorder::Start(g_videoRecorderConfig);
         sleep(recorderTime);
         TestRecorder::Stop(false, g_videoRecorderConfig);
