@@ -90,15 +90,15 @@ struct AVRecorderConfig {
     Location location; // Optional
     bool withVideo = false;
     bool withAudio = false;
-    bool getConfig = false;
 };
+
+using RetInfo = std::pair<int32_t, std::string>;
 
 class AVRecorderNapi {
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
-    using AvRecorderTaskqFunc = void(AVRecorderNapi::*)(AVRecorderAsyncContext *ctx);
-    using AvRecorderJsFunc = int32_t(AVRecorderNapi::*)(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
-        napi_env env, napi_value args);
+    
+    using AvRecorderTaskqFunc = RetInfo (AVRecorderNapi::*)();
 
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
@@ -165,24 +165,20 @@ private:
 
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
-    static std::shared_ptr<TaskHandler<void>> GetPromiseTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
-        const std::string &opt);
-    static void ExecuteOnJs(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
-        napi_value args, const std::string &opt);
-    static napi_value ExecuteByPromise(napi_env env, napi_callback_info info,
-        size_t &argCount, const std::string &opt);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVRecorderNapi *avnapi, const std::string &opt);
+    static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt);
 
     AVRecorderNapi();
     ~AVRecorderNapi();
 
-    void Prepare(AVRecorderAsyncContext *asyncCtx);
-    void GetInputSurface(AVRecorderAsyncContext *asyncCtx);
-    void Start(AVRecorderAsyncContext *asyncCtx);
-    void Pause(AVRecorderAsyncContext *asyncCtx);
-    void Resume(AVRecorderAsyncContext *asyncCtx);
-    void Stop(AVRecorderAsyncContext *asyncCtx);
-    void Reset(AVRecorderAsyncContext *asyncCtx);
-    void Release(AVRecorderAsyncContext *asyncCtx);
+    RetInfo GetInputSurface();
+    RetInfo Start();
+    RetInfo Pause();
+    RetInfo Resume();
+    RetInfo Stop();
+    RetInfo Reset();
+    RetInfo Release();
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string add = "");
     void StateCallback(const std::string &state);
@@ -197,8 +193,8 @@ private:
     int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
-    int32_t SetProfile(AVRecorderAsyncContext *asyncCtx);
-    int32_t Configure(AVRecorderAsyncContext *asyncCtx);
+    RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
+    RetInfo Configure(std::shared_ptr<AVRecorderConfig> config);
 
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
@@ -207,7 +203,6 @@ private:
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
     std::unique_ptr<TaskQueue> taskQue_;
     static std::map<std::string, AvRecorderTaskqFunc> taskQFuncs_;
-    static std::map<std::string, AvRecorderJsFunc> jsFuncs_;
     sptr<Surface> surface_ = nullptr;
     int32_t videoSourceID_ = -1;
     int32_t audioSourceID_ = -1;
@@ -225,7 +220,7 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     AVRecorderNapi *napi = nullptr;
     std::shared_ptr<AVRecorderConfig> config_ = nullptr;
     std::string opt_ = "";
-    std::shared_ptr<TaskHandler<void>> task_ = nullptr;
+    std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

@@ -217,7 +217,7 @@ std::string ErrorMessageNoMemory(const std::string& param1, const std::string& p
 std::string ErrorMessageOperateNotPermit(const std::string& param1, const std::string& param2)
 {
     (void)param2;
-    std::string message = "The operate " + param1 + " failed due to not permit in current state";
+    std::string message = "The operate " + param1 + " failed due to not permit in current state.";
     return message;
 }
 
