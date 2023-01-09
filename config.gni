@@ -28,6 +28,14 @@ declare_args() {
   multimedia_player_framework_support_capi = true
   multimedia_player_framework_support_test = true
   multimedia_player_framework_support_xcollie = true
+  use_memmgr_plugin = false
+  if (defined(global_parts_info.resourceschedule_memmgr_plugin)) {
+    use_memmgr_plugin = true
+  }
+  use_memmgr = false
+  if (defined(global_parts_info.resourceschedule_memmgr)) {
+    use_memmgr = true
+  }
 }
 
 player_framework_defines = []
