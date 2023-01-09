@@ -52,17 +52,9 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
         }
         case PlayerListenerMsg::ON_INFO: {
             int32_t type = data.ReadInt32();
-            int32_t extra = 0;
+            int32_t extra = data.ReadInt32();
             Format format;
-            if (type == INFO_TYPE_EXTRA_FORMAT ||
-                type == INFO_TYPE_RESOLUTION_CHANGE ||
-                type == INFO_TYPE_BUFFERING_UPDATE ||
-                type == INFO_TYPE_BITRATE_COLLECT ||
-                type == INFO_TYPE_INTERRUPT_EVENT) {
-                (void)MediaParcel::Unmarshalling(data, format);
-            } else {
-                extra = data.ReadInt32();
-            }
+            (void)MediaParcel::Unmarshalling(data, format);
             MEDIA_LOGD("0x%{public}06" PRIXPTR " listen stub on info type: %{public}d extra %{public}d",
                        FAKE_POINTER(this), type, extra);
             OnInfo(static_cast<PlayerOnInfoType>(type), extra, format);
