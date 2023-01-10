@@ -992,7 +992,6 @@ declare namespace media {
   * Describes media recorder states.
   * @since 9
   * @syscap SystemCapability.Multimedia.Media.AVRecorder
-  * @import import media from '@ohos.multimedia.media'
   */
   type AVRecorderState = 'idle' | 'prepared' | 'started' | 'paused' | 'stopped' | 'released' | 'error';
 
