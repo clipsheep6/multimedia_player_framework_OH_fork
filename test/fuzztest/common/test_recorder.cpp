@@ -195,6 +195,7 @@ void TestRecorder::Start(RecorderTestParam::VideoRecorderConfig_ &recorderConfig
 void TestRecorder::Stop(bool block, RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     recorder->Stop(block);
+    isExit_.store(true);
 }
 
 void TestRecorder::Reset(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
@@ -205,6 +206,7 @@ void TestRecorder::Reset(RecorderTestParam::VideoRecorderConfig_ &recorderConfig
 void TestRecorder::Release(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     recorder->Release();
+    recorder = nullptr;
 }
 
 bool TestRecorder::CreateRecorder()
