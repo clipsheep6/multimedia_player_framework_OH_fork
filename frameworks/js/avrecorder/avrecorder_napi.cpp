@@ -430,9 +430,11 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetPromiseTask(AVRecorderN
         CHECK_AND_RETURN_RET(napi != nullptr && napi->recorder_ != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
 
-        // Prevent users from repeatedly calling an interface for a short time
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+        
+        CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
+            RetInfo(MSERR_EXT_API9_OK, ""));
 
         RetInfo ret(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "");
         auto itFunc = taskQFuncs_.find(option);
@@ -589,23 +591,29 @@ int32_t AVRecorderNapi::CheckStateMachine(const std::string &opt)
             AVRecordergOpt::RELEASE
         }},
         {AVRecorderState::STATE_STARTED, {
+            AVRecordergOpt::START,
+            AVRecordergOpt::RESUME,
             AVRecordergOpt::PAUSE,
             AVRecordergOpt::STOP,
             AVRecordergOpt::RESET,
             AVRecordergOpt::RELEASE
         }},
         {AVRecorderState::STATE_PAUSED, {
+            AVRecordergOpt::PAUSE,
             AVRecordergOpt::RESUME,
             AVRecordergOpt::STOP,
             AVRecordergOpt::RESET,
             AVRecordergOpt::RELEASE
         }},
         {AVRecorderState::STATE_STOPPED, {
+            AVRecordergOpt::STOP,
             AVRecordergOpt::PREPARE,
             AVRecordergOpt::RESET,
             AVRecordergOpt::RELEASE
         }},
-        {AVRecorderState::STATE_RELEASED, {}},
+        {AVRecorderState::STATE_RELEASED, {
+            AVRecordergOpt::RELEASE
+        }},
         {AVRecorderState::STATE_ERROR, {
             AVRecordergOpt::RESET,
             AVRecordergOpt::RELEASE
@@ -619,6 +627,42 @@ int32_t AVRecorderNapi::CheckStateMachine(const std::string &opt)
     std::vector<std::string> allowedOpt = stateCtrl.at(curState);
     if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
         MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    return MSERR_OK;
+}
+
+int32_t AVRecorderNapi::CheckRepeatOperation(const std::string &opt)
+{
+    const std::map<std::string, std::vector<std::string>> stateCtrl = {
+        {AVRecorderState::STATE_IDLE, {
+            AVRecordergOpt::RESET
+        }},
+        {AVRecorderState::STATE_PREPARED, {}},
+        {AVRecorderState::STATE_STARTED, {
+            AVRecordergOpt::START,
+            AVRecordergOpt::RESUME
+        }},
+        {AVRecorderState::STATE_PAUSED, {
+            AVRecordergOpt::PAUSE
+        }},
+        {AVRecorderState::STATE_STOPPED, {
+            AVRecordergOpt::STOP
+        }},
+        {AVRecorderState::STATE_RELEASED, {
+            AVRecordergOpt::RELEASE
+        }},
+        {AVRecorderState::STATE_ERROR, {}},
+    };
+
+    auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
+    CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
+
+    std::string curState = napiCb->GetState();
+    std::vector<std::string> repeatOpt = stateCtrl.at(curState);
+    if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
+        MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!", curState.c_str(), opt.c_str());
         return MSERR_INVALID_OPERATION;
     }
 

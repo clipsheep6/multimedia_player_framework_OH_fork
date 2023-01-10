@@ -188,6 +188,7 @@ private:
     void RemoveSurface();
 
     int32_t CheckStateMachine(const std::string &opt);
+    int32_t CheckRepeatOperation(const std::string &opt);
     int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
     int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
     int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
