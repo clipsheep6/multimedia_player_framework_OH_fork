@@ -240,7 +240,7 @@ private:
         {
             if (asyncTask != nullptr) {
                 auto result = asyncTask->GetResult();
-                if (result.Value().first != MSERR_EXT_API9_OK) {
+                if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                     SignError(result.Value().first, result.Value().second);
                 }
             }
