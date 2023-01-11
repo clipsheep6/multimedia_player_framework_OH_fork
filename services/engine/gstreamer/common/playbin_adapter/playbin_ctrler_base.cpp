@@ -36,6 +36,7 @@ namespace {
     constexpr int32_t BUFFER_LOW_PERCENT_DEFAULT = 1;
     constexpr int32_t BUFFER_HIGH_PERCENT_DEFAULT = 4;
     constexpr int32_t BUFFER_PERCENT_THRESHOLD = 100;
+    constexpr uint32_t RECONNECTION_TIME_OUT_DEFAULT = 15000000; // 15s
     constexpr int32_t NANO_SEC_PER_USEC = 1000;
     constexpr double DEFAULT_RATE = 1.0;
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
@@ -953,6 +954,7 @@ void PlayBinCtrlerBase::OnSourceSetup(const GstElement *playbin, GstElement *src
     } else if (strstr(eleTypeName, "GstCurlHttpSrc") != nullptr) {
         g_object_set(src, "ssl-ca-file", "/etc/ssl/certs/cacert.pem", nullptr);
         MEDIA_LOGI("setup curl_http ca_file done");
+        g_object_set(src, "reconnection-timeout", RECONNECTION_TIME_OUT_DEFAULT, nullptr);
     }
 }
 
