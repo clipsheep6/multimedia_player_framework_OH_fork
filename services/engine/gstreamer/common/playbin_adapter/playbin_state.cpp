@@ -409,8 +409,7 @@ int32_t PlayBinCtrlerBase::PlayingState::Play()
 int32_t PlayBinCtrlerBase::PlayingState::Pause()
 {
     GstState state = GST_STATE_NULL;
-    gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
-        nullptr, static_cast<GstClockTime>(0));
+    gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
     if (state == GST_STATE_PAUSED) {
         MEDIA_LOGI("playbin already paused");
         ctrler_.ChangeState(ctrler_.pausedState_);
