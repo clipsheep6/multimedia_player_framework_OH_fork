@@ -1552,7 +1552,7 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         return GST_FLOW_ERROR;
     }
     GST_DEBUG_OBJECT(self, "Waiting until codec is drained");
-    gint64 wait_until = g_get_monotonic_time() + 3 * G_TIME_SPAN_SECOND;
+    gint64 wait_until = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
     if (!g_cond_wait_until(&self->drain_cond, &self->drain_lock, wait_until)) {
         GST_ERROR_OBJECT(self, "Drain timed out");
     } else {
