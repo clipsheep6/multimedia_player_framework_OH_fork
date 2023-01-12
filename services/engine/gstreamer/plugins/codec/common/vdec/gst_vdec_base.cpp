@@ -1405,13 +1405,35 @@ static void gst_vdec_base_loop(GstVdecBase *self)
     gst_vdec_base_pause_loop(self);
 }
 
+static void gst_vdec_swap_width_height(GstVdecBase *self)
+{
+    std::swap(self->width, self->height);
+    GstStructure *structure = gst_caps_get_structure(self->sink_caps, 0);
+    g_return_val_if_fail(structure != nullptr, FALSE);
+    gst_structure_set(structure, "width", G_TYPE_INT, self->width, nullptr);
+    gst_structure_set(structure, "height", G_TYPE_INT, self->height, nullptr);
+}
+
 static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
 {
     GstCaps *templ_caps = gst_pad_get_pad_template_caps(GST_VIDEO_DECODER_SRC_PAD(self));
     g_return_val_if_fail(templ_caps != nullptr, FALSE);
     ON_SCOPE_EXIT(0) { gst_caps_unref(templ_caps); };
     GstCaps *pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
+    gboolean ok = TRUE;
     if (gst_caps_is_empty(pool_caps)) {
+        ok = FALSE;
+        GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
+        GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
+        if (kclass->can_swap_width_height != nullptr && kclass->can_swap_width_height(element_class)) {
+            gst_vdec_swap_width_height(self);
+            pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
+            if (!gst_caps_is_empty(pool_caps)) {
+                ok = TRUE;
+            }
+        }
+    }
+    if (!ok) {
         gst_caps_unref(pool_caps);
         GST_ERROR_OBJECT(self, "pool caps is null with sink caps%" GST_PTR_FORMAT, self->sink_caps);
         return FALSE;
