@@ -541,6 +541,7 @@ int32_t PlayBinCtrlerBase::EnterInitializedState()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "DoInitializeForDataSource failed!");
 
     SetupCustomElement();
+    SetupSourceSetupSignal();
     ret = SetupSignalMessage();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
     ret = SetupElementUnSetupSignal();
@@ -707,6 +708,17 @@ void PlayBinCtrlerBase::SetupCustomElement()
     }
 }
 
+void PlayBinCtrlerBase::SetupSourceSetupSignal()
+{
+    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+
+    gulong id = g_signal_connect_data(playbin_, "source-setup",
+        G_CALLBACK(&PlayBinCtrlerBase::SourceSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
+        static_cast<GConnectFlags>(0));
+    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
+}
+
 int32_t PlayBinCtrlerBase::SetupSignalMessage()
 {
     MEDIA_LOGD("SetupSignalMessage enter");
@@ -811,14 +823,6 @@ int32_t PlayBinCtrlerBase::DoInitializeForDataSource()
         auto msgNotifier = std::bind(&PlayBinCtrlerBase::OnAppsrcErrorMessageReceived, this, std::placeholders::_1);
         CHECK_AND_RETURN_RET_LOG(appsrcWrap_->SetErrorCallback(msgNotifier) == MSERR_OK,
             MSERR_INVALID_OPERATION, "set appsrc error callback failed");
-
-        PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
-        CHECK_AND_RETURN_RET_LOG(wrapper != nullptr, MSERR_NO_MEMORY, "can not create this wrapper");
-
-        gulong id = g_signal_connect_data(playbin_, "source-setup",
-            G_CALLBACK(&PlayBinCtrlerBase::SourceSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
-            static_cast<GConnectFlags>(0));
-        (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
 
         g_object_set(playbin_, "uri", "appsrc://", nullptr);
     }
