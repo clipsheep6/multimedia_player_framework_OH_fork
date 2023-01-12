@@ -205,7 +205,6 @@ public:
     /**
      * Called when an error occurred for versions above api9
      *
-     * @param sourceId Resource where the error occurred
      * @param errorCode Error code.
      * @param errorMsg Error message.
      */

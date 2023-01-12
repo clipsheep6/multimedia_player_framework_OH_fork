@@ -480,11 +480,6 @@ int32_t PlayerServer::Release()
     return MSERR_OK;
 }
 
-int32_t PlayerServer::ReleaseSync()
-{
-    return MSERR_OK;
-}
-
 int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 {
     std::lock_guard<std::mutex> lock(mutex_);

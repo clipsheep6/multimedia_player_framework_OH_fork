@@ -45,6 +45,12 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
 
     switch (code) {
         case PlayerListenerMsg::ON_ERROR: {
+            int32_t errorType = data.ReadInt32();
+            int32_t errorCode = data.ReadInt32();
+            OnError(static_cast<PlayerErrorType>(errorType), errorCode);
+            return MSERR_OK;
+        }
+        case PlayerListenerMsg::ON_ERROR_MSG: {
             int32_t errorCode = data.ReadInt32();
             std::string errorMsg = data.ReadString();
             OnError(errorCode, errorMsg);
@@ -64,6 +70,16 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
             MEDIA_LOGE("default case, need check PlayerListenerStub");
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
         }
+    }
+}
+
+void PlayerListenerStub::OnError(PlayerErrorType errorType, int32_t errorCode)
+{
+    std::shared_ptr<PlayerCallback> cb = callback_.lock();
+    if (cb != nullptr) {
+        (void)errorType;
+        auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+        cb->OnError(errorCode, errorMsg);
     }
 }
 
