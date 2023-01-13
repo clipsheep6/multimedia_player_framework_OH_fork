@@ -50,12 +50,6 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
             OnError(static_cast<PlayerErrorType>(errorType), errorCode);
             return MSERR_OK;
         }
-        case PlayerListenerMsg::ON_ERROR_MSG: {
-            int32_t errorCode = data.ReadInt32();
-            std::string errorMsg = data.ReadString();
-            OnError(errorCode, errorMsg);
-            return MSERR_OK;
-        }
         case PlayerListenerMsg::ON_INFO: {
             int32_t type = data.ReadInt32();
             int32_t extra = data.ReadInt32();
@@ -64,6 +58,12 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
             MEDIA_LOGD("0x%{public}06" PRIXPTR " listen stub on info type: %{public}d extra %{public}d",
                        FAKE_POINTER(this), type, extra);
             OnInfo(static_cast<PlayerOnInfoType>(type), extra, format);
+            return MSERR_OK;
+        }
+        case PlayerListenerMsg::ON_ERROR_MSG: {
+            int32_t errorCode = data.ReadInt32();
+            std::string errorMsg = data.ReadString();
+            OnError(errorCode, errorMsg);
             return MSERR_OK;
         }
         default: {
@@ -83,19 +83,19 @@ void PlayerListenerStub::OnError(PlayerErrorType errorType, int32_t errorCode)
     }
 }
 
-void PlayerListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
-{
-    std::shared_ptr<PlayerCallback> cb = callback_.lock();
-    if (cb != nullptr) {
-        cb->OnError(errorCode, errorMsg);
-    }
-}
-
 void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
     if (cb != nullptr) {
         cb->OnInfo(type, extra, infoBody);
+    }
+}
+
+void PlayerListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
+{
+    std::shared_ptr<PlayerCallback> cb = callback_.lock();
+    if (cb != nullptr) {
+        cb->OnError(errorCode, errorMsg);
     }
 }
 
