@@ -32,13 +32,12 @@ public:
         (void)errorType;
         (void)errorCode;
     }
+    virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
     virtual void OnError(int32_t errorCode, const std::string &errorMsg)
     {
         (void)errorCode;
         (void)errorMsg;
     }
-    virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
-
     enum PlayerListenerMsg {
         ON_ERROR = 0,
         ON_INFO,
