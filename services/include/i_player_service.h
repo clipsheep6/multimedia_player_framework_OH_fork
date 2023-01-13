@@ -145,7 +145,10 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual int32_t ReleaseSync() = 0;
+    virtual int32_t ReleaseSync()
+    {
+        return ERR_OK;
+    }
 
     /**
      * @brief Sets the volume of the player.
