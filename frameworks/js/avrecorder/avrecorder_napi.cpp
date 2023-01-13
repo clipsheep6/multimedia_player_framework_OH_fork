@@ -881,8 +881,7 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
         if (config->rotation != VIDEO_ROTATION_0 &&
             config->rotation != VIDEO_ROTATION_90 &&
             config->rotation != VIDEO_ROTATION_180 &&
-            config->rotation != VIDEO_ROTATION_270)
-        {
+            config->rotation != VIDEO_ROTATION_270) {
             return GetRetInfo(MSERR_INVALID_VAL, "SetOrientationHint", "rotation");
         }
         recorder_->SetOrientationHint(config->rotation);
