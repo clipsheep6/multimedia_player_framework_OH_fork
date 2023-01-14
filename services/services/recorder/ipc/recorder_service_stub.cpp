@@ -253,7 +253,8 @@ int32_t RecorderServiceStub::SetLocation(float latitude, float longitude)
 int32_t RecorderServiceStub::SetOrientationHint(int32_t rotation)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->SetOrientationHint(rotation);
+    recorderServer_->SetOrientationHint(rotation);
+    return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::Prepare()
