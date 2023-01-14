@@ -446,8 +446,10 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
         case GST_EVENT_STREAM_GROUP_DONE:
             basesink->stream_group_done = TRUE;
             GST_DEBUG_OBJECT(basesink, "received STREAM_GROUP_DONE, set stream_group_done TRUE");
-            /* may async start to change state, preroll STREAM_GROUP_DONE to async done */
-            gst_base_sink_do_preroll (basesink, GST_MINI_OBJECT_CAST(event));
+            if (basesink->need_preroll) {
+                /* may async start to change state, preroll STREAM_GROUP_DONE to async done */
+                gst_base_sink_do_preroll (basesink, GST_MINI_OBJECT_CAST(event));
+            }
             break;
         case GST_EVENT_STREAM_START:
             basesink->stream_group_done = FALSE;
