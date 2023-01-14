@@ -486,9 +486,7 @@ void RecorderServer::SetLocation(float latitude, float longitude)
 void RecorderServer::SetOrientationHint(int32_t rotation)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (status_ != REC_CONFIGURED) {
-        return;
-    }
+    CHECK_AND_RETURN_LOG(status_ == REC_CONFIGURED, "status_ error");
     CHECK_AND_RETURN_LOG(recorderEngine_ != nullptr, "engine is nullptr");
     RotationAngle rotationAngle(rotation);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {

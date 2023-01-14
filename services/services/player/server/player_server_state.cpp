@@ -88,8 +88,8 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
     }
         
     if (type == INFO_TYPE_SPEEDDONE) {
-        MediaTrace::TraceEnd("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(&server_));
         (void)server_.taskMgr_.MarkTaskDone();
+        MediaTrace::TraceEnd("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(&server_));
         return MSERR_OK;
     }
 
@@ -106,6 +106,11 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
             BehaviorEventWrite(server_.GetStatusDescription(extra).c_str(), "Player");
             MEDIA_LOGI("Callback State change, currentState is %{public}s",
                 server_.GetStatusDescription(extra).c_str());
+        }
+
+        if (extra == PLAYER_STOPPED && server_.disableStoppedCb_) {
+            server_.disableStoppedCb_ = false;
+            return MSERR_UNSUPPORT;
         }
     }
     return MSERR_OK;

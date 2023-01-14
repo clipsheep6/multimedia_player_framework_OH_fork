@@ -107,7 +107,7 @@ void PlayerCodecCtrl::SetCapsFixErrorCb(CapsFixErrorNotifier notifier)
     signalId_ = g_signal_connect(decoder_, "caps-fix-error", G_CALLBACK(&PlayerCodecCtrl::CapsFixErrorCb), this);
 }
 
-void PlayerCodecCtrl::CapsFixErrorCb(GstElement *decoder, gpointer userData)
+void PlayerCodecCtrl::CapsFixErrorCb(const GstElement *decoder, gpointer userData)
 {
     MEDIA_LOGD("CapsFixErrorCb in");
     if (decoder == nullptr || userData == nullptr) {

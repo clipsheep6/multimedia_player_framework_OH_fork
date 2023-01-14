@@ -28,7 +28,7 @@ public:
     explicit PlayerListenerCallback(const sptr<IStandardPlayerListener> &listener);
     virtual ~PlayerListenerCallback();
 
-    void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
 private:
@@ -40,7 +40,7 @@ public:
     explicit PlayerListenerProxy(const sptr<IRemoteObject> &impl);
     virtual ~PlayerListenerProxy();
 
-    void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
 private:

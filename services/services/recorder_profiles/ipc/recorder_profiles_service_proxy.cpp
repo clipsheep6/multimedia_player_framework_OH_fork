@@ -41,10 +41,8 @@ bool RecorderProfilesServiceProxy::IsAudioRecorderConfigSupported(const Recorder
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return false;
-    }
+    bool token = data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
     (void)RecorderProfilesParcel::Marshalling(data, profile);
     uint32_t code = static_cast<uint32_t>(RecorderProfilesServiceMsg::RECORDER_PROFILES_IS_AUDIO_RECORDER_SUPPORT);
@@ -59,19 +57,14 @@ bool RecorderProfilesServiceProxy::HasVideoRecorderProfile(int32_t sourceId, int
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return false;
-    }
+    bool token = data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, false, "Failed to write descriptor!");
 
     data.WriteInt32(sourceId);
     data.WriteInt32(qualityLevel);
     uint32_t code = static_cast<uint32_t>(RecorderProfilesServiceMsg::RECORDER_PROFILES_HAS_VIDEO_RECORD_PROFILE);
     int32_t ret  = Remote()->SendRequest(code, data, reply, option);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("HasVideoRecorderProfile failed, error: %{public}d", ret);
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, false, "HasVideoRecorderProfile failed");
     return reply.ReadBool();
 }
 
@@ -82,19 +75,14 @@ RecorderProfilesData RecorderProfilesServiceProxy::GetVideoRecorderProfileInfo(i
     MessageOption option;
     RecorderProfilesData capabilityData;
 
-    if (!data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return capabilityData;
-    }
+    bool token = data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, capabilityData, "Failed to write descriptor!");
 
     data.WriteInt32(sourceId);
     data.WriteInt32(qualityLevel);
 
     uint32_t code = static_cast<uint32_t>(RecorderProfilesServiceMsg::RECORDER_PROFILES_GET_VIDEO_RECORDER_PROFILE);
-    int32_t ret = Remote()->SendRequest(code, data, reply, option);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("GetVideoRecorderProfileInfo failed, error: %{public}d", ret);
-    }
+    (void)Remote()->SendRequest(code, data, reply, option);
     (void)RecorderProfilesParcel::Unmarshalling(reply, capabilityData);
     return capabilityData;
 }
@@ -106,16 +94,11 @@ std::vector<RecorderProfilesData> RecorderProfilesServiceProxy::GetAudioRecorder
     MessageOption option;
     std::vector<RecorderProfilesData> capabilityDataArray;
 
-    if (!data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return capabilityDataArray;
-    }
+    bool token = data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, capabilityDataArray, "Failed to write descriptor!");
 
     uint32_t code = static_cast<uint32_t>(RecorderProfilesServiceMsg::RECORDER_PROFILES_GET_AUDIO_RECORDER_CAPS);
-    int32_t ret = Remote()->SendRequest(code, data, reply, option);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("GetAudioRecorderCapsInfo failed, error: %{public}d", ret);
-    }
+    (void)Remote()->SendRequest(code, data, reply, option);
     (void)RecorderProfilesParcel::Unmarshalling(reply, capabilityDataArray);
     return capabilityDataArray;
 }
@@ -127,16 +110,11 @@ std::vector<RecorderProfilesData> RecorderProfilesServiceProxy::GetVideoRecorder
     MessageOption option;
     std::vector<RecorderProfilesData> capabilityDataArray;
 
-    if (!data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return capabilityDataArray;
-    }
+    bool token = data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, capabilityDataArray, "Failed to write descriptor!");
 
     uint32_t code = static_cast<uint32_t>(RecorderProfilesServiceMsg ::RECORDER_PROFILES_GET_VIDEO_RECORDER_CAPS);
-    int32_t ret = Remote()->SendRequest(code, data, reply, option);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("GetVideoRecorderCapsInfo failed, error: %{public}d", ret);
-    }
+    (void)Remote()->SendRequest(code, data, reply, option);
     (void)RecorderProfilesParcel::Unmarshalling(reply, capabilityDataArray);
     return capabilityDataArray;
 }
@@ -147,16 +125,11 @@ int32_t RecorderProfilesServiceProxy::DestroyStub()
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return MSERR_UNKNOWN;
-    }
+    bool token = data.WriteInterfaceToken(RecorderProfilesServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     uint32_t code = static_cast<uint32_t>(RecorderProfilesServiceMsg::RECORDER_PROFILES_DESTROY);
-    int32_t ret = Remote()->SendRequest(code, data, reply, option);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("destroy failed, error: %{public}d", ret);
-    }
+    (void)Remote()->SendRequest(code, data, reply, option);
     return reply.ReadInt32();
 }
 }  // namespace Media

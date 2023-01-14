@@ -70,7 +70,8 @@ void PlayerClient::MediaServerDied()
     playerProxy_ = nullptr;
     listenerStub_ = nullptr;
     if (callback_ != nullptr) {
-        callback_->OnError(PLAYER_ERROR, MSERR_SERVICE_DIED);
+        callback_->OnError(MSERR_SERVICE_DIED,
+            "mediaserver is died, please create a new playback instance again");
     }
 }
 
@@ -154,6 +155,17 @@ int32_t PlayerClient::Release()
 
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->Release();
+}
+
+int32_t PlayerClient::ReleaseSync()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    callback_ = nullptr;
+    listenerStub_ = nullptr;
+    dataSrcStub_ = nullptr;
+
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->ReleaseSync();
 }
 
 int32_t PlayerClient::SetVolume(float leftVolume, float rightVolume)

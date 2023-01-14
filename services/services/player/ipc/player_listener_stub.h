@@ -29,6 +29,7 @@ public:
     // IStandardPlayerListener override
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
     // PlayerListenerStub

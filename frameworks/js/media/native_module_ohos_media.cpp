@@ -35,9 +35,15 @@ static napi_value Export(napi_env env, napi_value exports)
     OHOS::Media::AudioPlayerNapi::Init(env, exports);
     OHOS::Media::VideoPlayerNapi::Init(env, exports);
 #endif
+#ifdef SUPPORT_PLAYER_API9
+    OHOS::Media::AVPlayerNapi::Init(env, exports);
+#endif
 #ifdef SUPPORT_RECORDER
     OHOS::Media::AudioRecorderNapi::Init(env, exports);
     OHOS::Media::VideoRecorderNapi::Init(env, exports);
+#endif
+#ifdef SUPPORT_RECORDER_API9
+    OHOS::Media::AVRecorderNapi::Init(env, exports);
 #endif
     return exports;
 }

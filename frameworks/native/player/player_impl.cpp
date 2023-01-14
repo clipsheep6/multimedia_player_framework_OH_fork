@@ -26,6 +26,7 @@ namespace OHOS {
 namespace Media {
 std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 {
+    MEDIA_LOGD("PlayerImpl: CreatePlayer in");
     std::shared_ptr<PlayerImpl> impl = std::make_shared<PlayerImpl>();
     CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new PlayerImpl");
 
@@ -37,6 +38,7 @@ std::shared_ptr<Player> PlayerFactory::CreatePlayer()
 
 int32_t PlayerImpl::Init()
 {
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
     playerService_ = MediaServiceFactory::GetInstance().CreatePlayerService();
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_UNKNOWN, "failed to create player service");
     return MSERR_OK;
@@ -58,8 +60,8 @@ PlayerImpl::~PlayerImpl()
 
 int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(dataSrc)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
-    MEDIA_LOGD("KPI-TRACE: PlayerImpl SetSource in(dataSrc)");
     return playerService_->SetSource(dataSrc);
 }
 
@@ -68,7 +70,6 @@ int32_t PlayerImpl::SetSource(const std::string &url)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(url): %{public}s", FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
-    MEDIA_LOGD("KPI-TRACE: PlayerImpl SetSource in(url)");
     return playerService_->SetSource(url);
 }
 
@@ -126,6 +127,16 @@ int32_t PlayerImpl::Release()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Release in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     (void)playerService_->Release();
+    (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+    playerService_ = nullptr;
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::ReleaseSync()
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " ReleaseSync in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    (void)playerService_->ReleaseSync();
     (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
     playerService_ = nullptr;
     return MSERR_OK;
@@ -216,7 +227,6 @@ int32_t PlayerImpl::SetVideoSurface(sptr<Surface> surface)
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetVideoSurface in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
-    MEDIA_LOGD("KPI-TRACE: PlayerImpl SetVideoSurface in");
     surface_ = surface;
     return playerService_->SetVideoSurface(surface);
 }
@@ -224,6 +234,7 @@ int32_t PlayerImpl::SetVideoSurface(sptr<Surface> surface)
 
 bool PlayerImpl::IsPlaying()
 {
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " IsPlaying in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, false, "player service does not exist..");
 
     return playerService_->IsPlaying();
@@ -231,6 +242,7 @@ bool PlayerImpl::IsPlaying()
 
 bool PlayerImpl::IsLooping()
 {
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " IsLooping in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, false, "player service does not exist..");
 
     return playerService_->IsLooping();
@@ -248,7 +260,6 @@ int32_t PlayerImpl::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &cal
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayerCallback in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
-    MEDIA_LOGD("KPI-TRACE: PlayerImpl SetPlayerCallback in");
     return playerService_->SetPlayerCallback(callback);
 }
 

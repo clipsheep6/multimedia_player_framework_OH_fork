@@ -145,7 +145,6 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             condVarSpeed_.notify_all();
             break;
         case INFO_TYPE_POSITION_UPDATE:
-            seekPosition_ = extra;
             break;
         case INFO_TYPE_BITRATE_COLLECT:
             std::cout << "INFO_TYPE_BITRATE_COLLECT: " << extra << std::endl;
@@ -161,9 +160,9 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
     }
 }
 
-void PlayerCallbackTest::OnError(PlayerErrorType errorType, int32_t errorCode)
+void PlayerCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    std::cout << "Error received, errorType:" << errorType << " errorCode:" << errorCode << std::endl;
+    std::cout << "Error received, errorCode: " << errorCode << "errorMsg: " << errorMsg << std::endl;
 }
 
 void PlayerCallbackTest::Notify(PlayerStates currentState)
@@ -382,6 +381,16 @@ int32_t PlayerMock::Release()
     }
     callback_ = nullptr;
     return player_->Release();
+}
+
+int32_t PlayerMock::ReleaseSync()
+{
+    if (previewWindow_ != nullptr) {
+        previewWindow_->Destroy();
+        previewWindow_ = nullptr;
+    }
+    callback_ = nullptr;
+    return player_->ReleaseSync();
 }
 
 int32_t PlayerMock::SetVolume(float leftVolume, float rightVolume)

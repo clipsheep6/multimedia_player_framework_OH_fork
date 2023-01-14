@@ -605,7 +605,8 @@ void MediaAsyncContext::CheckCtorResult(napi_env env, napi_value &result, MediaA
         if (napi_unwrap(env, result, reinterpret_cast<void **>(&instance)) != napi_ok || instance == nullptr) {
             MEDIA_LOGE("Failed to create instance");
             ctx->errFlag = true;
-            (void)CommonNapi::CreateError(env, MSERR_EXT_UNKNOWN, "Failed to create instance", result);
+            (void)CommonNapi::CreateError(env, MSERR_EXT_API9_NO_MEMORY,
+                "The instance or memory has reached the upper limit, please recycle background playback", result);
             args = result;
         }
     }

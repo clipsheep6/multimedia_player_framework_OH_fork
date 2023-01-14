@@ -52,20 +52,18 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
         }
         case PlayerListenerMsg::ON_INFO: {
             int32_t type = data.ReadInt32();
-            int32_t extra = 0;
+            int32_t extra = data.ReadInt32();
             Format format;
-            if (type == INFO_TYPE_EXTRA_FORMAT ||
-                type == INFO_TYPE_RESOLUTION_CHANGE ||
-                type == INFO_TYPE_BUFFERING_UPDATE ||
-                type == INFO_TYPE_BITRATE_COLLECT ||
-                type == INFO_TYPE_INTERRUPT_EVENT) {
-                (void)MediaParcel::Unmarshalling(data, format);
-            } else {
-                extra = data.ReadInt32();
-            }
+            (void)MediaParcel::Unmarshalling(data, format);
             MEDIA_LOGD("0x%{public}06" PRIXPTR " listen stub on info type: %{public}d extra %{public}d",
                        FAKE_POINTER(this), type, extra);
             OnInfo(static_cast<PlayerOnInfoType>(type), extra, format);
+            return MSERR_OK;
+        }
+        case PlayerListenerMsg::ON_ERROR_MSG: {
+            int32_t errorCode = data.ReadInt32();
+            std::string errorMsg = data.ReadString();
+            OnError(errorCode, errorMsg);
             return MSERR_OK;
         }
         default: {
@@ -79,7 +77,9 @@ void PlayerListenerStub::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
     if (cb != nullptr) {
-        cb->OnError(errorType, errorCode);
+        (void)errorType;
+        auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+        cb->OnError(errorCode, errorMsg);
     }
 }
 
@@ -88,6 +88,14 @@ void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
     if (cb != nullptr) {
         cb->OnInfo(type, extra, infoBody);
+    }
+}
+
+void PlayerListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
+{
+    std::shared_ptr<PlayerCallback> cb = callback_.lock();
+    if (cb != nullptr) {
+        cb->OnError(errorCode, errorMsg);
     }
 }
 

@@ -494,8 +494,7 @@ int32_t RecorderServiceStub::SetOrientationHint(MessageParcel &data, MessageParc
 {
     (void)reply;
     int32_t rotation = data.ReadInt32();
-    SetOrientationHint(rotation);
-    return MSERR_OK;
+    return SetOrientationHint(rotation);
 }
 
 int32_t RecorderServiceStub::Prepare(MessageParcel &data, MessageParcel &reply)

@@ -45,9 +45,6 @@ AudioPlayerNapi::~AudioPlayerNapi()
     nativePlayer_ = nullptr;
     callbackNapi_ = nullptr;
 
-    if (wrapper_ != nullptr) {
-        napi_delete_reference(env_, wrapper_);
-    }
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -123,7 +120,7 @@ napi_value AudioPlayerNapi::Constructor(napi_env env, napi_callback_info info)
     }
 
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(playerNapi),
-        AudioPlayerNapi::Destructor, nullptr, &(playerNapi->wrapper_));
+        AudioPlayerNapi::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         napi_get_undefined(env, &result);
         delete playerNapi;
@@ -796,6 +793,7 @@ static std::string GetJSState(PlayerStates currentState)
     switch (currentState) {
         case PLAYER_IDLE:
         case PLAYER_INITIALIZED:
+        case PLAYER_PREPARING:
         case PLAYER_PREPARED:
             result = STATE_IDLE;
             break;

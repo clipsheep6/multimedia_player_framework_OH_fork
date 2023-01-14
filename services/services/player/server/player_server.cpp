@@ -202,6 +202,8 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     lastOpStatus_ = PLAYER_INITIALIZED;
     ChangeState(initializedState_);
 
+    Format format;
+    OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_INITIALIZED, format);
     return MSERR_OK;
 }
 
@@ -273,8 +275,8 @@ int32_t PlayerServer::HandlePrepare()
         (void)playerEngine_->SetLooping(config_.looping);
     }
     if (config_.speedMode != SPEED_FORWARD_1_00_X) {
+        MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
         auto rateTask = std::make_shared<TaskHandler<void>>([this]() {
-            MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->SetPlaybackSpeed(config_.speedMode);
         });
@@ -427,6 +429,7 @@ int32_t PlayerServer::OnReset()
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED) {
+        disableStoppedCb_ = true;
         (void)OnStop(true);
     }
 
@@ -451,6 +454,8 @@ int32_t PlayerServer::HandleReset()
     uriHelper_ = nullptr;
     lastErrMsg_.clear();
     errorCbOnce_ = false;
+    disableStoppedCb_ = false;
+    isStateChangedBySystem_ = false;
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
     return MSERR_OK;
@@ -502,7 +507,8 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
     }
 
     Format format;
-    OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
+    (void)format.PutFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, leftVolume);
+    OnInfoNoChangeStatus(INFO_TYPE_VOLUME_CHANGE, 0, format);
     return MSERR_OK;
 }
 
@@ -760,7 +766,6 @@ void PlayerServer::HandleEos()
 
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
             MEDIA_LOGI("Interrupted seek action");
-            Format format;
             taskMgr_.MarkTaskDone();
             disableNextSeekDone_ = false;
         });
@@ -924,7 +929,7 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
             write(fd, dumpString.c_str(), dumpString.size());
         return MSERR_OK;
     }
-    dumpString += "PlayerServer current state is: " + std::to_string(lastOpStatus_) + "\n";
+    dumpString += "PlayerServer current state is: " + GetStatusDescription(lastOpStatus_) + "\n";
     if (lastErrMsg_.size() != 0) {
         dumpString += "PlayerServer last error is: " + lastErrMsg_ + "\n";
     }
@@ -936,17 +941,17 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
         std::to_string(config_.leftVolume) + ", " + std::to_string(config_.rightVolume) + "\n";
 
     std::vector<Format> videoTrack;
-    CHECK_AND_RETURN_RET(GetVideoTrackInfo(videoTrack) == MSERR_OK, MSERR_INVALID_OPERATION);
+    (void)GetVideoTrackInfo(videoTrack);
     dumpString += "PlayerServer video tracks info: \n";
     FormatToString(dumpString, videoTrack);
     
     std::vector<Format> audioTrack;
-    CHECK_AND_RETURN_RET(GetAudioTrackInfo(audioTrack) == MSERR_OK, MSERR_INVALID_OPERATION);
+    (void)GetAudioTrackInfo(audioTrack);
     dumpString += "PlayerServer audio tracks info: \n";
     FormatToString(dumpString, audioTrack);
     
-    int32_t currentTime;
-    CHECK_AND_RETURN_RET(GetCurrentTime(currentTime) == MSERR_OK, MSERR_INVALID_OPERATION);
+    int32_t currentTime = -1;
+    (void)GetCurrentTime(currentTime);
     dumpString += "PlayerServer current time is: " + std::to_string(currentTime) + "\n";
     write(fd, dumpString.c_str(), dumpString.size());
 
@@ -955,11 +960,18 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
 
 void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
+    (void)errorType;
+    auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+    return OnErrorMessage(errorCode, errorMsg);
+}
+
+void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg)
+{
     std::lock_guard<std::mutex> lockCb(mutexCb_);
-    lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+    lastErrMsg_ = errorMsg;
     FaultEventWrite(lastErrMsg_, "Player");
     if (playerCb_ != nullptr && !errorCbOnce_) {
-        playerCb_->OnError(errorType, errorCode);
+        playerCb_->OnError(errorCode, errorMsg);
         errorCbOnce_ = true;
     }
 }
@@ -968,8 +980,9 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
 
-    if (type == INFO_TYPE_STATE_CHANGE_BY_AUDIO && extra == PLAYER_PAUSED) {
-        OnPause();
+    if (type == INFO_TYPE_STATE_CHANGE_BY_AUDIO && extra == PLAYER_PAUSED && lastOpStatus_ == PLAYER_STARTED) {
+        isStateChangedBySystem_ = true;
+        (void)OnPause();
     } else {
         int32_t ret = HandleMessage(type, extra, infoBody);
         if (playerCb_ != nullptr && ret == MSERR_OK) {

@@ -57,7 +57,7 @@ protected:
 class PlayerCallbackTest : public PlayerCallback, public NoCopyable, public PlayerSignal {
 public:
     ~PlayerCallbackTest() {}
-    void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    void OnError(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
     void SeekNotify(int32_t extra, const Format &infoBody);
     void Notify(PlayerStates currentState);
@@ -89,6 +89,7 @@ public:
     int32_t Stop();
     int32_t Reset();
     int32_t Release();
+    int32_t ReleaseSync();
     int32_t Seek(int32_t mseconds, PlayerSeekMode mode);
     int32_t SetVolume(float leftVolume, float rightVolume);
     int32_t SetLooping(bool loop);

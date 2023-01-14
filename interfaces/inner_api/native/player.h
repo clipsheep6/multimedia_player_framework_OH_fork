@@ -28,6 +28,8 @@ namespace OHOS {
 namespace Media {
 class PlayerKeys {
 public:
+    static constexpr std::string_view PLAYER_STATE_CHANGED_REASON = "state_changed_reason";
+    static constexpr std::string_view PLAYER_VOLUME_LEVEL = "volume_level";
     static constexpr std::string_view PLAYER_TRACK_INDEX = "track_index";
     static constexpr std::string_view PLAYER_TRACK_TYPE = "track_type";
     static constexpr std::string_view PLAYER_WIDTH = "width";
@@ -117,7 +119,9 @@ enum PlayerOnInfoType : int32_t {
     /* return the message when PlayerStates changed by audio. */
     INFO_TYPE_STATE_CHANGE_BY_AUDIO,
     /* return the message with extra information in format. */
-    INFO_TYPE_EXTRA_FORMAT
+    INFO_TYPE_EXTRA_FORMAT,
+    /* return the duration of playback. */
+    INFO_TYPE_DURATION_UPDATE,
 };
 
 enum PlayerStates : int32_t {
@@ -139,6 +143,8 @@ enum PlayerStates : int32_t {
     PLAYER_STOPPED = 7,
     /* Play to the end states */
     PLAYER_PLAYBACK_COMPLETE = 8,
+    /* released states */
+    PLAYER_RELEASED = 9,
 };
 
 enum PlayerSeekMode : int32_t {
@@ -185,12 +191,16 @@ class PlayerCallback {
 public:
     virtual ~PlayerCallback() = default;
     /**
-     * Called when an error occurred.
+     * Called when an error occurred for versions older than api9
      *
      * @param errorType Error type. For details, see {@link PlayerErrorType}.
      * @param errorCode Error code.
      */
-    virtual void OnError(PlayerErrorType errorType, int32_t errorCode) = 0;
+    __attribute__((deprecated)) virtual void OnError(PlayerErrorType errorType, int32_t errorCode)
+    {
+        (void)errorType;
+        (void)errorCode;
+    }
 
     /**
      * Called when a player message or alarm is received.
@@ -200,6 +210,18 @@ public:
      * @param infoBody According to the info type, the information carrier passed.Is an optional parameter.
      */
     virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
+
+    /**
+     * Called when an error occurred for versions above api9
+     *
+     * @param errorCode Error code.
+     * @param errorMsg Error message.
+     */
+    virtual void OnError(int32_t errorCode, const std::string &errorMsg)
+    {
+        (void)errorCode;
+        (void)errorMsg;
+    }
 };
 
 class Player {
@@ -312,7 +334,11 @@ public:
     virtual int32_t Reset() = 0;
 
     /**
-     * @brief Releases player resources
+     * @brief Releases player resources async
+     *
+     *  Asynchronous release guarantees the performance
+     *  but cannot ensure whether the surfacebuffer is released.
+     *  The caller needs to ensure the life cycle security of the sufrace
      *
      * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
      * in {@link media_errors.h} otherwise.
@@ -516,6 +542,20 @@ public:
      * @version 1.0
      */
     virtual int32_t SetParameter(const Format &param) = 0;
+
+    /**
+     * @brief Releases player resources sync
+     *
+     * Synchronous release ensures effective release of surfacebuffer
+     * but this interface will take a long time (when the engine is not idle state)
+     * requiring the caller to design an asynchronous mechanism by itself
+     *
+     * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t ReleaseSync() = 0;
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

@@ -35,22 +35,19 @@ PlayerListenerProxy::~PlayerListenerProxy()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-void PlayerListenerProxy::OnError(PlayerErrorType errorType, int32_t errorCode)
+void PlayerListenerProxy::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return;
-    }
-    data.WriteInt32(errorType);
+    bool token = data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
     data.WriteInt32(errorCode);
-    int error = Remote()->SendRequest(PlayerListenerMsg::ON_ERROR, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("on error failed, error: %{public}d", error);
-    }
+    data.WriteString(errorMsg);
+    int error = Remote()->SendRequest(PlayerListenerMsg::ON_ERROR_MSG, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on error failed, error: %{public}d", error);
 }
 
 void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -59,24 +56,15 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
 
-    if (!data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return;
-    }
+    bool token = data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+
     data.WriteInt32(type);
-    if (type == INFO_TYPE_EXTRA_FORMAT ||
-        type == INFO_TYPE_RESOLUTION_CHANGE ||
-        type == INFO_TYPE_BUFFERING_UPDATE ||
-        type == INFO_TYPE_BITRATE_COLLECT ||
-        type == INFO_TYPE_INTERRUPT_EVENT) {
-        MediaParcel::Marshalling(data, infoBody);
-    } else {
-        data.WriteInt32(extra);
-    }
+    data.WriteInt32(extra);
+    MediaParcel::Marshalling(data, infoBody);
+
     int error = Remote()->SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("on info failed, error: %{public}d", error);
-    }
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
 }
 
 PlayerListenerCallback::PlayerListenerCallback(const sptr<IStandardPlayerListener> &listener) : listener_(listener)
@@ -89,11 +77,11 @@ PlayerListenerCallback::~PlayerListenerCallback()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-void PlayerListenerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)
+void PlayerListenerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    MEDIA_LOGE("player callback onError, errorType: %{public}d, errorCode: %{public}d", errorType, errorCode);
+    MEDIA_LOGE("player callback onError, errorCode: %{public}d, errorMsg: %{public}s", errorCode, errorMsg.c_str());
     if (listener_ != nullptr) {
-        listener_->OnError(errorType, errorCode);
+        listener_->OnError(errorCode, errorMsg);
     }
 }
 
