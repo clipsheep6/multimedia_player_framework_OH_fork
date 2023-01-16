@@ -1414,10 +1414,10 @@ static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
 {
     g_return_val_if_fail(caps != nullptr, nullptr);
     caps = gst_caps_make_writable(caps);
-    GstStructure *structure = gst_caps_get_structure(self->sink_caps, 0);
+    GstStructure *structure = gst_caps_get_structure(sink_caps, 0);
     g_return_val_if_fail(structure != nullptr, nullptr);
-    const GValue *width = gst_structure_get_value(strcuture, "width");
-    const GValue *height = gst_structure_get_value(strcuture, "height");
+    const GValue *width = gst_structure_get_value(structure, "width");
+    const GValue *height = gst_structure_get_value(structure, "height");
     GValue temp_width = *width;
     width = &temp_width;
     gst_structure_set(structure, "width", G_TYPE_INT, height, nullptr);
