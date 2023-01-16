@@ -82,13 +82,13 @@ static gboolean g_support_swap_width_height = FALSE;
 
 G_DEFINE_ABSTRACT_TYPE(GstVdecBase, gst_vdec_base, GST_TYPE_VIDEO_DECODER);
 
-static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
+static void gst_vdec_base_class_init(GstVdecBaseClass *kclass)
 {
-    GST_DEBUG_OBJECT(klass, "Class init");
-    g_return_if_fail(klass != nullptr);
-    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-    GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
-    GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS(klass);
+    GST_DEBUG_OBJECT(kclass, "Class init");
+    g_return_if_fail(kclass != nullptr);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(kclass);
+    GstElementClass *element_class = GST_ELEMENT_CLASS(kclass);
+    GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS(kclass);
     GST_DEBUG_CATEGORY_INIT (gst_vdec_base_debug_category, "vdecbase", 0, "video decoder base class");
     gobject_class->set_property = gst_vdec_base_set_property;
     gobject_class->finalize = gst_vdec_base_finalize;
@@ -112,11 +112,11 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
     gst_vdec_base_class_install_property(gobject_class);
 
     signals[SIGNAL_CAPS_FIX_ERROR] =
-        g_signal_new ("caps-fix-error", G_TYPE_FROM_CLASS (klass),
+        g_signal_new ("caps-fix-error", G_TYPE_FROM_CLASS (kclass),
         G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
     const gchar *src_caps_string = GST_VIDEO_CAPS_MAKE(GST_VDEC_BASE_SUPPORTED_FORMATS);
-    GST_DEBUG_OBJECT(klass, "Pad template caps %s", src_caps_string);
+    GST_DEBUG_OBJECT(kclass, "Pad template caps %s", src_caps_string);
 
     GstCaps *src_caps = gst_caps_from_string(src_caps_string);
     if (src_caps != nullptr) {
