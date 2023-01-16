@@ -251,7 +251,9 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->player_mode = FALSE;
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
     GstElementClass *element_class = GST_ELEMENT_CLASS(kclass);
-    self->support_swap_width_height = kclass->support_swap_width_height(element_class);
+    if (kclass->support_swap_width_height) {
+        self->support_swap_width_height = kclass->support_swap_width_height(element_class);
+    }
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
