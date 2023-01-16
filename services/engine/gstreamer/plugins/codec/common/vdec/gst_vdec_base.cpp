@@ -212,6 +212,16 @@ static void gst_vdec_base_check_input_need_copy(GstVdecBase *self)
     }
 }
 
+static void gst_vdec_base_check_support_swap_width_height(GstVdecBase *self)
+{
+    GstVdecBaseClass *base_class = GST_VDEC_BASE_GET_CLASS(self);
+    g_return_if_fail(base_class != nullptr);
+    GstElementClass *element_class = GST_ELEMENT_CLASS(kclass);
+    if (base_class->support_swap_width_height != nullptr) {
+        self->support_swap_width_height = base_class->support_swap_width_height(element_class);
+    }
+}
+
 static void gst_vdec_base_property_init(GstVdecBase *self)
 {
     g_mutex_init(&self->lock);
@@ -249,11 +259,6 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->input_need_ashmem = FALSE;
     self->has_set_format = FALSE;
     self->player_mode = FALSE;
-    GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
-    GstElementClass *element_class = GST_ELEMENT_CLASS(kclass);
-    if (kclass->support_swap_width_height != nullptr) {
-        self->support_swap_width_height = kclass->support_swap_width_height(element_class);
-    }
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -335,6 +340,7 @@ static gboolean gst_vdec_base_open(GstVideoDecoder *decoder)
     self->decoder = base_class->create_codec(reinterpret_cast<GstElementClass*>(base_class));
     g_return_val_if_fail(self->decoder != nullptr, FALSE);
     gst_vdec_base_check_input_need_copy(self);
+    gst_vdec_base_check_support_swap_width_height(self);
     return TRUE;
 }
 
