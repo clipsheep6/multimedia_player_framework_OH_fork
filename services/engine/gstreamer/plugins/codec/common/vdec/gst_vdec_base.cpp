@@ -78,7 +78,7 @@ enum {
 };
 
 static guint signals[SIGNAL_LAST] = { 0, };
-static gboolean g_support_swap_width_height = FALSE;
+gboolean g_support_swap_width_height = FALSE;
 
 G_DEFINE_ABSTRACT_TYPE(GstVdecBase, gst_vdec_base, GST_TYPE_VIDEO_DECODER);
 
@@ -107,7 +107,7 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *kclass)
     element_class->change_state = gst_vdec_base_change_state;
 
     if (kclass->can_swap_width_height != nullptr) {
-        g_support_swap_width_height = kclass->can_swap_width_height(element_class);
+        kclass->supportSwapWidthHeight = kclass->support_swap_width_height(element_class);
     }
     gst_vdec_base_class_install_property(gobject_class);
 
@@ -253,6 +253,9 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->input_need_ashmem = FALSE;
     self->has_set_format = FALSE;
     self->player_mode = FALSE;
+    GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
+    GstElementClass *element_class = GST_ELEMENT_CLASS(kclass);
+    self->support_swap_width_height = kclass->support_swap_width_height(element_class);
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -1433,7 +1436,7 @@ static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
     gboolean check = TRUE;
     if (gst_caps_is_empty(pool_caps)) {
         check = FALSE;
-        if (g_support_swap_width_height) {
+        if (self->support_swap_width_height) {
             templ_caps = gst_vdec_swap_width_height(templ_caps);
             pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
             if (!gst_caps_is_empty(pool_caps)) {
