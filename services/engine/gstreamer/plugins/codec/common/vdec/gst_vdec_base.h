@@ -126,7 +126,7 @@ struct _GstVdecBaseClass {
         GstBuffer *buffer, bool &ready_push, bool is_finish);
     void (*flush_cache_slice_buffer)(GstVdecBase *self);
     gboolean (*input_need_copy)();
-    gboolean (*can_swap_width_height)(GstElementClass *kclass);
+    gboolean (*support_swap_width_height)(GstElementClass *kclass);
 };
 
 GST_API_EXPORT GType gst_vdec_base_get_type(void);

@@ -73,7 +73,7 @@ public:
     static std::shared_ptr<IGstCodec> CreateHdiVdec(GstElementClass *kclass);
     static std::shared_ptr<IGstCodec> CreateHdiVenc(GstElementClass *kclass);
     static gboolean InputNeedCopy();
-    static gboolean CanSwapWidthHeight(GstElementClass *kclass);
+    static gboolean SupportSwapWidthHeight(GstElementClass *kclass);
     static gboolean PluginInit(GstPlugin *plugin);
 private:
     static void SetCreateFuncs(GstElementClass *elementClass, const CapabilityData &capData);
@@ -186,7 +186,7 @@ void GstHdiFactory::SetCreateFuncs(GstElementClass *elementClass, const Capabili
             GstVdecBaseClass *vdecClass = reinterpret_cast<GstVdecBaseClass*>(elementClass);
             vdecClass->create_codec = FUNCTIONS_MAP.at(factoryPair);
             vdecClass->input_need_copy = InputNeedCopy;
-            vdecClass->can_swap_width_height = CanSwapWidthHeight;
+            vdecClass->can_swap_width_height = SupportSwapWidthHeight;
             break;
         }
         case AVCODEC_TYPE_VIDEO_ENCODER: {
