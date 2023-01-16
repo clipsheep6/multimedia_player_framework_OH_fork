@@ -78,7 +78,6 @@ enum {
 };
 
 static guint signals[SIGNAL_LAST] = { 0, };
-gboolean g_support_swap_width_height = FALSE;
 
 G_DEFINE_ABSTRACT_TYPE(GstVdecBase, gst_vdec_base, GST_TYPE_VIDEO_DECODER);
 
@@ -106,9 +105,6 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *kclass)
     video_decoder_class->propose_allocation = gst_vdec_base_propose_allocation;
     element_class->change_state = gst_vdec_base_change_state;
 
-    if (kclass->can_swap_width_height != nullptr) {
-        kclass->supportSwapWidthHeight = kclass->support_swap_width_height(element_class);
-    }
     gst_vdec_base_class_install_property(gobject_class);
 
     signals[SIGNAL_CAPS_FIX_ERROR] =
