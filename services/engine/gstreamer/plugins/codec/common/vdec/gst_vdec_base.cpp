@@ -1412,7 +1412,6 @@ static void gst_vdec_base_loop(GstVdecBase *self)
 
 static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
 {
-    g_return_val_if_fail(caps != nullptr, nullptr);
     caps = gst_caps_make_writable(caps);
     GstStructure *structure = gst_caps_get_structure(caps, 0);
     g_return_val_if_fail(structure != nullptr, nullptr);
@@ -1423,6 +1422,7 @@ static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
     gst_structure_set(structure, "width", G_TYPE_INT, height, nullptr);
     gst_structure_set(structure, "height", G_TYPE_INT, width, nullptr);
     GST_DEBUG_OBJECT(structure, "after swap width and height, caps %" GST_PTR_FORMAT, caps);
+    return caps;
 }
 
 static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
