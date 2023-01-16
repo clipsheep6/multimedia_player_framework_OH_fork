@@ -52,7 +52,7 @@ namespace {
         { RGBA, "RGBA" },
     };
     const char *GST_CODEC_NAME = "codec_name";
-    const char *CAN_SWAP_WIDTH_HEIGHT = "can_swap_width_height";
+    const char *SUPPORT_SWAP_WIDTH_HEIGHT = "support_swap_width_height";
     const int32_t HDI_RANK_DEFAULT = 2;
 }
 
@@ -169,10 +169,10 @@ gboolean GstHdiFactory::InputNeedCopy()
     return TRUE;
 }
 
-static gboolean CanSwapWidthHeight(GstElementClass *kclass)
+static gboolean SupportSwapWidthHeight(GstElementClass *kclass)
 {
-    std::string canSwapWidthHeight = gst_element_class_get_metadata(kclass, CAN_SWAP_WIDTH_HEIGHT);
-    return canSwapWidthHeight == "TRUE";
+    std::string supportSwapWidthHeight = gst_element_class_get_metadata(kclass, CAN_SWAP_WIDTH_HEIGHT);
+    return supportSwapWidthHeight == "TRUE";
 }
 
 void GstHdiFactory::SetCreateFuncs(GstElementClass *elementClass, const CapabilityData &capData)
@@ -316,8 +316,8 @@ void GstHdiFactory::GstHdiCodecClassInit(gpointer kclass, gpointer data)
     gst_element_class_add_pad_template(elementClass, srctempl);
     gst_element_class_add_pad_template(elementClass, sinktempl);
     gst_element_class_add_metadata(elementClass, GST_CODEC_NAME, capDataWarp->componentName.c_str());
-    const gchar* canSwapWidthHeight = capData.canSwapWidthHeight ? "TRUE" : "FALSE";
-    gst_element_class_add_metadata(elementClass, CAN_SWAP_WIDTH_HEIGHT, canSwapWidthHeight);
+    const gchar* supportSwapWidthHeight = capData.supportSwapWidthHeight ? "TRUE" : "FALSE";
+    gst_element_class_add_metadata(elementClass, SUPPORT_SWAP_WIDTH_HEIGHT, supportSwapWidthHeight);
     SetCreateFuncs(elementClass, capData);
     CANCEL_SCOPE_EXIT_GUARD(1);
 }

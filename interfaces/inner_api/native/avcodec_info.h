@@ -114,7 +114,7 @@ struct CapabilityData {
     int32_t codecType = AVCODEC_TYPE_NONE;
     std::string mimeType = "";
     bool isVendor = false;
-    bool canSwapWidthHeight = false;
+    bool supportSwapWidthHeight = false;
     Range bitrate;
     Range channels;
     Range complexity;

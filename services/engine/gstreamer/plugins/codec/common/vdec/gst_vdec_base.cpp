@@ -78,7 +78,7 @@ enum {
 };
 
 static guint signals[SIGNAL_LAST] = { 0, };
-static gboolean g_support_swap_width_height;
+static gboolean g_support_swap_width_height = FALSE;
 
 G_DEFINE_ABSTRACT_TYPE(GstVdecBase, gst_vdec_base, GST_TYPE_VIDEO_DECODER);
 
@@ -1421,6 +1421,7 @@ static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
     width = &temp_width;
     gst_structure_set(structure, "width", G_TYPE_INT, height, nullptr);
     gst_structure_set(structure, "height", G_TYPE_INT, width, nullptr);
+    GST_DEBUG_OBJECT(structure, "after swap width and height, caps %" GST_PTR_FORMAT, caps);
 }
 
 static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
