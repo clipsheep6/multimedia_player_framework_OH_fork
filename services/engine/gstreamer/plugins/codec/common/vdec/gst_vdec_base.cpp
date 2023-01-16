@@ -78,6 +78,7 @@ enum {
 };
 
 static guint signals[SIGNAL_LAST] = { 0, };
+static gboolean g_support_swap_width_height;
 
 G_DEFINE_ABSTRACT_TYPE(GstVdecBase, gst_vdec_base, GST_TYPE_VIDEO_DECODER);
 
@@ -105,6 +106,9 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
     video_decoder_class->propose_allocation = gst_vdec_base_propose_allocation;
     element_class->change_state = gst_vdec_base_change_state;
 
+    if (kclass->can_swap_width_height != nullptr) {
+        g_support_swap_width_height = kclass->can_swap_width_height(element_class);
+    }
     gst_vdec_base_class_install_property(gobject_class);
 
     signals[SIGNAL_CAPS_FIX_ERROR] =
@@ -1405,13 +1409,18 @@ static void gst_vdec_base_loop(GstVdecBase *self)
     gst_vdec_base_pause_loop(self);
 }
 
-static void gst_vdec_swap_width_height(GstVdecBase *self)
+static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
 {
-    std::swap(self->width, self->height);
+    g_return_val_if_fail(caps != nullptr, nullptr);
+    caps = gst_caps_make_writable(caps);
     GstStructure *structure = gst_caps_get_structure(self->sink_caps, 0);
-    g_return_val_if_fail(structure != nullptr, FALSE);
-    gst_structure_set(structure, "width", G_TYPE_INT, self->width, nullptr);
-    gst_structure_set(structure, "height", G_TYPE_INT, self->height, nullptr);
+    g_return_val_if_fail(structure != nullptr, nullptr);
+    const GValue *width = gst_structure_get_value(strcuture, "width");
+    const GValue *height = gst_structure_get_value(strcuture, "height");
+    GValue temp_width = *width;
+    width = &temp_width;
+    gst_structure_set(structure, "width", G_TYPE_INT, height, nullptr);
+    gst_structure_set(structure, "height", G_TYPE_INT, width, nullptr);
 }
 
 static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
@@ -1420,20 +1429,18 @@ static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
     g_return_val_if_fail(templ_caps != nullptr, FALSE);
     ON_SCOPE_EXIT(0) { gst_caps_unref(templ_caps); };
     GstCaps *pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
-    gboolean ok = TRUE;
+    gboolean check = TRUE;
     if (gst_caps_is_empty(pool_caps)) {
-        ok = FALSE;
-        GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
-        GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
-        if (kclass->can_swap_width_height != nullptr && kclass->can_swap_width_height(element_class)) {
-            gst_vdec_swap_width_height(self);
+        check = FALSE;
+        if (g_support_swap_width_height) {
+            templ_caps = gst_vdec_swap_width_height(templ_caps);
             pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
             if (!gst_caps_is_empty(pool_caps)) {
-                ok = TRUE;
+                check = TRUE;
             }
         }
     }
-    if (!ok) {
+    if (!check) {
         gst_caps_unref(pool_caps);
         GST_ERROR_OBJECT(self, "pool caps is null with sink caps%" GST_PTR_FORMAT, self->sink_caps);
         return FALSE;
