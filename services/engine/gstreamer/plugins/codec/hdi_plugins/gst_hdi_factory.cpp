@@ -171,7 +171,7 @@ gboolean GstHdiFactory::InputNeedCopy()
 
 static gboolean SupportSwapWidthHeight(GstElementClass *kclass)
 {
-    std::string supportSwapWidthHeight = gst_element_class_get_metadata(kclass, CAN_SWAP_WIDTH_HEIGHT);
+    std::string supportSwapWidthHeight = gst_element_class_get_metadata(kclass, SUPPORT_SWAP_WIDTH_HEIGHT);
     return supportSwapWidthHeight == "TRUE";
 }
 
