@@ -68,6 +68,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("loop", JsGetLoop, JsSetLoop),
         DECLARE_NAPI_GETTER_SETTER("videoScaleType", JsGetVideoScaleType, JsSetVideoScaleType),
         DECLARE_NAPI_GETTER_SETTER("audioInterruptMode", JsGetAudioInterruptMode, JsSetAudioInterruptMode),
+        DECLARE_NAPI_GETTER_SETTER("audioRendererInfo", JsGetAudioRendererInfo, JsSetAudioRendererInfo),
 
         DECLARE_NAPI_GETTER("state", JsGetState),
         DECLARE_NAPI_GETTER("currentTime", JsGetCurrentTime),
@@ -1227,6 +1228,79 @@ napi_value AVPlayerNapi::JsGetAudioInterruptMode(napi_env env, napi_callback_inf
     napi_value value = nullptr;
     (void)napi_create_int32(env, static_cast<int32_t>(jsPlayer->interruptMode_), &value);
     MEDIA_LOGI("JsGetAudioInterruptMode Out");
+    return value;
+}
+
+napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetAudioRendererInfo In");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "JsSetAudioRendererInfo is not napi_number");
+        return result;
+    }
+
+    napi_status status = napi_get_value_int32(env, args[0], &jsPlayer->audioRendererInfo_);
+    auto audioRendererInfo = jsPlayer->audioRendererInfo_;
+    auto check = [&]() -> bool {
+        std::list<int32_t> contentType = {0, 1, 2, 3, 4, 5};
+        std::list<int32_t> streamUsage = {0, 1, 2, 3, 4, 6};
+        auto iter1 = std::find(contentType.begin(), contentType.end(), audioRendererInfo.contentType);
+        auto iter2 = std::find(streamUsage.begin(), streamUsage.end(), audioRendererInfo.streamUsage);
+        if (iter1 == contentType.end() || iter2 == streamUsage.end() ||
+            audioRendererInfo.rendererFlags != 0) {
+            return false;
+        }
+        return true;
+    };
+
+    if (status != napi_ok || check()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the input interrupt Mode");
+        return result;
+    }
+
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport to set audio renderer info");
+        return result;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+        MEDIA_LOGI("SetAudioRendererInfo Task");
+        if (jsPlayer->player_ != nullptr) {
+            Format format;
+            (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, audioRendererInfo.contentType);
+            (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, audioRendererInfo.streamUsage);
+            (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, audioRendererInfo.rendererFlags);
+            (void)jsPlayer->player_->SetParameter(format);
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("JsSetAudioRendererInfo Out");
+    return result;
+}
+
+napi_value AVPlayerNapi::JsGetAudioRendererInfo(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetAudioRendererInfo In");
+
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+
+    napi_value value = nullptr;
+    (void)napi_create_int32(env, static_cast<int32_t>(jsPlayer->audioRendererInfo_), &value);
+    MEDIA_LOGI("JsGetAudioRendererInfo Out");
     return value;
 }
 

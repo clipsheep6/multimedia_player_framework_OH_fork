@@ -146,6 +146,13 @@ private:
      */
     static napi_value JsGetAudioInterruptMode(napi_env env, napi_callback_info info);
     static napi_value JsSetAudioInterruptMode(napi_env env, napi_callback_info info);
+    
+    /**
+     * audioRendererInfo?: audio.AudioRendererInfo
+     */
+    static napi_value JsGetAudioRendererInfo(napi_env env, napi_callback_info info);
+    static napi_value JsSetAudioRendererInfo(napi_env env, napi_callback_info info);
+
     /**
      * readonly currentTime: number
      */
@@ -260,6 +267,7 @@ private:
     int32_t videoScaleType_ = 0;
     std::vector<Format> trackInfoVec_;
     OHOS::AudioStandard::InterruptMode interruptMode_ = AudioStandard::InterruptMode::SHARE_MODE;
+    OHOS::AudioStandard::AudioRendererInfo audioRendererInfo_;
     std::unique_ptr<TaskQueue> taskQue_;
     std::mutex mutex_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
