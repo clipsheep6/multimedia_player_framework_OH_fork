@@ -186,7 +186,7 @@ void GstHdiFactory::SetCreateFuncs(GstElementClass *elementClass, const Capabili
             GstVdecBaseClass *vdecClass = reinterpret_cast<GstVdecBaseClass*>(elementClass);
             vdecClass->create_codec = FUNCTIONS_MAP.at(factoryPair);
             vdecClass->input_need_copy = InputNeedCopy;
-            vdecClass->can_swap_width_height = SupportSwapWidthHeight;
+            vdecClass->support_swap_width_height = SupportSwapWidthHeight;
             break;
         }
         case AVCODEC_TYPE_VIDEO_ENCODER: {
