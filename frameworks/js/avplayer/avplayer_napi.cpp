@@ -1244,8 +1244,8 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "JsSetAudioRendererInfo is not napi_number");
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "JsSetAudioRendererInfo is not napi_object");
         return result;
     }
 
