@@ -1278,7 +1278,7 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
 
     if (item == nullptr || !check()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-            "invalid parameters, please check the input interrupt Mode");
+            "invalid parameters, please check the input audio renderer info");
         return result;
     }
 
