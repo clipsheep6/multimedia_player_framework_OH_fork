@@ -359,7 +359,6 @@ int32_t PlayBinCtrlerBase::PreparedState::Prepare()
 
 int32_t PlayBinCtrlerBase::PreparedState::Play()
 {
-    ctrler_.isUserSetPlay_ = true;
     GstStateChangeReturn ret;
     return ChangePlayBinState(GST_STATE_PLAYING, ret);
 }
@@ -383,8 +382,7 @@ int32_t PlayBinCtrlerBase::PreparedState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PreparedState::ProcessStateChange(const InnerMessage &msg)
 {
-    if ((msg.detail1 == GST_STATE_PAUSED) && (msg.detail2 == GST_STATE_PLAYING) && ctrler_.isUserSetPlay_) {
-        ctrler_.isUserSetPlay_ = false;
+    if ((msg.detail1 == GST_STATE_PAUSED) && (msg.detail2 == GST_STATE_PLAYING)) {
         ctrler_.ChangeState(ctrler_.playingState_);
         return;
     }
@@ -413,7 +411,7 @@ int32_t PlayBinCtrlerBase::PlayingState::Pause()
     GstState state = GST_STATE_NULL;
     gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
     if (state == GST_STATE_PAUSED) {
-        MEDIA_LOGI("playbin already paused");
+        MEDIA_LOGD("Playbin already paused");
         ctrler_.ChangeState(ctrler_.pausedState_);
         return MSERR_OK;
     }
@@ -441,7 +439,7 @@ int32_t PlayBinCtrlerBase::PlayingState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg)
 {
-    if (msg.detail2 == GST_STATE_PAUSED && ctrler_.isUserSetPause_) {
+    if ((msg.detail1 == GST_STATE_PLAYING) && (msg.detail2 == GST_STATE_PAUSED) && ctrler_.isUserSetPause_) {
         ctrler_.ChangeState(ctrler_.pausedState_);
         ctrler_.isUserSetPause_ = false;
         return;
@@ -527,8 +525,7 @@ int32_t PlayBinCtrlerBase::PausedState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PausedState::ProcessStateChange(const InnerMessage &msg)
 {
-    if ((msg.detail1 == GST_STATE_PAUSED) && (msg.detail2 == GST_STATE_PLAYING) && ctrler_.isUserSetPlay_) {
-        ctrler_.isUserSetPlay_ = false;
+    if ((msg.detail1 == GST_STATE_PAUSED) && (msg.detail2 == GST_STATE_PLAYING)) {
         ctrler_.ChangeState(ctrler_.playingState_);
     }
 }
@@ -607,7 +604,6 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
 
 int32_t PlayBinCtrlerBase::PlaybackCompletedState::Stop()
 {
-    ctrler_.isUserSetPlay_ = true;
     ctrler_.ChangeState(ctrler_.stoppingState_);
     return MSERR_OK;
 }
@@ -632,8 +628,7 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::SetRate(double rate)
 void PlayBinCtrlerBase::PlaybackCompletedState::ProcessStateChange(const InnerMessage &msg)
 {
     (void)msg;
-    if (msg.detail2 == GST_STATE_PLAYING && ctrler_.isSeeking_ && ctrler_.isUserSetPlay_) {
-        ctrler_.isUserSetPlay_ = false;
+    if (msg.detail2 == GST_STATE_PLAYING && ctrler_.isSeeking_) {
         ctrler_.ChangeState(ctrler_.playingState_);
         ctrler_.isSeeking_ = false;
     }
