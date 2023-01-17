@@ -1259,7 +1259,7 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "rendererFlags", rendererFlags), result);
     MEDIA_LOGI("contentType = %d, streamUsage = %d, rendererFlags = %d",
         contentType, streamUsage, rendererFlags);
-    jsPlayer->audioRendererInfo_ = AudioStandard::AudioRendererInfo{
+    jsPlayer->audioRendererInfo_ = AudioStandard::AudioRendererInfo {
         static_cast<AudioStandard::ContentType>(contentType),
         static_cast<AudioStandard::StreamUsage>(streamUsage),
         static_cast<int32_t>(rendererFlags),
@@ -1275,13 +1275,11 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
         }
         return true;
     };
-
     if (item == nullptr || !check()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, please check the input audio renderer info");
         return result;
     }
-
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_INITIALIZED) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not initialized, unsupport to set audio renderer info");
