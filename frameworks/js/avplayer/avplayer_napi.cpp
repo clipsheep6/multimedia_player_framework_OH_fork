@@ -1253,23 +1253,23 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
     napi_get_named_property(env, args[0], "audioRendererInfo", &item);
     CHECK_AND_RETURN_RET_LOG(item != nullptr, result, "get audioRendererInfo error");
     
-    int contentType, streamUsage, rendererFlags;
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "contentType", contentType), result);
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "streamUsage", streamUsage), result);
+    int content, usage, rendererFlags;
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "content", content), result);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "usage", usage), result);
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "rendererFlags", rendererFlags), result);
-    MEDIA_LOGI("contentType = %d, streamUsage = %d, rendererFlags = %d",
-        contentType, streamUsage, rendererFlags);
+    MEDIA_LOGI("content = %d, usage = %d, rendererFlags = %d",
+        content, usage, rendererFlags);
     jsPlayer->audioRendererInfo_ = AudioStandard::AudioRendererInfo {
-        static_cast<AudioStandard::ContentType>(contentType),
-        static_cast<AudioStandard::StreamUsage>(streamUsage),
+        static_cast<AudioStandard::ContentType>(content),
+        static_cast<AudioStandard::StreamUsage>(usage),
         static_cast<int32_t>(rendererFlags),
     };
     auto check = [&]() -> bool {
-        std::list<int32_t> contentType = {0, 1, 2, 3, 4, 5};
-        std::list<int32_t> streamUsage = {0, 1, 2, 3, 4, 6};
-        auto iter1 = std::find(contentType.begin(), contentType.end(), jsPlayer->audioRendererInfo_.contentType);
-        auto iter2 = std::find(streamUsage.begin(), streamUsage.end(), jsPlayer->audioRendererInfo_.streamUsage);
-        if (iter1 == contentType.end() || iter2 == streamUsage.end() ||
+        std::list<int32_t> contents = {0, 1, 2, 3, 4, 5};
+        std::list<int32_t> usages = {0, 1, 2, 3, 4, 6};
+        auto iter1 = std::find(contents.begin(), contents.end(), jsPlayer->audioRendererInfo_.contentType);
+        auto iter2 = std::find(usages.begin(), usages.end(), jsPlayer->audioRendererInfo_.streamUsage);
+        if (iter1 == contents.end() || iter2 == usages.end() ||
             jsPlayer->audioRendererInfo_.rendererFlags != 0) {
             return false;
         }
@@ -1310,13 +1310,13 @@ napi_value AVPlayerNapi::JsGetAudioRendererInfo(napi_env env, napi_callback_info
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
-    int contentType = static_cast<int>(jsPlayer->audioRendererInfo_.contentType);
-    int streamUsage = static_cast<int>(jsPlayer->audioRendererInfo_.streamUsage);
+    int content = static_cast<int>(jsPlayer->audioRendererInfo_.contentType);
+    int usage = static_cast<int>(jsPlayer->audioRendererInfo_.streamUsage);
     int rendererFlags = static_cast<int>(jsPlayer->audioRendererInfo_.rendererFlags);
     napi_status status = napi_create_object(env, &result);
     CHECK_AND_RETURN_RET(status == napi_ok, result);
-    CommonNapi::SetPropertyInt32(env, result, "contentType", contentType);
-    CommonNapi::SetPropertyInt32(env, result, "streamUsage", streamUsage);
+    CommonNapi::SetPropertyInt32(env, result, "content", content);
+    CommonNapi::SetPropertyInt32(env, result, "usage", usage);
     CommonNapi::SetPropertyInt32(env, result, "rendererFlags", rendererFlags);
     MEDIA_LOGI("JsGetAudioRendererInfo Out");
     return result;
