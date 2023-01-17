@@ -35,6 +35,7 @@ config("gst_audio_server_sink_config") {
     "-Wimplicit-fallthrough",
     "-Wsign-compare",
     "-Wunused-parameter",
+    "-DOHOS_OPT_COMPAT",
   ]
 
   include_dirs = [
