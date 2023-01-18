@@ -214,6 +214,7 @@ private:
     static AVPlayerNapi* GetJsInstance(napi_env env, napi_callback_info info);
     static AVPlayerNapi* GetJsInstanceWithParameter(napi_env env, napi_callback_info info,
         size_t &argc, napi_value *argv);
+    static bool JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi *jsPlayer);
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -267,7 +268,11 @@ private:
     int32_t videoScaleType_ = 0;
     std::vector<Format> trackInfoVec_;
     OHOS::AudioStandard::InterruptMode interruptMode_ = AudioStandard::InterruptMode::SHARE_MODE;
-    OHOS::AudioStandard::AudioRendererInfo audioRendererInfo_;
+    OHOS::AudioStandard::AudioRendererInfo audioRendererInfo_ = OHOS::AudioStandard::AudioRendererInfo {
+        OHOS::AudioStandard::ContentType::CONTENT_TYPE_MUSIC,
+        OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
+        0
+    };
     std::unique_ptr<TaskQueue> taskQue_;
     std::mutex mutex_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
