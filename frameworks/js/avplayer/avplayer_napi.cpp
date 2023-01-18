@@ -1248,9 +1248,9 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
         return result;
     }
     int32_t content, usage, rendererFlags;
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "content", content), result);
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "usage", usage), result);
-    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "rendererFlags", rendererFlags), result);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args[0], "content", content), result);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args[0], "usage", usage), result);
+    CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args[0], "rendererFlags", rendererFlags), result);
     MEDIA_LOGI("content = %d, usage = %d, rendererFlags = %d",
         content, usage, rendererFlags);
     auto check = [&]() -> bool {
@@ -1258,7 +1258,8 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
         std::list<int32_t> usages = {0, 1, 2, 3, 4, 6};
         auto iter1 = std::find(contents.begin(), contents.end(), content);
         auto iter2 = std::find(usages.begin(), usages.end(), usage);
-        if (iter1 == contents.end() || iter2 == usages.end() ||
+        if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
+            std::find(usages.begin(), usages.end(), usage) == usages.end() ||
             rendererFlags != 0) {
             return false;
         }
