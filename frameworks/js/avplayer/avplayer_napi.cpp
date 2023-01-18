@@ -1302,9 +1302,9 @@ napi_value AVPlayerNapi::JsGetAudioRendererInfo(napi_env env, napi_callback_info
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
-    int content = static_cast<int>(jsPlayer->audioRendererInfo_.contentType);
-    int usage = static_cast<int>(jsPlayer->audioRendererInfo_.streamUsage);
-    int rendererFlags = static_cast<int>(jsPlayer->audioRendererInfo_.rendererFlags);
+    int32_t content = static_cast<int>(jsPlayer->audioRendererInfo_.contentType);
+    int32_t usage = static_cast<int>(jsPlayer->audioRendererInfo_.streamUsage);
+    int32_t rendererFlags = jsPlayer->audioRendererInfo_.rendererFlags;
     napi_status status = napi_create_object(env, &result);
     CHECK_AND_RETURN_RET(status == napi_ok, result);
     CommonNapi::SetPropertyInt32(env, result, "content", content);
