@@ -216,7 +216,7 @@ static void gst_vdec_base_check_support_swap_width_height(GstVdecBase *self)
 {
     GstVdecBaseClass *base_class = GST_VDEC_BASE_GET_CLASS(self);
     g_return_if_fail(base_class != nullptr);
-    GstElementClass *element_class = GST_ELEMENT_CLASS(kclass);
+    GstElementClass *element_class = GST_ELEMENT_CLASS(base_class);
     if (base_class->support_swap_width_height != nullptr) {
         self->support_swap_width_height = base_class->support_swap_width_height(element_class);
     }
