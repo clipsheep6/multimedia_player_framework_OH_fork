@@ -218,7 +218,7 @@ static void gst_vdec_base_check_support_swap_width_height(GstVdecBase *self)
     g_return_if_fail(base_class != nullptr);
     GstElementClass *element_class = GST_ELEMENT_CLASS(base_class);
     if (base_class->support_swap_width_height != nullptr) {
-        self->support_swap_width_height = base_class->support_swap_width_height(element_class);
+        self->is_support_swap_width_height = base_class->support_swap_width_height(element_class);
     }
 }
 
@@ -259,6 +259,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->input_need_ashmem = FALSE;
     self->has_set_format = FALSE;
     self->player_mode = FALSE;
+    self->is_support_swap_width_height = FALSE;
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -1424,7 +1425,8 @@ static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
     GST_DEBUG_OBJECT(structure, "before swap width and height, caps %" GST_PTR_FORMAT, caps);
     const GValue *width = gst_structure_get_value(structure, "width");
     const GValue *height = gst_structure_get_value(structure, "height");
-    GValue temp_width = *width;
+    GValue temp_width = { 0 };
+    gst_value_init_and_copy (&temp_width, width);
     width = &temp_width;
     gst_structure_set_value(structure, "width", height);
     gst_structure_set_value(structure, "height", width);
@@ -1438,18 +1440,19 @@ static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
     g_return_val_if_fail(templ_caps != nullptr, FALSE);
     ON_SCOPE_EXIT(0) { gst_caps_unref(templ_caps); };
     GstCaps *pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
-    gboolean check = TRUE;
+    gboolean is_caps_valid = TRUE;
     if (gst_caps_is_empty(pool_caps)) {
-        check = FALSE;
-        if (self->support_swap_width_height) {
+        gst_caps_unref(pool_caps);
+        is_caps_valid = FALSE;
+        if (self->is_support_swap_width_height) {
             templ_caps = gst_vdec_swap_width_height(templ_caps);
             pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
             if (!gst_caps_is_empty(pool_caps)) {
-                check = TRUE;
+                is_caps_valid = TRUE;
             }
         }
     }
-    if (!check) {
+    if (!is_caps_valid) {
         gst_caps_unref(pool_caps);
         GST_ERROR_OBJECT(self, "pool caps is null with sink caps%" GST_PTR_FORMAT, self->sink_caps);
         return FALSE;

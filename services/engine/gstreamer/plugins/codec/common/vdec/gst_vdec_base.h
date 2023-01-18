@@ -117,7 +117,7 @@ struct _GstVdecBase {
     gboolean input_need_ashmem;
     gboolean has_set_format;
     gboolean player_mode;
-    gboolean support_swap_width_height;
+    gboolean is_support_swap_width_height;
 };
 
 struct _GstVdecBaseClass {
