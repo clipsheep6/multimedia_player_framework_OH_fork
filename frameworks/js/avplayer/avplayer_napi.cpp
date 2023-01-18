@@ -1256,8 +1256,6 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
     auto check = [&]() -> bool {
         std::list<int32_t> contents = {0, 1, 2, 3, 4, 5};
         std::list<int32_t> usages = {0, 1, 2, 3, 4, 6};
-        auto iter1 = std::find(contents.begin(), contents.end(), content);
-        auto iter2 = std::find(usages.begin(), usages.end(), usage);
         if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
             std::find(usages.begin(), usages.end(), usage) == usages.end() ||
             rendererFlags != 0) {
