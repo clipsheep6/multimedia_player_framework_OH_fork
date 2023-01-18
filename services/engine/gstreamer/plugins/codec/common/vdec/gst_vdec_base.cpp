@@ -1421,12 +1421,13 @@ static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
     caps = gst_caps_make_writable(caps);
     GstStructure *structure = gst_caps_get_structure(caps, 0);
     g_return_val_if_fail(structure != nullptr, nullptr);
+    GST_DEBUG_OBJECT(structure, "before swap width and height, caps %" GST_PTR_FORMAT, caps);
     const GValue *width = gst_structure_get_value(structure, "width");
     const GValue *height = gst_structure_get_value(structure, "height");
     GValue temp_width = *width;
     width = &temp_width;
-    gst_structure_set(structure, "width", G_TYPE_INT, height, nullptr);
-    gst_structure_set(structure, "height", G_TYPE_INT, width, nullptr);
+    gst_structure_set_value(structure, "width", height, nullptr);
+    gst_structure_set_value(structure, "height", width, nullptr);
     GST_DEBUG_OBJECT(structure, "after swap width and height, caps %" GST_PTR_FORMAT, caps);
     return caps;
 }
