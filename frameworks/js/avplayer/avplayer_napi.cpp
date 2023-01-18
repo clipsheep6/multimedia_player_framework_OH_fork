@@ -1242,40 +1242,29 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
     size_t argCount = 1;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
-
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "JsSetAudioRendererInfo is not napi_object");
         return result;
     }
-
-    napi_value item = nullptr;
-    napi_get_named_property(env, args[0], "audioRendererInfo", &item);
-    CHECK_AND_RETURN_RET_LOG(item != nullptr, result, "get audioRendererInfo error");
-    
-    int content, usage, rendererFlags;
+    int32_t content, usage, rendererFlags;
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "content", content), result);
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "usage", usage), result);
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "rendererFlags", rendererFlags), result);
     MEDIA_LOGI("content = %d, usage = %d, rendererFlags = %d",
         content, usage, rendererFlags);
-    jsPlayer->audioRendererInfo_ = AudioStandard::AudioRendererInfo {
-        static_cast<AudioStandard::ContentType>(content),
-        static_cast<AudioStandard::StreamUsage>(usage),
-        static_cast<int32_t>(rendererFlags),
-    };
     auto check = [&]() -> bool {
         std::list<int32_t> contents = {0, 1, 2, 3, 4, 5};
         std::list<int32_t> usages = {0, 1, 2, 3, 4, 6};
-        auto iter1 = std::find(contents.begin(), contents.end(), jsPlayer->audioRendererInfo_.contentType);
-        auto iter2 = std::find(usages.begin(), usages.end(), jsPlayer->audioRendererInfo_.streamUsage);
+        auto iter1 = std::find(contents.begin(), contents.end(), content);
+        auto iter2 = std::find(usages.begin(), usages.end(), usage);
         if (iter1 == contents.end() || iter2 == usages.end() ||
-            jsPlayer->audioRendererInfo_.rendererFlags != 0) {
+            rendererFlags != 0) {
             return false;
         }
         return true;
     };
-    if (item == nullptr || !check()) {
+    if (!check()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, please check the input audio renderer info");
         return result;
@@ -1285,7 +1274,11 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
             "current state is not initialized, unsupport to set audio renderer info");
         return result;
     }
-
+    jsPlayer->audioRendererInfo_ = AudioStandard::AudioRendererInfo {
+        static_cast<AudioStandard::ContentType>(content),
+        static_cast<AudioStandard::StreamUsage>(usage),
+        rendererFlags,
+    };
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
         MEDIA_LOGI("SetAudioRendererInfo Task");
         if (jsPlayer->player_ != nullptr) {
