@@ -63,7 +63,7 @@ int32_t HdiOutBufferMgr::PushBuffer(GstBuffer *buffer)
 {
     MEDIA_LOGD("mBuffers %{public}zu, available %{public}zu, codingBuffers %{public}zu",
         mBuffers.size(), availableBuffers_.size(), codingBuffers_.size());
-    MediaTrace::CounterTrace("availableBuffers_", availableBuffers_.size());
+    MediaTrace::CounterTrace("AvailableBuffers", availableBuffers_.size());
     std::unique_lock<std::mutex> lock(mutex_);
     ON_SCOPE_EXIT(0) { gst_buffer_unref(buffer); };
     if (isFormatChange_) {
@@ -94,7 +94,7 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
     }
     if (!mBuffers.empty()) {
         MEDIA_LOGD("mBuffers %{public}zu, available %{public}zu", mBuffers.size(), availableBuffers_.size());
-        MediaTrace::CounterTrace("mBuffers", mBuffers.size());
+        MediaTrace::CounterTrace("WaitingForDisplayBuffers", mBuffers.size());
         GstBufferWrap bufferWarp = mBuffers.front();
         mBuffers.pop_front();
         if (bufferWarp.isEos) {
@@ -124,9 +124,9 @@ int32_t HdiOutBufferMgr::FreeBuffers()
 int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
 {
     MEDIA_LOGD("codecBufferAvailable");
-    MediaTrace::CounterTrace("mBuffers", mBuffers.size());
-    MediaTrace::CounterTrace("availableBuffers_", availableBuffers_.size());
-    MediaTrace::CounterTrace("codingBuffers_", codingBuffers_.size());
+    MediaTrace::CounterTrace("WaitingForDisplayBuffers", mBuffers.size());
+    MediaTrace::CounterTrace("AvailableBuffers", availableBuffers_.size());
+    MediaTrace::CounterTrace("CodingBuffers", codingBuffers_.size());
     MediaTrace trace("HdiOutBufferMgr::CodecBufferAvailable");
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "FillBufferDone failed");
     std::unique_lock<std::mutex> lock(mutex_);
