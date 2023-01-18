@@ -1251,7 +1251,7 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args[0], "content", content), result);
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args[0], "usage", usage), result);
     CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, args[0], "rendererFlags", rendererFlags), result);
-    MEDIA_LOGI("content = %d, usage = %d, rendererFlags = %d",
+    MEDIA_LOGI("content = %{public}d, usage = %{public}d, rendererFlags = %{public}d",
         content, usage, rendererFlags);
     auto check = [&]() -> bool {
         std::list<int32_t> contents = {0, 1, 2, 3, 4, 5};
