@@ -1421,7 +1421,7 @@ static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
 {
     caps = gst_caps_make_writable(caps);
     GstStructure *structure = gst_caps_get_structure(caps, 0);
-    g_return_val_if_fail(structure != nullptr, nullptr);
+    g_return_val_if_fail(structure != nullptr, caps);
     GST_DEBUG_OBJECT(structure, "before swap width and height, caps %" GST_PTR_FORMAT, caps);
     const GValue *width = gst_structure_get_value(structure, "width");
     const GValue *height = gst_structure_get_value(structure, "height");
