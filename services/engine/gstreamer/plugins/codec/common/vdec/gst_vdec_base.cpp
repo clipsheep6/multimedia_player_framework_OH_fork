@@ -672,7 +672,7 @@ static void gst_vdec_base_remove_reconfig_flag(GstVideoDecoder *decoder)
 
 static gboolean gst_vdec_base_negotiate(GstVdecBase *self)
 {
-    MediaTrace trace("VdecBace::Negotiate");
+    MediaTrace trace("VdecBase::Negotiate");
     GST_DEBUG_OBJECT(self, "Negotiate");
     g_return_val_if_fail(self != nullptr, FALSE);
     g_return_val_if_fail(GST_VIDEO_DECODER_SRC_PAD(self) != nullptr, FALSE);
