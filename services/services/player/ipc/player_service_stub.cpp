@@ -42,7 +42,7 @@ sptr<PlayerServiceStub> PlayerServiceStub::Create()
 }
 
 PlayerServiceStub::PlayerServiceStub()
-    : taskQue_("PlayerServer")
+    : taskQue_("PlayerRequest")
 {
     (void)taskQue_.Start();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
