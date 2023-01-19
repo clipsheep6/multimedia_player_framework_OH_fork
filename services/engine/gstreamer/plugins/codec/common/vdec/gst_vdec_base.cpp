@@ -1442,11 +1442,10 @@ static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
     GstCaps *pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
     gboolean is_caps_valid = TRUE;
     if (gst_caps_is_empty(pool_caps)) {
-        gst_caps_unref(pool_caps);
-        pool_caps = nullptr;
         is_caps_valid = FALSE;
         if (self->is_support_swap_width_height) {
             templ_caps = gst_vdec_swap_width_height(templ_caps);
+            gst_caps_unref(pool_caps);
             pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
             if (!gst_caps_is_empty(pool_caps)) {
                 is_caps_valid = TRUE;
