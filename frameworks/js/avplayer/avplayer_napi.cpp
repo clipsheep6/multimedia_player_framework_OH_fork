@@ -1249,7 +1249,8 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
     };
     std::list<int32_t> usages = {
         AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN, AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
-        AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION, AudioStandard::StreamUsage::STREAM_USAGE_VOICE_ASSISTANT,
+        AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION,
+        AudioStandard::StreamUsage::STREAM_USAGE_VOICE_ASSISTANT,
         AudioStandard::StreamUsage::STREAM_USAGE_RANGING, AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION_RINGTONE
     };
     if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
