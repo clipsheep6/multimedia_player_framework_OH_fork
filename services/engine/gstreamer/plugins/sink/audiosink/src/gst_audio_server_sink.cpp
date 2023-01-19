@@ -419,7 +419,6 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
 
 static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *event)
 {
-    MediaTrace trace("Audio::gst_audio_server_sink_event");
     g_return_val_if_fail(basesink != nullptr, FALSE);
     g_return_val_if_fail(event != nullptr, FALSE);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
@@ -517,7 +516,6 @@ static gboolean gst_audio_server_sink_stop(GstBaseSink *basesink)
 
 static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *element, GstStateChange transition)
 {
-    MediaTrace trace("Audio::gst_audio_server_sink_change_state");
     g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(element);
     g_return_val_if_fail(sink != nullptr, GST_STATE_CHANGE_FAILURE);
