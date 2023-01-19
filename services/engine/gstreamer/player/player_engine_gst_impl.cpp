@@ -783,6 +783,8 @@ int32_t PlayerEngineGstImpl::SetAudioRendererInfo(const int32_t contentType,
     contentType_ = contentType;
     streamUsage_ = streamUsage;
     rendererFlag_ = rendererFlag;
+    MEDIA_LOGI("content = %{public}d, usage = %{public}d, rendererFlags = %{public}d",
+        contentType, streamUsage, rendererFlag);
     if (playBinCtrler_ != nullptr) {
         MEDIA_LOGD("SetAudioRendererInfo in");
         uint32_t rendererInfo(0);
