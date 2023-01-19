@@ -140,6 +140,13 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     (void)LoadGstreamerEngine();
     (void)LoadHistreamerEngine();
 
+    if (factorys_.empty()) {
+        gstreamerLoad_ = false;
+        histreamerLoad_ = false;
+        MEDIA_LOGI("Failed to load libmedia_engine_gst.z.so or libmedia_engine_histreamer.z.so");
+        return nullptr
+    }
+
     int32_t maxScore = std::numeric_limits<int32_t>::min();
     std::shared_ptr<IEngineFactory> target = nullptr;
     for (auto &factory : factorys_) {
