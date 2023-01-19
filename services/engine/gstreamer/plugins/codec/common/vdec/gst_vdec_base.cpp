@@ -1351,6 +1351,7 @@ static void gst_vdec_base_loop(GstVdecBase *self)
     g_return_if_fail(self != nullptr);
     g_return_if_fail(self->decoder != nullptr);
 
+    pthread_setname_np(pthread_self(), "VDecOutPut");
     GstBuffer *gst_buffer = nullptr;
     if (gst_vdec_base_push_out_buffers(self) != TRUE) {
         gst_vdec_base_pause_loop(self);
