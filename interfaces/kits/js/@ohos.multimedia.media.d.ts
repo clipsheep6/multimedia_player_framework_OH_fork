@@ -98,26 +98,24 @@ declare namespace media {
   function createVideoPlayer() : Promise<VideoPlayer>;
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVRecorder
    * Creates an VideoRecorder instance.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
    * @param callback Callback used to return AudioPlayer instance if the operation is successful; returns null otherwise.
    * @throws { BusinessError } 5400101 - No memory. Return by callback.
    * @systemapi
-   * @deprecated since 9
-   * @useinstead ohos.multimedia.media/media#createAVRecorder
    */
   function createVideoRecorder(callback: AsyncCallback<VideoRecorder>): void;
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVRecorder
    * Creates an VideoRecorder instance.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
    * @returns A Promise instance used to return VideoRecorder instance if the operation is successful; returns null otherwise.
    * @throws { BusinessError } 5400101 - No memory. Return by promise.
    * @systemapi
-   * @deprecated since 9
-   * @useinstead ohos.multimedia.media/media#createAVRecorder
    */
   function createVideoRecorder(): Promise<VideoRecorder>;
 
@@ -410,6 +408,15 @@ declare namespace media {
     audioInterruptMode ?: audio.InterruptMode;
 
     /**
+     * Describes audio renderer info, refer to {@link #audio.AudioRendererInfo}. Set it before
+     * calling the {@link #prepare()} in the first time in order for the audio renderer info to
+     * become effective thereafter.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    audioRendererInfo ?: audio.AudioRendererInfo;
+
+    /**
      * Current playback position.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
@@ -534,7 +541,7 @@ declare namespace media {
     on(type: 'bitrateDone', callback: Callback<number>): void;
     off(type: 'bitrateDone'): void;
     /**
-     * Register or unregister listens for media playback events.
+     * LRegister or unregister listens for media playback events.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
@@ -1520,23 +1527,21 @@ declare namespace media {
   }
 
   /**
-   * Describes video recorder states.
-   * @since 9
-   * @syscap SystemCapability.Multimedia.Media.VideoRecorder
-   * @systemapi
-   * @deprecated since 9
-   * @useinstead ohos.multimedia.media/media.AVRecorderState
-   */
+  * The maintenance of this interface has been stopped since version api 9. Please use AVRecorderState.
+  * Describes video recorder states.
+  * @since 9
+  * @syscap SystemCapability.Multimedia.Media.VideoRecorder
+  * @systemapi
+  */
   type VideoRecordState = 'idle' | 'prepared' | 'playing' | 'paused' | 'stopped' | 'error';
 
   /**
+   * The maintenance of this interface has been stopped since version api 9. Please use AVRecorder.
    * Manages and record video. Before calling an VideoRecorder method, you must use createVideoRecorder()
    * to create an VideoRecorder instance.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
    * @systemapi
-   * @deprecated since 9
-   * @useinstead ohos.multimedia.media/media.AVRecorder
    */
   interface VideoRecorder {
     /**
@@ -1551,8 +1556,6 @@ declare namespace media {
      * @throws { BusinessError } 5400102 - Operation not allowed. Return by callback.
      * @throws { BusinessError } 5400105 - Service died. Return by callback.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#prepare
      */
     prepare(config: VideoRecorderConfig, callback: AsyncCallback<void>): void;
     /**
@@ -1567,8 +1570,6 @@ declare namespace media {
      * @throws { BusinessError } 5400102 - Operation not allowed. Return by promise.
      * @throws { BusinessError } 5400105 - Service died. Return by promise.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#prepare
      */
     prepare(config: VideoRecorderConfig): Promise<void>;
     /**
@@ -1580,8 +1581,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by callback.
      * @throws { BusinessError } 5400105 - Service died. Return by callback.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#getInputSurface
      */
     getInputSurface(callback: AsyncCallback<string>): void;
     /**
@@ -1593,8 +1592,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by promise.
      * @throws { BusinessError } 5400105 - Service died. Return by promise.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#getInputSurface
      */
     getInputSurface(): Promise<string>;
     /**
@@ -1606,8 +1603,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by callback.
      * @throws { BusinessError } 5400105 - Service died. Return by callback.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#start
      */
     start(callback: AsyncCallback<void>): void;
     /**
@@ -1619,8 +1614,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by promise.
      * @throws { BusinessError } 5400105 - Service died. Return by promise.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#start
      */
     start(): Promise<void>;
     /**
@@ -1632,8 +1625,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by callback.
      * @throws { BusinessError } 5400105 - Service died. Return by callback.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#pause
      */
     pause(callback: AsyncCallback<void>): void;
     /**
@@ -1645,8 +1636,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by promise.
      * @throws { BusinessError } 5400105 - Service died. Return by promise.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#pause
      */
     pause(): Promise<void>;
     /**
@@ -1658,8 +1647,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by callback.
      * @throws { BusinessError } 5400105 - Service died. Return by callback.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#resume
      */
     resume(callback: AsyncCallback<void>): void;
     /**
@@ -1671,8 +1658,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by promise.
      * @throws { BusinessError } 5400105 - Service died. Return by promise.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#resume
      */
     resume(): Promise<void>;
     /**
@@ -1684,8 +1669,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by callback.
      * @throws { BusinessError } 5400105 - Service died. Return by callback.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#stop
      */
     stop(callback: AsyncCallback<void>): void;
     /**
@@ -1697,8 +1680,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by promise.
      * @throws { BusinessError } 5400105 - Service died. Return by promise.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#stop
      */
     stop(): Promise<void>;
     /**
@@ -1708,8 +1689,6 @@ declare namespace media {
      * @param callback A callback instance used to return when release completed.
      * @throws { BusinessError } 5400105 - Service died. Return by callback.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#release
      */
     release(callback: AsyncCallback<void>): void;
     /**
@@ -1719,8 +1698,6 @@ declare namespace media {
       * @returns A Promise instance used to return when release completed.
       * @throws { BusinessError } 5400105 - Service died. Return by callback.
       * @systemapi
-      * @deprecated since 9
-      * @useinstead ohos.multimedia.media/media.AVRecorder#release
       */
     release(): Promise<void>;
     /**
@@ -1733,8 +1710,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by callback.
      * @throws { BusinessError } 5400105 - Service died. Return by callback.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#reset
      */
     reset(callback: AsyncCallback<void>): void;
      /**
@@ -1747,8 +1722,6 @@ declare namespace media {
       * @throws { BusinessError } 5400103 - I/O error. Return by promise.
       * @throws { BusinessError } 5400105 - Service died. Return by promise.
       * @systemapi
-      * @deprecated since 9
-      * @useinstead ohos.multimedia.media/media.AVRecorder#reset
       */
     reset(): Promise<void>;
     /**
@@ -1760,8 +1733,6 @@ declare namespace media {
      * @throws { BusinessError } 5400103 - I/O error. Return by callback.
      * @throws { BusinessError } 5400105 - Service died. Return by callback.
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#on
      */
     on(type: 'error', callback: ErrorCallback): void;
 
@@ -1770,8 +1741,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
-     * @useinstead ohos.multimedia.media/media.AVRecorder#state
      */
      readonly state: VideoRecordState;
   }
@@ -2366,8 +2335,6 @@ declare namespace media {
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
    * @systemapi
-   * @deprecated since 9
-   * @useinstead ohos.multimedia.media/media.AVRecorderProfile
    */
   interface VideoRecorderProfile {
     /**
@@ -2375,7 +2342,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     readonly audioBitrate: number;
 
@@ -2384,7 +2350,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     readonly audioChannels: number;
 
@@ -2393,7 +2358,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     readonly audioCodec: CodecMimeType;
 
@@ -2402,7 +2366,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     readonly audioSampleRate: number;
 
@@ -2411,7 +2374,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     readonly fileFormat: ContainerFormatType;
 
@@ -2420,7 +2382,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     readonly videoBitrate: number;
 
@@ -2429,7 +2390,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     readonly videoCodec: CodecMimeType;
 
@@ -2438,7 +2398,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     readonly videoFrameWidth: number;
 
@@ -2447,7 +2406,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     readonly videoFrameHeight: number;
 
@@ -2456,7 +2414,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     readonly videoFrameRate: number;
   }
@@ -2506,8 +2463,6 @@ declare namespace media {
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.VideoRecorder
    * @systemapi
-   * @deprecated since 9
-   * @useinstead ohos.multimedia.media/media.AVRecorderConfig
    */
   interface VideoRecorderConfig {
     /**
@@ -2515,7 +2470,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     audioSourceType?: AudioSourceType;
     /**
@@ -2523,7 +2477,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     videoSourceType: VideoSourceType;
     /**
@@ -2531,7 +2484,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     profile: VideoRecorderProfile;
     /**
@@ -2541,7 +2493,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     url: string;
     /**
@@ -2550,7 +2501,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     rotation?: number;
     /**
@@ -2558,7 +2508,6 @@ declare namespace media {
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.VideoRecorder
      * @systemapi
-     * @deprecated since 9
      */
     location?: Location;
   }

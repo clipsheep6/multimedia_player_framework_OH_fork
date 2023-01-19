@@ -42,6 +42,7 @@ struct _GstConsumerSurfacePoolPrivate {
     GstBuffer *cache_buffer;
     gboolean need_eos_buffer;
     gboolean is_first_buffer_in_for_trace;
+    gboolean pause_data;
 };
 
 enum {
@@ -50,6 +51,7 @@ enum {
     PROP_REPEAT,
     PROP_MAX_FRAME_RATE,
     PROP_NOTIFY_EOS,
+    PROP_PAUSE_DATA,
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfacePool, gst_consumer_surface_pool, GST_TYPE_VIDEO_BUFFER_POOL);
@@ -148,6 +150,10 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
         g_param_spec_boolean("notify-eos", "notify eos", "Need notify eos",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobjectClass, PROP_PAUSE_DATA,
+        g_param_spec_boolean("pause_data", "pause data", "pause data",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+            
     poolClass->get_options = gst_consumer_surface_pool_get_options;
     poolClass->set_config = gst_consumer_surface_pool_set_config;
     poolClass->release_buffer = gst_consumer_surface_pool_release_buffer;
@@ -185,6 +191,9 @@ static void gst_consumer_surface_pool_set_property(GObject *object, guint id, co
         case PROP_NOTIFY_EOS:
             priv->need_eos_buffer = g_value_get_boolean(value);
             g_cond_signal(&priv->buffer_available_con);
+            break;
+        case PROP_PAUSE_DATA:
+            priv->pause_data = g_value_get_boolean(value);
             break;
         default:
             break;
@@ -337,7 +346,7 @@ static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *poo
             }
         }
 
-        if (priv->suspend && priv->start) {
+        if (priv->pause_data && priv->start) {
             g_cond_wait(&priv->buffer_available_con, &priv->pool_lock);
             continue;
         }
@@ -388,6 +397,7 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
     priv->flushing = FALSE;
     priv->start = FALSE;
     priv->suspend = FALSE;
+    priv->pause_data = FALSE;
     priv->is_first_buffer = TRUE;
     priv->is_first_buffer_in_for_trace = TRUE;
     priv->repeat_interval = 0;
