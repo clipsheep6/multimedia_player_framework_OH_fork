@@ -143,7 +143,7 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     if (factorys_.empty()) {
         gstreamerLoad_ = false;
         histreamerLoad_ = false;
-        MEDIA_LOGI("Failed to load libmedia_engine_gst.z.so or libmedia_engine_histreamer.z.so");
+        MEDIA_LOGE("Failed to load libmedia_engine_gst.z.so or libmedia_engine_histreamer.z.so");
         return nullptr;
     }
 
