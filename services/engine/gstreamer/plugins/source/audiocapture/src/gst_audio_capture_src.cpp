@@ -424,7 +424,7 @@ static void gst_audio_capture_src_getbuffer_timeout(GstPushSrc *psrc)
 
     GST_ELEMENT_ERROR (src, RESOURCE, READ,
         ("Audio input stream timeout, please confirm whether the input is normal."),
-        ("Audio input stream timeout, please confirm whether the input is normal."));            
+        ("Audio input stream timeout, please confirm whether the input is normal."));
 }
 
 static gboolean plugin_init(GstPlugin *plugin)

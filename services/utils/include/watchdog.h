@@ -16,15 +16,15 @@
 #ifndef TIME_PERF_H
 #define TIME_PERF_H
 
-#include <cstdio>
 #include <atomic>
+#include <condition_variable>
+#include <mutex>
 #include <thread>
 #include "media_dfx.h"
 #include "media_log.h"
 
 namespace OHOS {
 namespace Media {
-
 // If Notify() is not used to trigger the dog feeding action for more than timeoutMs_, the Alarm() action is triggered.
 class __attribute__((visibility("default"))) WatchDog {
 public:

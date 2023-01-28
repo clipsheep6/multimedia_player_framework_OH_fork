@@ -600,6 +600,6 @@ static void gst_consumer_surface_pool_notify_timeout(GstConsumerSurfacePool *poo
     if (priv->src) {
         GST_ELEMENT_ERROR (priv->src, RESOURCE, NOT_FOUND,
             ("Input stream timeout, please confirm whether the input is normal."),
-            ("Input stream timeout, please confirm whether the input is normal."));            
+            ("Input stream timeout, please confirm whether the input is normal."));
     }
 }

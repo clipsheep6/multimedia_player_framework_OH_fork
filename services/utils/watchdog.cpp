@@ -22,7 +22,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-
 WatchDog::~WatchDog()
 {
     DisableWatchDog();
@@ -48,7 +47,7 @@ void WatchDog::DisableWatchDog()
 {
     enable_.store(false);
     pause_.store(false);
-    if (thread_) {
+    if (thread_ && thread_->joinable()) {
         cond_.notify_all();
         pauseCond_.notify_all();
         thread_->join();
@@ -93,7 +92,7 @@ void WatchDog::WatchDogThread()
         }
 
         if ((count_.load() == 0) && (pause_.load() == false)) {
-            MEDIA_LOGD("Alarm!");
+            MEDIA_LOGI("Alarm!");
             Alarm();
         }
 
