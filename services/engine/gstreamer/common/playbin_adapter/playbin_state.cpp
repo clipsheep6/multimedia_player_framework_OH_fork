@@ -598,6 +598,7 @@ void PlayBinCtrlerBase::PlaybackCompletedState::StateEnter()
 
 int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
 {
+    ctrler_.isUserSetPlay_ = true;
     ctrler_.isDuration_ = false;
     PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
         0, static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
@@ -607,7 +608,6 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
 
 int32_t PlayBinCtrlerBase::PlaybackCompletedState::Stop()
 {
-    ctrler_.isUserSetPlay_ = true;
     ctrler_.ChangeState(ctrler_.stoppingState_);
     return MSERR_OK;
 }
