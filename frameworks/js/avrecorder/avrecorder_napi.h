@@ -169,6 +169,10 @@ private:
     static std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVRecorderNapi *avnapi, const std::string &opt);
     static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt);
 
+    static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
+    static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
+    static int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
+
     AVRecorderNapi();
     ~AVRecorderNapi();
 
@@ -180,7 +184,7 @@ private:
     RetInfo Reset();
     RetInfo Release();
 
-    void ErrorCallback(int32_t errCode, const std::string &operate, const std::string add = "");
+    void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const std::string &state);
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &callbackName);
@@ -189,9 +193,6 @@ private:
 
     int32_t CheckStateMachine(const std::string &opt);
     int32_t CheckRepeatOperation(const std::string &opt);
-    int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
-    int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
-    int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
@@ -216,7 +217,7 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     ~AVRecorderAsyncContext() = default;
 
     void AVRecorderSignError(int32_t errCode, const std::string &operate,
-        const std::string &param, const std::string add = "");
+        const std::string &param, const std::string &add = "");
 
     AVRecorderNapi *napi = nullptr;
     std::shared_ptr<AVRecorderConfig> config_ = nullptr;
