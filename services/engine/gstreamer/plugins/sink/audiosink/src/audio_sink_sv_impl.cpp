@@ -79,6 +79,7 @@ AudioSinkSvImpl::AudioSinkSvImpl(GstBaseSink *sink)
     : audioSink_(sink)
 {
     audioRendererMediaCallback_ = std::make_shared<AudioRendererMediaCallback>(sink);
+    SetAudioDumpBySysParam();
 }
 
 AudioSinkSvImpl::~AudioSinkSvImpl()
@@ -90,6 +91,10 @@ AudioSinkSvImpl::~AudioSinkSvImpl()
         id = PlayerXCollie::GetInstance().SetTimerByLog("AudioRenderer::~AudioRenderer");
         audioRenderer_ = nullptr;
         PlayerXCollie::GetInstance().CancelTimer(id);
+    }
+    if (dumpFile_ != nullptr) {
+        (void)fclose(dumpFile_);
+        dumpFile_ = nullptr;
     }
 }
 
@@ -429,6 +434,7 @@ int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
             MEDIA_LOGE("[AudioSinkSvImpl] audioRenderer write failed, drop an audio packet!");
             return MSERR_OK;
         }
+        DumpAudioBuffer(buffer, bytesWritten, static_cast<size_t>(bytesSingle));
         bytesWritten += static_cast<size_t>(bytesSingle);
         CHECK_AND_RETURN_RET(bytesWritten >= static_cast<size_t>(bytesSingle), MSERR_AUD_RENDER_FAILED);
     }
@@ -474,6 +480,37 @@ void AudioSinkSvImpl::SetAudioInterruptMode(int32_t interruptMode)
 {
     CHECK_AND_RETURN(audioRendererMediaCallback_ != nullptr);
     audioRenderer_->SetInterruptMode(static_cast<AudioStandard::InterruptMode>(interruptMode));
+}
+
+void AudioSinkSvImpl::SetAudioDumpBySysParam()
+{
+    std::string dump_enable;
+    enableDump_ = false;
+    int32_t res = OHOS::system::GetStringParameter("sys.media.dump.audiowrite.enable", dump_enable, "");
+    if (res != 0 || dump_enable.empty()) {
+        MEDIA_LOGD("sys.media.dump.audiowrite.enable is not set, dump audio is not required");
+        return;
+    }
+    MEDIA_LOGD("sys.media.dump.audiowrite.enable=%s", dump_enable.c_str());
+    if (dump_enable == "true") {
+        enableDump_ = true;
+    }
+}
+
+void AudioSinkSvImpl::DumpAudioBuffer(uint8_t *buffer, const size_t &bytesWritten, const size_t &bytesSingle)
+{
+    if (enableDump_ == false) {
+        return;
+    }
+
+    if (dumpFile_ == nullptr) {
+        std::string dumpFilePath = "/data/media/audio-write-" +
+        std::to_string(static_cast<int32_t>(FAKE_POINTER(this))) + ".pcm";
+        dumpFile_ = fopen(dumpFilePath.c_str(), "wb+");
+    }
+    CHECK_AND_RETURN(dumpFile_ != nullptr);
+    (void)fwrite(buffer + bytesWritten, bytesSingle, 1, dumpFile_);
+    (void)fflush(dumpFile_);
 }
 } // namespace Media
 } // namespace OHOS
