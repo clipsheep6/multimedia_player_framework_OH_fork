@@ -54,13 +54,13 @@ EngineFactoryRepo::~EngineFactoryRepo()
     }
 }
 
-void EngineFactoryRepo::LoadLib(const std::string &libPath)
+int32_t EngineFactoryRepo::LoadLib(const std::string &libPath)
 {
     void *handle = dlopen(libPath.c_str(), RTLD_NOW | RTLD_LOCAL);
     if (handle == nullptr) {
         MEDIA_LOGE("failed to dlopen %{public}s, errno:%{public}d, errormsg:%{public}s",
                    libPath.c_str(), errno, dlerror());
-        return;
+        return MSERR_OPEN_FILE_FAILED;
     }
 
     CreateFactoryFunc entry = reinterpret_cast<CreateFactoryFunc>(dlsym(handle, MEDIA_ENGINE_ENTRY_SYMBOL.c_str()));
@@ -68,18 +68,19 @@ void EngineFactoryRepo::LoadLib(const std::string &libPath)
         MEDIA_LOGE("failed to dlsym %{public}s for lib %{public}s, errno:%{public}d, errormsg:%{public}s",
             MEDIA_ENGINE_ENTRY_SYMBOL.c_str(), libPath.c_str(), errno, dlerror());
         (void)dlclose(handle);
-        return;
+        return MSERR_OPEN_FILE_FAILED;
     }
 
     std::shared_ptr<IEngineFactory> factory = std::shared_ptr<IEngineFactory>(entry());
     if (factory == nullptr) {
         MEDIA_LOGE("failed to create engine factory for lib: %{public}s", libPath.c_str());
         (void)dlclose(handle);
-        return;
+        return MSERR_OPEN_FILE_FAILED;
     }
 
     factoryLibs_.push_back(handle);
     factorys_.push_back(factory);
+    return MSERR_OK;
 }
 
 int32_t EngineFactoryRepo::LoadGstreamerEngine()
@@ -96,11 +97,12 @@ int32_t EngineFactoryRepo::LoadGstreamerEngine()
         if (namePos == std::string::npos) {
             continue;
         } else {
-            LoadLib(file);
+            CHECK_AND_RETURN_RET_LOG(LoadLib(file) == MSERR_OK, MSERR_OPEN_FILE_FAILED, "LoadLib failed");
             gstreamerLoad_ = true;
             break;
         }
     }
+
     return MSERR_OK;
 }
 
@@ -122,7 +124,7 @@ int32_t EngineFactoryRepo::LoadHistreamerEngine()
             if (namePos == std::string::npos) {
                 continue;
             } else {
-                LoadLib(file);
+                CHECK_AND_RETURN_RET_LOG(LoadLib(file) == MSERR_OK, MSERR_OPEN_FILE_FAILED, "LoadLib failed");
                 histreamerLoad_ = true;
                 break;
             }
@@ -137,6 +139,13 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
 {
     (void)LoadGstreamerEngine();
     (void)LoadHistreamerEngine();
+
+    if (factorys_.empty()) {
+        gstreamerLoad_ = false;
+        histreamerLoad_ = false;
+        MEDIA_LOGE("Failed to load libmedia_engine_gst.z.so or libmedia_engine_histreamer.z.so");
+        return nullptr;
+    }
 
     int32_t maxScore = std::numeric_limits<int32_t>::min();
     std::shared_ptr<IEngineFactory> target = nullptr;
