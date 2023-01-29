@@ -185,7 +185,7 @@ napi_value AVRecorderNapi::JsCreateAVRecorder(napi_env env, napi_callback_info i
     return result;
 }
 
-RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::string &param, const std::string add = "")
+RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::string &param, const std::string &add = "")
 {
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
@@ -728,7 +728,7 @@ int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyn
         (void)CommonNapi::GetPropertyInt32(env, item, "audioBitrate", profile.audioBitrate);
         (void)CommonNapi::GetPropertyInt32(env, item, "audioChannels", profile.audioChannels);
         std::string audioCodec = CommonNapi::GetPropertyString(env, item, "audioCodec");
-        (void)GetAudioCodecFormat(audioCodec, profile.audioCodecFormat);
+        (void)AVRecorderNapi::GetAudioCodecFormat(audioCodec, profile.audioCodecFormat);
         (void)CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.auidoSampleRate);
         MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
                    " audioSampleRate %{public}d!", profile.audioBitrate, profile.audioChannels,
@@ -739,7 +739,7 @@ int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyn
     if (asyncCtx->config_->withVideo) {
         (void)CommonNapi::GetPropertyInt32(env, item, "videoBitrate", profile.videoBitrate);
         std::string videoCodec = CommonNapi::GetPropertyString(env, item, "videoCodec");
-        (void)GetVideoCodecFormat(videoCodec, profile.videoCodecFormat);
+        (void)AVRecorderNapi::GetVideoCodecFormat(videoCodec, profile.videoCodecFormat);
         CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameWidth", profile.videoFrameWidth),
             (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameWidth", "videoFrameWidth"), ret));
         CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameHeight", profile.videoFrameHeight),
@@ -752,7 +752,7 @@ int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyn
     }
 
     std::string outputFile = CommonNapi::GetPropertyString(env, item, "fileFormat");
-    ret = GetOutputFormat(outputFile, profile.fileFormat);
+    ret = AVRecorderNapi::GetOutputFormat(outputFile, profile.fileFormat);
     CHECK_AND_RETURN_RET(ret == MSERR_OK,
         (asyncCtx->AVRecorderSignError(ret, "GetOutputFormat", "fileFormat"), ret));
     MEDIA_LOGI("fileFormat %{public}d", profile.fileFormat);
@@ -900,7 +900,7 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
-void AVRecorderNapi::ErrorCallback(int32_t errCode, const std::string &operate, const std::string add)
+void AVRecorderNapi::ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add)
 {
     MEDIA_LOGE("failed to %{public}s, errCode = %{public}d", operate.c_str(), errCode);
     CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "recorderCb_ is nullptr!");
@@ -955,7 +955,7 @@ void AVRecorderNapi::RemoveSurface()
 }
 
 void AVRecorderAsyncContext::AVRecorderSignError(int32_t errCode, const std::string &operate,
-    const std::string &param, const std::string add)
+    const std::string &param, const std::string &add)
 {
     RetInfo retInfo = GetRetInfo(errCode, operate, param, add);
     SignError(retInfo.first, retInfo.second);
