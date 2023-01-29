@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <mutex>
 #include <thread>
 #include "watchdog.h"
 

@@ -213,7 +213,7 @@ static void gst_consumer_surface_pool_set_property(GObject *object, guint id, co
                 gst_buffer_unref(priv->cache_buffer);
                 priv->cache_buffer = nullptr;
             }
-            priv->repeat_interval = g_value_get_uint(value) * 1000; // ms to us
+            priv->repeat_interval = g_value_get_uint(value) * 1000; // ms * 1000 = us
             break;
         case PROP_MAX_FRAME_RATE:
             priv->max_frame_rate = g_value_get_uint(value);
