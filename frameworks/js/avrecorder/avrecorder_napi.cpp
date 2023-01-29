@@ -724,27 +724,42 @@ int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyn
 
     AVRecorderProfile &profile = asyncCtx->config_->profile;
 
+    int32_t ret;
     if (asyncCtx->config_->withAudio) {
-        (void)CommonNapi::GetPropertyInt32(env, item, "audioBitrate", profile.audioBitrate);
-        (void)CommonNapi::GetPropertyInt32(env, item, "audioChannels", profile.audioChannels);
         std::string audioCodec = CommonNapi::GetPropertyString(env, item, "audioCodec");
-        (void)AVRecorderNapi::GetAudioCodecFormat(audioCodec, profile.audioCodecFormat);
-        (void)CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.auidoSampleRate);
+        ret = AVRecorderNapi::GetAudioCodecFormat(audioCodec, profile.audioCodecFormat);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK,
+            (asyncCtx->AVRecorderSignError(ret, "GetAudioCodecFormat", "audioCodecFormat"), ret));
+
+        ret = MSERR_INVALID_VAL;
+        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioBitrate", profile.audioBitrate),
+            (asyncCtx->AVRecorderSignError(ret, "GetaudioBitrate", "audioBitrate"), ret));
+        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioChannels", profile.audioChannels),
+            (asyncCtx->AVRecorderSignError(ret, "GetaudioChannels", "audioChannels"), ret));
+        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "audioSampleRate", profile.auidoSampleRate),
+            (asyncCtx->AVRecorderSignError(ret, "GetauidoSampleRate", "auidoSampleRate"), ret));
+
         MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
                    " audioSampleRate %{public}d!", profile.audioBitrate, profile.audioChannels,
                    profile.audioCodecFormat, profile.auidoSampleRate);
     }
 
-    int32_t ret = MSERR_INVALID_VAL;
     if (asyncCtx->config_->withVideo) {
-        (void)CommonNapi::GetPropertyInt32(env, item, "videoBitrate", profile.videoBitrate);
         std::string videoCodec = CommonNapi::GetPropertyString(env, item, "videoCodec");
-        (void)AVRecorderNapi::GetVideoCodecFormat(videoCodec, profile.videoCodecFormat);
+        ret = AVRecorderNapi::GetVideoCodecFormat(videoCodec, profile.videoCodecFormat);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK,
+            (asyncCtx->AVRecorderSignError(ret, "GetVideoCodecFormat", "videoCodecFormat"), ret));
+
+        ret = MSERR_INVALID_VAL;
+        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoBitrate", profile.videoBitrate),
+            (asyncCtx->AVRecorderSignError(ret, "GetvideoBitrate", "videoBitrate"), ret));
         CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameWidth", profile.videoFrameWidth),
             (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameWidth", "videoFrameWidth"), ret));
         CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameHeight", profile.videoFrameHeight),
             (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameHeight", "videoFrameHeight"), ret));
-        (void)CommonNapi::GetPropertyInt32(env, item, "videoFrameRate", profile.videoFrameRate);
+        CHECK_AND_RETURN_RET(CommonNapi::GetPropertyInt32(env, item, "videoFrameRate", profile.videoFrameRate),
+            (asyncCtx->AVRecorderSignError(ret, "GetvideoFrameRate", "videoFrameRate"), ret));
+
         MEDIA_LOGI("videoBitrate %{public}d, videoCodecFormat %{public}d, videoFrameWidth %{public}d,"
                    " videoFrameHeight %{public}d, videoFrameRate %{public}d",
                    profile.videoBitrate, profile.videoCodecFormat, profile.videoFrameWidth,
@@ -803,6 +818,9 @@ int32_t AVRecorderNapi::GetConfig(std::unique_ptr<AVRecorderAsyncContext> &async
 
     (void)CommonNapi::GetPropertyInt32(env, args, "rotation", config->rotation);
     MEDIA_LOGI("rotation %{public}d!", config->rotation);
+    CHECK_AND_RETURN_RET((config->rotation == VIDEO_ROTATION_0 || config->rotation == VIDEO_ROTATION_90 ||
+        config->rotation == VIDEO_ROTATION_180 || config->rotation == VIDEO_ROTATION_270),
+        (asyncCtx->AVRecorderSignError(MSERR_INVALID_VAL, "getrotation", "rotation"), MSERR_INVALID_VAL));
 
     napi_value geoLocation = nullptr;
     napi_get_named_property(env, args, "location", &geoLocation);
@@ -878,12 +896,6 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
     recorder_->SetLocation(config->location.latitude, config->location.longitude);
 
     if (config->withVideo) {
-        if (config->rotation != VIDEO_ROTATION_0 &&
-            config->rotation != VIDEO_ROTATION_90 &&
-            config->rotation != VIDEO_ROTATION_180 &&
-            config->rotation != VIDEO_ROTATION_270) {
-            return GetRetInfo(MSERR_INVALID_VAL, "SetOrientationHint", "rotation");
-        }
         recorder_->SetOrientationHint(config->rotation);
     }
 
