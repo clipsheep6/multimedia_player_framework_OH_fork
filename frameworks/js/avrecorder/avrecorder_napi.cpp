@@ -724,7 +724,7 @@ int32_t AVRecorderNapi::GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyn
 
     AVRecorderProfile &profile = asyncCtx->config_->profile;
 
-    int32_t ret;
+    int32_t ret = MSERR_OK;
     if (asyncCtx->config_->withAudio) {
         std::string audioCodec = CommonNapi::GetPropertyString(env, item, "audioCodec");
         ret = AVRecorderNapi::GetAudioCodecFormat(audioCodec, profile.audioCodecFormat);
