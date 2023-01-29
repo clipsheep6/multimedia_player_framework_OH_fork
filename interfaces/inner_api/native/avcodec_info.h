@@ -133,6 +133,7 @@ struct CapabilityData {
     std::vector<int32_t> levels;
     std::map<int32_t, std::vector<int32_t>> profileLevelsMap;
     std::map<ImgSize, Range> measuredFrameRate;
+    bool supportSwapWidthHeight = false;
 };
 
 struct LevelParams {
