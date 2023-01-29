@@ -48,9 +48,9 @@ void WatchDog::DisableWatchDog()
 {
     enable_.store(false);
     pause_.store(false);
-    if (thread_ && thread_->joinable()) {
-        cond_.notify_all();
-        pauseCond_.notify_all();
+    cond_.notify_all();
+    pauseCond_.notify_all();
+    if (thread_ != nullptr && thread_->joinable()) {
         thread_->join();
         thread_.reset();
         thread_ = nullptr;

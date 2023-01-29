@@ -142,6 +142,7 @@ static void gst_consumer_surface_pool_finalize(GObject *obj)
         }
         priv->consumer_surface = nullptr;
     }
+    priv->poolMgr = nullptr;
     g_mutex_clear(&priv->pool_lock);
     g_cond_clear(&priv->buffer_available_con);
     G_OBJECT_CLASS(parent_class)->finalize(obj);

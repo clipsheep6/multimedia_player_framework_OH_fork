@@ -360,6 +360,7 @@ static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *eleme
             break;
         case GST_STATE_CHANGE_READY_TO_NULL:
             src->audio_capture = nullptr;
+            src->audio_mgr = nullptr;
             break;
         default:
             break;
