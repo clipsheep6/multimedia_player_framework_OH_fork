@@ -102,7 +102,15 @@ std::string AVRecorderCallback::GetState()
 void AVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
 {
     MEDIA_LOGI("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
-    SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened");
+    if (errCode == MSERR_DATA_SOURCE_IO_ERROR) {
+        SendErrorCallback(MSERR_EXT_API9_TIMEOUT,
+            "The video input stream timed out. Please confirm that the input stream is normal.");
+    } else if (errCode == MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR) {
+        SendErrorCallback(MSERR_EXT_API9_TIMEOUT,
+            "Read data from audio timeout, please confirm whether the audio module is normal.");
+    } else {
+        SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened.");
+    }
     SendStateCallback(AVRecorderState::STATE_ERROR, StateChangeReason::BACKGROUND);
 }
 
