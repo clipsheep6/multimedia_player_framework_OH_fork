@@ -209,7 +209,7 @@ void PlayerMemManage::FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &a
         if (*iter == playeServerTask) {
             iter = appPlayerInfo.playerServerTaskVec.erase(iter);
             MEDIA_LOGI("Remove PlayerServerTask from vector size:%{public}lu",
-                appPlayerInfo.playerServerTaskVec.size());
+                static_cast<unsigned long>(appPlayerInfo.playerServerTaskVec.size()));
             isFind = true;
             break;
         } else {
@@ -235,13 +235,13 @@ int32_t PlayerMemManage::DeregisterPlayerServer(std::shared_ptr<IPlayerService> 
                 Memory::MemMgrClient::GetInstance().DeregisterActiveApps(pid, uid);
                 pidPlayersInfo.erase(pid);
                 MEDIA_LOGI("DeregisterActiveApps pid:%{public}d uid:%{public}d pidPlayersInfo size:%{public}lu",
-                    pid, uid, pidPlayersInfo.size());
+                    pid, uid, static_cast<unsigned long>(pidPlayersInfo.size()));
                 break;
             }
         }
         if (pidPlayersInfo.size() == 0) {
             playerManage_.erase(uid);
-            MEDIA_LOGI("remove uid:%{public}d playerManage_ size:%{public}lu", uid, playerManage_.size());
+            MEDIA_LOGI("remove uid:%{public}d playerManage_ size:%{public}lu", uid, static_cast<unsigned long>(playerManage_.size()));
             break;
         }
     }
@@ -411,4 +411,4 @@ void PlayerMemManage::HandleOnRemoteDied(const wptr<IRemoteObject> &object)
     }
 }
 }
-}
+}
