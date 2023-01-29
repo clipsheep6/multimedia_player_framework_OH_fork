@@ -488,10 +488,10 @@ void AudioSinkSvImpl::SetAudioDumpBySysParam()
     enableDump_ = false;
     int32_t res = OHOS::system::GetStringParameter("sys.media.dump.audiowrite.enable", dump_enable, "");
     if (res != 0 || dump_enable.empty()) {
-        MEDIA_LOGD("sys.media.dump.audiowrite.enable is not set, dump audio is not required");
+        MEDIA_LOGI("sys.media.dump.audiowrite.enable is not set, dump audio is not required");
         return;
     }
-    MEDIA_LOGD("sys.media.dump.audiowrite.enable=%s", dump_enable.c_str());
+    MEDIA_LOGI("sys.media.dump.audiowrite.enable=%s", dump_enable.c_str());
     if (dump_enable == "true") {
         enableDump_ = true;
     }

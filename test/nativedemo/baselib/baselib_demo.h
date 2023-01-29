@@ -34,17 +34,14 @@ public:
 private:
     void RunMalloc();
     void RunMemset_s();
-    void RunMemset();
     void RunMemcpy_s();
-    void RunMemcpy();
     void RunMultiThreadMem();
     void GenerateRandList(int32_t *r, const int32_t &len, const int32_t &left, const int32_t &right);
     std::unique_ptr<std::thread> memsetsThread_;
-    std::unique_ptr<std::thread> memsetThread_;
     std::unique_ptr<std::thread> memcpysThread_;
-    std::unique_ptr<std::thread> memcpyThread_;
-    int32_t epoch_;
-    int32_t runTimesPerEpoch_;
+    std::unique_ptr<std::thread> mallocThread_;
+    int32_t epoch_ = 2000; // default run 2000 epoch
+    int32_t runTimesPerEpoch_ = 1000; // every epoch run 1000 times base lib function
 };
 }  // namespace Media
 }  // namespace OHOS
