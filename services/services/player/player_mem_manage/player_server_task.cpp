@@ -411,7 +411,7 @@ int32_t PlayerServerTask::SetSource(int32_t fd, int64_t offset, int64_t size)
             return MSERR_INVALID_OPERATION;
         }
     }
-    MEDIA_LOGI("SetSource enter fd:%{public}d, offset:%{public}ld, size:%{public}ld", fd, offset, size);
+    MEDIA_LOGI("SetSource enter fd:%{public}d, offset:%{public}lld, size:%{public}lld", fd, offset, size);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         auto ret = playerServer_->SetSource(fd, offset, size);
         if (ret == MSERR_OK) {
@@ -1162,4 +1162,4 @@ void PlayerServerTask::CheckHasRecover(PlayerOnInfoType type, int32_t extra)
     }
 }
 }
-}
+}
