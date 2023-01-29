@@ -322,6 +322,7 @@ void HdiInit::AddHdiCap(CodecCompCapability &hdiCap)
     codecCap.blockSize = {hdiCap.port.video.blockSize.width, hdiCap.port.video.blockSize.height};
     codecCap.measuredFrameRate = GetMeasuredFrameRate(hdiCap.port.video);
     codecCap.profileLevelsMap = GetCodecProfileLevels(hdiCap);
+    codecCap.supportSwapWidthHeight = hdiCap.canSwapWidthHeight;
     capabilitys_.push_back(codecCap);
 }
 

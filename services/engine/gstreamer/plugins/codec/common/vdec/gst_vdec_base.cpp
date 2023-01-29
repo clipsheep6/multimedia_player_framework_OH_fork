@@ -81,13 +81,13 @@ static guint signals[SIGNAL_LAST] = { 0, };
 
 G_DEFINE_ABSTRACT_TYPE(GstVdecBase, gst_vdec_base, GST_TYPE_VIDEO_DECODER);
 
-static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
+static void gst_vdec_base_class_init(GstVdecBaseClass *kclass)
 {
-    GST_DEBUG_OBJECT(klass, "Class init");
-    g_return_if_fail(klass != nullptr);
-    GObjectClass *gobject_class = G_OBJECT_CLASS(klass);
-    GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
-    GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS(klass);
+    GST_DEBUG_OBJECT(kclass, "Class init");
+    g_return_if_fail(kclass != nullptr);
+    GObjectClass *gobject_class = G_OBJECT_CLASS(kclass);
+    GstElementClass *element_class = GST_ELEMENT_CLASS(kclass);
+    GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS(kclass);
     GST_DEBUG_CATEGORY_INIT (gst_vdec_base_debug_category, "vdecbase", 0, "video decoder base class");
     gobject_class->set_property = gst_vdec_base_set_property;
     gobject_class->finalize = gst_vdec_base_finalize;
@@ -108,11 +108,11 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
     gst_vdec_base_class_install_property(gobject_class);
 
     signals[SIGNAL_CAPS_FIX_ERROR] =
-        g_signal_new ("caps-fix-error", G_TYPE_FROM_CLASS (klass),
+        g_signal_new ("caps-fix-error", G_TYPE_FROM_CLASS (kclass),
         G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0, G_TYPE_NONE);
 
     const gchar *src_caps_string = GST_VIDEO_CAPS_MAKE(GST_VDEC_BASE_SUPPORTED_FORMATS);
-    GST_DEBUG_OBJECT(klass, "Pad template caps %s", src_caps_string);
+    GST_DEBUG_OBJECT(kclass, "Pad template caps %s", src_caps_string);
 
     GstCaps *src_caps = gst_caps_from_string(src_caps_string);
     if (src_caps != nullptr) {
@@ -212,6 +212,16 @@ static void gst_vdec_base_check_input_need_copy(GstVdecBase *self)
     }
 }
 
+static void gst_vdec_base_check_support_swap_width_height(GstVdecBase *self)
+{
+    GstVdecBaseClass *base_class = GST_VDEC_BASE_GET_CLASS(self);
+    g_return_if_fail(base_class != nullptr);
+    GstElementClass *element_class = GST_ELEMENT_CLASS(base_class);
+    if (base_class->support_swap_width_height != nullptr) {
+        self->is_support_swap_width_height = base_class->support_swap_width_height(element_class);
+    }
+}
+
 static void gst_vdec_base_property_init(GstVdecBase *self)
 {
     g_mutex_init(&self->lock);
@@ -249,6 +259,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->input_need_ashmem = FALSE;
     self->has_set_format = FALSE;
     self->player_mode = FALSE;
+    self->is_support_swap_width_height = FALSE;
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -330,6 +341,7 @@ static gboolean gst_vdec_base_open(GstVideoDecoder *decoder)
     self->decoder = base_class->create_codec(reinterpret_cast<GstElementClass*>(base_class));
     g_return_val_if_fail(self->decoder != nullptr, FALSE);
     gst_vdec_base_check_input_need_copy(self);
+    gst_vdec_base_check_support_swap_width_height(self);
     return TRUE;
 }
 
@@ -1404,13 +1416,42 @@ static void gst_vdec_base_loop(GstVdecBase *self)
     gst_vdec_base_pause_loop(self);
 }
 
+static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
+{
+    caps = gst_caps_make_writable(caps);
+    GstStructure *structure = gst_caps_get_structure(caps, 0);
+    g_return_val_if_fail(structure != nullptr, caps);
+    GST_DEBUG_OBJECT(structure, "before swap width and height, caps %" GST_PTR_FORMAT, caps);
+    const GValue *width = gst_structure_get_value(structure, "width");
+    const GValue *height = gst_structure_get_value(structure, "height");
+    GValue temp_width = G_VALUE_INIT;
+    gst_value_init_and_copy (&temp_width, width);
+    width = &temp_width;
+    gst_structure_set_value(structure, "width", height);
+    gst_structure_set_value(structure, "height", width);
+    GST_DEBUG_OBJECT(structure, "after swap width and height, caps %" GST_PTR_FORMAT, caps);
+    return caps;
+}
+
 static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
 {
     GstCaps *templ_caps = gst_pad_get_pad_template_caps(GST_VIDEO_DECODER_SRC_PAD(self));
     g_return_val_if_fail(templ_caps != nullptr, FALSE);
     ON_SCOPE_EXIT(0) { gst_caps_unref(templ_caps); };
     GstCaps *pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
+    gboolean is_caps_valid = TRUE;
     if (gst_caps_is_empty(pool_caps)) {
+        is_caps_valid = FALSE;
+        if (self->is_support_swap_width_height) {
+            templ_caps = gst_vdec_swap_width_height(templ_caps);
+            gst_caps_unref(pool_caps);
+            pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
+            if (!gst_caps_is_empty(pool_caps)) {
+                is_caps_valid = TRUE;
+            }
+        }
+    }
+    if (!is_caps_valid) {
         gst_caps_unref(pool_caps);
         GST_ERROR_OBJECT(self, "pool caps is null with sink caps%" GST_PTR_FORMAT, self->sink_caps);
         return FALSE;
