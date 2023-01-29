@@ -164,8 +164,8 @@ private:
     bool errorCbOnce_ = false;
     bool disableStoppedCb_ = false;
     bool isStateChangedBySystem_ = false;
-    int32_t contentType_ = 0;
-    int32_t streamUsage_ = 0;
+    int32_t contentType_ = 2;
+    int32_t streamUsage_ = 1;
     int32_t rendererFlag_ = 0;
     std::string lastErrMsg_;
     int32_t appUid_ = 0;
