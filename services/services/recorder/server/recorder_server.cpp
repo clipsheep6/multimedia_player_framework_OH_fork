@@ -707,7 +707,7 @@ void RecorderServer::WatchDog()
 {
     static constexpr uint8_t timeInterval = 1; // Detect once per second
     static constexpr uint8_t maxTimes = 3; // Maximum number of unanswered
-
+    pthread_setname_np(pthread_self(), "RecWatchDog");
     while (true) {
         std::unique_lock<std::mutex> lockWatchDog(watchDogMutex_);
         watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] {

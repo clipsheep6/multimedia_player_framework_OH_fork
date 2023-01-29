@@ -202,6 +202,7 @@ int32_t AudioCaptureAsImpl::AudioCaptureLoop()
 void AudioCaptureAsImpl::GetAudioCaptureBuffer()
 {
     MEDIA_LOGD("GetAudioCaptureBuffer");
+    pthread_setname_np(pthread_self(), "AudioCapture");
     while (true) {
         {
             std::unique_lock<std::mutex> lock(pauseMutex_);

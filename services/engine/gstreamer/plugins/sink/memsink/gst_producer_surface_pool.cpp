@@ -402,6 +402,8 @@ static void gst_producer_surface_pool_request_loop(GstProducerSurfacePool *spool
     GstBufferPool *pool = GST_BUFFER_POOL_CAST(spool);
     GST_DEBUG_OBJECT(spool, "Loop In");
 
+    pthread_setname_np(pthread_self(), "SurfacePool");
+
     GST_BUFFER_POOL_LOCK(spool);
     gst_producer_surface_pool_statistics(spool);
 
@@ -544,6 +546,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
     g_return_val_if_fail(spool != nullptr, GST_FLOW_ERROR);
 
     GST_DEBUG_OBJECT(spool, "alloc surface buffer");
+    OHOS::Media::MediaTrace trace("Gst::surface_pool_alloc_buffer");
 
     GstSurfaceMemory *memory = nullptr;
     GstFlowReturn ret = do_alloc_memory_locked(spool, params, &memory);
