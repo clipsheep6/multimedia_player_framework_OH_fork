@@ -465,7 +465,7 @@ int32_t PlayerServer::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     {
-        std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
+        std::lock_guard<std::mutex> lockCb(mutexCb_);
         playerCb_ = nullptr;
     }
     MEDIA_LOGD("PlayerServer Release in");
@@ -906,22 +906,9 @@ int32_t PlayerServer::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &c
     }
 
     {
-        std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
+        std::lock_guard<std::mutex> lockCb(mutexCb_);
         playerCb_ = callback;
     }
-    return MSERR_OK;
-}
-
-void PlayerServer::SetPlayerCallbackInner(const std::shared_ptr<PlayerCallback> &callback)
-{
-    std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
-    playerCb_ = callback;
-}
-
-int32_t PlayerServer::SetObs(const std::weak_ptr<IPlayerEngineObs> &obs)
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    obs_ = obs;
     return MSERR_OK;
 }
 
@@ -979,7 +966,7 @@ void PlayerServer::OnError(PlayerErrorType errorType, int32_t errorCode)
 
 void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg)
 {
-    std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
     lastErrMsg_ = errorMsg;
     FaultEventWrite(lastErrMsg_, "Player");
     if (playerCb_ != nullptr && !errorCbOnce_) {
@@ -990,7 +977,7 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
 
 void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
 
     if (type == INFO_TYPE_STATE_CHANGE_BY_AUDIO && extra == PLAYER_PAUSED && lastOpStatus_ == PLAYER_STARTED) {
         isStateChangedBySystem_ = true;
@@ -1001,16 +988,12 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
             MEDIA_LOGD("OnInfo user type:%{public}d, extra:%{public}d", type, extra);
             playerCb_->OnInfo(type, extra, infoBody);
         }
-        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
-        if (notifyObs != nullptr) {
-            notifyObs->OnInfo(type, extra, infoBody);
-        }
     }
 }
 
 void PlayerServer::OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
+    std::lock_guard<std::mutex> lockCb(mutexCb_);
 
     if (playerCb_ != nullptr) {
         playerCb_->OnInfo(type, extra, infoBody);
@@ -1070,6 +1053,49 @@ std::shared_ptr<PlayerServerState> PlayerServerStateMachine::GetCurrState()
 {
     std::unique_lock<std::recursive_mutex> lock(recMutex_);
     return currState_;
+}
+
+int32_t PlayerServer::SetSourceInternal()
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetConfigInternal()
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetBehaviorInternal()
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetPlaybackSpeedInternal()
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::GetInformationBeforeMemReset()
+{
+    return MSERR_OK;
+}
+
+void PlayerServer::RecoverToInitialized(PlayerOnInfoType type, int32_t extra)
+{
+    (void)type;
+    (void)extra;
+}
+
+void PlayerServer::RecoverToPrepared(PlayerOnInfoType type, int32_t extra)
+{
+    (void)type;
+    (void)extra;
+}
+
+void PlayerServer::RecoverToCompleted(PlayerOnInfoType type, int32_t extra)
+{
+    (void)type;
+    (void)extra;
 }
 } // namespace Media
 } // namespace OHOS
