@@ -27,6 +27,7 @@ namespace Media {
 class __attribute__((visibility("default"))) WatchDog {
 public:
     WatchDog() = default;
+    WatchDog(uint32_t timeoutMs) : timeoutMs_(timeoutMs) {};
     ~WatchDog();
 
     bool IsWatchDogEnable();
