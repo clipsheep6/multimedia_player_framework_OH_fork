@@ -386,6 +386,7 @@ static GstFlowReturn gst_video_capture_src_fill(GstBaseSrc *src, guint64 offset,
         GST_ELEMENT_ERROR (src, STREAM, FAILED, ("Data width or height error on input stream."),
             ("Data width or height error on input stream. Input data width=%d, height=%d. Set width=%d, height=%d."
             meta->width, meta->height, capturesrc->video_width, capturesrc->video_height));
+        return GST_FLOW_ERROR;
     }
 
     if (gst_buffer_get_size(buf) < capturesrc->min_buffer_size) {
