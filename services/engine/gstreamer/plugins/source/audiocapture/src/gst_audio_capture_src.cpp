@@ -390,7 +390,7 @@ static GstFlowReturn gst_audio_capture_src_create(GstPushSrc *psrc, GstBuffer **
         src->audio_mgr->ResumeWatchDog();
     }
     std::shared_ptr<AudioBuffer> audio_buffer = src->audio_capture->GetBuffer();
-    if (src->input_detection) {
+    if (src->input_detection && src->audio_mgr != nullptr) {
         src->audio_mgr->PauseWatchDog();
     }
     if (audio_buffer == nullptr) {
