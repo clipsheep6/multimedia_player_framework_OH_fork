@@ -19,13 +19,12 @@
 #include "mem_mgr_client.h"
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerMemManage"};
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerMemManage"};
 }
 
 namespace OHOS {
 namespace Media {
 constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 30.0;
-constexpr int32_t PLAYER_CHECK_NOT_PLAYING_MAX_CNT = 5;
 constexpr int32_t RESERVE_BACK_GROUND_APP_NUM = 1;
 PlayerMemManage& PlayerMemManage::GetInstance()
 {
@@ -53,16 +52,7 @@ PlayerMemManage::~PlayerMemManage()
 
 void PlayerMemManage::FindProbeTaskPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
-    for (auto iter = appPlayerInfo.playerServerTaskVec.begin();
-        iter != appPlayerInfo.playerServerTaskVec.end(); iter++) {
-        if (std::static_pointer_cast<PlayerServerTask>(*iter)->GetReleaseMemByManage()) {
-            continue;
-        }
-        if ((*iter)->IsPlaying()) {
-            std::static_pointer_cast<PlayerServerTask>(*iter)->SetContinuousNotPlayingCntZero();
-            continue;
-        }
-
+    for (auto iter = appPlayerInfo.memRecallVec.begin(); iter != appPlayerInfo.memRecallVec.end(); iter++) {
         std::chrono::duration<double> durationCost = std::chrono::duration_cast<
             std::chrono::duration<double>>(std::chrono::steady_clock::now() -
             appPlayerInfo.appEnterBackTime);
@@ -70,21 +60,8 @@ void PlayerMemManage::FindProbeTaskPlayerFromVec(AppPlayerInfo &appPlayerInfo)
             continue;
         }
 
-        if (std::static_pointer_cast<PlayerServerTask>(*iter)->GetContinuousNotPlayingCnt() <
-            PLAYER_CHECK_NOT_PLAYING_MAX_CNT) {
-            std::static_pointer_cast<PlayerServerTask>(*iter)->ContinuousNotPlayingCntAdd();
-            continue;
-        } else {
-            MEDIA_LOGI("Cost duration:%{public}f seconds, and set cnt zero", durationCost.count());
-            std::static_pointer_cast<PlayerServerTask>(*iter)->SetContinuousNotPlayingCntZero();
-        }
-        auto ret = std::static_pointer_cast<PlayerServerTask>(*iter)->ReleaseMemByManage();
-        if (ret != MSERR_OK) {
-            DeregisterPlayerServer(*iter);
-            MEDIA_LOGE("FindProbeTaskPlayerFromVec ReleaseMemByManage fail");
-            return;
-        }
-        MEDIA_LOGI("FindProbeTaskPlayerFromVec ReleaseMemByManage success");
+        (*iter)(static_cast<int32_t>(MemManageRecallType::TICK_TRIGGER_RECALL_TYPE), 0);
+        MEDIA_LOGI("call MemManageRecall success");
     }
 }
 
@@ -167,11 +144,10 @@ bool PlayerMemManage::Init()
     return true;
 }
 
-int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid,
-    std::shared_ptr<IPlayerService> playeServerTask)
+int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, MemManageRecall memRecall)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (playeServerTask == nullptr) {
+    if (memRecall == nullptr) {
         MEDIA_LOGE("input param invalid");
         return MSERR_INVALID_VAL;
     }
@@ -188,7 +164,7 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid,
     auto pidIter = pidPlayersInfo.find(pid);
     if (pidIter == pidPlayersInfo.end()) {
         MEDIA_LOGI("new app in pid:%{public}d", pid);
-        auto ret = pidPlayersInfo.emplace(pid, AppPlayerInfo {std::vector<std::shared_ptr<IPlayerService>>(),
+        auto ret = pidPlayersInfo.emplace(pid, AppPlayerInfo {std::vector<MemManageRecall>(),
             static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND), false,
             std::chrono::steady_clock::now(), std::chrono::steady_clock::now()});
         Memory::MemMgrClient::GetInstance().RegisterActiveApps(pid, uid);
@@ -196,20 +172,20 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid,
     }
 
     auto &appPlayerInfo = pidIter->second;
-    appPlayerInfo.playerServerTaskVec.push_back(playeServerTask);
+    appPlayerInfo.memRecallVec.push_back(memRecall);
 
     return MSERR_OK;
 }
 
 void PlayerMemManage::FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &appPlayerInfo,
-    std::shared_ptr<IPlayerService> playeServerTask)
+    MemManageRecall memRecall)
 {
-    for (auto iter = appPlayerInfo.playerServerTaskVec.begin();
-        iter != appPlayerInfo.playerServerTaskVec.end();) {
-        if (*iter == playeServerTask) {
-            iter = appPlayerInfo.playerServerTaskVec.erase(iter);
+    for (auto iter = appPlayerInfo.memRecallVec.begin();
+        iter != appPlayerInfo.memRecallVec.end();) {
+        if (*iter == memRecall) {
+            iter = appPlayerInfo.memRecallVec.erase(iter);
             MEDIA_LOGI("Remove PlayerServerTask from vector size:%{public}lu",
-                appPlayerInfo.playerServerTaskVec.size());
+                appPlayerInfo.memRecallVec.size());
             isFind = true;
             break;
         } else {
@@ -218,10 +194,10 @@ void PlayerMemManage::FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &a
     }
 }
 
-int32_t PlayerMemManage::DeregisterPlayerServer(std::shared_ptr<IPlayerService> playeServerTask)
+int32_t PlayerMemManage::DeregisterPlayerServer(MemManageRecall memRecall)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (playeServerTask == nullptr) {
+    if (memRecall == nullptr) {
         MEDIA_LOGE("input param invalid");
         return MSERR_INVALID_VAL;
     }
@@ -230,8 +206,8 @@ int32_t PlayerMemManage::DeregisterPlayerServer(std::shared_ptr<IPlayerService> 
     bool isFind = false;
     for (auto &[uid, pidPlayersInfo] : playerManage_) {
         for (auto &[pid, appPlayerInfo] : pidPlayersInfo) {
-            FindDeregisterPlayerFromVec(isFind, appPlayerInfo, playeServerTask);
-            if (appPlayerInfo.playerServerTaskVec.size() == 0) {
+            FindDeregisterPlayerFromVec(isFind, appPlayerInfo, memRecall);
+            if (appPlayerInfo.memRecallVec.size() == 0) {
                 Memory::MemMgrClient::GetInstance().DeregisterActiveApps(pid, uid);
                 pidPlayersInfo.erase(pid);
                 MEDIA_LOGI("DeregisterActiveApps pid:%{public}d uid:%{public}d pidPlayersInfo size:%{public}lu",
@@ -247,7 +223,7 @@ int32_t PlayerMemManage::DeregisterPlayerServer(std::shared_ptr<IPlayerService> 
     }
 
     if (!isFind) {
-        MEDIA_LOGW("Not find playeServerTask, maybe already deregister");
+        MEDIA_LOGW("Not find memRecall, maybe already deregister");
         return MSERR_INVALID_OPERATION;
     }
 
@@ -272,30 +248,13 @@ int32_t PlayerMemManage::HandleForceReclaim(int32_t uid, int32_t pid)
                 MEDIA_LOGE("HandleForceReclaim appState not allow");
                 return MSERR_INVALID_OPERATION;
             }
-            FindPlayerFromVec(appPlayerInfo);
+            for (auto iter = appPlayerInfo.memRecallVec.begin(); iter != appPlayerInfo.memRecallVec.end(); iter++) {
+                (*iter)(static_cast<int32_t>(MemManageRecallType::FORCE_RECLAIM_RECALL_TYPE), 0);
+                MEDIA_LOGI("call MemManageRecall success");
+            }
         }
     }
     return MSERR_OK;
-}
-
-void PlayerMemManage::FindPlayerFromVec(AppPlayerInfo &appPlayerInfo)
-{
-    for (auto iter = appPlayerInfo.playerServerTaskVec.begin();
-        iter != appPlayerInfo.playerServerTaskVec.end(); iter++) {
-        if (std::static_pointer_cast<PlayerServerTask>(*iter)->GetReleaseMemByManage() ||
-            std::static_pointer_cast<PlayerServerTask>(*iter)->IsAudioPlayer() ||
-            (*iter)->IsPlaying()) {
-            continue;
-        }
-
-        auto ret = std::static_pointer_cast<PlayerServerTask>(*iter)->ReleaseMemByManage();
-        if (ret != MSERR_OK) {
-            DeregisterPlayerServer(*iter);
-            MEDIA_LOGE("FindPlayerFromVec ReleaseMemByManage fail");
-            return;
-        }
-        MEDIA_LOGI("FindPlayerFromVec ReleaseMemByManage success");
-    }
 }
 
 void PlayerMemManage::HandleOnTrimLevelLow()
@@ -306,7 +265,11 @@ void PlayerMemManage::HandleOnTrimLevelLow()
                 continue;
             }
 
-            FindPlayerFromVec(appPlayerInfo);
+            for (auto iter = appPlayerInfo.memRecallVec.begin(); iter != appPlayerInfo.memRecallVec.end(); iter++) {
+                (*iter)(static_cast<int32_t>(MemManageRecallType::ON_TRIM_RECALL_TYPE),
+                    Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW);
+                MEDIA_LOGI("call MemManageRecall success");
+            }
         }
     }
 }

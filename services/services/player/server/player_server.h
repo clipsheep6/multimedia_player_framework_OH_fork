@@ -73,46 +73,44 @@ public:
     PlayerServer();
     virtual ~PlayerServer();
 
-    int32_t SetSource(const std::string &url) override;
-    int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
-    int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
-    int32_t Play() override;
-    int32_t Prepare() override;
-    int32_t PrepareAsync() override;
-    int32_t Pause() override;
-    int32_t Stop() override;
-    int32_t Reset() override;
-    int32_t Release() override;
-    int32_t ReleaseSync() override;
-    int32_t SetVolume(float leftVolume, float rightVolume) override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
-    int32_t GetCurrentTime(int32_t &currentTime) override;
-    int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
-    int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
-    int32_t GetVideoWidth() override;
-    int32_t GetVideoHeight() override;
-    int32_t GetDuration(int32_t &duration) override;
-    int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
-    int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
+    virtual int32_t SetSource(const std::string &url) override;
+    virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
+    virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
+    virtual int32_t Play() override;
+    virtual int32_t Prepare() override;
+    virtual int32_t PrepareAsync() override;
+    virtual int32_t Pause() override;
+    virtual int32_t Stop() override;
+    virtual int32_t Reset() override;
+    virtual int32_t Release() override;
+    virtual int32_t ReleaseSync() override;
+    virtual int32_t SetVolume(float leftVolume, float rightVolume) override;
+    virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    virtual int32_t GetCurrentTime(int32_t &currentTime) override;
+    virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+    virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
+    virtual int32_t GetVideoWidth() override;
+    virtual int32_t GetVideoHeight() override;
+    virtual int32_t GetDuration(int32_t &duration) override;
+    virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
 #ifdef SUPPORT_VIDEO
-    int32_t SetVideoSurface(sptr<Surface> surface) override;
+    virtual int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
-    bool IsPlaying() override;
-    bool IsLooping() override;
-    int32_t SetLooping(bool loop) override;
-    int32_t SetParameter(const Format &param) override;
-    int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
-    void SetPlayerCallbackInner(const std::shared_ptr<PlayerCallback> &callback);
-    int32_t SetObs(const std::weak_ptr<IPlayerEngineObs> &obs);
-    int32_t DumpInfo(int32_t fd);
-    int32_t SelectBitRate(uint32_t bitRate) override;
+    virtual bool IsPlaying() override;
+    virtual bool IsLooping() override;
+    virtual int32_t SetLooping(bool loop) override;
+    virtual int32_t SetParameter(const Format &param) override;
+    virtual int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
+    virtual int32_t DumpInfo(int32_t fd);
+    virtual int32_t SelectBitRate(uint32_t bitRate) override;
 
     // IPlayerEngineObs override
-    void OnError(PlayerErrorType errorType, int32_t errorCode) override;
-    void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
-    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    virtual void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    virtual void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
+    virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
-private:
+protected:
     class BaseState;
     class IdleState;
     class InitializedState;
@@ -122,16 +120,35 @@ private:
     class PausedState;
     class StoppedState;
     class PlaybackCompletedState;
+    std::shared_ptr<IdleState> idleState_;
+    std::shared_ptr<InitializedState> initializedState_;
+    std::shared_ptr<PreparingState> preparingState_;
+    std::shared_ptr<PreparedState> preparedState_;
+    std::shared_ptr<PlayingState> playingState_;
+    std::shared_ptr<PausedState> pausedState_;
+    std::shared_ptr<StoppedState> stoppedState_;
+    std::shared_ptr<PlaybackCompletedState> playbackCompletedState_;
 
-    int32_t Init();
+    virtual int32_t Init();
+    virtual int32_t SetSourceInternal();
+    virtual int32_t SetConfigInternal();
+    virtual int32_t SetBehaviorInternal();
+    virtual int32_t SetPlaybackSpeedInternal();
+    virtual int32_t GetInformationBeforeMemReset();
+    virtual void RecoverToInitialized(PlayerOnInfoType type, int32_t extra);
+    virtual void RecoverToPrepared(PlayerOnInfoType type, int32_t extra);
+    virtual void RecoverToCompleted(PlayerOnInfoType type, int32_t extra);
+
+    std::recursive_mutex recMutex_;
+    std::recursive_mutex recMutexCb_;
+    int32_t appUid_ = 0;
+    int32_t appPid_ = 0;
+    std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
+
+private:
     bool IsValidSeekMode(PlayerSeekMode mode);
     bool IsEngineStarted();
     int32_t InitPlayEngine(const std::string &url);
-    int32_t OnPrepare(bool sync);
-    int32_t OnPlay();
-    int32_t OnPause();
-    int32_t OnStop(bool sync);
-    int32_t OnReset();
     int32_t HandlePrepare();
     int32_t HandlePlay();
     int32_t HandlePause();
@@ -140,20 +157,21 @@ private:
     int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
     void HandleEos();
-    void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     const std::string &GetStatusDescription(int32_t status);
+    int32_t OnPrepare(bool sync);
+    int32_t OnPlay();
+    int32_t OnPause();
+    int32_t OnStop(bool sync);
+    int32_t OnReset();
+    
+    void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {});
 
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
-    std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
-    std::weak_ptr<IPlayerEngineObs> obs_;
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
 #endif
-    PlayerStates lastOpStatus_ = PLAYER_IDLE;
-    PlayerServerTaskMgr taskMgr_;
-    std::mutex mutex_;
-    std::recursive_mutex recMutexCb_;
+
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
     std::unique_ptr<UriHelper> uriHelper_;
     struct ConfigInfo {
@@ -163,25 +181,17 @@ private:
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
         std::string url;
     } config_;
+    
     bool disableNextSeekDone_ = false;
-    bool errorCbOnce_ = false;
     bool disableStoppedCb_ = false;
+    PlayerStates lastOpStatus_ = PLAYER_IDLE;
+    PlayerServerTaskMgr taskMgr_;
+    bool errorCbOnce_ = false;
     bool isStateChangedBySystem_ = false;
     int32_t contentType_ = 0;
     int32_t streamUsage_ = 0;
     int32_t rendererFlag_ = 0;
     std::string lastErrMsg_;
-    int32_t appUid_ = 0;
-    int32_t appPid_ = 0;
-
-    std::shared_ptr<IdleState> idleState_;
-    std::shared_ptr<InitializedState> initializedState_;
-    std::shared_ptr<PreparingState> preparingState_;
-    std::shared_ptr<PreparedState> preparedState_;
-    std::shared_ptr<PlayingState> playingState_;
-    std::shared_ptr<PausedState> pausedState_;
-    std::shared_ptr<StoppedState> stoppedState_;
-    std::shared_ptr<PlaybackCompletedState> playbackCompletedState_;
 };
 } // namespace Media
 } // namespace OHOS

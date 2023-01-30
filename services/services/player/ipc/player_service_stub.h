@@ -21,7 +21,6 @@
 #include "i_standard_player_listener.h"
 #include "media_death_recipient.h"
 #include "player_server.h"
-#include "player_server_task.h"
 
 namespace OHOS {
 namespace Media {
@@ -30,44 +29,52 @@ public:
     static sptr<PlayerServiceStub> Create();
     virtual ~PlayerServiceStub();
 
-    int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
-    int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
-    int32_t SetSource(const std::string &url) override;
-    int32_t SetSource(const sptr<IRemoteObject> &object) override;
-    int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
-    int32_t Play() override;
-    int32_t Prepare() override;
-    int32_t PrepareAsync() override;
-    int32_t Pause() override;
-    int32_t Stop() override;
-    int32_t Reset() override;
-    int32_t Release() override;
-    int32_t ReleaseSync() override;
-    int32_t SetVolume(float leftVolume, float rightVolume) override;
-    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
-    int32_t GetCurrentTime(int32_t &currentTime) override;
-    int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
-    int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
-    int32_t GetVideoWidth() override;
-    int32_t GetVideoHeight() override;
-    int32_t GetDuration(int32_t &duration) override;
-    int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
-    int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
+    virtual int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
+    virtual int32_t SetSource(const std::string &url) override;
+    virtual int32_t SetSource(const sptr<IRemoteObject> &object) override;
+    virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
+    virtual int32_t Play() override;
+    virtual int32_t Prepare() override;
+    virtual int32_t PrepareAsync() override;
+    virtual int32_t Pause() override;
+    virtual int32_t Stop() override;
+    virtual int32_t Reset() override;
+    virtual int32_t Release() override;
+    virtual int32_t ReleaseSync() override;
+    virtual int32_t SetVolume(float leftVolume, float rightVolume) override;
+    virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    virtual int32_t GetCurrentTime(int32_t &currentTime) override;
+    virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+    virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
+    virtual int32_t GetVideoWidth() override;
+    virtual int32_t GetVideoHeight() override;
+    virtual int32_t GetDuration(int32_t &duration) override;
+    virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
 #ifdef SUPPORT_VIDEO
-    int32_t SetVideoSurface(sptr<Surface> surface) override;
+    virtual int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
-    bool IsPlaying() override;
-    bool IsLooping() override;
-    int32_t SetLooping(bool loop) override;
-    int32_t SetParameter(const Format &param) override;
-    int32_t DestroyStub() override;
-    int32_t SetPlayerCallback() override;
-    int32_t DumpInfo(int32_t fd);
-    int32_t SelectBitRate(uint32_t bitRate) override;
+    virtual bool IsPlaying() override;
+    virtual bool IsLooping() override;
+    virtual int32_t SetLooping(bool loop) override;
+    virtual int32_t SetParameter(const Format &param) override;
+    virtual int32_t DestroyStub() override;
+    virtual int32_t SetPlayerCallback() override;
+    virtual int32_t DumpInfo(int32_t fd);
+    virtual int32_t SelectBitRate(uint32_t bitRate) override;
+
+protected:
+    virtual int32_t Init();
+    virtual void SetPlayerFuncs();
+
+    TaskQueue taskQue_;
+    std::shared_ptr<IPlayerService> playerServer_ = nullptr;
+    std::shared_ptr<PlayerCallback> playerCallback_ = nullptr;
 
 private:
     PlayerServiceStub();
-    int32_t Init();
+
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
     int32_t SetSource(MessageParcel &data, MessageParcel &reply);
     int32_t SetMediaDataSource(MessageParcel &data, MessageParcel &reply);
@@ -101,11 +108,8 @@ private:
     int32_t SelectBitRate(MessageParcel &data, MessageParcel &reply);
 
     std::mutex mutex_;
-    std::shared_ptr<PlayerCallback> playerCallback_ = nullptr;
-    std::shared_ptr<IPlayerService> playerServerTask_ = nullptr;
     using PlayerStubFunc = int32_t(PlayerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, std::pair<PlayerStubFunc, std::string>> playerFuncs_;
-    TaskQueue taskQue_;
 };
 } // namespace Media
 } // namespace OHOS

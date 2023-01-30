@@ -20,19 +20,23 @@
 #include <unordered_map>
 #include <chrono>
 #include "task_queue.h"
-#include "i_player_service.h"
 #include "app_state_listener.h"
-#include "player_server_task.h"
 
 namespace OHOS {
 namespace Media {
+using MemManageRecall = std::function<void(int32_t, int32_t)>;
+class enum MemManageRecallType : int32_t {
+    FORCE_RECLAIM_RECALL_TYPE,
+    ON_TRIM_RECALL_TYPE,
+    TICK_TRIGGER_RECALL_TYPE,
+};
 class PlayerMemManage {
 public:
     ~PlayerMemManage();
 
     static PlayerMemManage& GetInstance();
-    int32_t RegisterPlayerServer(int32_t uid, int32_t pid, std::shared_ptr<IPlayerService> playeServerTask);
-    int32_t DeregisterPlayerServer(std::shared_ptr<IPlayerService> playeServerTask);
+    int32_t RegisterPlayerServer(int32_t uid, int32_t pid, MemManageRecall memRecall);
+    int32_t DeregisterPlayerServer(MemManageRecall memRecall);
     int32_t HandleForceReclaim(int32_t uid, int32_t pid);
     int32_t HandleOnTrim(Memory::SystemMemoryLevel level);
     int32_t RecordAppState(int32_t uid, int32_t pid, int32_t state);
@@ -42,7 +46,7 @@ public:
 
 private:
     struct AppPlayerInfo {
-        std::vector<std::shared_ptr<IPlayerService>> playerServerTaskVec;
+        std::vector<MemManageRecall> memRecallVec;
         int32_t appState;
         bool isReserve;
         std::chrono::steady_clock::time_point appEnterFrontTime;
@@ -54,9 +58,7 @@ private:
     void HandleOnTrimLevelLow();
     void FindProbeTaskPlayerFromVec(AppPlayerInfo &appPlayerInfo);
     void FindProbeTaskPlayer();
-    void FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &appPlayerInfo,
-        std::shared_ptr<IPlayerService> playeServerTask);
-    void FindPlayerFromVec(AppPlayerInfo &appPlayerInfo);
+    void FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &appPlayerInfo, MemManageRecall memRecall);
     void SetAppPlayerInfo(AppPlayerInfo &appPlayerInfo, int32_t state);
     void SetLastestExitBackGroundApp();
     static bool BackGroundTimeGreaterSort(AppPlayerInfo *a, AppPlayerInfo *b);

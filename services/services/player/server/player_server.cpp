@@ -55,7 +55,7 @@ private:
     VideoPlayerManager() = default;
     ~VideoPlayerManager() = default;
     std::unordered_set<PlayerServer *> videoPlayerList;
-    std::mutex mutex_;
+    std::recursive_mutex recMutex_;
 };
 
 VideoPlayerManager &VideoPlayerManager::GetInstance()
@@ -66,7 +66,7 @@ VideoPlayerManager &VideoPlayerManager::GetInstance()
 
 int32_t VideoPlayerManager::RegisterVideoPlayer(PlayerServer *player)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     if (videoPlayerList.find(player) != videoPlayerList.end()) {
         return MSERR_OK;
     }
@@ -78,7 +78,7 @@ int32_t VideoPlayerManager::RegisterVideoPlayer(PlayerServer *player)
 
 void VideoPlayerManager::UnRegisterVideoPlayer(PlayerServer *player)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     if (videoPlayerList.erase(player) == 0) {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Not in videoPlayer list", FAKE_POINTER(player));
     }
@@ -128,7 +128,7 @@ int32_t PlayerServer::Init()
 
 int32_t PlayerServer::SetSource(const std::string &url)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MediaTrace trace("PlayerServer::SetSource url");
     MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(url)");
     config_.url = url;
@@ -139,7 +139,7 @@ int32_t PlayerServer::SetSource(const std::string &url)
 
 int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MediaTrace trace("PlayerServer::SetSource dataSrc");
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
     MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(dataSrc)");
@@ -159,7 +159,7 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
 
 int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MediaTrace trace("PlayerServer::SetSource fd");
     MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(fd)");
     auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
@@ -209,7 +209,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
 
 int32_t PlayerServer::Prepare()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGD("KPI-TRACE: PlayerServer Prepare in");
 
     if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
@@ -222,7 +222,7 @@ int32_t PlayerServer::Prepare()
 
 int32_t PlayerServer::PrepareAsync()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGD("KPI-TRACE: PlayerServer PrepareAsync in");
 
     if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
@@ -288,7 +288,7 @@ int32_t PlayerServer::HandlePrepare()
 
 int32_t PlayerServer::Play()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGD("PlayerServer Play in");
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE ||
         lastOpStatus_ == PLAYER_PAUSED) {
@@ -334,7 +334,7 @@ int32_t PlayerServer::HandlePlay()
 
 int32_t PlayerServer::Pause()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("PlayerServer Pause in");
 
     if (lastOpStatus_ == PLAYER_STARTED) {
@@ -373,7 +373,7 @@ int32_t PlayerServer::HandlePause()
 
 int32_t PlayerServer::Stop()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
 
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED) {
@@ -415,7 +415,7 @@ int32_t PlayerServer::HandleStop()
 
 int32_t PlayerServer::Reset()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MediaTrace trace("PlayerServer::Reset");
     if (lastOpStatus_ == PLAYER_IDLE) {
         MEDIA_LOGE("Can not Reset, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
@@ -463,7 +463,7 @@ int32_t PlayerServer::HandleReset()
 
 int32_t PlayerServer::Release()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     {
         std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
         playerCb_ = nullptr;
@@ -487,7 +487,7 @@ int32_t PlayerServer::ReleaseSync()
 
 int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     if (lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not SetVolume, currentState is PLAYER_STATE_ERROR");
         return MSERR_INVALID_OPERATION;
@@ -545,7 +545,7 @@ bool PlayerServer::IsValidSeekMode(PlayerSeekMode mode)
 
 int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED && lastOpStatus_ != PLAYER_STARTED) {
@@ -597,7 +597,7 @@ int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
 
 int32_t PlayerServer::GetCurrentTime(int32_t &currentTime)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
 
     currentTime = -1;
     if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_STATE_ERROR) {
@@ -623,7 +623,7 @@ int32_t PlayerServer::GetCurrentTime(int32_t &currentTime)
 
 int32_t PlayerServer::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
@@ -640,7 +640,7 @@ int32_t PlayerServer::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 
 int32_t PlayerServer::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
@@ -657,7 +657,7 @@ int32_t PlayerServer::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 
 int32_t PlayerServer::GetVideoWidth()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
@@ -672,7 +672,7 @@ int32_t PlayerServer::GetVideoWidth()
 
 int32_t PlayerServer::GetVideoHeight()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
@@ -687,7 +687,7 @@ int32_t PlayerServer::GetVideoHeight()
 
 int32_t PlayerServer::GetDuration(int32_t &duration)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
 
     if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not GetDuration, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
@@ -706,7 +706,7 @@ int32_t PlayerServer::GetDuration(int32_t &duration)
 
 int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
 
     if ((lastOpStatus_ != PLAYER_STARTED) && (lastOpStatus_ != PLAYER_PREPARED) &&
         (lastOpStatus_ != PLAYER_PAUSED) && (lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE)) {
@@ -784,7 +784,7 @@ void PlayerServer::HandleEos()
 
 int32_t PlayerServer::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
 
     if (lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not GetDuration, currentState is PLAYER_STATE_ERROR");
@@ -798,7 +798,7 @@ int32_t PlayerServer::GetPlaybackSpeed(PlaybackRateMode &mode)
 
 int32_t PlayerServer::SelectBitRate(uint32_t bitRate)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::recursive_mutex> lock(recMutex_);
     if (playerEngine_ != nullptr) {
         int ret = playerEngine_->SelectBitRate(bitRate);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SelectBitRate Failed!");
@@ -809,7 +809,7 @@ int32_t PlayerServer::SelectBitRate(uint32_t bitRate)
 #ifdef SUPPORT_VIDEO
 int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     CHECK_AND_RETURN_RET_LOG(VideoPlayerManager::GetInstance().RegisterVideoPlayer(this) == MSERR_OK,
         MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR, "video player is no more than 13");
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
@@ -826,7 +826,7 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 
 bool PlayerServer::IsPlaying()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     if (lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not judge IsPlaying, currentState is PLAYER_STATE_ERROR");
         return false;
@@ -837,7 +837,7 @@ bool PlayerServer::IsPlaying()
 
 bool PlayerServer::IsLooping()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     if (lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not judge IsLooping, currentState is PLAYER_STATE_ERROR");
         return false;
@@ -848,7 +848,7 @@ bool PlayerServer::IsLooping()
 
 int32_t PlayerServer::SetLooping(bool loop)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     if (lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not SetLooping, currentState is PLAYER_STATE_ERROR");
         return MSERR_INVALID_OPERATION;
@@ -880,7 +880,7 @@ int32_t PlayerServer::SetLooping(bool loop)
 
 int32_t PlayerServer::SetParameter(const Format &param)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     if (lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not SetParameter, currentState is PLAYER_STATE_ERROR");
         return MSERR_INVALID_OPERATION;
@@ -902,7 +902,7 @@ int32_t PlayerServer::SetParameter(const Format &param)
 
 int32_t PlayerServer::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
 
     if (lastOpStatus_ != PLAYER_IDLE && lastOpStatus_ != PLAYER_INITIALIZED) {
@@ -915,19 +915,6 @@ int32_t PlayerServer::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &c
         std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
         playerCb_ = callback;
     }
-    return MSERR_OK;
-}
-
-void PlayerServer::SetPlayerCallbackInner(const std::shared_ptr<PlayerCallback> &callback)
-{
-    std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
-    playerCb_ = callback;
-}
-
-int32_t PlayerServer::SetObs(const std::weak_ptr<IPlayerEngineObs> &obs)
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    obs_ = obs;
     return MSERR_OK;
 }
 
@@ -1007,10 +994,6 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
             MEDIA_LOGD("OnInfo user type:%{public}d, extra:%{public}d", type, extra);
             playerCb_->OnInfo(type, extra, infoBody);
         }
-        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
-        if (notifyObs != nullptr) {
-            notifyObs->OnInfo(type, extra, infoBody);
-        }
     }
 }
 
@@ -1076,6 +1059,49 @@ std::shared_ptr<PlayerServerState> PlayerServerStateMachine::GetCurrState()
 {
     std::unique_lock<std::recursive_mutex> lock(recMutex_);
     return currState_;
+}
+
+int32_t PlayerServer::SetSourceInternal()
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetConfigInternal()
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetBehaviorInternal()
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::SetPlaybackSpeedInternal()
+{
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::GetInformationBeforeMemReset()
+{
+    return MSERR_OK;
+}
+
+void PlayerServer::RecoverToInitialized(PlayerOnInfoType type, int32_t extra)
+{
+    (void)type;
+    (void)extra;
+}
+
+void RecoverToPrepared(PlayerOnInfoType type, int32_t extra)
+{
+    (void)type;
+    (void)extra;
+}
+
+void RecoverToCompleted(PlayerOnInfoType type, int32_t extra)
+{
+    (void)type;
+    (void)extra;
 }
 } // namespace Media
 } // namespace OHOS
