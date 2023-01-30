@@ -174,7 +174,7 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobjectClass, PROP_PAUSE_DATA,
-        g_param_spec_boolean("pause_data", "pause data", "pause data",
+        g_param_spec_boolean("pause-data", "pause data", "pause data",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobjectClass, PROP_SRC,
