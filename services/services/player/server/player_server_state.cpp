@@ -299,6 +299,11 @@ int32_t PlayerServer::PlaybackCompletedState::Play()
     return server_.HandlePlay();
 }
 
+int32_t PlayerServer::PlaybackCompletedState::Seek(int32_t mSeconds, PlayerSeekMode mode)
+{
+    return server_.HandleSeek(mSeconds, mode);
+}
+
 int32_t PlayerServer::PlaybackCompletedState::Stop()
 {
     return server_.HandleStop();
