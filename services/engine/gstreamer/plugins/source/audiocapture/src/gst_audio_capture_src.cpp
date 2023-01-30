@@ -324,6 +324,7 @@ static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSr
                     g_return_val_if_fail(src->audio_capture->ResumeAudioCapture() == MSERR_OK,
                         GST_STATE_CHANGE_FAILURE);
                 } else {
+                    src->audio_mgr = nullptr;
                     g_return_val_if_fail(src->audio_capture->WakeUpAudioThreads() == MSERR_OK,
                         GST_STATE_CHANGE_FAILURE);
                 }
@@ -356,11 +357,11 @@ static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *eleme
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             src->is_start = FALSE;
             g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            src->audio_mgr = nullptr;
             g_return_val_if_fail(src->audio_capture->StopAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
             break;
         case GST_STATE_CHANGE_READY_TO_NULL:
             src->audio_capture = nullptr;
-            src->audio_mgr = nullptr;
             break;
         default:
             break;
