@@ -113,7 +113,7 @@ void BaseLibDemo::RunMemset_s()
     for (int32_t epo = 0; epo < epoch_; epo++) {
         for (int32_t i = 0; i < runTimesPerEpoch_; i++) {
             ptrs[i] = malloc(randSize[i]);
-            memset_s(ptrs[i], randSize[i], 0, randSize[i]);
+            (void)memset_s(ptrs[i], randSize[i], 0, randSize[i]);
         }
         for (int32_t i = 0; i < runTimesPerEpoch_; i++) {
             free(ptrs[i]);
@@ -136,10 +136,10 @@ void BaseLibDemo::RunMemcpy_s()
         for (int32_t i = 0; i < runTimesPerEpoch_; i++) {
             ptrSrc[i] = malloc(randSize[i]);
             ptrDst[i] = malloc(randSize[i]);
-            memset_s(ptrSrc[i], randSize[i], 0, randSize[i]);
-            memset_s(ptrDst[i], randSize[i], 1, randSize[i]);
+            (void)memset_s(ptrSrc[i], randSize[i], 0, randSize[i]);
+            (void)memset_s(ptrDst[i], randSize[i], 1, randSize[i]);
 
-            memcpy_s(ptrDst[i], randSize[i], ptrSrc[i], randSize[i]);
+            (void)memcpy_s(ptrDst[i], randSize[i], ptrSrc[i], randSize[i]);
         }
         for (int32_t i = 0; i < runTimesPerEpoch_; i++) {
             free(ptrSrc[i]);
