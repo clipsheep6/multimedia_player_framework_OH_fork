@@ -138,6 +138,8 @@ GstBufferTypeMeta *gst_buffer_add_buffer_handle_meta(GstBuffer *buffer, intptr_t
     buffer_meta->bufferFlag = config.bufferFlag;
     buffer_meta->pixelFormat = config.pixelFormat;
     buffer_meta->length = config.length;
+    buffer_meta->width = config.width;
+    buffer_meta->height = config.height;
     return buffer_meta;
 }
 
