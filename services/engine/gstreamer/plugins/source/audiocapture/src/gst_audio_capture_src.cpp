@@ -380,9 +380,9 @@ static GstFlowReturn gst_audio_capture_src_create(GstPushSrc *psrc, GstBuffer **
 
     if (src->input_detection) {
         if (src->audio_mgr == nullptr) {
-            src->audio_mgr = std::make_shared<AudioManager>(*psrc);
+            const guint32 timeoutMs = 3000; // Error will be reported if there is no data input in 3000ms by default.
+            src->audio_mgr = std::make_shared<AudioManager>(*psrc, timeoutMs);
             g_return_val_if_fail(src->audio_mgr != nullptr, GST_FLOW_ERROR);
-            src->audio_mgr->SetTimeout(3000); // Error will be reported if there is no data input in 3000ms by default.
             src->audio_mgr->EnableWatchDog();
         }
 

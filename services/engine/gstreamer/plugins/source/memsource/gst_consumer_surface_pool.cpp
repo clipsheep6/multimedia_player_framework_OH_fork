@@ -30,7 +30,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_consumer_surface_pool_debug_category);
 
 class PoolManager : public OHOS::Media::WatchDog, public NoCopyable {
 public:
-    explicit PoolManager(GstConsumerSurfacePool &owner) : owner_(owner) {}
+    explicit PoolManager(GstConsumerSurfacePool &owner, uint32_t timeoutMs) : WatchDog(timeoutMs), owner_(owner) {}
     ~PoolManager() = default;
 
     void Alarm() override;
@@ -136,13 +136,13 @@ static void gst_consumer_surface_pool_finalize(GObject *obj)
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL_CAST(obj);
     g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);
     auto priv = surfacepool->priv;
+    priv->poolMgr = nullptr;
     if (priv->consumer_surface != nullptr) {
         if (priv->consumer_surface->UnregisterConsumerListener() != SURFACE_ERROR_OK) {
             GST_WARNING_OBJECT(surfacepool, "deregister consumer listener fail");
         }
         priv->consumer_surface = nullptr;
     }
-    priv->poolMgr = nullptr;
     g_mutex_clear(&priv->pool_lock);
     g_cond_clear(&priv->buffer_available_con);
     G_OBJECT_CLASS(parent_class)->finalize(obj);
@@ -271,6 +271,7 @@ static void gst_consumer_surface_pool_flush_stop(GstBufferPool *pool)
     g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);
     auto priv = surfacepool->priv;
     g_mutex_lock(&priv->pool_lock);
+    priv->poolMgr = nullptr;
     surfacepool->priv->flushing = FALSE;
     surfacepool->priv->is_first_buffer = TRUE;
     surfacepool->priv->is_first_buffer_in_for_trace = TRUE;
@@ -579,14 +580,16 @@ static void gst_consumer_surface_pool_set_input_detection(GObject *object, bool 
 
     if (enable) {
         if (priv->poolMgr == nullptr) {
-            priv->poolMgr = std::make_shared<PoolManager>(*surfacepool);
+            const guint32 timeoutMs = 3000; // Error will be reported if there is no data input in 3000ms by default.
+            priv->poolMgr = std::make_shared<PoolManager>(*surfacepool, timeoutMs);
             g_return_if_fail(priv->poolMgr != nullptr);
-            priv->poolMgr->SetTimeout(3000); // Error will be reported if there is no data input in 3000ms by default.
         }
         
         priv->poolMgr->EnableWatchDog();
     } else {
-        priv->poolMgr->DisableWatchDog();
+        if (priv->poolMgr) {
+            priv->poolMgr->DisableWatchDog();
+        }
     }
 }
 

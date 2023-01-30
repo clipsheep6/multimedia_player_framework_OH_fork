@@ -34,7 +34,7 @@ public:
     void DisableWatchDog();
     void PauseWatchDog();
     void ResumeWatchDog();
-    void SetTimeout(int32_t timeoutMs);
+    void SetTimeout(uint32_t timeoutMs);
     void Notify();
     void WatchDogThread();
     virtual void Alarm() = 0;
@@ -42,7 +42,7 @@ public:
 private:
     std::atomic<bool> enable_ = false;
     std::atomic<bool> pause_ = false;
-    int32_t timeoutMs_ = 0;
+    uint32_t timeoutMs_ = 0;
     std::atomic<uint32_t> count_ = 0;
     std::condition_variable cond_;
     std::mutex mutex_;

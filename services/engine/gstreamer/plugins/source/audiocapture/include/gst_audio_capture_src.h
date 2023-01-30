@@ -26,7 +26,7 @@ namespace OHOS {
 namespace Media {
 class AudioManager : public OHOS::Media::WatchDog, public NoCopyable {
 public:
-    explicit AudioManager(GstPushSrc &owner) : owner_(owner) {}
+    explicit AudioManager(GstPushSrc &owner, uint32_t timeoutMs) : WatchDog(timeoutMs), owner_(owner) {}
     ~AudioManager() = default;
 
     void Alarm() override;

@@ -453,6 +453,7 @@ static void gst_video_capture_src_prestop(GstVideoCaptureSrc *src)
 
     // Prevent the data acquisition thread from getting stuck: acquire_buffer.
     g_object_set(surfacesrc->pool, "pause-data", FALSE, nullptr);
+    g_object_set(surfacesrc->pool, "src", nullptr, nullptr);
 }
 
 static void gst_video_capture_src_stop(GstVideoCaptureSrc *src)

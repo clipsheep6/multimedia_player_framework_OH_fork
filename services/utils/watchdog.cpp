@@ -69,7 +69,7 @@ void WatchDog::ResumeWatchDog()
     pauseCond_.notify_all();
 };
 
-void WatchDog::SetTimeout(int32_t timeoutMs)
+void WatchDog::SetTimeout(uint32_t timeoutMs)
 {
     timeoutMs_ = timeoutMs;
 };
