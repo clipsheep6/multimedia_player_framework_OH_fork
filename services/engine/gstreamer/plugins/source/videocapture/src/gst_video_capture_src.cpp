@@ -408,6 +408,9 @@ static void gst_video_capture_src_start(GstVideoCaptureSrc *src)
     g_return_if_fail(surfacesrc->pool != nullptr);
 
     g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
+    g_object_set(surfacesrc->pool, "src", static_cast<gpointer>(src), nullptr);
+    g_object_set(surfacesrc->pool, "input-detection", TRUE, nullptr);
+
     src->cur_state = RECORDER_RUNNING;
 }
 
@@ -418,7 +421,8 @@ static void gst_video_capture_src_pause(GstVideoCaptureSrc *src)
     g_return_if_fail(surfacesrc->pool != nullptr);
 
     g_object_set(surfacesrc->pool, "suspend", TRUE, nullptr);
-    g_object_set(surfacesrc->pool, "pause_data", TRUE, nullptr);
+    g_object_set(surfacesrc->pool, "pause-data", TRUE, nullptr);
+    g_object_set(surfacesrc->pool, "input-detection", FALSE, nullptr);
 
     src->cur_state = RECORDER_PAUSED;
     src->paused_count++;
@@ -435,7 +439,8 @@ static void gst_video_capture_src_resume(GstVideoCaptureSrc *src)
     g_return_if_fail(surfacesrc->pool != nullptr);
 
     g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
-    g_object_set(surfacesrc->pool, "pause_data", FALSE, nullptr);
+    g_object_set(surfacesrc->pool, "pause-data", FALSE, nullptr);
+    g_object_set(surfacesrc->pool, "input-detection", TRUE, nullptr);
 
     src->cur_state = RECORDER_RESUME;
 }
@@ -447,7 +452,8 @@ static void gst_video_capture_src_prestop(GstVideoCaptureSrc *src)
     g_return_if_fail(surfacesrc->pool != nullptr);
 
     // Prevent the data acquisition thread from getting stuck: acquire_buffer.
-    g_object_set(surfacesrc->pool, "pause_data", FALSE, nullptr);
+    g_object_set(surfacesrc->pool, "pause-data", FALSE, nullptr);
+    g_object_set(surfacesrc->pool, "src", nullptr, nullptr);
 }
 
 static void gst_video_capture_src_stop(GstVideoCaptureSrc *src)
