@@ -127,6 +127,7 @@ static int RunBaseLib()
     cout << "demo baselib end" << endl;
     return 0;
 }
+
 int main(int argc, char *argv[])
 {
     constexpr int minRequiredArgCount = 2;

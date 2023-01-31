@@ -33,9 +33,9 @@ void BaseLibDemo::RunCase()
 {
     cout << "Please set run mode:" << endl;
     cout << "0: RunMultiThreadMem" << endl;
-    cout << "1: RunMalloc" << endl;
-    cout << "2: RunMemset_s" << endl;
-    cout << "3: RunMemcpy_s" << endl;
+    cout << "1: RunMemoryAllocation" << endl;
+    cout << "2: RunMemorySet" << endl;
+    cout << "3: RunMemoryCopy" << endl;
     string mode;
     (void)getline(cin, mode);
     cout << "Please set run epoch (default is 2000) :" << endl;
@@ -54,11 +54,11 @@ void BaseLibDemo::RunCase()
     if (mode == "0") {
         RunMultiThreadMem();
     } else if (mode == "1") {
-        RunMalloc();
+        RunMemoryAllocation();
     } else if (mode == "2") {
-        RunMemset_s();
+        RunMemorySet();
     } else if (mode == "3") {
-        RunMemcpy_s();
+        RunMemoryCopy();
     }
     cout << "Please collect media_demo process information, enter any key to exit" << endl;
     (void)getline(cin, str);
@@ -75,9 +75,9 @@ void BaseLibDemo::GenerateRandList(int32_t *r, const int32_t &len, const int32_t
 void BaseLibDemo::RunMultiThreadMem()
 {
     cout << "===RunMultiThreadMem epoch: " << epoch_ << "===" << endl;
-    memsetsThread_ = make_unique<thread>(&BaseLibDemo::RunMemset_s, this);
-    memcpysThread_ = make_unique<thread>(&BaseLibDemo::RunMemcpy_s, this);
-    mallocThread_ = make_unique<thread>(&BaseLibDemo::RunMalloc, this);
+    memsetsThread_ = make_unique<thread>(&BaseLibDemo::RunMemorySet, this);
+    memcpysThread_ = make_unique<thread>(&BaseLibDemo::RunMemoryCopy, this);
+    mallocThread_ = make_unique<thread>(&BaseLibDemo::RunMemoryAllocation, this);
 
     memsetsThread_->join();
     memcpysThread_->join();
@@ -85,9 +85,9 @@ void BaseLibDemo::RunMultiThreadMem()
     cout << "RunMultiThreadMem end" << endl;
 }
 
-void BaseLibDemo::RunMalloc()
+void BaseLibDemo::RunMemoryAllocation()
 {
-    cout << "---RunMalloc epoch: " << epoch_ << "---" << endl;
+    cout << "---RunMemoryAllocation epoch: " << epoch_ << "---" << endl;
     void *ptrs[runTimesPerEpoch_];
     int32_t randSize[runTimesPerEpoch_];
     GenerateRandList(randSize, runTimesPerEpoch_, MIN_MALLOC_SIZE, MAX_MALLOC_SIZE);
@@ -97,34 +97,39 @@ void BaseLibDemo::RunMalloc()
         }
         for (int32_t i = 0; i < runTimesPerEpoch_; i++) {
             free(ptrs[i]);
+            ptrs[i] = nullptr;
         }
-        if (epo % PRINT_FREQ== 0) {
-            cout << "RunMalloc epoch now is:" << epo << endl;
+        if (epo % PRINT_FREQ == 0) {
+            cout << "RunMemoryAllocation epoch now is:" << epo << endl;
         }
     }
 }
 
-void BaseLibDemo::RunMemset_s()
+void BaseLibDemo::RunMemorySet()
 {
-    cout << "---RunMemset_s epoch: " << epoch_ << "---" << endl;
+    cout << "---RunMemorySet epoch: " << epoch_ << "---" << endl;
     void *ptrs[runTimesPerEpoch_];
     int32_t randSize[runTimesPerEpoch_];
     GenerateRandList(randSize, runTimesPerEpoch_, MIN_MALLOC_SIZE, MAX_MALLOC_SIZE);
     for (int32_t epo = 0; epo < epoch_; epo++) {
         for (int32_t i = 0; i < runTimesPerEpoch_; i++) {
             ptrs[i] = malloc(randSize[i]);
-            (void)memset_s(ptrs[i], randSize[i], 0, randSize[i]);
+            if (memset_s(ptrs[i], randSize[i], 0, randSize[i]) != EOK) {
+                cout << "memset_s fail" << endl;
+                break;
+            }
         }
         for (int32_t i = 0; i < runTimesPerEpoch_; i++) {
             free(ptrs[i]);
+            ptrs[i] = nullptr;
         }
-        if (epo % PRINT_FREQ== 0) {
-        cout << "RunMemset_s epoch now is:" << epo << endl;
+        if (epo % PRINT_FREQ == 0) {
+        cout << "RunMemorySet epoch now is:" << epo << endl;
         }
     }
 }
 
-void BaseLibDemo::RunMemcpy_s()
+void BaseLibDemo::RunMemoryCopy()
 {
     cout << "---RunMemset epoch: " << epoch_ << "---" << endl;
     void *ptrSrc[runTimesPerEpoch_];
@@ -136,17 +141,21 @@ void BaseLibDemo::RunMemcpy_s()
         for (int32_t i = 0; i < runTimesPerEpoch_; i++) {
             ptrSrc[i] = malloc(randSize[i]);
             ptrDst[i] = malloc(randSize[i]);
-            (void)memset_s(ptrSrc[i], randSize[i], 0, randSize[i]);
-            (void)memset_s(ptrDst[i], randSize[i], 1, randSize[i]);
-
-            (void)memcpy_s(ptrDst[i], randSize[i], ptrSrc[i], randSize[i]);
+            if (memset_s(ptrSrc[i], randSize[i], 0, randSize[i]) != EOK ||
+                memset_s(ptrDst[i], randSize[i], 1, randSize[i]) != EOK ||
+                memcpy_s(ptrDst[i], randSize[i], ptrSrc[i], randSize[i]) != EOK) {
+                    cout << "memset_s or memcpy_s fail" << endl;
+                    break;
+                }
         }
         for (int32_t i = 0; i < runTimesPerEpoch_; i++) {
             free(ptrSrc[i]);
             free(ptrDst[i]);
+            ptrSrc[i] = nullptr;
+            ptrDst[i] = nullptr;
         }
-        if (epo % PRINT_FREQ== 0) {
-            cout << "RunMemcpy_s epoch now is:" << epo << endl;
+        if (epo % PRINT_FREQ == 0) {
+            cout << "RunMemoryCopy epoch now is:" << epo << endl;
         }
     }
 }

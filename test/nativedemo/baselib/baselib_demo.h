@@ -17,11 +17,9 @@
 #define BASELIB_DEMO_H
 
 #include <climits>
-#include <iostream>
 #include <thread>
 #include <queue>
 #include <string>
-
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -32,9 +30,9 @@ public:
     ~BaseLibDemo() = default;
     void RunCase();
 private:
-    void RunMalloc();
-    void RunMemset_s();
-    void RunMemcpy_s();
+    void RunMemoryAllocation();
+    void RunMemorySet();
+    void RunMemoryCopy();
     void RunMultiThreadMem();
     void GenerateRandList(int32_t *r, const int32_t &len, const int32_t &left, const int32_t &right);
     std::unique_ptr<std::thread> memsetsThread_;
