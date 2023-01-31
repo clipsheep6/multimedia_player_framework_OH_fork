@@ -26,6 +26,7 @@
 #include "i_gst_codec.h"
 #include "hdi_buffer_mgr.h"
 #include "hdi_params_mgr.h"
+#include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
@@ -70,6 +71,9 @@ private:
     static int32_t Event(CodecCallbackType *self, OMX_EVENTTYPE event, EventInfo *info);
     static int32_t EmptyBufferDone(CodecCallbackType *self, int64_t appData, const OmxCodecBuffer *buffer);
     static int32_t FillBufferDone(CodecCallbackType *self, int64_t appData, const OmxCodecBuffer *buffer);
+    int32_t OnEvent(OMX_EVENTTYPE event, EventInfo *info);
+    int32_t OnEmptyBufferDone(const OmxCodecBuffer *buffer);
+    int32_t OnFillBufferDone(const OmxCodecBuffer *buffer);
     void HandelEventFlush(OMX_U32 data);
     void HandelEventCmdComplete(OMX_U32 data1, OMX_U32 data2);
     void HandelEventStateSet(OMX_U32 data);
@@ -102,6 +106,7 @@ private:
     bool start_ = false;
     uint32_t id_ = 0;
     CompVerInfo verInfo_ = {};
+    TaskQueue taskQue_;
 };
 } // namespace Media
 } // namespace OHOS

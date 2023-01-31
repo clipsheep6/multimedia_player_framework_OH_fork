@@ -44,7 +44,7 @@ namespace {
 namespace OHOS {
 namespace Media {
 HdiCodec::HdiCodec(const string& component)
-    : componentName_(component)
+    : componentName_(component), taskQue_("HDICallback")
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -72,6 +72,7 @@ void HdiCodec::InitVersion()
 int32_t HdiCodec::Init()
 {
     MEDIA_LOGD("Init");
+    (void)taskQue_.Start();
     callback_ = CodecCallbackTypeStubGetInstance();
     CHECK_AND_RETURN_RET_LOG(callback_ != nullptr, GST_CODEC_ERROR, "GetCallBack failed");
     callback_->EventHandler = &HdiCodec::Event;
@@ -114,6 +115,7 @@ void HdiCodec::Deinit()
     appData_ = nullptr;
     CodecCallbackTypeStubRelease(callback_);
     callback_ = nullptr;
+    (void)taskQue_.Stop();
 }
 
 void HdiCodec::SetHdiInBufferMgr(shared_ptr<HdiBufferMgr> bufferMgr)
@@ -371,22 +373,27 @@ int32_t HdiCodec::Event(CodecCallbackType *self, OMX_EVENTTYPE event, EventInfo 
     AppData *mAppData = reinterpret_cast<AppData *>(info->appData);
     auto instance = mAppData->instance.lock();
     CHECK_AND_RETURN_RET_LOG(instance != nullptr, HDF_ERR_INVALID_PARAM, "HdiCodec is null");
-    switch (event) {
-        case OMX_EventCmdComplete:
-            instance->HandelEventCmdComplete(info->data1, info->data2);
-            break;
-        case OMX_EventPortSettingsChanged:
-            instance->HandleEventPortSettingsChanged(info->data1, info->data2);
-            break;
-        case OMX_EventBufferFlag:
-            instance->HandleEventBufferFlag(info->data1, info->data2);
-            break;
-        case OMX_EventError:
-            instance->HandleEventError(info->data1);
-            break;
-        default:
-            break;
-    }
+    return instance->OnEvent(event, info);
+}
+
+int32_t HdiCodec::OnEvent(OMX_EVENTTYPE event, EventInfo *info)
+{
+    auto task = std::make_shared<TaskHandler<void>>([this, event, info] {
+        switch (event) {
+            case OMX_EventCmdComplete:
+                return HandelEventCmdComplete(info->data1, info->data2);
+            case OMX_EventPortSettingsChanged:
+                return HandleEventPortSettingsChanged(info->data1, info->data2);
+            case OMX_EventBufferFlag:
+                return HandleEventBufferFlag(info->data1, info->data2);
+            case OMX_EventError:
+                return HandleEventError(info->data1);
+            default:
+                break;
+        }
+    });
+    (void)taskQue_.EnqueueTask(task);
+    (void)task->GetResult();
     return HDF_SUCCESS;
 }
 
@@ -514,9 +521,22 @@ int32_t HdiCodec::EmptyBufferDone(CodecCallbackType *self, int64_t appData, cons
     CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, HDF_ERR_INVALID_PARAM, "appData is null");
     auto instance = mAppData->instance.lock();
     CHECK_AND_RETURN_RET_LOG(instance != nullptr, HDF_ERR_INVALID_PARAM, "HdiCodec is null");
-    if (instance->inBufferMgr_->CodecBufferAvailable(buffer) != GST_CODEC_OK) {
+    if (instance->OnEmptyBufferDone(buffer) != HDF_SUCCESS) {
         MEDIA_LOGE("empty buffer done failed");
         return OMX_ErrorBadParameter;
+    }
+    return HDF_SUCCESS;
+}
+
+int32_t HdiCodec::OnEmptyBufferDone(const OmxCodecBuffer *buffer)
+{
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, buffer] {
+        return inBufferMgr_->CodecBufferAvailable(buffer);
+    });
+    (void)taskQue_.EnqueueTask(task);
+    auto result = task->GetResult();
+    if (result.HasResult()) {
+        return result.Value();
     }
     return HDF_SUCCESS;
 }
@@ -529,9 +549,22 @@ int32_t HdiCodec::FillBufferDone(CodecCallbackType *self, int64_t appData, const
     CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, OMX_ErrorBadParameter, "appData is null");
     auto instance = mAppData->instance.lock();
     CHECK_AND_RETURN_RET_LOG(instance != nullptr, OMX_ErrorBadParameter, "HdiCodec is null");
-    if (instance->outBufferMgr_->CodecBufferAvailable(buffer) != GST_CODEC_OK) {
+    if (instance->OnFillBufferDone(buffer) != HDF_SUCCESS) {
         MEDIA_LOGE("fill buffer done failed");
         return OMX_ErrorBadParameter;
+    }
+    return HDF_SUCCESS;
+}
+
+int32_t HdiCodec::OnFillBufferDone(const OmxCodecBuffer *buffer)
+{
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, buffer] {
+        return outBufferMgr_->CodecBufferAvailable(buffer);
+    });
+    (void)taskQue_.EnqueueTask(task);
+    auto result = task->GetResult();
+    if (result.HasResult()) {
+        return result.Value();
     }
     return HDF_SUCCESS;
 }
