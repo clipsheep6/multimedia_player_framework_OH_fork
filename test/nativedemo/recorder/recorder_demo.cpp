@@ -325,7 +325,8 @@ int32_t RecorderDemo::CameraServicesForVideo() const
         g_videoRecorderConfig.videoFormat);
     DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoEncoder failed ");
 
-    ret = recorder_->SetVideoSize(g_videoRecorderConfig.videoSourceId, YUV_BUFFER_WIDTH, YUV_BUFFER_HEIGHT);
+    ret = recorder_->SetVideoSize(g_videoRecorderConfig.videoSourceId,
+        g_videoRecorderConfig.width, g_videoRecorderConfig.height);
     DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoSize failed ");
 
     ret = recorder_->SetVideoFrameRate(g_videoRecorderConfig.videoSourceId, g_videoRecorderConfig.frameRate);
