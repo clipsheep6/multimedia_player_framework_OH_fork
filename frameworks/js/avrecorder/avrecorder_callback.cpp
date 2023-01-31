@@ -108,6 +108,9 @@ void AVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
     } else if (errCode == MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR) {
         SendErrorCallback(MSERR_EXT_API9_TIMEOUT,
             "Read data from audio timeout, please confirm whether the audio module is normal.");
+    } else if (errCode == MSERR_DATA_SOURCE_ERROR_UNKNOWN) {
+        SendErrorCallback(MSERR_EXT_API9_IO, "Video input data is abnormal."
+            " Please confirm that the pts, width, height, size and other data are normal.");
     } else {
         SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened.");
     }

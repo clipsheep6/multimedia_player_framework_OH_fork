@@ -61,14 +61,19 @@ RecorderMsgProcResult RecorderMsgHandler::ProcessErrorMsgDefault(GstMessage &msg
     MEDIA_LOGE("[ERROR] domain:0x%{public}x, code:0x%{public}x, msg:%{public}s, %{public}s.",
         parser.GetErr()->domain, parser.GetErr()->code, parser.GetErr()->message, parser.GetDbg());
 
-    if (parser.GetErr()->domain == GST_RESOURCE_ERROR &&
-        parser.GetErr()->code == GST_RESOURCE_ERROR_NOT_FOUND) {
-        // Video input timeout.
-        prettyMsg.detail = MSERR_DATA_SOURCE_IO_ERROR;
-    } else if (parser.GetErr()->domain == GST_RESOURCE_ERROR &&
-               parser.GetErr()->code == GST_RESOURCE_ERROR_READ) {
-        // Audio input timeout.
-        prettyMsg.detail = MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR;
+    if (parser.GetErr()->domain == GST_RESOURCE_ERROR) {
+        if (parser.GetErr()->code == GST_RESOURCE_ERROR_NOT_FOUND) {
+            // Video input timeout.
+            prettyMsg.detail = MSERR_DATA_SOURCE_IO_ERROR;
+        } else if (parser.GetErr()->code == GST_RESOURCE_ERROR_READ) {
+            // Audio input timeout.
+            prettyMsg.detail = MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR;
+        } else if (parser.GetErr()->code == GST_RESOURCE_ERROR_SETTINGS) {
+            // Video input data error.
+            prettyMsg.detail = MSERR_DATA_SOURCE_ERROR_UNKNOWN;
+        } else {
+            prettyMsg.detail = MSERR_UNKNOWN;
+        }
     } else {
         prettyMsg.detail = MSERR_UNKNOWN;
     }
