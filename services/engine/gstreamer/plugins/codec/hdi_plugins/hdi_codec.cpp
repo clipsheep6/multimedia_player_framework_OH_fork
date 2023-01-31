@@ -521,7 +521,7 @@ int32_t HdiCodec::EmptyBufferDone(CodecCallbackType *self, int64_t appData, cons
     CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, HDF_ERR_INVALID_PARAM, "appData is null");
     auto instance = mAppData->instance.lock();
     CHECK_AND_RETURN_RET_LOG(instance != nullptr, HDF_ERR_INVALID_PARAM, "HdiCodec is null");
-    if (instance->OnEmptyBufferDone(buffer) != HDF_SUCCESS) {
+    if (instance->OnEmptyBufferDone(buffer) != GST_CODEC_OK) {
         MEDIA_LOGE("empty buffer done failed");
         return OMX_ErrorBadParameter;
     }
@@ -538,7 +538,7 @@ int32_t HdiCodec::OnEmptyBufferDone(const OmxCodecBuffer *buffer)
     if (result.HasResult()) {
         return result.Value();
     }
-    return HDF_SUCCESS;
+    return GST_CODEC_OK;
 }
 
 int32_t HdiCodec::FillBufferDone(CodecCallbackType *self, int64_t appData, const OmxCodecBuffer *buffer)
@@ -549,7 +549,7 @@ int32_t HdiCodec::FillBufferDone(CodecCallbackType *self, int64_t appData, const
     CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, OMX_ErrorBadParameter, "appData is null");
     auto instance = mAppData->instance.lock();
     CHECK_AND_RETURN_RET_LOG(instance != nullptr, OMX_ErrorBadParameter, "HdiCodec is null");
-    if (instance->OnFillBufferDone(buffer) != HDF_SUCCESS) {
+    if (instance->OnFillBufferDone(buffer) != GST_CODEC_OK) {
         MEDIA_LOGE("fill buffer done failed");
         return OMX_ErrorBadParameter;
     }
@@ -566,7 +566,7 @@ int32_t HdiCodec::OnFillBufferDone(const OmxCodecBuffer *buffer)
     if (result.HasResult()) {
         return result.Value();
     }
-    return HDF_SUCCESS;
+    return GST_CODEC_OK;
 }
 }  // namespace Media
 }  // namespace OHOS
