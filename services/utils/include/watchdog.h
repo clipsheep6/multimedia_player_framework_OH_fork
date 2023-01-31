@@ -23,27 +23,72 @@
 
 namespace OHOS {
 namespace Media {
-// If Notify() is not used to trigger the dog feeding action for more than timeoutMs_, the Alarm() action is triggered.
+/**
+ * More than timeoutMs_ If Notify() is not used to trigger the dog feeding action within, the Alarm() action
+ * will be triggered. When notify() is restored, the AlarmRecovery() action will be triggered. 
+ * See interface details for specific usage.
+ */
 class __attribute__((visibility("default"))) WatchDog {
 public:
     WatchDog() = default;
     WatchDog(uint32_t timeoutMs) : timeoutMs_(timeoutMs) {};
     ~WatchDog();
 
-    bool IsWatchDogEnable();
+    /**
+     * Create a listening thread. Repeated calls do not take effect.
+     */
     void EnableWatchDog();
+
+    /**
+     * End and destroy the listening thread.
+     */
     void DisableWatchDog();
+
+    /**
+     * The listening thread enters the paused state (semaphore waiting).
+     */
     void PauseWatchDog();
+
+    /**
+     * The listening thread resumes running and starts a new round of timeout waiting.
+     */
     void ResumeWatchDog();
-    void SetTimeout(uint32_t timeoutMs);
+
+    /**
+     * Watchdog feeding action. 
+     * It needs to be called regularly within the timeoutMs_ time, otherwise Alarm() will be triggered.
+     * When the alarmed_ is true, AlarmRecovery() will be triggered.
+     */
     void Notify();
+
+    /**
+     * Set the alarmed_. When the alarmed_ is true, the notify() interface will trigger AlarmRecovery().
+     */
+    void SetWatchDogAlarmed(bool alarmed);
+
+    /**
+     * The watchdog timeout will trigger this event. Please inherit and override the interface.
+     */
+    virtual void Alarm();
+
+    /**
+     * This event will be triggered when the watchdog is recovered and the alarmed_ is true.
+     */
+    virtual void AlarmRecovery();
+
+    /**
+     * TThe thread used to monitor the watchdog.
+     */
     void WatchDogThread();
-    virtual void Alarm() = 0;
+
+    void SetWatchDogTimeout(uint32_t timeoutMs);
+    bool IsWatchDogAlarmed();
 
 private:
     std::atomic<bool> enable_ = false;
     std::atomic<bool> pause_ = false;
-    uint32_t timeoutMs_ = 0;
+    std::atomic<bool> alarmed_ = false;
+    uint32_t timeoutMs_ = 1000; // Default 1000ms.
     std::atomic<uint32_t> count_ = 0;
     std::condition_variable cond_;
     std::mutex mutex_;
