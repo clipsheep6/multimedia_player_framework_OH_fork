@@ -32,13 +32,13 @@ namespace {
     constexpr uint32_t CODEC_BUFFER_WIDTH = 1024;
     constexpr uint32_t CODEC_BUFFER_HEIGHT = 25;
     constexpr uint32_t YUV_BUFFER_WIDTH = 1280;
-    constexpr uint32_t YUV_BUFFER_HEIGHT = 768;
+    constexpr uint32_t YUV_BUFFER_HEIGHT = 760;
     constexpr uint32_t RGBA_BUFFER_WIDTH = 1280;
     constexpr uint32_t RGBA_BUFFER_HEIGHT = 760;
     constexpr uint32_t STRIDE_ALIGN = 8;
     constexpr uint32_t FRAME_DURATION = 40000000;
     constexpr uint32_t RECORDER_TIME = 5;
-    constexpr uint32_t YUV_BUFFER_SIZE = 1474560; // 1280 * 768 * 3 / 2
+    constexpr uint32_t YUV_BUFFER_SIZE = YUV_BUFFER_WIDTH * YUV_BUFFER_HEIGHT * 3 / 2; // width * height * 3 / 2
     constexpr uint32_t RGBA_BUFFER_SIZE = 3891200; // 1280 * 760 * 4
     constexpr uint32_t SEC_TO_NS = 1000000000;
     const string PURE_VIDEO = "1";
@@ -325,8 +325,7 @@ int32_t RecorderDemo::CameraServicesForVideo() const
         g_videoRecorderConfig.videoFormat);
     DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoEncoder failed ");
 
-    ret = recorder_->SetVideoSize(g_videoRecorderConfig.videoSourceId,
-        g_videoRecorderConfig.width, g_videoRecorderConfig.height);
+    ret = recorder_->SetVideoSize(g_videoRecorderConfig.videoSourceId, YUV_BUFFER_WIDTH, YUV_BUFFER_HEIGHT);
     DEMO_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoSize failed ");
 
     ret = recorder_->SetVideoFrameRate(g_videoRecorderConfig.videoSourceId, g_videoRecorderConfig.frameRate);
