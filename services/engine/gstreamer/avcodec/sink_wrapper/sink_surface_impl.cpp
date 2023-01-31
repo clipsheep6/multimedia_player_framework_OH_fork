@@ -176,9 +176,10 @@ int32_t SinkSurfaceImpl::HandleNewSampleCb(GstBuffer *buffer)
     info.presentationTimeUs = static_cast<int64_t>(GST_BUFFER_PTS(buffer) / nsToUs);
     AVCodecBufferFlag flag = AVCODEC_BUFFER_FLAG_NONE;
     GetFlagFromBuffer(buffer, flag);
-    MediaTrace::TraceBegin("Codec::OnOutputBufferAvailable", FAKE_POINTER(this));
-    obs->OnOutputBufferAvailable(index, info, flag);
-    MediaTrace::TraceEnd("Codec::OnOutputBufferAvailable", FAKE_POINTER(this));
+    {
+        MediaTrace trace("Codec::OnOutputBufferAvailable");
+        obs->OnOutputBufferAvailable(index, info, flag);
+    }
 
     MEDIA_LOGD("OutputBufferAvailable, index:%{public}d", index);
     bufferList_[index]->owner_ = BufferWrapper::SERVER;

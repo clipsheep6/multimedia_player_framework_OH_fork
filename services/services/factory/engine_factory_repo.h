@@ -33,7 +33,7 @@ private:
     ~EngineFactoryRepo();
     int32_t LoadGstreamerEngine();
     int32_t LoadHistreamerEngine();
-    void LoadLib(const std::string &libPath);
+    int32_t LoadLib(const std::string &libPath);
 
     std::mutex mutex_;
     std::vector<std::shared_ptr<IEngineFactory>> factorys_;

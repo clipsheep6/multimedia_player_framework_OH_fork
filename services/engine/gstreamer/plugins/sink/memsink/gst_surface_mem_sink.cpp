@@ -367,6 +367,7 @@ static GstFlowReturn gst_surface_do_render_buffer(GstMemSink *memsink, GstBuffer
 
 static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer, bool is_preroll)
 {
+    MediaTrace renderTrace("Surface::RenderFrame");
     g_return_val_if_fail(memsink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
     GstSurfaceMemSink *surface_sink = GST_SURFACE_MEM_SINK_CAST(memsink);
     g_return_val_if_fail(surface_sink != nullptr, GST_FLOW_ERROR);
@@ -393,6 +394,7 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
     }
 
     if (surface_sink->firstRenderFrame && is_preroll) {
+        MediaTrace firstRenderTrace("Surface::firstRenderFrame and isPreroll");
         GST_DEBUG_OBJECT(surface_sink, "first render frame");
         surface_sink->firstRenderFrame = FALSE;
         GST_OBJECT_UNLOCK(surface_sink);

@@ -430,6 +430,13 @@ void AVMetadataHelperEngineGstImpl::OnNotifyMessage(const PlayBinMessage &msg)
 
 void AVMetadataHelperEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
 {
+    const gchar *metadata = gst_element_get_metadata(&elem, GST_ELEMENT_METADATA_KLASS);
+    std::string metaStr(metadata);
+    if (metaStr.find("Codec/Decoder/Video") != std::string::npos) {
+        MEDIA_LOGI("Only need one frame!");
+        g_object_set(const_cast<GstElement *>(&elem), "only-one-frame-required", TRUE, nullptr);
+    }
+    
     std::unique_lock<std::mutex> lock(mutex_);
     if (metaCollector_ != nullptr) {
         metaCollector_->AddMetaSource(elem);

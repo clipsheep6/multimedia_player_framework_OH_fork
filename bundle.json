@@ -22,7 +22,9 @@
         "SystemCapability.Multimedia.Media.AudioEncoder",
         "SystemCapability.Multimedia.Media.VideoDecoder",
         "SystemCapability.Multimedia.Media.VideoEncoder",
-        "SystemCapability.Multimedia.Media.CodecBase"
+        "SystemCapability.Multimedia.Media.CodecBase",
+        "SystemCapability.Multimedia.Media.AVPlayer",
+        "SystemCapability.Multimedia.Media.AVRecorder"
       ],
       "features": [],
       "adapted_system_type": [ "standard" ],
