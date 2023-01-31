@@ -28,11 +28,6 @@ WatchDog::~WatchDog()
     DisableWatchDog();
 }
 
-bool WatchDog::IsWatchDogEnable()
-{
-    return enable_.load();
-};
-
 void WatchDog::EnableWatchDog()
 {
     if (enable_.load()) {
@@ -48,6 +43,7 @@ void WatchDog::DisableWatchDog()
 {
     enable_.store(false);
     pause_.store(false);
+    alarmed_.store(false);
     cond_.notify_all();
     pauseCond_.notify_all();
     if (thread_ != nullptr && thread_->joinable()) {
@@ -69,7 +65,7 @@ void WatchDog::ResumeWatchDog()
     pauseCond_.notify_all();
 };
 
-void WatchDog::SetTimeout(uint32_t timeoutMs)
+void WatchDog::SetWatchDogTimeout(uint32_t timeoutMs)
 {
     timeoutMs_ = timeoutMs;
 };
@@ -78,6 +74,29 @@ void WatchDog::Notify()
 {
     count_++;
     cond_.notify_all();
+    if (IsWatchDogAlarmed()) {
+        AlarmRecovery();
+    }
+};
+
+void WatchDog::SetWatchDogAlarmed(bool alarmed)
+{
+    alarmed_.store(alarmed);
+};
+
+bool WatchDog::IsWatchDogAlarmed()
+{
+    return alarmed_.load();
+};
+
+void WatchDog::Alarm()
+{
+    SetWatchDogAlarmed(true);
+};
+
+void WatchDog::AlarmRecovery()
+{
+    SetWatchDogAlarmed(false);
 };
 
 void WatchDog::WatchDogThread()
