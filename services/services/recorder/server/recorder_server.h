@@ -21,6 +21,7 @@
 #include "time_monitor.h"
 #include "nocopyable.h"
 #include "task_queue.h"
+#include "watchdog.h"
 
 namespace OHOS {
 namespace Media {
@@ -28,7 +29,7 @@ enum class RecorderWatchDogStatus : int32_t {
     WATCHDOG_WATCHING = 0,
     WATCHDOG_PAUSE,
 };
-class RecorderServer : public IRecorderService, public IRecorderEngineObs, public NoCopyable {
+class RecorderServer : public IRecorderService, public IRecorderEngineObs, public WatchDog, public NoCopyable {
 public:
     static std::shared_ptr<IRecorderService> Create();
     RecorderServer();
@@ -76,8 +77,10 @@ public:
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
     int32_t HeartBeat() override;
     int32_t DumpInfo(int32_t fd);
-    void WatchDog();
-    void StopWatchDog();
+
+    // watchdog
+    void Alarm() override;
+    void AlarmRecovery() override;
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
@@ -117,12 +120,7 @@ private:
     } config_;
     std::string lastErrMsg_;
 
-    std::unique_ptr<std::thread> watchDogThread_;
-    RecorderWatchDogStatus watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
-    std::atomic<bool> stopWatchDog = false;
-    std::atomic<uint32_t> watchDogCount = 0;
-    std::condition_variable watchDogCond_;
-    std::mutex watchDogMutex_;
+    std::atomic<bool> watchdogPause_ = false;
 };
 } // namespace Media
 } // namespace OHOS
