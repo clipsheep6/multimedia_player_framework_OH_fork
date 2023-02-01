@@ -99,7 +99,6 @@ private:
     bool isReleaseMemByManage_ = false;
     bool isRecoverMemByUser_ = false;
     bool isAudioPlayer_ = true;
-    int32_t continuousNotPlayingCnt_ = 0;
 
     int32_t Init() override;
     int32_t SetSourceInternal() override;
@@ -115,9 +114,6 @@ private:
     void CheckHasRecover(PlayerOnInfoType type, int32_t extra);
     int32_t ReleaseMemByManage();
     int32_t RecoverMemByUser();
-    void TickTriggerRecall();
-    void OntrimRecall(int32_t onTrimLevel);
-    void ForceReclaimRecall();
 };
 }
 }

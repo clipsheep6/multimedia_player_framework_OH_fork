@@ -24,13 +24,8 @@
 
 namespace OHOS {
 namespace Media {
-using MemManageRecall = std::function<void(int32_t, int32_t)>;
+using MemManageRecall = std::function<void()>;
 using MemManageRecallPair = std::pair<MemManageRecall, void *>;
-enum class MemManageRecallType : int32_t {
-    FORCE_RECLAIM_RECALL_TYPE,
-    ON_TRIM_RECALL_TYPE,
-    TICK_TRIGGER_RECALL_TYPE,
-};
 class PlayerMemManage {
 public:
     ~PlayerMemManage();

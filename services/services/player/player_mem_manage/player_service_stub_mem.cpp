@@ -77,8 +77,7 @@ int32_t PlayerServiceStubMem::Init()
         playerServer_ = PlayerServerMem::Create();
         int32_t appUid = IPCSkeleton::GetCallingUid();
         int32_t appPid = IPCSkeleton::GetCallingPid();
-        memManageRecallPair_ = make_pair(std::bind(&PlayerServiceStubMem::MemRecall, this,
-            std::placeholders::_1, std::placeholders::_2), &playerServer_);
+        memManageRecallPair_ = make_pair(std::bind(&PlayerServiceStubMem::MemRecall, this), &playerServer_);
         PlayerMemManage::GetInstance().RegisterPlayerServer(appUid, appPid, memManageRecallPair_);
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
@@ -109,12 +108,12 @@ int32_t PlayerServiceStubMem::Release()
     return playerServer_->Release();
 }
 
-void PlayerServiceStubMem::MemRecall(int32_t recallType, int32_t onTrimLevel)
+void PlayerServiceStubMem::MemRecall()
 {
     MEDIA_LOGI("Enter MemRecall");
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("MemRecall");
-        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetForMemManage(recallType, onTrimLevel);
+        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetForMemManage();
         PlayerXCollie::GetInstance().CancelTimer(id);
         return;
     });

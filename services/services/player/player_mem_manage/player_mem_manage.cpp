@@ -62,7 +62,7 @@ void PlayerMemManage::FindProbeTaskPlayerFromVec(AppPlayerInfo &appPlayerInfo)
             continue;
         }
 
-        ((*iter).first)(static_cast<int32_t>(MemManageRecallType::TICK_TRIGGER_RECALL_TYPE), 0);
+        ((*iter).first)();
         MEDIA_LOGI("call MemManageRecall success");
     }
 }
@@ -242,7 +242,7 @@ int32_t PlayerMemManage::HandleForceReclaim(int32_t uid, int32_t pid)
                 return MSERR_INVALID_OPERATION;
             }
             for (auto iter = appPlayerInfo.memRecallPairVec.begin(); iter != appPlayerInfo.memRecallPairVec.end(); iter++) {
-                ((*iter).first)(static_cast<int32_t>(MemManageRecallType::FORCE_RECLAIM_RECALL_TYPE), 0);
+                ((*iter).first)();
                 MEDIA_LOGI("call MemManageRecall success");
             }
         }
@@ -259,8 +259,7 @@ void PlayerMemManage::HandleOnTrimLevelLow()
             }
 
             for (auto iter = appPlayerInfo.memRecallPairVec.begin(); iter != appPlayerInfo.memRecallPairVec.end(); iter++) {
-                ((*iter).first)(static_cast<int32_t>(MemManageRecallType::ON_TRIM_RECALL_TYPE),
-                    static_cast<int32_t>(Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW));
+                ((*iter).first)();
                 MEDIA_LOGI("call MemManageRecall success");
             }
         }

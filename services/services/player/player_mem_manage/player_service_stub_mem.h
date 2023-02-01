@@ -27,7 +27,7 @@ public:
     virtual ~PlayerServiceStubMem();
     int32_t DestroyStub() override;
     int32_t Release() override;
-    void MemRecall(int32_t recallType, int32_t onTrimLevel);
+    void MemRecall();
 
 private:
     PlayerServiceStubMem();

@@ -29,7 +29,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-constexpr int32_t PLAYER_CHECK_NOT_PLAYING_MAX_CNT = 5;
 std::shared_ptr<IPlayerService> PlayerServerMem::Create()
 {
     MEDIA_LOGI("Create new PlayerServerMem");
@@ -635,80 +634,19 @@ void PlayerServerMem::CheckHasRecover(PlayerOnInfoType type, int32_t extra)
     recoverConfig_.curState->StateRecoverPlayerCb(type, extra);
 }
 
-void PlayerServerMem::TickTriggerRecall()
-{
-    if (isReleaseMemByManage_) {
-        return;
-    }
-
-    if (IsPlaying()) {
-        continuousNotPlayingCnt_ = 0;
-        return;
-    }
-
-    if (continuousNotPlayingCnt_ < PLAYER_CHECK_NOT_PLAYING_MAX_CNT) {
-        continuousNotPlayingCnt_++;
-        return;
-    } else {
-        continuousNotPlayingCnt_ = 0;
-    }
-
-    auto ret = ReleaseMemByManage();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("TickTriggerRecall ReleaseMemByManage fail");
-        return;
-    }
-    MEDIA_LOGI("TickTriggerRecall ReleaseMemByManage success");
-}
-
-void PlayerServerMem::OntrimRecall(int32_t onTrimLevel)
-{
-    (void)onTrimLevel;
-    if (isReleaseMemByManage_ || isAudioPlayer_ || IsPlaying()) {
-        return;
-    }
-
-    auto ret = ReleaseMemByManage();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("OntrimRecall ReleaseMemByManage fail");
-        return;
-    }
-    MEDIA_LOGI("OntrimRecall ReleaseMemByManage success");
-}
-
-void PlayerServerMem::ForceReclaimRecall()
-{
-    if (isReleaseMemByManage_ || isAudioPlayer_ || IsPlaying()) {
-        return;
-    }
-
-    auto ret = ReleaseMemByManage();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("ForceReclaimRecall ReleaseMemByManage fail");
-        return;
-    }
-    MEDIA_LOGI("ForceReclaimRecall ReleaseMemByManage success");
-}
-
-void PlayerServerMem::ResetForMemManage(int32_t recallType, int32_t onTrimLevel)
+void PlayerServerMem::ResetForMemManage()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    switch (recallType) {
-        case static_cast<int32_t>(MemManageRecallType::FORCE_RECLAIM_RECALL_TYPE):
-            ForceReclaimRecall();
-            break;
-
-        case static_cast<int32_t>(MemManageRecallType::ON_TRIM_RECALL_TYPE):
-            OntrimRecall(onTrimLevel);
-            break;
-
-        case static_cast<int32_t>(MemManageRecallType::TICK_TRIGGER_RECALL_TYPE):
-            TickTriggerRecall();
-            break;
-
-        default:
-            break;
+    if (isReleaseMemByManage_ || isAudioPlayer_ || IsPlaying()) {
+        return;
     }
+
+    auto ret = ReleaseMemByManage();
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("ResetForMemManage ReleaseMemByManage fail");
+        return;
+    }
+    MEDIA_LOGI("ResetForMemManage ReleaseMemByManage success");
 }
 }
 }
