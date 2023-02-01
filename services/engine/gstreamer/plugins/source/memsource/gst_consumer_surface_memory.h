@@ -31,6 +31,8 @@ struct _GstConsumerSurfaceMemory {
     gboolean is_eos_frame;
     gint32 data_size;
     gint32 pixel_format;
+    guint32 width;
+    guint32 height;
 };
 
 gboolean gst_is_consumer_surface_memory(GstMemory *mem);
