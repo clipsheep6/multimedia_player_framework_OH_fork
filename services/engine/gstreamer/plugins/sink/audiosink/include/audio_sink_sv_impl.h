@@ -88,7 +88,7 @@ private:
     void DumpAudioBuffer(uint8_t *buffer, const size_t &bytesWritten, const size_t &bytesSingle);
     bool isMute_ = false;
     bool enableDump_ = false;
-    FILE *dumpFile_;
+    FILE *dumpFile_ = nullptr;
     std::shared_ptr<AudioRendererMediaCallback> audioRendererMediaCallback_ = nullptr;
 };
 
