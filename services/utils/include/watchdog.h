@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef TIME_PERF_H
-#define TIME_PERF_H
+#ifndef WATCHDOG_H
+#define WATCHDOG_H
 
 #include <atomic>
 #include <condition_variable>
@@ -31,7 +31,7 @@ namespace Media {
 class __attribute__((visibility("default"))) WatchDog {
 public:
     WatchDog() = default;
-    WatchDog(uint32_t timeoutMs) : timeoutMs_(timeoutMs) {};
+    explicit WatchDog(uint32_t timeoutMs) : timeoutMs_(timeoutMs) {};
     ~WatchDog();
 
     /**
@@ -57,43 +57,42 @@ public:
     /**
      * Watchdog feeding action.
      * It needs to be called regularly within the timeoutMs_ time, otherwise Alarm() will be triggered.
-     * When the alarmed_ is true, AlarmRecovery() will be triggered.
+     * When the watchdog recovers, AlarmRecovery() will be triggered.
      */
     void Notify();
 
     /**
-     * Set the alarmed_. When the alarmed_ is true, the notify() interface will trigger AlarmRecovery().
-     */
-    void SetWatchDogAlarmed(bool alarmed);
-
-    /**
-     * The watchdog timeout will trigger this event. Please inherit and override the interface.
+     * This event will be triggered when the watchdog times out. A timeout will only be triggered once.
+     * Please inherit and override the interface.
      */
     virtual void Alarm();
 
     /**
-     * This event will be triggered when the watchdog is recovered and the alarmed_ is true.
+     * This event will be triggered when the watchdog is restored.
      */
     virtual void AlarmRecovery();
 
     /**
-     * TThe thread used to monitor the watchdog.
+     * The thread used to monitor the watchdog.
+     * The watchdog timeout will trigger the Alarm() action and enter the pause state,
+     * until Notify() triggers the AlarmRecovery() again, and then continue to run.
      */
     void WatchDogThread();
 
     void SetWatchDogTimeout(uint32_t timeoutMs);
-    bool IsWatchDogAlarmed();
 
 private:
     std::atomic<bool> enable_ = false;
     std::atomic<bool> pause_ = false;
-    std::atomic<bool> alarmed_ = false;
+    bool alarmed_ = false;
     uint32_t timeoutMs_ = 1000; // Default 1000ms.
     std::atomic<uint32_t> count_ = 0;
     std::condition_variable cond_;
-    std::mutex mutex_;
+    std::mutex condMutex_;
     std::condition_variable pauseCond_;
     std::mutex pauseMutex_;
+    std::mutex mutex_;
+    std::mutex alarmMutex_;
     std::unique_ptr<std::thread> thread_;
 };
 } // namespace Media

@@ -119,6 +119,8 @@ private:
         int64_t maxFileSize;
     } config_;
     std::string lastErrMsg_;
+
+    std::atomic<bool> watchdogPause_ = false;
 };
 } // namespace Media
 } // namespace OHOS

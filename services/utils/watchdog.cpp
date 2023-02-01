@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
+#include "watchdog.h"
 #include <mutex>
 #include <thread>
-#include "watchdog.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "watchdog"};
@@ -30,20 +30,19 @@ WatchDog::~WatchDog()
 
 void WatchDog::EnableWatchDog()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     if (enable_.load()) {
         return;
     }
 
-    DisableWatchDog();
     enable_.store(true);
     thread_ = std::make_unique<std::thread>(&WatchDog::WatchDogThread, this);
 };
 
 void WatchDog::DisableWatchDog()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     enable_.store(false);
-    pause_.store(false);
-    alarmed_.store(false);
     cond_.notify_all();
     pauseCond_.notify_all();
     if (thread_ != nullptr && thread_->joinable()) {
@@ -51,69 +50,84 @@ void WatchDog::DisableWatchDog()
         thread_.reset();
         thread_ = nullptr;
     }
+
+    // It may be changed by thread. Assign value after thread recycle.
+    pause_.store(false);
+    alarmed_ = false;
 };
 
 void WatchDog::PauseWatchDog()
 {
-    pause_.store(true);
-    cond_.notify_all();
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (enable_.load()) {
+        pause_.store(true);
+        cond_.notify_all();
+    }
 };
 
 void WatchDog::ResumeWatchDog()
 {
-    pause_.store(false);
-    pauseCond_.notify_all();
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (enable_.load()) {
+        pause_.store(false);
+        pauseCond_.notify_all();
+    }
 };
 
 void WatchDog::SetWatchDogTimeout(uint32_t timeoutMs)
 {
+    std::unique_lock<std::mutex> condLock(condMutex_);
     timeoutMs_ = timeoutMs;
 };
 
 void WatchDog::Notify()
 {
+    std::unique_lock<std::mutex> alarmLock(alarmMutex_);
     count_++;
     cond_.notify_all();
-    if (IsWatchDogAlarmed()) {
+
+    if (alarmed_) {
+        alarmed_ = false;
         AlarmRecovery();
+        pause_.store(false);
+        pauseCond_.notify_all();
     }
-};
-
-void WatchDog::SetWatchDogAlarmed(bool alarmed)
-{
-    alarmed_.store(alarmed);
-};
-
-bool WatchDog::IsWatchDogAlarmed()
-{
-    return alarmed_.load();
 };
 
 void WatchDog::Alarm()
 {
-    SetWatchDogAlarmed(true);
+    MEDIA_LOGI("Alarm!");
 };
 
 void WatchDog::AlarmRecovery()
 {
-    SetWatchDogAlarmed(false);
+    MEDIA_LOGI("AlarmRecovery!");
 };
 
 void WatchDog::WatchDogThread()
 {
     while (true) {
-        std::unique_lock<std::mutex> lock(mutex_);
-        cond_.wait_for(lock, std::chrono::milliseconds(timeoutMs_), [this] {
-            return (enable_.load() == false) || (pause_.load() == true) || (count_.load() > 0);
-        });
+        {
+            std::unique_lock<std::mutex> condLock(condMutex_);
+            cond_.wait_for(condLock, std::chrono::milliseconds(timeoutMs_), [this] {
+                return (enable_.load() == false) || (pause_.load() == true) || (count_.load() > 0);
+            });
+        }
 
         if (enable_.load() == false) {
             break;
         }
 
-        if ((count_.load() == 0) && (pause_.load() == false)) {
-            MEDIA_LOGI("Alarm!");
-            Alarm();
+        {
+            std::unique_lock<std::mutex> alarmLock(alarmMutex_);
+            if ((count_.load() == 0) && (pause_.load() == false)) {
+                MEDIA_LOGI("Watchdog timeout!");
+                if (alarmed_ == false) {
+                    alarmed_ = true;
+                    Alarm();
+                    pause_.store(true);
+                }
+            }
         }
 
         count_.store(0);

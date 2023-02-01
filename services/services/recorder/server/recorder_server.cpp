@@ -595,8 +595,8 @@ int32_t RecorderServer::PauseAct()
 int32_t RecorderServer::Pause()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (IsWatchDogAlarmed()) {
-        SetWatchDogAlarmed(false);
+    if (watchdogPause_.load()) {
+        watchdogPause_.store(false);
         return MSERR_OK;
     }
 
@@ -698,17 +698,17 @@ void RecorderServer::Alarm()
     if (status_ == REC_RECORDING) {
         MEDIA_LOGE("Watchdog triggered, recording paused");
         PauseAct();
-        SetWatchDogAlarmed(true);
+        watchdogPause_.store(true);
     }
 }
 
 void RecorderServer::AlarmRecovery()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (IsWatchDogAlarmed() && status_ == REC_PAUSED) {
+    if (watchdogPause_.load() && status_ == REC_PAUSED) {
         MEDIA_LOGE("Watchdog resumes, recording continues");
         ResumeAct();
-        SetWatchDogAlarmed(false);
+        watchdogPause_.store(false);
     }
 }
 
