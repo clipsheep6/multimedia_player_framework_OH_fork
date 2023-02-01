@@ -20,6 +20,21 @@
 #include <gst/base/gstpushsrc.h>
 #include "audio_capture.h"
 #include "common_utils.h"
+#include "watchdog.h"
+
+namespace OHOS {
+namespace Media {
+class AudioManager : public OHOS::Media::WatchDog, public NoCopyable {
+public:
+    explicit AudioManager(GstPushSrc &owner, uint32_t timeoutMs) : WatchDog(timeoutMs), owner_(owner) {}
+    ~AudioManager() = default;
+
+    void Alarm() override;
+private:
+    GstPushSrc &owner_;
+};
+} // namespace Media
+} // namespace OHOS
 
 G_BEGIN_DECLS
 
@@ -46,6 +61,7 @@ struct _GstAudioCaptureSrc {
     AudioStreamType stream_type;
     AudioSourceType source_type;
     std::unique_ptr<OHOS::Media::AudioCapture> audio_capture;
+    std::shared_ptr<OHOS::Media::AudioManager> audio_mgr;
     GstCaps *src_caps;
     guint32 bitrate;
     guint32 channels;
@@ -56,6 +72,7 @@ struct _GstAudioCaptureSrc {
     gint32 appuid;
     gint32 apppid;
     gboolean bypass_audio;
+    gboolean input_detection;
 };
 
 struct _GstAudioCaptureSrcClass {

@@ -54,6 +54,7 @@ ohos_shared_library("media_service_utils") {
     "time_monitor.cpp",
     "time_perf.cpp",
     "uri_helper.cpp",
+    "watchdog.cpp",
     "xml_parse.cpp",
   ]
 

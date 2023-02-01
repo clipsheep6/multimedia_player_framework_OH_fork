@@ -80,7 +80,7 @@ RecorderServer::~RecorderServer()
         (void)task->GetResult();
         taskQue_.Stop();
     }
-    StopWatchDog();
+    DisableWatchDog();
 }
 
 int32_t RecorderServer::Init()
@@ -106,7 +106,9 @@ int32_t RecorderServer::Init()
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.Value() == MSERR_OK, result.Value(), "Result failed");
 
-    watchDogThread_ = std::make_unique<std::thread>(&RecorderServer::WatchDog, this);
+    static constexpr uint32_t timeoutMs = 3000; // Maximum number of unanswered = 3000ms
+    SetWatchDogTimeout(timeoutMs);
+    EnableWatchDog();
 
     status_ = REC_INITIALIZED;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
@@ -411,7 +413,6 @@ int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_CONFIGURED : REC_INITIALIZED);
-    watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
@@ -540,7 +541,6 @@ int32_t RecorderServer::Prepare()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PREPARED : REC_ERROR);
-    watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
@@ -564,7 +564,6 @@ int32_t RecorderServer::Start()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
-    watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
 
     startTimeMonitor_.FinishTime();
@@ -596,16 +595,12 @@ int32_t RecorderServer::PauseAct()
 int32_t RecorderServer::Pause()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (watchDogstatus_ == RecorderWatchDogStatus::WATCHDOG_PAUSE) {
-        watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
+    if (watchdogPause_.load()) {
+        watchdogPause_.store(false);
         return MSERR_OK;
     }
 
-    int32_t ret = PauseAct();
-    if (ret == MSERR_OK) {
-        watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
-    }
-    return ret;
+    return PauseAct();
 }
 
 int32_t RecorderServer::ResumeAct()
@@ -633,11 +628,7 @@ int32_t RecorderServer::ResumeAct()
 int32_t RecorderServer::Resume()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    int32_t ret = ResumeAct();
-    if (ret == MSERR_OK) {
-        watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
-    }
-    return ret;
+    return ResumeAct();
 }
 
 int32_t RecorderServer::Stop(bool block)
@@ -657,7 +648,6 @@ int32_t RecorderServer::Stop(bool block)
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
-    watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
 }
@@ -676,7 +666,6 @@ int32_t RecorderServer::Reset()
     auto result = task->GetResult();
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
-    watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
 
     stopTimeMonitor_.FinishTime();
@@ -693,76 +682,33 @@ int32_t RecorderServer::Release()
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
     }
-    StopWatchDog();
+    DisableWatchDog();
     return MSERR_OK;
 }
 
 int32_t RecorderServer::HeartBeat()
 {
-    watchDogCount.store(0);
+    Notify();
     return MSERR_OK;
 }
 
-void RecorderServer::WatchDog()
+void RecorderServer::Alarm()
 {
-    static constexpr uint8_t timeInterval = 1; // Detect once per second
-    static constexpr uint8_t maxTimes = 3; // Maximum number of unanswered
-    pthread_setname_np(pthread_self(), "RecWatchDog");
-    while (true) {
-        std::unique_lock<std::mutex> lockWatchDog(watchDogMutex_);
-        watchDogCond_.wait_for(lockWatchDog, std::chrono::seconds(timeInterval), [this] {
-            return stopWatchDog.load();
-        });
-
-        if (stopWatchDog.load() == true) {
-            MEDIA_LOGD("WatchDog Stop.");
-            break;
-        }
-
-        std::lock_guard<std::mutex> lock(mutex_);
-
-        if (recorderEngine_ == nullptr) {
-            MEDIA_LOGD("Engine is empty. WatchDog stop.");
-            break;
-        }
-
-        if (watchDogstatus_ == RecorderWatchDogStatus::WATCHDOG_WATCHING) {
-            if (status_ != REC_RECORDING) {
-                continue;
-            }
-
-            watchDogCount++;
-            MEDIA_LOGD("WatchDog Count: %u", watchDogCount.load());
-            if (watchDogCount.load() >= maxTimes) {
-                MEDIA_LOGE("Watchdog triggered, recording paused");
-                PauseAct();
-                watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_PAUSE;
-                continue;
-            }
-        }
-
-        if (watchDogstatus_ == RecorderWatchDogStatus::WATCHDOG_PAUSE) {
-            if (status_ != REC_PAUSED) {
-                continue;
-            }
-
-            if (watchDogCount.load() < maxTimes) {
-                MEDIA_LOGE("Watchdog resumes, recording continues");
-                ResumeAct();
-                watchDogstatus_ = RecorderWatchDogStatus::WATCHDOG_WATCHING;
-            }
-        }
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (status_ == REC_RECORDING) {
+        MEDIA_LOGE("Watchdog triggered, recording paused");
+        PauseAct();
+        watchdogPause_.store(true);
     }
 }
 
-void RecorderServer::StopWatchDog()
+void RecorderServer::AlarmRecovery()
 {
-    if (watchDogThread_ != nullptr && watchDogThread_->joinable()) {
-        stopWatchDog.store(true);
-        watchDogCond_.notify_all();
-        watchDogThread_->join();
-        watchDogThread_.reset();
-        watchDogThread_ = nullptr;
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (watchdogPause_.load() && status_ == REC_PAUSED) {
+        MEDIA_LOGE("Watchdog resumes, recording continues");
+        ResumeAct();
+        watchdogPause_.store(false);
     }
 }
 
