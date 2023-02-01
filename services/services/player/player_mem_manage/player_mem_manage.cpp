@@ -56,8 +56,7 @@ void PlayerMemManage::FindProbeTaskPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
     for (auto iter = appPlayerInfo.memRecallPairVec.begin(); iter != appPlayerInfo.memRecallPairVec.end(); iter++) {
         std::chrono::duration<double> durationCost = std::chrono::duration_cast<
-            std::chrono::duration<double>>(std::chrono::steady_clock::now() -
-            appPlayerInfo.appEnterBackTime);
+            std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterBackTime);
         if (durationCost.count() <= APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
             continue;
         }
@@ -115,7 +114,7 @@ void PlayerMemManage::FindProbeTaskPlayer()
 void PlayerMemManage::ProbeTask()
 {
     while (!existTask_) {
-        FindProbeTaskPlayer();  
+        FindProbeTaskPlayer();
         sleep(1);  // 1 : one second interval check
     }
 }
@@ -241,7 +240,8 @@ int32_t PlayerMemManage::HandleForceReclaim(int32_t uid, int32_t pid)
                 MEDIA_LOGE("HandleForceReclaim appState not allow");
                 return MSERR_INVALID_OPERATION;
             }
-            for (auto iter = appPlayerInfo.memRecallPairVec.begin(); iter != appPlayerInfo.memRecallPairVec.end(); iter++) {
+            for (auto iter = appPlayerInfo.memRecallPairVec.begin();
+                iter != appPlayerInfo.memRecallPairVec.end(); iter++) {
                 ((*iter).first)();
                 MEDIA_LOGI("call MemManageRecall success");
             }
@@ -258,7 +258,8 @@ void PlayerMemManage::HandleOnTrimLevelLow()
                 continue;
             }
 
-            for (auto iter = appPlayerInfo.memRecallPairVec.begin(); iter != appPlayerInfo.memRecallPairVec.end(); iter++) {
+            for (auto iter = appPlayerInfo.memRecallPairVec.begin();
+                iter != appPlayerInfo.memRecallPairVec.end(); iter++) {
                 ((*iter).first)();
                 MEDIA_LOGI("call MemManageRecall success");
             }

@@ -66,7 +66,7 @@ public:
     int32_t SelectBitRate(uint32_t bitRate) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
-    void ResetForMemManage(int32_t recallType, int32_t onTrimLevel);
+    void ResetForMemManage();
 
 private:
     struct RecoverConfigInfo {
@@ -83,8 +83,11 @@ private:
         sptr<Surface> surface = nullptr;
         bool loop = false;
         bool isPlaying = false;
-        bool isHasSetParam = false;
-        Format param;
+        int32_t videoScaleType = -1;
+        int32_t contentType = -1;
+        int32_t streamUsage = -1;
+        int32_t rendererFlag = -1;
+        int32_t interruptMode = -1;
         std::shared_ptr<PlayerCallback> callback = nullptr;
         uint32_t bitRate = 0;
         int32_t currentTime = 0;
@@ -100,15 +103,19 @@ private:
     bool isRecoverMemByUser_ = false;
     bool isAudioPlayer_ = true;
 
-    int32_t Init() override;
-    int32_t SetSourceInternal() override;
-    int32_t SetConfigInternal() override;
-    int32_t SetBehaviorInternal() override;
-    int32_t SetPlaybackSpeedInternal() override;
-    int32_t GetInformationBeforeMemReset() override;
-    void RecoverToInitialized(PlayerOnInfoType type, int32_t extra) override;
-    void RecoverToPrepared(PlayerOnInfoType type, int32_t extra) override;
-    void RecoverToCompleted(PlayerOnInfoType type, int32_t extra) override;
+    void SaveParameter(const Format &param);
+    int32_t SetSaveParameter();
+    int32_t StateRecover();
+    int32_t StateRelease();
+    void StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra);
+    int32_t SetSourceInternal();
+    int32_t SetConfigInternal();
+    int32_t SetBehaviorInternal();
+    int32_t SetPlaybackSpeedInternal();
+    int32_t GetInformationBeforeMemReset();
+    void RecoverToInitialized(PlayerOnInfoType type, int32_t extra);
+    void RecoverToPrepared(PlayerOnInfoType type, int32_t extra);
+    void RecoverToCompleted(PlayerOnInfoType type, int32_t extra);
     int32_t CheckReleaseStateAndRecover();
     int32_t RecoverPlayerCb();
     void CheckHasRecover(PlayerOnInfoType type, int32_t extra);

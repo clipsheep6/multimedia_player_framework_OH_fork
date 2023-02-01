@@ -71,26 +71,6 @@ int32_t PlayerServer::BaseState::SetPlaybackSpeed(PlaybackRateMode mode)
     return MSERR_INVALID_STATE;
 }
 
-int32_t PlayerServer::BaseState::StateRecover()
-{
-    ReportInvalidOperation();
-    return MSERR_INVALID_STATE;
-}
-
-int32_t PlayerServer::BaseState::StateRelease()
-{
-    ReportInvalidOperation();
-    return MSERR_INVALID_STATE;
-}
-
-int32_t PlayerServer::BaseState::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
-{
-    (void)type;
-    (void)extra;
-    ReportInvalidOperation();
-    return MSERR_INVALID_STATE;
-}
-
 int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     MEDIA_LOGD("message received, type = %{public}d, extra = %{public}d", type, extra);
@@ -141,45 +121,9 @@ void PlayerServer::IdleState::StateEnter()
     (void)server_.HandleReset();
 }
 
-int32_t PlayerServer::IdleState::StateRelease()
-{
-    MEDIA_LOGI("CurState is IdleState");
-    return MSERR_INVALID_STATE;
-}
-
-int32_t PlayerServer::IdleState::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
-{
-    (void)type;
-    (void)extra;
-    return MSERR_OK;
-}
-
 int32_t PlayerServer::InitializedState::Prepare()
 {
     server_.ChangeState(server_.preparingState_);
-    return MSERR_OK;
-}
-
-int32_t PlayerServer::InitializedState::StateRecover()
-{
-    MEDIA_LOGI("InitializedState recover");
-    int32_t ret = server_.SetSourceInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "InitializedState failed to SetSource url");
-
-    ret = server_.SetConfigInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "InitializedState failed to SetConfigInternal");
-    return MSERR_OK;
-}
-
-int32_t PlayerServer::InitializedState::StateRelease()
-{
-    MEDIA_LOGI("CurState is InitializedState");
-    return MSERR_OK;
-}
-
-int32_t PlayerServer::InitializedState::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
-{
-    server_.RecoverToInitialized(type, extra);
     return MSERR_OK;
 }
 
@@ -208,13 +152,6 @@ void PlayerServer::PreparingState::HandleStateChange(int32_t newState)
         }
         (void)server_.taskMgr_.MarkTaskDone();
     }
-}
-
-int32_t PlayerServer::PreparingState::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
-{
-    (void)type;
-    (void)extra;
-    return MSERR_OK;
 }
 
 int32_t PlayerServer::PreparedState::Prepare()
@@ -254,35 +191,6 @@ void PlayerServer::PreparedState::HandleStateChange(int32_t newState)
         server_.ChangeState(server_.stoppedState_);
         (void)server_.taskMgr_.MarkTaskDone();
     }
-}
-
-int32_t PlayerServer::PreparedState::StateRecover()
-{
-    MEDIA_LOGI("PreparedState recover");
-    int32_t ret = server_.SetSourceInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PreparedState failed to SetSource url");
-
-    ret = server_.SetConfigInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PreparedState failed to SetConfigInternal");
-
-    ret = server_.PrepareAsync();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PreparedState failed to PrepareAsync");
-
-    ret = server_.SetBehaviorInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PreparedState failed to SetBehaviorInternal");
-
-    return ret;
-}
-
-int32_t PlayerServer::PreparedState::StateRelease()
-{
-    return server_.GetInformationBeforeMemReset();
-}
-
-int32_t PlayerServer::PreparedState::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
-{
-    server_.RecoverToPrepared(type, extra);
-    return MSERR_OK;
 }
 
 int32_t PlayerServer::PlayingState::Play()
@@ -335,19 +243,6 @@ void PlayerServer::PlayingState::HandleEos()
     server_.HandleEos();
 }
 
-int32_t PlayerServer::PlayingState::StateRelease()
-{
-    MEDIA_LOGI("CurState is PlayingState");
-    return MSERR_INVALID_STATE;
-}
-
-int32_t PlayerServer::PlayingState::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
-{
-    (void)type;
-    (void)extra;
-    return MSERR_OK;
-}
-
 int32_t PlayerServer::PausedState::Play()
 {
     return server_.HandlePlay();
@@ -387,35 +282,6 @@ void PlayerServer::PausedState::HandleStateChange(int32_t newState)
     }
 }
 
-int32_t PlayerServer::PausedState::StateRecover()
-{
-    MEDIA_LOGI("PausedState recover");
-    int32_t ret = server_.SetSourceInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PausedState failed to SetSource url");
-
-    ret = server_.SetConfigInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PausedState failed to SetConfigInternal");
-
-    ret = server_.PrepareAsync();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PausedState failed to PrepareAsync");
-
-    ret = server_.SetBehaviorInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PausedState failed to SetBehaviorInternal");
-
-    return ret;
-}
-
-int32_t PlayerServer::PausedState::StateRelease()
-{
-    return server_.GetInformationBeforeMemReset();
-}
-
-int32_t PlayerServer::PausedState::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
-{
-    server_.RecoverToPrepared(type, extra);
-    return MSERR_OK;
-}
-
 int32_t PlayerServer::StoppedState::Prepare()
 {
     server_.ChangeState(server_.preparingState_);
@@ -425,28 +291,6 @@ int32_t PlayerServer::StoppedState::Prepare()
 int32_t PlayerServer::StoppedState::Stop()
 {
     (void)server_.taskMgr_.MarkTaskDone();
-    return MSERR_OK;
-}
-
-int32_t PlayerServer::StoppedState::StateRecover()
-{
-    MEDIA_LOGI("StoppedState recover");
-    int32_t ret = server_.SetSourceInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "InitializedState failed to SetSource url");
-
-    ret = server_.SetConfigInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "InitializedState failed to SetConfigInternal");
-    return MSERR_OK;
-}
-
-int32_t PlayerServer::StoppedState::StateRelease()
-{
-    return server_.GetInformationBeforeMemReset();
-}
-
-int32_t PlayerServer::StoppedState::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
-{
-    server_.RecoverToInitialized(type, extra);
     return MSERR_OK;
 }
 
@@ -476,39 +320,6 @@ void PlayerServer::PlaybackCompletedState::HandleStateChange(int32_t newState)
 int32_t PlayerServer::PlaybackCompletedState::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     return server_.HandleSetPlaybackSpeed(mode);
-}
-
-int32_t PlayerServer::PlaybackCompletedState::StateRecover()
-{
-    MEDIA_LOGI("PlaybackCompletedState recover");
-    int32_t ret = server_.SetSourceInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "PlaybackCompletedState failed to SetSource url");
-
-    ret = server_.SetConfigInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "PlaybackCompletedState failed to SetConfigInternal");
-
-    ret = server_.PrepareAsync();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "PlaybackCompletedState failed to PrepareAsync");
-
-    ret = server_.SetPlaybackSpeedInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "PlaybackCompletedState failed to SetPlaybackSpeedInternal");
-
-    return ret;
-}
-
-int32_t PlayerServer::PlaybackCompletedState::StateRelease()
-{
-    return server_.GetInformationBeforeMemReset();
-}
-
-int32_t PlayerServer::PlaybackCompletedState::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
-{
-    server_.RecoverToCompleted(type, extra);
-    return MSERR_OK;
 }
 }
 }

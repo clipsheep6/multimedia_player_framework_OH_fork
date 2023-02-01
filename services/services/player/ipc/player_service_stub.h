@@ -29,7 +29,8 @@ public:
     static sptr<PlayerServiceStub> Create();
     virtual ~PlayerServiceStub();
 
-    virtual int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
+    virtual int OnRemoteRequest(uint32_t code, MessageParcel &data,
+        MessageParcel &reply, MessageOption &option) override;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) override;
     virtual int32_t SetSource(const std::string &url) override;
     virtual int32_t SetSource(const sptr<IRemoteObject> &object) override;

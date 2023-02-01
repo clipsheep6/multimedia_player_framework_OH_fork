@@ -128,19 +128,9 @@ protected:
     std::shared_ptr<StoppedState> stoppedState_;
     std::shared_ptr<PlaybackCompletedState> playbackCompletedState_;
 
-    virtual int32_t Init();
-    virtual int32_t SetSourceInternal();
-    virtual int32_t SetConfigInternal();
-    virtual int32_t SetBehaviorInternal();
-    virtual int32_t SetPlaybackSpeedInternal();
-    virtual int32_t GetInformationBeforeMemReset();
-    virtual void RecoverToInitialized(PlayerOnInfoType type, int32_t extra);
-    virtual void RecoverToPrepared(PlayerOnInfoType type, int32_t extra);
-    virtual void RecoverToCompleted(PlayerOnInfoType type, int32_t extra);
-
-    int32_t appUid_ = 0;
-    int32_t appPid_ = 0;
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
+    std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
+    virtual int32_t Init();
 
 private:
     bool IsValidSeekMode(PlayerSeekMode mode);
@@ -164,7 +154,6 @@ private:
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     void OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {});
 
-    std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
 #endif
@@ -181,6 +170,8 @@ private:
     
     std::mutex mutex_;
     std::mutex mutexCb_;
+    int32_t appUid_ = 0;
+    int32_t appPid_ = 0;
     bool disableNextSeekDone_ = false;
     bool disableStoppedCb_ = false;
     PlayerStates lastOpStatus_ = PLAYER_IDLE;

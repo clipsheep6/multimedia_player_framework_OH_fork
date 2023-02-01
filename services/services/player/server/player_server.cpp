@@ -1054,48 +1054,5 @@ std::shared_ptr<PlayerServerState> PlayerServerStateMachine::GetCurrState()
     std::unique_lock<std::recursive_mutex> lock(recMutex_);
     return currState_;
 }
-
-int32_t PlayerServer::SetSourceInternal()
-{
-    return MSERR_OK;
-}
-
-int32_t PlayerServer::SetConfigInternal()
-{
-    return MSERR_OK;
-}
-
-int32_t PlayerServer::SetBehaviorInternal()
-{
-    return MSERR_OK;
-}
-
-int32_t PlayerServer::SetPlaybackSpeedInternal()
-{
-    return MSERR_OK;
-}
-
-int32_t PlayerServer::GetInformationBeforeMemReset()
-{
-    return MSERR_OK;
-}
-
-void PlayerServer::RecoverToInitialized(PlayerOnInfoType type, int32_t extra)
-{
-    (void)type;
-    (void)extra;
-}
-
-void PlayerServer::RecoverToPrepared(PlayerOnInfoType type, int32_t extra)
-{
-    (void)type;
-    (void)extra;
-}
-
-void PlayerServer::RecoverToCompleted(PlayerOnInfoType type, int32_t extra)
-{
-    (void)type;
-    (void)extra;
-}
 } // namespace Media
 } // namespace OHOS

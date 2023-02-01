@@ -31,9 +31,6 @@ public:
     virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode);
     virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode);
     virtual int32_t Stop();
-    virtual int32_t StateRecover();
-    virtual int32_t StateRelease();
-    virtual int32_t StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra);
 
 protected:
     int32_t OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody) final;
@@ -55,8 +52,6 @@ class PlayerServer::IdleState : public PlayerServer::BaseState {
 public:
     explicit IdleState(PlayerServer &server) : BaseState(server, "idle_state") {}
     ~IdleState() = default;
-    int32_t StateRelease() override;
-    int32_t StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra) override;
 
 protected:
     void StateEnter() override;
@@ -68,9 +63,6 @@ public:
     ~InitializedState() = default;
 
     int32_t Prepare() override;
-    int32_t StateRecover() override;
-    int32_t StateRelease() override;
-    int32_t StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra) override;
 };
 
 class PlayerServer::PreparingState : public PlayerServer::BaseState {
@@ -79,7 +71,6 @@ public:
     ~PreparingState() = default;
 
     int32_t Stop() override;
-    int32_t StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -96,9 +87,6 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
-    int32_t StateRecover() override;
-    int32_t StateRelease() override;
-    int32_t StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -114,8 +102,6 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
-    int32_t StateRelease() override;
-    int32_t StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -133,9 +119,6 @@ public:
     int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
-    int32_t StateRecover() override;
-    int32_t StateRelease() override;
-    int32_t StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
@@ -148,9 +131,6 @@ public:
 
     int32_t Prepare() override;
     int32_t Stop() override;
-    int32_t StateRecover() override;
-    int32_t StateRelease() override;
-    int32_t StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra) override;
 };
 
 class PlayerServer::PlaybackCompletedState : public PlayerServer::BaseState {
@@ -161,9 +141,6 @@ public:
     int32_t Play() override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
-    int32_t StateRecover() override;
-    int32_t StateRelease() override;
-    int32_t StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra) override;
 
 protected:
     void HandleStateChange(int32_t newState) override;
