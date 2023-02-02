@@ -79,9 +79,9 @@ int32_t HdiVdecParamsMgr::SetInputVideoCommon(GstElement *element)
     inPortDef_.format.video.eCompressionFormat = HdiCodecUtil::CompressionGstToHdi(base->compress_format);
     inPortDef_.format.video.nFrameHeight = (uint32_t)base->height;
     inPortDef_.format.video.nFrameWidth = (uint32_t)base->width;
-    inPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate) << HDI_FRAME_RATE_MOVE;
+    inPortDef_.format.video.xFramerate = (uint32_t)((1 << HDI_FRAME_RATE_MOVE) * (base->frame_rate));
     inPortDef_.nBufferCountActual = base->input.buffer_cnt;
-    MEDIA_LOGD("frame_rate %{public}d", base->frame_rate);
+    MEDIA_LOGD("frame_rate %{public}.3f", base->frame_rate);
     auto ret = HdiSetParameter(handle_, OMX_IndexParamPortDefinition, inPortDef_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
     return GST_CODEC_OK;
@@ -93,9 +93,9 @@ int32_t HdiVdecParamsMgr::SetOutputVideoCommon(GstElement *element)
     GstVdecBase *base = GST_VDEC_BASE(element);
     outPortDef_.format.video.nFrameHeight = (uint32_t)base->height;
     outPortDef_.format.video.nFrameWidth = (uint32_t)base->width;
-    outPortDef_.format.video.xFramerate = (uint32_t)(base->frame_rate) << HDI_FRAME_RATE_MOVE;
+    outPortDef_.format.video.xFramerate = (uint32_t)((1 << HDI_FRAME_RATE_MOVE) * (base->frame_rate));
     outPortDef_.nBufferCountActual = base->output.buffer_cnt;
-    MEDIA_LOGD("frame_rate %{public}d", base->frame_rate);
+    MEDIA_LOGD("frame_rate %{public}.3f", base->frame_rate);
     auto ret = HdiSetParameter(handle_, OMX_IndexParamPortDefinition, outPortDef_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
     return GST_CODEC_OK;
