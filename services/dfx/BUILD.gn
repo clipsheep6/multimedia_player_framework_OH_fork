@@ -65,7 +65,6 @@ ohos_shared_library("media_service_dfx") {
   install_enable = true
 
   sources = [
-    "player_xcollie.cpp",
     "service_dump_manager.cpp",
   ]
 
