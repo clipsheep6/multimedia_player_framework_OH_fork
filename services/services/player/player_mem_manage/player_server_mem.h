@@ -97,6 +97,12 @@ private:
         int32_t videoHeight = 0;
         int32_t duration = 0;
     } recoverConfig_;
+    struct PlayerServerConfig {
+        bool errorCbOnce = false;
+        bool disableStoppedCb = false;
+        std::string lastErrMsg;
+        std::unique_ptr<UriHelper> uriHelper;
+    } playerServerConfig_;
     std::recursive_mutex recMutex_;
     std::recursive_mutex recMutexCb_;
     bool isReleaseMemByManage_ = false;
@@ -109,6 +115,8 @@ private:
     int32_t StateRelease();
     void StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra);
     int32_t SetSourceInternal();
+    void SetPlayerServerConfig();
+    void GetPlayerServerConfig();
     int32_t SetConfigInternal();
     int32_t SetBehaviorInternal();
     int32_t SetPlaybackSpeedInternal();

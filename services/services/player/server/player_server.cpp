@@ -162,12 +162,20 @@ int32_t PlayerServer::SetSource(int32_t fd, int64_t offset, int64_t size)
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetSource fd");
     MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(fd)");
-    auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
-    CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read the fd");
-    int32_t ret = InitPlayEngine(uriHelper->FormattedUri());
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
-    uriHelper_ = std::move(uriHelper);
+    int32_t ret;
+    if (uriHelper_ != nullptr) {
+        ret = InitPlayEngine(uriHelper_->FormattedUri());
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
+    } else {
+        auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
+        CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ),
+            MSERR_INVALID_VAL, "Failed to read the fd");
+        ret = InitPlayEngine(uriHelper->FormattedUri());
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetSource Failed!");
+        uriHelper_ = std::move(uriHelper);
+    }
     config_.url = "file descriptor source";
+
     return ret;
 }
 
@@ -455,7 +463,6 @@ int32_t PlayerServer::HandleReset()
     lastErrMsg_.clear();
     errorCbOnce_ = false;
     disableStoppedCb_ = false;
-    isStateChangedBySystem_ = false;
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
     return MSERR_OK;
@@ -883,12 +890,6 @@ int32_t PlayerServer::SetParameter(const Format &param)
     if (playerEngine_ != nullptr) {
         int32_t ret = playerEngine_->SetParameter(param);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetParameter Failed!");
-    } else {
-        if (param.ContainKey(PlayerKeys::CONTENT_TYPE) && param.ContainKey(PlayerKeys::STREAM_USAGE)) {
-            param.GetIntValue(PlayerKeys::CONTENT_TYPE, contentType_);
-            param.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage_);
-            param.GetIntValue(PlayerKeys::RENDERER_FLAG, rendererFlag_);
-        }
     }
 
     return MSERR_OK;
@@ -980,12 +981,11 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     std::lock_guard<std::mutex> lockCb(mutexCb_);
 
     if (type == INFO_TYPE_STATE_CHANGE_BY_AUDIO && extra == PLAYER_PAUSED && lastOpStatus_ == PLAYER_STARTED) {
-        isStateChangedBySystem_ = true;
         (void)OnPause();
     } else {
         int32_t ret = HandleMessage(type, extra, infoBody);
         if (playerCb_ != nullptr && ret == MSERR_OK) {
-            MEDIA_LOGD("OnInfo user type:%{public}d, extra:%{public}d", type, extra);
+            MEDIA_LOGI("OnInfo user type:%{public}d, extra:%{public}d", type, extra);
             playerCb_->OnInfo(type, extra, infoBody);
         }
     }

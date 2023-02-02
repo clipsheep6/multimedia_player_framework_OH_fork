@@ -130,6 +130,10 @@ protected:
 
     std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
     std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
+    bool errorCbOnce_ = false;
+    bool disableStoppedCb_ = false;
+    std::string lastErrMsg_;
+    std::unique_ptr<UriHelper> uriHelper_ = nullptr;
     virtual int32_t Init();
 
 private:
@@ -159,7 +163,6 @@ private:
 #endif
 
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
-    std::unique_ptr<UriHelper> uriHelper_;
     struct ConfigInfo {
         std::atomic<bool> looping = false;
         float leftVolume = 2.0f; // 2.0f: invalid initial value, audiotrack volume range [0, 1]
@@ -173,15 +176,8 @@ private:
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
     bool disableNextSeekDone_ = false;
-    bool disableStoppedCb_ = false;
     PlayerStates lastOpStatus_ = PLAYER_IDLE;
     PlayerServerTaskMgr taskMgr_;
-    bool errorCbOnce_ = false;
-    bool isStateChangedBySystem_ = false;
-    int32_t contentType_ = 2; // CONTENT_TYPE_MUSIC
-    int32_t streamUsage_ = 1; // STREAM_USAGE_MEDIA
-    int32_t rendererFlag_ = 0;
-    std::string lastErrMsg_;
 };
 } // namespace Media
 } // namespace OHOS

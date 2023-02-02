@@ -175,9 +175,9 @@ ohos_shared_library("media_service") {
     "safwk:system_ability_fwk",
   ]
   if (use_memmgr_plugin) {
-    external_deps += ["memmgr_plugin:memmgrclient"]
+    external_deps += [ "memmgr_plugin:memmgrclient" ]
   } else if (use_memmgr) {
-    external_deps += ["memmgr:memmgrclient"]
+    external_deps += [ "memmgr:memmgrclient" ]
   }
 
   subsystem_name = "multimedia"
