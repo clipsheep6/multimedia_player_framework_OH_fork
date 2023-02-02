@@ -21,6 +21,7 @@
 #include "i_standard_player_listener.h"
 #include "media_death_recipient.h"
 #include "player_server.h"
+#include "player_server_task.h"
 
 namespace OHOS {
 namespace Media {
@@ -100,7 +101,7 @@ private:
 
     std::mutex mutex_;
     std::shared_ptr<PlayerCallback> playerCallback_ = nullptr;
-    std::shared_ptr<IPlayerService> playerServer_ = nullptr;
+    std::shared_ptr<IPlayerService> playerServerTask_ = nullptr;
     using PlayerStubFunc = int32_t(PlayerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, std::pair<PlayerStubFunc, std::string>> playerFuncs_;
     TaskQueue taskQue_;

@@ -1,0 +1,83 @@
+diff a/services/services/player/ipc/player_service_stub.cpp b/services/services/player/ipc/player_service_stub.cpp	(rejected hunks)
+@@ -184,63 +191,64 @@ int32_t PlayerServiceStub::SetSource(const sptr<IRemoteObject> &object)
+     std::shared_ptr<IMediaDataSource> mediaDataSrc = std::make_shared<MediaDataCallback>(proxy);
+     CHECK_AND_RETURN_RET_LOG(mediaDataSrc != nullptr, MSERR_NO_MEMORY, "failed to new PlayerListenerCallback");
+ 
+-    return playerServer_->SetSource(mediaDataSrc);
++    return playerServerTask_->SetSource(mediaDataSrc);
+ }
+ 
+ int32_t PlayerServiceStub::SetSource(int32_t fd, int64_t offset, int64_t size)
+ {
+     MediaTrace trace("binder::SetSource(fd)");
+-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+-    return playerServer_->SetSource(fd, offset, size);
++    CHECK_AND_RETURN_RET_LOG(playerServerTask_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
++    return playerServerTask_->SetSource(fd, offset, size);
+ }
+ 
+ int32_t PlayerServiceStub::Play()
+ {
+     MediaTrace trace("binder::Play");
+-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+-    return playerServer_->Play();
++    CHECK_AND_RETURN_RET_LOG(playerServerTask_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
++    return playerServerTask_->Play();
+ }
+ 
+ int32_t PlayerServiceStub::Prepare()
+ {
+     MediaTrace trace("binder::Prepare");
+-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+-    return playerServer_->Prepare();
++    CHECK_AND_RETURN_RET_LOG(playerServerTask_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
++    return playerServerTask_->Prepare();
+ }
+ 
+ int32_t PlayerServiceStub::PrepareAsync()
+ {
+     MediaTrace trace("binder::PrepareAsync");
+-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+-    return playerServer_->PrepareAsync();
++    CHECK_AND_RETURN_RET_LOG(playerServerTask_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
++    return playerServerTask_->PrepareAsync();
+ }
+ 
+ int32_t PlayerServiceStub::Pause()
+ {
+     MediaTrace trace("binder::Pause");
+-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+-    return playerServer_->Pause();
++    CHECK_AND_RETURN_RET_LOG(playerServerTask_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
++    return playerServerTask_->Pause();
+ }
+ 
+ int32_t PlayerServiceStub::Stop()
+ {
+     MediaTrace trace("binder::Stop");
+-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+-    return playerServer_->Stop();
++    CHECK_AND_RETURN_RET_LOG(playerServerTask_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
++    return playerServerTask_->Stop();
+ }
+ 
+ int32_t PlayerServiceStub::Reset()
+ {
+     MediaTrace trace("binder::Reset");
+-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+-    return playerServer_->Reset();
++    CHECK_AND_RETURN_RET_LOG(playerServerTask_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
++    return playerServerTask_->Reset();
+ }
+ 
+ int32_t PlayerServiceStub::Release()
+ {
+     MediaTrace trace("binder::Release");
+-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+-    return playerServer_->Release();
++    CHECK_AND_RETURN_RET_LOG(playerServerTask_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
++    PlayerMemManage::GetInstance().DeregisterPlayerServer(playerServerTask_);
++    return playerServerTask_->Release();
+ }
+ 
+ int32_t PlayerServiceStub::ReleaseSync()
