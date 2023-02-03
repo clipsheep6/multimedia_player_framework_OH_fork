@@ -91,7 +91,6 @@ private:
     int32_t SetRateInternal(double rate);
     void SetupCustomElement();
     GstSeekFlags ChooseSetRateFlags(double rate);
-    void SetupSourceSetupSignal();
     int32_t SetupSignalMessage();
     int32_t SetupElementUnSetupSignal();
     void QueryDuration();
