@@ -539,6 +539,7 @@ int32_t PlayBinCtrlerBase::EnterInitializedState()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "DoInitializeForDataSource failed!");
 
     SetupCustomElement();
+    SetupSourceSetupSignal();
     ret = SetupSignalMessage();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
     ret = SetupElementUnSetupSignal();
@@ -703,6 +704,17 @@ void PlayBinCtrlerBase::SetupCustomElement()
             MEDIA_LOGD("can not create scaletempo, the audio playback speed can not be adjusted");
         }
     }
+}
+
+void PlayBinCtrlerBase::SetupSourceSetupSignal()
+{
+    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+
+    gulong id = g_signal_connect_data(playbin_, "source-setup",
+        G_CALLBACK(&PlayBinCtrlerBase::SourceSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
+        static_cast<GConnectFlags>(0));
+    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
 }
 
 int32_t PlayBinCtrlerBase::SetupSignalMessage()
@@ -977,6 +989,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         msgProcessor_->AddMsgFilter(ELEM_NAME(&elem));
     }
 
+    std::string elementName(GST_ELEMENT_NAME(&elem));
     if (isNetWorkPlay_ == false && elementName.find("uridecodebin") != std::string::npos) {
         PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
