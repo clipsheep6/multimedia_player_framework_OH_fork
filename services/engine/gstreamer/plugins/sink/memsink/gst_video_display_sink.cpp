@@ -19,7 +19,7 @@
 
 using namespace OHOS;
 namespace {
-    constexpr guint64 DEFAULT_MAX_WAIT_CLOCK_TIME = 1000000000; // ns, 1s
+    constexpr guint64 DEFAULT_MAX_WAIT_CLOCK_TIME = 200000000; // ns, 1s
     constexpr gint64 DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD = 20000000; // ns, 20ms
     constexpr gint64 DEFAULT_EXTRA_RENDER_FRAME_DIFF = 20000000; // ns, 20ms
     constexpr gint DEFAULT_DROP_BEHIND_VIDEO_BUF_FREQUENCY = 5; // drop 1 buffer every 5 buffers at most
