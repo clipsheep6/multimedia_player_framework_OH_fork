@@ -1486,7 +1486,7 @@ static gboolean gst_vdec_base_set_format(GstVideoDecoder *decoder, GstVideoCodec
     is_format_change = is_format_change || self->width != info->width;
     is_format_change = is_format_change || self->height != GST_VIDEO_INFO_FIELD_HEIGHT(info);
     is_format_change = is_format_change || (self->frame_rate < epsilon && self->frame_rate > -epsilon &&
-        && info->fps_n != 0);
+        info->fps_n != 0);
 
     if (is_format_change && info->width != 0 && GST_VIDEO_INFO_FIELD_HEIGHT(info) != 0) {
         self->width = info->width;
