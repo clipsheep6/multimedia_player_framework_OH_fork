@@ -63,6 +63,7 @@ ohos_shared_library("gst_mem_src") {
   install_enable = true
 
   sources = [
+    "../videocapture/src/video_pool_manager.cpp",
     "../videocapture/src/gst_video_capture_pool.cpp",
     "../videocapture/src/gst_video_capture_src.cpp",
     "gst_consumer_surface_allocator.cpp",

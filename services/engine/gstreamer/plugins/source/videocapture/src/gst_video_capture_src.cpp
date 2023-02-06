@@ -143,6 +143,7 @@ static void gst_video_capture_src_init(GstVideoCaptureSrc *videocapturesrc)
     videocapturesrc->paused_count = 0;
     videocapturesrc->persist_time = 0;
     videocapturesrc->total_pause_time = 0;
+    videocapturesrc->paused_buffer_count = 0;
 }
 
 static void gst_video_capture_src_finalize(GObject *object)
@@ -282,6 +283,7 @@ static GstStateChangeReturn gst_video_capture_src_change_state(GstElement *eleme
 {
     GstVideoCaptureSrc *capturesrc = GST_VIDEO_CAPTURE_SRC(element);
     g_return_val_if_fail(capturesrc != nullptr, GST_STATE_CHANGE_FAILURE);
+    GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(capturesrc);
 
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -300,6 +302,15 @@ static GstStateChangeReturn gst_video_capture_src_change_state(GstElement *eleme
     GstStateChangeReturn ret = GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
 
     switch (transition) {
+        case GST_STATE_CHANGE_NULL_TO_READY:
+            if (surfacesrc->pool != nullptr) {
+                if (capturesrc->stream_type == VIDEO_STREAM_TYPE_ES_AVC) {
+                    g_object_set(surfacesrc->pool, "cached-data", TRUE, nullptr);
+                } else {
+                    g_object_set(surfacesrc->pool, "suspend", TRUE, nullptr);
+                }
+            }
+            break;
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
             gst_video_capture_src_pause(capturesrc);
             break;
@@ -316,9 +327,6 @@ static GstStateChangeReturn gst_video_capture_src_change_state(GstElement *eleme
 static GstBufferPool *gst_video_capture_create_pool()
 {
     GstBufferPool *bufferpool = gst_video_capture_pool_new();
-    if (bufferpool) {
-        g_object_set(bufferpool, "suspend", TRUE, nullptr);
-    }
     return bufferpool;
 }
 
@@ -346,14 +354,21 @@ static GstFlowReturn gst_video_capture_deal_with_pts(GstVideoCaptureSrc *src, Gs
     }
 
     if (src->cur_state == RECORDER_RESUME) {
-        src->cur_state = RECORDER_RUNNING;
-        src->resume_time = static_cast<gint64>(timestamp);
-        src->persist_time = fabs(src->resume_time - src->paused_time) - src->min_interval;
-        GST_INFO_OBJECT(src, "video resume timestamp %" G_GINT64_FORMAT "", src->resume_time);
-        src->paused_time = -1; // reset pause time
-        src->total_pause_time += src->persist_time;
-        GST_INFO_OBJECT(src, "video has %d times pause, total PauseTime: %" G_GINT64_FORMAT "",
-            src->paused_count, src->total_pause_time);
+        if (src->paused_buffer_count > 0) {
+            src->paused_buffer_count--;
+            timestamp = src->last_timestamp + 1000000; // Only 1000000 ns is added, and this data is only used for decoding.
+            src->paused_time = timestamp;
+            GST_DEBUG_OBJECT(src, "Data received during pause, timestamp %" G_GINT64_FORMAT "", timestamp);
+        } else {
+            src->cur_state = RECORDER_RUNNING;
+            src->resume_time = static_cast<gint64>(timestamp);
+            src->persist_time = fabs(src->resume_time - src->paused_time) - src->min_interval;
+            GST_INFO_OBJECT(src, "video resume timestamp %" G_GINT64_FORMAT "", src->resume_time);
+            src->paused_time = -1; // reset pause time
+            src->total_pause_time += src->persist_time;
+            GST_INFO_OBJECT(src, "video has %d times pause, total PauseTime: %" G_GINT64_FORMAT "",
+                src->paused_count, src->total_pause_time);
+        }
     }
 
     src->last_timestamp = static_cast<gint64>(timestamp); // updata last_timestamp
@@ -415,7 +430,11 @@ static void gst_video_capture_src_start(GstVideoCaptureSrc *src)
     GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(src);
     g_return_if_fail(surfacesrc->pool != nullptr);
 
-    g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
+    if (src->stream_type == VIDEO_STREAM_TYPE_ES_AVC) {
+        g_object_set(surfacesrc->pool, "cached-data", FALSE, nullptr);
+    } else {
+        g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
+    }
     g_object_set(surfacesrc->pool, "src", static_cast<gpointer>(src), nullptr);
     g_object_set(surfacesrc->pool, "input-detection", TRUE, nullptr);
 
@@ -428,7 +447,11 @@ static void gst_video_capture_src_pause(GstVideoCaptureSrc *src)
     GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(src);
     g_return_if_fail(surfacesrc->pool != nullptr);
 
-    g_object_set(surfacesrc->pool, "suspend", TRUE, nullptr);
+    if (src->stream_type == VIDEO_STREAM_TYPE_ES_AVC) {
+        g_object_set(surfacesrc->pool, "cached-data", TRUE, nullptr);
+    } else {
+        g_object_set(surfacesrc->pool, "suspend", TRUE, nullptr);
+    }
     g_object_set(surfacesrc->pool, "pause-data", TRUE, nullptr);
     g_object_set(surfacesrc->pool, "input-detection", FALSE, nullptr);
 
@@ -436,8 +459,12 @@ static void gst_video_capture_src_pause(GstVideoCaptureSrc *src)
     src->paused_count++;
 
     GstBufferPool *bufferpool = GST_BUFFER_POOL(surfacesrc->pool);
-    gst_buffer_pool_set_flushing(bufferpool, TRUE);
-    gst_buffer_pool_set_flushing(bufferpool, FALSE);
+
+    if (src->stream_type != VIDEO_STREAM_TYPE_ES_AVC) {
+        gst_buffer_pool_set_flushing(bufferpool, TRUE);
+        gst_buffer_pool_set_flushing(bufferpool, FALSE);
+    }
+    GST_DEBUG_OBJECT(src, "video capture src pause");
 }
 
 static void gst_video_capture_src_resume(GstVideoCaptureSrc *src)
@@ -446,11 +473,18 @@ static void gst_video_capture_src_resume(GstVideoCaptureSrc *src)
     GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(src);
     g_return_if_fail(surfacesrc->pool != nullptr);
 
-    g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
+    src->cur_state = RECORDER_RESUME;
+
+    if (src->stream_type == VIDEO_STREAM_TYPE_ES_AVC) {
+        g_object_set(surfacesrc->pool, "cached-data", FALSE, nullptr);
+        g_object_get(surfacesrc->pool, "buffer-count", &src->paused_buffer_count, nullptr);
+        GST_DEBUG_OBJECT(surfacesrc, "Received %d frames of data during pause.", src->paused_buffer_count);
+    } else {
+        g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
+    }
     g_object_set(surfacesrc->pool, "pause-data", FALSE, nullptr);
     g_object_set(surfacesrc->pool, "input-detection", TRUE, nullptr);
-
-    src->cur_state = RECORDER_RESUME;
+    GST_DEBUG_OBJECT(src, "video capture src resume");
 }
 
 static void gst_video_capture_src_prestop(GstVideoCaptureSrc *src)

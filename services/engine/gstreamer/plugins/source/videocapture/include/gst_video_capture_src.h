@@ -61,6 +61,7 @@ struct _GstVideoCaptureSrc {
     gint64 paused_time; // the timestamp when video pause called
     gint64 resume_time; // the timestamp when video resume called
     guint paused_count; // the paused count times
+    guint paused_buffer_count; // Buffer received during pause
     gint64 persist_time;
     gint64 total_pause_time;
 };
