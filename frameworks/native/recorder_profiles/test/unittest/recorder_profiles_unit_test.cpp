@@ -139,6 +139,7 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetVideoRecorderCaps_0100, T
 {
     std::vector<std::shared_ptr<VideoRecorderCaps>> videoRecorderArray =
         RecorderProfilesFactory::CreateRecorderProfiles().GetVideoRecorderCaps();
+    ASSERT_TRUE(videoRecorderArray.size() != 0);
     CheckVideoRecorderCapsArray(videoRecorderArray);
 }
 
@@ -154,6 +155,7 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetVideoRecorderProfile_0100
     int32_t qualityLevel = RECORDER_QUALITY_LOW;
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         RecorderProfilesFactory::CreateRecorderProfiles().GetVideoRecorderProfile(sourceId, qualityLevel);
+    ASSERT_TRUE(videoRecorderProfile != nullptr);
     EXPECT_EQ(ContainerFormatType::CFT_MPEG_4, videoRecorderProfile->containerFormatType);
     EXPECT_EQ(96000, videoRecorderProfile->audioBitrate); // 96000 expect audio bitrate
     EXPECT_EQ(2, videoRecorderProfile->audioChannels); // 2 expect channels
