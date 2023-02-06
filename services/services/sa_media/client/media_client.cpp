@@ -32,6 +32,7 @@
 #endif
 #include "media_log.h"
 #include "media_errors.h"
+#include "player_xcollie.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaClient"};
@@ -288,10 +289,14 @@ int32_t MediaClient::DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmu
 sptr<IStandardMediaService> MediaClient::GetMediaProxy()
 {
     MEDIA_LOGD("enter");
+    int32_t id1 = PlayerXCollie::GetInstance().SetTimer("SystemAbilityManagerClient::GetSystemAbilityManager");
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    PlayerXCollie::GetInstance().CancelTimer(id1);
     CHECK_AND_RETURN_RET_LOG(samgr != nullptr, nullptr, "system ability manager is nullptr.");
 
+    int32_t id2 = PlayerXCollie::GetInstance().SetTimer("SystemAbilityManagerClient::GetSystemAbility");
     sptr<IRemoteObject> object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
+    PlayerXCollie::GetInstance().CancelTimer(id2);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "media object is nullptr.");
 
     mediaProxy_ = iface_cast<IStandardMediaService>(object);
