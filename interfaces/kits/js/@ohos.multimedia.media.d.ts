@@ -736,6 +736,12 @@ declare namespace media {
     CACHED_DURATION = 4,
   }
 
+  /**
+   * Media file descriptor. The caller needs to ensure that the fd is valid and
+   * the offset and length are correct.
+   * @since 9
+   * @syscap SystemCapability.Multimedia.Media.Core
+   */
   interface AVFileDescriptor {
     /**
      * The file descriptor of audio or video source from file system. The caller
