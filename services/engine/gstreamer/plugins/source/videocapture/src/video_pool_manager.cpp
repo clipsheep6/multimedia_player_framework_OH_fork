@@ -76,7 +76,7 @@ void VideoPoolManager::FreeBufferQue()
 {
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGI("FreeBufferQue size: %{public}d", bufferQue_.size());
-    while(bufferQue_.size() > 0) {
+    while (bufferQue_.size() > 0) {
         GstBuffer *buf = bufferQue_.front();
         bufferQue_.pop();
         if (buf) {

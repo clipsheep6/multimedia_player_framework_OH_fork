@@ -700,7 +700,7 @@ static void gst_consumer_surface_pool_dump_surfacebuffer(GstConsumerSurfacePool 
     }
     (void)fwrite(buffer->GetVirAddr(), data_size, 1, dump_file);
     (void)fflush(dump_file);
-    fclose(dump_file);
+    (void)fclose(dump_file);
     return;
 }
 
@@ -726,6 +726,6 @@ static void gst_consumer_surface_pool_dump_gstbuffer(GstConsumerSurfacePool *poo
     (void)fwrite(info.data, meta->length, 1, dump_file);
     (void)fflush(dump_file);
     gst_buffer_unmap(buf, &info);
-    fclose(dump_file);
+    (void)fclose(dump_file);
     return;
 }

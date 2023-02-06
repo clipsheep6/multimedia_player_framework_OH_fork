@@ -356,7 +356,7 @@ static GstFlowReturn gst_video_capture_deal_with_pts(GstVideoCaptureSrc *src, Gs
     if (src->cur_state == RECORDER_RESUME) {
         if (src->paused_buffer_count > 0) {
             src->paused_buffer_count--;
-            timestamp = src->last_timestamp + 1000000; // Only 1000000 ns is added, and this data is only used for decoding.
+            timestamp = src->last_timestamp + 1000000; // Increase 1000000 ns to avoid audio and video synchronization.
             src->paused_time = timestamp;
             GST_DEBUG_OBJECT(src, "Data received during pause, timestamp %" G_GINT64_FORMAT "", timestamp);
         } else {
