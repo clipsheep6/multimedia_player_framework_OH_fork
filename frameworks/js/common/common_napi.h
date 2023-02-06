@@ -52,6 +52,7 @@ public:
         const std::vector<int32_t> &vec);
     static bool AddNumberPropInt32(napi_env env, napi_value obj, const std::string &key, int32_t value);
     static bool AddNumberPropInt64(napi_env env, napi_value obj, const std::string &key, int64_t value);
+    static bool AddNapiValueProp(napi_env env, napi_value obj, const std::string &key, napi_value value);
     static bool AddArrayInt(napi_env env, napi_value &array, const std::vector<int32_t> &vec);
     static bool AddStringProperty(napi_env env, napi_value obj, const std::string &key, const std::string &value);
 };
@@ -279,6 +280,11 @@ struct AVFileDescriptor {
     int32_t fd = 0;
     int64_t offset = 0;
     int64_t length = -1;
+};
+
+struct AVDataSrcDescriptor {
+    int64_t fileSize = 0;
+    napi_value callback = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

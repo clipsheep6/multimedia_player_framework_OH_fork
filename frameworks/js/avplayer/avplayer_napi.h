@@ -21,6 +21,7 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "avplayer_callback.h"
+#include "media_data_source_callback.h"
 #include "common_napi.h"
 #include "audio_info.h"
 #include "task_queue.h"
@@ -138,6 +139,11 @@ private:
     static napi_value JsGetAVFileDescriptor(napi_env env, napi_callback_info info);
     static napi_value JsSetAVFileDescriptor(napi_env env, napi_callback_info info);
     /**
+     * dataSrc: DataSrcDescriptor
+     */
+    static napi_value JsSetDataSrc(napi_env env, napi_callback_info info);
+    static napi_value JsGetDataSrc(napi_env env, napi_callback_info info);
+    /**
      * surfaceId?: string
      */
     static napi_value JsSetSurfaceID(napi_env env, napi_callback_info info);
@@ -218,6 +224,7 @@ private:
     std::shared_ptr<TaskHandler<void>> ReleaseTask();
     std::string GetCurrentState();
     bool IsControllable();
+    bool IsLiveSource(napi_env env, napi_callback_info info);
 
     void NotifyDuration(int32_t duration) override;
     void NotifyPosition(int32_t position) override;
@@ -235,9 +242,11 @@ private:
     napi_ref wrapper_ = nullptr;
     std::shared_ptr<Player> player_ = nullptr;
     std::shared_ptr<AVPlayerCallback> playerCb_ = nullptr;
+    std::shared_ptr<MediaDataSourceCallback> dataSrcCb_ = nullptr;
     std::atomic<bool> isReleased_ = false;
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;
+    struct AVDataSrcDescriptor dataSrcDescriptor_;
     std::string surface_ = "";
     bool loop_ = false;
     int32_t videoScaleType_ = 0;

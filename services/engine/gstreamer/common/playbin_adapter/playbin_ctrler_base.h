@@ -47,7 +47,7 @@ public:
 
     int32_t Init();
     int32_t SetSource(const std::string &url)  override;
-    int32_t SetSource(const std::shared_ptr<GstAppsrcWrap> &appsrcWrap) override;
+    int32_t SetSource(const std::shared_ptr<GstAppsrcEngine> &appsrcWrap) override;
     int32_t Prepare() override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
@@ -173,7 +173,7 @@ private:
 
     std::atomic<bool> isDuration_ = false;
     std::atomic<bool> enableLooping_ = false;
-    std::shared_ptr<GstAppsrcWrap> appsrcWrap_ = nullptr;
+    std::shared_ptr<GstAppsrcEngine> appsrcWrap_ = nullptr;
 
     std::shared_ptr<IdleState> idleState_;
     std::shared_ptr<InitializedState> initializedState_;

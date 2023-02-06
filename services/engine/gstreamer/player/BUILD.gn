@@ -55,6 +55,7 @@ config("media_engine_gst_player_config") {
     "//foundation/multimedia/audio_framework/frameworks/innerkitsimpl/common/include",
     "//foundation/multimedia/audio_framework/interfaces/innerkits/native/audiocommon/include",
     "//foundation/multimedia/audio_framework/interfaces/innerkits/native/audiomanager/include",
+    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
     "//foundation/graphic/graphic_2d/utils/sync_fence/export",
     "//drivers/peripheral/audio/interfaces/include",
