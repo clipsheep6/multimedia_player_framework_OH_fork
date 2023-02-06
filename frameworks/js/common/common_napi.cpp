@@ -472,6 +472,20 @@ bool CommonNapi::AddNumberPropInt64(napi_env env, napi_value obj, const std::str
     return true;
 }
 
+bool CommonNapi::AddNapiValueProp(napi_env env, napi_value obj, const std::string &key, napi_value value)
+{
+    CHECK_AND_RETURN_RET(obj != nullptr, false);
+
+    napi_value keyNapi = nullptr;
+    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
+    CHECK_AND_RETURN_RET(status == napi_ok, false);
+
+    status = napi_set_property(env, obj, keyNapi, value);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "Failed to set property");
+
+    return true;
+}
+
 napi_status MediaJsResultStringVector::GetJsResult(napi_env env, napi_value &result)
 {
     napi_status status;
