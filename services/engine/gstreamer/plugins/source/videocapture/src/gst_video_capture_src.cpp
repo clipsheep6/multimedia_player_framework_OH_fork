@@ -69,13 +69,14 @@ static void gst_video_capture_src_set_caps(GstVideoCaptureSrc *src, int32_t pixe
 static void gst_video_capture_src_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_video_capture_src_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 static GstStateChangeReturn gst_video_capture_src_change_state(GstElement *element, GstStateChange transition);
-static void gst_video_capture_deal_with_pts(GstVideoCaptureSrc *src, GstBuffer *buf);
+static GstFlowReturn gst_video_capture_deal_with_pts(GstVideoCaptureSrc *src, GstBuffer *buf);
 static GstFlowReturn gst_video_capture_src_fill(GstBaseSrc *src, guint64 offset, guint size, GstBuffer *buf);
 static GstBufferPool *gst_video_capture_create_pool();
 static void gst_video_capture_src_start(GstVideoCaptureSrc *src);
 static void gst_video_capture_src_pause(GstVideoCaptureSrc *src);
 static void gst_video_capture_src_resume(GstVideoCaptureSrc *src);
 static void gst_video_capture_src_stop(GstVideoCaptureSrc *src);
+static void gst_video_capture_src_prestop(GstVideoCaptureSrc *src);
 
 static void gst_video_capture_src_class_init(GstVideoCaptureSrcClass *klass)
 {
@@ -290,6 +291,9 @@ static GstStateChangeReturn gst_video_capture_src_change_state(GstElement *eleme
                 gst_video_capture_src_resume(capturesrc);
             }
             break;
+        case GST_STATE_CHANGE_PAUSED_TO_READY:
+            gst_video_capture_src_prestop(capturesrc);
+            break;
         default:
             break;
     }
@@ -318,15 +322,16 @@ static GstBufferPool *gst_video_capture_create_pool()
     return bufferpool;
 }
 
-static void gst_video_capture_deal_with_pts(GstVideoCaptureSrc *src, GstBuffer *buf)
+static GstFlowReturn gst_video_capture_deal_with_pts(GstVideoCaptureSrc *src, GstBuffer *buf)
 {
-    g_return_if_fail(buf != nullptr);
+    g_return_val_if_fail(buf != nullptr, GST_FLOW_ERROR);
 
     guint64 timestamp = GST_BUFFER_PTS(buf);
-    g_return_if_fail(timestamp <= G_MAXINT64);
+    g_return_val_if_fail(timestamp <= G_MAXINT64, GST_FLOW_ERROR);
     GST_DEBUG_OBJECT(src, "video capture buffer size is: %" G_GSIZE_FORMAT ", pts: %" G_GUINT64_FORMAT,
         gst_buffer_get_size(buf), timestamp);
-    g_return_if_fail(src->last_timestamp >= 0 && timestamp >= static_cast<guint64>(src->last_timestamp));
+    g_return_val_if_fail(src->last_timestamp >= 0 && timestamp >= static_cast<guint64>(src->last_timestamp),
+        GST_FLOW_ERROR);
     GST_INFO_OBJECT(src, "videoCapturer timestamp has increased: %" G_GUINT64_FORMAT,
         timestamp - src->last_timestamp);
 
@@ -352,8 +357,10 @@ static void gst_video_capture_deal_with_pts(GstVideoCaptureSrc *src, GstBuffer *
     }
 
     src->last_timestamp = static_cast<gint64>(timestamp); // updata last_timestamp
-    g_return_if_fail(src->total_pause_time >= 0 && timestamp >= static_cast<guint64>(src->last_timestamp));
+    g_return_val_if_fail(src->total_pause_time >= 0 && timestamp >= static_cast<guint64>(src->last_timestamp),
+        GST_FLOW_ERROR);
     GST_BUFFER_PTS(buf) = timestamp - src->total_pause_time; // running state timestamp to encoder is up with pause
+    return GST_FLOW_OK;
 }
 
 static GstFlowReturn gst_video_capture_src_fill(GstBaseSrc *src, guint64 offset, guint size, GstBuffer *buf)
@@ -374,8 +381,16 @@ static GstFlowReturn gst_video_capture_src_fill(GstBaseSrc *src, guint64 offset,
         capturesrc->is_first_buffer = false;
     }
 
+    if ((capturesrc->stream_type != VIDEO_STREAM_TYPE_ES_AVC) &&
+        ((meta->width != capturesrc->video_width) || (meta->height != capturesrc->video_height))) {
+        GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, ("Data width or height error on input stream."),
+            ("Data width or height error on input stream. Input data width=%d, height=%d. Set width=%d, height=%d.",
+            meta->width, meta->height, capturesrc->video_width, capturesrc->video_height));
+        return GST_FLOW_ERROR;
+    }
+
     if (gst_buffer_get_size(buf) < capturesrc->min_buffer_size) {
-        GST_ELEMENT_ERROR (src, STREAM, FAILED, ("Wrong data length on input streams."),
+        GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, ("Wrong data length on input streams."),
             ("The minimum data length of video data input is %d, and the current input data length is "
             "%" G_GSIZE_FORMAT ".", capturesrc->min_buffer_size, gst_buffer_get_size(buf)));
         return GST_FLOW_ERROR;
@@ -386,7 +401,10 @@ static GstFlowReturn gst_video_capture_src_fill(GstBaseSrc *src, guint64 offset,
     }
 
     // do with pts
-    gst_video_capture_deal_with_pts(capturesrc, buf);
+    if (gst_video_capture_deal_with_pts(capturesrc, buf) != GST_FLOW_OK) {
+        GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, ("Data timestamp error on input stream."),
+            ("Data timestamp error on input stream, pts: %" G_GUINT64_FORMAT, GST_BUFFER_PTS(buf)));
+    }
 
     return GST_FLOW_OK;
 }
@@ -398,6 +416,9 @@ static void gst_video_capture_src_start(GstVideoCaptureSrc *src)
     g_return_if_fail(surfacesrc->pool != nullptr);
 
     g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
+    g_object_set(surfacesrc->pool, "src", static_cast<gpointer>(src), nullptr);
+    g_object_set(surfacesrc->pool, "input-detection", TRUE, nullptr);
+
     src->cur_state = RECORDER_RUNNING;
 }
 
@@ -408,6 +429,8 @@ static void gst_video_capture_src_pause(GstVideoCaptureSrc *src)
     g_return_if_fail(surfacesrc->pool != nullptr);
 
     g_object_set(surfacesrc->pool, "suspend", TRUE, nullptr);
+    g_object_set(surfacesrc->pool, "pause-data", TRUE, nullptr);
+    g_object_set(surfacesrc->pool, "input-detection", FALSE, nullptr);
 
     src->cur_state = RECORDER_PAUSED;
     src->paused_count++;
@@ -424,8 +447,21 @@ static void gst_video_capture_src_resume(GstVideoCaptureSrc *src)
     g_return_if_fail(surfacesrc->pool != nullptr);
 
     g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
+    g_object_set(surfacesrc->pool, "pause-data", FALSE, nullptr);
+    g_object_set(surfacesrc->pool, "input-detection", TRUE, nullptr);
 
     src->cur_state = RECORDER_RESUME;
+}
+
+static void gst_video_capture_src_prestop(GstVideoCaptureSrc *src)
+{
+    g_return_if_fail(src != nullptr);
+    GstSurfaceSrc *surfacesrc = GST_SURFACE_SRC(src);
+    g_return_if_fail(surfacesrc->pool != nullptr);
+
+    // Prevent the data acquisition thread from getting stuck: acquire_buffer.
+    g_object_set(surfacesrc->pool, "pause-data", FALSE, nullptr);
+    g_object_set(surfacesrc->pool, "src", nullptr, nullptr);
 }
 
 static void gst_video_capture_src_stop(GstVideoCaptureSrc *src)

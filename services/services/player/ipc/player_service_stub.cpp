@@ -42,7 +42,7 @@ sptr<PlayerServiceStub> PlayerServiceStub::Create()
 }
 
 PlayerServiceStub::PlayerServiceStub()
-    : taskQue_("PlayerServer")
+    : taskQue_("PlayerRequest")
 {
     (void)taskQue_.Start();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
@@ -241,11 +241,6 @@ int32_t PlayerServiceStub::Release()
     MediaTrace trace("binder::Release");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->Release();
-}
-
-int32_t PlayerServiceStub::ReleaseSync()
-{
-    return MSERR_OK;
 }
 
 int32_t PlayerServiceStub::SetVolume(float leftVolume, float rightVolume)

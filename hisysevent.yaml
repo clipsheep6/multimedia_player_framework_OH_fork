@@ -15,21 +15,21 @@ domain: MULTIMEDIA
 
 PLAYER_ERR:
   __BASE: {type: FAULT, level: CRITICAL, desc: player error}
-  PID: {type: INT32, desc: pid}
-  UID: {type: INT32, desc: uid}
+  PID: {type: INT32, desc: The pid of the PLAYER_ERR event}
+  UID: {type: INT32, desc: The uid of the PLAYER_ERR event}
   MODULE: {type: STRING, desc: module name}
   MSG: {type: STRING, desc: message}
 
 PLAYER_STATE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: state change}
-  PID: {type: INT32, desc: pid}
-  UID: {type: INT32, desc: uid}
+  PID: {type: INT32, desc: The pid of the PLAYER_STATE event}
+  UID: {type: INT32, desc: The uid of the PLAYER_STATE event}
   MODULE: {type: STRING, desc: module name}
   MSG: {type: STRING, desc: message}
 
 PLAYER_STATISTICS:
   __BASE: {type: STATISTIC, level: MINOR, desc: function call frequency}
-  PID: {type: INT32, desc: pid}
-  UID: {type: INT32, desc: uid}
+  PID: {type: INT32, desc: The pid of the PLAYER_STATISTICS event}
+  UID: {type: INT32, desc: The uid of the PLAYER_STATISTICS event}
   MODULE: {type: STRING, desc: module name}
   MSG: {type: STRING, desc: message}

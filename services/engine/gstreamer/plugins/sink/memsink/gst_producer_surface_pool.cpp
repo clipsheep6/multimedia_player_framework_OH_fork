@@ -145,7 +145,7 @@ static void gst_producer_surface_pool_init(GstProducerSurfacePool *pool)
     pool->callCnt = 0;
     pool->isDynamicCached = FALSE;
     pool->cachedBuffers = 0;
-    pool->scale_type = 0;
+    pool->scale_type = 1; // VIDEO_SCALE_TYPE_FIT_CROP
 }
 
 static void gst_producer_surface_pool_finalize(GObject *obj)
@@ -402,6 +402,8 @@ static void gst_producer_surface_pool_request_loop(GstProducerSurfacePool *spool
     GstBufferPool *pool = GST_BUFFER_POOL_CAST(spool);
     GST_DEBUG_OBJECT(spool, "Loop In");
 
+    pthread_setname_np(pthread_self(), "SurfacePool");
+
     GST_BUFFER_POOL_LOCK(spool);
     gst_producer_surface_pool_statistics(spool);
 
@@ -544,6 +546,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
     g_return_val_if_fail(spool != nullptr, GST_FLOW_ERROR);
 
     GST_DEBUG_OBJECT(spool, "alloc surface buffer");
+    OHOS::Media::MediaTrace trace("Gst::surface_pool_alloc_buffer");
 
     GstSurfaceMemory *memory = nullptr;
     GstFlowReturn ret = do_alloc_memory_locked(spool, params, &memory);
@@ -566,7 +569,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
     auto buffer_handle = buf->GetBufferHandle();
     g_return_val_if_fail(buffer_handle != nullptr, GST_FLOW_ERROR);
     int32_t stride = buffer_handle->stride;
-    GstBufferHandleConfig config = { sizeof(buffer_handle), memory->fence, 0, 0, 0 };
+    GstBufferHandleConfig config = { sizeof(buffer_handle), memory->fence, 0, 0, 0, 0, 0 };
     gst_buffer_add_buffer_handle_meta(*buffer, reinterpret_cast<intptr_t>(buffer_handle), config);
 
     GstVideoInfo *info = &spool->info;

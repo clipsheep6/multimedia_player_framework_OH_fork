@@ -77,6 +77,7 @@ ohos_shared_library("gst_audio_capture_src") {
   ]
 
   deps = [
+    "../../../../../utils:media_service_utils",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",

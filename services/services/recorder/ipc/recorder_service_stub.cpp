@@ -104,6 +104,11 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         return MSERR_INVALID_OPERATION;
     }
 
+    // When the server encounters the application freeze and enters the pause state, it needs to recover in advance.
+    if (code != PAUSE) {
+        HeartBeat();
+    }
+
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {
         auto memberFunc = itFunc->second;
@@ -494,8 +499,7 @@ int32_t RecorderServiceStub::SetOrientationHint(MessageParcel &data, MessageParc
 {
     (void)reply;
     int32_t rotation = data.ReadInt32();
-    SetOrientationHint(rotation);
-    return MSERR_OK;
+    return SetOrientationHint(rotation);
 }
 
 int32_t RecorderServiceStub::Prepare(MessageParcel &data, MessageParcel &reply)
