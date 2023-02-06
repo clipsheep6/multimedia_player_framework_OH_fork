@@ -240,6 +240,7 @@ bool PlayerMock::CreatePlayer()
 
 int32_t PlayerMock::SetSource(const std::string url)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     int32_t ret = player_->SetSource(url);
     return ret;
@@ -247,6 +248,7 @@ int32_t PlayerMock::SetSource(const std::string url)
 
 int32_t PlayerMock::SetSource(const std::string &path, int64_t offset, int64_t size)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::string rawFile = path.substr(strlen("file://"));
     int32_t fd = open(rawFile.c_str(), O_RDONLY);
     if (fd <= 0) {
@@ -286,6 +288,7 @@ int32_t PlayerMock::SetDataSrc(const std::string &path, int32_t size, bool seeka
 
 int32_t PlayerMock::Prepare()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     int32_t ret = player_->Prepare();
     if (ret == MSERR_OK) {
@@ -296,6 +299,7 @@ int32_t PlayerMock::Prepare()
 
 int32_t PlayerMock::PrepareAsync()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     int ret = player_->PrepareAsync();
     if (ret == MSERR_OK) {
@@ -306,6 +310,7 @@ int32_t PlayerMock::PrepareAsync()
 
 int32_t PlayerMock::Play()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     int32_t ret = player_->Play();
     if (ret == MSERR_OK) {
@@ -316,6 +321,7 @@ int32_t PlayerMock::Play()
 
 int32_t PlayerMock::Pause()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     int32_t ret = player_->Pause();
     if (ret == MSERR_OK) {
@@ -326,6 +332,7 @@ int32_t PlayerMock::Pause()
 
 int32_t PlayerMock::Stop()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     int32_t ret = player_->Stop();
     if (ret == MSERR_OK) {
@@ -339,6 +346,7 @@ int32_t PlayerMock::Stop()
 
 void PlayerMock::SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode)
 {
+    UNITTEST_CHECK_AND_RETURN_LOG(player_ == nullptr || callback_ == nullptr, "player or callback is nullptr");
     int32_t duration = 0;
     int32_t seekPosition = 0;
     callback_->SetSeekDoneFlag(false);
@@ -355,6 +363,7 @@ void PlayerMock::SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode)
 
 int32_t PlayerMock::Seek(int32_t mseconds, PlayerSeekMode mode)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     SeekPrepare(mseconds, mode);
     int32_t ret = player_->Seek(mseconds, mode);
@@ -366,6 +375,7 @@ int32_t PlayerMock::Seek(int32_t mseconds, PlayerSeekMode mode)
 
 int32_t PlayerMock::Reset()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     int32_t ret = player_->Reset();
     if (ret == MSERR_OK) {
         return callback_->ResetSync();
@@ -375,6 +385,7 @@ int32_t PlayerMock::Reset()
 
 int32_t PlayerMock::Release()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     if (previewWindow_ != nullptr) {
         previewWindow_->Destroy();
         previewWindow_ = nullptr;
@@ -385,6 +396,7 @@ int32_t PlayerMock::Release()
 
 int32_t PlayerMock::ReleaseSync()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     if (previewWindow_ != nullptr) {
         previewWindow_->Destroy();
         previewWindow_ = nullptr;
@@ -395,49 +407,58 @@ int32_t PlayerMock::ReleaseSync()
 
 int32_t PlayerMock::SetVolume(float leftVolume, float rightVolume)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetVolume(leftVolume, rightVolume);
 }
 
 int32_t PlayerMock::SetLooping(bool loop)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetLooping(loop);
 }
 
 int32_t PlayerMock::GetCurrentTime(int32_t &currentTime)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->GetCurrentTime(currentTime);
 }
 
 int32_t PlayerMock::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetVideoTrackInfo(videoTrack);
 }
 
 int32_t PlayerMock::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetAudioTrackInfo(audioTrack);
 }
 
 int32_t PlayerMock::GetVideoWidth()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetVideoWidth();
 }
 
 int32_t PlayerMock::GetVideoHeight()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetVideoHeight();
 }
 
 int32_t PlayerMock::GetDuration(int32_t &duration)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetDuration(duration);
 }
 
 int32_t PlayerMock::SetPlaybackSpeed(PlaybackRateMode mode)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     callback_->SetSpeedDoneFlag(false);
     int32_t ret = player_->SetPlaybackSpeed(mode);
     if (ret == MSERR_OK) {
@@ -448,39 +469,46 @@ int32_t PlayerMock::SetPlaybackSpeed(PlaybackRateMode mode)
 
 int32_t PlayerMock::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->GetPlaybackSpeed(mode);
 }
 
 int32_t PlayerMock::SelectBitRate(uint32_t bitRate)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->SelectBitRate(bitRate);
 }
 
 bool PlayerMock::IsPlaying()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->IsPlaying();
 }
 
 bool PlayerMock::IsLooping()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->IsLooping();
 }
 
 int32_t PlayerMock::SetParameter(const Format &param)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     return player_->SetParameter(param);
 }
 
 int32_t PlayerMock::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetPlayerCallback(callback);
 }
 
 int32_t PlayerMock::SetVideoSurface(sptr<Surface> surface)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetVideoSurface(surface);
 }
