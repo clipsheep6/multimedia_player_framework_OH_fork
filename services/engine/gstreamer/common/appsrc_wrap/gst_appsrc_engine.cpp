@@ -236,30 +236,6 @@ gboolean GstAppsrcEngine::SeekDataInner(uint64_t pos)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("SeekAndFreeBuffers in");
-    // if (appSrcMem_->availableBegin <= appSrcMem_->begin) {
-    //     if (appSrcMem_->filePos - GetAvailableSize() <= pos && appSrcMem_->filePos >= pos) {
-    //         appSrcMem_->end = appSrcMem_->availableBegin == 0 ? bufferSize_ - 1 : appSrcMem_->availableBegin - 1;
-    //         appSrcMem_->availableBegin = appSrcMem_->begin - (appSrcMem_->filePos - pos);
-    //         if (noFreeBuffer_) {
-    //             noFreeBuffer_ = false;
-    //         }
-    //     } else {
-    //         appSrcMem_->filePos = pos;
-    //         appSrcMem_->availableBegin = appSrcMem_->begin;
-    //     }
-    // } else {
-    //     if (appSrcMem_->filePos - GetAvailableSize() <= pos && appSrcMem_->filePos >= pos) {
-    //         appSrcMem_->end = appSrcMem_->availableBegin == 0 ? bufferSize_ - 1 : appSrcMem_->availableBegin - 1;
-    //         appSrcMem_->availableBegin = appSrcMem_->filePos - appSrcMem_->begin < pos ?
-    //             appSrcMem_->begin - (appSrcMem_->filePos - pos) : bufferSize_ - (appSrcMem_->filePos - pos - appSrcMem_->begin);
-    //         if (noFreeBuffer_) {
-    //             noFreeBuffer_ = false;
-    //         }
-    //     } else {
-    //         appSrcMem_->filePos = pos;
-    //         appSrcMem_->availableBegin = appSrcMem_->begin;
-    //     }
-    // }
     appSrcMem_->filePos = pos;
     appSrcMem_->availableBegin = appSrcMem_->begin;
     appSrcMem_->end = appSrcMem_->availableBegin == 0 ? bufferSize_ - 1 : appSrcMem_->availableBegin - 1;
