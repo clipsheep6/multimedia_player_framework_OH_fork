@@ -19,7 +19,7 @@
 
 using namespace OHOS;
 namespace {
-    constexpr guint64 DEFAULT_MAX_WAIT_CLOCK_TIME = 200000000; // ns, 1s
+    constexpr guint64 DEFAULT_MAX_WAIT_CLOCK_TIME = 200000000; // ns, 200ms
     constexpr gint64 DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD = 20000000; // ns, 20ms
     constexpr gint64 DEFAULT_EXTRA_RENDER_FRAME_DIFF = 20000000; // ns, 20ms
     constexpr gint DEFAULT_DROP_BEHIND_VIDEO_BUF_FREQUENCY = 5; // drop 1 buffer every 5 buffers at most
@@ -41,6 +41,7 @@ struct _GstVideoDisplaySinkPrivate {
     guint buffer_count;
     guint64 total_video_buffer_num;
     guint64 dropped_video_buffer_num;
+    guint64 last_video_render_pts;
 };
 
 #define gst_video_display_sink_parent_class parent_class
@@ -107,6 +108,7 @@ static void gst_video_display_sink_init(GstVideoDisplaySink *sink)
     priv->buffer_count = 1;
     priv->total_video_buffer_num = 0;
     priv->dropped_video_buffer_num = 0;
+    priv->last_video_render_pts = 0;
     gst_video_display_sink_enable_drop_from_sys_param(sink);
 }
 
@@ -290,7 +292,17 @@ static GstFlowReturn gst_video_display_sink_do_app_render(GstSurfaceMemSink *sur
     GstVideoDisplaySink *video_display_sink = GST_VIDEO_DISPLAY_SINK_CAST(surface_sink);
 
     kpi_log_avsync_diff(video_display_sink, GST_BUFFER_PTS(buffer));
-    gst_video_display_sink_get_render_time_diff_thd(video_display_sink, GST_BUFFER_DURATION(buffer));
+
+    GstClockTime last_duration = 0;
+    if (video_display_sink->priv->last_video_render_pts == 0) {
+        last_duration = GST_BUFFER_DURATION(buffer);
+    } else {
+        last_duration = GST_BUFFER_PTS(buffer) - video_display_sink->priv->last_video_render_pts;
+    }
+    GST_INFO_OBJECT(video_display_sink, "avg duration %" G_GUINT64_FORMAT ", last_duration %" G_GUINT64_FORMAT
+        ", pts %" G_GUINT64_FORMAT, GST_BUFFER_DURATION(buffer), last_duration, GST_BUFFER_PTS(buffer));
+    video_display_sink->priv->last_video_render_pts = GST_BUFFER_PTS(buffer);
+    gst_video_display_sink_get_render_time_diff_thd(video_display_sink, last_duration);
     return GST_FLOW_OK;
 }
 
