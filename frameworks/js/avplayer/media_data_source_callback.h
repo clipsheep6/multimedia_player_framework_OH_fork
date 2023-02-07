@@ -24,7 +24,6 @@
 
 namespace OHOS {
 namespace Media {
-
 const std::string READAT_CALLBACK_NAME = "readAt";
 
 class MediaDataSourceCallback : public IMediaDataSource, public NoCopyable {
@@ -39,10 +38,12 @@ private:
     struct MediaDataSourceJsCallback {
         MediaDataSourceJsCallback(const std::string &callbackName, const std::shared_ptr<AVSharedMemory> &mem,
             uint32_t length, int64_t pos)
-            :callbackName_(callbackName), memory_(mem), length_(length), pos_(pos) {
+            :callbackName_(callbackName), memory_(mem), length_(length), pos_(pos)
+        {
             readSize_ = nullptr;
         }
-        ~MediaDataSourceJsCallback() {
+        ~MediaDataSourceJsCallback()
+        {
             if (memory_ != nullptr) {
                 memory_ = nullptr;
             }
@@ -55,12 +56,14 @@ private:
         napi_value readSize_;
         std::mutex mutexCond_;
         std::condition_variable cond_;
-        void SetResult(napi_value val) {
+        void SetResult(napi_value val)
+        {
             std::unique_lock<std::mutex> lock(mutexCond_);
             readSize_ = val;
             cond_.notify_all();
         }
-        void WaitResult() {
+        void WaitResult()
+        {
             std::unique_lock<std::mutex> lock(mutexCond_);
             if (readSize_ == nullptr) {
                 cond_.wait(lock, [this]() { return readSize_ != nullptr; });

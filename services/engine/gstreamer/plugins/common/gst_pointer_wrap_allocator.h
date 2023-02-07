@@ -16,9 +16,9 @@
 #ifndef GST_POINTER_WRAP_ALLOCATOR_H
 #define GST_POINTER_WRAP_ALLOCATOR_H
 
+#include <gst/gst.h>
 #include "avsharedmemory.h"
 #include "gst_pointer_wrap_memory.h"
-#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
@@ -47,7 +47,8 @@ struct _GstPointerWrapAllocatorClass {
 GType gst_pointer_wrap_allocator_get_type(void);
 
 __attribute__((visibility("default"))) GstPointerWrapAllocator *gst_pointer_wrap_allocator_new(void);
-__attribute__((visibility("default"))) GstMemory *gst_pointer_wrap(GstAllocator *allocator, std::shared_ptr<OHOS::Media::AVSharedMemory> shmem,
+__attribute__((visibility("default"))) GstMemory *gst_pointer_wrap(
+    GstAllocator *allocator, std::shared_ptr<OHOS::Media::AVSharedMemory> shmem,
     int32_t offset, int32_t length, FreeMemory free_memory);
 
 G_END_DECLS

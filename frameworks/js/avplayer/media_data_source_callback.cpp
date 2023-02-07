@@ -14,11 +14,11 @@
  */
 
 #include "media_data_source_callback.h"
+#include <uv.h>
 #include "media_dfx.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "scope_guard.h"
-#include <uv.h>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaDataSourceCallback"};
@@ -104,7 +104,7 @@ int32_t MediaDataSourceCallback::GetSize(int64_t &size)
 }
 
 void MediaDataSourceCallback::SaveCallbackReference(const std::string &name, std::shared_ptr<AutoRef> ref)
-{   
+{
     MEDIA_LOGD("Add Callback: %{public}s", name.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_[name] = ref;

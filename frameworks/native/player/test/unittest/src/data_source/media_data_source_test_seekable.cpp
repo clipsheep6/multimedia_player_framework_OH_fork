@@ -75,7 +75,7 @@ void MediaDataSourceTestSeekable::Reset()
 }
 
 int32_t MediaDataSourceTestSeekable::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
-{   
+{
     MEDIA_LOGD("ReadAt in");
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_INVALID_VAL, "Mem is nullptr");
     if (pos != pos_) {

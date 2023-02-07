@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include "securec.h"
 #include "gst_pointer_wrap_allocator.h"
+#include "securec.h"
 #include "media_log.h"
 
 #define gst_pointer_wrap_allocator_parent_class parent_class
@@ -35,7 +35,8 @@ GstMemory *gst_pointer_wrap(GstAllocator *allocator, std::shared_ptr<OHOS::Media
     g_return_val_if_fail(allocator != nullptr, nullptr);
     g_return_val_if_fail(shmem != nullptr, nullptr);
 
-    GstPointerWrapMemory *memory = reinterpret_cast<GstPointerWrapMemory *>(g_slice_alloc0(sizeof(GstPointerWrapMemory)));
+    GstPointerWrapMemory *memory =
+        reinterpret_cast<GstPointerWrapMemory *>(g_slice_alloc0(sizeof(GstPointerWrapMemory)));
     g_return_val_if_fail(memory != nullptr, nullptr);
 
     gst_memory_init(GST_MEMORY_CAST(memory), GST_MEMORY_FLAG_NO_SHARE, allocator,
@@ -139,7 +140,8 @@ static GstMemory *gst_pointer_wrap_allocator_mem_copy(GstPointerWrapMemory *mem,
 {
     g_return_val_if_fail(mem != nullptr && mem->pointer != nullptr, nullptr);
     g_return_val_if_fail(offset >= 0 && offset < mem->length, nullptr);
-    GST_DEBUG("in gst_pointer_wrap_allocator_mem_copy, offset is %" G_GSSIZE_FORMAT ", size is %" G_GSSIZE_FORMAT "", offset, size);
+    GST_DEBUG("in gst_pointer_wrap_allocator_mem_copy, offset is %" G_GSSIZE_FORMAT ","
+        "size is %" G_GSSIZE_FORMAT "", offset, size);
 
     gssize realOffset = static_cast<gssize>(mem->offset) + offset;
     g_return_val_if_fail(realOffset >= 0, nullptr);

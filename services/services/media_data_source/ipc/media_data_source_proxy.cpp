@@ -26,10 +26,12 @@ namespace OHOS {
 namespace Media {
 class MediaDataSourceProxy::BufferCache : public NoCopyable {
 public:
-    BufferCache() {
+    BufferCache()
+    {
         caches_ = nullptr;
     }
-    ~BufferCache() {
+    ~BufferCache()
+    {
         if (caches_ != nullptr) {
             caches_ = nullptr;
         }
@@ -42,23 +44,18 @@ public:
         if (caches_ != nullptr && caches_ == memory.get()) {
             MEDIA_LOGI("HIT_CACHE");
             flag = CacheFlag::HIT_CACHE;
-            parcel.WriteUint8(flag);
+            parcel.WriteUint8(static_cast<uint8_t>(flag));
             return MSERR_OK;
         } else {
             MEDIA_LOGI("UPDATE_CACHE");
             flag = CacheFlag::UPDATE_CACHE;
             caches_ = memory.get();
-            parcel.WriteUint8(flag);
+            parcel.WriteUint8(static_cast<uint8_t>(flag));
             return WriteAVSharedMemoryToParcel(memory, parcel);
         }
     }
 
 private:
-    enum CacheFlag : uint8_t {
-        HIT_CACHE = 1,
-        UPDATE_CACHE,
-    };
-
     AVSharedMemory *caches_;
 };
 
@@ -121,7 +118,7 @@ int32_t MediaDataSourceProxy::ReadAt(const std::shared_ptr<AVSharedMemory> &mem,
     data.WriteUint32(offset);
     data.WriteUint32(length);
     data.WriteInt64(pos);
-    int error = Remote()->SendRequest(ListenerMsg::READ_AT, data, reply, option);
+    int error = Remote()->SendRequest(static_cast<uint32_t>(ListenerMsg::READ_AT), data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, 0, "ReadAt failed, error: %{public}d", error);
 
     return reply.ReadInt32();
@@ -136,7 +133,7 @@ int32_t MediaDataSourceProxy::GetSize(int64_t &size)
     bool token = data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    int error = Remote()->SendRequest(ListenerMsg::GET_SIZE, data, reply, option);
+    int error = Remote()->SendRequest(static_cast<uint32_t>(ListenerMsg::GET_SIZE), data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, -1, "GetSize failed, error: %{public}d", error);
 
     size = reply.ReadInt64();

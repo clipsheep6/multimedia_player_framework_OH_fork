@@ -47,11 +47,6 @@ public:
     }
 
 private:
-    enum CacheFlag : uint8_t {
-        HIT_CACHE = 1,
-        UPDATE_CACHE,
-    };
-
     std::shared_ptr<AVSharedMemory> caches_;
 };
 
@@ -79,7 +74,7 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         BufferCache_ = std::make_unique<BufferCache>();
     }
 
-    switch (code) {
+    switch (static_cast<ListenerMsg>(code)) {
         case ListenerMsg::READ_AT: {
             std::shared_ptr<AVSharedMemory> memory = nullptr;
             if (BufferCache_ != nullptr) {

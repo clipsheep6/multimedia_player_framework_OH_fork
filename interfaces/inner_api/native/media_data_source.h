@@ -54,7 +54,8 @@ public:
 
     /**
      * @brief Get the total size of the stream.
-     * IIf the user does not know the length of the stream, size should be assigned -1, player will use the datasource not seekable.
+     * If the user does not know the length of the stream, size should be assigned -1,
+     * player will use the datasource not seekable.
      * @param size Total size of the stream. If no size set -1.
      * @return MSERR_OK if ok; others if failed. see media_errors.h
      */
