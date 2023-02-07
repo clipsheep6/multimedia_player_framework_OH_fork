@@ -31,7 +31,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_video_capture_pool_debug_category);
 
 enum {
     PROP_0,
-    PROP_cached_data,
+    PROP_CACHED_DATA,
     PROP_BUFFER_COUNT,
 };
 
@@ -53,7 +53,7 @@ static void gst_video_capture_pool_class_init(GstVideoCapturePoolClass *klass)
     gobjectClass->set_property = gst_video_capture_pool_set_property;
     gobjectClass->get_property = gst_video_capture_pool_get_property;
    
-    g_object_class_install_property(gobjectClass, PROP_cached_data,
+    g_object_class_install_property(gobjectClass, PROP_CACHED_DATA,
         g_param_spec_boolean("cached-data", "es pause", "es pause",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
     
@@ -89,7 +89,7 @@ static void gst_video_capture_pool_set_property(GObject *object, guint id, const
     g_return_if_fail(pool != nullptr && value != nullptr);
 
     g_mutex_lock(&pool->pool_lock);
-    ON_SCOPE_EXIT(0) { 
+    ON_SCOPE_EXIT(0) {
         g_mutex_unlock(&pool->pool_lock);
     };
     switch (id) {
@@ -177,22 +177,22 @@ static GstFlowReturn gst_video_capture_pool_alloc_buffer(GstBufferPool *pool, Gs
 
 static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *surfacepool, GstBuffer **buffer)
 {
-    g_return_val_if_fail(surfacepool != nullptr && buffer != nullptr, GST_FLOW_ERROR);
+    g_return_val_if_fail(surfacepool != nullptr && surfacepool->get_surface_buffer != nullptr &&
+        surfacepool->release_surface_buffer != nullptr && buffer != nullptr, GST_FLOW_ERROR);
 
     // Get buffer
     OHOS::sptr<OHOS::SurfaceBuffer> sbuffer = nullptr;
     gint32 fencefd = -1;
-    GstFlowReturn ret = gst_consumer_surface_pool_get_surface_buffer(surfacepool, sbuffer, fencefd);
-    g_return_val_if_fail(ret == GST_FLOW_OK, GST_FLOW_ERROR);
+    GstFlowReturn ret = surfacepool->get_surface_buffer(surfacepool, sbuffer, fencefd);
+    g_return_val_if_fail(ret == GST_FLOW_OK && sbuffer != nullptr, GST_FLOW_ERROR);
     ON_SCOPE_EXIT(0) {
-        gst_consumer_surface_pool_release_surface_buffer(surfacepool, sbuffer, fencefd);
+        surfacepool->release_surface_buffer(surfacepool, sbuffer, fencefd);
     };
 
     // Get buffer data.
     gint64 timestamp = 0;
     gint32 data_size = 0;
     gboolean end_of_stream = false;
-    guint32 bufferFlag = 0;
     gint32 realsize = sbuffer->GetSize();
     const OHOS::sptr<OHOS::BufferExtraData>& extraData = sbuffer->GetExtraData();
     g_return_val_if_fail(extraData != nullptr, GST_FLOW_ERROR);
@@ -200,16 +200,14 @@ static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *s
     (void)extraData->ExtraGet("dataSize", data_size);
     g_return_val_if_fail(realsize >= data_size, GST_FLOW_ERROR);
     (void)extraData->ExtraGet("endOfStream", end_of_stream);
-    if (end_of_stream) {
-        bufferFlag = BUFFER_FLAG_EOS;
-    }
+    guint32 bufferFlag = end_of_stream ? BUFFER_FLAG_EOS : 0;
 
     // copy data
     GstBuffer *dts_buffer = gst_buffer_new_allocate(nullptr, data_size, nullptr);
+    g_return_val_if_fail(dts_buffer != nullptr, GST_FLOW_ERROR);
     ON_SCOPE_EXIT(1) {
         gst_buffer_unref(dts_buffer);
     };
-    g_return_val_if_fail(dts_buffer != nullptr, GST_FLOW_ERROR);
 
     GstMapInfo info = GST_MAP_INFO_INIT;
     g_return_val_if_fail(gst_buffer_map(dts_buffer, &info, GST_MAP_WRITE) == TRUE, GST_FLOW_ERROR);
@@ -219,27 +217,23 @@ static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *s
 
     uint8_t *src = static_cast<uint8_t *>(sbuffer->GetVirAddr());
     errno_t rc = memcpy_s(info.data, info.size, src, static_cast<size_t>(data_size));
-    if (rc != EOK) {
-        GST_ERROR("memcpy failed");
-        return GST_FLOW_ERROR;
-    }
+    g_return_val_if_fail(rc == EOK, GST_FLOW_ERROR);
 
     // Meta
-    GstBufferTypeMeta *buffer_meta = NULL;
-    buffer_meta = (GstBufferTypeMeta *)gst_buffer_add_meta(dts_buffer, GST_BUFFER_TYPE_META_INFO, NULL);
-    g_return_val_if_fail(buffer_meta != NULL, GST_FLOW_ERROR);
+    GstBufferTypeMeta *meta = (GstBufferTypeMeta *)gst_buffer_add_meta(dts_buffer, GST_BUFFER_TYPE_META_INFO, NULL);
+    g_return_val_if_fail(meta != NULL, GST_FLOW_ERROR);
 
-    buffer_meta->type = BUFFER_TYPE_HANDLE;
-    buffer_meta->bufLen = data_size;
-    buffer_meta->length = data_size;
-    buffer_meta->bufferFlag = bufferFlag;
-    buffer_meta->pixelFormat = sbuffer->GetFormat();
-    buffer_meta->width = sbuffer->GetWidth();
-    buffer_meta->height = sbuffer->GetHeight();
+    meta->type = BUFFER_TYPE_HANDLE;
+    meta->bufLen = data_size;
+    meta->length = data_size;
+    meta->bufferFlag = bufferFlag;
+    meta->pixelFormat = sbuffer->GetFormat();
+    meta->width = sbuffer->GetWidth();
+    meta->height = sbuffer->GetHeight();
 
     GST_BUFFER_PTS(dts_buffer) = static_cast<uint64_t>(timestamp);
     GST_DEBUG_OBJECT(surfacepool, "BufferQue video capture buffer size is: %" G_GSIZE_FORMAT ", pts: %"
-            G_GUINT64_FORMAT, gst_buffer_get_size(dts_buffer), timestamp);
+        G_GUINT64_FORMAT, gst_buffer_get_size(dts_buffer), timestamp);
 
     CANCEL_SCOPE_EXIT_GUARD(1);
     *buffer = dts_buffer;

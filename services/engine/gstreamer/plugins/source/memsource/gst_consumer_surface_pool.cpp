@@ -98,6 +98,10 @@ static void add_buffer_info(GstConsumerSurfacePool *pool, GstConsumerSurfaceMemo
 static void cache_frame_if_necessary(GstConsumerSurfacePool *pool, GstConsumerSurfaceMemory *mem, GstBuffer *buffer);
 static gboolean drop_this_frame(GstConsumerSurfacePool *pool, guint64 new_timestamp,
     guint64 old_timestamp, guint32 frame_rate);
+static GstFlowReturn gst_consumer_surface_pool_get_surface_buffer(GstConsumerSurfacePool *pool,
+    sptr<SurfaceBuffer> &surface_buffer, gint32 &fencefd);
+static void gst_consumer_surface_pool_release_surface_buffer(GstConsumerSurfacePool *pool,
+    sptr<SurfaceBuffer> &surface_buffer, gint32 &fencefd);
 static void gst_consumer_surface_pool_get_dump_flag(GstConsumerSurfacePool *pool);
 static void gst_consumer_surface_pool_dump_surfacebuffer(GstConsumerSurfacePool *pool, sptr<SurfaceBuffer> &buffer);
 static void gst_consumer_surface_pool_dump_gstbuffer(GstConsumerSurfacePool *pool, GstBuffer *buf);
@@ -449,6 +453,8 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
     pool->priv = priv;
     pool->buffer_available = nullptr;
     pool->alloc_buffer = nullptr;
+    pool->get_surface_buffer = gst_consumer_surface_pool_get_surface_buffer;
+    pool->release_surface_buffer = gst_consumer_surface_pool_release_surface_buffer;
     priv->available_buf_count = 0;
     priv->flushing = FALSE;
     priv->start = FALSE;
@@ -480,14 +486,14 @@ static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *p
         priv->poolMgr->Notify();
     }
 
-    bool cached_data = false;
+    bool cachedData = false;
     if (pool->buffer_available) {
         if (pool->buffer_available(pool) == GST_FLOW_OK) {
-            cached_data = true;
+            cachedData = true;
         }
     }
 
-    if (priv->suspend && !cached_data) {
+    if (priv->suspend && !cachedData) {
         sptr<SurfaceBuffer> buffer = nullptr;
         gint32 fencefd = -1;
         gint64 timestamp = 0;
@@ -635,7 +641,7 @@ static void gst_consumer_surface_pool_notify_timeout(GstConsumerSurfacePool *poo
     }
 }
 
-GstFlowReturn gst_consumer_surface_pool_get_surface_buffer(GstConsumerSurfacePool *pool,
+static GstFlowReturn gst_consumer_surface_pool_get_surface_buffer(GstConsumerSurfacePool *pool,
     sptr<SurfaceBuffer> &surface_buffer, gint32 &fencefd)
 {
     g_return_val_if_fail(pool != nullptr && pool->priv != nullptr, GST_FLOW_ERROR);
@@ -650,7 +656,7 @@ GstFlowReturn gst_consumer_surface_pool_get_surface_buffer(GstConsumerSurfacePoo
     return GST_FLOW_ERROR;
 }
 
-void gst_consumer_surface_pool_release_surface_buffer(GstConsumerSurfacePool *pool,
+static void gst_consumer_surface_pool_release_surface_buffer(GstConsumerSurfacePool *pool,
     sptr<SurfaceBuffer> &surface_buffer, gint32 &fencefd)
 {
     g_return_if_fail(pool != nullptr && pool->priv != nullptr);
