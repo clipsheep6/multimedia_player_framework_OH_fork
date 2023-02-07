@@ -324,7 +324,7 @@ void HdiInit::AddHdiCap(CodecCompCapability &hdiCap)
     codecCap.profileLevelsMap = GetCodecProfileLevels(hdiCap);
     if (codecCap.supportSwapWidthHeight == false) {
         codecCap.supportSwapWidthHeight = hdiCap.canSwapWidthHeight;
-        MEDIA_LOGI("%{public}s supportSwapWidthHeight = %d", hdiCap.compName, codecCap.supportSwapWidthHeight);
+        MEDIA_LOGI("%{public}s supportSwapWidthHeight = %{public}d", hdiCap.compName, codecCap.supportSwapWidthHeight);
     }
     capabilitys_.push_back(codecCap);
 }
