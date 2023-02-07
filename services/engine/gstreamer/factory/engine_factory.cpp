@@ -102,7 +102,6 @@ std::unique_ptr<IAVCodecListEngine> GstEngineFactory::CreateAVCodecListEngine()
     return std::make_unique<AVCodecListEngineGstImpl>();
 }
 #endif
-
 } // namespace Media
 } // namespace OHOS
 
