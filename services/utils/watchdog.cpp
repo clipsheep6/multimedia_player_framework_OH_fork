@@ -63,7 +63,7 @@ void WatchDog::PauseWatchDog()
     std::unique_lock<std::mutex> lock(mutex_);
     if (enable_.load()) {
         pause_ = true;
-        paused_ = true; // 
+        paused_ = true;
         cond_.notify_all();
     }
 };
