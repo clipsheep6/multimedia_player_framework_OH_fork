@@ -27,9 +27,6 @@
 #ifdef SUPPORT_METADATA
 #include "i_standard_avmetadatahelper_service.h"
 #endif
-#ifdef SUPPORT_MUXER
-#include "i_standard_avmuxer_service.h"
-#endif
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -253,38 +250,6 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
 }
 #endif
 
-#ifdef SUPPORT_MUXER
-std::shared_ptr<IAVMuxerService> MediaClient::CreateAVMuxerService()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (!IsAlived()) {
-        MEDIA_LOGE("media service does not exist.");
-        return nullptr;
-    }
-
-    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
-        IStandardMediaService::MediaSystemAbility::MEDIA_AVMUXER, listenerStub_->AsObject());
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "avmuxer proxy object is nullptr.");
-
-    sptr<IStandardAVMuxerService> avmuxerProxy = iface_cast<IStandardAVMuxerService>(object);
-    CHECK_AND_RETURN_RET_LOG(avmuxerProxy != nullptr, nullptr, "muxer proxy is nullptr.");
-
-    std::shared_ptr<AVMuxerClient> avmuxer = AVMuxerClient::Create(avmuxerProxy);
-    CHECK_AND_RETURN_RET_LOG(avmuxer != nullptr, nullptr, "failed to create avmuxer client.");
-
-    avmuxerClientList_.push_back(avmuxer);
-    return avmuxer;
-}
-
-int32_t MediaClient::DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(avmuxer != nullptr, MSERR_NO_MEMORY, "input avmuxer is nullptr.");
-    avmuxerClientList_.remove(avmuxer);
-    return MSERR_OK;
-}
-#endif
-
 sptr<IStandardMediaService> MediaClient::GetMediaProxy()
 {
     MEDIA_LOGD("enter");
@@ -375,15 +340,6 @@ void MediaClient::DoMediaServerDied()
         auto avCodecListClient = std::static_pointer_cast<AVCodecListClient>(it);
         if (avCodecListClient != nullptr) {
             avCodecListClient->MediaServerDied();
-        }
-    }
-#endif
-
-#ifdef SUPPORT_MUXER
-    for (auto &it : avmuxerClientList_) {
-        auto avmuxer = std::static_pointer_cast<AVMuxerClient>(it);
-        if (avmuxer != nullptr) {
-            avmuxer->MediaServerDied();
         }
     }
 #endif

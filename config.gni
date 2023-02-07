@@ -17,8 +17,6 @@ declare_args() {
   multimedia_player_framework_support_player_js_api9 = true
   multimedia_player_framework_support_codec = true
   multimedia_player_framework_support_codec_js = false
-  multimedia_player_framework_support_muxer = false
-  multimedia_player_framework_support_muxer_js = false
   multimedia_player_framework_support_metadata = true
   multimedia_player_framework_support_gstreamer = true
   multimedia_player_framework_support_histreamer = true
@@ -55,16 +53,6 @@ if (multimedia_player_framework_support_codec) {
 
 if (multimedia_player_framework_support_codec_js) {
   player_framework_defines += [ "SUPPORT_CODEC_JS" ]
-}
-
-if (multimedia_player_framework_support_muxer) {
-  player_framework_defines += [ "SUPPORT_MUXER" ]
-} else {
-  player_framework_defines += [ "UNSUPPORT_MUXER" ]
-}
-
-if (multimedia_player_framework_support_muxer_js) {
-  player_framework_defines += [ "SUPPORT_MUXER_JS" ]
 }
 
 if (multimedia_player_framework_support_metadata) {

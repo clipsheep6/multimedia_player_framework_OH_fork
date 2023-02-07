@@ -31,9 +31,6 @@
 #include "i_avcodec_service.h"
 #include "i_avcodeclist_service.h"
 #endif
-#ifdef SUPPORT_MUXER
-#include "i_avmuxer_service.h"
-#endif
 
 namespace OHOS {
 namespace Media {
@@ -185,31 +182,6 @@ public:
      * @version 1.0
      */
     virtual int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) = 0;
-#endif
-
-#ifdef SUPPORT_MUXER
-    /**
-     * @brief Create an avmuxer service.
-     *
-     * All avmuxer functions must be created and obtained first.
-     *
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.2
-     * @version 3.2
-     */
-    virtual std::shared_ptr<IAVMuxerService> CreateAVMuxerService() = 0;
-
-    /**
-     * @brief Destroy a avmuxer service.
-     *
-     * call the API to destroy the avmuxer service.
-     *
-     * @param pointer to the avmuxer service.
-     * @return Returns a valid pointer if the setting is successful;
-     * @since 3.2
-     * @version 3.2
-     */
-    virtual int32_t DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer) = 0;
 #endif
 };
 

@@ -55,8 +55,6 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "$MEDIA_ROOT_DIR/services/services/avcodeclist/server",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/server",
-    "$MEDIA_ROOT_DIR/services/services/avmuxer/ipc",
-    "$MEDIA_ROOT_DIR/services/services/avmuxer/server",
     "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc",
     "$MEDIA_ROOT_DIR/services/services/media_data_source/server",
   ]

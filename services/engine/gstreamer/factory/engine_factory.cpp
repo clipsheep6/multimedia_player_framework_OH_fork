@@ -23,7 +23,6 @@
 #include "nocopyable.h"
 #include "player_engine_gst_impl.h"
 #include "recorder_engine_gst_impl.h"
-#include "avmuxer_engine_gst_impl.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstEngineFactory"};
@@ -49,9 +48,6 @@ public:
 #ifdef SUPPORT_CODEC
     std::unique_ptr<IAVCodecEngine> CreateAVCodecEngine() override;
     std::unique_ptr<IAVCodecListEngine> CreateAVCodecListEngine() override;
-#endif
-#ifdef SUPPORT_MUXER
-    std::unique_ptr<IAVMuxerEngine> CreateAVMuxerEngine() override;
 #endif
 };
 
@@ -107,13 +103,6 @@ std::unique_ptr<IAVCodecListEngine> GstEngineFactory::CreateAVCodecListEngine()
 }
 #endif
 
-#ifdef SUPPORT_MUXER
-std::unique_ptr<IAVMuxerEngine> GstEngineFactory::CreateAVMuxerEngine()
-{
-    GstLoader::Instance().UpdateLogLevel();
-    return std::make_unique<AVMuxerEngineGstImpl>();
-}
-#endif
 } // namespace Media
 } // namespace OHOS
 

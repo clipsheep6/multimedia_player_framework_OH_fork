@@ -34,9 +34,6 @@
 #ifdef SUPPORT_METADATA
 #include "avmetadatahelper_client.h"
 #endif
-#ifdef SUPPORT_MUXER
-#include "avmuxer_client.h"
-#endif
 #include "nocopyable.h"
 
 namespace OHOS {
@@ -65,10 +62,6 @@ public:
     std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() override;
     int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) override;
 #endif
-#ifdef SUPPORT_MUXER
-    std::shared_ptr<IAVMuxerService> CreateAVMuxerService() override;
-    int32_t DestroyAVMuxerService(std::shared_ptr<IAVMuxerService> avmuxer) override;
-#endif
 
 private:
     sptr<IStandardMediaService> GetMediaProxy();
@@ -92,9 +85,6 @@ private:
 #ifdef SUPPORT_CODEC
     std::list<std::shared_ptr<IAVCodecService>> avCodecClientList_;
     std::list<std::shared_ptr<IAVCodecListService>> avCodecListClientList_;
-#endif
-#ifdef SUPPORT_MUXER
-    std::list<std::shared_ptr<IAVMuxerService>> avmuxerClientList_;
 #endif
     std::mutex mutex_;
 };
