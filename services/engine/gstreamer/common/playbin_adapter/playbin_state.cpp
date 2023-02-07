@@ -24,6 +24,7 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinState"};
     constexpr int32_t USEC_PER_MSEC = 1000;
     constexpr uint32_t DEFAULT_POSITION_UPDATE_INTERVAL_MS = 100; // 100 ms
+    constexpr uint32_t RECONNECTION_TIME_OUT_DEFAULT = 15000000; // 15s
 }
 
 namespace OHOS {
@@ -347,6 +348,10 @@ void PlayBinCtrlerBase::PreparedState::StateEnter()
     PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
         0, static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
     ctrler_.ReportMessage(posUpdateMsg);
+
+    if (ctrler_.isNetWorkPlay_) {
+        g_object_set(ctrler_.playbin_, "reconnection-timeout", RECONNECTION_TIME_OUT_DEFAULT, nullptr);
+    }
 
     msg = { PLAYBIN_MSG_STATE_CHANGE, 0, PLAYBIN_STATE_PREPARED, {} };
     ctrler_.ReportMessage(msg);
