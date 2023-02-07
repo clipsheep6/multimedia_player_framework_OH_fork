@@ -57,7 +57,7 @@ int32_t VideoPoolManager::PushBuffer(GstBuffer *buf)
         "The queue length has reached the maximum.");
 
     bufferQue_.push(buf);
-    MEDIA_LOGI("PushBuffer end, size: %{public}d", bufferQue_.size());
+    MEDIA_LOGI("PushBuffer end, size: %{public}zu", bufferQue_.size());
     return MSERR_OK;
 }
 
@@ -68,14 +68,14 @@ GstBuffer *VideoPoolManager::PopBuffer()
 
     GstBuffer *buf = bufferQue_.front();
     bufferQue_.pop();
-    MEDIA_LOGI("PopBuffer end, size: %{public}d", bufferQue_.size());
+    MEDIA_LOGI("PopBuffer end, size: %{public}zu", bufferQue_.size());
     return buf;
 }
 
 void VideoPoolManager::FreeBufferQue()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("FreeBufferQue size: %{public}d", bufferQue_.size());
+    MEDIA_LOGI("FreeBufferQue size: %{public}zu", bufferQue_.size());
     while (bufferQue_.size() > 0) {
         GstBuffer *buf = bufferQue_.front();
         bufferQue_.pop();
