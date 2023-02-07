@@ -1522,17 +1522,19 @@ static gboolean gst_vdec_base_set_format(GstVideoDecoder *decoder, GstVideoCodec
 
     GST_DEBUG_OBJECT(self, "Setting new caps");
 
+    constexpr gfloat epsilon = 1e-6;
     is_format_change = is_format_change || self->width != info->width;
     is_format_change = is_format_change || self->height != GST_VIDEO_INFO_FIELD_HEIGHT(info);
-    is_format_change = is_format_change || (self->frame_rate == 0 && info->fps_n != 0);
+    is_format_change = is_format_change || (self->frame_rate < epsilon && self->frame_rate > -epsilon &&
+        info->fps_n != 0);
 
     if (is_format_change && info->width != 0 && GST_VIDEO_INFO_FIELD_HEIGHT(info) != 0) {
         self->width = info->width;
         self->height = GST_VIDEO_INFO_FIELD_HEIGHT(info);
-        self->frame_rate  = info->fps_n;
+        self->frame_rate  = static_cast<gfloat>(info->fps_n) / static_cast<gfloat>(info->fps_d);
         gst_vdec_base_post_resolution_changed_message(self);
         self->resolution_changed = TRUE;
-        GST_DEBUG_OBJECT(self, "width: %d, height: %d, frame_rate: %d", self->width, self->height, self->frame_rate);
+        GST_DEBUG_OBJECT(self, "width: %d, height: %d, frame_rate: %.3f", self->width, self->height, self->frame_rate);
     }
 
     GST_DEBUG_OBJECT(self, "Setting input port definition");
