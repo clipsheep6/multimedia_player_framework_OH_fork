@@ -93,7 +93,7 @@ static void gst_video_capture_pool_set_property(GObject *object, guint id, const
         g_mutex_unlock(&pool->pool_lock);
     };
     switch (id) {
-        case PROP_cached_data:
+        case PROP_CACHED_DATA:
             if (g_value_get_boolean(value) == true) {
                 if (pool->poolMgr == nullptr) {
                     const uint32_t size = 6; // Save up to 6 buffer data.
