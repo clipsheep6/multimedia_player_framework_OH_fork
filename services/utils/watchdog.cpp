@@ -42,6 +42,7 @@ void WatchDog::EnableWatchDog()
 void WatchDog::DisableWatchDog()
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    count_++; // Prevent accidental touch of alarm().
     enable_.store(false);
     cond_.notify_all();
     pauseCond_.notify_all();
@@ -60,6 +61,7 @@ void WatchDog::PauseWatchDog()
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (enable_.load()) {
+        count_++; // Prevent accidental touch of alarm().
         pause_.store(true);
         cond_.notify_all();
     }
@@ -69,6 +71,7 @@ void WatchDog::ResumeWatchDog()
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (enable_.load()) {
+        count_++; // Prevent accidental touch of alarm().
         pause_.store(false);
         pauseCond_.notify_all();
     }
