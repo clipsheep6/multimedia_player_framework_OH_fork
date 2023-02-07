@@ -145,7 +145,7 @@ static void gst_producer_surface_pool_init(GstProducerSurfacePool *pool)
     pool->callCnt = 0;
     pool->isDynamicCached = FALSE;
     pool->cachedBuffers = 0;
-    pool->scale_type = 0;
+    pool->scale_type = 1; // VIDEO_SCALE_TYPE_FIT_CROP
 }
 
 static void gst_producer_surface_pool_finalize(GObject *obj)
@@ -577,7 +577,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
         gst_buffer_add_video_meta(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
             GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info));
     }
-    GstBufferHandleConfig config = { sizeof(buffer_handle), memory->fence, 0, 0, 0 };
+    GstBufferHandleConfig config = { sizeof(buffer_handle), memory->fence, 0, 0, 0, 0, 0 };
     gst_buffer_add_buffer_handle_meta(*buffer, reinterpret_cast<intptr_t>(buffer_handle), config);
     return GST_FLOW_OK;
 }

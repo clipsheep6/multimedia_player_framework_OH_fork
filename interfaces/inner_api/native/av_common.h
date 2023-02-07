@@ -134,6 +134,11 @@ VIDEO_ROTATION_180 = 180,
  */
 VIDEO_ROTATION_270 = 270,
 };
+
+enum StateChangeReason {
+    USER = 1,
+    BACKGROUND = 2,
+};
 } // namespace Media
 } // namespace OHOS
 #endif // AV_COMMOM_H

@@ -54,11 +54,6 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
 };
 
-enum StateChangeReason {
-    USER = 1,
-    BACKGROUND = 2,
-};
-
 enum BufferingInfoType : int32_t {
     /* begin to b buffering */
     BUFFERING_START = 1,
@@ -107,8 +102,6 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_STATE_CHANGE,
     /* return the current posion of playback automatically. */
     INFO_TYPE_POSITION_UPDATE,
-    /* return the duration of playback. */
-    INFO_TYPE_DURATION_UPDATE,
     /* return the playback message. */
     INFO_TYPE_MESSAGE,
     /* return the message when volume changed. */
@@ -126,7 +119,9 @@ enum PlayerOnInfoType : int32_t {
     /* return the message when PlayerStates changed by audio. */
     INFO_TYPE_STATE_CHANGE_BY_AUDIO,
     /* return the message with extra information in format. */
-    INFO_TYPE_EXTRA_FORMAT
+    INFO_TYPE_EXTRA_FORMAT,
+    /* return the duration of playback. */
+    INFO_TYPE_DURATION_UPDATE,
 };
 
 enum PlayerStates : int32_t {
@@ -208,9 +203,17 @@ public:
     }
 
     /**
+     * Called when a player message or alarm is received.
+     *
+     * @param type Indicates the information type. For details, see {@link PlayerOnInfoType}.
+     * @param extra Indicates other information, for example, the start time position of a playing file.
+     * @param infoBody According to the info type, the information carrier passed.Is an optional parameter.
+     */
+    virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
+
+    /**
      * Called when an error occurred for versions above api9
      *
-     * @param sourceId Resource where the error occurred
      * @param errorCode Error code.
      * @param errorMsg Error message.
      */
@@ -219,15 +222,6 @@ public:
         (void)errorCode;
         (void)errorMsg;
     }
-
-    /**
-     * Called when a player message or alarm is received.
-     *
-     * @param type Indicates the information type. For details, see {@link PlayerOnInfoType}.
-     * @param extra Indicates other information, for example, the start time position of a playing file.
-     * @param infoBody According to the info type, the information carrier passed.Is an optional parameter.
-     */
-    virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
 };
 
 class Player {
@@ -352,20 +346,6 @@ public:
      * @version 1.0
      */
     virtual int32_t Release() = 0;
-
-    /**
-     * @brief Releases player resources sync
-     *
-     * Synchronous release ensures effective release of surfacebuffer
-     * but this interface will take a long time (when the engine is not idle state)
-     * requiring the caller to design an asynchronous mechanism by itself
-     *
-     * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
-     * in {@link media_errors.h} otherwise.
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual int32_t ReleaseSync() = 0;
 
     /**
      * @brief Sets the volume of the player.
@@ -562,6 +542,20 @@ public:
      * @version 1.0
      */
     virtual int32_t SetParameter(const Format &param) = 0;
+
+    /**
+     * @brief Releases player resources sync
+     *
+     * Synchronous release ensures effective release of surfacebuffer
+     * but this interface will take a long time (when the engine is not idle state)
+     * requiring the caller to design an asynchronous mechanism by itself
+     *
+     * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t ReleaseSync() = 0;
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

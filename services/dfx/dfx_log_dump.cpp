@@ -128,6 +128,7 @@ void DfxLogDump::UpdateCheckEnable()
 
 void DfxLogDump::TaskProcessor()
 {
+    pthread_setname_np(pthread_self(), "DfxLogTask");
     while (true) {
         std::string temp;
         int32_t lineCount = 0;

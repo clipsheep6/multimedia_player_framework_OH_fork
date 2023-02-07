@@ -58,11 +58,28 @@ RecorderMsgProcResult RecorderMsgHandler::ProcessErrorMsgDefault(GstMessage &msg
 {
     GstErrorMsgParser parser(msg);
     CHECK_AND_RETURN_RET(parser.InitCheck(), RecorderMsgProcResult::REC_MSG_PROC_FAILED);
-    MEDIA_LOGE("[ERROR] %{public}s, %{public}s", parser.GetErr()->message, parser.GetDbg());
+    MEDIA_LOGE("[ERROR] domain:0x%{public}x, code:0x%{public}x, msg:%{public}s, %{public}s.",
+        parser.GetErr()->domain, parser.GetErr()->code, parser.GetErr()->message, parser.GetDbg());
+
+    if (parser.GetErr()->domain == GST_RESOURCE_ERROR) {
+        if (parser.GetErr()->code == GST_RESOURCE_ERROR_NOT_FOUND) {
+            // Video input timeout.
+            prettyMsg.detail = MSERR_DATA_SOURCE_IO_ERROR;
+        } else if (parser.GetErr()->code == GST_RESOURCE_ERROR_READ) {
+            // Audio input timeout.
+            prettyMsg.detail = MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR;
+        } else if (parser.GetErr()->code == GST_RESOURCE_ERROR_SETTINGS) {
+            // Video input data error.
+            prettyMsg.detail = MSERR_DATA_SOURCE_ERROR_UNKNOWN;
+        } else {
+            prettyMsg.detail = MSERR_UNKNOWN;
+        }
+    } else {
+        prettyMsg.detail = MSERR_UNKNOWN;
+    }
 
     prettyMsg.type = REC_MSG_ERROR;
     prettyMsg.code = IRecorderEngineObs::ErrorType::ERROR_INTERNAL;
-    prettyMsg.detail = MSERR_UNKNOWN;
 
     return RecorderMsgProcResult::REC_MSG_PROC_OK;
 }

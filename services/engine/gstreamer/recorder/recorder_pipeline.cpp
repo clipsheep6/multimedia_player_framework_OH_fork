@@ -419,6 +419,7 @@ void RecorderPipeline::StopForError(const RecorderMessage &msg)
 {
     MEDIA_LOGE("Fatal error happened, stop recording. Error code: %{public}d, detail: %{public}d",
                msg.code, msg.detail);
+    NotifyMessage(msg);
 
     errorState_.store(true);
     gstPipeCond_.notify_all();
@@ -435,7 +436,6 @@ void RecorderPipeline::StopForError(const RecorderMessage &msg)
     (void)executeInCmdQ_(stopforErrorTask, true);
     
     isStarted_ = false;
-    NotifyMessage(msg);
 }
 
 int32_t RecorderPipeline::BypassOneSource(int32_t sourceId)

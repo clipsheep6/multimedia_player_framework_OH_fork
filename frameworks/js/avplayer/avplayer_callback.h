@@ -46,6 +46,7 @@ public:
     int32_t GetVideoHeight() const;
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void ClearCallbackReference();
+    void ClearCallbackReference(const std::string &name);
     void Start();
     void Pause();
     void Release();

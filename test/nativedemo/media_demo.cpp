@@ -22,6 +22,7 @@
 #include "avcodec_venc_demo.h"
 #include "avcodec_vdec_demo.h"
 #include "recorder_profiles_demo.h"
+#include "baselib_demo.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -100,6 +101,18 @@ static int RunMediaProfile(const string &path)
     return 0;
 }
 
+static int RunBaseLib()
+{
+    auto baselib = std::make_unique<BaseLibDemo>();
+    if (baselib == nullptr) {
+        cout << "baselib is null" << endl;
+        return 0;
+    }
+    baselib->RunCase();
+    cout << "demo baselib end" << endl;
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
     constexpr int minRequiredArgCount = 2;
@@ -114,6 +127,7 @@ int main(int argc, char *argv[])
     cout << "3:codeclist" << endl;
     cout << "4:video-encoder" << endl;
     cout << "5:recorder_profiles" << endl;
+    cout << "6:baselib" << endl;
 
     string mode;
     (void)getline(cin, mode);
@@ -129,6 +143,8 @@ int main(int argc, char *argv[])
         (void)RunVideoEncoder(false);
     } else if (mode == "5") {
         (void)RunMediaProfile(path);
+    } else if (mode == "6") {
+        (void)RunBaseLib();
     } else {
         cout << "no that selection" << endl;
     }

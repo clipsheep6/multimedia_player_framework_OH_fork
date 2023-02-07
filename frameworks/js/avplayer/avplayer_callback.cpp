@@ -117,7 +117,7 @@ public:
             (void)napi_create_int32(ref->env_, valueVec[0], &args[0]);
             (void)napi_create_int32(ref->env_, valueVec[1], &args[1]);
 
-            const int32_t argCount = valueVec.size();
+            const int32_t argCount = static_cast<int32_t>(valueVec.size());
             napi_value result = nullptr;
             status = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,
@@ -286,13 +286,13 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
         Format infoBody;
         AVPlayerCallback::OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, infoBody);
     }
-
     AVPlayerCallback::OnErrorCb(errorCodeApi9, errorMsg);
 }
 
 void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
 {
-    MEDIA_LOGE("OnErrorCb:errorCode %{public}d, errorMsg %{public}s", errorCode, errorMsg.c_str());
+    std::string message = MSExtAVErrorToString(errorCode) + errorMsg;
+    MEDIA_LOGE("OnErrorCb:errorCode %{public}d, errorMsg %{public}s", errorCode, message.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
     if (refMap_.find(AVPlayerEvent::EVENT_ERROR) == refMap_.end()) {
         MEDIA_LOGW("can not find error callback!");
@@ -305,7 +305,7 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_ERROR);
     cb->callbackName = AVPlayerEvent::EVENT_ERROR;
     cb->errorCode = errorCode;
-    cb->errorMsg = errorMsg;
+    cb->errorMsg = message;
     NapiCallback::CompleteCallback(env_, cb);
 }
 
@@ -393,9 +393,6 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state, const Format &infoBod
             if (infoBody.ContainKey(PlayerKeys::PLAYER_STATE_CHANGED_REASON)) {
                 (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, reason);
             }
-            if (state == PLAYER_PLAYBACK_COMPLETE || state == PLAYER_STATE_ERROR) {
-                reason = StateChangeReason::BACKGROUND;
-            }
             cb->callback = refMap_.at(AVPlayerEvent::EVENT_STATE_CHANGE);
             cb->callbackName = AVPlayerEvent::EVENT_STATE_CHANGE;
             cb->state = stateMap.at(state);
@@ -408,7 +405,10 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state, const Format &infoBod
 void AVPlayerCallback::OnVolumeChangeCb(const Format &infoBody)
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGI("OnVolumeChangeCb in");
+    float volumeLevel = 0.0;
+    (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, volumeLevel);
+
+    MEDIA_LOGI("OnVolumeChangeCb in volume=%{public}f", volumeLevel);
     if (refMap_.find(AVPlayerEvent::EVENT_VOLUME_CHANGE) == refMap_.end()) {
         MEDIA_LOGW("can not find vol change callback!");
         return;
@@ -416,9 +416,6 @@ void AVPlayerCallback::OnVolumeChangeCb(const Format &infoBody)
 
     NapiCallback::Double *cb = new(std::nothrow) NapiCallback::Double();
     CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new Double");
-
-    float volumeLevel = 0.0;
-    (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, volumeLevel);
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_VOLUME_CHANGE);
     cb->callbackName = AVPlayerEvent::EVENT_VOLUME_CHANGE;
     cb->value = static_cast<double>(volumeLevel);
@@ -656,17 +653,16 @@ void AVPlayerCallback::OnBitRateCollectedCb(const Format &infoBody) const
     if (infoBody.ContainKey(std::string(PlayerKeys::PLAYER_BITRATE))) {
         uint8_t *addr = nullptr;
         size_t size  = 0;
-        uint32_t bitrate = 0;
         infoBody.GetBuffer(std::string(PlayerKeys::PLAYER_BITRATE), &addr, size);
         CHECK_AND_RETURN_LOG(addr != nullptr, "bitrate addr is nullptr");
 
         MEDIA_LOGI("bitrate size = %{public}zu", size / sizeof(uint32_t));
         while (size > 0) {
-            if ((size - sizeof(uint32_t)) < 0) {
+            if (size < sizeof(uint32_t)) {
                 break;
             }
 
-            bitrate = *(static_cast<uint32_t *>(static_cast<void *>(addr)));
+            uint32_t bitrate = *(static_cast<uint32_t *>(static_cast<void *>(addr)));
             MEDIA_LOGI("bitrate = %{public}u", bitrate);
             addr += sizeof(uint32_t);
             size -= sizeof(uint32_t);
@@ -710,6 +706,12 @@ void AVPlayerCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_.clear();
+}
+
+void AVPlayerCallback::ClearCallbackReference(const std::string &name)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    refMap_.erase(name);
 }
 
 void AVPlayerCallback::Start()

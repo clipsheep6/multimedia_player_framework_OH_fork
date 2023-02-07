@@ -480,11 +480,6 @@ int32_t PlayerServer::Release()
     return MSERR_OK;
 }
 
-int32_t PlayerServer::ReleaseSync()
-{
-    return MSERR_OK;
-}
-
 int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -513,7 +508,7 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 
     Format format;
     (void)format.PutFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, leftVolume);
-    OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
+    OnInfoNoChangeStatus(INFO_TYPE_VOLUME_CHANGE, 0, format);
     return MSERR_OK;
 }
 
@@ -771,7 +766,6 @@ void PlayerServer::HandleEos()
 
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
             MEDIA_LOGI("Interrupted seek action");
-            Format format;
             taskMgr_.MarkTaskDone();
             disableNextSeekDone_ = false;
         });
