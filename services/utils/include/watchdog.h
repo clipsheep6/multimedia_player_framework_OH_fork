@@ -83,16 +83,14 @@ public:
 
 private:
     std::atomic<bool> enable_ = false;
-    std::atomic<bool> pause_ = false;
+    bool pause_ = false;
+    bool paused_ = false;
     bool alarmed_ = false;
     uint32_t timeoutMs_ = 1000; // Default 1000ms.
-    std::atomic<uint32_t> count_ = 0;
+    uint32_t count_ = 0;
     std::condition_variable cond_;
-    std::mutex condMutex_;
-    std::condition_variable pauseCond_;
-    std::mutex pauseMutex_;
     std::mutex mutex_;
-    std::mutex alarmMutex_;
+    std::mutex disableMutex_;
     std::unique_ptr<std::thread> thread_;
 };
 } // namespace Media
