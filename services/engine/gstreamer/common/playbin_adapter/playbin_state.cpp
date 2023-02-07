@@ -194,7 +194,7 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
                     static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
                 ctrler_.ReportMessage(posUpdateMsg);
 
-                PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, ctrler_.rate_, {} };
+                PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, 0, ctrler_.rate_ };
                 ctrler_.ReportMessage(playBinMsg);
             } else {
                 MEDIA_LOGD("Async done, not seeking or rating!");
@@ -472,7 +472,7 @@ void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg
                     static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
                 ctrler_.ReportMessage(posUpdateMsg);
 
-                PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, ctrler_.rate_, {} };
+                PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, 0, ctrler_.rate_ };
                 ctrler_.ReportMessage(playBinMsg);
             } else {
                 MEDIA_LOGD("playing, not seeking or rating!");
