@@ -391,7 +391,8 @@ uint32_t GstAppsrcEngine::GetAvailableSize()
         availableSize = 0;
     } else {
         availableSize = appSrcMem_->availableBegin < appSrcMem_->begin?
-            appSrcMem_->begin - appSrcMem_->availableBegin : bufferSize_ - appSrcMem_->availableBegin + appSrcMem_->begin;
+            appSrcMem_->begin - appSrcMem_->availableBegin :
+            bufferSize_ - appSrcMem_->availableBegin + appSrcMem_->begin;
     }
     MEDIA_LOGD("GetAvailableSize is: %{public}u", availableSize);
     return availableSize;
