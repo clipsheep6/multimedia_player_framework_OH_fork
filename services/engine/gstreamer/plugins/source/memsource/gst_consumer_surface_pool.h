@@ -18,6 +18,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstvideopool.h>
+#include "iconsumer_surface.h"
 #include "surface.h"
 
 G_BEGIN_DECLS
@@ -60,7 +61,7 @@ GstBufferPool *gst_consumer_surface_pool_new();
 GstCaps *gst_consumer_surface_pool_get_caps(GstConsumerSurfacePool *pool);
 
 void gst_consumer_surface_pool_set_surface(GstBufferPool *pool,
-    OHOS::sptr<OHOS::Surface> &consumer_surface);
+    OHOS::sptr<OHOS::IConsumerSurface> &consumer_surface);
 
 G_END_DECLS
 

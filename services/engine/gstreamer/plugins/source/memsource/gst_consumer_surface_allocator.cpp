@@ -29,7 +29,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_consumer_surface_allocator_debug_category);
 #define GST_CAT_DEFAULT gst_consumer_surface_allocator_debug_category
 
 struct _GstConsumerSurfaceAllocatorPrivate {
-    sptr<Surface> csurface;
+    sptr<IConsumerSurface> csurface;
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfaceAllocator, gst_consumer_surface_allocator, GST_TYPE_ALLOCATOR);
@@ -59,7 +59,7 @@ static GstMemory *gst_consumer_surface_allocator_alloc(GstAllocator *allocator, 
 
     ON_SCOPE_EXIT(0) { g_slice_free(GstConsumerSurfaceMemory, mem); };
     // shorten code
-    sptr<Surface> surface = sallocator->priv->csurface;
+    sptr<IConsumerSurface> surface = sallocator->priv->csurface;
     sptr<SurfaceBuffer> surface_buffer = nullptr;
     gint32 fencefd = -1;
     gint64 timestamp = 0;
@@ -235,7 +235,7 @@ static void gst_consumer_surface_allocator_class_init(GstConsumerSurfaceAllocato
     allocatorClass->free = gst_consumer_surface_allocator_free;
 }
 
-void gst_consumer_surface_allocator_set_surface(GstAllocator *allocator, sptr<Surface> &consumerSurface)
+void gst_consumer_surface_allocator_set_surface(GstAllocator *allocator, sptr<IConsumerSurface> &consumerSurface)
 {
     GstConsumerSurfaceAllocator *sallocator = GST_CONSUMER_SURFACE_ALLOCATOR(allocator);
     g_return_if_fail(sallocator != nullptr && sallocator->priv != nullptr);
