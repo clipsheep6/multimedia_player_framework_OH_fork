@@ -56,6 +56,9 @@ static GstFlowReturn gst_audio_capture_src_create(GstPushSrc *psrc, GstBuffer **
 static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_audio_capture_src_negotiate(GstBaseSrc *basesrc);
 static void gst_audio_capture_src_getbuffer_timeout(GstPushSrc *psrc);
+static void gst_audio_capture_src_mgr_init(GstAudioCaptureSrc *src);
+static void gst_audio_capture_src_mgr_enable_watchdog(GstAudioCaptureSrc *src);
+static void gst_audio_capture_src_mgr_disable_watchdog(GstAudioCaptureSrc *src);
 
 void AudioManager::Alarm()
 {
@@ -318,11 +321,13 @@ static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSr
             }
             if (src->is_start == FALSE) {
                 g_return_val_if_fail(src->audio_capture->StartAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
+                gst_audio_capture_src_mgr_init(src);
                 src->is_start = TRUE;
             } else {
                 if (!src->bypass_audio) {
                     g_return_val_if_fail(src->audio_capture->ResumeAudioCapture() == MSERR_OK,
                         GST_STATE_CHANGE_FAILURE);
+                    gst_audio_capture_src_mgr_enable_watchdog(src);
                 } else {
                     src->audio_mgr = nullptr;
                     g_return_val_if_fail(src->audio_capture->WakeUpAudioThreads() == MSERR_OK,
@@ -349,6 +354,7 @@ static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *eleme
 
     switch (transition) {
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+            gst_audio_capture_src_mgr_disable_watchdog(src);
             g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
             if (!src->bypass_audio) {
                 g_return_val_if_fail(src->audio_capture->PauseAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
@@ -379,14 +385,7 @@ static GstFlowReturn gst_audio_capture_src_create(GstPushSrc *psrc, GstBuffer **
     }
     g_return_val_if_fail(src->audio_capture != nullptr, GST_FLOW_ERROR);
 
-    if (src->input_detection) {
-        if (src->audio_mgr == nullptr) {
-            const guint32 timeoutMs = 3000; // Error will be reported if there is no data input in 3000ms by default.
-            src->audio_mgr = std::make_shared<AudioManager>(*psrc, timeoutMs);
-            g_return_val_if_fail(src->audio_mgr != nullptr, GST_FLOW_ERROR);
-            src->audio_mgr->EnableWatchDog();
-        }
-
+    if (src->input_detection && src->audio_mgr != nullptr) {
         src->audio_mgr->ResumeWatchDog();
     }
     std::shared_ptr<AudioBuffer> audio_buffer = src->audio_capture->GetBuffer();
@@ -416,6 +415,34 @@ static gboolean gst_audio_capture_src_negotiate(GstBaseSrc *basesrc)
     (void)gst_base_src_wait_playing(basesrc);
     g_return_val_if_fail(src->src_caps != nullptr, FALSE);
     return gst_base_src_set_caps(basesrc, src->src_caps);
+}
+
+static void gst_audio_capture_src_mgr_init(GstAudioCaptureSrc *src)
+{
+    g_return_if_fail(src != nullptr);
+    if (src->input_detection && src->audio_mgr == nullptr) {
+        const guint32 timeoutMs = 3000; // Error will be reported if there is no data input in 3000ms by default.
+        GstPushSrc *psrc = GST_PUSH_SRC(src);
+        src->audio_mgr = std::make_shared<AudioManager>(*psrc, timeoutMs);
+        g_return_if_fail(src->audio_mgr != nullptr);
+    }
+}
+
+static void gst_audio_capture_src_mgr_enable_watchdog(GstAudioCaptureSrc *src)
+{
+    g_return_if_fail(src != nullptr);
+    if (src->input_detection && src->audio_mgr != nullptr) {
+        src->audio_mgr->EnableWatchDog();
+        src->audio_mgr->PauseWatchDog();
+    }
+}
+
+static void gst_audio_capture_src_mgr_disable_watchdog(GstAudioCaptureSrc *src)
+{
+    g_return_if_fail(src != nullptr);
+    if (src->audio_mgr != nullptr) {
+        src->audio_mgr->DisableWatchDog();
+    }
 }
 
 static void gst_audio_capture_src_getbuffer_timeout(GstPushSrc *psrc)
