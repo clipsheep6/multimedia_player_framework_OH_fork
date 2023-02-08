@@ -608,7 +608,16 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
     PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
         0, static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
     ctrler_.ReportMessage(posUpdateMsg);
-    return ctrler_.SeekInternal(0, IPlayBinCtrler::PlayBinSeekMode::PREV_SYNC);
+    
+    GstState state = GST_STATE_NULL;
+    gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
+
+    if (state == GST_STATE_PAUSED) {
+        GstStateChangeReturn ret;
+        return ChangePlayBinState(GST_STATE_PLAYING, ret);
+    } else {
+        return ctrler_.SeekInternal(0, IPlayBinCtrler::PlayBinSeekMode::PREV_SYNC);
+    }
 }
 
 int32_t PlayBinCtrlerBase::PlaybackCompletedState::Stop()
@@ -619,11 +628,9 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Stop()
 
 int32_t PlayBinCtrlerBase::PlaybackCompletedState::Seek(int64_t timeUs, int32_t option)
 {
-    (void)option;
-    int64_t position = timeUs / USEC_PER_MSEC;
-    PlayBinMessage msg = { PLAYBIN_MSG_SEEKDONE, 0, static_cast<int32_t>(position), {} };
-    ctrler_.ReportMessage(msg);
-    return MSERR_OK;
+    GstStateChangeReturn ret;
+    (void)ChangePlayBinState(GST_STATE_PAUSED, ret);
+    return ctrler_.SeekInternal(timeUs, option);
 }
 
 int32_t PlayBinCtrlerBase::PlaybackCompletedState::SetRate(double rate)
