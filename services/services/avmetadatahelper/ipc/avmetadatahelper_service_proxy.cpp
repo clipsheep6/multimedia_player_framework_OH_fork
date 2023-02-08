@@ -41,15 +41,13 @@ int32_t AVMetadataHelperServiceProxy::DestroyStub()
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return MSERR_UNKNOWN;
-    }
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
     int error = Remote()->SendRequest(DESTROY, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("destroy failed, error: %{public}d", error);
-        return error;
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "DestroyStub failed, error: %{public}d", error);
+
     return reply.ReadInt32();
 }
 
@@ -59,19 +57,16 @@ int32_t AVMetadataHelperServiceProxy::SetSource(const std::string &uri, int32_t 
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return MSERR_UNKNOWN;
-    }
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     (void)data.WriteString(uri);
     (void)data.WriteInt32(usage);
 
     int error = Remote()->SendRequest(SET_URI_SOURCE, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("Set Source failed, error: %{public}d", error);
-        return error;
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetSource failed, error: %{public}d", error);
+
     return reply.ReadInt32();
 }
 
@@ -81,10 +76,8 @@ int32_t AVMetadataHelperServiceProxy::SetSource(int32_t fd, int64_t offset, int6
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return MSERR_UNKNOWN;
-    }
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     (void)data.WriteFileDescriptor(fd);
     (void)data.WriteInt64(offset);
@@ -92,10 +85,9 @@ int32_t AVMetadataHelperServiceProxy::SetSource(int32_t fd, int64_t offset, int6
     (void)data.WriteInt32(usage);
 
     int error = Remote()->SendRequest(SET_FD_SOURCE, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("Set Source failed, error: %{public}d", error);
-        return error;
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetSource failed, error: %{public}d", error);
+
     return reply.ReadInt32();
 }
 
@@ -105,18 +97,15 @@ std::string AVMetadataHelperServiceProxy::ResolveMetadata(int32_t key)
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return "";
-    }
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, "", "Failed to write descriptor!");
 
     (void)data.WriteInt32(key);
 
     int error = Remote()->SendRequest(RESOLVE_METADATA, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("ResolveMetadata failed, error: %{public}d", error);
-        return "";
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, "",
+        "ResolveMetadata failed, error: %{public}d", error);
+
     return reply.ReadString();
 }
 
@@ -127,30 +116,20 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperServiceProxy::ResolveMe
     MessageOption option;
     std::unordered_map<int32_t, std::string> metadata;
 
-    if (!data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return metadata;
-    }
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, metadata, "Failed to write descriptor!");
 
     int error = Remote()->SendRequest(RESOLVE_METADATA_MAP, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("ResolveMetadata failed, error: %{public}d", error);
-        return metadata;
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, metadata,
+        "ResolveMetadataMap failed, error: %{public}d", error);
 
     std::vector<int32_t> key;
     (void)reply.ReadInt32Vector(&key);
-    if (key.size() == 0) {
-        MEDIA_LOGE("Read key failed");
-        return metadata;
-    }
+    CHECK_AND_RETURN_RET_LOG(!key.empty(), metadata, "key is empty");
 
     std::vector<std::string> dataStr;
     (void)reply.ReadStringVector(&dataStr);
-    if (dataStr.size() == 0) {
-        MEDIA_LOGE("Read dataStr failed");
-        return metadata;
-    }
+    CHECK_AND_RETURN_RET_LOG(!dataStr.empty(), metadata, "dataStr is empty");
 
     auto itKey = key.begin();
     auto itDataStr = dataStr.begin();
@@ -167,16 +146,12 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchArtPicture()
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return nullptr;
-    }
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
 
     int error = Remote()->SendRequest(FETCH_ART_PICTURE, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("Fetch art picture failed, error: %{public}d", error);
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
+        "FetchArtPicture failed, error: %{public}d", error);
 
     return ReadAVSharedMemoryFromParcel(reply);
 }
@@ -188,10 +163,8 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchFrameAtTime(i
     MessageParcel reply;
     MessageOption opt;
 
-    if (!data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return nullptr;
-    }
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
 
     (void)data.WriteInt64(timeUs);
     (void)data.WriteInt32(option);
@@ -200,10 +173,9 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchFrameAtTime(i
     (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
 
     int error = Remote()->SendRequest(FETCH_FRAME_AT_TIME, data, reply, opt);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("FetchFrameAtTime failed, error: %{public}d", error);
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
+        "FetchFrameAtTime failed, error: %{public}d", error);
+
     return ReadAVSharedMemoryFromParcel(reply);
 }
 
@@ -213,15 +185,11 @@ void AVMetadataHelperServiceProxy::Release()
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor())) {
-        MEDIA_LOGE("Failed to write descriptor");
-        return;
-    }
+    bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
 
     int error = Remote()->SendRequest(RELEASE, data, reply, option);
-    if (error != MSERR_OK) {
-        MEDIA_LOGE("Release failed, error: %{public}d", error);
-    }
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "Release failed, error: %{public}d", error);
 }
 } // namespace Media
 } // namespace OHOS

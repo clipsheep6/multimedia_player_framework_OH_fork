@@ -25,10 +25,9 @@ using namespace std;
 using namespace OHOS;
 using namespace OHOS::Media;
 
-void TestPlayerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)
+void TestPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    (void)errorType;
-    cout << "Error received, errorCode:" << MSErrorToString(static_cast<MediaServiceErrCode>(errorCode)) << endl;
+    cout << "Error received, errorCode: " << errorCode << "errorMsg: " << errorMsg << endl;
 }
 
 void TestPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)

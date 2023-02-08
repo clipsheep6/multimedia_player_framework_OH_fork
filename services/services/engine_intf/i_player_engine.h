@@ -31,6 +31,11 @@ class IPlayerEngineObs : public std::enable_shared_from_this<IPlayerEngineObs> {
 public:
     virtual ~IPlayerEngineObs() = default;
     virtual void OnError(PlayerErrorType errorType, int32_t errorCode) = 0;
+    virtual void OnErrorMessage(int32_t errorCode, const std::string &errorMsg)
+    {
+        (void)errorCode;
+        (void)errorMsg;
+    }
     virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) = 0;
 };
 

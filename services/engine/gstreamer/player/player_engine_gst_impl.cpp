@@ -45,9 +45,6 @@ PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid)
     : appuid_(uid), apppid_(pid)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    taskQueue_ = std::make_unique<TaskQueue>("player-engine-task");
-    int32_t ret = taskQueue_->Start();
-    CHECK_AND_RETURN_LOG(ret == MSERR_OK, "task queue start failed");
 }
 
 PlayerEngineGstImpl::~PlayerEngineGstImpl()
@@ -168,13 +165,16 @@ void PlayerEngineGstImpl::HandleErrorMessage(const PlayBinMessage &msg)
 {
     MEDIA_LOGE("error happended, cancel inprocessing job");
 
-    PlayerErrorType errorType = PLAYER_ERROR;
     int32_t errorCode = msg.code;
+    std::string errorMsg = "Unknown Error";
+    if (msg.subType == PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE) {
+        errorMsg = std::any_cast<std::string>(msg.extra);
+    }
 
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     Format format;
     if (notifyObs != nullptr) {
-        notifyObs->OnError(errorType, errorCode);
+        notifyObs->OnErrorMessage(errorCode, errorMsg);
         notifyObs->OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, format);
     }
 }
@@ -267,7 +267,7 @@ void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
 void PlayerEngineGstImpl::HandleBufferingPercent(const PlayBinMessage &msg)
 {
     int32_t lastPercent = percent_;
-    percent_ =  msg.code;
+    percent_ = msg.code;
 
     if (lastPercent == percent_) {
         return;
@@ -413,8 +413,17 @@ void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
 void PlayerEngineGstImpl::HandlePositionUpdateMessage(const PlayBinMessage &msg)
 {
     currentTime_ = msg.code;
-    duration_ = std::any_cast<int32_t>(msg.extra);
-    MEDIA_LOGD("update position %{public}d ms, duration %{public}d ms", currentTime_, duration_);
+    int32_t duration = std::any_cast<int32_t>(msg.extra);
+    MEDIA_LOGD("update position %{public}d ms, duration %{public}d ms", currentTime_, duration);
+
+    if (duration != duration_) {
+        duration_ = duration;
+        Format format;
+        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+        if (notifyObs != nullptr) {
+            notifyObs->OnInfo(INFO_TYPE_DURATION_UPDATE, duration_, format);
+        }
+    }
 
     // 10: report once at 1000ms
     if (currentTimeOnInfoCnt_ % POSITION_REPORT_PER_TIMES == 0 ||
@@ -890,6 +899,12 @@ void PlayerEngineGstImpl::OnNotifyElemUnSetup(GstElement &elem)
 void PlayerEngineGstImpl::OnCapsFixError()
 {
     MEDIA_LOGD("OnCapsFixError in");
+
+    if (taskQueue_ == nullptr) {
+        taskQueue_ = std::make_unique<TaskQueue>("reset-playbin-task");
+        int32_t ret = taskQueue_->Start();
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "task queue start failed");
+    }
 
     useSoftDec_ = true;
     auto resetTask = std::make_shared<TaskHandler<void>>([this]() {

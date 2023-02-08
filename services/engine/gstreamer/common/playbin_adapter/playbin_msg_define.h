@@ -38,6 +38,11 @@ enum PlayBinMsgType : int32_t {
     PLAYBIN_MSG_ASYNC_DONE,
 };
 
+enum PlayBinMsgErrorSubType : int32_t {
+    PLAYBIN_SUB_MSG_ERROR_NO_MESSAGE = 0,
+    PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE = 1,
+};
+
 enum PlayBinMsgPositionUpdateSubType : int32_t {
     PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE = 0,
     PLAYBIN_SUB_MSG_POSITION_UPDATE_UNFORCE = 1,

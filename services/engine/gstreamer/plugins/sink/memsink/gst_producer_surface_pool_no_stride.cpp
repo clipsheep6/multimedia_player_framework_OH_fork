@@ -145,7 +145,7 @@ static void gst_producer_surface_pool_init(GstProducerSurfacePool *pool)
     pool->callCnt = 0;
     pool->isDynamicCached = FALSE;
     pool->cachedBuffers = 0;
-    pool->scale_type = 0;
+    pool->scale_type = 1; // VIDEO_SCALE_TYPE_FIT_CROP
 }
 
 static void gst_producer_surface_pool_finalize(GObject *obj)

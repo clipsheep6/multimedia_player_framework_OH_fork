@@ -128,7 +128,7 @@ public:
     virtual int32_t Reset() = 0;
 
     /**
-     * @brief Releases player resources
+     * @brief Releases player resources async
      *
      * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
      * in {@link media_errors.h} otherwise.
@@ -136,6 +136,19 @@ public:
      * @version 1.0
      */
     virtual int32_t Release() = 0;
+
+    /**
+     * @brief Releases player resources sync
+     *
+     * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t ReleaseSync()
+    {
+        return ERR_OK;
+    }
 
     /**
      * @brief Sets the volume of the player.
