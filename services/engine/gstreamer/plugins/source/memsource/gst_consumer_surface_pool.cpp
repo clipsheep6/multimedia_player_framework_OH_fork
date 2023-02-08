@@ -271,7 +271,6 @@ static void gst_consumer_surface_pool_flush_stop(GstBufferPool *pool)
     g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);
     auto priv = surfacepool->priv;
     g_mutex_lock(&priv->pool_lock);
-    priv->poolMgr = nullptr;
     surfacepool->priv->flushing = FALSE;
     surfacepool->priv->is_first_buffer = TRUE;
     surfacepool->priv->is_first_buffer_in_for_trace = TRUE;
@@ -297,6 +296,7 @@ static gboolean gst_consumer_surface_pool_stop(GstBufferPool *pool)
     g_return_val_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr, FALSE);
     auto priv = surfacepool->priv;
     g_mutex_lock(&priv->pool_lock);
+    surfacepool->priv->poolMgr = nullptr;
     surfacepool->priv->start = FALSE;
     g_cond_signal(&priv->buffer_available_con);
     g_mutex_unlock(&priv->pool_lock);

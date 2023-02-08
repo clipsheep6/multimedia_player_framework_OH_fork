@@ -30,37 +30,49 @@ WatchDog::~WatchDog()
 
 void WatchDog::EnableWatchDog()
 {
-    std::unique_lock<std::mutex> lock(mutex_);
-    if (enable_.load()) {
-        return;
-    }
+    while (true) {
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (enable_) {
+            return;
+        }
 
-    enable_.store(true);
-    thread_ = std::make_unique<std::thread>(&WatchDog::WatchDogThread, this);
+        if (disabling.load()) {
+            continue; // Wait for disable execution to finish.
+        }
+
+        enable_ = true;
+        thread_ = std::make_unique<std::thread>(&WatchDog::WatchDogThread, this);
+        break;
+    }
 };
 
 void WatchDog::DisableWatchDog()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    enable_.store(false);
-    cond_.notify_all();
-    pauseCond_.notify_all();
-    if (thread_ != nullptr && thread_->joinable()) {
-        thread_->join();
-        thread_.reset();
-        thread_ = nullptr;
-    }
+    if (disabling.load() == false) {
+        disabling.store(true);
+        enable_ = false;
+        cond_.notify_all();
+        lock.unlock(); // Make the thread acquire the lock and exit.
+        if (thread_ != nullptr && thread_->joinable()) {
+            thread_->join();
+            thread_.reset();
+            thread_ = nullptr;
+        }
 
-    // It may be changed by thread. Assign value after thread recycle.
-    pause_.store(false);
-    alarmed_ = false;
+        // It may be changed by thread. Assign value after thread recycle.
+        pause_ = false;
+        alarmed_ = false;
+        disabling.store(false);
+    }
 };
 
 void WatchDog::PauseWatchDog()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (enable_.load()) {
-        pause_.store(true);
+    if (enable_) {
+        pause_ = true;
+        paused_ = true;
         cond_.notify_all();
     }
 };
@@ -68,29 +80,31 @@ void WatchDog::PauseWatchDog()
 void WatchDog::ResumeWatchDog()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (enable_.load()) {
-        pause_.store(false);
-        pauseCond_.notify_all();
+    if (enable_) {
+        pause_ = false;
+        cond_.notify_all();
     }
 };
 
 void WatchDog::SetWatchDogTimeout(uint32_t timeoutMs)
 {
-    std::unique_lock<std::mutex> condLock(condMutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     timeoutMs_ = timeoutMs;
 };
 
 void WatchDog::Notify()
 {
-    std::unique_lock<std::mutex> alarmLock(alarmMutex_);
-    count_++;
-    cond_.notify_all();
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (enable_) {
+        if (alarmed_) {
+            alarmed_ = false;
+            AlarmRecovery();
+            pause_ = false;
+            cond_.notify_all();
+        }
 
-    if (alarmed_) {
-        alarmed_ = false;
-        AlarmRecovery();
-        pause_.store(false);
-        pauseCond_.notify_all();
+        count_++;
+        cond_.notify_all();
     }
 };
 
@@ -107,37 +121,40 @@ void WatchDog::AlarmRecovery()
 void WatchDog::WatchDogThread()
 {
     while (true) {
-        {
-            std::unique_lock<std::mutex> condLock(condMutex_);
-            cond_.wait_for(condLock, std::chrono::milliseconds(timeoutMs_), [this] {
-                return (enable_.load() == false) || (pause_.load() == true) || (count_.load() > 0);
-            });
+        std::unique_lock<std::mutex> lock(mutex_);
+        
+        // For pause/resume control, wait only when paused.
+        cond_.wait(lock, [this] {
+            return (enable_ == false) || (pause_ == false);
+        });
+
+        if (paused_) {
+            paused_ = false;
         }
 
-        if (enable_.load() == false) {
+        // For timeout detection.
+        cond_.wait_for(lock, std::chrono::milliseconds(timeoutMs_), [this] {
+            return (enable_ == false) || (pause_ == true) || (count_ > 0);
+        });
+
+        if (enable_ == false) {
             break;
         }
 
-        {
-            std::unique_lock<std::mutex> alarmLock(alarmMutex_);
-            if ((count_.load() == 0) && (pause_.load() == false)) {
-                MEDIA_LOGI("Watchdog timeout!");
-                if (alarmed_ == false) {
-                    alarmed_ = true;
-                    Alarm();
-                    pause_.store(true);
-                }
+        if (pause_ == true || paused_ == true) {
+            continue;
+        }
+        
+        if (count_ == 0) {
+            MEDIA_LOGI("Watchdog timeout!");
+            if (alarmed_ == false) {
+                alarmed_ = true;
+                Alarm();
+                pause_ = true;
             }
         }
 
-        count_.store(0);
-
-        if (pause_.load()) {
-            std::unique_lock<std::mutex> pauseLock(pauseMutex_);
-            pauseCond_.wait(pauseLock, [this] {
-                return (enable_.load() == false) || (pause_.load() == false);
-            });
-        }
+        count_ = 0;
     }
 }
 } // namespace Media
