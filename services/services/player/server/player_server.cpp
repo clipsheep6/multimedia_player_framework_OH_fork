@@ -245,8 +245,9 @@ int32_t PlayerServer::OnPrepare(bool sync)
         MediaTrace::TraceBegin("PlayerServer::PrepareAsync", FAKE_POINTER(this));
 #ifdef SUPPORT_VIDEO
         if (surface_ != nullptr) {
-            ret = playerEngine_->SetVideoSurface(surface_);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetVideoSurface Failed!");
+            int32_t res = playerEngine_->SetVideoSurface(surface_);
+            CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
+                static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoSurface Failed!");
         }
 #endif
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
