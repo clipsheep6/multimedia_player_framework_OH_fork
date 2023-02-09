@@ -592,11 +592,12 @@ int32_t PlayBinCtrlerBase::StoppingState::Stop()
 
 void PlayBinCtrlerBase::StoppingState::ProcessStateChange(const InnerMessage &msg)
 {
+    MEDIA_LOGI("StoppingState::ProcessStateChange");
     if (msg.detail2 == GST_STATE_READY) {
         std::unique_lock<std::mutex> lock(ctrler_.mutex_);
         ctrler_.ChangeState(ctrler_.stoppedState_);
         ctrler_.stoppingCond_.notify_one(); // awake the stoppingCond_'s waiter in Stop()
-        MEDIA_LOGD("stoppingCond_.notify_one");
+        MEDIA_LOGI("stoppingCond_.notify_one stopping->stopped");
     }
 }
 
@@ -673,7 +674,8 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Seek(int64_t timeUs, int32_t 
     gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
     if (state == GST_STATE_PLAYING) {
         GstStateChangeReturn ret;
-        return ChangePlayBinState(GST_STATE_PAUSED, ret);
+        MEDIA_LOGI("completed GST_STATE_PLAYING->GST_STATE_PAUSED");
+        (void)ChangePlayBinState(GST_STATE_PAUSED, ret);
     }
     return ctrler_.SeekInternal(timeUs, option);
 }
@@ -685,7 +687,8 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::SetRate(double rate)
     gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
     if (state == GST_STATE_PLAYING) {
         GstStateChangeReturn ret;
-        return ChangePlayBinState(GST_STATE_PAUSED, ret);
+        MEDIA_LOGI("completed GST_STATE_PLAYING->GST_STATE_PAUSED");
+        (void)ChangePlayBinState(GST_STATE_PAUSED, ret);
     }
     return ctrler_.SetRateInternal(rate);
 }
