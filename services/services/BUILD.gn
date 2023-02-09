@@ -58,8 +58,6 @@ config("media_service_config") {
     "avcodeclist/server",
     "recorder_profiles/ipc",
     "recorder_profiles/server",
-    "avmuxer/ipc",
-    "avmuxer/server",
     "//base/security/access_token/interfaces/innerkits/access_token/include",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
     "//foundation/multimedia/player_framework/services/include",
@@ -127,12 +125,6 @@ ohos_shared_library("media_service") {
       "avcodeclist/ipc/avcodeclist_service_stub.cpp",
       "avcodeclist/server/avcodeclist_server.cpp",
       "sa_media/ipc/avcodeclist_parcel.cpp",
-    ]
-  }
-  if (multimedia_player_framework_support_muxer) {
-    sources += [
-      "avmuxer/ipc/avmuxer_service_stub.cpp",
-      "avmuxer/server/avmuxer_server.cpp",
     ]
   }
   if (multimedia_player_framework_support_metadata) {

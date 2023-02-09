@@ -45,7 +45,6 @@ public:
         AVMETADATAHELPER,
         AVCODECLIST,
         AVCODEC,
-        AVMUXER,
         RECORDERPROFILES,
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
