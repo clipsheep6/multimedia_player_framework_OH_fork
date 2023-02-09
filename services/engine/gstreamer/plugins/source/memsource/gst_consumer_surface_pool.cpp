@@ -363,8 +363,11 @@ static GstFlowReturn gst_consumer_surface_pool_alloc_buffer(GstBufferPool *pool,
     g_return_val_if_fail(pclass != nullptr && pclass->alloc_buffer != nullptr, GST_FLOW_NOT_SUPPORTED);
     g_return_val_if_fail(surfacemem != nullptr, GST_FLOW_ERROR);
 
-    if (surfacepool->alloc_buffer) {
-        if (surfacepool->alloc_buffer(pool, buffer) == GST_FLOW_OK) {
+    if (surfacepool->find_buffer_in_cache) {
+        bool found = false;
+        g_return_val_if_fail(surfacepool->find_buffer_in_cache(pool, buffer, &found) == GST_FLOW_OK,
+            GST_FLOW_ERROR);
+        if (found) {
             gst_consumer_surface_pool_dump_gstbuffer(surfacepool, *buffer);
             return GST_FLOW_OK;
         }
@@ -451,8 +454,8 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
         (gst_consumer_surface_pool_get_instance_private(pool));
     g_return_if_fail(priv != nullptr);
     pool->priv = priv;
-    pool->buffer_available = nullptr;
-    pool->alloc_buffer = nullptr;
+    pool->cache_buffer = nullptr;
+    pool->find_buffer_in_cache = nullptr;
     pool->get_surface_buffer = gst_consumer_surface_pool_get_surface_buffer;
     pool->release_surface_buffer = gst_consumer_surface_pool_release_surface_buffer;
     priv->available_buf_count = 0;
@@ -486,24 +489,30 @@ static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *p
         priv->poolMgr->Notify();
     }
 
-    bool cachedData = false;
-    if (pool->buffer_available) {
-        if (pool->buffer_available(pool) == GST_FLOW_OK) {
-            cachedData = true;
-        }
-    }
+    if (priv->suspend) {
+        if (pool->cache_buffer) {
+            bool releasebuffer = false;
+            if (pool->cache_buffer(pool, &releasebuffer) != GST_FLOW_OK) {
+                GST_WARNING_OBJECT(pool, "Cache buffer failed.");
+            }
 
-    if (priv->suspend && !cachedData) {
-        sptr<SurfaceBuffer> buffer = nullptr;
-        gint32 fencefd = -1;
-        gint64 timestamp = 0;
-        Rect damage = {0, 0, 0, 0};
-        if (priv->consumer_surface->AcquireBuffer(buffer, fencefd, timestamp, damage) == SURFACE_ERROR_OK) {
-            GST_INFO_OBJECT(pool, "Surface is suspended, release buffer. Available buffer count %u",
-                priv->available_buf_count);
-            gst_consumer_surface_pool_dump_surfacebuffer(pool, buffer);
-            (void)priv->consumer_surface->ReleaseBuffer(buffer, fencefd);
-            return;
+            if (releasebuffer) {
+                GST_INFO_OBJECT(pool, "cache buffer, release buffer. Available buffer count %u",
+                    priv->available_buf_count);
+                return;
+            }
+        } else {
+            sptr<SurfaceBuffer> buffer = nullptr;
+            gint32 fencefd = -1;
+            gint64 timestamp = 0;
+            Rect damage = {0, 0, 0, 0};
+            if (priv->consumer_surface->AcquireBuffer(buffer, fencefd, timestamp, damage) == SURFACE_ERROR_OK) {
+                GST_INFO_OBJECT(pool, "Surface is suspended, release buffer. Available buffer count %u",
+                    priv->available_buf_count);
+                gst_consumer_surface_pool_dump_surfacebuffer(pool, buffer);
+                (void)priv->consumer_surface->ReleaseBuffer(buffer, fencefd);
+                return;
+            }
         }
     }
 

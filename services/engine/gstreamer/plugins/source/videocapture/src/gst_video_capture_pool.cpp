@@ -39,9 +39,10 @@ G_DEFINE_TYPE(GstVideoCapturePool, gst_video_capture_pool, GST_TYPE_CONSUMER_SUR
 
 static void gst_video_capture_pool_set_property(GObject *object, guint id, const GValue *value, GParamSpec *pspec);
 static void gst_video_capture_pool_get_property(GObject *object, guint id, GValue *value, GParamSpec *pspec);
-static GstFlowReturn gst_video_capture_pool_buffer_available(GstConsumerSurfacePool *surfacepool);
-static GstFlowReturn gst_video_capture_pool_alloc_buffer(GstBufferPool *pool, GstBuffer **buffer);
-static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *surfacepool, GstBuffer **buffer);
+static GstFlowReturn gst_video_capture_pool_cache_buffer(GstConsumerSurfacePool *surfacepool, bool *releasebuffer);
+static GstFlowReturn gst_video_capture_pool_find_buffer(GstBufferPool *gstpool, GstBuffer **buffer, bool *found);
+static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *surfacepool,
+    GstBuffer **buffer, bool *releasebuffer);
 
 static void gst_video_capture_pool_class_init(GstVideoCapturePoolClass *klass)
 {
@@ -66,8 +67,8 @@ static void gst_video_capture_pool_init(GstVideoCapturePool *pool)
 {
     g_return_if_fail(pool != nullptr);
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
-    surfacepool->buffer_available = gst_video_capture_pool_buffer_available;
-    surfacepool->alloc_buffer = gst_video_capture_pool_alloc_buffer;
+    surfacepool->cache_buffer = gst_video_capture_pool_cache_buffer;
+    surfacepool->find_buffer_in_cache = gst_video_capture_pool_find_buffer;
 
     pool->cached_data = false;
     pool->poolMgr = nullptr;
@@ -136,71 +137,76 @@ static void gst_video_capture_pool_get_property(GObject *object, guint id, GValu
     }
 }
 
-static GstFlowReturn gst_video_capture_pool_buffer_available(GstConsumerSurfacePool *surfacepool)
+static GstFlowReturn gst_video_capture_pool_cache_buffer(GstConsumerSurfacePool *surfacepool, bool *releasebuffer)
 {
-    g_return_val_if_fail(surfacepool != nullptr, GST_FLOW_ERROR);
-    GstVideoCapturePool *videopool = GST_VIDEO_CAPTURE_POOL(surfacepool);
+    g_return_val_if_fail(surfacepool != nullptr && releasebuffer != nullptr, GST_FLOW_ERROR);
+    GstVideoCapturePool *pool = GST_VIDEO_CAPTURE_POOL(surfacepool);
 
-    g_mutex_lock(&videopool->pool_lock);
+    g_mutex_lock(&pool->pool_lock);
     ON_SCOPE_EXIT(0) {
-        g_mutex_unlock(&videopool->pool_lock);
+        g_mutex_unlock(&pool->pool_lock);
     };
-    if (videopool->cached_data && videopool->poolMgr != nullptr &&
-        videopool->poolMgr->IsBufferQueFull() == false) {
+
+    *releasebuffer = false;
+    if (pool->cached_data && pool->poolMgr != nullptr && pool->poolMgr->IsBufferQueFull() == false) {
         GstBuffer *buf;
-        if (gst_video_capture_pool_get_buffer(surfacepool, &buf) == GST_FLOW_OK) {
-            (void)videopool->poolMgr->PushBuffer(buf);
-            return GST_FLOW_OK;
+        if (gst_video_capture_pool_get_buffer(surfacepool, &buf, releasebuffer) == GST_FLOW_OK) {
+            (void)pool->poolMgr->PushBuffer(buf);
+            *releasebuffer = false;
+        } else {
+            GST_WARNING_OBJECT(surfacepool, "video capture pool get buffer failed");
         }
     }
 
-    return GST_FLOW_ERROR;
+    return GST_FLOW_OK;
 }
 
-static GstFlowReturn gst_video_capture_pool_alloc_buffer(GstBufferPool *pool, GstBuffer **buffer)
+static GstFlowReturn gst_video_capture_pool_find_buffer(GstBufferPool *gstpool, GstBuffer **buffer, bool *found)
 {
-    GstVideoCapturePool *videopool = GST_VIDEO_CAPTURE_POOL(pool);
-    g_return_val_if_fail(videopool != nullptr && buffer != nullptr, GST_FLOW_ERROR);
+    GstVideoCapturePool *pool = GST_VIDEO_CAPTURE_POOL(gstpool);
+    g_return_val_if_fail(pool != nullptr && buffer != nullptr && found != nullptr, GST_FLOW_ERROR);
     
-    g_mutex_lock(&videopool->pool_lock);
+    g_mutex_lock(&pool->pool_lock);
     ON_SCOPE_EXIT(0) {
-        g_mutex_unlock(&videopool->pool_lock);
+        g_mutex_unlock(&pool->pool_lock);
     };
     
-    if (videopool->poolMgr != nullptr && videopool->poolMgr->GetBufferQueSize() > 0) {
-        *buffer = videopool->poolMgr->PopBuffer();
-        return GST_FLOW_OK;
+    *found = false;
+    if (pool->poolMgr != nullptr && pool->poolMgr->GetBufferQueSize() > 0) {
+        *buffer = pool->poolMgr->PopBuffer();
+        *found = true;
     }
 
-    return GST_FLOW_ERROR;
+    return GST_FLOW_OK;
 }
 
-static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *surfacepool, GstBuffer **buffer)
+static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *surfacepool,
+    GstBuffer **buffer, bool *releasebuffer)
 {
     g_return_val_if_fail(surfacepool != nullptr && surfacepool->get_surface_buffer != nullptr &&
-        surfacepool->release_surface_buffer != nullptr && buffer != nullptr, GST_FLOW_ERROR);
+    surfacepool->release_surface_buffer != nullptr && buffer != nullptr && releasebuffer != nullptr, GST_FLOW_ERROR);
 
     // Get buffer
-    OHOS::sptr<OHOS::SurfaceBuffer> sbuffer = nullptr;
+    OHOS::sptr<OHOS::SurfaceBuffer> surfacebuffer = nullptr;
     gint32 fencefd = -1;
-    GstFlowReturn ret = surfacepool->get_surface_buffer(surfacepool, sbuffer, fencefd);
-    g_return_val_if_fail(ret == GST_FLOW_OK && sbuffer != nullptr, GST_FLOW_ERROR);
+    GstFlowReturn ret = surfacepool->get_surface_buffer(surfacepool, surfacebuffer, fencefd);
+    g_return_val_if_fail(ret == GST_FLOW_OK && surfacebuffer != nullptr, GST_FLOW_ERROR);
+    *releasebuffer = true;
     ON_SCOPE_EXIT(0) {
-        surfacepool->release_surface_buffer(surfacepool, sbuffer, fencefd);
+        surfacepool->release_surface_buffer(surfacepool, surfacebuffer, fencefd);
     };
 
     // Get buffer data.
     gint64 timestamp = 0;
     gint32 data_size = 0;
     gboolean end_of_stream = false;
-    gint32 realsize = sbuffer->GetSize();
-    const OHOS::sptr<OHOS::BufferExtraData>& extraData = sbuffer->GetExtraData();
+    gint32 realsize = surfacebuffer->GetSize();
+    const OHOS::sptr<OHOS::BufferExtraData>& extraData = surfacebuffer->GetExtraData();
     g_return_val_if_fail(extraData != nullptr, GST_FLOW_ERROR);
     (void)extraData->ExtraGet("timeStamp", timestamp);
     (void)extraData->ExtraGet("dataSize", data_size);
     g_return_val_if_fail(realsize >= data_size, GST_FLOW_ERROR);
     (void)extraData->ExtraGet("endOfStream", end_of_stream);
-    guint32 bufferFlag = end_of_stream ? BUFFER_FLAG_EOS : 0;
 
     // copy data
     GstBuffer *dts_buffer = gst_buffer_new_allocate(nullptr, data_size, nullptr);
@@ -215,7 +221,7 @@ static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *s
         gst_buffer_unmap(dts_buffer, &info);
     };
 
-    uint8_t *src = static_cast<uint8_t *>(sbuffer->GetVirAddr());
+    uint8_t *src = static_cast<uint8_t *>(surfacebuffer->GetVirAddr());
     errno_t rc = memcpy_s(info.data, info.size, src, static_cast<size_t>(data_size));
     g_return_val_if_fail(rc == EOK, GST_FLOW_ERROR);
 
@@ -226,10 +232,10 @@ static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *s
     meta->type = BUFFER_TYPE_HANDLE;
     meta->bufLen = data_size;
     meta->length = data_size;
-    meta->bufferFlag = bufferFlag;
-    meta->pixelFormat = sbuffer->GetFormat();
-    meta->width = sbuffer->GetWidth();
-    meta->height = sbuffer->GetHeight();
+    meta->bufferFlag = end_of_stream ? BUFFER_FLAG_EOS : 0;
+    meta->pixelFormat = surfacebuffer->GetFormat();
+    meta->width = surfacebuffer->GetWidth();
+    meta->height = surfacebuffer->GetHeight();
 
     GST_BUFFER_PTS(dts_buffer) = static_cast<uint64_t>(timestamp);
     GST_DEBUG_OBJECT(surfacepool, "BufferQue video capture buffer size is: %" G_GSIZE_FORMAT ", pts: %"
