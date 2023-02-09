@@ -970,7 +970,7 @@ napi_value AVPlayerNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info 
     (void)CommonNapi::AddNumberPropInt64(env, value, "length", jsPlayer->fileDescriptor_.length);
 
     MEDIA_LOGI("JsGetAVFileDescriptor Out");
-    return result;
+    return value;
 }
 
 #ifdef SUPPORT_VIDEO
