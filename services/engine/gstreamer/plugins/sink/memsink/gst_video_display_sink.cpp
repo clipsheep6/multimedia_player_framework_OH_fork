@@ -301,7 +301,8 @@ static GstFlowReturn gst_video_display_sink_do_app_render(GstSurfaceMemSink *sur
         It is difficult to obtain the duration of the current frame, so using the duration of the previous
         frame does not affect perception */
     GstClockTime last_duration = GST_BUFFER_PTS(buffer) - video_display_sink->priv->last_video_render_pts;
-    if (last_duration <= 0 || video_display_sink->priv->last_video_render_pts == 0) {
+    if (GST_BUFFER_PTS(buffer) <= video_display_sink->priv->last_video_render_pts ||
+        video_display_sink->priv->last_video_render_pts == 0) {
         last_duration = GST_BUFFER_DURATION(buffer);
     }
 
