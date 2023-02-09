@@ -750,6 +750,16 @@ int32_t PlayerEngineGstImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
     MEDIA_LOGI("Seek in %{public}dms", mSeconds);
 
+    if (playBinCtrler_->QueryPosition() == mSeconds) {
+        MEDIA_LOGW("current time same to seek time, invalid seek");
+        Format format;
+        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+        if (notifyObs != nullptr) {
+            notifyObs->OnInfo(INFO_TYPE_SEEKDONE, mSeconds, format);
+        }
+        return MSERR_OK;
+    }
+
     codecCtrl_.EnhanceSeekPerformance(true);
 
     int64_t position = static_cast<int64_t>(mSeconds) * MSEC_PER_USEC;
