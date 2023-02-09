@@ -183,8 +183,8 @@ static GstFlowReturn gst_video_capture_pool_find_buffer(GstBufferPool *gstpool, 
 static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *surfacepool,
     GstBuffer **buffer, bool *releasebuffer)
 {
-    g_return_val_if_fail(surfacepool != nullptr && surfacepool->get_surface_buffer != nullptr &&
-    surfacepool->release_surface_buffer != nullptr && buffer != nullptr && releasebuffer != nullptr, GST_FLOW_ERROR);
+    g_return_val_if_fail(surfacepool != nullptr && buffer != nullptr && surfacepool->get_surface_buffer != nullptr &&
+        surfacepool->release_surface_buffer != nullptr && releasebuffer != nullptr, GST_FLOW_ERROR);
 
     // Get buffer
     OHOS::sptr<OHOS::SurfaceBuffer> surfacebuffer = nullptr;
