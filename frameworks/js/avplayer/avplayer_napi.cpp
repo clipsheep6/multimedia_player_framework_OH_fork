@@ -200,10 +200,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                         state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
             });
-
-            CHECK_AND_RETURN_RET_LOG(GetCurrentState() == AVPlayerState::STATE_PREPARED,
-                TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The prepare operation was interrupted or an error occurred!"), "Prepare Task failed");
         } else if (state == AVPlayerState::STATE_PREPARED) {
             MEDIA_LOGI("current state is prepared, invalid operation");
         } else {
