@@ -1449,11 +1449,14 @@ static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
             if (!gst_caps_is_empty(pool_caps)) {
                 is_caps_valid = TRUE;
             }
+        } else {
+            GST_DEBUG_OBJECT(self, "codec not support swap width and height");
         }
     }
     if (!is_caps_valid) {
         gst_caps_unref(pool_caps);
-        GST_ERROR_OBJECT(self, "pool caps is null with sink caps%" GST_PTR_FORMAT, self->sink_caps);
+        GST_ERROR_OBJECT(self, "pool caps is null with sink caps%" GST_PTR_FORMAT ", templ caps %" GST_PTR_FORMAT,
+            self->sink_caps, templ_caps);
         return FALSE;
     }
     pool_caps = gst_caps_fixate(pool_caps);
