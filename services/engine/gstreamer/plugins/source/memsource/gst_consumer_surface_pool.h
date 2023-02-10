@@ -48,8 +48,8 @@ struct _GstConsumerSurfacePool {
     /* < private > */
     GstConsumerSurfacePoolPrivate *priv;
 
-    GstFlowReturn (*cache_buffer) (GstConsumerSurfacePool *pool, bool *releasebuffer);
-    GstFlowReturn (*find_buffer_in_cache) (GstBufferPool *pool, GstBuffer **buffer, bool *found);
+    GstFlowReturn (*buffer_available) (GstConsumerSurfacePool *pool, bool *releasebuffer);
+    GstFlowReturn (*find_buffer) (GstBufferPool *pool, GstBuffer **buffer, bool *found);
     GstFlowReturn (*get_surface_buffer) (GstConsumerSurfacePool *pool,
         OHOS::sptr<OHOS::SurfaceBuffer> &surface_buffer, gint32 &fencefd);
     void (*release_surface_buffer) (GstConsumerSurfacePool *pool,

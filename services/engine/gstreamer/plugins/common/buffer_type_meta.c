@@ -32,6 +32,7 @@ static gboolean gst_buffer_type_meta_init(GstMeta *meta, gpointer params, GstBuf
     buffer_meta->pixelFormat = 0;
     buffer_meta->width = 0;
     buffer_meta->height = 0;
+    buffer_meta->invalidpts = FALSE;
 
     return TRUE;
 }

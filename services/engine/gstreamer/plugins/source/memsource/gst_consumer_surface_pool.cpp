@@ -363,9 +363,9 @@ static GstFlowReturn gst_consumer_surface_pool_alloc_buffer(GstBufferPool *pool,
     g_return_val_if_fail(pclass != nullptr && pclass->alloc_buffer != nullptr, GST_FLOW_NOT_SUPPORTED);
     g_return_val_if_fail(surfacemem != nullptr, GST_FLOW_ERROR);
 
-    if (surfacepool->find_buffer_in_cache) {
+    if (surfacepool->find_buffer) {
         bool found = false;
-        g_return_val_if_fail(surfacepool->find_buffer_in_cache(pool, buffer, &found) == GST_FLOW_OK,
+        g_return_val_if_fail(surfacepool->find_buffer(pool, buffer, &found) == GST_FLOW_OK,
             GST_FLOW_ERROR);
         if (found) {
             gst_consumer_surface_pool_dump_gstbuffer(surfacepool, *buffer);
@@ -454,8 +454,8 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
         (gst_consumer_surface_pool_get_instance_private(pool));
     g_return_if_fail(priv != nullptr);
     pool->priv = priv;
-    pool->cache_buffer = nullptr;
-    pool->find_buffer_in_cache = nullptr;
+    pool->buffer_available = nullptr;
+    pool->find_buffer = nullptr;
     pool->get_surface_buffer = gst_consumer_surface_pool_get_surface_buffer;
     pool->release_surface_buffer = gst_consumer_surface_pool_release_surface_buffer;
     priv->available_buf_count = 0;
@@ -490,15 +490,14 @@ static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *p
     }
 
     if (priv->suspend) {
-        if (pool->cache_buffer) {
+        if (pool->buffer_available) {
             bool releasebuffer = false;
-            if (pool->cache_buffer(pool, &releasebuffer) != GST_FLOW_OK) {
+            if (pool->buffer_available(pool, &releasebuffer) != GST_FLOW_OK) {
                 GST_WARNING_OBJECT(pool, "Cache buffer failed.");
             }
 
             if (releasebuffer) {
-                GST_INFO_OBJECT(pool, "cache buffer, release buffer. Available buffer count %u",
-                    priv->available_buf_count);
+                GST_INFO_OBJECT(pool, "release buffer. Available buffer count %u", priv->available_buf_count);
                 return;
             }
         } else {

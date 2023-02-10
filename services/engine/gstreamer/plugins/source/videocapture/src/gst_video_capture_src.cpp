@@ -143,7 +143,6 @@ static void gst_video_capture_src_init(GstVideoCaptureSrc *videocapturesrc)
     videocapturesrc->paused_count = 0;
     videocapturesrc->persist_time = 0;
     videocapturesrc->total_pause_time = 0;
-    videocapturesrc->paused_buffer_count = 0;
 }
 
 static void gst_video_capture_src_finalize(GObject *object)
@@ -352,8 +351,9 @@ static GstFlowReturn gst_video_capture_deal_with_pts(GstVideoCaptureSrc *src, Gs
     }
 
     if (src->cur_state == RECORDER_RESUME) {
-        if (src->paused_buffer_count > 0) {
-            src->paused_buffer_count--;
+        GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(buf);
+        g_return_val_if_fail(meta != nullptr, GST_FLOW_ERROR);
+        if (meta->invalidpts) {
             timestamp = src->last_timestamp + 1000000; // Increase 1000000 ns to avoid audio and video synchronization.
             src->paused_time = timestamp;
             GST_DEBUG_OBJECT(src, "Data received during pause, timestamp %" G_GINT64_FORMAT "", timestamp);
@@ -473,8 +473,6 @@ static void gst_video_capture_src_resume(GstVideoCaptureSrc *src)
 
     if (src->stream_type == VIDEO_STREAM_TYPE_ES_AVC) {
         g_object_set(surfacesrc->pool, "cached-data", FALSE, nullptr);
-        g_object_get(surfacesrc->pool, "buffer-count", &src->paused_buffer_count, nullptr);
-        GST_DEBUG_OBJECT(surfacesrc, "Received %d frames of data during pause.", src->paused_buffer_count);
     }
     g_object_set(surfacesrc->pool, "suspend", FALSE, nullptr);
     g_object_set(surfacesrc->pool, "pause-data", FALSE, nullptr);
