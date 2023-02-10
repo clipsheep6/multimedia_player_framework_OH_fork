@@ -18,6 +18,7 @@
 
 #include <gst/gst.h>
 #include "gst_consumer_surface_pool.h"
+#include "video_pool_manager.h"
 
 G_BEGIN_DECLS
 
@@ -34,6 +35,10 @@ G_BEGIN_DECLS
 
 struct _GstVideoCapturePool {
     GstConsumerSurfacePool element;
+
+    GMutex pool_lock;
+    gboolean cached_data;
+    std::shared_ptr<OHOS::Media::VideoPoolManager> poolMgr;
 };
 
 struct _GstVideoCapturePoolClass {
