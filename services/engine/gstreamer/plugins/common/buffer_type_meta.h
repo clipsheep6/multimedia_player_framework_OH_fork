@@ -64,6 +64,7 @@ struct _GstBufferTypeMeta {
     int32_t pixelFormat;
     uint32_t width;
     uint32_t height;
+    gboolean invalidpts;
 };
 
 struct _GstBufferFdConfig {
