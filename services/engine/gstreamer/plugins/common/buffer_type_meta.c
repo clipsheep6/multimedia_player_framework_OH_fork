@@ -76,6 +76,7 @@ static gboolean gst_buffer_type_meta_transform(GstBuffer *dest, GstMeta *meta,
             dMeta->pixelFormat = sMeta->pixelFormat;
             dMeta->width = sMeta->width;
             dMeta->height = sMeta->height;
+            dMeta->invalidpts = sMeta->invalidpts;
         }
     } else {
         return FALSE;
