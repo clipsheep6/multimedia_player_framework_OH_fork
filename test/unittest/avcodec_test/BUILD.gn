@@ -51,6 +51,8 @@ avcodec_unittest_capi_include_dirs = [
 ]
 
 avcodec_unittest_cflags = [
+    "-fsanitize=cfi",
+    "-flto",
   "-std=c++17",
   "-fno-rtti",
   "-fno-exceptions",

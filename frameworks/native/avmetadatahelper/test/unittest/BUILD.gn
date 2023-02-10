@@ -33,6 +33,8 @@ ohos_unittest("avmetadata_unit_test") {
   ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-Wall",
     "-Werror",
   ]

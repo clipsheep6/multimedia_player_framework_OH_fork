@@ -40,6 +40,8 @@ vcodec_fuzztest_include_dirs = [
 ]
 
 vcodec_fuzztest_cflags = [
+    "-fsanitize=cfi",
+    "-flto",
   "-std=c++17",
   "-fno-rtti",
   "-fno-exceptions",

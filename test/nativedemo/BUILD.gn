@@ -38,6 +38,8 @@ ohos_executable("media_demo") {
   ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-Wall",
     "-std=c++17",
     "-fno-rtti",

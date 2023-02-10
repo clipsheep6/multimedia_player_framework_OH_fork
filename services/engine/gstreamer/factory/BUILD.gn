@@ -18,6 +18,8 @@ config("media_engine_gst_factory_config") {
   visibility = [ ":*" ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",

@@ -28,6 +28,8 @@ ohos_unittest("recorder_unit_test") {
   ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-Wall",
     "-Werror",
   ]

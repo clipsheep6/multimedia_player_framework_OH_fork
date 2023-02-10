@@ -41,6 +41,8 @@ config("media_capi_config") {
   ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-fno-exceptions",
     "-Wall",
     "-fno-common",

@@ -17,6 +17,8 @@ config("gst_avmuxer_bin_config") {
   visibility = [ ":*" ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-fno-rtti",
     "-fno-exceptions",
     "-Wall",

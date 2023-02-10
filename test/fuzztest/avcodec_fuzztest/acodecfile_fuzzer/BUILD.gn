@@ -41,6 +41,8 @@ acodec_fuzztest_include_dirs = [
 ]
 
 acodec_fuzztest_cflags = [
+    "-fsanitize=cfi",
+    "-flto",
   "-std=c++17",
   "-std=c++17",
   "-fno-rtti",

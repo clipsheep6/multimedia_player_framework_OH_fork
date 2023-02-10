@@ -15,7 +15,9 @@ import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
 config("media_service_log_dfx_public_config") {
-  cflags = [ "-DOHOS_MEDIA_LOG_DFX" ]
+  cflags = [
+    "-fsanitize=cfi",
+    "-flto", "-DOHOS_MEDIA_LOG_DFX" ]
   include_dirs = [ "//foundation/multimedia/player_framework/services/dfx" ]
 }
 
@@ -30,6 +32,8 @@ ohos_shared_library("media_service_log_dfx") {
   ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",
@@ -76,6 +80,8 @@ ohos_shared_library("media_service_dfx") {
   defines += player_framework_defines
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",
