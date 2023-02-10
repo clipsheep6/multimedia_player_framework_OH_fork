@@ -59,6 +59,12 @@ public:
     virtual uint8_t *GetBase() const = 0;
 
     /**
+     * @brief Get the memory's virtual available address
+     * @return the memory's virtual available address if the memory is valid, otherwise nullptr.
+     */
+    virtual uint8_t *GetBaseWithOffset() const =0;
+
+    /**
      * @brief Get the memory's size
      * @return the memory's size if the memory is valid, otherwise -1.
      */
@@ -69,6 +75,17 @@ public:
      * @return the memory's flags if the memory is valid, otherwise 0.
      */
     virtual uint32_t GetFlags() const = 0;
+
+    /**
+     * @brief Set the offset of the virtual memory
+     */
+    virtual void SetOffset(uint32_t offset) = 0;
+
+    /**
+     * @brief Get the offset of the virtual memory
+     * @return the memory's offset if the offset is valid, otherwise 0.
+     */
+    virtual uint32_t GetOffset() const = 0;
 };
 } // namespace Media
 } // namespace OHOS

@@ -392,6 +392,13 @@ declare namespace media {
     fdSrc ?: AVFileDescriptor;
 
     /**
+     * DataSource descriptor. Mainstream media formats are supported.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    dataSrc ?: DataSrcDescriptor;
+
+    /**
      * Whether to loop media playback.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
@@ -2653,6 +2660,31 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.Core
      */
     [key : string]: Object;
+  }
+
+  /**
+    * DataSource descriptor. The caller needs to ensure that the fileSize and 
+    * callback is valid.
+    * @since 10
+    * @syscap SystemCapability.Multimedia.Media.AVPlayer
+    */
+  interface DataSrcDescriptor {
+    /**
+     * Size of the file, -1 indicates that the file size is unknown
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.Core
+     */
+    fileSize: number;
+    /**
+     * Callback function implemented by users, which is used to fill data.
+     * @param buffer The stream mem need to fill.
+     * @param length The stream length player want to get.
+     * @param pos The stream pos player want get start, -1 indicates starting from the position where the last filling ends.
+     * @return Returns length of the data to be filled.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    callback: (buffer: ArrayBuffer, length: number, pos: number) => int
   }
 
   /**

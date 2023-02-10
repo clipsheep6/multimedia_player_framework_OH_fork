@@ -1,0 +1,56 @@
+/*
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef GST_POINTER_WRAP_ALLOCATOR_H
+#define GST_POINTER_WRAP_ALLOCATOR_H
+
+#include <gst/gst.h>
+#include "avsharedmemory.h"
+#include "gst_pointer_wrap_memory.h"
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_POINTER_WRAP_ALLOCATOR (gst_pointer_wrap_allocator_get_type())
+#define GST_POINTER_WRAP_ALLOCATOR(obj) \
+    (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_POINTER_WRAP_ALLOCATOR, GstPointerWrapAllocator))
+#define GST_POINTER_WRAP_ALLOCATOR_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_POINTER_WRAP_ALLOCATOR, GstPointerWrapAllocatorClass))
+#define GST_IS_POINTER_WRAP_ALLOCATOR(obj) \
+    (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_POINTER_WRAP_ALLOCATOR))
+#define GST_IS_POINTER_WRAP_ALLOCATOR_CLASS(klass) \
+    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_POINTER_WRAP_ALLOCATOR))
+#define GST_POINTER_WRAP_ALLOCATOR_CAST(obj) ((GstPointerWrapAllocator*)(obj))
+
+using GstPointerWrapAllocator = struct _GstPointerWrapAllocator;
+using GstPointerWrapAllocatorClass = struct _GstPointerWrapAllocatorClass;
+
+struct _GstPointerWrapAllocator {
+    GstAllocator parent;
+};
+
+struct _GstPointerWrapAllocatorClass {
+    GstAllocatorClass parent;
+};
+
+GType gst_pointer_wrap_allocator_get_type(void);
+
+__attribute__((visibility("default"))) GstPointerWrapAllocator *gst_pointer_wrap_allocator_new(void);
+__attribute__((visibility("default"))) GstMemory *gst_pointer_wrap(
+    GstAllocator *allocator, std::shared_ptr<OHOS::Media::AVSharedMemory> shmem,
+    int32_t offset, int32_t length, FreeMemory free_memory);
+
+G_END_DECLS
+
+#endif // GST_POINTER_WRAP_ALLOCATOR_H
