@@ -33,6 +33,8 @@ ohos_fuzztest("PlayerFileFuzzTest") {
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
   ]
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-g",
     "-O0",
     "-Wno-unused-variable",

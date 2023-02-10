@@ -66,6 +66,8 @@ ohos_shared_library("media_service_utils") {
   ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",

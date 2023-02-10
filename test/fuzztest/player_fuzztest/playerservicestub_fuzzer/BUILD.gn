@@ -61,6 +61,8 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "$MEDIA_ROOT_DIR/services/services/media_data_source/server",
   ]
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",

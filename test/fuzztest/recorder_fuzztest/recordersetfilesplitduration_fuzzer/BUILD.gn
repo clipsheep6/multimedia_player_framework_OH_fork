@@ -32,6 +32,8 @@ ohos_fuzztest("RecorderSetFileSplitDurationFuzzTest") {
     "//graphic/graphic_2d/interfaces/innerkits/surface",
   ]
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",
