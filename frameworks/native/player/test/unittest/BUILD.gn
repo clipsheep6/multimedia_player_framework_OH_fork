@@ -29,6 +29,9 @@ ohos_unittest("player_unit_test") {
   ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
+    "-fvisibility=default",
     "-Wall",
     "-Werror",
     "-Wno-deprecated-declarations",

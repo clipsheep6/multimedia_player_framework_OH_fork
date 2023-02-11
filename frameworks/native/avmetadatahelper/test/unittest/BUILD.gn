@@ -33,6 +33,9 @@ ohos_unittest("avmetadata_unit_test") {
   ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
+    "-fvisibility=default",
     "-Wall",
     "-Werror",
   ]
