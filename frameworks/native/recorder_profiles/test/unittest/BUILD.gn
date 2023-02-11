@@ -25,8 +25,6 @@ ohos_unittest("recorder_profiles_unit_test") {
   ]
 
   cflags = [
-    "-fsanitize=cfi",
-    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",
