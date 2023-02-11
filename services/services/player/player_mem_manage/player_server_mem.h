@@ -69,8 +69,26 @@ public:
     void ResetForMemManage();
 
 private:
+    class MemBaseState;
+    class MemIdleState;
+    class MemInitializedState;
+    class MemPreparingState;
+    class MemPreparedState;
+    class MemPlayingState;
+    class MemPausedState;
+    class MemStoppedState;
+    class MemPlaybackCompletedState;
+
+    std::shared_ptr<MemIdleState> memIdleState_ = nullptr;
+    std::shared_ptr<MemInitializedState> memInitializedState_ = nullptr;
+    std::shared_ptr<MemPreparingState> memPreparingState_ = nullptr;
+    std::shared_ptr<MemPreparedState> memPreparedState_ = nullptr;
+    std::shared_ptr<MemPlayingState> memPlayingState_ = nullptr;
+    std::shared_ptr<MemPausedState> memPausedState_ = nullptr;
+    std::shared_ptr<MemStoppedState> memStoppedState_ = nullptr;
+    std::shared_ptr<MemPlaybackCompletedState> memPlaybackCompletedState_ = nullptr;
     struct RecoverConfigInfo {
-        std::shared_ptr<BaseState> curState = nullptr;
+        std::shared_ptr<MemBaseState> currState = nullptr;
         int32_t sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_NULL);
         std::string url = "";
         std::shared_ptr<IMediaDataSource> dataSrc = nullptr;
@@ -109,6 +127,8 @@ private:
     bool isRecoverMemByUser_ = false;
     bool isAudioPlayer_ = true;
 
+    int32_t Init() override;
+    void ConvertCurrState();
     void SaveParameter(const Format &param);
     int32_t SetSaveParameter();
     int32_t StateRecover();

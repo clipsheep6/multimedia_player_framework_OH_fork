@@ -28,7 +28,7 @@ using MemManageRecall = std::function<void()>;
 using MemManageRecallPair = std::pair<MemManageRecall, void *>;
 class PlayerMemManage {
 public:
-    ~PlayerMemManage();
+    virtual ~PlayerMemManage();
 
     static PlayerMemManage& GetInstance();
     int32_t RegisterPlayerServer(int32_t uid, int32_t pid, MemManageRecallPair memRecallPair);

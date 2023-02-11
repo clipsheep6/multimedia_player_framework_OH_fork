@@ -181,7 +181,7 @@ void PlayerMemManage::FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &a
         if ((*iter).second == memRecallPair.second) {
             iter = appPlayerInfo.memRecallPairVec.erase(iter);
             MEDIA_LOGI("Remove PlayerServerTask from vector size:%{public}u",
-                appPlayerInfo.memRecallPairVec.size());
+                static_cast<uint32_t>(appPlayerInfo.memRecallPairVec.size()));
             isFind = true;
             break;
         } else {
@@ -203,13 +203,14 @@ int32_t PlayerMemManage::DeregisterPlayerServer(MemManageRecallPair memRecallPai
                 Memory::MemMgrClient::GetInstance().DeregisterActiveApps(pid, uid);
                 pidPlayersInfo.erase(pid);
                 MEDIA_LOGI("DeregisterActiveApps pid:%{public}d uid:%{public}d pidPlayersInfo size:%{public}u",
-                    pid, uid, pidPlayersInfo.size());
+                    pid, uid, static_cast<uint32_t>(pidPlayersInfo.size()));
                 break;
             }
         }
         if (pidPlayersInfo.size() == 0) {
             playerManage_.erase(uid);
-            MEDIA_LOGI("remove uid:%{public}d playerManage_ size:%{public}u", uid, playerManage_.size());
+            MEDIA_LOGI("remove uid:%{public}d playerManage_ size:%{public}u",
+                uid, static_cast<uint32_t>(playerManage_.size()));
             break;
         }
     }

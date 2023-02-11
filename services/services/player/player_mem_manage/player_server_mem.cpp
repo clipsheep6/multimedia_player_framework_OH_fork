@@ -22,6 +22,7 @@
 #include "media_dfx.h"
 #include "param_wrapper.h"
 #include "ipc_skeleton.h"
+#include "player_server_mem_state.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServerMem"};
@@ -37,6 +38,19 @@ std::shared_ptr<IPlayerService> PlayerServerMem::Create()
 
     (void)playerServerMem->Init();
     return playerServerMem;
+}
+
+int32_t PlayerServerMem::Init()
+{
+    memIdleState_ = std::make_shared<MemIdleState>(*this);
+    memInitializedState_ = std::make_shared<MemInitializedState>(*this);
+    memPreparingState_ = std::make_shared<MemPreparingState>(*this);
+    memPreparedState_ = std::make_shared<MemPreparedState>(*this);
+    memPlayingState_ = std::make_shared<MemPlayingState>(*this);
+    memPausedState_ = std::make_shared<MemPausedState>(*this);
+    memStoppedState_ = std::make_shared<MemStoppedState>(*this);
+    memPlaybackCompletedState_ = std::make_shared<MemPlaybackCompletedState>(*this);
+    return PlayerServer::Init();
 }
 
 PlayerServerMem::PlayerServerMem()
@@ -183,7 +197,7 @@ int32_t PlayerServerMem::SetSource(int32_t fd, int64_t offset, int64_t size)
     if (CheckReleaseStateAndRecover() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("SetSource enter fd:%{public}d, offset:%{public}lld, size:%{public}lld", fd, offset, size);
+    MEDIA_LOGI("SetSource enter fd:%{public}d, offset:%{public}ld, size:%{public}ld", fd, offset, size);
 
     auto ret = PlayerServer::SetSource(fd, offset, size);
     if (ret == MSERR_OK) {
@@ -554,9 +568,31 @@ int32_t PlayerServerMem::GetInformationBeforeMemReset()
     return MSERR_OK;
 }
 
+void PlayerServerMem::ConvertCurrState()
+{
+    if (GetCurrState() == idleState_) {
+        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memIdleState_);
+    } else if (GetCurrState() == initializedState_) {
+        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memInitializedState_);
+    } else if (GetCurrState() == preparingState_) {
+        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memPreparingState_);
+    } else if (GetCurrState() == preparedState_) {
+        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memPreparedState_);
+    } else if (GetCurrState() == playingState_) {
+        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memPlayingState_);
+    } else if (GetCurrState() == pausedState_) {
+        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memPausedState_);
+    } else if (GetCurrState() == stoppedState_) {
+        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memStoppedState_);
+    } else if (GetCurrState() == playbackCompletedState_) {
+        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memPlaybackCompletedState_);
+    } else {
+        MEDIA_LOGE("CurrState:%{public}s", GetCurrState()->GetStateName().c_str());
+    }
+}
+
 int32_t PlayerServerMem::ReleaseMemByManage()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Enter ReleaseMemByManage");
     if (isReleaseMemByManage_ || isRecoverMemByUser_) {
         MEDIA_LOGE("ReleaseMemByManage %{public}d, RecoverMemByUser %{public}d",
@@ -564,10 +600,10 @@ int32_t PlayerServerMem::ReleaseMemByManage()
         return MSERR_OK;
     }
 
-    recoverConfig_.curState = std::static_pointer_cast<BaseState>(GetCurrState());
+    ConvertCurrState();
     auto ret = StateRelease();
     if (ret == MSERR_INVALID_STATE) {
-        MEDIA_LOGI("CurState is Idle or Playing");
+        MEDIA_LOGI("CurrState is Idle or Playing");
         return MSERR_OK;
     }
     
@@ -585,87 +621,29 @@ int32_t PlayerServerMem::ReleaseMemByManage()
 
 int32_t PlayerServerMem::CheckReleaseStateAndRecover()
 {
-    if (isReleaseMemByManage_) {
-        if (RecoverMemByUser() != MSERR_OK) {
-            MEDIA_LOGE("RecoverMemByUser fail");
-            return MSERR_INVALID_OPERATION;
-        }
+    if (!isReleaseMemByManage_) {
+        return MSERR_OK;
+    }
+
+    if (RecoverMemByUser() != MSERR_OK) {
+        MEDIA_LOGE("RecoverMemByUser fail");
+        return MSERR_INVALID_OPERATION;
     }
     return MSERR_OK;
 }
 
 int32_t PlayerServerMem::StateRecover()
 {
-    int32_t ret;
-    std::string curStateName = recoverConfig_.curState->GetStateName();
-    if (recoverConfig_.curState == initializedState_ || recoverConfig_.curState == stoppedState_) {
-        SetPlayerServerConfig();
-        ret = SetSourceInternal();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to SetSource url", curStateName.c_str());
-        ret = SetConfigInternal();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to SetConfigInternal", curStateName.c_str());
-    } else if (recoverConfig_.curState == preparingState_ || recoverConfig_.curState == preparedState_ ||
-        recoverConfig_.curState == pausedState_) {
-        SetPlayerServerConfig();
-        ret = SetSourceInternal();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to SetSource url", curStateName.c_str());
-        ret = SetConfigInternal();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to SetConfigInternal", curStateName.c_str());
-        ret = PrepareAsync();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to PrepareAsync", curStateName.c_str());
-        ret = SetBehaviorInternal();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to SetBehaviorInternal", curStateName.c_str());
-    } else if (recoverConfig_.curState == playbackCompletedState_) {
-        SetPlayerServerConfig();
-        ret = SetSourceInternal();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to SetSource url", curStateName.c_str());
-        ret = SetConfigInternal();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to SetConfigInternal", curStateName.c_str());
-        ret = PrepareAsync();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to PrepareAsync", curStateName.c_str());
-        ret = SetPlaybackSpeedInternal();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to SetPlaybackSpeedInternal", curStateName.c_str());
-    } else {
-        MEDIA_LOGI("StateRecover curState:%{public}s", curStateName.c_str());
-    }
-
-    return MSERR_OK;
+    return recoverConfig_.currState->MemStateRecover();
 }
 
 int32_t PlayerServerMem::StateRelease()
 {
-    std::string curStateName = recoverConfig_.curState->GetStateName();
-    if (recoverConfig_.curState == idleState_ || recoverConfig_.curState == playingState_) {
-        MEDIA_LOGI("CurState:%{public}s can not release mem", curStateName.c_str());
-        return MSERR_INVALID_STATE;
-    } else if (recoverConfig_.curState == preparingState_ || recoverConfig_.curState == preparedState_ ||
-        recoverConfig_.curState == pausedState_ || recoverConfig_.curState == stoppedState_ ||
-        recoverConfig_.curState == playbackCompletedState_) {
-        auto ret = GetInformationBeforeMemReset();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-            "curState:%{public}s failed to GetInformationBeforeMemReset", curStateName.c_str());
-    } else if (recoverConfig_.curState == initializedState_) {
-        GetPlayerServerConfig();
-    } else {
-        MEDIA_LOGI("StateRelease curState:%{public}s", curStateName.c_str());
-    }
-
-    return MSERR_OK;
+    return recoverConfig_.currState->MemStateRelease();
 }
 
 int32_t PlayerServerMem::RecoverMemByUser()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Enter RecoverMemByUser");
     if (!isReleaseMemByManage_ || isRecoverMemByUser_) {
         MEDIA_LOGE("ReleaseMemByManage %{public}d, RecoverMemByUser %{public}d",
@@ -732,17 +710,7 @@ void PlayerServerMem::RecoverToCompleted(PlayerOnInfoType type, int32_t extra)
 
 void PlayerServerMem::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
 {
-    if (recoverConfig_.curState == initializedState_ || recoverConfig_.curState == stoppedState_) {
-        RecoverToInitialized(type, extra);
-    } else if (recoverConfig_.curState == preparingState_ || recoverConfig_.curState == preparedState_ ||
-        recoverConfig_.curState == pausedState_) {
-        RecoverToPrepared(type, extra);
-    } else if (recoverConfig_.curState == playbackCompletedState_) {
-        RecoverToCompleted(type, extra);
-    } else {
-        MEDIA_LOGI("StateRecoverPlayerCb type:%{public}d, extra:%{public}d, curState:%{public}s",
-            type, extra, recoverConfig_.curState->GetStateName().c_str());
-    }
+    recoverConfig_.currState->MemPlayerCbRecover(type, extra);
 }
 
 void PlayerServerMem::CheckHasRecover(PlayerOnInfoType type, int32_t extra)
