@@ -214,6 +214,7 @@ int32_t VideoSource::Prepare()
 
 int32_t VideoSource::CheckConfigReady()
 {
+    MEDIA_LOGE("xyj VideoSource::CheckConfigReady");
     std::set<int32_t> expectedParam = { RecorderPublicParamType::VID_RECTANGLE };
 
     if (!CheckAllParamsConfigured(expectedParam)) {

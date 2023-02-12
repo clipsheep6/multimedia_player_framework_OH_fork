@@ -39,7 +39,8 @@ enum {
     PROP_TOKEN_ID,
     PROP_APP_UID,
     PROP_APP_PID,
-    PROP_BYPASS_AUDIO_SERVICE
+    PROP_BYPASS_AUDIO_SERVICE,
+    PROP_SUPPORTED_AUDIO_PARAMS
 };
 
 using namespace OHOS::Media;
@@ -132,6 +133,11 @@ static void gst_audio_capture_src_class_init(GstAudioCaptureSrcClass *klass)
         g_param_spec_boolean("bypass-audio-service", "Bypass Audio Service",
         "do not enable audio service", FALSE,
         (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+    
+    g_object_class_install_property(gobject_class, PROP_SUPPORTED_AUDIO_PARAMS,
+        g_param_spec_boolean("Supported-audio-params", "issupport audio params",
+        "issupport audio params", FALSE,
+        (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     gst_element_class_set_static_metadata(gstelement_class,
         "Audio capture source", "Source/Audio",
@@ -174,6 +180,10 @@ static void gst_audio_capture_src_finalize(GObject *object)
     if (src->src_caps != nullptr) {
         gst_caps_unref(src->src_caps);
         src->src_caps = nullptr;
+    }
+
+    if (src->audio_capture) {
+        src->audio_capture = nullptr;
     }
 }
 
@@ -238,6 +248,14 @@ static void gst_audio_capture_src_get_property(GObject *object, guint prop_id,
         case PROP_BITRATE:
             g_value_set_uint(value, src->bitrate);
             break;
+        case PROP_SUPPORTED_AUDIO_PARAMS:
+            if (src->audio_capture == nullptr) {
+                src->audio_capture = OHOS::Media::AudioCaptureFactory::CreateAudioCapture(src->stream_type);
+                g_return_if_fail(src->audio_capture != nullptr);
+            }
+            g_value_set_boolean(value, src->audio_capture->IsSupportedCaptureParameter(
+                src->bitrate, src->channels, src->sample_rate));
+            break;
         default:
             break;
     }
@@ -297,8 +315,10 @@ static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSr
     g_return_val_if_fail(src != nullptr, GST_STATE_CHANGE_FAILURE);
     switch (transition) {
         case GST_STATE_CHANGE_NULL_TO_READY: {
-            src->audio_capture = OHOS::Media::AudioCaptureFactory::CreateAudioCapture(src->stream_type);
-            g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            if (src->audio_capture == nullptr) {
+                src->audio_capture = OHOS::Media::AudioCaptureFactory::CreateAudioCapture(src->stream_type);
+                g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            }
             break;
         }
         case GST_STATE_CHANGE_READY_TO_PAUSED: {

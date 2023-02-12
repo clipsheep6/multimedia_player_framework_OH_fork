@@ -19,11 +19,13 @@
 #include "media_log.h"
 #include "recorder_private_param.h"
 #include "i_recorder_engine.h"
+#include "avcodec_ability_singleton.h"
 #include "avcodeclist_engine_gst_impl.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoEncoder"};
     constexpr uint32_t DEFAULT_I_FRAME_INTERVAL = 25;
+    constexpr double EPSLON = 1e-6;
 }
 
 namespace OHOS {
@@ -54,14 +56,14 @@ int32_t VideoEncoder::CreateMpegElement()
         gstElem_ = nullptr;
     }
 
-    std::string encorderName = GetEncorderName(CodecMimeType::VIDEO_MPEG4);
-    gstElem_ = gst_element_factory_make(encorderName.c_str(), name_.c_str());
+    encorderName_ = GetEncorderName(CodecMimeType::VIDEO_MPEG4);
+    gstElem_ = gst_element_factory_make(encorderName_.c_str(), name_.c_str());
     if (gstElem_ == nullptr) {
         MEDIA_LOGE("Create mpeg encoder gst_element failed! sourceId: %{public}d", desc_.handle_);
         return MSERR_INVALID_OPERATION;
     }
 
-    MEDIA_LOGI("use %{public}s", encorderName.c_str());
+    MEDIA_LOGI("use %{public}s", encorderName_.c_str());
     return MSERR_OK;
 }
 
@@ -72,8 +74,8 @@ int32_t VideoEncoder::CreateH264Element()
         gstElem_ = nullptr;
     }
 
-    std::string encorderName = GetEncorderName(CodecMimeType::VIDEO_AVC);
-    gstElem_ = gst_element_factory_make(encorderName.c_str(), name_.c_str());
+    encorderName_ = GetEncorderName(CodecMimeType::VIDEO_AVC);
+    gstElem_ = gst_element_factory_make(encorderName_.c_str(), name_.c_str());
     if (gstElem_ == nullptr) {
         MEDIA_LOGE("Create h264 encoder gst_element failed! sourceId: %{public}d", desc_.handle_);
         return MSERR_INVALID_OPERATION;
@@ -81,7 +83,7 @@ int32_t VideoEncoder::CreateH264Element()
     g_object_set(gstElem_, "i-frame-interval", DEFAULT_I_FRAME_INTERVAL, nullptr);
     g_object_set(gstElem_, "enable-surface", TRUE, nullptr);
 
-    MEDIA_LOGI("use %{public}s", encorderName.c_str());
+    MEDIA_LOGI("use %{public}s", encorderName_.c_str());
     return MSERR_OK;
 }
 
@@ -123,14 +125,50 @@ int32_t VideoEncoder::Configure(const RecorderParam &recParam)
         MarkParameter(param.type);
     }
 
+    if (recParam.type != RecorderPublicParamType::VID_RECTANGLE) {
+        const VidRectangle &param = static_cast<const VidRectangle &>(recParam);
+        width_ = param.width;
+        height_ = param.height;
+        setRectangle_ = true;
+    }
+
+    if (recParam.type != RecorderPublicParamType::VID_FRAMERATE) {
+        const VidFrameRate &param = static_cast<const VidFrameRate &>(recParam);
+        frameRate_ = param.frameRate;
+        setFrameRate_ = true;
+    }
+
     return MSERR_OK;
 }
 
 int32_t VideoEncoder::CheckConfigReady()
 {
+    MEDIA_LOGE("xyj VideoEncoder::CheckConfigReady");
     std::set<int32_t> expectedParam = { RecorderPublicParamType::VID_ENC_FMT };
     bool configed = CheckAllParamsConfigured(expectedParam);
     CHECK_AND_RETURN_RET(configed == true, MSERR_INVALID_OPERATION);
+
+    std::vector<CapabilityData> capabilityDataArray = AVCodecAbilitySingleton::GetInstance().GetCapabilityDataArray();
+    for (auto iter = capabilityDataArray.begin(); iter != capabilityDataArray.end(); ++iter) {
+        if ((*iter).codecName == encorderName_) {
+            Range width = (*iter).width;
+            Range height = (*iter).height;
+            if (setRectangle_ &&
+                (width.minVal > width_ || width.maxVal < width_ || height.minVal > height_ || height.maxVal < height_)) {
+                MEDIA_LOGD("The %{public}s can not support of:%{public}d * %{public}d",
+                    encorderName_.c_str(), width_, height_);
+                return MSERR_UNSUPPORT_VID_PARAMS;
+            }
+
+            Range frameRate = (*iter).frameRate;
+            if (setFrameRate_ &&
+                (fabs(frameRate.minVal - frameRate_) > EPSLON || fabs(frameRate_ - frameRate.maxVal) > EPSLON)) {
+                MEDIA_LOGE("The %{public}s can not support frameRate:%{public}d", encorderName_.c_str(), frameRate_);
+                return MSERR_UNSUPPORT_VID_PARAMS;
+            }
+            break;
+        }
+    }
 
     return MSERR_OK;
 }

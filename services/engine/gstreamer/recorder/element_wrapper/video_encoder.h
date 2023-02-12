@@ -38,6 +38,12 @@ private:
     int32_t CreateH264Element();
     int32_t encoderFormat_;
     int32_t bitRate_;
+    int32_t width_;
+    int32_t height_;
+    int32_t frameRate_;
+    bool setRectangle_ = false;
+    bool setFrameRate_ = false;
+    std::string encorderName_;
 };
 } // namespace Media
 } // namespace OHOS

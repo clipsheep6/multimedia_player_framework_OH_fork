@@ -47,6 +47,7 @@ public:
 
     int32_t SetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
         const AppInfo &appInfo) override;
+    bool IsSupportedCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate) override;
     int32_t GetCaptureParameter(uint32_t &bitrate, uint32_t &channels, uint32_t &sampleRate) override;
     int32_t GetSegmentInfo(uint64_t &start) override;
     int32_t StartAudioCapture() override;
@@ -55,6 +56,9 @@ public:
     int32_t ResumeAudioCapture() override;
     std::shared_ptr<AudioBuffer> GetBuffer() override;
     int32_t WakeUpAudioThreads() override;
+
+    bool GetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+        AudioStandard::AudioCapturerParams &params);
 
 private:
     std::unique_ptr<OHOS::AudioStandard::AudioCapturer> audioCapturer_ = nullptr;
