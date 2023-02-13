@@ -19,7 +19,6 @@
 #include "media_log.h"
 #include "recorder_private_param.h"
 #include "i_recorder_engine.h"
-#include "avcodec_ability_singleton.h"
 #include "avcodeclist_engine_gst_impl.h"
 
 namespace {
@@ -141,6 +140,16 @@ int32_t VideoEncoder::Configure(const RecorderParam &recParam)
     return MSERR_OK;
 }
 
+bool VideoEncoder::CheckRangeValid(Range &range, int32_t value)
+{
+    if ((range.minVal != 0 || range.maxVal != 0) &&
+        (value < range.minVal || value > range.maxVal)) {
+        return false;
+    }
+
+    return true;
+}
+
 int32_t VideoEncoder::CheckConfigReady()
 {
     std::set<int32_t> expectedParam = { RecorderPublicParamType::VID_ENC_FMT };
@@ -153,9 +162,7 @@ int32_t VideoEncoder::CheckConfigReady()
             Range width = (*iter).width;
             Range height = (*iter).height;
             if (setRectangle_ &&
-                (((width.minVal != 0 || width.maxVal != 0) && (width_ < width.minVal || width_ > width.maxVal)) ||
-                 ((height.minVal != 0 || height.maxVal != 0) &&
-                  (height_ < height.minVal || height_ > height.maxVal)))) {
+                (CheckRangeValid(width, width_) == false || CheckRangeValid(height, height_) == false)) {
                 MEDIA_LOGE("The %{public}s can not support of:%{public}d * %{public}d."
                     " Valid:[%{public}d - %{public}d] * [%{public}d - %{public}d]",
                     encorderName_.c_str(), width_, height_, width.minVal, width.maxVal, height.minVal, height.maxVal);
@@ -163,16 +170,14 @@ int32_t VideoEncoder::CheckConfigReady()
             }
 
             Range frameRate = (*iter).frameRate;
-            if (setFrameRate_ && (frameRate.minVal != 0 || frameRate.maxVal != 0) &&
-                (frameRate_ < frameRate.minVal || frameRate_ > frameRate.maxVal)) {
+            if (setFrameRate_ && CheckRangeValid(frameRate, frameRate_) == false) {
                 MEDIA_LOGE("The %{public}s can not support frameRate: %{public}d. Valid:[%{public}d - %{public}d].",
                     encorderName_.c_str(), frameRate_, frameRate.minVal, frameRate.maxVal);
                 return MSERR_UNSUPPORT_VID_PARAMS;
             }
 
             Range bitRate = (*iter).bitrate;
-            if (setBitRate_ && (bitRate.minVal != 0 || bitRate.maxVal != 0) &&
-                (bitRate_ < bitRate.minVal || bitRate_ > bitRate.maxVal)) {
+            if (setBitRate_ && CheckRangeValid(bitRate, bitRate_) == false) {
                 MEDIA_LOGE("The %{public}s can not support bitRate:%{public}d. Valid:[%{public}d - %{public}d]",
                     encorderName_.c_str(), bitRate_, bitRate.minVal, bitRate.maxVal);
                 return MSERR_UNSUPPORT_VID_PARAMS;

@@ -1005,13 +1005,19 @@ int32_t AVRecorderNapi::GetPropertyInt32(napi_env env, napi_value configObj, con
     }
 
     if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
-        MEDIA_LOGI("get %{public}s property fail, maybe not assigned", type.c_str());
+        MEDIA_LOGI("get %{public}s property fail", type.c_str());
         return MSERR_OK;
     }
 
     if (napi_get_value_int32(env, item, &result) != napi_ok) {
-        MEDIA_LOGE("get %{public}s property value fail", type.c_str());
-        return MSERR_INVALID_VAL;
+        std::string string = CommonNapi::GetStringArgument(env, item);
+        if (string == "") {
+            // This attribute has not been assigned
+            return MSERR_OK;
+        } else {
+            MEDIA_LOGE("get %{public}s property value fail", type.c_str());
+            return MSERR_INVALID_VAL;
+        }
     }
 
     MEDIA_LOGI("get %{public}s : %{public}d!", type.c_str(), result);

@@ -128,7 +128,7 @@ static void gst_audio_capture_src_class_init(GstAudioCaptureSrcClass *klass)
             "do not enable audio service", FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
     
     g_object_class_install_property(gobject_class, PROP_SUPPORTED_AUDIO_PARAMS,
-        g_param_spec_boolean("Supported-audio-params", "issupport audio params",
+        g_param_spec_boolean("supported-audio-params", "issupport audio params",
             "issupport audio params", FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     gst_element_class_set_static_metadata(gstelement_class,

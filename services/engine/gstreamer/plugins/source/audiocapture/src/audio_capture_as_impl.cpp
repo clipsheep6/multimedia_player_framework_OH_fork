@@ -77,7 +77,6 @@ bool AudioCaptureAsImpl::GetCaptureParameter(uint32_t bitrate, uint32_t channels
 
 bool AudioCaptureAsImpl::IsSupportedCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate)
 {
-    (void) bitrate;
     AudioStandard::AudioCapturerParams params;
     CHECK_AND_RETURN_RET_LOG(GetCaptureParameter(bitrate, channels, sampleRate, params), false,
         "unsupport audio params");
