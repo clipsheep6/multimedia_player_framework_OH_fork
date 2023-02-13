@@ -176,7 +176,8 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
         GstState state = GST_STATE_NULL;
         GstStateChangeReturn stateRet = gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
             nullptr, static_cast<GstClockTime>(0));
-        MEDIA_LOGI("BaseState::HandleAsyncDone %{public}d, %{public}d", static_cast<int32_t>(stateRet), static_cast<int32_t>(state));
+        MEDIA_LOGI("BaseState::HandleAsyncDone %{public}d, %{public}d",
+            static_cast<int32_t>(stateRet), static_cast<int32_t>(state));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state >= GST_STATE_PAUSED)) {
             if (ctrler_.isSeeking_) {
                 int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
@@ -463,7 +464,7 @@ void PlayBinCtrlerBase::PlayingState::HandleAsyncDone(const InnerMessage &msg)
 void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg)
 {
     MEDIA_LOGI("PreparingState::ProcessStateChange");
-    if (msg.detail1 == GST_STATE_PLAYING &&msg.detail2 == GST_STATE_PAUSED && ctrler_.isUserSetPause_) {
+    if (msg.detail1 == GST_STATE_PLAYING && msg.detail2 == GST_STATE_PAUSED && ctrler_.isUserSetPause_) {
         ctrler_.ChangeState(ctrler_.pausedState_);
         ctrler_.isUserSetPause_ = false;
         MEDIA_LOGI("playing->paused end");
