@@ -43,6 +43,7 @@ private:
     int32_t frameRate_;
     bool setRectangle_ = false;
     bool setFrameRate_ = false;
+    bool setBitRate_ = false;
     std::string encorderName_;
 };
 } // namespace Media
