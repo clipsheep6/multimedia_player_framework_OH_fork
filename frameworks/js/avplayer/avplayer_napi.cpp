@@ -1634,6 +1634,7 @@ void AVPlayerNapi::ResetUserParameters()
     height_ = 0;
     position_ = -1;
     duration_ = -1;
+    loop_ = false;
 }
 
 void AVPlayerNapi::StartListenCurrentResource()
