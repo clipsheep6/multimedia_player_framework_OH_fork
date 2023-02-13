@@ -189,6 +189,14 @@ RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::strin
 {
     MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+    if (errCode == MSERR_UNSUPPORT_VID_PARAMS) {
+        return RetInfo(err, "The video parameter is not supported. Please check the type and range.");
+    }
+    
+    if (errCode == MSERR_UNSUPPORT_AUD_PARAMS) {
+        return RetInfo(err, "The audio parameter is not supported. Please check the type and range.");
+    }
+    
     std::string message;
     if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
@@ -267,18 +275,6 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetPrepareTask(std::unique
         CHECK_AND_RETURN_RET(retinfo.first == MSERR_OK, ((void)napi->recorder_->Reset(), retinfo));
 
         int32_t ret = napi->recorder_->Prepare();
-        if (ret != MSERR_OK) {
-            (void)napi->recorder_->Reset();
-            if (ret == MSERR_UNSUPPORT_VID_PARAMS) {
-                return RetInfo(MSERR_EXT_API9_INVALID_PARAMETER,
-                    "The video parameter is not supported. Please check the type and range.");
-            } else if (ret == MSERR_UNSUPPORT_AUD_PARAMS) {
-                return RetInfo(MSERR_EXT_API9_INVALID_PARAMETER,
-                    "The audio parameter is not supported. Please check the type and range.");
-            } else {
-                return GetRetInfo(ret, "Prepare", "");
-            }
-        }
         CHECK_AND_RETURN_RET(ret == MSERR_OK, ((void)napi->recorder_->Reset(), GetRetInfo(ret, "Prepare", "")));
 
         napi->RemoveSurface();

@@ -100,44 +100,36 @@ static void gst_audio_capture_src_class_init(GstAudioCaptureSrcClass *klass)
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_SAMPLE_RATE,
-        g_param_spec_uint("sample-rate", "Sample-Rate",
-            "Audio sampling rate", 0, G_MAXINT32, 0,
+        g_param_spec_uint("sample-rate", "Sample-Rate", "Audio sampling rate", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_CHANNELS,
-        g_param_spec_uint("channels", "Channels",
-            "Number of audio channels", 0, G_MAXINT32, 0,
+        g_param_spec_uint("channels", "Channels", "Number of audio channels", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_BITRATE,
-        g_param_spec_uint("bitrate", "Bitrate",
-            "Audio bitrate", 0, G_MAXINT32, 0,
+        g_param_spec_uint("bitrate", "Bitrate", "Audio bitrate", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_TOKEN_ID,
-        g_param_spec_uint("token-id", "TokenID",
-            "Token ID", 0, G_MAXUINT32, 0,
+        g_param_spec_uint("token-id", "TokenID", "Token ID", 0, G_MAXUINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_APP_UID,
-        g_param_spec_int("app-uid", "Appuid",
-            "APP UID", 0, G_MAXINT32, 0,
+        g_param_spec_int("app-uid", "Appuid", "APP UID", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_APP_PID,
-        g_param_spec_int("app-pid", "Apppid",
-            "APP PID", 0, G_MAXINT32, 0,
+        g_param_spec_int("app-pid", "Apppid", "APP PID", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_BYPASS_AUDIO_SERVICE,
         g_param_spec_boolean("bypass-audio-service", "Bypass Audio Service",
-        "do not enable audio service", FALSE,
-        (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            "do not enable audio service", FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
     
     g_object_class_install_property(gobject_class, PROP_SUPPORTED_AUDIO_PARAMS,
         g_param_spec_boolean("Supported-audio-params", "issupport audio params",
-        "issupport audio params", FALSE,
-        (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            "issupport audio params", FALSE, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     gst_element_class_set_static_metadata(gstelement_class,
         "Audio capture source", "Source/Audio",

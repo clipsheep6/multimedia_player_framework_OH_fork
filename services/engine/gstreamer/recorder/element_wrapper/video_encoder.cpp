@@ -125,14 +125,14 @@ int32_t VideoEncoder::Configure(const RecorderParam &recParam)
         MarkParameter(param.type);
     }
 
-    if (recParam.type != RecorderPublicParamType::VID_RECTANGLE) {
+    if (recParam.type == RecorderPublicParamType::VID_RECTANGLE) {
         const VidRectangle &param = static_cast<const VidRectangle &>(recParam);
         width_ = param.width;
         height_ = param.height;
         setRectangle_ = true;
     }
 
-    if (recParam.type != RecorderPublicParamType::VID_FRAMERATE) {
+    if (recParam.type == RecorderPublicParamType::VID_FRAMERATE) {
         const VidFrameRate &param = static_cast<const VidFrameRate &>(recParam);
         frameRate_ = param.frameRate;
         setFrameRate_ = true;
@@ -143,7 +143,6 @@ int32_t VideoEncoder::Configure(const RecorderParam &recParam)
 
 int32_t VideoEncoder::CheckConfigReady()
 {
-    MEDIA_LOGE("xyj VideoEncoder::CheckConfigReady");
     std::set<int32_t> expectedParam = { RecorderPublicParamType::VID_ENC_FMT };
     bool configed = CheckAllParamsConfigured(expectedParam);
     CHECK_AND_RETURN_RET(configed == true, MSERR_INVALID_OPERATION);
@@ -153,9 +152,9 @@ int32_t VideoEncoder::CheckConfigReady()
         if ((*iter).codecName == encorderName_) {
             Range width = (*iter).width;
             Range height = (*iter).height;
-            if (setRectangle_ &&
-                (width.minVal > width_ || width.maxVal < width_ || height.minVal > height_ || height.maxVal < height_)) {
-                MEDIA_LOGD("The %{public}s can not support of:%{public}d * %{public}d",
+            if (setRectangle_ && (width.minVal > width_ ||
+                width.maxVal < width_ || height.minVal > height_ || height.maxVal < height_)) {
+                MEDIA_LOGE("The %{public}s can not support of:%{public}d * %{public}d",
                     encorderName_.c_str(), width_, height_);
                 return MSERR_UNSUPPORT_VID_PARAMS;
             }
