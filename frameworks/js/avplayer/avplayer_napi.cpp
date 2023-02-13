@@ -1437,7 +1437,7 @@ napi_value AVPlayerNapi::JsGetHeight(napi_env env, napi_callback_info info)
 
     int32_t height = 0;
     if (jsPlayer->IsControllable()) {
-        width = jsPlayer->height_;
+        height = jsPlayer->height_;
     }
 
     napi_value value = nullptr;
