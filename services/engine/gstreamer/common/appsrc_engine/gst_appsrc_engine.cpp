@@ -15,6 +15,7 @@
 
 #include "gst_appsrc_engine.h"
 #include <algorithm>
+#include <sys/time.h>
 #include "avsharedmemorybase.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -300,6 +301,8 @@ int32_t GstAppsrcEngine::PullBuffer()
             MEDIA_LOGD("free mem begin update to %{public}u, filePos update to %{public}" PRIu64 "",
                 appSrcMem_->begin, appSrcMem_->filePos);
             pushCond_.notify_all();
+        } else if (IsConnectTimeout()){
+            OnError(MSERR_DATA_SOURCE_IO_ERROR);
         }
     }
     return ret;
@@ -307,8 +310,8 @@ int32_t GstAppsrcEngine::PullBuffer()
 
 int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
 {
-    MEDIA_LOGD("PushBuffer in, pushSize is %{public}d, free mem begin is: %{public}u, free mem end is: %{public}u,
-        available begin is: %{public}u", pushSize, appSrcMem_->begin, appSrcMem_->end, appSrcMem_->availableBegin);
+    MEDIA_LOGD("PushBuffer in, pushSize is %{public}d, free mem begin is: %{public}u, free mem end is: %{public}u,"
+        "available begin is: %{public}u", pushSize, appSrcMem_->begin, appSrcMem_->end, appSrcMem_->availableBegin);
     CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr && appSrcMem_->mem != nullptr, MSERR_NO_MEMORY, "no mem");
     GstFlowReturn ret;
 
@@ -348,6 +351,9 @@ int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
         if (appSrcMem_->availableBegin == appSrcMem_->begin) {
             noAvailableBuffer_ = true;
         }
+    } else {
+        MEDIA_LOGE("appSrcMem_->availableBegin + pushSize > bufferSize_");
+        return MSERR_INVALID_OPERATION;
     }
     if (needDataSize_ == pushSize) {
         needData_ = false;
@@ -415,6 +421,38 @@ void GstAppsrcEngine::PointerMemoryAvailable(uint32_t offset, uint32_t length)
         MEDIA_LOGD("noFreeBuffer_ set to false");
     }
     pullCond_.notify_all();
+}
+
+static int64_t GetTime()
+{
+    struct timeval time = {};
+    int ret = gettimeofday(&time, nullptr);
+    CHECK_AND_RETURN_RET_LOG(ret != -1, -1, "Get current time failed!");
+    if ((static_cast<int64_t>(time.tv_sec) < (LLONG_MAX / 1000)) &&
+        (static_cast<int64_t>(time.tv_usec) <= 1000000)) {
+        return static_cast<int64_t>(time.tv_sec) * 1000 + static_cast<int64_t>(time.tv_usec) * 1000 / 1000000;
+    } else {
+        MEDIA_LOGW("time overflow");
+    }
+    return -1;
+}
+
+bool GstAppsrcEngine::IsConnectTimeout()
+{
+    if (!needData_) {
+        return false;
+    }
+    if (timer_ == 0) {
+        timer_ = GetTime();
+        MEDIA_LOGI("Waiting to receive data");
+    } else {
+        int64_t curTime = GetTime();
+        if (curTime - timer_ > 15000) {
+            MEDIA_LOGE("No data was received for 15 seconds");
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace Media
 } // namespace OHOS

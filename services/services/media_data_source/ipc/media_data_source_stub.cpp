@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_data_source.h"
+#include "avsharedmemorybase.h"
 #include "avsharedmemory_ipc.h"
 
 namespace {
@@ -25,6 +26,31 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaDataS
 
 namespace OHOS {
 namespace Media {
+class MediaDataSourceStub::BufferCache : public NoCopyable {
+public:
+    BufferCache() = default;
+    ~BufferCache() = default;
+
+    int32_t ReadFromParcel(MessageParcel &parcel, std::shared_ptr<AVSharedMemory> &memory)
+    {
+        CacheFlag flag = static_cast<CacheFlag>(parcel.ReadUint8());
+        if (flag == CacheFlag::HIT_CACHE) {
+            MEDIA_LOGD("HIT_CACHE");
+            memory = caches_;
+            return MSERR_OK;
+        } else {
+            MEDIA_LOGD("UPDATE_CACHE");
+            memory = ReadAVSharedMemoryFromParcel(parcel);
+            CHECK_AND_RETURN_RET(memory != nullptr, MSERR_INVALID_VAL);
+            caches_ = memory;
+            return MSERR_OK;
+        }
+    }
+
+private:
+    std::shared_ptr<AVSharedMemory> caches_;
+};
+
 MediaDataSourceStub::MediaDataSourceStub(const std::shared_ptr<IMediaDataSource> &dataSrc)
     : dataSrc_(dataSrc)
 {
@@ -45,19 +71,23 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         return MSERR_INVALID_OPERATION;
     }
 
-    switch (code) {
+    if (BufferCache_ == nullptr) {
+        BufferCache_ = std::make_unique<BufferCache>();
+    }
+
+    switch (static_cast<ListenerMsg>(code)) {
         case ListenerMsg::READ_AT: {
+            std::shared_ptr<AVSharedMemory> memory = nullptr;
+            if (BufferCache_ != nullptr) {
+                int32_t ret = BufferCache_->ReadFromParcel(data, memory);
+                CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+            }
+            uint32_t offset = data.ReadUint32();
             uint32_t length = data.ReadUint32();
-            std::shared_ptr<AVSharedMemory> mem = ReadAVSharedMemoryFromParcel(data);
-            int32_t realLen = ReadAt(length, mem);
-            reply.WriteInt32(realLen);
-            return MSERR_OK;
-        }
-        case ListenerMsg::READ_AT_POS: {
             int64_t pos = data.ReadInt64();
-            uint32_t length = data.ReadUint32();
-            std::shared_ptr<AVSharedMemory> mem = ReadAVSharedMemoryFromParcel(data);
-            int32_t realLen = ReadAt(pos, length, mem);
+            std::static_pointer_cast<AVSharedMemoryBase>(memory)->SetOffset(offset);
+            MEDIA_LOGD("offset is %{public}u", offset);
+            int32_t realLen = ReadAt(memory, length, pos);
             reply.WriteInt32(realLen);
             return MSERR_OK;
         }
@@ -75,16 +105,12 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     }
 }
 
-int32_t MediaDataSourceStub::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+int32_t MediaDataSourceStub::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
+    MEDIA_LOGD("ReadAt in");
     CHECK_AND_RETURN_RET_LOG(dataSrc_ != nullptr, SOURCE_ERROR_IO, "dataSrc_ is nullptr");
-    return dataSrc_->ReadAt(pos, length, mem);
-}
-
-int32_t MediaDataSourceStub::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
-{
-    CHECK_AND_RETURN_RET_LOG(dataSrc_ != nullptr, SOURCE_ERROR_IO, "dataSrc_ is nullptr");
-    return dataSrc_->ReadAt(length, mem);
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "mem is nullptr");
+    return dataSrc_->ReadAt(mem, length, pos);
 }
 
 int32_t MediaDataSourceStub::GetSize(int64_t &size)

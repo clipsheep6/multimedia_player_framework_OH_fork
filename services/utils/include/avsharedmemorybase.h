@@ -91,6 +91,15 @@ public:
     }
 
     /**
+     * @brief Get the memory's virtual available address
+     * @return the memory's virtual available address if the memory is valid, otherwise nullptr.
+     */
+    virtual uint8_t *GetBaseWithOffset() const override
+    {
+        return base_ + offset_;
+    }
+
+    /**
      * @brief Get the memory's size
      * @return the memory's size if the memory is valid, otherwise -1.
      */
@@ -108,6 +117,16 @@ public:
         return (base_ != nullptr) ? flags_ : 0;
     }
 
+    void SetOffset(uint32_t offset)
+    {
+        offset_ = offset;
+    }
+
+    uint32_t GetOffset() const
+    {
+        return offset_;
+    }
+
 protected:
     AVSharedMemoryBase(int32_t fd, int32_t size, uint32_t flags, const std::string &name);
 
@@ -116,6 +135,7 @@ private:
     void Close() noexcept;
 
     uint8_t *base_;
+    uint32_t offset_;
     int32_t size_;
     uint32_t flags_;
     std::string name_;

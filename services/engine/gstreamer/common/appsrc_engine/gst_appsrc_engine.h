@@ -66,6 +66,7 @@ private:
     uint32_t GetFreeSize();
     uint32_t GetAvailableSize();
     void PointerMemoryAvailable(uint32_t offset, uint32_t length);
+    bool IsConnectTimeout();
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
     const int64_t size_ = 0;
     std::mutex mutex_;
@@ -86,6 +87,7 @@ private:
     GstShMemoryWrapAllocator *allocator_ = nullptr;
     bool noFreeBuffer_ = false;
     bool noAvailableBuffer_ = false;
+    int64_t timer_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

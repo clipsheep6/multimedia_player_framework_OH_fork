@@ -167,7 +167,7 @@ int32_t PlayBinCtrlerBase::SetSource(const std::string &url)
     return MSERR_OK;
 }
 
-int32_t PlayBinCtrlerBase::SetSource(const std::shared_ptr<GstAppsrcWrap> &appsrcWrap)
+int32_t PlayBinCtrlerBase::SetSource(const std::shared_ptr<GstAppsrcEngine> &appsrcWrap)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     appsrcWrap_ = appsrcWrap;
@@ -769,7 +769,9 @@ void PlayBinCtrlerBase::QueryDuration()
     gboolean ret = gst_element_query_duration(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &duration);
     CHECK_AND_RETURN_LOG(ret, "query duration failed");
 
-    duration_ = duration / NANO_SEC_PER_USEC;
+    if (duration >= 0) {
+        duration_ = duration / NANO_SEC_PER_USEC;
+    }
     MEDIA_LOGI("update the duration: %{public}" PRIi64 " microsecond", duration_);
 }
 
@@ -787,7 +789,9 @@ int64_t PlayBinCtrlerBase::QueryPositionInternal(bool isSeekDone)
     }
 
     int64_t curTime = position / NANO_SEC_PER_USEC;
-    curTime = std::min(curTime, duration_);
+    if (duration_ >= 0) {
+        curTime = std::min(curTime, duration_);
+    }
     lastTime_ = curTime;
     MEDIA_LOGI("update the position: %{public}" PRIi64 " microsecond", curTime);
     return curTime;
@@ -797,10 +801,6 @@ void PlayBinCtrlerBase::ProcessEndOfStream()
 {
     MEDIA_LOGD("End of stream");
     isDuration_ = true;
-    if (IsLiveSource()) {
-        MEDIA_LOGD("appsrc livemode, can not loop");
-        return;
-    }
 
     if (!enableLooping_.load()) {
         ChangeState(playbackCompletedState_);

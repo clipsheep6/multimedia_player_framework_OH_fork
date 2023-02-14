@@ -307,6 +307,7 @@ int32_t PlayerServer::OnPlay()
         (void)dataSrc_->GetSize(size);
         if (size == -1) {
             MEDIA_LOGE("Can not play in complete status, it is live-stream");
+            OnError(PLAYER_ERROR, MSERR_INVALID_OPERATION);
             return MSERR_INVALID_OPERATION;
         }
     }
@@ -558,6 +559,16 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
         return MSERR_INVALID_VAL;
     }
 
+    if (dataSrc_ != nullptr) {
+        int64_t size = 0;
+        (void)dataSrc_->GetSize(size);
+        if (size == -1) {
+            MEDIA_LOGE("Can not Seek, it is live-stream");
+            OnError(PLAYER_ERROR, MSERR_INVALID_OPERATION);
+            return MSERR_INVALID_OPERATION;
+        }
+    }
+
     int32_t currentTime = -1;
     if (mSeconds == 0 && playerEngine_->GetCurrentTime(currentTime) == MSERR_OK && currentTime == mSeconds) {
         MEDIA_LOGW("Seek to the inner position");
@@ -720,6 +731,7 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         (void)dataSrc_->GetSize(size);
         if (size == -1) {
             MEDIA_LOGE("Can not SetPlaybackSpeed, it is live-stream");
+            OnError(PLAYER_ERROR, MSERR_INVALID_OPERATION);
             return MSERR_INVALID_OPERATION;
         }
     }
@@ -860,6 +872,7 @@ int32_t PlayerServer::SetLooping(bool loop)
         (void)dataSrc_->GetSize(size);
         if (size == -1) {
             MEDIA_LOGE("Can not SetLooping, it is live-stream");
+            OnError(PLAYER_ERROR, MSERR_INVALID_OPERATION);
             return MSERR_INVALID_OPERATION;
         }
     }

@@ -66,30 +66,12 @@ int32_t MediaDataSourceTestNoSeek::Init()
     return MSERR_OK;
 }
 
-void MediaDataSourceTestNoSeek::Reset()
+int32_t MediaDataSourceTestNoSeek::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
-    std::cout<< "reset data source" << std::endl;
-    pos_ = 0;
-    (void)fseek(fd_, 0, SEEK_SET);
-}
-
-int32_t MediaDataSourceTestNoSeek::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
-{
+    MEDIA_LOGD("ReadAt in");
     (void)pos;
-    (void)length;
-    (void)mem;
-    return 0;
-}
-
-int32_t MediaDataSourceTestNoSeek::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
-{
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_INVALID_VAL, "Mem is nullptr");
     size_t readRet = 0;
-    if (fixedSize_ > 0) {
-        length = static_cast<uint32_t>(fixedSize_);
-    }
-    CHECK_AND_RETURN_RET_LOG(mem->GetSize() > 0, SOURCE_ERROR_IO, "AVSHMEM length should large than 0");
-    length = std::min(length, static_cast<uint32_t>(mem->GetSize()));
     int32_t realLen = static_cast<int32_t>(length);
     if (pos_ >= size_) {
         MEDIA_LOGI("Is eos");
@@ -99,7 +81,7 @@ int32_t MediaDataSourceTestNoSeek::ReadAt(uint32_t length, const std::shared_ptr
         MEDIA_LOGI("Is null mem");
         return SOURCE_ERROR_IO;
     }
-    readRet = fread(mem->GetBase(), static_cast<size_t>(length), 1, fd_);
+    readRet = fread(mem->GetBaseWithOffset(), static_cast<size_t>(length), 1, fd_);
     if (ferror(fd_)) {
         MEDIA_LOGI("Failed to call fread");
         return SOURCE_ERROR_IO;
@@ -114,10 +96,7 @@ int32_t MediaDataSourceTestNoSeek::ReadAt(uint32_t length, const std::shared_ptr
 
 int32_t MediaDataSourceTestNoSeek::GetSize(int64_t &size)
 {
-    (void)fseek(fd_, 0, SEEK_END);
-    size_ = static_cast<int64_t>(ftell(fd_));
-    (void)fseek(fd_, 0, SEEK_SET);
-    size = -1;
+    size = fixedSize_;
     return MSERR_OK;
 }
 } // namespace Media

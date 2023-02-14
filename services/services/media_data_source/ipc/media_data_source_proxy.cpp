@@ -16,6 +16,7 @@
 #include "media_data_source_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "avsharedmemorybase.h"
 #include "avsharedmemory_ipc.h"
 
 namespace {
@@ -24,6 +25,41 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaDataS
 
 namespace OHOS {
 namespace Media {
+class MediaDataSourceProxy::BufferCache : public NoCopyable {
+public:
+    BufferCache()
+    {
+        caches_ = nullptr;
+    }
+    ~BufferCache()
+    {
+        if (caches_ != nullptr) {
+            caches_ = nullptr;
+        }
+    }
+
+    int32_t WriteToParcel(const std::shared_ptr<AVSharedMemory> &memory, MessageParcel &parcel)
+    {
+        CHECK_AND_RETURN_RET_LOG(memory != nullptr, MSERR_NO_MEMORY, "memory is nullptr");
+        CacheFlag flag;
+        if (caches_ != nullptr && caches_ == memory.get()) {
+            MEDIA_LOGI("HIT_CACHE");
+            flag = CacheFlag::HIT_CACHE;
+            parcel.WriteUint8(static_cast<uint8_t>(flag));
+            return MSERR_OK;
+        } else {
+            MEDIA_LOGI("UPDATE_CACHE");
+            flag = CacheFlag::UPDATE_CACHE;
+            caches_ = memory.get();
+            parcel.WriteUint8(static_cast<uint8_t>(flag));
+            return WriteAVSharedMemoryToParcel(memory, parcel);
+        }
+    }
+
+private:
+    AVSharedMemory *caches_;
+};
+
 MediaDataCallback::MediaDataCallback(const sptr<IStandardMediaDataSource> &ipcProxy)
     : callbackProxy_(ipcProxy)
 {
@@ -35,16 +71,13 @@ MediaDataCallback::~MediaDataCallback()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
-int32_t MediaDataCallback::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
-{
-    CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, SOURCE_ERROR_IO, "callbackProxy_ is nullptr");
-    return callbackProxy_->ReadAt(length, mem);
-}
 
-int32_t MediaDataCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+int32_t MediaDataCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
+    MEDIA_LOGD("ReadAt in");
     CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, SOURCE_ERROR_IO, "callbackProxy_ is nullptr");
-    return callbackProxy_->ReadAt(pos, length, mem);
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "memory is nullptr");
+    return callbackProxy_->ReadAt(mem, length, pos);
 }
 
 int32_t MediaDataCallback::GetSize(int64_t &size)
@@ -64,8 +97,10 @@ MediaDataSourceProxy::~MediaDataSourceProxy()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-int32_t MediaDataSourceProxy::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+int32_t MediaDataSourceProxy::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
+    MEDIA_LOGD("ReadAt in");
+    CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "mem is nullptr");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -73,27 +108,18 @@ int32_t MediaDataSourceProxy::ReadAt(int64_t pos, uint32_t length, const std::sh
     bool token = data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
+    if (BufferCache_ == nullptr) {
+        BufferCache_ = std::make_unique<BufferCache>();
+    }
+    CHECK_AND_RETURN_RET_LOG(BufferCache_ != nullptr, MSERR_NO_MEMORY, "Failed to create BufferCache_!");
+
+    uint32_t offset = std::static_pointer_cast<AVSharedMemoryBase>(mem)->GetOffset();
+    MEDIA_LOGD("offset is %{public}u", offset);
+    BufferCache_->WriteToParcel(mem, data);
+    data.WriteUint32(offset);
+    data.WriteUint32(length);
     data.WriteInt64(pos);
-    data.WriteUint32(length);
-    CHECK_AND_RETURN_RET_LOG(WriteAVSharedMemoryToParcel(mem, data) == MSERR_OK, 0, "write parcel failed");
-    int error = Remote()->SendRequest(ListenerMsg::READ_AT_POS, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, 0, "ReadAt failed, error: %{public}d", error);
-
-    return reply.ReadInt32();
-}
-
-int32_t MediaDataSourceProxy::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
-
-    bool token = data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-
-    data.WriteUint32(length);
-    CHECK_AND_RETURN_RET_LOG(WriteAVSharedMemoryToParcel(mem, data) == MSERR_OK, 0, "write parcel failed");
-    int error = Remote()->SendRequest(ListenerMsg::READ_AT, data, reply, option);
+    int error = Remote()->SendRequest(static_cast<uint32_t>(ListenerMsg::READ_AT), data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, 0, "ReadAt failed, error: %{public}d", error);
 
     return reply.ReadInt32();
@@ -108,7 +134,7 @@ int32_t MediaDataSourceProxy::GetSize(int64_t &size)
     bool token = data.WriteInterfaceToken(MediaDataSourceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    int error = Remote()->SendRequest(ListenerMsg::GET_SIZE, data, reply, option);
+    int error = Remote()->SendRequest(static_cast<uint32_t>(ListenerMsg::GET_SIZE), data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, -1, "GetSize failed, error: %{public}d", error);
 
     size = reply.ReadInt64();
