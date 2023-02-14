@@ -67,9 +67,6 @@ config("media_client_public_config") {
   ]
 
   cflags = [
-    "-fsanitize=cfi",
-    "-flto",
-    "-fvisibility=default",
     "-fno-exceptions",
     "-Wall",
     "-fno-common",
