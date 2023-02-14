@@ -32,9 +32,9 @@ struct _GstShMemoryWrapMemory {
     FreeMemory free_memory;
 };
 
-const char GST_SHMEMORY_WRAP_MEMORY_TYPE[] = "ShmemWrapMemory";
+static const char GST_SHMEMORY_WRAP_MEMORY_TYPE[] = "ShmemWrapMemory";
 
-inline gboolean gst_is_shmemory_wrap_memory(GstMemory *mem)
+static inline gboolean gst_is_shmemory_wrap_memory(GstMemory *mem)
 {
     return gst_memory_is_type(mem, GST_SHMEMORY_WRAP_MEMORY_TYPE);
 }
