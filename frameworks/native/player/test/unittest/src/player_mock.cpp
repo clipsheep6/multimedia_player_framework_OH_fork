@@ -346,7 +346,7 @@ int32_t PlayerMock::Stop()
 
 void PlayerMock::SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode)
 {
-    UNITTEST_CHECK_AND_RETURN_LOG(player_ == nullptr || callback_ == nullptr, "player or callback is nullptr");
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     int32_t duration = 0;
     int32_t seekPosition = 0;
     callback_->SetSeekDoneFlag(false);
