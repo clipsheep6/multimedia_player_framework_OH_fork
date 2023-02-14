@@ -88,12 +88,12 @@ ohos_shared_library("native_media_core") {
 
 ohos_shared_library("native_media_codecbase") {
   install_enable = true
- 
+
   sanitize = {
     cfi = true
     debug = true
   }
- 
+
   sources = [
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec/native_avcodec_base.cpp",
   ]
