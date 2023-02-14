@@ -63,6 +63,11 @@ config("gst_audio_server_sink_config") {
 ohos_shared_library("gst_audio_server_sink") {
   install_enable = true
 
+  sanitize = {
+    cfi = true
+    debug = true
+  }
+
   sources = [
     "src/audio_sink_factory.cpp",
     "src/audio_sink_sv_impl.cpp",

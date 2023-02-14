@@ -71,6 +71,11 @@ config("gst_codec_plugin_hdi_config") {
 ohos_shared_library("gst_codec_plugin_hdi") {
   install_enable = true
 
+  sanitize = {
+    cfi = true
+    debug = true
+  }
+
   sources = [
     "gst_hdi_factory.cpp",
     "hdi_buffer_mgr.cpp",

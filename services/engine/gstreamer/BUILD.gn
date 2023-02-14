@@ -22,6 +22,11 @@ group("media_engine_gst_package") {
 }
 
 ohos_shared_library("media_engine_gst") {
+  sanitize = {
+    cfi = true
+    debug = true
+  }
+
   deps = [
     "common:media_engine_gst_common",
     "factory:media_engine_gst_factory",

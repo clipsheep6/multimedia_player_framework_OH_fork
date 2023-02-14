@@ -22,6 +22,11 @@ config("media_service_log_dfx_public_config") {
 ohos_shared_library("media_service_log_dfx") {
   install_enable = true
 
+  sanitize = {
+    cfi = true
+    debug = true
+  }
+
   sources = [ "dfx_log_dump.cpp" ]
 
   include_dirs = [
@@ -63,6 +68,11 @@ ohos_shared_library("media_service_log_dfx") {
 
 ohos_shared_library("media_service_dfx") {
   install_enable = true
+
+  sanitize = {
+    cfi = true
+    debug = true
+  }
 
   sources = [ "service_dump_manager.cpp" ]
 

@@ -46,6 +46,11 @@ config("media_service_utils_public_config") {
 ohos_shared_library("media_service_utils") {
   install_enable = true
 
+  sanitize = {
+    cfi = true
+    debug = true
+  }
+
   sources = [
     "avsharedmemorybase.cpp",
     "avsharedmemorypool.cpp",

@@ -64,6 +64,11 @@ declare_args() {
 ohos_shared_library("gst_mem_sink") {
   install_enable = true
 
+  sanitize = {
+    cfi = true
+    debug = true
+  }
+
   sources = [
     "gst_mem_sink_plugins.cpp",
     "gst_shared_mem_sink.cpp",
