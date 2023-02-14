@@ -16,8 +16,6 @@ import("//foundation/multimedia/player_framework/config.gni")
 
 config("media_service_log_dfx_public_config") {
   cflags = [
-    "-fsanitize=cfi",
-    "-flto",
     "-DOHOS_MEDIA_LOG_DFX",
   ]
   include_dirs = [ "//foundation/multimedia/player_framework/services/dfx" ]
