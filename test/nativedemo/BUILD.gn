@@ -110,7 +110,6 @@ ohos_executable("media_demo") {
   external_deps = [
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
     "multimedia_player_framework:media_client",
   ]
   install_enable = false
