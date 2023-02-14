@@ -239,16 +239,17 @@ int32_t PlayerServer::OnPrepare(bool sync)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     int32_t ret = MSERR_OK;
 
-#ifdef SUPPORT_VIDEO
-    if (surface_ != nullptr) {
-        ret = playerEngine_->SetVideoSurface(surface_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetVideoSurface Failed!");
-    }
-#endif
     lastOpStatus_ = PLAYER_PREPARED;
 
     auto preparedTask = std::make_shared<TaskHandler<int32_t>>([this]() {
         MediaTrace::TraceBegin("PlayerServer::PrepareAsync", FAKE_POINTER(this));
+#ifdef SUPPORT_VIDEO
+        if (surface_ != nullptr) {
+            int32_t res = playerEngine_->SetVideoSurface(surface_);
+            CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
+                static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoSurface Failed!");
+        }
+#endif
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         return currState->Prepare();
     });
@@ -481,11 +482,6 @@ int32_t PlayerServer::Release()
     return MSERR_OK;
 }
 
-int32_t PlayerServer::ReleaseSync()
-{
-    return MSERR_OK;
-}
-
 int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -514,7 +510,7 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
 
     Format format;
     (void)format.PutFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, leftVolume);
-    OnInfo(INFO_TYPE_VOLUME_CHANGE, 0, format);
+    OnInfoNoChangeStatus(INFO_TYPE_VOLUME_CHANGE, 0, format);
     return MSERR_OK;
 }
 
@@ -783,7 +779,6 @@ void PlayerServer::HandleEos()
 
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
             MEDIA_LOGI("Interrupted seek action");
-            Format format;
             taskMgr_.MarkTaskDone();
             disableNextSeekDone_ = false;
         });

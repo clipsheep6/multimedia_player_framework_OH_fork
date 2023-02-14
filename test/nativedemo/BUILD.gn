@@ -25,7 +25,7 @@ ohos_executable("media_demo") {
     "./recorder_profiles",
     "./avcodecvenc",
     "./avcodecvdec",
-    "./avmuxer",
+    "./baselib",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//graphic/graphic_2d/interfaces/innerkits/surface",
@@ -59,7 +59,10 @@ ohos_executable("media_demo") {
     "-Wno-deprecated-declarations",
   ]
 
-  sources = [ "./media_demo.cpp" ]
+  sources = [
+    "./baselib/baselib_demo.cpp",
+    "./media_demo.cpp",
+  ]
 
   if (multimedia_player_framework_support_player) {
     sources += [
@@ -82,10 +85,6 @@ ohos_executable("media_demo") {
       "./avcodecvdec/avcodec_vdec_demo.cpp",
       "./avcodecvenc/avcodec_venc_demo.cpp",
     ]
-  }
-
-  if (multimedia_player_framework_support_muxer) {
-    sources += [ "./avmuxer/avmuxer_demo.cpp" ]
   }
 
   if (multimedia_player_framework_support_metadata) {

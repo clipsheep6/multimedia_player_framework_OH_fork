@@ -16,6 +16,7 @@
 #include "media_service_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "player_xcollie.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServiceProxy"};
@@ -47,7 +48,9 @@ sptr<IRemoteObject> MediaServiceProxy::GetSubSystemAbility(IStandardMediaService
 
     (void)data.WriteInt32(static_cast<int32_t>(subSystemId));
     (void)data.WriteRemoteObject(listener);
+    int32_t id = PlayerXCollie::GetInstance().SetTimer("MediaServiceProxy::GetSubSystemAbility");
     int error = Remote()->SendRequest(MediaServiceMsg::GET_SUBSYSTEM, data, reply, option);
+    PlayerXCollie::GetInstance().CancelTimer(id);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
         "Create player proxy failed, error: %{public}d", error);
     return reply.ReadRemoteObject();

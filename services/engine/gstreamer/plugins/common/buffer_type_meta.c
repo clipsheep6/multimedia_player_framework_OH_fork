@@ -30,6 +30,9 @@ static gboolean gst_buffer_type_meta_init(GstMeta *meta, gpointer params, GstBuf
     buffer_meta->memFlag = 0;
     buffer_meta->bufferFlag = 0;
     buffer_meta->pixelFormat = 0;
+    buffer_meta->width = 0;
+    buffer_meta->height = 0;
+    buffer_meta->invalidpts = FALSE;
 
     return TRUE;
 }
@@ -71,6 +74,9 @@ static gboolean gst_buffer_type_meta_transform(GstBuffer *dest, GstMeta *meta,
             dMeta->memFlag = sMeta->memFlag;
             dMeta->bufferFlag = sMeta->bufferFlag;
             dMeta->pixelFormat = sMeta->pixelFormat;
+            dMeta->width = sMeta->width;
+            dMeta->height = sMeta->height;
+            dMeta->invalidpts = sMeta->invalidpts;
         }
     } else {
         return FALSE;
@@ -138,6 +144,8 @@ GstBufferTypeMeta *gst_buffer_add_buffer_handle_meta(GstBuffer *buffer, intptr_t
     buffer_meta->bufferFlag = config.bufferFlag;
     buffer_meta->pixelFormat = config.pixelFormat;
     buffer_meta->length = config.length;
+    buffer_meta->width = config.width;
+    buffer_meta->height = config.height;
     return buffer_meta;
 }
 

@@ -171,5 +171,57 @@ export default function AVPlayerHlsFuncTest() {
             videoSizeId = 1;
             videoSizeArray = [ [256, 144], [426, 240], [640, 360], [854, 480], [1280, 720] ];
         })
+
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_setBitrate_0300
+            * @tc.name      : 001.test hls
+            * @tc.desc      : HLS setBitrate test
+            * @tc.size      : MediumTest
+            * @tc.type      : Function test
+            * @tc.level     : Level2
+        */
+        it('SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_setBitrate_0300', 0, async function (done) {
+            await initAVPlayer(HTTP_PATH + '05.hls/hls_variant/index.m3u8', done);
+            expectBitrateArray = [165340, 344388, 387360, 765178, 1676816];
+            setBitrateState = AVPlayerTestBase.AV_PLAYER_STATE.PAUSED;
+            videoSizeId = 1;
+            videoSizeArray = [ [256, 144], [426, 240], [640, 360], [854, 480], [1280, 720] ];
+            await mediaTestBase.msleepAsync(PLAY_TIME);
+            avPlayer.pause();
+        })
+
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_setBitrate_0400
+            * @tc.name      : 001.test hls
+            * @tc.desc      : HLS setBitrate test
+            * @tc.size      : MediumTest
+            * @tc.type      : Function test
+            * @tc.level     : Level2
+        */
+        it('SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_setBitrate_0400', 0, async function (done) {
+            await initAVPlayer(HTTP_PATH + '05.hls/hls_variant/index.m3u8', done);
+            expectBitrateArray = [165340, 344388, 387360, 765178, 1676816];
+            setBitrateState = AVPlayerTestBase.AV_PLAYER_STATE.COMPLETED;
+            videoSizeId = 1;
+            videoSizeArray = [ [256, 144], [426, 240], [640, 360], [854, 480], [1280, 720] ];
+            await mediaTestBase.msleepAsync(PLAY_TIME);
+            avPlayer.loop = false;
+        })
+
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_setBitrate_0500
+            * @tc.name      : 001.test hls
+            * @tc.desc      : HLS setBitrate test
+            * @tc.size      : MediumTest
+            * @tc.type      : Function test
+            * @tc.level     : Level2
+        */
+        it('SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_setBitrate_0500', 0, async function (done) {
+            await initAVPlayer(HTTP_PATH + '05.hls/hls_variant/index.m3u8', done);
+            expectBitrateArray = [165340, 344388, 387360, 765178, 1676816];
+            setBitrateState = AVPlayerTestBase.AV_PLAYER_STATE.PREPARED;
+            videoSizeId = 3;
+            videoSizeArray = [ [256, 144], [426, 240], [640, 360], [854, 480], [1280, 720] ];
+        })
     });
 }

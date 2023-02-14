@@ -59,7 +59,9 @@ public:
     int32_t SelectBitRate(uint32_t bitRate) override;
 
 private:
+    int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<PlayerServiceProxy> delegator_;
+    std::map<uint32_t, std::string> playerFuncs_;
 };
 } // namespace Media
 } // namespace OHOS

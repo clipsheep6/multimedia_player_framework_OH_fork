@@ -21,6 +21,7 @@
 #include <thread>
 #include <map>
 
+#include "audio_info.h"
 #include "i_player_engine.h"
 #include "i_playbin_ctrler.h"
 #include "gst_appsrc_engine.h"
@@ -79,6 +80,7 @@ private:
     void HandleErrorMessage(const PlayBinMessage &msg);
     void HandleInfoMessage(const PlayBinMessage &msg);
     void HandleSeekDoneMessage(const PlayBinMessage &msg);
+    void HandleSpeedDoneMessage(const PlayBinMessage &msg);
     void HandleSubTypeMessage(const PlayBinMessage &msg);
     void HandleBufferingStart();
     void HandleBufferingEnd();
@@ -114,8 +116,8 @@ private:
     int32_t apppid_ = 0;
     std::map<uint32_t, uint64_t> mqBufferingTime_;
     VideoScaleType videoScaleType_ = VIDEO_SCALE_TYPE_FIT;
-    int32_t contentType_ = 0;
-    int32_t streamUsage_ = 0;
+    int32_t contentType_ = AudioStandard::CONTENT_TYPE_MUSIC; // CONTENT_TYPE_MUSIC
+    int32_t streamUsage_ = AudioStandard::STREAM_USAGE_MEDIA; // STREAM_USAGE_MEDIA
     int32_t rendererFlag_ = 0;
     int32_t currentTime_ = -1;
     int32_t duration_ = -1;

@@ -91,6 +91,7 @@ private:
     int32_t SetRateInternal(double rate);
     void SetupCustomElement();
     GstSeekFlags ChooseSetRateFlags(double rate);
+    void SetupSourceSetupSignal();
     int32_t SetupSignalMessage();
     int32_t SetupElementUnSetupSignal();
     void QueryDuration();
@@ -166,6 +167,7 @@ private:
     bool isRating_ = false;
     bool isBuffering_ = false;
     bool isNetWorkPlay_ = false;
+    bool isUserSetPlay_ = false;
     bool isUserSetPause_ = false;
     uint32_t rendererInfo_ = 0;
     int32_t rendererFlag_ = 0;

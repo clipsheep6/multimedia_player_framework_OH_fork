@@ -31,6 +31,7 @@
 #endif
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_dfx.h"
 #include "service_dump_manager.h"
 #include "player_xcollie.h"
 
@@ -200,6 +201,7 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
         dumperTbl_[StubType::PLAYER].emplace_back(dumper);
         MEDIA_LOGD("The number of player services(%{public}zu) pid(%{public}d).",
             playerStubMap_.size(), pid);
+        MediaTrace::CounterTrace("The number of player", playerStubMap_.size());
         if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
             MEDIA_LOGW("failed to call InstanceDump");
         }
@@ -381,6 +383,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
                     MEDIA_LOGD("destroy player stub services(%{public}zu) pid(%{public}d).",
                         playerStubMap_.size(), pid);
                     (void)playerStubMap_.erase(it);
+                    MediaTrace::CounterTrace("The number of player", playerStubMap_.size());
                     return;
                 }
             }

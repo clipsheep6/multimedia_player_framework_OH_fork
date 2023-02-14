@@ -237,10 +237,10 @@ int32_t SrcBytebufferImpl::HandleBufferAvailable(GstBuffer *buffer)
 
     auto obs = obs_.lock();
     CHECK_AND_RETURN_RET_LOG(obs != nullptr, MSERR_UNKNOWN, "obs is nullptr");
-    MediaTrace::TraceBegin("Codec::OnInputBufferAvailable", FAKE_POINTER(this));
-    obs->OnInputBufferAvailable(index);
-    MediaTrace::TraceEnd("Codec::OnInputBufferAvailable", FAKE_POINTER(this));
-
+    {
+        MediaTrace trace("Codec::OnInputBufferAvailable");
+        obs->OnInputBufferAvailable(index);
+    }
     MEDIA_LOGD("OnInputBufferAvailable, index:%{public}u", index);
     bufferList_[index]->owner_ = BufferWrapper::SERVER;
     bufferList_[index]->gstBuffer_ = gst_buffer_ref(buffer);

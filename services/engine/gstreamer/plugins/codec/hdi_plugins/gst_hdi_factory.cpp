@@ -52,6 +52,7 @@ namespace {
         { RGBA, "RGBA" },
     };
     const char *GST_CODEC_NAME = "codec_name";
+    const char *SUPPORT_SWAP_WIDTH_HEIGHT = "support_swap_width_height";
     const int32_t HDI_RANK_DEFAULT = 2;
 }
 
@@ -72,6 +73,7 @@ public:
     static std::shared_ptr<IGstCodec> CreateHdiVdec(GstElementClass *kclass);
     static std::shared_ptr<IGstCodec> CreateHdiVenc(GstElementClass *kclass);
     static gboolean InputNeedCopy();
+    static gboolean SupportSwapWidthHeight(GstElementClass *kclass);
     static gboolean PluginInit(GstPlugin *plugin);
 private:
     static void SetCreateFuncs(GstElementClass *elementClass, const CapabilityData &capData);
@@ -167,6 +169,12 @@ gboolean GstHdiFactory::InputNeedCopy()
     return TRUE;
 }
 
+gboolean GstHdiFactory::SupportSwapWidthHeight(GstElementClass *kclass)
+{
+    std::string supportSwapWidthHeight = gst_element_class_get_metadata(kclass, SUPPORT_SWAP_WIDTH_HEIGHT);
+    return supportSwapWidthHeight == "TRUE";
+}
+
 void GstHdiFactory::SetCreateFuncs(GstElementClass *elementClass, const CapabilityData &capData)
 {
     std::pair<int32_t, std::string> factoryPair = {capData.codecType, capData.mimeType};
@@ -178,6 +186,7 @@ void GstHdiFactory::SetCreateFuncs(GstElementClass *elementClass, const Capabili
             GstVdecBaseClass *vdecClass = reinterpret_cast<GstVdecBaseClass*>(elementClass);
             vdecClass->create_codec = FUNCTIONS_MAP.at(factoryPair);
             vdecClass->input_need_copy = InputNeedCopy;
+            vdecClass->support_swap_width_height = SupportSwapWidthHeight;
             break;
         }
         case AVCODEC_TYPE_VIDEO_ENCODER: {
@@ -307,6 +316,8 @@ void GstHdiFactory::GstHdiCodecClassInit(gpointer kclass, gpointer data)
     gst_element_class_add_pad_template(elementClass, srctempl);
     gst_element_class_add_pad_template(elementClass, sinktempl);
     gst_element_class_add_metadata(elementClass, GST_CODEC_NAME, capDataWarp->componentName.c_str());
+    const gchar* supportSwapWidthHeight = capData.supportSwapWidthHeight ? "TRUE" : "FALSE";
+    gst_element_class_add_metadata(elementClass, SUPPORT_SWAP_WIDTH_HEIGHT, supportSwapWidthHeight);
     SetCreateFuncs(elementClass, capData);
     CANCEL_SCOPE_EXIT_GUARD(1);
 }

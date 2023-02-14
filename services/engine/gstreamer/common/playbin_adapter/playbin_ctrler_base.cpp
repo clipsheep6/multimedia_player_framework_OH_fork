@@ -36,7 +36,6 @@ namespace {
     constexpr int32_t BUFFER_LOW_PERCENT_DEFAULT = 1;
     constexpr int32_t BUFFER_HIGH_PERCENT_DEFAULT = 4;
     constexpr int32_t BUFFER_PERCENT_THRESHOLD = 100;
-    constexpr uint32_t HTTP_TIME_OUT_DEFAULT = 15; // 15s
     constexpr int32_t NANO_SEC_PER_USEC = 1000;
     constexpr double DEFAULT_RATE = 1.0;
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
@@ -286,7 +285,6 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
         appsrcWrap_->Stop();
     }
 
-    g_object_set(playbin_, "exit-block", 1, nullptr);
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     (void)currState->Stop();
 
@@ -507,7 +505,6 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         g_object_set(playbin_, "buffering-flags", true, "buffer-size", PLAYBIN_QUEUE_MAX_SIZE,
             "buffer-duration", BUFFER_DURATION, "low-percent", BUFFER_LOW_PERCENT_DEFAULT,
             "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, nullptr);
-        g_object_set(playbin_, "timeout", HTTP_TIME_OUT_DEFAULT, nullptr);
 
         PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
@@ -531,7 +528,7 @@ int32_t PlayBinCtrlerBase::EnterInitializedState()
         ExitInitializedState();
         PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR,
             PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
-            MSERR_CREATE_PLAYER_ENGINE_FAILED, "failed to EnterInitializedState" };
+            MSERR_CREATE_PLAYER_ENGINE_FAILED, std::string("failed to EnterInitializedState") };
         ReportMessage(msg);
         MEDIA_LOGE("enter initialized state failed");
     };
@@ -544,6 +541,7 @@ int32_t PlayBinCtrlerBase::EnterInitializedState()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "DoInitializeForDataSource failed!");
 
     SetupCustomElement();
+    SetupSourceSetupSignal();
     ret = SetupSignalMessage();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
     ret = SetupElementUnSetupSignal();
@@ -710,6 +708,17 @@ void PlayBinCtrlerBase::SetupCustomElement()
     }
 }
 
+void PlayBinCtrlerBase::SetupSourceSetupSignal()
+{
+    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+
+    gulong id = g_signal_connect_data(playbin_, "source-setup",
+        G_CALLBACK(&PlayBinCtrlerBase::SourceSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
+        static_cast<GConnectFlags>(0));
+    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
+}
+
 int32_t PlayBinCtrlerBase::SetupSignalMessage()
 {
     MEDIA_LOGD("SetupSignalMessage enter");
@@ -815,14 +824,6 @@ int32_t PlayBinCtrlerBase::DoInitializeForDataSource()
         CHECK_AND_RETURN_RET_LOG(appsrcWrap_->SetErrorCallback(msgNotifier) == MSERR_OK,
             MSERR_INVALID_OPERATION, "set appsrc error callback failed");
 
-        PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
-        CHECK_AND_RETURN_RET_LOG(wrapper != nullptr, MSERR_NO_MEMORY, "can not create this wrapper");
-
-        gulong id = g_signal_connect_data(playbin_, "source-setup",
-            G_CALLBACK(&PlayBinCtrlerBase::SourceSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
-            static_cast<GConnectFlags>(0));
-        (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
-
         g_object_set(playbin_, "uri", "appsrc://", nullptr);
     }
     return MSERR_OK;
@@ -852,13 +853,14 @@ void PlayBinCtrlerBase::HandleCacheCtrlCb(const InnerMessage &msg)
 void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
 {
     if (percent < static_cast<float>(BUFFER_LOW_PERCENT_DEFAULT) / BUFFER_HIGH_PERCENT_DEFAULT *
-        BUFFER_PERCENT_THRESHOLD && !isSeeking_ && !isRating_ && !isUserSetPause_) {
+        BUFFER_PERCENT_THRESHOLD) {
         isBuffering_ = true;
         {
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_BUFFERING, nullptr);
         }
-        if (GetCurrState() == playingState_) {
+
+        if (GetCurrState() == playingState_ && !isSeeking_ && !isRating_ && !isUserSetPause_) {
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to paused", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
@@ -1079,7 +1081,7 @@ void PlayBinCtrlerBase::OnAppsrcErrorMessageReceived(int32_t errorCode)
     (void)errorCode;
     PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR,
         PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
-        MSERR_DATA_SOURCE_IO_ERROR, "PlayBinCtrlerBase::OnAppsrcErrorMessageReceived" };
+        MSERR_DATA_SOURCE_IO_ERROR, std::string("PlayBinCtrlerBase::OnAppsrcErrorMessageReceived") };
     ReportMessage(msg);
 }
 

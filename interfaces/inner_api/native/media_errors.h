@@ -37,7 +37,6 @@ enum MediaServiceErrCode : ErrCode {
     MSERR_CREATE_PLAYER_ENGINE_FAILED,                // create player engine failed.
     MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,      // create avmetadatahelper engine failed.
     MSERR_CREATE_AVCODEC_ENGINE_FAILED,               // create avcodec engine failed.
-    MSERR_CREATE_AVMUXER_ENGINE_FAILED,               // create avmuxer engine failed.
     MSERR_INVALID_STATE,                              // the state is not support this operation.
     MSERR_UNSUPPORT,                                  // unsupport interface.
     MSERR_UNSUPPORT_AUD_SRC_TYPE,                     // unsupport audio source type.
@@ -94,7 +93,8 @@ enum MediaServiceExtErrCode : ErrCode {
 // media api9 error code
 enum MediaServiceExtErrCodeAPI9 : ErrCode {
     MSERR_EXT_API9_OK = 0,                          // use for determine error
-    MSERR_EXT_API9_NO_PERMISSION = 201,             // permission denied.
+    MSERR_EXT_API9_NO_PERMISSION = 201,             // permission denied (AccessToken).
+    MSERR_EXT_API9_PERMISSION_DENIED = 202,         // permission denied (system API).
     MSERR_EXT_API9_INVALID_PARAMETER = 401,         // invalid parameter.
     MSERR_EXT_API9_UNSUPPORT_CAPABILITY = 801,      // unsupport api.
     MSERR_EXT_API9_NO_MEMORY = 5400101,             // no memory.
@@ -115,6 +115,8 @@ __attribute__((visibility("default"))) std::string MSExtErrorAPI9ToString(MediaS
 __attribute__((visibility("default"))) std::string MSErrorToExtErrorAPI9String(MediaServiceErrCode code,
     const std::string& param1, const std::string& param2);
 __attribute__((visibility("default"))) MediaServiceExtErrCodeAPI9 MSErrorToExtErrorAPI9(MediaServiceErrCode code);
+
+__attribute__((visibility("default"))) std::string MSExtAVErrorToString(MediaServiceExtErrCodeAPI9 code);
 } // namespace Media
 } // namespace OHOS
 #endif // MEDIA_ERRORS_H

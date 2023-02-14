@@ -205,6 +205,17 @@ void PlayerEngineGstImpl::HandleSeekDoneMessage(const PlayBinMessage &msg)
     }
 }
 
+void PlayerEngineGstImpl::HandleSpeedDoneMessage(const PlayBinMessage &msg)
+{
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        Format format;
+        double rate = std::any_cast<double>(msg.extra);
+        PlaybackRateMode speedMode = ChangeSpeedToMode(rate);
+        notifyObs->OnInfo(INFO_TYPE_SPEEDDONE, speedMode, format);
+    }
+}
+
 void PlayerEngineGstImpl::HandleBufferingStart()
 {
     percent_ = 0;
@@ -449,7 +460,7 @@ void PlayerEngineGstImpl::OnNotifyMessage(const PlayBinMessage &msg)
     const std::unordered_map<int32_t, MsgNotifyFunc> MSG_NOTIFY_FUNC_TABLE = {
         { PLAYBIN_MSG_ERROR, std::bind(&PlayerEngineGstImpl::HandleErrorMessage, this, std::placeholders::_1) },
         { PLAYBIN_MSG_SEEKDONE, std::bind(&PlayerEngineGstImpl::HandleSeekDoneMessage, this, std::placeholders::_1) },
-        { PLAYBIN_MSG_SPEEDDONE, std::bind(&PlayerEngineGstImpl::HandleInfoMessage, this, std::placeholders::_1) },
+        { PLAYBIN_MSG_SPEEDDONE, std::bind(&PlayerEngineGstImpl::HandleSpeedDoneMessage, this, std::placeholders::_1) },
         { PLAYBIN_MSG_BITRATEDONE, std::bind(&PlayerEngineGstImpl::HandleInfoMessage, this, std::placeholders::_1)},
         { PLAYBIN_MSG_EOS, std::bind(&PlayerEngineGstImpl::HandleInfoMessage, this, std::placeholders::_1) },
         { PLAYBIN_MSG_STATE_CHANGE, std::bind(&PlayerEngineGstImpl::HandleInfoMessage, this, std::placeholders::_1) },
@@ -783,6 +794,8 @@ int32_t PlayerEngineGstImpl::SetAudioRendererInfo(const int32_t contentType,
     contentType_ = contentType;
     streamUsage_ = streamUsage;
     rendererFlag_ = rendererFlag;
+    MEDIA_LOGI("content = %{public}d, usage = %{public}d, rendererFlags = %{public}d",
+        contentType, streamUsage, rendererFlag);
     if (playBinCtrler_ != nullptr) {
         MEDIA_LOGD("SetAudioRendererInfo in");
         uint32_t rendererInfo(0);
@@ -924,6 +937,7 @@ void PlayerEngineGstImpl::ResetPlaybinToSoftDec()
     isPlaySinkFlagsSet_ = false;
 
     if (playBinCtrler_ != nullptr) {
+        playBinCtrler_->Stop(false);
         playBinCtrler_->SetElemSetupListener(nullptr);
         playBinCtrler_->SetElemUnSetupListener(nullptr);
         playBinCtrler_->SetAutoPlugSortListener(nullptr);
