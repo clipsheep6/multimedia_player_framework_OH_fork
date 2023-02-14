@@ -50,6 +50,8 @@ int32_t PlayerServerMem::Init()
     memPausedState_ = std::make_shared<MemPausedState>(*this);
     memStoppedState_ = std::make_shared<MemStoppedState>(*this);
     memPlaybackCompletedState_ = std::make_shared<MemPlaybackCompletedState>(*this);
+
+    recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memIdleState_);
     return PlayerServer::Init();
 }
 
@@ -66,7 +68,7 @@ PlayerServerMem::~PlayerServerMem()
 int32_t PlayerServerMem::SetSourceInternal()
 {
     int32_t ret;
-    MEDIA_LOGI("PlayerServerMem SetSourceInternal");
+    MEDIA_LOGI("sourceType:%{public}d", recoverConfig_.sourceType);
     switch (recoverConfig_.sourceType) {
         case static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_URL):
             ret = PlayerServer::SetSource(recoverConfig_.url);
@@ -106,7 +108,8 @@ void PlayerServerMem::GetPlayerServerConfig()
 int32_t PlayerServerMem::SetConfigInternal()
 {
     int32_t ret = MSERR_OK;
-    MEDIA_LOGI("PlayerServerMem SetConfigInternal");
+    MEDIA_LOGI("leftVolume:%{public}f rightVolume:%{public}f loop:%{public}d bitRate:%{public}d",
+        recoverConfig_.leftVolume, recoverConfig_.rightVolume, recoverConfig_.loop, recoverConfig_.bitRate);
     if (recoverConfig_.leftVolume != 1.0f || recoverConfig_.rightVolume != 1.0f) {
         ret = PlayerServer::SetVolume(recoverConfig_.leftVolume, recoverConfig_.rightVolume);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SetVolume");
@@ -136,7 +139,7 @@ int32_t PlayerServerMem::SetConfigInternal()
 int32_t PlayerServerMem::SetBehaviorInternal()
 {
     int ret = MSERR_OK;
-    MEDIA_LOGI("PlayerServerMem SetBehaviorInternal");
+    MEDIA_LOGI("speedMode:%{public}d currentTime:%{public}d", recoverConfig_.speedMode, recoverConfig_.currentTime);
     if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
         ret = PlayerServer::SetPlaybackSpeed(recoverConfig_.speedMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SetPlaybackSpeed");
@@ -152,6 +155,7 @@ int32_t PlayerServerMem::SetBehaviorInternal()
 
 int32_t PlayerServerMem::SetPlaybackSpeedInternal()
 {
+    MEDIA_LOGI("speedMode:%{public}d", recoverConfig_.speedMode);
     if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
         auto ret = PlayerServer::SetPlaybackSpeed(recoverConfig_.speedMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PreparedState failed to SetPlaybackSpeed");
@@ -162,10 +166,9 @@ int32_t PlayerServerMem::SetPlaybackSpeedInternal()
 int32_t PlayerServerMem::SetSource(const std::string &url)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("SetSource enter url:%{public}s", url.c_str());
     
     auto ret = PlayerServer::SetSource(url);
     if (ret == MSERR_OK) {
@@ -178,10 +181,9 @@ int32_t PlayerServerMem::SetSource(const std::string &url)
 int32_t PlayerServerMem::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("SetSource enter datasrc");
 
     auto ret = PlayerServer::SetSource(dataSrc);
     if (ret == MSERR_OK) {
@@ -194,10 +196,9 @@ int32_t PlayerServerMem::SetSource(const std::shared_ptr<IMediaDataSource> &data
 int32_t PlayerServerMem::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("SetSource enter fd:%{public}d, offset:%{public}ld, size:%{public}ld", fd, offset, size);
 
     auto ret = PlayerServer::SetSource(fd, offset, size);
     if (ret == MSERR_OK) {
@@ -212,50 +213,45 @@ int32_t PlayerServerMem::SetSource(int32_t fd, int64_t offset, int64_t size)
 int32_t PlayerServerMem::Play()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("Play enter");
     return PlayerServer::Play();
 }
 
 int32_t PlayerServerMem::Prepare()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("Prepare enter");
     return PlayerServer::Prepare();
 }
 
 int32_t PlayerServerMem::PrepareAsync()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("PrepareAsync enter");
     return PlayerServer::PrepareAsync();
 }
 
 int32_t PlayerServerMem::Pause()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("Pause enter");
     return PlayerServer::Pause();
 }
 
 int32_t PlayerServerMem::Stop()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("Stop enter");
     return PlayerServer::Stop();
 }
 
@@ -271,7 +267,6 @@ int32_t PlayerServerMem::Reset()
         }
         return MSERR_OK;
     }
-    MEDIA_LOGI("Reset enter");
     return PlayerServer::Reset();
 }
 
@@ -282,17 +277,15 @@ int32_t PlayerServerMem::Release()
         MEDIA_LOGI("User call Release");
         isReleaseMemByManage_ = false;
     }
-    MEDIA_LOGI("Release enter");
     return PlayerServer::Release();
 }
 
 int32_t PlayerServerMem::SetVolume(float leftVolume, float rightVolume)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("SetVolume enter leftVolume:%{public}f rightVolume:%{public}f", leftVolume, rightVolume);
     auto ret = PlayerServer::SetVolume(leftVolume, rightVolume);
     if (ret == MSERR_OK) {
         recoverConfig_.leftVolume = leftVolume;
@@ -304,10 +297,9 @@ int32_t PlayerServerMem::SetVolume(float leftVolume, float rightVolume)
 int32_t PlayerServerMem::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("Seek enter mSeconds:%{public}d mode:%{public}d", mSeconds, mode);
     return PlayerServer::Seek(mSeconds, mode);
 }
 
@@ -319,7 +311,6 @@ int32_t PlayerServerMem::GetCurrentTime(int32_t &currentTime)
         currentTime = recoverConfig_.currentTime;
         return MSERR_OK;
     }
-    MEDIA_LOGI("GetCurrentTime enter");
     return PlayerServer::GetCurrentTime(currentTime);
 }
 
@@ -331,8 +322,6 @@ int32_t PlayerServerMem::GetVideoTrackInfo(std::vector<Format> &videoTrack)
         videoTrack = recoverConfig_.videoTrack;
         return MSERR_OK;
     }
-
-    MEDIA_LOGI("GetVideoTrackInfo enter");
     return PlayerServer::GetVideoTrackInfo(videoTrack);
 }
 
@@ -344,8 +333,6 @@ int32_t PlayerServerMem::GetAudioTrackInfo(std::vector<Format> &audioTrack)
         audioTrack = recoverConfig_.audioTrack;
         return MSERR_OK;
     }
-
-    MEDIA_LOGI("GetAudioTrackInfo enter");
     return PlayerServer::GetAudioTrackInfo(audioTrack);
 }
 
@@ -356,8 +343,6 @@ int32_t PlayerServerMem::GetVideoWidth()
         MEDIA_LOGI("User call GetVideoWidth:%{public}d", recoverConfig_.videoWidth);
         return recoverConfig_.videoWidth;
     }
-
-    MEDIA_LOGI("GetVideoWidth enter");
     return PlayerServer::GetVideoWidth();
 }
 
@@ -368,7 +353,6 @@ int32_t PlayerServerMem::GetVideoHeight()
         MEDIA_LOGI("User call GetVideoHeight:%{public}d", recoverConfig_.videoHeight);
         return recoverConfig_.videoHeight;
     }
-    MEDIA_LOGI("GetVideoHeight enter");
     return PlayerServer::GetVideoHeight();
 }
 
@@ -380,17 +364,15 @@ int32_t PlayerServerMem::GetDuration(int32_t &duration)
         duration = recoverConfig_.duration;
         return MSERR_OK;
     }
-    MEDIA_LOGI("GetDuration enter");
     return PlayerServer::GetDuration(duration);
 }
 
 int32_t PlayerServerMem::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("SetPlaybackSpeed enter mode:%{public}d", mode);
     auto ret = PlayerServer::SetPlaybackSpeed(mode);
     if (ret == MSERR_OK) {
         recoverConfig_.speedMode = mode;
@@ -406,7 +388,6 @@ int32_t PlayerServerMem::GetPlaybackSpeed(PlaybackRateMode &mode)
         mode = recoverConfig_.speedMode;
         return MSERR_OK;
     }
-    MEDIA_LOGI("GetPlaybackSpeed enter");
     return PlayerServer::GetPlaybackSpeed(mode);
 }
 
@@ -415,10 +396,9 @@ int32_t PlayerServerMem::SetVideoSurface(sptr<Surface> surface)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     isAudioPlayer_ = false;
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("SetVidoSurface enter");
     auto ret = PlayerServer::SetVideoSurface(surface);
     if (ret == MSERR_OK) {
         recoverConfig_.surface = surface;
@@ -434,7 +414,6 @@ bool PlayerServerMem::IsPlaying()
         MEDIA_LOGI("User call IsPlaying:%{public}d", recoverConfig_.isPlaying);
         return recoverConfig_.isPlaying;
     }
-    MEDIA_LOGI("IsPlaying enter");
     return PlayerServer::IsPlaying();
 }
 
@@ -445,17 +424,15 @@ bool PlayerServerMem::IsLooping()
         MEDIA_LOGI("User call IsLooping:%{public}d", recoverConfig_.loop);
         return recoverConfig_.loop;
     }
-    MEDIA_LOGI("IsLooping enter");
     return PlayerServer::IsLooping();
 }
 
 int32_t PlayerServerMem::SetLooping(bool loop)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("SetLooping enter loop:%{public}d", loop);
     auto ret = PlayerServer::SetLooping(loop);
     if (ret == MSERR_OK) {
         recoverConfig_.loop = loop;
@@ -501,11 +478,9 @@ int32_t PlayerServerMem::SetSaveParameter()
 int32_t PlayerServerMem::SetParameter(const Format &param)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-
-    MEDIA_LOGI("SetParameter enter");
     auto ret = PlayerServer::SetParameter(param);
     if (ret == MSERR_OK) {
         SaveParameter(param);
@@ -516,10 +491,9 @@ int32_t PlayerServerMem::SetParameter(const Format &param)
 int32_t PlayerServerMem::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("SetPlayerCallback enter");
     auto ret = PlayerServer::SetPlayerCallback(callback);
     if (ret == MSERR_OK) {
         recoverConfig_.callback = callback;
@@ -530,10 +504,9 @@ int32_t PlayerServerMem::SetPlayerCallback(const std::shared_ptr<PlayerCallback>
 int32_t PlayerServerMem::SelectBitRate(uint32_t bitRate)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (CheckReleaseStateAndRecover() != MSERR_OK) {
+    if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
-    MEDIA_LOGI("SelectBitRate enter bitRate:%{public}u", bitRate);
     auto ret = PlayerServer::SelectBitRate(bitRate);
     if (ret == MSERR_OK) {
         recoverConfig_.bitRate = bitRate;
@@ -562,7 +535,6 @@ int32_t PlayerServerMem::GetInformationBeforeMemReset()
     ret = PlayerServer::GetDuration(recoverConfig_.duration);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to GetDuration");
     recoverConfig_.isPlaying = PlayerServer::IsPlaying();
-    
     GetPlayerServerConfig();
 
     return MSERR_OK;
@@ -593,81 +565,54 @@ void PlayerServerMem::ConvertCurrState()
 
 int32_t PlayerServerMem::ReleaseMemByManage()
 {
-    MEDIA_LOGI("Enter ReleaseMemByManage");
     if (isReleaseMemByManage_ || isRecoverMemByUser_) {
-        MEDIA_LOGE("ReleaseMemByManage %{public}d, RecoverMemByUser %{public}d",
-            isReleaseMemByManage_, isRecoverMemByUser_);
         return MSERR_OK;
     }
-
     ConvertCurrState();
-    auto ret = StateRelease();
+    MEDIA_LOGI("Enter, currState:%{public}s", recoverConfig_.currState->GetStateName().c_str());
+    auto ret = recoverConfig_.currState->MemStateRelease();
     if (ret == MSERR_INVALID_STATE) {
         MEDIA_LOGI("CurrState is Idle or Playing");
         return MSERR_OK;
     }
     
     playerCb_ = nullptr;
+    ClearConfigInfo();
     ret = PlayerServer::Reset();
     if (ret != MSERR_OK) {
-        MEDIA_LOGE("ReleaseMemByManage fail");
+        MEDIA_LOGE("PlayerServer::Reset fail");
         return ret;
     }
 
     isReleaseMemByManage_ = true;
-    MEDIA_LOGI("ReleaseMemByManage success");
+    MEDIA_LOGI("exit");
     return ret;
-}
-
-int32_t PlayerServerMem::CheckReleaseStateAndRecover()
-{
-    if (!isReleaseMemByManage_) {
-        return MSERR_OK;
-    }
-
-    if (RecoverMemByUser() != MSERR_OK) {
-        MEDIA_LOGE("RecoverMemByUser fail");
-        return MSERR_INVALID_OPERATION;
-    }
-    return MSERR_OK;
-}
-
-int32_t PlayerServerMem::StateRecover()
-{
-    return recoverConfig_.currState->MemStateRecover();
-}
-
-int32_t PlayerServerMem::StateRelease()
-{
-    return recoverConfig_.currState->MemStateRelease();
 }
 
 int32_t PlayerServerMem::RecoverMemByUser()
 {
-    MEDIA_LOGI("Enter RecoverMemByUser");
     if (!isReleaseMemByManage_ || isRecoverMemByUser_) {
-        MEDIA_LOGE("ReleaseMemByManage %{public}d, RecoverMemByUser %{public}d",
-            isReleaseMemByManage_, isRecoverMemByUser_);
         return MSERR_OK;
     }
+    MEDIA_LOGI("Enter, currState:%{public}s", recoverConfig_.currState->GetStateName().c_str());
 
     isReleaseMemByManage_ = false;
     isRecoverMemByUser_ = true;
-    auto ret = StateRecover();
+    auto ret = recoverConfig_.currState->MemStateRecover();
     if (ret != MSERR_OK) {
-        MEDIA_LOGE("RecoverMemByUser StateRecover fail");
+        MEDIA_LOGE("StateRecover fail");
         isReleaseMemByManage_ = true;
         isRecoverMemByUser_ = false;
         return ret;
     }
     
-    MEDIA_LOGI("RecoverMemByUser success");
+    MEDIA_LOGI("exit");
     return ret;
 }
 
 int32_t PlayerServerMem::RecoverPlayerCb()
 {
-    MEDIA_LOGI("PlayerServerMem RecoverPlayerCb");
+    MEDIA_LOGI("enter");
     if (recoverConfig_.callback != nullptr) {
         playerCb_ = recoverConfig_.callback;
     }
@@ -708,35 +653,34 @@ void PlayerServerMem::RecoverToCompleted(PlayerOnInfoType type, int32_t extra)
     }
 }
 
-void PlayerServerMem::StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra)
-{
-    recoverConfig_.currState->MemPlayerCbRecover(type, extra);
-}
-
 void PlayerServerMem::CheckHasRecover(PlayerOnInfoType type, int32_t extra)
 {
-    MEDIA_LOGI("CheckHasRecover enter, type:%{public}d, extra:%{public}d, isRecoverMemByUser:%{public}d",
-        type, extra, isRecoverMemByUser_);
     if (!isRecoverMemByUser_) {
         return;
     }
-
-    StateRecoverPlayerCb(type, extra);
+    MEDIA_LOGI("enter, type:%{public}d, extra:%{public}d", type, extra);
+    recoverConfig_.currState->MemPlayerCbRecover(type, extra);
 }
 
 void PlayerServerMem::ResetForMemManage()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_ || isAudioPlayer_ || IsPlaying()) {
+    if (isAudioPlayer_ || IsPlaying()) {
         return;
     }
 
     auto ret = ReleaseMemByManage();
     if (ret != MSERR_OK) {
-        MEDIA_LOGE("ResetForMemManage ReleaseMemByManage fail");
-        return;
+        MEDIA_LOGE("ReleaseMemByManage fail");
     }
-    MEDIA_LOGI("ResetForMemManage ReleaseMemByManage success");
+}
+
+void PlayerServerMem::RecoverByMemManage()
+{
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
+    if (RecoverMemByUser() != MSERR_OK) {
+        MEDIA_LOGE("RecoverMemByUser fail");
+    }
 }
 }
 }

@@ -33,7 +33,7 @@ PlayerMemManage& PlayerMemManage::GetInstance()
     static PlayerMemManage instance;
     bool ret = instance.Init();
     if (!ret) {
-        MEDIA_LOGE("PlayerMemManage GetInstance Init Failed");
+        MEDIA_LOGE("GetInstance Init Failed");
     }
     return instance;
 }
@@ -54,15 +54,14 @@ PlayerMemManage::~PlayerMemManage()
 
 void PlayerMemManage::FindProbeTaskPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
-    for (auto iter = appPlayerInfo.memRecallPairVec.begin(); iter != appPlayerInfo.memRecallPairVec.end(); iter++) {
+    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
         std::chrono::duration<double> durationCost = std::chrono::duration_cast<
             std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterBackTime);
         if (durationCost.count() <= APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
             continue;
         }
 
-        ((*iter).first)();
-        MEDIA_LOGI("call MemManageRecall success");
+        ((*iter).resetRecall)();
     }
 }
 
@@ -145,7 +144,7 @@ bool PlayerMemManage::Init()
     return true;
 }
 
-int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, MemManageRecallPair memRecallPair)
+int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const MemManageRecall &memRecallStruct)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
 
@@ -161,7 +160,7 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, MemManag
     auto pidIter = pidPlayersInfo.find(pid);
     if (pidIter == pidPlayersInfo.end()) {
         MEDIA_LOGI("new app in pid:%{public}d", pid);
-        auto ret = pidPlayersInfo.emplace(pid, AppPlayerInfo {std::vector<MemManageRecallPair>(),
+        auto ret = pidPlayersInfo.emplace(pid, AppPlayerInfo {std::vector<MemManageRecall>(),
             static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND), false,
             std::chrono::steady_clock::now(), std::chrono::steady_clock::now()});
         Memory::MemMgrClient::GetInstance().RegisterActiveApps(pid, uid);
@@ -169,19 +168,19 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, MemManag
     }
 
     auto &appPlayerInfo = pidIter->second;
-    appPlayerInfo.memRecallPairVec.push_back(memRecallPair);
+    appPlayerInfo.memRecallStructVec.push_back(memRecallStruct);
 
     return MSERR_OK;
 }
 
 void PlayerMemManage::FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &appPlayerInfo,
-    MemManageRecallPair memRecallPair)
+    const MemManageRecall &memRecallStruct)
 {
-    for (auto iter = appPlayerInfo.memRecallPairVec.begin(); iter != appPlayerInfo.memRecallPairVec.end();) {
-        if ((*iter).second == memRecallPair.second) {
-            iter = appPlayerInfo.memRecallPairVec.erase(iter);
+    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end();) {
+        if ((*iter).signAddr == memRecallStruct.signAddr) {
+            iter = appPlayerInfo.memRecallStructVec.erase(iter);
             MEDIA_LOGI("Remove PlayerServerTask from vector size:%{public}u",
-                static_cast<uint32_t>(appPlayerInfo.memRecallPairVec.size()));
+                static_cast<uint32_t>(appPlayerInfo.memRecallStructVec.size()));
             isFind = true;
             break;
         } else {
@@ -190,7 +189,7 @@ void PlayerMemManage::FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &a
     }
 }
 
-int32_t PlayerMemManage::DeregisterPlayerServer(MemManageRecallPair memRecallPair)
+int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecallStruct)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
 
@@ -198,8 +197,8 @@ int32_t PlayerMemManage::DeregisterPlayerServer(MemManageRecallPair memRecallPai
     bool isFind = false;
     for (auto &[uid, pidPlayersInfo] : playerManage_) {
         for (auto &[pid, appPlayerInfo] : pidPlayersInfo) {
-            FindDeregisterPlayerFromVec(isFind, appPlayerInfo, memRecallPair);
-            if (appPlayerInfo.memRecallPairVec.size() == 0) {
+            FindDeregisterPlayerFromVec(isFind, appPlayerInfo, memRecallStruct);
+            if (appPlayerInfo.memRecallStructVec.size() == 0) {
                 Memory::MemMgrClient::GetInstance().DeregisterActiveApps(pid, uid);
                 pidPlayersInfo.erase(pid);
                 MEDIA_LOGI("DeregisterActiveApps pid:%{public}d uid:%{public}d pidPlayersInfo size:%{public}u",
@@ -241,11 +240,12 @@ int32_t PlayerMemManage::HandleForceReclaim(int32_t uid, int32_t pid)
                 MEDIA_LOGE("HandleForceReclaim appState not allow");
                 return MSERR_INVALID_OPERATION;
             }
-            for (auto iter = appPlayerInfo.memRecallPairVec.begin();
-                iter != appPlayerInfo.memRecallPairVec.end(); iter++) {
-                ((*iter).first)();
-                MEDIA_LOGI("call MemManageRecall success");
+            for (auto iter = appPlayerInfo.memRecallStructVec.begin();
+                iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+                ((*iter).resetRecall)();
+                MEDIA_LOGI("call ResetForMemManageRecall success");
             }
+            return MSERR_OK;
         }
     }
     return MSERR_OK;
@@ -259,10 +259,10 @@ void PlayerMemManage::HandleOnTrimLevelLow()
                 continue;
             }
 
-            for (auto iter = appPlayerInfo.memRecallPairVec.begin();
-                iter != appPlayerInfo.memRecallPairVec.end(); iter++) {
-                ((*iter).first)();
-                MEDIA_LOGI("call MemManageRecall success");
+            for (auto iter = appPlayerInfo.memRecallStructVec.begin();
+                iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+                ((*iter).resetRecall)();
+                MEDIA_LOGI("call ResetForMemManageRecall success");
             }
         }
     }
@@ -291,12 +291,22 @@ int32_t PlayerMemManage::HandleOnTrim(Memory::SystemMemoryLevel level)
     return MSERR_OK;
 }
 
+void PlayerMemManage::AwakeFrontGroundAppMedia(AppPlayerInfo &appPlayerInfo)
+{
+    for (auto iter = appPlayerInfo.memRecallStructVec.begin();
+        iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+        ((*iter).recoverRecall)();
+    }
+    MEDIA_LOGI("call RecoverByMemManageRecall success");
+}
+
 void PlayerMemManage::SetAppPlayerInfo(AppPlayerInfo &appPlayerInfo, int32_t state)
 {
     if (appPlayerInfo.appState != state) {
         appPlayerInfo.appState = state;
         if (state == static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
             appPlayerInfo.appEnterFrontTime = std::chrono::steady_clock::now();
+            AwakeFrontGroundAppMedia(appPlayerInfo);
         } else if (state == static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND)) {
             appPlayerInfo.appEnterBackTime = std::chrono::steady_clock::now();
         }
@@ -316,6 +326,7 @@ int32_t PlayerMemManage::RecordAppState(int32_t uid, int32_t pid, int32_t state)
                 continue;
             }
             SetAppPlayerInfo(appPlayerInfo, state);
+            return MSERR_OK;
         }
     }
 
@@ -324,7 +335,7 @@ int32_t PlayerMemManage::RecordAppState(int32_t uid, int32_t pid, int32_t state)
 
 void PlayerMemManage::RemoteDieAgainRegisterActiveApps()
 {
-    MEDIA_LOGI("Enter RemoteDieAgainRegisterActiveApps");
+    MEDIA_LOGI("Enter");
     for (auto &[findUid, pidPlayersInfo] : playerManage_) {
         for (auto &[findPid, appPlayerInfo] : pidPlayersInfo) {
             MEDIA_LOGI("Again RegisterActiveApps uid:%{public}d, pid:%{public}d", findUid, findPid);
@@ -336,7 +347,7 @@ void PlayerMemManage::RemoteDieAgainRegisterActiveApps()
 void PlayerMemManage::HandleOnConnected()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    MEDIA_LOGI("Enter HandleOnConnected RemoteDied:%{public}d", appStateListenerRomoteDied_);
+    MEDIA_LOGI("Enter RemoteDied:%{public}d", appStateListenerRomoteDied_);
     appStateListenerIsConnected_ = true;
     if (appStateListenerRomoteDied_) {
         RemoteDieAgainRegisterActiveApps();
@@ -347,7 +358,7 @@ void PlayerMemManage::HandleOnConnected()
 void PlayerMemManage::HandleOnDisconnected()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    MEDIA_LOGI("Enter HandleOnDisconnected");
+    MEDIA_LOGI("Enter");
     appStateListenerIsConnected_ = false;
 }
 
@@ -355,7 +366,7 @@ void PlayerMemManage::HandleOnRemoteDied(const wptr<IRemoteObject> &object)
 {
     (void)object;
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    MEDIA_LOGI("Enter HandleOnRemoteDied");
+    MEDIA_LOGI("Enter");
     appStateListenerRomoteDied_ = true;
     appStateListenerIsConnected_ = false;
 

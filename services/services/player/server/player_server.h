@@ -25,6 +25,7 @@
 
 namespace OHOS {
 namespace Media {
+constexpr float INVALID_VALUE = 2.0f;
 class PlayerServerState {
 public:
     explicit PlayerServerState(const std::string &name) : name_(name) {}
@@ -135,6 +136,7 @@ protected:
     std::string lastErrMsg_;
     std::unique_ptr<UriHelper> uriHelper_ = nullptr;
     virtual int32_t Init();
+    virtual void ClearConfigInfo();
 
 private:
     bool IsValidSeekMode(PlayerSeekMode mode);
@@ -165,8 +167,8 @@ private:
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
     struct ConfigInfo {
         std::atomic<bool> looping = false;
-        float leftVolume = 2.0f; // 2.0f: invalid initial value, audiotrack volume range [0, 1]
-        float rightVolume = 2.0f; // 2.0f: invalid initial value, audiotrack volume range [0, 1]
+        float leftVolume = INVALID_VALUE;
+        float rightVolume = INVALID_VALUE;
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
         std::string url;
     } config_;

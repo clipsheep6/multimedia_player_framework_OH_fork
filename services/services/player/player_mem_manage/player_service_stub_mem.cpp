@@ -60,7 +60,7 @@ PlayerServiceStubMem::~PlayerServiceStubMem()
 {
     if (playerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
-            PlayerMemManage::GetInstance().DeregisterPlayerServer(memManageRecallPair_);
+            PlayerMemManage::GetInstance().DeregisterPlayerServer(memRecallStruct_);
             int32_t id = PlayerXCollie::GetInstance().SetTimer("PlayerServiceStubMem::~PlayerServiceStubMem");
             (void)playerServer_->Release();
             PlayerXCollie::GetInstance().CancelTimer(id);
@@ -77,8 +77,9 @@ int32_t PlayerServiceStubMem::Init()
         playerServer_ = PlayerServerMem::Create();
         int32_t appUid = IPCSkeleton::GetCallingUid();
         int32_t appPid = IPCSkeleton::GetCallingPid();
-        memManageRecallPair_ = make_pair(std::bind(&PlayerServiceStubMem::MemRecall, this), &playerServer_);
-        PlayerMemManage::GetInstance().RegisterPlayerServer(appUid, appPid, memManageRecallPair_);
+        memRecallStruct_ = {std::bind(&PlayerServiceStubMem::ResetForMemManageRecall, this),
+            std::bind(&PlayerServiceStubMem::RecoverByMemManageRecall, this), &playerServer_};
+        PlayerMemManage::GetInstance().RegisterPlayerServer(appUid, appPid, memRecallStruct_);
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
 
@@ -91,7 +92,7 @@ int32_t PlayerServiceStubMem::DestroyStub()
     MediaTrace trace("binder::DestroyStub");
     playerCallback_ = nullptr;
     if (playerServer_ != nullptr) {
-        PlayerMemManage::GetInstance().DeregisterPlayerServer(memManageRecallPair_);
+        PlayerMemManage::GetInstance().DeregisterPlayerServer(memRecallStruct_);
         (void)playerServer_->Release();
         playerServer_ = nullptr;
     }
@@ -104,16 +105,27 @@ int32_t PlayerServiceStubMem::Release()
 {
     MediaTrace trace("binder::Release");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    PlayerMemManage::GetInstance().DeregisterPlayerServer(memManageRecallPair_);
+    PlayerMemManage::GetInstance().DeregisterPlayerServer(memRecallStruct_);
     return playerServer_->Release();
 }
 
-void PlayerServiceStubMem::MemRecall()
+void PlayerServiceStubMem::ResetForMemManageRecall()
 {
-    MEDIA_LOGI("Enter MemRecall");
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
-        int32_t id = PlayerXCollie::GetInstance().SetTimer("MemRecall");
+        int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetForMemManage");
         std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetForMemManage();
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        return;
+    });
+    (void)taskQue_.EnqueueTask(task);
+    (void)task->GetResult();
+}
+
+void PlayerServiceStubMem::RecoverByMemManageRecall()
+{
+    auto task = std::make_shared<TaskHandler<void>>([&, this] {
+        int32_t id = PlayerXCollie::GetInstance().SetTimer("RecoverByMemManage");
+        std::static_pointer_cast<PlayerServerMem>(playerServer_)->RecoverByMemManage();
         PlayerXCollie::GetInstance().CancelTimer(id);
         return;
     });

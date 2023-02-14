@@ -27,12 +27,13 @@ public:
     virtual ~PlayerServiceStubMem();
     int32_t DestroyStub() override;
     int32_t Release() override;
-    void MemRecall();
+    void ResetForMemManageRecall();
+    void RecoverByMemManageRecall();
 
 private:
     PlayerServiceStubMem();
     int32_t Init() override;
-    MemManageRecallPair memManageRecallPair_;
+    MemManageRecall memRecallStruct_;
 };
 } // namespace Media
 } // namespace OHOS

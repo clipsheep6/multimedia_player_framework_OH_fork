@@ -24,15 +24,20 @@
 
 namespace OHOS {
 namespace Media {
-using MemManageRecall = std::function<void()>;
-using MemManageRecallPair = std::pair<MemManageRecall, void *>;
+using ResetForMemManageRecall = std::function<void()>;
+using RecoverByMemManageRecall = std::function<void()>;
+struct MemManageRecall {
+    ResetForMemManageRecall resetRecall;
+    RecoverByMemManageRecall recoverRecall;
+    void *signAddr;
+};
 class PlayerMemManage {
 public:
     virtual ~PlayerMemManage();
 
     static PlayerMemManage& GetInstance();
-    int32_t RegisterPlayerServer(int32_t uid, int32_t pid, MemManageRecallPair memRecallPair);
-    int32_t DeregisterPlayerServer(MemManageRecallPair memRecallPair);
+    int32_t RegisterPlayerServer(int32_t uid, int32_t pid, const MemManageRecall &memRecallStruct);
+    int32_t DeregisterPlayerServer(const MemManageRecall &memRecallStruct);
     int32_t HandleForceReclaim(int32_t uid, int32_t pid);
     int32_t HandleOnTrim(Memory::SystemMemoryLevel level);
     int32_t RecordAppState(int32_t uid, int32_t pid, int32_t state);
@@ -42,7 +47,7 @@ public:
 
 private:
     struct AppPlayerInfo {
-        std::vector<MemManageRecallPair> memRecallPairVec;
+        std::vector<MemManageRecall> memRecallStructVec;
         int32_t appState;
         bool isReserve;
         std::chrono::steady_clock::time_point appEnterFrontTime;
@@ -54,7 +59,8 @@ private:
     void HandleOnTrimLevelLow();
     void FindProbeTaskPlayerFromVec(AppPlayerInfo &appPlayerInfo);
     void FindProbeTaskPlayer();
-    void FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &appPlayerInfo, MemManageRecallPair memRecallPair);
+    void FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &appPlayerInfo, const MemManageRecall &memRecallStruct);
+    void AwakeFrontGroundAppMedia(AppPlayerInfo &appPlayerInfo);
     void SetAppPlayerInfo(AppPlayerInfo &appPlayerInfo, int32_t state);
     void SetLastestExitBackGroundApp();
     static bool BackGroundTimeGreaterSort(AppPlayerInfo *a, AppPlayerInfo *b);

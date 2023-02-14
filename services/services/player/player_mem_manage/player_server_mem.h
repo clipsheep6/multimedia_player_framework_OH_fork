@@ -67,6 +67,7 @@ public:
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
     void ResetForMemManage();
+    void RecoverByMemManage();
 
 private:
     class MemBaseState;
@@ -118,8 +119,8 @@ private:
     struct PlayerServerConfig {
         bool errorCbOnce = false;
         bool disableStoppedCb = false;
-        std::string lastErrMsg;
-        std::unique_ptr<UriHelper> uriHelper;
+        std::string lastErrMsg = "";
+        std::unique_ptr<UriHelper> uriHelper = nullptr;
     } playerServerConfig_;
     std::recursive_mutex recMutex_;
     std::recursive_mutex recMutexCb_;
@@ -131,9 +132,6 @@ private:
     void ConvertCurrState();
     void SaveParameter(const Format &param);
     int32_t SetSaveParameter();
-    int32_t StateRecover();
-    int32_t StateRelease();
-    void StateRecoverPlayerCb(PlayerOnInfoType type, int32_t extra);
     int32_t SetSourceInternal();
     void SetPlayerServerConfig();
     void GetPlayerServerConfig();
@@ -144,7 +142,6 @@ private:
     void RecoverToInitialized(PlayerOnInfoType type, int32_t extra);
     void RecoverToPrepared(PlayerOnInfoType type, int32_t extra);
     void RecoverToCompleted(PlayerOnInfoType type, int32_t extra);
-    int32_t CheckReleaseStateAndRecover();
     int32_t RecoverPlayerCb();
     void CheckHasRecover(PlayerOnInfoType type, int32_t extra);
     int32_t ReleaseMemByManage();

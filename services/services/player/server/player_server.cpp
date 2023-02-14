@@ -706,6 +706,17 @@ int32_t PlayerServer::GetDuration(int32_t &duration)
     return MSERR_OK;
 }
 
+void PlayerServer::ClearConfigInfo()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    config_.looping = false;
+    config_.leftVolume = INVALID_VALUE; 
+    config_.rightVolume = INVALID_VALUE;
+    config_.speedMode = SPEED_FORWARD_1_00_X;
+    config_.url = "";
+}
+
 int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -890,6 +901,9 @@ int32_t PlayerServer::SetParameter(const Format &param)
     if (playerEngine_ != nullptr) {
         int32_t ret = playerEngine_->SetParameter(param);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetParameter Failed!");
+    } else {
+        MEDIA_LOGE("playerEngine_ is nullptr");
+        return MSERR_NO_MEMORY;
     }
 
     return MSERR_OK;
@@ -985,7 +999,6 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     } else {
         int32_t ret = HandleMessage(type, extra, infoBody);
         if (playerCb_ != nullptr && ret == MSERR_OK) {
-            MEDIA_LOGI("OnInfo user type:%{public}d, extra:%{public}d", type, extra);
             playerCb_->OnInfo(type, extra, infoBody);
         }
     }

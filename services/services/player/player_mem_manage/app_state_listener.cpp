@@ -35,38 +35,38 @@ AppStateListener::~AppStateListener()
 
 void AppStateListener::OnConnected()
 {
-    MEDIA_LOGI("enter OnConnected");
+    MEDIA_LOGI("enter");
     PlayerMemManage::GetInstance().HandleOnConnected();
 }
 
 void AppStateListener::OnDisconnected()
 {
-    MEDIA_LOGI("enter OnDisconnected");
+    MEDIA_LOGI("enter");
     PlayerMemManage::GetInstance().HandleOnDisconnected();
 }
 
 void AppStateListener::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
     (void)object;
-    MEDIA_LOGI("enter OnRemoteDied");
+    MEDIA_LOGI("enter");
     PlayerMemManage::GetInstance().HandleOnRemoteDied(object);
 }
 
 void AppStateListener::ForceReclaim(int32_t pid, int32_t uid)
 {
-    MEDIA_LOGI("enter ForceReclaim");
+    MEDIA_LOGI("enter");
     PlayerMemManage::GetInstance().HandleForceReclaim(uid, pid);
 }
 
 void AppStateListener::OnTrim(Memory::SystemMemoryLevel level)
 {
-    MEDIA_LOGI("enter OnTrim level:%{public}d", level);
+    MEDIA_LOGI("enter level:%{public}d", level);
     PlayerMemManage::GetInstance().HandleOnTrim(level);
 }
 
 void AppStateListener::OnAppStateChanged(int32_t pid, int32_t uid, int32_t state)
 {
-    MEDIA_LOGI("enter OnAppStateChanged pid:%{public}d, uid:%{public}d, state:%{public}d", pid, uid, state);
+    MEDIA_LOGI("enter pid:%{public}d, uid:%{public}d, state:%{public}d", pid, uid, state);
     PlayerMemManage::GetInstance().RecordAppState(uid, pid, state);
 }
 }
