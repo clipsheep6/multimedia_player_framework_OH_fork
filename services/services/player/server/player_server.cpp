@@ -239,16 +239,17 @@ int32_t PlayerServer::OnPrepare(bool sync)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     int32_t ret = MSERR_OK;
 
-#ifdef SUPPORT_VIDEO
-    if (surface_ != nullptr) {
-        ret = playerEngine_->SetVideoSurface(surface_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetVideoSurface Failed!");
-    }
-#endif
     lastOpStatus_ = PLAYER_PREPARED;
 
     auto preparedTask = std::make_shared<TaskHandler<int32_t>>([this]() {
         MediaTrace::TraceBegin("PlayerServer::PrepareAsync", FAKE_POINTER(this));
+#ifdef SUPPORT_VIDEO
+        if (surface_ != nullptr) {
+            int32_t res = playerEngine_->SetVideoSurface(surface_);
+            CHECK_AND_RETURN_RET_LOG(res == MSERR_OK,
+                static_cast<int32_t>(MSERR_INVALID_OPERATION), "Engine SetVideoSurface Failed!");
+        }
+#endif
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         return currState->Prepare();
     });

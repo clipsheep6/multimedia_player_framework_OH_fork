@@ -16,7 +16,7 @@
 #include "gst_video_display_sink.h"
 
 namespace {
-    constexpr guint64 DEFAULT_MAX_WAIT_CLOCK_TIME = 1000000000; // ns, 1s
+    constexpr guint64 DEFAULT_MAX_WAIT_CLOCK_TIME = 200000000; // ns, 200ms
     constexpr gint64 DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD = 20000000; // ns, 20ms
     constexpr gint64 DEFAULT_EXTRA_RENDER_FRAME_DIFF = 20000000; // ns, 20ms
 }
@@ -32,6 +32,7 @@ struct _GstVideoDisplaySinkPrivate {
     gboolean enable_kpi_avsync_log;
     GMutex mutex;
     guint64 render_time_diff_threshold;
+    guint64 last_video_render_pts;
 };
 
 #define gst_video_display_sink_parent_class parent_class
@@ -47,6 +48,7 @@ static void gst_video_display_sink_set_property(GObject *object, guint prop_id, 
 static GstFlowReturn gst_video_display_sink_do_app_render(GstSurfaceMemSink *surface_sink,
     GstBuffer *buffer, bool is_preroll);
 static GstClockTime gst_video_display_sink_update_reach_time(GstBaseSink *base_sink, GstClockTime reach_time);
+static gboolean gst_video_display_sink_event(GstBaseSink *base_sink, GstEvent *event);
 
 static void gst_video_display_sink_class_init(GstVideoDisplaySinkClass *klass)
 {
@@ -74,6 +76,7 @@ static void gst_video_display_sink_class_init(GstVideoDisplaySinkClass *klass)
 
     surface_sink_class->do_app_render = gst_video_display_sink_do_app_render;
     base_sink_class->update_reach_time = gst_video_display_sink_update_reach_time;
+    base_sink_class->event = gst_video_display_sink_event;
     GST_DEBUG_CATEGORY_INIT(gst_video_display_sink_debug_category, "videodisplaysink", 0, "videodisplaysink class");
 }
 
@@ -88,6 +91,7 @@ static void gst_video_display_sink_init(GstVideoDisplaySink *sink)
     priv->audio_sink = nullptr;
     priv->enable_kpi_avsync_log = FALSE;
     g_mutex_init(&priv->mutex);
+    priv->last_video_render_pts = 0;
     priv->render_time_diff_threshold = DEFAULT_MAX_WAIT_CLOCK_TIME;
 }
 
@@ -157,6 +161,28 @@ static void gst_video_display_sink_set_property(GObject *object, guint prop_id, 
     }
 }
 
+static gboolean gst_video_display_sink_event(GstBaseSink *base_sink, GstEvent *event)
+{
+    g_return_val_if_fail(event != nullptr, FALSE);
+    GstVideoDisplaySink *video_display_sink = GST_VIDEO_DISPLAY_SINK_CAST(base_sink);
+    g_return_val_if_fail(video_display_sink != nullptr, FALSE);
+    GstVideoDisplaySinkPrivate *priv = video_display_sink->priv;
+
+    switch (event->type) {
+        case GST_EVENT_FLUSH_STOP: {
+            if (priv != nullptr) {
+                g_mutex_lock(&priv->mutex);
+                priv->last_video_render_pts = 0;
+                g_mutex_unlock(&priv->mutex);
+            }
+            break;
+        }
+        default:
+            break;
+    }
+    return GST_BASE_SINK_CLASS(parent_class)->event(base_sink, event);
+}
+
 static void kpi_log_avsync_diff(GstVideoDisplaySink *video_display_sink, guint64 last_render_pts)
 {
     GstVideoDisplaySinkPrivate *priv = video_display_sink->priv;
@@ -187,6 +213,7 @@ static void gst_video_display_sink_get_render_time_diff_thd(GstVideoDisplaySink 
 
     guint64 render_time_diff_thd = duration + DEFAULT_EXTRA_RENDER_FRAME_DIFF;
     if (render_time_diff_thd > DEFAULT_MAX_WAIT_CLOCK_TIME) {
+        // Low framerate does not enter smoothing logic to prevent video render too fast.
         priv->render_time_diff_threshold = G_MAXUINT64;
         GST_DEBUG_OBJECT(video_display_sink, "render_time_diff_thd is greater than DEFAULT_MAX_WAIT_CLOCK_TIME");
     } else if (render_time_diff_thd != priv->render_time_diff_threshold) {
@@ -204,7 +231,21 @@ static GstFlowReturn gst_video_display_sink_do_app_render(GstSurfaceMemSink *sur
     GstVideoDisplaySink *video_display_sink = GST_VIDEO_DISPLAY_SINK_CAST(surface_sink);
 
     kpi_log_avsync_diff(video_display_sink, GST_BUFFER_PTS(buffer));
-    gst_video_display_sink_get_render_time_diff_thd(video_display_sink, GST_BUFFER_DURATION(buffer));
+
+    /* The value of GST_BUFFER_DURATION(buffer) is average duration, which has no reference
+        value in the variable frame rate stream, because the actual duration of each frame varies greatly.
+        It is difficult to obtain the duration of the current frame, so using the duration of the previous
+        frame does not affect perception */
+    GstClockTime last_duration = GST_BUFFER_PTS(buffer) - video_display_sink->priv->last_video_render_pts;
+    if (GST_BUFFER_PTS(buffer) <= video_display_sink->priv->last_video_render_pts ||
+        video_display_sink->priv->last_video_render_pts == 0) {
+        last_duration = GST_BUFFER_DURATION(buffer);
+    }
+
+    GST_DEBUG_OBJECT(video_display_sink, "avg duration %" G_GUINT64_FORMAT ", last_duration %" G_GUINT64_FORMAT
+        ", pts %" G_GUINT64_FORMAT, GST_BUFFER_DURATION(buffer), last_duration, GST_BUFFER_PTS(buffer));
+    video_display_sink->priv->last_video_render_pts = GST_BUFFER_PTS(buffer);
+    gst_video_display_sink_get_render_time_diff_thd(video_display_sink, last_duration);
     return GST_FLOW_OK;
 }
 
