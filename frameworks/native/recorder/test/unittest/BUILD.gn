@@ -31,14 +31,14 @@ ohos_unittest("recorder_unit_test") {
     "-Wall",
     "-Werror",
   ]
-  
+
   if (multimedia_player_framework_support_recorder) {
     sources = [
       "src/recorder_mock.cpp",
       "src/recorder_unit_test.cpp",
     ]
   }
-  
+
   deps = [
     "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface",

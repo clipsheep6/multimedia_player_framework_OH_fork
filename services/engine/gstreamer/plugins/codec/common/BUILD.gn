@@ -17,6 +17,8 @@ config("gst_codec_plugins_common_config") {
   visibility = [ ":*" ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-fno-exceptions",
     "-Wall",
     "-fno-common",
