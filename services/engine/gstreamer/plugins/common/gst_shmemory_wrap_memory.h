@@ -20,7 +20,8 @@
 #include <gst/gst.h>
 #include "avsharedmemory.h"
 
-typedef struct _GstShMemoryWrapMemory GstShMemoryWrapMemory;
+struct _GstShMemoryWrapMemory;
+using GstShMemoryWrapMemory = _GstShMemoryWrapMemory;
 using FreeMemory = std::function<void(int32_t, int32_t)>;
 
 struct _GstShMemoryWrapMemory {
@@ -31,9 +32,9 @@ struct _GstShMemoryWrapMemory {
     FreeMemory free_memory;
 };
 
-static const char GST_SHMEMORY_WRAP_MEMORY_TYPE[] = "ShmemWrapMemory";
+const char GST_SHMEMORY_WRAP_MEMORY_TYPE[] = "ShmemWrapMemory";
 
-static inline gboolean gst_is_shmemory_wrap_memory(GstMemory *mem)
+inline gboolean gst_is_shmemory_wrap_memory(GstMemory *mem)
 {
     return gst_memory_is_type(mem, GST_SHMEMORY_WRAP_MEMORY_TYPE);
 }

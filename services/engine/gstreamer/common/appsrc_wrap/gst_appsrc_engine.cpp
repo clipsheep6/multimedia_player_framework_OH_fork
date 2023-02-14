@@ -336,8 +336,7 @@ int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
         gst_buffer_append_memory(buffer, mem);
         GST_BUFFER_OFFSET(buffer) = appSrcMem_->pushOffset;
         appSrcMem_->pushOffset += pushSize;
-        ret = gst_app_src_push_buffer(GST_APP_SRC_CAST(appSrc_), buffer);
-        if (ret != GST_FLOW_OK) {
+        if (gst_app_src_push_buffer(GST_APP_SRC_CAST(appSrc_), buffer) != GST_FLOW_OK) {
             gst_buffer_unref(buffer);
             MEDIA_LOGE("Push buffer failed!");
             return MSERR_INVALID_OPERATION;
@@ -349,9 +348,6 @@ int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
         if (appSrcMem_->availableBegin == appSrcMem_->begin) {
             noAvailableBuffer_ = true;
         }
-    } else {
-        MEDIA_LOGE("appSrcMem_->availableBegin + pushSize > bufferSize_");
-        return MSERR_INVALID_OPERATION;
     }
     if (needDataSize_ == pushSize) {
         needData_ = false;
