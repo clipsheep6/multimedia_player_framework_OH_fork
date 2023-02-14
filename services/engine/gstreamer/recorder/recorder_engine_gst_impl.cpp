@@ -251,7 +251,8 @@ int32_t RecorderEngineGstImpl::Stop(bool isDrainAll)
 
 int32_t RecorderEngineGstImpl::Reset()
 {
-    return Stop(false);
+    (void)Stop(false);
+    return MSERR_OK;
 }
 
 int32_t RecorderEngineGstImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam)
