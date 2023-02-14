@@ -52,7 +52,6 @@ config("media_engine_gst_avmeta_config") {
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/appsrc_wrap",
     "//foundation/graphic/standard/interfaces/innerkits/surface",
     "//foundation/graphic/standard/interfaces/innerkits/common",
-    "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink",
     "//foundation/multimedia/image_framework/interfaces/innerkits/include",

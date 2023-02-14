@@ -53,7 +53,6 @@ ohos_fuzztest("PlayerSeekFuzzTest") {
   ]
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
     "multimedia_player_framework:media_client",
   ]
 }

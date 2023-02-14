@@ -88,7 +88,6 @@ ohos_static_library("gst_codec_plugins_common") {
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
-    "ipc:ipc_core",
   ]
 
   subsystem_name = "multimedia"
