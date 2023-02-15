@@ -23,10 +23,6 @@ group("media_engine_gst_plugins") {
     "source/audiocapture:gst_audio_capture_src",
     "source/memsource:gst_mem_src",
   ]
-
-  if (multimedia_player_framework_support_muxer) {
-    deps += [ "bin/muxerbin:gst_avmuxer_bin" ]
-  }
 }
 
 group("media_engine_gst_plugins_common") {

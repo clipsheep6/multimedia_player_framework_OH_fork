@@ -89,8 +89,8 @@ struct _GstVdecBase {
     gboolean is_codec_outbuffer;
     GstVdecBasePort input;
     GstVdecBasePort output;
-    gint frame_rate;
-    gint seek_frame_rate;
+    gfloat frame_rate;
+    gfloat seek_frame_rate;
     gint width;
     gint height;
     gint memtype;

@@ -35,12 +35,11 @@ public:
         MEDIA_AVMETADATAHELPER = 3,
         MEDIA_CODECLIST = 4,
         MEDIA_AVCODEC = 5,
-        MEDIA_AVMUXER = 6,
-        RECORDER_PROFILES = 7,
+        RECORDER_PROFILES = 6,
     };
 
     /**
-     * Create Player/Recorder/AVCodec/Codeclist/AVMuxer/Split/AVmetadata Service Ability
+     * Create Player/Recorder/AVCodec/Codeclist/Split/AVmetadata Service Ability
      *
      * @return Returns remote object sptr, nullptr on failure.
      */

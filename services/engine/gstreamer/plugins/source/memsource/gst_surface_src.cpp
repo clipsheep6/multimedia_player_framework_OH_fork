@@ -61,7 +61,7 @@ static void gst_surface_src_get_property(GObject *object, guint prop_id, GValue 
 static void gst_surface_src_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_surface_src_create_surface(GstSurfaceSrc *surfacesrc);
-static GstBufferPool *gst_surface_src_create_pool();
+static GstBufferPool *gst_surface_src_create_pool(GstMemSrc *memsrc);
 static gboolean gst_surface_src_init_pool(GstSurfaceSrc *surfacesrc);
 static void gst_surface_src_destroy_surface(GstSurfaceSrc *src);
 static void gst_surface_src_destroy_pool(GstSurfaceSrc *src);
@@ -285,8 +285,9 @@ static gboolean gst_surface_src_send_event(GstElement *element, GstEvent *event)
     return GST_ELEMENT_CLASS(parent_class)->send_event(element, event);
 }
 
-static GstBufferPool *gst_surface_src_create_pool()
+static GstBufferPool *gst_surface_src_create_pool(GstMemSrc *memsrc)
 {
+    (void)memsrc;
     return gst_consumer_surface_pool_new();
 }
 
@@ -299,7 +300,8 @@ static gboolean gst_surface_src_init_pool(GstSurfaceSrc *surfacesrc)
     gst_allocation_params_init(&params);
 
     if (memsrcclass->create_pool) {
-        pool = memsrcclass->create_pool();
+        GstMemSrc *memsrc = GST_MEM_SRC(surfacesrc);
+        pool = memsrcclass->create_pool(memsrc);
     }
 
     g_return_val_if_fail(pool != nullptr, FALSE);

@@ -61,7 +61,6 @@ bool PlayerServiceStubFuzzer::FuzzServiceStub(uint8_t *data, size_t size)
             IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER,
             IStandardMediaService::MediaSystemAbility::MEDIA_CODECLIST,
             IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC,
-            IStandardMediaService::MediaSystemAbility::MEDIA_AVMUXER,
             IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES,
         };
     int32_t systemId = *reinterpret_cast<int32_t *>(data) % (subSystemIdList);

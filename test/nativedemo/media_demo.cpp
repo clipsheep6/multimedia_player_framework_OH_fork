@@ -22,7 +22,6 @@
 #include "avcodec_venc_demo.h"
 #include "avcodec_vdec_demo.h"
 #include "recorder_profiles_demo.h"
-#include "avmuxer_demo.h"
 #include "baselib_demo.h"
 
 using namespace OHOS;
@@ -102,20 +101,6 @@ static int RunMediaProfile(const string &path)
     return 0;
 }
 
-static int RunAVMuxer()
-{
-#ifdef SUPPORT_MUXER
-    auto avmuxer = std::make_unique<AVMuxerDemo>();
-    if (avmuxer == nullptr) {
-        cout << "avmuxer is null" << endl;
-        return 0;
-    }
-    avmuxer->RunCase();
-#endif
-    cout << "demo avmuxer end" << endl;
-    return 0;
-}
-
 static int RunBaseLib()
 {
     auto baselib = std::make_unique<BaseLibDemo>();
@@ -141,9 +126,8 @@ int main(int argc, char *argv[])
     cout << "2:avmetadatahelper" << endl;
     cout << "3:codeclist" << endl;
     cout << "4:video-encoder" << endl;
-    cout << "5:avmuxer" << endl;
-    cout << "6:recorder_profiles" << endl;
-    cout << "7:baselib" << endl;
+    cout << "5:recorder_profiles" << endl;
+    cout << "6:baselib" << endl;
 
     string mode;
     (void)getline(cin, mode);
@@ -158,10 +142,8 @@ int main(int argc, char *argv[])
     } else if (mode == "4") {
         (void)RunVideoEncoder(false);
     } else if (mode == "5") {
-        (void)RunAVMuxer();
-    } else if (mode == "6") {
         (void)RunMediaProfile(path);
-    } else if (mode == "7") {
+    } else if (mode == "6") {
         (void)RunBaseLib();
     } else {
         cout << "no that selection" << endl;

@@ -27,7 +27,6 @@ config("media_client_local_config") {
     "$MEDIA_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_ROOT_DIR/services/services/avcodeclist/server",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/server",
-    "$MEDIA_ROOT_DIR/services/services/avmuxer/server",
   ]
 }
 
@@ -49,8 +48,6 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/avcodeclist/ipc",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/client",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
-    "$MEDIA_ROOT_DIR/services/services/avmuxer/client",
-    "$MEDIA_ROOT_DIR/services/services/avmuxer/ipc",
   ]
 }
 
@@ -130,12 +127,6 @@ ohos_shared_library("media_client") {
         "$MEDIA_ROOT_DIR/services/services/avcodeclist/server/avcodeclist_server.cpp",
       ]
     }
-    if (multimedia_player_framework_support_muxer) {
-      sources += [
-        "$MEDIA_ROOT_DIR/frameworks/native/avmuxer/avmuxer_impl.cpp",
-        "$MEDIA_ROOT_DIR/services/services/avmuxer/server/avmuxer_server.cpp",
-      ]
-    }
     if (multimedia_player_framework_support_metadata) {
       sources += [
         "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
@@ -164,7 +155,7 @@ ohos_shared_library("media_client") {
     external_deps = [
       "c_utils:utils",
       "hiviewdfx_hilog_native:libhilog",
-      "ipc:ipc_core",
+      "ipc:ipc_single",
     ]
   } else {
     sources = [
@@ -213,13 +204,6 @@ ohos_shared_library("media_client") {
         "$MEDIA_ROOT_DIR/services/services/sa_media/ipc/avcodeclist_parcel.cpp",
       ]
     }
-    if (multimedia_player_framework_support_muxer) {
-      sources += [
-        "$MEDIA_ROOT_DIR/frameworks/native/avmuxer/avmuxer_impl.cpp",
-        "$MEDIA_ROOT_DIR/services/services/avmuxer/client/avmuxer_client.cpp",
-        "$MEDIA_ROOT_DIR/services/services/avmuxer/ipc/avmuxer_service_proxy.cpp",
-      ]
-    }
     if (multimedia_player_framework_support_metadata) {
       sources += [
         "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
@@ -249,7 +233,7 @@ ohos_shared_library("media_client") {
     external_deps = [
       "c_utils:utils",
       "hiviewdfx_hilog_native:libhilog",
-      "ipc:ipc_core",
+      "ipc:ipc_single",
       "samgr:samgr_proxy",
     ]
   }

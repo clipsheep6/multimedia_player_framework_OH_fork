@@ -24,6 +24,7 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinState"};
     constexpr int32_t USEC_PER_MSEC = 1000;
     constexpr uint32_t DEFAULT_POSITION_UPDATE_INTERVAL_MS = 100; // 100 ms
+    constexpr uint32_t RECONNECTION_TIME_OUT_DEFAULT = 15000000; // 15s
 }
 
 namespace OHOS {
@@ -194,7 +195,7 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
                     static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
                 ctrler_.ReportMessage(posUpdateMsg);
 
-                PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, ctrler_.rate_, {} };
+                PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, 0, ctrler_.rate_ };
                 ctrler_.ReportMessage(playBinMsg);
             } else {
                 MEDIA_LOGD("Async done, not seeking or rating!");
@@ -348,6 +349,10 @@ void PlayBinCtrlerBase::PreparedState::StateEnter()
         0, static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
     ctrler_.ReportMessage(posUpdateMsg);
 
+    if (ctrler_.isNetWorkPlay_) {
+        g_object_set(ctrler_.playbin_, "reconnection-timeout", RECONNECTION_TIME_OUT_DEFAULT, nullptr);
+    }
+
     msg = { PLAYBIN_MSG_STATE_CHANGE, 0, PLAYBIN_STATE_PREPARED, {} };
     ctrler_.ReportMessage(msg);
 }
@@ -472,7 +477,7 @@ void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg
                     static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
                 ctrler_.ReportMessage(posUpdateMsg);
 
-                PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, ctrler_.rate_, {} };
+                PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, 0, ctrler_.rate_ };
                 ctrler_.ReportMessage(playBinMsg);
             } else {
                 MEDIA_LOGD("playing, not seeking or rating!");
@@ -624,7 +629,7 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Seek(int64_t timeUs, int32_t 
 int32_t PlayBinCtrlerBase::PlaybackCompletedState::SetRate(double rate)
 {
     ctrler_.rate_ = rate;
-    PlayBinMessage msg = { PLAYBIN_MSG_SPEEDDONE, 0, rate, {} };
+    PlayBinMessage msg = { PLAYBIN_MSG_SPEEDDONE, 0, 0, rate };
     ctrler_.ReportMessage(msg);
     return MSERR_OK;
 }
