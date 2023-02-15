@@ -206,7 +206,8 @@ int32_t RecorderPipelineBuilder::CheckConfigure(int32_t sourceId, const Recorder
     if (param.type == RecorderPublicParamType::VID_ENC_FMT) {
         const VidEnc &tempParam = static_cast<const VidEnc &>(param);
 
-        if (currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
+        if ((currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_BUTT) ||
+            ((currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES))){
             needVideoParse_ = false;
             return MSERR_OK;
         }
@@ -342,6 +343,8 @@ void RecorderPipelineBuilder::Reset()
     otherSrcCount_ = 0;
 
     outputFormatConfiged_ = false;
+    currentVideoSourceType_ = VideoSourceType::VIDEO_SOURCE_BUTT;
+    needVideoParse_ = false;
 }
 } // namespace Media
 } // namespace OHOS
