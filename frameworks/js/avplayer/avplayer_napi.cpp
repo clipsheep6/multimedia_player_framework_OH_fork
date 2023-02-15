@@ -137,7 +137,6 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
     (void)finalize;
     if (nativeObject != nullptr) {
         AVPlayerNapi *jsPlayer = reinterpret_cast<AVPlayerNapi *>(nativeObject);
-        jsPlayer->ClearCallbackReference();
         auto task = jsPlayer->ReleaseTask();
         if (task != nullptr) {
             MEDIA_LOGI("Destructor Wait Release Task Start");
@@ -533,6 +532,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         std::unique_lock<std::mutex> lock(mutex_);
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
         preparingCond_.notify_all(); // stop prepare
+        stateChangeCond_.notify_all(); // stop play/pause/stop
     }
     return task;
 }
@@ -600,10 +600,10 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
 
         std::unique_lock<std::mutex> lock(mutex_);
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
+        isReleased_.store(true);
         preparingCond_.notify_all(); // stop wait prepare
         resettingCond_.notify_all(); // stop wait reset
         stateChangeCond_.notify_all(); // stop wait play/pause/stop
-        isReleased_.store(true);
     }
     return task;
 }
@@ -1570,15 +1570,6 @@ void AVPlayerNapi::SaveCallbackReference(const std::string &callbackName, std::s
     if (playerCb_ != nullptr) {
         playerCb_->SaveCallbackReference(callbackName, ref);
     }
-}
-
-void AVPlayerNapi::ClearCallbackReference()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (playerCb_ != nullptr) {
-        playerCb_->ClearCallbackReference();
-    }
-    refMap_.clear();
 }
 
 void AVPlayerNapi::ClearCallbackReference(const std::string &callbackName)
