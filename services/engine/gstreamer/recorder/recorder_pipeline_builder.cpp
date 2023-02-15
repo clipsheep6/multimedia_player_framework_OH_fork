@@ -207,7 +207,7 @@ int32_t RecorderPipelineBuilder::CheckConfigure(int32_t sourceId, const Recorder
         const VidEnc &tempParam = static_cast<const VidEnc &>(param);
 
         if ((currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_BUTT) ||
-            ((currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES))){
+            ((currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES))) {
             needVideoParse_ = false;
             return MSERR_OK;
         }
