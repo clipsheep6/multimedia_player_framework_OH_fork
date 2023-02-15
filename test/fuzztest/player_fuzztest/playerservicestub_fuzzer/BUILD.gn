@@ -101,7 +101,7 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "multimedia_player_framework:media_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
