@@ -140,6 +140,7 @@ int32_t RecorderEngineGstImpl::SetOutputFormat(OutputFormatType format)
 
 int32_t RecorderEngineGstImpl::BuildPipeline()
 {
+    pipeline_ = nullptr;
     int32_t ret = builder_->Build(pipeline_);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 

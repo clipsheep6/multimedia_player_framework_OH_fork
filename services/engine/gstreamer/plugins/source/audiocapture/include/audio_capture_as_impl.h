@@ -57,7 +57,7 @@ public:
     std::shared_ptr<AudioBuffer> GetBuffer() override;
     int32_t WakeUpAudioThreads() override;
 
-    bool GetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+    bool CheckAndGetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
         AudioStandard::AudioCapturerParams &params);
 
 private:

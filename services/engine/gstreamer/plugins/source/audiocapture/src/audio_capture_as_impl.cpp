@@ -40,7 +40,7 @@ AudioCaptureAsImpl::~AudioCaptureAsImpl()
     }
 }
 
-bool AudioCaptureAsImpl::GetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+bool AudioCaptureAsImpl::CheckAndGetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
     AudioStandard::AudioCapturerParams &params)
 {
     (void)bitrate;
@@ -78,7 +78,7 @@ bool AudioCaptureAsImpl::GetCaptureParameter(uint32_t bitrate, uint32_t channels
 bool AudioCaptureAsImpl::IsSupportedCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate)
 {
     AudioStandard::AudioCapturerParams params;
-    CHECK_AND_RETURN_RET_LOG(GetCaptureParameter(bitrate, channels, sampleRate, params), false,
+    CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureParameter(bitrate, channels, sampleRate, params), false,
         "unsupport audio params");
 
     return true;
@@ -101,8 +101,8 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
     CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_NO_MEMORY, "create audio cache ctrl failed");
 
     AudioStandard::AudioCapturerParams params;
-    CHECK_AND_RETURN_RET_LOG(GetCaptureParameter(bitrate, channels, sampleRate, params), MSERR_UNSUPPORT_AUD_PARAMS,
-        "unsupport audio params");
+    CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureParameter(bitrate, channels, sampleRate, params),
+        MSERR_UNSUPPORT_AUD_PARAMS, "unsupport audio params");
 
     params.audioSampleFormat = AudioStandard::SAMPLE_S16LE;
     params.audioEncoding = AudioStandard::ENCODING_PCM;

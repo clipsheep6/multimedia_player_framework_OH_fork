@@ -1006,7 +1006,7 @@ int32_t AVRecorderNapi::GetPropertyInt32(napi_env env, napi_value configObj, con
 
     if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
         MEDIA_LOGI("get %{public}s property fail", type.c_str());
-        return MSERR_OK;
+        return MSERR_UNKNOWN;
     }
 
     if (napi_get_value_int32(env, item, &result) != napi_ok) {

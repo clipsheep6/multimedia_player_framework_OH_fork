@@ -268,7 +268,6 @@ int32_t RecorderPipelineBuilder::CheckPipeline()
 
 int32_t RecorderPipelineBuilder::Build(std::shared_ptr<RecorderPipeline> &pipeline)
 {
-    pipeline = nullptr;
     if (!outputFormatConfiged_) {
         MEDIA_LOGE("Output format not configured, build pipeline failed !");
         return MSERR_INVALID_OPERATION;
