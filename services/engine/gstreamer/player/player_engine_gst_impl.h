@@ -79,6 +79,7 @@ private:
     void HandleErrorMessage(const PlayBinMessage &msg);
     void HandleInfoMessage(const PlayBinMessage &msg);
     void HandleSeekDoneMessage(const PlayBinMessage &msg);
+    void HandleSpeedDoneMessage(const PlayBinMessage &msg);
     void HandleSubTypeMessage(const PlayBinMessage &msg);
     void HandleBufferingStart();
     void HandleBufferingEnd();

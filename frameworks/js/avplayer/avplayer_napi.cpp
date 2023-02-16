@@ -181,7 +181,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Prepare Task In");
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(taskMutex_);
 
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_INITIALIZED ||
@@ -198,10 +198,10 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                         state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
             });
-
-            CHECK_AND_RETURN_RET_LOG(GetCurrentState() == AVPlayerState::STATE_PREPARED,
-                TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The prepare operation was interrupted or an error occurred!"), "Prepare Task failed");
+            if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
+                return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "failed to prepare, avplayer enter error status, please check error callback messages!");
+            }
         } else if (state == AVPlayerState::STATE_PREPARED) {
             MEDIA_LOGI("current state is prepared, invalid operation");
         } else {
@@ -262,7 +262,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Play Task In");
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(taskMutex_);
 
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_PREPARED ||
@@ -276,14 +276,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
             stateChangeCond_.wait(lock, [this]() {
                 auto state = GetCurrentState();
                 return (state == AVPlayerState::STATE_PLAYING ||
+                        state == AVPlayerState::STATE_COMPLETED ||
                         state == AVPlayerState::STATE_ERROR ||
                         state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
             });
-
-            CHECK_AND_RETURN_RET_LOG(GetCurrentState() == AVPlayerState::STATE_PLAYING,
-                TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The play operation was interrupted or an error occurred!"), "Play Task failed");
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -344,7 +341,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Pause Task In");
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(taskMutex_);
 
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_PLAYING) {
@@ -356,14 +353,11 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
             stateChangeCond_.wait(lock, [this]() {
                 auto state = GetCurrentState();
                 return (state == AVPlayerState::STATE_PAUSED ||
+                        state == AVPlayerState::STATE_COMPLETED ||
                         state == AVPlayerState::STATE_ERROR ||
                         state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
             });
-
-            CHECK_AND_RETURN_RET_LOG(GetCurrentState() == AVPlayerState::STATE_PAUSED,
-                TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The pause operation was interrupted or an error occurred!"), "Pause Task failed");
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -422,7 +416,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Stop Task In");
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(taskMutex_);
 
         if (IsControllable()) {
             int32_t ret = player_->Stop();
@@ -437,10 +431,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
                         state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
             });
-
-            CHECK_AND_RETURN_RET_LOG(GetCurrentState() == AVPlayerState::STATE_STOPPED,
-                TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The stop operation was interrupted or an error occurred!"), "Stop Task failed");
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
@@ -504,7 +494,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
         PauseListenCurrentResource(); // Pause event listening for the current resource
         ResetUserParameters();
         {
-            std::unique_lock<std::mutex> lock(mutex_);
+            std::unique_lock<std::mutex> lock(taskMutex_);
             if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                     "current state is not playing, unsupport pause operation");
@@ -527,9 +517,10 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
     });
 
     {
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(taskMutex_);
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
         preparingCond_.notify_all(); // stop prepare
+        stateChangeCond_.notify_all(); // stop play/pause/stop
     }
     return task;
 }
@@ -589,18 +580,17 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
 
             if (playerCb_ != nullptr) {
                 playerCb_->Release();
-                playerCb_ = nullptr;
             }
             MEDIA_LOGI("Release Task Out");
             return TaskRet(MSERR_EXT_API9_OK, "Success");
         });
 
-        std::unique_lock<std::mutex> lock(mutex_);
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        isReleased_.store(true);
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
         preparingCond_.notify_all(); // stop wait prepare
         resettingCond_.notify_all(); // stop wait reset
         stateChangeCond_.notify_all(); // stop wait play/pause/stop
-        isReleased_.store(true);
     }
     return task;
 }
@@ -968,7 +958,7 @@ napi_value AVPlayerNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info 
     (void)CommonNapi::AddNumberPropInt64(env, value, "length", jsPlayer->fileDescriptor_.length);
 
     MEDIA_LOGI("JsGetAVFileDescriptor Out");
-    return result;
+    return value;
 }
 
 #ifdef SUPPORT_VIDEO
@@ -1064,6 +1054,12 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport loop operation");
+        return result;
+    }
+
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetLoop is not napi_boolean");
@@ -1074,12 +1070,6 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
     if (status != napi_ok) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, please check the input loop");
-        return result;
-    }
-
-    if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport loop operation");
         return result;
     }
 
@@ -1120,6 +1110,12 @@ napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info in
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport video scale operation");
+        return result;
+    }
+
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetVideoScaleType is not napi_number");
@@ -1133,12 +1129,6 @@ napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info in
         return result;
     }
     jsPlayer->videoScaleType_ = videoScaleType;
-
-    if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport video scale operation");
-        return result;
-    }
 
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, videoScaleType]() {
         MEDIA_LOGI("SetVideoScaleType Task");
@@ -1179,6 +1169,12 @@ napi_value AVPlayerNapi::JsSetAudioInterruptMode(napi_env env, napi_callback_inf
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport audio interrupt operation");
+        return result;
+    }
+
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "SetAudioInterruptMode is not napi_number");
@@ -1195,12 +1191,6 @@ napi_value AVPlayerNapi::JsSetAudioInterruptMode(napi_env env, napi_callback_inf
         return result;
     }
     jsPlayer->interruptMode_ = static_cast<AudioStandard::InterruptMode>(interruptMode);
-
-    if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport audio interrupt operation");
-        return result;
-    }
 
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
         MEDIA_LOGI("SetAudioInterruptMode Task");
@@ -1332,8 +1322,13 @@ napi_value AVPlayerNapi::JsGetWidth(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
+    int32_t width = 0;
+    if (jsPlayer->IsControllable()) {
+        width = jsPlayer->width_;
+    }
+
     napi_value value = nullptr;
-    (void)napi_create_int32(env, jsPlayer->width_, &value);
+    (void)napi_create_int32(env, width, &value);
     MEDIA_LOGI("JsGetWidth Out");
     return value;
 }
@@ -1347,8 +1342,13 @@ napi_value AVPlayerNapi::JsGetHeight(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
+    int32_t height = 0;
+    if (jsPlayer->IsControllable()) {
+        height = jsPlayer->height_;
+    }
+
     napi_value value = nullptr;
-    (void)napi_create_int32(env, jsPlayer->height_, &value);
+    (void)napi_create_int32(env, height, &value);
     MEDIA_LOGI("JsGetHeight Out");
     return value;
 }
@@ -1408,6 +1408,11 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return result;
+    }
+
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
@@ -1440,6 +1445,11 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     size_t argCount = 2; // args[0]:type, args[1]:callback
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to off event");
+        return result;
+    }
 
     napi_valuetype valueType0 = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
@@ -1484,36 +1494,37 @@ void AVPlayerNapi::ClearCallbackReference(const std::string &callbackName)
 
 void AVPlayerNapi::NotifyDuration(int32_t duration)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     duration_ = duration;
 }
 
 void AVPlayerNapi::NotifyPosition(int32_t position)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     position_ = position;
 }
 
 void AVPlayerNapi::NotifyState(PlayerStates state)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(taskMutex_);
     if (state_ != state) {
         state_ = state;
+        MEDIA_LOGI("notify %{public}s OK", GetCurrentState().c_str());
         switch (state_) {
-            case PLAYER_STATE_ERROR:
             case PLAYER_PREPARED:
                 preparingCond_.notify_all();
-                MEDIA_LOGI("notify prepare OK");
                 break;
             case PLAYER_IDLE:
                 resettingCond_.notify_all();
-                MEDIA_LOGI("notify reset OK");
                 break;
             case PLAYER_STARTED:
             case PLAYER_PAUSED:
             case PLAYER_STOPPED:
+            case PLAYER_PLAYBACK_COMPLETE:
                 stateChangeCond_.notify_all();
-                MEDIA_LOGI("notify start/pause/stop OK");
+                break;
+            case PLAYER_STATE_ERROR:
+                preparingCond_.notify_all();
+                resettingCond_.notify_all();
+                stateChangeCond_.notify_all();
                 break;
             default:
                 break;
@@ -1523,7 +1534,6 @@ void AVPlayerNapi::NotifyState(PlayerStates state)
 
 void AVPlayerNapi::NotifyVideoSize(int32_t width, int32_t height)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     width_ = width;
     height_ = height;
 }
@@ -1538,6 +1548,7 @@ void AVPlayerNapi::ResetUserParameters()
     height_ = 0;
     position_ = -1;
     duration_ = -1;
+    loop_ = false;
 }
 
 void AVPlayerNapi::StartListenCurrentResource()
