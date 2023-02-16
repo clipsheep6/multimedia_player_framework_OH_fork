@@ -730,7 +730,6 @@ void AVPlayerCallback::Release()
 
     Format infoBody;
     AVPlayerCallback::OnStateChangeCb(PlayerStates::PLAYER_RELEASED, infoBody);
-    env_ = nullptr;
     listener_ = nullptr;
 }
 } // namespace Media
