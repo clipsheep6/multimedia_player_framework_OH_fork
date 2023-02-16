@@ -238,7 +238,7 @@ static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, Gs
 static gboolean gst_surface_src_create_surface(GstSurfaceSrc *surfacesrc)
 {
     g_return_val_if_fail(surfacesrc != nullptr, FALSE);
-    sptr<Surface> consumerSurface = Surface::CreateSurfaceAsConsumer();
+    sptr<IConsumerSurface> consumerSurface = IConsumerSurface::Create();
     g_return_val_if_fail(consumerSurface != nullptr, FALSE);
     sptr<IBufferProducer> producer = consumerSurface->GetProducer();
     g_return_val_if_fail(producer != nullptr, FALSE);
@@ -338,7 +338,7 @@ static void gst_surface_src_init_surface(GstSurfaceSrc *src)
     g_return_if_fail(src != nullptr && src->consumerSurface != nullptr);
     // The internal function do not need judge whether it is empty
     GstMemSrc *memsrc = GST_MEM_SRC(src);
-    sptr<Surface> surface = src->consumerSurface;
+    sptr<IConsumerSurface> surface = src->consumerSurface;
     guint width = DEFAULT_VIDEO_WIDTH;
     guint height = DEFAULT_VIDEO_HEIGHT;
     GST_OBJECT_LOCK(memsrc);
