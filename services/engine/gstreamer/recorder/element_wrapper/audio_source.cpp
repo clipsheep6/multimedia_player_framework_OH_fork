@@ -129,6 +129,11 @@ int32_t AudioSource::CheckConfigReady()
         MEDIA_LOGE("audiosource required parameter not configured completely, failed !");
         return MSERR_INVALID_OPERATION;
     }
+
+    bool isSupportedParams = false;
+    g_object_get(gstElem_, "supported-audio-params", &isSupportedParams, nullptr);
+    CHECK_AND_RETURN_RET_LOG(isSupportedParams, MSERR_UNSUPPORT_AUD_PARAMS, "unsupport audio params");
+
     return MSERR_OK;
 }
 
