@@ -137,6 +137,7 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
     (void)finalize;
     if (nativeObject != nullptr) {
         AVPlayerNapi *jsPlayer = reinterpret_cast<AVPlayerNapi *>(nativeObject);
+        jsPlayer->ClearCallbackReference();
         auto task = jsPlayer->ReleaseTask();
         if (task != nullptr) {
             MEDIA_LOGI("Destructor Wait Release Task Start");
@@ -592,15 +593,14 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
 
             if (playerCb_ != nullptr) {
                 playerCb_->Release();
-                playerCb_ = nullptr;
             }
             MEDIA_LOGI("Release Task Out");
             return TaskRet(MSERR_EXT_API9_OK, "Success");
         });
 
         std::unique_lock<std::mutex> lock(taskMutex_);
-        (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
         isReleased_.store(true);
+        (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
         preparingCond_.notify_all(); // stop wait prepare
         resettingCond_.notify_all(); // stop wait reset
         stateChangeCond_.notify_all(); // stop wait play/pause/stop
@@ -1516,6 +1516,11 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
+        return result;
+    }
+
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
@@ -1549,6 +1554,11 @@ napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to off event");
+        return result;
+    }
+
     napi_valuetype valueType0 = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "napi_typeof failed, please check the input parameters");
@@ -1570,6 +1580,15 @@ void AVPlayerNapi::SaveCallbackReference(const std::string &callbackName, std::s
     if (playerCb_ != nullptr) {
         playerCb_->SaveCallbackReference(callbackName, ref);
     }
+}
+
+void AVPlayerNapi::ClearCallbackReference()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (playerCb_ != nullptr) {
+        playerCb_->ClearCallbackReference();
+    }
+    refMap_.clear();
 }
 
 void AVPlayerNapi::ClearCallbackReference(const std::string &callbackName)

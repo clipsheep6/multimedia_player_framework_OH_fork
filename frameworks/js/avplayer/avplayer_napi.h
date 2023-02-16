@@ -218,6 +218,7 @@ private:
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
+    void ClearCallbackReference();
     void ClearCallbackReference(const std::string &callbackName);
     void StartListenCurrentResource();
     void PauseListenCurrentResource();
