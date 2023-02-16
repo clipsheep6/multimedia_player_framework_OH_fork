@@ -17,6 +17,7 @@
 #define GST_CONSUMER_SURFACE_ALLOCATOR_H
 
 #include <gst/gst.h>
+#include "iconsumer_surface.h"
 #include "surface.h"
 
 G_BEGIN_DECLS
@@ -52,7 +53,7 @@ GType gst_consumer_surface_allocator_get_type(void);
 GstAllocator *gst_consumer_surface_allocator_new();
 
 void gst_consumer_surface_allocator_set_surface(GstAllocator *allocator,
-    OHOS::sptr<OHOS::Surface> &consumerSurface);
+    OHOS::sptr<OHOS::IConsumerSurface> &consumerSurface);
 
 G_END_DECLS
 
