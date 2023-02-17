@@ -17,6 +17,7 @@
 #define MEDIA_DATA_SOURCE_CALLBACK_H_
 
 #include <mutex>
+#include <uv.h>
 #include "media_data_source.h"
 #include "common_napi.h"
 #include "napi/native_api.h"
@@ -35,19 +36,26 @@ public:
     void SaveCallbackReference(const std::string &name, std::shared_ptr<AutoRef> ref);
     void ClearCallbackReference();
     static bool AddNapiValueProp(napi_env env, napi_value obj, const std::string &key, napi_value value);
+
+    // This interface has been deprecated
+    int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
+    // This interface has been deprecated
+    int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
 private:
+    int32_t uv_work(uv_loop_s *loop, uv_work_t *work);
     struct MediaDataSourceJsCallback {
         MediaDataSourceJsCallback(const std::string &callbackName, const std::shared_ptr<AVSharedMemory> &mem,
             uint32_t length, int64_t pos)
             :callbackName_(callbackName), memory_(mem), length_(length), pos_(pos) {
         }
-        ~MediaDataSourceJsCallback() {
-            isexit_ = true;
+        ~MediaDataSourceJsCallback()
+        {
+            isExit_ = true;
             if (memory_ != nullptr) {
                 memory_ = nullptr;
             }
         }
-        std::shared_ptr<AutoRef> callback_;
+        std::weak_ptr<AutoRef> callback_;
         std::string callbackName_;
         std::shared_ptr<AVSharedMemory> memory_;
         uint32_t length_;
@@ -56,11 +64,16 @@ private:
         std::mutex mutexCond_;
         std::condition_variable cond_;
         bool setResult_ = false;
-        bool isexit_ = false;
-        void WaitResult() {
+        bool isExit_ = false;
+        void WaitResult()
+        {
             std::unique_lock<std::mutex> lock(mutexCond_);
             if (!setResult_) {
-                cond_.wait(lock, [this]() { return setResult_ || isexit_; });
+                static constexpr int32_t timeout = 3;
+                cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() { return setResult_ || isExit_; });
+                if (!(setResult_ || isExit_)) {
+                    readSize_ = 0;
+                }
             }
             setResult_ = false;
         }

@@ -59,12 +59,6 @@ public:
     virtual uint8_t *GetBase() const = 0;
 
     /**
-     * @brief Get the memory's virtual available address
-     * @return the memory's virtual available address if the memory is valid, otherwise nullptr.
-     */
-    virtual uint8_t *GetBaseWithOffset() const = 0;
-
-    /**
      * @brief Get the memory's size
      * @return the memory's size if the memory is valid, otherwise -1.
      */

@@ -60,6 +60,11 @@ public:
      * @return MSERR_OK if ok; others if failed. see media_errors.h
      */
     virtual int32_t GetSize(int64_t &size) = 0;
+
+    // This interface has been deprecated
+    virtual int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
+    // This interface has been deprecated
+    virtual int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
 };
 } // namespace Media
 } // namespace OHOS

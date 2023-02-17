@@ -16,7 +16,7 @@
 #include "media_data_source_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"
-#include "avsharedmemorybase.h"
+#include "avdatasrcmemory.h"
 #include "avsharedmemory_ipc.h"
 
 namespace {
@@ -80,6 +80,21 @@ int32_t MediaDataCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, ui
     return callbackProxy_->ReadAt(mem, length, pos);
 }
 
+int32_t MediaDataCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+{
+    (void)pos;
+    (void)length;
+    (void)mem;
+    return MSERR_OK;
+}
+
+int32_t MediaDataCallback::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+{
+    (void)length;
+    (void)mem;
+    return MSERR_OK;
+}
+
 int32_t MediaDataCallback::GetSize(int64_t &size)
 {
     CHECK_AND_RETURN_RET_LOG(callbackProxy_ != nullptr, MSERR_INVALID_OPERATION, "callbackProxy_ is nullptr");
@@ -113,7 +128,7 @@ int32_t MediaDataSourceProxy::ReadAt(const std::shared_ptr<AVSharedMemory> &mem,
     }
     CHECK_AND_RETURN_RET_LOG(BufferCache_ != nullptr, MSERR_NO_MEMORY, "Failed to create BufferCache_!");
 
-    uint32_t offset = std::static_pointer_cast<AVSharedMemoryBase>(mem)->GetOffset();
+    uint32_t offset = std::static_pointer_cast<AVDataSrcMemory>(mem)->GetOffset();
     MEDIA_LOGD("offset is %{public}u", offset);
     BufferCache_->WriteToParcel(mem, data);
     data.WriteUint32(offset);

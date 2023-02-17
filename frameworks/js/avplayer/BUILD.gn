@@ -26,9 +26,9 @@ ohos_shared_library("media_avplayer") {
   ]
 
   sources = [
+    "./media_data_source_callback.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_callback.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer/avplayer_napi.cpp",
-    "//foundation/multimedia/player_framework/frameworks/js/avplayer/media_data_source_callback.cpp",
     "//foundation/multimedia/player_framework/frameworks/js/common/common_napi.cpp",
   ]
 

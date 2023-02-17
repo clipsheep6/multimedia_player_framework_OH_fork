@@ -49,7 +49,7 @@ config("media_engine_gst_avmeta_config") {
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/metadata",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/message",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/utils",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/common/appsrc_engine",
+    "../common/appsrc_engine",
     "//foundation/graphic/standard/interfaces/innerkits/surface",
     "//foundation/graphic/standard/interfaces/innerkits/common",
     "//foundation/communication/ipc/interfaces/innerkits/ipc_core/include",

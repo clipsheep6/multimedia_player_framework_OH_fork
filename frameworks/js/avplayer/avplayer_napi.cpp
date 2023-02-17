@@ -672,15 +672,18 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
         }
         status = napi_get_value_int32(env, args[1], &mode);
         if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CLOSEST) {
-            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-                "invalid parameters, please check the input seek mode");
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek mode");
             return result;
         }
     }
 
-    if (!jsPlayer->IsControllable() || jsPlayer->IsLiveSource(env, info)) {
+    if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed or in live mode, unsupport seek operation");
+        return result;
+    }
+    if (jsPlayer->IsLiveSource(env, info)) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "In live mode, unsupport seek operation");
         return result;
     }
 
@@ -719,9 +722,13 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
         return result;
     }
 
-    if (!jsPlayer->IsControllable() || jsPlayer->IsLiveSource(env, info)) {
+    if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed or in live mode, unsupport speed operation");
+            "current state is not prepared/playing/paused/completed, unsupport speed operation");
+        return result;
+    }
+    if (jsPlayer->IsLiveSource(env, info)) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "In live mode, unsupport speed operation");
         return result;
     }
 
@@ -983,7 +990,7 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set fd");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set dataSrc");
         return result;
     }
     jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
@@ -1136,9 +1143,13 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
-    if (!jsPlayer->IsControllable() || jsPlayer->IsLiveSource(env, info)) {
+    if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed or in live mode, unsupport loop operation");
+            "current state is not prepared/playing/paused/completed, unsupport loop operation");
+        return result;
+    }
+    if (jsPlayer->IsLiveSource(env, info)) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "In live mode, unsupport loop operation");
         return result;
     }
 

@@ -31,14 +31,12 @@ public:
     virtual int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1) = 0;
     virtual int32_t GetSize(int64_t &size) = 0;
 
-    enum class ListenerMsg : uint8_t
-    {
+    enum class ListenerMsg : uint8_t {
         READ_AT = 0,
         GET_SIZE,
     };
 
-    enum class CacheFlag : uint8_t
-    {
+    enum class CacheFlag : uint8_t {
         HIT_CACHE = 1,
         UPDATE_CACHE,
     };

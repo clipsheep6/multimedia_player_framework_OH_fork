@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,20 +13,20 @@
  * limitations under the License.
  */
 
-#ifndef AVSHAREDMEMORYBASE_H
-#define AVSHAREDMEMORYBASE_H
+#ifndef AVDATASRCMEMORY_H
+#define AVDATASRCMEMORY_H
 
 #include <string>
 #include "nocopyable.h"
-#include "avsharedmemory.h"
+#include "avsharedmemorybase.h"
 
 namespace OHOS {
 namespace Media {
-class __attribute__((visibility("default"))) AVSharedMemoryBase
-    : public AVSharedMemory, public NoCopyable {
+class __attribute__((visibility("default"))) AVDataSrcMemory
+    : public AVSharedMemoryBase {
 public:
     /**
-     * @brief Construct a new AVSharedMemoryBase object. This function should only be used in the
+     * @brief Construct a new AVDataSrcMemory object. This function should only be used in the
      * local process.
      *
      * @param size the memory's size, bytes.
@@ -37,7 +37,7 @@ public:
         int32_t size, uint32_t flags, const std::string &name);
 
     /**
-     * @brief Construct a new AVSharedMemoryBase object. This function should only be used in the
+     * @brief Construct a new AVDataSrcMemory object. This function should only be used in the
      * remote process.
      *
      * @param fd the memory's fd
@@ -48,7 +48,7 @@ public:
     static std::shared_ptr<AVSharedMemory> CreateFromRemote(
         int32_t fd, int32_t size, uint32_t flags, const std::string &name);
 
-    ~AVSharedMemoryBase();
+    virtual ~AVDataSrcMemory();
 
     /**
      * @brief Construct a new AVSharedMemoryBase object. This function should only be used in the
@@ -58,28 +58,7 @@ public:
      * @param flags the memory's accessible flags, refer to {@AVSharedMemory::Flags}.
      * @param name the debug string
      */
-    AVSharedMemoryBase(int32_t size, uint32_t flags, const std::string &name);
-
-    /**
-     * @brief Intialize the memory. Call this interface firstly before the other interface.
-     * @return MSERR_OK if success, otherwise the errcode.
-     */
-    int32_t Init();
-
-    /**
-     * @brief Get the memory's fd, which only valid when the underlying memory
-     * chunk is allocated through the ashmem.
-     * @return the memory's fd if the memory is allocated through the ashmem, otherwise -1.
-     */
-    int32_t GetFd() const
-    {
-        return fd_;
-    }
-
-    std::string GetName() const
-    {
-        return name_;
-    }
+    AVDataSrcMemory(int32_t size, uint32_t flags, const std::string &name);
 
     /**
      * @brief Get the memory's virtual address
@@ -87,41 +66,28 @@ public:
      */
     virtual uint8_t *GetBase() const override
     {
-        return base_;
+        return AVSharedMemoryBase::GetBase() + offset_;
     }
 
-    /**
-     * @brief Get the memory's size
-     * @return the memory's size if the memory is valid, otherwise -1.
-     */
-    virtual int32_t GetSize() const override
+    uint8_t *GetInnerBase() const
     {
-        return (base_ != nullptr) ? size_ : -1;
+        return AVSharedMemoryBase::GetBase();
     }
 
-    /**
-     * @brief Get the memory's flags set by the creator, refer to {@Flags}
-     * @return the memory's flags if the memory is valid, otherwise 0.
-     */
-    virtual uint32_t GetFlags() const final
+    void SetOffset(uint32_t offset)
     {
-        return (base_ != nullptr) ? flags_ : 0;
+        offset_ = offset;
     }
 
+    uint32_t GetOffset() const
+    {
+        return offset_;
+    }
 protected:
-    AVSharedMemoryBase(int32_t fd, int32_t size, uint32_t flags, const std::string &name);
-
+    AVDataSrcMemory(int32_t fd, int32_t size, uint32_t flags, const std::string &name);
 private:
-    int32_t MapMemory(bool isRemote);
-    void Close() noexcept;
-
-    uint8_t *base_;
-    int32_t size_;
-    uint32_t flags_;
-    std::string name_;
-    int32_t fd_;
+    uint32_t offset_;
 };
 } // namespace Media
 } // namespace OHOS
-
 #endif

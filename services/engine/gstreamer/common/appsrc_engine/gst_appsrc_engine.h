@@ -51,15 +51,20 @@ public:
     int32_t Init();
     int32_t Prepare();
     void Stop();
+    void SetPushBufferMode(bool isCopy);
 private:
     void SetCallBackForAppSrc();
     void ClearAppsrc();
+    void ResetMemParam();
+    void ResetConfig();
     static void NeedData(const GstElement *appSrc, uint32_t size, gpointer self);
     static gboolean SeekData(const GstElement *appSrc, uint64_t seekPos, gpointer self);
     void NeedDataInner(uint32_t size);
     gboolean SeekDataInner(uint64_t pos);
     int32_t PullBuffer();
+    int32_t Pusheos();
     int32_t PushBuffer(uint32_t pushSize);
+    int32_t PushBufferWithCopy(uint32_t pushSize);
     void PullTask();
     void PushTask();
     void OnError(int32_t errorCode);
@@ -86,8 +91,9 @@ private:
     std::shared_ptr<AppsrcMemory> appSrcMem_;
     GstShMemoryWrapAllocator *allocator_ = nullptr;
     bool noFreeBuffer_ = false;
-    bool noAvailableBuffer_ = false;
+    bool noAvailableBuffer_ = true;
     int64_t timer_ = 0;
+    bool copyMode_ = false;
 };
 } // namespace Media
 } // namespace OHOS

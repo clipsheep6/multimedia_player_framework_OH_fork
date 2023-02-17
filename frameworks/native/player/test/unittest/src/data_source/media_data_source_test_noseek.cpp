@@ -66,6 +66,13 @@ int32_t MediaDataSourceTestNoSeek::Init()
     return MSERR_OK;
 }
 
+void MediaDataSourceTestNoSeek::Reset()
+{
+    std::cout<< "reset data source" << std::endl;
+    pos_ = 0;
+    (void)fseek(fd_, 0, SEEK_SET);
+}
+
 int32_t MediaDataSourceTestNoSeek::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
     MEDIA_LOGD("ReadAt in");
@@ -81,7 +88,7 @@ int32_t MediaDataSourceTestNoSeek::ReadAt(const std::shared_ptr<AVSharedMemory> 
         MEDIA_LOGI("Is null mem");
         return SOURCE_ERROR_IO;
     }
-    readRet = fread(mem->GetBaseWithOffset(), static_cast<size_t>(length), 1, fd_);
+    readRet = fread(mem->GetBase(), static_cast<size_t>(length), 1, fd_);
     if (ferror(fd_)) {
         MEDIA_LOGI("Failed to call fread");
         return SOURCE_ERROR_IO;
@@ -92,6 +99,21 @@ int32_t MediaDataSourceTestNoSeek::ReadAt(const std::shared_ptr<AVSharedMemory> 
     MEDIA_LOGD("length %{public}u realLen %{public}d", length, realLen);
     pos_ += realLen;
     return realLen;
+}
+
+int32_t MediaDataSourceTestNoSeek::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+{
+    (void)pos;
+    (void)length;
+    (void)mem;
+    return MSERR_OK;
+}
+
+int32_t MediaDataSourceTestNoSeek::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+{
+    (void)length;
+    (void)mem;
+    return MSERR_OK;
 }
 
 int32_t MediaDataSourceTestNoSeek::GetSize(int64_t &size)

@@ -519,6 +519,7 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
 int32_t PlayBinCtrlerBase::EnterInitializedState()
 {
     if (isInitialized_) {
+        (void)DoInitializeForDataSource();
         return MSERR_OK;
     }
     MediaTrace("PlayBinCtrlerBase::InitializedState");
@@ -820,6 +821,9 @@ int32_t PlayBinCtrlerBase::DoInitializeForDataSource()
 {
     if (appsrcWrap_ != nullptr) {
         (void)appsrcWrap_->Prepare();
+        if (isInitialized_) {
+            return MSERR_OK;
+        }
         auto msgNotifier = std::bind(&PlayBinCtrlerBase::OnAppsrcErrorMessageReceived, this, std::placeholders::_1);
         CHECK_AND_RETURN_RET_LOG(appsrcWrap_->SetErrorCallback(msgNotifier) == MSERR_OK,
             MSERR_INVALID_OPERATION, "set appsrc error callback failed");
@@ -989,6 +993,11 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         strncmp(ELEM_NAME(&elem), "qtdemux", strlen("qtdemux")) == 0) {
         MEDIA_LOGD("add msgfilter element: %{public}s", ELEM_NAME(&elem));
         msgProcessor_->AddMsgFilter(ELEM_NAME(&elem));
+    }
+
+    if (strncmp(ELEM_NAME(&elem), "qtdemux", strlen("qtdemux")) == 0 &&
+        appsrcWrap_ != nullptr && appsrcWrap_->IsLiveMode()) {
+        appsrcWrap_->SetPushBufferMode(true);
     }
 
     std::string elementName(GST_ELEMENT_NAME(&elem));

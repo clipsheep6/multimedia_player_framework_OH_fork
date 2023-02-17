@@ -47,7 +47,8 @@ GstMemory *gst_shmemory_wrap(GstAllocator *allocator, std::shared_ptr<OHOS::Medi
     memory->length = length;
     memory->free_memory = free_memory;
     GST_DEBUG("wrap memory for size: %" PRIu64 ", addr: 0x%06" PRIXPTR "",
-        static_cast<uint64_t>(length), FAKE_POINTER(memory->shmemory->GetBase() + offset));
+        static_cast<uint64_t>(length), FAKE_POINTER(
+            std::static_pointer_cast<OHOS::Media::AVDataSrcMemory>(memory->shmemory)->GetInnerBase() + offset));
 
     return GST_MEMORY_CAST(memory);
 }
@@ -67,7 +68,9 @@ static void gst_shmemory_wrap_allocator_free(GstAllocator *allocator, GstMemory 
 
     GstShMemoryWrapMemory *shWrapMem = reinterpret_cast<GstShMemoryWrapMemory *>(memory);
     GST_DEBUG("free memory for size: %" G_GSIZE_FORMAT ", shWrapMem->offset %d, addr: 0x%06" PRIXPTR "",
-        memory->maxsize, shWrapMem->offset, FAKE_POINTER(shWrapMem->shmemory->GetBase() + shWrapMem->offset));
+    memory->maxsize, shWrapMem->offset, FAKE_POINTER(
+        std::static_pointer_cast<OHOS::Media::AVDataSrcMemory>(shWrapMem->shmemory)->GetInnerBase() +
+        shWrapMem->offset));
 
     shWrapMem->shmemory = nullptr;
     if (shWrapMem->free_memory) {
@@ -87,9 +90,12 @@ static gpointer gst_shmemory_wrap_allocator_mem_map(GstMemory *mem, gsize maxsiz
     g_return_val_if_fail(shWrapMem->shmemory != nullptr, nullptr);
 
     GST_INFO("mem_map, maxsize: %" G_GSIZE_FORMAT ", size: %" G_GSIZE_FORMAT", addr: 0x%06" PRIXPTR "",
-        mem->maxsize, mem->size, FAKE_POINTER(shWrapMem->shmemory->GetBase() + shWrapMem->offset));
+        mem->maxsize, mem->size, FAKE_POINTER(
+            std::static_pointer_cast<OHOS::Media::AVDataSrcMemory>(shWrapMem->shmemory)->GetInnerBase() +
+            shWrapMem->offset));
     
-    return shWrapMem->shmemory->GetBase() + shWrapMem->offset;
+    return std::static_pointer_cast<OHOS::Media::AVDataSrcMemory>(shWrapMem->shmemory)->GetInnerBase() +
+        shWrapMem->offset;
 }
 
 static void gst_shmemory_wrap_allocator_mem_unmap(GstMemory *mem)
@@ -132,8 +138,8 @@ static GstMemory *gst_shmemory_wrap_allocator_mem_share(GstMemory *mem, gssize o
     sub->shmemory = reinterpret_cast<GstShMemoryWrapMemory *>(mem)->shmemory;
     sub->offset = reinterpret_cast<GstShMemoryWrapMemory *>(mem)->offset + offset;
     sub->length = size;
-    GST_DEBUG("gst_shmemory_wrap_allocator_mem_share, addr: 0x%06" PRIXPTR "",
-        FAKE_POINTER(sub->shmemory->GetBase() + sub->offset));
+    GST_DEBUG("gst_shmemory_wrap_allocator_mem_share, addr: 0x%06" PRIXPTR "", FAKE_POINTER(
+        std::static_pointer_cast<OHOS::Media::AVDataSrcMemory>(sub->shmemory)->GetInnerBase() + sub->offset));
     return GST_MEMORY_CAST(sub);
 }
 
@@ -161,7 +167,7 @@ static GstMemory *gst_shmemory_wrap_allocator_mem_copy(GstShMemoryWrapMemory *me
         return nullptr;
     }
 
-    uint8_t *src = mem->shmemory->GetBase() + realOffset;
+    uint8_t *src = std::static_pointer_cast<OHOS::Media::AVDataSrcMemory>(mem->shmemory)->GetInnerBase() + realOffset;
     errno_t rc = memcpy_s(info.data, info.size, src, static_cast<size_t>(size));
     if (rc != EOK) {
         GST_ERROR("memcpy failed");
@@ -170,7 +176,8 @@ static GstMemory *gst_shmemory_wrap_allocator_mem_copy(GstShMemoryWrapMemory *me
         return nullptr;
     }
     GST_DEBUG("realOffset is %" G_GSSIZE_FORMAT ", size is %" G_GSSIZE_FORMAT ", src addr: 0x%06" PRIXPTR "",
-        realOffset, size, FAKE_POINTER(mem->shmemory->GetBase() + realOffset));
+        realOffset, size, FAKE_POINTER(
+            std::static_pointer_cast<OHOS::Media::AVDataSrcMemory>(mem->shmemory)->GetInnerBase() + realOffset));
 
     gst_memory_unmap(copy, &info);
 

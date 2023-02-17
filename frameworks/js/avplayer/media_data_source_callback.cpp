@@ -15,7 +15,6 @@
 
 #include "media_data_source_callback.h"
 #include "avsharedmemorybase.h"
-#include <uv.h>
 #include "media_dfx.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -45,6 +44,9 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
     MEDIA_LOGD("ReadAt in");
     MediaDataSourceJsCallback *cb = new(std::nothrow) MediaDataSourceJsCallback(READAT_CALLBACK_NAME, mem, length, pos);
     CHECK_AND_RETURN_RET_LOG(cb != nullptr, 0, "Failed to Create MediaDataSourceJsCallback");
+    if (refMap_.find(READAT_CALLBACK_NAME) == refMap_.end()) {
+        return SOURCE_ERROR_IO;
+    }
     cb->callback_ = refMap_.at(READAT_CALLBACK_NAME);
     ON_SCOPE_EXIT(0) { delete cb; };
 
@@ -57,15 +59,23 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
     
     work->data = reinterpret_cast<void *>(cb);
     // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_work(loop, work);
+    CHECK_AND_RETURN_RET_LOG(ret == 0, SOURCE_ERROR_IO, "Failed to execute uv queue work");
+
+    cb->WaitResult();
+    return cb->readSize_;
+}
+
+int32_t MediaDataSourceCallback::uv_work(uv_loop_s *loop, uv_work_t *work)
+{
+    return uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr && work->data != nullptr, "work is nullptr");
         MediaDataSourceJsCallback *event = reinterpret_cast<MediaDataSourceJsCallback *>(work->data);
-        MEDIA_LOGD("JsCallBack %{public}s, offset is %{public}u, length is %{public}u", event->callbackName_.c_str(),
-            std::static_pointer_cast<AVSharedMemoryBase>(event->memory_)->GetOffset(), event->length_);
+        MEDIA_LOGD("length is %{public}u", event->length_);
         do {
             CHECK_AND_BREAK(status != UV_ECANCELED);
-            std::shared_ptr<AutoRef> ref = event->callback_;
+            std::shared_ptr<AutoRef> ref = event->callback_.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", event->callbackName_.c_str());
 
             napi_value jsCallback = nullptr;
@@ -73,15 +83,19 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
             CHECK_AND_BREAK(nstatus == napi_ok && jsCallback != nullptr);
             
             // noseek mode don't need pos, so noseek mode need 2 parameters and seekable mode need 3 parameters
-            int32_t paramNum = 2;
+            int32_t paramNum;
             napi_value args[3] = { nullptr };
-            nstatus = napi_create_external_arraybuffer(ref->env_, event->memory_->GetBaseWithOffset(),
+            nstatus = napi_create_external_arraybuffer(ref->env_, event->memory_->GetBase(),
                 static_cast<size_t>(event->length_), [](napi_env env, void *data, void *hint) {}, nullptr, &args[0]);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create napi arraybuffer failed");
-            CHECK_AND_BREAK_LOG(napi_create_uint32(ref->env_, event->length_, &args[1]) == napi_ok, "create length failed");
+            CHECK_AND_BREAK_LOG(napi_create_uint32(ref->env_, event->length_, &args[1]) == napi_ok,
+                "set length failed");
             if (event->pos_ != -1) {
-                paramNum += 1;
-                CHECK_AND_BREAK_LOG(napi_create_int64(ref->env_, event->pos_, &args[2]) == napi_ok, "create pos failed");
+                paramNum = 3;  // 3 parameters
+                CHECK_AND_BREAK_LOG(napi_create_int64(ref->env_, event->pos_, &args[2]) == napi_ok,  // 2 parameters
+                    "set pos failed");
+            } else {
+                paramNum = 2;  // 2 parameters
             }
             
             napi_value size;
@@ -94,10 +108,20 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
             event->cond_.notify_all();
         } while (0);
     });
-    CHECK_AND_RETURN_RET_LOG(ret == 0, SOURCE_ERROR_IO, "Failed to execute uv queue work");
+}
+int32_t MediaDataSourceCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+{
+    (void)pos;
+    (void)length;
+    (void)mem;
+    return MSERR_OK;
+}
 
-    cb->WaitResult();
-    return cb->readSize_;
+int32_t MediaDataSourceCallback::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+{
+    (void)length;
+    (void)mem;
+    return MSERR_OK;
 }
 
 int32_t MediaDataSourceCallback::GetSize(int64_t &size)
@@ -117,6 +141,7 @@ void MediaDataSourceCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     refMap_.clear();
+    MEDIA_LOGD("callback has been clear");
 }
 
 bool MediaDataSourceCallback::AddNapiValueProp(napi_env env, napi_value obj, const std::string &key, napi_value value)

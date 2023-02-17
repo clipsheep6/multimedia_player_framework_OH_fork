@@ -17,7 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_data_source.h"
-#include "avsharedmemorybase.h"
+#include "avdatasrcmemory.h"
 #include "avsharedmemory_ipc.h"
 
 namespace {
@@ -40,7 +40,7 @@ public:
             return MSERR_OK;
         } else {
             MEDIA_LOGD("UPDATE_CACHE");
-            memory = ReadAVSharedMemoryFromParcel(parcel);
+            memory = ReadADataSrcMemoryFromParcel(parcel);
             CHECK_AND_RETURN_RET(memory != nullptr, MSERR_INVALID_VAL);
             caches_ = memory;
             return MSERR_OK;
@@ -85,7 +85,7 @@ int MediaDataSourceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
             uint32_t offset = data.ReadUint32();
             uint32_t length = data.ReadUint32();
             int64_t pos = data.ReadInt64();
-            std::static_pointer_cast<AVSharedMemoryBase>(memory)->SetOffset(offset);
+            std::static_pointer_cast<AVDataSrcMemory>(memory)->SetOffset(offset);
             MEDIA_LOGD("offset is %{public}u", offset);
             int32_t realLen = ReadAt(memory, length, pos);
             reply.WriteInt32(realLen);
