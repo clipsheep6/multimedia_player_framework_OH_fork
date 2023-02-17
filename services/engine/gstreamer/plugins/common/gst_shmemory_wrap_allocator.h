@@ -17,7 +17,7 @@
 #define GST_SHMEMORY_WRAP_ALLOCATOR_H
 
 #include <gst/gst.h>
-#include "avsharedmemory.h"
+#include "avdatasrcmemory.h"
 #include "gst_shmemory_wrap_memory.h"
 
 G_BEGIN_DECLS
