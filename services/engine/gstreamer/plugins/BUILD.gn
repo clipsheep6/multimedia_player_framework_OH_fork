@@ -23,6 +23,10 @@ group("media_engine_gst_plugins") {
     "source/audiocapture:gst_audio_capture_src",
     "source/memsource:gst_mem_src",
   ]
+
+  if (device_name == "rk3588") {
+    deps -= [ "codec:codec_plugins" ]
+  }
 }
 
 group("media_engine_gst_plugins_common") {
