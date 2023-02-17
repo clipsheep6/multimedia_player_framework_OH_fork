@@ -140,8 +140,9 @@ int32_t RecorderEngineGstImpl::SetOutputFormat(OutputFormatType format)
 
 int32_t RecorderEngineGstImpl::BuildPipeline()
 {
-    pipeline_ = builder_->Build();
-    CHECK_AND_RETURN_RET(pipeline_ != nullptr, MSERR_INVALID_OPERATION);
+    pipeline_ = nullptr;
+    int32_t ret = builder_->Build(pipeline_);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
     ctrler_->SetPipeline(pipeline_);
 
@@ -251,7 +252,8 @@ int32_t RecorderEngineGstImpl::Stop(bool isDrainAll)
 
 int32_t RecorderEngineGstImpl::Reset()
 {
-    return Stop(false);
+    (void)Stop(false);
+    return MSERR_OK;
 }
 
 int32_t RecorderEngineGstImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam)

@@ -17,6 +17,7 @@
 #define __GST_SURFACE_SRC_H__
 
 #include "gst_mem_src.h"
+#include "iconsumer_surface.h"
 #include "surface.h"
 
 G_BEGIN_DECLS
@@ -43,7 +44,7 @@ struct _GstSurfaceMemSrcDump {
 
 struct _GstSurfaceSrc {
     GstMemSrc memsrc;
-    OHOS::sptr<OHOS::Surface> consumerSurface;
+    OHOS::sptr<OHOS::IConsumerSurface> consumerSurface;
     OHOS::sptr<OHOS::Surface> producerSurface;
     GstBufferPool *pool;
     guint stride;

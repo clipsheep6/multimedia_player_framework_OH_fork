@@ -40,7 +40,7 @@ private:
 };
 
 struct _GstConsumerSurfacePoolPrivate {
-    sptr<Surface> consumer_surface;
+    sptr<IConsumerSurface> consumer_surface;
     guint available_buf_count;
     GMutex pool_lock;
     GCond buffer_available_con;
@@ -529,7 +529,7 @@ static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *p
     GST_DEBUG_OBJECT(pool, "Available buffer count %u", pool->priv->available_buf_count);
 }
 
-void gst_consumer_surface_pool_set_surface(GstBufferPool *pool, sptr<Surface> &consumer_surface)
+void gst_consumer_surface_pool_set_surface(GstBufferPool *pool, sptr<IConsumerSurface> &consumer_surface)
 {
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
     g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);

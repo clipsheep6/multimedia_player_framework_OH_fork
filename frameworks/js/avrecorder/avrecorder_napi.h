@@ -173,6 +173,9 @@ private:
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
     static int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
 
+    static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result,
+        bool &getValue);
+
     AVRecorderNapi();
     ~AVRecorderNapi();
 
@@ -193,6 +196,7 @@ private:
 
     int32_t CheckStateMachine(const std::string &opt);
     int32_t CheckRepeatOperation(const std::string &opt);
+    int32_t GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);

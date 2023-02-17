@@ -258,8 +258,7 @@ void GstAppsrcEngine::PushTask()
             bufferSize_ - appSrcMem_->availableBegin : pushSize;
         if (pushSize == 0) {
             ret = Pusheos();
-        }
-        if (copyMode_) {
+        } else if (copyMode_) {
             ret = PushBufferWithCopy(pushSize);
         } else {
             ret = PushBuffer(pushSize);
@@ -336,7 +335,6 @@ int32_t GstAppsrcEngine::PullBuffer()
             appSrcMem_->begin %= bufferSize_;
             if (appSrcMem_->begin == (appSrcMem_->end + 1) % bufferSize_) {
                 noFreeBuffer_ = true;
-                MEDIA_LOGD("noFreeBuffer_ set to true");
             }
             noAvailableBuffer_ = false;
             appSrcMem_->filePos += readSize;
