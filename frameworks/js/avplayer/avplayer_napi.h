@@ -275,6 +275,7 @@ private:
     };
     std::unique_ptr<TaskQueue> taskQue_;
     std::mutex mutex_;
+    std::mutex taskMutex_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
     PlayerStates state_ = PLAYER_IDLE;
     std::condition_variable preparingCond_;
