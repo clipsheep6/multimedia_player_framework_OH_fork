@@ -117,26 +117,38 @@ enum AVSeekMode : uint8_t {
  * @version 3.2
  */
 enum VideoRotation : uint32_t {
-/**
- * Video without rotation
- */
-VIDEO_ROTATION_0 = 0,
-/**
- * Video rotated 90 degrees
- */
-VIDEO_ROTATION_90 = 90,
-/**
- * Video rotated 180 degrees
- */
-VIDEO_ROTATION_180 = 180,
-/**
- * Video rotated 270 degrees
- */
-VIDEO_ROTATION_270 = 270,
+    /**
+    * Video without rotation
+    */
+    VIDEO_ROTATION_0 = 0,
+    /**
+    * Video rotated 90 degrees
+    */
+    VIDEO_ROTATION_90 = 90,
+    /**
+    * Video rotated 180 degrees
+    */
+    VIDEO_ROTATION_180 = 180,
+    /**
+    * Video rotated 270 degrees
+    */
+    VIDEO_ROTATION_270 = 270,
 };
 
+/**
+ * @brief Enumerates the state change reason.
+ *
+ * @since 3.2
+ * @version 3.2
+ */
 enum StateChangeReason {
+    /**
+     * audio/video state change by user
+     */
     USER = 1,
+    /**
+     * audio/video state change by system
+     */
     BACKGROUND = 2,
 };
 } // namespace Media
