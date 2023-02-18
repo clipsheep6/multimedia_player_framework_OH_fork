@@ -1053,9 +1053,14 @@ napi_value AVPlayerNapi::JsGetDataSrc(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
     napi_value value = nullptr;
+    int64_t fileSize;
+    napi_value callback = nullptr;
     (void)napi_create_object(env, &value);
-    (void)CommonNapi::AddNumberPropInt64(env, value, "fileSize", jsPlayer->dataSrcDescriptor_.fileSize);
-    (void)MediaDataSourceCallback::AddNapiValueProp(env, value, "callback", jsPlayer->dataSrcDescriptor_.callback);
+    (void)jsPlayer->dataSrcCb_->GetSize(fileSize);
+    (void)CommonNapi::AddNumberPropInt64(env, value, "fileSize", fileSize);
+    int32_t ret = jsPlayer->dataSrcCb_->GetCallback(READAT_CALLBACK_NAME, &callback);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "failed to GetCallback");
+    (void)MediaDataSourceCallback::AddNapiValueProp(env, value, "callback", callback);
 
     MEDIA_LOGI("JsGetDataSrc Out");
     return value;
@@ -1474,8 +1479,7 @@ bool AVPlayerNapi::IsControllable()
 
 bool AVPlayerNapi::IsLiveSource(napi_env env, napi_callback_info info)
 {
-    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
-    return jsPlayer->dataSrcCb_ != nullptr && jsPlayer->dataSrcDescriptor_.fileSize == -1;
+    return dataSrcCb_ != nullptr && dataSrcDescriptor_.fileSize == -1;
 }
 
 std::string AVPlayerNapi::GetCurrentState()

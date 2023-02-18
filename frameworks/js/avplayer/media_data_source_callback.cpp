@@ -137,6 +137,17 @@ void MediaDataSourceCallback::SaveCallbackReference(const std::string &name, std
     refMap_[name] = ref;
 }
 
+int32_t MediaDataSourceCallback::GetCallback(const std::string &name, napi_value *callback)
+{
+    if (refMap_.find(READAT_CALLBACK_NAME) == refMap_.end()) {
+        return MSERR_INVALID_VAL;
+    }
+    auto ref = refMap_.at(READAT_CALLBACK_NAME);
+    napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, callback);
+    CHECK_AND_RETURN_RET(nstatus == napi_ok && callback != nullptr, MSERR_INVALID_OPERATION);
+    return MSERR_OK;
+}
+
 void MediaDataSourceCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);

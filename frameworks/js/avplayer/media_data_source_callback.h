@@ -34,6 +34,7 @@ public:
     int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1) override;
     int32_t GetSize(int64_t &size) override;
     void SaveCallbackReference(const std::string &name, std::shared_ptr<AutoRef> ref);
+    int32_t GetCallback(const std::string &name, napi_value *callback);
     void ClearCallbackReference();
     static bool AddNapiValueProp(napi_env env, napi_value obj, const std::string &key, napi_value value);
 
