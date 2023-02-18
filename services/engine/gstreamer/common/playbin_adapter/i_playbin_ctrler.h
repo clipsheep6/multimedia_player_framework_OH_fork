@@ -76,6 +76,7 @@ public:
     virtual void SetElemUnSetupListener(ElemSetupListener listener) = 0;
     virtual void SetAutoPlugSortListener(AutoPlugSortListener listener) = 0;
     virtual void RemoveGstPlaySinkVideoConvertPlugin() = 0;
+    virtual int64_t QueryPosition() = 0;
 };
 } // namespace Media
 } // namespace OHOS
