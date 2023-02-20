@@ -14,6 +14,10 @@
 import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
+declares_args() {
+    multimedia_player_framework_use_codec_plugins = true
+}
+
 group("media_engine_gst_plugins") {
   deps = [
     "bin/codecbin:gst_codec_bin",
@@ -24,7 +28,7 @@ group("media_engine_gst_plugins") {
     "source/memsource:gst_mem_src",
   ]
 
-  if (device_name == "rk3588") {
+  if (!multimedia_player_framework_use_codec_plugins) {
     deps -= [ "codec:codec_plugins" ]
   }
 }
