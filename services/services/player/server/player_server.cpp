@@ -281,8 +281,12 @@ int32_t PlayerServer::HandlePrepare()
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->SetPlaybackSpeed(config_.speedMode);
         });
+        auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
+            MEDIA_LOGI("Interrupted speed action");
+            taskMgr_.MarkTaskDone("interrupted speed done");
+        });
 
-        (void)taskMgr_.LaunchTask(rateTask, PlayerServerTaskType::RATE_CHANGE, "speed");
+        (void)taskMgr_.LaunchTask(rateTask, cancelTask, PlayerServerTaskType::RATE_CHANGE, "speed");
     }
     return MSERR_OK;
 }
