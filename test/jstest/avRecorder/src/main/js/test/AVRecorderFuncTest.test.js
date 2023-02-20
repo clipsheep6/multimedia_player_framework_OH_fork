@@ -54,7 +54,6 @@ describe('AVRecorderFuncTest', function () {
     let cameraManager;
     let cameras;
     let captureSession;
-    let cameraFlowSource;
     let fdPath;
     let fdObject;
     let playerSurfaceId = '';
@@ -69,55 +68,27 @@ describe('AVRecorderFuncTest', function () {
     let videoOutput;
     let previewOutput;
     let needDone = false;
+    const RKWIDTH = 640;
+    const RKHEIGHT = 480;
+    const WGRWIDTH = 1920;
+    const WGRHEIGHT = 1080;
     
     let avProfile = {
-        audioBitrate : 48000,
+        audioBitrate : 200000,
         audioChannels : 2,
         audioCodec : media.CodecMimeType.AUDIO_AAC,
         audioSampleRate : 48000,
         fileFormat : media.ContainerFormatType.CFT_MPEG_4,
         videoBitrate : 2000000,
         videoCodec : media.CodecMimeType.VIDEO_AVC,
-        videoFrameWidth : 640,
-        videoFrameHeight : 480,
+        videoFrameWidth : RKWIDTH,
+        videoFrameHeight : RKHEIGHT,
         videoFrameRate : 30
     }
     let avConfig = {
         audioSourceType : media.AudioSourceType.AUDIO_SOURCE_TYPE_MIC,
         videoSourceType : media.VideoSourceType.VIDEO_SOURCE_TYPE_SURFACE_YUV,
         profile : avProfile,
-        url : 'fd://',
-        rotation : 0,
-        location : { latitude : 30, longitude : 130 }
-    }
-
-    let videoProfile = {
-        fileFormat : media.ContainerFormatType.CFT_MPEG_4,
-        videoBitrate : 2000000,
-        videoCodec : media.CodecMimeType.VIDEO_AVC,
-        videoFrameWidth : 640,
-        videoFrameHeight : 480,
-        videoFrameRate : 30
-    }
-    let videoConfig = {
-        videoSourceType : media.VideoSourceType.VIDEO_SOURCE_TYPE_SURFACE_YUV,
-        profile : videoProfile,
-        url : 'fd://',
-        rotation : 0,
-        location : { latitude : 30, longitude : 130 }
-    }
-
-    let audioProfile = {
-        audioBitrate : 48000,
-        audioChannels : 2,
-        audioCodec : media.CodecMimeType.AUDIO_AAC,
-        audioSampleRate : 48000,
-        fileFormat : media.ContainerFormatType.CFT_MPEG_4,
-    }
-
-    let audioConfig = {
-        audioSourceType : media.AudioSourceType.AUDIO_SOURCE_TYPE_MIC,
-        profile : audioProfile,
         url : 'fd://',
         rotation : 0,
         location : { latitude : 30, longitude : 130 }
@@ -153,11 +124,11 @@ describe('AVRecorderFuncTest', function () {
         if (cameraoutputcapability != null) {
             console.info('[camera] case getSupportedOutputCapability success');
             videoProfiles = cameraoutputcapability.videoProfiles;
-            videoProfiles[0].size.height = 480;
-            videoProfiles[0].size.width = 640;
+            videoProfiles[0].size.height = RKHEIGHT;
+            videoProfiles[0].size.width = RKWIDTH;
             previewProfiles = cameraoutputcapability.previewProfiles;
-            previewProfiles[0].size.height = 480;
-            previewProfiles[0].size.width = 640;
+            previewProfiles[0].size.height = RKHEIGHT;
+            previewProfiles[0].size.width = RKWIDTH;
         } else {
             console.info('[camera] case getSupportedOutputCapability failed');
             return;
@@ -165,13 +136,9 @@ describe('AVRecorderFuncTest', function () {
         if (previewProfiles[0].format == camera.CameraFormat.CAMERA_FORMAT_YUV_420_SP) {
             console.info('[camera] case format is VIDEO_SOURCE_TYPE_SURFACE_YUV');
             avConfig.videoSourceType = media.VideoSourceType.VIDEO_SOURCE_TYPE_SURFACE_YUV;
-            videoConfig.videoSourceType = media.VideoSourceType.VIDEO_SOURCE_TYPE_SURFACE_YUV;
-            cameraFlowSource = media.VideoSourceType.VIDEO_SOURCE_TYPE_SURFACE_YUV;
         } else {
             console.info('[camera] case format is VIDEO_SOURCE_TYPE_SURFACE_ES');
             avConfig.videoSourceType = media.VideoSourceType.VIDEO_SOURCE_TYPE_SURFACE_ES;
-            videoConfig.videoSourceType = media.VideoSourceType.VIDEO_SOURCE_TYPE_SURFACE_ES;
-            cameraFlowSource = media.VideoSourceType.VIDEO_SOURCE_TYPE_SURFACE_ES;
         }
         console.info('beforeAll case Out');
     })
@@ -183,35 +150,23 @@ describe('AVRecorderFuncTest', function () {
         if (previewProfiles[0].format == camera.CameraFormat.CAMERA_FORMAT_YUV_420_SP) {
             if (pageId == 0) {
                 avProfile.videoCodec = media.CodecMimeType.VIDEO_MPEG4;
-                avProfile.videoFrameWidth = 640;
-                avProfile.videoFrameHeight = 480;
-                videoProfiles[0].size.width = 640;
-                videoProfiles[0].size.height = 480;
-                previewProfiles[0].size.width = 640;
-                previewProfiles[0].size.height = 480;
-                videoProfile.videoFrameWidth = 640;
-                videoProfile.videoFrameHeight = 480;
             } else {
                 avProfile.videoCodec = media.CodecMimeType.VIDEO_AVC;
-                avProfile.videoFrameWidth = 1920;
-                avProfile.videoFrameHeight = 1080;
-                videoProfiles[0].size.width = 1920;
-                videoProfiles[0].size.height = 1080;
-                previewProfiles[0].size.width = 1920;
-                previewProfiles[0].size.height = 1080;
-                videoProfile.videoFrameWidth = 1920;
-                videoProfile.videoFrameHeight = 1080;
             }
+            avProfile.videoFrameWidth = WGRWIDTH;
+            avProfile.videoFrameHeight = WGRHEIGHT;
+            videoProfiles[0].size.width = WGRWIDTH;
+            videoProfiles[0].size.height = WGRHEIGHT;
+            previewProfiles[0].size.width = WGRWIDTH;
+            previewProfiles[0].size.height = WGRHEIGHT;
         } else {
             avProfile.videoCodec = media.CodecMimeType.VIDEO_AVC;
-            avProfile.videoFrameWidth = 1920;
-            avProfile.videoFrameHeight = 1080;
-            videoProfiles[0].size.width = 1920;
-            videoProfiles[0].size.height = 1080;
-            previewProfiles[0].size.width = 1920;
-            previewProfiles[0].size.height = 1080;
-            videoProfile.videoFrameWidth = 1920;
-            videoProfile.videoFrameHeight = 1080;
+            avProfile.videoFrameWidth = RKWIDTH;
+            avProfile.videoFrameHeight = RKHEIGHT;
+            videoProfiles[0].size.width = RKWIDTH;
+            videoProfiles[0].size.height = RKHEIGHT;
+            previewProfiles[0].size.width = RKWIDTH;
+            previewProfiles[0].size.height = RKHEIGHT;
         }
         await mediaTestBase.msleepAsync(1000).then(
             () => {}, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
@@ -239,14 +194,6 @@ describe('AVRecorderFuncTest', function () {
     afterAll(function () {
         console.info('afterAll case');
     })
-
-    function printFailure(error) {
-        console.info(`case failureCallback called,errMessage is ${error.message}`);
-    }
-    
-    function printCatchError(error) {
-        console.info(`case catchCallback called,errMessage is ${error.message}`);
-    }
 
     async function startVideoOutput() {
         console.info(`case to start camera`);
@@ -310,7 +257,6 @@ describe('AVRecorderFuncTest', function () {
         }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
         console.info('[camera] case captureSession release success');
     }
-
 
     async function getRecorderFileFd(fileName, fileType) {
         console.info("case current fileName is: " + fileName);
@@ -928,6 +874,118 @@ describe('AVRecorderFuncTest', function () {
             STOP_CALLBACK, STOPVIDEOOUTPUT, RELEASECAMERA, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, 
             RESET_CALLBACK, STOPVIDEOOUTPUT, RELEASE_CALLBACK, RELEASECAMERA, END);
         nextStep(done);
+    })
+
+    /* *
+    * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_RESET_PROMISE_0100
+    * @tc.name      : 01. test avRecorder basic function by promise interfaces
+    * @tc.desc      : test avRecorder operation: any-reset(promise)
+    * @tc.size      : MediumTest
+    * @tc.type      : Function
+    * @tc.level     : Level2
+    */
+    it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_RESET_PROMISE_0100', 0, async function (done) {
+        let fileName = 'avRecorder_reset_promise_0'+ caseCount +'.mp4';
+        await getRecorderFileFd(fileName, 'video');
+  
+        let INFO1 = 'case current testcase is prepare-reset(promise)';
+        let array1 = new Array(PRINTINFO, INFO1, CREATE_PROMISE, PREPARE_PROMISE, RESET_PROMISE);
+
+        let INFO2 = 'case current testcase is getInputSurface-reset(promise)';
+        let array2 = new Array(PRINTINFO, INFO2, PREPARE_PROMISE, GETSURFACE_PROMISE, RESET_PROMISE);
+
+        let INFO3 = 'case current testcase is start-reset(promise)';
+        let array3 = new Array(PRINTINFO, INFO3, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, RESET_PROMISE, 
+            STOPVIDEOOUTPUT, RELEASECAMERA);
+
+        let INFO4 = 'case current testcase is pause-reset(promise)';
+        let array4 = new Array(PRINTINFO, INFO4, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, PAUSE_PROMISE, 
+            RESET_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+
+        let INFO5 = 'case current testcase is resume-reset(promise)';
+        let array5 = new Array(PRINTINFO, INFO5, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, PAUSE_PROMISE, 
+            RESUME_PROMISE, RESET_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+
+        let INFO6 = 'case current testcase is stop-reset(promise)';
+        let array6 = new Array(PRINTINFO, INFO6, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, STOP_PROMISE, 
+            RESET_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+
+        mySteps = [...array1, ...array2, ...array3, ...array4, ...array5, ...array6, END];
+        console.info('case mySteps is: ' + mySteps);
+        nextStep(done);
+    })
+
+    /* *
+    * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_RELEASE_PROMISE_0100
+    * @tc.name      : 01. test avRecorder basic function by promise interfaces
+    * @tc.desc      : test avRecorder operation: any-release(promise)
+    * @tc.size      : MediumTest
+    * @tc.type      : Function
+    * @tc.level     : Level2
+    */
+    it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_RELEASE_PROMISE_0100', 0, async function (done) {
+        let fileName = 'avRecorder_release_promise_0'+ caseCount +'.mp4';
+        await getRecorderFileFd(fileName, 'video');
+    
+        let INFO1 = 'case current testcase is create-release(promise)';
+        let array1 = new Array(PRINTINFO, INFO1, CREATE_PROMISE, RELEASE_PROMISE);
+    
+        let INFO2 = 'case current testcase is prepare-release(promise)';
+        let array2 = new Array(PRINTINFO, INFO2, CREATE_PROMISE, PREPARE_PROMISE, RELEASE_PROMISE);
+    
+        let INFO3 = 'case current testcase is getInputSurface-release(promise)';
+        let array3 = new Array(PRINTINFO, INFO3, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, RELEASE_PROMISE);
+    
+        let INFO4 = 'case current testcase is start-release(promise)';
+        let array4 = new Array(PRINTINFO, INFO4, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
+            RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+    
+        let INFO5 = 'case current testcase is pause-release(promise)';
+        let array5 = new Array(PRINTINFO, INFO5, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
+            PAUSE_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+    
+        let INFO6 = 'case current testcase is resume-release(promise)';
+        let array6 = new Array(PRINTINFO, INFO6, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
+            PAUSE_PROMISE, RESUME_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+    
+        let INFO7 = 'case current testcase is stop-release(promise)';
+        let array7 = new Array(PRINTINFO, INFO7, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
+            STOP_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+    
+        let INFO8 = 'case current testcase is reset-release(promise)';
+        let array8 = new Array(PRINTINFO, INFO8, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
+            RESET_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+    
+        mySteps = [...array1, ...array2, ...array3, ...array4, ...array5, ...array6, ...array7, ...array8, END];
+        console.info('case mySteps is: ' + mySteps);
+        nextStep(done);
+    })
+
+    /* *
+    * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_SETCALLBACK_0100
+    * @tc.name      : 01. test avRecorder setcallback on and off
+    * @tc.desc      : test avRecorder setcallback on and off
+    * @tc.size      : MediumTest
+    * @tc.type      : Function
+    * @tc.level     : Level2
+    */
+    it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_SETCALLBACK_0100', 0, async function (done) {
+        let fileName = 'avRecorder_callback_on_off_0'+ caseCount +'.mp4';
+        await getRecorderFileFd(fileName, 'video');
+        await createAVRecorderByPromise(done);
+        CallbackOn(1);
+        await prepareByPromise();
+        CallbackOn(2);
+        await getInputSurfaceByPromise(done);
+        await startVideoOutput();
+        await startByPromise();
+        CallbackOff();
+        await pauseByPromise();
+        CallbackOn(3);
+        await stopByPromise();
+        CallbackOff();
+        await releaseByPromise();
+        done();
     })
 })
 }
