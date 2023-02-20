@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-declares_args() {
+declares_arg() {
     multimedia_player_framework_use_codec_plugins = true
 }
 
