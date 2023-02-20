@@ -1737,7 +1737,7 @@ AVPlayerNapi* AVPlayerNapi::GetJsInstanceWithParameter(napi_env env, napi_callba
     return jsPlayer;
 }
 
-bool AVPlayer::IsLiveSource() const
+bool AVPlayerNapi::IsLiveSource() const
 {
     return isLiveStream_;
 }

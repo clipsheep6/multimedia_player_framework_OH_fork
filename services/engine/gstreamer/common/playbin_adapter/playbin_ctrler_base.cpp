@@ -1006,7 +1006,7 @@ void PlayBinCtrlerBase::OnAdaptiveElementSetup(GstElement &elem)
     CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
     gulong id = g_signal_connect_data(&elem, "is-live-scene", G_CALLBACK(&PlayBinCtrlerBase::OnIsLiveStream), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    (void)signalIds_emplace_back(SignalInfo { &elem, id });
+    (void)signalIds_.emplace_back(SignalInfo { &elem, id });
 }
 
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
