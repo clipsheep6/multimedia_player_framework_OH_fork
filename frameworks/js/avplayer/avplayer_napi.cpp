@@ -653,6 +653,11 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support seek");
+        return result;
+    }
+
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "seek time is not number");
@@ -707,6 +712,11 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     size_t argCount = 1; // setSpeed(speed: number)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support speed");
+        return result;
+    }
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
@@ -1067,6 +1077,11 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support loop");
+        return result;
+    }
+
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport loop operation");
@@ -1342,6 +1357,9 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
         currentTime = jsPlayer->position_;
     }
 
+    if (jsPlayer->IsLiveSource()) {
+        currentTime = -1;
+    }
     napi_value value = nullptr;
     (void)napi_create_int32(env, currentTime, &value);
     std::string curState = jsPlayer->GetCurrentState();
@@ -1363,6 +1381,9 @@ napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
         duration = jsPlayer->duration_;
     }
 
+    if (jsPlayer->IsLiveSource()) {
+        duration = -1;
+    }
     napi_value value = nullptr;
     (void)napi_create_int32(env, duration, &value);
     std::string curState = jsPlayer->GetCurrentState();
@@ -1646,6 +1667,11 @@ void AVPlayerNapi::NotifyVideoSize(int32_t width, int32_t height)
     height_ = height;
 }
 
+void AVPlayerNapi::NotifyIsLiveStream()
+{
+    isLiveStream_ = true;
+}
+
 void AVPlayerNapi::ResetUserParameters()
 {
     url_.clear();
@@ -1709,6 +1735,11 @@ AVPlayerNapi* AVPlayerNapi::GetJsInstanceWithParameter(napi_env env, napi_callba
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsPlayer != nullptr, nullptr, "failed to napi_unwrap");
 
     return jsPlayer;
+}
+
+bool AVPlayer::IsLiveSource() const
+{
+    return isLiveStream_;
 }
 } // namespace Media
 } // namespace OHOS

@@ -332,6 +332,16 @@ void PlayerEngineGstImpl::HandleBitRateCollect(const PlayBinMessage &msg)
     }
 }
 
+void PlayerEngineGstImpl::HandleIsLiveStream(const PlayBinMessage &msg)
+{
+    (void)msg;
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    Format format;
+    if (notifyObs != nullptr) {
+        notifyObs->OnInfo(INFO_TYPE_IS_LIVE_STREAM, 0, format);
+    }
+}
+
 void PlayerEngineGstImpl::HandleSubTypeMessage(const PlayBinMessage &msg)
 {
     switch (msg.subType) {
@@ -365,6 +375,10 @@ void PlayerEngineGstImpl::HandleSubTypeMessage(const PlayBinMessage &msg)
         }
         case PLAYBIN_SUB_MSG_BITRATE_COLLECT: {
             HandleBitRateCollect(msg);
+            break;
+        }
+        case PLAYBIN_SUB_MSG_IS_LIVE_STREAM: {
+            HandleIsLiveStream(msg);
             break;
         }
         default: {
