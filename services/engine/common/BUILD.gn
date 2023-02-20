@@ -16,6 +16,7 @@ import("//build/ohos.gni")
 ohos_shared_library("media_engine_common") {
   sanitize = {
     cfi = true
+    cfi_cross_dso = true
     debug = false
   }
 

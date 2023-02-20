@@ -86,6 +86,7 @@ ohos_shared_library("media_service") {
 
   sanitize = {
     cfi = true
+    cfi_cross_dso = true
     debug = false
   }
 

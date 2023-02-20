@@ -57,6 +57,7 @@ ohos_shared_library("gst_codec_bin") {
 
   sanitize = {
     cfi = true
+    cfi_cross_dso = true
     debug = false
   }
 

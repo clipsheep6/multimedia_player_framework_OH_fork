@@ -65,6 +65,7 @@ ohos_shared_library("gst_audio_server_sink") {
 
   sanitize = {
     cfi = true
+    cfi_cross_dso = true
     debug = false
   }
 

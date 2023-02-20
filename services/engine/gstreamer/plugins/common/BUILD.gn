@@ -58,6 +58,7 @@ ohos_shared_library("gst_media_common") {
 
   sanitize = {
     cfi = true
+    cfi_cross_dso = true
     debug = false
   }
 

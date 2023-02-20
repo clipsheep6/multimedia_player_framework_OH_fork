@@ -24,6 +24,7 @@ group("media_engine_gst_package") {
 ohos_shared_library("media_engine_gst") {
   sanitize = {
     cfi = true
+    cfi_cross_dso = true
     debug = false
   }
 
