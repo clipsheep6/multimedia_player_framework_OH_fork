@@ -65,7 +65,7 @@ ohos_shared_library("native_media_core") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [
@@ -91,7 +91,7 @@ ohos_shared_library("native_media_codecbase") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [
@@ -111,7 +111,7 @@ ohos_shared_library("native_media_adec") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [
@@ -140,7 +140,7 @@ ohos_shared_library("native_media_aenc") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [
@@ -169,7 +169,7 @@ ohos_shared_library("native_media_vdec") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [
@@ -202,7 +202,7 @@ ohos_shared_library("native_media_venc") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [

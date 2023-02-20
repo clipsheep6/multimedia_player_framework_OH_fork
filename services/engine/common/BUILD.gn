@@ -16,7 +16,7 @@ import("//build/ohos.gni")
 ohos_shared_library("media_engine_common") {
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   deps = [ "avcodeclist:media_engine_common_avcodeclist" ]

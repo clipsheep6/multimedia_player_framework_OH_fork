@@ -40,7 +40,7 @@ ohos_copy("media_declaration") {
 ohos_shared_library("media") {
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   include_dirs = [

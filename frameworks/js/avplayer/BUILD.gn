@@ -18,7 +18,7 @@ import("//foundation/multimedia/player_framework/config.gni")
 ohos_shared_library("media_avplayer") {
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   include_dirs = [

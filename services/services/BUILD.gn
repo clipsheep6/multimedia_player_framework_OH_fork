@@ -86,7 +86,7 @@ ohos_shared_library("media_service") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [

@@ -57,7 +57,7 @@ ohos_shared_library("gst_codec_bin") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [ "src/gst_codec_bin.cpp" ]

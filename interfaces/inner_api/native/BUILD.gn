@@ -98,7 +98,7 @@ ohos_shared_library("media_client") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   if (defined(ohos_lite)) {

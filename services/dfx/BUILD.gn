@@ -24,7 +24,7 @@ ohos_shared_library("media_service_log_dfx") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [ "dfx_log_dump.cpp" ]
@@ -71,7 +71,7 @@ ohos_shared_library("media_service_dfx") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [ "service_dump_manager.cpp" ]

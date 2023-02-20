@@ -66,7 +66,7 @@ ohos_shared_library("gst_mem_sink") {
 
   sanitize = {
     cfi = true
-    debug = true
+    debug = false
   }
 
   sources = [
