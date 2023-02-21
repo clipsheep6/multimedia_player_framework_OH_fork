@@ -25,30 +25,30 @@ export default function AVRecorderFuncTest() {
 describe('AVRecorderFuncTest', function () {
     const RECORDER_TIME = 3000;
     const PAUSE_TIME = 1000;
-    const END = 0;
-    const CREATE_PROMISE = 1;
-    const CREATE_CALLBACK = 2;
-    const PREPARE_PROMISE = 3;
-    const PREPARE_CALLBACK = 4;
-    const GETSURFACE_PROMISE = 5;
-    const GETSURFACE_CALLBACK = 6;
-    const STARTCAMERA = 7;
-    const START_PROMISE = 8;
-    const START_CALLBACK = 9;
-    const PAUSE_PROMISE = 10;
-    const PAUSE_CALLBACK = 11;
-    const RESUME_PROMISE = 12;
-    const RESUME_CALLBACK = 13;
-    const STOP_PROMISE = 14;
-    const STOP_CALLBACK = 15;
-    const RESET_PROMISE = 16;
-    const RESET_CALLBACK = 17;
-    const RELEASE_PROMISE = 18;
-    const RELEASE_CALLBACK = 19;
-    const SETCALLBACKOFF = 20;
-    const STOPVIDEOOUTPUT = 21;
-    const RELEASECAMERA = 22;
-    const PRINTINFO = 23;
+    const END = 'end of switch';
+    const CREATE_PROMISE = 'create by promise';
+    const CREATE_CALLBACK = 'create by callback';
+    const PREPARE_PROMISE = 'prepare by promise';
+    const PREPARE_CALLBACK = 'prepare by callback';
+    const GETSURFACE_PROMISE = 'getInputSurface by promise';
+    const GETSURFACE_CALLBACK = 'getInputSurface by callback';
+    const START_CAMERA = 'start camera Input';
+    const START_PROMISE = 'start by promise';
+    const START_CALLBACK = 'start by callback';
+    const PAUSE_PROMISE = 'pause by promise';
+    const PAUSE_CALLBACK = 'pause by callback';
+    const RESUME_PROMISE = 'resume by promise';
+    const RESUME_CALLBACK = 'resume by callback';
+    const STOP_PROMISE = 'stop by promise';
+    const STOP_CALLBACK = 'stop by callback';
+    const RESET_PROMISE = 'reset by promise';
+    const RESET_CALLBACK = 'reset by callback';
+    const RELEASE_PROMISE = 'release by promise';
+    const RELEASE_CALLBACK = 'release by callback';
+    const SET_CALLBACKOFF = 'set callback off';
+    const STOP_VIDEOOUTPUT = 'stop video output';
+    const RELEASE_CAMERA = 'release camera';
+    const PRINT_INFO = 'print operation info';
     let mySteps = new Array();
     let caseCount = 0;
     let cameraManager;
@@ -68,10 +68,11 @@ describe('AVRecorderFuncTest', function () {
     let videoOutput;
     let previewOutput;
     let needDone = false;
-    const RKWIDTH = 640;
-    const RKHEIGHT = 480;
-    const WGRWIDTH = 1920;
-    const WGRHEIGHT = 1080;
+    const RESOLUTION480_WIDTH = 640;
+    const RESOLUTION480_HEIGHT = 480;
+    const RESOLUTION1080_WIDTH = 1920;
+    const RESOLUTION1080_HEIGHT = 1080;
+    const FORMAT_MP4 = '.mp4';
     
     let avProfile = {
         audioBitrate : 200000,
@@ -81,8 +82,8 @@ describe('AVRecorderFuncTest', function () {
         fileFormat : media.ContainerFormatType.CFT_MPEG_4,
         videoBitrate : 2000000,
         videoCodec : media.CodecMimeType.VIDEO_AVC,
-        videoFrameWidth : RKWIDTH,
-        videoFrameHeight : RKHEIGHT,
+        videoFrameWidth : RESOLUTION480_WIDTH,
+        videoFrameHeight : RESOLUTION480_HEIGHT,
         videoFrameRate : 30
     }
     let avConfig = {
@@ -124,11 +125,11 @@ describe('AVRecorderFuncTest', function () {
         if (cameraoutputcapability != null) {
             console.info('[camera] case getSupportedOutputCapability success');
             videoProfiles = cameraoutputcapability.videoProfiles;
-            videoProfiles[0].size.height = RKHEIGHT;
-            videoProfiles[0].size.width = RKWIDTH;
+            videoProfiles[0].size.height = RESOLUTION480_HEIGHT;
+            videoProfiles[0].size.width = RESOLUTION480_WIDTH;
             previewProfiles = cameraoutputcapability.previewProfiles;
-            previewProfiles[0].size.height = RKHEIGHT;
-            previewProfiles[0].size.width = RKWIDTH;
+            previewProfiles[0].size.height = RESOLUTION480_HEIGHT;
+            previewProfiles[0].size.width = RESOLUTION480_WIDTH;
         } else {
             console.info('[camera] case getSupportedOutputCapability failed');
             return;
@@ -153,20 +154,20 @@ describe('AVRecorderFuncTest', function () {
             } else {
                 avProfile.videoCodec = media.CodecMimeType.VIDEO_AVC;
             }
-            avProfile.videoFrameWidth = WGRWIDTH;
-            avProfile.videoFrameHeight = WGRHEIGHT;
-            videoProfiles[0].size.width = WGRWIDTH;
-            videoProfiles[0].size.height = WGRHEIGHT;
-            previewProfiles[0].size.width = WGRWIDTH;
-            previewProfiles[0].size.height = WGRHEIGHT;
+            avProfile.videoFrameWidth = RESOLUTION1080_WIDTH;
+            avProfile.videoFrameHeight = RESOLUTION1080_HEIGHT;
+            videoProfiles[0].size.width = RESOLUTION1080_WIDTH;
+            videoProfiles[0].size.height = RESOLUTION1080_HEIGHT;
+            previewProfiles[0].size.width = RESOLUTION1080_WIDTH;
+            previewProfiles[0].size.height = RESOLUTION1080_HEIGHT;
         } else {
             avProfile.videoCodec = media.CodecMimeType.VIDEO_AVC;
-            avProfile.videoFrameWidth = RKWIDTH;
-            avProfile.videoFrameHeight = RKHEIGHT;
-            videoProfiles[0].size.width = RKWIDTH;
-            videoProfiles[0].size.height = RKHEIGHT;
-            previewProfiles[0].size.width = RKWIDTH;
-            previewProfiles[0].size.height = RKHEIGHT;
+            avProfile.videoFrameWidth = RESOLUTION480_WIDTH;
+            avProfile.videoFrameHeight = RESOLUTION480_HEIGHT;
+            videoProfiles[0].size.width = RESOLUTION480_WIDTH;
+            videoProfiles[0].size.height = RESOLUTION480_HEIGHT;
+            previewProfiles[0].size.width = RESOLUTION480_WIDTH;
+            previewProfiles[0].size.height = RESOLUTION480_HEIGHT;
         }
         await mediaTestBase.msleepAsync(1000).then(
             () => {}, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
@@ -492,7 +493,7 @@ describe('AVRecorderFuncTest', function () {
                 mySteps.shift();
                 getInputSurfaceByCallback(done);
                 break;
-            case STARTCAMERA:
+            case START_CAMERA:
                 mySteps.shift();
                 await startVideoOutput();
                 nextStep(done);
@@ -545,21 +546,21 @@ describe('AVRecorderFuncTest', function () {
                 mySteps.shift();
                 await releaseByCallback(done);
                 break;
-            case SETCALLBACKOFF:
+            case SET_CALLBACKOFF:
                 mySteps.shift();
                 setCallbackOff(done);
                 break;
-            case STOPVIDEOOUTPUT:
+            case STOP_VIDEOOUTPUT:
                 mySteps.shift();
                 await stopVideoOutput();
                 nextStep(done);
                 break;
-            case RELEASECAMERA:
+            case RELEASE_CAMERA:
                 mySteps.shift();
                 await releaseCamera();
                 nextStep(done);
                 break;
-            case PRINTINFO:
+            case PRINT_INFO:
                 mySteps.shift();
                 console.info(mySteps[0]);
                 mySteps.shift();
@@ -649,161 +650,161 @@ describe('AVRecorderFuncTest', function () {
  
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0100
-    * @tc.name      : 01. test avRecorder basic function by promise interfaces
+    * @tc.name      : 01. test avRecorder basic function by promises
     * @tc.desc      : test avRecorder operation: start-pause-resume-stop-reset-release
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0100', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, PAUSE_PROMISE, 
-            RESUME_PROMISE, STOP_PROMISE, STOPVIDEOOUTPUT, RESET_PROMISE, SETCALLBACKOFF, RELEASE_PROMISE, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, PAUSE_PROMISE, 
+            RESUME_PROMISE, STOP_PROMISE, STOP_VIDEOOUTPUT, RESET_PROMISE, SET_CALLBACKOFF, RELEASE_PROMISE, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0200
-    * @tc.name      : 01. test avRecorder basic function by callback interfaces
+    * @tc.name      : 01. test avRecorder basic function by callbacks
     * @tc.desc      : test avRecorder operation: start-pause-resume-stop-reset-release
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0200', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, PAUSE_CALLBACK,
-            RESUME_CALLBACK, STOP_CALLBACK, STOPVIDEOOUTPUT, RESET_CALLBACK, RELEASE_CALLBACK, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, START_CAMERA, START_CALLBACK, PAUSE_CALLBACK,
+            RESUME_CALLBACK, STOP_CALLBACK, STOP_VIDEOOUTPUT, RESET_CALLBACK, RELEASE_CALLBACK, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0300
-    * @tc.name      : 01. test avRecorder basic function by promise interfaces
+    * @tc.name      : 01. test avRecorder basic function by promises
     * @tc.desc      : test avRecorder operation: start-pause-resume-pause-reset-release
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0300', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, PAUSE_PROMISE,
-            RESUME_PROMISE, PAUSE_PROMISE, RESET_PROMISE, STOPVIDEOOUTPUT, RELEASE_PROMISE, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, PAUSE_PROMISE,
+            RESUME_PROMISE, PAUSE_PROMISE, RESET_PROMISE, STOP_VIDEOOUTPUT, RELEASE_PROMISE, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0400
-    * @tc.name      : 01. test avRecorder basic function by callback interfaces
+    * @tc.name      : 01. test avRecorder basic function by callbacks
     * @tc.desc      : test avRecorder operation: start-pause-resume-pause-reset-release 
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0400', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, PAUSE_CALLBACK,
-            RESUME_CALLBACK, PAUSE_CALLBACK, RESET_CALLBACK, STOPVIDEOOUTPUT, SETCALLBACKOFF, RELEASE_CALLBACK, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, START_CAMERA, START_CALLBACK, PAUSE_CALLBACK,
+            RESUME_CALLBACK, PAUSE_CALLBACK, RESET_CALLBACK, STOP_VIDEOOUTPUT, SET_CALLBACKOFF, RELEASE_CALLBACK, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0500
-    * @tc.name      : 01. test avRecorder basic function by promise interfaces
+    * @tc.name      : 01. test avRecorder basic function by promises
     * @tc.desc      : test avRecorder operation: start-stop-reset-release
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0500', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, STOP_PROMISE, 
-            RESET_PROMISE, STOPVIDEOOUTPUT, RELEASE_PROMISE, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, STOP_PROMISE, 
+            RESET_PROMISE, STOP_VIDEOOUTPUT, RELEASE_PROMISE, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0600
-    * @tc.name      : 01. test avRecorder basic function by callback interfaces
+    * @tc.name      : 01. test avRecorder basic function by callbacks
     * @tc.desc      : test avRecorder operation: start-stop-reset-release
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0600', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, STOP_CALLBACK,
-            RESET_CALLBACK, STOPVIDEOOUTPUT, RELEASE_CALLBACK, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, START_CAMERA, START_CALLBACK, STOP_CALLBACK,
+            RESET_CALLBACK, STOP_VIDEOOUTPUT, RELEASE_CALLBACK, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0700
-    * @tc.name      : 01. test avRecorder basic function by promise interfaces
+    * @tc.name      : 01. test avRecorder basic function by promises
     * @tc.desc      : test avRecorder operation: start-pause-stop-reset-release
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0700', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, PAUSE_PROMISE, 
-            STOP_PROMISE, STOPVIDEOOUTPUT, RESET_PROMISE, RELEASE_PROMISE, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, PAUSE_PROMISE, 
+            STOP_PROMISE, STOP_VIDEOOUTPUT, RESET_PROMISE, RELEASE_PROMISE, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0800
-    * @tc.name      : 01. test avRecorder basic function by callback interfaces
+    * @tc.name      : 01. test avRecorder basic function by callbacks
     * @tc.desc      : test avRecorder operation: start-pause-stop-reset-release
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0800', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, PAUSE_CALLBACK,
-            STOP_CALLBACK, STOPVIDEOOUTPUT, RESET_CALLBACK, RELEASE_CALLBACK, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, START_CAMERA, START_CALLBACK, PAUSE_CALLBACK,
+            STOP_CALLBACK, STOP_VIDEOOUTPUT, RESET_CALLBACK, RELEASE_CALLBACK, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0900
-    * @tc.name      : 01. test avRecorder basic function by promise interfaces
+    * @tc.name      : 01. test avRecorder basic function by promises
     * @tc.desc      : test avRecorder operation: start-pause-resume-stop-reset-release
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_0900', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, PAUSE_PROMISE, 
-            RESUME_PROMISE, STOP_PROMISE, RESET_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, PAUSE_PROMISE, 
+            RESUME_PROMISE, STOP_PROMISE, RESET_PROMISE, RELEASE_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1000
-    * @tc.name      : 01. test avRecorder basic function by callback interfaces
+    * @tc.name      : 01. test avRecorder basic function by callbacks
     * @tc.desc      : test avRecorder operation: start-pause-resume-stop-reset-release
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1000', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, PAUSE_CALLBACK,
-            RESUME_CALLBACK, STOP_CALLBACK, RESET_CALLBACK, RELEASE_CALLBACK, STOPVIDEOOUTPUT, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, START_CAMERA, START_CALLBACK, PAUSE_CALLBACK,
+            RESUME_CALLBACK, STOP_CALLBACK, RESET_CALLBACK, RELEASE_CALLBACK, STOP_VIDEOOUTPUT, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
@@ -816,11 +817,11 @@ describe('AVRecorderFuncTest', function () {
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1100', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
-            RESET_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
-            RESET_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, 
+            RESET_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, 
+            RESET_PROMISE, RELEASE_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
@@ -833,11 +834,11 @@ describe('AVRecorderFuncTest', function () {
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1200', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, 
-            RESET_CALLBACK, STOPVIDEOOUTPUT, RELEASECAMERA, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, 
-            RESET_CALLBACK, RELEASE_CALLBACK, STOPVIDEOOUTPUT, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, START_CAMERA, START_CALLBACK, 
+            RESET_CALLBACK, STOP_VIDEOOUTPUT, RELEASE_CAMERA, PREPARE_CALLBACK, GETSURFACE_CALLBACK, START_CAMERA, START_CALLBACK, 
+            RESET_CALLBACK, RELEASE_CALLBACK, STOP_VIDEOOUTPUT, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
@@ -850,11 +851,11 @@ describe('AVRecorderFuncTest', function () {
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1300', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
-            STOP_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
-            RESET_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, 
+            STOP_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, 
+            RESET_PROMISE, RELEASE_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
@@ -867,47 +868,47 @@ describe('AVRecorderFuncTest', function () {
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_FUNC_1400', 0, async function (done) {
-        let fileName = 'avRecorder_func_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_func_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
-        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, 
-            STOP_CALLBACK, STOPVIDEOOUTPUT, RELEASECAMERA, PREPARE_CALLBACK, GETSURFACE_CALLBACK, STARTCAMERA, START_CALLBACK, 
-            RESET_CALLBACK, STOPVIDEOOUTPUT, RELEASE_CALLBACK, RELEASECAMERA, END);
+        mySteps = new Array(CREATE_CALLBACK, PREPARE_CALLBACK, GETSURFACE_CALLBACK, START_CAMERA, START_CALLBACK, 
+            STOP_CALLBACK, STOP_VIDEOOUTPUT, RELEASE_CAMERA, PREPARE_CALLBACK, GETSURFACE_CALLBACK, START_CAMERA, START_CALLBACK, 
+            RESET_CALLBACK, STOP_VIDEOOUTPUT, RELEASE_CALLBACK, RELEASE_CAMERA, END);
         nextStep(done);
     })
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_RESET_PROMISE_0100
-    * @tc.name      : 01. test avRecorder basic function by promise interfaces
+    * @tc.name      : 01. test avRecorder basic function by promises
     * @tc.desc      : test avRecorder operation: any-reset(promise)
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_RESET_PROMISE_0100', 0, async function (done) {
-        let fileName = 'avRecorder_reset_promise_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_reset_promise_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
   
         let INFO1 = 'case current testcase is prepare-reset(promise)';
-        let array1 = new Array(PRINTINFO, INFO1, CREATE_PROMISE, PREPARE_PROMISE, RESET_PROMISE);
+        let array1 = new Array(PRINT_INFO, INFO1, CREATE_PROMISE, PREPARE_PROMISE, RESET_PROMISE);
 
         let INFO2 = 'case current testcase is getInputSurface-reset(promise)';
-        let array2 = new Array(PRINTINFO, INFO2, PREPARE_PROMISE, GETSURFACE_PROMISE, RESET_PROMISE);
+        let array2 = new Array(PRINT_INFO, INFO2, PREPARE_PROMISE, GETSURFACE_PROMISE, RESET_PROMISE);
 
         let INFO3 = 'case current testcase is start-reset(promise)';
-        let array3 = new Array(PRINTINFO, INFO3, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, RESET_PROMISE, 
-            STOPVIDEOOUTPUT, RELEASECAMERA);
+        let array3 = new Array(PRINT_INFO, INFO3, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, RESET_PROMISE, 
+            STOP_VIDEOOUTPUT, RELEASE_CAMERA);
 
         let INFO4 = 'case current testcase is pause-reset(promise)';
-        let array4 = new Array(PRINTINFO, INFO4, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, PAUSE_PROMISE, 
-            RESET_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+        let array4 = new Array(PRINT_INFO, INFO4, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, PAUSE_PROMISE, 
+            RESET_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA);
 
         let INFO5 = 'case current testcase is resume-reset(promise)';
-        let array5 = new Array(PRINTINFO, INFO5, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, PAUSE_PROMISE, 
-            RESUME_PROMISE, RESET_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+        let array5 = new Array(PRINT_INFO, INFO5, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, PAUSE_PROMISE, 
+            RESUME_PROMISE, RESET_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA);
 
         let INFO6 = 'case current testcase is stop-reset(promise)';
-        let array6 = new Array(PRINTINFO, INFO6, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, STOP_PROMISE, 
-            RESET_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+        let array6 = new Array(PRINT_INFO, INFO6, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, STOP_PROMISE, 
+            RESET_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA);
 
         mySteps = [...array1, ...array2, ...array3, ...array4, ...array5, ...array6, END];
         console.info('case mySteps is: ' + mySteps);
@@ -916,44 +917,44 @@ describe('AVRecorderFuncTest', function () {
 
     /* *
     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVRECORDER_RELEASE_PROMISE_0100
-    * @tc.name      : 01. test avRecorder basic function by promise interfaces
+    * @tc.name      : 01. test avRecorder basic function by promises
     * @tc.desc      : test avRecorder operation: any-release(promise)
     * @tc.size      : MediumTest
     * @tc.type      : Function
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_RELEASE_PROMISE_0100', 0, async function (done) {
-        let fileName = 'avRecorder_release_promise_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_release_promise_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
     
         let INFO1 = 'case current testcase is create-release(promise)';
-        let array1 = new Array(PRINTINFO, INFO1, CREATE_PROMISE, RELEASE_PROMISE);
+        let array1 = new Array(PRINT_INFO, INFO1, CREATE_PROMISE, RELEASE_PROMISE);
     
         let INFO2 = 'case current testcase is prepare-release(promise)';
-        let array2 = new Array(PRINTINFO, INFO2, CREATE_PROMISE, PREPARE_PROMISE, RELEASE_PROMISE);
+        let array2 = new Array(PRINT_INFO, INFO2, CREATE_PROMISE, PREPARE_PROMISE, RELEASE_PROMISE);
     
         let INFO3 = 'case current testcase is getInputSurface-release(promise)';
-        let array3 = new Array(PRINTINFO, INFO3, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, RELEASE_PROMISE);
+        let array3 = new Array(PRINT_INFO, INFO3, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, RELEASE_PROMISE);
     
         let INFO4 = 'case current testcase is start-release(promise)';
-        let array4 = new Array(PRINTINFO, INFO4, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
-            RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+        let array4 = new Array(PRINT_INFO, INFO4, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, 
+            RELEASE_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA);
     
         let INFO5 = 'case current testcase is pause-release(promise)';
-        let array5 = new Array(PRINTINFO, INFO5, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
-            PAUSE_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+        let array5 = new Array(PRINT_INFO, INFO5, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, 
+            PAUSE_PROMISE, RELEASE_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA);
     
         let INFO6 = 'case current testcase is resume-release(promise)';
-        let array6 = new Array(PRINTINFO, INFO6, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
-            PAUSE_PROMISE, RESUME_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+        let array6 = new Array(PRINT_INFO, INFO6, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, 
+            PAUSE_PROMISE, RESUME_PROMISE, RELEASE_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA);
     
         let INFO7 = 'case current testcase is stop-release(promise)';
-        let array7 = new Array(PRINTINFO, INFO7, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
-            STOP_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+        let array7 = new Array(PRINT_INFO, INFO7, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, 
+            STOP_PROMISE, RELEASE_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA);
     
         let INFO8 = 'case current testcase is reset-release(promise)';
-        let array8 = new Array(PRINTINFO, INFO8, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, STARTCAMERA, START_PROMISE, 
-            RESET_PROMISE, RELEASE_PROMISE, STOPVIDEOOUTPUT, RELEASECAMERA);
+        let array8 = new Array(PRINT_INFO, INFO8, CREATE_PROMISE, PREPARE_PROMISE, GETSURFACE_PROMISE, START_CAMERA, START_PROMISE, 
+            RESET_PROMISE, RELEASE_PROMISE, STOP_VIDEOOUTPUT, RELEASE_CAMERA);
     
         mySteps = [...array1, ...array2, ...array3, ...array4, ...array5, ...array6, ...array7, ...array8, END];
         console.info('case mySteps is: ' + mySteps);
@@ -969,7 +970,7 @@ describe('AVRecorderFuncTest', function () {
     * @tc.level     : Level2
     */
     it('SUB_MULTIMEDIA_MEDIA_AVRECORDER_SETCALLBACK_0100', 0, async function (done) {
-        let fileName = 'avRecorder_callback_on_off_0'+ caseCount +'.mp4';
+        let fileName = 'avRecorder_callback_on_off_0'+ caseCount + FORMAT_MP4;
         await getRecorderFileFd(fileName, 'video');
         await createAVRecorderByPromise(done);
         CallbackOn(1);
