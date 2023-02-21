@@ -24,6 +24,7 @@
 
 namespace OHOS {
 namespace Media {
+constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 30.0;
 using ResetForMemManageRecall = std::function<void()>;
 using RecoverByMemManageRecall = std::function<void()>;
 struct MemManageRecall {

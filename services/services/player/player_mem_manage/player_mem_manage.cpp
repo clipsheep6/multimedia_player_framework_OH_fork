@@ -26,7 +26,6 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 30.0;
 constexpr int32_t RESERVE_BACK_GROUND_APP_NUM = 1;
 PlayerMemManage& PlayerMemManage::GetInstance()
 {

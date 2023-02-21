@@ -17,6 +17,7 @@
 #define PLAYER_SERVER_MEM_H
 
 #include <vector>
+#include <chrono>
 #include "player_server.h"
 #include "player_server_state.h"
 
@@ -127,6 +128,7 @@ private:
     bool isReleaseMemByManage_ = false;
     bool isRecoverMemByUser_ = false;
     bool isAudioPlayer_ = true;
+    std::chrono::steady_clock::time_point lastestUserSetTime_;
 
     int32_t Init() override;
     void ConvertCurrState();

@@ -52,6 +52,7 @@ int32_t PlayerServerMem::Init()
     memPlaybackCompletedState_ = std::make_shared<MemPlaybackCompletedState>(*this);
 
     recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memIdleState_);
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Init();
 }
 
@@ -185,6 +186,7 @@ int32_t PlayerServerMem::SetSource(const std::shared_ptr<IMediaDataSource> &data
         return MSERR_INVALID_OPERATION;
     }
 
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     auto ret = PlayerServer::SetSource(dataSrc);
     if (ret == MSERR_OK) {
         recoverConfig_.dataSrc = dataSrc;
@@ -200,6 +202,7 @@ int32_t PlayerServerMem::SetSource(int32_t fd, int64_t offset, int64_t size)
         return MSERR_INVALID_OPERATION;
     }
 
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     auto ret = PlayerServer::SetSource(fd, offset, size);
     if (ret == MSERR_OK) {
         recoverConfig_.fd = fd;
@@ -216,6 +219,7 @@ int32_t PlayerServerMem::Play()
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Play();
 }
 
@@ -225,6 +229,7 @@ int32_t PlayerServerMem::Prepare()
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Prepare();
 }
 
@@ -234,6 +239,7 @@ int32_t PlayerServerMem::PrepareAsync()
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::PrepareAsync();
 }
 
@@ -243,6 +249,7 @@ int32_t PlayerServerMem::Pause()
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Pause();
 }
 
@@ -252,6 +259,7 @@ int32_t PlayerServerMem::Stop()
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Stop();
 }
 
@@ -267,6 +275,7 @@ int32_t PlayerServerMem::Reset()
         }
         return MSERR_OK;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Reset();
 }
 
@@ -277,6 +286,7 @@ int32_t PlayerServerMem::Release()
         MEDIA_LOGI("User call Release");
         isReleaseMemByManage_ = false;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Release();
 }
 
@@ -286,6 +296,7 @@ int32_t PlayerServerMem::SetVolume(float leftVolume, float rightVolume)
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     auto ret = PlayerServer::SetVolume(leftVolume, rightVolume);
     if (ret == MSERR_OK) {
         recoverConfig_.leftVolume = leftVolume;
@@ -300,6 +311,7 @@ int32_t PlayerServerMem::Seek(int32_t mSeconds, PlayerSeekMode mode)
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Seek(mSeconds, mode);
 }
 
@@ -373,6 +385,7 @@ int32_t PlayerServerMem::SetPlaybackSpeed(PlaybackRateMode mode)
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     auto ret = PlayerServer::SetPlaybackSpeed(mode);
     if (ret == MSERR_OK) {
         recoverConfig_.speedMode = mode;
@@ -399,6 +412,7 @@ int32_t PlayerServerMem::SetVideoSurface(sptr<Surface> surface)
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     auto ret = PlayerServer::SetVideoSurface(surface);
     if (ret == MSERR_OK) {
         recoverConfig_.surface = surface;
@@ -433,6 +447,7 @@ int32_t PlayerServerMem::SetLooping(bool loop)
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     auto ret = PlayerServer::SetLooping(loop);
     if (ret == MSERR_OK) {
         recoverConfig_.loop = loop;
@@ -481,6 +496,7 @@ int32_t PlayerServerMem::SetParameter(const Format &param)
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     auto ret = PlayerServer::SetParameter(param);
     if (ret == MSERR_OK) {
         SaveParameter(param);
@@ -494,6 +510,7 @@ int32_t PlayerServerMem::SetPlayerCallback(const std::shared_ptr<PlayerCallback>
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     auto ret = PlayerServer::SetPlayerCallback(callback);
     if (ret == MSERR_OK) {
         recoverConfig_.callback = callback;
@@ -507,6 +524,7 @@ int32_t PlayerServerMem::SelectBitRate(uint32_t bitRate)
     if (RecoverMemByUser() != MSERR_OK) {
         return MSERR_INVALID_OPERATION;
     }
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
     auto ret = PlayerServer::SelectBitRate(bitRate);
     if (ret == MSERR_OK) {
         recoverConfig_.bitRate = bitRate;
@@ -666,6 +684,12 @@ void PlayerServerMem::ResetForMemManage()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     if (isAudioPlayer_ || IsPlaying()) {
+        return;
+    }
+    std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<
+        std::chrono::duration<double>>(std::chrono::steady_clock::now() - lastestUserSetTime_);
+    if (lastSetToNow.count() <= APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
+        MEDIA_LOGW("last set time(%{public}f) less than threshold value", lastSetToNow.count());
         return;
     }
 
