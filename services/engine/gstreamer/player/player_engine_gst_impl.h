@@ -24,7 +24,7 @@
 #include "audio_info.h"
 #include "i_player_engine.h"
 #include "i_playbin_ctrler.h"
-#include "gst_appsrc_wrap.h"
+#include "gst_appsrc_engine.h"
 #include "player_track_parse.h"
 #include "player_codec_ctrl.h"
 #include "task_queue.h"
@@ -104,7 +104,7 @@ private:
     std::weak_ptr<IPlayerEngineObs> obs_;
     sptr<Surface> producerSurface_ = nullptr;
     std::string url_ = "";
-    std::shared_ptr<GstAppsrcWrap> appsrcWrap_ = nullptr;
+    std::shared_ptr<GstAppsrcEngine> appsrcWrap_ = nullptr;
     std::shared_ptr<PlayerTrackParse> trackParse_ = nullptr;
     PlayerCodecCtrl codecCtrl_;
     int32_t videoWidth_ = 0;

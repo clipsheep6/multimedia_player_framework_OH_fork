@@ -19,8 +19,10 @@
 #include "avdatasrcmemory.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_dfx.h"
 #include "securec.h"
 #include "scope_guard.h"
+#include "param_wrapper.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstAppsrcEngine"};
@@ -88,6 +90,7 @@ int32_t GstAppsrcEngine::Prepare()
     MEDIA_LOGD("Prepare in");
     std::unique_lock<std::mutex> lock(mutex_);
     ResetConfig();
+    SetPushBufferMode();
     CHECK_AND_RETURN_RET_LOG(pullTaskQue_.Start() == MSERR_OK, MSERR_INVALID_OPERATION, "init task failed");
     CHECK_AND_RETURN_RET_LOG(pushTaskQue_.Start() == MSERR_OK, MSERR_INVALID_OPERATION, "init task failed");
     auto task = std::make_shared<TaskHandler<void>>([this] { PullTask(); });
@@ -179,10 +182,19 @@ bool GstAppsrcEngine::IsLiveMode() const
     return streamType_ == GST_APP_STREAM_TYPE_STREAM;
 }
 
-void GstAppsrcEngine::SetPushBufferMode(bool isCopy)
+void GstAppsrcEngine::SetPushBufferMode()
 {
-    MEDIA_LOGD("Set copyMode_ to %{public}d", isCopy);
-    copyMode_ = isCopy;
+    std::string copyMode;
+    int32_t res = OHOS::system::GetStringParameter("sys.media.datasrc.set.copymode", copyMode, "");
+    if (res == 0 && !copyMode.empty()) {
+        if (copyMode == "TRUE") {
+            copyMode_ = true;
+            MEDIA_LOGD("set copymode to true");
+        } else if (copyMode == "FALSE") {
+            copyMode_ = false;
+            MEDIA_LOGD("set copymode to false");
+        }
+    }
 }
 
 int32_t GstAppsrcEngine::SetErrorCallback(AppsrcErrorNotifier notifier)
@@ -482,6 +494,7 @@ uint32_t GstAppsrcEngine::GetFreeSize()
             bufferSize_ - appSrcMem_->begin + appSrcMem_->end + 1;
     }
     MEDIA_LOGD("GetFreeSize is: %{public}u", freeSize);
+    MediaTrace::CounterTrace("DataSrc::FreeBuffer", freeSize);
     return freeSize;
 }
 
@@ -498,6 +511,7 @@ uint32_t GstAppsrcEngine::GetAvailableSize()
             bufferSize_ - appSrcMem_->availableBegin + appSrcMem_->begin;
     }
     MEDIA_LOGD("GetAvailableSize is: %{public}u", availableSize);
+    MediaTrace::CounterTrace("DataSrc::AvailableBUffer", availableSize);
     return availableSize;
 }
 

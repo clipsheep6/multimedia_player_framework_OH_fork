@@ -280,6 +280,11 @@ struct AVFileDescriptor {
     int64_t offset = 0;
     int64_t length = -1;
 };
+
+struct AVDataSrcDescriptor {
+    int64_t fileSize = 0;
+    napi_value callback = nullptr;
+};
 } // namespace Media
 } // namespace OHOS
 #endif // COMMON_NAPI_H
