@@ -14,28 +14,29 @@
  */
 
 
-export async function initCaptureSession(videoOutPut, cameraManager, cameraDevice, previewOutput) {
-    let cameraInput = await cameraManager.createCameraInput(cameraDevice);
-    if (cameraInput != null) {
-        console.info('[camera] case createCameraInput success');
-    } else {
-        console.info('[camera] case createCameraInput failed');
-        return;
-    }
-    await cameraInput.open((err) => {
-        if(err){
-            console.info('[camera] cameraInput open Failed');
-            return
-        }
-        console.info('[camera] cameraInput open success');
-    })
-    let captureSession = await cameraManager.createCaptureSession();
-    await captureSession.beginConfig();
-    await captureSession.addInput(cameraInput);
-    await captureSession.addOutput(previewOutput);
-    await captureSession.addOutput(videoOutPut);
-    await captureSession.commitConfig();
-    await captureSession.start();
+export async function initCaptureSession(cameraInput, videoOutPut, cameraManager, previewOutput) {
+    await cameraInput.open().then(() => {
+        console.info('[camera] case cameraInput.open() called');
+    }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+    console.info('[camera] case cameraInput open success');
+    let captureSession = cameraManager.createCaptureSession();
+    console.info('[camera] case createCaptureSession success');
+    captureSession.beginConfig();
+    console.info('[camera] case beginConfig success');
+    captureSession.addInput(cameraInput);
+    console.info('[camera] case addInput(cameraInput) success');
+    captureSession.addOutput(previewOutput);
+    console.info('[camera] case addOutput(previewOutput) success');
+    captureSession.addOutput(videoOutPut);
+    console.info('[camera] case addOutput(videoOutPut) success');
+    await captureSession.commitConfig().then(() => {
+        console.info('[camera] case commitConfig');
+    }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+    console.info('[camera] case commitConfig success');
+    await captureSession.start().then(() => {
+        console.info('[camera] case captureSession.start()');
+    }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+    console.info('[camera] case captureSession.start() success');
     return captureSession;
 }
 

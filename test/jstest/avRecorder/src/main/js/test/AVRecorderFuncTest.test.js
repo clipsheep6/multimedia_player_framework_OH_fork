@@ -203,8 +203,7 @@ describe('AVRecorderFuncTest', function () {
         console.info(`case camera create videoOutput done`);
         previewOutput = cameraManager.createPreviewOutput(previewProfiles[0], playerSurfaceId);
         console.info(`case camera create previewOutput done`);
-        captureSession = await videoRecorderBase.initCaptureSession(cameraInput, videoOutput, cameraManager,
-            cameras[0], previewOutput);
+        captureSession = await videoRecorderBase.initCaptureSession(cameraInput, videoOutput, cameraManager, previewOutput);
         if (cameraInput == null || videoOutput == null || previewOutput == null) {
             console.info('[camera] case cameraInput/videoOutput/previewOutput is null');
             return;
