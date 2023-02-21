@@ -53,7 +53,7 @@ config("media_engine_gst_factory_config") {
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/message",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/metadata",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/utils",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/common/appsrc_wrap",
+    "../common/appsrc_engine",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",

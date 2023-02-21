@@ -51,7 +51,7 @@ public:
     int32_t Init();
     int32_t Prepare();
     void Stop();
-    void SetPushBufferMode(bool isCopy);
+    void SetPushBufferMode();
 private:
     void SetCallBackForAppSrc();
     void ClearAppsrc();

@@ -106,7 +106,7 @@ int32_t PlayerEngineGstImpl::SetSource(const std::shared_ptr<IMediaDataSource> &
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "input dataSrc is empty!");
-    appsrcWrap_ = GstAppsrcWrap::Create(dataSrc);
+    appsrcWrap_ = GstAppsrcEngine::Create(dataSrc);
     CHECK_AND_RETURN_RET_LOG(appsrcWrap_ != nullptr, MSERR_NO_MEMORY, "new appsrcwrap failed!");
     return MSERR_OK;
 }

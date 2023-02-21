@@ -78,7 +78,7 @@ void MediaDataSourceDemoSeekable::Reset()
     (void)fseek(fd_, 0, SEEK_SET);
 }
 
-int32_t MediaDataSourceDemoSeekable::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+int32_t MediaDataSourceDemoSeekable::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_INVALID_VAL, "Mem is nullptr");
     if (pos != pos_) {
@@ -112,11 +112,19 @@ int32_t MediaDataSourceDemoSeekable::ReadAt(int64_t pos, uint32_t length, const 
     return realLen;
 }
 
+int32_t MediaDataSourceDemoSeekable::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+{
+    (void)pos;
+    (void)length;
+    (void)mem;
+    return MSERR_OK;
+}
+
 int32_t MediaDataSourceDemoSeekable::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
 {
     (void)length;
     (void)mem;
-    return 0;
+    return MSERR_OK;
 }
 
 int32_t MediaDataSourceDemoSeekable::GetSize(int64_t &size)

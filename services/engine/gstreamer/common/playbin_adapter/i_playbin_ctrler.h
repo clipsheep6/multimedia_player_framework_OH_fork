@@ -22,7 +22,7 @@
 #include "nocopyable.h"
 #include "playbin_msg_define.h"
 #include "playbin_sink_provider.h"
-#include "gst_appsrc_wrap.h"
+#include "gst_appsrc_engine.h"
 
 namespace OHOS {
 namespace Media {
@@ -56,7 +56,7 @@ public:
     static std::shared_ptr<IPlayBinCtrler> Create(PlayBinKind kind, const PlayBinCreateParam &createParam);
 
     virtual int32_t SetSource(const std::string &url) = 0;
-    virtual int32_t SetSource(const std::shared_ptr<GstAppsrcWrap> &appsrcWrap) = 0;
+    virtual int32_t SetSource(const std::shared_ptr<GstAppsrcEngine> &appsrcWrap) = 0;
     virtual int32_t Prepare() = 0; // sync
     virtual int32_t PrepareAsync() = 0; // async
     virtual int32_t Play() = 0; // async

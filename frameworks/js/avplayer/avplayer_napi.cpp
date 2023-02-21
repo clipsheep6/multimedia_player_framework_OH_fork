@@ -66,6 +66,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
+        DECLARE_NAPI_GETTER_SETTER("dataSrc", JsGetDataSrc, JsSetDataSrc),
         DECLARE_NAPI_GETTER_SETTER("surfaceId", JsGetSurfaceID, JsSetSurfaceID),
         DECLARE_NAPI_GETTER_SETTER("loop", JsGetLoop, JsSetLoop),
         DECLARE_NAPI_GETTER_SETTER("videoScaleType", JsGetVideoScaleType, JsSetVideoScaleType),
@@ -323,6 +324,9 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
         state != AVPlayerState::STATE_PLAYING) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/paused/completed, unsupport play operation");
+    } else if (state == AVPlayerState::STATE_COMPLETED && jsPlayer->IsLiveSource()) {
+        promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_CAPABILITY,
+            "In live mode, replay not be allowed.");
     } else {
         promiseCtx->asyncTask = jsPlayer->PlayTask();
     }
@@ -556,6 +560,10 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
             "current state is released, unsupport reset operation");
     } else {
         promiseCtx->asyncTask = jsPlayer->ResetTask();
+        if (jsPlayer->dataSrcCb_ != nullptr) {
+            jsPlayer->dataSrcCb_->ClearCallbackReference();
+            jsPlayer->dataSrcCb_ = nullptr;
+        }
     }
 
     napi_value resource = nullptr;
@@ -675,8 +683,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
         }
         status = napi_get_value_int32(env, args[1], &mode);
         if (status != napi_ok || mode < SEEK_NEXT_SYNC || mode > SEEK_CLOSEST) {
-            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-                "invalid parameters, please check the input seek mode");
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek mode");
             return result;
         }
     }
@@ -684,6 +691,10 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport seek operation");
+        return result;
+    }
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, unsupport seek operation");
         return result;
     }
 
@@ -725,6 +736,10 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport speed operation");
+        return result;
+    }
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, unsupport speed operation");
         return result;
     }
 
@@ -974,6 +989,84 @@ napi_value AVPlayerNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info 
     return value;
 }
 
+napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetDataSrc In");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set dataSrc");
+        return result;
+    }
+    jsPlayer->StartListenCurrentResource(); // Listen to the events of the current resource
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "args[0] is not napi_object");
+        return result;
+    }
+    (void)CommonNapi::GetPropertyInt64(env, args[0], "fileSize", jsPlayer->dataSrcDescriptor_.fileSize);
+    if (jsPlayer->dataSrcDescriptor_.fileSize < -1 || jsPlayer->dataSrcDescriptor_.fileSize == 0) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check parameter fileSize");
+        return result;
+    }
+    MEDIA_LOGD("Recvive filesize is %{public}" PRId64 "", jsPlayer->dataSrcDescriptor_.fileSize);
+    jsPlayer->dataSrcCb_ = std::make_shared<MediaDataSourceCallback>(env, jsPlayer->dataSrcDescriptor_.fileSize);
+
+    napi_value callback = nullptr;
+    napi_ref ref = nullptr;
+    napi_get_named_property(env, args[0], "callback", &callback);
+    jsPlayer->dataSrcDescriptor_.callback = callback;
+    napi_status status = napi_create_reference(env, callback, 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
+    jsPlayer->dataSrcCb_->SaveCallbackReference(READAT_CALLBACK_NAME, autoRef);
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+        MEDIA_LOGI("SetDataSrc Task");
+        if (jsPlayer->player_ != nullptr) {
+            if (jsPlayer->player_->SetSource(jsPlayer->dataSrcCb_) != MSERR_OK) {
+                jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
+            }
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    task->GetResult();
+
+    MEDIA_LOGI("JsSetDataSrc Out");
+    return result;
+}
+
+napi_value AVPlayerNapi::JsGetDataSrc(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetDataSrc In");
+
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(jsPlayer->dataSrcCb_ != nullptr, result, "failed to check dataSrcCb_");
+
+    napi_value value = nullptr;
+    int64_t fileSize;
+    napi_value callback = nullptr;
+    (void)napi_create_object(env, &value);
+    (void)jsPlayer->dataSrcCb_->GetSize(fileSize);
+    (void)CommonNapi::AddNumberPropInt64(env, value, "fileSize", fileSize);
+    int32_t ret = jsPlayer->dataSrcCb_->GetCallback(READAT_CALLBACK_NAME, &callback);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, result, "failed to GetCallback");
+    (void)MediaDataSourceCallback::AddNapiValueProp(env, value, "callback", callback);
+
+    MEDIA_LOGI("JsGetDataSrc Out");
+    return value;
+}
+
 #ifdef SUPPORT_VIDEO
 void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
 {
@@ -1070,6 +1163,10 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport loop operation");
+        return result;
+    }
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, unsupport loop operation");
         return result;
     }
 
@@ -1359,7 +1456,7 @@ napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
     int32_t duration = -1;
-    if (jsPlayer->IsControllable()) {
+    if (jsPlayer->IsControllable() && !jsPlayer->IsLiveSource()) {
         duration = jsPlayer->duration_;
     }
 
@@ -1379,6 +1476,11 @@ bool AVPlayerNapi::IsControllable()
     } else {
         return false;
     }
+}
+
+bool AVPlayerNapi::IsLiveSource()
+{
+    return dataSrcCb_ != nullptr && dataSrcDescriptor_.fileSize == -1;
 }
 
 std::string AVPlayerNapi::GetCurrentState()
