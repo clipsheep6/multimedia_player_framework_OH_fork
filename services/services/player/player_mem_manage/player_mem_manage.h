@@ -25,8 +25,9 @@
 namespace OHOS {
 namespace Media {
 constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 30.0;
+constexpr int32_t APP_CONTINUE_RESET_INTERVAL_NUM = 30;
 constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 60.0;
-using ResetForMemManageRecall = std::function<void(int32_t)>;
+using ResetForMemManageRecall = std::function<void()>;
 using RecoverByMemManageRecall = std::function<void()>;
 struct MemManageRecall {
     ResetForMemManageRecall resetRecall;
@@ -52,6 +53,7 @@ private:
         std::vector<MemManageRecall> memRecallStructVec;
         int32_t appState;
         bool isReserve;
+        int32_t continueResetCnt;
         std::chrono::steady_clock::time_point appEnterFrontTime;
         std::chrono::steady_clock::time_point appEnterBackTime;
     };

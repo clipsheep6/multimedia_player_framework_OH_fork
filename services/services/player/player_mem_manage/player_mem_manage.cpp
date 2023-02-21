@@ -57,14 +57,20 @@ void PlayerMemManage::FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
         appPlayerInfo.isReserve) {
         return;
     }
-    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-        std::chrono::duration<double> durationCost = std::chrono::duration_cast<
-            std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterBackTime);
-        if (durationCost.count() <= APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
-            continue;
-        }
+    std::chrono::duration<double> durationCost = std::chrono::duration_cast<
+        std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterBackTime);
+    if (durationCost.count() <= APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
+        appPlayerInfo.continueResetCnt = 0;
+        return;
+    }
+    if (appPlayerInfo.continueResetCnt % APP_CONTINUE_RESET_INTERVAL_NUM != 0) {
+        appPlayerInfo.continueResetCnt++;
+        return;
+    }
+    appPlayerInfo.continueResetCnt++;
 
-        ((*iter).resetRecall)(static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND));
+    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+        ((*iter).resetRecall)();
     }
 }
 
@@ -73,14 +79,21 @@ void PlayerMemManage::FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
     if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
         return;
     }
-    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-        std::chrono::duration<double> durationCost = std::chrono::duration_cast<
-            std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterFrontTime);
-        if (durationCost.count() <= APP_FRONT_GROUND_DESTROY_MEMERY_TIME) {
-            continue;
-        }
 
-        ((*iter).resetRecall)(static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND));
+    std::chrono::duration<double> durationCost = std::chrono::duration_cast<
+        std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterFrontTime);
+    if (durationCost.count() <= APP_FRONT_GROUND_DESTROY_MEMERY_TIME) {
+        appPlayerInfo.continueResetCnt = 0;
+        return;
+    }
+    if (appPlayerInfo.continueResetCnt % APP_CONTINUE_RESET_INTERVAL_NUM != 0) {
+        appPlayerInfo.continueResetCnt++;
+        return;
+    }
+    appPlayerInfo.continueResetCnt++;
+
+    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+        ((*iter).resetRecall)();
     }
 }
 
@@ -177,7 +190,7 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const Me
     if (pidIter == pidPlayersInfo.end()) {
         MEDIA_LOGI("new app in pid:%{public}d", pid);
         auto ret = pidPlayersInfo.emplace(pid, AppPlayerInfo {std::vector<MemManageRecall>(),
-            static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND), false,
+            static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND), false, 0,
             std::chrono::steady_clock::now(), std::chrono::steady_clock::now()});
         Memory::MemMgrClient::GetInstance().RegisterActiveApps(pid, uid);
         pidIter = ret.first;
@@ -258,7 +271,7 @@ int32_t PlayerMemManage::HandleForceReclaim(int32_t uid, int32_t pid)
             }
             for (auto iter = appPlayerInfo.memRecallStructVec.begin();
                 iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-                ((*iter).resetRecall)(static_cast<int32_t>(AppState::APP_STATE_NULL));
+                ((*iter).resetRecall)();
                 MEDIA_LOGI("call ResetForMemManageRecall success");
             }
             return MSERR_OK;
@@ -277,7 +290,7 @@ void PlayerMemManage::HandleOnTrimLevelLow()
 
             for (auto iter = appPlayerInfo.memRecallStructVec.begin();
                 iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-                ((*iter).resetRecall)(static_cast<int32_t>(AppState::APP_STATE_NULL));
+                ((*iter).resetRecall)();
                 MEDIA_LOGI("call ResetForMemManageRecall success");
             }
         }

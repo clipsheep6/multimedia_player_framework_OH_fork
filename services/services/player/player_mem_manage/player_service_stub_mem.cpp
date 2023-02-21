@@ -77,7 +77,7 @@ int32_t PlayerServiceStubMem::Init()
         playerServer_ = PlayerServerMem::Create();
         int32_t appUid = IPCSkeleton::GetCallingUid();
         int32_t appPid = IPCSkeleton::GetCallingPid();
-        memRecallStruct_ = {std::bind(&PlayerServiceStubMem::ResetForMemManageRecall, this, std::placeholders::_1),
+        memRecallStruct_ = {std::bind(&PlayerServiceStubMem::ResetForMemManageRecall, this),
             std::bind(&PlayerServiceStubMem::RecoverByMemManageRecall, this), &playerServer_};
         PlayerMemManage::GetInstance().RegisterPlayerServer(appUid, appPid, memRecallStruct_);
     }
@@ -109,11 +109,11 @@ int32_t PlayerServiceStubMem::Release()
     return playerServer_->Release();
 }
 
-void PlayerServiceStubMem::ResetForMemManageRecall(int32_t appState)
+void PlayerServiceStubMem::ResetForMemManageRecall()
 {
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetForMemManage");
-        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetForMemManage(appState);
+        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetForMemManage();
         PlayerXCollie::GetInstance().CancelTimer(id);
         return;
     });

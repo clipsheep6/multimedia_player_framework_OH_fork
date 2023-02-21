@@ -67,7 +67,7 @@ public:
     int32_t SelectBitRate(uint32_t bitRate) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
-    void ResetForMemManage(int32_t appState);
+    void ResetForMemManage();
     void RecoverByMemManage();
 
 private:
@@ -128,7 +128,6 @@ private:
     bool isReleaseMemByManage_ = false;
     bool isRecoverMemByUser_ = false;
     bool isAudioPlayer_ = true;
-    std::chrono::steady_clock::time_point lastestUserSetTime_;
 
     int32_t Init() override;
     void ConvertCurrState();
