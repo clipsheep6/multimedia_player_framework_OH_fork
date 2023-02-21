@@ -46,6 +46,7 @@ public:
     GstAppsrcEngine(const std::shared_ptr<IMediaDataSource> &dataSrc, const int64_t size);
     ~GstAppsrcEngine();
     int32_t SetAppsrc(GstElement *appSrc);
+    void SetParserParam(GstElement &elem);
     int32_t SetErrorCallback(AppsrcErrorNotifier notifier);
     bool IsLiveMode() const;
     int32_t Init();
@@ -94,6 +95,7 @@ private:
     bool noAvailableBuffer_ = true;
     int64_t timer_ = 0;
     bool copyMode_ = false;
+    bool isFirstBuffer_ = true;
 };
 } // namespace Media
 } // namespace OHOS

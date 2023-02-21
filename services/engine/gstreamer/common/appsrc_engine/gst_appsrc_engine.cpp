@@ -123,6 +123,7 @@ void GstAppsrcEngine::ResetConfig()
     noAvailableBuffer_ = true;
     timer_ = 0;
     copyMode_ = false;
+    isFirstBuffer_ = true;
 }
 
 void GstAppsrcEngine::Stop()
@@ -162,6 +163,15 @@ int32_t GstAppsrcEngine::SetAppsrc(GstElement *appSrc)
     SetCallBackForAppSrc();
     MEDIA_LOGD("SetAppsrc out");
     return MSERR_OK;
+}
+
+void GstAppsrcEngine::SetParserParam(GstElement &elem)
+{
+    if (!copyMode_) {
+        MEDIA_LOGD("SetParser in");
+        g_object_set(static_cast<GstElement *>(&elem), "bufferpool-size", bufferSize_, nullptr);
+        MEDIA_LOGD("SetParser out");
+    }
 }
 
 void GstAppsrcEngine::SetCallBackForAppSrc()
@@ -229,8 +239,9 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
         int32_t ret;
         if (pushSize == 0) {
             ret = Pusheos();
-        } else if (copyMode_) {
+        } else if (copyMode_ || isFirstBuffer_) {
             ret = PushBufferWithCopy(pushSize);
+            isFirstBuffer_ = false;
         } else {
             ret = PushBuffer(pushSize);
         }
@@ -270,8 +281,9 @@ void GstAppsrcEngine::PushTask()
             bufferSize_ - appSrcMem_->availableBegin : pushSize;
         if (pushSize == 0) {
             ret = Pusheos();
-        } else if (copyMode_) {
+        } else if (copyMode_ || isFirstBuffer_) {
             ret = PushBufferWithCopy(pushSize);
+            isFirstBuffer_ = false;
         } else {
             ret = PushBuffer(pushSize);
         }
