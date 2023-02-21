@@ -25,7 +25,8 @@
 namespace OHOS {
 namespace Media {
 constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 30.0;
-using ResetForMemManageRecall = std::function<void()>;
+constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 60.0;
+using ResetForMemManageRecall = std::function<void(int32_t)>;
 using RecoverByMemManageRecall = std::function<void()>;
 struct MemManageRecall {
     ResetForMemManageRecall resetRecall;
@@ -58,7 +59,8 @@ private:
     bool Init();
     void ProbeTask();
     void HandleOnTrimLevelLow();
-    void FindProbeTaskPlayerFromVec(AppPlayerInfo &appPlayerInfo);
+    void FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo);
+    void FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo);
     void FindProbeTaskPlayer();
     void FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &appPlayerInfo, const MemManageRecall &memRecallStruct);
     void AwakeFrontGroundAppMedia(AppPlayerInfo &appPlayerInfo);

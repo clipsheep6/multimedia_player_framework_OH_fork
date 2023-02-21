@@ -680,7 +680,7 @@ void PlayerServerMem::CheckHasRecover(PlayerOnInfoType type, int32_t extra)
     recoverConfig_.currState->MemPlayerCbRecover(type, extra);
 }
 
-void PlayerServerMem::ResetForMemManage()
+void PlayerServerMem::ResetForMemManage(int32_t appState)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     if (isAudioPlayer_ || IsPlaying()) {
@@ -688,9 +688,20 @@ void PlayerServerMem::ResetForMemManage()
     }
     std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<
         std::chrono::duration<double>>(std::chrono::steady_clock::now() - lastestUserSetTime_);
-    if (lastSetToNow.count() <= APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
-        MEDIA_LOGW("last set time(%{public}f) less than threshold value", lastSetToNow.count());
-        return;
+    if (appState == static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
+        if (lastSetToNow.count() <= APP_FRONT_GROUND_DESTROY_MEMERY_TIME) {
+            MEDIA_LOGW("appState: %{public}d, from lastest set to now duration: %{public}f less than threshold value",
+                appState, lastSetToNow.count());
+            return;
+        }
+    } else if (appState == static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND)) {
+        if (lastSetToNow.count() <= APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
+            MEDIA_LOGW("appState: %{public}d, from lastest set to now duration: %{public}f less than threshold value",
+                appState, lastSetToNow.count());
+            return;
+        }
+    } else {
+        MEDIA_LOGD("appState: %{public}d", appState);
     }
 
     auto ret = ReleaseMemByManage();

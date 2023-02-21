@@ -51,8 +51,12 @@ PlayerMemManage::~PlayerMemManage()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-void PlayerMemManage::FindProbeTaskPlayerFromVec(AppPlayerInfo &appPlayerInfo)
+void PlayerMemManage::FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
+    if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND) ||
+        appPlayerInfo.isReserve) {
+        return;
+    }
     for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
         std::chrono::duration<double> durationCost = std::chrono::duration_cast<
             std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterBackTime);
@@ -60,7 +64,23 @@ void PlayerMemManage::FindProbeTaskPlayerFromVec(AppPlayerInfo &appPlayerInfo)
             continue;
         }
 
-        ((*iter).resetRecall)();
+        ((*iter).resetRecall)(static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND));
+    }
+}
+
+void PlayerMemManage::FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
+{
+    if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
+        return;
+    }
+    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+        std::chrono::duration<double> durationCost = std::chrono::duration_cast<
+            std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterFrontTime);
+        if (durationCost.count() <= APP_FRONT_GROUND_DESTROY_MEMERY_TIME) {
+            continue;
+        }
+
+        ((*iter).resetRecall)(static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND));
     }
 }
 
@@ -100,11 +120,8 @@ void PlayerMemManage::FindProbeTaskPlayer()
     SetLastestExitBackGroundApp();
     for (auto &[uid, pidPlayersInfo] : playerManage_) {
         for (auto &[pid, appPlayerInfo] : pidPlayersInfo) {
-            if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND) ||
-                appPlayerInfo.isReserve) {
-                continue;
-            }
-            FindProbeTaskPlayerFromVec(appPlayerInfo);
+            FindFrontGroundPlayerFromVec(appPlayerInfo);
+            FindBackGroundPlayerFromVec(appPlayerInfo);
         }
     }
 }
@@ -241,7 +258,7 @@ int32_t PlayerMemManage::HandleForceReclaim(int32_t uid, int32_t pid)
             }
             for (auto iter = appPlayerInfo.memRecallStructVec.begin();
                 iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-                ((*iter).resetRecall)();
+                ((*iter).resetRecall)(static_cast<int32_t>(AppState::APP_STATE_NULL));
                 MEDIA_LOGI("call ResetForMemManageRecall success");
             }
             return MSERR_OK;
@@ -260,7 +277,7 @@ void PlayerMemManage::HandleOnTrimLevelLow()
 
             for (auto iter = appPlayerInfo.memRecallStructVec.begin();
                 iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-                ((*iter).resetRecall)();
+                ((*iter).resetRecall)(static_cast<int32_t>(AppState::APP_STATE_NULL));
                 MEDIA_LOGI("call ResetForMemManageRecall success");
             }
         }

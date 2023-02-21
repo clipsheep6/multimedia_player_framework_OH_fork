@@ -67,7 +67,7 @@ public:
     int32_t SelectBitRate(uint32_t bitRate) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
-    void ResetForMemManage();
+    void ResetForMemManage(int32_t appState);
     void RecoverByMemManage();
 
 private:
