@@ -162,7 +162,7 @@ napi_value VideoRecorderNapi::CreateVideoRecorder(napi_env env, napi_callback_in
     std::unique_ptr<VideoRecorderAsyncContext> asyncCtx = std::make_unique<VideoRecorderAsyncContext>(env);
     if (!SystemPermission()) {
         SignError(asyncCtx.get(),
-            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system")
+            MSERR_EXT_API9_PERMISSION_DENIED, "CreateVideoRecorder", "system");
     }
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
