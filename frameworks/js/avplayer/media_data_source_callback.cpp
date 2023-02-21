@@ -26,6 +26,28 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaDataS
 
 namespace OHOS {
 namespace Media {
+MediaDataSourceJsCallback::~MediaDataSourceJsCallback()
+{
+    isExit_ = true;
+    cond_.notify_all();
+    if (memory_ != nullptr) {
+        memory_ = nullptr;
+    }
+}
+
+void MediaDataSourceJsCallback::WaitResult()
+{
+    std::unique_lock<std::mutex> lock(mutexCond_);
+    if (!setResult_) {
+        static constexpr int32_t timeout = 3;
+        cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() { return setResult_ || isExit_; });
+        if (!(setResult_ || isExit_)) {
+            readSize_ = 0;
+        }
+    }
+    setResult_ = false;
+}
+
 MediaDataSourceCallback::MediaDataSourceCallback(napi_env env, int64_t fileSize)
     : env_(env),
       size_(fileSize)
@@ -42,13 +64,16 @@ MediaDataSourceCallback::~MediaDataSourceCallback()
 int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
     MEDIA_LOGD("ReadAt in");
-    MediaDataSourceJsCallback *cb = new(std::nothrow) MediaDataSourceJsCallback(READAT_CALLBACK_NAME, mem, length, pos);
-    CHECK_AND_RETURN_RET_LOG(cb != nullptr, 0, "Failed to Create MediaDataSourceJsCallback");
-    if (refMap_.find(READAT_CALLBACK_NAME) == refMap_.end()) {
-        return SOURCE_ERROR_IO;
+    cb_ = std::make_shared<MediaDataSourceJsCallback>(READAT_CALLBACK_NAME, mem, length, pos);
+    CHECK_AND_RETURN_RET_LOG(cb_ != nullptr, 0, "Failed to Create MediaDataSourceJsCallback");
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (refMap_.find(READAT_CALLBACK_NAME) == refMap_.end()) {
+            return SOURCE_ERROR_IO;
+        }
+        cb_->callback_ = refMap_.at(READAT_CALLBACK_NAME);
     }
-    cb->callback_ = refMap_.at(READAT_CALLBACK_NAME);
-    ON_SCOPE_EXIT(0) { delete cb; };
+    ON_SCOPE_EXIT(0) { cb_ = nullptr; };
 
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -57,13 +82,13 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
     CHECK_AND_RETURN_RET_LOG(work != nullptr, 0, "Failed to new uv_work_t");
     ON_SCOPE_EXIT(1) { delete work; };
     
-    work->data = reinterpret_cast<void *>(cb);
+    work->data = reinterpret_cast<void *>(cb_.get());
     // async callback, jsWork and jsWork->data should be heap object.
     int ret = uv_work(loop, work);
     CHECK_AND_RETURN_RET_LOG(ret == 0, SOURCE_ERROR_IO, "Failed to execute uv queue work");
 
-    cb->WaitResult();
-    return cb->readSize_;
+    cb_->WaitResult();
+    return cb_->readSize_;
 }
 
 int32_t MediaDataSourceCallback::uv_work(uv_loop_s *loop, uv_work_t *work)
@@ -151,6 +176,10 @@ int32_t MediaDataSourceCallback::GetCallback(const std::string &name, napi_value
 void MediaDataSourceCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    if (cb_) {
+        cb_->isExit_ = true;
+        cb_->cond_.notify_all();
+    }
     refMap_.clear();
     MEDIA_LOGD("callback has been clear");
 }

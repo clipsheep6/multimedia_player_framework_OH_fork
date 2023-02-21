@@ -324,8 +324,8 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
         state != AVPlayerState::STATE_PLAYING) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/paused/completed, unsupport play operation");
-    } else if (state == AVPlayerState::STATE_COMPLETED && jsPlayer->IsLiveSource(env, info)) {
-        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+    } else if (state == AVPlayerState::STATE_COMPLETED && jsPlayer->IsLiveSource()) {
+        promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_CAPABILITY,
             "In live mode, replay not be allowed.");
     } else {
         promiseCtx->asyncTask = jsPlayer->PlayTask();
@@ -690,11 +690,11 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
 
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed or in live mode, unsupport seek operation");
+            "current state is not prepared/playing/paused/completed, unsupport seek operation");
         return result;
     }
-    if (jsPlayer->IsLiveSource(env, info)) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "In live mode, unsupport seek operation");
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, unsupport seek operation");
         return result;
     }
 
@@ -738,8 +738,8 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
             "current state is not prepared/playing/paused/completed, unsupport speed operation");
         return result;
     }
-    if (jsPlayer->IsLiveSource(env, info)) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "In live mode, unsupport speed operation");
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, unsupport speed operation");
         return result;
     }
 
@@ -1051,6 +1051,7 @@ napi_value AVPlayerNapi::JsGetDataSrc(napi_env env, napi_callback_info info)
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+    CHECK_AND_RETURN_RET_LOG(jsPlayer->dataSrcCb_ != nullptr, result, "failed to check dataSrcCb_");
 
     napi_value value = nullptr;
     int64_t fileSize;
@@ -1164,8 +1165,8 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
             "current state is not prepared/playing/paused/completed, unsupport loop operation");
         return result;
     }
-    if (jsPlayer->IsLiveSource(env, info)) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "In live mode, unsupport loop operation");
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, unsupport loop operation");
         return result;
     }
 
@@ -1455,7 +1456,7 @@ napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
     int32_t duration = -1;
-    if (jsPlayer->IsControllable() && !jsPlayer->IsLiveSource(env, info)) {
+    if (jsPlayer->IsControllable() && !jsPlayer->IsLiveSource()) {
         duration = jsPlayer->duration_;
     }
 
@@ -1477,7 +1478,7 @@ bool AVPlayerNapi::IsControllable()
     }
 }
 
-bool AVPlayerNapi::IsLiveSource(napi_env env, napi_callback_info info)
+bool AVPlayerNapi::IsLiveSource()
 {
     return dataSrcCb_ != nullptr && dataSrcDescriptor_.fileSize == -1;
 }

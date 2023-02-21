@@ -16,6 +16,7 @@
 #include "media_data_source_proxy.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_dfx.h"
 #include "avdatasrcmemory.h"
 #include "avsharedmemory_ipc.h"
 
@@ -116,6 +117,7 @@ int32_t MediaDataSourceProxy::ReadAt(const std::shared_ptr<AVSharedMemory> &mem,
 {
     MEDIA_LOGD("ReadAt in");
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "mem is nullptr");
+    MediaTrace trace("DataSrc::ReadAt");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);

@@ -27,6 +27,24 @@ namespace OHOS {
 namespace Media {
 const std::string READAT_CALLBACK_NAME = "readAt";
 
+struct MediaDataSourceJsCallback {
+    MediaDataSourceJsCallback(const std::string &callbackName, const std::shared_ptr<AVSharedMemory> &mem,
+        uint32_t length, int64_t pos)
+        :callbackName_(callbackName), memory_(mem), length_(length), pos_(pos) {
+    }
+    ~MediaDataSourceJsCallback();
+    void WaitResult();
+    std::weak_ptr<AutoRef> callback_;
+    std::string callbackName_;
+    std::shared_ptr<AVSharedMemory> memory_;
+    uint32_t length_;
+    int64_t pos_;
+    int32_t readSize_;
+    std::mutex mutexCond_;
+    std::condition_variable cond_;
+    bool setResult_ = false;
+    bool isExit_ = false;
+};
 class MediaDataSourceCallback : public IMediaDataSource, public NoCopyable {
 public:
     MediaDataSourceCallback(napi_env env, int64_t fileSize);
@@ -44,45 +62,11 @@ public:
     int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
 private:
     int32_t uv_work(uv_loop_s *loop, uv_work_t *work);
-    struct MediaDataSourceJsCallback {
-        MediaDataSourceJsCallback(const std::string &callbackName, const std::shared_ptr<AVSharedMemory> &mem,
-            uint32_t length, int64_t pos)
-            :callbackName_(callbackName), memory_(mem), length_(length), pos_(pos) {
-        }
-        ~MediaDataSourceJsCallback()
-        {
-            isExit_ = true;
-            if (memory_ != nullptr) {
-                memory_ = nullptr;
-            }
-        }
-        std::weak_ptr<AutoRef> callback_;
-        std::string callbackName_;
-        std::shared_ptr<AVSharedMemory> memory_;
-        uint32_t length_;
-        int64_t pos_;
-        int32_t readSize_;
-        std::mutex mutexCond_;
-        std::condition_variable cond_;
-        bool setResult_ = false;
-        bool isExit_ = false;
-        void WaitResult()
-        {
-            std::unique_lock<std::mutex> lock(mutexCond_);
-            if (!setResult_) {
-                static constexpr int32_t timeout = 3;
-                cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() { return setResult_ || isExit_; });
-                if (!(setResult_ || isExit_)) {
-                    readSize_ = 0;
-                }
-            }
-            setResult_ = false;
-        }
-    };
     std::mutex mutex_;
     napi_env env_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
     int64_t size_ = -1;
+    std::shared_ptr<MediaDataSourceJsCallback> cb_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

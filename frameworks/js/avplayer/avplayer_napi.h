@@ -241,7 +241,7 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     std::string GetCurrentState();
     bool IsControllable();
-    bool IsLiveSource(napi_env env, napi_callback_info info);
+    bool IsLiveSource();
 
     void NotifyDuration(int32_t duration) override;
     void NotifyPosition(int32_t position) override;

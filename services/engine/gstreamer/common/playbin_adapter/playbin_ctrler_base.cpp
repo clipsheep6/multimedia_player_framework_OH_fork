@@ -991,11 +991,6 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         msgProcessor_->AddMsgFilter(ELEM_NAME(&elem));
     }
 
-    if (strncmp(ELEM_NAME(&elem), "qtdemux", strlen("qtdemux")) == 0 &&
-        appsrcWrap_ != nullptr && appsrcWrap_->IsLiveMode()) {
-        appsrcWrap_->SetPushBufferMode(true);
-    }
-
     std::string elementName(GST_ELEMENT_NAME(&elem));
     if (isNetWorkPlay_ == false && elementName.find("uridecodebin") != std::string::npos) {
         PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
