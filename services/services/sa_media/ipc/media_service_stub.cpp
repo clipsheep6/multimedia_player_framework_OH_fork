@@ -139,10 +139,8 @@ int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &r
 {
     MediaSystemAbility id = static_cast<MediaSystemAbility>(data.ReadInt32());
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
-    Listener(
-        (void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj)),
-        "MediaServiceStub::GetSystemAbility", true
-    )
+    Listener((void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj)),
+        "MediaServiceStub::GetSystemAbility", true)
     return MSERR_OK;
 }
 } // namespace Media
