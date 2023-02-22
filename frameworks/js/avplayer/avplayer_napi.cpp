@@ -195,15 +195,15 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                 return TaskRet(errCode, "failed to prepare");
             }
-            int32_t id = PlayerXCollie::GetInstance().SetTimer("PrepareTask");
-            preparingCond_.wait(lock, [this]() {
-                auto state = GetCurrentState();
-                return (state == AVPlayerState::STATE_PREPARED ||
-                        state == AVPlayerState::STATE_ERROR ||
-                        state == AVPlayerState::STATE_IDLE ||
-                        state == AVPlayerState::STATE_RELEASED);
-            });
-            PlayerXCollie::GetInstance().CancelTimer(id);
+            Listener(
+                preparingCond_.wait(lock, [this]() {
+                    auto state = GetCurrentState();
+                    return (state == AVPlayerState::STATE_PREPARED ||
+                            state == AVPlayerState::STATE_ERROR ||
+                            state == AVPlayerState::STATE_IDLE ||
+                            state == AVPlayerState::STATE_RELEASED);
+                }), "PrepareTask", false
+            )
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                     "failed to prepare, avplayer enter error status, please check error callback messages!");
@@ -279,16 +279,16 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                 auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                 return TaskRet(errCode, "failed to Play");
             }
-            int32_t id = PlayerXCollie::GetInstance().SetTimer("PlayTask");
-            stateChangeCond_.wait(lock, [this]() {
-                auto state = GetCurrentState();
-                return (state == AVPlayerState::STATE_PLAYING ||
-                        state == AVPlayerState::STATE_COMPLETED ||
-                        state == AVPlayerState::STATE_ERROR ||
-                        state == AVPlayerState::STATE_IDLE ||
-                        state == AVPlayerState::STATE_RELEASED);
-            });
-            PlayerXCollie::GetInstance().CancelTimer(id);
+            Listener(
+                stateChangeCond_.wait(lock, [this]() {
+                    auto state = GetCurrentState();
+                    return (state == AVPlayerState::STATE_PLAYING ||
+                            state == AVPlayerState::STATE_COMPLETED ||
+                            state == AVPlayerState::STATE_ERROR ||
+                            state == AVPlayerState::STATE_IDLE ||
+                            state == AVPlayerState::STATE_RELEASED);
+                }), "PlayTask", false
+            )
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -361,16 +361,16 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
                 auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                 return TaskRet(errCode, "failed to Pause");
             }
-            int32_t id = PlayerXCollie::GetInstance().SetTimer("PauseTask");
-            stateChangeCond_.wait(lock, [this]() {
-                auto state = GetCurrentState();
-                return (state == AVPlayerState::STATE_PAUSED ||
-                        state == AVPlayerState::STATE_COMPLETED ||
-                        state == AVPlayerState::STATE_ERROR ||
-                        state == AVPlayerState::STATE_IDLE ||
-                        state == AVPlayerState::STATE_RELEASED);
-            });
-            PlayerXCollie::GetInstance().CancelTimer(id);
+            Listener(
+                stateChangeCond_.wait(lock, [this]() {
+                    auto state = GetCurrentState();
+                    return (state == AVPlayerState::STATE_PAUSED ||
+                            state == AVPlayerState::STATE_COMPLETED ||
+                            state == AVPlayerState::STATE_ERROR ||
+                            state == AVPlayerState::STATE_IDLE ||
+                            state == AVPlayerState::STATE_RELEASED);
+                }), "PauseTask", false
+            )
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -437,15 +437,15 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
                 auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                 return TaskRet(errCode, "failed to Stop");
             }
-            int32_t id = PlayerXCollie::GetInstance().SetTimer("StopTask");
-            stateChangeCond_.wait(lock, [this]() {
-                auto state = GetCurrentState();
-                return (state == AVPlayerState::STATE_STOPPED ||
-                        state == AVPlayerState::STATE_ERROR ||
-                        state == AVPlayerState::STATE_IDLE ||
-                        state == AVPlayerState::STATE_RELEASED);
-            });
-            PlayerXCollie::GetInstance().CancelTimer(id);
+            Listener(
+                stateChangeCond_.wait(lock, [this]() {
+                    auto state = GetCurrentState();
+                    return (state == AVPlayerState::STATE_STOPPED ||
+                            state == AVPlayerState::STATE_ERROR ||
+                            state == AVPlayerState::STATE_IDLE ||
+                            state == AVPlayerState::STATE_RELEASED);
+                }), "StopTask", false
+            )
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
@@ -521,12 +521,12 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
                     auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                     return TaskRet(errCode, "failed to Reset");
                 }
-                int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetTask");
-                resettingCond_.wait(lock, [this]() {
-                    auto state = GetCurrentState();
-                    return state == AVPlayerState::STATE_IDLE || state == AVPlayerState::STATE_RELEASED;
-                });
-                PlayerXCollie::GetInstance().CancelTimer(id);
+                Listener(
+                    resettingCond_.wait(lock, [this]() {
+                        auto state = GetCurrentState();
+                        return state == AVPlayerState::STATE_IDLE || state == AVPlayerState::STATE_RELEASED;
+                    }), "ResetTask", false
+                )
             }
         }
         MEDIA_LOGI("Reset Task Out");

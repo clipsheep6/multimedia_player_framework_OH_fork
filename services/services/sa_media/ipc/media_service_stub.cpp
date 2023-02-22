@@ -139,9 +139,10 @@ int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &r
 {
     MediaSystemAbility id = static_cast<MediaSystemAbility>(data.ReadInt32());
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
-    int32_t xcollieId = PlayerXCollie::GetInstance().SetTimer("MediaServiceStub::GetSystemAbility", true);
-    (void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj));
-    PlayerXCollie::GetInstance().CancelTimer(xcollieId);
+    Listener(
+        (void)reply.WriteRemoteObject(GetSubSystemAbility(id, listenerObj)),
+        "MediaServiceStub::GetSystemAbility", true
+    )
     return MSERR_OK;
 }
 } // namespace Media
