@@ -40,10 +40,53 @@ AudioCaptureAsImpl::~AudioCaptureAsImpl()
     }
 }
 
+bool AudioCaptureAsImpl::CheckAndGetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
+    AudioStandard::AudioCapturerParams &params)
+{
+    (void)bitrate;
+    auto supportedSampleList = AudioStandard::AudioCapturer::GetSupportedSamplingRates();
+    CHECK_AND_RETURN_RET(supportedSampleList.size() > 0, false);
+    bool isValidSampleRate = false;
+    for (auto iter = supportedSampleList.cbegin(); iter != supportedSampleList.cend(); ++iter) {
+        CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, false);
+        uint32_t supportedSampleRate = static_cast<uint32_t>(*iter);
+        if (sampleRate <= supportedSampleRate) {
+            params.samplingRate = *iter;
+            isValidSampleRate = true;
+            break;
+        }
+    }
+    CHECK_AND_RETURN_RET(isValidSampleRate, false);
+
+    auto supportedChannelsList = AudioStandard::AudioCapturer::GetSupportedChannels();
+    CHECK_AND_RETURN_RET(supportedChannelsList.size() > 0, false);
+    bool isValidChannels = false;
+    for (auto iter = supportedChannelsList.cbegin(); iter != supportedChannelsList.cend(); ++iter) {
+        CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, false);
+        uint32_t supportedChannels = static_cast<uint32_t>(*iter);
+        if (channels == supportedChannels) {
+            params.audioChannel = *iter;
+            isValidChannels = true;
+            break;
+        }
+    }
+    CHECK_AND_RETURN_RET(isValidChannels, false);
+
+    return true;
+}
+
+bool AudioCaptureAsImpl::IsSupportedCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate)
+{
+    AudioStandard::AudioCapturerParams params;
+    CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureParameter(bitrate, channels, sampleRate, params), false,
+        "unsupport audio params");
+
+    return true;
+}
+
 int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t channels, uint32_t sampleRate,
     const AppInfo &appInfo)
 {
-    (void)bitrate;
     if (audioCapturer_ == nullptr) {
         AudioStandard::AppInfo audioAppInfo = {};
         audioAppInfo.appUid = appInfo.appUid;
@@ -58,33 +101,8 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
     CHECK_AND_RETURN_RET_LOG(audioCacheCtrl_ != nullptr, MSERR_NO_MEMORY, "create audio cache ctrl failed");
 
     AudioStandard::AudioCapturerParams params;
-    auto supportedSampleList = AudioStandard::AudioCapturer::GetSupportedSamplingRates();
-    CHECK_AND_RETURN_RET(supportedSampleList.size() > 0, MSERR_UNKNOWN);
-    bool isValidSampleRate = false;
-    for (auto iter = supportedSampleList.cbegin(); iter != supportedSampleList.cend(); ++iter) {
-        CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, MSERR_UNKNOWN);
-        uint32_t supportedSampleRate = static_cast<uint32_t>(*iter);
-        if (sampleRate <= supportedSampleRate) {
-            params.samplingRate = *iter;
-            isValidSampleRate = true;
-            break;
-        }
-    }
-    CHECK_AND_RETURN_RET(isValidSampleRate, MSERR_UNSUPPORT_AUD_SAMPLE_RATE);
-
-    auto supportedChannelsList = AudioStandard::AudioCapturer::GetSupportedChannels();
-    CHECK_AND_RETURN_RET(supportedChannelsList.size() > 0, MSERR_UNKNOWN);
-    bool isValidChannels = false;
-    for (auto iter = supportedChannelsList.cbegin(); iter != supportedChannelsList.cend(); ++iter) {
-        CHECK_AND_RETURN_RET(static_cast<int32_t>(*iter) > 0, MSERR_UNKNOWN);
-        uint32_t supportedChannels = static_cast<uint32_t>(*iter);
-        if (channels == supportedChannels) {
-            params.audioChannel = *iter;
-            isValidChannels = true;
-            break;
-        }
-    }
-    CHECK_AND_RETURN_RET(isValidChannels, MSERR_UNSUPPORT_AUD_CHANNEL_NUM);
+    CHECK_AND_RETURN_RET_LOG(CheckAndGetCaptureParameter(bitrate, channels, sampleRate, params),
+        MSERR_UNSUPPORT_AUD_PARAMS, "unsupport audio params");
 
     params.audioSampleFormat = AudioStandard::SAMPLE_S16LE;
     params.audioEncoding = AudioStandard::ENCODING_PCM;

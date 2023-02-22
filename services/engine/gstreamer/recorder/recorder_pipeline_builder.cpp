@@ -206,7 +206,8 @@ int32_t RecorderPipelineBuilder::CheckConfigure(int32_t sourceId, const Recorder
     if (param.type == RecorderPublicParamType::VID_ENC_FMT) {
         const VidEnc &tempParam = static_cast<const VidEnc &>(param);
 
-        if (currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
+        if ((currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_BUTT) ||
+            ((currentVideoSourceType_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES))) {
             needVideoParse_ = false;
             return MSERR_OK;
         }
@@ -266,11 +267,11 @@ int32_t RecorderPipelineBuilder::CheckPipeline()
     return MSERR_OK;
 }
 
-std::shared_ptr<RecorderPipeline> RecorderPipelineBuilder::Build()
+int32_t RecorderPipelineBuilder::Build(std::shared_ptr<RecorderPipeline> &pipeline)
 {
     if (!outputFormatConfiged_) {
         MEDIA_LOGE("Output format not configured, build pipeline failed !");
-        return nullptr;
+        return MSERR_INVALID_OPERATION;
     }
 
     /*
@@ -294,17 +295,18 @@ std::shared_ptr<RecorderPipeline> RecorderPipelineBuilder::Build()
      */
 
     int32_t ret = CheckPipeline();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
     for (auto &elem : pipelineDesc_->allElems) {
         ret = elem->CheckConfigReady();  // Check whether the parameter fully configured
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
     }
 
     ret = ExecuteLink();
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, nullptr);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
-    return pipeline_;
+    pipeline = pipeline_;
+    return MSERR_OK;
 }
 
 int32_t RecorderPipelineBuilder::ExecuteLink()
@@ -340,6 +342,8 @@ void RecorderPipelineBuilder::Reset()
     otherSrcCount_ = 0;
 
     outputFormatConfiged_ = false;
+    currentVideoSourceType_ = VideoSourceType::VIDEO_SOURCE_BUTT;
+    needVideoParse_ = false;
 }
 } // namespace Media
 } // namespace OHOS

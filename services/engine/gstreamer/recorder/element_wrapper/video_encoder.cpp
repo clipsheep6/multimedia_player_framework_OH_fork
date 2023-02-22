@@ -54,14 +54,14 @@ int32_t VideoEncoder::CreateMpegElement()
         gstElem_ = nullptr;
     }
 
-    std::string encorderName = GetEncorderName(CodecMimeType::VIDEO_MPEG4);
-    gstElem_ = gst_element_factory_make(encorderName.c_str(), name_.c_str());
+    encorderName_ = GetEncorderName(CodecMimeType::VIDEO_MPEG4);
+    gstElem_ = gst_element_factory_make(encorderName_.c_str(), name_.c_str());
     if (gstElem_ == nullptr) {
         MEDIA_LOGE("Create mpeg encoder gst_element failed! sourceId: %{public}d", desc_.handle_);
         return MSERR_INVALID_OPERATION;
     }
 
-    MEDIA_LOGI("use %{public}s", encorderName.c_str());
+    MEDIA_LOGI("use %{public}s", encorderName_.c_str());
     return MSERR_OK;
 }
 
@@ -72,8 +72,8 @@ int32_t VideoEncoder::CreateH264Element()
         gstElem_ = nullptr;
     }
 
-    std::string encorderName = GetEncorderName(CodecMimeType::VIDEO_AVC);
-    gstElem_ = gst_element_factory_make(encorderName.c_str(), name_.c_str());
+    encorderName_ = GetEncorderName(CodecMimeType::VIDEO_AVC);
+    gstElem_ = gst_element_factory_make(encorderName_.c_str(), name_.c_str());
     if (gstElem_ == nullptr) {
         MEDIA_LOGE("Create h264 encoder gst_element failed! sourceId: %{public}d", desc_.handle_);
         return MSERR_INVALID_OPERATION;
@@ -81,7 +81,7 @@ int32_t VideoEncoder::CreateH264Element()
     g_object_set(gstElem_, "i-frame-interval", DEFAULT_I_FRAME_INTERVAL, nullptr);
     g_object_set(gstElem_, "enable-surface", TRUE, nullptr);
 
-    MEDIA_LOGI("use %{public}s", encorderName.c_str());
+    MEDIA_LOGI("use %{public}s", encorderName_.c_str());
     return MSERR_OK;
 }
 
@@ -121,9 +121,33 @@ int32_t VideoEncoder::Configure(const RecorderParam &recParam)
         g_object_set(gstElem_, "bitrate", param.bitRate, nullptr);
         MEDIA_LOGI("Set video bitrate: %{public}d", param.bitRate);
         MarkParameter(param.type);
+        setBitRate_ = true;
+    }
+
+    if (recParam.type == RecorderPublicParamType::VID_RECTANGLE) {
+        const VidRectangle &param = static_cast<const VidRectangle &>(recParam);
+        width_ = param.width;
+        height_ = param.height;
+        setRectangle_ = true;
+    }
+
+    if (recParam.type == RecorderPublicParamType::VID_FRAMERATE) {
+        const VidFrameRate &param = static_cast<const VidFrameRate &>(recParam);
+        frameRate_ = param.frameRate;
+        setFrameRate_ = true;
     }
 
     return MSERR_OK;
+}
+
+bool VideoEncoder::CheckRangeValid(Range &range, int32_t value)
+{
+    if ((range.minVal != 0 || range.maxVal != 0) &&
+        (value < range.minVal || value > range.maxVal)) {
+        return false;
+    }
+
+    return true;
 }
 
 int32_t VideoEncoder::CheckConfigReady()
@@ -131,6 +155,36 @@ int32_t VideoEncoder::CheckConfigReady()
     std::set<int32_t> expectedParam = { RecorderPublicParamType::VID_ENC_FMT };
     bool configed = CheckAllParamsConfigured(expectedParam);
     CHECK_AND_RETURN_RET(configed == true, MSERR_INVALID_OPERATION);
+
+    std::vector<CapabilityData> capabilityDataArray = AVCodecAbilitySingleton::GetInstance().GetCapabilityDataArray();
+    for (auto iter = capabilityDataArray.begin(); iter != capabilityDataArray.end(); ++iter) {
+        if ((*iter).codecName == encorderName_) {
+            Range width = (*iter).width;
+            Range height = (*iter).height;
+            if (setRectangle_ &&
+                (CheckRangeValid(width, width_) == false || CheckRangeValid(height, height_) == false)) {
+                MEDIA_LOGE("The %{public}s can not support of:%{public}d * %{public}d."
+                    " Valid:[%{public}d - %{public}d] * [%{public}d - %{public}d]",
+                    encorderName_.c_str(), width_, height_, width.minVal, width.maxVal, height.minVal, height.maxVal);
+                return MSERR_UNSUPPORT_VID_PARAMS;
+            }
+
+            Range frameRate = (*iter).frameRate;
+            if (setFrameRate_ && CheckRangeValid(frameRate, frameRate_) == false) {
+                MEDIA_LOGE("The %{public}s can not support frameRate: %{public}d. Valid:[%{public}d - %{public}d].",
+                    encorderName_.c_str(), frameRate_, frameRate.minVal, frameRate.maxVal);
+                return MSERR_UNSUPPORT_VID_PARAMS;
+            }
+
+            Range bitRate = (*iter).bitrate;
+            if (setBitRate_ && CheckRangeValid(bitRate, bitRate_) == false) {
+                MEDIA_LOGE("The %{public}s can not support bitRate:%{public}d. Valid:[%{public}d - %{public}d]",
+                    encorderName_.c_str(), bitRate_, bitRate.minVal, bitRate.maxVal);
+                return MSERR_UNSUPPORT_VID_PARAMS;
+            }
+            break;
+        }
+    }
 
     return MSERR_OK;
 }
