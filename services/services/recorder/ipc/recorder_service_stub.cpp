@@ -104,6 +104,11 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         return MSERR_INVALID_OPERATION;
     }
 
+    // When the server encounters the application freeze and enters the pause state, it needs to recover in advance.
+    if (code != PAUSE) {
+        HeartBeat();
+    }
+
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {
         auto memberFunc = itFunc->second;

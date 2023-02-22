@@ -20,12 +20,23 @@
 #include "scope_guard.h"
 #include "media_dfx.h"
 #include "media_log.h"
+#include "watchdog.h"
 using namespace OHOS;
 
 #define gst_consumer_surface_pool_parent_class parent_class
 
 GST_DEBUG_CATEGORY_STATIC(gst_consumer_surface_pool_debug_category);
 #define GST_CAT_DEFAULT gst_consumer_surface_pool_debug_category
+
+class PoolManager : public OHOS::Media::WatchDog, public NoCopyable {
+public:
+    explicit PoolManager(GstConsumerSurfacePool &owner, uint32_t timeoutMs) : WatchDog(timeoutMs), owner_(owner) {}
+    ~PoolManager() = default;
+
+    void Alarm() override;
+private:
+    GstConsumerSurfacePool &owner_;
+};
 
 struct _GstConsumerSurfacePoolPrivate {
     sptr<Surface> consumer_surface;
@@ -43,6 +54,8 @@ struct _GstConsumerSurfacePoolPrivate {
     gboolean need_eos_buffer;
     gboolean is_first_buffer_in_for_trace;
     gboolean pause_data;
+    GstElement *src;
+    std::shared_ptr<PoolManager> poolMgr;
 };
 
 enum {
@@ -52,6 +65,8 @@ enum {
     PROP_MAX_FRAME_RATE,
     PROP_NOTIFY_EOS,
     PROP_PAUSE_DATA,
+    PROP_SRC,
+    PROP_INPUT_DETECTION,
 };
 
 G_DEFINE_TYPE_WITH_PRIVATE(GstConsumerSurfacePool, gst_consumer_surface_pool, GST_TYPE_VIDEO_BUFFER_POOL);
@@ -68,6 +83,8 @@ private:
 static void gst_consumer_surface_pool_set_property(GObject *object, guint id, const GValue *value, GParamSpec *pspec);
 static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool);
 static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *pool);
+static void gst_consumer_surface_pool_notify_timeout(GstConsumerSurfacePool *pool);
+static void gst_consumer_surface_pool_set_input_detection(GObject *object, bool enable);
 static GstFlowReturn gst_consumer_surface_pool_acquire_buffer(GstBufferPool *pool, GstBuffer **buffer,
     GstBufferPoolAcquireParams *params);
 static void gst_consumer_surface_pool_release_buffer(GstBufferPool *pool, GstBuffer *buffer);
@@ -83,6 +100,11 @@ static gboolean drop_this_frame(GstConsumerSurfacePool *pool, guint64 new_timest
 void ConsumerListenerProxy::OnBufferAvailable()
 {
     gst_consumer_surface_pool_buffer_available(&owner_);
+}
+
+void PoolManager::Alarm()
+{
+    gst_consumer_surface_pool_notify_timeout(&owner_);
 }
 
 static const gchar **gst_consumer_surface_pool_get_options(GstBufferPool *pool)
@@ -114,6 +136,7 @@ static void gst_consumer_surface_pool_finalize(GObject *obj)
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL_CAST(obj);
     g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);
     auto priv = surfacepool->priv;
+    priv->poolMgr = nullptr;
     if (priv->consumer_surface != nullptr) {
         if (priv->consumer_surface->UnregisterConsumerListener() != SURFACE_ERROR_OK) {
             GST_WARNING_OBJECT(surfacepool, "deregister consumer listener fail");
@@ -153,6 +176,14 @@ static void gst_consumer_surface_pool_class_init(GstConsumerSurfacePoolClass *kl
     g_object_class_install_property(gobjectClass, PROP_PAUSE_DATA,
         g_param_spec_boolean("pause-data", "pause data", "pause data",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobjectClass, PROP_SRC,
+        g_param_spec_pointer("src", "Src plugin-in", "Src plugin-in",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobjectClass, PROP_INPUT_DETECTION,
+        g_param_spec_boolean("input-detection", "input-detection", "input-detection",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
             
     poolClass->get_options = gst_consumer_surface_pool_get_options;
     poolClass->set_config = gst_consumer_surface_pool_set_config;
@@ -183,7 +214,7 @@ static void gst_consumer_surface_pool_set_property(GObject *object, guint id, co
                 gst_buffer_unref(priv->cache_buffer);
                 priv->cache_buffer = nullptr;
             }
-            priv->repeat_interval = g_value_get_uint(value) * 1000; // ms to us
+            priv->repeat_interval = g_value_get_uint(value) * 1000; // ms * 1000 = us
             break;
         case PROP_MAX_FRAME_RATE:
             priv->max_frame_rate = g_value_get_uint(value);
@@ -194,6 +225,12 @@ static void gst_consumer_surface_pool_set_property(GObject *object, guint id, co
             break;
         case PROP_PAUSE_DATA:
             priv->pause_data = g_value_get_boolean(value);
+            break;
+        case PROP_SRC:
+            priv->src = static_cast<GstElement *>(g_value_get_pointer(value));
+            break;
+        case PROP_INPUT_DETECTION:
+            gst_consumer_surface_pool_set_input_detection(object, g_value_get_boolean(value));
             break;
         default:
             break;
@@ -259,6 +296,7 @@ static gboolean gst_consumer_surface_pool_stop(GstBufferPool *pool)
     g_return_val_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr, FALSE);
     auto priv = surfacepool->priv;
     g_mutex_lock(&priv->pool_lock);
+    surfacepool->priv->poolMgr = nullptr;
     surfacepool->priv->start = FALSE;
     g_cond_signal(&priv->buffer_available_con);
     g_mutex_unlock(&priv->pool_lock);
@@ -407,6 +445,8 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
     priv->need_eos_buffer = FALSE;
     g_mutex_init(&priv->pool_lock);
     g_cond_init(&priv->buffer_available_con);
+    priv->src = nullptr;
+    priv->poolMgr = nullptr;
 }
 
 static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *pool)
@@ -415,6 +455,10 @@ static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *p
     auto priv = pool->priv;
     g_mutex_lock(&priv->pool_lock);
     ON_SCOPE_EXIT(0) { g_mutex_unlock(&priv->pool_lock); };
+
+    if (priv->poolMgr) {
+        priv->poolMgr->Notify();
+    }
 
     if (priv->suspend) {
         sptr<SurfaceBuffer> buffer = nullptr;
@@ -524,4 +568,42 @@ GstBufferPool *gst_consumer_surface_pool_new()
     (void)gst_object_ref_sink(pool);
 
     return pool;
+}
+
+static void gst_consumer_surface_pool_set_input_detection(GObject *object, bool enable)
+{
+    GST_DEBUG_OBJECT(object, "set_input_detection enable = %d.", enable);
+    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(object);
+    g_return_if_fail(surfacepool != nullptr);
+    auto priv = surfacepool->priv;
+    g_return_if_fail(priv != nullptr);
+
+    if (enable) {
+        if (priv->poolMgr == nullptr) {
+            const guint32 timeoutMs = 3000; // Error will be reported if there is no data input in 3000ms by default.
+            priv->poolMgr = std::make_shared<PoolManager>(*surfacepool, timeoutMs);
+            g_return_if_fail(priv->poolMgr != nullptr);
+        }
+        
+        priv->poolMgr->EnableWatchDog();
+    } else {
+        if (priv->poolMgr) {
+            priv->poolMgr->DisableWatchDog();
+        }
+    }
+}
+
+static void gst_consumer_surface_pool_notify_timeout(GstConsumerSurfacePool *pool)
+{
+    GST_DEBUG_OBJECT(pool, "Input stream timeout.");
+    GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
+    g_return_if_fail(surfacepool != nullptr && surfacepool->priv != nullptr);
+    auto priv = surfacepool->priv;
+    g_return_if_fail(priv != nullptr);
+
+    if (priv->src) {
+        GST_ELEMENT_ERROR (priv->src, RESOURCE, NOT_FOUND,
+            ("Input stream timeout, please confirm whether the input is normal."),
+            ("Input stream timeout, please confirm whether the input is normal."));
+    }
 }
