@@ -109,11 +109,35 @@ int32_t PlayerServiceStubMem::Release()
     return playerServer_->Release();
 }
 
-void PlayerServiceStubMem::ResetForMemManageRecall()
+void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
 {
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
-        int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetForMemManage");
-        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetForMemManage();
+        int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetFrontGroundForMemManageRecall");
+        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetFrontGroundForMemManage();
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        return;
+    });
+    (void)taskQue_.EnqueueTask(task);
+    (void)task->GetResult();
+}
+
+void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
+{
+    auto task = std::make_shared<TaskHandler<void>>([&, this] {
+        int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetBackGroundForMemManageRecall");
+        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetBackGroundForMemManage();
+        PlayerXCollie::GetInstance().CancelTimer(id);
+        return;
+    });
+    (void)taskQue_.EnqueueTask(task);
+    (void)task->GetResult();
+}
+
+void PlayerServiceStubMem::ResetMemmgrForMemManageRecall()
+{
+    auto task = std::make_shared<TaskHandler<void>>([&, this] {
+        int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetMemmgrForMemManageRecall");
+        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetMemmgrForMemManage();
         PlayerXCollie::GetInstance().CancelTimer(id);
         return;
     });

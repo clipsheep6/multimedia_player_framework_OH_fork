@@ -27,7 +27,9 @@ public:
     virtual ~PlayerServiceStubMem();
     int32_t DestroyStub() override;
     int32_t Release() override;
-    void ResetForMemManageRecall();
+    void ResetFrontGroundForMemManageRecall();
+    void ResetBackGroundForMemManageRecall();
+    void ResetMemmgrForMemManageRecall();
     void RecoverByMemManageRecall();
 
 private:

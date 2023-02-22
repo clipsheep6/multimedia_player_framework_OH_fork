@@ -136,7 +136,8 @@ protected:
     std::string lastErrMsg_;
     std::unique_ptr<UriHelper> uriHelper_ = nullptr;
     virtual int32_t Init();
-    virtual void ClearConfigInfo();
+    void ClearConfigInfo();
+    bool IsPrepared();
 
 private:
     bool IsValidSeekMode(PlayerSeekMode mode);

@@ -67,7 +67,7 @@ public:
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
-    virtual void SetPlayerFuncs();
+    void SetPlayerFuncs();
 
     TaskQueue taskQue_;
     std::shared_ptr<IPlayerService> playerServer_ = nullptr;

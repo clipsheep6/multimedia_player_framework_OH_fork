@@ -67,7 +67,9 @@ public:
     int32_t SelectBitRate(uint32_t bitRate) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
-    void ResetForMemManage();
+    void ResetFrontGroundForMemManage();
+    void ResetBackGroundForMemManage();
+    void ResetMemmgrForMemManage();
     void RecoverByMemManage();
 
 private:
@@ -128,7 +130,9 @@ private:
     bool isReleaseMemByManage_ = false;
     bool isRecoverMemByUser_ = false;
     bool isAudioPlayer_ = true;
+    int32_t continueReset = 0;
     std::map<std::shared_ptr<PlayerServerState>, std::shared_ptr<MemBaseState>> stateMap_;
+    std::chrono::steady_clock::time_point lastestUserSetTime_;
 
     int32_t Init() override;
     void SetStateMap();

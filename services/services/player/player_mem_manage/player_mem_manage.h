@@ -30,7 +30,9 @@ constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 60.0;
 using ResetForMemManageRecall = std::function<void()>;
 using RecoverByMemManageRecall = std::function<void()>;
 struct MemManageRecall {
-    ResetForMemManageRecall resetRecall;
+    ResetForMemManageRecall resetFrontGroundRecall;
+    ResetForMemManageRecall resetBackGroundRecall;
+    ResetForMemManageRecall resetMemmgrRecall;
     RecoverByMemManageRecall recoverRecall;
     void *signAddr;
 };
@@ -53,7 +55,6 @@ private:
         std::vector<MemManageRecall> memRecallStructVec;
         int32_t appState;
         bool isReserve;
-        int32_t continueResetCnt;
         std::chrono::steady_clock::time_point appEnterFrontTime;
         std::chrono::steady_clock::time_point appEnterBackTime;
     };
