@@ -25,11 +25,11 @@ namespace Media {
 class __attribute__((visibility("default"))) PlayerXCollie {
 public:
     static PlayerXCollie &GetInstance();
-    int32_t Dump(int32_t fd);    
-    constexpr static uint32_t timerTimeout = 10;
     int32_t SetTimer(const std::string &name, bool recovery = false, uint32_t timeout = 10); // 10s
     int32_t SetTimerByLog(const std::string &name, uint32_t timeout = 10); // 10s
     void CancelTimer(int32_t id);
+    int32_t Dump(int32_t fd);
+    constexpr static uint32_t timerTimeout = 10;
 private:
     PlayerXCollie() = default;
     ~PlayerXCollie() = default;
