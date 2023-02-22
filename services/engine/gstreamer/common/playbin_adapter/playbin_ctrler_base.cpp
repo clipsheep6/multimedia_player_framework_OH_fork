@@ -292,9 +292,7 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     {
         MEDIA_LOGD("Stop Start");
         if (GetCurrState() != stoppedState_) {
-            Listener(
-                stoppingCond_.wait(lock), "stoppingCond_.wait", PlayerXCollie::timerTimeout
-            )
+            Listener(stoppingCond_.wait(lock), "stoppingCond_.wait", PlayerXCollie::timerTimeout)
         }
         MEDIA_LOGD("Stop End");
     }
@@ -1111,9 +1109,7 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
     MEDIA_LOGD("report msg, type: %{public}d", msg.type);
 
     auto msgReportHandler = std::make_shared<TaskHandler<void>>([this, msg]() {
-        Listener(
-            notifier_(msg), "PlayBinCtrlerBase::ReportMessage", PlayerXCollie::timerTimeout
-        )
+        Listener(notifier_(msg), "PlayBinCtrlerBase::ReportMessage", PlayerXCollie::timerTimeout)
     });
     int32_t ret = msgQueue_->EnqueueTask(msgReportHandler);
     if (ret != MSERR_OK) {

@@ -52,10 +52,8 @@ PlayerServiceStub::~PlayerServiceStub()
 {
     if (playerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
-            Listener(
-                (void)playerServer_->Release(); playerServer_ = nullptr,
-                "PlayerServiceStub::~PlayerServiceStub", false
-            )
+            Listener((void)playerServer_->Release(); playerServer_ = nullptr,
+                "PlayerServiceStub::~PlayerServiceStub", false)
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
@@ -135,9 +133,7 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
         if (memberFunc != nullptr) {
             auto task = std::make_shared<TaskHandler<int>>([&, this] {
                 int32_t ret = -1;
-                Listener(
-                    ret = (this->*memberFunc)(data, reply), funcName, false
-                )
+                Listener(ret = (this->*memberFunc)(data, reply), funcName, false)
                 return ret;
             });
             (void)taskQue_.EnqueueTask(task);

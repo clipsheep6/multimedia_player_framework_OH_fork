@@ -25,36 +25,42 @@ namespace Media {
 class __attribute__((visibility("default"))) PlayerXCollie {
 public:
     static PlayerXCollie &GetInstance();
-    PlayerXCollie() = default;
-    PlayerXCollie(const std::string &name, bool recovery = false, uint32_t timeout = 10)
-    {
-        id_ = SetTimer(name, recovery, timeout);
-    };
-
-    PlayerXCollie(const std::string &name, uint32_t timeout = 10)
-    {
-        id_ = SetTimerByLog(name, timeout);
-    }
-    int32_t Dump(int32_t fd);
-    
-    ~PlayerXCollie()
-    {
-        CancelTimer(id_);
-    }
+    int32_t Dump(int32_t fd);    
     constexpr static uint32_t timerTimeout = 10;
-private:
     int32_t SetTimer(const std::string &name, bool recovery = false, uint32_t timeout = 10); // 10s
     int32_t SetTimerByLog(const std::string &name, uint32_t timeout = 10); // 10s
     void CancelTimer(int32_t id);
+private:
+    PlayerXCollie() = default;
+    ~PlayerXCollie() = default;
     void TimerCallback(void *data);
 
     std::mutex mutex_;
     std::map<int32_t, std::string> dfxDumper_;
     uint32_t threadDeadlockCount_ = 0;
+};
+
+class __attribute__((visibility("hidden"))) XcollieTimer {
+public:
+    XcollieTimer(const std::string &name, bool recovery = false, uint32_t timeout = 10)
+    {
+        id_ = PlayerXCollie::GetInstance().SetTimer(name, recovery, timeout);
+    };
+
+    XcollieTimer(const std::string &name, uint32_t timeout = 10)
+    {
+        id_ = PlayerXCollie::GetInstance().SetTimerByLog(name, timeout);
+    }
+
+    ~XcollieTimer()
+    {
+        PlayerXCollie::GetInstance().CancelTimer(id_);
+    }
+private:
     int32_t id_ = 0;
 };
 
-#define Listener(statement, args...) { PlayerXCollie xCollie(args); statement; }
+#define Listener(statement, args...) { XcollieTimer xCollie(args); statement; }
 } // namespace Media
 } // namespace OHOS
 #endif
