@@ -201,7 +201,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                         state == AVPlayerState::STATE_ERROR ||
                         state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
-            }), "PrepareTask", false)
+                }), "PrepareTask", false)
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                     "failed to prepare, avplayer enter error status, please check error callback messages!");
@@ -284,7 +284,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                         state == AVPlayerState::STATE_ERROR ||
                         state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
-            }), "PlayTask", false)
+                }), "PlayTask", false)
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -364,7 +364,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
                         state == AVPlayerState::STATE_ERROR ||
                         state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
-            }), "PauseTask", false)
+                }), "PauseTask", false)
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -437,7 +437,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
                         state == AVPlayerState::STATE_ERROR ||
                         state == AVPlayerState::STATE_IDLE ||
                         state == AVPlayerState::STATE_RELEASED);
-            }), "StopTask", false)
+                }), "StopTask", false)
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
@@ -516,7 +516,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
                 Listener(resettingCond_.wait(lock, [this]() {
                     auto state = GetCurrentState();
                     return state == AVPlayerState::STATE_IDLE || state == AVPlayerState::STATE_RELEASED;
-                }), "ResetTask", false)
+                    }), "ResetTask", false)
             }
         }
         MEDIA_LOGI("Reset Task Out");
