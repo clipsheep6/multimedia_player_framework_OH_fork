@@ -43,14 +43,14 @@ std::shared_ptr<IPlayerService> PlayerServerMem::Create()
 
 void PlayerServerMem::SetStateMap()
 {
-    stateMap_[idleState_] = std::static_pointer_cast<MemBaseState>(memIdleState_);
-    stateMap_[initializedState_] = std::static_pointer_cast<MemBaseState>(memInitializedState_);
-    stateMap_[preparingState_] = std::static_pointer_cast<MemBaseState>(memPreparingState_);
-    stateMap_[preparedState_] = std::static_pointer_cast<MemBaseState>(memPreparedState_);
-    stateMap_[playingState_] = std::static_pointer_cast<MemBaseState>(memPlayingState_);
-    stateMap_[pausedState_] = std::static_pointer_cast<MemBaseState>(memPausedState_);
-    stateMap_[stoppedState_] = std::static_pointer_cast<MemBaseState>(memStoppedState_);
-    stateMap_[playbackCompletedState_] = std::static_pointer_cast<MemBaseState>(memPlaybackCompletedState_);
+    stateMap_[idleState_.get()] = std::static_pointer_cast<MemBaseState>(memIdleState_);
+    stateMap_[initializedState_.get()] = std::static_pointer_cast<MemBaseState>(memInitializedState_);
+    stateMap_[preparingState_.get()] = std::static_pointer_cast<MemBaseState>(memPreparingState_);
+    stateMap_[preparedState_.get()] = std::static_pointer_cast<MemBaseState>(memPreparedState_);
+    stateMap_[playingState_.get()] = std::static_pointer_cast<MemBaseState>(memPlayingState_);
+    stateMap_[pausedState_.get()] = std::static_pointer_cast<MemBaseState>(memPausedState_);
+    stateMap_[stoppedState_.get()] = std::static_pointer_cast<MemBaseState>(memStoppedState_);
+    stateMap_[playbackCompletedState_.get()] = std::static_pointer_cast<MemBaseState>(memPlaybackCompletedState_);
 }
 
 int32_t PlayerServerMem::Init()
@@ -63,11 +63,12 @@ int32_t PlayerServerMem::Init()
     memPausedState_ = std::make_shared<MemPausedState>(*this);
     memStoppedState_ = std::make_shared<MemStoppedState>(*this);
     memPlaybackCompletedState_ = std::make_shared<MemPlaybackCompletedState>(*this);
-    SetStateMap();
 
     recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memIdleState_);
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    return PlayerServer::Init();
+    auto ret = PlayerServer::Init();
+    SetStateMap();
+    return ret;
 }
 
 PlayerServerMem::PlayerServerMem()
@@ -594,7 +595,7 @@ int32_t PlayerServerMem::ReleaseMemByManage()
         return MSERR_OK;
     }
 
-    auto itSatetMap = stateMap_.find(GetCurrState());
+    auto itSatetMap = stateMap_.find(GetCurrState().get());
     if (itSatetMap == stateMap_.end()) {
         MEDIA_LOGE("Not find correct stateMap");
         return MSERR_INVALID_OPERATION;
@@ -696,7 +697,11 @@ void PlayerServerMem::CheckHasRecover(PlayerOnInfoType type, int32_t extra)
 void PlayerServerMem::ResetFrontGroundForMemManage()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (continueReset < CONTINUE_RESET_MAX_NUM || !IsPrepared()) {
+    if (!IsPrepared()) {
+        continueReset = 0;
+        return;
+    }
+    if (continueReset < CONTINUE_RESET_MAX_NUM) {
         continueReset++;
         return;
     }
@@ -717,10 +722,14 @@ void PlayerServerMem::ResetFrontGroundForMemManage()
 void PlayerServerMem::ResetBackGroundForMemManage()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (continueReset < CONTINUE_RESET_MAX_NUM || IsPlaying()) {
-        continueReset++;
+    if (IsPlaying()) {
+        continueReset = 0;
         return;
     }
+    if (continueReset < CONTINUE_RESET_MAX_NUM) {
+        continueReset++;
+        return;
+    } 
     continueReset = 0;
 
     std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<

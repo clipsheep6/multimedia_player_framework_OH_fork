@@ -131,7 +131,7 @@ private:
     bool isRecoverMemByUser_ = false;
     bool isAudioPlayer_ = true;
     int32_t continueReset = 0;
-    std::map<std::shared_ptr<PlayerServerState>, std::shared_ptr<MemBaseState>> stateMap_;
+    std::map<void *, std::shared_ptr<MemBaseState>> stateMap_;
     std::chrono::steady_clock::time_point lastestUserSetTime_;
 
     int32_t Init() override;

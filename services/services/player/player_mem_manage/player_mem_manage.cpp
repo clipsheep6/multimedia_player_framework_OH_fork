@@ -178,7 +178,7 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const Me
     if (pidIter == pidPlayersInfo.end()) {
         MEDIA_LOGI("new app in pid:%{public}d", pid);
         auto ret = pidPlayersInfo.emplace(pid, AppPlayerInfo {std::vector<MemManageRecall>(),
-            static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND), false, 0,
+            static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND), false,
             std::chrono::steady_clock::now(), std::chrono::steady_clock::now()});
         Memory::MemMgrClient::GetInstance().RegisterActiveApps(pid, uid);
         pidIter = ret.first;

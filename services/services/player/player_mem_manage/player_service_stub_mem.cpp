@@ -77,7 +77,9 @@ int32_t PlayerServiceStubMem::Init()
         playerServer_ = PlayerServerMem::Create();
         int32_t appUid = IPCSkeleton::GetCallingUid();
         int32_t appPid = IPCSkeleton::GetCallingPid();
-        memRecallStruct_ = {std::bind(&PlayerServiceStubMem::ResetForMemManageRecall, this),
+        memRecallStruct_ = {std::bind(&PlayerServiceStubMem::ResetFrontGroundForMemManageRecall, this),
+            std::bind(&PlayerServiceStubMem::ResetBackGroundForMemManageRecall, this),
+            std::bind(&PlayerServiceStubMem::ResetMemmgrForMemManageRecall, this),
             std::bind(&PlayerServiceStubMem::RecoverByMemManageRecall, this), &playerServer_};
         PlayerMemManage::GetInstance().RegisterPlayerServer(appUid, appPid, memRecallStruct_);
     }
