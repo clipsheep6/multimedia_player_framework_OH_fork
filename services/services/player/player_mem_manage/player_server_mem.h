@@ -128,9 +128,10 @@ private:
     bool isReleaseMemByManage_ = false;
     bool isRecoverMemByUser_ = false;
     bool isAudioPlayer_ = true;
+    std::map<std::shared_ptr<PlayerServerState>, std::shared_ptr<MemBaseState>> stateMap_;
 
     int32_t Init() override;
-    void ConvertCurrState();
+    void SetStateMap();
     void SaveParameter(const Format &param);
     int32_t SetSaveParameter();
     int32_t SetSourceInternal();

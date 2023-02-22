@@ -55,6 +55,7 @@ void PlayerMemManage::FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
     if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND) ||
         appPlayerInfo.isReserve) {
+        appPlayerInfo.continueResetCnt = 0;
         return;
     }
     std::chrono::duration<double> durationCost = std::chrono::duration_cast<
@@ -77,6 +78,7 @@ void PlayerMemManage::FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 void PlayerMemManage::FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
     if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
+        appPlayerInfo.continueResetCnt = 0;
         return;
     }
 

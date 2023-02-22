@@ -74,41 +74,41 @@ public:
     PlayerServer();
     virtual ~PlayerServer();
 
-    virtual int32_t SetSource(const std::string &url) override;
-    virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
-    virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
-    virtual int32_t Play() override;
-    virtual int32_t Prepare() override;
-    virtual int32_t PrepareAsync() override;
-    virtual int32_t Pause() override;
-    virtual int32_t Stop() override;
-    virtual int32_t Reset() override;
-    virtual int32_t Release() override;
-    virtual int32_t SetVolume(float leftVolume, float rightVolume) override;
-    virtual int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
-    virtual int32_t GetCurrentTime(int32_t &currentTime) override;
-    virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
-    virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
-    virtual int32_t GetVideoWidth() override;
-    virtual int32_t GetVideoHeight() override;
-    virtual int32_t GetDuration(int32_t &duration) override;
-    virtual int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
-    virtual int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
+    int32_t SetSource(const std::string &url) override;
+    int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
+    int32_t Play() override;
+    int32_t Prepare() override;
+    int32_t PrepareAsync() override;
+    int32_t Pause() override;
+    int32_t Stop() override;
+    int32_t Reset() override;
+    int32_t Release() override;
+    int32_t SetVolume(float leftVolume, float rightVolume) override;
+    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
+    int32_t GetCurrentTime(int32_t &currentTime) override;
+    int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+    int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
+    int32_t GetVideoWidth() override;
+    int32_t GetVideoHeight() override;
+    int32_t GetDuration(int32_t &duration) override;
+    int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
+    int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override;
 #ifdef SUPPORT_VIDEO
-    virtual int32_t SetVideoSurface(sptr<Surface> surface) override;
+    int32_t SetVideoSurface(sptr<Surface> surface) override;
 #endif
-    virtual bool IsPlaying() override;
-    virtual bool IsLooping() override;
-    virtual int32_t SetLooping(bool loop) override;
-    virtual int32_t SetParameter(const Format &param) override;
-    virtual int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
-    virtual int32_t DumpInfo(int32_t fd);
-    virtual int32_t SelectBitRate(uint32_t bitRate) override;
+    bool IsPlaying() override;
+    bool IsLooping() override;
+    int32_t SetLooping(bool loop) override;
+    int32_t SetParameter(const Format &param) override;
+    int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) override;
+    int32_t DumpInfo(int32_t fd);
+    int32_t SelectBitRate(uint32_t bitRate) override;
 
     // IPlayerEngineObs override
-    virtual void OnError(PlayerErrorType errorType, int32_t errorCode) override;
-    virtual void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
-    virtual void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    void OnError(PlayerErrorType errorType, int32_t errorCode) override;
+    void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
+    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
 protected:
     class BaseState;

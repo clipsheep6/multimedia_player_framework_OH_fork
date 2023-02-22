@@ -40,6 +40,18 @@ std::shared_ptr<IPlayerService> PlayerServerMem::Create()
     return playerServerMem;
 }
 
+void PlayerServerMem::SetStateMap()
+{
+    stateMap_[idleState_] = std::static_pointer_cast<MemBaseState>(memIdleState_);
+    stateMap_[initializedState_] = std::static_pointer_cast<MemBaseState>(memInitializedState_);
+    stateMap_[preparingState_] = std::static_pointer_cast<MemBaseState>(memPreparingState_);
+    stateMap_[preparedState_] = std::static_pointer_cast<MemBaseState>(memPreparedState_);
+    stateMap_[playingState_] = std::static_pointer_cast<MemBaseState>(memPlayingState_);
+    stateMap_[pausedState_] = std::static_pointer_cast<MemBaseState>(memPausedState_);
+    stateMap_[stoppedState_] = std::static_pointer_cast<MemBaseState>(memStoppedState_);
+    stateMap_[playbackCompletedState_] = std::static_pointer_cast<MemBaseState>(memPlaybackCompletedState_);
+}
+
 int32_t PlayerServerMem::Init()
 {
     memIdleState_ = std::make_shared<MemIdleState>(*this);
@@ -50,6 +62,7 @@ int32_t PlayerServerMem::Init()
     memPausedState_ = std::make_shared<MemPausedState>(*this);
     memStoppedState_ = std::make_shared<MemStoppedState>(*this);
     memPlaybackCompletedState_ = std::make_shared<MemPlaybackCompletedState>(*this);
+    SetStateMap();
 
     recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memIdleState_);
     return PlayerServer::Init();
@@ -555,35 +568,18 @@ int32_t PlayerServerMem::GetInformationBeforeMemReset()
     return MSERR_OK;
 }
 
-void PlayerServerMem::ConvertCurrState()
-{
-    if (GetCurrState() == idleState_) {
-        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memIdleState_);
-    } else if (GetCurrState() == initializedState_) {
-        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memInitializedState_);
-    } else if (GetCurrState() == preparingState_) {
-        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memPreparingState_);
-    } else if (GetCurrState() == preparedState_) {
-        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memPreparedState_);
-    } else if (GetCurrState() == playingState_) {
-        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memPlayingState_);
-    } else if (GetCurrState() == pausedState_) {
-        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memPausedState_);
-    } else if (GetCurrState() == stoppedState_) {
-        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memStoppedState_);
-    } else if (GetCurrState() == playbackCompletedState_) {
-        recoverConfig_.currState = std::static_pointer_cast<MemBaseState>(memPlaybackCompletedState_);
-    } else {
-        MEDIA_LOGE("CurrState:%{public}s", GetCurrState()->GetStateName().c_str());
-    }
-}
-
 int32_t PlayerServerMem::ReleaseMemByManage()
 {
     if (isReleaseMemByManage_ || isRecoverMemByUser_) {
         return MSERR_OK;
     }
-    ConvertCurrState();
+
+    auto itSatetMap = stateMap_.find(GetCurrState());
+    if (itSatetMap == stateMap_.end()) {
+        MEDIA_LOGE("Not find correct stateMap");
+        return MSERR_INVALID_OPERATION;
+    }
+    recoverConfig_.currState = itSatetMap->second;
     MEDIA_LOGI("Enter, currState:%{public}s", recoverConfig_.currState->GetStateName().c_str());
     auto ret = recoverConfig_.currState->MemStateRelease();
     if (ret == MSERR_INVALID_STATE) {
