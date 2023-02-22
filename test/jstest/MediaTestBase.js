@@ -24,9 +24,8 @@ export async function getPermission(permissionNames) {
 }
 
 export async function driveFn(num) {
-    console.info(`case come in driveFn 111`);
+    console.info(`case come in driveFn`);
     let driver = UiDriver.create();
-    console.info(`case come in driveFn 222`);
     console.info(`driver is ${JSON.stringify(driver)}`);
     await msleepAsync(2000);
     console.info(`UiDriver start`);
@@ -59,7 +58,6 @@ export async function closeFileDescriptor(fileName) {
     });
 }
 
-
 // wait asynchronously
 export async function msleepAsync(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
@@ -70,6 +68,7 @@ export function assertErr(opera, err, done) {
     expect().assertFail();
     done();
 }
+
 // callback function for promise call back error
 export function failureCallback(error) {
     expect().assertFail();
@@ -81,6 +80,7 @@ export function catchCallback(error) {
     expect().assertFail();
     console.info(`case error catch called,errMessage is ${error.message}`);
 }
+
 export function checkDescription(actualDescription, descriptionKey, descriptionValue) {
     for (let i = 0; i < descriptionKey.length; i++) {
         let property = actualDescription[descriptionKey[i]];
@@ -96,7 +96,6 @@ export function checkDescription(actualDescription, descriptionKey, descriptionV
     }
 }
 
-
 export async function getFd(pathName, fileType) {
     let fdObject = {
         fileAsset : null,
@@ -111,11 +110,15 @@ export async function getFd(pathName, fileType) {
     if (fileType == 'audio') {
         mediaType = mediaLibrary.MediaType.AUDIO;
         publicPath = await mediaTest.getPublicDirectory(mediaLibrary.DirectoryType.DIR_AUDIO);
+    } else if (fileType == "video") {
+        mediaType = mediaLibrary.MediaType.VIDEO;
+        publicPath = await mediaTest.getPublicDirectory(mediaLibrary.DirectoryType.DIR_VIDEO);
     } else {
         mediaType = mediaLibrary.MediaType.VIDEO;
         publicPath = await mediaTest.getPublicDirectory(mediaLibrary.DirectoryType.DIR_VIDEO);
     }
     console.info('[mediaLibrary] publicPath is ' + publicPath);
+
     let dataUri = await mediaTest.createAsset(mediaType, displayName, publicPath);
     if (dataUri != undefined) {
         let args = dataUri.id.toString();
