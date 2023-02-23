@@ -35,11 +35,13 @@ avcodec_unittest_native_include_dirs = [
 ]
 
 avcodec_unittest_capi_include_dirs = [
+  "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
+  "//commonlibrary/c_utils/base/include",
   "//graphic/graphic_2d/interfaces/kits/surface",
   "//graphic/graphic_2d/interfaces/inner_api/surface",
   "//foundation//window/window_manager/interfaces/innerkits/wm",
+  "//foundation/multimedia/image_framework/interfaces/innerkits/include",
   "$MEDIA_ROOT_DIR/interfaces/kits/c",
-  "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
   "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/audiodecoder/",
   "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/audioencoder/",
   "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/avformat/",
@@ -292,6 +294,10 @@ ohos_unittest("format_capi_unit_test") {
   ]
 
   cflags = avcodec_unittest_cflags
+
+  configs = [
+    "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
+  ]
 
   if (multimedia_player_framework_support_codec) {
     sources = [

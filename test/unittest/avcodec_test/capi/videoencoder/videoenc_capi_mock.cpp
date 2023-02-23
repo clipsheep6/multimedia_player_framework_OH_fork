@@ -19,7 +19,6 @@
 #include "avmemory_capi_mock.h"
 #include "surface_capi_mock.h"
 #include "media_errors.h"
-#include "native_avmagic.h"
 #include "native_avcodec_base.h"
 #include "window.h"
 #include "avcodec_video_encoder.h"
@@ -111,14 +110,6 @@ int32_t VideoEncCapiMock::SetCallback(std::shared_ptr<AVCodecCallbackMock> cb)
         return OH_VideoEncoder_SetCallback(codec_, callback, NULL);
     }
     return AV_ERR_OPERATE_NOT_PERMIT;
-};
-
-struct VEncObject : public OH_AVCodec {
-    explicit VEncObject(const std::shared_ptr<AVCodecVideoEncoder> &encoder)
-        : OH_AVCodec(AVMagic::MEDIA_MAGIC_VIDEO_ENCODER), videoEncoder_(encoder) {}
-    ~VEncObject() = default;
-
-    const std::shared_ptr<AVCodecVideoEncoder> videoEncoder_;
 };
 
 std::shared_ptr<SurfaceMock> VideoEncCapiMock::GetInputSurface()
