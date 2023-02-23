@@ -169,6 +169,7 @@ private:
     std::string lastErrMsg_;
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
+    bool isLiveStream_ = false;
 
     std::shared_ptr<IdleState> idleState_;
     std::shared_ptr<InitializedState> initializedState_;

@@ -564,6 +564,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
             jsPlayer->dataSrcCb_->ClearCallbackReference();
             jsPlayer->dataSrcCb_ = nullptr;
         }
+        jsPlayer->isLiveStream_ = false;
     }
 
     napi_value resource = nullptr;
@@ -661,6 +662,11 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support seek");
+        return result;
+    }
+
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "seek time is not number");
@@ -718,6 +724,11 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     size_t argCount = 1; // setSpeed(speed: number)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support speed");
+        return result;
+    }
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
@@ -1034,6 +1045,9 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
             if (jsPlayer->player_->SetSource(jsPlayer->dataSrcCb_) != MSERR_OK) {
                 jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
             }
+            if (jsPlayer->dataSrcDescriptor_.fileSize == -1) {
+                jsPlayer->isLiveStream_ = false;
+            }
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
@@ -1159,6 +1173,11 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
     size_t argCount = 1; // loop: boolenan
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (jsPlayer->IsLiveSource()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support loop");
+        return result;
+    }
 
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -1439,6 +1458,9 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
         currentTime = jsPlayer->position_;
     }
 
+    if (jsPlayer->IsLiveSource()) {
+        currentTime = -1;
+    }
     napi_value value = nullptr;
     (void)napi_create_int32(env, currentTime, &value);
     std::string curState = jsPlayer->GetCurrentState();
@@ -1460,6 +1482,9 @@ napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
         duration = jsPlayer->duration_;
     }
 
+    if (jsPlayer->IsLiveSource()) {
+        duration = -1;
+    }
     napi_value value = nullptr;
     (void)napi_create_int32(env, duration, &value);
     std::string curState = jsPlayer->GetCurrentState();
@@ -1476,11 +1501,6 @@ bool AVPlayerNapi::IsControllable()
     } else {
         return false;
     }
-}
-
-bool AVPlayerNapi::IsLiveSource()
-{
-    return dataSrcCb_ != nullptr && dataSrcDescriptor_.fileSize == -1;
 }
 
 std::string AVPlayerNapi::GetCurrentState()
@@ -1748,6 +1768,11 @@ void AVPlayerNapi::NotifyVideoSize(int32_t width, int32_t height)
     height_ = height;
 }
 
+void AVPlayerNapi::NotifyIsLiveStream()
+{
+    isLiveStream_ = true;
+}
+
 void AVPlayerNapi::ResetUserParameters()
 {
     url_.clear();
@@ -1811,6 +1836,11 @@ AVPlayerNapi* AVPlayerNapi::GetJsInstanceWithParameter(napi_env env, napi_callba
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsPlayer != nullptr, nullptr, "failed to napi_unwrap");
 
     return jsPlayer;
+}
+
+bool AVPlayerNapi::IsLiveSource() const
+{
+    return isLiveStream_;
 }
 } // namespace Media
 } // namespace OHOS

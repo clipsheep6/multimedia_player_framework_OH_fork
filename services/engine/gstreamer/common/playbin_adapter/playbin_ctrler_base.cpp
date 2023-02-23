@@ -978,6 +978,37 @@ bool PlayBinCtrlerBase::OnVideoDecoderSetup(GstElement &elem)
     return false;
 }
 
+void PlayBinCtrlerBase::OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData)
+{
+    (void)demux;
+    MEDIA_LOGI("is live stream: %{public}d", isLiveStream);
+    auto thizStrong  = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
+    thizStrong->isAdaptiveLiveStream_ = isLiveStream;
+    if (isLiveStream) {
+        PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_IS_LIVE_STREAM, 0, {} };
+        thizStrong->ReportMessage(msg);
+    }
+}
+
+void PlayBinCtrlerBase::OnAdaptiveElementSetup(GstElement &elem)
+{
+    const gchar *metadata = gst_element_get_metadata(&elem, GST_ELEMENT_METADATA_KLASS);
+    if (metadata == nullptr) {
+        return;
+    }
+
+    std::string metaStr(metadata);
+    if (metaStr.find("Demuxer/Adaptive") == std::string::npos) {
+        return;
+    }
+    MEDIA_LOGI("get element_name %{public}s, get metadata %{public}s", GST_ELEMENT_NAME(&elem), metadata);
+    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+    gulong id = g_signal_connect_data(&elem, "is-live-scene", G_CALLBACK(&PlayBinCtrlerBase::OnIsLiveStream), wrapper,
+        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+    (void)signalIds_.emplace_back(SignalInfo { &elem, id });
+}
+
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 {
     MEDIA_LOGD("element setup: %{public}s", ELEM_NAME(&elem));
@@ -991,6 +1022,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         msgProcessor_->AddMsgFilter(ELEM_NAME(&elem));
     }
 
+    OnAdaptiveElementSetup(elem);
     std::string elementName(GST_ELEMENT_NAME(&elem));
     if (isNetWorkPlay_ == false && elementName.find("uridecodebin") != std::string::npos) {
         PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
