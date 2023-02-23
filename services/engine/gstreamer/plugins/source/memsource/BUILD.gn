@@ -66,7 +66,7 @@ ohos_shared_library("gst_mem_src") {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "//foundation/multimedia/player_framework/cfi_blocklist.txt"
+    blocklist = "../../../../../../../cfi_blocklist.txt"
   }
 
   sources = [
