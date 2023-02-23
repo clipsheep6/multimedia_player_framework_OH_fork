@@ -67,6 +67,7 @@ ohos_shared_library("native_media_core") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "../../../cfi_blocklist.txt"
   }
 
   sources = [
@@ -94,6 +95,7 @@ ohos_shared_library("native_media_codecbase") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "../../../cfi_blocklist.txt"
   }
 
   sources = [
@@ -115,6 +117,7 @@ ohos_shared_library("native_media_adec") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "../../../cfi_blocklist.txt"
   }
 
   sources = [
@@ -145,6 +148,7 @@ ohos_shared_library("native_media_aenc") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "../../../cfi_blocklist.txt"
   }
 
   sources = [
@@ -175,6 +179,7 @@ ohos_shared_library("native_media_vdec") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "../../../cfi_blocklist.txt"
   }
 
   sources = [
@@ -209,6 +214,7 @@ ohos_shared_library("native_media_venc") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "../../../cfi_blocklist.txt"
   }
 
   sources = [
