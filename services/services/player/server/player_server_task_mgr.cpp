@@ -51,7 +51,7 @@ int32_t PlayerServerTaskMgr::Init()
 }
 
 int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &task,
-    const std::shared_ptr<ITaskHandler> &cancelTask, PlayerServerTaskType type)
+    const std::shared_ptr<ITaskHandler> &cancelTask, PlayerServerTaskType type, const std::string &taskName)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
@@ -63,22 +63,25 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "launch two phase task failed");
             currTwoPhaseTask_ = task;
             currTwoPhaseType_ = type;
+            currTwoPhaseTaskName_ = taskName;
+            MEDIA_LOGI("task[%{public}s] start", currTwoPhaseTaskName_.c_str());
             return MSERR_OK;
         }
-        MEDIA_LOGI("current two phase task is in processing, the new task, type: %{public}hhu", type);
+        MEDIA_LOGI("current two phase task[%{public}s] is in processing, the new task[%{public}s]",
+            currTwoPhaseTaskName_.c_str(), taskName.c_str());
         for (auto &item : pendingTwoPhaseTasks_)  {
             if (item.type == type) {
                 item.type = PlayerServerTaskType::CANCEL_TASK;
                 MEDIA_LOGI("replace old task");
             }
         }
-        pendingTwoPhaseTasks_.push_back({ type, task, cancelTask });
+        pendingTwoPhaseTasks_.push_back({ type, task, cancelTask, taskName });
     }
     return MSERR_OK;
 }
 
 int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &task,
-    PlayerServerTaskType type, uint64_t delayUs)
+    PlayerServerTaskType type, const std::string &taskName, uint64_t delayUs)
 {
     (void)delayUs;
     std::unique_lock<std::mutex> lock(mutex_);
@@ -90,19 +93,24 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "launch two phase task failed");
             currTwoPhaseTask_ = task;
             currTwoPhaseType_ = type;
+            currTwoPhaseTaskName_ = taskName;
+            MEDIA_LOGI("task[%{public}s] start", currTwoPhaseTaskName_.c_str());
         } else {
-            pendingTwoPhaseTasks_.push_back({ type, task, nullptr });
+            MEDIA_LOGI("current two phase task[%{public}s] is in processing, the new task[%{public}s]",
+                currTwoPhaseTaskName_.c_str(), taskName.c_str());
+            pendingTwoPhaseTasks_.push_back({ type, task, nullptr, taskName });
         }
     }
     
     return MSERR_OK;
 }
 
-int32_t PlayerServerTaskMgr::MarkTaskDone()
+int32_t PlayerServerTaskMgr::MarkTaskDone(const std::string &taskName)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(isInited_, MSERR_INVALID_OPERATION, "not init");
 
+    MEDIA_LOGI("task[%{public}s] end", taskName.c_str());
     currTwoPhaseTask_ = nullptr;
     currTwoPhaseType_ = PlayerServerTaskType::BUTT;
 
@@ -115,13 +123,14 @@ int32_t PlayerServerTaskMgr::MarkTaskDone()
         } else {
             currTwoPhaseTask_ = item.task;
         }
+        currTwoPhaseTaskName_ = item.taskName;
 
         CHECK_AND_RETURN_RET_LOG(currTwoPhaseTask_ != nullptr, MSERR_OK, "task is nullptr");
         int32_t ret = taskThread_->EnqueueTask(currTwoPhaseTask_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
             "execute the stack top task failed, type: %{public}hhu", item.type);
 
-        MEDIA_LOGI("launch the two phase task, type: %{public}hhu", item.type);
+        MEDIA_LOGI("task[%{public}s] start", currTwoPhaseTaskName_.c_str());
     }
     return MSERR_OK;
 }

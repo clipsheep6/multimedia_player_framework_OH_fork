@@ -47,6 +47,7 @@ ohos_shared_library("media_service_utils") {
   install_enable = true
 
   sources = [
+    "avdatasrcmemory.cpp",
     "avsharedmemorybase.cpp",
     "avsharedmemorypool.cpp",
     "media_dfx.cpp",

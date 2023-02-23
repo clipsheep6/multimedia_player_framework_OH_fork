@@ -74,19 +74,15 @@ void MediaDataSourceTestSeekable::Reset()
     (void)fseek(fd_, 0, SEEK_SET);
 }
 
-int32_t MediaDataSourceTestSeekable::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+int32_t MediaDataSourceTestSeekable::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
+    MEDIA_LOGD("ReadAt in");
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_INVALID_VAL, "Mem is nullptr");
     if (pos != pos_) {
         (void)fseek(fd_, static_cast<long>(pos), SEEK_SET);
         pos_ = pos;
     }
-    if (fixedSize_ > 0) {
-        length = static_cast<uint32_t>(fixedSize_);
-    }
     size_t readRet = 0;
-    CHECK_AND_RETURN_RET_LOG(mem->GetSize() > 0, SOURCE_ERROR_IO, "AVSHMEM length should large than 0");
-    length = std::min(length, static_cast<uint32_t>(mem->GetSize()));
     int32_t realLen = static_cast<int32_t>(length);
     if (pos_ >= size_) {
         MEDIA_LOGI("Is eos");
@@ -108,19 +104,24 @@ int32_t MediaDataSourceTestSeekable::ReadAt(int64_t pos, uint32_t length, const 
     return realLen;
 }
 
+int32_t MediaDataSourceTestSeekable::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
+{
+    (void)pos;
+    (void)length;
+    (void)mem;
+    return MSERR_OK;
+}
+
 int32_t MediaDataSourceTestSeekable::ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
 {
     (void)length;
     (void)mem;
-    return 0;
+    return MSERR_OK;
 }
 
 int32_t MediaDataSourceTestSeekable::GetSize(int64_t &size)
 {
-    (void)fseek(fd_, 0, SEEK_END);
-    size = static_cast<int64_t>(ftell(fd_));
-    (void)fseek(fd_, 0, SEEK_SET);
-    size_ = size;
+    size = fixedSize_;
     return MSERR_OK;
 }
 } // namespace Media

@@ -42,38 +42,29 @@ public:
     virtual ~IMediaDataSource() = default;
 
     /**
-     * @brief If the size of the datasource is greater than 0, provide the implementation of this interface.
-     * Player use ReadAt to tell the position and length of mem want get.(length is number of Bytes)
+     * @brief Player use ReadAt to tell user the desired file position and length.(length is number of Bytes)
      * Then usr filled the mem, and return the actual length of mem.
+     * @param mem The stream mem need to fill. see avsharedmemory.h.
+     * @param length The stream length player want to get.
      * @param pos The stream pos player want get start.
-     * @param length Stream length player want to get.
-     * @param mem Stream mem need to fill. see avsharedmemory.h.
-     * The memory length is greater than or equal to the length.
      * The length of the filled memory must match the actual length returned.
      * @return The actual length of stream mem filled, if failed or no mem return MediaDataSourceError.
      */
-    virtual int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
-
-    /**
-     * @brief One-to-one use with getMem.
-     * If the size of the datasource is -1, provide the implementation of this interface.
-     * Player use ReadAt to tell the length of mem want get.(length is number of Bytes)
-     * Then usr filled the mem, and return the actual length of mem.
-     * @param length Stream length player want to get.
-     * @param mem Stream mem need to fill.see avsharedmemory.h.
-     * The memory length is greater than or equal to the length.
-     * The length of the filled memory must match the actual length returned.
-     * @return The actual length of stream mem filled, if failed or no mem return MediaDataSourceError.
-     */
-    virtual int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
+    virtual int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1) = 0;
 
     /**
      * @brief Get the total size of the stream.
-     * If the stream does not have the length, return -1. With -1, player will use the datasource not seekable.
+     * If the user does not know the length of the stream, size should be assigned -1,
+     * player will use the datasource not seekable.
      * @param size Total size of the stream. If no size set -1.
      * @return MSERR_OK if ok; others if failed. see media_errors.h
      */
     virtual int32_t GetSize(int64_t &size) = 0;
+
+    // This interface has been deprecated
+    virtual int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
+    // This interface has been deprecated
+    virtual int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) = 0;
 };
 } // namespace Media
 } // namespace OHOS

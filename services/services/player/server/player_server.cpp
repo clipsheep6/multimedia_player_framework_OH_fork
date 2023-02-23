@@ -254,7 +254,7 @@ int32_t PlayerServer::OnPrepare(bool sync)
         return currState->Prepare();
     });
 
-    ret = taskMgr_.LaunchTask(preparedTask, PlayerServerTaskType::STATE_CHANGE);
+    ret = taskMgr_.LaunchTask(preparedTask, PlayerServerTaskType::STATE_CHANGE, "prepare");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Prepare launch task failed");
 
     if (sync) {
@@ -281,8 +281,12 @@ int32_t PlayerServer::HandlePrepare()
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
             (void)currState->SetPlaybackSpeed(config_.speedMode);
         });
+        auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
+            MEDIA_LOGI("Interrupted speed action");
+            taskMgr_.MarkTaskDone("interrupted speed done");
+        });
 
-        (void)taskMgr_.LaunchTask(rateTask, PlayerServerTaskType::RATE_CHANGE);
+        (void)taskMgr_.LaunchTask(rateTask, cancelTask, PlayerServerTaskType::RATE_CHANGE, "speed");
     }
     return MSERR_OK;
 }
@@ -308,6 +312,7 @@ int32_t PlayerServer::OnPlay()
         (void)dataSrc_->GetSize(size);
         if (size == -1) {
             MEDIA_LOGE("Can not play in complete status, it is live-stream");
+            OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not play in complete status, it is live-stream");
             return MSERR_INVALID_OPERATION;
         }
     }
@@ -318,7 +323,7 @@ int32_t PlayerServer::OnPlay()
         (void)currState->Play();
     });
     MEDIA_LOGD("PlayerServer OnPlay in");
-    int ret = taskMgr_.LaunchTask(playingTask, PlayerServerTaskType::STATE_CHANGE);
+    int ret = taskMgr_.LaunchTask(playingTask, PlayerServerTaskType::STATE_CHANGE, "play");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Play failed");
 
     lastOpStatus_ = PLAYER_STARTED;
@@ -357,7 +362,7 @@ int32_t PlayerServer::OnPause()
         (void)currState->Pause();
     });
 
-    int ret = taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE);
+    int ret = taskMgr_.LaunchTask(pauseTask, PlayerServerTaskType::STATE_CHANGE, "pause");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Pause failed");
 
     lastOpStatus_ = PLAYER_PAUSED;
@@ -397,7 +402,7 @@ int32_t PlayerServer::OnStop(bool sync)
         (void)currState->Stop();
     });
 
-    (void)taskMgr_.LaunchTask(stopTask, PlayerServerTaskType::STATE_CHANGE);
+    (void)taskMgr_.LaunchTask(stopTask, PlayerServerTaskType::STATE_CHANGE, "stop");
     if (sync) {
         (void)stopTask->GetResult(); // wait HandleStop
     }
@@ -438,7 +443,7 @@ int32_t PlayerServer::OnReset()
     auto idleTask = std::make_shared<TaskHandler<void>>([this]() {
         ChangeState(idleState_);
     });
-    (void)taskMgr_.LaunchTask(idleTask, PlayerServerTaskType::STATE_CHANGE);
+    (void)taskMgr_.LaunchTask(idleTask, PlayerServerTaskType::STATE_CHANGE, "reset");
     (void)idleTask->GetResult();
     (void)taskMgr_.Reset();
     lastOpStatus_ = PLAYER_IDLE;
@@ -500,9 +505,9 @@ int32_t PlayerServer::SetVolume(float leftVolume, float rightVolume)
     if (IsEngineStarted()) {
         auto task = std::make_shared<TaskHandler<void>>([this]() {
             (void)playerEngine_->SetVolume(config_.leftVolume, config_.rightVolume);
-            taskMgr_.MarkTaskDone();
+            taskMgr_.MarkTaskDone("volume done");
         });
-        (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE);
+        (void)taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "volume");
     } else {
         MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
     }
@@ -544,7 +549,8 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED && lastOpStatus_ != PLAYER_STARTED) {
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
@@ -554,13 +560,16 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
         return MSERR_INVALID_VAL;
     }
 
-    int32_t currentTime = -1;
-    if (mSeconds == 0 && playerEngine_->GetCurrentTime(currentTime) == MSERR_OK && currentTime == mSeconds) {
-        MEDIA_LOGW("Seek to the inner position");
-        Format format;
-        OnInfoNoChangeStatus(INFO_TYPE_SEEKDONE, 0, format);
-        return MSERR_OK;
+    if (dataSrc_ != nullptr) {
+        int64_t size = 0;
+        (void)dataSrc_->GetSize(size);
+        if (size == -1) {
+            MEDIA_LOGE("Can not Seek, it is live-stream");
+            OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
+            return MSERR_INVALID_OPERATION;
+        }
     }
+
     MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
     mSeconds = std::max(0, mSeconds);
 
@@ -574,10 +583,10 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
         MEDIA_LOGI("Interrupted seek action");
         Format format;
         OnInfoNoChangeStatus(INFO_TYPE_SEEKDONE, mSeconds, format);
-        taskMgr_.MarkTaskDone();
+        taskMgr_.MarkTaskDone("interrupted seek done");
     });
 
-    int ret = taskMgr_.LaunchTask(seekTask, cancelTask, PlayerServerTaskType::SEEKING);
+    int ret = taskMgr_.LaunchTask(seekTask, cancelTask, PlayerServerTaskType::SEEKING, "seek");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
 
     return MSERR_OK;
@@ -716,6 +725,7 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         (void)dataSrc_->GetSize(size);
         if (size == -1) {
             MEDIA_LOGE("Can not SetPlaybackSpeed, it is live-stream");
+            OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetPlaybackSpeed, it is live-stream");
             return MSERR_INVALID_OPERATION;
         }
     }
@@ -737,10 +747,10 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         MEDIA_LOGI("Interrupted speed action");
         Format format;
         OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
-        taskMgr_.MarkTaskDone();
+        taskMgr_.MarkTaskDone("interrupted speed done");
     });
 
-    int ret = taskMgr_.LaunchTask(rateTask, cancelTask, PlayerServerTaskType::RATE_CHANGE);
+    int ret = taskMgr_.LaunchTask(rateTask, cancelTask, PlayerServerTaskType::RATE_CHANGE, "speed");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlaybackSpeed failed");
 
     return MSERR_OK;
@@ -767,12 +777,12 @@ void PlayerServer::HandleEos()
 
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
             MEDIA_LOGI("Interrupted seek action");
-            taskMgr_.MarkTaskDone();
+            taskMgr_.MarkTaskDone("interrupted seek done");
             disableNextSeekDone_ = false;
         });
 
         disableNextSeekDone_ = true;
-        int ret = taskMgr_.LaunchTask(seekTask, cancelTask, PlayerServerTaskType::SEEKING);
+        int ret = taskMgr_.LaunchTask(seekTask, cancelTask, PlayerServerTaskType::SEEKING, "eos seek");
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Seek failed");
     }
 }
@@ -855,6 +865,7 @@ int32_t PlayerServer::SetLooping(bool loop)
         (void)dataSrc_->GetSize(size);
         if (size == -1) {
             MEDIA_LOGE("Can not SetLooping, it is live-stream");
+            OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetLooping, it is live-stream");
             return MSERR_INVALID_OPERATION;
         }
     }

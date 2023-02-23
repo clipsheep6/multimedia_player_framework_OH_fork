@@ -106,7 +106,7 @@ int32_t PlayerEngineGstImpl::SetSource(const std::shared_ptr<IMediaDataSource> &
 {
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "input dataSrc is empty!");
-    appsrcWrap_ = GstAppsrcWrap::Create(dataSrc);
+    appsrcWrap_ = GstAppsrcEngine::Create(dataSrc);
     CHECK_AND_RETURN_RET_LOG(appsrcWrap_ != nullptr, MSERR_NO_MEMORY, "new appsrcwrap failed!");
     return MSERR_OK;
 }
@@ -763,6 +763,16 @@ int32_t PlayerEngineGstImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
     MEDIA_LOGI("Seek in %{public}dms", mSeconds);
+
+    if (playBinCtrler_->QueryPosition() == mSeconds) {
+        MEDIA_LOGW("current time same to seek time, invalid seek");
+        Format format;
+        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+        if (notifyObs != nullptr) {
+            notifyObs->OnInfo(INFO_TYPE_SEEKDONE, mSeconds, format);
+        }
+        return MSERR_OK;
+    }
 
     codecCtrl_.EnhanceSeekPerformance(true);
 

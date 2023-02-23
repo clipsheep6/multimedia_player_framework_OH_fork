@@ -124,7 +124,7 @@ static GstMemory *gst_shmemory_wrap_allocator_mem_share(GstMemory *mem, gssize o
     sub = g_slice_new0(GstShMemoryWrapMemory);
     g_return_val_if_fail(sub != nullptr, nullptr);
     /* the shared memory is always readonly */
-    GST_DEBUG("mem->maxsize is %u", mem->maxsize);
+    GST_DEBUG("mem->maxsize is %" G_GSIZE_FORMAT "", mem->maxsize);
     gst_memory_init(
         GST_MEMORY_CAST(sub),
         (GstMemoryFlags)(GST_MINI_OBJECT_FLAGS(parent) | GST_MINI_OBJECT_FLAG_LOCK_READONLY),
