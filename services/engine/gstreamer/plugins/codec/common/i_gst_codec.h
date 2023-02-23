@@ -251,6 +251,14 @@ public:
      * @version 1.0
      */
     virtual void Deinit() = 0;
+
+    /**
+     * @brief Callback when codec process dies.
+     *
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual void OnCodecDie() = 0;
 };
 } // namespace Media
 } // namespace OHOS

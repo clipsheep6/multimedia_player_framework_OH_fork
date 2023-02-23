@@ -55,6 +55,8 @@ public:
     int32_t Flush(GstCodecDirect direct) override;
     int32_t ActiveBufferMgr(GstCodecDirect direct, bool active) override;
     void Deinit() override;
+    void OnCodecDie() override;
+
 private:
     struct AppData {
         std::weak_ptr<HdiCodec> instance;

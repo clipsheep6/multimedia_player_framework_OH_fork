@@ -174,7 +174,7 @@ void HdiBufferMgr::WaitFlushed()
 {
     MEDIA_LOGD("Enter WaitFlushed");
     std::unique_lock<std::mutex> lock(mutex_);
-    flushCond_.wait(lock, [this]() { return !isFlushing_ || !isStart_; });
+    flushCond_.wait(lock, [this]() { return !isFlushing_ || !isStart_ || isError_.load(); });
 }
 
 void HdiBufferMgr::NotifyAvailable()
@@ -201,6 +201,14 @@ void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
     if (flag & OMX_BUFFERFLAG_CODECCONFIG) {
         bufferType->bufferFlag |= BUFFER_FLAG_CODEC_DATA;
     }
+}
+
+void HdiBufferMgr::OnCodecDie()
+{
+    MEDIA_LOGD("Enter OnCodecDie");
+    isError_.store(true);
+    bufferCond_.notify_all();
+    flushCond_.notify_all();
 }
 }  // namespace Media
 }  // namespace OHOS

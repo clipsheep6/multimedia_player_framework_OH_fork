@@ -83,7 +83,8 @@ int32_t HdiCodec::Init()
     int32_t ret;
     {
         MediaTrace trace("HdiCodec::Init");
-        ret = HdiInit::GetInstance().GetHandle(&handle_, id_, componentName_, appData_, callback_);
+        std::shared_ptr<IGstCodec> codec(this);
+        ret = HdiInit::GetInstance().GetHandle(&handle_, id_, componentName_, appData_, callback_, codec);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "GetHandle failed");
         CHECK_AND_RETURN_RET_LOG(handle_ != nullptr, GST_CODEC_ERROR, "Handle is nullptr");
         InitVersion();
@@ -114,6 +115,25 @@ void HdiCodec::Deinit()
     delete appData_;
     appData_ = nullptr;
     CodecCallbackTypeStubRelease(callback_);
+    callback_ = nullptr;
+    (void)taskQue_.Stop();
+}
+
+void HdiCodec::OnCodecDie()
+{
+    MEDIA_LOGD("OnCodecDie");
+    MediaTrace trace("HdiCodec::OnCodecDie");
+    if (inBufferMgr_) {
+        inBufferMgr_->OnCodecDie();
+    }
+
+    if (outBufferMgr_) {
+        outBufferMgr_->OnCodecDie();
+    }
+
+    handle_ = nullptr;
+    delete appData_;
+    appData_ = nullptr;
     callback_ = nullptr;
     (void)taskQue_.Stop();
 }
@@ -222,21 +242,23 @@ int32_t HdiCodec::Flush(GstCodecDirect direct)
         return GST_CODEC_OK;
     }
     CHECK_AND_RETURN_RET_LOG(handle_ != nullptr, GST_CODEC_ERROR, "Handle is nullptr");
+    int32_t ret = HDF_SUCCESS;
     switch (direct) {
         case GST_CODEC_INPUT:
             inBufferMgr_->Flush(true);
-            HdiSendCommand(handle_, OMX_CommandFlush, inPortIndex_, 0);
+            ret = HdiSendCommand(handle_, OMX_CommandFlush, inPortIndex_, 0);
             break;
         case GST_CODEC_OUTPUT:
             outBufferMgr_->Flush(true);
-            HdiSendCommand(handle_, OMX_CommandFlush, outPortIndex_, 0);
+            ret = HdiSendCommand(handle_, OMX_CommandFlush, outPortIndex_, 0);
             break;
         default:
             inBufferMgr_->Flush(true);
             outBufferMgr_->Flush(true);
-            HdiSendCommand(handle_, OMX_CommandFlush, -1, 0);
+            ret = HdiSendCommand(handle_, OMX_CommandFlush, -1, 0);
             break;
     }
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSendCommand failed");
     inBufferMgr_->WaitFlushed();
     outBufferMgr_->WaitFlushed();
     MEDIA_LOGD("Flush end");

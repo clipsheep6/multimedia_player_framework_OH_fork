@@ -56,9 +56,13 @@ int32_t HdiInBufferMgr::PushBuffer(GstBuffer *buffer)
 {
     MEDIA_LOGD("PushBuffer start");
     std::unique_lock<std::mutex> lock(mutex_);
-    bufferCond_.wait(lock, [this]() {return !availableBuffers_.empty() || isFlushed_ || !isStart_;});
+    bufferCond_.wait(lock, [this]() {return !availableBuffers_.empty() || isFlushed_ || !isStart_ || isError_.load();});
     if (isFlushed_ || !isStart_) {
         return GST_CODEC_FLUSH;
+    }
+    if (isError_.load()) {
+        MEDIA_LOGD("Status error. PushBuffer failed.");
+        return GST_CODEC_ERROR;
     }
     std::shared_ptr<HdiBufferWrap> codecBuffer = nullptr;
     if (buffer == nullptr) {
