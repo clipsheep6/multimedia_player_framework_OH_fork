@@ -69,6 +69,7 @@ ohos_shared_library("gst_audio_capture_src") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "//foundation/multimedia/player_framework/cfi_blocklist.txt"
   }
 
   sources = [
