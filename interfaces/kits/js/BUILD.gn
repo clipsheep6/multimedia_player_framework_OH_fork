@@ -38,6 +38,12 @@ ohos_copy("media_declaration") {
 }
 
 ohos_shared_library("media") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   include_dirs = [
     "//foundation/multimedia/player_framework/interfaces/kits/js",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer",
