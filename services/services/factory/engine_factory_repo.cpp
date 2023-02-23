@@ -54,7 +54,7 @@ EngineFactoryRepo::~EngineFactoryRepo()
     }
 }
 
-int32_t EngineFactoryRepo::LoadLib(const std::string &libPath)
+int32_t EngineFactoryRepo::LoadLib(const std::string &libPath) __attribute__((no_sanitize("cfi")))
 {
     void *handle = dlopen(libPath.c_str(), RTLD_NOW | RTLD_LOCAL);
     if (handle == nullptr) {
