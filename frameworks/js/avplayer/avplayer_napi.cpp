@@ -699,10 +699,6 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
             "current state is not prepared/playing/paused/completed, unsupport seek operation");
         return result;
     }
-    if (jsPlayer->IsLiveSource()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, unsupport seek operation");
-        return result;
-    }
 
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, time, mode]() {
         MEDIA_LOGI("Seek Task");
@@ -747,10 +743,6 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
             "current state is not prepared/playing/paused/completed, unsupport speed operation");
-        return result;
-    }
-    if (jsPlayer->IsLiveSource()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, unsupport speed operation");
         return result;
     }
 
@@ -1184,10 +1176,6 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
             "current state is not prepared/playing/paused/completed, unsupport loop operation");
         return result;
     }
-    if (jsPlayer->IsLiveSource()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "In live mode, unsupport loop operation");
-        return result;
-    }
 
     napi_valuetype valueType = napi_undefined;
     if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
@@ -1458,7 +1446,7 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
         currentTime = jsPlayer->position_;
     }
 
-    if (jsPlayer->IsLiveSource()) {
+    if (jsPlayer->IsLiveSource() && jsPlayer->dataSrcCb_ == nullptr) {
         currentTime = -1;
     }
     napi_value value = nullptr;
@@ -1482,9 +1470,6 @@ napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
         duration = jsPlayer->duration_;
     }
 
-    if (jsPlayer->IsLiveSource()) {
-        duration = -1;
-    }
     napi_value value = nullptr;
     (void)napi_create_int32(env, duration, &value);
     std::string curState = jsPlayer->GetCurrentState();

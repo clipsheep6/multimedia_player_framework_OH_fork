@@ -607,8 +607,9 @@ int32_t PlayerServer::GetCurrentTime(int32_t &currentTime)
         MEDIA_LOGE("Can not GetCurrentTime, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
-    if (isLiveStream_) {
-        return MSERR_OK; 
+    if (isLiveStream_ && dataSrc_ == nullptr) {
+        MEDIA_LOGD("It is live-stream");
+        return MSERR_OK;
     }
 
     MEDIA_LOGD("PlayerServer GetCurrentTime in, currentState is %{public}s",
@@ -702,7 +703,7 @@ int32_t PlayerServer::GetDuration(int32_t &duration)
 
     MEDIA_LOGD("PlayerServer GetDuration in");
     duration = -1;
-    if (playerEngine_ != nullptr && !isLiveStream_) {
+    if (playerEngine_ != nullptr) {
         int ret = playerEngine_->GetDuration(duration);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine GetDuration Failed!");
     }
