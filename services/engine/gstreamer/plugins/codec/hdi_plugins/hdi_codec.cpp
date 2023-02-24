@@ -84,7 +84,8 @@ int32_t HdiCodec::Init()
     {
         MediaTrace trace("HdiCodec::Init");
         std::shared_ptr<IGstCodec> codec(this);
-        ret = HdiInit::GetInstance().GetHandle(&handle_, id_, componentName_, appData_, callback_, codec);
+        HdiInfo info = {componentName_, appData_, callback_, codec};
+        ret = HdiInit::GetInstance().GetHandle(&handle_, id_, info);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "GetHandle failed");
         CHECK_AND_RETURN_RET_LOG(handle_ != nullptr, GST_CODEC_ERROR, "Handle is nullptr");
         InitVersion();
@@ -121,7 +122,7 @@ void HdiCodec::Deinit()
 
 void HdiCodec::OnCodecDie()
 {
-    MEDIA_LOGD("OnCodecDie");
+    MEDIA_LOGE("OnCodecDie");
     MediaTrace trace("HdiCodec::OnCodecDie");
     if (inBufferMgr_) {
         inBufferMgr_->OnCodecDie();

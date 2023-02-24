@@ -28,12 +28,17 @@
 #include "i_gst_codec.h"
 namespace OHOS {
 namespace Media {
+struct HdiInfo {
+    std::string name;
+    void *appData;
+    CodecCallbackType *callbacks;
+    std::shared_ptr<IGstCodec> codec;
+};
 class HdiInit {
 public:
     static HdiInit &GetInstance();
     ~HdiInit();
-    int32_t GetHandle(CodecComponentType **component, uint32_t &id, std::string name,
-        void *appData, CodecCallbackType *callbacks, std::shared_ptr<IGstCodec> codec);
+    int32_t GetHandle(CodecComponentType **component, uint32_t &id, HdiInfo info);
     int32_t FreeHandle(CodecComponentType *component, uint32_t id);
     std::vector<CapabilityData> GetCapabilitys();
     void CodecComponentManagerReset();

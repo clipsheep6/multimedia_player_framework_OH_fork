@@ -37,6 +37,15 @@ HdiOutBufferMgr::HdiOutBufferMgr()
 HdiOutBufferMgr::~HdiOutBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    std::unique_lock<std::mutex> lock(mutex_);
+    while (!mBuffers.empty()) {
+        MEDIA_LOGI("mBuffers %{public}zu", mBuffers.size());
+        GstBufferWrap bufferWarp = mBuffers.front();
+        mBuffers.pop_front();
+        if (bufferWarp.gstBuffer) {
+            gst_buffer_unref(bufferWarp.gstBuffer);
+        }
+    }
 }
 
 int32_t HdiOutBufferMgr::Start()
@@ -92,10 +101,7 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
         MEDIA_LOGD("isFlush %{public}d isStart %{public}d", isFlushed_, isStart_);
         return GST_CODEC_FLUSH;
     }
-    if (isError_.load()) {
-        MEDIA_LOGD("Status error. PullBuffer failed.");
-        return GST_CODEC_ERROR;
-    }
+
     if (!mBuffers.empty()) {
         MEDIA_LOGD("mBuffers %{public}zu, available %{public}zu", mBuffers.size(), availableBuffers_.size());
         MediaTrace::CounterTrace("WaitingForDisplayBuffers", mBuffers.size());
@@ -108,6 +114,10 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
         }
         (*buffer) = bufferWarp.gstBuffer;
         return GST_CODEC_OK;
+    }
+
+    if (isError_.load()) {
+        MEDIA_LOGE("Status error, mBuffers empty.");
     }
     return GST_CODEC_ERROR;
 }

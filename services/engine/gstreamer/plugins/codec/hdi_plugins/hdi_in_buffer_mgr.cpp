@@ -61,7 +61,7 @@ int32_t HdiInBufferMgr::PushBuffer(GstBuffer *buffer)
         return GST_CODEC_FLUSH;
     }
     if (isError_.load()) {
-        MEDIA_LOGD("Status error. PushBuffer failed.");
+        MEDIA_LOGE("Status error. PushBuffer failed.");
         return GST_CODEC_ERROR;
     }
     std::shared_ptr<HdiBufferWrap> codecBuffer = nullptr;

@@ -359,8 +359,7 @@ std::vector<CapabilityData> HdiInit::GetCapabilitys()
     return capabilitys_;
 }
 
-int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, std::string name,
-    void *appData, CodecCallbackType *callbacks, std::shared_ptr<IGstCodec> codec)
+int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, HdiInfo info)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (mgr_ == nullptr) {
@@ -369,10 +368,10 @@ int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, std::st
     }
     
     CHECK_AND_RETURN_RET_LOG(component != nullptr, HDF_FAILURE, "component is nullptr");
-    int32_t ret = mgr_->CreateComponent(component, &id, const_cast<char *>(name.c_str()),
-        reinterpret_cast<int64_t>(appData), callbacks);
+    int32_t ret = mgr_->CreateComponent(component, &id, const_cast<char *>(info.name.c_str()),
+        reinterpret_cast<int64_t>(info.appData), info.callbacks);
     if (ret == HDF_SUCCESS) {
-        handleMap_[*component] = {id, codec};
+        handleMap_[*component] = {id, info.codec};
     }
 
     return ret;
