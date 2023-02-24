@@ -41,7 +41,7 @@ struct AppsrcMemory {
 
 class GstAppsrcEngine : public std::enable_shared_from_this<GstAppsrcEngine>, public NoCopyable {
 public:
-    using AppsrcErrorNotifier = std::function<void(int32_t)>;
+    using AppsrcErrorNotifier = std::function<void(int32_t, std::string)>;
     static std::shared_ptr<GstAppsrcEngine> Create(const std::shared_ptr<IMediaDataSource> &dataSrc);
     GstAppsrcEngine(const std::shared_ptr<IMediaDataSource> &dataSrc, const int64_t size);
     ~GstAppsrcEngine();
@@ -49,6 +49,7 @@ public:
     void SetParserParam(GstElement &elem);
     int32_t SetErrorCallback(AppsrcErrorNotifier notifier);
     bool IsLiveMode() const;
+    void SetVideoMode();
     int32_t Init();
     int32_t Prepare();
     void Stop();
@@ -68,7 +69,7 @@ private:
     int32_t PushBufferWithCopy(uint32_t pushSize);
     void PullTask();
     void PushTask();
-    void OnError(int32_t errorCode);
+    void OnError(int32_t errorCode, std::string message);
     uint32_t GetFreeSize();
     uint32_t GetAvailableSize();
     void PointerMemoryAvailable(uint32_t offset, uint32_t length);
@@ -96,6 +97,7 @@ private:
     int64_t timer_ = 0;
     bool copyMode_ = false;
     bool isFirstBuffer_ = true;
+    bool videoMode_ = false;
 };
 } // namespace Media
 } // namespace OHOS

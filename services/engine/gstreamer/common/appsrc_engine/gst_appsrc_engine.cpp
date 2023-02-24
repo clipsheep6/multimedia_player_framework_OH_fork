@@ -26,12 +26,14 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstAppsrcEngine"};
-    constexpr int32_t DEFAULT_BUFFER_SIZE = 409600;
+    constexpr int32_t AUDIO_DEFAULT_BUFFER_SIZE = 409600;
+    constexpr int32_t VIDEO_DEFAULT_BUFFER_SIZE = 2048000;
     constexpr int32_t PULL_SIZE = 81920;
     constexpr int64_t UNKNOW_FILE_SIZE = -1;
     constexpr int32_t TIME_VAL_MS = 1000;
     constexpr int32_t TIME_VAL_US = 1000000;
-    constexpr int32_t TIME_OUT_MS = 15000;
+    constexpr int32_t CONNECT_TIME_OUT_MS = 15000;
+    constexpr int32_t PLAY_TIME_OUT = 3;
 }
 
 namespace OHOS {
@@ -55,8 +57,7 @@ GstAppsrcEngine::GstAppsrcEngine(const std::shared_ptr<IMediaDataSource> &dataSr
     : dataSrc_(dataSrc),
       size_(size),
       pullTaskQue_("pullbufferTask"),
-      pushTaskQue_("pushbufferTask"),
-      bufferSize_(DEFAULT_BUFFER_SIZE)
+      pushTaskQue_("pushbufferTask")
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create and size %{public}" PRId64 "", FAKE_POINTER(this), size);
     streamType_ = size == UNKNOW_FILE_SIZE ? GST_APP_STREAM_TYPE_STREAM : GST_APP_STREAM_TYPE_RANDOM_ACCESS;
@@ -74,11 +75,6 @@ int32_t GstAppsrcEngine::Init()
 {
     MEDIA_LOGD("Init in");
     appSrcMem_ = std::make_shared<AppsrcMemory>();
-    CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr, MSERR_NO_MEMORY, "init AppsrcMemory failed");
-    appSrcMem_->mem = AVDataSrcMemory::CreateFromLocal(
-        bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "appsrc");
-    CHECK_AND_RETURN_RET_LOG(appSrcMem_->mem != nullptr, MSERR_NO_MEMORY, "init AVSharedMemory failed");
-    ResetMemParam();
     allocator_ = gst_shmemory_wrap_allocator_new();
     CHECK_AND_RETURN_RET_LOG(allocator_ != nullptr, MSERR_NO_MEMORY, "Failed to create allocator");
     MEDIA_LOGD("Init out");
@@ -89,6 +85,12 @@ int32_t GstAppsrcEngine::Prepare()
 {
     MEDIA_LOGD("Prepare in");
     std::unique_lock<std::mutex> lock(mutex_);
+    if (appSrcMem_ && appSrcMem_->mem == nullptr) {
+        bufferSize_ = videoMode_ ? VIDEO_DEFAULT_BUFFER_SIZE : AUDIO_DEFAULT_BUFFER_SIZE;
+        appSrcMem_->mem = AVDataSrcMemory::CreateFromLocal(
+            bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "appsrc");
+        CHECK_AND_RETURN_RET_LOG(appSrcMem_->mem != nullptr, MSERR_NO_MEMORY, "init AVSharedMemory failed");
+    }
     ResetConfig();
     SetPushBufferMode();
     CHECK_AND_RETURN_RET_LOG(pullTaskQue_.Start() == MSERR_OK, MSERR_INVALID_OPERATION, "init task failed");
@@ -192,6 +194,11 @@ bool GstAppsrcEngine::IsLiveMode() const
     return streamType_ == GST_APP_STREAM_TYPE_STREAM;
 }
 
+void GstAppsrcEngine::SetVideoMode()
+{
+    videoMode_ = true;
+}
+
 void GstAppsrcEngine::SetPushBufferMode()
 {
     std::string copyMode;
@@ -246,7 +253,7 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
             ret = PushBuffer(pushSize);
         }
         if (ret != MSERR_OK) {
-            OnError(ret);
+            OnError(MSERR_EXT_API9_NO_MEMORY, "GstAppsrcEngine:Push buffer failed.");
         }
     } else {
         needData_ = true;
@@ -259,7 +266,7 @@ void GstAppsrcEngine::PullTask()
 {
     int32_t ret = PullBuffer();
     if (ret != MSERR_OK) {
-        OnError(ret);
+        OnError(MSERR_EXT_API9_NO_MEMORY, "GstAppsrcEngine:Pull buffer failed.");
     }
 }
 
@@ -268,28 +275,33 @@ void GstAppsrcEngine::PushTask()
     int32_t ret = MSERR_OK;
     while (ret == MSERR_OK) {
         std::unique_lock<std::mutex> lock(mutex_);
-        pushCond_.wait(lock, [this] {
+        pushCond_.wait_for(lock, std::chrono::seconds(PLAY_TIME_OUT), [this] {
             return ((GetAvailableSize() || atEos_) && needData_) || isExit_;
         });
+        if (!GetAvailableSize() && GetFreeSize() < PULL_SIZE && needData_) {
+            OnError(MSERR_EXT_API9_TIMEOUT, "GstAppsrcEngine:Failed to playing, please check the user manual"
+                "to make sure that the file format is supported by datasrc mode");
+        }
         if (isExit_) {
             break;
         }
-        uint32_t availableSize = GetAvailableSize();
+        if (needData_) {
+            uint32_t availableSize = GetAvailableSize();
         // pushSize is min(needDataSize_, availableSize, bufferSize_ - appSrcMem_->availableBegin)
         uint32_t pushSize = needDataSize_ > availableSize ? availableSize : needDataSize_;
         pushSize = pushSize > (bufferSize_ - appSrcMem_->availableBegin) ?
             bufferSize_ - appSrcMem_->availableBegin : pushSize;
         if (pushSize == 0) {
             ret = Pusheos();
-        } else if (copyMode_ || isFirstBuffer_) {
+        } else if (copyMode_) {
             ret = PushBufferWithCopy(pushSize);
-            isFirstBuffer_ = false;
         } else {
             ret = PushBuffer(pushSize);
         }
+        }
     }
     if (ret != MSERR_OK) {
-        OnError(ret);
+        OnError(MSERR_EXT_API9_NO_MEMORY, "GstAppsrcEngine:Push buffer failed.");
     }
 }
 
@@ -367,7 +379,7 @@ int32_t GstAppsrcEngine::PullBuffer()
                 appSrcMem_->begin, appSrcMem_->filePos);
             pushCond_.notify_all();
         } else if (IsConnectTimeout()) {
-            OnError(MSERR_DATA_SOURCE_IO_ERROR);
+            OnError(MSERR_EXT_API9_TIMEOUT, "GstAppsrcEngine:Network disconnection");
         }
     }
     return ret;
@@ -483,13 +495,13 @@ int32_t GstAppsrcEngine::PushBufferWithCopy(uint32_t pushSize)
     return MSERR_OK;
 }
 
-void GstAppsrcEngine::OnError(int32_t errorCode)
+void GstAppsrcEngine::OnError(int32_t errorCode, std::string message)
 {
     isExit_ = true;
     pullCond_.notify_all();
     pushCond_.notify_all();
     if (notifier_ != nullptr) {
-        notifier_(errorCode);
+        notifier_(errorCode, message);
     }
 }
 
@@ -535,7 +547,7 @@ void GstAppsrcEngine::PointerMemoryAvailable(uint32_t offset, uint32_t length)
     if ((appSrcMem_->end + 1) % bufferSize_ != offset && !copyMode_) {
         MEDIA_LOGE("mempool error, wrap->appSrcMem_->end is %{public}u offset is %{public}u",
             appSrcMem_->end, offset);
-        OnError(MSERR_INVALID_OPERATION);
+        OnError(MSERR_EXT_API9_NO_PERMISSION, "GstAppsrcEngine:Bufferpool checkout failed.");
     }
     appSrcMem_->end = offset + length - 1;
     if (noFreeBuffer_) {
@@ -570,7 +582,7 @@ bool GstAppsrcEngine::IsConnectTimeout()
         MEDIA_LOGI("Waiting to receive data");
     } else {
         int64_t curTime = GetTime();
-        if (curTime - timer_ > TIME_OUT_MS) {
+        if (curTime - timer_ > CONNECT_TIME_OUT_MS) {
             MEDIA_LOGE("No data was received for 15 seconds");
             return true;
         }

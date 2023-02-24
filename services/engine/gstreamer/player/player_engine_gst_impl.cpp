@@ -124,6 +124,9 @@ int32_t PlayerEngineGstImpl::SetVideoSurface(sptr<Surface> surface)
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
 
     producerSurface_ = surface;
+    if (appsrcWrap_) {
+        appsrcWrap_->SetVideoMode();
+    }
     return MSERR_OK;
 }
 

@@ -820,7 +820,8 @@ int32_t PlayBinCtrlerBase::DoInitializeForDataSource()
         if (isInitialized_) {
             return MSERR_OK;
         }
-        auto msgNotifier = std::bind(&PlayBinCtrlerBase::OnAppsrcErrorMessageReceived, this, std::placeholders::_1);
+        auto msgNotifier = std::bind(&PlayBinCtrlerBase::OnAppsrcErrorMessageReceived,
+            this, std::placeholders::_1, std::placeholders::_2);
         CHECK_AND_RETURN_RET_LOG(appsrcWrap_->SetErrorCallback(msgNotifier) == MSERR_OK,
             MSERR_INVALID_OPERATION, "set appsrc error callback failed");
 
@@ -1076,12 +1077,11 @@ void PlayBinCtrlerBase::OnBitRateParseCompleteCb(const GstElement *playbin, uint
     }
 }
 
-void PlayBinCtrlerBase::OnAppsrcErrorMessageReceived(int32_t errorCode)
+void PlayBinCtrlerBase::OnAppsrcErrorMessageReceived(int32_t errorCode, std::string message)
 {
-    (void)errorCode;
     PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR,
         PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
-        MSERR_DATA_SOURCE_IO_ERROR, std::string("PlayBinCtrlerBase::OnAppsrcErrorMessageReceived") };
+        errorCode, message };
     ReportMessage(msg);
 }
 
