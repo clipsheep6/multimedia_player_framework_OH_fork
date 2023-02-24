@@ -124,6 +124,7 @@ void HdiCodec::OnCodecDie()
 {
     MEDIA_LOGE("OnCodecDie");
     MediaTrace trace("HdiCodec::OnCodecDie");
+    isError_.store(true);
     if (inBufferMgr_) {
         inBufferMgr_->OnCodecDie();
     }
@@ -132,43 +133,45 @@ void HdiCodec::OnCodecDie()
         outBufferMgr_->OnCodecDie();
     }
 
-    handle_ = nullptr;
-    delete appData_;
-    appData_ = nullptr;
-    callback_ = nullptr;
     (void)taskQue_.Stop();
 }
 
 void HdiCodec::SetHdiInBufferMgr(shared_ptr<HdiBufferMgr> bufferMgr)
 {
+    CHECK_AND_RETURN_LOG(!isError_.load(), "codec error");
     inBufferMgr_ = bufferMgr;
     inBufferMgr_->Init(handle_, inPortIndex_, verInfo_);
 }
 
 void HdiCodec::SetHdiOutBufferMgr(shared_ptr<HdiBufferMgr> bufferMgr)
 {
+    CHECK_AND_RETURN_LOG(!isError_.load(), "codec error");
     outBufferMgr_ = bufferMgr;
     outBufferMgr_->Init(handle_, outPortIndex_, verInfo_);
 }
 
 void HdiCodec::SetHdiParamsMgr(shared_ptr<HdiParamsMgr> paramsMgr)
 {
+    CHECK_AND_RETURN_LOG(!isError_.load(), "codec error");
     paramsMgr_ = paramsMgr;
     paramsMgr_->Init(handle_, portParam_, verInfo_);
 }
 
 int32_t HdiCodec::SetParameter(GstCodecParamKey key, GstElement *element)
 {
+    CHECK_AND_RETURN_RET_LOG(paramsMgr_ != nullptr, GST_CODEC_ERROR, "cparamsMgr_ is nullptr");
     return paramsMgr_->SetParameter(key, element);
 }
 
 int32_t HdiCodec::GetParameter(GstCodecParamKey key, GstElement *element)
 {
+    CHECK_AND_RETURN_RET_LOG(paramsMgr_ != nullptr, GST_CODEC_ERROR, "cparamsMgr_ is nullptr");
     return paramsMgr_->GetParameter(key, element);
 }
 
 int32_t HdiCodec::Start()
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     MEDIA_LOGD("Start begin");
     if (curState_ != OMX_StateExecuting) {
         CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateExecuting) == GST_CODEC_OK, GST_CODEC_ERROR, "Change failed");
@@ -187,6 +190,7 @@ int32_t HdiCodec::Start()
 
 int32_t HdiCodec::Stop()
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     {
         MediaTrace trace("HdiCodec::Stop");
         inBufferMgr_->Stop(false);
@@ -206,6 +210,7 @@ int32_t HdiCodec::Stop()
 
 int32_t HdiCodec::ChangeState(OMX_STATETYPE state)
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     MEDIA_LOGD("Change state from %{public}u to %{public}u", targetState_, state);
     if (targetState_ != state && curState_ != state) {
         auto ret = HdiSendCommand(handle_, OMX_CommandStateSet, state, 0);
@@ -217,27 +222,32 @@ int32_t HdiCodec::ChangeState(OMX_STATETYPE state)
 
 int32_t HdiCodec::AllocateInputBuffers()
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     return inBufferMgr_->AllocateBuffers();
 }
 
 int32_t HdiCodec::UseInputBuffers(std::vector<GstBuffer*> buffers)
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     MediaTrace trace("HdiCodec::UseInputBuffers");
     return inBufferMgr_->UseBuffers(buffers);
 }
 
 int32_t HdiCodec::PushInputBuffer(GstBuffer *buffer)
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     return inBufferMgr_->PushBuffer(buffer);
 }
 
 int32_t HdiCodec::PullInputBuffer(GstBuffer **buffer)
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     return inBufferMgr_->PullBuffer(buffer);
 }
 
 int32_t HdiCodec::Flush(GstCodecDirect direct)
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     MEDIA_LOGD("Flush start");
     if (!start_) {
         return GST_CODEC_OK;
@@ -268,6 +278,7 @@ int32_t HdiCodec::Flush(GstCodecDirect direct)
 
 int32_t HdiCodec::ActiveBufferMgr(GstCodecDirect direct, bool active)
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     CHECK_AND_RETURN_RET_LOG(handle_ != nullptr, GST_CODEC_ERROR, "Handle is nullptr");
     int32_t ret = HDF_SUCCESS;
     if (direct == GST_CODEC_INPUT || direct == GST_CODEC_ALL) {
@@ -300,6 +311,7 @@ int32_t HdiCodec::ActiveBufferMgr(GstCodecDirect direct, bool active)
 
 int32_t HdiCodec::FreeInputBuffers()
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     CHECK_AND_RETURN_RET_LOG(inBufferMgr_->FreeBuffers() == GST_CODEC_OK, GST_CODEC_ERROR, "Freebuffer fail");
     if (inState_ == DEACTIVING) {
         WaitForEvent(OMX_CommandPortDisable);
@@ -309,6 +321,7 @@ int32_t HdiCodec::FreeInputBuffers()
 
 int32_t HdiCodec::AllocateOutputBuffers()
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     if (curState_ < OMX_StateIdle) {
         CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "ChangeState failed");
         // some omx need input and output allocate or use common
@@ -321,6 +334,7 @@ int32_t HdiCodec::AllocateOutputBuffers()
 
 int32_t HdiCodec::UseOutputBuffers(std::vector<GstBuffer*> buffers)
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     MEDIA_LOGD("UseOutputBuffers");
     MediaTrace trace("HdiCodec::UseOutputBuffers");
     if (curState_ < OMX_StateIdle) {
@@ -343,11 +357,13 @@ int32_t HdiCodec::UseOutputBuffers(std::vector<GstBuffer*> buffers)
 
 int32_t HdiCodec::PushOutputBuffer(GstBuffer *buffer)
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     return outBufferMgr_->PushBuffer(buffer);
 }
 
 int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     int32_t ret = GST_CODEC_OK;
     {
         unique_lock<mutex> lock(mutex_);
@@ -374,6 +390,7 @@ int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
 
 int32_t HdiCodec::FreeOutputBuffers()
 {
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     MEDIA_LOGD("FreeOutputBuffers");
     CHECK_AND_RETURN_RET_LOG(outBufferMgr_->FreeBuffers() == GST_CODEC_OK, GST_CODEC_ERROR, "Freebuffers fail");
     if (outState_ == DEACTIVING) {
@@ -437,7 +454,7 @@ void HdiCodec::WaitForEvent(OMX_U32 cmd)
     MEDIA_LOGD("wait eventdone %{public}d lastcmd %{public}d cmd %{public}u", eventDone_, lastCmd_, cmd);
     static constexpr int32_t timeout = 2;
     cond_.wait_for(lock, std::chrono::seconds(timeout),
-        [this, &newCmd]() { return eventDone_ && (lastCmd_ == newCmd || lastCmd_ == -1); });
+        [this, &newCmd]() { return eventDone_ && (lastCmd_ == newCmd || lastCmd_ == -1 || isError_.load()); });
     eventDone_ = false;
 }
 
