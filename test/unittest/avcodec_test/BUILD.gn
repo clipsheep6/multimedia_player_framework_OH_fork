@@ -39,7 +39,6 @@ avcodec_unittest_capi_include_dirs = [
   "//commonlibrary/c_utils/base/include",
   "//graphic/graphic_2d/interfaces/kits/surface",
   "//graphic/graphic_2d/interfaces/inner_api/surface",
-  "//foundation//window/window_manager/interfaces/innerkits/wm",
   "//foundation/multimedia/image_framework/interfaces/innerkits/include",
   "$MEDIA_ROOT_DIR/interfaces/kits/c",
   "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/audiodecoder/",
