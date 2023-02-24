@@ -59,10 +59,7 @@
           "glib",
           "gstreamer",
           "libffi",
-          "ffmpeg",
-          "libsoup",
-          "libpsl",
-          "libgettext"
+          "ffmpeg"
         ]
       },
       "build": {

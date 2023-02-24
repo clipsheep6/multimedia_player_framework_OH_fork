@@ -17,6 +17,7 @@ import("//foundation/multimedia/player_framework/config.gni")
 
 ohos_shared_library("media_avplayer") {
   include_dirs = [
+    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiocommon/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api",
     "//foundation/multimedia/player_framework/frameworks/js/avplayer",
     "//foundation/multimedia/player_framework/frameworks/js/common",
