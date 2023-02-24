@@ -95,6 +95,13 @@ config("media_client_public_config") {
 
 ohos_shared_library("media_client") {
   install_enable = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   if (defined(ohos_lite)) {
     sources = [
       "$MEDIA_ROOT_DIR/frameworks/native/common/media_errors.cpp",

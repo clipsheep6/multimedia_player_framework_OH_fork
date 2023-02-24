@@ -84,6 +84,12 @@ config("media_service_config") {
 ohos_shared_library("media_service") {
   install_enable = true
 
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "//foundation/multimedia/player_framework/frameworks/native/common/media_errors.cpp",
     "//foundation/multimedia/player_framework/services/utils/avsharedmemorybase.cpp",
