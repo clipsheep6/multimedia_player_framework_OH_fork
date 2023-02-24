@@ -85,13 +85,11 @@ ohos_static_library("media_engine_gst_player") {
 
   configs = [
     ":media_engine_gst_player_config",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils_public_config",
   ]
 
   deps = [
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
@@ -105,6 +103,7 @@ ohos_static_library("media_engine_gst_player") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "multimedia_audio_framework:audio_client",
+    "graphic_standard:surface",
   ]
 
   subsystem_name = "multimedia"

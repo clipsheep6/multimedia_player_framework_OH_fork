@@ -147,11 +147,6 @@ ohos_shared_library("media_service") {
     "//third_party/libxml2:xml2",
   ]
 
-  if (multimedia_player_framework_support_video) {
-    configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
-    deps += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface" ]
-  }
-
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
@@ -160,6 +155,10 @@ ohos_shared_library("media_service") {
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
   ]
+
+  if (multimedia_player_framework_support_video) {
+    external_deps += [ "graphic_standard:surface" ]
+  }
 
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"
