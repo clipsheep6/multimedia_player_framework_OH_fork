@@ -32,7 +32,7 @@ struct HdiInfo {
     std::string name;
     void *appData;
     CodecCallbackType *callbacks;
-    std::shared_ptr<IGstCodec> codec;
+    std::weak_ptr<IGstCodec> codec;
 };
 class HdiInit {
 public:
@@ -46,7 +46,7 @@ public:
 
     struct HandleInfo {
         uint32_t id;
-        std::shared_ptr<IGstCodec> codec;
+        std::weak_ptr<IGstCodec> codec;
     };
 
 private:

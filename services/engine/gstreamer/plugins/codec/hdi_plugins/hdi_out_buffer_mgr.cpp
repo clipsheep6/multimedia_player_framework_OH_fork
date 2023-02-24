@@ -38,8 +38,8 @@ HdiOutBufferMgr::~HdiOutBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGI("unref mBuffers %{public}zu", mBuffers.size());
     while (!mBuffers.empty()) {
-        MEDIA_LOGI("mBuffers %{public}zu", mBuffers.size());
         GstBufferWrap bufferWarp = mBuffers.front();
         mBuffers.pop_front();
         if (bufferWarp.gstBuffer) {

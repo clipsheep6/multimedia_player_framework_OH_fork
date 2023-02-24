@@ -222,6 +222,7 @@ void HdiBufferMgr::OnCodecDie()
     isError_.store(true);
     bufferCond_.notify_all();
     flushCond_.notify_all();
+    freeCond_.notify_all();
     UnrefGstBuffer();
 }
 }  // namespace Media

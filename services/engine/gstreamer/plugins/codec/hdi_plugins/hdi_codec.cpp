@@ -83,7 +83,7 @@ int32_t HdiCodec::Init()
     int32_t ret;
     {
         MediaTrace trace("HdiCodec::Init");
-        std::shared_ptr<IGstCodec> codec(this);
+        std::weak_ptr<IGstCodec> codec = weak_from_this();
         HdiInfo info = {componentName_, appData_, callback_, codec};
         ret = HdiInit::GetInstance().GetHandle(&handle_, id_, info);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "GetHandle failed");
@@ -125,6 +125,7 @@ void HdiCodec::OnCodecDie()
     MEDIA_LOGE("OnCodecDie");
     MediaTrace trace("HdiCodec::OnCodecDie");
     isError_.store(true);
+    cond_.notify_all();
     if (inBufferMgr_) {
         inBufferMgr_->OnCodecDie();
     }
@@ -454,7 +455,7 @@ void HdiCodec::WaitForEvent(OMX_U32 cmd)
     MEDIA_LOGD("wait eventdone %{public}d lastcmd %{public}d cmd %{public}u", eventDone_, lastCmd_, cmd);
     static constexpr int32_t timeout = 2;
     cond_.wait_for(lock, std::chrono::seconds(timeout),
-        [this, &newCmd]() { return eventDone_ && (lastCmd_ == newCmd || lastCmd_ == -1 || isError_.load()); });
+        [this, &newCmd]() { return (eventDone_ && (lastCmd_ == newCmd || lastCmd_ == -1)) || isError_.load(); });
     eventDone_ = false;
 }
 

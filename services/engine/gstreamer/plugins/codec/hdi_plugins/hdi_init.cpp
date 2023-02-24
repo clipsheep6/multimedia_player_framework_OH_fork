@@ -141,8 +141,9 @@ void HdiInit::CodecComponentManagerReset()
     CodecComponentManagerRelease();
     mgr_ = nullptr;
     for (auto iter = handleMap_.begin(); iter != handleMap_.end(); ++iter) {
-        if (iter->second.codec != nullptr) {
-            iter->second.codec->OnCodecDie();
+        auto codec = iter->second.codec.lock();
+        if (codec) {
+            codec->OnCodecDie();
         }
     }
     handleMap_.clear();
