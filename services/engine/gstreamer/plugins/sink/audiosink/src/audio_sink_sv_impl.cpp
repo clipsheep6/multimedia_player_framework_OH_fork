@@ -181,6 +181,16 @@ int32_t AudioSinkSvImpl::SetRendererInfo(int32_t desc, int32_t rendererFlags)
     rendererOptions_.rendererInfo.contentType = static_cast<AudioStandard::ContentType>(contentType);
     rendererOptions_.rendererInfo.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
     rendererOptions_.rendererInfo.rendererFlags = rendererFlags;
+    if (audioRenderer_ != nullptr) {
+        OHOS::AudioStandard::AudioRendererDesc audioRenderDesc;
+        audioRenderDesc.contentType = static_cast<AudioStandard::ContentType>(contentType);
+        audioRenderDesc.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
+        int32_t ret = audioRenderer_->SetAudioRendererDesc(audioRenderDesc);
+        MEDIA_LOGI("audioRenderer SetRendererInfo content: %{public}d, usage: %{public}d, ret: %{public}d",
+            contentType, streamUsage, ret);
+        CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED,
+            "audio server SetRendererInfo failed!");
+    }
     return MSERR_OK;
 }
 

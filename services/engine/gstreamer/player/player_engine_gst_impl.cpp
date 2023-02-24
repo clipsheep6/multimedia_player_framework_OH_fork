@@ -807,7 +807,7 @@ int32_t PlayerEngineGstImpl::SetAudioRendererInfo(const int32_t contentType,
     MEDIA_LOGI("content = %{public}d, usage = %{public}d, rendererFlags = %{public}d",
         contentType, streamUsage, rendererFlag);
     if (playBinCtrler_ != nullptr) {
-        MEDIA_LOGD("SetAudioRendererInfo in");
+        MEDIA_LOGI("SetAudioRendererInfo in");
         uint32_t rendererInfo(0);
         rendererInfo |= (contentType | (static_cast<uint32_t>(streamUsage) <<
             AudioStandard::RENDERER_STREAM_USAGE_SHIFT));

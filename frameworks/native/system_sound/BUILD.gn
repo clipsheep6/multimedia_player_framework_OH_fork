@@ -1,0 +1,62 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+import("./../../../multimedia_player_framework_aafwk.gni")
+
+ohos_shared_library("audio_ringtone_client") {
+  install_enable = true
+  sources = [ "audio_ringtone_manager.cpp" ]
+
+  include_dirs = [
+    "${multimedia_player_framework_path}/interfaces/inner_api/native/audio_ringtone/include",
+    "${multimedia_player_framework_path}/services/utils/include",
+    "${multimedia_audio_framework_path}/frameworks/native/ringtoneplayer/include",
+    "${multimedia_audio_framework_path}/services/audio_service/client/include",
+    "${multimedia_audio_framework_path}/interfaces/inner_api/native/audiocommon/include",
+    "${multimedia_audio_framework_path}/interfaces/inner_api/native/audiomanager/include",
+    "${multimedia_media_library_path}/interfaces/inner_api/media_library_helper/include",
+    "${multimedia_media_library_path}/frameworks/utils/include",
+  ]
+
+  deps = [
+    "${ability_runtime_path}/frameworks/native/ability/native:data_ability_helper",
+    "${ability_runtime_path}/frameworks/native/appkit:appkit_native",
+    "${graphic_2d_path}/frameworks/surface:surface",
+    "${multimedia_audio_framework_path}/services/audio_service:audio_client",
+    "${multimedia_player_framework_path}/interfaces/inner_api/native:media_client",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_base:zuri",
+    "ability_runtime:ability_manager",
+    "ability_runtime:abilitykit_native",
+    "bundle_framework:appexecfwk_base",
+    "hiviewdfx_hilog_native:libhilog",
+    "relational_store:native_dataability",
+    "relational_store:native_rdb",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+  ]
+
+  defines = []
+  defines += player_framework_defines
+
+  subsystem_name = "multimedia"
+  part_name = "multimedia_player_framework"
+}
