@@ -564,7 +564,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
             jsPlayer->dataSrcCb_->ClearCallbackReference();
             jsPlayer->dataSrcCb_ = nullptr;
         }
-        jsPlayer->isLiveStream_ = true;
+        jsPlayer->isLiveStream_ = false;
     }
 
     napi_value resource = nullptr;
@@ -1038,7 +1038,7 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
                 jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
             }
             if (jsPlayer->dataSrcDescriptor_.fileSize == -1) {
-                jsPlayer->isLiveStream_ = false;
+                jsPlayer->isLiveStream_ = true;
             }
         }
     });
