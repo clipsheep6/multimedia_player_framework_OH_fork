@@ -254,14 +254,13 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
 sptr<IStandardMediaService> MediaClient::GetMediaProxy()
 {
     MEDIA_LOGD("enter");
-    int32_t id1 = PlayerXCollie::GetInstance().SetTimer("SystemAbilityManagerClient::GetSystemAbilityManager");
-    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    PlayerXCollie::GetInstance().CancelTimer(id1);
+    sptr<ISystemAbilityManager> samgr = nullptr;
+    LISTENER(samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager(),
+        "SystemAbilityManagerClient::GetSystemAbilityManager", false)
     CHECK_AND_RETURN_RET_LOG(samgr != nullptr, nullptr, "system ability manager is nullptr.");
-
-    int32_t id2 = PlayerXCollie::GetInstance().SetTimer("SystemAbilityManagerClient::GetSystemAbility");
-    sptr<IRemoteObject> object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
-    PlayerXCollie::GetInstance().CancelTimer(id2);
+    sptr<IRemoteObject> object = nullptr;
+    LISTENER(object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID),
+        "SystemAbilityManagerClient::GetSystemAbility", false)
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "media object is nullptr.");
 
     mediaProxy_ = iface_cast<IStandardMediaService>(object);

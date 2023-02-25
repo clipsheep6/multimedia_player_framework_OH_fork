@@ -77,10 +77,8 @@ int32_t PlayerServiceProxy::SendRequest(uint32_t code, MessageParcel &data, Mess
         funcName = itFunc->second;
     }
     MEDIA_LOGI("Proxy: SendRequest task: %{public}s is received", funcName.c_str());
-    
-    int32_t id = PlayerXCollie::GetInstance().SetTimer(funcName);
-    int32_t error = Remote()->SendRequest(code, data, reply, option);
-    PlayerXCollie::GetInstance().CancelTimer(id);
+    int32_t error = -1;
+    LISTENER(error = Remote()->SendRequest(code, data, reply, option), funcName, false)
     return error;
 }
 

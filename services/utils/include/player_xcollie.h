@@ -29,7 +29,7 @@ public:
     int32_t SetTimerByLog(const std::string &name, uint32_t timeout = 10); // 10s
     void CancelTimer(int32_t id);
     int32_t Dump(int32_t fd);
-
+    constexpr static uint32_t timerTimeout = 10;
 private:
     PlayerXCollie() = default;
     ~PlayerXCollie() = default;
@@ -39,6 +39,28 @@ private:
     std::map<int32_t, std::string> dfxDumper_;
     uint32_t threadDeadlockCount_ = 0;
 };
+
+class __attribute__((visibility("hidden"))) XcollieTimer {
+public:
+    XcollieTimer(const std::string &name, bool recovery = false, uint32_t timeout = 10)
+    {
+        id_ = PlayerXCollie::GetInstance().SetTimer(name, recovery, timeout);
+    };
+
+    XcollieTimer(const std::string &name, uint32_t timeout)
+    {
+        id_ = PlayerXCollie::GetInstance().SetTimerByLog(name, timeout);
+    }
+
+    ~XcollieTimer()
+    {
+        PlayerXCollie::GetInstance().CancelTimer(id_);
+    }
+private:
+    int32_t id_ = 0;
+};
+
+#define LISTENER(statement, args...) { XcollieTimer xCollie(args); statement; }
 } // namespace Media
 } // namespace OHOS
 #endif

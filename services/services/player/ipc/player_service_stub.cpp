@@ -52,10 +52,8 @@ PlayerServiceStub::~PlayerServiceStub()
 {
     if (playerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
-            int32_t id = PlayerXCollie::GetInstance().SetTimer("PlayerServiceStub::~PlayerServiceStub");
-            (void)playerServer_->Release();
-            PlayerXCollie::GetInstance().CancelTimer(id);
-            playerServer_ = nullptr;
+            LISTENER((void)playerServer_->Release(); playerServer_ = nullptr,
+                "PlayerServiceStub::~PlayerServiceStub", false)
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
@@ -134,9 +132,8 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
         MEDIA_LOGI("Stub: OnRemoteRequest task: %{public}s is received", funcName.c_str());
         if (memberFunc != nullptr) {
             auto task = std::make_shared<TaskHandler<int>>([&, this] {
-                int32_t id = PlayerXCollie::GetInstance().SetTimer(funcName);
-                auto ret = (this->*memberFunc)(data, reply);
-                PlayerXCollie::GetInstance().CancelTimer(id);
+                int32_t ret = -1;
+                LISTENER(ret = (this->*memberFunc)(data, reply), funcName, false)
                 return ret;
             });
             (void)taskQue_.EnqueueTask(task);
