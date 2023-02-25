@@ -153,6 +153,7 @@ int32_t PlayerServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc
     if (size == -1) {
         config_.looping = false;
         config_.speedMode = SPEED_FORWARD_1_00_X;
+        isLiveStream_ = true;
     }
     return ret;
 }
@@ -447,6 +448,7 @@ int32_t PlayerServer::OnReset()
     (void)idleTask->GetResult();
     (void)taskMgr_.Reset();
     lastOpStatus_ = PLAYER_IDLE;
+    isLiveStream_ = false;
 
     return MSERR_OK;
 }
@@ -560,14 +562,10 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
         return MSERR_INVALID_VAL;
     }
 
-    if (dataSrc_ != nullptr) {
-        int64_t size = 0;
-        (void)dataSrc_->GetSize(size);
-        if (size == -1) {
-            MEDIA_LOGE("Can not Seek, it is live-stream");
-            OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
-            return MSERR_INVALID_OPERATION;
-        }
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not Seek, it is live-stream");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
+        return MSERR_INVALID_OPERATION;
     }
 
     MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
@@ -608,6 +606,10 @@ int32_t PlayerServer::GetCurrentTime(int32_t &currentTime)
     if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not GetCurrentTime, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
+    }
+    if (isLiveStream_ && dataSrc_ == nullptr) {
+        MEDIA_LOGD("It is live-stream");
+        return MSERR_OK;
     }
 
     MEDIA_LOGD("PlayerServer GetCurrentTime in, currentState is %{public}s",
@@ -720,14 +722,10 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         return MSERR_INVALID_OPERATION;
     }
     MEDIA_LOGD("PlayerServer SetPlaybackSpeed in, mode %{public}d", mode);
-    if (dataSrc_ != nullptr) {
-        int64_t size = 0;
-        (void)dataSrc_->GetSize(size);
-        if (size == -1) {
-            MEDIA_LOGE("Can not SetPlaybackSpeed, it is live-stream");
-            OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetPlaybackSpeed, it is live-stream");
-            return MSERR_INVALID_OPERATION;
-        }
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not SetPlaybackSpeed, it is live-stream");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetPlaybackSpeed, it is live-stream");
+        return MSERR_INVALID_OPERATION;
     }
 
     if (config_.speedMode == mode) {
@@ -860,14 +858,10 @@ int32_t PlayerServer::SetLooping(bool loop)
     }
     MEDIA_LOGD("PlayerServer SetLooping in, loop %{public}d", loop);
 
-    if (dataSrc_ != nullptr) {
-        int64_t size = 0;
-        (void)dataSrc_->GetSize(size);
-        if (size == -1) {
-            MEDIA_LOGE("Can not SetLooping, it is live-stream");
-            OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetLooping, it is live-stream");
-            return MSERR_INVALID_OPERATION;
-        }
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not SetLooping, it is live-stream");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not SetLooping, it is live-stream");
+        return MSERR_INVALID_OPERATION;
     }
 
     if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || GetCurrState() == preparingState_) {
@@ -997,6 +991,9 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
         (void)OnPause();
     } else {
         int32_t ret = HandleMessage(type, extra, infoBody);
+        if (type == INFO_TYPE_IS_LIVE_STREAM) {
+            isLiveStream_ = true;
+        }
         if (playerCb_ != nullptr && ret == MSERR_OK) {
             playerCb_->OnInfo(type, extra, infoBody);
         }

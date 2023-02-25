@@ -241,12 +241,13 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     std::string GetCurrentState();
     bool IsControllable();
-    bool IsLiveSource();
+    bool IsLiveSource() const;
 
     void NotifyDuration(int32_t duration) override;
     void NotifyPosition(int32_t position) override;
     void NotifyState(PlayerStates state) override;
     void NotifyVideoSize(int32_t width, int32_t height) override;
+    void NotifyIsLiveStream() override;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
@@ -294,6 +295,7 @@ private:
     int32_t height_ = 0;
     int32_t position_ = -1;
     int32_t duration_ = -1;
+    bool isLiveStream_ = false;
 };
 } // namespace Media
 } // namespace OHOS

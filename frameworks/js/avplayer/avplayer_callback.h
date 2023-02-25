@@ -32,6 +32,7 @@ public:
     virtual void NotifyPosition(int32_t position) = 0;
     virtual void NotifyState(PlayerStates state) = 0;
     virtual void NotifyVideoSize(int32_t width, int32_t height) = 0;
+    virtual void NotifyIsLiveStream() = 0;
 };
 
 class AVPlayerCallback : public PlayerCallback {
@@ -66,6 +67,7 @@ private:
     void OnAudioInterruptCb(const Format &infoBody) const;
     void OnBitRateCollectedCb(const Format &infoBody) const;
     void OnEosCb(int32_t isLooping) const;
+    void NotifyIsLiveStream() const;
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
