@@ -19,7 +19,6 @@
 #include "avmemory_capi_mock.h"
 #include "surface_capi_mock.h"
 #include "native_avcodec_base.h"
-#include "native_avmagic.h"
 #include "window.h"
 #include "avcodec_video_decoder.h"
 using namespace std;
@@ -109,14 +108,6 @@ int32_t VideoDecCapiMock::SetCallback(std::shared_ptr<AVCodecCallbackMock> cb)
     }
     return AV_ERR_OPERATE_NOT_PERMIT;
 }
-
-struct VDecObject : public OH_AVCodec {
-    explicit VDecObject(const std::shared_ptr<AVCodecVideoDecoder> &decoder)
-        : OH_AVCodec(AVMagic::MEDIA_MAGIC_VIDEO_DECODER), videoDecoder_(decoder) {}
-    ~VDecObject() = default;
-
-    const std::shared_ptr<AVCodecVideoDecoder> videoDecoder_;
-};
 
 int32_t VideoDecCapiMock::SetOutputSurface(std::shared_ptr<SurfaceMock> surface)
 {
