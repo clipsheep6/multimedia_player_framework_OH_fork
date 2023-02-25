@@ -525,20 +525,14 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
             MEDIA_LOGD("GST_STATE_CHANGE_PAUSED_TO_PLAYING");
-            g_return_val_if_fail(sink->audio_sink != nullptr, GST_STATE_CHANGE_FAILURE);
-            if (sink->audio_sink->Start() != MSERR_OK) {
+            if (sink->audio_sink == nullptr || sink->audio_sink->Start() != MSERR_OK) {
                 GST_ERROR_OBJECT(sink, "audio sink Start failed!");
-                GST_ELEMENT_ERROR(sink, STREAM, FAILED, ("audio sink Start failed!"), (NULL));
-                return GST_STATE_CHANGE_FAILURE;
             }
 
             if (sink->pause_cache_buffer != nullptr) {
                 GST_INFO_OBJECT(basesink, "pause to play");
                 if (gst_audio_server_sink_render(basesink, sink->pause_cache_buffer) != GST_FLOW_OK) {
                     GST_ERROR_OBJECT(sink, "audio sink gst_audio_server_sink_render failed!");
-                    GST_ELEMENT_ERROR(sink, STREAM, FAILED,
-                        ("audio sink gst_audio_server_sink_render failed!"), (NULL));
-                    return GST_STATE_CHANGE_FAILURE;
                 }
                 gst_buffer_unref(sink->pause_cache_buffer);
                 sink->pause_cache_buffer = nullptr;
