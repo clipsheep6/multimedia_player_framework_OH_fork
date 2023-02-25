@@ -39,6 +39,8 @@ ohos_shared_library("media_avplayer") {
   ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",

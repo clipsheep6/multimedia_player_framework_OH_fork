@@ -1349,8 +1349,7 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         AudioStandard::StreamUsage::STREAM_USAGE_RANGING, AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION_RINGTONE
     };
     if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
-        std::find(usages.begin(), usages.end(), usage) == usages.end() ||
-        rendererFlags != 0) {
+        std::find(usages.begin(), usages.end(), usage) == usages.end()) {
         return false;
     }
     jsPlayer->audioRendererInfo_ = AudioStandard::AudioRendererInfo {

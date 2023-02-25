@@ -16,6 +16,8 @@ import("//build/ohos.gni")
 config("gst_codec_plugin_hdi_config") {
   visibility = [ ":*" ]
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",
