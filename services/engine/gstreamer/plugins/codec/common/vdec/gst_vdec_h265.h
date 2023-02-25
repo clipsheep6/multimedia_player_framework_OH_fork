@@ -42,6 +42,8 @@ typedef struct _GstVdecH265Class GstVdecH265Class;
 
 struct _GstVdecH265 {
     GstVdecBase parent;
+    gboolean is_hvcc;
+    gint hvcc_nal_len;
 };
 
 struct _GstVdecH265Class {

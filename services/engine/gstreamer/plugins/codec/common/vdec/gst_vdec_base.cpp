@@ -289,6 +289,8 @@ static void gst_vdec_base_init(GstVdecBase *self)
     self->output.dump_file = nullptr;
     self->input.first_frame = TRUE;
     self->output.first_frame = TRUE;
+    self->codec_data_update = FALSE;
+    self->codec_data = nullptr;
 }
 
 static void gst_vdec_base_finalize(GObject *object)
@@ -476,6 +478,11 @@ static void gst_vdec_base_stop_after(GstVdecBase *self)
     if (self->sink_caps) {
         gst_caps_unref(self->sink_caps);
         self->sink_caps = nullptr;
+    }
+    self->codec_data_update = FALSE;
+    if (self->codec_data) {
+        gst_buffer_unref(self->codec_data);
+        self->codec_data = nullptr;
     }
 }
 
@@ -938,7 +945,8 @@ static void gst_vdec_base_input_frame_pts_to_list(GstVdecBase *self, GstVideoCod
     g_mutex_unlock(&self->lock);
 }
 
-static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstBuffer *src_buffer)
+static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstBuffer *src_buffer,
+    gboolean is_codec_data)
 {
     GstBuffer* dts_buffer;
     GstBufferPool *pool = reinterpret_cast<GstBufferPool *>(gst_object_ref(self->inpool));
@@ -960,11 +968,17 @@ static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstB
     }
     ON_SCOPE_EXIT(3) { gst_buffer_unmap(src_buffer, &src_map); };
 
-    auto ret = memcpy_s(dts_map.data, dts_map.size, src_map.data, src_map.size);
-    g_return_val_if_fail(ret == EOK, GST_CODEC_ERROR);
     GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(dts_buffer);
     g_return_val_if_fail(meta != nullptr, GST_CODEC_ERROR);
-    meta->length = src_map.size;
+    GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
+    if (kclass->parser) {
+        ParseMeta parse_meta = {src_map, dts_map, is_codec_data, meta->length};
+        g_return_val_if_fail(kclass->parser(self,parse_meta) == TRUE, GST_CODEC_ERROR);
+    } else {
+        auto ret = memcpy_s(dts_map.data, dts_map.size, src_map.data, src_map.size);
+        g_return_val_if_fail(ret == EOK, GST_CODEC_ERROR);
+        meta->length = src_map.size;
+    }
     CANCEL_SCOPE_EXIT_GUARD(2);
     CANCEL_SCOPE_EXIT_GUARD(3);
     gst_buffer_unmap(dts_buffer, &dts_map);
@@ -1009,7 +1023,12 @@ static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, G
 
     gint codec_ret = GST_CODEC_OK;
     if (!gst_vdec_check_ashmem_buffer(buf) && self->input_need_ashmem) {
-        codec_ret = gst_vdec_base_push_input_buffer_with_copy(self, buf);
+        // codec data just for mkv/mp4, and this scene is no ashmem
+        if (self->codec_data_update) {
+            self->codec_data_update = FALSE;
+            (void)gst_vdec_base_push_input_buffer_with_copy(self, self->codec_data, TRUE);
+        }
+        codec_ret = gst_vdec_base_push_input_buffer_with_copy(self, buf, FALSE);
     } else {
         gst_vdec_base_dump_input_buffer(self, buf);
         codec_ret = self->decoder->PushInputBuffer(buf);
@@ -1547,6 +1566,11 @@ static gboolean gst_vdec_base_set_format(GstVideoDecoder *decoder, GstVideoCodec
         g_return_val_if_fail(gst_vdec_base_pre_init_surface(self) != FALSE, FALSE);
     }
     self->has_set_format = TRUE;
+    if (state->codec_data != nullptr && state->codec_data != self->codec_data) {
+        gst_buffer_unref(self->codec_data);
+        self->codec_data = gst_buffer_ref(state->codec_data);
+        self->codec_data_update = TRUE;
+    }
 
     return TRUE;
 }
@@ -1570,7 +1594,7 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
             gint codec_ret = GST_CODEC_OK;
             if (!gst_vdec_check_ashmem_buffer(cat_buffer) && self->input_need_ashmem) {
-                codec_ret = gst_vdec_base_push_input_buffer_with_copy(self, cat_buffer);
+                codec_ret = gst_vdec_base_push_input_buffer_with_copy(self, cat_buffer, FALSE);
             } else {
                 gst_vdec_base_dump_input_buffer(self, cat_buffer);
                 codec_ret = self->decoder->PushInputBuffer(cat_buffer);

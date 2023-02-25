@@ -44,6 +44,8 @@ namespace {
     const std::string DEFAULT_H265_CAPS = "video/x-h265,"
         "alignment=(string) nal,"
         "stream-format=(string) byte-stream";
+    const std::string DEFAULT_H265_DEC_CAPS = "video/x-h265,"
+        "stream-format=(string) { hvc1, hev1, byte-stream }";
     using namespace OHOS::Media;
     const std::unordered_map<int32_t, std::string> FORMAT_MAPPING = {
         { NV21, "NV21" },
@@ -89,6 +91,11 @@ private:
         (void)capData;
         return DEFAULT_H265_CAPS;
     }
+    static inline std::string GetH265DecCaps(CapabilityData &capData)
+    {
+        (void)capData;
+        return DEFAULT_H265_DEC_CAPS;
+    }    
     static std::string GetRawCaps(CapabilityData &capData);
     static void GetWidth(std::string &capStr, const CapabilityData &capData);
     static void GetHeight(std::string &capStr, const CapabilityData &capData);
@@ -113,7 +120,7 @@ const std::map<std::pair<int32_t, std::string>, GType> GstHdiFactory::COMPONENT_
 const std::map<std::pair<int32_t, std::string>, GetCapsStr> GstHdiFactory::SINK_CAPS_MAP = {
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_AVC), GetH264Caps},
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_AVC), GetRawCaps},
-    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_HEVC), GetH265Caps},
+    {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_DECODER, CodecMimeType::VIDEO_HEVC), GetH265DecCaps},
     {std::pair<int32_t, std::string>(AVCODEC_TYPE_VIDEO_ENCODER, CodecMimeType::VIDEO_HEVC), GetRawCaps},
 };
 
