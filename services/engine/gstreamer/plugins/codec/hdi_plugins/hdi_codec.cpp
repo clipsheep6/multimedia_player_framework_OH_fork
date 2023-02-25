@@ -361,7 +361,6 @@ int32_t HdiCodec::UseOutputBuffers(std::vector<GstBuffer*> buffers)
 
 int32_t HdiCodec::PushOutputBuffer(GstBuffer *buffer)
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     return outBufferMgr_->PushBuffer(buffer);
 }
 

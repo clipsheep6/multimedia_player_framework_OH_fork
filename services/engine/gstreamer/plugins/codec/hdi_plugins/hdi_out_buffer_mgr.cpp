@@ -73,8 +73,9 @@ int32_t HdiOutBufferMgr::PushBuffer(GstBuffer *buffer)
     MEDIA_LOGD("mBuffers %{public}zu, available %{public}zu, codingBuffers %{public}zu",
         mBuffers.size(), availableBuffers_.size(), codingBuffers_.size());
     MediaTrace::CounterTrace("AvailableBuffers", availableBuffers_.size());
-    std::unique_lock<std::mutex> lock(mutex_);
     ON_SCOPE_EXIT(0) { gst_buffer_unref(buffer); };
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    std::unique_lock<std::mutex> lock(mutex_);
     if (isFormatChange_) {
         MEDIA_LOGD("It is formatchange");
         return GST_CODEC_OK;
