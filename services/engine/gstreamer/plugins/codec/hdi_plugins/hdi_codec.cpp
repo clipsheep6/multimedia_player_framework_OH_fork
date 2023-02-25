@@ -126,34 +126,38 @@ void HdiCodec::OnCodecDie()
     MediaTrace trace("HdiCodec::OnCodecDie");
     isError_.store(true);
     cond_.notify_all();
+    {
+        unique_lock<mutex> lock(mutex_);
+        start_ = false;
+    }
+
     if (inBufferMgr_) {
         inBufferMgr_->OnCodecDie();
+        inBufferMgr_->Stop(false);
+        (void)inBufferMgr_->FreeBuffers();
     }
 
     if (outBufferMgr_) {
         outBufferMgr_->OnCodecDie();
+        outBufferMgr_->Stop(false);
+        (void)outBufferMgr_->FreeBuffers();
     }
-
-    (void)taskQue_.Stop();
 }
 
 void HdiCodec::SetHdiInBufferMgr(shared_ptr<HdiBufferMgr> bufferMgr)
 {
-    CHECK_AND_RETURN_LOG(!isError_.load(), "codec error");
     inBufferMgr_ = bufferMgr;
     inBufferMgr_->Init(handle_, inPortIndex_, verInfo_);
 }
 
 void HdiCodec::SetHdiOutBufferMgr(shared_ptr<HdiBufferMgr> bufferMgr)
 {
-    CHECK_AND_RETURN_LOG(!isError_.load(), "codec error");
     outBufferMgr_ = bufferMgr;
     outBufferMgr_->Init(handle_, outPortIndex_, verInfo_);
 }
 
 void HdiCodec::SetHdiParamsMgr(shared_ptr<HdiParamsMgr> paramsMgr)
 {
-    CHECK_AND_RETURN_LOG(!isError_.load(), "codec error");
     paramsMgr_ = paramsMgr;
     paramsMgr_->Init(handle_, portParam_, verInfo_);
 }
@@ -191,7 +195,7 @@ int32_t HdiCodec::Start()
 
 int32_t HdiCodec::Stop()
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_OK, "codec error");
     {
         MediaTrace trace("HdiCodec::Stop");
         inBufferMgr_->Stop(false);
@@ -211,8 +215,8 @@ int32_t HdiCodec::Stop()
 
 int32_t HdiCodec::ChangeState(OMX_STATETYPE state)
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     MEDIA_LOGD("Change state from %{public}u to %{public}u", targetState_, state);
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     if (targetState_ != state && curState_ != state) {
         auto ret = HdiSendCommand(handle_, OMX_CommandStateSet, state, 0);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSendCommand failed");
@@ -248,9 +252,8 @@ int32_t HdiCodec::PullInputBuffer(GstBuffer **buffer)
 
 int32_t HdiCodec::Flush(GstCodecDirect direct)
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     MEDIA_LOGD("Flush start");
-    if (!start_) {
+    if (!start_ || isError_.load()) {
         return GST_CODEC_OK;
     }
     CHECK_AND_RETURN_RET_LOG(handle_ != nullptr, GST_CODEC_ERROR, "Handle is nullptr");
@@ -312,7 +315,7 @@ int32_t HdiCodec::ActiveBufferMgr(GstCodecDirect direct, bool active)
 
 int32_t HdiCodec::FreeInputBuffers()
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_OK, "codec error");
     CHECK_AND_RETURN_RET_LOG(inBufferMgr_->FreeBuffers() == GST_CODEC_OK, GST_CODEC_ERROR, "Freebuffer fail");
     if (inState_ == DEACTIVING) {
         WaitForEvent(OMX_CommandPortDisable);
@@ -391,7 +394,7 @@ int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
 
 int32_t HdiCodec::FreeOutputBuffers()
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_OK, "codec error");
     MEDIA_LOGD("FreeOutputBuffers");
     CHECK_AND_RETURN_RET_LOG(outBufferMgr_->FreeBuffers() == GST_CODEC_OK, GST_CODEC_ERROR, "Freebuffers fail");
     if (outState_ == DEACTIVING) {

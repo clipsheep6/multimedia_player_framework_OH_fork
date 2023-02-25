@@ -33,7 +33,7 @@ HdiBufferMgr::HdiBufferMgr()
 HdiBufferMgr::~HdiBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-    UnrefGstBuffer();
+    FreeBuffers();
 }
 
 int32_t HdiBufferMgr::Start()
@@ -136,13 +136,29 @@ void HdiBufferMgr::FreeCodecBuffers()
 {
     MEDIA_LOGD("Enter FreeCodecBuffers");
     for (auto codecBuffer : availableBuffers_) {
+        CHECK_AND_BREAK_LOG(!isError_.load(), "codec error");
         auto ret = handle_->FreeBuffer(handle_, mPortIndex_, &codecBuffer->hdiBuffer);
         if (ret != HDF_SUCCESS) {
             MEDIA_LOGE("free buffer %{public}u fail", codecBuffer->hdiBuffer.bufferId);
         }
     }
     EmptyList(availableBuffers_);
+
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGI("unref buffer %{public}zu", codingBuffers_.size());
+    for (auto iter = codingBuffers_.begin(); iter != codingBuffers_.end(); ++iter) {
+        if (iter->second != nullptr) {
+            gst_buffer_unref(iter->second);
+        }
+    }
+    codingBuffers_.clear();
     MEDIA_LOGD("Enter FreeCodecBuffers End");
+}
+
+int32_t HdiBufferMgr::FreeBuffers()
+{
+    FreeCodecBuffers();
+    return GST_CODEC_OK;
 }
 
 int32_t HdiBufferMgr::Stop(bool isFormatChange)
@@ -204,26 +220,11 @@ void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
     }
 }
 
-void HdiBufferMgr::UnrefGstBuffer()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("unref buffer %{public}zu", codingBuffers_.size());
-    for (auto iter = codingBuffers_.begin(); iter != codingBuffers_.end(); ++iter) {
-        if (iter->second != nullptr) {
-            gst_buffer_unref(iter->second);
-        }
-    }
-    codingBuffers_.clear();
-}
-
 void HdiBufferMgr::OnCodecDie()
 {
     MEDIA_LOGE("Enter OnCodecDie");
     isError_.store(true);
-    bufferCond_.notify_all();
-    flushCond_.notify_all();
     freeCond_.notify_all();
-    UnrefGstBuffer();
 }
 }  // namespace Media
 }  // namespace OHOS
