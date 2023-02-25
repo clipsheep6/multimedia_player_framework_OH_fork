@@ -349,6 +349,8 @@ int32_t RecorderClient::SetFileSplitDuration(FileSplitType type, int64_t timesta
 
 int32_t RecorderClient::SetParameter(int32_t sourceId, const Format &format)
 {
+    (void)sourceId;
+    (void)format;
     return MSERR_INVALID_OPERATION;
 }
 
