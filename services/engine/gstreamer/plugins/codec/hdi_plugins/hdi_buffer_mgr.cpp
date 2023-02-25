@@ -34,6 +34,7 @@ HdiBufferMgr::~HdiBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     FreeBuffers();
+    UnrefGstBuffer();
 }
 
 int32_t HdiBufferMgr::Start()
@@ -143,15 +144,6 @@ void HdiBufferMgr::FreeCodecBuffers()
         }
     }
     EmptyList(availableBuffers_);
-
-    std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("unref buffer %{public}zu", codingBuffers_.size());
-    for (auto iter = codingBuffers_.begin(); iter != codingBuffers_.end(); ++iter) {
-        if (iter->second != nullptr) {
-            gst_buffer_unref(iter->second);
-        }
-    }
-    codingBuffers_.clear();
     MEDIA_LOGD("Enter FreeCodecBuffers End");
 }
 
@@ -220,11 +212,24 @@ void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
     }
 }
 
+void HdiBufferMgr::UnrefGstBuffer()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGI("unref buffer %{public}zu", codingBuffers_.size());
+    for (auto iter = codingBuffers_.begin(); iter != codingBuffers_.end(); ++iter) {
+        if (iter->second != nullptr) {
+            gst_buffer_unref(iter->second);
+        }
+    }
+    codingBuffers_.clear();
+}
+
 void HdiBufferMgr::OnCodecDie()
 {
     MEDIA_LOGE("Enter OnCodecDie");
     isError_.store(true);
     freeCond_.notify_all();
+    UnrefGstBuffer();
 }
 }  // namespace Media
 }  // namespace OHOS

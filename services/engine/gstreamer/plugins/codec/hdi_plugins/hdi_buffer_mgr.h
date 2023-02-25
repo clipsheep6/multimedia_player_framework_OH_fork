@@ -87,6 +87,7 @@ public:
 
 protected:
     void FreeCodecBuffers();
+    void UnrefGstBuffer();
     std::atomic<bool> isError_ = false;
     bool isFlushing_ = false;
     bool isFlushed_ = false;
