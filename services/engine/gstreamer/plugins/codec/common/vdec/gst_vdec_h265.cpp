@@ -68,7 +68,7 @@ static gboolean gst_vdec_h265_parser_codec_data(GstVdecH265 *self, GstMapInfo &s
             dts_info.data[dts_offset] = 0;
             dts_info.data[dts_offset + 1] = 0;
             dts_info.data[dts_offset + 2] = 0;
-            dts_info.data[dts_offset + 3] = 0;
+            dts_info.data[dts_offset + 3] = 1;
 
             gint len = (src_info.data[src_offset] << 8) + src_info.data[src_offset + 1];
             // Next 2 bytes is type data.

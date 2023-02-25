@@ -95,7 +95,7 @@ private:
     {
         (void)capData;
         return DEFAULT_H265_DEC_CAPS;
-    }    
+    }
     static std::string GetRawCaps(CapabilityData &capData);
     static void GetWidth(std::string &capStr, const CapabilityData &capData);
     static void GetHeight(std::string &capStr, const CapabilityData &capData);

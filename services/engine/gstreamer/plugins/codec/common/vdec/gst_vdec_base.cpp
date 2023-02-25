@@ -973,7 +973,7 @@ static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstB
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
     if (kclass->parser) {
         ParseMeta parse_meta = {src_map, dts_map, is_codec_data, meta->length};
-        g_return_val_if_fail(kclass->parser(self,parse_meta) == TRUE, GST_CODEC_ERROR);
+        g_return_val_if_fail(kclass->parser(self, parse_meta) == TRUE, GST_CODEC_ERROR);
     } else {
         auto ret = memcpy_s(dts_map.data, dts_map.size, src_map.data, src_map.size);
         g_return_val_if_fail(ret == EOK, GST_CODEC_ERROR);
