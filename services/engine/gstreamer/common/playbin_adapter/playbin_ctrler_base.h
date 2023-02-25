@@ -107,6 +107,7 @@ private:
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
         const uint32_t hintType, gpointer userData);
     static void OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData);
+    static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
     void SetupInterruptEventCb();
     void SetupAudioStateEventCb();
     void OnElementSetup(GstElement &elem);
@@ -127,6 +128,7 @@ private:
     void HandleCacheCtrlCb(const InnerMessage &msg);
     void HandleCacheCtrlWhenNoBuffering(int32_t percent);
     void HandleCacheCtrlWhenBuffering(int32_t percent);
+    void OnAdaptiveElementSetup(GstElement &elem);
 
     std::mutex mutex_;
     std::mutex cacheCtrlMutex_;
@@ -173,6 +175,7 @@ private:
     uint32_t rendererInfo_ = 0;
     int32_t rendererFlag_ = 0;
     int32_t cachePercent_ = 100; // 100% cache percent
+    bool isAdaptiveLiveStream_ = true;
 
     std::atomic<bool> isDuration_ = false;
     std::atomic<bool> enableLooping_ = false;
