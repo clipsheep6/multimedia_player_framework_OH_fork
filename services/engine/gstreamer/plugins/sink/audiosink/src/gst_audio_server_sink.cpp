@@ -557,8 +557,6 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
                 g_return_val_if_fail(sink->audio_sink != nullptr, GST_STATE_CHANGE_FAILURE);
                 if (sink->audio_sink->Pause() != MSERR_OK) {
                     GST_ERROR_OBJECT(sink, "audio sink Pause failed!");
-                    GST_ELEMENT_ERROR(sink, STREAM, FAILED, ("audio sink Pause failed!"), (NULL));
-                    return GST_STATE_CHANGE_FAILURE;
                 }
             }
             break;
