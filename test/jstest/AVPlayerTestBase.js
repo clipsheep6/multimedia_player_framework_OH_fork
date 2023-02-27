@@ -307,9 +307,6 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
                 break;
             case AV_PLAYER_STATE.RELEASED:
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.RELEASED);
-                offCallback(avPlayer, ['stateChange', 'volumeChange', 'endOfStream', 'seekDone', 'speedDone',
-                'bitrateDone', 'timeUpdate', 'durationUpdate', 'bufferingUpdate', 'startRenderFrame', 'videoSizeChange',
-                'audioInterrupt', 'availableBitrates', 'error']);
                 // step 18: release -> done
                 avPlayer = null;
                 done();
@@ -453,8 +450,6 @@ export function setAVPlayerDataSrcNoSeekCb(src, avPlayer, playTest, playTime, do
                 } else if (playCnt == 3) {
                     // step 13: playing -> loop
                     await mediaTestBase.msleepAsync(playTime);
-                    // expect(avPlayer.currentTime).assertClose(playTime, DELTA_TIME);
-                    // expect(Math.abs(avPlayer.currentTime - playTime)).assertLess(DELTA_TIME);
                     avPlayer.loop = true;
                 }
                 break;
@@ -476,9 +471,6 @@ export function setAVPlayerDataSrcNoSeekCb(src, avPlayer, playTest, playTime, do
                 break;
             case AV_PLAYER_STATE.RELEASED:
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.RELEASED);
-                offCallback(avPlayer, ['stateChange', 'volumeChange', 'endOfStream', 'seekDone', 'speedDone',
-                'bitrateDone', 'timeUpdate', 'durationUpdate', 'bufferingUpdate', 'startRenderFrame', 'videoSizeChange',
-                'audioInterrupt', 'availableBitrates', 'error']);
                 // step 18: release -> done
                 avPlayer = null;
                 done();
@@ -552,7 +544,6 @@ export function setAVPlayerDataSrcNoSeekCb(src, avPlayer, playTest, playTime, do
 export async function testAVPlayerDataSrcNoSeek(src, avPlayer, playTest, playTime, done) {
     console.info(`case media source: ${src}`)
     media.createAVPlayer((err, video) => {
-        console.info(`case media err: ${err}`)
         if (typeof(video) != 'undefined') {
             console.info('case createAVPlayer success');
             avPlayer = video;
@@ -688,7 +679,7 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
             case 3:
                 // step 6: seek  + setVolume
                 avPlayer.setVolume(0.5);
-                avPlayer.seek(avPlayer.duration / 2, media.SeekMode.SEEK_CLOSEST_SYNC);
+                avPlayer.seek(avPlayer.duration / 2, 2); // 2: CLOSEST SYNC
                 avPlayer.play();
                 break;
             case 4:
@@ -724,7 +715,6 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
 export async function testAVPlayerSeek(src, avPlayer, playTest, playTime, done) {
     console.info(`case media source: ${src}`)
     media.createAVPlayer((err, video) => {
-        console.info(`case media err: ${err}`)
         if (typeof(video) != 'undefined') {
             console.info('case createAVPlayer success');
             avPlayer = video;
