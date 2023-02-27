@@ -244,7 +244,7 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
         pushSize = pushSize > (bufferSize_ - appSrcMem_->availableBegin) ?
             bufferSize_ - appSrcMem_->availableBegin : pushSize;
         int32_t ret;
-        if (pushSize == 0) {
+        if (pushSize == 0 && atEos_) {
             ret = Pusheos();
         } else if (copyMode_ || isFirstBuffer_) {
             ret = PushBufferWithCopy(pushSize);
@@ -287,17 +287,17 @@ void GstAppsrcEngine::PushTask()
         }
         if (needData_) {
             uint32_t availableSize = GetAvailableSize();
-        // pushSize is min(needDataSize_, availableSize, bufferSize_ - appSrcMem_->availableBegin)
-        uint32_t pushSize = needDataSize_ > availableSize ? availableSize : needDataSize_;
-        pushSize = pushSize > (bufferSize_ - appSrcMem_->availableBegin) ?
-            bufferSize_ - appSrcMem_->availableBegin : pushSize;
-        if (pushSize == 0) {
-            ret = Pusheos();
-        } else if (copyMode_) {
-            ret = PushBufferWithCopy(pushSize);
-        } else {
-            ret = PushBuffer(pushSize);
-        }
+            // pushSize is min(needDataSize_, availableSize, bufferSize_ - appSrcMem_->availableBegin)
+            uint32_t pushSize = needDataSize_ > availableSize ? availableSize : needDataSize_;
+            pushSize = pushSize > (bufferSize_ - appSrcMem_->availableBegin) ?
+                bufferSize_ - appSrcMem_->availableBegin : pushSize;
+            if (pushSize == 0 && atEos_) {
+                ret = Pusheos();
+            } else if (copyMode_) {
+                ret = PushBufferWithCopy(pushSize);
+            } else {
+                ret = PushBuffer(pushSize);
+            }
         }
     }
     if (ret != MSERR_OK) {
