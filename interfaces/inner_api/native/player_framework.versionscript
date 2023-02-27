@@ -25,6 +25,7 @@
     "*AudioDecoderFactory*";
     "*AVCodecListFactory*";
     "*VideoCaps*";
+    "*AudioCaps*";
     "*AVCodecInfo*";
     "*Error*";
     "*ExtError*";

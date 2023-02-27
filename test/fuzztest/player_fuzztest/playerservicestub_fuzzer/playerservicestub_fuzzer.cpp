@@ -14,21 +14,12 @@
  */
 
 #include "playerservicestub_fuzzer.h"
-#include "media_server_manager.h"
-#include "media_service_proxy.h"
-#include "media_listener_stub.h"
-#include "media_service_stub.h"
-#include "media_service_proxy.h"
-#include "media_client.h"
-#include "media_server.h"
+#include <iostream>
 #include "i_media_service.h"
+#include "i_standard_media_listener.h"
 #include "i_standard_media_service.h"
-#include "media_death_recipient.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
-
-
-#include <iostream>
 
 using namespace std;
 using namespace OHOS;
@@ -36,6 +27,12 @@ using namespace OHOS::Media;
 
 namespace OHOS {
 namespace Media {
+class PlayerServiceListenerStubFuzzer : public IRemoteStub<IStandardMediaListener>, public NoCopyable {
+public:
+    PlayerServiceListenerStubFuzzer() = default;
+    ~PlayerServiceListenerStubFuzzer() = default;
+};
+
 PlayerServiceStubFuzzer::PlayerServiceStubFuzzer()
 {
 }
@@ -52,7 +49,7 @@ bool PlayerServiceStubFuzzer::FuzzServiceStub(uint8_t *data, size_t size)
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     mediaProxy_ = iface_cast<IStandardMediaService>(object);
     sptr<IRemoteObject> listenerStub_ = nullptr;
-    listenerStub_ = new(std::nothrow) MediaListenerStub();
+    listenerStub_ = new(std::nothrow) PlayerServiceListenerStubFuzzer();
 
     IStandardMediaService::MediaSystemAbility subSystemId[subSystemIdList] {
             IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER,
