@@ -14,11 +14,10 @@
  */
 import media from '@ohos.multimedia.media'
 import fileio from '@ohos.fileio'
-import mediaLibrary from '@ohos.multimedia.mediaLibrary';
 import {testAVPlayerDataSrcNoSeek, testAVPlayerFun, AV_PLAYER_STATE} from '../../../../../../AVPlayerTestBase.js';
 import * as mediaTestBase from '../../../../../../MediaTestBase.js';
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index';
-import { UiDriver, BY } from '@ohos.uitest'
+
 export default function AVPlayerDataSrcReliabilityTest() {
     describe('AVPlayerDataSrcReliabilityTest', function () {
         let avPlayer = null;

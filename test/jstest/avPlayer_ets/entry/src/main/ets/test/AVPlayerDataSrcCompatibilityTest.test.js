@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,11 +14,10 @@
  */
 import media from '@ohos.multimedia.media'
 import fileio from '@ohos.fileio'
-import mediaLibrary from '@ohos.multimedia.mediaLibrary';
 import {testAVPlayerDataSrcNoSeek, testAVPlayerFun} from '../../../../../../AVPlayerTestBase.js';
 import * as mediaTestBase from '../../../../../../MediaTestBase.js';
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index';
-import { UiDriver, BY } from '@ohos.uitest'
+
 export default function AVPlayerDataSrcCompatibilityTest() {
     describe('AVPlayerDataSrcCompatibilityTest', function () {
         const PLAY_TIME = 3000;
