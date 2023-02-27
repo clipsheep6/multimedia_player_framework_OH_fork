@@ -274,13 +274,14 @@ int32_t HdiCodec::PullInputBuffer(GstBuffer **buffer)
 int32_t HdiCodec::Flush(GstCodecDirect direct)
 {
     std::shared_lock<std::shared_mutex> rLock(rwMutex_);
-    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
-    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     MEDIA_LOGD("Flush start");
     if (!start_ || isError_.load()) {
         return GST_CODEC_OK;
     }
+
     CHECK_AND_RETURN_RET_LOG(handle_ != nullptr, GST_CODEC_ERROR, "Handle is nullptr");
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     int32_t ret = HDF_SUCCESS;
     switch (direct) {
         case GST_CODEC_INPUT:

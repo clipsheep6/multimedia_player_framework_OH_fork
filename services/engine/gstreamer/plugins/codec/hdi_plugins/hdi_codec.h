@@ -110,7 +110,7 @@ private:
     uint32_t id_ = 0;
     CompVerInfo verInfo_ = {};
     TaskQueue taskQue_;
-    std::atomic<bool> isError_ = false;
+    bool isError_ = false;
     std::shared_mutex rwMutex_;
 };
 } // namespace Media
