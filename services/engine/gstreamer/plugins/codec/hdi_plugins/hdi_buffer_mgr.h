@@ -79,16 +79,15 @@ public:
         return GST_CODEC_OK;
     }
 
-    void OnCodecDie() override;
-
     virtual int32_t Flush(bool enable) override;
     virtual int32_t Stop(bool isFormatChange);
     virtual void WaitFlushed();
+    void OnCodecDied();
 
 protected:
     void FreeCodecBuffers();
     void UnrefGstBuffer();
-    std::atomic<bool> isError_ = false;
+    std::atomic<bool> isCodecError_ = false;
     bool isFlushing_ = false;
     bool isFlushed_ = false;
     bool isStart_ = false;

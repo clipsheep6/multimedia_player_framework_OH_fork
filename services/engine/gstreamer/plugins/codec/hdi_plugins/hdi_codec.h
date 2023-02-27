@@ -22,6 +22,7 @@
 #include <gst/gst.h>
 #include <OMX_Core.h>
 #include <OMX_Component.h>
+#include <shared_mutex>
 #include "nocopyable.h"
 #include "i_gst_codec.h"
 #include "hdi_buffer_mgr.h"
@@ -55,7 +56,7 @@ public:
     int32_t Flush(GstCodecDirect direct) override;
     int32_t ActiveBufferMgr(GstCodecDirect direct, bool active) override;
     void Deinit() override;
-    void OnCodecDie() override;
+    void OnCodecDied() override;
 
 private:
     struct AppData {
@@ -110,6 +111,7 @@ private:
     CompVerInfo verInfo_ = {};
     TaskQueue taskQue_;
     std::atomic<bool> isError_ = false;
+    std::shared_mutex rwMutex_;
 };
 } // namespace Media
 } // namespace OHOS

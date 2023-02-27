@@ -33,6 +33,7 @@ HdiBufferMgr::HdiBufferMgr()
 HdiBufferMgr::~HdiBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    Stop(false);
     FreeBuffers();
     UnrefGstBuffer();
 }
@@ -137,7 +138,7 @@ void HdiBufferMgr::FreeCodecBuffers()
 {
     MEDIA_LOGD("Enter FreeCodecBuffers");
     for (auto codecBuffer : availableBuffers_) {
-        CHECK_AND_BREAK_LOG(!isError_.load(), "codec error");
+        CHECK_AND_BREAK_LOG(!isCodecError_.load(), "codec error");
         auto ret = handle_->FreeBuffer(handle_, mPortIndex_, &codecBuffer->hdiBuffer);
         if (ret != HDF_SUCCESS) {
             MEDIA_LOGE("free buffer %{public}u fail", codecBuffer->hdiBuffer.bufferId);
@@ -183,7 +184,7 @@ void HdiBufferMgr::WaitFlushed()
 {
     MEDIA_LOGD("Enter WaitFlushed");
     std::unique_lock<std::mutex> lock(mutex_);
-    flushCond_.wait(lock, [this]() { return !isFlushing_ || !isStart_ || isError_.load(); });
+    flushCond_.wait(lock, [this]() { return !isFlushing_ || !isStart_; });
 }
 
 void HdiBufferMgr::NotifyAvailable()
@@ -224,12 +225,11 @@ void HdiBufferMgr::UnrefGstBuffer()
     codingBuffers_.clear();
 }
 
-void HdiBufferMgr::OnCodecDie()
+void HdiBufferMgr::OnCodecDied()
 {
-    MEDIA_LOGE("Enter OnCodecDie");
-    isError_.store(true);
+    MEDIA_LOGE("Enter OnCodecDied");
+    isCodecError_.store(true);
     freeCond_.notify_all();
-    UnrefGstBuffer();
 }
 }  // namespace Media
 }  // namespace OHOS

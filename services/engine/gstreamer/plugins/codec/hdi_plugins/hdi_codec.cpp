@@ -23,6 +23,7 @@
 #include "hdi_codec_util.h"
 #include "securec.h"
 #include "media_dfx.h"
+#include "scope_guard.h"
 
 using namespace std;
 namespace {
@@ -71,6 +72,7 @@ void HdiCodec::InitVersion()
 
 int32_t HdiCodec::Init()
 {
+    std::unique_lock<std::shared_mutex> wLock(rwMutex_);
     MEDIA_LOGD("Init");
     (void)taskQue_.Start();
     callback_ = CodecCallbackTypeStubGetInstance();
@@ -100,6 +102,7 @@ int32_t HdiCodec::Init()
 
 void HdiCodec::Deinit()
 {
+    std::unique_lock<std::shared_mutex> wLock(rwMutex_);
     MEDIA_LOGD("Deinit");
     if (curState_ > OMX_StateLoaded) {
         (void)WaitForState(OMX_StateLoaded);
@@ -120,11 +123,12 @@ void HdiCodec::Deinit()
     (void)taskQue_.Stop();
 }
 
-void HdiCodec::OnCodecDie()
+void HdiCodec::OnCodecDied()
 {
-    MEDIA_LOGE("OnCodecDie");
-    MediaTrace trace("HdiCodec::OnCodecDie");
-    isError_.store(true);
+    MEDIA_LOGE("OnCodecDied");
+    MediaTrace trace("HdiCodec::OnCodecDied");
+    std::unique_lock<std::shared_mutex> wLock(rwMutex_);
+    isError_ = true;
     cond_.notify_all();
     {
         unique_lock<mutex> lock(mutex_);
@@ -132,51 +136,57 @@ void HdiCodec::OnCodecDie()
     }
 
     if (inBufferMgr_) {
-        inBufferMgr_->OnCodecDie();
-        inBufferMgr_->Stop(false);
-        (void)inBufferMgr_->FreeBuffers();
+        inBufferMgr_->OnCodecDied();
+        inBufferMgr_ = nullptr;
     }
 
     if (outBufferMgr_) {
-        outBufferMgr_->OnCodecDie();
-        outBufferMgr_->Stop(false);
-        (void)outBufferMgr_->FreeBuffers();
+        outBufferMgr_->OnCodecDied();
+        outBufferMgr_ = nullptr;
     }
 }
 
 void HdiCodec::SetHdiInBufferMgr(shared_ptr<HdiBufferMgr> bufferMgr)
 {
+    std::unique_lock<std::shared_mutex> wLock(rwMutex_);
     inBufferMgr_ = bufferMgr;
     inBufferMgr_->Init(handle_, inPortIndex_, verInfo_);
 }
 
 void HdiCodec::SetHdiOutBufferMgr(shared_ptr<HdiBufferMgr> bufferMgr)
 {
+    std::unique_lock<std::shared_mutex> wLock(rwMutex_);
     outBufferMgr_ = bufferMgr;
     outBufferMgr_->Init(handle_, outPortIndex_, verInfo_);
 }
 
 void HdiCodec::SetHdiParamsMgr(shared_ptr<HdiParamsMgr> paramsMgr)
 {
+    std::unique_lock<std::shared_mutex> wLock(rwMutex_);
     paramsMgr_ = paramsMgr;
     paramsMgr_->Init(handle_, portParam_, verInfo_);
 }
 
 int32_t HdiCodec::SetParameter(GstCodecParamKey key, GstElement *element)
 {
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
     CHECK_AND_RETURN_RET_LOG(paramsMgr_ != nullptr, GST_CODEC_ERROR, "cparamsMgr_ is nullptr");
     return paramsMgr_->SetParameter(key, element);
 }
 
 int32_t HdiCodec::GetParameter(GstCodecParamKey key, GstElement *element)
 {
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
     CHECK_AND_RETURN_RET_LOG(paramsMgr_ != nullptr, GST_CODEC_ERROR, "cparamsMgr_ is nullptr");
     return paramsMgr_->GetParameter(key, element);
 }
 
 int32_t HdiCodec::Start()
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     MEDIA_LOGD("Start begin");
     if (curState_ != OMX_StateExecuting) {
         CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateExecuting) == GST_CODEC_OK, GST_CODEC_ERROR, "Change failed");
@@ -195,7 +205,10 @@ int32_t HdiCodec::Start()
 
 int32_t HdiCodec::Stop()
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_OK, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_OK, "codec error");
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     {
         MediaTrace trace("HdiCodec::Stop");
         inBufferMgr_->Stop(false);
@@ -216,7 +229,7 @@ int32_t HdiCodec::Stop()
 int32_t HdiCodec::ChangeState(OMX_STATETYPE state)
 {
     MEDIA_LOGD("Change state from %{public}u to %{public}u", targetState_, state);
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
     if (targetState_ != state && curState_ != state) {
         auto ret = HdiSendCommand(handle_, OMX_CommandStateSet, state, 0);
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSendCommand failed");
@@ -227,31 +240,42 @@ int32_t HdiCodec::ChangeState(OMX_STATETYPE state)
 
 int32_t HdiCodec::AllocateInputBuffers()
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
     return inBufferMgr_->AllocateBuffers();
 }
 
 int32_t HdiCodec::UseInputBuffers(std::vector<GstBuffer*> buffers)
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
     MediaTrace trace("HdiCodec::UseInputBuffers");
     return inBufferMgr_->UseBuffers(buffers);
 }
 
 int32_t HdiCodec::PushInputBuffer(GstBuffer *buffer)
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
     return inBufferMgr_->PushBuffer(buffer);
 }
 
 int32_t HdiCodec::PullInputBuffer(GstBuffer **buffer)
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
     return inBufferMgr_->PullBuffer(buffer);
 }
 
 int32_t HdiCodec::Flush(GstCodecDirect direct)
 {
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     MEDIA_LOGD("Flush start");
     if (!start_ || isError_.load()) {
         return GST_CODEC_OK;
@@ -282,7 +306,8 @@ int32_t HdiCodec::Flush(GstCodecDirect direct)
 
 int32_t HdiCodec::ActiveBufferMgr(GstCodecDirect direct, bool active)
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
     CHECK_AND_RETURN_RET_LOG(handle_ != nullptr, GST_CODEC_ERROR, "Handle is nullptr");
     int32_t ret = HDF_SUCCESS;
     if (direct == GST_CODEC_INPUT || direct == GST_CODEC_ALL) {
@@ -315,7 +340,9 @@ int32_t HdiCodec::ActiveBufferMgr(GstCodecDirect direct, bool active)
 
 int32_t HdiCodec::FreeInputBuffers()
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_OK, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_OK, "codec error");
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
     CHECK_AND_RETURN_RET_LOG(inBufferMgr_->FreeBuffers() == GST_CODEC_OK, GST_CODEC_ERROR, "Freebuffer fail");
     if (inState_ == DEACTIVING) {
         WaitForEvent(OMX_CommandPortDisable);
@@ -325,7 +352,10 @@ int32_t HdiCodec::FreeInputBuffers()
 
 int32_t HdiCodec::AllocateOutputBuffers()
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     if (curState_ < OMX_StateIdle) {
         CHECK_AND_RETURN_RET_LOG(ChangeState(OMX_StateIdle) == GST_CODEC_OK, GST_CODEC_ERROR, "ChangeState failed");
         // some omx need input and output allocate or use common
@@ -338,7 +368,10 @@ int32_t HdiCodec::AllocateOutputBuffers()
 
 int32_t HdiCodec::UseOutputBuffers(std::vector<GstBuffer*> buffers)
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     MEDIA_LOGD("UseOutputBuffers");
     MediaTrace trace("HdiCodec::UseOutputBuffers");
     if (curState_ < OMX_StateIdle) {
@@ -361,12 +394,19 @@ int32_t HdiCodec::UseOutputBuffers(std::vector<GstBuffer*> buffers)
 
 int32_t HdiCodec::PushOutputBuffer(GstBuffer *buffer)
 {
+    ON_SCOPE_EXIT(0) {
+        gst_buffer_unref(buffer);
+    };
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     return outBufferMgr_->PushBuffer(buffer);
 }
 
 int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     int32_t ret = GST_CODEC_OK;
     {
         unique_lock<mutex> lock(mutex_);
@@ -393,7 +433,9 @@ int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
 
 int32_t HdiCodec::FreeOutputBuffers()
 {
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_OK, "codec error");
+    std::shared_lock<std::shared_mutex> rLock(rwMutex_);
+    CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_OK, "codec error");
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     MEDIA_LOGD("FreeOutputBuffers");
     CHECK_AND_RETURN_RET_LOG(outBufferMgr_->FreeBuffers() == GST_CODEC_OK, GST_CODEC_ERROR, "Freebuffers fail");
     if (outState_ == DEACTIVING) {
@@ -416,6 +458,7 @@ int32_t HdiCodec::Event(CodecCallbackType *self, OMX_EVENTTYPE event, EventInfo 
     AppData *mAppData = reinterpret_cast<AppData *>(info->appData);
     auto instance = mAppData->instance.lock();
     CHECK_AND_RETURN_RET_LOG(instance != nullptr, HDF_ERR_INVALID_PARAM, "HdiCodec is null");
+    std::shared_lock<std::shared_mutex> rLock(instance->rwMutex_);
     return instance->OnEvent(event, info);
 }
 
@@ -471,8 +514,10 @@ void HdiCodec::HandelEventStateSet(OMX_U32 data)
 void HdiCodec::HandelEventFlush(OMX_U32 data)
 {
     if (data == inPortIndex_) {
+        CHECK_AND_RETURN_LOG(inBufferMgr_ != nullptr, "inBufferMgr_ is nullptr");
         inBufferMgr_->Flush(false);
     } else {
+        CHECK_AND_RETURN_LOG(outBufferMgr_ != nullptr, "outBufferMgr_ is nullptr");
         outBufferMgr_->Flush(false);
     }
 }
@@ -528,8 +573,10 @@ void HdiCodec::HandleEventPortSettingsChanged(OMX_U32 data1, OMX_U32 data2)
         MEDIA_LOGD("GST_CODEC_FORMAT_CHANGE");
         ret_ = GST_CODEC_FORMAT_CHANGE;
         if (data1 == inPortIndex_) {
+            CHECK_AND_RETURN_LOG(inBufferMgr_ != nullptr, "inBufferMgr_ is nullptr");
             inBufferMgr_->Stop(true);
         } else {
+            CHECK_AND_RETURN_LOG(outBufferMgr_ != nullptr, "outBufferMgr_ is nullptr");
             outBufferMgr_->Stop(true);
         }
     } else if (data2 == OMX_IndexConfigCommonOutputCrop) {
@@ -564,6 +611,7 @@ int32_t HdiCodec::EmptyBufferDone(CodecCallbackType *self, int64_t appData, cons
     CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, HDF_ERR_INVALID_PARAM, "appData is null");
     auto instance = mAppData->instance.lock();
     CHECK_AND_RETURN_RET_LOG(instance != nullptr, HDF_ERR_INVALID_PARAM, "HdiCodec is null");
+    std::shared_lock<std::shared_mutex> rLock(instance->rwMutex_);
     if (instance->OnEmptyBufferDone(buffer) != GST_CODEC_OK) {
         MEDIA_LOGE("empty buffer done failed");
         return OMX_ErrorBadParameter;
@@ -573,6 +621,7 @@ int32_t HdiCodec::EmptyBufferDone(CodecCallbackType *self, int64_t appData, cons
 
 int32_t HdiCodec::OnEmptyBufferDone(const OmxCodecBuffer *buffer)
 {
+    CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([this, buffer] {
         return inBufferMgr_->CodecBufferAvailable(buffer);
     });
@@ -592,6 +641,7 @@ int32_t HdiCodec::FillBufferDone(CodecCallbackType *self, int64_t appData, const
     CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, OMX_ErrorBadParameter, "appData is null");
     auto instance = mAppData->instance.lock();
     CHECK_AND_RETURN_RET_LOG(instance != nullptr, OMX_ErrorBadParameter, "HdiCodec is null");
+    std::shared_lock<std::shared_mutex> rLock(instance->rwMutex_);
     if (instance->OnFillBufferDone(buffer) != GST_CODEC_OK) {
         MEDIA_LOGE("fill buffer done failed");
         return OMX_ErrorBadParameter;
@@ -601,6 +651,7 @@ int32_t HdiCodec::FillBufferDone(CodecCallbackType *self, int64_t appData, const
 
 int32_t HdiCodec::OnFillBufferDone(const OmxCodecBuffer *buffer)
 {
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([this, buffer] {
         return outBufferMgr_->CodecBufferAvailable(buffer);
     });

@@ -73,8 +73,6 @@ int32_t HdiOutBufferMgr::PushBuffer(GstBuffer *buffer)
     MEDIA_LOGD("mBuffers %{public}zu, available %{public}zu, codingBuffers %{public}zu",
         mBuffers.size(), availableBuffers_.size(), codingBuffers_.size());
     MediaTrace::CounterTrace("AvailableBuffers", availableBuffers_.size());
-    ON_SCOPE_EXIT(0) { gst_buffer_unref(buffer); };
-    CHECK_AND_RETURN_RET_LOG(!isError_.load(), GST_CODEC_ERROR, "codec error");
     std::unique_lock<std::mutex> lock(mutex_);
     if (isFormatChange_) {
         MEDIA_LOGD("It is formatchange");
@@ -97,7 +95,7 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
     MEDIA_LOGD("Enter PullBuffer");
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "buffer is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
-    bufferCond_.wait(lock, [this]() { return !mBuffers.empty() || isFlushed_ || !isStart_ || isError_.load(); });
+    bufferCond_.wait(lock, [this]() { return !mBuffers.empty() || isFlushed_ || !isStart_; });
     if (isFlushed_ || !isStart_) {
         MEDIA_LOGD("isFlush %{public}d isStart %{public}d", isFlushed_, isStart_);
         return GST_CODEC_FLUSH;
@@ -116,10 +114,6 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
         (*buffer) = bufferWarp.gstBuffer;
         return GST_CODEC_OK;
     }
-
-    if (isError_.load()) {
-        MEDIA_LOGE("Status error, mBuffers empty.");
-    }
     return GST_CODEC_ERROR;
 }
 
@@ -129,7 +123,7 @@ int32_t HdiOutBufferMgr::FreeBuffers()
     std::unique_lock<std::mutex> lock(mutex_);
     static constexpr int32_t timeout = 2;
     freeCond_.wait_for(lock, std::chrono::seconds(timeout),
-        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual || isError_.load(); });
+        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual || isCodecError_.load(); });
     FreeCodecBuffers();
     std::for_each(mBuffers.begin(), mBuffers.end(), [&](GstBufferWrap buffer) { gst_buffer_unref(buffer.gstBuffer); });
     EmptyList(mBuffers);

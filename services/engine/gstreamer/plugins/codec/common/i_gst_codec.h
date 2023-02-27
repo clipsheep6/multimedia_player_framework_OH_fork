@@ -258,7 +258,7 @@ public:
      * @since 1.0
      * @version 1.0
      */
-    virtual void OnCodecDie() = 0;
+    virtual void OnCodecDied() = 0;
 };
 } // namespace Media
 } // namespace OHOS

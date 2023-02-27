@@ -143,7 +143,7 @@ void HdiInit::CodecComponentManagerReset()
     for (auto iter = handleMap_.begin(); iter != handleMap_.end(); ++iter) {
         auto codec = iter->second.codec.lock();
         if (codec) {
-            codec->OnCodecDie();
+            codec->OnCodecDied();
         }
     }
     handleMap_.clear();
