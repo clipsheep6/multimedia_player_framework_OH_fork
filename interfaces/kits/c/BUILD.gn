@@ -75,7 +75,7 @@ ohos_shared_library("native_media_core") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/common/native_avmemory.cpp",
   ]
 
-  public_configs = [ ":media_capi_config" ]
+  configs = [ ":media_capi_config" ]
 
   deps = [
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
@@ -102,7 +102,7 @@ ohos_shared_library("native_media_codecbase") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec/native_avcodec_base.cpp",
   ]
 
-  public_configs = [ ":media_capi_config" ]
+  configs = [ ":media_capi_config" ]
 
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   output_extension = "so"
@@ -124,7 +124,7 @@ ohos_shared_library("native_media_adec") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec/native_audio_decoder.cpp",
   ]
 
-  public_configs = [ ":media_capi_config" ]
+  configs = [ ":media_capi_config" ]
 
   deps = [
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
@@ -155,7 +155,7 @@ ohos_shared_library("native_media_aenc") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec/native_audio_encoder.cpp",
   ]
 
-  public_configs = [ ":media_capi_config" ]
+  configs = [ ":media_capi_config" ]
 
   deps = [
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
@@ -186,7 +186,7 @@ ohos_shared_library("native_media_vdec") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec/native_video_decoder.cpp",
   ]
 
-  public_configs = [
+  configs = [
     ":media_capi_config",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
   ]
@@ -221,7 +221,7 @@ ohos_shared_library("native_media_venc") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec/native_video_encoder.cpp",
   ]
 
-  public_configs = [
+  configs = [
     ":media_capi_config",
     "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
   ]
