@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,12 +16,17 @@ import AVPlayerHlsFuncTest from './AVPlayerHlsFuncTest.test.js'
 import AVPlayerHlsLiveFuncTest from './AVPlayerHlsLiveFuncTest.test.js'
 import AVPlayerHttpCompatibilityTest from './AVPlayerHttpCompatibilityTest.test.ets'
 import AVPlayerHttpSeekTest from './AVPlayerHttpSeekTest.test.ets'
+import AVPlayerDataSrcCompatibilityTest from './AVPlayerDataSrcCompatibilityTest.test.js'
+import AVPlayerDataSrcReliabilityTest from './AVPlayerDataSrcReliabilityTest.test.js'
 import AVPlayerLocalTest from './AVPlayerLocalTest.test.js'
 
 export default function testsuite() {
   AVPlayerHlsFuncTest()
   AVPlayerHlsLiveFuncTest();
+  AVPlayerHlsFuncTest();
   AVPlayerHttpCompatibilityTest();
   AVPlayerHttpSeekTest();
+  AVPlayerDataSrcCompatibilityTest();
+  AVPlayerDataSrcReliabilityTest();
   AVPlayerLocalTest();
 }
