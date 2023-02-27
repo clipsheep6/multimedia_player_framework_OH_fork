@@ -26,7 +26,9 @@
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder"
       ],
-      "features": [],
+      "features": [
+        "multimedia_player_framework_use_codec_plugins"
+      ],
       "adapted_system_type": [ "standard" ],
       "rom": "10000KB",
       "ram": "10000KB",
@@ -59,10 +61,7 @@
           "glib",
           "gstreamer",
           "libffi",
-          "ffmpeg",
-          "libsoup",
-          "libpsl",
-          "libgettext"
+          "ffmpeg"
         ]
       },
       "build": {
