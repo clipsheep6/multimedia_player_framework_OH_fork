@@ -228,7 +228,7 @@ ohos_shared_library("media_client") {
       "//foundation/multimedia/player_framework/services/utils:media_format",
       "//third_party/bounds_checking_function:libsec_static",
     ]
-  
+
     if (multimedia_player_framework_support_video) {
       public_configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
     }
