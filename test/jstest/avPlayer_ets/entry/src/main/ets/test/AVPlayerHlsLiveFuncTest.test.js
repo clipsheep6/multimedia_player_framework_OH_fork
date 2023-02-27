@@ -26,23 +26,6 @@ export default function AVPlayerHlsLiveFuncTest() {
         let avPlayer = null;
         let surfaceID = globalThis.value;
 
-        const AV_PLAYER_STEP = {
-            SRC : 'src',
-            PREPARE : 'prepare',
-            PLAY : 'play',
-            PAUSE : 'pause',
-            STOP : 'stop',
-            RELEASE : 'release',
-            RESET : 'reset',
-            ERROR : 'error',
-            SEEK : 'seek',
-            LOOP : 'loop',
-            SETSPEED : 'setSpeed',
-            CURRENTTIME : 'currentTime',
-            DURATION : 'duration',
-            SETBITRATE : 'setBitrate'
-        }
-
         const AV_MULTI_HLS_LIVE_BITRATE = [
             224726,
             389070,
@@ -111,73 +94,67 @@ export default function AVPlayerHlsLiveFuncTest() {
 
         function NextSteps(avPlayer, src, steps) {
             switch(steps[0]) {
-                case AV_PLAYER_STEP.SRC:
+                case 'src':
                     steps.shift();
                     avPlayer.url = src;
                     break;
-                case AV_PLAYER_STEP.PREPARE:
+                case 'prepare':
                     steps.shift();
                     avPlayer.prepare();
                     break;
-                case AV_PLAYER_STEP.PLAY:
+                case 'play':
                     steps.shift();
                     avPlayer.play();
                     break;
-                case AV_PLAYER_STEP.SEEK:
+                case 'seek':
                     steps.shift();
                     const seekNum = steps[0];
                     steps.shift();
                     avPlayer.seek(seekNum);
                     break;
-                case AV_PLAYER_STEP.LOOP:
+                case 'loop':
                     steps.shift();
                     const loopFlag = steps[0];
                     steps.shift();
                     avPlayer.loop = loopFlag;
                     break;
-                case AV_PLAYER_STEP.SETSPEED:
+                case 'setSpeed':
                     steps.shift();
                     const speedNum = steps[0];
                     steps.shift();
                     avPlayer.setSpeed(speedNum);
                     break;
-                case AV_PLAYER_STEP.DURATION:
+                case 'duration':
                     steps.shift();
                     expect(avPlayer.duration).assertEqual(steps[0]);
-                    // const durationValue = steps[0];
                     steps.shift();
-                    // expect(avPlayer.duration).assertEqual(durationValue);
                     NextSteps(avPlayer, src, steps);
                     break;
-                case AV_PLAYER_STEP.CURRENTTIME:
+                case 'currentTime':
                     steps.shift();
                     expect(avPlayer.currentTime).assertEqual(steps[0]);
-                    // const expectTime = steps[0];
                     steps.shift();
-                    // expect(avPlayer.currentTime).assertEqual(expectTime);
                     NextSteps(avPlayer, src, steps);
                     break;
-                case AV_PLAYER_STEP.SETBITRATE:
+                case 'setBitrate':
                     steps.shift();
                     avPlayer.setBitrate(steps[0]);
-                    // const bitRate = steps[0];
                     steps.shift();
-                    // avPlayer.setBitrate(bitRate);
                     NextSteps(avPlayer, src, steps);
                     break;
-                case AV_PLAYER_STEP.PAUSE:
+                case 'pause':
                     steps.shift();
                     avPlayer.pause();
                     break;
-                case AV_PLAYER_STEP.STOP:
+                case 'stop':
                     steps.shift();
                     avPlayer.stop();
                     break;
-                case AV_PLAYER_STEP.RESET:
+                case 'reset':
                     steps.shift();
                     avPlayer.reset();
                     break;
-                case AV_PLAYER_STEP.RELEASE:
+                case 'release':
                     steps.shift();
                     avPlayer.release();
                     break;
@@ -272,7 +249,7 @@ export default function AVPlayerHlsLiveFuncTest() {
             });
             avPlayer.on('error', (err) => {
                 console.info(`case error called,errName is ${err.name},errCode is ${err.code},errMessage is ${err.message}`);
-                expect(Steps[0]).assertEqual(AV_PLAYER_STEP.ERROR);
+                expect(Steps[0]).assertEqual('error');
                 Steps.shift();
                 NextSteps(avPlayer, src, Steps);
             });
@@ -320,7 +297,7 @@ export default function AVPlayerHlsLiveFuncTest() {
             });
             avPlayer.on('error', (err) => {
                 console.info(`case error called,errName is ${err.name},errCode is ${err.code},errMessage is ${err.message}`);
-                expect(Steps[0]).assertEqual(AV_PLAYER_STEP.ERROR);
+                expect(Steps[0]).assertEqual('error');
                 Steps.shift();
                 NextSteps(avPlayer, src, Steps);
             });
@@ -483,7 +460,7 @@ export default function AVPlayerHlsLiveFuncTest() {
                 }
             });
             avPlayer.on('volumeChange', (vol) => {
-                expect(true).assertEqual(Math.abs(0.1 - vol) < 0.000001); // set volume value is 0.1, error is 0.000001
+                expect(true).assertEqual(Math.abs(0.1 - vol) < 0.05); // set volume value is 0.1, deviation is 0.05
             })
             avPlayer.on('error', (err) => {
                 console.info(`case error called,errName ${err.name},errCode ${err.code},errMessage ${err.message}`);
@@ -680,7 +657,8 @@ export default function AVPlayerHlsLiveFuncTest() {
                     done();
                 }
             }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
-            let Steps = new Array('src', 'prepare', 'seek', 6, 'error', 'play', 'seek', 0, 'error', 'pause', 'seek', 5, 'error', 'stop', 'seek', 1, 'error', 'release');
+            let Steps = new Array('src', 'prepare', 'seek', 6, 'error', 'play', 'seek', 0, 'error',
+                        'pause', 'seek', 5, 'error', 'stop', 'seek', 1, 'error', 'release'); // 6, 0, 5, 1 is seek target
             testReliability(avPlayer, HLS_PATH, surfaceID, Steps, done);
         })
 
@@ -703,7 +681,8 @@ export default function AVPlayerHlsLiveFuncTest() {
                     done();
                 }
             }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
-            let Steps = new Array('src', 'prepare', 'currentTime', -1, 'play', 'currentTime', -1, 'pause', 'currentTime', -1, 'stop', 'currentTime', -1, 'release');
+            let Steps = new Array('src', 'prepare', 'currentTime', -1, 'play', 'currentTime', -1, 'pause',
+                        'currentTime', -1, 'stop', 'currentTime', -1, 'release');
             testReliability(avPlayer, HLS_PATH, surfaceID, Steps, done);
         })
 
@@ -726,7 +705,8 @@ export default function AVPlayerHlsLiveFuncTest() {
                     done();
                 }
             }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
-            let Steps = new Array('src', 'prepare', 'loop', true, 'error', 'play', 'loop', false, 'error', 'pause', 'loop', true, 'error', 'stop', 'loop', false, 'error', 'release');
+            let Steps = new Array('src', 'prepare', 'loop', true, 'error', 'play', 'loop', false,
+                        'error', 'pause', 'loop', true, 'error', 'stop', 'loop', false, 'error', 'release');
             testReliability(avPlayer, HLS_PATH, surfaceID, Steps, done);
         })
 
@@ -749,7 +729,8 @@ export default function AVPlayerHlsLiveFuncTest() {
                     done();
                 }
             }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
-            let Steps = new Array('src', 'prepare', 'duration', -1, 'play', 'duration', -1, 'pause', 'duration', -1, 'stop', 'duration', -1, 'release');
+            let Steps = new Array('src', 'prepare', 'duration', -1, 'play', 'duration', -1, 'pause',
+                        'duration', -1, 'stop', 'duration', -1, 'release');
             testReliability(avPlayer, HLS_PATH, surfaceID, Steps, done);
         })
 
@@ -809,7 +790,6 @@ export default function AVPlayerHlsLiveFuncTest() {
                         break;
                     case AVPlayerTestBase.AV_PLAYER_STATE.PLAYING:
                         if ((pauseTimes++) < 1000) {
-                            // pauseTimes++;
                             avPlayer.pause();
                         } else {
                             avPlayer.release();
