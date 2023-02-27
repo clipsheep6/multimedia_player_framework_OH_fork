@@ -124,6 +124,9 @@ int32_t PlayerEngineGstImpl::SetVideoSurface(sptr<Surface> surface)
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr");
 
     producerSurface_ = surface;
+    if (appsrcWrap_) {
+        appsrcWrap_->SetVideoMode();
+    }
     return MSERR_OK;
 }
 
@@ -910,6 +913,10 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
             auto notifier = std::bind(&PlayerEngineGstImpl::OnCapsFixError, this);
             codecCtrl_.SetCapsFixErrorCb(notifier);
         }
+    }
+
+    if (appsrcWrap_ && metaStr.find("Codec/Parser") != std::string::npos) {
+        appsrcWrap_->SetParserParam(elem);
     }
 }
 

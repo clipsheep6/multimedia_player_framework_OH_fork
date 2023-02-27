@@ -41,8 +41,13 @@ void MediaDataSourceJsCallback::WaitResult()
     if (!setResult_) {
         static constexpr int32_t timeout = 3;
         cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() { return setResult_ || isExit_; });
-        if (!(setResult_ || isExit_)) {
+        if (!setResult_) {
             readSize_ = 0;
+            if (isExit_) {
+                MEDIA_LOGW("Reset, ReadAt has been cancel!");
+            } else {
+                MEDIA_LOGW("timeout 3s!");
+            }
         }
     }
     setResult_ = false;
@@ -64,13 +69,13 @@ MediaDataSourceCallback::~MediaDataSourceCallback()
 int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
     MEDIA_LOGD("ReadAt in");
-    cb_ = std::make_shared<MediaDataSourceJsCallback>(READAT_CALLBACK_NAME, mem, length, pos);
-    CHECK_AND_RETURN_RET_LOG(cb_ != nullptr, 0, "Failed to Create MediaDataSourceJsCallback");
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (refMap_.find(READAT_CALLBACK_NAME) == refMap_.end()) {
             return SOURCE_ERROR_IO;
         }
+        cb_ = std::make_shared<MediaDataSourceJsCallback>(READAT_CALLBACK_NAME, mem, length, pos);
+        CHECK_AND_RETURN_RET_LOG(cb_ != nullptr, 0, "Failed to Create MediaDataSourceJsCallback");
         cb_->callback_ = refMap_.at(READAT_CALLBACK_NAME);
     }
     ON_SCOPE_EXIT(0) { cb_ = nullptr; };
@@ -81,18 +86,19 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
     uv_work_t *work = new(std::nothrow) uv_work_t;
     CHECK_AND_RETURN_RET_LOG(work != nullptr, 0, "Failed to new uv_work_t");
     ON_SCOPE_EXIT(1) { delete work; };
-    
+
     work->data = reinterpret_cast<void *>(cb_.get());
     // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_work(loop, work);
+    int ret = UvWork(loop, work);
     CHECK_AND_RETURN_RET_LOG(ret == 0, SOURCE_ERROR_IO, "Failed to execute uv queue work");
-
+    CANCEL_SCOPE_EXIT_GUARD(1);
     cb_->WaitResult();
     return cb_->readSize_;
 }
 
-int32_t MediaDataSourceCallback::uv_work(uv_loop_s *loop, uv_work_t *work)
+int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
 {
+    MEDIA_LOGD("begin UvWork");
     return uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr && work->data != nullptr, "work is nullptr");
@@ -110,6 +116,7 @@ int32_t MediaDataSourceCallback::uv_work(uv_loop_s *loop, uv_work_t *work)
             // noseek mode don't need pos, so noseek mode need 2 parameters and seekable mode need 3 parameters
             int32_t paramNum;
             napi_value args[3] = { nullptr };
+            CHECK_AND_BREAK_LOG(event->memory_ != nullptr, "failed to checkout memory");
             nstatus = napi_create_external_arraybuffer(ref->env_, event->memory_->GetBase(),
                 static_cast<size_t>(event->length_), [](napi_env env, void *data, void *hint) {}, nullptr, &args[0]);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create napi arraybuffer failed");
@@ -132,8 +139,10 @@ int32_t MediaDataSourceCallback::uv_work(uv_loop_s *loop, uv_work_t *work)
             event->setResult_ = true;
             event->cond_.notify_all();
         } while (0);
+        delete work;
     });
 }
+
 int32_t MediaDataSourceCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
 {
     (void)pos;
@@ -176,12 +185,13 @@ int32_t MediaDataSourceCallback::GetCallback(const std::string &name, napi_value
 void MediaDataSourceCallback::ClearCallbackReference()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    std::map<std::string, std::shared_ptr<AutoRef>> temp;
+    temp.swap(refMap_);
+    MEDIA_LOGD("callback has been clear");
     if (cb_) {
         cb_->isExit_ = true;
         cb_->cond_.notify_all();
     }
-    refMap_.clear();
-    MEDIA_LOGD("callback has been clear");
 }
 
 bool MediaDataSourceCallback::AddNapiValueProp(napi_env env, napi_value obj, const std::string &key, napi_value value)

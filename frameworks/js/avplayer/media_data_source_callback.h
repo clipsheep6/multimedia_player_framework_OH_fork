@@ -61,7 +61,7 @@ public:
     // This interface has been deprecated
     int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
 private:
-    int32_t uv_work(uv_loop_s *loop, uv_work_t *work);
+    int32_t UvWork(uv_loop_s *loop, uv_work_t *work);
     std::mutex mutex_;
     napi_env env_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
