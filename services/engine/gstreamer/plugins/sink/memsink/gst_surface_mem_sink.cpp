@@ -348,7 +348,7 @@ static GstFlowReturn gst_surface_do_render_buffer(GstMemSink *memsink, GstBuffer
             // surface do not support timestamp is 0.
             GST_BUFFER_PTS(buffer) = GST_BUFFER_PTS(buffer) == 0 ? 1 : GST_BUFFER_PTS(buffer);
             OHOS::BufferFlushConfig flushConfig = {
-                { 0, 0, surface_mem->buf->GetWidth(), surface_mem->buf->GetHeight() }, GST_BUFFER_PTS(buffer)
+                { 0, 0, surface_mem->buf->GetWidth(), surface_mem->buf->GetHeight() }, {}, GST_BUFFER_PTS(buffer)
             };
             gst_surface_mem_sink_dump_buffer(surface_sink, buffer);
             {
