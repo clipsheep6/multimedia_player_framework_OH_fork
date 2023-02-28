@@ -48,6 +48,8 @@ avcodec_unittest_capi_include_dirs = [
   "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/videodecoder/",
   "$MEDIA_ROOT_DIR/test/unittest/avcodec_test/capi/videoencoder/",
   "$MEDIA_ROOT_DIR/test/unittest/common/include/",
+  "../../../../../../commonlibrary/c_utils/base/include",
+  "../../../../../../foundation/multimedia/image_framework/interfaces/innerkits/include",
 ]
 
 avcodec_unittest_cflags = [
@@ -306,5 +308,8 @@ ohos_unittest("format_capi_unit_test") {
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
     "//foundation/window/window_manager/wm:libwm",
   ]
-  external_deps = [ "bounds_checking_function:libsec_shared" ]
+  external_deps = [
+    "bounds_checking_function:libsec_shared",
+    "graphic_standard:surface",
+  ]
 }
