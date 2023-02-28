@@ -37,6 +37,7 @@ HdiOutBufferMgr::HdiOutBufferMgr()
 HdiOutBufferMgr::~HdiOutBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    ClearmBuffers();
 }
 
 int32_t HdiOutBufferMgr::Start()
@@ -156,6 +157,19 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
     NotifyAvailable();
     bufferCond_.notify_all();
     return GST_CODEC_OK;
+}
+
+void HdiOutBufferMgr::ClearmBuffers()
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGI("unref mBuffers %{public}zu", mBuffers.size());
+    while (!mBuffers.empty()) {
+        GstBufferWrap bufferWarp = mBuffers.front();
+        mBuffers.pop_front();
+        if (bufferWarp.gstBuffer) {
+            gst_buffer_unref(bufferWarp.gstBuffer);
+        }
+    }
 }
 }  // namespace Media
 }  // namespace OHOS

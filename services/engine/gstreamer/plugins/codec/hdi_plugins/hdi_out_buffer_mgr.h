@@ -36,6 +36,7 @@ public:
     int32_t CodecBufferAvailable(const OmxCodecBuffer *buffer) override;
 
 protected:
+    void ClearmBuffers();
     std::list<GstBufferWrap> mBuffers;
 };
 } // namespace Media
