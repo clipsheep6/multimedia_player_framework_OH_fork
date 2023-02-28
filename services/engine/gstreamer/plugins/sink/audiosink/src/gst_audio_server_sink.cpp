@@ -199,9 +199,6 @@ static void gst_audio_server_sink_init(GstAudioServerSink *sink)
     sink->last_render_pts = 0;
     sink->enable_opt_render_delay = FALSE;
     sink->last_running_time_diff = 0;
-    GstBaseSink *basesink = GST_BASE_SINK(sink);
-    basesink->need_preroll = FALSE;
-    basesink->have_preroll = TRUE;
 }
 
 static void gst_audio_server_sink_finalize(GObject *object)
@@ -498,8 +495,6 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
     GstBaseSink *basesink = GST_BASE_SINK(element);
     g_return_val_if_fail(basesink != nullptr, GST_STATE_CHANGE_FAILURE);
 
-    basesink->need_preroll = FALSE;
-    basesink->have_preroll = TRUE;
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
             MEDIA_LOGD("GST_STATE_CHANGE_PAUSED_TO_PLAYING");
