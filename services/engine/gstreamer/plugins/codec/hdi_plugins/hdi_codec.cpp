@@ -275,7 +275,7 @@ int32_t HdiCodec::Flush(GstCodecDirect direct)
 {
     std::shared_lock<std::shared_mutex> rLock(rwMutex_);
     MEDIA_LOGD("Flush start");
-    if (!start_ || isError_.load()) {
+    if (!start_ || isError_) {
         return GST_CODEC_OK;
     }
 
@@ -501,7 +501,7 @@ void HdiCodec::WaitForEvent(OMX_U32 cmd)
     MEDIA_LOGD("wait eventdone %{public}d lastcmd %{public}d cmd %{public}u", eventDone_, lastCmd_, cmd);
     static constexpr int32_t timeout = 2;
     cond_.wait_for(lock, std::chrono::seconds(timeout),
-        [this, &newCmd]() { return (eventDone_ && (lastCmd_ == newCmd || lastCmd_ == -1)) || isError_.load(); });
+        [this, &newCmd]() { return (eventDone_ && (lastCmd_ == newCmd || lastCmd_ == -1)) || isError_; });
     eventDone_ = false;
 }
 
