@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 import AVPlayerHlsFuncTest from './AVPlayerHlsFuncTest.test.js'
+import AVPlayerHlsLiveFuncTest from './AVPlayerHlsLiveFuncTest.test.js'
 import AVPlayerHttpCompatibilityTest from './AVPlayerHttpCompatibilityTest.test.ets'
 import AVPlayerHttpSeekTest from './AVPlayerHttpSeekTest.test.ets'
 import AVPlayerDataSrcCompatibilityTest from './AVPlayerDataSrcCompatibilityTest.test.js'
@@ -20,6 +21,8 @@ import AVPlayerDataSrcReliabilityTest from './AVPlayerDataSrcReliabilityTest.tes
 import AVPlayerLocalTest from './AVPlayerLocalTest.test.js'
 
 export default function testsuite() {
+  AVPlayerHlsFuncTest()
+  AVPlayerHlsLiveFuncTest();
   AVPlayerHlsFuncTest();
   AVPlayerHttpCompatibilityTest();
   AVPlayerHttpSeekTest();
