@@ -46,9 +46,7 @@ public:
 
     int32_t Init();
     int32_t LaunchTask(const std::shared_ptr<ITaskHandler> &task, PlayerServerTaskType type,
-        const std::string &taskName, uint64_t delayUs = 0);
-    int32_t LaunchTask(const std::shared_ptr<ITaskHandler> &task, const std::shared_ptr<ITaskHandler> &cancelTask,
-        PlayerServerTaskType type, const std::string &taskName);
+        const std::string &taskName, const std::shared_ptr<ITaskHandler> &cancelTask = nullptr);
     // only take effect when it is called at the task thread.
     int32_t MarkTaskDone(const std::string &taskName);
     PlayerServerTaskType GetCurrTaskType();
@@ -56,6 +54,8 @@ public:
     int32_t Reset();
 
 private:
+    int32_t EnqueueTask(const std::shared_ptr<ITaskHandler> &task, PlayerServerTaskType type,
+        const std::string &taskName);
     struct TwoPhaseTaskItem {
         PlayerServerTaskType type;
         std::shared_ptr<ITaskHandler> task;
