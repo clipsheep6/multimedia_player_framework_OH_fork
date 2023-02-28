@@ -1125,6 +1125,12 @@ void PlayBinCtrlerBase::OnSinkMessageReceived(const PlayBinMessage &msg)
     ReportMessage(msg);
 }
 
+void PlayBinCtrlerBase::SetNotifier(PlayBinMsgNotifier notifier)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    notifier_ = notifier;
+}
+
 void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
 {
     if (msg.type == PlayBinMsgType::PLAYBIN_MSG_ERROR) {
@@ -1140,14 +1146,17 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
 
     MEDIA_LOGD("report msg, type: %{public}d", msg.type);
 
-    auto msgReportHandler = std::make_shared<TaskHandler<void>>([this, msg]() {
-        LISTENER(notifier_(msg), "PlayBinCtrlerBase::ReportMessage", PlayerXCollie::timerTimeout)
-    });
-    int32_t ret = msgQueue_->EnqueueTask(msgReportHandler);
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("async report msg failed, type: %{public}d, subType: %{public}d, code: %{public}d",
-                   msg.type, msg.subType, msg.code);
-    };
+    PlayBinMsgNotifier notifier = notifier_;
+    if (notifier != nullptr) {
+        auto msgReportHandler = std::make_shared<TaskHandler<void>>([msg, notifier]() {
+            LISTENER(notifier(msg), "PlayBinCtrlerBase::ReportMessage", PlayerXCollie::timerTimeout)
+        });
+        int32_t ret = msgQueue_->EnqueueTask(msgReportHandler);
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("async report msg failed, type: %{public}d, subType: %{public}d, code: %{public}d",
+                msg.type, msg.subType, msg.code);
+        };
+    }
 
     if (msg.type == PlayBinMsgType::PLAYBIN_MSG_EOS) {
         ProcessEndOfStream();
