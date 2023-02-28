@@ -231,20 +231,24 @@ ohos_shared_library("media_client") {
 
     if (multimedia_player_framework_support_video) {
       public_configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
-      deps += [
-        "//foundation/graphic/graphic_2d/frameworks/surface:surface",
-        "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
-      ]
     }
 
     external_deps = [
       "c_utils:utils",
       "hiviewdfx_hilog_native:libhilog",
       "ipc:ipc_single",
+      "multimedia_audio_framework:audio_client",
+      "multimedia_image_framework:image_native",
       "samgr:samgr_proxy",
     ]
+
+    if (multimedia_player_framework_support_video) {
+      external_deps += [ "graphic_standard:surface" ]
+    }
   }
 
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"
+  version_script = "player_framework.versionscript"
 }
