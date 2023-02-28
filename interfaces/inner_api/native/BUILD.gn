@@ -231,6 +231,10 @@ ohos_shared_library("media_client") {
 
     if (multimedia_player_framework_support_video) {
       public_configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
+      deps += [
+        "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+        "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
+      ]
     }
 
     external_deps = [
@@ -241,10 +245,6 @@ ohos_shared_library("media_client") {
       "multimedia_image_framework:image_native",
       "samgr:samgr_proxy",
     ]
-
-    if (multimedia_player_framework_support_video) {
-      external_deps += [ "graphic_standard:surface" ]
-    }
   }
 
   innerapi_tags = [ "platformsdk" ]
