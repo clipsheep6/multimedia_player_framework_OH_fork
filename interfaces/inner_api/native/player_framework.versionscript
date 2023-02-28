@@ -13,12 +13,22 @@
 
 1.0 {
   global:
-    "OHOS::Media::PlayerFactory";
-    "OHOS::Media::RecorderFactory";
-    "OHOS::Media::Format";
-    "OHOS::Media::AVSharedMemory";
-    "OHOS::Media::AVMetadataHelperFactory";
-    "OHOS::Media::RecorderProfilesFactory";
+    "*PlayerFactory*";
+    "*RecorderFactory*";
+    "*Format*";
+    "*AVSharedMemory*";
+    "*AVMetadataHelperFactory*";
+    "*RecorderProfilesFactory*";
+    "*VideoEncoderFactory*";
+    "*VideoDecoderFactory*";
+    "*AudioEncoderFactory*";
+    "*AudioDecoderFactory*";
+    "*AVCodecListFactory*";
+    "*VideoCaps*";
+    "*AudioCaps*";
+    "*AVCodecInfo*";
+    "*Error*";
+    "*ExtError*";
   local:
     *;
 };
