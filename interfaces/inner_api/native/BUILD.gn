@@ -162,7 +162,7 @@ ohos_shared_library("media_client") {
   ]
 
   deps = [
-    "//foundation/multimedia/player_framework/services/utils:media_format",
+    "../../../services/utils:media_format",
     "//third_party/bounds_checking_function:libsec_static",
   ]
 
