@@ -199,6 +199,9 @@ static void gst_audio_server_sink_init(GstAudioServerSink *sink)
     sink->last_render_pts = 0;
     sink->enable_opt_render_delay = FALSE;
     sink->last_running_time_diff = 0;
+    GstBaseSink *basesink = GST_BASE_SINK(sink);
+    basesink->need_preroll = FALSE;
+    basesink->have_preroll = TRUE;
 }
 
 static void gst_audio_server_sink_finalize(GObject *object)
