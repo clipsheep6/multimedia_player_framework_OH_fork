@@ -793,7 +793,9 @@ static gboolean gst_venc_base_push_out_buffers(GstVencBase *self)
         flow = gst_buffer_pool_acquire_buffer(pool, &buffer, &params);
         if (flow == GST_FLOW_OK) {
             g_return_val_if_fail(buffer != nullptr, FALSE);
-            // buffer ref give to encoder
+            ON_SCOPE_EXIT(1) {
+                gst_buffer_unref(buffer);
+            };
             codec_ret = self->encoder->PushOutputBuffer(buffer);
             g_return_val_if_fail(gst_codec_return_is_ok(self, codec_ret, "push buffer", TRUE), FALSE);
             self->coding_outbuf_cnt++;

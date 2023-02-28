@@ -111,7 +111,7 @@ private:
     CompVerInfo verInfo_ = {};
     TaskQueue taskQue_;
     bool isError_ = false;
-    std::shared_mutex rwMutex_;
+    std::shared_mutex bufferMgrMutex_;
 };
 } // namespace Media
 } // namespace OHOS

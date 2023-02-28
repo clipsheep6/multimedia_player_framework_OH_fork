@@ -37,15 +37,6 @@ HdiOutBufferMgr::HdiOutBufferMgr()
 HdiOutBufferMgr::~HdiOutBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-    std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("unref mBuffers %{public}zu", mBuffers.size());
-    while (!mBuffers.empty()) {
-        GstBufferWrap bufferWarp = mBuffers.front();
-        mBuffers.pop_front();
-        if (bufferWarp.gstBuffer) {
-            gst_buffer_unref(bufferWarp.gstBuffer);
-        }
-    }
 }
 
 int32_t HdiOutBufferMgr::Start()
@@ -100,7 +91,6 @@ int32_t HdiOutBufferMgr::PullBuffer(GstBuffer **buffer)
         MEDIA_LOGD("isFlush %{public}d isStart %{public}d", isFlushed_, isStart_);
         return GST_CODEC_FLUSH;
     }
-
     if (!mBuffers.empty()) {
         MEDIA_LOGD("mBuffers %{public}zu, available %{public}zu", mBuffers.size(), availableBuffers_.size());
         MediaTrace::CounterTrace("WaitingForDisplayBuffers", mBuffers.size());
@@ -123,8 +113,9 @@ int32_t HdiOutBufferMgr::FreeBuffers()
     std::unique_lock<std::mutex> lock(mutex_);
     static constexpr int32_t timeout = 2;
     freeCond_.wait_for(lock, std::chrono::seconds(timeout),
-        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual || isCodecError_.load(); });
+        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual || bufferRleased; });
     FreeCodecBuffers();
+    MEDIA_LOGI("unref mBuffers %{public}zu", mBuffers.size());
     std::for_each(mBuffers.begin(), mBuffers.end(), [&](GstBufferWrap buffer) { gst_buffer_unref(buffer.gstBuffer); });
     EmptyList(mBuffers);
     return GST_CODEC_OK;

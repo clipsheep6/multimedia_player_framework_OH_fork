@@ -33,9 +33,8 @@ HdiBufferMgr::HdiBufferMgr()
 HdiBufferMgr::~HdiBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-    Stop(false);
     FreeBuffers();
-    UnrefGstBuffer();
+    ClearCodingBuffers();
 }
 
 int32_t HdiBufferMgr::Start()
@@ -136,9 +135,10 @@ int32_t HdiBufferMgr::UseHdiBuffers(std::vector<std::shared_ptr<HdiBufferWrap>> 
 
 void HdiBufferMgr::FreeCodecBuffers()
 {
+    // Caller lock protection
     MEDIA_LOGD("Enter FreeCodecBuffers");
     for (auto codecBuffer : availableBuffers_) {
-        CHECK_AND_BREAK_LOG(!isCodecError_.load(), "codec error");
+        CHECK_AND_BREAK_LOG(!bufferRleased, "bufferRleased");
         auto ret = handle_->FreeBuffer(handle_, mPortIndex_, &codecBuffer->hdiBuffer);
         if (ret != HDF_SUCCESS) {
             MEDIA_LOGE("free buffer %{public}u fail", codecBuffer->hdiBuffer.bufferId);
@@ -150,6 +150,7 @@ void HdiBufferMgr::FreeCodecBuffers()
 
 int32_t HdiBufferMgr::FreeBuffers()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     FreeCodecBuffers();
     return GST_CODEC_OK;
 }
@@ -213,7 +214,7 @@ void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
     }
 }
 
-void HdiBufferMgr::UnrefGstBuffer()
+void HdiBufferMgr::ClearCodingBuffers()
 {
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGI("unref buffer %{public}zu", codingBuffers_.size());
@@ -225,10 +226,14 @@ void HdiBufferMgr::UnrefGstBuffer()
     codingBuffers_.clear();
 }
 
-void HdiBufferMgr::OnCodecDied()
+void HdiBufferMgr::BufferReleased()
 {
-    MEDIA_LOGE("Enter OnCodecDied");
-    isCodecError_.store(true);
+    MEDIA_LOGI("Enter BufferReleased");
+    std::unique_lock<std::mutex> lock(mutex_);
+    bufferRleased = true;
+    isStart_ = false;
+    bufferCond_.notify_all();
+    flushCond_.notify_all();
     freeCond_.notify_all();
 }
 }  // namespace Media
