@@ -287,7 +287,7 @@ int32_t PlayerServer::HandlePrepare()
             taskMgr_.MarkTaskDone("interrupted speed done");
         });
 
-        (void)taskMgr_.LaunchTask(rateTask, cancelTask, PlayerServerTaskType::RATE_CHANGE, "speed");
+        (void)taskMgr_.LaunchTask(rateTask, PlayerServerTaskType::RATE_CHANGE, "speed", cancelTask);
     }
     return MSERR_OK;
 }
@@ -584,7 +584,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
         taskMgr_.MarkTaskDone("interrupted seek done");
     });
 
-    int ret = taskMgr_.LaunchTask(seekTask, cancelTask, PlayerServerTaskType::SEEKING, "seek");
+    int ret = taskMgr_.LaunchTask(seekTask, PlayerServerTaskType::SEEKING, "seek", cancelTask);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
 
     return MSERR_OK;
@@ -748,7 +748,7 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         taskMgr_.MarkTaskDone("interrupted speed done");
     });
 
-    int ret = taskMgr_.LaunchTask(rateTask, cancelTask, PlayerServerTaskType::RATE_CHANGE, "speed");
+    int ret = taskMgr_.LaunchTask(rateTask, PlayerServerTaskType::RATE_CHANGE, "speed", cancelTask);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetPlaybackSpeed failed");
 
     return MSERR_OK;
@@ -780,7 +780,7 @@ void PlayerServer::HandleEos()
         });
 
         disableNextSeekDone_ = true;
-        int ret = taskMgr_.LaunchTask(seekTask, cancelTask, PlayerServerTaskType::SEEKING, "eos seek");
+        int ret = taskMgr_.LaunchTask(seekTask, PlayerServerTaskType::SEEKING, "eos seek", cancelTask);
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Seek failed");
     }
 }
