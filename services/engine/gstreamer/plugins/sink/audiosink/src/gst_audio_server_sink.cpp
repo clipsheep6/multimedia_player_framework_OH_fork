@@ -495,6 +495,8 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
     GstBaseSink *basesink = GST_BASE_SINK(element);
     g_return_val_if_fail(basesink != nullptr, GST_STATE_CHANGE_FAILURE);
 
+    basesink->need_preroll = FALSE;
+    basesink->have_preroll = TRUE;
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
             MEDIA_LOGD("GST_STATE_CHANGE_PAUSED_TO_PLAYING");
