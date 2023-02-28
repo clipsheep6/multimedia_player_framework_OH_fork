@@ -20,27 +20,10 @@ config("media_public_config") {
   include_dirs = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/utils/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
   ]
 
-  cflags = [
-    "-fno-exceptions",
-    "-Wall",
-    "-fno-common",
-    "-fstack-protector-strong",
-    "-Wshadow",
-    "-FPIC",
-    "-FS",
-    "-O2",
-    "-D_FORTIFY_SOURCE=2",
-    "-Wformat=2",
-    "-Wdate-time",
-  ]
-
-  cflags_cc = [
-    "-std=c++17",
-    "-fno-rtti",
-  ]
+  defines = []
+  defines += player_framework_defines
 }
 
 config("media_client_ipc_config") {
@@ -184,9 +167,6 @@ ohos_shared_library("media_client") {
   ]
 
   public_configs = [ ":media_public_config" ]
-  if (multimedia_player_framework_support_video) {
-    public_configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
-  }
 
   external_deps = [
     "c_utils:utils",
