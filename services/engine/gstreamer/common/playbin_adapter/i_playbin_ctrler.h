@@ -77,6 +77,7 @@ public:
     virtual void SetAutoPlugSortListener(AutoPlugSortListener listener) = 0;
     virtual void RemoveGstPlaySinkVideoConvertPlugin() = 0;
     virtual int64_t QueryPosition() = 0;
+    virtual void SetNotifier(PlayBinMsgNotifier notifier) = 0;
 };
 } // namespace Media
 } // namespace OHOS

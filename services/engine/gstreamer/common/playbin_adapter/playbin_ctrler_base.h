@@ -67,6 +67,7 @@ public:
     void SetElemUnSetupListener(ElemSetupListener listener) final;
     void SetAutoPlugSortListener(AutoPlugSortListener listener) final;
     void RemoveGstPlaySinkVideoConvertPlugin() final;
+    void SetNotifier(PlayBinMsgNotifier notifier) final;
 protected:
     virtual int32_t OnInit() = 0;
 
