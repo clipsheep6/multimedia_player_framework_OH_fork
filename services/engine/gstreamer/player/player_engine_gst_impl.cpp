@@ -935,6 +935,7 @@ void PlayerEngineGstImpl::ResetPlaybinToSoftDec()
     isPlaySinkFlagsSet_ = false;
 
     if (playBinCtrler_ != nullptr) {
+        playBinCtrler_->SetNotifier(nullptr);
         playBinCtrler_->Stop(false);
         playBinCtrler_->SetElemSetupListener(nullptr);
         playBinCtrler_->SetElemUnSetupListener(nullptr);
