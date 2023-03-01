@@ -592,8 +592,6 @@ int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
 
 int32_t PlayerServer::GetCurrentTime(int32_t &currentTime)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-
     currentTime = -1;
     if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not GetCurrentTime, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
@@ -682,8 +680,6 @@ int32_t PlayerServer::GetVideoHeight()
 
 int32_t PlayerServer::GetDuration(int32_t &duration)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-
     if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STATE_ERROR) {
         MEDIA_LOGE("Can not GetDuration, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
