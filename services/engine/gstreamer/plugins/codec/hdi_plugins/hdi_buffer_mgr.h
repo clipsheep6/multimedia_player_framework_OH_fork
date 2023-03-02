@@ -66,7 +66,10 @@ public:
         return GST_CODEC_OK;
     }
 
-    int32_t FreeBuffers() override;
+    int32_t FreeBuffers() override
+    {
+        return GST_CODEC_OK;
+    }
 
     virtual int32_t Preprocessing()
     {
@@ -87,7 +90,7 @@ public:
 protected:
     void FreeCodecBuffers();
     void ClearCodingBuffers();
-    std::atomic<bool> bufferRleased = false;
+    std::atomic<bool> bufferRleased_ = false;
     bool isFlushing_ = false;
     bool isFlushed_ = false;
     bool isStart_ = false;

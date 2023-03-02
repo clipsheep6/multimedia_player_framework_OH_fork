@@ -138,7 +138,7 @@ void HdiBufferMgr::FreeCodecBuffers()
     // Caller lock protection
     MEDIA_LOGD("Enter FreeCodecBuffers");
     for (auto codecBuffer : availableBuffers_) {
-        CHECK_AND_BREAK_LOG(!bufferRleased, "bufferRleased");
+        CHECK_AND_BREAK_LOG(!bufferRleased_, "bufferRleased!");
         auto ret = handle_->FreeBuffer(handle_, mPortIndex_, &codecBuffer->hdiBuffer);
         if (ret != HDF_SUCCESS) {
             MEDIA_LOGE("free buffer %{public}u fail", codecBuffer->hdiBuffer.bufferId);
@@ -146,13 +146,6 @@ void HdiBufferMgr::FreeCodecBuffers()
     }
     EmptyList(availableBuffers_);
     MEDIA_LOGD("Enter FreeCodecBuffers End");
-}
-
-int32_t HdiBufferMgr::FreeBuffers()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    FreeCodecBuffers();
-    return GST_CODEC_OK;
 }
 
 int32_t HdiBufferMgr::Stop(bool isFormatChange)
@@ -230,7 +223,7 @@ void HdiBufferMgr::BufferReleased()
 {
     MEDIA_LOGI("Enter BufferReleased");
     std::unique_lock<std::mutex> lock(mutex_);
-    bufferRleased = true;
+    bufferRleased_ = true;
     isStart_ = false;
     bufferCond_.notify_all();
     flushCond_.notify_all();
