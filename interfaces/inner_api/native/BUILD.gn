@@ -80,11 +80,6 @@ config("media_client_public_config") {
     "-Wdate-time",
   ]
 
-  cflags_cc = [
-    "-std=c++17",
-    "-fno-rtti",
-  ]
-
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
