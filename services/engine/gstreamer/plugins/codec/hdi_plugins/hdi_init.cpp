@@ -140,6 +140,12 @@ void HdiInit::CodecComponentManagerReset()
     std::lock_guard<std::mutex> lock(mutex_);
     CodecComponentManagerRelease();
     mgr_ = nullptr;
+    for (auto iter = handleMap_.begin(); iter != handleMap_.end(); ++iter) {
+        auto codec = iter->second.codec.lock();
+        if (codec) {
+            codec->OnCodecDied();
+        }
+    }
     handleMap_.clear();
 
     MEDIA_LOGD("CodecComponentManagerReset End");
@@ -354,8 +360,7 @@ std::vector<CapabilityData> HdiInit::GetCapabilitys()
     return capabilitys_;
 }
 
-int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, std::string name,
-    void *appData, CodecCallbackType *callbacks)
+int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, HdiInfo info)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (mgr_ == nullptr) {
@@ -364,10 +369,10 @@ int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, std::st
     }
     
     CHECK_AND_RETURN_RET_LOG(component != nullptr, HDF_FAILURE, "component is nullptr");
-    int32_t ret = mgr_->CreateComponent(component, &id, const_cast<char *>(name.c_str()),
-        reinterpret_cast<int64_t>(appData), callbacks);
+    int32_t ret = mgr_->CreateComponent(component, &id, const_cast<char *>(info.name.c_str()),
+        reinterpret_cast<int64_t>(info.appData), info.callbacks);
     if (ret == HDF_SUCCESS) {
-        handleMap_[*component] = id;
+        handleMap_[*component] = {id, info.codec};
     }
 
     return ret;
@@ -380,7 +385,7 @@ int32_t HdiInit::FreeHandle(CodecComponentType *component, uint32_t id)
     std::lock_guard<std::mutex> lock(mutex_);
     auto iter = handleMap_.find(component);
     CHECK_AND_RETURN_RET_LOG(iter != handleMap_.end(), HDF_SUCCESS, "The handle has been released!");
-    CHECK_AND_RETURN_RET_LOG(iter->second == id, HDF_FAILURE, "Handle and id do not match!");
+    CHECK_AND_RETURN_RET_LOG(iter->second.id == id, HDF_FAILURE, "Handle and id do not match!");
     
     int32_t ret =  mgr_->DestroyComponent(id);
     if (ret == HDF_SUCCESS) {

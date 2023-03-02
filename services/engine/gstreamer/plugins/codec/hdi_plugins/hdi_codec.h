@@ -22,6 +22,7 @@
 #include <gst/gst.h>
 #include <OMX_Core.h>
 #include <OMX_Component.h>
+#include <shared_mutex>
 #include "nocopyable.h"
 #include "i_gst_codec.h"
 #include "hdi_buffer_mgr.h"
@@ -55,6 +56,8 @@ public:
     int32_t Flush(GstCodecDirect direct) override;
     int32_t ActiveBufferMgr(GstCodecDirect direct, bool active) override;
     void Deinit() override;
+    void OnCodecDied() override;
+
 private:
     struct AppData {
         std::weak_ptr<HdiCodec> instance;
@@ -107,6 +110,8 @@ private:
     uint32_t id_ = 0;
     CompVerInfo verInfo_ = {};
     TaskQueue taskQue_;
+    bool isError_ = false;
+    std::shared_mutex bufferMgrMutex_;
 };
 } // namespace Media
 } // namespace OHOS

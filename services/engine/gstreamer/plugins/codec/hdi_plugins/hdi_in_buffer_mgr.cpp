@@ -85,7 +85,7 @@ int32_t HdiInBufferMgr::FreeBuffers()
     }
     static constexpr int32_t timeout = 2;
     freeCond_.wait_for(lock, std::chrono::seconds(timeout),
-        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual; });
+        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual || bufferRleased_; });
     FreeCodecBuffers();
     return GST_CODEC_OK;
 }
