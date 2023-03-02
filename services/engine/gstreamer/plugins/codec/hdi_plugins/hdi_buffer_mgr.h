@@ -85,9 +85,12 @@ public:
     virtual int32_t Flush(bool enable) override;
     virtual int32_t Stop(bool isFormatChange);
     virtual void WaitFlushed();
+    void BufferReleased();
 
 protected:
     void FreeCodecBuffers();
+    void ClearCodingBuffers();
+    std::atomic<bool> bufferRleased_ = false;
     bool isFlushing_ = false;
     bool isFlushed_ = false;
     bool isStart_ = false;

@@ -1339,7 +1339,9 @@ static gboolean gst_vdec_base_push_out_buffers(GstVdecBase *self)
         flow = gst_buffer_pool_acquire_buffer(pool, &buffer, &params);
         if (flow == GST_FLOW_OK) {
             g_return_val_if_fail(buffer != nullptr, FALSE);
-            // the buffer ref give to decoder
+            ON_SCOPE_EXIT(1) {
+                gst_buffer_unref(buffer);
+            };
             gint codec_ret = self->decoder->PushOutputBuffer(buffer);
             if (codec_ret == GST_CODEC_FLUSH) {
                 GST_INFO_OBJECT(self, "Input Buffer is Flush");
