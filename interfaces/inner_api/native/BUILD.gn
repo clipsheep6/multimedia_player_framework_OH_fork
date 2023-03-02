@@ -54,7 +54,6 @@ config("media_client_base_config") {
     "$MEDIA_ROOT_DIR/services/utils/include",
     "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
     "//utils/system/safwk/native/include",
-    "//third_party/bounds_checking_function/include",
     "//commonlibrary/c_utils/base/include",
     "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiocommon/include",
@@ -184,4 +183,5 @@ ohos_shared_library("media_client") {
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"
+  version_script = "player_framework.versionscript"
 }
