@@ -46,6 +46,7 @@ typedef struct _GstVdecBase GstVdecBase;
 typedef struct _GstVdecBaseClass GstVdecBaseClass;
 typedef struct _GstVdecBasePort GstVdecBasePort;
 typedef struct _DisplayRect DisplayRect;
+typedef struct _ParseMeta ParseMeta;
 
 struct _GstVdecBasePort {
     gint frame_rate;
@@ -70,6 +71,13 @@ struct _DisplayRect {
     gint y;
     gint width;
     gint height;
+};
+
+struct _ParseMeta {
+    GstMapInfo &src_info;
+    GstMapInfo &dts_info;
+    bool is_codec_data;
+    guint &copy_len;
 };
 
 struct _GstVdecBase {
@@ -118,6 +126,8 @@ struct _GstVdecBase {
     gboolean has_set_format;
     gboolean player_mode;
     gboolean is_support_swap_width_height;
+    gboolean codec_data_update;
+    GstBuffer *codec_data;
 };
 
 struct _GstVdecBaseClass {
@@ -128,6 +138,7 @@ struct _GstVdecBaseClass {
     void (*flush_cache_slice_buffer)(GstVdecBase *self);
     gboolean (*input_need_copy)();
     gboolean (*support_swap_width_height)(GstElementClass *kclass);
+    gboolean (*parser)(GstVdecBase *base, ParseMeta &meta);
 };
 
 GST_API_EXPORT GType gst_vdec_base_get_type(void);
