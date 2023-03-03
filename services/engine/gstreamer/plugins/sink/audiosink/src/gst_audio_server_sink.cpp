@@ -525,9 +525,8 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
             MEDIA_LOGD("GST_STATE_CHANGE_PAUSED_TO_PLAYING");
-            if (sink->audio_sink == nullptr || sink->audio_sink->Start() != MSERR_OK) {
-                GST_ERROR_OBJECT(sink, "audio sink Start failed!");
-            }
+            g_return_val_if_fail(sink->audio_sink != nullptr, GST_STATE_CHANGE_FAILURE);
+            (void)sink->audio_sink->Start();
 
             if (sink->pause_cache_buffer != nullptr) {
                 GST_INFO_OBJECT(basesink, "pause to play");
@@ -548,9 +547,8 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
             MEDIA_LOGD("GST_STATE_CHANGE_PLAYING_TO_PAUSED");
             {
                 std::unique_lock<std::mutex> lock(sink->mutex_);
-                if (sink->audio_sink == nullptr || sink->audio_sink->Pause() != MSERR_OK) {
-                    GST_ERROR_OBJECT(sink, "audio sink Pause failed!");
-                }
+                g_return_val_if_fail(sink->audio_sink != nullptr, GST_STATE_CHANGE_FAILURE);
+                (void)sink->audio_sink->Pause();
             }
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
