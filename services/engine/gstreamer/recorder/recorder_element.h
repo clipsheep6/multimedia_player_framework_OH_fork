@@ -26,6 +26,7 @@
 #include "recorder_param.h"
 #include "recorder_inner_defines.h"
 #include "recorder_message_handler.h"
+#include "avcodec_ability_singleton.h"
 
 namespace OHOS {
 namespace Media {
@@ -237,6 +238,14 @@ protected:
         (void)prettyMsg;
         return RecorderMsgProcResult::REC_MSG_PROC_IGNORE;
     }
+
+    /**
+    * @brief Judge whether value is within the valid range
+    * @param range: Reasonable value range
+    * @param value: Value to be judged
+    * @return If the value is valid, return true, otherwise return false
+    */   
+    bool CheckRangeValid(Range &range, int32_t value);
 
     friend class RecorderPipelineLinkHelper;
 

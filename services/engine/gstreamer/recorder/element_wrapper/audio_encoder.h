@@ -35,6 +35,12 @@ protected:
 
 private:
     int32_t encoderFormat_;
+    int32_t sampleRate_;
+    int32_t channels_;
+    int32_t bitRate_;
+    bool setChannels_ = false;
+    bool setSampleRate_ = false;
+    bool setBitRate_ = false;
 };
 } // namespace Media
 } // namespace OHOS

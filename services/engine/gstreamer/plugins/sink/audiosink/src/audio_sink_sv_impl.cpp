@@ -479,7 +479,7 @@ void AudioSinkSvImpl::DumpAudioBuffer(uint8_t *buffer, const size_t &bytesWritte
 
     if (dumpFile_ == nullptr) {
         std::string dumpFilePath = "/data/media/audio-write-" +
-        std::to_string(static_cast<int32_t>(FAKE_POINTER(this))) + ".pcm";
+            std::to_string(static_cast<int32_t>(FAKE_POINTER(this))) + ".pcm";
         dumpFile_ = fopen(dumpFilePath.c_str(), "wb+");
     }
     CHECK_AND_RETURN(dumpFile_ != nullptr);

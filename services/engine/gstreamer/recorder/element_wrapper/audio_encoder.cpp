@@ -64,6 +64,20 @@ int32_t AudioEncoder::Configure(const RecorderParam &recParam)
         g_object_set(gstElem_, "bitrate", param.bitRate, nullptr);
         MEDIA_LOGI("Set audio bitrate: %{public}d", param.bitRate);
         MarkParameter(param.type);
+        setBitRate_ = true;
+        bitRate_ = param.bitRate;
+    }
+
+    if (recParam.type == RecorderPublicParamType::AUD_SAMPLERATE) {
+        const AudSampleRate &param = static_cast<const AudSampleRate &>(recParam);
+        setSampleRate_ = true;
+        sampleRate_ = param.sampleRate;
+    }
+
+    if (recParam.type == RecorderPublicParamType::AUD_CHANNEL) {
+        const AudChannel &param = static_cast<const AudChannel &>(recParam);
+        setChannels_ = true;
+        channels_ = param.channel;
     }
 
     return MSERR_OK;
@@ -74,6 +88,36 @@ int32_t AudioEncoder::CheckConfigReady()
     std::set<int32_t> expectedParam = { RecorderPublicParamType::AUD_ENC_FMT };
     bool configed = CheckAllParamsConfigured(expectedParam);
     CHECK_AND_RETURN_RET(configed == true, MSERR_INVALID_OPERATION);
+
+    std::vector<CapabilityData> capabilityDataArray = AVCodecAbilitySingleton::GetInstance().GetCapabilityDataArray();
+    for (auto iter = capabilityDataArray.begin(); iter != capabilityDataArray.end(); ++iter) {
+        if ((*iter).codecName == "avenc_aac") {
+            Range bitrate = (*iter).bitrate;
+            if (setBitRate_ && CheckRangeValid(bitrate, bitRate_) == false) {
+                MEDIA_LOGE("Audio can not support bitrate: %{public}d. Valid:[%{public}d - %{public}d].",
+                    bitRate_, bitrate.minVal, bitrate.maxVal);
+                return MSERR_UNSUPPORT_AUD_PARAMS;
+            }
+
+            Range channels = (*iter).channels;
+            if (setChannels_ && CheckRangeValid(channels, channels_) == false) {
+                MEDIA_LOGE("Audio can not support channels: %{public}d. Valid:[%{public}d - %{public}d].",
+                    channels_, channels.minVal, channels.maxVal);
+                return MSERR_UNSUPPORT_AUD_PARAMS;
+            }
+
+            if (setSampleRate_) {
+                std::vector<int32_t> sampleRate = (*iter).sampleRate;
+                auto sampleIter = find(sampleRate.cbegin(), sampleRate.cend(), sampleRate_);
+                if (sampleIter == sampleRate.cend()) {
+                    MEDIA_LOGE("Audio can not support sampleRate: %{public}d.", sampleRate_);
+                    return MSERR_UNSUPPORT_AUD_PARAMS;
+                }
+            }
+
+            break;
+        }
+    }
 
     return MSERR_OK;
 }

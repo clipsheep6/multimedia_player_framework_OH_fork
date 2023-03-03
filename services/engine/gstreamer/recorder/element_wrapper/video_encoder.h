@@ -17,7 +17,6 @@
 #define VIDEO_ENCODER_H
 
 #include "recorder_element.h"
-#include "avcodec_ability_singleton.h"
 
 namespace OHOS {
 namespace Media {
@@ -37,7 +36,6 @@ private:
     std::string GetEncorderName(std::string_view mimeType);
     int32_t CreateMpegElement();
     int32_t CreateH264Element();
-    bool CheckRangeValid(Range &range, int32_t value);
     int32_t encoderFormat_;
     int32_t bitRate_;
     int32_t width_;

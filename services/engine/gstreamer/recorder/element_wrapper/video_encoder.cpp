@@ -140,16 +140,6 @@ int32_t VideoEncoder::Configure(const RecorderParam &recParam)
     return MSERR_OK;
 }
 
-bool VideoEncoder::CheckRangeValid(Range &range, int32_t value)
-{
-    if ((range.minVal != 0 || range.maxVal != 0) &&
-        (value < range.minVal || value > range.maxVal)) {
-        return false;
-    }
-
-    return true;
-}
-
 int32_t VideoEncoder::CheckConfigReady()
 {
     std::set<int32_t> expectedParam = { RecorderPublicParamType::VID_ENC_FMT };
