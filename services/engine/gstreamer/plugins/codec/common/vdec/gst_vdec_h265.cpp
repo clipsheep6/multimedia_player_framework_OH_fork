@@ -14,22 +14,29 @@
  */
 
 #include "gst_vdec_h265.h"
+#include "securec.h"
+#include "media_dfx.h"
+#include "media_log.h"
 
 G_DEFINE_TYPE(GstVdecH265, gst_vdec_h265, GST_TYPE_VDEC_BASE);
+
+static constexpr gint HVCC_EXT_NALU_LENGTH_START_POS = 21;
+static constexpr gint ANEEXB_HEAD = 4;
+static gboolean gst_vdec_h265_parser(GstVdecBase *base, ParseMeta &meta);
 
 static void gst_vdec_h265_class_init(GstVdecH265Class *klass)
 {
     GST_DEBUG_OBJECT(klass, "Init h265 class");
     GstElementClass *element_class = GST_ELEMENT_CLASS(klass);
+    GstVdecBaseClass *base_class = GST_VDEC_BASE_CLASS(klass);
+    base_class->parser = gst_vdec_h265_parser;
 
     gst_element_class_set_static_metadata(element_class,
         "Hardware Driver Interface H.265 Video Decoder",
         "Codec/Decoder/Video/Hardware",
         "Decode H.265 video streams",
         "OpenHarmony");
-    const gchar *sink_caps_string = "video/x-h265, "
-        "alignment=(string) nal, "
-        "stream-format=(string){ byte-stream }";
+    const gchar *sink_caps_string = "video/x-h265";
     GstCaps *sink_caps = gst_caps_from_string(sink_caps_string);
 
     if (sink_caps != nullptr) {
@@ -39,8 +46,87 @@ static void gst_vdec_h265_class_init(GstVdecH265Class *klass)
     }
 }
 
+static gboolean gst_vdec_h265_parser_codec_data(GstVdecH265 *self, GstMapInfo &src_info,
+    GstMapInfo &dts_info, guint &copy_len)
+{
+    // The 21 byte is 2 bits for framerate 3 bits for tempLayers 1 bit for tmpIdNest 2 bits for nalu len minus one
+    gint src_offset = HVCC_EXT_NALU_LENGTH_START_POS;
+    self->hvcc_nal_len = src_info.data[src_offset] & 3 + 1;
+    // Next byte is 1 byte for array nums.
+    src_offset++;
+    gint hvcc_array_nums = src_info.data[src_offset];
+    // Next byte is 1 byte type.
+    src_offset++;
+    gint dts_offset = 0;
+    for (gint i = 0; i < hvcc_array_nums; ++i) {
+        // Next byte is 2 bytes for type nums like two vps.
+        src_offset++;
+        gint type_num = (src_info.data[src_offset] << 8) + src_info.data[src_offset + 1];
+        // Next 2 bytes is 2 bytes for type len like one vps len.
+        src_offset += 2;
+        for (gint j = 0; j < type_num; ++j) {
+            dts_info.data[dts_offset] = 0;
+            dts_info.data[dts_offset + 1] = 0;
+            dts_info.data[dts_offset + 2] = 0;
+            dts_info.data[dts_offset + 3] = 1;
+
+            gint len = (src_info.data[src_offset] << 8) + src_info.data[src_offset + 1];
+            // Next 2 bytes is type data.
+            src_offset += 2;
+            GST_DEBUG_OBJECT(self, "src_offset %d len %d", src_offset, len);
+            auto ret = memcpy_s(dts_info.data + dts_offset + ANEEXB_HEAD, dts_info.size - dts_offset - ANEEXB_HEAD,
+                src_info.data + src_offset, len);
+            g_return_val_if_fail(ret == EOK, FALSE);
+            dts_offset += (ANEEXB_HEAD + len);
+            src_offset += len;
+        }
+    }
+    copy_len = dts_offset;
+
+    return TRUE;
+}
+
+static gboolean gst_vdec_h265_parser_nalu(GstVdecH265 *self, GstMapInfo &src_info,
+    GstMapInfo &dts_info, guint &copy_len)
+{
+    dts_info.data[0] = 0;
+    dts_info.data[1] = 0;
+    dts_info.data[2] = 0;
+    dts_info.data[3] = 1;
+    auto ret = memcpy_s(dts_info.data + ANEEXB_HEAD, dts_info.size - ANEEXB_HEAD,
+        src_info.data + self->hvcc_nal_len, src_info.size - self->hvcc_nal_len);
+    g_return_val_if_fail(ret == EOK, FALSE);
+    copy_len = src_info.size - self->hvcc_nal_len + ANEEXB_HEAD;
+    return TRUE;
+}
+
+static gboolean gst_vdec_h265_copy_info(GstMapInfo &src_info, GstMapInfo &dts_info, guint &copy_len)
+{
+    auto ret = memcpy_s(dts_info.data, dts_info.size, src_info.data, src_info.size);
+    g_return_val_if_fail(ret == EOK, FALSE);
+    copy_len = src_info.size;
+    return TRUE;
+}
+
+static gboolean gst_vdec_h265_parser(GstVdecBase *base, ParseMeta &meta)
+{
+    GstVdecH265 *self = GST_VDEC_H265(base);
+    g_return_val_if_fail(self != nullptr, FALSE);
+    gboolean ret = TRUE;
+    if (meta.is_codec_data) {
+        ret = gst_vdec_h265_parser_codec_data(self, meta.src_info, meta.dts_info, meta.copy_len);
+        self->is_hvcc = true;
+    } else if (self->is_hvcc) {
+        ret = gst_vdec_h265_parser_nalu(self, meta.src_info, meta.dts_info, meta.copy_len);
+    } else {
+        ret = gst_vdec_h265_copy_info(meta.src_info, meta.dts_info, meta.copy_len);
+    }
+    return ret;
+}
+
 static void gst_vdec_h265_init(GstVdecH265 *self)
 {
     GstVdecBase *base = GST_VDEC_BASE(self);
     base->compress_format = OHOS::Media::GstCompressionFormat::GST_HEVC;
+    self->is_hvcc = false;
 }
