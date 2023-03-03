@@ -13,22 +13,27 @@
 
 1.0 {
   global:
-    "*PlayerFactory*";
-    "*RecorderFactory*";
-    "*Format*";
-    "*AVSharedMemory*";
-    "*AVMetadataHelperFactory*";
-    "*RecorderProfilesFactory*";
-    "*VideoEncoderFactory*";
-    "*VideoDecoderFactory*";
-    "*AudioEncoderFactory*";
-    "*AudioDecoderFactory*";
-    "*AVCodecListFactory*";
-    "*VideoCaps*";
-    "*AudioCaps*";
-    "*AVCodecInfo*";
-    "*Error*";
-    "*ExtError*";
+    extern "C++" {
+      *OHOS::Media::PlayerFactory::CreatePlayer*;
+      *OHOS::Media::RecorderFactory::CreateRecorder*;
+      *OHOS::Media::VideoEncoderFactory::CreateBy*;
+      *OHOS::Media::VideoDecoderFactory::CreateBy*;
+      *OHOS::Media::AudioEncoderFactory::CreateBy*;
+      *OHOS::Media::AudioDecoderFactory::CreateBy*;
+      *OHOS::Media::AVMetadataHelperFactory::Create*;
+      *OHOS::Media::RecorderProfilesFactory::Create*;
+      *OHOS::Media::Format::*;
+      *OHOS::Media::VideoCaps::*;
+      *OHOS::Media::AudioCaps::*;
+      *OHOS::Media::AVCodecInfo::*;
+      *OHOS::Media::AVCodecListFactory::Create*;
+    };
+    "*MSErrorToString*";
+    "*MSExtErrorToString*";
+    "*MSErrorToExtError*";
+    "*MSExtErrorAPI9ToString*";
+    "*MSExtAVErrorToString*";
+    "*mem*";
   local:
     *;
 };

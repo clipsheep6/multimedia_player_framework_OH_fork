@@ -184,4 +184,5 @@ ohos_shared_library("media_client") {
   innerapi_tags = [ "platformsdk" ]
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"
+  version_script = "player_framework.versionscript"
 }
