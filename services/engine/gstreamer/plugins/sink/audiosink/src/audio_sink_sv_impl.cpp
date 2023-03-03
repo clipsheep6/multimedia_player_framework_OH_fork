@@ -256,7 +256,7 @@ int32_t AudioSinkSvImpl::Pause()
         LISTENER(
             bool ret = audioRenderer_->Pause();
             if (ret == false) {
-               MEDIA_LOGE("audio Renderer Pause failed!");
+                MEDIA_LOGE("audio Renderer Pause failed!");
             }
             CHECK_AND_RETURN_RET(ret == true, MSERR_AUD_RENDER_FAILED),
             "AudioRenderer::Pause",
