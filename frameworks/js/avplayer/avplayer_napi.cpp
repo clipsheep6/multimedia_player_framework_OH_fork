@@ -24,6 +24,8 @@
 #include "string_ex.h"
 #include "player_xcollie.h"
 
+using namespace OHOS::AudioStandard;
+
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerNapi"};
 }
@@ -1337,20 +1339,21 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
     (void)CommonNapi::GetPropertyInt32(env, args, "rendererFlags", rendererFlags);
     MEDIA_LOGI("content = %{public}d, usage = %{public}d, rendererFlags = %{public}d",
         content, usage, rendererFlags);
-    std::list<int32_t> contents = {
-        AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN, AudioStandard::ContentType::CONTENT_TYPE_SPEECH,
-        AudioStandard::ContentType::CONTENT_TYPE_MUSIC, AudioStandard::ContentType::CONTENT_TYPE_MOVIE,
-        AudioStandard::ContentType::CONTENT_TYPE_SONIFICATION, AudioStandard::ContentType::CONTENT_TYPE_RINGTONE
+    std::vector<int32_t> contents = {
+        CONTENT_TYPE_UNKNOWN, CONTENT_TYPE_SPEECH,
+        CONTENT_TYPE_MUSIC, CONTENT_TYPE_MOVIE,
+        CONTENT_TYPE_SONIFICATION, CONTENT_TYPE_RINGTONE,
+        CONTENT_TYPE_ULTRASONIC
     };
-    std::list<int32_t> usages = {
-        AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN, AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
-        AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION,
-        AudioStandard::StreamUsage::STREAM_USAGE_VOICE_ASSISTANT,
-        AudioStandard::StreamUsage::STREAM_USAGE_RANGING, AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION_RINGTONE
+    std::vector<int32_t> usages = {
+        STREAM_USAGE_UNKNOWN, STREAM_USAGE_MEDIA,
+        STREAM_USAGE_VOICE_COMMUNICATION, STREAM_USAGE_VOICE_ASSISTANT,
+        STREAM_USAGE_ALARM, STREAM_USAGE_NOTIFICATION_RINGTONE,
+        STREAM_USAGE_RANGING, STREAM_USAGE_ACCESSIBILITY,
+        STREAM_USAGE_SYSTEM
     };
     if (std::find(contents.begin(), contents.end(), content) == contents.end() ||
-        std::find(usages.begin(), usages.end(), usage) == usages.end() ||
-        rendererFlags != 0) {
+        std::find(usages.begin(), usages.end(), usage) == usages.end()) {
         return false;
     }
     jsPlayer->audioRendererInfo_ = AudioStandard::AudioRendererInfo {
