@@ -227,9 +227,6 @@ int32_t AudioSinkSvImpl::Start()
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     LISTENER(
         bool ret = audioRenderer_->Start();
-        if (ret == false) {
-            MEDIA_LOGE("audio Renderer Start failed!");
-        }
         CHECK_AND_RETURN_RET(ret == true, MSERR_AUD_RENDER_FAILED),
         "AudioRenderer::Start",
         PlayerXCollie::timerTimeout)
