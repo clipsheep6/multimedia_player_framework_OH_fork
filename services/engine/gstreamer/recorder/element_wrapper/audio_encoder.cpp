@@ -106,13 +106,10 @@ int32_t AudioEncoder::CheckConfigReady()
                 return MSERR_UNSUPPORT_AUD_PARAMS;
             }
 
-            if (setSampleRate_) {
-                std::vector<int32_t> sampleRate = (*iter).sampleRate;
-                auto sampleIter = find(sampleRate.cbegin(), sampleRate.cend(), sampleRate_);
-                if (sampleIter == sampleRate.cend()) {
-                    MEDIA_LOGE("Audio can not support sampleRate: %{public}d.", sampleRate_);
-                    return MSERR_UNSUPPORT_AUD_PARAMS;
-                }
+            std::vector<int32_t> sampleRate = (*iter).sampleRate;
+            if (setSampleRate_ && find(sampleRate.cbegin(), sampleRate.cend(), sampleRate_) == sampleRate.cend()) {
+                MEDIA_LOGE("Audio can not support sampleRate: %{public}d.", sampleRate_);
+                return MSERR_UNSUPPORT_AUD_PARAMS;
             }
 
             break;

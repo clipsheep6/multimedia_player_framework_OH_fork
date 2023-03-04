@@ -240,11 +240,11 @@ protected:
     }
 
     /**
-    * @brief Judge whether value is within the valid range
-    * @param range: Reasonable value range
-    * @param value: Value to be judged
-    * @return If the value is valid, return true, otherwise return false
-    */   
+     * @brief Judge whether value is within the valid range
+     * @param range: Reasonable value range
+     * @param value: Value to be judged
+     * @return If the value is valid, return true, otherwise return false
+     */
     bool CheckRangeValid(Range &range, int32_t value);
 
     friend class RecorderPipelineLinkHelper;

@@ -702,7 +702,8 @@ static void gst_consumer_surface_pool_get_dump_file(GstConsumerSurfacePool *pool
     }
 }
 
-static void gst_consumer_surface_pool_dump_data(FILE *dump_file, const void *addr, gint32 size, gint32 width, gint32 height)
+static void gst_consumer_surface_pool_dump_data(FILE *dump_file, const void *addr,
+    gint32 size, gint32 width, gint32 height)
 {
     g_return_if_fail(dump_file != nullptr && addr != nullptr);
     gint32 data_size = size;
@@ -737,7 +738,8 @@ static void gst_consumer_surface_pool_dump_surfacebuffer(GstConsumerSurfacePool 
         (void)extraData->ExtraGet("dataSize", data_size);
     }
 
-    gst_consumer_surface_pool_dump_data(pool->priv->dump_file, buffer->GetVirAddr(), data_size, buffer->GetWidth(), buffer->GetHeight());
+    gst_consumer_surface_pool_dump_data(pool->priv->dump_file, buffer->GetVirAddr(),
+        data_size, buffer->GetWidth(), buffer->GetHeight());
     return;
 }
 
