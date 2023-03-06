@@ -403,6 +403,7 @@ int32_t PlayBinCtrlerBase::SetAudioRendererInfo(const uint32_t rendererInfo, con
     rendererInfo_ = rendererInfo;
     rendererFlag_ = rendererFlag;
     if (audioSink_ != nullptr) {
+        MEDIA_LOGI("SetAudioRendererInfo to audio sink");
         g_object_set(audioSink_, "audio-renderer-desc", rendererInfo, nullptr);
         g_object_set(audioSink_, "audio-renderer-flag", rendererFlag, nullptr);
     }

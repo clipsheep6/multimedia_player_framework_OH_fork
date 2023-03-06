@@ -14,11 +14,13 @@
 import("//build/ohos.gni")
 import("//build/ohos/ace/ace.gni")
 import("//foundation/multimedia/player_framework/config.gni")
+import("./../../../multimedia_player_framework_aafwk.gni")
 
 group("napi_packages") {
   deps = []
   if (multimedia_player_framework_support_jsapi) {
     deps += [
+      "${multimedia_player_framework_path}/frameworks/js/ringtone_manager:systemsoundmanager",
       "//foundation/multimedia/player_framework/interfaces/kits/js:media",
       "//foundation/multimedia/player_framework/interfaces/kits/js:media_js",
     ]

@@ -24,7 +24,8 @@
         "SystemCapability.Multimedia.Media.VideoEncoder",
         "SystemCapability.Multimedia.Media.CodecBase",
         "SystemCapability.Multimedia.Media.AVPlayer",
-        "SystemCapability.Multimedia.Media.AVRecorder"
+        "SystemCapability.Multimedia.Media.AVRecorder",
+        "SystemCapability.MultiMedia.SystemSound.Core"
       ],
       "features": [
         "multimedia_player_framework_use_codec_plugins"
@@ -105,13 +106,13 @@
           },
           {
             "type": "none",
-            "name": "//foundation/multimedia/audio_framework/frameworks/native/systemsound:audio_ringtone_client",
+            "name": "//foundation/multimedia/player_framework/frameworks/native/system_sound:audio_ringtone_client",
             "header": {
               "header_files": [
                 "iringtone_player.h",
                 "iringtone_sound_manager.h"
               ],
-              "header_base": "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audioringtone/include"
+              "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/audio_ringtone/include"
             }
           }
         ],
