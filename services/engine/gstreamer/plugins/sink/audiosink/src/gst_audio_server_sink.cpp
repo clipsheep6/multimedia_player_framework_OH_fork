@@ -558,7 +558,7 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
                 /**
                  * When executing release task, call stop first.
                  * if report pause fail message, it will abort stop task. Then,
-                 * release task will freee resources. Due to stop failed, the plugin
+                 * release task will free resources. Due to stop failed, the plugin
                  * not stopped will use destoryed mutex. It will lead to service crash.
                  */
                 (void)sink->audio_sink->Pause();
