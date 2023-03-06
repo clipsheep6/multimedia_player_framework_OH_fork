@@ -37,7 +37,6 @@ config("media_capi_config") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec",
     "$MEDIA_ROOT_DIR/frameworks/native/capi/common",
     "$MEDIA_ROOT_DIR/services/utils/include",
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
   ]
 
   cflags = [
@@ -82,7 +81,10 @@ ohos_shared_library("native_media_core") {
     "//foundation/multimedia/player_framework/services/utils:media_format",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "graphic_standard:surface",
+    "hiviewdfx_hilog_native:libhilog"
+  ]
   output_extension = "so"
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"
@@ -186,13 +188,9 @@ ohos_shared_library("native_media_vdec") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec/native_video_decoder.cpp",
   ]
 
-  configs = [
-    ":media_capi_config",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
-  ]
+  configs = [ ":media_capi_config" ]
 
   deps = [
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_codecbase",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
@@ -201,7 +199,9 @@ ohos_shared_library("native_media_vdec") {
   external_deps = [
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
+    "graphic_standard:surface",
   ]
+
   output_extension = "so"
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"
@@ -221,13 +221,9 @@ ohos_shared_library("native_media_venc") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec/native_video_encoder.cpp",
   ]
 
-  configs = [
-    ":media_capi_config",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
-  ]
+  configs = [ ":media_capi_config" ]
 
   deps = [
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_codecbase",
     "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
@@ -236,6 +232,7 @@ ohos_shared_library("native_media_venc") {
   external_deps = [
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
+    "graphic_standard:surface",
   ]
   output_extension = "so"
   subsystem_name = "multimedia"

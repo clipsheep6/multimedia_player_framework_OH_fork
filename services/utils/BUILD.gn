@@ -37,10 +37,7 @@ ohos_static_library("media_format") {
 }
 
 config("media_service_utils_public_config") {
-  include_dirs = [
-    "include",
-    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
-  ]
+  include_dirs = [ "include" ]
 }
 
 ohos_shared_library("media_service_utils") {

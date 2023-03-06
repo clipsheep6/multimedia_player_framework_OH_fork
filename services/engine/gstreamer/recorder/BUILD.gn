@@ -79,11 +79,9 @@ ohos_static_library("media_engine_gst_recorder") {
     ":media_engine_gst_recorder_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils_public_config",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
   ]
 
   deps = [
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
@@ -91,7 +89,10 @@ ohos_static_library("media_engine_gst_recorder") {
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "graphic_standard:surface",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
 
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"
