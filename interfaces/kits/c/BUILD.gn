@@ -37,6 +37,7 @@ config("media_capi_config") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/avcodec",
     "$MEDIA_ROOT_DIR/frameworks/native/capi/common",
     "$MEDIA_ROOT_DIR/services/utils/include",
+    "//foundation/graphic/graphic_2d/frameworks/surface/include",
   ]
 
   cflags = [
