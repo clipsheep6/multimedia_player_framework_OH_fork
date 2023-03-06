@@ -528,11 +528,13 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
             {
                 std::unique_lock<std::mutex> lock(sink->mutex_);
                 g_return_val_if_fail(sink->audio_sink != nullptr, GST_STATE_CHANGE_FAILURE);
-                if (sink->audio_sink->Pause() != MSERR_OK) {
-                    GST_ERROR_OBJECT(sink, "audio sink Pause failed!");
-                    GST_ELEMENT_ERROR(sink, STREAM, FAILED, ("audio sink Pause failed!"), (NULL));
-                    return GST_STATE_CHANGE_FAILURE;
-                }
+                /**
+                 * When executing release task, call stop first.
+                 * if report pause fail message, it will abort stop task. Then,
+                 * release task will free resources. Due to stop failed, the plugin
+                 * not stopped will use destoryed mutex. It will lead to service crash.
+                 */
+                (void)sink->audio_sink->Pause();
             }
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
