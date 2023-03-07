@@ -574,7 +574,13 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
         MediaTrace::TraceBegin("PlayerServer::Seek", FAKE_POINTER(this));
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-        (void)currState->Seek(mSeconds, mode);
+        auto ret = currState->Seek(mSeconds, mode);
+        if (ret != MSERR_OK) {
+            Format format;
+            OnErrorMessage(MSERR_INVALID_OPERATION, "seek failed for some reason");
+            OnInfoNoChangeStatus(INFO_TYPE_SEEKDONE, mSeconds, format);
+            taskMgr_.MarkTaskDone();
+        }
     });
 
     auto cancelTask = std::make_shared<TaskHandler<void>>([this, mSeconds]() {
@@ -738,7 +744,13 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
     auto rateTask = std::make_shared<TaskHandler<void>>([this, mode]() {
         MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-        (void)currState->SetPlaybackSpeed(mode);
+        auto ret = currState->SetPlaybackSpeed(mode);
+        if (ret != MSERR_OK) {
+            Format format;
+            OnErrorMessage(MSERR_INVALID_OPERATION, "speed failed for some reason");
+            OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
+            taskMgr_.MarkTaskDone();
+        }
     });
 
     auto cancelTask = std::make_shared<TaskHandler<void>>([this, mode]() {
