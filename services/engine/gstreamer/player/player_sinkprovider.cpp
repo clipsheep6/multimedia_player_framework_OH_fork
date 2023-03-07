@@ -18,7 +18,6 @@
 #include "securec.h"
 #include "display_type.h"
 #include "param_wrapper.h"
-#include "surface_buffer_impl.h"
 #include "gst/video/gstvideometa.h"
 #include "media_log.h"
 #include "media_errors.h"

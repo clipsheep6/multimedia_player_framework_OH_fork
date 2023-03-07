@@ -54,7 +54,6 @@ config("media_engine_gst_avmeta_config") {
     "//foundation/graphic/standard/interfaces/innerkits/common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     "//drivers/peripheral/base",
     "//drivers/peripheral/display/interfaces/include",
     "//commonlibrary/c_utils/base/include",
@@ -90,7 +89,10 @@ ohos_static_library("media_engine_gst_avmeta") {
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "hiviewdfx_hilog_native:libhilog",
+    "multimedia_image_framework:image_native",
+  ]
 
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"

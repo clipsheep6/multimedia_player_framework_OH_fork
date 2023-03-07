@@ -52,12 +52,7 @@ config("media_engine_gst_player_config") {
     "../common/appsrc_engine",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/metadata",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/utils",
-    "//foundation/multimedia/audio_framework/frameworks/innerkitsimpl/common/include",
-    "//foundation/multimedia/audio_framework/interfaces/innerkits/native/audiocommon/include",
-    "//foundation/multimedia/audio_framework/interfaces/innerkits/native/audiomanager/include",
     "../plugins/common",
-    "//foundation/graphic/graphic_2d/frameworks/surface/include",
-    "//foundation/graphic/graphic_2d/utils/sync_fence/export",
     "//drivers/peripheral/audio/interfaces/include",
     "//drivers/peripheral/display/interfaces/include",
     "//third_party/gstreamer/gstreamer",
@@ -85,13 +80,11 @@ ohos_static_library("media_engine_gst_player") {
 
   configs = [
     ":media_engine_gst_player_config",
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils_public_config",
   ]
 
   deps = [
-    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
@@ -102,6 +95,7 @@ ohos_static_library("media_engine_gst_player") {
   ]
 
   external_deps = [
+    "graphic_standard:surface",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "multimedia_audio_framework:audio_client",

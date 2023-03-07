@@ -53,7 +53,6 @@ config("gst_mem_src_config") {
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/glib/gmodule",
-    "//foundation/graphic/graphic_2d/interfaces/innerkits/common",
     "//foundation/graphic/graphic_2d/utils/sync_fence/export",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
   ]
@@ -83,7 +82,6 @@ ohos_shared_library("gst_mem_src") {
   configs = [ ":gst_mem_src_config" ]
 
   deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common:gst_media_common",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
@@ -95,6 +93,7 @@ ohos_shared_library("gst_mem_src") {
   ]
 
   external_deps = [
+    "graphic_standard:surface",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
   ]

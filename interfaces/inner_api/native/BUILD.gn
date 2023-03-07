@@ -52,14 +52,8 @@ config("media_client_base_config") {
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/include",
     "$MEDIA_ROOT_DIR/services/utils/include",
-    "//base/hiviewdfx/hilog/interfaces/native/innerkits/include",
     "//utils/system/safwk/native/include",
-    "//third_party/bounds_checking_function/include",
     "//commonlibrary/c_utils/base/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiocommon/include",
-    "//foundation/multimedia/audio_framework/interfaces/kits/js/audio_capturer/include",
-    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiocapturer/include",
   ]
 
   cflags = [
