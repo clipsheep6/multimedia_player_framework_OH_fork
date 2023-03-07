@@ -35,9 +35,9 @@ protected:
 
 private:
     int32_t encoderFormat_;
-    int32_t sampleRate_;
-    int32_t channels_;
-    int32_t bitRate_;
+    int32_t sampleRate_ = 0;
+    int32_t channels_ = 0;
+    int32_t bitRate_ = 0;
     bool setChannels_ = false;
     bool setSampleRate_ = false;
     bool setBitRate_ = false;

@@ -36,11 +36,11 @@ private:
     std::string GetEncorderName(std::string_view mimeType);
     int32_t CreateMpegElement();
     int32_t CreateH264Element();
-    int32_t encoderFormat_;
-    int32_t bitRate_;
-    int32_t width_;
-    int32_t height_;
-    int32_t frameRate_;
+    int32_t encoderFormat_ = VideoCodecFormat::VIDEO_DEFAULT;
+    int32_t bitRate_ = 0;
+    int32_t width_ = 0;
+    int32_t height_ = 0;
+    int32_t frameRate_ = 0;
     bool setRectangle_ = false;
     bool setFrameRate_ = false;
     bool setBitRate_ = false;
