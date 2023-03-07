@@ -144,6 +144,7 @@ int32_t RecorderPipeline::Resume()
 int32_t RecorderPipeline::Stop(bool isDrainAll)
 {
     if (errorState_.load()) {
+        StopForErrorAct();
         return MSERR_INVALID_STATE;
     }
 
@@ -415,6 +416,19 @@ bool RecorderPipeline::CheckStopForError(const RecorderMessage &msg)
     return errorSources_.size() == desc_->srcElems.size();
 }
 
+void RecorderPipeline::StopForErrorAct()
+{
+    if (errorExcution) {
+        return;
+    }
+
+    (void)DoElemAction(&RecorderElement::Stop, false);
+    DrainBuffer(false);
+    (void)SyncWaitChangeState(GST_STATE_NULL);
+
+    errorExcution = true;
+}
+
 void RecorderPipeline::StopForError(const RecorderMessage &msg)
 {
     MEDIA_LOGE("Fatal error happened, stop recording. Error code: %{public}d, detail: %{public}d",
@@ -425,9 +439,7 @@ void RecorderPipeline::StopForError(const RecorderMessage &msg)
     gstPipeCond_.notify_all();
 
     auto stopforErrorTask = std::make_shared<TaskHandler<int32_t>>([this] {
-        (void)DoElemAction(&RecorderElement::Stop, false);
-        DrainBuffer(false);
-        (void)SyncWaitChangeState(GST_STATE_NULL);
+        StopForErrorAct();
         return MSERR_OK;
     });
 
