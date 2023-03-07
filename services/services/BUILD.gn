@@ -58,8 +58,6 @@ config("media_service_config") {
     "avcodeclist/server",
     "recorder_profiles/ipc",
     "recorder_profiles/server",
-    "//base/security/access_token/interfaces/innerkits/access_token/include",
-    "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/services/factory",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
@@ -67,7 +65,6 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/common",
     "//commonlibrary/c_utils/base/include",
-    "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
     "//third_party/glib/glibmemdfx",
@@ -153,19 +150,19 @@ ohos_shared_library("media_service") {
     "//third_party/libxml2:xml2",
   ]
 
-  if (multimedia_player_framework_support_video) {
-    configs += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface_public_config" ]
-    deps += [ "//foundation/graphic/graphic_2d/frameworks/surface:surface" ]
-  }
-
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "multimedia_image_framework:image_native",
     "safwk:system_ability_fwk",
   ]
+
+  if (multimedia_player_framework_support_video) {
+    external_deps += [ "graphic_standard:surface" ]
+  }
 
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"

@@ -51,7 +51,6 @@ config("gst_mem_sink_config") {
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/glib/gmodule",
-    "//foundation/graphic/graphic_2d/interfaces/innerkits/common",
     "//foundation/graphic/graphic_2d/utils/sync_fence/export",
     "//base/hiviewdfx/hisysevent/interfaces/native/innerkits/hisysevent/include",
   ]
@@ -88,7 +87,6 @@ ohos_shared_library("gst_mem_sink") {
   configs = [ ":gst_mem_sink_config" ]
 
   deps = [
-    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common:gst_media_common",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
@@ -100,7 +98,10 @@ ohos_shared_library("gst_mem_sink") {
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [ "init:libbegetutil" ]
+  external_deps = [
+    "graphic_standard:surface",
+    "init:libbegetutil",
+  ]
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"

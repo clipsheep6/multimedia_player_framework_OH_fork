@@ -105,7 +105,6 @@ ohos_shared_library("gst_codec_plugin_hdi") {
     "//drivers/hdf_core/adapter/uhdf2/ipc:libhdf_ipc_adapter",
     "//drivers/hdf_core/adapter/uhdf2/utils:libhdf_utils",
     "//drivers/peripheral/codec/hal:libcodec_hdi_omx_client",
-    "//foundation/graphic/graphic_2d:libsurface",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/engine/common:media_engine_common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common:gst_media_common",
@@ -115,7 +114,10 @@ ohos_shared_library("gst_codec_plugin_hdi") {
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
+  external_deps = [
+    "graphic_standard:surface",
+    "hiviewdfx_hilog_native:libhilog",
+  ]
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
