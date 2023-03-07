@@ -86,6 +86,7 @@ private:
     bool CheckStopForError(const RecorderMessage &msg);
     void StopForError(const RecorderMessage &msg);
     int32_t BypassOneSource(int32_t sourceId);
+    void StopForErrorAct();
 
     friend class RecorderPipelineLinkHelper;
 
@@ -103,6 +104,7 @@ private:
     bool isStarted_ = false;
     GstState currState_ = GST_STATE_NULL;
     std::atomic<bool> errorState_ { false };
+    bool errorExcution = false;
     std::set<bool> errorSources_;
 };
 } // namespace Media

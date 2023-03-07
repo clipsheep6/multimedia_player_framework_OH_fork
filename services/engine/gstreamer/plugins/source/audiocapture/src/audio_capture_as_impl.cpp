@@ -34,6 +34,15 @@ AudioCaptureAsImpl::AudioCaptureAsImpl()
 
 AudioCaptureAsImpl::~AudioCaptureAsImpl()
 {
+    if (captureLoop_ != nullptr && audioCacheCtrl_ != nullptr && captureLoop_->joinable()) {
+        MEDIA_LOGE("Clear thread resources");
+        curState_.store(RECORDER_INITIALIZED);
+        audioCacheCtrl_->pauseCond_.notify_all();
+        captureLoop_->join();
+        captureLoop_.reset();
+        captureLoop_ = nullptr;
+    }
+
     if (audioCapturer_ != nullptr) {
         (void)audioCapturer_->Release();
         audioCapturer_ = nullptr;
@@ -317,6 +326,7 @@ int32_t AudioCaptureAsImpl::StopAudioCapture()
         audioCacheCtrl_->pauseCond_.notify_all();
         captureLoop_->join();
         captureLoop_.reset();
+        captureLoop_ = nullptr;
     }
 
     audioCacheCtrl_->captureCond_.notify_all();
