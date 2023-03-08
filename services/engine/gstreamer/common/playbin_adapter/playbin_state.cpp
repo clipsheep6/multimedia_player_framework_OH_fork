@@ -644,11 +644,11 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
 
     GstState state = GST_STATE_NULL;
     gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
-    if (state == GST_STATE_PAUSED) {
+    if (state == GST_STATE_PAUSED) { // completed + seek + play
         GstStateChangeReturn ret;
         MEDIA_LOGI("completed->seek->play");
         return ChangePlayBinState(GST_STATE_PLAYING, ret);
-    } else {
+    } else { // completed + play
         ctrler_.isReplay_ = true;
         MEDIA_LOGI("completed->play");
         return ctrler_.SeekInternal(0, IPlayBinCtrler::PlayBinSeekMode::PREV_SYNC);
@@ -686,12 +686,14 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::SetRate(double rate)
     MEDIA_LOGI("completed->speed");
     GstState state = GST_STATE_NULL;
     gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
-    if (state == GST_STATE_PLAYING) {
-        GstStateChangeReturn ret;
-        MEDIA_LOGI("completed GST_STATE_PLAYING->GST_STATE_PAUSED");
-        (void)ChangePlayBinState(GST_STATE_PAUSED, ret);
+    if (state == GST_STATE_PAUSED) { // completed + seek + speed
+        ctrler_.SetRateInternal(rate);
+    } else { // completed + speed
+        ctrler_.rate_ = rate;
+        PlayBinMessage msg = { PLAYBIN_MSG_SPEEDDONE, 0, 0, rate };
+        ctrler_.ReportMessage(msg);
     }
-    return ctrler_.SetRateInternal(rate);
+    return MSERR_OK;
 }
 
 void PlayBinCtrlerBase::PlaybackCompletedState::ProcessStateChange(const InnerMessage &msg)
