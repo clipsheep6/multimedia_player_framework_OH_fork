@@ -109,6 +109,11 @@ int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
             std::shared_ptr<AutoRef> ref = event->callback_.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", event->callbackName_.c_str());
 
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_BREAK_LOG(scope != nullptr, "%{public}s scope is nullptr", event->callbackName_.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
             napi_value jsCallback = nullptr;
             napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_BREAK(nstatus == napi_ok && jsCallback != nullptr);
