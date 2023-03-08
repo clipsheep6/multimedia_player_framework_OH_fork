@@ -39,6 +39,12 @@ public:
             CHECK_AND_RETURN_LOG(ref != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
 
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
@@ -60,6 +66,12 @@ public:
             std::shared_ptr<AutoRef> ref = callback.lock();
             CHECK_AND_RETURN_LOG(ref != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -85,6 +97,12 @@ public:
             CHECK_AND_RETURN_LOG(ref != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
 
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
@@ -107,6 +125,12 @@ public:
             std::shared_ptr<AutoRef> ref = callback.lock();
             CHECK_AND_RETURN_LOG(ref != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -132,6 +156,12 @@ public:
             std::shared_ptr<AutoRef> ref = callback.lock();
             CHECK_AND_RETURN_LOG(ref != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -163,6 +193,12 @@ public:
             CHECK_AND_RETURN_LOG(ref != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
 
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
             CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
@@ -185,6 +221,12 @@ public:
             std::shared_ptr<AutoRef> ref = callback.lock();
             CHECK_AND_RETURN_LOG(ref != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
@@ -212,6 +254,12 @@ public:
             std::shared_ptr<AutoRef> ref = callback.lock();
             CHECK_AND_RETURN_LOG(ref != nullptr,
                 "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
 
             napi_value jsCallback = nullptr;
             napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
