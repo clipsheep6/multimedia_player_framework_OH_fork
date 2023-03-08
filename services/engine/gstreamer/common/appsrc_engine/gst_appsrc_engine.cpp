@@ -28,7 +28,7 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstAppsrcEngine"};
     constexpr int32_t AUDIO_DEFAULT_BUFFER_SIZE = 409600;
     constexpr int32_t VIDEO_DEFAULT_BUFFER_SIZE = 2048000;
-    constexpr int32_t PULL_SIZE = 81920;
+    constexpr uint32_t PULL_SIZE = 81920;
     constexpr int64_t UNKNOW_FILE_SIZE = -1;
     constexpr int32_t TIME_VAL_MS = 1000;
     constexpr int32_t TIME_VAL_US = 1000000;
@@ -336,7 +336,6 @@ int32_t GstAppsrcEngine::PullBuffer()
 {
     int32_t ret = MSERR_OK;
     while (ret == MSERR_OK) {
-        MEDIA_LOGD("PullBuffer loop");
         int32_t readSize;
         std::unique_lock<std::mutex> lock(mutex_);
         MEDIA_LOGD("free mem begin is: %{public}u, free mem end is: %{public}u", appSrcMem_->begin, appSrcMem_->end);
@@ -345,19 +344,20 @@ int32_t GstAppsrcEngine::PullBuffer()
             break;
         }
         CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr && appSrcMem_->mem != nullptr, MSERR_NO_MEMORY, "no mem");
-        int32_t pullSize = bufferSize_ - appSrcMem_->begin;
+        CHECK_AND_RETURN_RET_LOG(bufferSize_ > appSrcMem_->begin, MSERR_INVALID_VAL, "Get pullSize failed");
+        uint32_t pullSize = bufferSize_ - appSrcMem_->begin;
         pullSize = std::min(pullSize, PULL_SIZE);
         std::static_pointer_cast<AVDataSrcMemory>(appSrcMem_->mem)->SetOffset(appSrcMem_->begin);
         if (size_ == UNKNOW_FILE_SIZE) {
-            MEDIA_LOGD("ReadAt begin, offset is %{public}u, length is %{public}d", appSrcMem_->begin, pullSize);
+            MEDIA_LOGD("ReadAt begin, offset is %{public}u, length is %{public}u", appSrcMem_->begin, pullSize);
             readSize = dataSrc_->ReadAt(appSrcMem_->mem, pullSize);
         } else {
-            MEDIA_LOGD("ReadAt begin, offset is %{public}u, length is %{public}d, pos is %{public}" PRIu64 "",
+            MEDIA_LOGD("ReadAt begin, offset is %{public}u, length is %{public}u, pos is %{public}" PRIu64 "",
                 appSrcMem_->begin, pullSize, appSrcMem_->filePos);
             readSize = dataSrc_->ReadAt(appSrcMem_->mem, pullSize, appSrcMem_->filePos);
         }
         MEDIA_LOGD("ReadAt end");
-        if (readSize > pullSize) {
+        if (readSize > static_cast<int32_t>(pullSize)) {
             MEDIA_LOGE("PullBuffer loop end, readSize > length");
             ret = MSERR_INVALID_VAL;
         }
@@ -373,7 +373,7 @@ int32_t GstAppsrcEngine::PullBuffer()
                 noFreeBuffer_ = true;
             }
             noAvailableBuffer_ = false;
-            appSrcMem_->filePos += readSize;
+            appSrcMem_->filePos += static_cast<uint32_t>(readSize);
             timer_ = 0;
             MEDIA_LOGD("free mem begin update to %{public}u, filePos update to %{public}" PRIu64 "",
                 appSrcMem_->begin, appSrcMem_->filePos);
