@@ -155,10 +155,7 @@ ohos_shared_library("media_client") {
     ":media_client_ipc_config",
   ]
 
-  deps = [
-    "../../../services/utils:media_format",
-    "//third_party/bounds_checking_function:libsec_static",
-  ]
+  deps = [ "../../../services/utils:media_format" ]
 
   public_configs = [ ":media_public_config" ]
 
