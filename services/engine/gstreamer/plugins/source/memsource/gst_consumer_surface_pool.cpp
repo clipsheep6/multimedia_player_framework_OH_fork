@@ -22,6 +22,7 @@
 #include "media_log.h"
 #include "watchdog.h"
 #include "param_wrapper.h"
+#include "directory_ex.h"
 using namespace OHOS;
 
 #define gst_consumer_surface_pool_parent_class parent_class
@@ -55,7 +56,7 @@ struct _GstConsumerSurfacePoolPrivate {
     gboolean need_eos_buffer;
     gboolean is_first_buffer_in_for_trace;
     gboolean pause_data;
-    gboolean dump_data;
+    FILE *dump_file;
     GstElement *src;
     std::shared_ptr<PoolManager> poolMgr;
 };
@@ -102,7 +103,7 @@ static GstFlowReturn gst_consumer_surface_pool_get_surface_buffer(GstConsumerSur
     sptr<SurfaceBuffer> &surface_buffer, gint32 &fencefd);
 static void gst_consumer_surface_pool_release_surface_buffer(GstConsumerSurfacePool *pool,
     sptr<SurfaceBuffer> &surface_buffer, gint32 &fencefd);
-static void gst_consumer_surface_pool_get_dump_flag(GstConsumerSurfacePool *pool);
+static void gst_consumer_surface_pool_get_dump_file(GstConsumerSurfacePool *pool);
 static void gst_consumer_surface_pool_dump_surfacebuffer(GstConsumerSurfacePool *pool, sptr<SurfaceBuffer> &buffer);
 static void gst_consumer_surface_pool_dump_gstbuffer(GstConsumerSurfacePool *pool, GstBuffer *buf);
 
@@ -154,6 +155,9 @@ static void gst_consumer_surface_pool_finalize(GObject *obj)
     }
     g_mutex_clear(&priv->pool_lock);
     g_cond_clear(&priv->buffer_available_con);
+    if (priv->dump_file) {
+        (void)fclose(priv->dump_file);
+    }
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
 
@@ -474,8 +478,8 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
     g_cond_init(&priv->buffer_available_con);
     priv->src = nullptr;
     priv->poolMgr = nullptr;
-    priv->dump_data = FALSE;
-    gst_consumer_surface_pool_get_dump_flag(pool);
+    priv->dump_file = nullptr;
+    gst_consumer_surface_pool_get_dump_file(pool);
 }
 
 static void gst_consumer_surface_pool_buffer_available(GstConsumerSurfacePool *pool)
@@ -673,13 +677,12 @@ static void gst_consumer_surface_pool_release_surface_buffer(GstConsumerSurfaceP
     (void)priv->consumer_surface->ReleaseBuffer(surface_buffer, fencefd);
 }
 
-static void gst_consumer_surface_pool_get_dump_flag(GstConsumerSurfacePool *pool)
+static void gst_consumer_surface_pool_get_dump_file(GstConsumerSurfacePool *pool)
 {
     g_return_if_fail(pool != nullptr && pool->priv != nullptr);
     auto priv = pool->priv;
 
     std::string dump_enable;
-    priv->dump_data = FALSE;
     int32_t res = OHOS::system::GetStringParameter("sys.media.dump.surfacesrc.enable", dump_enable, "");
     if (res != 0 || dump_enable.empty()) {
         GST_DEBUG_OBJECT(pool, "sys.media.dump.surfacesrc.enable");
@@ -688,33 +691,55 @@ static void gst_consumer_surface_pool_get_dump_flag(GstConsumerSurfacePool *pool
     GST_DEBUG_OBJECT(pool, "sys.media.dump.surfacesrc.enable=%s", dump_enable.c_str());
 
     if (dump_enable == "true") {
-        priv->dump_data = TRUE;
+        std::string input_dump_file = "/data/media/surface_in" +
+            std::to_string(static_cast<int32_t>(FAKE_POINTER(pool))) + ".es_yuv";
+
+        priv->dump_file = fopen(input_dump_file.c_str(), "ab+");
+        if (priv->dump_file == nullptr) {
+            GST_ERROR_OBJECT(pool, "open file failed");
+            return;
+        }
     }
+}
+
+static void gst_consumer_surface_pool_dump_data(FILE *dump_file, const void *addr,
+    gint32 size, gint32 width, gint32 height)
+{
+    g_return_if_fail(dump_file != nullptr && addr != nullptr);
+    gint32 data_size = size;
+    
+    if (width != 0 && height != 0) {
+        // The size of non-es streams needs to be adjusted, only dump video data
+        gint32 rgbaSize = width * height * 4;   // rgba = w * h * 4
+        gint32 yuvSize = width * height * 3 / 2; // yuv = w * h * 3 / 2
+        if (size > rgbaSize) {
+            data_size = rgbaSize;
+        } else if (size > yuvSize) {
+            data_size = yuvSize;
+        }
+    }
+
+    (void)fwrite(addr, data_size, 1, dump_file);
+    (void)fflush(dump_file);
+    return;
 }
 
 static void gst_consumer_surface_pool_dump_surfacebuffer(GstConsumerSurfacePool *pool, sptr<SurfaceBuffer> &buffer)
 {
     g_return_if_fail(pool != nullptr && pool->priv != nullptr && buffer != nullptr);
 
-    if (pool->priv->dump_data == false) {
+    if (pool->priv->dump_file == nullptr) {
         return;
     }
 
-    const sptr<OHOS::BufferExtraData>& extraData = buffer->GetExtraData();
     gint32 data_size = 0;
+    const sptr<OHOS::BufferExtraData>& extraData = buffer->GetExtraData();
     if (extraData != nullptr) {
         (void)extraData->ExtraGet("dataSize", data_size);
     }
-    std::string input_dump_file = "/data/media/surface_in" +
-    std::to_string(static_cast<int32_t>(FAKE_POINTER(pool))) + ".es_yuv";
-    FILE *dump_file = fopen(input_dump_file.c_str(), "ab+");
-    if (dump_file == nullptr) {
-        GST_ERROR_OBJECT(pool, "open file failed");
-        return;
-    }
-    (void)fwrite(buffer->GetVirAddr(), data_size, 1, dump_file);
-    (void)fflush(dump_file);
-    (void)fclose(dump_file);
+
+    gst_consumer_surface_pool_dump_data(pool->priv->dump_file, buffer->GetVirAddr(),
+        data_size, buffer->GetWidth(), buffer->GetHeight());
     return;
 }
 
@@ -722,24 +747,16 @@ static void gst_consumer_surface_pool_dump_gstbuffer(GstConsumerSurfacePool *poo
 {
     g_return_if_fail(pool != nullptr && pool->priv != nullptr && buf != nullptr);
 
-    if (pool->priv->dump_data == false) {
+    if (pool->priv->dump_file == nullptr) {
         return;
     }
 
     GstBufferTypeMeta *meta = gst_buffer_get_buffer_type_meta(buf);
     g_return_if_fail(meta != nullptr);
-    std::string input_dump_file = "/data/media/surface_in" +
-        std::to_string(static_cast<int32_t>(FAKE_POINTER(pool))) + ".es_yuv";
-    FILE *dump_file = fopen(input_dump_file.c_str(), "ab+");
-    if (dump_file == nullptr) {
-        GST_ERROR_OBJECT(pool, "open file failed");
-        return;
-    }
     GstMapInfo info = GST_MAP_INFO_INIT;
     gst_buffer_map(buf, &info, GST_MAP_READ);
-    (void)fwrite(info.data, meta->length, 1, dump_file);
-    (void)fflush(dump_file);
+    gst_consumer_surface_pool_dump_data(pool->priv->dump_file, info.data,
+        static_cast<gint32>(meta->length), static_cast<gint32>(meta->width), static_cast<gint32>(meta->height));
     gst_buffer_unmap(buf, &info);
-    (void)fclose(dump_file);
     return;
 }
