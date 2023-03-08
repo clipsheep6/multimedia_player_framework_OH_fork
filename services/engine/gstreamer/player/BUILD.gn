@@ -98,7 +98,7 @@ ohos_static_library("media_engine_gst_player") {
     "graphic_standard:surface",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
-    "multimedia_audio_framework:audio_client",
+    "multimedia_audio_framework:audio_service_client",
   ]
 
   subsystem_name = "multimedia"
