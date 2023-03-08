@@ -33,7 +33,6 @@
     "*MSErrorToExtError*";
     "*MSExtErrorAPI9ToString*";
     "*MSExtAVErrorToString*";
-    "*mem*";
   local:
     *;
 };
