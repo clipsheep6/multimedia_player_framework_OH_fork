@@ -27,9 +27,7 @@
         "SystemCapability.Multimedia.Media.AVRecorder",
         "SystemCapability.MultiMedia.SystemSound.Core"
       ],
-      "features": [
-        "multimedia_player_framework_use_codec_plugins"
-      ],
+      "features": [],
       "adapted_system_type": [ "standard" ],
       "rom": "10000KB",
       "ram": "10000KB",
