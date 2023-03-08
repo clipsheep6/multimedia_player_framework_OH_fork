@@ -211,12 +211,12 @@ static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *s
     g_return_val_if_fail(meta != NULL, GST_FLOW_ERROR);
 
     meta->type = BUFFER_TYPE_HANDLE;
-    meta->bufLen = data_size;
-    meta->length = data_size;
+    meta->bufLen = static_cast<uint32_t>(data_size);
+    meta->length = static_cast<uint32_t>(data_size);
     meta->bufferFlag = end_of_stream ? BUFFER_FLAG_EOS : 0;
     meta->pixelFormat = surfacebuffer->GetFormat();
-    meta->width = surfacebuffer->GetWidth();
-    meta->height = surfacebuffer->GetHeight();
+    meta->width = static_cast<uint32_t>(surfacebuffer->GetWidth());
+    meta->height = static_cast<uint32_t>(surfacebuffer->GetHeight());
     meta->invalidpts = TRUE;
 
     GST_BUFFER_PTS(dts_buffer) = static_cast<uint64_t>(timestamp);

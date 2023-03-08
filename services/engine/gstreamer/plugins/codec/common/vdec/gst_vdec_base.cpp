@@ -1450,7 +1450,6 @@ static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
     width = &temp_width;
     gst_structure_set_value(structure, "width", height);
     gst_structure_set_value(structure, "height", width);
-    GST_DEBUG_OBJECT(structure, "after swap width and height, caps %" GST_PTR_FORMAT, caps);
     return caps;
 }
 
