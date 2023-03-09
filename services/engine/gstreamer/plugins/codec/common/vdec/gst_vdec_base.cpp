@@ -1627,7 +1627,14 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         GST_DEBUG_OBJECT(self, "finish hdi end");
     }
     g_mutex_unlock(&self->drain_lock);
+
+    // when change codec, need to stop current decoder for outstanding buffers
+    gst_buffer_pool_set_active(self->outpool, FALSE);
     GST_VIDEO_DECODER_STREAM_LOCK(self);
+    if (self->decoder != nullptr) {
+        (void)self->decoder->Flush(GST_CODEC_ALL);
+    }
+    gst_vdec_base_set_flushing(self, TRUE);
 
     return GST_FLOW_OK;
 }
