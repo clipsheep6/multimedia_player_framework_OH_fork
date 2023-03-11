@@ -1584,7 +1584,7 @@ static void gst_vdec_base_need_stop(GstVideoDecoder *decoder)
     GstPad *srcpad = GST_VIDEO_DECODER_SRC_PAD(self);
     if (gst_pad_get_task_state(pad) != GST_TASK_STARTED) {
         GST_DEBUG_OBJECT(self, "vdec not start yet");
-        return GST_FLOW_OK;
+        return;
     }
     // when change codec, need to stop current decoder for outstanding buffers
     GstPad *peer = gst_pad_get_peer (srcpad);
