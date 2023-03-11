@@ -1580,7 +1580,7 @@ static gboolean gst_vdec_base_set_format(GstVideoDecoder *decoder, GstVideoCodec
 static void gst_vdec_base_need_stop(GstVideoDecoder *decoder)
 {
     GstVdecBase *self = GST_VDEC_BASE(decoder);
-    g_return_if_fail(self != nullptr, GST_FLOW_ERROR);
+    g_return_if_fail(self != nullptr);
     GST_DEBUG_OBJECT(self, "Stop codec start");
     GstPad *srcpad = GST_VIDEO_DECODER_SRC_PAD(self);
     if (gst_pad_get_task_state(pad) != GST_TASK_STARTED) {
