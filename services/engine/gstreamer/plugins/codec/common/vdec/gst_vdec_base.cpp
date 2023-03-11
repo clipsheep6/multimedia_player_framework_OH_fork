@@ -1591,7 +1591,7 @@ static void gst_vdec_base_need_stop(GstVideoDecoder *decoder)
     GstPad *peer = gst_pad_get_peer (srcpad);
     GstPad *dpad = gst_ghost_pad_get_target(GST_GHOST_PAD_CAST(peer));
     GstEvent *stream_start = gst_pad_get_sticky_event (dpad, GST_EVENT_STREAM_START, 0);
-    // decodebin has next group
+    // call by gst_vdec_base_finish with eos, handle eos
     if (stream_start) {
         gst_event_unref (stream_start);
 
