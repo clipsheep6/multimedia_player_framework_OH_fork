@@ -95,6 +95,8 @@ ohos_shared_library("media") {
   }
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-std=c++17",
     "-fno-rtti",
     "-fno-exceptions",

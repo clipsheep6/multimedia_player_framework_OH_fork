@@ -17,6 +17,8 @@ config("gst_audio_capture_src_config") {
   visibility = [ ":*" ]
 
   cflags = [
+    "-fsanitize=cfi",
+    "-flto",
     "-fno-rtti",
     "-fno-exceptions",
     "-Wall",
