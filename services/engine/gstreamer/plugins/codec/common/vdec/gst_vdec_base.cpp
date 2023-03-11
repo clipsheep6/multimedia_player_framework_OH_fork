@@ -96,6 +96,8 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *klass)
     video_decoder_class->propose_allocation = gst_vdec_base_propose_allocation;
     element_class->change_state = gst_vdec_base_change_state;
 
+    g_mutex_init(&kclass->vdec_mutex);
+
     g_object_class_install_property(gobject_class, PROP_VENDOR,
         g_param_spec_pointer("vendor", "Vendor property", "Vendor property",
             (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
@@ -374,6 +376,10 @@ static gboolean gst_vdec_base_close(GstVideoDecoder *decoder)
     g_return_val_if_fail(self->decoder != nullptr, FALSE);
     self->decoder->Deinit();
     self->decoder = nullptr;
+    GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
+
+    // unlock vdec mutex for new codec start to negotiate
+    g_mutex_unlock(&kclass->vdec_mutex);
     return TRUE;
 }
 
@@ -1465,44 +1471,6 @@ static gboolean gst_vdec_base_set_format(GstVideoDecoder *decoder, GstVideoCodec
     return TRUE;
 }
 
-static void gst_vdec_base_need_stop(GstVideoDecoder *decoder)
-{
-    GstVdecBase *self = GST_VDEC_BASE(decoder);
-    g_return_if_fail(self != nullptr);
-    GstPad *srcpad = GST_VIDEO_DECODER_SRC_PAD(self);
-    if (gst_pad_get_task_state(srcpad) != GST_TASK_STARTED) {
-        GST_DEBUG_OBJECT(self, "vdec not start yet");
-        return;
-    }
-    // when change codec, need to stop current decoder for outstanding buffers
-    GstPad *peer = gst_pad_get_peer (srcpad);
-    GstPad *dpad = gst_ghost_pad_get_target(GST_GHOST_PAD_CAST(peer));
-    GstEvent *stream_start = gst_pad_get_sticky_event (dpad, GST_EVENT_STREAM_START, 0);
-    // call by gst_vdec_base_finish with eos, handle eos
-    if (stream_start) {
-        gst_event_unref (stream_start);
-
-        GST_DEBUG_OBJECT(self, "Stop decoder first for free output buffers to switch next groups");
-        gst_buffer_pool_set_active(self->outpool, FALSE);
-        GST_VIDEO_DECODER_STREAM_LOCK(self);
-        if (self->decoder != nullptr) {
-            (void)self->decoder->Flush(GST_CODEC_ALL);
-        }
-        gst_vdec_base_set_flushing(self, TRUE);
-
-        GST_VIDEO_DECODER_STREAM_UNLOCK(self);
-        gst_vdec_base_stop(decoder);
-        gst_vdec_base_close(decoder);
-        GST_DEBUG_OBJECT(self, "Stop codec success");
-    }
-    if (dpad) {
-        gst_object_unref(dpad);
-    }
-    if (peer) {
-        gst_object_unref(peer);
-    }
-}
-
 static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
 {
     GstVdecBase *self = GST_VDEC_BASE(decoder);
@@ -1547,9 +1515,10 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
     }
     g_mutex_unlock(&self->drain_lock);
 
-    gst_vdec_base_need_stop(decoder);
-
     GST_VIDEO_DECODER_STREAM_LOCK(self);
+
+    // need to stop old codec before new codec start to negotiate
+    g_mutex_lock(&kclass->vdec_mutex);
     return GST_FLOW_OK;
 }
 
@@ -1719,6 +1688,10 @@ static gboolean gst_vdec_base_decide_allocation(GstVideoDecoder *decoder, GstQue
     guint size = 0;
     guint min_buf = 0;
     guint max_buf = 0;
+
+    GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
+    g_mutex_lock(&kclass->vdec_mutex);
+
     gst_query_parse_allocation(query, &outcaps, nullptr);
     gst_video_info_init(&vinfo);
     if (outcaps != nullptr) {
@@ -1753,6 +1726,7 @@ static gboolean gst_vdec_base_decide_allocation(GstVideoDecoder *decoder, GstQue
         gst_object_unref(self->outpool);
         self->outpool = pool;
     }
+    g_mutex_unlock(&kclass->vdec_mutex);
     return TRUE;
 }
 

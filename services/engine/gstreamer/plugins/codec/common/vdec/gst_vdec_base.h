@@ -125,6 +125,7 @@ struct _GstVdecBaseClass {
         GstBuffer *buffer, bool &ready_push, bool is_finish);
     void (*flush_cache_slice_buffer)(GstVdecBase *self);
     gboolean (*input_need_copy)();
+    GMutex vdec_mutex;
 };
 
 GST_API_EXPORT GType gst_vdec_base_get_type(void);
