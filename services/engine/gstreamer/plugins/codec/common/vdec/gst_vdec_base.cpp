@@ -105,6 +105,8 @@ static void gst_vdec_base_class_init(GstVdecBaseClass *kclass)
     video_decoder_class->propose_allocation = gst_vdec_base_propose_allocation;
     element_class->change_state = gst_vdec_base_change_state;
 
+    g_mutex_init(&kclass->vdec_mutex);
+
     gst_vdec_base_class_install_property(gobject_class);
 
     signals[SIGNAL_CAPS_FIX_ERROR] =
@@ -412,6 +414,10 @@ static gboolean gst_vdec_base_close(GstVideoDecoder *decoder)
     g_return_val_if_fail(self->decoder != nullptr, FALSE);
     self->decoder->Deinit();
     self->decoder = nullptr;
+    GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
+
+    // unlock vdec mutex for new codec start to negotiate
+    g_mutex_unlock(&kclass->vdec_mutex);
     return TRUE;
 }
 
@@ -1594,7 +1600,7 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         return GST_FLOW_ERROR;
     }
     GST_DEBUG_OBJECT(self, "Waiting until codec is drained");
-    gint64 wait_until = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
+    gint64 wait_until = g_get_monotonic_time() + G_TIME_SPAN_SECOND * 2;
     if (!g_cond_wait_until(&self->drain_cond, &self->drain_lock, wait_until)) {
         GST_ERROR_OBJECT(self, "Drain timed out");
     } else {
@@ -1603,6 +1609,8 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
     g_mutex_unlock(&self->drain_lock);
     GST_VIDEO_DECODER_STREAM_LOCK(self);
 
+    // need to stop old codec before new codec start to negotiate
+    g_mutex_lock(&kclass->vdec_mutex);
     return GST_FLOW_OK;
 }
 
@@ -1772,6 +1780,10 @@ static gboolean gst_vdec_base_decide_allocation(GstVideoDecoder *decoder, GstQue
     guint size = 0;
     guint min_buf = 0;
     guint max_buf = 0;
+
+    GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
+    g_mutex_lock(&kclass->vdec_mutex);
+
     gst_query_parse_allocation(query, &outcaps, nullptr);
     gst_video_info_init(&vinfo);
     if (outcaps != nullptr) {
@@ -1804,6 +1816,8 @@ static gboolean gst_vdec_base_decide_allocation(GstVideoDecoder *decoder, GstQue
     GST_DEBUG_OBJECT(decoder, "Pool ref %u", (reinterpret_cast<GObject*>(pool)->ref_count));
     gst_object_unref(self->outpool);
     self->outpool = pool;
+
+    g_mutex_unlock(&kclass->vdec_mutex);
     return TRUE;
 }
 
