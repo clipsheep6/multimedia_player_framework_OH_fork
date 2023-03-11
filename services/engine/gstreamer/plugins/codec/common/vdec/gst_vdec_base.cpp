@@ -1581,7 +1581,6 @@ static void gst_vdec_base_need_stop(GstVideoDecoder *decoder)
 {
     GstVdecBase *self = GST_VDEC_BASE(decoder);
     g_return_if_fail(self != nullptr);
-    GST_DEBUG_OBJECT(self, "Stop codec start");
     GstPad *srcpad = GST_VIDEO_DECODER_SRC_PAD(self);
     if (gst_pad_get_task_state(pad) != GST_TASK_STARTED) {
         GST_DEBUG_OBJECT(self, "vdec not start yet");
@@ -1606,6 +1605,7 @@ static void gst_vdec_base_need_stop(GstVideoDecoder *decoder)
         GST_VIDEO_DECODER_STREAM_UNLOCK(self);
         gst_vdec_base_stop(decoder);
         gst_vdec_base_close(decoder);
+        GST_DEBUG_OBJECT(self, "Stop codec success");
     }
     if (dpad) {
         gst_object_unref(dpad);
