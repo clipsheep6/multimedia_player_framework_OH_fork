@@ -286,6 +286,7 @@ void GstMsgProcessor::ProcessGstMessage(GstMessage &msg)
         return; // ignore.
     }
 
+    // Customized messages(INNER_MSG_BUFFERING_USED_MQ_NUM), no interception required
     if (innerMsg.type == InnerMsgType::INNER_MSG_BUFFERING_USED_MQ_NUM ||
         innerMsg.type == InnerMsgType::INNER_MSG_ERROR) {
         notifier_(innerMsg);
