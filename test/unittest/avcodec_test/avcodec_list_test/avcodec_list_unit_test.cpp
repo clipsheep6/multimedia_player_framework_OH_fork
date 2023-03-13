@@ -462,7 +462,7 @@ void AVCodecListUnitTest::CheckAVEncAAC(const std::shared_ptr<AudioCapsMock> &au
     EXPECT_EQ(0, audioCodecCaps->IsHardwareAccelerated());
     EXPECT_EQ(1, audioCodecCaps->IsSoftwareOnly());
     EXPECT_EQ(0, audioCodecCaps->IsVendor());
-    EXPECT_EQ(1, audioCaps->GetSupportedBitrate().minVal);
+    EXPECT_EQ(8000, audioCaps->GetSupportedBitrate().minVal);  // 8000: supported min bitrate
     EXPECT_EQ(MAX_AUDIO_BITRATE, audioCaps->GetSupportedBitrate().maxVal);
     EXPECT_EQ(1, audioCaps->GetSupportedChannel().minVal);
     EXPECT_EQ(MAX_CHANNEL_COUNT, audioCaps->GetSupportedChannel().maxVal);
