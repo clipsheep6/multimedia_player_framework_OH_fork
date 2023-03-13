@@ -17,6 +17,7 @@
 #define GST_CONSUMER_SURFACE_ALLOCATOR_H
 
 #include <gst/gst.h>
+#include "iconsumer_surface.h"
 #include "surface.h"
 
 G_BEGIN_DECLS
