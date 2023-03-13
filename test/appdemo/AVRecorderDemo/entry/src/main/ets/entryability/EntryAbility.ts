@@ -38,21 +38,6 @@ export default class EntryAbility extends Ability {
         hilog.isLoggable(0x0000, 'testTag', hilog.LogLevel.INFO);
         hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onWindowStageCreate');
 
-//        // 申请权限
-//        let array: Array<string> = [
-//            'ohos.permission.MEDIA_LOCATION',
-//            'ohos.permission.READ_MEDIA',
-//            'ohos.permission.WRITE_MEDIA',
-//            'ohos.permission.CAMERA',
-//            'ohos.permission.MICROPHONE',
-//        ]
-//        this.context.requestPermissionsFromUser(array).then(function(data) {
-//            console.log("data permissions:" + data.permissions);
-//            console.log("data result:" + data.authResults);
-//        }, (err) => {
-//            console.error("data result:" + err.code);
-//        })
-
         windowStage.loadContent("pages/ListPage", (err, data) => {
             if (err.code) {
                 hilog.isLoggable(0x0000, 'testTag', hilog.LogLevel.ERROR);
