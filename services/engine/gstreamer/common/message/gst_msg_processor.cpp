@@ -286,7 +286,10 @@ void GstMsgProcessor::ProcessGstMessage(GstMessage &msg)
         return; // ignore.
     }
 
-    if (innerMsg.type != InnerMsgType::INNER_MSG_ERROR) {
+    if (innerMsg.type == InnerMsgType::INNER_MSG_BUFFERING_USED_MQ_NUM ||
+        innerMsg.type == InnerMsgType::INNER_MSG_ERROR) {
+        notifier_(innerMsg);
+    } else {
         gchar *srcName = GST_OBJECT_NAME(GST_MESSAGE_SRC(&msg));
         if (srcName == nullptr) {
             return;
@@ -300,8 +303,6 @@ void GstMsgProcessor::ProcessGstMessage(GstMessage &msg)
                 return;
             }
         }
-    } else {
-        notifier_(innerMsg);
     }
 }
 } // namespace Media
