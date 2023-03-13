@@ -32,6 +32,7 @@ static gboolean gst_buffer_type_meta_init(GstMeta *meta, gpointer params, GstBuf
     buffer_meta->pixelFormat = 0;
     buffer_meta->width = 0;
     buffer_meta->height = 0;
+    buffer_meta->invalidpts = FALSE;
 
     return TRUE;
 }
@@ -75,6 +76,7 @@ static gboolean gst_buffer_type_meta_transform(GstBuffer *dest, GstMeta *meta,
             dMeta->pixelFormat = sMeta->pixelFormat;
             dMeta->width = sMeta->width;
             dMeta->height = sMeta->height;
+            dMeta->invalidpts = sMeta->invalidpts;
         }
     } else {
         return FALSE;
