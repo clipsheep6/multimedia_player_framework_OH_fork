@@ -249,6 +249,7 @@ void PlayBinCtrlerBase::BaseState::HandleBufferingTime(const InnerMessage &msg)
 void PlayBinCtrlerBase::BaseState::HandleUsedMqNum(const InnerMessage &msg)
 {
     uint32_t usedMqNum = static_cast<uint32_t>(msg.detail1);
+    MEDIA_LOGI("HandleUsedMqNum usedMqNum %{public}u", usedMqNum);
     PlayBinMessage playBinMsg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BUFFERING_USED_MQ_NUM, 0, usedMqNum };
     ctrler_.ReportMessage(playBinMsg);
 }
