@@ -77,7 +77,7 @@
                 <Item codecType="AUDIO_ENCODER"/>
                 <Item mimeType="audio/mp4a-latm"/>
                 <Item isVendor="false"/>
-                <Item bitrate="1-384000"/>
+                <Item bitrate="8000-384000"/>
                 <Item channels="1-2"/>
                 <Item format="S32LE"/>
                 <Item mpegVersion="4"/>
