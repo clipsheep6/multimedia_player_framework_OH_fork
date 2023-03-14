@@ -1050,7 +1050,7 @@ void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
 
     // stop current codec before new codec start to negotiate
     if (IsVideoDecoder(elem)) {
-        g_object_set(&elem, "codec_change", TRUE, nullptr);
+        g_object_set(&elem, "codec-change", TRUE, nullptr);
     }
 
     decltype(elemUnSetupListener_) listener = nullptr;
