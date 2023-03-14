@@ -210,7 +210,6 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             if (self->decoder != nullptr) {
                 (void)self->decoder->Flush(GST_CODEC_ALL);
             }
-            // gst_vdec_base_set_flushing(self, TRUE);
 
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
             gst_vdec_base_stop(GST_VIDEO_DECODER(self));
@@ -1637,7 +1636,7 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         return GST_FLOW_ERROR;
     }
     GST_DEBUG_OBJECT(self, "Waiting until codec is drained");
-    gint64 wait_until = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
+    gint64 wait_until = g_get_monotonic_time() + G_TIME_SPAN_SECOND * 2;
     if (!g_cond_wait_until(&self->drain_cond, &self->drain_lock, wait_until)) {
         GST_ERROR_OBJECT(self, "Drain timed out");
     } else {

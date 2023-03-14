@@ -1048,9 +1048,9 @@ void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
 {
     MEDIA_LOGD("element unsetup: %{public}s", ELEM_NAME(&elem));
 
+    // stop current codec before new codec start to negotiate
     if (IsVideoDecoder(elem)) {
-        g_object_set(&elem, "need-stop", "TRUE", nullptr);
-        // (void)gst_element_set_state(&elem, GST_STATE_NULL);
+        g_object_set(&elem, "need-stop", TRUE, nullptr);
     }
 
     decltype(elemUnSetupListener_) listener = nullptr;
