@@ -205,8 +205,10 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             break;
         case PROP_CODEC_CHANGE:
             self->codec_change.store(g_value_get_boolean(value));
-            self->decoder->Stop();
-            (void)self->decoder->FreeOutputBuffers();
+            if (self->decoder != nullptr) {
+                self->decoder->Stop();
+                (void)self->decoder->FreeOutputBuffers();
+            }
             break;
         default:
             break;
