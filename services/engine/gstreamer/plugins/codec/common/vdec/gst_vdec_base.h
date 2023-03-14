@@ -127,6 +127,7 @@ struct _GstVdecBase {
     gboolean player_mode;
     gboolean is_support_swap_width_height;
     gboolean codec_data_update;
+    gboolean need_stop;
     GstBuffer *codec_data;
 };
 

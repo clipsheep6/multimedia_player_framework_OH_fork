@@ -204,16 +204,9 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             self->player_mode = g_value_get_boolean(value);
             break;
         case PROP_NEED_STOP:
-            GST_DEBUG_OBJECT(self, "Stop decoder first for free output buffers to switch next groups");
-            gst_buffer_pool_set_active(self->outpool, FALSE);
-            GST_VIDEO_DECODER_STREAM_LOCK(self);
-            if (self->decoder != nullptr) {
-                (void)self->decoder->Flush(GST_CODEC_ALL);
-            }
-
-            GST_VIDEO_DECODER_STREAM_UNLOCK(self);
-            gst_vdec_base_stop(GST_VIDEO_DECODER(self));
-            gst_vdec_base_close(GST_VIDEO_DECODER(self));
+            self->need_stop = g_value_get_boolean(value);
+            self->decoder->Stop();
+            (void)self->decoder->FreeOutputBuffers();
             break;
         default:
             break;
@@ -277,6 +270,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->has_set_format = FALSE;
     self->player_mode = FALSE;
     self->is_support_swap_width_height = FALSE;
+    self->need_stop = FALSE;
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -515,8 +509,11 @@ static gboolean gst_vdec_base_stop(GstVideoDecoder *decoder)
     g_cond_broadcast(&self->drain_cond);
     g_mutex_unlock(&self->drain_lock);
 
-    gint ret = self->decoder->Stop();
-    (void)gst_codec_return_is_ok(self, ret, "Stop", TRUE);
+    gint ret = -1;
+    if (!self->need_stop) {
+        ret = self->decoder->Stop();
+        (void)gst_codec_return_is_ok(self, ret, "Stop", TRUE);
+    }
     if (self->input_state) {
         gst_video_codec_state_unref(self->input_state);
     }
@@ -529,8 +526,10 @@ static gboolean gst_vdec_base_stop(GstVideoDecoder *decoder)
     gst_pad_stop_task(GST_VIDEO_DECODER_SRC_PAD(decoder));
     ret = self->decoder->FreeInputBuffers();
     (void)gst_codec_return_is_ok(self, ret, "FreeInput", TRUE);
-    ret = self->decoder->FreeOutputBuffers();
-    (void)gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE);
+    if (!self->need_stop) {
+        ret = self->decoder->FreeOutputBuffers();
+        (void)gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE);
+    }
     if (self->inpool) {
         gst_object_unref(self->inpool);
         self->inpool = nullptr;
