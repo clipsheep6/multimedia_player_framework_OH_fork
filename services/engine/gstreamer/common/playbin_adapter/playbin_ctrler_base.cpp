@@ -962,7 +962,7 @@ void PlayBinCtrlerBase::OnSourceSetup(const GstElement *playbin, GstElement *src
     }
 }
 
-bool PlayBinCtrlerBase::OnVideoDecoderSetup(GstElement &elem)
+bool PlayBinCtrlerBase::IsVideoDecoder(GstElement &elem)
 {
     const gchar *metadata = gst_element_get_metadata(&elem, GST_ELEMENT_METADATA_KLASS);
     if (metadata == nullptr) {
@@ -1016,7 +1016,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
     // limit to the g-signal, send this notification at this thread, do not change the work thread.
     // otherwise ,the avmetaengine will work improperly.
 
-    if (OnVideoDecoderSetup(elem) || strncmp(ELEM_NAME(&elem), "multiqueue", strlen("multiqueue")) == 0 ||
+    if (IsVideoDecoder(elem) || strncmp(ELEM_NAME(&elem), "multiqueue", strlen("multiqueue")) == 0 ||
         strncmp(ELEM_NAME(&elem), "qtdemux", strlen("qtdemux")) == 0) {
         MEDIA_LOGD("add msgfilter element: %{public}s", ELEM_NAME(&elem));
         msgProcessor_->AddMsgFilter(ELEM_NAME(&elem));
@@ -1047,6 +1047,11 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
 {
     MEDIA_LOGD("element unsetup: %{public}s", ELEM_NAME(&elem));
+
+    if (IsVideoDecoder(elem)) {
+        g_object_set(&elem, "need-stop", "TRUE", nullptr);
+        // (void)gst_element_set_state(&elem, GST_STATE_NULL);
+    }
 
     decltype(elemUnSetupListener_) listener = nullptr;
     {

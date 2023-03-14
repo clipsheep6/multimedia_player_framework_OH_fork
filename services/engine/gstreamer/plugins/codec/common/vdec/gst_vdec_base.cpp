@@ -70,6 +70,7 @@ enum {
     PROP_ENABLE_SLICE_CAT,
     PROP_SEEK,
     PROP_PLAYER_MODE,
+    PROP_NEED_STOP,
 };
 
 enum {
@@ -152,6 +153,10 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
     g_object_class_install_property(gobject_class, PROP_SEEK,
         g_param_spec_boolean("seeking", "Seeking", "Whether the decoder is in seek",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_NEED_STOP,
+    g_param_spec_boolean("need-stop", "Need Stop", "Whether the decoder need stop",
+        FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -198,6 +203,18 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
         case PROP_PLAYER_MODE:
             self->player_mode = g_value_get_boolean(value);
             break;
+        case PROP_NEED_STOP:
+            GST_DEBUG_OBJECT(self, "Stop decoder first for free output buffers to switch next groups");
+            gst_buffer_pool_set_active(self->outpool, FALSE);
+            GST_VIDEO_DECODER_STREAM_LOCK(self);
+            if (self->decoder != nullptr) {
+                (void)self->decoder->Flush(GST_CODEC_ALL);
+            }
+            // gst_vdec_base_set_flushing(self, TRUE);
+
+            GST_VIDEO_DECODER_STREAM_UNLOCK(self);
+            gst_vdec_base_stop(GST_VIDEO_DECODER(self));
+            gst_vdec_base_close(GST_VIDEO_DECODER(self));
         default:
             break;
     }
