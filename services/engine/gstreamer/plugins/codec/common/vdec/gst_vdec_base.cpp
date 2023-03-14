@@ -215,6 +215,7 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
             gst_vdec_base_stop(GST_VIDEO_DECODER(self));
             gst_vdec_base_close(GST_VIDEO_DECODER(self));
+            break;
         default:
             break;
     }
