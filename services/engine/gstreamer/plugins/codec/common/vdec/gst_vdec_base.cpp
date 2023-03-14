@@ -155,8 +155,8 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_CODEC_CHANGE,
-    g_param_spec_boolean("codec_change", "Codec change", "Whether the decoder need stop for new decoder",
-        FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+        g_param_spec_boolean("codec_change", "Codec change", "Whether the decoder need stop for new decoder",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
