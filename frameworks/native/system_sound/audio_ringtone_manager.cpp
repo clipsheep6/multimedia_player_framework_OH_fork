@@ -402,8 +402,7 @@ std::string RingtonePlayer::GetTitle()
 {
     MEDIA_LOGI("RingtonePlayer::%{public}s", __func__);
     std::string uri = audioRingtoneMgr_.GetSystemRingtoneUri(context_, type_);
-    int leftIndex = uri.find_last_of("/");
-    return uri.substr(leftIndex + 1);
+    return uri.substr(uri.find_last_of("/") + 1);
 }
 int32_t RingtonePlayer::SetRingtonePlayerInterruptCallback(
     const std::shared_ptr<RingtonePlayerInterruptCallback> &interruptCallback)

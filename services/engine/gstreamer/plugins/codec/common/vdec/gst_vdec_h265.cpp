@@ -81,7 +81,8 @@ static gboolean gst_vdec_h265_parser_codec_data(GstVdecH265 *self, GstMapInfo &s
             src_offset += len;
         }
     }
-    copy_len = dts_offset;
+    g_return_val_if_fail(dts_offset >= 0, FALSE);
+    copy_len = static_cast<guint>(dts_offset);
 
     return TRUE;
 }
@@ -96,7 +97,7 @@ static gboolean gst_vdec_h265_parser_nalu(GstVdecH265 *self, GstMapInfo &src_inf
     auto ret = memcpy_s(dts_info.data + ANEEXB_HEAD, dts_info.size - ANEEXB_HEAD,
         src_info.data + self->hvcc_nal_len, src_info.size - self->hvcc_nal_len);
     g_return_val_if_fail(ret == EOK, FALSE);
-    copy_len = src_info.size - self->hvcc_nal_len + ANEEXB_HEAD;
+    copy_len = src_info.size - static_cast<guint>(self->hvcc_nal_len) + ANEEXB_HEAD;
     return TRUE;
 }
 
