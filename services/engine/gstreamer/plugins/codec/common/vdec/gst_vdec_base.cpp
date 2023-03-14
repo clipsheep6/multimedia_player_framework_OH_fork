@@ -70,7 +70,7 @@ enum {
     PROP_ENABLE_SLICE_CAT,
     PROP_SEEK,
     PROP_PLAYER_MODE,
-    PROP_NEED_STOP,
+    PROP_CODEC_CHANGE,
 };
 
 enum {
@@ -154,7 +154,7 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
         g_param_spec_boolean("seeking", "Seeking", "Whether the decoder is in seek",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobject_class, PROP_NEED_STOP,
+    g_object_class_install_property(gobject_class, PROP_CODEC_CHANGE,
     g_param_spec_boolean("need-stop", "Need Stop", "Whether the decoder need stop",
         FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 }
@@ -203,8 +203,8 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
         case PROP_PLAYER_MODE:
             self->player_mode = g_value_get_boolean(value);
             break;
-        case PROP_NEED_STOP:
-            self->need_stop = g_value_get_boolean(value);
+        case PROP_CODEC_CHANGE:
+            self->codec_change.store(g_value_get_boolean(value));
             self->decoder->Stop();
             (void)self->decoder->FreeOutputBuffers();
             break;
@@ -270,7 +270,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->has_set_format = FALSE;
     self->player_mode = FALSE;
     self->is_support_swap_width_height = FALSE;
-    self->need_stop = FALSE;
+    self->codec_change = FALSE;
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -510,7 +510,7 @@ static gboolean gst_vdec_base_stop(GstVideoDecoder *decoder)
     g_mutex_unlock(&self->drain_lock);
 
     gint ret = -1;
-    if (!self->need_stop) {
+    if (!self->codec_change) {
         ret = self->decoder->Stop();
         (void)gst_codec_return_is_ok(self, ret, "Stop", TRUE);
     }
@@ -526,7 +526,7 @@ static gboolean gst_vdec_base_stop(GstVideoDecoder *decoder)
     gst_pad_stop_task(GST_VIDEO_DECODER_SRC_PAD(decoder));
     ret = self->decoder->FreeInputBuffers();
     (void)gst_codec_return_is_ok(self, ret, "FreeInput", TRUE);
-    if (!self->need_stop) {
+    if (!self->codec_change) {
         ret = self->decoder->FreeOutputBuffers();
         (void)gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE);
     }
