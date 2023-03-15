@@ -204,11 +204,13 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             self->player_mode = g_value_get_boolean(value);
             break;
         case PROP_CODEC_CHANGE:
-            self->codec_change.store(g_value_get_boolean(value));
-            if (self->decoder != nullptr) {
+            g_mutex_lock(&self->codec_change_mutex);
+            self->codec_change = g_value_get_boolean(value);
+            if (self->decoder != nullptr && self->decoder_start) {
                 self->decoder->Stop();
                 (void)self->decoder->FreeOutputBuffers();
             }
+            g_mutex_unlock(&self->codec_change_mutex);
             break;
         default:
             break;
@@ -273,6 +275,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->player_mode = FALSE;
     self->is_support_swap_width_height = FALSE;
     self->codec_change = FALSE;
+    g_mutex_init(&self->codec_change_mutex);
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -314,6 +317,7 @@ static void gst_vdec_base_finalize(GObject *object)
     g_mutex_clear(&self->drain_lock);
     g_cond_clear(&self->drain_cond);
     g_mutex_clear(&self->lock);
+    g_mutex_clear(&self->codec_change_mutex);
     if (self->input.allocator) {
         gst_object_unref(self->input.allocator);
         self->input.allocator = nullptr;
@@ -474,7 +478,6 @@ static void gst_vdec_base_stop_after(GstVdecBase *self)
     self->prepared = FALSE;
     self->input.first_frame = TRUE;
     self->output.first_frame = TRUE;
-    self->decoder_start = FALSE;
     self->pre_init_pool = FALSE;
     self->performance_mode = FALSE;
     self->resolution_changed = FALSE;
@@ -511,6 +514,7 @@ static gboolean gst_vdec_base_stop(GstVideoDecoder *decoder)
     g_cond_broadcast(&self->drain_cond);
     g_mutex_unlock(&self->drain_lock);
 
+    g_mutex_lock(&self->codec_change_mutex);
     gint ret = -1;
     if (!self->codec_change) {
         ret = self->decoder->Stop();
@@ -532,6 +536,8 @@ static gboolean gst_vdec_base_stop(GstVideoDecoder *decoder)
         ret = self->decoder->FreeOutputBuffers();
         (void)gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE);
     }
+    self->decoder_start = FALSE;
+    g_mutex_unlock(&self->codec_change_mutex);
     if (self->inpool) {
         gst_object_unref(self->inpool);
         self->inpool = nullptr;

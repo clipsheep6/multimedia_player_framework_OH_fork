@@ -18,7 +18,6 @@
 
 #include <vector>
 #include <list>
-#include <atomic>
 #include <gst/video/gstvideodecoder.h>
 #include "gst_shmem_allocator.h"
 #include "gst_shmem_pool.h"
@@ -128,7 +127,8 @@ struct _GstVdecBase {
     gboolean player_mode;
     gboolean is_support_swap_width_height;
     gboolean codec_data_update;
-    std::atomic<gboolean> codec_change;
+    gboolean codec_change;
+    GMutex codec_change_mutex;
     GstBuffer *codec_data;
 };
 
