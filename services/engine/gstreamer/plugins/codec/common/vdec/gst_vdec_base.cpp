@@ -1653,8 +1653,8 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
     GST_DEBUG_OBJECT(self, "Waiting until codec is drained");
 
     /**
-     * If user paused meanwhile, it will mustly drain timed out. Then
-     * videodeocoder push eos to downstream, means that videosink will
+     * Fix me? If user paused meanwhile, it will mustly drain timed out.
+     * Then videodeocoder push eos to downstream, means that videosink will
      * render less buffer.
      */
     gint64 wait_until = g_get_monotonic_time() + DRAIN_TIME_OUT;
