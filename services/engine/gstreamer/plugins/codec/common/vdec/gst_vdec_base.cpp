@@ -208,15 +208,15 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             g_mutex_lock(&self->codec_change_mutex);
             self->codec_change = g_value_get_boolean(value);
             // need release outstanding buffers for next codec to negotiate buffer pool
-            if (self->decoder != nullptr && self->decoder_start) {
-                self->decoder->Stop();
-                (void)self->decoder->FreeOutputBuffers();
-                self->decoder_start = FALSE;
-            }
             if (self->outpool) {
                 gst_buffer_pool_set_active(self->outpool, FALSE);
                 gst_object_unref(self->outpool);
                 self->outpool = nullptr;
+            }
+            if (self->decoder != nullptr && self->decoder_start) {
+                self->decoder->Stop();
+                (void)self->decoder->FreeOutputBuffers();
+                self->decoder_start = FALSE;
             }
             g_mutex_unlock(&self->codec_change_mutex);
             break;
