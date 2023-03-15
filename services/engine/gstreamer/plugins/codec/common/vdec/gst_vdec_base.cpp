@@ -1460,8 +1460,6 @@ static void gst_vdec_base_loop(GstVdecBase *self)
             GST_DEBUG_OBJECT(self, "Flushing");
             break;
         case GST_FLOW_EOS:
-            // thought about signal drain cond here?
-
             GST_DEBUG_OBJECT(self, "Eos");
             gst_pad_push_event(GST_VIDEO_DECODER_SRC_PAD(self), gst_event_new_eos());
             break;
