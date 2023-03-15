@@ -35,6 +35,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_vdec_base_debug_category);
 #define DEFAULT_HEIGHT 1080
 #define DEFAULT_SEEK_FRAME_RATE 1000
 #define BLOCKING_ACQUIRE_BUFFER_THRESHOLD 5
+#define DRAIN_TIME_OUT G_TIME_SPAN_SECOND * 2
 
 static void gst_vdec_base_class_install_property(GObjectClass *gobject_class);
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -206,6 +207,7 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
         case PROP_CODEC_CHANGE:
             g_mutex_lock(&self->codec_change_mutex);
             self->codec_change = g_value_get_boolean(value);
+            // need release outstanding buffers for next codec to negotiate buffer pool
             if (self->decoder != nullptr && self->decoder_start) {
                 self->decoder->Stop();
                 (void)self->decoder->FreeOutputBuffers();
@@ -1651,7 +1653,13 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         return GST_FLOW_ERROR;
     }
     GST_DEBUG_OBJECT(self, "Waiting until codec is drained");
-    gint64 wait_until = g_get_monotonic_time() + G_TIME_SPAN_SECOND * 2;
+
+    /**
+     * If user paused meanwhile, it will mustly drain timed out. Then
+     * videodeocoder push eos to downstream, means that videosink will
+     * render less buffer.
+     */
+    gint64 wait_until = g_get_monotonic_time() + DRAIN_TIME_OUT;
     if (!g_cond_wait_until(&self->drain_cond, &self->drain_lock, wait_until)) {
         GST_ERROR_OBJECT(self, "Drain timed out");
     } else {
