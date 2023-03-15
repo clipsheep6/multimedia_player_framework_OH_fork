@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_vdec_base_debug_category);
 #define DEFAULT_HEIGHT 1080
 #define DEFAULT_SEEK_FRAME_RATE 1000
 #define BLOCKING_ACQUIRE_BUFFER_THRESHOLD 5
-#define DRAIN_TIME_OUT G_TIME_SPAN_SECOND * 2
+#define DRAIN_TIME_OUT (G_TIME_SPAN_SECOND * 2)
 
 static void gst_vdec_base_class_install_property(GObjectClass *gobject_class);
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
