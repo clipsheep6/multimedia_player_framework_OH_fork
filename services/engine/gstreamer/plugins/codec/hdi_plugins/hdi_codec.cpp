@@ -52,6 +52,10 @@ HdiCodec::HdiCodec(const string& component)
 HdiCodec::~HdiCodec()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    if (handle_) {
+        MEDIA_LOGE("FreeHandle");
+        (void)HdiInit::GetInstance().FreeHandle(handle_, id_);
+    }
     if (appData_) {
         delete appData_;
         appData_ = nullptr;
