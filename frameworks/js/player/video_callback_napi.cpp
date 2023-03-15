@@ -16,6 +16,7 @@
 #include "video_callback_napi.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "scope_guard.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoCallbackNapi"};
@@ -350,6 +351,11 @@ void VideoCallbackNapi::UvWorkCallBack(uv_work_t *work, int status)
 
     auto asyncContext = reinterpret_cast<MediaAsyncContext *>(work->data);
     if (asyncContext != nullptr) {
+        napi_handle_scope scope = nullptr;
+        napi_env env = asyncContext->env_;
+        napi_open_handle_scope(env, &scope);
+        CHECK_AND_RETURN_LOG(scope != nullptr, "scope is nullptr");
+        ON_SCOPE_EXIT(0) { napi_close_handle_scope(env, scope); };
         MediaAsyncContext::CompleteCallback(asyncContext->env_, nstatus, work->data);
     }
     delete work;
