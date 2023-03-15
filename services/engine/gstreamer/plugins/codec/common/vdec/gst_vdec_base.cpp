@@ -209,6 +209,12 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             if (self->decoder != nullptr && self->decoder_start) {
                 self->decoder->Stop();
                 (void)self->decoder->FreeOutputBuffers();
+                self->decoder_start = FALSE;
+            }
+            if (self->outpool) {
+                gst_buffer_pool_set_active(self->outpool, FALSE);
+                gst_object_unref(self->outpool);
+                self->outpool = nullptr;
             }
             g_mutex_unlock(&self->codec_change_mutex);
             break;
@@ -532,21 +538,21 @@ static gboolean gst_vdec_base_stop(GstVideoDecoder *decoder)
     gst_pad_stop_task(GST_VIDEO_DECODER_SRC_PAD(decoder));
     ret = self->decoder->FreeInputBuffers();
     (void)gst_codec_return_is_ok(self, ret, "FreeInput", TRUE);
-    if (!self->codec_change) {
-        ret = self->decoder->FreeOutputBuffers();
-        (void)gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE);
-    }
-    self->decoder_start = FALSE;
-    g_mutex_unlock(&self->codec_change_mutex);
     if (self->inpool) {
         gst_object_unref(self->inpool);
         self->inpool = nullptr;
+    }
+    if (!self->codec_change) {
+        ret = self->decoder->FreeOutputBuffers();
+        (void)gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE);
     }
     if (self->outpool) {
         gst_buffer_pool_set_active(self->outpool, FALSE);
         gst_object_unref(self->outpool);
         self->outpool = nullptr;
     }
+    self->decoder_start = FALSE;
+    g_mutex_unlock(&self->codec_change_mutex);
     gst_vdec_base_stop_after(self);
     GST_DEBUG_OBJECT(self, "Stop decoder end");
     return TRUE;
