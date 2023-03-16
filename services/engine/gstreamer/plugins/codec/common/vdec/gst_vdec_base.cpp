@@ -524,7 +524,7 @@ static gboolean gst_vdec_base_stop(GstVideoDecoder *decoder)
     g_mutex_unlock(&self->drain_lock);
 
     g_mutex_lock(&self->codec_change_mutex);
-    gint ret = -1;
+    gint ret = GST_CODEC_OK;
     if (!self->codec_change) {
         ret = self->decoder->Stop();
         (void)gst_codec_return_is_ok(self, ret, "Stop", TRUE);
