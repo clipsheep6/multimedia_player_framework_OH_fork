@@ -115,7 +115,7 @@ private:
     void OnElementUnSetup(GstElement &elem);
     void OnSourceSetup(const GstElement *playbin, GstElement *src,
         const std::shared_ptr<PlayBinCtrlerBase> &playbinCtrl);
-    bool OnVideoDecoderSetup(GstElement &elem);
+    bool IsVideoDecoder(GstElement &elem);
     void OnAppsrcErrorMessageReceived(int32_t errorCode, std::string message);
     void OnMessageReceived(const InnerMessage &msg);
     void OnSinkMessageReceived(const PlayBinMessage &msg);
