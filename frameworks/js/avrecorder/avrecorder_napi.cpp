@@ -24,6 +24,9 @@
 #include "string_ex.h"
 #include "avcodec_info.h"
 #include "avcontainer_common.h"
+#ifdef SUPPORT_JSSTACK
+#include "xpower_event_js.h"
+#endif
 #include "avrecorder_napi.h"
 
 namespace {
@@ -295,6 +298,9 @@ napi_value AVRecorderNapi::JsGetInputSurface(napi_env env, napi_callback_info in
 napi_value AVRecorderNapi::JsStart(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVRecorder::JsStart");
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     return ExecuteByPromise(env, info, AVRecordergOpt::START);
 }
 
@@ -307,6 +313,9 @@ napi_value AVRecorderNapi::JsPause(napi_env env, napi_callback_info info)
 napi_value AVRecorderNapi::JsResume(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVRecorder::JsResume");
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     return ExecuteByPromise(env, info, AVRecordergOpt::RESUME);
 }
 

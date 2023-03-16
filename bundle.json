@@ -54,7 +54,8 @@
           "zlib",
           "access_token",
           "multimedia_image_framework",
-          "common"
+          "common",
+          "hiview"
         ],
         "third_party": [
           "glib",

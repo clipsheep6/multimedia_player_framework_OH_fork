@@ -19,6 +19,9 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "string_ex.h"
+#ifdef SUPPORT_JSSTACK
+#include "xpower_event_js.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioPlayerNapi"};
@@ -383,6 +386,9 @@ napi_value AudioPlayerNapi::Play(napi_env env, napi_callback_info info)
         player->ErrorCallback(MSERR_EXT_NO_MEMORY, "player is released(null), please create player again");
         return undefinedResult;
     }
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     int32_t ret = player->nativePlayer_->Play();
     if (ret != MSERR_OK) {
         player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to Play");
@@ -597,7 +603,9 @@ napi_value AudioPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
         player->ErrorCallback(MSERR_EXT_INVALID_VAL, "invalid parameters, please check the input parameters");
         return undefinedResult;
     }
-
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "VOLUME_CHANGE", "SRC=Media");
+#endif
     int32_t ret = player->nativePlayer_->SetVolume(static_cast<float>(volumeLevel), static_cast<float>(volumeLevel));
     if (ret != MSERR_OK) {
         player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetVolume");
