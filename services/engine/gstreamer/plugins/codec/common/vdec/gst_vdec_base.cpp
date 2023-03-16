@@ -174,7 +174,7 @@ static void gst_vdec_base_free_outstanding_buffers(GstVdecBase *self)
         (void)self->decoder->FreeOutputBuffers();
         self->decoder_start = FALSE;
     }
-    g_mutex_unlock(&self->codec_change_mutex);        
+    g_mutex_unlock(&self->codec_change_mutex);
 }
 
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
