@@ -160,6 +160,23 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 }
 
+static void gst_vdec_base_free_outstanding_buffers(GstVdecBase *self)
+{
+    g_return_if_fail(self != nullptr);
+    g_mutex_lock(&self->codec_change_mutex);
+    if (self->outpool) {
+        gst_buffer_pool_set_active(self->outpool, FALSE);
+        gst_object_unref(self->outpool);
+        self->outpool = nullptr;
+    }
+    if (self->decoder != nullptr && self->decoder_start) {
+        self->decoder->Stop();
+        (void)self->decoder->FreeOutputBuffers();
+        self->decoder_start = FALSE;
+    }
+    g_mutex_unlock(&self->codec_change_mutex);        
+}
+
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
     (void)pspec;
@@ -205,20 +222,9 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             self->player_mode = g_value_get_boolean(value);
             break;
         case PROP_CODEC_CHANGE:
-            g_mutex_lock(&self->codec_change_mutex);
-            self->codec_change = g_value_get_boolean(value);
             // need release outstanding buffers for next codec to negotiate buffer pool
-            if (self->outpool) {
-                gst_buffer_pool_set_active(self->outpool, FALSE);
-                gst_object_unref(self->outpool);
-                self->outpool = nullptr;
-            }
-            if (self->decoder != nullptr && self->decoder_start) {
-                self->decoder->Stop();
-                (void)self->decoder->FreeOutputBuffers();
-                self->decoder_start = FALSE;
-            }
-            g_mutex_unlock(&self->codec_change_mutex);
+            gst_vdec_base_free_outstanding_buffers(self);
+            self->codec_change = g_value_get_boolean(value);
             break;
         default:
             break;
