@@ -477,6 +477,7 @@ static gboolean gst_vdec_base_start(GstVideoDecoder *decoder)
     self->pts_list.swap(empty);
     self->last_pts = GST_CLOCK_TIME_NONE;
     gst_vdec_base_dump_from_sys_param(self);
+    self->codec_change = FALSE;
     return TRUE;
 }
 
