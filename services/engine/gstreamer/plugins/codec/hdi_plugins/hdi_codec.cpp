@@ -55,6 +55,7 @@ HdiCodec::~HdiCodec()
     if (handle_) {
         MEDIA_LOGE("FreeHandle");
         (void)HdiInit::GetInstance().FreeHandle(handle_, id_);
+        (void)taskQue_.Stop();
     }
     if (appData_) {
         delete appData_;

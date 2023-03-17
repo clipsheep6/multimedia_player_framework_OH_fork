@@ -167,6 +167,7 @@ static void gst_audio_capture_src_init(GstAudioCaptureSrc *src)
 
 static void gst_audio_capture_src_finalize(GObject *object)
 {
+    GST_DEBUG_OBJECT(object, "finalize");
     GstAudioCaptureSrc *src = GST_AUDIO_CAPTURE_SRC(object);
     g_return_if_fail(src != nullptr);
     if (src->src_caps != nullptr) {
@@ -177,6 +178,8 @@ static void gst_audio_capture_src_finalize(GObject *object)
     if (src->audio_capture) {
         src->audio_capture = nullptr;
     }
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static void gst_audio_capture_src_set_property(GObject *object, guint prop_id,
