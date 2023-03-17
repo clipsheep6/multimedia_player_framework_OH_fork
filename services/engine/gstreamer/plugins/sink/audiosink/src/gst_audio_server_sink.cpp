@@ -219,7 +219,7 @@ static void gst_audio_server_sink_finalize(GObject *object)
     }
     gst_audio_server_sink_clear_cache_buffer(sink);
 
-    G_OBJECT_CLASS(parent_class)->finalize(obj);
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static gboolean gst_audio_server_sink_set_volume(GstAudioServerSink *sink, gfloat volume)
