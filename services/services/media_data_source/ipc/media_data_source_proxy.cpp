@@ -34,9 +34,7 @@ public:
     }
     ~BufferCache()
     {
-        if (caches_ != nullptr) {
-            caches_ = nullptr;
-        }
+        caches_ = nullptr;
     }
 
     int32_t WriteToParcel(const std::shared_ptr<AVSharedMemory> &memory, MessageParcel &parcel)

@@ -115,7 +115,7 @@ static GstMemory *gst_shmemory_wrap_allocator_mem_share(GstMemory *mem, gssize o
 
     /* find the real parent */
     if ((parent = mem->parent) == NULL) {
-        parent = (GstMemory *)mem;
+        parent = reinterpret_cast<GstMemory *>(mem);
     }
     if (size == -1) {
         size = mem->size - offset;
