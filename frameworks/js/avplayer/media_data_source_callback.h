@@ -39,7 +39,7 @@ struct MediaDataSourceJsCallback {
     std::shared_ptr<AVSharedMemory> memory_;
     uint32_t length_;
     int64_t pos_;
-    int32_t readSize_;
+    int32_t readSize_ = 0;
     std::mutex mutexCond_;
     std::condition_variable cond_;
     bool setResult_ = false;

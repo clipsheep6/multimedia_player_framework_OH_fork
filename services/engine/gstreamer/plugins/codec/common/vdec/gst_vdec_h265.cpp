@@ -87,7 +87,7 @@ static gboolean gst_vdec_h265_parser_codec_data(GstVdecH265 *self, GstMapInfo &s
     return TRUE;
 }
 
-static gboolean gst_vdec_h265_parser_nalu(GstVdecH265 *self, GstMapInfo &src_info,
+static gboolean gst_vdec_h265_parser_nalu(GstVdecH265 *self, const GstMapInfo &src_info,
     GstMapInfo &dts_info, guint &copy_len)
 {
     dts_info.data[0] = 0;
@@ -101,7 +101,7 @@ static gboolean gst_vdec_h265_parser_nalu(GstVdecH265 *self, GstMapInfo &src_inf
     return TRUE;
 }
 
-static gboolean gst_vdec_h265_copy_info(GstMapInfo &src_info, GstMapInfo &dts_info, guint &copy_len)
+static gboolean gst_vdec_h265_copy_info(const GstMapInfo &src_info, const GstMapInfo &dts_info, guint &copy_len)
 {
     auto ret = memcpy_s(dts_info.data, dts_info.size, src_info.data, src_info.size);
     g_return_val_if_fail(ret == EOK, FALSE);

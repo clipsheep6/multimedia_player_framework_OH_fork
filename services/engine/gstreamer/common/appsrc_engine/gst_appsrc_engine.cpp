@@ -396,10 +396,10 @@ int32_t GstAppsrcEngine::Pusheos()
 
 int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
 {
+    CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr && appSrcMem_->mem != nullptr, MSERR_NO_MEMORY, "no mem");
     MEDIA_LOGD("PushBuffer in, pushSize is %{public}d, free mem begin is: %{public}u,"
         "free mem end is: %{public}u,available begin is: %{public}u",
         pushSize, appSrcMem_->begin, appSrcMem_->end, appSrcMem_->availableBegin);
-    CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr && appSrcMem_->mem != nullptr, MSERR_NO_MEMORY, "no mem");
 
     if (appSrcMem_->availableBegin + pushSize <= bufferSize_) {
         auto freeMemory = [this](uint32_t offset, uint32_t length) {
@@ -443,10 +443,10 @@ int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
 
 int32_t GstAppsrcEngine::PushBufferWithCopy(uint32_t pushSize)
 {
+    CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr && appSrcMem_->mem != nullptr, MSERR_NO_MEMORY, "no mem");
     MEDIA_LOGD("PushBufferWithCopy in, pushSize is %{public}d, free mem begin is: %{public}u,"
         "free mem end is: %{public}u, available begin is: %{public}u",
         pushSize, appSrcMem_->begin, appSrcMem_->end, appSrcMem_->availableBegin);
-    CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr && appSrcMem_->mem != nullptr, MSERR_NO_MEMORY, "no mem");
 
     if (appSrcMem_->availableBegin + pushSize <= bufferSize_) {
         GstBuffer *buffer = gst_buffer_new_allocate(nullptr, static_cast<gsize>(pushSize), nullptr);
