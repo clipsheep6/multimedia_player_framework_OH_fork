@@ -988,6 +988,7 @@ static void gst_vdec_base_input_frame_pts_to_list(GstVdecBase *self, GstVideoCod
 static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstBuffer *src_buffer,
     gboolean is_codec_data)
 {
+    MediaTrace trace("VdecBase::InputCopy");
     GstBuffer* dts_buffer;
     GstBufferPool *pool = reinterpret_cast<GstBufferPool *>(gst_object_ref(self->inpool));
     ON_SCOPE_EXIT(0) { gst_object_unref(pool); };
@@ -1038,6 +1039,7 @@ static gboolean gst_vdec_check_ashmem_buffer(GstBuffer *buffer)
 
 static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, GstVideoCodecFrame *frame)
 {
+    MediaTrace trace("VdecBase::PushInputBuffer");
     GstVdecBase *self = GST_VDEC_BASE(decoder);
     gst_vdec_debug_input_time(self);
     gst_vdec_base_input_frame_pts_to_list(self, frame);
@@ -1092,6 +1094,7 @@ static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, G
 
 static GstFlowReturn gst_vdec_base_handle_frame(GstVideoDecoder *decoder, GstVideoCodecFrame *frame)
 {
+    MediaTrace trace("VdecBase::HandleFrame");
     GST_DEBUG_OBJECT(decoder, "Handle frame");
     GstVdecBase *self = GST_VDEC_BASE(decoder);
     ON_SCOPE_EXIT(0) { gst_video_codec_frame_unref(frame); };
