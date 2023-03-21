@@ -77,8 +77,11 @@ int32_t HdiOutBufferMgr::PushBuffer(GstBuffer *buffer)
     std::shared_ptr<HdiBufferWrap> codecBuffer = nullptr;
     codecBuffer = GetCodecBuffer(buffer);
     CHECK_AND_RETURN_RET_LOG(codecBuffer != nullptr, GST_CODEC_ERROR, "Push buffer failed");
-    auto ret = HdiFillThisBuffer(handle_, &codecBuffer->hdiBuffer);
-    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "FillThisBuffer failed");
+    {
+        MediaTrace trace("HdiOutBufferMgr::FillThisBuffer");
+        auto ret = HdiFillThisBuffer(handle_, &codecBuffer->hdiBuffer);
+        CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "FillThisBuffer failed");
+    }
     return GST_CODEC_OK;
 }
 

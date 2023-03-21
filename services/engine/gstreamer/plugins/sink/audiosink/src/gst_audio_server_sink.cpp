@@ -614,6 +614,7 @@ static void gst_audio_server_sink_get_latency(GstAudioServerSink *sink, const Gs
 
 static GstFlowReturn gst_audio_server_sink_render(GstBaseSink *basesink, GstBuffer *buffer)
 {
+    pthread_setname_np(pthread_self(), "audioSinkRender");
     MediaTrace trace("Audio::gst_audio_server_sink_render");
     g_return_val_if_fail(basesink != nullptr, GST_FLOW_ERROR);
     g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);

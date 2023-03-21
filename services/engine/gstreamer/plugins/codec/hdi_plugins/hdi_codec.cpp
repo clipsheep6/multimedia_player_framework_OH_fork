@@ -448,6 +448,7 @@ int32_t HdiCodec::FreeOutputBuffers()
 
 int32_t HdiCodec::Event(CodecCallbackType *self, OMX_EVENTTYPE event, EventInfo *info)
 {
+    MediaTrace trace("HdiCodec::Event");
     (void)self;
     CHECK_AND_RETURN_RET_LOG(info != nullptr, HDF_ERR_INVALID_PARAM, "appData is null");
     if (OMX_EVENT_TO_STRING.find(event) != OMX_EVENT_TO_STRING.end()) {
@@ -608,6 +609,7 @@ void HdiCodec::HandleEventError(OMX_U32 data)
 
 int32_t HdiCodec::EmptyBufferDone(CodecCallbackType *self, int64_t appData, const OmxCodecBuffer *buffer)
 {
+    MediaTrace trace("HdiCodec::EmptyBufferDone");
     MEDIA_LOGD("EmptyBufferDone");
     (void)self;
     AppData *mAppData = reinterpret_cast<AppData *>(appData);
@@ -638,6 +640,7 @@ int32_t HdiCodec::OnEmptyBufferDone(const OmxCodecBuffer *buffer)
 
 int32_t HdiCodec::FillBufferDone(CodecCallbackType *self, int64_t appData, const OmxCodecBuffer *buffer)
 {
+    MediaTrace trace("HdiCodec::FillBufferDone");
     MEDIA_LOGD("FillBufferDone");
     (void)self;
     AppData *mAppData = reinterpret_cast<AppData *>(appData);
