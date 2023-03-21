@@ -361,6 +361,7 @@ static void gst_vdec_base_finalize(GObject *object)
 
     self->input.av_shmem_pool = nullptr;
     self->output.av_shmem_pool = nullptr;
+    self->decoder = nullptr;
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
