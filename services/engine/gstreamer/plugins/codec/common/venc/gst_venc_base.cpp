@@ -954,7 +954,7 @@ static gboolean gst_venc_base_event(GstVideoEncoder *encoder, GstEvent *event)
         case GST_EVENT_FLUSH_START:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VENC: flush start");
             if (self->encoder != nullptr) {
-                (void)self->encoder->Flush(GST_CODEC_INPUT);
+                (void)self->encoder->Flush(GST_CODEC_ALL);
             }
             gst_venc_base_set_flushing(self, TRUE);
             self->encoder_start = FALSE;
@@ -963,9 +963,6 @@ static gboolean gst_venc_base_event(GstVideoEncoder *encoder, GstEvent *event)
             self->flushing_stopping = TRUE;
             self->encoder_start = FALSE;
             ret = GST_VIDEO_ENCODER_CLASS(parent_class)->sink_event(encoder, event);
-            if (self->encoder != nullptr) {
-                (void)self->encoder->Flush(GST_CODEC_OUTPUT);
-            }
             gst_venc_base_set_flushing(self, FALSE);
             self->flushing_stopping = FALSE;
             GST_WARNING_OBJECT(self, "KPI-TRACE-VENC: flush stop");
