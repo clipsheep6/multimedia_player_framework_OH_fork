@@ -16,6 +16,7 @@
 #include "dfx_log_dump.h"
 #include <fstream>
 #include <unistd.h>
+#include <malloc.h>
 #include <sys/time.h>
 #include "securec.h"
 
@@ -129,6 +130,8 @@ void DfxLogDump::UpdateCheckEnable()
 void DfxLogDump::TaskProcessor()
 {
     pthread_setname_np(pthread_self(), "DfxLogTask");
+    (void)mallopt(M_SET_THREAD_CACHE, M_THREAD_CACHE_DISABLE);
+    (void)mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
     while (true) {
         std::string temp;
         int32_t lineCount = 0;
