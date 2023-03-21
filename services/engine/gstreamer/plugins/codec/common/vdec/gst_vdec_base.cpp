@@ -665,7 +665,7 @@ static gboolean gst_vdec_base_negotiate_format(GstVdecBase *self)
     }
     GstCaps *templ_caps = gst_pad_get_pad_template_caps(GST_VIDEO_DECODER_SRC_PAD(self));
     g_return_val_if_fail(templ_caps != nullptr, FALSE);
-    GST_DEBUG_OBJECT(self, "templ_caps %" GST_PTR_FORMAT, templ_caps);
+    GST_DEBUG_OBJECT(self, "templ_caps %s", gst_caps_to_string(templ_caps));
     (void)update_caps_format(self, templ_caps);
     GstCaps *intersection = gst_pad_peer_query_caps(GST_VIDEO_DECODER_SRC_PAD(self), templ_caps);
     gst_caps_unref(templ_caps);
@@ -1482,7 +1482,7 @@ static GstCaps* gst_vdec_swap_width_height(GstCaps *caps)
     caps = gst_caps_make_writable(caps);
     GstStructure *structure = gst_caps_get_structure(caps, 0);
     g_return_val_if_fail(structure != nullptr, caps);
-    GST_DEBUG_OBJECT(structure, "before swap width and height, caps %" GST_PTR_FORMAT, caps);
+    GST_DEBUG_OBJECT(structure, "before swap width and height, caps %s", gst_caps_to_string(caps));
     const GValue *width = gst_structure_get_value(structure, "width");
     const GValue *height = gst_structure_get_value(structure, "height");
     GValue temp_width = G_VALUE_INIT;
@@ -1513,7 +1513,7 @@ static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
     }
     if (!is_caps_valid) {
         gst_caps_unref(pool_caps);
-        GST_ERROR_OBJECT(self, "pool caps is null with sink caps%" GST_PTR_FORMAT, self->sink_caps);
+        GST_ERROR_OBJECT(self, "pool caps is null with sink caps %s", gst_caps_to_string(self->sink_caps));
         return FALSE;
     }
     pool_caps = gst_caps_fixate(pool_caps);
