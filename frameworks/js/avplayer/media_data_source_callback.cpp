@@ -30,9 +30,7 @@ MediaDataSourceJsCallback::~MediaDataSourceJsCallback()
 {
     isExit_ = true;
     cond_.notify_all();
-    if (memory_ != nullptr) {
-        memory_ = nullptr;
-    }
+    memory_ = nullptr;
 }
 
 void MediaDataSourceJsCallback::WaitResult()

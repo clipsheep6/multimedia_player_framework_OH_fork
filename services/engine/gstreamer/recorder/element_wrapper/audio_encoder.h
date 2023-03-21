@@ -34,7 +34,7 @@ protected:
     RecorderMsgProcResult DoProcessMessage(GstMessage &rawMsg, RecorderMessage &prettyMsg) override;
 
 private:
-    int32_t encoderFormat_;
+    int32_t encoderFormat_ = AudioCodecFormat::AAC_LC;
     int32_t sampleRate_ = 0;
     int32_t channels_ = 0;
     int32_t bitRate_ = 0;

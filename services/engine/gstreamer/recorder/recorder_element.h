@@ -245,7 +245,7 @@ protected:
      * @param value: Value to be judged
      * @return If the value is valid, return true, otherwise return false
      */
-    bool CheckRangeValid(Range &range, int32_t value);
+    bool CheckRangeValid(const Range &range, int32_t value);
 
     friend class RecorderPipelineLinkHelper;
 
