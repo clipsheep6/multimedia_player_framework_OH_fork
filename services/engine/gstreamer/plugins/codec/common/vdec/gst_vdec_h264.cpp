@@ -15,7 +15,9 @@
 
 #include "gst_vdec_h264.h"
 #include "securec.h"
+#include "media_dfx.h"
 
+using namespace OHOS::Media;
 #define gst_vdec_h264_parent_class parent_class
 G_DEFINE_TYPE(GstVdecH264, gst_vdec_h264, GST_TYPE_VDEC_BASE);
 
@@ -101,6 +103,7 @@ static gboolean get_slice_flag(GstVdecH264 *self, GstMapInfo *info, bool &ready_
 
 static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool &ready_push, bool is_finish)
 {
+    MediaTrace trace("VdecBase::SliceBuffer");
     GstVdecH264 *vdec_h264 = GST_VDEC_H264(self);
     GstBuffer *buf = nullptr;
     g_mutex_lock(&vdec_h264->cat_lock);

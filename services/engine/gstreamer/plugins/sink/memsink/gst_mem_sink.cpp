@@ -18,7 +18,9 @@
 #include <cinttypes>
 #include "gst_surface_mem_sink.h"
 #include "gst_shared_mem_sink.h"
+#include "media_dfx.h"
 
+using namespace OHOS::Media;
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
@@ -465,6 +467,7 @@ static GstFlowReturn gst_mem_sink_preroll(GstBaseSink *basesink, GstBuffer *buff
 
 static GstFlowReturn gst_mem_sink_stream_render(GstBaseSink *basesink, GstBuffer *buffer)
 {
+    MediaTrace trace("MemSink::stream_render");
     GstMemSink *mem_sink = GST_MEM_SINK_CAST(basesink);
     g_return_val_if_fail(mem_sink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
     GstMemSinkPrivate *priv = mem_sink->priv;
