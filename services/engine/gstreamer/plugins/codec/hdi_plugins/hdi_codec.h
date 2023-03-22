@@ -28,6 +28,7 @@
 #include "hdi_buffer_mgr.h"
 #include "hdi_params_mgr.h"
 #include "task_queue.h"
+#include "watchdog.h"
 
 namespace OHOS {
 namespace Media {
