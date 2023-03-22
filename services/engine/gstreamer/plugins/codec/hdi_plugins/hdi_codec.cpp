@@ -266,6 +266,13 @@ int32_t HdiCodec::PushInputBuffer(GstBuffer *buffer)
     std::shared_lock<std::shared_mutex> rLock(bufferMgrMutex_);
     CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
     CHECK_AND_RETURN_RET_LOG(inBufferMgr_ != nullptr, GST_CODEC_ERROR, "inBufferMgr_ is nullptr");
+
+    if (buffer == nullptr) {
+        static constexpr uint32_t timeoutMs = 2000; // Maximum wait time for emptying codec = 2000ms
+        SetWatchDogTimeout(timeoutMs);
+        EnableWatchDog();
+    }
+
     return inBufferMgr_->PushBuffer(buffer);
 }
 
@@ -426,6 +433,9 @@ int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
         ret = outBufferMgr_->PullBuffer(buffer);
     }
     MEDIA_LOGD("ret %{public}d", ret);
+    if (ret == GST_CODEC_EOS) {
+        DisableWatchDog();
+    }
     {
         unique_lock<mutex> lock(mutex_);
         if (ret_ != GST_CODEC_OK) {
@@ -672,6 +682,16 @@ int32_t HdiCodec::OnFillBufferDone(const OmxCodecBuffer *buffer)
         return result.Value();
     }
     return GST_CODEC_OK;
+}
+
+void HdiCodec::Alarm()
+{
+    MEDIA_LOGE("Alarm");
+    CHECK_AND_RETURN_LOG(!isError_, "Error state");
+    CHECK_AND_RETURN_LOG(start_, "Stoped");
+    std::shared_lock<std::shared_mutex> rLock(bufferMgrMutex_);
+    CHECK_AND_RETURN_LOG(outBufferMgr_ != nullptr, "outBufferMgr is nullptr");
+    outBufferMgr_->Stop(false);
 }
 }  // namespace Media
 }  // namespace OHOS

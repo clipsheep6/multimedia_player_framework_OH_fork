@@ -30,10 +30,12 @@ namespace OHOS {
 namespace Media {
 AudioCaptureAsImpl::AudioCaptureAsImpl()
 {
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 AudioCaptureAsImpl::~AudioCaptureAsImpl()
 {
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     if (captureLoop_ != nullptr && audioCacheCtrl_ != nullptr && captureLoop_->joinable()) {
         MEDIA_LOGE("Clear thread resources");
         curState_.store(RECORDER_INITIALIZED);
