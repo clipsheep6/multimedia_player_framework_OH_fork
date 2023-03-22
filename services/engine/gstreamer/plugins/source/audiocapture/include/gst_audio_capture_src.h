@@ -86,7 +86,6 @@ using GstAudioCaptureSrcClass = struct _GstAudioCaptureSrcClass;
 #define CHECK_AND_BREAK_REP_ERR(cond, src, fmt, ...)   \
     do {                                               \
         if (!(cond)) {                                 \
-            MEDIA_LOGE("%{public}s, check failed!", #cond);     \
             GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE,         \
                 (fmt, ##__VA_ARGS__), (fmt, ##__VA_ARGS__));    \
             break;                                     \
