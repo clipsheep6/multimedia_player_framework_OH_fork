@@ -28,10 +28,11 @@
 #include "hdi_buffer_mgr.h"
 #include "hdi_params_mgr.h"
 #include "task_queue.h"
+#include "watchdog.h"
 
 namespace OHOS {
 namespace Media {
-class HdiCodec : public IGstCodec, public NoCopyable, public std::enable_shared_from_this<HdiCodec> {
+class HdiCodec : public IGstCodec, public WatchDog, public NoCopyable, public std::enable_shared_from_this<HdiCodec> {
 public:
     explicit HdiCodec(const std::string& component);
     virtual ~HdiCodec();
@@ -58,6 +59,8 @@ public:
     void Deinit() override;
     void OnCodecDied() override;
 
+    // watchdog
+    void Alarm() override;
 private:
     struct AppData {
         std::weak_ptr<HdiCodec> instance;
