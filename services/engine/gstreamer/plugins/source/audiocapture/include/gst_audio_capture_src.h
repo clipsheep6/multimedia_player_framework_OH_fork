@@ -82,6 +82,16 @@ struct _GstAudioCaptureSrcClass {
 using GstAudioCaptureSrc = struct _GstAudioCaptureSrc;
 using GstAudioCaptureSrcClass = struct _GstAudioCaptureSrcClass;
 
+
+#define CHECK_AND_BREAK_REP_ERR(cond, src, fmt, ...)   \
+    do {                                               \
+        if (!(cond)) {                                 \
+            GST_ELEMENT_ERROR (src, CORE, STATE_CHANGE,         \
+                (fmt, ##__VA_ARGS__), (fmt, ##__VA_ARGS__));    \
+            break;                                     \
+        }                                              \
+    } while (0)
+
 G_GNUC_INTERNAL GType gst_audio_capture_src_get_type(void);
 
 G_END_DECLS
