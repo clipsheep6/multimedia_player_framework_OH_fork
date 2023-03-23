@@ -90,7 +90,7 @@ using GstAudioCaptureSrcClass = struct _GstAudioCaptureSrcClass;
                 (fmt, ##__VA_ARGS__), (fmt, ##__VA_ARGS__));    \
             break;                                     \
         }                                              \
-    } while (0);
+    } while (0)
 
 G_GNUC_INTERNAL GType gst_audio_capture_src_get_type(void);
 
