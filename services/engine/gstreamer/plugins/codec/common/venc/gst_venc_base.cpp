@@ -299,6 +299,7 @@ static void gst_venc_base_finalize(GObject *object)
     self->output.av_shmem_pool = nullptr;
     std::vector<GstVideoFormat> tempVec;
     tempVec.swap(self->formats);
+    self->encoder = nullptr;
     G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -633,6 +634,13 @@ static GstStateChangeReturn gst_venc_base_change_state(GstElement *element, GstS
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VENC: stop start");
+
+            GST_VIDEO_ENCODER_STREAM_LOCK(self);
+            if (self->encoder != nullptr) {
+                (void)self->encoder->Flush(GST_CODEC_ALL);
+            }
+            gst_venc_base_set_flushing(self, TRUE);
+            GST_VIDEO_ENCODER_STREAM_UNLOCK(self);
             break;
         case GST_STATE_CHANGE_READY_TO_NULL:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VENC: close start");

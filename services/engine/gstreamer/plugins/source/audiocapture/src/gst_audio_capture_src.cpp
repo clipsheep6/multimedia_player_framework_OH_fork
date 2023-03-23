@@ -167,6 +167,7 @@ static void gst_audio_capture_src_init(GstAudioCaptureSrc *src)
 
 static void gst_audio_capture_src_finalize(GObject *object)
 {
+    GST_DEBUG_OBJECT(object, "finalize");
     GstAudioCaptureSrc *src = GST_AUDIO_CAPTURE_SRC(object);
     g_return_if_fail(src != nullptr);
     if (src->src_caps != nullptr) {
@@ -177,6 +178,8 @@ static void gst_audio_capture_src_finalize(GObject *object)
     if (src->audio_capture) {
         src->audio_capture = nullptr;
     }
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static void gst_audio_capture_src_set_property(GObject *object, guint prop_id,
@@ -309,41 +312,40 @@ static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSr
         case GST_STATE_CHANGE_NULL_TO_READY: {
             if (src->audio_capture == nullptr) {
                 src->audio_capture = OHOS::Media::AudioCaptureFactory::CreateAudioCapture(src->stream_type);
-                g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+                CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "failed to CreateAudioCapture");
             }
             break;
         }
         case GST_STATE_CHANGE_READY_TO_PAUSED: {
-            g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
             AudioCapture::AppInfo appInfo = {};
             appInfo.appUid = src->appuid;
             appInfo.appPid = src->apppid;
             appInfo.appTokenId = src->token_id;
-            if (src->audio_capture->SetCaptureParameter(
-                src->bitrate, src->channels, src->sample_rate, appInfo) != MSERR_OK) {
-                return GST_STATE_CHANGE_FAILURE;
-            }
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture->SetCaptureParameter(src->bitrate, src->channels,
+                src->sample_rate, appInfo) == MSERR_OK, src, "SetCaptureParameter failed");
             break;
         }
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
-            g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
             if (src->need_caps_info) {
-                g_return_val_if_fail(process_caps_info(src) == TRUE, GST_STATE_CHANGE_FAILURE);
+                CHECK_AND_BREAK_REP_ERR(process_caps_info(src) == TRUE, src, "process caps info failed");
                 src->need_caps_info = FALSE;
             }
             if (src->is_start == FALSE) {
-                g_return_val_if_fail(src->audio_capture->StartAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
+                CHECK_AND_BREAK_REP_ERR(src->audio_capture->StartAudioCapture() == MSERR_OK,
+                    src, "StartAudioCapture failed");
                 gst_audio_capture_src_mgr_init(src);
                 src->is_start = TRUE;
             } else {
                 if (!src->bypass_audio) {
-                    g_return_val_if_fail(src->audio_capture->ResumeAudioCapture() == MSERR_OK,
-                        GST_STATE_CHANGE_FAILURE);
+                    CHECK_AND_BREAK_REP_ERR(src->audio_capture->ResumeAudioCapture() == MSERR_OK,
+                        src, "ResumeAudioCapture failed");
                     gst_audio_capture_src_mgr_enable_watchdog(src);
                 } else {
                     src->audio_mgr = nullptr;
-                    g_return_val_if_fail(src->audio_capture->WakeUpAudioThreads() == MSERR_OK,
-                        GST_STATE_CHANGE_FAILURE);
+                    CHECK_AND_BREAK_REP_ERR(src->audio_capture->WakeUpAudioThreads() == MSERR_OK,
+                        src, "WakeUpAudioThreads failed");
                 }
             }
             break;
@@ -367,16 +369,18 @@ static GstStateChangeReturn gst_audio_capture_src_change_state(GstElement *eleme
     switch (transition) {
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
             gst_audio_capture_src_mgr_disable_watchdog(src);
-            g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
             if (!src->bypass_audio) {
-                g_return_val_if_fail(src->audio_capture->PauseAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
+                CHECK_AND_BREAK_REP_ERR(src->audio_capture->PauseAudioCapture() == MSERR_OK,
+                    src, "PauseAudioCapture failed");
             }
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             src->is_start = FALSE;
-            g_return_val_if_fail(src->audio_capture != nullptr, GST_STATE_CHANGE_FAILURE);
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture != nullptr, src, "audio_capture is nullptr");
             src->audio_mgr = nullptr;
-            g_return_val_if_fail(src->audio_capture->StopAudioCapture() == MSERR_OK, GST_STATE_CHANGE_FAILURE);
+            CHECK_AND_BREAK_REP_ERR(src->audio_capture->StopAudioCapture() == MSERR_OK, src,
+                "StopAudioCapture failed");
             break;
         case GST_STATE_CHANGE_READY_TO_NULL:
             src->audio_capture = nullptr;

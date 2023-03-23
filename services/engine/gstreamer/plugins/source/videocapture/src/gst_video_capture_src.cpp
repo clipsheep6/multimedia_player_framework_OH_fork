@@ -147,6 +147,7 @@ static void gst_video_capture_src_init(GstVideoCaptureSrc *videocapturesrc)
 
 static void gst_video_capture_src_finalize(GObject *object)
 {
+    GST_DEBUG_OBJECT(object, "finalize");
     g_return_if_fail(object != nullptr);
     GstVideoCaptureSrc *src = GST_VIDEO_CAPTURE_SRC(object);
     g_return_if_fail(src != nullptr);
@@ -155,6 +156,8 @@ static void gst_video_capture_src_finalize(GObject *object)
         gst_caps_unref(src->src_caps);
         src->src_caps = nullptr;
     }
+
+    G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
 static void gst_video_capture_src_set_stream_type(GstVideoCaptureSrc *src, gint stream_type)
