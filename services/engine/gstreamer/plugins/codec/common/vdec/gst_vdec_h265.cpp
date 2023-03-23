@@ -51,7 +51,7 @@ static gboolean gst_vdec_h265_parser_codec_data(GstVdecH265 *self, GstMapInfo &s
 {
     // The 21 byte is 2 bits for framerate 3 bits for tempLayers 1 bit for tmpIdNest 2 bits for nalu len minus one
     gint src_offset = HVCC_EXT_NALU_LENGTH_START_POS;
-    self->hvcc_nal_len = src_info.data[src_offset] & 3 + 1;
+    self->hvcc_nal_len = (src_info.data[src_offset] & 3) + 1;
     // Next byte is 1 byte for array nums.
     src_offset++;
     gint hvcc_array_nums = src_info.data[src_offset];
