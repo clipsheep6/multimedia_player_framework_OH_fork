@@ -399,7 +399,6 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
     g_return_val_if_fail(sink != nullptr, FALSE);
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
 
-    GST_INFO_OBJECT(basesink, "caps=%s", gst_caps_to_string(caps));
     GstStructure *structure = gst_caps_get_structure(caps, 0);
     g_return_val_if_fail(structure != nullptr, FALSE);
     gint channels = 0;
