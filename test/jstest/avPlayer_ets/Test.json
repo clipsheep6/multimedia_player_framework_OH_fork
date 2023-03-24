@@ -20,7 +20,9 @@
             "type": "ShellKit",
             "run-command": [
                 "remount",
-                "mkdir /data/test"
+                "mkdir /data/test",
+                "mkdir /data/app/el2/100/base/ohos.acts.multimedia.avplayer/haps/phone",
+                "mkdir /data/app/el2/100/base/ohos.acts.multimedia.avplayer/haps/phone/files"
             ]
         },
         {

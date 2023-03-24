@@ -18,8 +18,8 @@ import {testAVPlayerDataSrcNoSeek, testAVPlayerFun} from '../../../../../../AVPl
 import * as mediaTestBase from '../../../../../../MediaTestBase.js';
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index';
 
-export default function AVPlayerDataSrcCompatibilityTest() {
-    describe('AVPlayerDataSrcCompatibilityTest', function () {
+export default function AVPlayerDataSrcNoSeekCompatibilityTest() {
+    describe('AVPlayerDataSrcNoSeekCompatibilityTest', function () {
         const PLAY_TIME = 3000;
         let avPlayer = null;
         let avPlayTest = {
@@ -58,7 +58,7 @@ export default function AVPlayerDataSrcCompatibilityTest() {
         function readAtNoSeek(buf, length) {
             console.info(' readAt length:' + length);
             let num = 0;
-            if (length == undefined) {
+            if (buf == undefined || length == undefined) {
                 expect().assertFail();
                 return -1;
             }
@@ -66,7 +66,7 @@ export default function AVPlayerDataSrcCompatibilityTest() {
             console.info('case  readAt num:' + num);
             if (num == 0) {
                 fileio.closeSync(fd);
-            fd = fileio.openSync(filePath, 0o0);
+                fd = fileio.openSync(filePath, 0o0);
             }
             if (num > 0) {
                 return num;
