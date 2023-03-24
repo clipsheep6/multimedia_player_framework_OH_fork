@@ -35,7 +35,6 @@ GST_DEBUG_CATEGORY_STATIC(gst_vdec_base_debug_category);
 #define DEFAULT_HEIGHT 1080
 #define DEFAULT_SEEK_FRAME_RATE 1000
 #define BLOCKING_ACQUIRE_BUFFER_THRESHOLD 5
-#define DRAIN_TIME_OUT (G_TIME_SPAN_SECOND * 2)
 
 static void gst_vdec_base_class_install_property(GObjectClass *gobject_class);
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
@@ -71,7 +70,6 @@ enum {
     PROP_ENABLE_SLICE_CAT,
     PROP_SEEK,
     PROP_PLAYER_MODE,
-    PROP_CODEC_CHANGE,
 };
 
 enum {
@@ -154,27 +152,6 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
     g_object_class_install_property(gobject_class, PROP_SEEK,
         g_param_spec_boolean("seeking", "Seeking", "Whether the decoder is in seek",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
-
-    g_object_class_install_property(gobject_class, PROP_CODEC_CHANGE,
-        g_param_spec_boolean("codec-change", "Codec change", "Whether the decoder need stop for new decoder",
-            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
-}
-
-static void gst_vdec_base_free_outstanding_buffers(GstVdecBase *self)
-{
-    g_return_if_fail(self != nullptr);
-    g_mutex_lock(&self->codec_change_mutex);
-    if (self->outpool) {
-        gst_buffer_pool_set_active(self->outpool, FALSE);
-        gst_object_unref(self->outpool);
-        self->outpool = nullptr;
-    }
-    if (self->decoder != nullptr && self->decoder_start) {
-        self->decoder->Stop();
-        (void)self->decoder->FreeOutputBuffers();
-        self->decoder_start = FALSE;
-    }
-    g_mutex_unlock(&self->codec_change_mutex);
 }
 
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -220,11 +197,6 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             break;
         case PROP_PLAYER_MODE:
             self->player_mode = g_value_get_boolean(value);
-            break;
-        case PROP_CODEC_CHANGE:
-            // need release outstanding buffers for next codec to negotiate buffer pool
-            gst_vdec_base_free_outstanding_buffers(self);
-            self->codec_change = g_value_get_boolean(value);
             break;
         default:
             break;
@@ -288,8 +260,6 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->has_set_format = FALSE;
     self->player_mode = FALSE;
     self->is_support_swap_width_height = FALSE;
-    self->codec_change = FALSE;
-    g_mutex_init(&self->codec_change_mutex);
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -331,7 +301,6 @@ static void gst_vdec_base_finalize(GObject *object)
     g_mutex_clear(&self->drain_lock);
     g_cond_clear(&self->drain_cond);
     g_mutex_clear(&self->lock);
-    g_mutex_clear(&self->codec_change_mutex);
     if (self->input.allocator) {
         gst_object_unref(self->input.allocator);
         self->input.allocator = nullptr;
@@ -484,7 +453,6 @@ static gboolean gst_vdec_base_start(GstVideoDecoder *decoder)
     self->pts_list.swap(empty);
     self->last_pts = GST_CLOCK_TIME_NONE;
     gst_vdec_base_dump_from_sys_param(self);
-    self->codec_change = FALSE;
     return TRUE;
 }
 
@@ -494,6 +462,7 @@ static void gst_vdec_base_stop_after(GstVdecBase *self)
     self->prepared = FALSE;
     self->input.first_frame = TRUE;
     self->output.first_frame = TRUE;
+    self->decoder_start = FALSE;
     self->pre_init_pool = FALSE;
     self->performance_mode = FALSE;
     self->resolution_changed = FALSE;
@@ -530,12 +499,8 @@ static gboolean gst_vdec_base_stop(GstVideoDecoder *decoder)
     g_cond_broadcast(&self->drain_cond);
     g_mutex_unlock(&self->drain_lock);
 
-    g_mutex_lock(&self->codec_change_mutex);
-    gint ret = GST_CODEC_OK;
-    if (!self->codec_change) {
-        ret = self->decoder->Stop();
-        (void)gst_codec_return_is_ok(self, ret, "Stop", TRUE);
-    }
+    gint ret = self->decoder->Stop();
+    (void)gst_codec_return_is_ok(self, ret, "Stop", TRUE);
     if (self->input_state) {
         gst_video_codec_state_unref(self->input_state);
     }
@@ -548,21 +513,17 @@ static gboolean gst_vdec_base_stop(GstVideoDecoder *decoder)
     gst_pad_stop_task(GST_VIDEO_DECODER_SRC_PAD(decoder));
     ret = self->decoder->FreeInputBuffers();
     (void)gst_codec_return_is_ok(self, ret, "FreeInput", TRUE);
+    ret = self->decoder->FreeOutputBuffers();
+    (void)gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE);
     if (self->inpool) {
         gst_object_unref(self->inpool);
         self->inpool = nullptr;
-    }
-    if (!self->codec_change) {
-        ret = self->decoder->FreeOutputBuffers();
-        (void)gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE);
     }
     if (self->outpool) {
         gst_buffer_pool_set_active(self->outpool, FALSE);
         gst_object_unref(self->outpool);
         self->outpool = nullptr;
     }
-    self->decoder_start = FALSE;
-    g_mutex_unlock(&self->codec_change_mutex);
     gst_vdec_base_stop_after(self);
     GST_DEBUG_OBJECT(self, "Stop decoder end");
     return TRUE;
@@ -1662,13 +1623,7 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         return GST_FLOW_ERROR;
     }
     GST_DEBUG_OBJECT(self, "Waiting until codec is drained");
-
-    /**
-     * Fix me? If user paused meanwhile, it will mustly drain timed out.
-     * Then videodeocoder push eos to downstream, means that videosink will
-     * render less buffer.
-     */
-    gint64 wait_until = g_get_monotonic_time() + DRAIN_TIME_OUT;
+    gint64 wait_until = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
     if (!g_cond_wait_until(&self->drain_cond, &self->drain_lock, wait_until)) {
         GST_ERROR_OBJECT(self, "Drain timed out");
     } else {
