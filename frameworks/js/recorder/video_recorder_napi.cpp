@@ -22,6 +22,9 @@
 #include "string_ex.h"
 #include "surface_utils.h"
 #include "recorder_napi_utils.h"
+#ifdef SUPPORT_JSSTACK
+#include "xpower_event_js.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoRecorderNapi"};
@@ -322,7 +325,9 @@ napi_value VideoRecorderNapi::Start(napi_env env, napi_callback_info info)
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
-
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Start", NAPI_AUTO_LENGTH, &resource);
@@ -408,7 +413,9 @@ napi_value VideoRecorderNapi::Resume(napi_env env, napi_callback_info info)
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
-
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Resume", NAPI_AUTO_LENGTH, &resource);
