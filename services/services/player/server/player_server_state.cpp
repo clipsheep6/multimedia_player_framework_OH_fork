@@ -71,49 +71,71 @@ int32_t PlayerServer::BaseState::SetPlaybackSpeed(PlaybackRateMode mode)
     return MSERR_INVALID_STATE;
 }
 
+int32_t PlayerServer::BaseState::MessageSeekDone(int32_t extra)
+{
+    int32_t ret = MSERR_OK;
+    (void)server_.taskMgr_.MarkTaskDone("seek done");
+    MediaTrace::TraceEnd("PlayerServer::Seek", FAKE_POINTER(&server_));
+    if (server_.disableNextSeekDone_ && extra == 0) {
+        ret = MSERR_UNSUPPORT;
+    }
+    server_.disableNextSeekDone_ = false;
+    return ret;
+}
+
+int32_t PlayerServer::BaseState::MessageSpeedDone()
+{
+    (void)server_.taskMgr_.MarkTaskDone("speed done");
+    MediaTrace::TraceEnd("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(&server_));
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::BaseState::MessageStateChange(int32_t extra)
+{
+    if (extra == PLAYER_PLAYBACK_COMPLETE) {
+        HandlePlaybackComplete(extra);
+    } else {
+        HandleStateChange(extra);
+        BehaviorEventWrite(server_.GetStatusDescription(extra).c_str(), "Player");
+        MEDIA_LOGI("Callback State change, currentState is %{public}s",
+            server_.GetStatusDescription(extra).c_str());
+    }
+
+    if (extra == PLAYER_STOPPED && server_.disableStoppedCb_) {
+        server_.disableStoppedCb_ = false;
+        return MSERR_UNSUPPORT;
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     MEDIA_LOGD("message received, type = %{public}d, extra = %{public}d", type, extra);
     (void)infoBody;
 
-    if (type == INFO_TYPE_SEEKDONE) {
-        int32_t ret = MSERR_OK;
-        (void)server_.taskMgr_.MarkTaskDone("seek done");
-        MediaTrace::TraceEnd("PlayerServer::Seek", FAKE_POINTER(&server_));
-        if (server_.disableNextSeekDone_ && extra == 0) {
-            ret = MSERR_UNSUPPORT;
-        }
-        server_.disableNextSeekDone_ = false;
-        return ret;
-    }
-        
-    if (type == INFO_TYPE_SPEEDDONE) {
-        (void)server_.taskMgr_.MarkTaskDone("speed done");
-        MediaTrace::TraceEnd("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(&server_));
-        return MSERR_OK;
+    int32_t ret = MSERR_OK;
+    switch (type) {
+        case INFO_TYPE_SEEKDONE:
+            ret = MessageSeekDone(extra);
+            break;
+
+        case INFO_TYPE_SPEEDDONE:
+            ret = MessageSpeedDone();
+            break;
+
+        case INFO_TYPE_EOS:
+            HandleEos();
+            break;
+
+        case INFO_TYPE_STATE_CHANGE:
+            ret = MessageStateChange(extra);
+            break;
+
+        default:
+            break;
     }
 
-    if (type == INFO_TYPE_EOS) {
-        HandleEos();
-        return MSERR_OK;
-    }
-
-    if (type == INFO_TYPE_STATE_CHANGE) {
-        if (extra == PLAYER_PLAYBACK_COMPLETE) {
-            HandlePlaybackComplete(extra);
-        } else {
-            HandleStateChange(extra);
-            BehaviorEventWrite(server_.GetStatusDescription(extra).c_str(), "Player");
-            MEDIA_LOGI("Callback State change, currentState is %{public}s",
-                server_.GetStatusDescription(extra).c_str());
-        }
-
-        if (extra == PLAYER_STOPPED && server_.disableStoppedCb_) {
-            server_.disableStoppedCb_ = false;
-            return MSERR_UNSUPPORT;
-        }
-    }
-    return MSERR_OK;
+    return ret;
 }
 
 void PlayerServer::IdleState::StateEnter()
