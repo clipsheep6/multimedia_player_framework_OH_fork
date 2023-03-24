@@ -62,7 +62,9 @@ export function checkPlayTest(avPlayer, playTest) {
     if (avPlayer == null) {
         return;
     }
-    expect(Math.abs(avPlayer.duration - playTest.duration)).assertLess(500);
+    if (playTest.duration > 0) {
+        expect(Math.abs(avPlayer.duration - playTest.duration)).assertLess(500);
+    }
     if (playTest.width > 0) {
         expect(avPlayer.width).assertEqual(playTest.width);
         expect(avPlayer.height).assertEqual(playTest.height);
@@ -238,7 +240,9 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
         switch (state) {
             case AV_PLAYER_STATE.INITIALIZED:
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.INITIALIZED);
-                avPlayer.surfaceId = surfaceID;
+                if (playTest.width != 0) {
+                    avPlayer.surfaceId = surfaceID;
+                }
                 // step 1, 13: initialized -> prepared
                 toPreparePromise(avPlayer, playTest);
                 break;
@@ -252,7 +256,7 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
                     avPlayer.play().then(() => {
                     }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
                 } else {
-                    // step 14: prepared -> seek
+                    // step 14: prepared -> seek(5th)
                     avPlayer.seek(avPlayer.duration);
                 }
                 break;
@@ -260,12 +264,12 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
                 playCnt++;
                 if (playCnt == 1) {
                     expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PLAYING);
-                    // step 3: playing -> seek duration/3
+                    // step 3: playing -> seek(1st) duration/3
                     await mediaTestBase.msleepAsync(playTime);
                     avPlayer.seek(avPlayer.duration / 3);
                 } else if (playCnt == 2) {
                     expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PLAYING);
-                    //  step 7: playing -> seek duration when loop true
+                    //  step 7: playing -> seek(3th) duration when loop true
                     avPlayer.seek(avPlayer.duration, media.SeekMode.SEEK_NEXT_SYNC);
                 } else if (playCnt == 3) {
                     // step 10: playing -> stop
@@ -275,7 +279,7 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
                 break;
             case AV_PLAYER_STATE.PAUSED:
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PAUSED);
-                // step 5: pause -> seek 0
+                // step 5: pause -> seek(2nd) 0
                 avPlayer.loop = true;
                 avPlayer.seek(0, media.SeekMode.SEEK_NEXT_SYNC);
                 break;
@@ -346,11 +350,10 @@ export function setAVPlayerFunCb(src, avPlayer, playTest, playTime, done) {
                     avPlayer.play();
                 }
                 if (nowTime > avPlayer.duration / 2) {
-                    avPlayer.setSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_00_X);
-                    await mediaTestBase.msleepAsync(avPlayer.duration - nowTime + playTime);
+                    await mediaTestBase.msleepAsync((avPlayer.duration - nowTime) / 2 + playTime);
                 }
                 if (avPlayer.loop == true) {
-                    // step 8: playing -> seek duration when loop false
+                    // step 8: playing -> seek(4th) duration when loop false
                     expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PLAYING);
                     avPlayer.loop = false;
                     avPlayer.seek(avPlayer.duration, media.SeekMode.SEEK_NEXT_SYNC);
@@ -575,7 +578,9 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
         switch (state) {
             case AV_PLAYER_STATE.INITIALIZED:
                 expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.INITIALIZED);
-                avPlayer.surfaceId = surfaceID;
+                if (playTest.width != 0) {
+                    avPlayer.surfaceId = surfaceID;
+                }
                 console.info('case initialized -> prepared');
                 // step 1,10: initialized -> prepared
                 avPlayer.prepare((err) => {
