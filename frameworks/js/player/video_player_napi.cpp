@@ -20,6 +20,9 @@
 #include "media_errors.h"
 #include "surface_utils.h"
 #include "string_ex.h"
+#ifdef SUPPORT_JSSTACK
+#include "xpower_event_js.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoPlayerNapi"};
@@ -584,6 +587,9 @@ napi_value VideoPlayerNapi::Play(napi_env env, napi_callback_info info)
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     // get jsPlayer
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Play", NAPI_AUTO_LENGTH, &resource);
@@ -980,6 +986,9 @@ napi_value VideoPlayerNapi::SetVolume(napi_env env, napi_callback_info info)
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
     // get jsPlayer
     (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "VOLUME_CHANGE", "SRC=Media");
+#endif
     // async work
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "SetVolume", NAPI_AUTO_LENGTH, &resource);

@@ -23,6 +23,9 @@
 #endif
 #include "string_ex.h"
 #include "player_xcollie.h"
+#ifdef SUPPORT_JSSTACK
+#include "xpower_event_js.h"
+#endif
 
 using namespace OHOS::AudioStandard;
 
@@ -328,7 +331,9 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
     } else {
         promiseCtx->asyncTask = jsPlayer->PlayTask();
     }
-
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsPlay", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
@@ -778,7 +783,9 @@ napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
             "current state is not prepared/playing/paused/completed, unsupport volume operation");
         return result;
     }
-
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "VOLUME_CHANGE", "SRC=Media");
+#endif
     auto task = std::make_shared<TaskHandler<void>>([jsPlayer, volumeLevel]() {
         MEDIA_LOGI("SetVolume Task");
         if (jsPlayer->player_ != nullptr) {

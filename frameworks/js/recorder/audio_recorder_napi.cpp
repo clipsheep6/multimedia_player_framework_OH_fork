@@ -24,6 +24,9 @@
 #include "string_ex.h"
 #include "common_napi.h"
 #include "recorder_napi_utils.h"
+#ifdef SUPPORT_JSSTACK
+#include "xpower_event_js.h"
+#endif
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioRecorderNapi"};
@@ -411,6 +414,9 @@ napi_value AudioRecorderNapi::Start(napi_env env, napi_callback_info info)
         }
         MEDIA_LOGD("Start success");
     });
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     (void)recorderNapi->taskQue_->EnqueueTask(task);
 
     return undefinedResult;
@@ -478,6 +484,9 @@ napi_value AudioRecorderNapi::Resume(napi_env env, napi_callback_info info)
         }
         MEDIA_LOGD("Resume success");
     });
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
     (void)recorderNapi->taskQue_->EnqueueTask(task);
     return undefinedResult;
 }

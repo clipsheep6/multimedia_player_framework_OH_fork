@@ -77,6 +77,13 @@ ohos_shared_library("media_avplayer") {
     external_deps += [ "graphic_standard:surface" ]
   }
 
+  if (multimedia_player_framework_support_jsstack) {
+    external_deps += [ "hiview:libxpower_event_js" ]
+  }
+
+  defines = []
+  defines += player_framework_defines
+
   part_name = "multimedia_player_framework"
   subsystem_name = "multimedia"
 }
