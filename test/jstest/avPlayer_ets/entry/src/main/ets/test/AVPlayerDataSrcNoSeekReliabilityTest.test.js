@@ -18,8 +18,8 @@ import {testAVPlayerDataSrcNoSeek, testAVPlayerFun, AV_PLAYER_STATE} from '../..
 import * as mediaTestBase from '../../../../../../MediaTestBase.js';
 import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from 'deccjsunit/index';
 
-export default function AVPlayerDataSrcReliabilityTest() {
-    describe('AVPlayerDataSrcReliabilityTest', function () {
+export default function AVPlayerDataSrcNoSeekReliabilityTest() {
+    describe('AVPlayerDataSrcNoSeekReliabilityTest', function () {
         let avPlayer = null;
         let pathDir = globalThis.abilityContext.filesDir;
         let filePath =  pathDir + "/01_15s.mp3";
