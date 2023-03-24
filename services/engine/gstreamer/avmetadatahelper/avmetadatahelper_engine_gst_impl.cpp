@@ -443,7 +443,7 @@ void AVMetadataHelperEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
     }
 }
 
-void AVMetadataHelperEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
+void AVMetadataHelperEngineGstImpl::OnNotifyElemUnSetup(GstElement &elem)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (metaCollector_ != nullptr) {
