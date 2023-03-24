@@ -233,6 +233,11 @@ void AVMetaBufferBlocker::Hide()
     isHidden_ = true;
 }
 
+std::string AVMetaBufferBlocker::GetElemName()
+{
+    return ELEM_NAME(&elem_);
+}
+
 bool AVMetaBufferBlocker::CheckBufferDetected(GstPadProbeInfo &info)
 {
     auto type = static_cast<unsigned int>(info.type);

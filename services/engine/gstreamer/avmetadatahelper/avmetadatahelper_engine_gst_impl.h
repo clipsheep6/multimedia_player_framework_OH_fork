@@ -50,6 +50,7 @@ private:
         const OutputConfiguration &param, std::vector<std::shared_ptr<AVSharedMemory>> &outFrames);
     int32_t ExtractMetadata();
     void OnNotifyElemSetup(GstElement &elem);
+    void OnNotifyElemUnSetup(GstElement &elem);
     const std::string &GetStatusDescription(OHOS::Media::PlayBinState status);
     void Reset();
 

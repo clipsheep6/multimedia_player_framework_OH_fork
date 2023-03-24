@@ -34,6 +34,7 @@ public:
 
     void Start();
     void AddMetaSource(GstElement &source);
+    void RemoveMetaSource(GstElement &source);
     void Stop(bool unlock = false);
     std::unordered_map<int32_t, std::string> GetMetadata();
     std::string GetMetadata(int32_t key);
@@ -44,6 +45,7 @@ private:
     uint8_t ProbeElemType(GstElement &source);
     void AddElemCollector(GstElement &source, uint8_t type);
     void AddElemBlocker(GstElement &source, uint8_t type);
+    void RemoveElemBlocker(GstElement &source, uint8_t type);
     void UpdateElemBlocker(GstElement &source, uint8_t elemType);
     void UpdataMeta(const Metadata &metadata);
     bool CheckCollectCompleted();
