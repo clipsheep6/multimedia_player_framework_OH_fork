@@ -14,6 +14,7 @@
  */
 
 #include <list>
+#include <mutex>
 #include "native_avcodec_base.h"
 #include "native_avcodec_videodecoder.h"
 #include "native_avmagic.h"
@@ -28,6 +29,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "NativeVide
 }
 
 using namespace OHOS::Media;
+class NativeVideoDecoderCallback;
 
 struct VideoDecoderObject : public OH_AVCodec {
     explicit VideoDecoderObject(const std::shared_ptr<AVCodecVideoDecoder> &decoder)
@@ -36,7 +38,7 @@ struct VideoDecoderObject : public OH_AVCodec {
 
     const std::shared_ptr<AVCodecVideoDecoder> videoDecoder_;
     std::list<OHOS::sptr<OH_AVMemory>> memoryObjList_;
-    std::shared_ptr<AVCodecCallback> callback_ = nullptr;
+    std::shared_ptr<NativeVideoDecoderCallback> callback_ = nullptr;
     std::atomic<bool> isFlushing_ = false;
     std::atomic<bool> isStop_ = false;
     std::atomic<bool> isEOS_ = false;
@@ -50,6 +52,7 @@ public:
 
     void OnError(AVCodecErrorType errorType, int32_t errorCode) override
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         (void)errorType;
         if (codec_ != nullptr && callback_.onError != nullptr) {
             int32_t extErr = MSErrorToExtError(static_cast<MediaServiceErrCode>(errorCode));
@@ -59,6 +62,7 @@ public:
 
     void OnOutputFormatChanged(const Format &format) override
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         if (codec_ != nullptr && callback_.onStreamChanged != nullptr) {
             OHOS::sptr<OH_AVFormat> object = new(std::nothrow) OH_AVFormat(format);
             // The object lifecycle is controlled by the current function stack
@@ -68,6 +72,7 @@ public:
 
     void OnInputBufferAvailable(uint32_t index) override
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         if (codec_ != nullptr && callback_.onNeedInputData != nullptr) {
             struct VideoDecoderObject *videoDecObj = reinterpret_cast<VideoDecoderObject *>(codec_);
             CHECK_AND_RETURN_LOG(videoDecObj->videoDecoder_ != nullptr, "videoDecoder_ is nullptr!");
@@ -85,6 +90,7 @@ public:
 
     void OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag) override
     {
+        std::unique_lock<std::mutex> lock(mutex_);
         if (codec_ != nullptr && callback_.onNeedOutputData != nullptr) {
             struct VideoDecoderObject *videoDecObj = reinterpret_cast<VideoDecoderObject *>(codec_);
             CHECK_AND_RETURN_LOG(videoDecObj->videoDecoder_ != nullptr, "videoDecoder_ is nullptr!");
@@ -101,6 +107,12 @@ public:
             // The bufferInfo lifecycle is controlled by the current function stack
             callback_.onNeedOutputData(codec_, index, nullptr, &bufferAttr, userData_);
         }
+    }
+
+    void StopCallback()
+    {
+        std::unique_lock<std::mutex> lock(mutex_);
+        codec_ = nullptr;
     }
 
 private:
@@ -155,6 +167,7 @@ private:
     struct OH_AVCodec *codec_;
     struct OH_AVCodecAsyncCallback callback_;
     void *userData_;
+    std::mutex mutex_;
 };
 
 struct OH_AVCodec *OH_VideoDecoder_CreateByMime(const char *mime)
@@ -191,6 +204,7 @@ OH_AVErrCode OH_VideoDecoder_Destroy(struct OH_AVCodec *codec)
     struct VideoDecoderObject *videoDecObj = reinterpret_cast<VideoDecoderObject *>(codec);
 
     if (videoDecObj != nullptr && videoDecObj->videoDecoder_ != nullptr) {
+        videoDecObj->callback_->StopCallback();
         videoDecObj->memoryObjList_.clear();
         videoDecObj->isStop_.store(false);
         int32_t ret = videoDecObj->videoDecoder_->Release();
