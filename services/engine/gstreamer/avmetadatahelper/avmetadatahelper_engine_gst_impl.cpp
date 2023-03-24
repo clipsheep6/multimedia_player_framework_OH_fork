@@ -220,8 +220,8 @@ int32_t AVMetadataHelperEngineGstImpl::SetSourceInternel(const std::string &uri,
     auto listener = std::bind(&AVMetadataHelperEngineGstImpl::OnNotifyElemSetup, this, std::placeholders::_1);
     playBinCtrler_->SetElemSetupListener(listener);
 
-    listener = std::bind(&AVMetadataHelperEngineGstImpl::OnNotifyElemSetup, this, std::placeholders::_1);
-    playBinCtrler_->SetElemSetupListener(listener);
+    listener = std::bind(&AVMetadataHelperEngineGstImpl::OnNotifyElemUnSetup, this, std::placeholders::_1);
+    playBinCtrler_->SetElemUnSetupListener(listener);
 
     auto autoPlugSortListener =
         std::bind(&AVMetadataHelperEngineGstImpl::OnNotifyAutoPlugSort, this, std::placeholders::_1);
@@ -440,6 +440,14 @@ void AVMetadataHelperEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
     std::unique_lock<std::mutex> lock(mutex_);
     if (metaCollector_ != nullptr) {
         metaCollector_->AddMetaSource(elem);
+    }
+}
+
+void AVMetadataHelperEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (metaCollector_ != nullptr) {
+        metaCollector_->RemoveMetaSource(elem);
     }
 }
 

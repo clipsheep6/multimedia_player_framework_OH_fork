@@ -14,6 +14,7 @@
  */
 
 #include "avmeta_meta_collector.h"
+#include <string>
 #include "avmetadatahelper.h"
 #include "media_errors.h"
 #include "media_log.h"
@@ -135,6 +136,19 @@ void AVMetaMetaCollector::AddMetaSource(GstElement &source)
     uint8_t srcType = ProbeElemType(source);
     AddElemCollector(source, srcType);
     AddElemBlocker(source, srcType);
+}
+
+void AVMetaMetaCollector::RemoveMetaSource(GstElement &source)
+{
+    MEDIA_LOGD("enter");
+
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (stopCollecting_) {
+        return;
+    }
+
+    uint8_t srcType = ProbeElemType(source);
+    RemoveElemBlocker(source, srcType);
 }
 
 void AVMetaMetaCollector::Stop(bool unlock) /* false */
@@ -399,6 +413,24 @@ void AVMetaMetaCollector::AddElemBlocker(GstElement &source, uint8_t type)
             PUSH_NEW_BLOCK(type, blocker);
         }
         return;
+    }
+}
+
+void AVMetaMetaCollector::RemoveElemBlocker(GstElement &source, uint8_t type)
+{
+    if (type == GstElemType::TYPEFIND || type == GstElemType::DECODEBIN || type == GstElemType::UNKNOWN) {
+        return;
+    }
+    for (auto &[elemType, blockerVec] : blockers_) {
+        for (auto iter = blockerVec.begin(); iter != blockerVec.end(); ++iter) {
+            if (*iter == nullptr) {
+                continue;
+            }
+            if (strcmp((*iter)->GetElemName().c_str(), ELEM_NAME(&source)) == 0) {
+                MEDIA_LOGD("Remove %{public}s", (*iter)->GetElemName().c_str());
+                blockerVec.erase(iter);
+            }
+        }
     }
 }
 
