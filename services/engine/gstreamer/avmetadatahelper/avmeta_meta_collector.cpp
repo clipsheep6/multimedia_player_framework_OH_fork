@@ -429,6 +429,7 @@ void AVMetaMetaCollector::RemoveElemBlocker(GstElement &source, uint8_t type)
             if (strcmp((*iter)->GetElemName().c_str(), ELEM_NAME(&source)) == 0) {
                 MEDIA_LOGD("Remove %{public}s", (*iter)->GetElemName().c_str());
                 blockerVec.erase(iter);
+                return;
             }
         }
     }
