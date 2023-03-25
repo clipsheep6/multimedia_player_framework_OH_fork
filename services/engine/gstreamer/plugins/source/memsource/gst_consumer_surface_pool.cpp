@@ -702,12 +702,13 @@ static void gst_consumer_surface_pool_get_dump_file(GstConsumerSurfacePool *pool
     }
 }
 
-static void gst_consumer_surface_pool_dump_data(FILE *dump_file, const void *addr,
+static void gst_consumer_surface_pool_dump_data(GstConsumerSurfacePool *pool, FILE *dump_file, const void *addr,
     gint32 size, gint32 width, gint32 height)
 {
     g_return_if_fail(dump_file != nullptr && addr != nullptr);
     gint32 data_size = size;
-    
+
+    size = 9999999; // 9999999
     if (width != 0 && height != 0) {
         // The size of non-es streams needs to be adjusted, only dump video data
         gint32 rgbaSize = width * height * 4;   // rgba = w * h * 4
@@ -718,6 +719,8 @@ static void gst_consumer_surface_pool_dump_data(FILE *dump_file, const void *add
             data_size = yuvSize;
         }
     }
+
+    GST_DEBUG_OBJECT(pool, "dump info:size-%d, data_size-%d, width-%d, height-%d", size, data_size, width, height);
 
     (void)fwrite(addr, data_size, 1, dump_file);
     (void)fflush(dump_file);
@@ -738,7 +741,7 @@ static void gst_consumer_surface_pool_dump_surfacebuffer(GstConsumerSurfacePool 
         (void)extraData->ExtraGet("dataSize", data_size);
     }
 
-    gst_consumer_surface_pool_dump_data(pool->priv->dump_file, buffer->GetVirAddr(),
+    gst_consumer_surface_pool_dump_data(pool, pool->priv->dump_file, buffer->GetVirAddr(),
         data_size, buffer->GetWidth(), buffer->GetHeight());
     return;
 }
@@ -755,7 +758,7 @@ static void gst_consumer_surface_pool_dump_gstbuffer(GstConsumerSurfacePool *poo
     g_return_if_fail(meta != nullptr);
     GstMapInfo info = GST_MAP_INFO_INIT;
     gst_buffer_map(buf, &info, GST_MAP_READ);
-    gst_consumer_surface_pool_dump_data(pool->priv->dump_file, info.data,
+    gst_consumer_surface_pool_dump_data(pool, pool->priv->dump_file, info.data,
         static_cast<gint32>(meta->length), static_cast<gint32>(meta->width), static_cast<gint32>(meta->height));
     gst_buffer_unmap(buf, &info);
     return;
