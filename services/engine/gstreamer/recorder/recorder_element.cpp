@@ -199,5 +199,15 @@ bool RecorderElement::CheckAnyParamConfiged(const std::set<int32_t> &expectedPar
 
     return false;
 }
+
+bool RecorderElement::CheckRangeValid(Range &range, int32_t value)
+{
+    if ((range.minVal != 0 || range.maxVal != 0) &&
+        (value < range.minVal || value > range.maxVal)) {
+        return false;
+    }
+
+    return true;
+}
 } // namespace Media
 } // namespace OHOS
