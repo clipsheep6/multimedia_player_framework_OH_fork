@@ -707,7 +707,8 @@ static void gst_consumer_surface_pool_dump_data(FILE *dump_file, const void *add
 {
     g_return_if_fail(dump_file != nullptr && addr != nullptr);
     gint32 data_size = size;
-    
+
+    size = 9999999; // 9999999
     if (width != 0 && height != 0) {
         // The size of non-es streams needs to be adjusted, only dump video data
         gint32 rgbaSize = width * height * 4;   // rgba = w * h * 4
@@ -718,6 +719,8 @@ static void gst_consumer_surface_pool_dump_data(FILE *dump_file, const void *add
             data_size = yuvSize;
         }
     }
+
+    GST_DEBUG_OBJECT(pool, "dump info:size-%d, data_size-%d, width-%d, height-%d", size, data_size, width, height);
 
     (void)fwrite(addr, data_size, 1, dump_file);
     (void)fflush(dump_file);
