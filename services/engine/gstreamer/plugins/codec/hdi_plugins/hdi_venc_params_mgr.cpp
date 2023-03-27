@@ -110,7 +110,7 @@ void HdiVencParamsMgr::Init(CodecComponentType *handle,
     InitHdiParam(videoFormat_, verInfo_);
     inPortDef_.nPortIndex = portParam.nStartPortNumber;
     outPortDef_.nPortIndex = portParam.nStartPortNumber + 1;
-    videoFormat_.portIndex = portParam.nStartPortNumber + 1;
+    videoFormat_.portIndex = portParam.nStartPortNumber;
 }
 
 int32_t HdiVencParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element)
