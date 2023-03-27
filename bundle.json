@@ -25,7 +25,7 @@
         "SystemCapability.Multimedia.Media.CodecBase",
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder",
-        "SystemCapability.MultiMedia.SystemSound.Core"
+        "SystemCapability.Multimedia.SystemSound.Core"
       ],
       "features": [],
       "adapted_system_type": [ "standard" ],
