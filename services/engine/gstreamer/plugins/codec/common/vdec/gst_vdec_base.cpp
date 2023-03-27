@@ -183,6 +183,7 @@ static void gst_vdec_base_free_outstanding_buffers(GstVdecBase *self)
     }
     gst_video_decoder_free_buffer_pool(GST_VIDEO_DECODER(self));
     g_mutex_unlock(&self->codec_change_mutex);
+    GST_DEBUG_OBJECT(self, "Outstanding buffers has been free");
 }
 
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
