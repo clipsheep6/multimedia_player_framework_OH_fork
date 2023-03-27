@@ -166,6 +166,9 @@ static void gst_vdec_base_free_outstanding_buffers(GstVdecBase *self)
     g_return_if_fail(self != nullptr);
     GST_DEBUG_OBJECT(self, "Ready free outstanding buffers");
     GST_VIDEO_DECODER_STREAM_LOCK(self);
+    if (self->decoder != nullptr) {
+        (void)self->decoder->Flush(GST_CODEC_ALL);
+    }
     gst_vdec_base_set_flushing(self, TRUE);
     GST_VIDEO_DECODER_STREAM_UNLOCK(self);
     g_mutex_lock(&self->codec_change_mutex);
