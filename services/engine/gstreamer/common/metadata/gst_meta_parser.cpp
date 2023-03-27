@@ -99,6 +99,17 @@ static const std::unordered_map<std::string_view, std::string_view> FILE_MIME_TY
     { "audio/x-wav", FILE_MIMETYPE_AUDIO_WAV } // wav
 };
 
+enum AUDIO_MPEG_TYPE {
+    AUDIO_MPEG_MP3,
+    AUDIO_MPEG_AAC
+};
+
+static const std::unordered_map<std::string_view, std::vector<std::string_view>> CODEC_MIME_TYPE_MAPPING = {
+    { "video/x-h264", {VIDEO_MIMETYPE_AVC} },
+    { "video/mpeg", {VIDEO_MIMETYPE_MPEG4} },
+    { "audio/mpeg", {AUDIO_MIMETYPE_MPEG, AUDIO_MIMETYPE_AAC} }
+};
+
 static void ParseGValue(const GValue &value, const MetaParseItem &item, Format &metadata)
 {
     if (G_VALUE_TYPE(&value) != item.valGType) {
@@ -205,6 +216,17 @@ void GstMetaParser::ParseStreamCaps(const GstCaps &caps, Format &metadata)
             metadata.PutIntValue(INNER_META_KEY_TRACK_TYPE, MediaType::MEDIA_TYPE_AUD);
         } else if (streamType.compare("text") == 0) {
             metadata.PutIntValue(INNER_META_KEY_TRACK_TYPE, MediaType::MEDIA_TYPE_SUBTITLE);
+        }
+
+        if (CODEC_MIME_TYPE_MAPPING.find(mimeType) != CODEC_MIME_TYPE_MAPPING.end()) {
+            if (mimeType == "audio/mpeg") {
+                gint mpegversion;
+                gst_structure_get_int(struc, "mpegversion", &mpegversion);
+                int32_t index = mpegversion == 1 ? AUDIO_MPEG_MP3 : AUDIO_MPEG_AAC;
+                mimeType = (CODEC_MIME_TYPE_MAPPING.find(mimeType)->second)[index];
+            } else {
+                mimeType = (CODEC_MIME_TYPE_MAPPING.find(mimeType)->second)[0];
+            }
         }
 
         metadata.PutStringValue(INNER_META_KEY_MIME_TYPE, mimeType);

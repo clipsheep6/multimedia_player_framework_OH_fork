@@ -19,6 +19,7 @@
 #include "player.h"
 #include "media_data_source_test_noseek.h"
 #include "media_data_source_test_seekable.h"
+#include "unittest_log.h"
 #include "window.h"
 
 namespace OHOS {

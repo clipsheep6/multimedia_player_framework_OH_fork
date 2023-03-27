@@ -118,6 +118,7 @@ public:
 
 protected:
     void ProcessStateChange(const InnerMessage &msg) override;
+    void HandleAsyncDone(const InnerMessage &msg) override;
     void StateEnter() override;
 };
 
@@ -134,6 +135,7 @@ public:
 
 protected:
     void ProcessStateChange(const InnerMessage &msg) override;
+    void HandleAsyncDone(const InnerMessage &msg) override;
     void StateEnter() override;
 };
 
@@ -169,6 +171,7 @@ public:
     ~PlaybackCompletedState() = default;
 
     int32_t Play() override;
+    int32_t Pause() override;
     int32_t Stop() override;
     int32_t Seek(int64_t timeUs, int32_t option) override;
     int32_t SetRate(double rate) override;
