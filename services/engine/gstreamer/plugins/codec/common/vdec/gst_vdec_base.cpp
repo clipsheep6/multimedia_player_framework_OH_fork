@@ -164,7 +164,7 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
 static void gst_vdec_base_free_outstanding_buffers(GstVdecBase *self)
 {
     g_return_if_fail(self != nullptr);
-    GST_DEBUG_OBJECT(self, "ready free outstanding buffers");
+    GST_DEBUG_OBJECT(self, "Ready free outstanding buffers");
     GST_VIDEO_DECODER_STREAM_LOCK(self);
     gst_vdec_base_set_flushing(self, TRUE);
     GST_VIDEO_DECODER_STREAM_UNLOCK(self);
