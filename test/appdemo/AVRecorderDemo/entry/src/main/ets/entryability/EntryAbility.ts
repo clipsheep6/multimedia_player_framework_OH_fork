@@ -1,6 +1,22 @@
+/*
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import hilog from '@ohos.hilog';
-import Ability from '@ohos.application.Ability';
+import Ability from '@ohos.app.ability.UIAbility';
 import Window from '@ohos.window';
+import abilityAccessCtrl from '@ohos.abilityAccessCtrl'
 
 /**
  * Lift cycle management of Ability.
@@ -10,6 +26,8 @@ export default class EntryAbility extends Ability {
         hilog.isLoggable(0x0000, 'testTag', hilog.LogLevel.INFO);
         hilog.info(0x0000, 'testTag', '%{public}s', 'Ability onCreate');
         console.log("[AVRecorder] MainAbility onCreate");
+        globalThis.abilityWant = this.launchWant;
+        globalThis.abilityContext = this.context;
         let array: Array<string> = [
             'ohos.permission.MEDIA_LOCATION',
             'ohos.permission.READ_MEDIA',
@@ -17,14 +35,18 @@ export default class EntryAbility extends Ability {
             'ohos.permission.CAMERA',
             'ohos.permission.MICROPHONE',
         ]
-        await this.context.requestPermissionsFromUser(array).then(function(data) {
-            console.log("data permissions:" + data.permissions);
-            console.log("data result:" + data.authResults);
-        }, (err) => {
-            console.error("data result:" + err.code);
-        })
-        globalThis.abilityWant = want;
-        globalThis.abilityContext = this.context;
+        let atManager = abilityAccessCtrl.createAtManager()
+        try {
+            // @ts-ignore
+            atManager.requestPermissionsFromUser(globalThis.abilityContext, array).then((data) => {
+                console.log("data permissions:" + data.permissions);
+                console.log("data result:" + data.authResults);
+            }, (err) => {
+                console.log("Failed to start ability err code:" + err)
+            })
+        } catch (error) {
+            console.log("Failed to start ability err code:" + error)
+        }
 
     }
 
