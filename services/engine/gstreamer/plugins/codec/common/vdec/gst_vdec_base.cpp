@@ -161,6 +161,7 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 }
 
+/* must taken codec_change mutex */
 static void gst_vdec_base_free_outstanding_buffers(GstVdecBase *self)
 {
     g_return_if_fail(self != nullptr);
@@ -170,14 +171,10 @@ static void gst_vdec_base_free_outstanding_buffers(GstVdecBase *self)
         (void)self->decoder->Flush(GST_CODEC_ALL);
     }
     gst_vdec_base_set_flushing(self, TRUE);
-    GST_VIDEO_DECODER_STREAM_UNLOCK(self);
-    g_mutex_lock(&self->codec_change_mutex);
     if (self->decoder != nullptr) {
-        GST_VIDEO_DECODER_STREAM_LOCK(self);
         self->decoder->Stop();
         (void)self->decoder->FreeOutputBuffers();
         self->decoder_start = FALSE;
-        GST_VIDEO_DECODER_STREAM_UNLOCK(self);
     }
     if (self->outpool) {
         gst_buffer_pool_set_active(self->outpool, FALSE);
@@ -185,7 +182,7 @@ static void gst_vdec_base_free_outstanding_buffers(GstVdecBase *self)
         self->outpool = nullptr;
     }
     gst_video_decoder_free_buffer_pool(GST_VIDEO_DECODER(self));
-    g_mutex_unlock(&self->codec_change_mutex);
+    GST_VIDEO_DECODER_STREAM_UNLOCK(self);
     GST_DEBUG_OBJECT(self, "Outstanding buffers has been free");
 }
 
@@ -235,8 +232,10 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             break;
         case PROP_CODEC_CHANGE:
             // need release outstanding buffers for next codec to negotiate buffer pool
+            g_mutex_lock(&self->codec_change_mutex);
             gst_vdec_base_free_outstanding_buffers(self);
             self->codec_change = g_value_get_boolean(value);
+            g_mutex_unlock(&self->codec_change_mutex);
             break;
         default:
             break;
