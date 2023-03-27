@@ -354,10 +354,6 @@ void PlayBinCtrlerBase::PreparedState::StateEnter()
         0, static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
     ctrler_.ReportMessage(posUpdateMsg);
 
-    if (ctrler_.isNetWorkPlay_) {
-        g_object_set(ctrler_.playbin_, "reconnection-timeout", RECONNECTION_TIME_OUT_DEFAULT, nullptr);
-    }
-
     msg = { PLAYBIN_MSG_STATE_CHANGE, 0, PLAYBIN_STATE_PREPARED, {} };
     ctrler_.ReportMessage(msg);
 }

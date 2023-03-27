@@ -15,6 +15,7 @@
 
 #include "watchdog.h"
 #include <mutex>
+#include <thread>
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "watchdog"};

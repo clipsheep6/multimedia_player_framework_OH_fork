@@ -18,7 +18,6 @@
 
 #include <atomic>
 #include <condition_variable>
-#include <thread>
 #include "media_dfx.h"
 #include "media_log.h"
 

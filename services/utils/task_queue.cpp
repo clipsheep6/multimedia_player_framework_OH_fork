@@ -14,6 +14,7 @@
  */
 
 #include "task_queue.h"
+#include <malloc.h>
 #include "media_log.h"
 #include "media_errors.h"
 
@@ -37,8 +38,6 @@ int32_t TaskQueue::Start()
     }
     isExit_ = false;
     thread_ = std::make_unique<std::thread>(&TaskQueue::TaskProcessor, this);
-    constexpr uint32_t nameSizeMax = 15;
-    pthread_setname_np(thread_->native_handle(), name_.substr(0, nameSizeMax).c_str());
     MEDIA_LOGI("thread started, ignore ! [%{public}s]", name_.c_str());
     return MSERR_OK;
 }
@@ -125,6 +124,9 @@ void TaskQueue::CancelNotExecutedTaskLocked()
 void TaskQueue::TaskProcessor()
 {
     MEDIA_LOGI("Enter TaskProcessor [%{public}s]", name_.c_str());
+    constexpr uint32_t nameSizeMax = 15;
+    pthread_setname_np(pthread_self(), name_.substr(0, nameSizeMax).c_str());
+    (void)mallopt(M_DELAYED_FREE, M_DELAYED_FREE_DISABLE);
     while (true) {
         std::unique_lock<std::mutex> lock(mutex_);
         cond_.wait(lock, [this] { return isExit_ || !taskList_.empty(); });
@@ -157,6 +159,7 @@ void TaskQueue::TaskProcessor()
             MEDIA_LOGW("enqueue periodic task failed:%d, why? [%{public}s]", res, name_.c_str());
         }
     }
+    (void)mallopt(M_FLUSH_THREAD_CACHE, 0);
     MEDIA_LOGI("Leave TaskProcessor [%{public}s]", name_.c_str());
 }
 } // namespace Media
