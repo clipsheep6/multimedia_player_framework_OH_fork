@@ -198,6 +198,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 return TaskRet(errCode, "failed to prepare");
             }
             LISTENER(stateChangeCond_.wait(lock, [this]() { return stateChanged_.load(); }), "PrepareTask", false)
+            stateChanged_ = false;
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                     "failed to prepare, avplayer enter error status, please check error callback messages!");
@@ -274,6 +275,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                 return TaskRet(errCode, "failed to Play");
             }
             LISTENER(stateChangeCond_.wait(lock, [this]() { return stateChanged_.load(); }), "PlayTask", false)
+            stateChanged_ = false;
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -347,6 +349,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
                 return TaskRet(errCode, "failed to Pause");
             }
             LISTENER(stateChangeCond_.wait(lock, [this]() { return stateChanged_.load(); }), "PauseTask", false)
+            stateChanged_ = false;
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -414,6 +417,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
                 return TaskRet(errCode, "failed to Stop");
             }
             LISTENER(stateChangeCond_.wait(lock, [this]() { return stateChanged_.load(); }), "StopTask", false)
+            stateChanged_ = false;
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
@@ -490,6 +494,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
                     return TaskRet(errCode, "failed to Reset");
                 }
                 LISTENER(stateChangeCond_.wait(lock, [this]() { return stateChanged_.load(); }), "ResetTask", false)
+                stateChanged_ = false;
             }
         }
         MEDIA_LOGI("Reset Task Out");
@@ -1685,7 +1690,7 @@ void AVPlayerNapi::NotifyState(PlayerStates state)
     std::lock_guard<std::mutex> lock(taskMutex_);
     if (state_ != state) {
         state_ = state;
-        MEDIA_LOGI("notify %{public}s OK", GetCurrentState().c_str());
+        MEDIA_LOGI("notify %{public}s", GetCurrentState().c_str());
         stateChangeCond_.notify_all();
         stateChanged_ = true;
     }
