@@ -288,9 +288,8 @@ private:
     std::mutex taskMutex_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
     PlayerStates state_ = PLAYER_IDLE;
-    std::condition_variable preparingCond_;
     std::condition_variable stateChangeCond_;
-    std::condition_variable resettingCond_;
+    std::atomic<bool> stateChanged_;
     int32_t width_ = 0;
     int32_t height_ = 0;
     int32_t position_ = -1;
