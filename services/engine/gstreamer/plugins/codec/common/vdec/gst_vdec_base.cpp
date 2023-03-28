@@ -1878,6 +1878,7 @@ static gboolean gst_vdec_base_decide_allocation(GstVideoDecoder *decoder, GstQue
         pool = gst_vdec_base_new_out_shmem_pool(self, outcaps, size);
     } else {
         gst_vdec_base_update_out_pool(self, &pool, outcaps, size);
+        gst_buffer_pool_set_active(pool, TRUE);
     }
     g_return_val_if_fail(pool != nullptr, FALSE);
     if (update_pool) {
