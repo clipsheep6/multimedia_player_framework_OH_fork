@@ -18,7 +18,6 @@
 
 #include "i_avcodec_engine.h"
 #include "i_avcodec_service.h"
-#include "time_monitor.h"
 #include "nocopyable.h"
 
 namespace OHOS {
