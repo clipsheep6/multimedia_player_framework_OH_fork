@@ -18,11 +18,6 @@
         "SystemCapability.Multimedia.Media.VideoPlayer",
         "SystemCapability.Multimedia.Media.AudioRecorder",
         "SystemCapability.Multimedia.Media.VideoRecorder",
-        "SystemCapability.Multimedia.Media.AudioDecoder",
-        "SystemCapability.Multimedia.Media.AudioEncoder",
-        "SystemCapability.Multimedia.Media.VideoDecoder",
-        "SystemCapability.Multimedia.Media.VideoEncoder",
-        "SystemCapability.Multimedia.Media.CodecBase",
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder",
         "SystemCapability.MultiMedia.SystemSound.Core"
@@ -68,7 +63,6 @@
           "base_group": [],
           "fwk_group": [
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
-            "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
             "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
           ],
           "service_group": [
