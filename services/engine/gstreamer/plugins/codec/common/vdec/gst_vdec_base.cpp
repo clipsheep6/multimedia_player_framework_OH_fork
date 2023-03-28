@@ -607,7 +607,7 @@ static gboolean gst_vdec_base_negotiate_format(GstVdecBase *self)
     }
     GstCaps *templ_caps = gst_pad_get_pad_template_caps(GST_VIDEO_DECODER_SRC_PAD(self));
     g_return_val_if_fail(templ_caps != nullptr, FALSE);
-    GST_DEBUG_OBJECT(self, "templ_caps %" GST_PTR_FORMAT, templ_caps);
+
     (void)update_caps_format(self, templ_caps);
     GstCaps *intersection = gst_pad_peer_query_caps(GST_VIDEO_DECODER_SRC_PAD(self), templ_caps);
     gst_caps_unref(templ_caps);
@@ -1414,7 +1414,6 @@ static gboolean gst_vdec_caps_fix_sink_caps(GstVdecBase *self)
     GstCaps *pool_caps = gst_caps_intersect(self->sink_caps, templ_caps);
     if (gst_caps_is_empty(pool_caps)) {
         gst_caps_unref(pool_caps);
-        GST_ERROR_OBJECT(self, "pool caps is null with sink caps%" GST_PTR_FORMAT, self->sink_caps);
         return FALSE;
     }
     pool_caps = gst_caps_fixate(pool_caps);

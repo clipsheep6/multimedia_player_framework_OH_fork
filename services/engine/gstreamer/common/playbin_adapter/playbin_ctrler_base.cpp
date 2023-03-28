@@ -978,14 +978,14 @@ bool PlayBinCtrlerBase::OnVideoDecoderSetup(GstElement &elem)
 
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 {
-    MEDIA_LOGD("element setup: %{public}s", ELEM_NAME(&elem));
+    MEDIA_LOGI("element setup: %{public}s", ELEM_NAME(&elem));
 
     // limit to the g-signal, send this notification at this thread, do not change the work thread.
     // otherwise ,the avmetaengine will work improperly.
 
     if (OnVideoDecoderSetup(elem) || strncmp(ELEM_NAME(&elem), "multiqueue", strlen("multiqueue")) == 0 ||
         strncmp(ELEM_NAME(&elem), "qtdemux", strlen("qtdemux")) == 0) {
-        MEDIA_LOGD("add msgfilter element: %{public}s", ELEM_NAME(&elem));
+        MEDIA_LOGI("add msgfilter element: %{public}s", ELEM_NAME(&elem));
         msgProcessor_->AddMsgFilter(ELEM_NAME(&elem));
     }
 
@@ -1012,7 +1012,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 
 void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
 {
-    MEDIA_LOGD("element unsetup: %{public}s", ELEM_NAME(&elem));
+    MEDIA_LOGI("element unsetup: %{public}s", ELEM_NAME(&elem));
 
     decltype(elemUnSetupListener_) listener = nullptr;
     {

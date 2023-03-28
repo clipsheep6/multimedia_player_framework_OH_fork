@@ -17,7 +17,6 @@
 #include <gst/gst.h>
 #include "media_errors.h"
 #include "media_log.h"
-#include "ipc_skeleton.h"
 #include "recorder_private_param.h"
 
 namespace {
