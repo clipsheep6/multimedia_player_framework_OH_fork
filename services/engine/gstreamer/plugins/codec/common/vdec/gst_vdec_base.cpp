@@ -418,6 +418,9 @@ static GstStateChangeReturn gst_vdec_base_change_state(GstElement *element, GstS
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: stop start");
+            if (self->outpool) {
+                gst_buffer_pool_set_active(self->outpool, FALSE);
+            }
             GST_VIDEO_DECODER_STREAM_LOCK(self);
             if (self->decoder != nullptr) {
                 (void)self->decoder->Flush(GST_CODEC_ALL);
