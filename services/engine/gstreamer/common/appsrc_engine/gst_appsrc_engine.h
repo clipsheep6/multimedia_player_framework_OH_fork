@@ -54,6 +54,8 @@ public:
     int32_t Prepare();
     void Stop();
     void SetPushBufferMode();
+    void DecoderSwitch();
+    void RecoverParamFromDecSwitch();
 private:
     void SetCallBackForAppSrc();
     void ClearAppsrc();
@@ -98,6 +100,7 @@ private:
     bool copyMode_ = false;
     bool isFirstBuffer_ = true;
     bool videoMode_ = false;
+    bool decoderSwitch_ = false;
 };
 } // namespace Media
 } // namespace OHOS

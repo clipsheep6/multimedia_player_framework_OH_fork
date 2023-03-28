@@ -969,6 +969,9 @@ void PlayerEngineGstImpl::ResetPlaybinToSoftDec()
 
     if (playBinCtrler_ != nullptr) {
         playBinCtrler_->SetNotifier(nullptr);
+        if (appsrcWrap_) {
+            appsrcWrap_->DecoderSwitch();
+        }
         playBinCtrler_->Stop(false);
         playBinCtrler_->SetElemSetupListener(nullptr);
         playBinCtrler_->SetElemUnSetupListener(nullptr);
