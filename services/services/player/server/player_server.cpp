@@ -838,7 +838,6 @@ int32_t PlayerServer::SetLooping(bool loop)
     }
     MEDIA_LOGD("PlayerServer SetLooping in, loop %{public}d", loop);
 
-
     if (lastOpStatus_ == PLAYER_IDLE || lastOpStatus_ == PLAYER_INITIALIZED || GetCurrState() == preparingState_) {
         MEDIA_LOGI("Waiting for the engine state is <prepared> to take effect");
         config_.looping = loop;
