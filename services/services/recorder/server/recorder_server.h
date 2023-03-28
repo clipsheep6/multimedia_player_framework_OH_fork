@@ -18,7 +18,6 @@
 
 #include "i_recorder_service.h"
 #include "i_recorder_engine.h"
-#include "time_monitor.h"
 #include "nocopyable.h"
 #include "task_queue.h"
 #include "watchdog.h"
@@ -98,8 +97,6 @@ private:
     RecStatus status_ = REC_INITIALIZED;
     std::mutex mutex_;
     std::mutex cbMutex_;
-    TimeMonitor startTimeMonitor_;
-    TimeMonitor stopTimeMonitor_;
     TaskQueue taskQue_;
     struct ConfigInfo {
         VideoSourceType videoSource;

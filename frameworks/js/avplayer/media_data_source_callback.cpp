@@ -14,7 +14,7 @@
  */
 
 #include "media_data_source_callback.h"
-#include "avsharedmemorybase.h"
+#include "avsharedmemory.h"
 #include "media_dfx.h"
 #include "media_log.h"
 #include "media_errors.h"

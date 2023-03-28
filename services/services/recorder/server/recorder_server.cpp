@@ -60,9 +60,7 @@ std::shared_ptr<IRecorderService> RecorderServer::Create()
 }
 
 RecorderServer::RecorderServer()
-    : startTimeMonitor_(START_TAG),
-      stopTimeMonitor_(STOP_TAG),
-      taskQue_("RecorderServer")
+    : taskQue_("RecorderServer")
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     taskQue_.Start();
@@ -85,8 +83,7 @@ RecorderServer::~RecorderServer()
 
 int32_t RecorderServer::Init()
 {
-    startTimeMonitor_.StartTime();
-
+    MediaTrace trace("RecorderServer::Init");
     uint32_t tokenId = IPCSkeleton::GetCallingTokenID();
     int32_t appUid = IPCSkeleton::GetCallingUid();
     int32_t appPid = IPCSkeleton::GetCallingPid();
@@ -565,8 +562,6 @@ int32_t RecorderServer::Start()
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
-
-    startTimeMonitor_.FinishTime();
     return ret;
 }
 
@@ -636,7 +631,6 @@ int32_t RecorderServer::Stop(bool block)
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::Stop");
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING && status_ != REC_PAUSED, MSERR_INVALID_OPERATION);
-    stopTimeMonitor_.StartTime();
 
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
@@ -667,8 +661,6 @@ int32_t RecorderServer::Reset()
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
-
-    stopTimeMonitor_.FinishTime();
     return ret;
 }
 
