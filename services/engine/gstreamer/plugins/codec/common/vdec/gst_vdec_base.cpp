@@ -1880,7 +1880,6 @@ static gboolean gst_vdec_base_decide_allocation(GstVideoDecoder *decoder, GstQue
         gst_vdec_base_update_out_pool(self, &pool, outcaps, size);
     }
     g_return_val_if_fail(pool != nullptr, FALSE);
-    gst_buffer_pool_set_active(pool, TRUE);
     if (update_pool) {
         gst_query_set_nth_allocation_pool(query, 0, pool, size, self->output.buffer_cnt, self->output.buffer_cnt);
     } else {
@@ -1889,6 +1888,7 @@ static gboolean gst_vdec_base_decide_allocation(GstVideoDecoder *decoder, GstQue
     GST_DEBUG_OBJECT(decoder, "Pool ref %u", (reinterpret_cast<GObject*>(pool)->ref_count));
     gst_object_unref(self->outpool);
     self->outpool = pool;
+    gst_buffer_pool_set_active(self->outpool, TRUE);
     return TRUE;
 }
 
