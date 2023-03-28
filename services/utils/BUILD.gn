@@ -56,7 +56,6 @@ ohos_shared_library("media_service_utils") {
     "media_dfx.cpp",
     "player_xcollie.cpp",
     "task_queue.cpp",
-    "time_monitor.cpp",
     "time_perf.cpp",
     "uri_helper.cpp",
     "watchdog.cpp",

@@ -40,7 +40,7 @@ public:
             return MSERR_OK;
         } else {
             MEDIA_LOGD("UPDATE_CACHE");
-            memory = ReadADataSrcMemoryFromParcel(parcel);
+            memory = ReadAVDataSrcMemoryFromParcel(parcel);
             CHECK_AND_RETURN_RET(memory != nullptr, MSERR_INVALID_VAL);
             caches_ = memory;
             return MSERR_OK;
