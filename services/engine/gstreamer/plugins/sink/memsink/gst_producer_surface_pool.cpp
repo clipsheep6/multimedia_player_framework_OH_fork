@@ -402,6 +402,8 @@ static void gst_producer_surface_pool_request_loop(GstProducerSurfacePool *spool
     GstBufferPool *pool = GST_BUFFER_POOL_CAST(spool);
     GST_DEBUG_OBJECT(spool, "Loop In");
 
+    pthread_setname_np(pthread_self(), "SurfacePool");
+
     GST_BUFFER_POOL_LOCK(spool);
     gst_producer_surface_pool_statistics(spool);
 

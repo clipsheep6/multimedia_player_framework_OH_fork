@@ -97,121 +97,145 @@ bool RecorderMock::CreateRecorder()
 
 int32_t RecorderMock::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetVideoSource(source, sourceId);
 }
 
 int32_t RecorderMock::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetAudioSource(source, sourceId);
 }
 
 int32_t RecorderMock::SetDataSource(DataSourceType dataType, int32_t &sourceId)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetDataSource(dataType, sourceId);
 }
 
 int32_t RecorderMock::SetOutputFormat(OutputFormatType format)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetOutputFormat(format);
 }
 
 int32_t RecorderMock::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetVideoEncoder(sourceId, encoder);
 }
 
 int32_t RecorderMock::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetVideoSize(sourceId, width, height);
 }
 
 int32_t RecorderMock::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetVideoFrameRate(sourceId, frameRate);
 }
 
 int32_t RecorderMock::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetVideoEncodingBitRate(sourceId, rate);
 }
 
 int32_t RecorderMock::SetCaptureRate(int32_t sourceId, double fps)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetCaptureRate(sourceId, fps);
 }
 
 OHOS::sptr<OHOS::Surface> RecorderMock::GetSurface(int32_t sourceId)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, nullptr, "recorder_ == nullptr");
     return recorder_->GetSurface(sourceId);
 }
 
 int32_t RecorderMock::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetAudioEncoder(sourceId, encoder);
 }
 
 int32_t RecorderMock::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetAudioSampleRate(sourceId, rate);
 }
 
 int32_t RecorderMock::SetAudioChannels(int32_t sourceId, int32_t num)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetAudioChannels(sourceId, num);
 }
 
 int32_t RecorderMock::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetAudioEncodingBitRate(sourceId, bitRate);
 }
 
 int32_t RecorderMock::SetMaxDuration(int32_t duration)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetMaxDuration(duration);
 }
 
 int32_t RecorderMock::SetMaxFileSize(int64_t size)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetMaxFileSize(size);
 }
 
 int32_t RecorderMock::SetOutputFile(int32_t fd)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetOutputFile(fd);
 }
 
 int32_t RecorderMock::SetNextOutputFile(int32_t fd)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetNextOutputFile(fd);
 }
 
 void RecorderMock::SetLocation(float latitude, float longitude)
 {
+    UNITTEST_CHECK_AND_RETURN_LOG(recorder_ != nullptr, "recorder_ == nullptr");
     return recorder_->SetLocation(latitude, longitude);
 }
 
 void RecorderMock::SetOrientationHint(int32_t rotation)
 {
+    UNITTEST_CHECK_AND_RETURN_LOG(recorder_ != nullptr, "recorder_ == nullptr");
     return recorder_->SetOrientationHint(rotation);
 }
 
 int32_t RecorderMock::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetRecorderCallback(callback);
 }
 
 int32_t RecorderMock::Prepare()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->Prepare();
 }
 
 int32_t RecorderMock::Start()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->Start();
 }
 
 int32_t RecorderMock::Pause()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     if (isStart_.load()) {
         isStart_.store(false);
     }
@@ -220,6 +244,7 @@ int32_t RecorderMock::Pause()
 
 int32_t RecorderMock::Resume()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     if (!isStart_.load()) {
         isStart_.store(true);
     }
@@ -228,6 +253,7 @@ int32_t RecorderMock::Resume()
 
 int32_t RecorderMock::Stop(bool block)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     if (!isExit_.load()) {
         isExit_.store(true);
     }
@@ -236,6 +262,7 @@ int32_t RecorderMock::Stop(bool block)
 
 int32_t RecorderMock::Reset()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     if (!isExit_.load()) {
         isExit_.store(true);
     }
@@ -244,6 +271,7 @@ int32_t RecorderMock::Reset()
 
 int32_t RecorderMock::Release()
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     if (!isExit_.load()) {
         isExit_.store(true);
     }
@@ -252,16 +280,19 @@ int32_t RecorderMock::Release()
 
 int32_t RecorderMock::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetFileSplitDuration(type, timestamp, duration);
 }
 
 int32_t RecorderMock::SetParameter(int32_t sourceId, const Format &format)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetParameter(sourceId, format);
 }
 
 int32_t RecorderMock::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig &recorderConfig)
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     if (recorderType != PURE_AUDIO) {
         producerSurface_ = recorder_->GetSurface(recorderConfig.videoSourceId);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, MSERR_INVALID_OPERATION, "GetSurface failed ");
@@ -459,6 +490,7 @@ void RecorderMock::HDICreateYUVBuffer()
 
 int32_t RecorderMock::CameraServicesForVideo(VideoRecorderConfig &recorderConfig) const
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     int32_t ret = recorder_->SetVideoEncoder(recorderConfig.videoSourceId,
         recorderConfig.videoFormat);
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoEncoder failed ");
@@ -478,6 +510,7 @@ int32_t RecorderMock::CameraServicesForVideo(VideoRecorderConfig &recorderConfig
 
 int32_t RecorderMock::CameraServicesForAudio(VideoRecorderConfig &recorderConfig) const
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     int32_t ret = recorder_->SetAudioEncoder(recorderConfig.audioSourceId, recorderConfig.audioFormat);
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetAudioEncoder failed ");
 
@@ -496,6 +529,7 @@ int32_t RecorderMock::CameraServicesForAudio(VideoRecorderConfig &recorderConfig
 
 int32_t RecorderMock::SetFormat(const std::string &recorderType, VideoRecorderConfig &recorderConfig) const
 {
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     int32_t ret = 0;
     if (recorderType == PURE_VIDEO) {
         ret = recorder_->SetVideoSource(recorderConfig.vSource, recorderConfig.videoSourceId);

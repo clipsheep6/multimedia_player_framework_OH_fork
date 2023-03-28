@@ -139,6 +139,7 @@ public:
     ~PlaybackCompletedState() = default;
 
     int32_t Play() override;
+    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override;
     int32_t Stop() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
 

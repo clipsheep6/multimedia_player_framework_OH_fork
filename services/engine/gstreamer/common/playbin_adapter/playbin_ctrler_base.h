@@ -56,6 +56,7 @@ public:
     int32_t Stop(bool needWait) override;
     int32_t SetRate(double rate) override;
     double GetRate() override;
+    int64_t QueryPosition() override;
     int32_t SetLoop(bool loop) override;
     void SetVolume(const float &leftVolume, const float &rightVolume) override;
     void SetAudioInterruptMode(const int32_t interruptMode) override;
@@ -167,7 +168,9 @@ private:
     bool isRating_ = false;
     bool isBuffering_ = false;
     bool isNetWorkPlay_ = false;
+    bool isUserSetPlay_ = false;
     bool isUserSetPause_ = false;
+    bool isReplay_ = false;
     uint32_t rendererInfo_ = 0;
     int32_t rendererFlag_ = 0;
     int32_t cachePercent_ = 100; // 100% cache percent

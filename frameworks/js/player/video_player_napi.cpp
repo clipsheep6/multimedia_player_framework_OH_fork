@@ -38,6 +38,37 @@ const std::string STATE_ERROR = "error";
 thread_local napi_ref VideoPlayerNapi::constructor_ = nullptr;
 const std::string CLASS_NAME = "VideoPlayer";
 
+static std::string GetJSState(PlayerStates currentState)
+{
+    std::string result;
+    MEDIA_LOGD("GetJSState()! is called!, %{public}d", currentState);
+    switch (currentState) {
+        case PLAYER_IDLE:
+        case PLAYER_INITIALIZED:
+            result = VideoPlayState::STATE_IDLE;
+            break;
+        case PLAYER_PREPARED:
+            result = VideoPlayState::STATE_PREPARED;
+            break;
+        case PLAYER_STARTED:
+            result = VideoPlayState::STATE_PLAYING;
+            break;
+        case PLAYER_PAUSED:
+            result = VideoPlayState::STATE_PAUSED;
+            break;
+        case PLAYER_STOPPED:
+        case PLAYER_PLAYBACK_COMPLETE:
+            result = VideoPlayState::STATE_STOPPED;
+            break;
+        default:
+            // Considering default state as stopped
+            MEDIA_LOGE("Error state! %{public}d", currentState);
+            result = VideoPlayState::STATE_ERROR;
+            break;
+    }
+    return result;
+}
+
 VideoPlayerNapi::VideoPlayerNapi()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
@@ -710,51 +741,46 @@ napi_value VideoPlayerNapi::Seek(napi_env env, napi_callback_info info)
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
-    MEDIA_LOGD("Seek In");
+    MEDIA_LOGI("Seek In");
     std::unique_ptr<VideoPlayerAsyncContext> asyncContext = std::make_unique<VideoPlayerAsyncContext>(env);
     asyncContext->asyncWorkType = AsyncWorkType::ASYNC_WORK_SEEK;
 
-    // get args
     napi_value jsThis = nullptr;
-    napi_value args[3] = { nullptr };
+    napi_value args[3] = { nullptr }; // timeMs: number, mode:SeekMode, callback:AsyncCallback<number>
     size_t argCount = 3;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr) {
         asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to napi_get_cb_info");
     }
-
-    // get seek time
-    napi_valuetype valueType = napi_undefined;
-    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "failed to get seek time");
-    }
-    status = napi_get_value_int32(env, args[0], &asyncContext->seekPosition);
-    if (status != napi_ok || asyncContext->seekPosition < 0) {
-        asyncContext->SignError(MSERR_EXT_INVALID_VAL, "seek position < 0");
-    }
-
-    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok) {
-        if (valueType == napi_number) { // get seek mode
-            status = napi_get_value_int32(env, args[1], &asyncContext->seekMode);
-            if (status != napi_ok ||
-                asyncContext->seekMode < SEEK_NEXT_SYNC ||
-                asyncContext->seekMode > SEEK_CLOSEST) {
-                asyncContext->SignError(MSERR_EXT_INVALID_VAL, "seek mode invalid");
-            }
-        } else if (valueType == napi_function) {
-            asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
+    if (asyncContext->jsPlayer != nullptr && asyncContext->jsPlayer->jsCallback_ != nullptr) {
+        auto cb = std::static_pointer_cast<VideoCallbackNapi>(asyncContext->jsPlayer->jsCallback_);
+        if (GetJSState(cb->GetCurrentState()) == VideoPlayState::STATE_STOPPED) {
+            asyncContext->SignError(MSERR_EXT_OPERATE_NOT_PERMIT, "current state does not support seek");
         }
     }
 
-    static constexpr size_t argFunc = 2;
-    if (args[argFunc] != nullptr &&
-        napi_typeof(env, args[argFunc], &valueType) == napi_ok && valueType == napi_function) {
-        asyncContext->callbackRef = CommonNapi::CreateReference(env, args[argFunc]);
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_number) {
+        (void)napi_get_value_int32(env, args[0], &asyncContext->seekPosition); // timeMs: number
+        if (asyncContext->seekPosition < 0) {
+            asyncContext->SignError(MSERR_EXT_INVALID_VAL, "seek position < 0");
+        }
+    }
+
+    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number) {
+        (void)napi_get_value_int32(env, args[1], &asyncContext->seekMode); // mode:SeekMode
+        if (asyncContext->seekMode < SEEK_NEXT_SYNC || asyncContext->seekMode > SEEK_CLOSEST) {
+            asyncContext->SignError(MSERR_EXT_INVALID_VAL, "seek mode invalid");
+        }
+        if (args[2] != nullptr && napi_typeof(env, args[2], &valueType) == napi_ok && valueType == napi_function) {
+            asyncContext->callbackRef = CommonNapi::CreateReference(env, args[2]); // callback:AsyncCallback<number>
+        }
+    } else if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
+        asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]); // callback:AsyncCallback<number>
     }
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
-    // get jsPlayer
-    (void)napi_unwrap(env, jsThis, reinterpret_cast<void **>(&asyncContext->jsPlayer));
-    // async work
+
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "Seek", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
@@ -1212,37 +1238,6 @@ napi_value VideoPlayerNapi::GetDuration(napi_env env, napi_callback_info info)
 
     MEDIA_LOGD("GetDuration success, Current time: %{public}d", duration);
     return jsResult;
-}
-
-static std::string GetJSState(PlayerStates currentState)
-{
-    std::string result;
-    MEDIA_LOGD("GetJSState()! is called!, %{public}d", currentState);
-    switch (currentState) {
-        case PLAYER_IDLE:
-        case PLAYER_INITIALIZED:
-            result = VideoPlayState::STATE_IDLE;
-            break;
-        case PLAYER_PREPARED:
-            result = VideoPlayState::STATE_PREPARED;
-            break;
-        case PLAYER_STARTED:
-            result = VideoPlayState::STATE_PLAYING;
-            break;
-        case PLAYER_PAUSED:
-            result = VideoPlayState::STATE_PAUSED;
-            break;
-        case PLAYER_STOPPED:
-        case PLAYER_PLAYBACK_COMPLETE:
-            result = VideoPlayState::STATE_STOPPED;
-            break;
-        default:
-            // Considering default state as stopped
-            MEDIA_LOGE("Error state! %{public}d", currentState);
-            result = VideoPlayState::STATE_ERROR;
-            break;
-    }
-    return result;
 }
 
 napi_value VideoPlayerNapi::GetState(napi_env env, napi_callback_info info)

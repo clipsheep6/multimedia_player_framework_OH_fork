@@ -367,6 +367,7 @@ static GstFlowReturn gst_surface_do_render_buffer(GstMemSink *memsink, GstBuffer
 
 static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, GstBuffer *buffer, bool is_preroll)
 {
+    MediaTrace renderTrace("Surface::RenderFrame");
     g_return_val_if_fail(memsink != nullptr && buffer != nullptr, GST_FLOW_ERROR);
     GstSurfaceMemSink *surface_sink = GST_SURFACE_MEM_SINK_CAST(memsink);
     g_return_val_if_fail(surface_sink != nullptr, GST_FLOW_ERROR);
@@ -393,6 +394,7 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
     }
 
     if (surface_sink->firstRenderFrame && is_preroll) {
+        MediaTrace firstRenderTrace("Surface::firstRenderFrame and isPreroll");
         GST_DEBUG_OBJECT(surface_sink, "first render frame");
         surface_sink->firstRenderFrame = FALSE;
         GST_OBJECT_UNLOCK(surface_sink);
@@ -419,7 +421,6 @@ static gboolean gst_surface_mem_sink_do_propose_allocation(GstMemSink *memsink, 
     GstCaps *caps = nullptr;
     gboolean needPool = FALSE;
     gst_query_parse_allocation(query, &caps, &needPool);
-    GST_DEBUG_OBJECT(surface_sink, "process allocation query, caps: %" GST_PTR_FORMAT, caps);
 
     if (!needPool) {
         GST_ERROR_OBJECT(surface_sink, "no need buffer pool, unexpected!");
@@ -588,4 +589,3 @@ static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *elemen
     }
     return GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
 }
-

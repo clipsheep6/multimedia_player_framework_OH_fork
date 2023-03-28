@@ -380,7 +380,6 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
     g_return_val_if_fail(sink != nullptr, FALSE);
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
 
-    GST_INFO_OBJECT(basesink, "caps=%" GST_PTR_FORMAT, caps);
     GstStructure *structure = gst_caps_get_structure(caps, 0);
     g_return_val_if_fail(structure != nullptr, FALSE);
     gint channels = 0;
@@ -429,6 +428,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             g_mutex_unlock(&sink->render_lock);
             break;
         case GST_EVENT_FLUSH_START:
+            basesink->stream_group_done = FALSE;
             gst_audio_server_sink_clear_cache_buffer(sink);
             if (sink->audio_sink == nullptr) {
                 break;
@@ -440,6 +440,18 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             break;
         case GST_EVENT_FLUSH_STOP:
             GST_DEBUG_OBJECT(basesink, "received FLUSH_STOP");
+            break;
+        case GST_EVENT_STREAM_GROUP_DONE:
+            basesink->stream_group_done = TRUE;
+            GST_DEBUG_OBJECT(basesink, "received STREAM_GROUP_DONE, set stream_group_done TRUE");
+            if (basesink->need_preroll) {
+                /* may async start to change state, preroll STREAM_GROUP_DONE to async done */
+                gst_base_sink_do_preroll (basesink, GST_MINI_OBJECT_CAST(event));
+            }
+            break;
+        case GST_EVENT_STREAM_START:
+            basesink->stream_group_done = FALSE;
+            GST_DEBUG_OBJECT(basesink, "received STREAM_START, set stream_group_done FALSE");
             break;
         default:
             break;
