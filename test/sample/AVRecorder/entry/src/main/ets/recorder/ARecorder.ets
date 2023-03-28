@@ -38,6 +38,9 @@ struct audioRecording {
   pauseRecordingBtn: any = $r('app.media.ic_pause_white');
   resumeRecordingBtn: any = $r('app.media.take_video_resume');
   settingBtn: any = $r('app.media.setting');
+  @State audioChannels: number = 2;  // set default audioChannels 2
+  @State audioSampleRate: number = 48000; // set default audioSampleRate 48000
+
   private avProfile = {
     audioBitrate: 48000, // set audioBitrate according to device ability
     audioChannels: 2, // set audioChannels, valid value 1-8
@@ -146,6 +149,8 @@ struct audioRecording {
 
   async prepareAudioRecorder(): Promise<void> {
     console.info(`${this.tag} case prepareAudioRecorder in`);
+    this.avConfig.profile.audioChannels = this.audioChannels;
+    this.avConfig.profile.audioSampleRate = this.audioSampleRate;
     await this.audioRecorder.prepare(this.avConfig).then(() => {
       console.info(`${this.tag} case prepare AVRecorder called`);
     }, this.failureCallback).catch(this.catchCallback);
@@ -259,6 +264,23 @@ struct audioRecording {
     console.info(`${this.tag} stopRecording done`);
   }
 
+  // detail button
+  @Builder ProfileInfo() {
+    Flex({ direction: FlexDirection.Column, alignItems: ItemAlign.Start, justifyContent: FlexAlign.Center }) {
+      Flex({ direction: FlexDirection.Row }) {
+        Text("音频声道数：").fontSize(16)
+        Text(this.audioChannels.toString()).fontSize(16)
+      }.margin('5%')
+
+      Flex({ direction: FlexDirection.Row }) {
+        Text("音频采样率：").fontSize(16)
+        Text(this.audioSampleRate.toString()).fontSize(16)
+      }.margin('5%')
+    }
+    .width(200).height(200)
+    .opacity(0.4)
+  }
+
   build() {
     Column() {
       Row() {
@@ -267,8 +289,25 @@ struct audioRecording {
             .fontSize(20)
             .fontColor('white')
             .margin({ bottom: '95%' })
+          Button('!')
+            .width('120px')
+            .height('120px')
+            .backgroundColor('white')
+            .fontColor('white')
+            .opacity(0.5)
+            .margin({ bottom: '95%', left: '80%' })
+            .bindContextMenu(this.ProfileInfo, ResponseType.LongPress)
           Row({ space: 100 }) {
             if (!this.isStartRecording) {
+              Image(this.settingBtn)
+                .width(50).height(50)
+                .margin({ left: 10, bottom: 10 })
+                .onClick(() => {
+                  if (this.dialogController !== undefined) {
+                    console.info(`${this.tag} to open setting dialog`);
+                    this.dialogController.open()
+                  }
+                })
               Image(this.startRecordingBtn)
                 .width(50).height(50)
                 .margin({ bottom: 10 })
@@ -295,4 +334,107 @@ struct audioRecording {
       }.backgroundColor(Color.Black)
     }
   }
+
+  dialogController: CustomDialogController = new CustomDialogController({
+    builder: CustomDialogExample({
+      cancel: this.onCancel,
+      confirm: this.onAccept,
+      audioChannels: $audioChannels,
+      audioSampleRate: $audioSampleRate,
+    }),
+    cancel: this.existApp,
+    autoCancel: false,
+  })
+
+  onCancel() {
+    console.info(`Callback when the cancel button is clicked`)
+  }
+
+  onAccept() {
+    console.info(`Callback when the confirm button is clicked`)
+  }
+
+  existApp() {
+    console.info(`Click the callback in the blank area`)
+  }
 }
+
+
+@CustomDialog
+struct CustomDialogExample {
+  @Link audioChannels: number
+  @Link audioSampleRate: number
+  controller: CustomDialogController
+  cancel: () => void
+  confirm: () => void
+  @State current_audioChannels: number = 2
+  @State current_audioSampleRate: number = 48000
+  private init_audioChannels: number = 2
+  private init_audioSampleRate: number = 48000
+  @State audioChannelsList: Array<number> = [1,2,4,8]
+  @State audioSampleRateList: Array<number> = [32000, 44100, 48000, 96000]
+
+  build() {
+    Column() {
+      Text('音频声道数： ' + this.current_audioChannels)
+        .width('100%')
+        .fontSize(18)
+        .margin({ bottom: 10 })
+      List() {
+        ForEach(this.audioChannelsList, (item, index) => {
+          ListItem() {
+            Text(item.toString())
+              .fontSize(16)
+              .width('100%')
+          }.height(48)
+          .onClick(() => {
+            console.info(`${item.toString()} audiochannel is clicked`)
+            this.current_audioChannels = item;
+            console.info(`${item.toString()} audiochannel is clicked`)
+          })
+        })
+      }.listDirection(Axis.Vertical)
+      .divider({ strokeWidth: 0.5, color: '#33000000', startMargin: 0, endMargin: 12 })
+
+      Text('音频采样率： ' + this.current_audioSampleRate)
+        .width('100%')
+        .fontSize(18)
+        .margin({ bottom: 10 })
+      List() {
+        ForEach(this.audioSampleRateList, (item, index) => {
+          ListItem() {
+            Text(item.toString())
+              .fontSize(16)
+              .width('100%')
+          }.height(48)
+          .onClick(() => {
+            console.info(`${item.toString()} samplerate is clicked`)
+            this.current_audioSampleRate = item
+            console.info(`${item.toString()} samplerate is clicked`)
+          })
+        })
+      }.listDirection(Axis.Vertical)
+      .divider({ strokeWidth: 0.5, color: '#33000000', startMargin: 0, endMargin: 12 })
+
+      Flex({ justifyContent: FlexAlign.SpaceAround }) {
+        Button('取消')
+          .onClick(() => {
+            this.audioChannels = this.init_audioChannels
+            this.audioSampleRate = this.init_audioSampleRate
+            this.controller.close()
+            this.cancel()
+          }).backgroundColor(0xffffff)
+          .fontColor(Color.Black)
+        Button('确认')
+          .onClick(() => {
+            this.audioChannels = this.current_audioChannels
+            this.audioSampleRate = this.current_audioSampleRate
+            this.controller.close()
+            this.confirm()
+          }).backgroundColor(0xffffff)
+          .fontColor(Color.Red)
+      }.margin({ bottom: 10 })
+    }.margin(24)
+  }
+}
+
