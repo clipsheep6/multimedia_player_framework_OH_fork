@@ -91,7 +91,11 @@ int32_t GstAppsrcEngine::Prepare()
             bufferSize_, AVSharedMemory::Flags::FLAGS_READ_WRITE, "appsrc");
         CHECK_AND_RETURN_RET_LOG(appSrcMem_->mem != nullptr, MSERR_NO_MEMORY, "init AVSharedMemory failed");
     }
-    ResetConfig();
+    if (decoderSwitch_) {
+        RecoverParamFromDecSwitch();
+    } else {
+        ResetConfig();
+    }
     SetPushBufferMode();
     CHECK_AND_RETURN_RET_LOG(pullTaskQue_.Start() == MSERR_OK, MSERR_INVALID_OPERATION, "init task failed");
     CHECK_AND_RETURN_RET_LOG(pushTaskQue_.Start() == MSERR_OK, MSERR_INVALID_OPERATION, "init task failed");
@@ -126,6 +130,14 @@ void GstAppsrcEngine::ResetConfig()
     timer_ = 0;
     copyMode_ = false;
     isFirstBuffer_ = true;
+}
+
+void GstAppsrcEngine::RecoverParamFromDecSwitch()
+{
+    appSrcMem_->availableBegin = 0;
+    appSrcMem_->end = bufferSize_ - 1;
+    isExit_ = false;
+    decoderSwitch_ = false;
 }
 
 void GstAppsrcEngine::Stop()
@@ -212,6 +224,11 @@ void GstAppsrcEngine::SetPushBufferMode()
             MEDIA_LOGD("set copymode to false");
         }
     }
+}
+
+void GstAppsrcEngine::DecoderSwitch()
+{
+    decoderSwitch_ = true;
 }
 
 int32_t GstAppsrcEngine::SetErrorCallback(AppsrcErrorNotifier notifier)
