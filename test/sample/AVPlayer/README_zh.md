@@ -14,7 +14,9 @@
 
 ### 效果预览
 
-<img src="screenshots\device\home.png" alt="home" style="zoom:12%;" /> <img src="screenshots\device\list.png" alt="list" style="zoom:12%;" /> <img src="screenshots\device\play.png" alt="play" style="zoom:12%;" /> 
+ <img src="screenshots/device/home.png" /><img src="screenshots/device/list.png"/><img src="screenshots/device/play.png"/>
+
+
 
 ### 使用说明
 
