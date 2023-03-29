@@ -22,7 +22,7 @@ ohos.permission.WRITE_MEDIA, which allows an app to write media files to the use
 ### Constraints
 
 1. This sample can only be run on standard-system devices that use the Rockchip RK3568 development board.
-2. This sample is based on the stage model, which is supported from API version 9. You should manully fetch Full SDK from gitee and replace them in DevEco Studio according to [Replace SDK Wiki](https://gitee.com/openharmony/docs/blob/master/zh-cn/application-dev/quick-start/full-sdk-switch-guide.md).
+2. This sample is based on the stage model, which is supported from API version 9. You should manully fetch Full SDK from gitee and replace them in DevEco Studio.
 3. DevEco Studio 3.1 (Build Version:3.1.0.200, built on Feburary 16, 2023) must be used.
-3. Camera apis can only be used by system app. In order to run this sample,  you should generate signature manually with hap-sign-tool according to [Signtool Wiki](https://docs.openharmony.cn/pages/v3.2Beta/zh-cn/application-dev/security/hapsigntool-overview.md/).
+3. Camera apis can only be used by system app. In order to run this sample,  you should generate signature manually with hap-sign-tool.
 
