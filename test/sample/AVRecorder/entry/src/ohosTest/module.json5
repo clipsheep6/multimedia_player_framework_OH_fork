@@ -15,57 +15,34 @@
 
 {
   "module": {
-    "name": "entry",
-    "type": "entry",
-    "description": "$string:module_desc",
-    "mainElement": "EntryAbility",
+    "name": "entry_test",
+    "type": "feature",
+    "description": "$string:module_test_desc",
+    "mainElement": "TestAbility",
     "deviceTypes": [
       "default",
       "tablet"
     ],
-    "metadata": [
-      {
-        "name": "ArkTSPartialUpdate",
-        "value": "false"
-      }
-    ],
-    "requestPermissions": [
-      {
-        "name": "ohos.permission.MEDIA_LOCATION"
-      },
-      {
-        "name": "ohos.permission.READ_MEDIA"
-      },
-      {
-        "name": "ohos.permission.WRITE_MEDIA"
-      },
-      {
-        "name": "ohos.permission.CAMERA"
-      },
-      {
-        "name": "ohos.permission.MICROPHONE"
-      }
-    ],
     "deliveryWithInstall": true,
     "installationFree": false,
-    "pages": "$profile:main_pages",
+    "pages": "$profile:test_pages",
     "abilities": [
       {
-        "name": "EntryAbility",
-        "srcEntrance": "./ets/entryability/EntryAbility.ts",
-        "description": "$string:ability_desc",
+        "name": "TestAbility",
+        "srcEntrance": "./ets/testability/TestAbility.ets",
+        "description": "$string:TestAbility_desc",
         "icon": "$media:icon",
-        "label": "$string:ability_label",
+        "label": "$string:TestAbility_label",
+        "visible": true,
         "startWindowIcon": "$media:icon",
         "startWindowBackground": "$color:start_window_background",
-        "visible": true,
         "skills": [
           {
-            "entities": [
-              "entity.system.home"
-            ],
             "actions": [
               "action.system.home"
+            ],
+            "entities": [
+              "entity.system.home"
             ]
           }
         ]
