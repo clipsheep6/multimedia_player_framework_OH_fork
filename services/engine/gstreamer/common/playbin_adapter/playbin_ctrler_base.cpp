@@ -38,6 +38,7 @@ namespace {
     constexpr int32_t BUFFER_PERCENT_THRESHOLD = 100;
     constexpr uint32_t HTTP_TIME_OUT_DEFAULT = 15; // 15s
     constexpr int32_t NANO_SEC_PER_USEC = 1000;
+    constexpr int32_t USEC_PER_MSEC = 1000;
     constexpr double DEFAULT_RATE = 1.0;
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
 }
@@ -335,9 +336,8 @@ int32_t PlayBinCtrlerBase::SetRateInternal(double rate)
     } else {
         ret = gst_element_query_position(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &position);
         if (!ret) {
-            isRating_ = false;
-            MEDIA_LOGE("query position failed");
-            return MSERR_NO_MEMORY;
+            MEDIA_LOGW("query position failed, use lastTime");
+            position = lastTime_;
         }
     }
 
@@ -636,7 +636,7 @@ int32_t PlayBinCtrlerBase::PrepareAsyncInternal()
 
 int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
 {
-    MEDIA_LOGD("execute seek, time: %{public}" PRIi64 ", option: %{public}d", timeUs, seekOption);
+    MEDIA_LOGI("execute seek, time: %{public}" PRIi64 ", option: %{public}d", timeUs, seekOption);
 
     int32_t seekFlags = SEEK_OPTION_TO_GST_SEEK_FLAGS.at(seekOption);
     timeUs = timeUs > duration_ ? duration_ : timeUs;
@@ -769,28 +769,28 @@ void PlayBinCtrlerBase::QueryDuration()
     gboolean ret = gst_element_query_duration(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &duration);
     CHECK_AND_RETURN_LOG(ret, "query duration failed");
 
-    duration_ = duration / NANO_SEC_PER_USEC;
+    if (duration >= 0) {
+        duration_ = duration / NANO_SEC_PER_USEC;
+    }
     MEDIA_LOGI("update the duration: %{public}" PRIi64 " microsecond", duration_);
 }
 
-int64_t PlayBinCtrlerBase::QueryPositionInternal(bool isSeekDone)
+int64_t PlayBinCtrlerBase::QueryPosition()
 {
     gint64 position = 0;
     gboolean ret = gst_element_query_position(GST_ELEMENT_CAST(playbin_), GST_FORMAT_TIME, &position);
     if (!ret) {
-        if (isSeekDone) {
-            position = seekPos_ * NANO_SEC_PER_USEC;
-        } else {
-            MEDIA_LOGW("query position failed");
-            return lastTime_;
-        }
+        MEDIA_LOGW("query position failed");
+        return lastTime_ / USEC_PER_MSEC;
     }
 
     int64_t curTime = position / NANO_SEC_PER_USEC;
-    curTime = std::min(curTime, duration_);
+    if (duration_ >= 0) {
+        curTime = std::min(curTime, duration_);
+    }
     lastTime_ = curTime;
     MEDIA_LOGI("update the position: %{public}" PRIi64 " microsecond", curTime);
-    return curTime;
+    return curTime / USEC_PER_MSEC;
 }
 
 void PlayBinCtrlerBase::ProcessEndOfStream()
@@ -802,7 +802,7 @@ void PlayBinCtrlerBase::ProcessEndOfStream()
         return;
     }
 
-    if (!enableLooping_.load()) {
+    if (!enableLooping_.load() && !isSeeking_) { // seek duration done->seeking->eos
         ChangeState(playbackCompletedState_);
     }
 }

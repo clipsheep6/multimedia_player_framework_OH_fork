@@ -988,7 +988,7 @@ HWTEST_F(PlayerUnitTest, Player_Seek_004, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
     EXPECT_EQ(MSERR_OK, player_->Play());
     sleep(PLAYING_TIME);
-    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
     EXPECT_EQ(MSERR_OK, player_->Reset());
