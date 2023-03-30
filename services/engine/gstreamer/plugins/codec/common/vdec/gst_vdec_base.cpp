@@ -164,8 +164,9 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
 /* must taken codec_change mutex */
 static void gst_vdec_base_free_outstanding_buffers(GstVdecBase *self)
 {
+    /* release outstanding buffers for next codec to negotiate buffer pool */
     g_return_if_fail(self != nullptr);
-    GST_DEBUG_OBJECT(self, "Ready free outstanding buffers");
+    GST_DEBUG_OBJECT(self, "Ready to free outstanding buffers");
     GST_VIDEO_DECODER_STREAM_LOCK(self);
     if (self->decoder != nullptr) {
         (void)self->decoder->Flush(GST_CODEC_ALL);
@@ -192,7 +193,6 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
     g_return_if_fail(object != nullptr && value != nullptr);
     GstVdecBase *self = GST_VDEC_BASE(object);
     gint ret = GST_CODEC_OK;
-
     switch (prop_id) {
         case PROP_VENDOR:
             GST_INFO_OBJECT(object, "Set vendor property");
@@ -231,7 +231,6 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             self->player_mode = g_value_get_boolean(value);
             break;
         case PROP_CODEC_CHANGE:
-            // need release outstanding buffers for next codec to negotiate buffer pool
             g_mutex_lock(&self->codec_change_mutex);
             gst_vdec_base_free_outstanding_buffers(self);
             self->codec_change = g_value_get_boolean(value);
