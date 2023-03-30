@@ -36,6 +36,7 @@ struct _GstVideoDisplaySinkPrivate {
     GstElement *audio_sink;
     gboolean enable_kpi_avsync_log;
     gboolean enable_drop;
+    gboolean close_avsync;
     GMutex mutex;
     guint64 render_time_diff_threshold;
     guint buffer_count;
@@ -61,6 +62,7 @@ static GstClockTime gst_video_display_sink_update_reach_time(GstBaseSink *base_s
 static gboolean gst_video_display_sink_event(GstBaseSink *base_sink, GstEvent *event);
 static GstStateChangeReturn gst_video_display_sink_change_state(GstElement *element, GstStateChange transition);
 static void gst_video_display_sink_enable_drop_from_sys_param(GstVideoDisplaySink *video_display_sink);
+static void gst_close_avsync_from_sys_param(GstVideoDisplaySink *video_display_sink);
 
 static void gst_video_display_sink_class_init(GstVideoDisplaySinkClass *klass)
 {
@@ -103,6 +105,7 @@ static void gst_video_display_sink_init(GstVideoDisplaySink *sink)
     sink->priv = priv;
     priv->audio_sink = nullptr;
     priv->enable_kpi_avsync_log = FALSE;
+    priv->close_avsync = FALSE;
     g_mutex_init(&priv->mutex);
     priv->render_time_diff_threshold = DEFAULT_MAX_WAIT_CLOCK_TIME;
     priv->buffer_count = 1;
@@ -110,6 +113,7 @@ static void gst_video_display_sink_init(GstVideoDisplaySink *sink)
     priv->dropped_video_buffer_num = 0;
     priv->last_video_render_pts = 0;
     gst_video_display_sink_enable_drop_from_sys_param(sink);
+    gst_close_avsync_from_sys_param(sink);
 }
 
 static void gst_video_display_sink_dispose(GObject *obj)
@@ -244,6 +248,22 @@ static void gst_video_display_sink_enable_drop_from_sys_param(GstVideoDisplaySin
 
     if (drop_enable == "false") {
         video_display_sink->priv->enable_drop = FALSE;
+    }
+}
+
+static void gst_close_avsync_from_sys_param(GstVideoDisplaySink *video_display_sink)
+{
+    std::string avsync_close;
+    video_display_sink->priv->close_avsync = FALSE;
+    int32_t res = OHOS::system::GetStringParameter("sys.media.close.avsync", avsync_close, "");
+    if (res != 0 || avsync_close.empty()) {
+        GST_DEBUG_OBJECT(video_display_sink, "sys.media.close.avsync");
+        return;
+    }
+    GST_DEBUG_OBJECT(video_display_sink, "sys.media.close.avsync=%s", avsync_close.c_str());
+
+    if (avsync_close == "true") {
+        video_display_sink->priv->close_avsync = TRUE;
     }
 }
 
@@ -393,7 +413,7 @@ static GstClockTime gst_video_display_sink_update_reach_time(GstBaseSink *base_s
     g_return_val_if_fail(GST_CLOCK_TIME_IS_VALID(reach_time), reach_time);
     GstVideoDisplaySink *video_display_sink = GST_VIDEO_DISPLAY_SINK_CAST(base_sink);
     GstVideoDisplaySinkPrivate *priv = video_display_sink->priv;
-    if (priv == nullptr || priv->render_time_diff_threshold == G_MAXUINT64) {
+    if (priv == nullptr || priv->render_time_diff_threshold == G_MAXUINT64 || priv->close_avsync == TRUE) {
         return reach_time;
     }
     priv->total_video_buffer_num++;
