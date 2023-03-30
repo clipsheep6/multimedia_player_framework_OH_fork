@@ -608,7 +608,6 @@ export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
                     // step 4: seek + pause
                     expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.PLAYING);
                     avPlayer.seek(avPlayer.duration / 2, media.SeekMode.SEEK_PREV_SYNC);
-                    // avPlayer.pause();
                     avPlayer.pause((err) => {
                         if (err != null) {
                             mediaTestBase.assertErr('pause', err, done);
