@@ -16,19 +16,21 @@ import AVPlayerHlsFuncTest from './AVPlayerHlsFuncTest.test.js'
 import AVPlayerHlsLiveFuncTest from './AVPlayerHlsLiveFuncTest.test.js'
 import AVPlayerHttpCompatibilityTest from './AVPlayerHttpCompatibilityTest.test.ets'
 import AVPlayerHttpSeekTest from './AVPlayerHttpSeekTest.test.ets'
-import AVPlayerDataSrcCompatibilityTest from './AVPlayerDataSrcCompatibilityTest.test.js'
-import AVPlayerDataSrcReliabilityTest from './AVPlayerDataSrcReliabilityTest.test.js'
+import AVPlayerDataSrcNoSeekCompatibilityTest from './AVPlayerDataSrcNoSeekCompatibilityTest.test.js'
+import AVPlayerDataSrcNoSeekReliabilityTest from './AVPlayerDataSrcNoSeekReliabilityTest.test.js'
 import AVPlayerLocalTest from './AVPlayerLocalTest.test.js'
-import AVPlayerLocalTestH265 from './AVPlayerLocalTesth265.test.js'
+import AVPlayerLocalTestH265 from './AVPlayerLocalTestH265.test.js'
+import AVPlayerLocalAPITest from './AVPlayerLocalAPITest.test.js'
 
 export default function testsuite() {
+  AVPlayerLocalAPITest()
   AVPlayerHlsFuncTest()
   AVPlayerHlsLiveFuncTest();
   AVPlayerHlsFuncTest();
   AVPlayerHttpCompatibilityTest();
   AVPlayerHttpSeekTest();
-  AVPlayerDataSrcCompatibilityTest();
-  AVPlayerDataSrcReliabilityTest();
+  AVPlayerDataSrcNoSeekCompatibilityTest();
+  AVPlayerDataSrcNoSeekReliabilityTest();
   AVPlayerLocalTest();
   AVPlayerLocalTestH265();
 }

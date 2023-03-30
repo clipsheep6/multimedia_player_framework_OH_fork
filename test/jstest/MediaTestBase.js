@@ -15,6 +15,8 @@
 
 import featureAbility from '@ohos.ability.featureAbility'
 import { UiDriver, BY, PointerMatrix } from '@ohos.uitest'
+import fileio from '@ohos.fileio'
+
 const CODECMIMEVALUE = ['video/avc', 'audio/mp4a-latm', 'audio/mpeg']
 
 export async function getPermission(permissionNames) {
@@ -42,7 +44,7 @@ export async function driveFn(num) {
 export async function getFileDescriptor(fileName) {
     let fileDescriptor = undefined;
     let mgr = globalThis.abilityContext.resourceManager
-    await mgr.getRawFileDescriptor(fileName).then(value => {
+    await mgr.getRawFileDescriptor(fileName).then((value) => {
         fileDescriptor = {fd: value.fd, offset: value.offset, length: value.length};
         console.log('case getRawFileDescriptor success fileName: ' + fileName);
     }).catch(error => {
@@ -56,6 +58,36 @@ export async function closeFileDescriptor(fileName) {
     }).catch(error => {
         console.log('case closeRawFileDescriptor err: ' + error);
     });
+}
+
+export function isFileOpen(fileDescriptor, done) {
+    if (fileDescriptor == undefined) {
+        expect().assertFail();
+        console.info('case error fileDescriptor undefined, open file fail');
+        done();
+    }
+}
+
+export async function getFdRead(pathName, done) {
+    let fdReturn;
+    pathName = globalThis.abilityContext.filesDir + '/' + pathName;
+    console.info("case pathName is" + pathName);
+    await fileio.open(pathName).then((fdNumber) => {
+        isFileOpen(fdNumber, done)
+        fdReturn = fdNumber;
+        console.info('[fileio]case open fd success, fd is ' + fdReturn);
+    })
+    console.info('fs open file end, and fd is '+ fdReturn);
+    return fdReturn;
+}
+
+export async function closeFdNumber(fdNumber) {
+    await fileio.close(fdNumber);
+}
+
+// wait synchronously 
+export function msleep(time) {
+    for(let t = Date.now();Date.now() - t <= time;);
 }
 
 // wait asynchronously
@@ -92,7 +124,6 @@ export function checkDescription(actualDescription, descriptionKey, descriptionV
         } else {
             expect(property).assertEqual(descriptionValue[i]);
         }
-        
     }
 }
 
