@@ -842,9 +842,6 @@ void PlayBinCtrlerBase::HandleCacheCtrl(int32_t percent)
 void PlayBinCtrlerBase::HandleCacheCtrlCb(const InnerMessage &msg)
 {
     if (isNetWorkPlay_) {
-        PlayBinMessage playBinMsg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BUFFERING_PERCENT, msg.detail1, {} };
-        ReportMessage(playBinMsg);
-
         cachePercent_ = msg.detail1;
         HandleCacheCtrl(cachePercent_);
     }
@@ -854,6 +851,14 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
 {
     if (percent < static_cast<float>(BUFFER_LOW_PERCENT_DEFAULT) / BUFFER_HIGH_PERCENT_DEFAULT *
         BUFFER_PERCENT_THRESHOLD) {
+        // percent<25% buffering start
+        PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BUFFERING_START, 0, {} };
+        ReportMessage(msg);
+
+        // percent<25% buffering percent
+        PlayBinMessage percentMsg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BUFFERING_PERCENT, percent, {} };
+        ReportMessage(percentMsg);
+
         isBuffering_ = true;
         {
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
@@ -869,14 +874,16 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
                 return;
             }
         }
-
-        PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BUFFERING_START, 0, {} };
-        ReportMessage(msg);
     }
 }
 
 void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
 {
+    // 0% < percent < 100% buffering percent
+    PlayBinMessage percentMsg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BUFFERING_PERCENT, percent, {} };
+    ReportMessage(percentMsg);
+
+    // percent > 100% buffering end
     if (percent >= BUFFER_PERCENT_THRESHOLD) {
         isBuffering_ = false;
         if (GetCurrState() == playingState_ && !isUserSetPause_) {
