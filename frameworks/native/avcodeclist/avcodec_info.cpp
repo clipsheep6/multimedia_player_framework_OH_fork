@@ -28,6 +28,29 @@ namespace {
 }
 namespace OHOS {
 namespace Media {
+
+struct LevelParams {
+    int32_t maxBlockPerFrame = 0;
+    int32_t maxBlockPerSecond = 0;
+    int32_t maxFrameRate = 0;
+    int32_t maxWidth = 0;
+    int32_t maxHeight = 0;
+    LevelParams(const int32_t &blockPerFrame, const int32_t &blockPerSecond,
+                const int32_t &frameRate, const int32_t &width, const int32_t height)
+    {
+        this->maxBlockPerFrame = blockPerFrame;
+        this->maxBlockPerSecond = blockPerSecond;
+        this->maxFrameRate = frameRate;
+        this->maxWidth = width;
+        this->maxHeight = height;
+    }
+    LevelParams(const int32_t &blockPerFrame, const int32_t &blockPerSecond)
+    {
+        this->maxBlockPerFrame = blockPerFrame;
+        this->maxBlockPerSecond = blockPerSecond;
+    }
+};
+
 const std::map<int32_t, LevelParams> AVC_PARAMS_MAP = {
     {AVC_LEVEL_1, LevelParams(1485, 99)},
     {AVC_LEVEL_1b, LevelParams(1485, 99)},

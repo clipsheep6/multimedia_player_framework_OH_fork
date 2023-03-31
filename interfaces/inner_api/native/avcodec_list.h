@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include "avcodec_info.h"
+#include "format.h"
 
 namespace OHOS {
 namespace Media {

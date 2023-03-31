@@ -23,6 +23,7 @@
 #include "hdf_remote_service.h"
 #include "codec_internal.h"
 #include "servmgr_hdi.h"
+#include "av_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiInit"};

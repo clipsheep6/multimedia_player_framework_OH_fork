@@ -16,8 +16,8 @@
 #define AVCODEC_COMMOM_H
 
 #include <string>
-#include "av_common.h"
 #include "format.h"
+#include "av_common.h"
 
 namespace OHOS {
 namespace Media {

@@ -22,6 +22,7 @@
 #include "common_napi.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
@@ -45,6 +46,7 @@ struct MediaDataSourceJsCallback {
     bool setResult_ = false;
     bool isExit_ = false;
 };
+
 class MediaDataSourceCallback : public IMediaDataSource, public NoCopyable {
 public:
     MediaDataSourceCallback(napi_env env, int64_t fileSize);

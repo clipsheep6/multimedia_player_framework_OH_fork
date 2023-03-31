@@ -23,7 +23,6 @@
 #include "avcodec_info.h"
 #include "avcodec_common.h"
 #include "recorder_profiles.h"
-#include "avcontainer_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaEnumNapi"};
@@ -67,11 +66,6 @@ static const std::vector<struct JsEnumInt> g_AVErrorCode = {
     { "AVERR_UNSUPPORT_FORMAT", MediaServiceExtErrCodeAPI9::MSERR_EXT_API9_UNSUPPORT_FORMAT },
 };
 
-static const std::vector<struct JsEnumInt> g_avDataSourceError = {
-    { "SOURCE_ERROR_IO", MediaDataSourceError::SOURCE_ERROR_IO },
-    { "SOURCE_ERROR_EOF", MediaDataSourceError::SOURCE_ERROR_EOF },
-};
-
 static const std::vector<struct JsEnumInt> g_bufferingInfoType = {
     { "BUFFERING_START", BufferingInfoType::BUFFERING_START },
     { "BUFFERING_END", BufferingInfoType::BUFFERING_END },
@@ -109,18 +103,6 @@ static const std::vector<struct JsEnumInt> g_mediaType = {
     { "MEDIA_TYPE_SUBTITLE", MediaType::MEDIA_TYPE_SUBTITLE },
 };
 
-static const std::vector<struct JsEnumInt> g_videoRecorderQualityLevel = {
-    { "RECORDER_QUALITY_LOW", VideoRecorderQualityLevel::RECORDER_QUALITY_LOW },
-    { "RECORDER_QUALITY_HIGH", VideoRecorderQualityLevel::RECORDER_QUALITY_HIGH },
-    { "RECORDER_QUALITY_QCIF", VideoRecorderQualityLevel::RECORDER_QUALITY_QCIF },
-    { "RECORDER_QUALITY_CIF", VideoRecorderQualityLevel::RECORDER_QUALITY_CIF },
-    { "RECORDER_QUALITY_480P", VideoRecorderQualityLevel::RECORDER_QUALITY_480P },
-    { "RECORDER_QUALITY_720P", VideoRecorderQualityLevel::RECORDER_QUALITY_720P },
-    { "RECORDER_QUALITY_1080P", VideoRecorderQualityLevel::RECORDER_QUALITY_1080P },
-    { "RECORDER_QUALITY_QVGA", VideoRecorderQualityLevel::RECORDER_QUALITY_QVGA },
-    { "RECORDER_QUALITY_2160P", VideoRecorderQualityLevel::RECORDER_QUALITY_2160P },
-};
-
 static const std::vector<struct JsEnumInt> g_audioSourceType = {
     { "AUDIO_SOURCE_TYPE_DEFAULT", AudioSourceType::AUDIO_SOURCE_DEFAULT },
     { "AUDIO_SOURCE_TYPE_MIC", AudioSourceType::AUDIO_MIC },
@@ -131,111 +113,11 @@ static const std::vector<struct JsEnumInt> g_videoSourceType = {
     { "VIDEO_SOURCE_TYPE_SURFACE_ES", VideoSourceType::VIDEO_SOURCE_SURFACE_ES },
 };
 
-static const std::vector<struct JsEnumInt> g_frameFlags = {
-    { "EOS_FRAME", AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_EOS },
-    { "SYNC_FRAME", AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_SYNC_FRAME },
-    { "PARTIAL_FRAME", AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_PARTIAL_FRAME },
-    { "CODEC_DATA", AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_CODEC_DATA },
-};
-
 static const std::vector<struct JsEnumInt> g_seekMode = {
     { "SEEK_NEXT_SYNC", PlayerSeekMode::SEEK_NEXT_SYNC },
     { "SEEK_PREV_SYNC", PlayerSeekMode::SEEK_PREVIOUS_SYNC },
     { "SEEK_CLOSEST_SYNC", PlayerSeekMode::SEEK_CLOSEST_SYNC },
     { "SEEK_CLOSEST", PlayerSeekMode::SEEK_CLOSEST },
-};
-
-static const std::vector<struct JsEnumInt> g_AVCodecType = {
-    { "AVCODEC_TYPE_VIDEO_ENCODER", AVCodecType::AVCODEC_TYPE_VIDEO_ENCODER },
-    { "AVCODEC_TYPE_VIDEO_DECODER", AVCodecType::AVCODEC_TYPE_VIDEO_DECODER },
-    { "AVCODEC_TYPE_AUDIO_ENCODER", AVCodecType::AVCODEC_TYPE_AUDIO_ENCODER },
-    { "AVCODEC_TYPE_AUDIO_DECODER", AVCodecType::AVCODEC_TYPE_AUDIO_DECODER },
-};
-
-static const std::vector<struct JsEnumInt> g_AACProfile = {
-    { "AAC_PROFILE_LC", AACProfile::AAC_PROFILE_LC },
-    { "AAC_PROFILE_ELD", AACProfile::AAC_PROFILE_ELD },
-    { "AAC_PROFILE_ERLC", AACProfile::AAC_PROFILE_ERLC },
-    { "AAC_PROFILE_HE", AACProfile::AAC_PROFILE_HE },
-    { "AAC_PROFILE_HE_V2", AACProfile::AAC_PROFILE_HE_V2 },
-    { "AAC_PROFILE_LD", AACProfile::AAC_PROFILE_LD },
-    { "AAC_PROFILE_MAIN", AACProfile::AAC_PROFILE_MAIN },
-};
-
-static const std::vector<struct JsEnumInt> g_videoEncodeBitrateMode = {
-    { "CBR", VideoEncodeBitrateMode::CBR },
-    { "VBR", VideoEncodeBitrateMode::VBR },
-    { "CQ", VideoEncodeBitrateMode::CQ },
-};
-
-static const std::vector<struct JsEnumInt> g_videoPixelFormat = {
-    { "YUVI420", VideoPixelFormat::YUVI420 },
-    { "NV12", VideoPixelFormat::NV12 },
-    { "NV21", VideoPixelFormat::NV21 },
-    { "SURFACE_FORMAT", VideoPixelFormat::SURFACE_FORMAT },
-    { "RGBA", VideoPixelFormat::RGBA },
-};
-
-static const std::vector<struct JsEnumInt> g_AVCProfile = {
-    { "AVC_PROFILE_BASELINE", AVCProfile::AVC_PROFILE_BASELINE },
-    { "AVC_PROFILE_CONSTRAINED_BASELINE", AVCProfile::AVC_PROFILE_CONSTRAINED_BASELINE },
-    { "AVC_PROFILE_CONSTRAINED_HIGH", AVCProfile::AVC_PROFILE_CONSTRAINED_HIGH },
-    { "AVC_PROFILE_EXTENDED", AVCProfile::AVC_PROFILE_EXTENDED },
-    { "AVC_PROFILE_HIGH", AVCProfile::AVC_PROFILE_HIGH },
-    { "AVC_PROFILE_HIGH_10", AVCProfile::AVC_PROFILE_HIGH_10 },
-    { "AVC_PROFILE_HIGH_422", AVCProfile::AVC_PROFILE_HIGH_422 },
-    { "AVC_PROFILE_HIGH_444", AVCProfile::AVC_PROFILE_HIGH_444 },
-    { "AVC_PROFILE_MAIN", AVCProfile::AVC_PROFILE_MAIN },
-};
-
-static const std::vector<struct JsEnumInt> g_HEVCProfile = {
-    { "HEVC_PROFILE_MAIN", HEVCProfile::HEVC_PROFILE_MAIN },
-    { "HEVC_PROFILE_MAIN_10", HEVCProfile::HEVC_PROFILE_MAIN_10 },
-    { "HEVC_PROFILE_MAIN_STILL", HEVCProfile::HEVC_PROFILE_MAIN_STILL },
-};
-
-static const std::vector<struct JsEnumInt> g_MPEG2Profile = {
-    { "MPEG2_PROFILE_422", MPEG2Profile::MPEG2_PROFILE_422 },
-    { "MPEG2_PROFILE_HIGH", MPEG2Profile::MPEG2_PROFILE_HIGH },
-    { "MPEG2_PROFILE_MAIN", MPEG2Profile::MPEG2_PROFILE_MAIN },
-    { "MPEG2_PROFILE_SNR", MPEG2Profile::MPEG2_PROFILE_SNR },
-    { "MPEG2_PROFILE_SIMPLE", MPEG2Profile::MPEG2_PROFILE_SIMPLE },
-    { "MPEG2_PROFILE_SPATIAL", MPEG2Profile::MPEG2_PROFILE_SPATIAL },
-};
-
-static const std::vector<struct JsEnumInt> g_MPEG4Profile = {
-    { "MPEG4_PROFILE_ADVANCED_CODING", MPEG4Profile::MPEG4_PROFILE_ADVANCED_CODING },
-    { "MPEG4_PROFILE_ADVANCED_CORE", MPEG4Profile::MPEG4_PROFILE_ADVANCED_CORE },
-    { "MPEG4_PROFILE_ADVANCED_REAL_TIME", MPEG4Profile::MPEG4_PROFILE_ADVANCED_REAL_TIME },
-    { "MPEG4_PROFILE_ADVANCED_SCALABLE", MPEG4Profile::MPEG4_PROFILE_ADVANCED_SCALABLE },
-    { "MPEG4_PROFILE_ADVANCED_SIMPLE", MPEG4Profile::MPEG4_PROFILE_ADVANCED_SIMPLE },
-    { "MPEG4_PROFILE_BASIC_ANIMATED", MPEG4Profile::MPEG4_PROFILE_BASIC_ANIMATED },
-    { "MPEG4_PROFILE_CORE", MPEG4Profile::MPEG4_PROFILE_CORE },
-    { "MPEG4_PROFILE_CORE_SCALABLE", MPEG4Profile::MPEG4_PROFILE_CORE_SCALABLE },
-    { "MPEG4_PROFILE_HYBRID", MPEG4Profile::MPEG4_PROFILE_HYBRID },
-    { "MPEG4_PROFILE_MAIN", MPEG4Profile::MPEG4_PROFILE_MAIN },
-    { "MPEG4_PROFILE_NBIT", MPEG4Profile::MPEG4_PROFILE_NBIT },
-    { "MPEG4_PROFILE_SCALABLE_TEXTURE", MPEG4Profile::MPEG4_PROFILE_SCALABLE_TEXTURE },
-    { "MPEG4_PROFILE_SIMPLE", MPEG4Profile::MPEG4_PROFILE_SIMPLE },
-    { "MPEG4_PROFILE_SIMPLE_FBA", MPEG4Profile::MPEG4_PROFILE_SIMPLE_FBA },
-    { "MPEG4_PROFILE_SIMPLE_FACE", MPEG4Profile::MPEG4_PROFILE_SIMPLE_FACE },
-    { "MPEG4_PROFILE_SIMPLE_SCALABLE", MPEG4Profile::MPEG4_PROFILE_SIMPLE_SCALABLE },
-};
-
-static const std::vector<struct JsEnumInt> g_H263Profile = {
-    { "H263_PROFILE_BACKWARD_COMPATIBLE", H263Profile::H263_PROFILE_BACKWARD_COMPATIBLE },
-    { "H263_PROFILE_BASELINE", H263Profile::H263_PROFILE_BASELINE },
-    { "H263_PROFILE_H320_CODING", H263Profile::H263_PROFILE_H320_CODING },
-    { "H263_PROFILE_HIGH_COMPRESSION", H263Profile::H263_PROFILE_HIGH_COMPRESSION },
-    { "H263_PROFILE_HIGH_LATENCY", H263Profile::H263_PROFILE_HIGH_LATENCY },
-    { "H263_PROFILE_ISW_V2", H263Profile::H263_PROFILE_ISW_V2 },
-    { "H263_PROFILE_ISW_V3", H263Profile::H263_PROFILE_ISW_V3 },
-    { "H263_PROFILE_INTERLACE", H263Profile::H263_PROFILE_INTERLACE },
-    { "H263_PROFILE_INTERNET", H263Profile::H263_PROFILE_INTERNET },
-};
-
-static const std::vector<struct JsEnumInt> g_VP8Profile = {
-    { "VP8_PROFILE_MAIN", VP8Profile::VP8_PROFILE_MAIN },
 };
 
 static const std::vector<struct JsEnumInt> g_VideoScaleType = {
@@ -305,27 +187,14 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "AVErrorCode", g_AVErrorCode},
     { "MediaErrorCode", g_mediaErrorCode },
-    { "AVDataSourceError", g_avDataSourceError },
     { "BufferingInfoType", g_bufferingInfoType },
     { "AudioEncoder", g_recorderAudioEncoder },
     { "AudioOutputFormat", g_recorderAudioOutputFormat },
     { "PlaybackSpeed", g_playbackSpeed },
     { "MediaType", g_mediaType },
-    { "VideoRecorderQualityLevel", g_videoRecorderQualityLevel },
     { "AudioSourceType", g_audioSourceType },
     { "VideoSourceType", g_videoSourceType },
-    { "FrameFlags", g_frameFlags },
     { "SeekMode", g_seekMode },
-    { "AVCodecType", g_AVCodecType },
-    { "AACProfile", g_AACProfile },
-    { "VideoEncodeBitrateMode", g_videoEncodeBitrateMode },
-    { "VideoPixelFormat", g_videoPixelFormat },
-    { "AVCProfile", g_AVCProfile },
-    { "HEVCProfile", g_HEVCProfile },
-    { "MPEG2Profile", g_MPEG2Profile },
-    { "MPEG4Profile", g_MPEG4Profile },
-    { "H263Profile", g_H263Profile},
-    { "VP8Profile", g_VP8Profile },
     { "VideoScaleType", g_VideoScaleType},
     { "StateChangeReason", g_stateChangeReason},
 };

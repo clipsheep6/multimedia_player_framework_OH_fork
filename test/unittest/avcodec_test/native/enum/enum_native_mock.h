@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace Media {
-const std::map<MediaDescriptionKeyMock, std::string_view>MEDIA_DESCRIPTION_KEY_INFOS = {
+const std::map<MediaDescriptionKeyMock, std::string_view> MEDIA_DESCRIPTION_KEY_INFOS = {
     {MOCK_MD_KEY_TRACK_INDEX, MediaDescriptionKey::MD_KEY_TRACK_INDEX},
     {MOCK_MD_KEY_TRACK_TYPE, MediaDescriptionKey::MD_KEY_TRACK_TYPE},
     {MOCK_MD_KEY_CODEC_MIME, MediaDescriptionKey::MD_KEY_CODEC_MIME},

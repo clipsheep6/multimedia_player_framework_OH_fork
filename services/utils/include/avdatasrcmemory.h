@@ -83,10 +83,12 @@ public:
     {
         return offset_;
     }
+
 protected:
     AVDataSrcMemory(int32_t fd, int32_t size, uint32_t flags, const std::string &name);
+
 private:
-    uint32_t offset_;
+    uint32_t offset_ = 0;
 };
 } // namespace Media
 } // namespace OHOS

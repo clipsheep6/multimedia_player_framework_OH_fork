@@ -20,7 +20,6 @@
 #include <string>
 #include "format.h"
 #include "surface.h"
-#include "av_common.h"
 
 namespace OHOS {
 namespace Media {
@@ -192,6 +191,27 @@ enum RecorderErrorType : int32_t {
      /** extend error start,The extension error code agreed upon by the plug-in and
          the application will be transparently transmitted by the service. */
     RECORDER_ERROR_EXTEND_START = 0X10000,
+};
+
+/**
+ * @brief the container format types.
+ */
+namespace ContainerFormatType {
+    static constexpr std::string_view CFT_MPEG_4A = "m4a";
+    static constexpr std::string_view CFT_MPEG_4 = "mp4";
+}
+
+/**
+ * @brief the struct of geolocation
+ *
+ * @param latitude float: latitude in degrees. Its value must be in the range [-90, 90].
+ * @param longitude float: longitude in degrees. Its value must be in the range [-180, 180].
+ * @since  3.1
+ * @version 3.1
+ */
+struct Location {
+    float latitude = 0;
+    float longitude = 0;
 };
 
 /**
