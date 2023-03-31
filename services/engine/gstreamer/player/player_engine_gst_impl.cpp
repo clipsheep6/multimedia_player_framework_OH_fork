@@ -221,7 +221,6 @@ void PlayerEngineGstImpl::HandleSpeedDoneMessage(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleBufferingStart()
 {
-    percent_ = 0;
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), 0);
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
@@ -238,6 +237,7 @@ void PlayerEngineGstImpl::HandleBufferingEnd()
     if (notifyObs != nullptr) {
         notifyObs->OnInfo(INFO_TYPE_BUFFERING_UPDATE, 0, format);
     }
+    updatePercent_ = -1; // invalid percent
 }
 
 void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
@@ -280,20 +280,16 @@ void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleBufferingPercent(const PlayBinMessage &msg)
 {
-    int32_t lastPercent = percent_;
-    percent_ = msg.code;
-
-    if (lastPercent == percent_) {
-        return;
-    }
-
-    std::shared_ptr<IPlayerEngineObs> tempObs = obs_.lock();
-    if (tempObs != nullptr) {
-        Format format;
-        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_PERCENT), percent_);
-        MEDIA_LOGD("percent = (%{public}d), percent_ = %{public}d, 0x%{public}06" PRIXPTR "",
-            lastPercent, percent_, FAKE_POINTER(this));
-        tempObs->OnInfo(INFO_TYPE_BUFFERING_UPDATE, 0, format);
+    int32_t curPercent = msg.code;
+    if (curPercent != updatePercent_) {
+        updatePercent_ = curPercent;
+        std::shared_ptr<IPlayerEngineObs> tempObs = obs_.lock();
+        if (tempObs != nullptr) {
+            Format format;
+            (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_PERCENT), updatePercent_);
+            MEDIA_LOGD("updatePercent_ = %{public}d, 0x%{public}06" PRIXPTR "", updatePercent_, FAKE_POINTER(this));
+            tempObs->OnInfo(INFO_TYPE_BUFFERING_UPDATE, 0, format);
+        }
     }
 }
 
