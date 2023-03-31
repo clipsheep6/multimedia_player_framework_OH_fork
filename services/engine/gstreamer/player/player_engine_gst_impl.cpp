@@ -287,7 +287,7 @@ void PlayerEngineGstImpl::HandleBufferingPercent(const PlayBinMessage &msg)
         if (tempObs != nullptr) {
             Format format;
             (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_PERCENT), updatePercent_);
-            MEDIA_LOGD("updatePercent_ = %{public}d, 0x%{public}06" PRIXPTR "", updatePercent_, FAKE_POINTER(this));
+            MEDIA_LOGI("updatePercent_ = %{public}d, 0x%{public}06" PRIXPTR "", updatePercent_, FAKE_POINTER(this));
             tempObs->OnInfo(INFO_TYPE_BUFFERING_UPDATE, 0, format);
         }
     }
