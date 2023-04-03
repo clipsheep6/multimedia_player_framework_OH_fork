@@ -248,7 +248,8 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 
     for (const auto &stub : stubMap_) {
         auto map = stub.second;
-        MEDIA_LOGD("recorder stub services(%{public}zu) pid(%{public}d).", map.size(), pid);
+        MEDIA_LOGD("%{public}s stub services(%{public}zu) pid(%{public}d).",
+            STUB_TYPE_NAME[stub.first].c_str(), map.size(), pid);
         for (auto iter = map.begin(); iter != map.end();) {
             if (iter->second == pid) {
                 executor_.Commit(iter->first);
@@ -257,7 +258,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
                 iter++;
             }
         }
-        MEDIA_LOGD("recorder stub services(%{public}zu).", recorderStubMap_.size());
+        MEDIA_LOGD("%{public}s stub services(%{public}zu).", STUB_TYPE_NAME[stub.first].c_str(), map.size());
     }
     executor_.Clear();
 }
