@@ -70,6 +70,7 @@ private:
     sptr<IRemoteObject> CreateAVCodecListStubObject();
     sptr<IRemoteObject> CreateAVCodecStubObject();
 #endif
+    sptr<IRemoteObject> CreateStub(sptr<IRemoteObject> object, DumperEntry entry, StubType type);
 
     class AsyncExecutor {
     public:
@@ -88,6 +89,7 @@ private:
     std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
+    std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>> stubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     AsyncExecutor executor_;
 

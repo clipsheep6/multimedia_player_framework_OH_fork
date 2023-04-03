@@ -18,7 +18,6 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "system_ability_definition.h"
-#include "media_server_manager.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServer"};
@@ -62,31 +61,8 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
 {
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");
-
-    switch (subSystemId) {
-        case MediaSystemAbility::MEDIA_RECORDER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDER);
-        }
-        case MediaSystemAbility::MEDIA_PLAYER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
-        }
-        case MediaSystemAbility::MEDIA_AVMETADATAHELPER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVMETADATAHELPER);
-        }
-        case MediaSystemAbility::MEDIA_CODECLIST: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODECLIST);
-        }
-        case MediaSystemAbility::MEDIA_AVCODEC: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
-        }
-        case MediaSystemAbility::RECORDER_PROFILES: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
-        }
-        default: {
-            MEDIA_LOGE("default case, media client need check subSystemId");
-            return nullptr;
-        }
-    }
+    CHECK_AND_RETURN_RET_LOG(stubTypeMap_.count(subSystemId) > 0, nullptr, "media client need check subSystemId");
+    return MediaServerManager::GetInstance().CreateStubObject(stubTypeMap_[subSystemId]);
 }
 
 int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
