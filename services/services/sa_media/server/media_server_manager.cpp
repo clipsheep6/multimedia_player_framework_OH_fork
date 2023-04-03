@@ -246,7 +246,7 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     std::lock_guard<std::mutex> lock(mutex_);
     DestroyDumperForPid(pid);
 
-    for (const auto &stub : stubMap_) {
+    for (auto &stub : stubMap_) {
         auto map = stub.second;
         MEDIA_LOGD("%{public}s stub services(%{public}zu) pid(%{public}d).",
             STUB_TYPE_NAME[stub.first].c_str(), map.size(), pid);
