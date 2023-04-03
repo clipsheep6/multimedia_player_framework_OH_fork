@@ -384,7 +384,7 @@ int32_t GstAppsrcEngine::PullBuffer()
             atEos_ = true;
             timer_ = 0;
         } else if (readSize > 0) {
-            appSrcMem_->begin += readSize;
+            appSrcMem_->begin += static_cast<uint32_t>(readSize);
             appSrcMem_->begin %= bufferSize_;
             if (appSrcMem_->begin == (appSrcMem_->end + 1) % bufferSize_) {
                 noFreeBuffer_ = true;
