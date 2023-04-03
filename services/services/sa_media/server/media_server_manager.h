@@ -56,20 +56,6 @@ public:
 
 private:
     MediaServerManager();
-#ifdef SUPPORT_PLAYER
-    sptr<IRemoteObject> CreatePlayerStubObject();
-#endif
-#ifdef SUPPORT_RECORDER
-    sptr<IRemoteObject> CreateRecorderStubObject();
-    sptr<IRemoteObject> CreateRecorderProfilesStubObject();
-#endif
-#ifdef SUPPORT_METADATA
-    sptr<IRemoteObject> CreateAVMetadataHelperStubObject();
-#endif
-#ifdef SUPPORT_CODEC
-    sptr<IRemoteObject> CreateAVCodecListStubObject();
-    sptr<IRemoteObject> CreateAVCodecStubObject();
-#endif
     sptr<IRemoteObject> CreateStub(sptr<IRemoteObject> object, DumperEntry entry, StubType type);
 
     class AsyncExecutor {
