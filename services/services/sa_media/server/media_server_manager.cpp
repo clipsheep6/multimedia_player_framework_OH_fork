@@ -23,7 +23,6 @@
 #include "player_xcollie.h"
 
 namespace {
-using OHOS::Media::MediaServerManager;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};
 }
 
@@ -72,7 +71,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     for (decltype(args.size()) index = 0; index < args.size(); ++index) {
         argSets.insert(args[index]);
     }
-    auto transform = [](std::string str) {
+    auto transform = [](std::string &str) {
         for (auto &c : str) {
             c = tolower(c);
         }
