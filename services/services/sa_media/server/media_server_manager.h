@@ -73,15 +73,15 @@ private:
         ServiceStubUtil("Recorder", StubType::RECORDER,
             IStandardMediaService::MEDIA_RECORDER, RecorderServiceStub::Create),
         ServiceStubUtil("Player", StubType::PLAYER,
-            IStandardMediaService::MEDIA_PLAYER, RecorderServiceStub::Create),
+            IStandardMediaService::MEDIA_PLAYER, PlayerServiceStub::Create),
         ServiceStubUtil("AvMetaDataHelper", StubType::AVMETADATAHELPER,
-            IStandardMediaService::MEDIA_AVMETADATAHELPER,RecorderServiceStub::Create),
+            IStandardMediaService::MEDIA_AVMETADATAHELPER, AVMetadataHelperServiceStub::Create),
         ServiceStubUtil("AVCodecList", StubType::AVCODECLIST,
-            IStandardMediaService::MEDIA_CODECLIST,RecorderServiceStub::Create),
+            IStandardMediaService::MEDIA_CODECLIST, AVCodecListServiceStub::Create),
         ServiceStubUtil("Codec", StubType::AVCODEC,
-            IStandardMediaService::MEDIA_AVCODEC,RecorderServiceStub::Create),
+            IStandardMediaService::MEDIA_AVCODEC, AVCodecServiceStub::Create),
         ServiceStubUtil("RecorderProfiles", StubType::RECORDERPROFILES,
-            IStandardMediaService::RECORDER_PROFILES,RecorderServiceStub::Create),
+            IStandardMediaService::RECORDER_PROFILES, RecorderProfilesServiceStub::Create)
     };
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
 
