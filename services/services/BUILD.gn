@@ -97,6 +97,7 @@ ohos_shared_library("media_service") {
     "sa_media/ipc/media_service_stub.cpp",
     "sa_media/server/media_server.cpp",
     "sa_media/server/media_server_manager.cpp",
+    "sa_media/server/service_stub_util.cpp",
   ]
   if (multimedia_player_framework_support_player) {
     sources += [

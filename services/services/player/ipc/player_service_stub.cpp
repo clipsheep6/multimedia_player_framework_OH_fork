@@ -112,7 +112,7 @@ int32_t PlayerServiceStub::DestroyStub()
         playerServer_ = nullptr;
     }
 
-    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, AsObject());
+    MediaServerManager::GetInstance().DestroyStubObject(StubType::PLAYER, AsObject());
     return MSERR_OK;
 }
 

@@ -18,6 +18,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "system_ability_definition.h"
+#include "media_server_manager.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServer"};
@@ -61,8 +62,14 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
 {
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");
-    CHECK_AND_RETURN_RET_LOG(stubTypeMap_.count(subSystemId) > 0, nullptr, "media client need check subSystemId");
-    return MediaServerManager::GetInstance().CreateStubObject(stubTypeMap_[subSystemId]);
+    auto &stubUtils = MediaServerManager::GetInstance().GetServiceStubUtils();
+    for (auto &stubUtil : stubUtils) {
+        if (stubUtil.GetAbility() == subSystemId) {
+            return MediaServerManager::GetInstance().CreateStubObject(stubUtil);
+        }
+    }
+    MEDIA_LOGE("media client need check subSystemId");
+    return nullptr;
 }
 
 int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)

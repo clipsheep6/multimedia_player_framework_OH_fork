@@ -68,7 +68,7 @@ int32_t RecorderProfilesServiceStub::Init()
 int32_t RecorderProfilesServiceStub::DestroyStub()
 {
     mediaProfileServer_ = nullptr;
-    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::RECORDERPROFILES, AsObject());
+    MediaServerManager::GetInstance().DestroyStubObject(StubType::RECORDERPROFILES, AsObject());
     return MSERR_OK;
 }
 
@@ -177,6 +177,12 @@ int32_t RecorderProfilesServiceStub::DestroyStub(MessageParcel &data, MessagePar
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
+    return MSERR_OK;
+}
+
+int32_t RecorderProfilesServiceStub::DumpInfo(int32_t fd)
+{
+    (void)fd;
     return MSERR_OK;
 }
 }  // namespace Media

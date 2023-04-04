@@ -15,20 +15,6 @@
 
 #include "media_server_manager.h"
 #include <unordered_set>
-#ifdef SUPPORT_RECORDER
-#include "recorder_service_stub.h"
-#include "recorder_profiles_service_stub.h"
-#endif
-#ifdef SUPPORT_PLAYER
-#include "player_service_stub.h"
-#endif
-#ifdef SUPPORT_METADATA
-#include "avmetadatahelper_service_stub.h"
-#endif
-#ifdef SUPPORT_CODEC
-#include "avcodec_service_stub.h"
-#include "avcodeclist_service_stub.h"
-#endif
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_dfx.h"
@@ -38,14 +24,6 @@
 namespace {
 using OHOS::Media::MediaServerManager;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaServerManager"};
-std::map<MediaServerManager::StubType, std::string> STUB_TYPE_NAME = {
-    {MediaServerManager::RECORDER, "Recorder"},
-    {MediaServerManager::PLAYER, "Player"},
-    {MediaServerManager::AVMETADATAHELPER, "AvMetaDataHelper"},
-    {MediaServerManager::AVCODECLIST, "AVCodecList"},
-    {MediaServerManager::AVCODEC, "AVCodec"},
-    {MediaServerManager::RECORDERPROFILES, "RecorderProfiles"}
-};
 }
 
 namespace OHOS {
@@ -144,86 +122,89 @@ MediaServerManager::~MediaServerManager()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
+sptr<IRemoteObject> MediaServerManager::CreateStubObject(ServiceStubUtil &stubUtil)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    switch (type) {
-#ifdef SUPPORT_RECORDER
-        case RECORDER: {
-            sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
-            DumperEntry entry = [media = stub](int32_t fd) -> int32_t {
-                return media->DumpInfo(fd);
-            };
-            return CreateStub(stub->AsObject(), entry, type);
-        }
-        case RECORDERPROFILES: {
-            sptr<RecorderProfilesServiceStub> stub = RecorderProfilesServiceStub::Create();
-            DumperEntry entry = [](int32_t) -> int32_t { return MSERR_OK; };
-            return CreateStub(stub->AsObject(), entry, type);
-        }
-#endif
-#ifdef SUPPORT_PLAYER
-        case PLAYER: {
-            sptr<PlayerServiceStub> stub = PlayerServiceStub::Create();
-            if (stub == nullptr) {
-                MEDIA_LOGE("failed to create ServiceStub");
-                return nullptr;
-            }
-            DumperEntry entry = [media = stub](int32_t fd) -> int32_t {
-                return media->DumpInfo(fd);
-            };
-            return CreateStub(stub->AsObject(), entry, type);
-        }
-#endif
-#ifdef SUPPORT_METADATA
-        case AVMETADATAHELPER: {
-            sptr<AVMetadataHelperServiceStub> avMetadataHelperStub = AVMetadataHelperServiceStub::Create();
-            DumperEntry entry = [](int32_t) -> int32_t { return MSERR_OK; };
-            return CreateStub(avMetadataHelperStub->AsObject(), entry, type);
-        }
-#endif
-#ifdef SUPPORT_CODEC
-        case AVCODECLIST: {
-            sptr<AVCodecListServiceStub> stub = AVCodecListServiceStub::Create();
-            DumperEntry entry = [](int32_t) -> int32_t { return MSERR_OK; };
-            return CreateStub(stub->AsObject(), entry, type);
-        }
-        case AVCODEC: {
-            sptr<AVCodecServiceStub> stub = AVCodecServiceStub::Create();
-            DumperEntry entry = [media = stub](int32_t fd) -> int32_t { return media->DumpInfo(fd); };
-            return CreateStub(stub->AsObject(), entry, type);
-        }
-#endif
-        default: {
-            MEDIA_LOGE("default case, media server manager failed");
-            return nullptr;
-        }
-    }
-}
-
-sptr<IRemoteObject> MediaServerManager::CreateStub(sptr<IRemoteObject> object, DumperEntry entry, StubType type)
-{
-    if (stubMap_[type].size() >= SERVER_MAX_NUMBER) {
-        // log detail, todo
+    if (stubUtil.GetStubMapSize() >= SERVER_MAX_NUMBER) {
         MEDIA_LOGE("The number of %{public}s services(%{public}zu) has reached the upper limit."
-            "Please release the applied resources.", STUB_TYPE_NAME[type].c_str(), stubMap_[type].size());
+        "Please release the applied resources.", stubUtil.GetName().c_str(), stubUtil.GetStubMapSize());
         return nullptr;
     }
+    auto stub = stubUtil.CreateStub();
+    Dumper::DumperEntry entry = [media = stub](int32_t fd) -> int32_t {
+        return media->DumpInfo(fd);
+    };
+    auto object = stub->AsObject();
     if (object != nullptr) {
         pid_t pid = IPCSkeleton::GetCallingPid();
-        stubMap_[type][object] = pid;
-
-        Dumper dumper = { pid, IPCSkeleton::GetCallingUid(), entry, object };
-        dumperTbl_[type].emplace_back(dumper);
+        stubUtil.AddObject(object, pid);
+        Dumper dumper{pid, IPCSkeleton::GetCallingUid(), entry, object};
+        dumperTbl_[stubUtil.GetStubType()].emplace_back(dumper);
         MEDIA_LOGD("The number of %{public}s services(%{public}zu) pid(%{public}d).",
-            STUB_TYPE_NAME[type].c_str(), stubMap_[type].size(), pid);
-        std::string varName = "The number of " + STUB_TYPE_NAME[type];
-        MediaTrace::CounterTrace(varName, stubMap_[type].size());
+            stubUtil.GetName().c_str(), stubUtil.GetStubMapSize(), pid);
+        std::string varName = "The number of " + stubUtil.GetName();
+        MediaTrace::CounterTrace(varName, stubUtil.GetStubMapSize());
         if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
             MEDIA_LOGW("failed to call InstanceDump");
         }
     }
     return object;
+    // return object;
+    // return CreateStub(stubUtil);
+//     switch (type) {
+// #ifdef SUPPORT_RECORDER
+//         case RECORDER: {
+//             // sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
+//             auto object = stubFuncMap_[type].first()->AsObject();
+//             DumperEntry entry = stubFuncMap_[type].second;
+//             // DumperEntry entry = [media = stub](int32_t fd) -> int32_t {
+//             //     return media->DumpInfo(fd);
+//             // };
+//             return CreateStub(object, entry, type);
+//         }
+//         case RECORDERPROFILES: {
+//             sptr<IRemoteBroker> stub = RecorderProfilesServiceStub::Create();
+//             DumperEntry entry = [](int32_t) -> int32_t { return MSERR_OK; };
+//             return CreateStub(stub->AsObject(), entry, type);
+//         }
+// #endif
+// #ifdef SUPPORT_PLAYER
+//         case PLAYER: {
+//             sptr<PlayerServiceStub> stub = PlayerServiceStub::Create();
+//             if (stub == nullptr) {
+//                 MEDIA_LOGE("failed to create ServiceStub");
+//                 return nullptr;
+//             }
+//             DumperEntry entry = [media = stub](int32_t fd) -> int32_t {
+//                 return media->DumpInfo(fd);
+//             };
+//             return CreateStub(stub->AsObject(), entry, type);
+//         }
+// #endif
+// #ifdef SUPPORT_METADATA
+//         case AVMETADATAHELPER: {
+//             sptr<AVMetadataHelperServiceStub> avMetadataHelperStub = AVMetadataHelperServiceStub::Create();
+//             DumperEntry entry = [](int32_t) -> int32_t { return MSERR_OK; };
+//             return CreateStub(avMetadataHelperStub->AsObject(), entry, type);
+//         }
+// #endif
+// #ifdef SUPPORT_CODEC
+//         case AVCODECLIST: {
+//             sptr<AVCodecListServiceStub> stub = AVCodecListServiceStub::Create();
+//             DumperEntry entry = [](int32_t) -> int32_t { return MSERR_OK; };
+//             return CreateStub(stub->AsObject(), entry, type);
+//         }
+//         case AVCODEC: {
+//             sptr<AVCodecServiceStub> stub = AVCodecServiceStub::Create();
+//             DumperEntry entry = [media = stub](int32_t fd) -> int32_t { return media->DumpInfo(fd); };
+//             return CreateStub(stub->AsObject(), entry, type);
+//         }
+// #endif
+//         default: {
+//             MEDIA_LOGE("default case, media server manager failed");
+//             return nullptr;
+//         }
+//     }
 }
 
 void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
@@ -231,11 +212,10 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     std::lock_guard<std::mutex> lock(mutex_);
     pid_t pid = IPCSkeleton::GetCallingPid();
     DestroyDumper(type, object);
-    for (auto it = stubMap_[type].begin(); it != stubMap_[type].end(); it++) {
-        if (it->first == object) {
+    for(auto &stub : stubUtils_) {
+        if (stub.GetStubType() == type && stub.GetStubMapSize()) {
             MEDIA_LOGD("destroy %{public}s stub services(%{public}zu) pid(%{public}d).",
-                STUB_TYPE_NAME[type].c_str(), stubMap_[type].size(), pid);
-            (void)stubMap_[type].erase(it);
+            stub.GetName().c_str(), stub.GetStubMapSize(), pid);
             return;
         }
     }
@@ -245,20 +225,11 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     DestroyDumperForPid(pid);
-
-    for (auto &stub : stubMap_) {
-        auto map = stub.second;
+    for (auto &stub : stubUtils_) {
         MEDIA_LOGD("%{public}s stub services(%{public}zu) pid(%{public}d).",
-            STUB_TYPE_NAME[stub.first].c_str(), map.size(), pid);
-        for (auto iter = map.begin(); iter != map.end();) {
-            if (iter->second == pid) {
-                executor_.Commit(iter->first);
-                iter = map.erase(iter);
-            } else {
-                iter++;
-            }
-        }
-        MEDIA_LOGD("%{public}s stub services(%{public}zu).", STUB_TYPE_NAME[stub.first].c_str(), map.size());
+            stub.GetName().c_str(), stub.GetStubMapSize(), pid);
+        stub.DeleteStubObjectForPid(pid);
+        MEDIA_LOGD("%{public}s stub services(%{public}zu).", stub.GetName().c_str(), stub.GetStubMapSize());
     }
     executor_.Clear();
 }
@@ -294,18 +265,28 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
     }
 }
 
-void MediaServerManager::AsyncExecutor::Commit(sptr<IRemoteObject> obj)
+std::vector<ServiceStubUtil> &MediaServerManager::GetServiceStubUtils()
+{
+    return stubUtils_;
+}
+
+AsyncExecutor &MediaServerManager::GetAsyncExecutor()
+{
+    return executor_;
+}
+
+void AsyncExecutor::Commit(sptr<IRemoteObject> obj)
 {
     std::lock_guard<std::mutex> lock(listMutex_);
     freeList_.push_back(obj);
 }
 
-void MediaServerManager::AsyncExecutor::Clear()
+void AsyncExecutor::Clear()
 {
-    std::thread(&MediaServerManager::AsyncExecutor::HandleAsyncExecution, this).detach();
+    std::thread(&AsyncExecutor::HandleAsyncExecution, this).detach();
 }
 
-void MediaServerManager::AsyncExecutor::HandleAsyncExecution()
+void AsyncExecutor::HandleAsyncExecution()
 {
     std::list<sptr<IRemoteObject>> tempList;
     {

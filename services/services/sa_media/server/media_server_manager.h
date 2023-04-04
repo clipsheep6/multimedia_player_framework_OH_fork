@@ -20,64 +20,71 @@
 #include <functional>
 #include <map>
 #include <list>
+#include "service_stub_util.h"
+#ifdef SUPPORT_RECORDER
+#include "recorder_service_stub.h"
+#include "recorder_profiles_service_stub.h"
+#endif
+#ifdef SUPPORT_PLAYER
+#include "player_service_stub.h"
+#endif
+#ifdef SUPPORT_METADATA
+#include "avmetadatahelper_service_stub.h"
+#endif
+#ifdef SUPPORT_CODEC
+#include "avcodec_service_stub.h"
+#include "avcodeclist_service_stub.h"
+#endif
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
 #include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
-using DumperEntry = std::function<int32_t(int32_t)>;
-struct Dumper {
-    pid_t pid_;
-    pid_t uid_;
-    DumperEntry entry_;
-    sptr<IRemoteObject> remoteObject_;
+class AsyncExecutor {
+public:
+    AsyncExecutor() = default;
+    virtual ~AsyncExecutor() = default;
+    void Commit(sptr<IRemoteObject> obj);
+    void Clear();
+private:
+    void HandleAsyncExecution();
+    std::list<sptr<IRemoteObject>> freeList_;
+    std::mutex listMutex_;
 };
-
 class MediaServerManager : public NoCopyable {
 public:
     static MediaServerManager &GetInstance();
     ~MediaServerManager();
 
-    enum StubType {
-        RECORDER = 0,
-        PLAYER,
-        AVMETADATAHELPER,
-        AVCODECLIST,
-        AVCODEC,
-        RECORDERPROFILES,
-    };
-    sptr<IRemoteObject> CreateStubObject(StubType type);
+    sptr<IRemoteObject> CreateStubObject(ServiceStubUtil &stubUtil);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
     void DestroyStubObjectForPid(pid_t pid);
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args);
     void DestroyDumper(StubType type, sptr<IRemoteObject> object);
     void DestroyDumperForPid(pid_t pid);
-
+    std::vector<ServiceStubUtil> &GetServiceStubUtils();
+    AsyncExecutor &GetAsyncExecutor();
 private:
     MediaServerManager();
-    sptr<IRemoteObject> CreateStub(sptr<IRemoteObject> object, DumperEntry entry, StubType type);
-
-    class AsyncExecutor {
-    public:
-        AsyncExecutor() = default;
-        virtual ~AsyncExecutor() = default;
-        void Commit(sptr<IRemoteObject> obj);
-        void Clear();
-    private:
-        void HandleAsyncExecution();
-        std::list<sptr<IRemoteObject>> freeList_;
-        std::mutex listMutex_;
-    };
-    std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecListStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> avCodecStubMap_;
-    std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
-    std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>> stubMap_;
-    std::map<StubType, std::vector<Dumper>> dumperTbl_;
+    void StubInit();
     AsyncExecutor executor_;
+
+    std::vector<ServiceStubUtil> stubUtils_{
+        ServiceStubUtil("Recorder", StubType::RECORDER,
+            IStandardMediaService::MEDIA_RECORDER, RecorderServiceStub::Create),
+        ServiceStubUtil("Player", StubType::PLAYER,
+            IStandardMediaService::MEDIA_PLAYER, RecorderServiceStub::Create),
+        ServiceStubUtil("AvMetaDataHelper", StubType::AVMETADATAHELPER,
+            IStandardMediaService::MEDIA_AVMETADATAHELPER,RecorderServiceStub::Create),
+        ServiceStubUtil("AVCodecList", StubType::AVCODECLIST,
+            IStandardMediaService::MEDIA_CODECLIST,RecorderServiceStub::Create),
+        ServiceStubUtil("AVCodec", StubType::AVCODEC,
+            IStandardMediaService::MEDIA_AVCODEC,RecorderServiceStub::Create),
+        ServiceStubUtil("RecorderProfiles", StubType::RECORDERPROFILES,
+            IStandardMediaService::RECORDER_PROFILES,RecorderServiceStub::Create),
+    };
+    std::map<StubType, std::vector<Dumper>> dumperTbl_;
 
     std::mutex mutex_;
 };
