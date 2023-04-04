@@ -38,10 +38,11 @@ public:
     std::map<sptr<IRemoteObject>, pid_t> GetStubMap() const;
     size_t GetStubMapSize() const;
     void AddObject(sptr<IRemoteObject> object, pid_t pid);
+    void AddDumper(Dumper dumper);
     bool DeleteStubObject(sptr<IRemoteObject> object);
     void DeleteStubObjectForPid(pid_t pid);
     sptr<IMediaStub> CreateStub();
-    std::vector<Dumper> GetDumpers() const;
+    std::vector<Dumper> &GetDumpers();
 private:
     std::string name_;
     StubType type_ = StubType::PLAYER;

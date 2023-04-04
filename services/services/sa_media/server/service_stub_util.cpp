@@ -47,6 +47,11 @@ void ServiceStubUtil::AddObject(sptr<IRemoteObject> object, pid_t pid)
     stubMap_[object] = pid;
 }
 
+void ServiceStubUtil::AddDumper(Dumper dumper)
+{
+    dumpers_.emplace_back(dumper);
+}
+
 bool ServiceStubUtil::DeleteStubObject(sptr<IRemoteObject> object)
 {
     for (auto it = stubMap_.begin(); it != stubMap_.end(); it++) {
@@ -75,7 +80,7 @@ sptr<IMediaStub> ServiceStubUtil::CreateStub()
     return create_();
 }
 
-std::vector<Dumper> ServiceStubUtil::GetDumpers() const
+std::vector<Dumper> &ServiceStubUtil::GetDumpers()
 {
     return dumpers_;
 }

@@ -69,7 +69,7 @@ private:
     MediaServerManager();
     AsyncExecutor executor_;
 
-    std::vector<ServiceStubUtil> stubUtils_{
+    std::vector<ServiceStubUtil> stubUtils_ {
         ServiceStubUtil("Recorder", StubType::RECORDER,
             IStandardMediaService::MEDIA_RECORDER, RecorderServiceStub::Create),
         ServiceStubUtil("Player", StubType::PLAYER,
@@ -83,7 +83,6 @@ private:
         ServiceStubUtil("RecorderProfiles", StubType::RECORDERPROFILES,
             IStandardMediaService::RECORDER_PROFILES, RecorderProfilesServiceStub::Create)
     };
-    std::map<StubType, std::vector<Dumper>> dumperTbl_;
 
     std::mutex mutex_;
 };

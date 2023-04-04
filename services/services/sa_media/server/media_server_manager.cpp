@@ -122,7 +122,7 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(ServiceStubUtil &stubUt
     std::lock_guard<std::mutex> lock(mutex_);
     if (stubUtil.GetStubMapSize() >= SERVER_MAX_NUMBER) {
         MEDIA_LOGE("The number of %{public}s services(%{public}zu) has reached the upper limit."
-        "Please release the applied resources.", stubUtil.GetName().c_str(), stubUtil.GetStubMapSize());
+            "Please release the applied resources.", stubUtil.GetName().c_str(), stubUtil.GetStubMapSize());
         return nullptr;
     }
     auto stub = stubUtil.CreateStub();
@@ -133,8 +133,8 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(ServiceStubUtil &stubUt
     if (object != nullptr) {
         pid_t pid = IPCSkeleton::GetCallingPid();
         stubUtil.AddObject(object, pid);
-        Dumper dumper{pid, IPCSkeleton::GetCallingUid(), entry, object};
-        dumperTbl_[stubUtil.GetStubType()].emplace_back(dumper);
+        Dumper dumper {pid, IPCSkeleton::GetCallingUid(), entry, object};
+        stubUtil.AddDumper(dumper);
         MEDIA_LOGD("The number of %{public}s services(%{public}zu) pid(%{public}d).",
             stubUtil.GetName().c_str(), stubUtil.GetStubMapSize(), pid);
         std::string varName = "The number of " + stubUtil.GetName();
@@ -154,7 +154,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     for(auto &stub : stubUtils_) {
         if (stub.GetStubType() == type && stub.GetStubMapSize()) {
             MEDIA_LOGD("destroy %{public}s stub services(%{public}zu) pid(%{public}d).",
-            stub.GetName().c_str(), stub.GetStubMapSize(), pid);
+                stub.GetName().c_str(), stub.GetStubMapSize(), pid);
             return;
         }
     }
@@ -175,24 +175,30 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 
 void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object)
 {
-    for (auto it = dumperTbl_[type].begin(); it != dumperTbl_[type].end(); it++) {
-        if (it->remoteObject_ == object) {
-            (void)dumperTbl_[type].erase(it);
-            MEDIA_LOGD("MediaServerManager::DestroyDumper");
-            if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
-                MEDIA_LOGW("failed to call InstanceDump");
+    for (auto &stubUtil : stubUtils_) {
+        if (stubUtil.GetStubType() == type) {
+            auto dumpers = stubUtil.GetDumpers();
+            for (auto it = dumpers.begin(); it != dumpers.end(); it++) {
+                if (it->remoteObject_ == object) {
+                    (void)dumpers.erase(it);
+                    MEDIA_LOGD("MediaServerManager::DestroyDumper");
+                    if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
+                        MEDIA_LOGW("failed to call InstanceDump");
+                    }
+                    return;
+                }
             }
-            return;
         }
     }
 }
 
 void MediaServerManager::DestroyDumperForPid(pid_t pid)
 {
-    for (auto &dumpers : dumperTbl_) {
-        for (auto it = dumpers.second.begin(); it != dumpers.second.end();) {
+    for (auto &stubUtil : stubUtils_) {
+        auto dumpers = stubUtil.GetDumpers();
+        for (auto it = dumpers.begin(); it != dumpers.end();) {
             if (it->pid_ == pid) {
-                it = dumpers.second.erase(it);
+                it = dumpers.erase(it);
                 MEDIA_LOGD("MediaServerManager::DestroyDumperForPid");
             } else {
                 it++;
