@@ -140,7 +140,10 @@ struct AudioPlayer {
     });
     // 焦点上报回调函数
     this.avPlayer.on('audioInterrupt', (info: audio.InterruptEvent) => {
-      Logger.info(TAG, 'audioInterrupt success,and InterruptEvent info is:' + info);
+      // 触发焦点上报后调用暂停接口暂停播放
+      this.pause();
+      this.isPlaying = !this.isPlaying;
+      Logger.info(TAG, 'audioInterrupt success,and InterruptEvent info is:' + JSON.stringify(info));
     });
     // HLS上报所有支持的比特率
     this.avPlayer.on('availableBitrates', (bitrates: Array<number>) => {
@@ -162,6 +165,8 @@ struct AudioPlayer {
           }
           break;
         case 'prepared':
+          // 设置焦点上报类型
+          this.avPlayer.audioInterruptMode = audio.InterruptMode.INDEPENDENT_MODE;
           this.getTrackDescription();
           Logger.info(TAG, 'state prepared called ：' + this.getCurrentTime());
           if (this.isNext) {
