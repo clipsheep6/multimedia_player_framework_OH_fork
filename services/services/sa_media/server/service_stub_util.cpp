@@ -32,11 +32,6 @@ IStandardMediaService::MediaSystemAbility ServiceStubUtil::GetAbility() const
     return ability_;
 }
 
-std::map<sptr<IRemoteObject>, pid_t> ServiceStubUtil::GetStubMap() const
-{
-    return stubMap_;
-}
-
 size_t ServiceStubUtil::GetStubMapSize() const
 {
     return stubMap_.size();

@@ -35,7 +35,6 @@ public:
     std::string GetName() const;
     StubType GetStubType() const;
     IStandardMediaService::MediaSystemAbility GetAbility() const;
-    std::map<sptr<IRemoteObject>, pid_t> GetStubMap() const;
     size_t GetStubMapSize() const;
     void AddObject(sptr<IRemoteObject> object, pid_t pid);
     void AddDumper(Dumper dumper);
