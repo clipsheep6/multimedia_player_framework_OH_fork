@@ -25,16 +25,13 @@ class Dumper {
 public:
     using DumperEntry = std::function<int32_t(int32_t)>;
     Dumper(pid_t pid, pid_t uid, DumperEntry entry, sptr<IRemoteObject> object) : pid_(pid), uid_(uid),
-        entry_(entry), remoteObject_(object)
-    {
+        entry_(entry), remoteObject_(object) {}
 
-    }
-// private:
     pid_t pid_;
     pid_t uid_;
     DumperEntry entry_;
     sptr<IRemoteObject> remoteObject_;
 };
-}
-}
+} // namespace Media
+} // namespace OHOS
 #endif

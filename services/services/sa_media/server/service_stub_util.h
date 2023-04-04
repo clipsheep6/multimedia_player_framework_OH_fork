@@ -43,7 +43,6 @@ public:
     sptr<IMediaStub> CreateStub();
     std::vector<Dumper> GetDumpers() const;
 private:
-    void Init();
     std::string name_;
     StubType type_ = StubType::PLAYER;
     IStandardMediaService::MediaSystemAbility ability_ = IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER;

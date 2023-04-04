@@ -17,14 +17,18 @@
 #define I_MEDIA_STUB_H
 
 #include "iremote_broker.h"
+#include "media_errors.h"
 
 namespace OHOS {
 namespace Media {
 class IMediaStub : public IRemoteBroker {
 public:
-    virtual int32_t DumpInfo(int32_t fd) {  (void)fd; return 0; };
+    virtual int32_t DumpInfo(int32_t fd)
+    {
+        (void)fd;
+        return MSERR_OK;
+    };
     virtual ~IMediaStub() = default;
-    DECLARE_INTERFACE_DESCRIPTOR(u"IMediaStub");
 };
 } // namespace Media
 } // namespace OHOS

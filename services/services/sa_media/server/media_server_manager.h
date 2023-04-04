@@ -67,7 +67,6 @@ public:
     AsyncExecutor &GetAsyncExecutor();
 private:
     MediaServerManager();
-    void StubInit();
     AsyncExecutor executor_;
 
     std::vector<ServiceStubUtil> stubUtils_{

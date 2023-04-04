@@ -17,12 +17,6 @@
 
 namespace OHOS {
 namespace Media {
-
-void ServiceStubUtil::Init()
-{
-
-}
-
 std::string ServiceStubUtil::GetName() const
 {
     return name_;
