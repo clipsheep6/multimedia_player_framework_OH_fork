@@ -16,8 +16,6 @@
 #ifndef MEDIA_SERVER_H
 #define MEDIA_SERVER_H
 
-#include <map>
-#include <vector>
 #include "media_service_stub.h"
 #include "system_ability.h"
 #include "nocopyable.h"
