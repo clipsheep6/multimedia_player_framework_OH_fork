@@ -152,7 +152,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     pid_t pid = IPCSkeleton::GetCallingPid();
     DestroyDumper(type, object);
     for(auto &stub : stubUtils_) {
-        if (stub.GetStubType() == type && stub.GetStubMapSize() > 0) {
+        if (stub.GetStubType() == type) {
             stub.DeleteStubObject(object);
             MEDIA_LOGD("destroy %{public}s stub services(%{public}zu) pid(%{public}d).",
                 stub.GetName().c_str(), stub.GetStubMapSize(), pid);
@@ -178,7 +178,7 @@ void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object
 {
     for (auto &stubUtil : stubUtils_) {
         if (stubUtil.GetStubType() == type) {
-            auto dumpers = stubUtil.GetDumpers();
+            auto &dumpers = stubUtil.GetDumpers();
             for (auto it = dumpers.begin(); it != dumpers.end(); it++) {
                 if (it->remoteObject_ == object) {
                     (void)dumpers.erase(it);
