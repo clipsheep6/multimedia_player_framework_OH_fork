@@ -88,7 +88,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
             std::u16string name = std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> {}.from_bytes(media_name);
             ret = WriteInfo(fd, dumpString, stubUtil.GetDumpers(), argSets.find(name) != argSets.end());
         }
-        if (ret == false) {
+        if (ret != OHOS::NO_ERROR) {
             std::string log = "Failed to write " + stubUtil.GetName() + "Server information";
             MEDIA_LOGW("%{public}s", log.c_str());
             return OHOS::INVALID_OPERATION;
