@@ -153,6 +153,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     DestroyDumper(type, object);
     for(auto &stub : stubUtils_) {
         if (stub.GetStubType() == type && stub.GetStubMapSize()) {
+            stub.DeleteStubObject(object);
             MEDIA_LOGD("destroy %{public}s stub services(%{public}zu) pid(%{public}d).",
                 stub.GetName().c_str(), stub.GetStubMapSize(), pid);
             return;
