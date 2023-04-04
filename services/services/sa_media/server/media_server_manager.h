@@ -79,7 +79,7 @@ private:
             IStandardMediaService::MEDIA_AVMETADATAHELPER,RecorderServiceStub::Create),
         ServiceStubUtil("AVCodecList", StubType::AVCODECLIST,
             IStandardMediaService::MEDIA_CODECLIST,RecorderServiceStub::Create),
-        ServiceStubUtil("AVCodec", StubType::AVCODEC,
+        ServiceStubUtil("Codec", StubType::AVCODEC,
             IStandardMediaService::MEDIA_AVCODEC,RecorderServiceStub::Create),
         ServiceStubUtil("RecorderProfiles", StubType::RECORDERPROFILES,
             IStandardMediaService::RECORDER_PROFILES,RecorderServiceStub::Create),

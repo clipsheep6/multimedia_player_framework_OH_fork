@@ -15,6 +15,7 @@
 
 #include "media_server_manager.h"
 #include <unordered_set>
+#include <codecvt>
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_dfx.h"
@@ -71,34 +72,29 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     for (decltype(args.size()) index = 0; index < args.size(); ++index) {
         argSets.insert(args[index]);
     }
-
-    dumpString += "------------------PlayerServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::PLAYER],
-        argSets.find(u"player") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write PlayerServer information");
-        return OHOS::INVALID_OPERATION;
+    auto transform = [](std::string str) {
+        for (auto &c : str) {
+            c = tolower(c);
+        }
+    };
+    for (auto &stubUtil : stubUtils_) {
+        dumpString += "------------------"+ stubUtil.GetName() +"Server------------------\n";
+        bool ret = false;
+        if (stubUtil.GetStubType() == StubType::AVMETADATAHELPER) {
+            ret = WriteInfo(fd, dumpString, stubUtil.GetDumpers(), false);
+        } else {
+            // transform from upper to lower u16string
+            std::string media_name = stubUtil.GetName();
+            transform(media_name);
+            std::u16string name = std::wstring_convert<std::codecvt_utf8<char16_t>, char16_t> {}.from_bytes(media_name);
+            ret = WriteInfo(fd, dumpString, stubUtil.GetDumpers(), argSets.find(name) != argSets.end());
+        }
+        if (ret == false) {
+            std::string log = "Failed to write " + stubUtil.GetName() + "Server information";
+            MEDIA_LOGW("%{public}s", log.c_str());
+            return OHOS::INVALID_OPERATION;
+        }
     }
-
-    dumpString += "------------------RecorderServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::RECORDER],
-        argSets.find(u"recorder") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write RecorderServer information");
-        return OHOS::INVALID_OPERATION;
-    }
-
-    dumpString += "------------------CodecServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::AVCODEC],
-        argSets.find(u"codec") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write CodecServer information");
-        return OHOS::INVALID_OPERATION;
-    }
-
-    dumpString += "------------------AVMetaServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write AVMetaServer information");
-        return OHOS::INVALID_OPERATION;
-    }
-
     if (ServiceDumpManager::GetInstance().Dump(fd, argSets) != OHOS::NO_ERROR) {
         MEDIA_LOGW("Failed to write dfx dump information");
         return OHOS::INVALID_OPERATION;
@@ -149,62 +145,6 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(ServiceStubUtil &stubUt
         }
     }
     return object;
-    // return object;
-    // return CreateStub(stubUtil);
-//     switch (type) {
-// #ifdef SUPPORT_RECORDER
-//         case RECORDER: {
-//             // sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
-//             auto object = stubFuncMap_[type].first()->AsObject();
-//             DumperEntry entry = stubFuncMap_[type].second;
-//             // DumperEntry entry = [media = stub](int32_t fd) -> int32_t {
-//             //     return media->DumpInfo(fd);
-//             // };
-//             return CreateStub(object, entry, type);
-//         }
-//         case RECORDERPROFILES: {
-//             sptr<IRemoteBroker> stub = RecorderProfilesServiceStub::Create();
-//             DumperEntry entry = [](int32_t) -> int32_t { return MSERR_OK; };
-//             return CreateStub(stub->AsObject(), entry, type);
-//         }
-// #endif
-// #ifdef SUPPORT_PLAYER
-//         case PLAYER: {
-//             sptr<PlayerServiceStub> stub = PlayerServiceStub::Create();
-//             if (stub == nullptr) {
-//                 MEDIA_LOGE("failed to create ServiceStub");
-//                 return nullptr;
-//             }
-//             DumperEntry entry = [media = stub](int32_t fd) -> int32_t {
-//                 return media->DumpInfo(fd);
-//             };
-//             return CreateStub(stub->AsObject(), entry, type);
-//         }
-// #endif
-// #ifdef SUPPORT_METADATA
-//         case AVMETADATAHELPER: {
-//             sptr<AVMetadataHelperServiceStub> avMetadataHelperStub = AVMetadataHelperServiceStub::Create();
-//             DumperEntry entry = [](int32_t) -> int32_t { return MSERR_OK; };
-//             return CreateStub(avMetadataHelperStub->AsObject(), entry, type);
-//         }
-// #endif
-// #ifdef SUPPORT_CODEC
-//         case AVCODECLIST: {
-//             sptr<AVCodecListServiceStub> stub = AVCodecListServiceStub::Create();
-//             DumperEntry entry = [](int32_t) -> int32_t { return MSERR_OK; };
-//             return CreateStub(stub->AsObject(), entry, type);
-//         }
-//         case AVCODEC: {
-//             sptr<AVCodecServiceStub> stub = AVCodecServiceStub::Create();
-//             DumperEntry entry = [media = stub](int32_t fd) -> int32_t { return media->DumpInfo(fd); };
-//             return CreateStub(stub->AsObject(), entry, type);
-//         }
-// #endif
-//         default: {
-//             MEDIA_LOGE("default case, media server manager failed");
-//             return nullptr;
-//         }
-//     }
 }
 
 void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)

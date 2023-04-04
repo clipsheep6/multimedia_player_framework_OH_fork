@@ -18,8 +18,6 @@
 #include <map>
 #include <functional>
 #include <string>
-#include <thread>
-#include <mutex>
 #include "i_media_stub.h"
 #include "i_standard_media_service.h"
 #include "stub_type.h"
@@ -32,10 +30,8 @@ public:
     ServiceStubUtil() = default;
     ServiceStubUtil(std::string name, StubType type, IStandardMediaService::MediaSystemAbility ability,
         std::function<sptr<IMediaStub>()> create) : name_(name), type_(type), ability_(ability),
-        create_(create)
-    {
+        create_(create) {}
 
-    }
     std::string GetName() const;
     StubType GetStubType() const;
     IStandardMediaService::MediaSystemAbility GetAbility() const;
@@ -53,7 +49,6 @@ private:
     IStandardMediaService::MediaSystemAbility ability_ = IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER;
     std::map<sptr<IRemoteObject>, pid_t> stubMap_;
     std::function<sptr<IMediaStub>()> create_;
-    // Dumper::DumperEntry dumperEntry_;
     std::vector<Dumper> dumpers_;
 };
 } // namespace Media
