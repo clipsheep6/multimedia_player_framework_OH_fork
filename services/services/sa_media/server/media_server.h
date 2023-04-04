@@ -41,18 +41,6 @@ protected:
     void OnStart() override;
     void OnStop() override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
-// private:
-//     std::vector<ServiceStubUtil> stubs_ = {
-
-//     };
-//     std::map<IStandardMediaService::MediaSystemAbility, StubType> stubTypeMap_ = {
-//         {MediaSystemAbility::MEDIA_RECORDER, StubType::RECORDER},
-//         {MediaSystemAbility::MEDIA_PLAYER, StubType::PLAYER},
-//         {MediaSystemAbility::MEDIA_AVMETADATAHELPER, StubType::AVMETADATAHELPER},
-//         {MediaSystemAbility::MEDIA_CODECLIST, StubType::AVCODECLIST},
-//         {MediaSystemAbility::MEDIA_AVCODEC, StubType::AVCODEC},
-//         {MediaSystemAbility::RECORDER_PROFILES, StubType::RECORDERPROFILES},
-//     };
 };
 } // namespace Media
 } // namespace OHOS
