@@ -138,7 +138,7 @@ HWTEST_F(ACodecUnitTest, audio_decodec_flush_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareEnc());
     EXPECT_EQ(MSERR_OK, audioCodec_->StartDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->StartEnc());
-    sleep(3); // start run 2s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, audioCodec_->FlushDec());
     sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, audioCodec_->StopDec());
