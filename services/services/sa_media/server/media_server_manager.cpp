@@ -196,7 +196,7 @@ void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object
 void MediaServerManager::DestroyDumperForPid(pid_t pid)
 {
     for (auto &stubUtil : stubUtils_) {
-        auto dumpers = stubUtil.GetDumpers();
+        auto &dumpers = stubUtil.GetDumpers();
         for (auto it = dumpers.begin(); it != dumpers.end();) {
             if (it->pid_ == pid) {
                 it = dumpers.erase(it);
