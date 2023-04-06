@@ -197,7 +197,7 @@ HWTEST_F(VCodecUnitTest, video_codec_format_h264_h264_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoDec_->Start());
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
     system("hidumper -s 3002 -a codec");
-    sleep(10); // start run 10s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, videoDec_->Stop());
     EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
     format->Destroy();
@@ -237,7 +237,7 @@ HWTEST_F(VCodecUnitTest, video_codec_format_h265_h265_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
     EXPECT_EQ(MSERR_OK, videoDec_->Start());
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
-    sleep(10); // start run 10s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, videoDec_->Stop());
     EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
     format->Destroy();
@@ -275,7 +275,7 @@ HWTEST_F(VCodecUnitTest, video_decode_Flush_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
     sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, videoDec_->Flush());
-    sleep(7); // start run 7s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, videoDec_->Stop());
     EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
     format->Destroy();
@@ -313,7 +313,7 @@ HWTEST_F(VCodecUnitTest, video_encode_Flush_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
     sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, videoEnc_->Flush());
-    sleep(7); // start run 7s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, videoDec_->Stop());
     EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
     format->Destroy();
@@ -404,7 +404,7 @@ HWTEST_F(VCodecUnitTest, video_codec_SetParameter_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
     EXPECT_EQ(MSERR_OK, videoEnc_->SetParameter(format));
     EXPECT_EQ(MSERR_OK, videoDec_->SetParameter(format));
-    sleep(5); // start run 5s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, videoDec_->Stop());
     EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
     format->Destroy();
@@ -477,7 +477,7 @@ HWTEST_F(VCodecUnitTest, video_NotifyEos_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
     EXPECT_EQ(MSERR_OK, videoDec_->Start());
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
-    sleep(10); // start run 10s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, videoEnc_->NotifyEos());
     EXPECT_EQ(MSERR_OK, videoDec_->Stop());
     EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
@@ -526,7 +526,7 @@ HWTEST_F(VCodecUnitTest, video_codec_format_mpeg2_mpeg4_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
     EXPECT_EQ(MSERR_OK, videoDec_->Start());
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
-    sleep(5); // start run 5s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, videoDec_->Stop());
     EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
     format->Destroy();
@@ -562,7 +562,7 @@ HWTEST_F(VCodecUnitTest, video_codec_format_mpeg4_mpeg4_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
     EXPECT_EQ(MSERR_OK, videoDec_->Start());
     EXPECT_EQ(MSERR_OK, videoEnc_->Start());
-    sleep(5); // start run 5s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, videoDec_->Stop());
     EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
     format->Destroy();
