@@ -36,6 +36,9 @@ struct HlsPlayer {
   @State isSpeed: boolean = false;
   @State descriptionValue: string = '';
   @State isBuffering: boolean = false;
+  @State widthValue: number = 0;
+  @State heightValue: number = 0;
+  @State bitrateList: Array<SelectOption> = new Array<SelectOption>();;
   private avPlayer: media.AVPlayer;
   private duration: number = -1;
   private fdPath: string = '';
@@ -48,12 +51,13 @@ struct HlsPlayer {
   private screenHeight: number = 1920; // 设备屏幕高，建议使用接口调用获取
   private volumeValue: number = 1.00;
   private mXcomponentController: XComponentController = new XComponentController();
-  private SRC_LIST: Array<string>
+  private SRC_LIST: Array<string>;
+  private bitrateValue: Array<number>;
   // 界面初始化函数
   async aboutToAppear() {
-    this.videoName = router.getParams()[CommonConstants.KEY_PARAM_DATA];
     this.SRC_LIST = CommonConstants.VIDEO_HLS_LISTS;
-    this.index = CommonConstants.VIDEO_HLS_LISTS.map(item => item).indexOf(this.videoName);
+    this.index = CommonConstants.VIDEO_HLS_LISTS.map(item => item).indexOf(router.getParams()[CommonConstants.KEY_PARAM_DATA]);
+    this.videoName = CommonConstants.VIDEO_HLS_NAME[this.index];
     Logger.info(TAG, 'aboutToAppear success, and play source is' + this.videoName);
   }
   // 界面销毁监听
@@ -151,14 +155,24 @@ struct HlsPlayer {
     });
     // 视频宽高上报回调函数
     this.avPlayer.on('videoSizeChange', (width: number, height: number) => {
+      this.widthValue = width;
+      this.heightValue = height;
       Logger.info(TAG, 'videoSizeChange success,and width is:' + width + ', height is :' + height);
     });
     // 焦点上报回调函数
     this.avPlayer.on('audioInterrupt', (info: audio.InterruptEvent) => {
-      Logger.info(TAG, 'audioInterrupt success,and InterruptEvent info is:' + info);
+      // 触发焦点上报后调用暂停接口暂停播放
+      this.pause();
+      this.isPlaying = !this.isPlaying;
+      Logger.info(TAG, 'audioInterrupt success,and InterruptEvent info is:' + JSON.stringify(info));
     });
     // HLS上报所有支持的比特率
     this.avPlayer.on('availableBitrates', (bitrates: Array<number>) => {
+      this.bitrateValue = bitrates;
+      for (let i = 0; i < bitrates.length; i++) {
+        this.bitrateList.push({'value': '' + bitrates[i]});
+        Logger.info(TAG, 'availableBitrates success,bitrates is :' + bitrates[i]);
+      }
       Logger.info(TAG, 'availableBitrates success,and availableBitrates length is:' + bitrates.length);
     });
   }
@@ -179,6 +193,8 @@ struct HlsPlayer {
           break;
         case 'prepared':
           this.getTrackDescription();
+          // 设置焦点上报类型
+          this.avPlayer.audioInterruptMode = audio.InterruptMode.INDEPENDENT_MODE;
           this.duration = this.avPlayer.duration;
           this.durationTimeText = this.mediaLibUtils.getShowTime(this.duration);
           Logger.info(TAG, 'state prepared called ：' + this.getCurrentTime());
@@ -298,27 +314,9 @@ struct HlsPlayer {
     this.avPlayer.loop = loopValue;
   }
   // HLS播放设置比特率
-  setBitrate(bitrate:number): void {
-    switch (bitrate) {
-      case 0:
-        this.avPlayer.setBitrate(165340);
-        break;
-      case 1:
-        this.avPlayer.setBitrate(344388);
-        break;
-      case 2:
-        this.avPlayer.setBitrate(387360);
-        break;
-      case 3:
-        this.avPlayer.setBitrate(765178);
-        break;
-      case 4:
-        this.avPlayer.setBitrate(1676816);
-        break;
-      default:
-        Logger.info(TAG, 'no this mode speed:' + bitrate);
-        break;
-    }
+  setBitrate(index:number): void {
+    Logger.info(TAG, 'setBitrate: bitrate is:' + this.bitrateValue[index]);
+    this.avPlayer.setBitrate(this.bitrateValue[index]);
   }
   // 获取轨道信息接口
   async getTrackDescription(): Promise<void> {
@@ -340,7 +338,7 @@ struct HlsPlayer {
   // 初始化函数
   async initAVPlayer(): Promise<void> {
     Logger.info(TAG, 'initAVPlayer success');
-    this.fdPath = this.videoName;
+    this.fdPath = CommonConstants.VIDEO_HLS_LISTS[this.index];
     Logger.info(TAG, 'file id is : ' + this.fdPath);
     this.surfaceID = this.mXcomponentController.getXComponentSurfaceId();
     Logger.info(TAG, 'surfaceID is : ' + this.surfaceID);
@@ -361,7 +359,7 @@ struct HlsPlayer {
       this.index = this.index + 1;
     }
     this.fdPath = this.SRC_LIST[this.index];
-    this.videoName = this.SRC_LIST[this.index];
+    this.videoName = CommonConstants.VIDEO_HLS_NAME[this.index]
     this.isBuffering = false;
     Logger.info(TAG, 'file id is : ' + this.fdPath);
     // 开始进入下一个视频的播放
@@ -383,7 +381,7 @@ struct HlsPlayer {
       this.index = this.index - 1;
     }
     this.fdPath = this.SRC_LIST[this.index];
-    this.videoName = this.SRC_LIST[this.index];
+    this.videoName = CommonConstants.VIDEO_HLS_NAME[this.index]
     this.isBuffering = false;
     Logger.info(TAG, 'file id is : ' + this.fdPath);
     if (this.getState() === 'idle') {
@@ -465,16 +463,15 @@ struct HlsPlayer {
 
       Column() {
         Row() {
+          Text('分辨率：' + this.widthValue + ' * ' + this.heightValue).fontSize(15).width('50%').textAlign(TextAlign.Center)
+        }
+        Row() {
           LoadingProgress()
             .width('80px')
             .height('80px')
             .visibility(this.isBuffering?Visibility.Hidden : Visibility.Visible)
             .color(Color.Blue)
-          Select([{ value: '165340'},
-            { value: '344388'},
-            { value: '387360'},
-            { value: '765178'},
-            { value: '1676816'}])
+          Select(this.bitrateList)
             .selected(2)
             .value('bitrate')
             .font({ size: 16, weight: 500 })
