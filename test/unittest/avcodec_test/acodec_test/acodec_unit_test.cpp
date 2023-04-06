@@ -118,7 +118,7 @@ HWTEST_F(ACodecUnitTest, audio_codec_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, audioCodec_->StartDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->StartEnc());
     system("hidumper -s 3002 -a codec");
-    sleep(10); // start run 10s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, audioCodec_->StopDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->StopEnc());
 }
@@ -140,7 +140,7 @@ HWTEST_F(ACodecUnitTest, audio_decodec_flush_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, audioCodec_->StartEnc());
     sleep(3); // start run 2s
     EXPECT_EQ(MSERR_OK, audioCodec_->FlushDec());
-    sleep(7); // start run 7s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, audioCodec_->StopDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->StopEnc());
 }
@@ -160,9 +160,9 @@ HWTEST_F(ACodecUnitTest, audio_encodec_flush_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareEnc());
     EXPECT_EQ(MSERR_OK, audioCodec_->StartDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->StartEnc());
-    sleep(3); // start run 2s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, audioCodec_->FlushEnc());
-    sleep(7); // start run 7s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, audioCodec_->StopDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->StopEnc());
 }
@@ -182,7 +182,7 @@ HWTEST_F(ACodecUnitTest, audio_codec_reset_0100, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, audioCodec_->PrepareEnc());
     EXPECT_EQ(MSERR_OK, audioCodec_->StartDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->StartEnc());
-    sleep(10); // start run 10s
+    sleep(3); // start run 3s
     EXPECT_EQ(MSERR_OK, audioCodec_->ResetDec());
     EXPECT_EQ(MSERR_OK, audioCodec_->ResetEnc());
 }
