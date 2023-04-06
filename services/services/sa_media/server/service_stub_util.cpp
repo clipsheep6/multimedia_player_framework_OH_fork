@@ -49,7 +49,7 @@ void ServiceStubUtil::AddDumper(Dumper dumper)
 
 bool ServiceStubUtil::DeleteStubObject(sptr<IRemoteObject> object)
 {
-    for (auto it = stubMap_.begin(); it != stubMap_.end(); it++) {
+    for (auto it = stubMap_.begin(); it != stubMap_.end(); ++it) {
         if (it->first == object) {
             (void)stubMap_.erase(it);
             return true;

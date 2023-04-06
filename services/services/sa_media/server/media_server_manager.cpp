@@ -179,7 +179,7 @@ void MediaServerManager::DestroyDumper(StubType type, sptr<IRemoteObject> object
     for (auto &stubUtil : stubUtils_) {
         if (stubUtil.GetStubType() == type) {
             auto &dumpers = stubUtil.GetDumpers();
-            for (auto it = dumpers.begin(); it != dumpers.end(); it++) {
+            for (auto it = dumpers.begin(); it != dumpers.end(); ++it) {
                 if (it->remoteObject_ == object) {
                     (void)dumpers.erase(it);
                     MEDIA_LOGD("MediaServerManager::DestroyDumper");
@@ -202,7 +202,7 @@ void MediaServerManager::DestroyDumperForPid(pid_t pid)
                 it = dumpers.erase(it);
                 MEDIA_LOGD("MediaServerManager::DestroyDumperForPid");
             } else {
-                it++;
+                ++it;
             }
         }
     }
