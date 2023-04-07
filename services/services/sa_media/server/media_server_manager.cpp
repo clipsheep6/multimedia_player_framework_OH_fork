@@ -151,7 +151,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     std::lock_guard<std::mutex> lock(mutex_);
     pid_t pid = IPCSkeleton::GetCallingPid();
     DestroyDumper(type, object);
-    for(auto &stub : stubUtils_) {
+    for (auto &stub : stubUtils_) {
         if (stub.GetStubType() == type) {
             stub.DeleteStubObject(object);
             MEDIA_LOGD("destroy %{public}s stub services(%{public}zu) pid(%{public}d).",
