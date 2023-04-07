@@ -431,9 +431,17 @@ declare namespace media {
     audioSenceEffectBypass ?: boolean;
 
     /**
+     * Describe the supported audio scene effect modes, refer to {@link #audio.AudioSceneEffectMode}.
+     * Read it after calling the {@link #prepare()}.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    readonly audioSenceEffectInfoArray ?: audio.AudioSenceEffectInfoArray;
+
+    /**
      * Describes audio sence Effect mode, refer to {@link #audio.AudioSceneEffectMode}. If it is
      * not set, the default mode will be used. Set it before calling the {@link #play()} in the
-     * first time in order for the  audio scene effect mode to become effective thereafter.
+     * first time in order for the audio scene effect mode to become effective thereafter.
      * @since 10
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      */
