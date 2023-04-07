@@ -424,6 +424,30 @@ declare namespace media {
     audioRendererInfo ?: audio.AudioRendererInfo;
 
     /**
+     * Whether to enable audio scene effects. If not set, it defaults to true.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    audioSenceEffectBypass ?: boolean;
+
+    /**
+     * Describe the supported audio scene effect modes, refer to {@link #audio.AudioSceneEffectMode}.
+     * Read it after calling the {@link #prepare()}.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    readonly audioSenceEffectInfoArray ?: audio.AudioSenceEffectInfoArray;
+
+    /**
+     * Describes audio sence Effect mode, refer to {@link #audio.AudioSceneEffectMode}. If it is
+     * not set, the default mode will be used. Set it before calling the {@link #play()} in the
+     * first time in order for the audio scene effect mode to become effective thereafter.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    audioSenceEffectMode ?: audio.AudioSceneEffectMode;
+
+    /**
      * Current playback position.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
@@ -601,6 +625,15 @@ declare namespace media {
      */
     on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
     off(type: 'audioInterrupt'): void;
+    /**
+     * Register or unregister listens for audio effect state change event, refer to {@link #audio.EffectStateChangeEvent}
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback event return audio effect state info.
+     */
+     on(type: 'audioEffectStateChange', callback: (info: audio.EffectStateChangeEvent) => void): void;
+     off(type: 'audioEffectStateChange'): void;
     /**
      * Register or unregister listens for available bitrate list collect completed events for HLS protocol stream playback.
      * This event will be reported after the {@link #prepare} called.
