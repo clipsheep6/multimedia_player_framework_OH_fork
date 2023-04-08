@@ -47,15 +47,14 @@ void ServiceStubUtil::AddDumper(Dumper dumper)
     dumpers_.emplace_back(dumper);
 }
 
-bool ServiceStubUtil::DeleteStubObject(sptr<IRemoteObject> object)
+void ServiceStubUtil::DeleteStubObject(sptr<IRemoteObject> object)
 {
     for (auto it = stubMap_.begin(); it != stubMap_.end(); ++it) {
         if (it->first == object) {
             (void)stubMap_.erase(it);
-            return true;
+            return;
         }
     }
-    return false;
 }
 
 void ServiceStubUtil::DeleteStubObjectForPid(pid_t pid)

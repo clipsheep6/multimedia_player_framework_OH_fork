@@ -38,7 +38,7 @@ public:
     size_t GetStubMapSize() const;
     void AddObject(sptr<IRemoteObject> object, pid_t pid);
     void AddDumper(Dumper dumper);
-    bool DeleteStubObject(sptr<IRemoteObject> object);
+    void DeleteStubObject(sptr<IRemoteObject> object);
     void DeleteStubObjectForPid(pid_t pid);
     sptr<IMediaStub> CreateStub();
     std::vector<Dumper> &GetDumpers();
