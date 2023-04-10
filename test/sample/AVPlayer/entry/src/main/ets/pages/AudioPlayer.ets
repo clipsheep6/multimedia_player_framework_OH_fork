@@ -179,6 +179,9 @@ struct AudioPlayer {
           break;
         case 'paused':
           Logger.info(TAG, 'state paused called');
+          if (!this.isPlaying) {
+            this.isPlaying = !this.isPlaying;
+          }
           break;
         case 'completed':
           Logger.info(TAG, 'state completed called');
@@ -328,6 +331,7 @@ struct AudioPlayer {
   async nextVideo(): Promise<void> {
     // 调用reset函数，重置播放器状态至idle
     await this.avPlayer.reset();
+    this.isLoop = false;
     // 获取当前播放文件的下一个视频文件在列表中的下标
     if (this.index === (this.SRC_LIST.length - 1)) {
       this.index = 0;
@@ -357,6 +361,7 @@ struct AudioPlayer {
   // 切换上个视频的接口
   async preVideo(): Promise<void> {
     await this.avPlayer.reset();
+    this.isLoop = false;
     if (this.index === (0)) {
       this.index = this.SRC_LIST.length - 1;
     } else {
@@ -404,20 +409,6 @@ struct AudioPlayer {
       .alignItems(VerticalAlign.Top)
       .gesture(
       GestureGroup(GestureMode.Exclusive,
-      PanGesture({ direction: PanDirection.Horizontal })
-        .onActionStart(async () => {
-          Logger.info(TAG, 'onActionStart moving start');
-        })
-        .onActionUpdate((event: GestureEvent) => {
-          // 左右滑动触发seek
-          Logger.info(TAG, 'event.offsetX is :' + event.offsetX + ',screenWidth is :' + this.screenWidth);
-          this.movingTime = parseInt(((event.offsetX / this.screenWidth) * this.duration).toString());
-          Logger.info(TAG, 'onActionStart moving update, moving time is :' + this.movingTime);
-          this.avPlayer.seek(this.getCurrentTime() + this.movingTime, 0);
-        })
-        .onActionEnd(() => {
-          Logger.info(TAG, 'onActionStart moving end');
-        }),
       PanGesture({ direction: PanDirection.Vertical })
         .onActionStart(() => {
           Logger.info(TAG, 'onActionStart  Vertical moving start');
@@ -438,7 +429,6 @@ struct AudioPlayer {
           Logger.info(TAG, 'onActionStart  Vertical moving end');
         }))
       )
-
       Column() {
         Row() {
           Text(this.videoName).fontSize(15).width('50%').textAlign(TextAlign.Center)
