@@ -424,13 +424,6 @@ declare namespace media {
     audioRendererInfo ?: audio.AudioRendererInfo;
 
     /**
-     * Whether to enable audio scene effects. If not set, it defaults to true.
-     * @since 10
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    audioSenceEffectBypass ?: boolean;
-
-    /**
      * Describe the supported audio scene effect modes, refer to {@link #audio.AudioSceneEffectMode}.
      * Read it after calling the {@link #prepare()}.
      * @since 10
