@@ -1275,6 +1275,7 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
         GST_DEBUG_OBJECT(self, "can not get state lock, stop format change");
         return;
     }
+    ON_SCOPE_EXIT(0) { GST_STATE_UNLOCK(self); };
     MediaTrace trace("VdecBase::FormatChange");
     GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change start");
     g_return_val_if_fail(self != nullptr, GST_FLOW_ERROR);
@@ -1305,6 +1306,8 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
     ret = self->decoder->Start();
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "Start", TRUE), GST_FLOW_ERROR);
     GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change end");
+    CANCEL_SCOPE_EXIT_GUARD(0);
+    GST_STATE_UNLOCK(self);
     return GST_FLOW_OK;
 }
 
