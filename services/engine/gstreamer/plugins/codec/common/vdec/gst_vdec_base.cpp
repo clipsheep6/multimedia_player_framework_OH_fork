@@ -1271,6 +1271,10 @@ static void gst_vdec_base_get_real_stride(GstVdecBase *self)
 
 static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
 {
+    if (!GST_STATE_TRY_LOCK(self)) {
+        GST_DEBUG_OBJECT(self, "can not get state lock, stop format change");
+        return;
+    }
     MediaTrace trace("VdecBase::FormatChange");
     GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change start");
     g_return_val_if_fail(self != nullptr, GST_FLOW_ERROR);
