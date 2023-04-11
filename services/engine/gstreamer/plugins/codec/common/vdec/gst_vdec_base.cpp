@@ -1271,7 +1271,7 @@ static void gst_vdec_base_get_real_stride(GstVdecBase *self)
 
 static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
 {
-    if (!GST_STATE_TRY_LOCK(self)) {
+    if (!GST_STATE_TRYLOCK(self)) {
         GST_DEBUG_OBJECT(self, "can not get state lock, stop format change");
         return;
     }
