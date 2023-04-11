@@ -1273,7 +1273,7 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
 {
     if (!GST_STATE_TRYLOCK(self)) {
         GST_DEBUG_OBJECT(self, "can not get state lock, stop format change");
-        return;
+        return GST_FLOW_OK;
     }
     ON_SCOPE_EXIT(0) { GST_STATE_UNLOCK(self); };
     MediaTrace trace("VdecBase::FormatChange");
