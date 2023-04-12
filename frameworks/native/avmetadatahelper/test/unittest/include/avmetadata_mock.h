@@ -83,9 +83,6 @@ public:
     void FrameToJpeg(std::shared_ptr<PixelMap> frame, const char *fileName, int64_t timeUs, int32_t queryOption);
 private:
     int32_t RGB565ToRGB888(const unsigned short *rgb565Buf, int rgb565Size, unsigned char *rgb888Buf, int rgb888Size);
-    int32_t Rgb888ToJpeg(const std::string_view &filename, const uint8_t *rgbData, int width, int height);
-    struct jpeg_compress_struct jpeg {};
-    struct jpeg_error_mgr jerr {};
 };
 class AVMetadataTestBase {
 public:

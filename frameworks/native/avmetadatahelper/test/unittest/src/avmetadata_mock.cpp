@@ -150,46 +150,6 @@ int32_t AVMetadataMock::RGB565ToRGB888(const unsigned short *rgb565Buf, int rgb5
     return 0;
 }
 
-int32_t AVMetadataMock::Rgb888ToJpeg(const std::string_view &filename,
-    const uint8_t *rgbData, int width, int height)
-{
-    if (rgbData == nullptr) {
-        std::cout << "rgbData is nullptr" << std::endl;
-        return -1;
-    }
-
-    jpeg.err = jpeg_std_error(&jerr);
-    jpeg_create_compress(&jpeg);
-    jpeg.image_width = width;
-    jpeg.image_height = height;
-    jpeg.input_components = RGB888_PIXEL_BYTES;
-    jpeg.in_color_space = JCS_RGB;
-    jpeg_set_defaults(&jpeg);
-
-    static const int QUALITY = 100;
-    jpeg_set_quality(&jpeg, QUALITY, TRUE);
-
-    FILE *pFile = fopen(filename.data(), "wb");
-    if (!pFile) {
-        jpeg_destroy_compress(&jpeg);
-        return 0;
-    }
-
-    jpeg_stdio_dest(&jpeg, pFile);
-    jpeg_start_compress(&jpeg, TRUE);
-    JSAMPROW row_pointer[1];
-    for (uint32_t i = 0; i < jpeg.image_height; i++) {
-        row_pointer[0] = const_cast<uint8_t *>(rgbData + i * jpeg.image_width * RGB888_PIXEL_BYTES);
-        jpeg_write_scanlines(&jpeg, row_pointer, 1);
-    }
-    jpeg_finish_compress(&jpeg);
-    (void)fclose(pFile);
-    pFile = NULL;
-
-    jpeg_destroy_compress(&jpeg);
-    return 0;
-}
-
 void AVMetadataMock::FrameToFile(std::shared_ptr<PixelMap> frame,
     const char *fileName, int64_t timeUs, int32_t queryOption)
 {
@@ -272,10 +232,9 @@ void AVMetadataMock::FrameToJpeg(std::shared_ptr<PixelMap> frame,
             delete [] rgb888;
             return;
         }
-        ret = Rgb888ToJpeg(filePath, rgb888, frame->GetWidth(), frame->GetHeight());
         delete [] rgb888;
     } else if (frame->GetPixelFormat() == PixelFormat::RGB_888) {
-        ret = Rgb888ToJpeg(filePath, frame->GetPixels(), frame->GetWidth(), frame->GetHeight());
+        return;
     } else {
         std::cout << "invalid pixel format" << std::endl;
         return;
