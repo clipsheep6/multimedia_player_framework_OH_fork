@@ -62,13 +62,8 @@ PlayerServiceStub::~PlayerServiceStub()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
-int32_t PlayerServiceStub::Init()
+void PlayerServiceStub::SetPlayerFuncs()
 {
-    if (playerServer_ == nullptr) {
-        playerServer_ = PlayerServer::Create();
-    }
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
-
     playerFuncs_[SET_LISTENER_OBJ] = { &PlayerServiceStub::SetListenerObject, "Player::SetListenerObject" };
     playerFuncs_[SET_SOURCE] = { &PlayerServiceStub::SetSource, "Player::SetSource" };
     playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = { &PlayerServiceStub::SetMediaDataSource, "Player::SetMediaDataSource" };
@@ -100,6 +95,16 @@ int32_t PlayerServiceStub::Init()
     playerFuncs_[GET_VIDEO_WIDTH] = { &PlayerServiceStub::GetVideoWidth, "Player::GetVideoWidth" };
     playerFuncs_[GET_VIDEO_HEIGHT] = { &PlayerServiceStub::GetVideoHeight, "Player::GetVideoHeight" };
     playerFuncs_[SELECT_BIT_RATE] = { &PlayerServiceStub::SelectBitRate, "Player::SelectBitRate" };
+}
+
+int32_t PlayerServiceStub::Init()
+{
+    if (playerServer_ == nullptr) {
+        playerServer_ = PlayerServer::Create();
+    }
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
+
+    SetPlayerFuncs();
     return MSERR_OK;
 }
 
