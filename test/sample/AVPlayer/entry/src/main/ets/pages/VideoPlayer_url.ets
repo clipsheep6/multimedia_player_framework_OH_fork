@@ -37,6 +37,8 @@ struct VideoPlayerUrl {
   @State isSpeed: boolean = false;
   @State descriptionValue: string = '';
   @State isBuffering: boolean = false;
+  @State speedTag: number = 1;
+  @State scaleTag: number = 0;
   private avPlayer: media.AVPlayer;
   private duration: number = -1;
   private fdPath: string = '';
@@ -514,7 +516,7 @@ struct VideoPlayerUrl {
             { value: 'speed：1.25'},
             { value: 'speed：1.75'},
             { value: 'speed：2.00'}])
-            .selected(2)
+            .selected(this.speedTag)
             .value('Speed')
             .font({ size: 16, weight: 400 })
             .fontColor('#182431')
@@ -523,11 +525,12 @@ struct VideoPlayerUrl {
             .onSelect((index: number) => {
               Logger.info(TAG, 'Select:' + index);
               this.setSpeed(index);
+              this.speedTag = index;
             })
           // 点击图标设置缩放模式
           Select([{ value: '0'},
             { value: '1'},])
-            .selected(2)
+            .selected(this.scaleTag)
             .value('ScaleType')
             .font({ size: 16, weight: 400 })
             .fontColor('#182431')
@@ -536,6 +539,7 @@ struct VideoPlayerUrl {
             .onSelect((index: number) => {
               Logger.info(TAG, 'Select:' + index);
               this.setScaleType(index);
+              this.scaleTag = index;
             })
         }.width('100%').justifyContent(FlexAlign.Center)
       }
