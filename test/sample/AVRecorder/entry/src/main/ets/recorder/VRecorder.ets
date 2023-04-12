@@ -73,7 +73,7 @@ struct videoRecording {
     videoSourceType: media.VideoSourceType.VIDEO_SOURCE_TYPE_SURFACE_YUV,
     profile: this.avProfile,
     url: 'fd://',
-    rotation: 0, // rotation angle, 0,90,180,270 can be selected
+    rotation: 90, // rotation angle, 0,90,180,270 can be selected
     location: { latitude: 30, longitude: 130 } // the location you recorde
   }
 
@@ -85,6 +85,18 @@ struct videoRecording {
     console.info(`${this.tag} aboutToDisappear called`);
     this.releaseCamera();
     console.info(`${this.tag} aboutToDisappear done`);
+  }
+
+  onPageShow(): void {
+    console.info(`${this.tag} onPageShow called`);
+    this.enterInit();
+    console.info(`${this.tag} onPageShow done`);
+  }
+
+  onPageHide(): void {
+    console.info(`${this.tag} onPageHide called`);
+    this.stopRecordingProcess();
+    console.info(`${this.tag} onPageHide done`);
   }
 
   async failureCallback(error): Promise<void> {
@@ -550,6 +562,7 @@ struct videoRecording {
     await this.resetVideoRecording();
     await this.releaseVideoRecorder();
     await this.stopVideoOutput();
+    this.videoOutput = undefined;
     await this.closeFd();
     clearInterval(this.timer);
     this.isStartRecording = false;
@@ -602,7 +615,7 @@ struct videoRecording {
             .fontSize(20)
             .fontColor('white')
             .margin({ bottom: '95%' })
-          Button('!')
+          Button('i')
             .width('120px')
             .height('120px')
             .backgroundColor('white')

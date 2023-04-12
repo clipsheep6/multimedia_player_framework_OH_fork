@@ -289,7 +289,7 @@ struct audioRecording {
             .fontSize(20)
             .fontColor('white')
             .margin({ bottom: '95%' })
-          Button('!')
+          Button('i')
             .width('120px')
             .height('120px')
             .backgroundColor('white')
