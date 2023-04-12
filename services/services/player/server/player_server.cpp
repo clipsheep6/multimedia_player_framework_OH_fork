@@ -721,7 +721,7 @@ void PlayerServer::ClearConfigInfo()
     std::lock_guard<std::mutex> lock(mutex_);
 
     config_.looping = false;
-    config_.leftVolume = INVALID_VALUE; 
+    config_.leftVolume = INVALID_VALUE;
     config_.rightVolume = INVALID_VALUE;
     config_.speedMode = SPEED_FORWARD_1_00_X;
     config_.url = "";
@@ -956,7 +956,6 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     if (playerEngine_ == nullptr) {
         dumpString +=
             "The engine is not created, note: engine can't be created until set source.\n";
-            write(fd, dumpString.c_str(), dumpString.size());
     }
     dumpString += "PlayerServer current state is: " + GetStatusDescription(lastOpStatus_) + "\n";
     if (lastErrMsg_.size() != 0) {

@@ -21,8 +21,8 @@ namespace OHOS {
 namespace Media {
 class PlayerServerMem::MemBaseState {
 public:
-    MemBaseState(PlayerServerMem &playerServerMem, const std::string &name) :
-        playerServerMem_(playerServerMem), name_(name) {}
+    MemBaseState(PlayerServerMem &playerServerMem, const std::string &name)
+        : playerServerMem_(playerServerMem), name_(name) {}
     virtual ~MemBaseState() = default;
     std::string GetStateName() const;
     virtual int32_t MemStateRecover();
@@ -39,14 +39,15 @@ protected:
 
 class PlayerServerMem::MemIdleState : public PlayerServerMem::MemBaseState {
 public:
-    MemIdleState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_idle_state") {}
-    virtual ~MemIdleState() = default;
+    explicit MemIdleState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_idle_state") {}
+    ~MemIdleState() = default;
 };
 
 class PlayerServerMem::MemInitializedState : public PlayerServerMem::MemBaseState {
 public:
-    MemInitializedState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_initialize_state") {}
-    virtual ~MemInitializedState() = default;
+    explicit MemInitializedState(PlayerServerMem &playerServerMem)
+        : MemBaseState(playerServerMem, "mem_initialize_state") {}
+    ~MemInitializedState() = default;
     int32_t MemStateRecover() override;
     int32_t MemStateRelease() override;
     int32_t MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra) override;
@@ -54,8 +55,9 @@ public:
 
 class PlayerServerMem::MemPreparingState : public PlayerServerMem::MemBaseState {
 public:
-    MemPreparingState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_preparing_state") {}
-    virtual ~MemPreparingState() = default;
+    explicit MemPreparingState(PlayerServerMem &playerServerMem)
+        : MemBaseState(playerServerMem, "mem_preparing_state") {}
+    ~MemPreparingState() = default;
     int32_t MemStateRecover() override;
     int32_t MemStateRelease() override;
     int32_t MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra) override;
@@ -63,8 +65,9 @@ public:
 
 class PlayerServerMem::MemPreparedState : public PlayerServerMem::MemBaseState {
 public:
-    MemPreparedState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_prepared_state") {}
-    virtual ~MemPreparedState() = default;
+    explicit MemPreparedState(PlayerServerMem &playerServerMem)
+        : MemBaseState(playerServerMem, "mem_prepared_state") {}
+    ~MemPreparedState() = default;
     int32_t MemStateRecover() override;
     int32_t MemStateRelease() override;
     int32_t MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra) override;
@@ -72,14 +75,14 @@ public:
 
 class PlayerServerMem::MemPlayingState : public PlayerServerMem::MemBaseState {
 public:
-    MemPlayingState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_playing_state") {}
-    virtual ~MemPlayingState() = default;
+    explicit MemPlayingState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_playing_state") {}
+    ~MemPlayingState() = default;
 };
 
 class PlayerServerMem::MemPausedState : public PlayerServerMem::MemBaseState {
 public:
-    MemPausedState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_paused_state") {}
-    virtual ~MemPausedState() = default;
+    explicit MemPausedState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_paused_state") {}
+    ~MemPausedState() = default;
     int32_t MemStateRecover() override;
     int32_t MemStateRelease() override;
     int32_t MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra) override;
@@ -87,8 +90,8 @@ public:
 
 class PlayerServerMem::MemStoppedState : public PlayerServerMem::MemBaseState {
 public:
-    MemStoppedState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_stopped_state") {}
-    virtual ~MemStoppedState() = default;
+    explicit MemStoppedState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_stopped_state") {}
+    ~MemStoppedState() = default;
     int32_t MemStateRecover() override;
     int32_t MemStateRelease() override;
     int32_t MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra) override;
@@ -96,9 +99,9 @@ public:
 
 class PlayerServerMem::MemPlaybackCompletedState : public PlayerServerMem::MemBaseState {
 public:
-    MemPlaybackCompletedState(PlayerServerMem &playerServerMem)
+    explicit MemPlaybackCompletedState(PlayerServerMem &playerServerMem)
         : MemBaseState(playerServerMem, "mem_playbackCompleted_state") {}
-    virtual ~MemPlaybackCompletedState() = default;
+    ~MemPlaybackCompletedState() = default;
     int32_t MemStateRecover() override;
     int32_t MemStateRelease() override;
     int32_t MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra) override;

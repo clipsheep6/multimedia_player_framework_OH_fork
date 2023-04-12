@@ -729,7 +729,7 @@ void PlayerServerMem::ResetBackGroundForMemManage()
     if (continueReset < CONTINUE_RESET_MAX_NUM) {
         continueReset++;
         return;
-    } 
+    }
     continueReset = 0;
 
     std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<

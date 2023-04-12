@@ -24,9 +24,9 @@
 
 namespace OHOS {
 namespace Media {
-constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 30.0;
+constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 60.0;
 constexpr int32_t APP_CONTINUE_RESET_INTERVAL_NUM = 30;
-constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 60.0;
+constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 120.0;
 using ResetForMemManageRecall = std::function<void()>;
 using RecoverByMemManageRecall = std::function<void()>;
 struct MemManageRecall {
@@ -65,7 +65,8 @@ private:
     void FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo);
     void FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo);
     void FindProbeTaskPlayer();
-    void FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &appPlayerInfo, const MemManageRecall &memRecallStruct);
+    void FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &appPlayerInfo,
+        const MemManageRecall &memRecallStruct);
     void AwakeFrontGroundAppMedia(AppPlayerInfo &appPlayerInfo);
     void SetAppPlayerInfo(AppPlayerInfo &appPlayerInfo, int32_t state);
     void SetLastestExitBackGroundApp();
@@ -79,7 +80,8 @@ private:
     bool appStateListenerRomoteDied_ = false;
     using PidPlayersInfo = std::unordered_map<int32_t, AppPlayerInfo>;
     std::unordered_map<int32_t, PidPlayersInfo> playerManage_;
-    TaskQueue probeTaskQueue_;
+    std::unique_ptr<TaskQueue> probeTaskQueue_;
+    bool isCreateProbeTask_ = true;
     bool existTask_ = false;
 };
 }

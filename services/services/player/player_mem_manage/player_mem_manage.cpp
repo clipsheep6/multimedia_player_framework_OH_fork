@@ -37,7 +37,7 @@ PlayerMemManage& PlayerMemManage::GetInstance()
     return instance;
 }
 
-PlayerMemManage::PlayerMemManage() : probeTaskQueue_("probeTaskQueue")
+PlayerMemManage::PlayerMemManage()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -46,7 +46,9 @@ PlayerMemManage::~PlayerMemManage()
 {
     Memory::MemMgrClient::GetInstance().UnsubscribeAppState(*appStateListener_);
     existTask_ = true;
-    probeTaskQueue_.Stop();
+    if (isCreateProbeTask_) {
+        probeTaskQueue_->Stop();
+    }
     playerManage_.clear();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -147,11 +149,14 @@ bool PlayerMemManage::Init()
     }
     MEDIA_LOGI("Create PlayerMemManage");
     playerManage_.clear();
-    CHECK_AND_RETURN_RET_LOG(probeTaskQueue_.Start() == MSERR_OK, false, "init task failed");
-    auto task = std::make_shared<TaskHandler<void>>([this] {
-        ProbeTask();
-    });
-    CHECK_AND_RETURN_RET_LOG(probeTaskQueue_.EnqueueTask(task) == MSERR_OK, false, "enque task fail");
+    if (isCreateProbeTask_) {
+        probeTaskQueue_ = std::make_unique<TaskQueue>("probeTaskQueue");
+        CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->Start() == MSERR_OK, false, "init task failed");
+        auto task = std::make_shared<TaskHandler<void>>([this] {
+            ProbeTask();
+        });
+        CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->EnqueueTask(task) == MSERR_OK, false, "enque task fail");
+    }
 
     appStateListener_ = std::make_shared<AppStateListener>();
     CHECK_AND_RETURN_RET_LOG(appStateListener_ != nullptr, false, "failed to new AppStateListener");
