@@ -83,19 +83,16 @@ struct videoRecording {
   aboutToDisappear(): void {
     console.info(`${this.tag} aboutToDisappear called`);
     this.releaseCamera();
-    console.info(`${this.tag} aboutToDisappear done`);
   }
 
   onPageShow(): void {
     console.info(`${this.tag} onPageShow called`);
     this.enterInit();
-    console.info(`${this.tag} onPageShow done`);
   }
 
   onPageHide(): void {
     console.info(`${this.tag} onPageHide called`);
     this.stopRecordingProcess();
-    console.info(`${this.tag} onPageHide done`);
   }
 
   async failureCallback(error): Promise<void> {
