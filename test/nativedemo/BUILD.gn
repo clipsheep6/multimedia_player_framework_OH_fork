@@ -33,7 +33,6 @@ ohos_executable("media_demo") {
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     "//foundation/window/window_manager/interfaces/innerkits/wm",
-    "//third_party/libjpeg-turbo",
   ]
 
   cflags = [
@@ -99,7 +98,6 @@ ohos_executable("media_demo") {
     "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//foundation/window/window_manager/wm:libwm",
-    "//third_party/libjpeg-turbo:turbojpeg_static",
   ]
 
   external_deps = [
