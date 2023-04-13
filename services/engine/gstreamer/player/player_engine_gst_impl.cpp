@@ -251,29 +251,20 @@ void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
     }
 
     mqBufferingTime_[mqNumId] = bufferingTime;
-
     MEDIA_LOGD("ProcessBufferingTime(%{public}" PRIu64 " ms), mqNumId = %{public}u, "
-        "mqNumUsedBuffering_ = %{public}u ms", bufferingTime, mqNumId, mqNumUsedBuffering_);
+        "mqNum = %{public}u", bufferingTime, mqNumId, mqNum_);
 
-    if (mqBufferingTime_.size() != mqNumUsedBuffering_) {
-        return;
-    }
-
-    uint64_t mqBufferingTime = BUFFER_TIME_DEFAULT;
-    for (auto iter = mqBufferingTime_.begin(); iter != mqBufferingTime_.end(); ++iter) {
-        if (iter->second < mqBufferingTime) {
-            mqBufferingTime = iter->second;
-        }
-    }
-
-    if (bufferingTime_ != mqBufferingTime) {
-        bufferingTime_ = mqBufferingTime;
-        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
-        if (notifyObs != nullptr) {
-            Format format;
-            (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION),
-                                     static_cast<int32_t>(mqBufferingTime));
-            notifyObs->OnInfo(INFO_TYPE_BUFFERING_UPDATE, 0, format);
+    if (mqBufferingTime_.size() == mqNum_) {
+        uint64_t mqBufferingTime = mqBufferingTime_[mqNumId];
+        if (bufferingTime_ != mqBufferingTime) {
+            bufferingTime_ = mqBufferingTime;
+            std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+            if (notifyObs != nullptr) {
+                Format format;
+                (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION),
+                                        static_cast<int32_t>(mqBufferingTime));
+                notifyObs->OnInfo(INFO_TYPE_BUFFERING_UPDATE, 0, format);
+            }
         }
     }
 }
@@ -295,7 +286,7 @@ void PlayerEngineGstImpl::HandleBufferingPercent(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleBufferingUsedMqNum(const PlayBinMessage &msg)
 {
-    mqNumUsedBuffering_ = std::any_cast<uint32_t>(msg.extra);
+    mqNum_ = std::any_cast<uint32_t>(msg.extra);
 }
 
 void PlayerEngineGstImpl::HandleVideoRenderingStart()

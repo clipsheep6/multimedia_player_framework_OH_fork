@@ -55,7 +55,7 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
             int32_t extra = data.ReadInt32();
             Format format;
             (void)MediaParcel::Unmarshalling(data, format);
-            MEDIA_LOGD("0x%{public}06" PRIXPTR " listen stub on info type: %{public}d extra %{public}d",
+            MEDIA_LOGI("0x%{public}06" PRIXPTR " listen stub on info type: %{public}d extra %{public}d",
                        FAKE_POINTER(this), type, extra);
             OnInfo(static_cast<PlayerOnInfoType>(type), extra, format);
             return MSERR_OK;
