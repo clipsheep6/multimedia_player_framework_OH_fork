@@ -892,7 +892,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
                 g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_PLAYING, nullptr);
             }
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
-            MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to playing", percent);
+            MEDIA_LOGI("percent is %{public}d, begin set to playing", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PLAYING);
             if (ret == GST_STATE_CHANGE_FAILURE) {
                 MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PLAYING");
