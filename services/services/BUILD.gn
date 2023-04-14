@@ -45,6 +45,7 @@ config("media_service_config") {
     "sa_media/server",
     "common",
     "player/ipc",
+    "player/player_mem_manage",
     "player/server",
     "media_data_source/ipc",
     "media_data_source/server",
@@ -107,6 +108,12 @@ ohos_shared_library("media_service") {
       "player/server/player_server_state.cpp",
       "player/server/player_server_task_mgr.cpp",
     ]
+    if (use_memmgr_plugin || use_memmgr) {
+      sources += [
+        "player/player_mem_manage/app_state_listener.cpp",
+        "player/player_mem_manage/player_mem_manage.cpp",
+      ]
+    }
   }
   if (multimedia_player_framework_support_recorder) {
     sources += [
@@ -120,6 +127,7 @@ ohos_shared_library("media_service") {
       "sa_media/ipc/recorder_profiles_parcel.cpp",
     ]
   }
+
   if (multimedia_player_framework_support_codec) {
     sources += [
       "avcodec/ipc/avcodec_listener_proxy.cpp",
@@ -162,6 +170,12 @@ ohos_shared_library("media_service") {
 
   if (multimedia_player_framework_support_video) {
     external_deps += [ "graphic_standard:surface" ]
+  }
+
+  if (use_memmgr_plugin) {
+    external_deps += [ "memmgr_plugin:memmgrclient" ]
+  } else if (use_memmgr) {
+    external_deps += [ "memmgr:memmgrclient" ]
   }
 
   subsystem_name = "multimedia"
