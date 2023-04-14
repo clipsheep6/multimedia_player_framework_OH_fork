@@ -108,7 +108,7 @@ public:
     void OnErrorMessage(int32_t errorCode, const std::string &errorMsg) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
 
-private:
+protected:
     class BaseState;
     class IdleState;
     class InitializedState;
@@ -118,8 +118,26 @@ private:
     class PausedState;
     class StoppedState;
     class PlaybackCompletedState;
+    std::shared_ptr<IdleState> idleState_;
+    std::shared_ptr<InitializedState> initializedState_;
+    std::shared_ptr<PreparingState> preparingState_;
+    std::shared_ptr<PreparedState> preparedState_;
+    std::shared_ptr<PlayingState> playingState_;
+    std::shared_ptr<PausedState> pausedState_;
+    std::shared_ptr<StoppedState> stoppedState_;
+    std::shared_ptr<PlaybackCompletedState> playbackCompletedState_;
 
-    int32_t Init();
+    std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
+    std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
+    bool errorCbOnce_ = false;
+    bool disableStoppedCb_ = false;
+    std::string lastErrMsg_;
+    std::unique_ptr<UriHelper> uriHelper_ = nullptr;
+    virtual int32_t Init();
+    void ClearConfigInfo();
+    bool IsPrepared();
+
+private:
     bool IsValidSeekMode(PlayerSeekMode mode);
     bool IsEngineStarted();
     int32_t InitPlayEngine(const std::string &url);
@@ -135,13 +153,12 @@ private:
     int32_t HandleReset();
     int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
+
     void HandleEos();
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
     const std::string &GetStatusDescription(int32_t status);
     void OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {});
 
-    std::unique_ptr<IPlayerEngine> playerEngine_ = nullptr;
-    std::shared_ptr<PlayerCallback> playerCb_ = nullptr;
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
 #endif
@@ -150,34 +167,18 @@ private:
     std::mutex mutex_;
     std::mutex mutexCb_;
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
-    std::unique_ptr<UriHelper> uriHelper_;
+    static constexpr float INVALID_VALUE = 2.0f;
     struct ConfigInfo {
         std::atomic<bool> looping = false;
-        float leftVolume = 2.0f; // 2.0f: invalid initial value, audiotrack volume range [0, 1]
-        float rightVolume = 2.0f; // 2.0f: invalid initial value, audiotrack volume range [0, 1]
+        float leftVolume = INVALID_VALUE;
+        float rightVolume = INVALID_VALUE;
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
         std::string url;
     } config_;
     bool disableNextSeekDone_ = false;
-    bool errorCbOnce_ = false;
-    bool disableStoppedCb_ = false;
-    bool isStateChangedBySystem_ = false;
-    int32_t contentType_ = 2; // CONTENT_TYPE_MUSIC
-    int32_t streamUsage_ = 1; // STREAM_USAGE_MEDIA
-    int32_t rendererFlag_ = 0;
-    std::string lastErrMsg_;
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
     bool isLiveStream_ = false;
-
-    std::shared_ptr<IdleState> idleState_;
-    std::shared_ptr<InitializedState> initializedState_;
-    std::shared_ptr<PreparingState> preparingState_;
-    std::shared_ptr<PreparedState> preparedState_;
-    std::shared_ptr<PlayingState> playingState_;
-    std::shared_ptr<PausedState> pausedState_;
-    std::shared_ptr<StoppedState> stoppedState_;
-    std::shared_ptr<PlaybackCompletedState> playbackCompletedState_;
 };
 } // namespace Media
 } // namespace OHOS
