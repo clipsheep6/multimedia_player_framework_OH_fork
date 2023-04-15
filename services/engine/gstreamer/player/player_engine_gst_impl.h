@@ -111,7 +111,7 @@ private:
     int32_t videoWidth_ = 0;
     int32_t videoHeight_ = 0;
     int32_t updatePercent_ = -1;
-    uint32_t mqNumUsedBuffering_ = 0;
+    uint32_t mqNum_ = 0;
     uint64_t bufferingTime_ = 0;
     int32_t appuid_ = 0;
     int32_t apppid_ = 0;

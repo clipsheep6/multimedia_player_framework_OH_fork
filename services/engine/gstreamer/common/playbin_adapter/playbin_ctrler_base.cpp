@@ -40,6 +40,7 @@ namespace {
     constexpr int32_t USEC_PER_MSEC = 1000;
     constexpr double DEFAULT_RATE = 1.0;
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
+    constexpr uint64_t CONNECT_SPEED_DEFAULT = 4 * 8 * 1024 * 1024;  // 4Mbps
 }
 
 namespace OHOS {
@@ -503,7 +504,7 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         g_object_set(playbin_, "ring-buffer-max-size", RING_BUFFER_MAX_SIZE, nullptr);
         g_object_set(playbin_, "buffering-flags", true, "buffer-size", PLAYBIN_QUEUE_MAX_SIZE,
             "buffer-duration", BUFFER_DURATION, "low-percent", BUFFER_LOW_PERCENT_DEFAULT,
-            "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, nullptr);
+            "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, "connection-speed", CONNECT_SPEED_DEFAULT, nullptr);
 
         PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
@@ -892,7 +893,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenBuffering(int32_t percent)
                 g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_PLAYING, nullptr);
             }
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
-            MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to playing", percent);
+            MEDIA_LOGI("percent is %{public}d, begin set to playing", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PLAYING);
             if (ret == GST_STATE_CHANGE_FAILURE) {
                 MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PLAYING");

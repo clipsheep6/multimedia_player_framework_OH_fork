@@ -54,7 +54,6 @@ struct videoRecording {
   stopRecordingBtn: any = $r('app.media.take_video_stop');
   pauseRecordingBtn: any = $r('app.media.ic_pause_white');
   resumeRecordingBtn: any = $r('app.media.take_video_resume');
-  switchCameraBtn: any = $r('app.media.small_switch_camera');
   settingBtn: any = $r('app.media.setting');
   private avProfile = {
     audioBitrate: 200000, // set audioBitrate according to device ability
@@ -73,7 +72,7 @@ struct videoRecording {
     videoSourceType: media.VideoSourceType.VIDEO_SOURCE_TYPE_SURFACE_YUV,
     profile: this.avProfile,
     url: 'fd://',
-    rotation: 0, // rotation angle, 0,90,180,270 can be selected
+    rotation: 90, // rotation angle, 0,90,180,270 can be selected
     location: { latitude: 30, longitude: 130 } // the location you recorde
   }
 
@@ -84,7 +83,16 @@ struct videoRecording {
   aboutToDisappear(): void {
     console.info(`${this.tag} aboutToDisappear called`);
     this.releaseCamera();
-    console.info(`${this.tag} aboutToDisappear done`);
+  }
+
+  onPageShow(): void {
+    console.info(`${this.tag} onPageShow called`);
+    this.enterInit();
+  }
+
+  onPageHide(): void {
+    console.info(`${this.tag} onPageHide called`);
+    this.stopRecordingProcess();
   }
 
   async failureCallback(error): Promise<void> {
@@ -481,10 +489,6 @@ struct videoRecording {
     }
   }
 
-  async switchCamera(): Promise<void> {
-    // 相机翻转，参考'@ohos.multimedia.camera'
-  }
-
   // close file fd
   async closeFd(): Promise<void> {
     console.info(`${this.tag} case closeFd called`);
@@ -550,6 +554,7 @@ struct videoRecording {
     await this.resetVideoRecording();
     await this.releaseVideoRecorder();
     await this.stopVideoOutput();
+    this.videoOutput = undefined;
     await this.closeFd();
     clearInterval(this.timer);
     this.isStartRecording = false;
@@ -602,7 +607,7 @@ struct videoRecording {
             .fontSize(20)
             .fontColor('white')
             .margin({ bottom: '95%' })
-          Button('!')
+          Button('i')
             .width('120px')
             .height('120px')
             .backgroundColor('white')
@@ -625,10 +630,6 @@ struct videoRecording {
                 .width(50).height(50)
                 .margin({ bottom: 10 })
                 .onClick(() => this.startRecordingProcess())
-              Image(this.switchCameraBtn)
-                .width(50).height(50)
-                .margin({ bottom: 10 })
-                .onClick(() => this.switchCamera())
             } else {
               Image(this.stopRecordingBtn)
                 .width(50).height(50)
@@ -645,10 +646,6 @@ struct videoRecording {
                   .margin({ bottom: 10 })
                   .onClick(() => this.resumeRecordingProcess())
               }
-              Image(this.switchCameraBtn)
-                .width(50).height(50)
-                .margin({ bottom: 10 })
-                .onClick(() => this.switchCamera())
             }
           }
         }.width('100%').height('100%')

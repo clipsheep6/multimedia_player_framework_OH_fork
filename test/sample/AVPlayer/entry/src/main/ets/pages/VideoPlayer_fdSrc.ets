@@ -36,6 +36,8 @@ struct VideoPlayerFdSrc {
   @State isSpeed: boolean = false;
   @State descriptionValue: string = '';
   @State isBuffering: boolean = false;
+  @State speedTag: number = 1;
+  @State scaleTag: number = 0;
   private avPlayer: media.AVPlayer;
   private duration: number = -1;
   private surfaceID: string = '';
@@ -43,7 +45,6 @@ struct VideoPlayerFdSrc {
   private isNext = false;
   private fileDescriptor: media.AVFileDescriptor;
   private index: number = -1;
-  private movingTime: number = -1;
   private screenWidth: number = 1080; // 设备屏幕宽，建议使用接口调用获取
   private screenHeight: number = 1920; // 设备屏幕高，建议使用接口调用获取
   private volumeValue: number = 1.00;
@@ -183,6 +184,9 @@ struct VideoPlayerFdSrc {
           break;
         case 'paused':
           Logger.info(TAG, 'state paused called');
+          if (!this.isPlaying) {
+            this.isPlaying = !this.isPlaying;
+          }
           break;
         case 'completed':
           Logger.info(TAG, 'state completed called');
@@ -325,6 +329,7 @@ struct VideoPlayerFdSrc {
   async nextVideo(): Promise<void> {
     // 调用reset函数，重置播放器状态至idle
     await this.avPlayer.reset();
+    this.isLoop = false;
     // 关闭当前已经打开的视频文件
     await this.mediaLibUtils.closeFileDescriptor(this.SRC_LIST[this.index]);
     // 获取当前播放文件的下一个视频文件在列表中的下标
@@ -350,6 +355,7 @@ struct VideoPlayerFdSrc {
   // 切换上个视频的接口
   async preVideo(): Promise<void> {
     await this.avPlayer.reset();
+    this.isLoop = false;
     // 关闭当前已经打开的视频文件
     await this.mediaLibUtils.closeFileDescriptor(this.SRC_LIST[this.index]);
     if (this.index === (0)) {
@@ -402,20 +408,6 @@ struct VideoPlayerFdSrc {
       .alignItems(VerticalAlign.Top)
       .gesture(
       GestureGroup(GestureMode.Exclusive,
-      PanGesture({ direction: PanDirection.Horizontal })
-        .onActionStart(async () => {
-          Logger.info(TAG, 'onActionStart moving start');
-        })
-        .onActionUpdate((event: GestureEvent) => {
-          // 左右滑动触发seek
-          Logger.info(TAG, 'event.offsetX is :' + event.offsetX + ',screenWidth is :' + this.screenWidth);
-          this.movingTime = parseInt(((event.offsetX / this.screenWidth) * this.duration).toString());
-          Logger.info(TAG, 'onActionStart moving update, moving time is :' + this.movingTime);
-          this.avPlayer.seek(this.getCurrentTime() + this.movingTime, 0);
-        })
-        .onActionEnd(() => {
-          Logger.info(TAG, 'onActionStart moving end');
-        }),
       PanGesture({ direction: PanDirection.Vertical })
         .onActionStart(() => {
           Logger.info(TAG, 'onActionStart  Vertical moving start');
@@ -510,7 +502,7 @@ struct VideoPlayerFdSrc {
             { value: 'speed：1.25'},
             { value: 'speed：1.75'},
             { value: 'speed：2.00'}])
-            .selected(2)
+            .selected(this.speedTag)
             .value('Speed')
             .font({ size: 16, weight: 400 })
             .fontColor('#182431')
@@ -519,11 +511,12 @@ struct VideoPlayerFdSrc {
             .onSelect((index: number) => {
               Logger.info(TAG, 'Select:' + index);
               this.setSpeed(index);
+              this.speedTag = index;
             })
           // 点击图标设置缩放模式
           Select([{ value: '0'},
             { value: '1'},])
-            .selected(2)
+            .selected(this.scaleTag)
             .value('ScaleType')
             .font({ size: 16, weight: 400 })
             .fontColor('#182431')
@@ -532,6 +525,7 @@ struct VideoPlayerFdSrc {
             .onSelect((index: number) => {
               Logger.info(TAG, 'Select:' + index);
               this.setScaleType(index);
+              this.scaleTag = index;
             })
         }.width('100%').justifyContent(FlexAlign.Center)
       }

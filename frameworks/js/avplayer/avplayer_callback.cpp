@@ -583,7 +583,6 @@ void AVPlayerCallback::OnDurationUpdateCb(int32_t duration) const
 void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
-    MEDIA_LOGI("OnBufferingUpdateCb is called");
     if (refMap_.find(AVPlayerEvent::EVENT_BUFFERING_UPDATE) == refMap_.end()) {
         MEDIA_LOGW("can not find buffering update callback!");
         return;

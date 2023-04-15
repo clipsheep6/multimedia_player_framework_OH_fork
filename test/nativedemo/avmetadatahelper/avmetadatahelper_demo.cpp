@@ -71,48 +71,6 @@ static const std::unordered_map<int32_t, std::string_view> AVMETA_KEY_TO_STRING_
     AVMETA_KEY_TO_STRING_MAP_ITEM(AV_KEY_VIDEO_ORIENTATION),
 };
 
-static struct jpeg_compress_struct jpeg;
-static struct jpeg_error_mgr jerr;
-
-static int32_t Rgb888ToJpeg(const std::string_view &filename, const uint8_t *rgbData, int32_t width, int32_t height)
-{
-    if (rgbData == nullptr) {
-        std::cout << "rgbData is nullptr" << std::endl;
-        return -1;
-    }
-
-    jpeg.err = jpeg_std_error(&jerr);
-    jpeg_create_compress(&jpeg);
-    jpeg.image_width = static_cast<uint32_t>(width);
-    jpeg.image_height = static_cast<uint32_t>(height);
-    jpeg.input_components = RGB888_PIXEL_BYTES;
-    jpeg.in_color_space = JCS_RGB;
-    jpeg_set_defaults(&jpeg);
-
-    static constexpr int32_t quality = 100;
-    jpeg_set_quality(&jpeg, quality, TRUE);
-
-    FILE *file = fopen(filename.data(), "wb");
-    if (file == nullptr) {
-        jpeg_destroy_compress(&jpeg);
-        return 0;
-    }
-
-    jpeg_stdio_dest(&jpeg, file);
-    jpeg_start_compress(&jpeg, TRUE);
-    JSAMPROW rowPointer[1];
-    for (uint32_t i = 0; i < jpeg.image_height; i++) {
-        rowPointer[0] = const_cast<uint8_t *>(rgbData + i * jpeg.image_width * RGB888_PIXEL_BYTES);
-        (void)jpeg_write_scanlines(&jpeg, rowPointer, 1);
-    }
-    jpeg_finish_compress(&jpeg);
-    (void)fclose(file);
-    file = nullptr;
-
-    jpeg_destroy_compress(&jpeg);
-    return 0;
-}
-
 // only valid for little-endian order.
 static int32_t RGB565ToRGB888(const uint16_t *rgb565Buf, int32_t rgb565Size, uint8_t *rgb888Buf, int32_t rgb888Size)
 {
@@ -250,7 +208,6 @@ static int32_t SaveRGB565Image(const std::shared_ptr<PixelMap> &frame, const std
         return ret;
     }
 
-    ret = Rgb888ToJpeg(filepath, rgb888, frame->GetWidth(), frame->GetHeight());
     delete [] rgb888;
 
     return ret;
@@ -272,7 +229,6 @@ static int32_t SaveRGBA8888Image(const std::shared_ptr<PixelMap> &frame, const s
         return ret;
     }
 
-    ret = Rgb888ToJpeg(filepath, rgb888, frame->GetWidth(), frame->GetHeight());
     delete [] rgb888;
 
     return ret;
@@ -301,7 +257,6 @@ void AVMetadataHelperDemo::DoFetchFrame(int64_t timeUs, int32_t queryOption, con
     } else if (param.colorFormat == PixelFormat::RGBA_8888) {
         ret = SaveRGBA8888Image(frame, filePath);
     } else if (param.colorFormat == PixelFormat::RGB_888) {
-        ret = Rgb888ToJpeg(filePath, frame->GetPixels(), frame->GetWidth(), frame->GetHeight());
     } else {
         std::cout << "invalid pixel format" << std::endl;
         return;
