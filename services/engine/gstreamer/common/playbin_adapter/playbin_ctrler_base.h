@@ -27,6 +27,8 @@
 #include "state_machine.h"
 #include "gst_msg_processor.h"
 #include "task_queue.h"
+#include "player_track_parse.h"
+#include "av_common.h"
 
 namespace OHOS {
 namespace Media {
@@ -68,6 +70,12 @@ public:
     void SetAutoPlugSortListener(AutoPlugSortListener listener) final;
     void RemoveGstPlaySinkVideoConvertPlugin() final;
     void SetNotifier(PlayBinMsgNotifier notifier) final;
+    void SetAutoSelectBitrate(bool enable) final;
+    int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+    int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
+    int32_t SelectTrack(int32_t index) override;
+    int32_t DeselectTrack(int32_t index) override;
+    int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
 protected:
     virtual int32_t OnInit() = 0;
 
@@ -103,12 +111,14 @@ private:
     static void SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userData);
     static void OnBitRateParseCompleteCb(const GstElement *playbin, uint32_t *bitrateInfo,
         uint32_t bitrateNum, gpointer userData);
+    static void OnSelectBitrateDoneCb(const GstElement *playbin, bool addPad, gpointer userData);
     static GValueArray *AutoPlugSort(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
         GValueArray *factories, gpointer userData);
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
         const uint32_t hintType, gpointer userData);
     static void OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData);
     static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
+    static void AudioChanged(const GstElement *playbin, gpointer userData);
     void SetupInterruptEventCb();
     void SetupAudioStateEventCb();
     void OnElementSetup(GstElement &elem);
@@ -130,7 +140,28 @@ private:
     void HandleCacheCtrlWhenNoBuffering(int32_t percent);
     void HandleCacheCtrlWhenBuffering(int32_t percent);
     void OnAdaptiveElementSetup(GstElement &elem);
+    void OnAudioChanged();
+    void ReportTrackChange();
+    void OnTrackDone();
+    void OnError(int32_t errorCode, std::string message);
 
+    inline void AddSignalIds(GstElement *element, gulong signalId)
+    {
+        if (signalIds_.find(element) == signalIds_.end()) {
+            signalIds_[element] = {signalId};
+        } else {
+            signalIds_[element].push_back(signalId);
+        }
+    }
+    inline void RemoveSignalIds(GstElement *element)
+    {
+        if (signalIds_.find(element) != signalIds_.end()) {
+            for (auto id : signalIds_[element]) {
+                g_signal_handler_disconnect(element, id);
+            }
+            signalIds_.erase(element);
+        }
+    }
     std::mutex mutex_;
     std::mutex cacheCtrlMutex_;
     std::mutex listenerMutex_;
@@ -144,12 +175,9 @@ private:
     std::shared_ptr<PlayBinSinkProvider> sinkProvider_;
     std::unique_ptr<GstMsgProcessor> msgProcessor_;
     std::string uri_;
+    std::shared_ptr<PlayerTrackParse> trackParse_;
 
-    struct SignalInfo {
-        GstElement *element;
-        gulong signalId;
-    };
-    std::vector<SignalInfo> signalIds_;
+    std::map<GstElement *, std::vector<gulong>> signalIds_;
     std::vector<uint32_t> bitRateVec_;
     bool isInitialized_ = false;
 
@@ -160,7 +188,6 @@ private:
     
     PlayBinSinkProvider::SinkPtr audioSink_ = nullptr;
     PlayBinSinkProvider::SinkPtr videoSink_ = nullptr;
-    PlayBinSinkProvider::SinkPtr subSink_ = nullptr;
 
     int64_t duration_ = 0;
     double rate_ = 0;
@@ -177,7 +204,11 @@ private:
     uint32_t rendererInfo_ = 0;
     int32_t rendererFlag_ = 0;
     int32_t cachePercent_ = 100; // 100% cache percent
-    bool isAdaptiveLiveStream_ = true;
+    uint64_t connectSpeed_ = 0;
+
+    bool isTrackChanging_ = false;
+    int32_t trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
+    int32_t audioIndex_ = -1;
 
     std::atomic<bool> isDuration_ = false;
     std::atomic<bool> enableLooping_ = false;

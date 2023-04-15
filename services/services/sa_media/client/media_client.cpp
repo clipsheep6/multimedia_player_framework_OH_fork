@@ -18,6 +18,8 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "ipc_skeleton.h"
+#include "i_standard_monitor_service.h"
+#include "monitor_client.h"
 #ifdef SUPPORT_RECORDER
 #include "i_standard_recorder_service.h"
 #endif
@@ -251,6 +253,21 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
 }
 #endif
 
+sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
+
+    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_MONITOR, listenerStub_->AsObject());
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "monitor proxy object is nullptr.");
+
+    sptr<IStandardMonitorService> monitorProxy = iface_cast<IStandardMonitorService>(object);
+    CHECK_AND_RETURN_RET_LOG(monitorProxy != nullptr, nullptr, "monitor proxy is nullptr.");
+
+    return monitorProxy;
+}
+
 sptr<IStandardMediaService> MediaClient::GetMediaProxy()
 {
     MEDIA_LOGD("enter");
@@ -347,6 +364,7 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
+    MonitorClient::GetInstance().MediaServerDied();
 }
 } // namespace Media
 } // namespace OHOS

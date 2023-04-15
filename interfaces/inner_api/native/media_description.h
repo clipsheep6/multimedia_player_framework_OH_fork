@@ -28,8 +28,7 @@ using MediaDescription = Format;
 /**
  * @brief Provides the key's definition for MediaDescription.
  */
-class MediaDescriptionKey {
-public:
+namespace MediaDescriptionKey {
     /**
      * Key for track index, value type is uint32_t
      */
@@ -122,9 +121,10 @@ public:
      */
     static constexpr std::string_view MD_KEY_CUSTOM_PREFIX = "vendor.custom";
 
-private:
-    MediaDescriptionKey() = delete;
-    ~MediaDescriptionKey() = delete;
+    /**
+     * Key for language, value type is string
+     */
+    static constexpr std::string_view MD_KEY_LANGUAGE = "language";
 };
 } // namespace Media
 } // namespace OHOS

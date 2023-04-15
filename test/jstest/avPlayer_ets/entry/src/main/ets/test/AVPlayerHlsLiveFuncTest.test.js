@@ -20,8 +20,8 @@ import { describe, beforeAll, beforeEach, afterEach, afterAll, it, expect } from
 
 export default function AVPlayerHlsLiveFuncTest() {
     describe('AVPlayerHlsLiveFuncTest', function () {
-        const HLS_PATH = 'http://123.60.114.95:8000/live/index.m3u8';
-        const MULTI_HLS_PATH = 'http://123.60.114.95:8000/multi/index.m3u8'
+        const HLS_PATH = 'http://xxx.xxx.xxx.xxx:xx/xx/index.m3u8';
+        const MULTI_HLS_PATH = 'http://xxx.xxx.xxx.xxx:xx/multi/index.m3u8'
         const PLAY_TIME = 2000;
         let avPlayer = null;
         let surfaceID = globalThis.value;
@@ -635,7 +635,7 @@ export default function AVPlayerHlsLiveFuncTest() {
                 }
             }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
             let surfaceID = globalThis.value;
-            testSetMultiBitrate(avPlayer, HLS_PATH, surfaceID, done);
+            testSetMultiBitrate(avPlayer, MULTI_HLS_PATH, surfaceID, done);
         })
 
         /* *
@@ -761,6 +761,66 @@ export default function AVPlayerHlsLiveFuncTest() {
         })
 
         /* *
+        //     * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_Live_RELIABILITY_0600
+        //     * @tc.name      : 013.test hls live - bitrate adaptation
+        //     * @tc.desc      : Hls live stability test
+        //     * @tc.size      : MediumTest
+        //     * @tc.type      : Reliability test
+        //     * @tc.level     : Level1
+        // */
+        it('SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_Live_RELIABILITY_0600', 0, async function (done) {
+            let isAdaption = false;
+            await media.createAVPlayer().then((video) => {
+                if (typeof (video) != 'undefined') {
+                    avPlayer = video;
+                } else {
+                    expect().assertFail();
+                    done();
+                }
+            }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+
+            avPlayer.on('stateChange', async (state, reason) => {
+                switch (state) {
+                    case AVPlayerTestBase.AV_PLAYER_STATE.INITIALIZED:
+                        avPlayer.surfaceId = surfaceID;
+                        avPlayer.prepare();
+                        break;
+                    case AVPlayerTestBase.AV_PLAYER_STATE.PREPARED:
+                        avPlayer.play();
+                        break;
+                    case AVPlayerTestBase.AV_PLAYER_STATE.PLAYING:
+                        await mediaTestBase.msleepAsync(2000); // play time 2000ms, ensure network had changed
+                        avPlayer.release();
+                        break;
+                    case AVPlayerTestBase.AV_PLAYER_STATE.RELEASED:
+                        avPlayer = null;
+                        expect(isAdaption).assertEqual(true);
+                        done();
+                        break;
+                    case AVPlayerTestBase.AV_PLAYER_STATE.ERROR:
+                        console.info(`case AVPlayerTestBase.AV_PLAYER_STATE.ERROR`);
+                        expect().assertFail();
+                        avPlayer.release();
+                        break;
+                    default:
+                        break; 
+                }
+            });
+            avPlayer.on('videoSizeChange', (width, height) => {
+                console.info('videoSizeChange success,and width is:' + width + ', height is :' + height)
+                isAdaption = true;
+            })
+            avPlayer.on('error', (err) => {
+                console.info(`case error called,errName is ${err.name}, case error called,errCode is ${err.code},
+                            case error called,errMessage is ${err.message}`);
+                avPlayer.release();
+                expect().assertFail();
+            });
+            console.info(`case src is ${HLS_PATH}`);
+            avPlayer.url = MULTI_HLS_PATH;
+        })
+
+        /* *
             * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_Live_STABILITY_0100
             * @tc.name      : 013.test hls live - 1000 times to pause
             * @tc.desc      : Hls live stability test
@@ -822,5 +882,4 @@ export default function AVPlayerHlsLiveFuncTest() {
             avPlayer.url = HLS_PATH;
         })
     })
-
 }

@@ -269,5 +269,26 @@ int32_t PlayerImpl::SetParameter(const Format &param)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerService_->SetParameter(param);
 }
+
+int32_t PlayerImpl::SelectTrack(int32_t index)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SelectTrack in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->SelectTrack(index);
+}
+
+int32_t PlayerImpl::DeselectTrack(int32_t index)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " DeselectTrack in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->DeselectTrack(index);
+}
+
+int32_t PlayerImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetCurrentTrack in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->GetCurrentTrack(trackType, index);
+}
 } // namespace Media
 } // namespace OHOS

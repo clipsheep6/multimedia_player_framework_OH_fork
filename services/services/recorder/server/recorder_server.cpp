@@ -39,7 +39,6 @@ namespace OHOS {
 namespace Media {
 const std::string START_TAG = "RecorderCreate->Start";
 const std::string STOP_TAG = "RecorderStop->Destroy";
-const int32_t ROOT_UID = 0;
 #define CHECK_STATUS_FAILED_AND_LOGE_RET(statusFailed, ret) \
     do { \
         if (statusFailed) { \
@@ -78,7 +77,6 @@ RecorderServer::~RecorderServer()
         (void)task->GetResult();
         taskQue_.Stop();
     }
-    DisableWatchDog();
 }
 
 int32_t RecorderServer::Init()
@@ -103,33 +101,9 @@ int32_t RecorderServer::Init()
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.Value() == MSERR_OK, result.Value(), "Result failed");
 
-    static constexpr uint32_t timeoutMs = 3000; // Maximum number of unanswered = 3000ms
-    SetWatchDogTimeout(timeoutMs);
-    EnableWatchDog();
-
     status_ = REC_INITIALIZED;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return MSERR_OK;
-}
-
-bool RecorderServer::CheckPermission()
-{
-    auto callerUid = IPCSkeleton::GetCallingUid();
-    // Root users should be whitelisted
-    if (callerUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Permission Granted");
-        return true;
-    }
-
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.MICROPHONE");
-    if (result == Security::AccessToken::PERMISSION_GRANTED) {
-        MEDIA_LOGI("user have the right to access MICROPHONE!");
-        return true;
-    } else {
-        MEDIA_LOGE("user do not have the right to access MICROPHONE!");
-        return false;
-    }
 }
 
 const std::string& RecorderServer::GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status)
@@ -286,10 +260,6 @@ int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
 
-    if (!CheckPermission()) {
-        MEDIA_LOGE("Permission check failed!");
-        return MSERR_INVALID_VAL;
-    }
     config_.audioSource = source;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetAudioSource(source, sourceId);
@@ -565,9 +535,10 @@ int32_t RecorderServer::Start()
     return ret;
 }
 
-int32_t RecorderServer::PauseAct()
+int32_t RecorderServer::Pause()
 {
     MediaTrace trace("RecorderServer::Pause");
+    std::lock_guard<std::mutex> lock(mutex_);
     if (status_ == REC_PAUSED) {
         MEDIA_LOGE("Can not repeat Pause");
         return MSERR_INVALID_OPERATION;
@@ -587,20 +558,10 @@ int32_t RecorderServer::PauseAct()
     return ret;
 }
 
-int32_t RecorderServer::Pause()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (watchdogPause_.load()) {
-        watchdogPause_.store(false);
-        return MSERR_OK;
-    }
-
-    return PauseAct();
-}
-
-int32_t RecorderServer::ResumeAct()
+int32_t RecorderServer::Resume()
 {
     MediaTrace trace("RecorderServer::Resume");
+    std::lock_guard<std::mutex> lock(mutex_);
     if (status_ == REC_RECORDING) {
         MEDIA_LOGE("Can not repeat Resume");
         return MSERR_INVALID_OPERATION;
@@ -618,12 +579,6 @@ int32_t RecorderServer::ResumeAct()
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return ret;
-}
-
-int32_t RecorderServer::Resume()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    return ResumeAct();
 }
 
 int32_t RecorderServer::Stop(bool block)
@@ -674,34 +629,7 @@ int32_t RecorderServer::Release()
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
     }
-    DisableWatchDog();
     return MSERR_OK;
-}
-
-int32_t RecorderServer::HeartBeat()
-{
-    Notify();
-    return MSERR_OK;
-}
-
-void RecorderServer::Alarm()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (status_ == REC_RECORDING) {
-        MEDIA_LOGE("Watchdog triggered, recording paused");
-        PauseAct();
-        watchdogPause_.store(true);
-    }
-}
-
-void RecorderServer::AlarmRecovery()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (watchdogPause_.load() && status_ == REC_PAUSED) {
-        MEDIA_LOGE("Watchdog resumes, recording continues");
-        ResumeAct();
-        watchdogPause_.store(false);
-    }
 }
 
 int32_t RecorderServer::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)

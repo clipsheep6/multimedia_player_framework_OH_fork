@@ -24,6 +24,10 @@
 #include "parameter.h"
 #include "media_dfx.h"
 #include "player_xcollie.h"
+#include "ipc_skeleton.h"
+#ifdef SUPPORT_AVSESSION
+#include "avsession_background.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServiceStub"};
@@ -50,6 +54,7 @@ PlayerServiceStub::PlayerServiceStub()
 
 PlayerServiceStub::~PlayerServiceStub()
 {
+    (void)CancellationMonitor(appPid_);
     if (playerServer_ != nullptr) {
         auto task = std::make_shared<TaskHandler<void>>([&, this] {
             LISTENER((void)playerServer_->Release(); playerServer_ = nullptr,
@@ -95,6 +100,11 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[GET_VIDEO_WIDTH] = { &PlayerServiceStub::GetVideoWidth, "Player::GetVideoWidth" };
     playerFuncs_[GET_VIDEO_HEIGHT] = { &PlayerServiceStub::GetVideoHeight, "Player::GetVideoHeight" };
     playerFuncs_[SELECT_BIT_RATE] = { &PlayerServiceStub::SelectBitRate, "Player::SelectBitRate" };
+    playerFuncs_[SELECT_TRACK] = { &PlayerServiceStub::SelectTrack, "Player::SelectTrack" };
+    playerFuncs_[DESELECT_TRACK] = { &PlayerServiceStub::DeselectTrack, "Player::DeselectTrack" };
+    playerFuncs_[GET_CURRENT_TRACK] = { &PlayerServiceStub::GetCurrentTrack, "Player::GetCurrentTrack" };
+
+    (void)RegisterMonitor(appPid_);
 }
 
 int32_t PlayerServiceStub::Init()
@@ -104,6 +114,8 @@ int32_t PlayerServiceStub::Init()
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
 
+    appUid_ = IPCSkeleton::GetCallingUid();
+    appPid_ = IPCSkeleton::GetCallingPid();
     SetPlayerFuncs();
     return MSERR_OK;
 }
@@ -124,6 +136,7 @@ int32_t PlayerServiceStub::DestroyStub()
 int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
+    MediaTrace trace("binder::OnRemoteRequest");
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (PlayerServiceStub::GetDescriptor() != remoteDescriptor) {
         MEDIA_LOGE("Invalid descriptor");
@@ -137,6 +150,7 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
         MEDIA_LOGI("Stub: OnRemoteRequest task: %{public}s is received", funcName.c_str());
         if (memberFunc != nullptr) {
             auto task = std::make_shared<TaskHandler<int>>([&, this] {
+                (void)IpcRecovery(false);
                 int32_t ret = -1;
                 LISTENER(ret = (this->*memberFunc)(data, reply), funcName, false)
                 return ret;
@@ -200,6 +214,9 @@ int32_t PlayerServiceStub::Play()
 {
     MediaTrace trace("binder::Play");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+#ifdef SUPPORT_AVSESSION
+    AVsessionBackground::Instance().AddListener(playerServer_, appUid_);
+#endif
     return playerServer_->Play();
 }
 
@@ -372,6 +389,67 @@ int32_t PlayerServiceStub::DumpInfo(int32_t fd)
 {
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return std::static_pointer_cast<PlayerServer>(playerServer_)->DumpInfo(fd);
+}
+
+int32_t PlayerServiceStub::DoIpcAbnormality()
+{
+    MEDIA_LOGI("Enter DoIpcAbnormality.");
+    auto task = std::make_shared<TaskHandler<int>>([&, this] {
+        MEDIA_LOGI("DoIpcAbnormality.");
+        CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, static_cast<int>(MSERR_NO_MEMORY),
+            "player server is nullptr");
+        CHECK_AND_RETURN_RET_LOG(IsPlaying(), static_cast<int>(MSERR_INVALID_OPERATION), "Not in playback state");
+        auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
+        return playerServer->BackGroundChangeState(PlayerStates::PLAYER_PAUSED, false);
+    });
+    (void)taskQue_.EnqueueTask(task);
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_UNKNOWN,
+        "DoIpcAbnormality task failed to start");
+    MEDIA_LOGI("Exit DoIpcAbnormality.");
+    return result.Value();
+}
+
+int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
+{
+    MEDIA_LOGI("Enter DoIpcRecovery %{public}d.", fromMonitor);
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    if (fromMonitor) {
+        auto task = std::make_shared<TaskHandler<int>>([&, this] {
+            MEDIA_LOGI("DoIpcRecovery.");
+            auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
+            return playerServer->BackGroundChangeState(PlayerStates::PLAYER_STARTED, false);
+        });
+        (void)taskQue_.EnqueueTask(task);
+        auto result = task->GetResult();
+        CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_UNKNOWN, "DoIpcRecovery task failed to start");
+        MEDIA_LOGI("Exit DoIpcRecovery.");
+        return result.Value();
+    } else {
+        auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
+        return playerServer->BackGroundChangeState(PlayerStates::PLAYER_STARTED, false);
+    }
+}
+
+int32_t PlayerServiceStub::SelectTrack(int32_t index)
+{
+    MediaTrace trace("PlayerServiceStub::SelectTrack");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SelectTrack(index);
+}
+
+int32_t PlayerServiceStub::DeselectTrack(int32_t index)
+{
+    MediaTrace trace("PlayerServiceStub::DeselectTrack");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->DeselectTrack(index);
+}
+
+int32_t PlayerServiceStub::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    MediaTrace trace("PlayerServiceStub::GetCurrentTrack");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetCurrentTrack(trackType, index);
 }
 
 int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
@@ -622,6 +700,30 @@ int32_t PlayerServiceStub::SetPlayerCallback(MessageParcel &data, MessageParcel 
 {
     (void)data;
     reply.WriteInt32(SetPlayerCallback());
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SelectTrack(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t index = data.ReadInt32();
+    reply.WriteInt32(SelectTrack(index));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::DeselectTrack(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t index = data.ReadInt32();
+    reply.WriteInt32(DeselectTrack(index));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetCurrentTrack(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t trackType = data.ReadInt32();
+    int32_t index = -1;
+    int32_t ret = GetCurrentTrack(trackType, index);
+    reply.WriteInt32(index);
+    reply.WriteInt32(ret);
     return MSERR_OK;
 }
 } // namespace Media

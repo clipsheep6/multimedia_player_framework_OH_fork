@@ -17,6 +17,7 @@
     <target name="player_unit_test">
         <depend resource="test_videofile/H264_AAC.mp4" pushpath="/data/test" findpath="res" presetcmd=""/>
         <preparer>
+            <option name="push" value="test_subtitlefile/utf8.srt -> /data/test" src="res"/>
             <option name="push" value="test_videofile/H264_AAC.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/H264_MP3.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/MPEG2_AAC.mp4 -> /data/test" src="res"/>
@@ -35,6 +36,7 @@
             <option name="push" value="test_videofile/MP4_ROTATE_90.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/1kb.mp3 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/01.mp3 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/mpeg4_1920_1080_aac_flac.mkv -> /data/test" src="res"/>
             <option name="push" value="error.mp4 -> /data/test" src="res"/>
             <option name="shell" value="mkdir /data/media"/>
         </preparer>

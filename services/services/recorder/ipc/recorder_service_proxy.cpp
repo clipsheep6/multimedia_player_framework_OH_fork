@@ -553,21 +553,5 @@ int32_t RecorderServiceProxy::DestroyStub()
 
     return reply.ReadInt32();
 }
-
-int32_t RecorderServiceProxy::HeartBeat()
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-
-    int error = Remote()->SendRequest(HEARTBEAT, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "HeartBeat failed, error: %{public}d", error);
-
-    return reply.ReadInt32();
-}
 } // namespace Media
 } // namespace OHOS

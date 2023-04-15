@@ -62,6 +62,9 @@ public:
     virtual int32_t DestroyStub() = 0;
     virtual int32_t SetPlayerCallback() = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
+    virtual int32_t SelectTrack(int32_t index) = 0;
+    virtual int32_t DeselectTrack(int32_t index) = 0;
+    virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
     /**
      * IPC code ID
      */
@@ -94,7 +97,10 @@ public:
         GET_AUDIO_TRACK_INFO,
         GET_VIDEO_WIDTH,
         GET_VIDEO_HEIGHT,
-        SELECT_BIT_RATE
+        SELECT_BIT_RATE,
+        SELECT_TRACK,
+        DESELECT_TRACK,
+        GET_CURRENT_TRACK
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

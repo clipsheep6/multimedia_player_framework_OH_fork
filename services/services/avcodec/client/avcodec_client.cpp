@@ -225,6 +225,7 @@ int32_t AVCodecClient::SetParameter(const Format &format)
 
 int32_t AVCodecClient::SetCallback(const std::shared_ptr<AVCodecCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "input param callback is nullptr.");
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "listenerStub_ is nullptr.");
 

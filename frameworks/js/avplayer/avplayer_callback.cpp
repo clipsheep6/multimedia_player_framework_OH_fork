@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "scope_guard.h"
+#include "event_queue.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerCallback"};
@@ -55,6 +56,11 @@ public:
             status = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,
                 "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+        virtual void JsCallback()
+        {
+            UvWork();
+            delete this;
         }
     };
 
@@ -214,6 +220,36 @@ public:
         }
     };
 
+    struct SubtitleProperty : public Base {
+        std::string text;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            // callback: (textInfo: TextInfoDescriptor)
+            napi_value args[1] = {nullptr};
+            napi_create_object(ref->env_, &args[0]);
+            CommonNapi::SetPropertyString(ref->env_, args[0], "text", text);
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
+
     struct PropertyInt : public Base {
         std::map<std::string, int32_t> valueMap;
         void UvWork() override
@@ -310,12 +346,72 @@ public:
         }
         CANCEL_SCOPE_EXIT_GUARD(0);
     }
+
+    static void CompleteCallbackInOrder(NapiCallback::Base *jsCb, std::shared_ptr<AppExecFwk::EventHandler> handler)
+    {
+        ON_SCOPE_EXIT(0) { delete jsCb; };
+        CHECK_AND_RETURN_LOG(handler != nullptr, "handler is nullptr");
+
+        bool ret = handler->PostTask(std::bind(&Base::JsCallback, jsCb),
+            AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        CHECK_AND_RETURN_LOG(ret, "Failed to execute PostTask");
+        CANCEL_SCOPE_EXIT_GUARD(0);
+    }
+
+    struct TrackChange : public Base {
+        int32_t number = 0;
+        bool isSelect = false;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            const int32_t argCount = 2; // 2 prapm, callback: (index: number, isSelect: boolean)
+            napi_value args[argCount] = {nullptr};
+            (void)napi_create_int32(ref->env_, number, &args[0]);
+            (void)napi_get_boolean(ref->env_, isSelect, &args[1]);
+
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
 };
 
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    auto runner = AppExecFwk::EventRunner::GetMainEventRunner();
+    if (runner != nullptr) {
+        handler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
+    }
+
+    onInfoFuncs_[INFO_TYPE_STATE_CHANGE] = &AVPlayerCallback::OnStateChangeCb;
+    onInfoFuncs_[INFO_TYPE_VOLUME_CHANGE] = &AVPlayerCallback::OnVolumeChangeCb;
+    onInfoFuncs_[INFO_TYPE_SEEKDONE] = &AVPlayerCallback::OnSeekDoneCb;
+    onInfoFuncs_[INFO_TYPE_SPEEDDONE] = &AVPlayerCallback::OnSpeedDoneCb;
+    onInfoFuncs_[INFO_TYPE_BITRATEDONE] = &AVPlayerCallback::OnBitRateDoneCb;
+    onInfoFuncs_[INFO_TYPE_POSITION_UPDATE] = &AVPlayerCallback::OnPositionUpdateCb;
+    onInfoFuncs_[INFO_TYPE_DURATION_UPDATE] = &AVPlayerCallback::OnDurationUpdateCb;
+    onInfoFuncs_[INFO_TYPE_BUFFERING_UPDATE] = &AVPlayerCallback::OnBufferingUpdateCb;
+    onInfoFuncs_[INFO_TYPE_MESSAGE] = &AVPlayerCallback::OnMessageCb;
+    onInfoFuncs_[INFO_TYPE_RESOLUTION_CHANGE] = &AVPlayerCallback::OnVideoSizeChangedCb;
+    onInfoFuncs_[INFO_TYPE_INTERRUPT_EVENT] = &AVPlayerCallback::OnAudioInterruptCb;
+    onInfoFuncs_[INFO_TYPE_BITRATE_COLLECT] = &AVPlayerCallback::OnBitRateCollectedCb;
+    onInfoFuncs_[INFO_TYPE_EOS] = &AVPlayerCallback::OnEosCb;
+    onInfoFuncs_[INFO_TYPE_IS_LIVE_STREAM] = &AVPlayerCallback::NotifyIsLiveStream;
+    onInfoFuncs_[INFO_TYPE_TRACKCHANGE] = &AVPlayerCallback::OnTrackChangedCb;
 }
 
 AVPlayerCallback::~AVPlayerCallback()
@@ -361,64 +457,25 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("OnInfo is called, PlayerOnInfoType: %{public}d", type);
-
-    switch (type) {
-        case INFO_TYPE_STATE_CHANGE:
-            AVPlayerCallback::OnStateChangeCb(static_cast<PlayerStates>(extra), infoBody);
-            break;
-        case INFO_TYPE_VOLUME_CHANGE:
-            AVPlayerCallback::OnVolumeChangeCb(infoBody);
-            break;
-        case INFO_TYPE_SEEKDONE:
-            AVPlayerCallback::OnSeekDoneCb(extra);
-            break;
-        case INFO_TYPE_SPEEDDONE:
-            AVPlayerCallback::OnSpeedDoneCb(extra);
-            break;
-        case INFO_TYPE_BITRATEDONE:
-            AVPlayerCallback::OnBitRateDoneCb(extra);
-            break;
-        case INFO_TYPE_POSITION_UPDATE:
-            AVPlayerCallback::OnPositionUpdateCb(extra);
-            break;
-        case INFO_TYPE_DURATION_UPDATE:
-            AVPlayerCallback::OnDurationUpdateCb(extra);
-            break;
-        case INFO_TYPE_BUFFERING_UPDATE:
-            AVPlayerCallback::OnBufferingUpdateCb(infoBody);
-            break;
-        case INFO_TYPE_MESSAGE:
-            AVPlayerCallback::OnMessageCb(extra, infoBody);
-            break;
-        case INFO_TYPE_RESOLUTION_CHANGE:
-            AVPlayerCallback::OnVideoSizeChangedCb(infoBody);
-            break;
-        case INFO_TYPE_INTERRUPT_EVENT:
-            AVPlayerCallback::OnAudioInterruptCb(infoBody);
-            break;
-        case INFO_TYPE_BITRATE_COLLECT:
-            AVPlayerCallback::OnBitRateCollectedCb(infoBody);
-            break;
-        case INFO_TYPE_EOS:
-            AVPlayerCallback::OnEosCb(extra);
-            break;
-        case INFO_TYPE_IS_LIVE_STREAM:
-            NotifyIsLiveStream();
-            break;
-        default:
-            break;
+    if (onInfoFuncs_.count(type) > 0) {
+        (this->*onInfoFuncs_[type])(extra, infoBody);
+    } else {
+        MEDIA_LOGI("OnInfo: no member func supporting, %{public}d", type);
     }
 }
 
-void AVPlayerCallback::NotifyIsLiveStream() const
+void AVPlayerCallback::NotifyIsLiveStream(const int32_t extra, const Format &infoBody)
 {
+    (void)extra;
+    (void)infoBody;
     if (listener_ != nullptr) {
         listener_->NotifyIsLiveStream();
     }
 }
 
-void AVPlayerCallback::OnStateChangeCb(PlayerStates state, const Format &infoBody)
+void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBody)
 {
+    PlayerStates state = static_cast<PlayerStates>(extra);
     MEDIA_LOGI("OnStateChanged is called, current state: %{public}d", state);
 
     if (listener_ != nullptr) {
@@ -460,8 +517,9 @@ void AVPlayerCallback::OnStateChangeCb(PlayerStates state, const Format &infoBod
     }
 }
 
-void AVPlayerCallback::OnVolumeChangeCb(const Format &infoBody)
+void AVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoBody)
 {
+    (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     float volumeLevel = 0.0;
     (void)infoBody.GetFloatValue(PlayerKeys::PLAYER_VOLUME_LEVEL, volumeLevel);
@@ -480,9 +538,11 @@ void AVPlayerCallback::OnVolumeChangeCb(const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnSeekDoneCb(int32_t currentPositon) const
+void AVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
 {
+    (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    int32_t currentPositon = extra;
     MEDIA_LOGI("OnSeekDone is called, currentPositon: %{public}d", currentPositon);
     if (refMap_.find(AVPlayerEvent::EVENT_SEEK_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find seekdone callback!");
@@ -498,9 +558,11 @@ void AVPlayerCallback::OnSeekDoneCb(int32_t currentPositon) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnSpeedDoneCb(int32_t speedMode) const
+void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody)
 {
+    (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    int32_t speedMode = extra;
     MEDIA_LOGI("OnSpeedDoneCb is called, speedMode: %{public}d", speedMode);
     if (refMap_.find(AVPlayerEvent::EVENT_SPEED_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find speeddone callback!");
@@ -516,9 +578,11 @@ void AVPlayerCallback::OnSpeedDoneCb(int32_t speedMode) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnBitRateDoneCb(int32_t bitRate) const
+void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBody)
 {
+    (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    int32_t bitRate = extra;
     MEDIA_LOGI("OnBitRateDoneCb is called, bitRate: %{public}d", bitRate);
     if (refMap_.find(AVPlayerEvent::EVENT_BITRATE_DONE) == refMap_.end()) {
         MEDIA_LOGW("can not find bitrate callback!");
@@ -534,9 +598,11 @@ void AVPlayerCallback::OnBitRateDoneCb(int32_t bitRate) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnPositionUpdateCb(int32_t position) const
+void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &infoBody)
 {
+    (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    int32_t position = extra;
     MEDIA_LOGI("OnPositionUpdateCb is called, position: %{public}d", position);
 
     if (listener_ != nullptr) {
@@ -557,9 +623,11 @@ void AVPlayerCallback::OnPositionUpdateCb(int32_t position) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnDurationUpdateCb(int32_t duration) const
+void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &infoBody)
 {
+    (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    int32_t duration = extra;
     MEDIA_LOGI("OnDurationUpdateCb is called, duration: %{public}d", duration);
 
     if (listener_ != nullptr) {
@@ -580,8 +648,25 @@ void AVPlayerCallback::OnDurationUpdateCb(int32_t duration) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
+void AVPlayerCallback::OnSubtitleUpdateCb(const Format &infoBody) const
 {
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_SUBTITLE_UPDATE) == refMap_.end()) {
+        MEDIA_LOGW("can not find subtitle update callback!");
+        return;
+    }
+    NapiCallback::SubtitleProperty *cb = new(std::nothrow) NapiCallback::SubtitleProperty();
+    if (infoBody.ContainKey("text")) {
+        (void)infoBody.GetStringValue("text", cb->text);
+    }
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUBTITLE_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_SUBTITLE_UPDATE;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_BUFFERING_UPDATE) == refMap_.end()) {
         MEDIA_LOGW("can not find buffering update callback!");
@@ -614,10 +699,10 @@ void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
     cb->callbackName = AVPlayerEvent::EVENT_BUFFERING_UPDATE;
     cb->valueVec.push_back(bufferingType);
     cb->valueVec.push_back(value);
-    NapiCallback::CompleteCallback(env_, cb);
+    NapiCallback::CompleteCallbackInOrder(cb, handler_);
 }
 
-void AVPlayerCallback::OnMessageCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnMessageCb(const int32_t extra, const Format &infoBody)
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGI("OnMessageCb is called, extra: %{public}d", extra);
@@ -643,8 +728,9 @@ void AVPlayerCallback::OnStartRenderFrameCb() const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnVideoSizeChangedCb(const Format &infoBody)
+void AVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format &infoBody)
 {
+    (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     int32_t width = 0;
     int32_t height = 0;
@@ -670,8 +756,9 @@ void AVPlayerCallback::OnVideoSizeChangedCb(const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnAudioInterruptCb(const Format &infoBody) const
+void AVPlayerCallback::OnAudioInterruptCb(const int32_t extra, const Format &infoBody)
 {
+    (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_AUDIO_INTERRUPT) == refMap_.end()) {
         MEDIA_LOGW("can not find audio interrupt callback!");
@@ -698,8 +785,9 @@ void AVPlayerCallback::OnAudioInterruptCb(const Format &infoBody) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnBitRateCollectedCb(const Format &infoBody) const
+void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &infoBody)
 {
+    (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_AVAILABLE_BITRATES) == refMap_.end()) {
         MEDIA_LOGW("can not find bitrate collected callback!");
@@ -736,9 +824,11 @@ void AVPlayerCallback::OnBitRateCollectedCb(const Format &infoBody) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnEosCb(int32_t isLooping) const
+void AVPlayerCallback::OnEosCb(const int32_t extra, const Format &infoBody)
 {
+    (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    int32_t isLooping = extra;
     MEDIA_LOGI("OnEndOfStream is called, isloop: %{public}d", isLooping);
     if (refMap_.find(AVPlayerEvent::EVENT_END_OF_STREAM) == refMap_.end()) {
         MEDIA_LOGW("can not find EndOfStream callback!");
@@ -750,6 +840,28 @@ void AVPlayerCallback::OnEosCb(int32_t isLooping) const
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_END_OF_STREAM);
     cb->callbackName = AVPlayerEvent::EVENT_END_OF_STREAM;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnTrackChangedCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    int32_t index = -1;
+    int32_t isSelect = -1;
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
+    MEDIA_LOGI("OnTrackChangedCb index %{public}d, isSelect = %{public}d", index, isSelect);
+ 
+    CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_TRACKCHANGE) != refMap_.end(),
+        "can not find trackChange callback!");
+
+    NapiCallback::TrackChange *cb = new(std::nothrow) NapiCallback::TrackChange();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new TrackChange");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_TRACKCHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_TRACKCHANGE;
+    cb->number = index;
+    cb->isSelect = isSelect ? true : false;
     NapiCallback::CompleteCallback(env_, cb);
 }
 

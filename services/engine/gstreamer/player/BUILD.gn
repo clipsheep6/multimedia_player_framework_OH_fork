@@ -44,7 +44,7 @@ config("media_engine_gst_player_config") {
 
   include_dirs = [
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/subsink",
+    "../../../../services/engine/gstreamer/plugins/sink/subtitlesink",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
@@ -76,7 +76,6 @@ ohos_static_library("media_engine_gst_player") {
     "player_codec_ctrl.cpp",
     "player_engine_gst_impl.cpp",
     "player_sinkprovider.cpp",
-    "player_track_parse.cpp",
   ]
 
   configs = [
@@ -96,12 +95,12 @@ ohos_static_library("media_engine_gst_player") {
   ]
 
   external_deps = [
+    "audio_framework:audio_client",
     "graphic_standard:surface",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
-    "multimedia_audio_framework:audio_client",
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

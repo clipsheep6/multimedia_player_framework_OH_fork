@@ -89,6 +89,7 @@ struct _GstVdecBase {
     GMutex lock;
     gboolean flushing;
     gboolean prepared;
+    gboolean idrframe;
     GstVideoCodecState *input_state;
     GstVideoCodecState *output_state;
     std::vector<GstVideoFormat> formats;
@@ -125,6 +126,7 @@ struct _GstVdecBase {
     gboolean input_need_ashmem;
     gboolean has_set_format;
     gboolean player_mode;
+    gboolean metadata_mode;
     gboolean is_support_swap_width_height;
     gboolean codec_data_update;
     GstBuffer *codec_data;
@@ -139,6 +141,7 @@ struct _GstVdecBaseClass {
     gboolean (*input_need_copy)();
     gboolean (*support_swap_width_height)(GstElementClass *kclass);
     gboolean (*parser)(GstVdecBase *base, ParseMeta &meta);
+    gboolean (*bypass_frame)(GstVdecBase *base, GstVideoCodecFrame *frame);
 };
 
 GST_API_EXPORT GType gst_vdec_base_get_type(void);

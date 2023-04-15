@@ -52,7 +52,6 @@ public:
     int32_t LaunchTask(const std::shared_ptr<ITaskHandler> &task, PlayBinTaskType type, uint64_t delayUs = 0);
     // only take effect when it is called at the task thread.
     int32_t MarkSecondPhase();
-    PlayBinTaskType GetCurrTaskType();
     void ClearAllTask();
     int32_t Reset();
 

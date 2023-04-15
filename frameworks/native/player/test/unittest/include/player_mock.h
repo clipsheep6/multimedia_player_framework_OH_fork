@@ -27,15 +27,19 @@ namespace Media {
 namespace PlayerTestParam {
 inline constexpr int32_t SEEK_TIME_5_SEC = 5000;
 inline constexpr int32_t SEEK_TIME_2_SEC = 2000;
+inline constexpr int32_t ONE_SEC = 1;
 inline constexpr int32_t WAITSECOND = 6;
 inline constexpr int32_t DELTA_TIME = 1000;
 inline constexpr int32_t PLAYING_TIME = 2;
 const std::string MEDIA_ROOT = "file:///data/test/";
 const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
+const std::string SUBTITLE_SRT_FIELE = MEDIA_ROOT + "utf8.srt";
 const std::string HTTPS_PLAY = "HTTPS";
 const std::string HTTP_PLAY = "HTTP";
 const std::string LOCAL_PLAY = "LOCAL";
 const std::string HLS_PLAY = "HLS";
+const std::string SUBTITLE_5_SEC = "MediaOS: test for subtitle_6";
+const std::string SUBTITLE_2_SEC = "MediaOS: test for subtitle_3";
 } // namespace PlayerTestParam
 
 class PlayerSignal {
@@ -44,6 +48,8 @@ protected:
     int32_t seekPosition_;
     bool seekDoneFlag_;
     bool speedDoneFlag_;
+    bool trackDoneFlag_ = false;
+    bool trackChange_ = false;
     PlayerSeekMode seekMode_ = PlayerSeekMode::SEEK_CLOSEST;
     std::mutex mutexCond_;
     std::condition_variable condVarPrepare_;
@@ -53,6 +59,7 @@ protected:
     std::condition_variable condVarReset_;
     std::condition_variable condVarSeek_;
     std::condition_variable condVarSpeed_;
+    std::condition_variable condVarTrackDone_;
 };
 
 class PlayerCallbackTest : public PlayerCallback, public NoCopyable, public PlayerSignal {
@@ -66,6 +73,7 @@ public:
     void SetSpeedDoneFlag(bool speedDoneFlag);
     void SetSeekPosition(int32_t seekPosition);
     void SetState(PlayerStates state);
+    void SetTrackDoneFlag(bool trackDoneFlag);
     int32_t PrepareSync();
     int32_t PlaySync();
     int32_t PauseSync();
@@ -73,6 +81,7 @@ public:
     int32_t ResetSync();
     int32_t SeekSync();
     int32_t SpeedSync();
+    int32_t TrackSync(bool &trackChange);
 };
 
 class PlayerMock : public NoCopyable {
@@ -109,6 +118,12 @@ public:
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback);
     int32_t SetVideoSurface(sptr<Surface> surface);
     sptr<Surface> GetVideoSurface();
+    int32_t SelectTrack(int32_t index, bool &trackChange);
+    int32_t DeselectTrack(int32_t index, bool &trackChange);
+    int32_t GetCurrentTrack(int32_t trackType, int32_t &index);
+    int32_t AddSubSource(const std::string &url);
+    int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size);
+    std::string SubtitleUpdate();
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;
@@ -118,6 +133,8 @@ private:
     int32_t height_ = 1080;
     int32_t width_ = 1920;
     std::mutex mutex_;
+    std::mutex subtitleMutex_;
+    std::string text = "";
 };
 } // namespace Media
 } // namespace OHOS

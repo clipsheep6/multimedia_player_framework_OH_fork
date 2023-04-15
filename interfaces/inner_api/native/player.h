@@ -43,6 +43,9 @@ public:
     static constexpr std::string_view PLAYER_BUFFERING_END = "buffering_end";
     static constexpr std::string_view PLAYER_BUFFERING_PERCENT = "buffering_percent";
     static constexpr std::string_view PLAYER_CACHED_DURATION = "cached_duration";
+    static constexpr std::string_view PLAYER_IS_SELECT = "track_is_select";
+    static constexpr std::string_view PLAYER_ERROR_TYPE = "error_type";
+    static constexpr std::string_view PLAYER_ERROR_MSG = "error_msg";
     static constexpr std::string_view CONTENT_TYPE = "content_type";
     static constexpr std::string_view STREAM_USAGE = "stream_usage";
     static constexpr std::string_view RENDERER_FLAG = "renderer_flag";
@@ -124,6 +127,16 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_DURATION_UPDATE,
     /* return the playback is live stream. */
     INFO_TYPE_IS_LIVE_STREAM,
+    /* return the subtitle of playback. */
+    INFO_TYPE_SUBTITLE_UPDATE,
+    /* return the message when track changes. */
+    INFO_TYPE_TRACKCHANGE,
+    /* return the default audio track. */
+    INFO_TYPE_DEFAULTTRACK,
+    /* Return to the end of track processing. */
+    INFO_TYPE_TRACK_DONE,
+    /* Return error message to prompt the user. */
+    INFO_TYPE_ERROR_MSG,
 };
 
 enum PlayerStates : int32_t {
@@ -193,18 +206,6 @@ class PlayerCallback {
 public:
     virtual ~PlayerCallback() = default;
     /**
-     * Called when an error occurred for versions older than api9
-     *
-     * @param errorType Error type. For details, see {@link PlayerErrorType}.
-     * @param errorCode Error code.
-     */
-    __attribute__((deprecated)) virtual void OnError(PlayerErrorType errorType, int32_t errorCode)
-    {
-        (void)errorType;
-        (void)errorCode;
-    }
-
-    /**
      * Called when a player message or alarm is received.
      *
      * @param type Indicates the information type. For details, see {@link PlayerOnInfoType}.
@@ -219,11 +220,7 @@ public:
      * @param errorCode Error code.
      * @param errorMsg Error message.
      */
-    virtual void OnError(int32_t errorCode, const std::string &errorMsg)
-    {
-        (void)errorCode;
-        (void)errorMsg;
-    }
+    virtual void OnError(int32_t errorCode, const std::string &errorMsg) = 0;
 };
 
 class Player {
@@ -558,6 +555,47 @@ public:
      * @version 1.0
      */
     virtual int32_t ReleaseSync() = 0;
+
+    /**
+     * @brief Select audio or subtitle track.
+     * By default, the first audio stream with data is played, and the subtitle track is not played.
+     * After the settings take effect, the original track will become invalid. Please set subtitles
+     * in prepared/playing/paused/completed state and set audio tracks in prepared state.
+     *
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if selected successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t SelectTrack(int32_t index) = 0;
+
+    /**
+     * @brief Deselect the current audio or subtitle track.
+     * After audio is deselected, the default track will be played, and after subtitles are deselected,
+     * they will not be played. Please set subtitles in prepared/playing/paused/completed state and set
+     * audio tracks in prepared state.
+     *
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if selected successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t DeselectTrack(int32_t index) = 0;
+
+    /**
+     * @brief Obtain the currently effective track index.
+     * Please get it in the prepared/playing/paused/completed state.
+     *
+     * @param trackType Media type.
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if the track index is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
 };
 
 class __attribute__((visibility("default"))) PlayerFactory {

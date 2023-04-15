@@ -338,6 +338,45 @@ public:
      * @version 1.0
      */
     virtual int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback) = 0;
+
+    /**
+     * @brief Select audio or subtitle track.
+     * By default, the first audio stream with data is played, and the subtitle track is not played.
+     * After the settings take effect, the original track will become invalid.
+     * Please set it in the prepared/playing/paused/completed state.
+     *
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if selected successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t SelectTrack(int32_t index) = 0;
+
+    /**
+     * @brief Deselect the current audio or subtitle track.
+     * After audio is deselected, the default track will be played, and after subtitles are deselected,
+     * they will not be played. Please set it in the prepared/playing/paused/completed state.
+     *
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if selected successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+    */
+    virtual int32_t DeselectTrack(int32_t index) = 0;
+
+    /**
+     * @brief Obtain the currently effective track index.
+     *
+     * @param trackType Media type.
+     * @param index Track index, reference {@link #GetAudioTrackInfo} and {@link #GetVideoTrackInfo}.
+     * @return Returns {@link MSERR_OK} if the track index is get; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
 };
 } // namespace Media
 } // namespace OHOS

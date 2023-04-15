@@ -121,5 +121,5 @@ ohos_shared_library("gst_codec_plugin_hdi") {
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

@@ -44,7 +44,7 @@ constexpr uint32_t TIME = 2;
 // PlayerCallback override
 void PlayerCallbackDemo::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    cout << "Error received, errorCode: " << errorCode << "errorMsg: " << errorMsg << endl;
+    cout << "Error received, errorCode: " << errorCode << " errorMsg: " << errorMsg << endl;
 }
 
 void PlayerCallbackDemo::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -89,6 +89,9 @@ void PlayerCallbackDemo::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
         case INFO_TYPE_VOLUME_CHANGE:
             cout << "PlayerCallback: volume changed" << endl;
             break;
+        case INFO_TYPE_TRACKCHANGE:
+            PrintTrackChange(infoBody);
+            break;
         default:
             break;
     }
@@ -115,6 +118,15 @@ void PlayerCallbackDemo::PrintResolution(const Format &infoBody) const
     (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_WIDTH), width);
     (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_HEIGHT), height);
     cout << "PlayerCallback: OnResolution changed width " << width << " height " << height << endl;
+}
+
+void PlayerCallbackDemo::PrintTrackChange(const Format &infoBody) const
+{
+    int32_t index = -1;
+    int32_t isSelect = -1;
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
+    cout << "PlayerCallback: On Track changed index " << index << " isSelect " << isSelect << endl;
 }
 
 void PlayerCallbackDemo::PrintBufferingUpdate(const Format &infoBody) const
@@ -477,6 +489,12 @@ void PlayerDemo::DoCmd(const std::string &cmd)
         SelectBitRate(cmd.substr(cmd.find("bitrate ") + std::string("bitrate ").length()));
     } else if (cmd.find("videoscaletype ") != std::string::npos) {
         SetVideoScaleType(cmd.substr(cmd.find("videoscaletype ") + std::string("videoscaletype ").length()));
+    } else if (cmd.find("seltrack") != std::string::npos) {
+        SelectTrack();
+    } else if (cmd.find("detrack") != std::string::npos) {
+        DeselectTrack();
+    }  else if (cmd.find("gettrack") != std::string::npos) {
+        GetCurrentTrack();
     }
 }
 
@@ -658,6 +676,48 @@ int32_t PlayerDemo::SetRendererInfo()
     return player_->SetParameter(format);
 }
 
+void PlayerDemo::SelectTrack()
+{
+    cout << "Please enter track index (int)" << endl;
+    string cmd;
+    (void)getline(cin, cmd);
+    int32_t index;
+    StrToInt(cmd, index);
+    if (player_->SelectTrack(index) == MSERR_OK) {
+        cout << "SelectTrack success" << endl;
+    } else {
+        cout << "SelectTrack failed" << endl;
+    }
+}
+
+void PlayerDemo::DeselectTrack()
+{
+    cout << "Please enter track index (int)" << endl;
+    string cmd;
+    (void)getline(cin, cmd);
+    int32_t index;
+    StrToInt(cmd, index);
+    if (player_->DeselectTrack(index) == MSERR_OK) {
+        cout << "DeselectTrack success" << endl;
+    } else {
+        cout << "DeselectTrack failed" << endl;
+    }
+}
+
+void PlayerDemo::GetCurrentTrack()
+{
+    cout << "Please enter track type (0:audio 1:video 2:subtitle)" << endl;
+    string cmd;
+    (void)getline(cin, cmd);
+    int32_t type;
+    StrToInt(cmd, type);
+    int32_t index;
+    if (player_->GetCurrentTrack(type, index) == MSERR_OK) {
+        cout << "GetCurrentTrack success:" << index << endl;
+    } else {
+        cout << "GetCurrentTrack failed" << endl;
+    }
+}
 
 int32_t PlayerDemo::SetSurfaceSize()
 {

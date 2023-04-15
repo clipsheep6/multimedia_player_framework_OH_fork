@@ -36,6 +36,7 @@ public:
         MEDIA_CODECLIST = 4,
         MEDIA_AVCODEC = 5,
         RECORDER_PROFILES = 6,
+        MEDIA_MONITOR = 7,
     };
 
     /**

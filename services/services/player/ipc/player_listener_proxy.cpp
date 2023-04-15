@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
+#include "player_xcollie.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerListenerProxy"};
@@ -46,7 +47,7 @@ void PlayerListenerProxy::OnError(int32_t errorCode, const std::string &errorMsg
 
     data.WriteInt32(errorCode);
     data.WriteString(errorMsg);
-    int error = Remote()->SendRequest(PlayerListenerMsg::ON_ERROR_MSG, data, reply, option);
+    int error = SendRequest(PlayerListenerMsg::ON_ERROR_MSG, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on error failed, error: %{public}d", error);
 }
 
@@ -54,6 +55,7 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
 {
     MessageParcel data;
     MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
 
     bool token = data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor());
     CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
@@ -61,17 +63,8 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
     data.WriteInt32(type);
     data.WriteInt32(extra);
     MediaParcel::Marshalling(data, infoBody);
-
-    if (type == INFO_TYPE_BUFFERING_UPDATE) {
-        // message concurrency, preventing client disorder
-        MessageOption option;
-        int error = Remote()->SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
-        CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
-    } else {
-        MessageOption option(MessageOption::TF_ASYNC);
-        int error = Remote()->SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
-        CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
-    }
+    int error = SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
 }
 
 PlayerListenerCallback::PlayerListenerCallback(const sptr<IStandardPlayerListener> &listener) : listener_(listener)
@@ -97,6 +90,14 @@ void PlayerListenerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const 
     if (listener_ != nullptr) {
         listener_->OnInfo(type, extra, infoBody);
     }
+}
+
+int32_t PlayerListenerProxy::SendRequest(uint32_t code, MessageParcel &data,
+    MessageParcel &reply, MessageOption &option)
+{
+    int32_t error = MSERR_OK;
+    LISTENER(error = Remote()->SendRequest(code, data, reply, option), "PlayerListenerProxy::SendRequest", false)
+    return error;
 }
 } // namespace Media
 } // namespace OHOS

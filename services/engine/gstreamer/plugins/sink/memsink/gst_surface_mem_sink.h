@@ -48,6 +48,8 @@ struct _GstSurfaceMemSink {
     GstMemSink memsink;
     GstBuffer *prerollBuffer;
     gboolean firstRenderFrame;
+    gboolean setRateEvent;
+    gdouble curRate;
     gboolean preInitPool;
     gboolean performanceMode;
     /* < private > */

@@ -21,7 +21,7 @@
 #include <mutex>
 #include <gst/gst.h>
 #include "gst_mem_sink.h"
-#include "gst_sub_sink.h"
+#include "gst_subtitle_sink.h"
 #include "playbin_sink_provider.h"
 #include "i_player_engine.h"
 
@@ -34,10 +34,10 @@ public:
 
     SinkPtr CreateAudioSink() override;
     SinkPtr CreateVideoSink() override;
-    SinkPtr CreateSubSink() override;
+    SinkPtr CreateSubtitleSink() override;
     SinkPtr GetVideoSink() override;
 
-    void SetAppInfo(int32_t uid, int32_t pid) override;
+    void SetAppInfo(int32_t uid, int32_t pid, uint32_t tokenId) override;
     void SetVideoScaleType(const uint32_t videoScaleType) override;
     void SetMsgNotifier(PlayBinMsgNotifier notifier) override;
 
@@ -45,15 +45,15 @@ private:
     const sptr<Surface> GetProducerSurface() const;
     GstElement *DoCreateAudioSink(const GstCaps *caps, const gpointer userData);
     GstElement *DoCreateVideoSink(const GstCaps *caps, const gpointer userData);
-    GstElement *DoCreateSubSink(const GstCaps *caps, const gpointer userData);
+    GstElement *DoCreateSubtitleSink(const gpointer userData);
     bool EnableKpiAVSyncLog() const;
     bool EnableOptRenderDelay() const;
     void SetFirstRenderFrameFlag(bool firstRenderFrame);
     bool GetFirstRenderFrameFlag() const;
     void OnFirstRenderFrame();
-    static GstFlowReturn SubTitleTextUpdated(GstBuffer *sample, gpointer userData);
-    void OnSubTitleTextUpdated(const std::vector<Format> &subtitle);
-    void HandleSubTitleBuffer(GstBuffer *sample, std::vector<Format> subtitle);
+    static GstFlowReturn SubtitleUpdated(GstBuffer *sample, gpointer userData);
+    void OnSubtitleUpdated(const Format &subtitle);
+    void HandleSubtitleBuffer(GstBuffer *sample, Format &subtitle);
     static GstPadProbeReturn SinkPadProbeCb(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
     static void EosCb(GstMemSink *memSink, gpointer userData);
     static GstFlowReturn NewPrerollCb(GstMemSink *memSink, GstBuffer *sample, gpointer userData);
@@ -62,12 +62,12 @@ private:
 
     GstElement *audioSink_ = nullptr;
     GstElement *videoSink_ = nullptr;
-    GstElement *subSink_ = nullptr;
+    GstElement *subtitleSink_ = nullptr;
     GstCaps *audioCaps_ = nullptr;
     GstCaps *videoCaps_ = nullptr;
-    GstCaps *subCaps_ = nullptr;
     sptr<Surface> producerSurface_ = nullptr;
     uint32_t queueSize_ = 0;
+    uint32_t tokenId_ = 0;
     int32_t uid_ = 0;
     int32_t pid_ = 0;
     uint32_t videoScaleType_ = 0;

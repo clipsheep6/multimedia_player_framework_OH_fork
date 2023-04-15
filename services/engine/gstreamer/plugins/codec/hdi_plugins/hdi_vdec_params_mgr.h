@@ -36,6 +36,8 @@ protected:
     int32_t SetInputVideoCommon(GstElement *element);
     int32_t SetOutputVideoCommon(GstElement *element);
     int32_t SetVideoFormat(GstElement *element);
+    int32_t SetFrameRate(GstElement *element);
+    int32_t SetMetadataMode();
     int32_t VideoSurfaceInit(GstElement *element);
     int32_t GetInputVideoCommon(GstElement *element);
     int32_t GetOutputVideoCommon(GstElement *element);

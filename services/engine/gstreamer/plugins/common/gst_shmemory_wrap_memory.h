@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,13 +22,14 @@
 
 struct _GstShMemoryWrapMemory;
 using GstShMemoryWrapMemory = _GstShMemoryWrapMemory;
-using FreeMemory = std::function<void(int32_t, int32_t)>;
+using FreeMemory = std::function<void(uint32_t, uint32_t, uint32_t)>;
 
 struct _GstShMemoryWrapMemory {
     GstMemory parent;
     std::shared_ptr<OHOS::Media::AVSharedMemory> shmemory;
     int32_t offset;
     int32_t length;
+    int32_t sub;
     FreeMemory free_memory;
 };
 

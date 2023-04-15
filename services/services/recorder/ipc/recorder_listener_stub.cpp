@@ -67,6 +67,10 @@ void RecorderListenerStub::OnError(int32_t errorType, int32_t errorCode)
     if (callback_ != nullptr) {
         callback_->OnError(static_cast<RecorderErrorType>(errorType), errorCode);
     }
+
+    std::shared_ptr<MonitorClientObject> monitor = monitor_.lock();
+    CHECK_AND_RETURN(monitor != nullptr);
+    (void)monitor->DisableMonitor();
 }
 
 void RecorderListenerStub::OnInfo(int32_t type, int32_t extra)
@@ -79,6 +83,12 @@ void RecorderListenerStub::OnInfo(int32_t type, int32_t extra)
 void RecorderListenerStub::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
     callback_ = callback;
+}
+
+void RecorderListenerStub::SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor)
+{
+    MEDIA_LOGI("SetMonitor");
+    monitor_ = monitor;
 }
 } // namespace Media
 } // namespace OHOS

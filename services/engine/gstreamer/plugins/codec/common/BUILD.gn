@@ -30,6 +30,8 @@ config("gst_codec_plugins_common_config") {
     "-Wfloat-equal",
     "-Wdate-time",
     "-DOHOS_EXT_FUNC",
+    "-DOHOS_OPT_COMPAT",
+    "-DOHOS_OPT_PERFORMANCE",
     "-Werror",
     "-Wextra",
     "-Wimplicit-fallthrough",
@@ -91,5 +93,5 @@ ohos_static_library("gst_codec_plugins_common") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

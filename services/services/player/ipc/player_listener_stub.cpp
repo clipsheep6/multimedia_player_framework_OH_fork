@@ -14,6 +14,8 @@
  */
 
 #include "player_listener_stub.h"
+#include "av_common.h"
+#include "player.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
@@ -85,9 +87,29 @@ void PlayerListenerStub::OnError(PlayerErrorType errorType, int32_t errorCode)
 
 void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
+    if (type == INFO_TYPE_ERROR_MSG) {
+        int32_t errtype = -1;
+        std::string msg;
+        infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_ERROR_TYPE), errtype);
+        infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_ERROR_MSG), msg);
+        return OnError(errtype, msg);
+    }
+
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
     if (cb != nullptr) {
         cb->OnInfo(type, extra, infoBody);
+    }
+    std::shared_ptr<MonitorClientObject> monitor = monitor_.lock();
+    CHECK_AND_RETURN(monitor != nullptr);
+    int32_t reason = StateChangeReason::USER;
+    if (infoBody.ContainKey(PlayerKeys::PLAYER_STATE_CHANGED_REASON)) {
+        (void)infoBody.GetIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, reason);
+    }
+    if (((type == INFO_TYPE_STATE_CHANGE) && (extra == PLAYER_PLAYBACK_COMPLETE || extra == PLAYER_STATE_ERROR)) ||
+        ((type == INFO_TYPE_STATE_CHANGE) && extra == PLAYER_PAUSED && reason == StateChangeReason::BACKGROUND) ||
+        ((type == INFO_TYPE_STATE_CHANGE_BY_AUDIO) && (extra == PLAYER_PAUSED))) {
+        MEDIA_LOGI("DisableMonitor, type = %{public}d, extra = %{public}d.", type, extra);
+        (void)monitor->DisableMonitor();
     }
 }
 
@@ -102,6 +124,12 @@ void PlayerListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 void PlayerListenerStub::SetPlayerCallback(const std::weak_ptr<PlayerCallback> &callback)
 {
     callback_ = callback;
+}
+
+void PlayerListenerStub::SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor)
+{
+    MEDIA_LOGI("SetMonitor");
+    monitor_ = monitor;
 }
 } // namespace Media
 } // namespace OHOS

@@ -47,6 +47,7 @@ enum {
     PROP_SAMPLE_RATE,
     PROP_APP_UID,
     PROP_APP_PID,
+    PROP_APP_TOKEN_ID,
     PROP_VOLUME,
     PROP_MAX_VOLUME,
     PROP_MIN_VOLUME,
@@ -56,6 +57,7 @@ enum {
     PROP_LAST_RENDER_PTS,
     PROP_ENABLE_OPT_RENDER_DELAY,
     PROP_LAST_RUNNING_TIME_DIFF,
+    PROP_SUBTITLE_SINK,
 };
 
 #define gst_audio_server_sink_parent_class parent_class
@@ -119,6 +121,11 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
             "APP PID", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_APP_TOKEN_ID,
+        g_param_spec_uint("app-token-id", "Apptokenid",
+            "APP TOKEN ID", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
     g_object_class_install_property(gobject_class, PROP_VOLUME,
         g_param_spec_float("volume", "Volume",
             "Volume", 0, G_MAXFLOAT, 0,
@@ -162,6 +169,10 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
         g_param_spec_int64("last-running-time-diff", "last running time diff", "last running time diff",
             0, G_MAXINT64, 0, (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_SUBTITLE_SINK,
+        g_param_spec_pointer("subtitle-sink", "subtitle sink", "subtitle sink",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Audio server sink", "Sink/Audio",
         "Push pcm data to Audio server", "OpenHarmony");
@@ -184,6 +195,7 @@ static void gst_audio_server_sink_init(GstAudioServerSink *sink)
     MediaTrace trace("Audio::gst_audio_server_sink_init");
     g_return_if_fail(sink != nullptr);
     sink->audio_sink = nullptr;
+    sink->subtitle_sink = nullptr;
     sink->bits_per_sample = DEFAULT_BITS_PER_SAMPLE;
     sink->channels = 0;
     sink->sample_rate = 0;
@@ -260,6 +272,13 @@ static void gst_audio_server_sink_error_callback(GstBaseSink *basesink, const st
     GST_ELEMENT_ERROR(sink, STREAM, FAILED, (NULL), ("audio render error: %s", errMsg.c_str()));
 }
 
+static void gst_audio_server_sink_set_subtitle_sink(GstAudioServerSink *sink, gpointer subtitle_sink)
+{
+    g_return_if_fail(subtitle_sink != nullptr);
+    sink->subtitle_sink = GST_ELEMENT_CAST(gst_object_ref(subtitle_sink));
+    GST_INFO_OBJECT(subtitle_sink, "get subtitle sink: %s", GST_ELEMENT_NAME(sink->subtitle_sink));
+}
+
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
     const GValue *value, GParamSpec *pspec)
 {
@@ -279,9 +298,6 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
             break;
         case PROP_AUDIO_RENDERER_DESC:
             sink->renderer_desc = g_value_get_int(value);
-            if (sink->audio_sink != nullptr) {
-                sink->audio_sink->SetRendererInfo(sink->renderer_desc, sink->renderer_flag);
-            }
             break;
         case PROP_APP_UID:
             sink->appuid = g_value_get_int(value);
@@ -293,11 +309,13 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
             GST_INFO_OBJECT(sink, "set app uid success!");
             g_object_notify(G_OBJECT(sink), "app-pid");
             break;
+        case PROP_APP_TOKEN_ID:
+            sink->apptokenid = g_value_get_uint(value);
+            GST_INFO_OBJECT(sink, "set app token id success!");
+            g_object_notify(G_OBJECT(sink), "app-token-id");
+            break;
         case PROP_AUDIO_RENDERER_FLAG:
             sink->renderer_flag = g_value_get_int(value);
-            if (sink->audio_sink != nullptr) {
-                sink->audio_sink->SetRendererInfo(sink->renderer_desc, sink->renderer_flag);
-            }
             break;
         case PROP_AUDIO_INTERRUPT_MODE:
             g_return_if_fail(sink->audio_sink != nullptr);
@@ -305,6 +323,9 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
             break;
         case PROP_ENABLE_OPT_RENDER_DELAY:
             sink->enable_opt_render_delay = g_value_get_boolean(value);
+            break;
+        case PROP_SUBTITLE_SINK:
+            gst_audio_server_sink_set_subtitle_sink(sink, g_value_get_pointer(value));
             break;
         default:
             break;
@@ -431,21 +452,27 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
     g_return_val_if_fail(event != nullptr, FALSE);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     g_return_val_if_fail(sink != nullptr, FALSE);
-    GstEventType type = GST_EVENT_TYPE(event);
-    switch (type) {
+    switch (GST_EVENT_TYPE(event)) {
         case GST_EVENT_EOS:
             if (sink->audio_sink == nullptr) {
                 break;
             }
+            // close audio/video sync
+            g_mutex_lock(&sink->render_lock);
+            sink->last_running_time_diff = 0;
+            g_mutex_unlock(&sink->render_lock);
             if (sink->audio_sink->Drain() != MSERR_OK) {
                 GST_ERROR_OBJECT(basesink, "fail to call Drain when handling EOS event");
             }
             break;
         case GST_EVENT_SEGMENT:
+            gboolean ret = FALSE;
             g_mutex_lock(&sink->render_lock);
             sink->frame_after_segment = TRUE;
+            ret = GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
+            g_object_set(G_OBJECT(sink->subtitle_sink), "segment-updated", TRUE, nullptr);
             g_mutex_unlock(&sink->render_lock);
-            break;
+            return ret;
         case GST_EVENT_FLUSH_START:
             basesink->stream_group_done = FALSE;
             gst_audio_server_sink_clear_cache_buffer(sink);
@@ -463,6 +490,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
         case GST_EVENT_STREAM_GROUP_DONE:
             basesink->stream_group_done = TRUE;
             GST_DEBUG_OBJECT(basesink, "received STREAM_GROUP_DONE, set stream_group_done TRUE");
+            g_object_set(G_OBJECT(sink->subtitle_sink), "segment-updated", TRUE, nullptr);
             if (basesink->need_preroll) {
                 /* may async start to change state, preroll STREAM_GROUP_DONE to async done */
                 gst_base_sink_do_preroll (basesink, GST_MINI_OBJECT_CAST(event));
@@ -483,13 +511,13 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     MediaTrace trace("Audio::gst_audio_server_sink_start");
     g_return_val_if_fail(basesink != nullptr, FALSE);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
-    MEDIA_LOGI("uid: %{public}d, pid: %{public}d", sink->appuid, sink->apppid);
+    MEDIA_LOGI("uid: %{public}d, pid: %{public}d, tokenid: %{public}u", sink->appuid, sink->apppid, sink->apptokenid);
     g_return_val_if_fail(sink != nullptr, FALSE);
     sink->audio_sink = OHOS::Media::AudioSinkFactory::CreateAudioSink(basesink);
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
     g_return_val_if_fail(sink->audio_sink->SetRendererInfo(sink->renderer_desc,
         sink->renderer_flag) == MSERR_OK, FALSE);
-    g_return_val_if_fail(sink->audio_sink->Prepare(sink->appuid, sink->apppid) == MSERR_OK, FALSE);
+    g_return_val_if_fail(sink->audio_sink->Prepare(sink->appuid, sink->apppid, sink->apptokenid) == MSERR_OK, FALSE);
     sink->audio_sink->SetAudioSinkCb(gst_audio_server_sink_interrupt_callback,
                                      gst_audio_server_sink_state_callback,
                                      gst_audio_server_sink_error_callback);

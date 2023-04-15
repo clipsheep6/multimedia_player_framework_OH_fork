@@ -66,9 +66,29 @@ int32_t HdiVdecParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element
         case GST_VENDOR:
             MEDIA_LOGD("Set vendor property");
             break;
+        case GST_METADATA_MODE:
+            return SetMetadataMode();
+        case GST_DYNAMIC_FRAME_RATE:
+            return SetFrameRate(element);
         default:
             break;
     }
+    return GST_CODEC_OK;
+}
+
+int32_t HdiVdecParamsMgr::SetFrameRate(GstElement *element)
+{
+    GstVdecBase *base = GST_VDEC_BASE(element);
+    OMX_PARAM_U32TYPE param;
+    InitParam(param, verInfo_);
+    param.nSize = sizeof(OMX_PARAM_U32TYPE);
+    param.nU32 = static_cast<uint32_t>(base->seek_frame_rate);
+    param.nPortIndex = inPortDef_.nPortIndex;
+        MEDIA_LOGI("SetFrameRate frame rate %{public}u", param.nU32);
+    param.nU32 = param.nU32 << HDI_FRAME_RATE_MOVE;
+    // OMX_IndexOtherStartUnused + 3 is frame_rate cmd
+    auto ret = HdiSetConfig(handle_, OMX_IndexOtherStartUnused + 3, param);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetConfig failed");
     return GST_CODEC_OK;
 }
 
@@ -112,6 +132,18 @@ int32_t HdiVdecParamsMgr::SetVideoFormat(GstElement *element)
     return GST_CODEC_OK;
 }
 
+int32_t HdiVdecParamsMgr::SetMetadataMode()
+{
+    MEDIA_LOGD("SetMetadataMode");
+    CodecEnableNativeBufferParams nativeBufferParam;
+    InitHdiParam(nativeBufferParam, verInfo_);
+    nativeBufferParam.portIndex = outPortDef_.nPortIndex;
+    nativeBufferParam.enable = OMX_FALSE;
+    auto ret = HdiSetParameter(handle_, OMX_IndexCodecExtEnableNativeBuffer, nativeBufferParam);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
+    return GST_CODEC_OK;
+}
+
 int32_t HdiVdecParamsMgr::GetInputVideoCommon(GstElement *element)
 {
     MEDIA_LOGD("GetInputVideoCommon");
@@ -145,6 +177,18 @@ int32_t HdiVdecParamsMgr::GetOutputVideoCommon(GstElement *element)
         base->output.width, base->output.height, base->stride, base->stride_height);
     base->rect.width = base->output.width;
     base->rect.height = base->output.height;
+
+    OMX_CONFIG_RECTTYPE rect;
+    InitParam(rect, verInfo_);
+    rect.nPortIndex = outPortDef_.nPortIndex;
+    if (HdiGetConfig(handle_, OMX_IndexConfigCommonOutputCrop, rect) == OMX_ErrorNone) {
+        base->rect.x = rect.nLeft;
+        base->rect.y = rect.nTop;
+        base->rect.width = rect.nWidth;
+        base->rect.height = rect.nHeight;
+        MEDIA_LOGD("rect nLeft %{public}d nTop %{public}d width %{public}d height %{public}d ",
+            rect.nLeft, rect.nTop, rect.nWidth, rect.nHeight);
+    }
 
     return GST_CODEC_OK;
 }

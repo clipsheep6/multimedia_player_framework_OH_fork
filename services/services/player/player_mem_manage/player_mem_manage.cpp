@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@ namespace OHOS {
 namespace Media {
 constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 60.0;
 constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 120.0;
-constexpr int32_t RESERVE_BACK_GROUND_APP_NUM = 1;
+constexpr int32_t RESERVE_BACK_GROUND_APP_NUM = 0;
 PlayerMemManage& PlayerMemManage::GetInstance()
 {
     static PlayerMemManage instance;
@@ -46,9 +46,11 @@ PlayerMemManage::PlayerMemManage()
 PlayerMemManage::~PlayerMemManage()
 {
     Memory::MemMgrClient::GetInstance().UnsubscribeAppState(*appStateListener_);
-    existTask_ = true;
-    if (isCreateProbeTask_) {
+    if (isAleardyCreateProbeTask_) {
+        isAleardyCreateProbeTask_ = false;
+        existTask_ = true;
         probeTaskQueue_->Stop();
+        probeTaskQueue_ = nullptr;
     }
     playerManage_.clear();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
@@ -150,14 +152,6 @@ bool PlayerMemManage::Init()
     }
     MEDIA_LOGI("Create PlayerMemManage");
     playerManage_.clear();
-    if (isCreateProbeTask_) {
-        probeTaskQueue_ = std::make_unique<TaskQueue>("probeTaskQueue");
-        CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->Start() == MSERR_OK, false, "init task failed");
-        auto task = std::make_shared<TaskHandler<void>>([this] {
-            ProbeTask();
-        });
-        CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->EnqueueTask(task) == MSERR_OK, false, "enque task fail");
-    }
 
     appStateListener_ = std::make_shared<AppStateListener>();
     CHECK_AND_RETURN_RET_LOG(appStateListener_ != nullptr, false, "failed to new AppStateListener");
@@ -170,6 +164,18 @@ bool PlayerMemManage::Init()
 int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const MemManageRecall &memRecallStruct)
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
+
+    if (!isAleardyCreateProbeTask_) {
+        MEDIA_LOGI("Start probe task");
+        isAleardyCreateProbeTask_ = true;
+        existTask_ = false;
+        probeTaskQueue_ = std::make_unique<TaskQueue>("probeTaskQueue");
+        CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->Start() == MSERR_OK, false, "init task failed");
+        auto task = std::make_shared<TaskHandler<void>>([this] {
+            ProbeTask();
+        });
+        CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->EnqueueTask(task) == MSERR_OK, false, "enque task fail");
+    }
 
     MEDIA_LOGI("Register PlayerServerTask uid:%{public}d, pid:%{public}d", uid, pid);
     auto objIter = playerManage_.find(uid);
@@ -223,18 +229,27 @@ int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecall
             FindDeregisterPlayerFromVec(isFind, appPlayerInfo, memRecallStruct);
             if (appPlayerInfo.memRecallStructVec.size() == 0) {
                 Memory::MemMgrClient::GetInstance().DeregisterActiveApps(pid, uid);
-                pidPlayersInfo.erase(pid);
                 MEDIA_LOGI("DeregisterActiveApps pid:%{public}d uid:%{public}d pidPlayersInfo size:%{public}u",
                     pid, uid, static_cast<uint32_t>(pidPlayersInfo.size()));
+                pidPlayersInfo.erase(pid);
                 break;
             }
         }
         if (pidPlayersInfo.size() == 0) {
-            playerManage_.erase(uid);
             MEDIA_LOGI("remove uid:%{public}d playerManage_ size:%{public}u",
                 uid, static_cast<uint32_t>(playerManage_.size()));
+            playerManage_.erase(uid);
             break;
         }
+    }
+
+    if (isAleardyCreateProbeTask_ && playerManage_.size() == 0) {
+        MEDIA_LOGI("Stop probe task");
+        isAleardyCreateProbeTask_ = false;
+        existTask_ = true;
+        probeTaskQueue_->Stop();
+        probeTaskQueue_ = nullptr;
+        playerManage_.clear();
     }
 
     if (!isFind) {
@@ -298,6 +313,7 @@ int32_t PlayerMemManage::HandleOnTrim(Memory::SystemMemoryLevel level)
 
     switch (level) {
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:  // remain 800MB trigger
+            HandleOnTrimLevelLow();
             break;
 
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:  // remain 700MB trigger
@@ -305,6 +321,7 @@ int32_t PlayerMemManage::HandleOnTrim(Memory::SystemMemoryLevel level)
             break;
 
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL: // remain 600MB trigger
+            HandleOnTrimLevelLow();
             break;
 
         default:
