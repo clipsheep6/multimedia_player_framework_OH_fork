@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "config.h"
+#include <gst/gst.h>
 #include <cinttypes>
 #include "gst_sub_sink.h"
 
@@ -30,6 +32,11 @@ struct _GstSubSinkPrivate {
     std::unique_ptr<TaskQueue> timer_queue;
 };
 
+
+static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
 
 static void gst_sub_sink_dispose(GObject *obj);
 static void gst_sub_sink_finalize(GObject *obj);
@@ -51,9 +58,9 @@ static void gst_sub_sink_class_init(GstSubSinkClass *kclass)
     g_return_if_fail(kclass != nullptr);
 
     GObjectClass *gobject_class = G_OBJECT_CLASS(kclass);
-    // GstAppSinkClass *app_sink_class = GST_APP_SINK_CLASS(kclass);
     GstElementClass *element_class = GST_ELEMENT_CLASS(kclass);
     GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS(kclass);
+    gst_element_class_add_static_pad_template(element_class, &g_sinktemplate);
 
     gst_element_class_set_static_metadata(element_class,
         "SubSink", "Sink/Subtitle", " Sub sink", "OpenHarmony");
@@ -167,7 +174,7 @@ static GstStateChangeReturn gst_sub_sink_change_state(GstElement *element, GstSt
     g_return_val_if_fail(priv != nullptr, GST_STATE_CHANGE_FAILURE);
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY:
-            gst_sub_sink_handle_buffer(basesink, nullptr, true, 0ULL);
+            gst_sub_sink_handle_buffer(basesink, nullptr, true);
             priv->timer_queue->Stop();
             GST_INFO_OBJECT(sub_sink, "sub sink has been stopped");
             break;
@@ -207,9 +214,7 @@ static GstFlowReturn gst_sub_sink_render(GstBaseSink * basesink, GstBuffer * buf
     
     g_return_val_if_fail(priv != nullptr, GST_FLOW_ERROR);
     gint64 delay_us = pts - GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
-    // render task
     gst_sub_sink_handle_buffer(basesink, buffer, FALSE, delay_us);
-    // clear task
     gst_sub_sink_handle_buffer(basesink, nullptr, FALSE, pts + duration);
     return GST_FLOW_OK;
 }
@@ -230,11 +235,11 @@ static gboolean gst_sub_sink_event(GstBaseSink *basesink, GstEvent *event)
         case GST_EVENT_FLUSH_START: {
             gst_sub_sink_handle_buffer(basesink, nullptr, TRUE, 0ULL);
             sub_sink->is_flushing = TRUE;
-            break;   
+            break;
         }
         case GST_EVENT_FLUSH_STOP: {
             sub_sink->is_flushing = FALSE;
-            break;   
+            break;
         }
         default:
             break;
@@ -253,3 +258,17 @@ static void gst_sub_sink_finalize(GObject *obj)
     g_return_if_fail(obj != nullptr);
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
+
+static gboolean plugin_init(GstPlugin *plugin)
+{
+    g_return_val_if_fail(plugin != nullptr, FALSE);
+    gboolean ret = gst_element_register(plugin, "subsink", GST_RANK_PRIMARY, GST_TYPE_SUB_SINK);
+    return ret;
+}
+
+GST_PLUGIN_DEFINE(GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    _sub_sink,
+    "GStreamer Subtitle Sink",
+    plugin_init,
+    PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

@@ -28,7 +28,10 @@ public:
     using SinkPtr = GstElement *;
     virtual SinkPtr CreateVideoSink() = 0;
     virtual SinkPtr CreateAudioSink() = 0;
-    virtual SinkPtr CreateSubSink() { return nullptr; }
+    virtual SinkPtr CreateSubSink()
+    {
+        return nullptr;
+    }
     virtual void SetAppInfo(int32_t uid, int32_t pid)
     {
         (void)uid;

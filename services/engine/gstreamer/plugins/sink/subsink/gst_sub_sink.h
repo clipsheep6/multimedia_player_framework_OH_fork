@@ -26,12 +26,12 @@ G_BEGIN_DECLS
 #define GST_TYPE_SUB_SINK (gst_sub_sink_get_type())
 #define GST_SUB_SINK(obj) \
     (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_SUB_SINK, GstSubSink))
-#define GST_SUB_SINK_CLASS(klass) \
+#define GST_SUB_SINK_CLASS(kclass) \
     (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_SUB_SINK, GstSubSinkClass))
 #define GST_IS_SUB_SINK(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_SUB_SINK))
-#define GST_IS_SUB_SINK_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_SUB_SINK))
+#define GST_IS_SUB_SINK_CLASS(kclass) \
+    (G_TYPE_CHECK_CLASS_TYPE((kclass), GST_TYPE_SUB_SINK))
 #define GST_SUB_SINK_CAST(obj) ((GstSubSink*)(obj))
 #define GST_SUB_SINK_GET_CLASS(obj) \
     (G_TYPE_INSTANCE_GET_CLASS((obj), GST_TYPE_SUB_SINK, GstSubSinkClass))
