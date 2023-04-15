@@ -65,7 +65,7 @@ int32_t AVMetadataHelperServiceStub::Init()
 int32_t AVMetadataHelperServiceStub::DestroyStub()
 {
     avMetadateHelperServer_ = nullptr;
-    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVMETADATAHELPER, AsObject());
+    MediaServerManager::GetInstance().DestroyStubObject(StubType::AVMETADATAHELPER, AsObject());
     return MSERR_OK;
 }
 
@@ -216,6 +216,12 @@ int32_t AVMetadataHelperServiceStub::DestroyStub(MessageParcel &data, MessagePar
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperServiceStub::DumpInfo(int32_t fd)
+{
+    (void)fd;
     return MSERR_OK;
 }
 } // namespace Media

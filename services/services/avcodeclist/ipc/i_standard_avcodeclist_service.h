@@ -21,11 +21,12 @@
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 #include "avcodec_info.h"
+#include "i_media_stub.h"
 #include "avsharedmemory.h"
 
 namespace OHOS {
 namespace Media {
-class IStandardAVCodecListService : public IRemoteBroker {
+class IStandardAVCodecListService : public IMediaStub {
 public:
     virtual ~IStandardAVCodecListService() = default;
     virtual std::string FindVideoDecoder(const Format &format) = 0;

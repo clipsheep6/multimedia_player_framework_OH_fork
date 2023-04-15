@@ -89,7 +89,7 @@ int32_t RecorderServiceStub::DestroyStub()
 {
     recorderServer_ = nullptr;
 
-    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::RECORDER, AsObject());
+    MediaServerManager::GetInstance().DestroyStubObject(StubType::RECORDER, AsObject());
     return MSERR_OK;
 }
 

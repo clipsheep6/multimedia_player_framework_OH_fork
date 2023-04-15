@@ -20,11 +20,12 @@
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
+#include "i_media_stub.h"
 #include "player.h"
 
 namespace OHOS {
 namespace Media {
-class IStandardPlayerService : public IRemoteBroker {
+class IStandardPlayerService : public IMediaStub {
 public:
     virtual ~IStandardPlayerService() = default;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;

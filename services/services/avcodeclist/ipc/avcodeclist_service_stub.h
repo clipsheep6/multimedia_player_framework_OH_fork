@@ -38,6 +38,7 @@ public:
     std::string FindAudioEncoder(const Format &format) override;
     std::vector<CapabilityData>  GetCodecCapabilityInfos() override;
     int32_t DestroyStub() override;
+    int32_t DumpInfo(int32_t fd) override;
 
 private:
     AVCodecListServiceStub();

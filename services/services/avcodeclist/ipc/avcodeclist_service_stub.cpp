@@ -63,7 +63,7 @@ int32_t AVCodecListServiceStub::DestroyStub()
 {
     codecListServer_ = nullptr;
 
-    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::AVCODECLIST, AsObject());
+    MediaServerManager::GetInstance().DestroyStubObject(StubType::AVCODECLIST, AsObject());
     return MSERR_OK;
 }
 
@@ -170,6 +170,12 @@ int32_t AVCodecListServiceStub::DestroyStub(MessageParcel &data, MessageParcel &
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
+    return MSERR_OK;
+}
+
+int32_t AVCodecListServiceStub::DumpInfo(int32_t fd)
+{
+    (void)fd;
     return MSERR_OK;
 }
 } // namespace Media

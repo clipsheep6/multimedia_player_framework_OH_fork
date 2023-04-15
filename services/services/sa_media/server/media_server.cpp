@@ -62,31 +62,14 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
 {
     int32_t ret = MediaServiceStub::SetDeathListener(listener);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed set death listener");
-
-    switch (subSystemId) {
-        case MediaSystemAbility::MEDIA_RECORDER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDER);
-        }
-        case MediaSystemAbility::MEDIA_PLAYER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::PLAYER);
-        }
-        case MediaSystemAbility::MEDIA_AVMETADATAHELPER: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVMETADATAHELPER);
-        }
-        case MediaSystemAbility::MEDIA_CODECLIST: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODECLIST);
-        }
-        case MediaSystemAbility::MEDIA_AVCODEC: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::AVCODEC);
-        }
-        case MediaSystemAbility::RECORDER_PROFILES: {
-            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::RECORDERPROFILES);
-        }
-        default: {
-            MEDIA_LOGE("default case, media client need check subSystemId");
-            return nullptr;
+    auto &stubUtils = MediaServerManager::GetInstance().GetServiceStubUtils();
+    for (auto &stubUtil : stubUtils) {
+        if (stubUtil.GetAbility() == subSystemId) {
+            return MediaServerManager::GetInstance().CreateStubObject(stubUtil);
         }
     }
+    MEDIA_LOGE("media client need check subSystemId");
+    return nullptr;
 }
 
 int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)

@@ -16,6 +16,7 @@
 #ifndef I_STANDARD_RECORDER_SERVICE_H
 #define I_STANDARD_RECORDER_SERVICE_H
 
+#include "i_media_stub.h"
 #include "ipc_types.h"
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
@@ -24,7 +25,7 @@
 
 namespace OHOS {
 namespace Media {
-class IStandardRecorderService : public IRemoteBroker {
+class IStandardRecorderService : public IMediaStub {
 public:
     virtual ~IStandardRecorderService() = default;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;

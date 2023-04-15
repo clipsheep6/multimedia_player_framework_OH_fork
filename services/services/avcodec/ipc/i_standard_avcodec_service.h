@@ -20,6 +20,7 @@
 #include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
+#include "i_media_stub.h"
 #include "avcodec_common.h"
 #include "avcodec_info.h"
 #include "avsharedmemory.h"
@@ -27,7 +28,7 @@
 
 namespace OHOS {
 namespace Media {
-class IStandardAVCodecService : public IRemoteBroker {
+class IStandardAVCodecService : public IMediaStub {
 public:
     virtual ~IStandardAVCodecService() = default;
 
