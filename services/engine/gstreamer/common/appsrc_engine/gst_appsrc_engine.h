@@ -18,67 +18,53 @@
 
 #include <vector>
 #include <gst/gst.h>
+#include <vector>
 #include "task_queue.h"
 #include "media_data_source.h"
+#include "appsrc_memory.h"
 #include "gst/app/gstappsrc.h"
 #include "gst_shmemory_wrap_allocator.h"
-#include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
-struct AppsrcMemory {
-    std::shared_ptr<AVSharedMemory> mem;
-    // The position of mem in file
-    uint64_t filePos;
-    // The start position that can be filled
-    uint32_t begin;
-    // The end position that can be filled
-    uint32_t end;
-    // The start position that can be push to appsrc
-    uint32_t availableBegin;
-    uint64_t pushOffset;
-};
-
 class GstAppsrcEngine : public std::enable_shared_from_this<GstAppsrcEngine>, public NoCopyable {
 public:
     using AppsrcErrorNotifier = std::function<void(int32_t, std::string)>;
     static std::shared_ptr<GstAppsrcEngine> Create(const std::shared_ptr<IMediaDataSource> &dataSrc);
     GstAppsrcEngine(const std::shared_ptr<IMediaDataSource> &dataSrc, const int64_t size);
     ~GstAppsrcEngine();
-    int32_t SetAppsrc(GstElement *appSrc);
-    void SetParserParam(GstElement &elem);
-    int32_t SetErrorCallback(AppsrcErrorNotifier notifier);
-    bool IsLiveMode() const;
-    void SetVideoMode();
     int32_t Init();
     int32_t Prepare();
     void Stop();
+    int32_t SetAppsrc(GstElement *appSrc);
+    int32_t SetErrorCallback(AppsrcErrorNotifier notifier);
+    bool IsLiveMode() const;
+    void SetVideoMode();
     void SetPushBufferMode();
     void DecoderSwitch();
     void RecoverParamFromDecSwitch();
 private:
     void SetCallBackForAppSrc();
     void ClearAppsrc();
-    void ResetMemParam();
     void ResetConfig();
     static void NeedData(const GstElement *appSrc, uint32_t size, gpointer self);
-    static gboolean SeekData(const GstElement *appSrc, uint64_t seekPos, gpointer self);
     void NeedDataInner(uint32_t size);
+    static gboolean SeekData(const GstElement *appSrc, uint64_t seekPos, gpointer self);
     gboolean SeekDataInner(uint64_t pos);
+    void PullTask();
     int32_t PullBuffer();
-    int32_t Pusheos();
+    void PushTask();
+    int32_t PushEos();
     int32_t PushBuffer(uint32_t pushSize);
     int32_t PushBufferWithCopy(uint32_t pushSize);
-    void PullTask();
-    void PushTask();
+    int32_t AddSrcMem(uint32_t bufferSize);
     void OnError(int32_t errorCode, std::string message);
-    uint32_t GetFreeSize();
-    uint32_t GetAvailableSize();
-    void PointerMemoryAvailable(uint32_t offset, uint32_t length);
+    void FreePointerMemory(uint32_t offset, uint32_t length, uint32_t subscript);
     bool IsConnectTimeout();
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
     const int64_t size_ = 0;
     std::mutex mutex_;
+    std::mutex freeMutex_;
     std::condition_variable pullCond_;
     std::condition_variable pushCond_;
     GstElement *appSrc_ = nullptr;
@@ -91,15 +77,13 @@ private:
     bool needData_ = false;
     uint32_t needDataSize_ = 0;
     bool isExit_ = false;
-    uint32_t bufferSize_ = 0;
+    std::vector<std::shared_ptr<AppsrcMemory>> appSrcMemVec_;
     std::shared_ptr<AppsrcMemory> appSrcMem_;
     GstShMemoryWrapAllocator *allocator_ = nullptr;
-    bool noFreeBuffer_ = false;
-    bool noAvailableBuffer_ = true;
     int64_t timer_ = 0;
     bool copyMode_ = false;
-    bool isFirstBuffer_ = true;
     bool videoMode_ = false;
+    uint32_t curSubscript_ = 0;
     bool decoderSwitch_ = false;
 };
 } // namespace Media

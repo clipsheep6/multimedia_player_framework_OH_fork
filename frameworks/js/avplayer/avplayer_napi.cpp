@@ -628,6 +628,10 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     promiseCtx->asyncTask = jsPlayer->ReleaseTask();
+    if (jsPlayer->dataSrcCb_ != nullptr) {
+        jsPlayer->dataSrcCb_->ClearCallbackReference();
+        jsPlayer->dataSrcCb_ = nullptr;
+    }
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsRelease", NAPI_AUTO_LENGTH, &resource);

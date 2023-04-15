@@ -22,13 +22,14 @@
 
 struct _GstShMemoryWrapMemory;
 using GstShMemoryWrapMemory = _GstShMemoryWrapMemory;
-using FreeMemory = std::function<void(int32_t, int32_t)>;
+using FreeMemory = std::function<void(uint32_t, uint32_t, uint32_t)>;
 
 struct _GstShMemoryWrapMemory {
     GstMemory parent;
     std::shared_ptr<OHOS::Media::AVSharedMemory> shmemory;
     int32_t offset;
     int32_t length;
+    int32_t sub;
     FreeMemory free_memory;
 };
 

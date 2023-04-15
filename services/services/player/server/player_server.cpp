@@ -464,6 +464,7 @@ int32_t PlayerServer::HandleReset()
     errorCbOnce_ = false;
     disableStoppedCb_ = false;
     isStateChangedBySystem_ = false;
+    disableNextSeekDone_ = false;
     Format format;
     OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
     return MSERR_OK;
