@@ -190,6 +190,28 @@ GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpo
     return sink;
 }
 
+PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubSink()
+{
+    subSink_ = DoCreateSubSink(subCaps_, reinterpret_cast<gpointer>(this));
+    CHECK_AND_RETURN_RET_LOG(subSink_ != nullptr, nullptr, "CreateSubSink failed..");
+    return subSink_;
+}
+
+GstElement *PlayerSinkProvider::DoCreateSubSink(const GstCaps *caps, const gpointer userData)
+{
+    MEDIA_LOGI("CreateSubSink in.");
+    (void)caps;
+    CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
+
+    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subsink", "sink")));
+    CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
+
+    GstSubSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubTitleTextUpdated };
+    gst_sub_sink_set_callback(GST_SUB_SINK(sink), &sinkCallbacks, userData, nullptr);
+
+    return sink;
+}
+
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::GetVideoSink()
 {
     CHECK_AND_RETURN_RET_LOG(videoSink_ != nullptr, nullptr, "videoSink is nullptr");
@@ -214,6 +236,40 @@ void PlayerSinkProvider::OnFirstRenderFrame()
             SetFirstRenderFrameFlag(false);
             MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
         }
+    }
+}
+
+void PlayerSinkProvider::HandleSubTitleBuffer(GstBuffer *sample, std::vector<Format> subtitle)
+{
+    /**
+     * @brief SubtitleDescriptor
+     * isRender: boolean;
+     * textSubInfo?: TextSubDescriptor
+     */
+    (void)sample;
+    subtitle.size();
+}
+
+GstFlowReturn PlayerSinkProvider::SubTitleTextUpdated(GstBuffer *sample, gpointer userData)
+{
+    CHECK_AND_RETURN_RET(userData != nullptr, GST_FLOW_ERROR);
+    PlayerSinkProvider *sinkProvider = reinterpret_cast<PlayerSinkProvider *>(userData);
+    std::vector<Format> subtitle;
+    // fill format
+    sinkProvider->HandleSubTitleBuffer(sample, subtitle);
+    sinkProvider->OnSubTitleTextUpdated(subtitle);
+    return GST_FLOW_OK;
+}
+
+void PlayerSinkProvider::OnSubTitleTextUpdated(const std::vector<Format> &subtitle)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGI("OnSubTitleTextUpdated in");
+    if (notifier_ != nullptr) {
+        MediaTrace trace("PlayerSinkProvider::SubTitleTextUpdated");
+        PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_TEXT_UPDATED, 0, subtitle};
+        notifier_(msg);
+        MEDIA_LOGD("Subtitle text updated");
     }
 }
 
