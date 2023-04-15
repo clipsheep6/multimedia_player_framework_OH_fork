@@ -21,6 +21,9 @@
 #endif
 #ifdef SUPPORT_PLAYER
 #include "player_service_stub.h"
+#ifdef USE_PURGEABLE_MEMORY
+#include "player_service_stub_mem.h"
+#endif
 #endif
 #ifdef SUPPORT_METADATA
 #include "avmetadatahelper_service_stub.h"
@@ -180,7 +183,11 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
             "Please release the applied resources.", playerStubMap_.size());
         return nullptr;
     }
+#ifdef USE_PURGEABLE_MEMORY
+    sptr<PlayerServiceStub> playerStub = PlayerServiceStubMem::Create();
+#else
     sptr<PlayerServiceStub> playerStub = PlayerServiceStub::Create();
+#endif
     if (playerStub == nullptr) {
         MEDIA_LOGE("failed to create PlayerServiceStub");
         return nullptr;

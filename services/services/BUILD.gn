@@ -112,6 +112,9 @@ ohos_shared_library("media_service") {
       sources += [
         "player/player_mem_manage/app_state_listener.cpp",
         "player/player_mem_manage/player_mem_manage.cpp",
+        "player/player_mem_manage/player_server_mem.cpp",
+        "player/player_mem_manage/player_server_mem_state.cpp",
+        "player/player_mem_manage/player_service_stub_mem.cpp",
       ]
     }
   }
