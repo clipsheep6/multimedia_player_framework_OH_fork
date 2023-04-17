@@ -29,7 +29,6 @@ using MediaDescription = Format;
  * @brief Provides the key's definition for MediaDescription.
  */
 namespace MediaDescriptionKey {
-public:
     /**
      * Key for track index, value type is uint32_t
      */
