@@ -23,7 +23,7 @@
 #include "avcodec_info.h"
 #include "avcodec_common.h"
 #include "recorder_profiles.h"
-#include "avcontainer_common.h"
+#include "av_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaEnumNapi"};

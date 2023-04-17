@@ -23,7 +23,7 @@
 #include "surface_utils.h"
 #include "string_ex.h"
 #include "avcodec_info.h"
-#include "avcontainer_common.h"
+#include "av_common.h"
 #ifdef SUPPORT_JSSTACK
 #include "xpower_event_js.h"
 #endif
