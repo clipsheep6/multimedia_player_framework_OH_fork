@@ -19,8 +19,8 @@
 #include <cstdint>
 #include <memory>
 #include <vector>
-#include "av_common.h"
-#include "nocopyable.h"
+#include <map>
+#include <string>
 
 namespace OHOS {
 namespace Media {
@@ -111,7 +111,7 @@ struct ImgSize {
  */
 struct CapabilityData {
     std::string codecName = "";
-    int32_t codecType = AVCODEC_TYPE_NONE;
+    int32_t codecType = AVCodecType::AVCODEC_TYPE_NONE;
     std::string mimeType = "";
     bool isVendor = false;
     Range bitrate;
@@ -134,28 +134,6 @@ struct CapabilityData {
     std::map<int32_t, std::vector<int32_t>> profileLevelsMap;
     std::map<ImgSize, Range> measuredFrameRate;
     bool supportSwapWidthHeight = false;
-};
-
-struct LevelParams {
-    int32_t maxBlockPerFrame = 0;
-    int32_t maxBlockPerSecond = 0;
-    int32_t maxFrameRate = 0;
-    int32_t maxWidth = 0;
-    int32_t maxHeight = 0;
-    LevelParams(const int32_t &blockPerFrame, const int32_t &blockPerSecond,
-                const int32_t &frameRate, const int32_t &width, const int32_t height)
-    {
-        this->maxBlockPerFrame = blockPerFrame;
-        this->maxBlockPerSecond = blockPerSecond;
-        this->maxFrameRate = frameRate;
-        this->maxWidth = width;
-        this->maxHeight = height;
-    }
-    LevelParams(const int32_t &blockPerFrame, const int32_t &blockPerSecond)
-    {
-        this->maxBlockPerFrame = blockPerFrame;
-        this->maxBlockPerSecond = blockPerSecond;
-    }
 };
 
 class __attribute__((visibility("default"))) AVCodecInfo {

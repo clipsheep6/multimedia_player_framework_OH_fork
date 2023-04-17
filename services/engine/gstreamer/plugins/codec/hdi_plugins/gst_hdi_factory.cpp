@@ -35,6 +35,7 @@
 #include "hdi_venc_out_buffer_mgr.h"
 #include "hdi_venc_params_mgr.h"
 #include "avcodec_ability_singleton.h"
+#include "av_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "hdiPluginInit"};

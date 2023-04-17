@@ -25,6 +25,7 @@
 #include "avsharedmemory.h"
 #include "format.h"
 #include "surface.h"
+#include "av_common.h"
 
 namespace OHOS {
 namespace Media {

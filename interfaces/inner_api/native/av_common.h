@@ -15,9 +15,7 @@
 #ifndef AV_COMMOM_H
 #define AV_COMMOM_H
 
-#include <vector>
 #include <string>
-#include "format.h"
 
 namespace OHOS {
 namespace Media {
@@ -48,7 +46,7 @@ enum MediaType : int32_t {
  * @since 3.1
  * @version 3.1
  */
-enum VideoPixelFormat {
+enum VideoPixelFormat : int32_t {
     /**
      * yuv 420 planar.
      */
@@ -69,45 +67,6 @@ enum VideoPixelFormat {
      * RGBA.
      */
     RGBA = 5,
-};
-
-/**
- * @brief the struct of geolocation
- *
- * @param latitude float: latitude in degrees. Its value must be in the range [-90, 90].
- * @param longitude float: longitude in degrees. Its value must be in the range [-180, 180].
- * @since  3.1
- * @version 3.1
- */
-struct Location {
-    float latitude = 0;
-    float longitude = 0;
-};
-
-/**
- * @brief Enumerates the seek mode.
- */
-enum AVSeekMode : uint8_t {
-    /**
-     * @brief this mode is used to seek to a key frame that is located right or before at
-     * the given timestamp.
-     */
-    AV_SEEK_PREV_SYNC = 0,
-    /**
-     * @brief this mode is used to seek to a key frame that is located right or after at
-     * the given timestamp.
-     */
-    AV_SEEK_NEXT_SYNC = 1,
-    /**
-     * @brief this mode is used to seek to a key frame that is located right or closest at
-     * the given timestamp.
-     */
-    AV_SEEK_CLOSEST_SYNC = 2,
-    /**
-     * @brief this mode is used to seek to a frame that is located right or closest at
-     * the given timestamp.
-     */
-    AV_SEEK_CLOSEST = 3,
 };
 
 /**

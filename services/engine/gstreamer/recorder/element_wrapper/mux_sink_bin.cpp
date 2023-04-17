@@ -23,6 +23,7 @@
 #include "media_log.h"
 #include "recorder_private_param.h"
 #include "scope_guard.h"
+#include "av_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MuxSinkBin"};

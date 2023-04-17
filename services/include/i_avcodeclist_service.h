@@ -18,6 +18,7 @@
 
 #include "avcodec_info.h"
 #include "avsharedmemory.h"
+#include "format.h"
 
 namespace OHOS {
 namespace Media {

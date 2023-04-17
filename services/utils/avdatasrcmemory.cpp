@@ -47,11 +47,7 @@ std::shared_ptr<AVSharedMemory> AVDataSrcMemory::CreateFromRemote(
 {
     std::shared_ptr<AVDataSrcMemory> memory = std::make_shared<AVSharedMemoryBaseImpl>(fd, size, flags, name);
     int32_t ret = memory->Init();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("Create avsharedmemory failed, ret = %{public}d", ret);
-        return nullptr;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to create AVDataSrcmemory");
     return memory;
 }
 
@@ -60,7 +56,6 @@ AVDataSrcMemory::AVDataSrcMemory(int32_t size, uint32_t flags, const std::string
 {
     MEDIA_LOGD("enter ctor, instance: 0x%{public}06" PRIXPTR ", name = %{public}s",
                FAKE_POINTER(this), name.c_str());
-    offset_ = 0;
 }
 
 AVDataSrcMemory::AVDataSrcMemory(int32_t fd, int32_t size, uint32_t flags, const std::string &name)
@@ -68,7 +63,6 @@ AVDataSrcMemory::AVDataSrcMemory(int32_t fd, int32_t size, uint32_t flags, const
 {
     MEDIA_LOGD("enter ctor, instance: 0x%{public}06" PRIXPTR ", name = %{public}s",
                FAKE_POINTER(this), name.c_str());
-    offset_ = 0;
 }
 
 AVDataSrcMemory::~AVDataSrcMemory()

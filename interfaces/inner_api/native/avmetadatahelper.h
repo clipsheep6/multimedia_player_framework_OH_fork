@@ -20,7 +20,6 @@
 #include <unordered_map>
 #include <memory>
 #include "pixel_map.h"
-#include "nocopyable.h"
 #include "avsharedmemory.h"
 
 namespace OHOS {

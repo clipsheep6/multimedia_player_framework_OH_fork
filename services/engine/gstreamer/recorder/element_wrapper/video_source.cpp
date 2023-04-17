@@ -22,6 +22,7 @@
 #include "common_utils.h"
 #include "avcodec_ability_singleton.h"
 #include "avcodeclist_engine_gst_impl.h"
+#include "av_common.h"
 
 namespace {
 using namespace OHOS::Media;
