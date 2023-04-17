@@ -183,11 +183,7 @@ sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
             "Please release the applied resources.", playerStubMap_.size());
         return nullptr;
     }
-#ifdef USE_PURGEABLE_MEMORY
-    sptr<PlayerServiceStub> playerStub = PlayerServiceStubMem::Create();
-#else
     sptr<PlayerServiceStub> playerStub = PlayerServiceStub::Create();
-#endif
     if (playerStub == nullptr) {
         MEDIA_LOGE("failed to create PlayerServiceStub");
         return nullptr;
