@@ -611,8 +611,8 @@ declare namespace media {
     off(type: 'audioInterrupt'): void;
 
     /**
-     * Register or unregister listens for available audio scene modes.
-     * This event will be reported after the {@link #prepare} called.
+     * Register or unregister listens for available audio scene modes. Refer to
+     * {@link #audio.AudioSceneEffectInfoArray}. This event will be reported after the {@link #prepare} called.
      * @since 10
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      * @param type Type of the playback event to listen for.
