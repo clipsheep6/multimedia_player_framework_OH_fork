@@ -89,6 +89,7 @@ ohos_static_library("media_engine_gst_player") {
     "//foundation/graphic/graphic_2d/utils:sync_fence",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/subsink:gst_sub_sink_base",
     "//third_party/glib:glib",
     "//third_party/glib:gobject",
     "//third_party/gstreamer/gstplugins_base:gstvideo",

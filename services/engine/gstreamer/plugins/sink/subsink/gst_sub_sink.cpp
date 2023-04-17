@@ -96,7 +96,7 @@ static void gst_sub_sink_init(GstSubSink *sub_sink)
 }
 
 void gst_sub_sink_set_callback(GstSubSink *sub_sink, GstSubSinkCallbacks *callbacks,
-                               gpointer user_data, GDestroyNotify notify)
+    gpointer user_data, GDestroyNotify notify)
 {
     g_return_if_fail(GST_IS_SUB_SINK(sub_sink));
     g_return_if_fail(callbacks != nullptr);
