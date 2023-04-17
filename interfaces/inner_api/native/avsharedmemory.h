@@ -26,7 +26,7 @@ namespace Media {
  * mechanism. For those platforms that do not support multi-process, it may
  * simply encapsulate ordinary memory blocks, not really multi-process shareable memory.
  */
-class __attribute__((visibility("default"))) AVSharedMemory {
+class AVSharedMemory {
 public:
     virtual ~AVSharedMemory() = default;
 

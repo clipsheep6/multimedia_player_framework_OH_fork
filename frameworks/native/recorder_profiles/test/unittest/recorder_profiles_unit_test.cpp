@@ -15,7 +15,6 @@
 
 #include "recorder_profiles_unit_test.h"
 #include "avcodec_info.h"
-#include "avcontainer_common.h"
 #include "media_errors.h"
 
 using namespace std;
