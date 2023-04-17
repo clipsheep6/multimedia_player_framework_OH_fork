@@ -377,48 +377,6 @@ declare namespace media {
     getTrackDescription() : Promise<Array<MediaDescription>>;
 
     /**
-     * Get information of audio scene effects.
-     * @param callback Callback used to return the information of audio scene effects,
-     * refer to {@link #audio.AudioSceneEffectMode}.
-     * @since 10
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    getAudioEffectInfoArray(callback: AsyncCallback<audio.AudioSceneEffectInfoArray>): void;
-    /**
-     * Get information of audio scene effects.
-     * @returns Promise used to return the information of audio scene effects,
-     * refer to {@link #audio.AudioSceneEffectMode}.
-     * @since 10
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    getAudioEffectInfoArray(): Promise<audio.AudioSceneEffectInfoArray>;
-
-    /**
-     * Obtains the current audio scene effect mode. This method uses an asynchronous callback to
-     * return the current audio scene effect mode. Refer to {@link #audio.AudioSceneEffectMode}.
-     * @param callback Callback used to return the current audio scene effect mode.
-     * @since 10
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    getAudioEffectMode(callback: AsyncCallback<audio.AudioSceneEffectMode>): void;
-    /**
-     * Obtains the current audio scene effect mode. This method uses a promise to
-     * return the current audio scene effect mode. Refer to {@link #audio.AudioSceneEffectMode}.
-     * @returns Promise used to return the current audio scene effect mode.
-     * @since 10
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     */
-    getAudioEffectMode(): Promise<audio.AudioSceneEffectMode>;
-
-    /**
-     * Sets the current audio scene effect mode.
-     * @since 10
-     * @syscap SystemCapability.Multimedia.Media.AVPlayer
-     * @param mode Refer to {@link #audio.AudioSceneEffectMode}.
-     */
-    setAudioEffectMode(mode: audio.AudioSceneEffectMode): void;
-
-    /**
      * Media URI. Mainstream media formats are supported.
      * Network:http://xxx
      * @since 9
@@ -464,6 +422,14 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.AVPlayer
      */
     audioRendererInfo ?: audio.AudioRendererInfo;
+
+    /**
+     * Obtains the current audio scene effect mode, refer to {@link #audio.AudioSceneEffectMode}.
+     * Read or write it after the {@link #on('availableAudioEffects')} event.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    audioSenceEffectMode ?: audio.AudioSceneEffectMode;
 
     /**
      * Current playback position.
@@ -643,6 +609,18 @@ declare namespace media {
      */
     on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
     off(type: 'audioInterrupt'): void;
+
+    /**
+     * Register or unregister listens for available audio scene modes.
+     * This event will be reported after the {@link #prepare} called.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     * @param type Type of the playback event to listen for.
+     * @param callback Callback used to listen for the playback event return available audio scene modes.
+     */
+     on(type: 'availableAudioEffects', callback: (audioEffects: audio.AudioSceneEffectInfoArray) => void): void;
+     off(type: 'availableAudioEffects'): void;
+
     /**
      * Register or unregister listens for audio scene effect change events.
      * @since 10
