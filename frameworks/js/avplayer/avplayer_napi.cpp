@@ -501,8 +501,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
     {
         std::unique_lock<std::mutex> lock(taskMutex_);
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
-        stateChangeCond_.notify_all();
         stopWait_ = true;
+        stateChangeCond_.notify_all();
     }
     return task;
 }
@@ -575,8 +575,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
         std::unique_lock<std::mutex> lock(taskMutex_);
         isReleased_.store(true);
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
-        stateChangeCond_.notify_all();
         stopWait_ = true;
+        stateChangeCond_.notify_all();
     }
     return task;
 }
@@ -1688,8 +1688,8 @@ void AVPlayerNapi::NotifyState(PlayerStates state)
     if (state_ != state) {
         state_ = state;
         MEDIA_LOGI("notify %{public}s", GetCurrentState().c_str());
-        stateChangeCond_.notify_all();
         stopWait_ = true;
+        stateChangeCond_.notify_all();
     }
 }
 
