@@ -1281,6 +1281,7 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
     GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change start");
     g_return_val_if_fail(self != nullptr, GST_FLOW_ERROR);
     g_return_val_if_fail(self->decoder != nullptr, GST_FLOW_ERROR);
+    GST_VIDEO_DECODER_STREAM_LOCK(self);
     gint ret = self->decoder->ActiveBufferMgr(GST_CODEC_OUTPUT, false);
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "ActiveBufferMgr", TRUE), GST_FLOW_ERROR);
     ret = self->decoder->FreeOutputBuffers();
@@ -1294,6 +1295,7 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
         gst_vdec_base_post_resolution_changed_message(self);
         self->resolution_changed = TRUE;
     }
+    GST_VIDEO_DECODER_STREAM_UNLOCK(self);
     if (format_change || (buffer_cnt_change && self->memtype != GST_MEMTYPE_SURFACE)) {
         g_return_val_if_fail(gst_vdec_base_set_outstate(self), GST_FLOW_ERROR);
         g_return_val_if_fail(gst_video_decoder_negotiate(GST_VIDEO_DECODER(self)), GST_FLOW_ERROR);
@@ -1301,10 +1303,14 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
         g_object_set(self->outpool, "dynamic-buffer-num", self->out_buffer_cnt, nullptr);
     }
 
+    GST_VIDEO_DECODER_STREAM_LOCK(self);
     ret = self->decoder->ActiveBufferMgr(GST_CODEC_OUTPUT, true);
+    GST_VIDEO_DECODER_STREAM_UNLOCK(self);
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "ActiveBufferMgr", TRUE), GST_FLOW_ERROR);
     g_return_val_if_fail(gst_vdec_base_allocate_out_buffers(self), GST_FLOW_ERROR);
+    GST_VIDEO_DECODER_STREAM_LOCK(self);
     ret = self->decoder->Start();
+    GST_VIDEO_DECODER_STREAM_UNLOCK(self);
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "Start", TRUE), GST_FLOW_ERROR);
     GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change end");
     return GST_FLOW_OK;
