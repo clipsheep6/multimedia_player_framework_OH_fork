@@ -191,7 +191,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Prepare Task In");
         std::unique_lock<std::mutex> lock(taskMutex_);
-
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_INITIALIZED ||
             state == AVPlayerState::STATE_STOPPED) {
@@ -200,13 +199,9 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
                 auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                 return TaskRet(errCode, "failed to prepare");
             }
-            LISTENER(preparingCond_.wait(lock, [this]() {
-                auto state = GetCurrentState();
-                return (state == AVPlayerState::STATE_PREPARED ||
-                        state == AVPlayerState::STATE_ERROR ||
-                        state == AVPlayerState::STATE_IDLE ||
-                        state == AVPlayerState::STATE_RELEASED);
-                }), "PrepareTask", false)
+            stopWait_ = false;
+            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PrepareTask", false)
+
             if (GetCurrentState() == AVPlayerState::STATE_ERROR) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                     "failed to prepare, avplayer enter error status, please check error callback messages!");
@@ -272,7 +267,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Play Task In");
         std::unique_lock<std::mutex> lock(taskMutex_);
-
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_PREPARED ||
             state == AVPlayerState::STATE_PAUSED ||
@@ -282,14 +276,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
                 auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                 return TaskRet(errCode, "failed to Play");
             }
-            LISTENER(stateChangeCond_.wait(lock, [this]() {
-                auto state = GetCurrentState();
-                return (state == AVPlayerState::STATE_PLAYING ||
-                        state == AVPlayerState::STATE_COMPLETED ||
-                        state == AVPlayerState::STATE_ERROR ||
-                        state == AVPlayerState::STATE_IDLE ||
-                        state == AVPlayerState::STATE_RELEASED);
-                }), "PlayTask", false)
+            stopWait_ = false;
+            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PlayTask", false)
         } else if (state == AVPlayerState::STATE_PLAYING) {
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
@@ -356,7 +344,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Pause Task In");
         std::unique_lock<std::mutex> lock(taskMutex_);
-
         auto state = GetCurrentState();
         if (state == AVPlayerState::STATE_PLAYING) {
             int32_t ret = player_->Pause();
@@ -364,14 +351,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
                 auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                 return TaskRet(errCode, "failed to Pause");
             }
-            LISTENER(stateChangeCond_.wait(lock, [this]() {
-                auto state = GetCurrentState();
-                return (state == AVPlayerState::STATE_PAUSED ||
-                        state == AVPlayerState::STATE_COMPLETED ||
-                        state == AVPlayerState::STATE_ERROR ||
-                        state == AVPlayerState::STATE_IDLE ||
-                        state == AVPlayerState::STATE_RELEASED);
-                }), "PauseTask", false)
+            stopWait_ = false;
+            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "PauseTask", false)
         } else if (state == AVPlayerState::STATE_PAUSED) {
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
@@ -431,20 +412,14 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
         MEDIA_LOGI("Stop Task In");
         std::unique_lock<std::mutex> lock(taskMutex_);
-
         if (IsControllable()) {
             int32_t ret = player_->Stop();
             if (ret != MSERR_OK) {
                 auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                 return TaskRet(errCode, "failed to Stop");
             }
-            LISTENER(stateChangeCond_.wait(lock, [this]() {
-                auto state = GetCurrentState();
-                return (state == AVPlayerState::STATE_STOPPED ||
-                        state == AVPlayerState::STATE_ERROR ||
-                        state == AVPlayerState::STATE_IDLE ||
-                        state == AVPlayerState::STATE_RELEASED);
-                }), "StopTask", false)
+            stopWait_ = false;
+            LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "StopTask", false)
         } else if (GetCurrentState() == AVPlayerState::STATE_STOPPED) {
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
@@ -520,10 +495,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
                     auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
                     return TaskRet(errCode, "failed to Reset");
                 }
-                LISTENER(resettingCond_.wait(lock, [this]() {
-                    auto state = GetCurrentState();
-                    return state == AVPlayerState::STATE_IDLE || state == AVPlayerState::STATE_RELEASED;
-                    }), "ResetTask", false)
+                stopWait_ = false;
+                LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "ResetTask", false)
             }
         }
         MEDIA_LOGI("Reset Task Out");
@@ -533,8 +506,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
     {
         std::unique_lock<std::mutex> lock(taskMutex_);
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
-        preparingCond_.notify_all(); // stop prepare
-        stateChangeCond_.notify_all(); // stop play/pause/stop
+        stopWait_ = true;
+        stateChangeCond_.notify_all();
     }
     return task;
 }
@@ -607,9 +580,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
         std::unique_lock<std::mutex> lock(taskMutex_);
         isReleased_.store(true);
         (void)taskQue_->EnqueueTask(task, true); // CancelNotExecutedTask
-        preparingCond_.notify_all(); // stop wait prepare
-        resettingCond_.notify_all(); // stop wait reset
-        stateChangeCond_.notify_all(); // stop wait play/pause/stop
+        stopWait_ = true;
+        stateChangeCond_.notify_all();
     }
     return task;
 }
@@ -1722,28 +1694,9 @@ void AVPlayerNapi::NotifyState(PlayerStates state)
     std::lock_guard<std::mutex> lock(taskMutex_);
     if (state_ != state) {
         state_ = state;
-        MEDIA_LOGI("notify %{public}s OK", GetCurrentState().c_str());
-        switch (state_) {
-            case PLAYER_PREPARED:
-                preparingCond_.notify_all();
-                break;
-            case PLAYER_IDLE:
-                resettingCond_.notify_all();
-                break;
-            case PLAYER_STARTED:
-            case PLAYER_PAUSED:
-            case PLAYER_STOPPED:
-            case PLAYER_PLAYBACK_COMPLETE:
-                stateChangeCond_.notify_all();
-                break;
-            case PLAYER_STATE_ERROR:
-                preparingCond_.notify_all();
-                resettingCond_.notify_all();
-                stateChangeCond_.notify_all();
-                break;
-            default:
-                break;
-        }
+        MEDIA_LOGI("notify %{public}s", GetCurrentState().c_str());
+        stopWait_ = true;
+        stateChangeCond_.notify_all();
     }
 }
 
