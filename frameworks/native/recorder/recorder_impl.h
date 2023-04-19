@@ -58,6 +58,7 @@ public:
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
     int32_t Init();
+    std::shared_ptr<CamcorderProfile> GetVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel) override;
 
 private:
     std::shared_ptr<IRecorderService> recorderService_ = nullptr;

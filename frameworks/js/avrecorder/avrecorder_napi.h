@@ -46,6 +46,8 @@ const std::string RESUME = "Resume";
 const std::string STOP = "Stop";
 const std::string RESET = "Reset";
 const std::string RELEASE = "Release";
+const std::string GETVIDEORECORDERPROFILE = "GetVideoRecorderProfile";
+const std::string SETAVRECORDERCONFIG = "SetAVRecorderConfig";
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -163,10 +165,18 @@ private:
      */
     static napi_value JsGetState(napi_env env, napi_callback_info info);
 
+    static napi_value JsGetVideoRecorderProfile(napi_env env, napi_callback_info info);
+
+    static napi_value JsSetAVRecorderConfig(napi_env env, napi_callback_info info);
+
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVRecorderNapi *avnapi, const std::string &opt);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetVideoRecorderProfileTask(
+        std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static std::shared_ptr<TaskHandler<RetInfo>> SetAVRecorderConfigTask(
+        std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt);
 
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
@@ -186,6 +196,7 @@ private:
     RetInfo Stop();
     RetInfo Reset();
     RetInfo Release();
+    RetInfo GetVideoRecorderProfile();
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void StateCallback(const std::string &state);
@@ -214,6 +225,8 @@ private:
     int32_t audioSourceID_ = -1;
     bool withVideo_ = false;
     bool getVideoInputSurface_ = false;
+    int32_t sourceId_ = -1;
+    int32_t qualityLevel_ = -1;
 };
 
 struct AVRecorderAsyncContext : public MediaAsyncContext {
@@ -227,6 +240,23 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     std::shared_ptr<AVRecorderConfig> config_ = nullptr;
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
+    std::shared_ptr<AVRecorderProfile> profile_ = nullptr;
+};
+
+class MediaJsAVRecorderProfile : public MediaJsResult {
+public:
+    explicit MediaJsAVRecorderProfile(std::shared_ptr<AVRecorderProfile> value)
+        : value_(value)
+    {
+    }
+    ~MediaJsAVRecorderProfile() = default;
+    napi_status GetJsResult(napi_env env, napi_value &result) override;
+    int32_t SetAudioCodecFormat(AudioCodecFormat &codecFormat, std::string &mime);
+    int32_t SetVideoCodecFormat(VideoCodecFormat &codecFormat, std::string &mime);
+    int32_t SetFileFormat(OutputFormatType &type, std::string &extension);
+
+private:
+    std::shared_ptr<AVRecorderProfile> value_;
 };
 } // namespace Media
 } // namespace OHOS
