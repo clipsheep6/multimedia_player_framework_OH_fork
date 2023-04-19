@@ -21,9 +21,18 @@
 #include "format.h"
 #include "surface.h"
 #include "av_common.h"
+#include "recorder_profiles.h"
 
 namespace OHOS {
 namespace Media {
+constexpr int32_t DEFAULT_AUDIO_BIT_RATE_VALUE = 48000;
+constexpr int32_t DEFAULT_AUDIO_CHANNELS_VALUE = 2;
+constexpr int32_t DEFAULT_AUDIO_SAMPLE_RATE_VALUE = 48000;
+constexpr int32_t DEFAULT_DURATION_VALUE = 5;
+constexpr int32_t DEFAULT_VIDEO_BIT_RATE_VALUE = 48000;
+constexpr int32_t DEFAULT_FRAME_HEIGHT_VALUE = -1;
+constexpr int32_t DEFAULT_FRAME_WIDTH_VALUE = -1;
+constexpr int32_t DEFAULT_FRAME_RATE_VALUE = 30;
 /**
  * @brief Enumerates video source types.
  *
@@ -133,6 +142,20 @@ enum FileSplitType : int32_t {
     FILE_SPLIT_NORMAL,
     /** Invalid value */
     FILE_SPLIT_BUTT,
+};
+
+struct CamcorderProfile {
+    int32_t audioBitrate = DEFAULT_AUDIO_BIT_RATE_VALUE;
+    int32_t audioChannels = DEFAULT_AUDIO_CHANNELS_VALUE;
+    AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_DEFAULT;
+    int32_t audioSampleRate = DEFAULT_AUDIO_SAMPLE_RATE_VALUE;
+    int32_t duration = DEFAULT_DURATION_VALUE;
+    OutputFormatType outputFormat = OutputFormatType::FORMAT_DEFAULT;
+    int32_t videoBitrate = DEFAULT_VIDEO_BIT_RATE_VALUE;
+    VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
+    int32_t videoFrameWidth = DEFAULT_FRAME_HEIGHT_VALUE;
+    int32_t videoFrameHeight = DEFAULT_FRAME_WIDTH_VALUE;
+    int32_t videoFrameRate = DEFAULT_FRAME_RATE_VALUE;
 };
 
 /**
@@ -657,6 +680,19 @@ public:
      * @version 1.0
      */
     virtual int32_t SetParameter(int32_t sourceId, const Format &format) = 0;
+
+    /**
+     * @brief Get video recorder profile, for example, {@link CamcorderProfile}.
+     *
+     * This function must be called before {@link Prepare}.
+     *
+     * @param sourceId Indicates the camera source ID. The value <b>-1</b> indicates an invalid ID and the setting fails.
+     * @param qualityLevel Indicates the quality level.
+     * @return Returns {@link CamcorderProfile} if the getting is successful; return an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual std::shared_ptr<CamcorderProfile> GetVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel) = 0;
 };
 
 class __attribute__((visibility("default"))) RecorderFactory {
