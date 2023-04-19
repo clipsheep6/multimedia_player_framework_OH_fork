@@ -47,6 +47,10 @@ struct MediaDataSourceJsCallback {
     bool isExit_ = false;
 };
 
+struct MediaDataSourceJsCallbackWraper {
+    std::weak_ptr<MediaDataSourceJsCallback> cb_;
+};
+
 class MediaDataSourceCallback : public IMediaDataSource, public NoCopyable {
 public:
     MediaDataSourceCallback(napi_env env, int64_t fileSize);

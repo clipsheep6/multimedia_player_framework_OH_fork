@@ -963,6 +963,7 @@ void PlayBinCtrlerBase::OnSourceSetup(const GstElement *playbin, GstElement *src
 
     std::unique_lock<std::mutex> appsrcLock(appsrcMutex_);
     if ((strstr(eleTypeName, "GstAppSrc") != nullptr) && (playbinCtrl->appsrcWrap_ != nullptr)) {
+        g_object_set(src, "datasrc-mode", true, nullptr);
         (void)playbinCtrl->appsrcWrap_->SetAppsrc(src);
     } else if (strstr(eleTypeName, "GstCurlHttpSrc") != nullptr) {
         g_object_set(src, "ssl-ca-file", "/etc/ssl/certs/cacert.pem", nullptr);
