@@ -1680,9 +1680,11 @@ static gboolean gst_vdec_base_event(GstVideoDecoder *decoder, GstEvent *event)
                 gst_buffer_pool_set_active(self->outpool, FALSE);
                 gst_vdec_base_set_flushing(self, TRUE);
                 self->decoder_start = FALSE;
+                g_mutex_lock(&self->format_change_lock);
                 if (self->decoder != nullptr) {
                     (void)self->decoder->Flush(GST_CODEC_ALL);
                 }
+                g_mutex_unlock(&self->format_change_lock);
             }
             break;
         case GST_EVENT_FLUSH_STOP:
