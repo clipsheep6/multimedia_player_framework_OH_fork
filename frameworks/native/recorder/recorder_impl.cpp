@@ -18,6 +18,7 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "avcontainer_common.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderImpl"};
@@ -242,6 +243,50 @@ int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
 {
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist..");
     return recorderService_->SetParameter(sourceId, format);
+}
+
+std::shared_ptr<CamcorderProfile> RecorderImpl::GetVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel)
+{
+    CHECK_AND_RETURN_RET_LOG(sourceId >= 0 && ((qualityLevel >= RECORDER_QUALITY_LOW &&
+        qualityLevel <= RECORDER_QUALITY_2160P) || (qualityLevel >= RECORDER_QUALITY_TIME_LAPSE_LOW &&
+        qualityLevel <= RECORDER_QUALITY_TIME_LAPSE_2160P) || (qualityLevel >= RECORDER_QUALITY_HIGH_SPEED_LOW &&
+        qualityLevel <= RECORDER_QUALITY_HIGH_SPEED_1080P)), nullptr, "sourceId or qualityLevel is null");
+
+    std::shared_ptr<CamcorderProfile> camcorderProfile = std::make_shared<CamcorderProfile>();
+
+    std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
+        OHOS::Media::RecorderProfilesFactory::CreateRecorderProfiles().GetVideoRecorderProfile(sourceId, qualityLevel);
+    CHECK_AND_RETURN_RET_LOG(videoRecorderProfile != nullptr, nullptr, "failed to get VideoRecorderProfile");
+
+    std::string containerFormatType = videoRecorderProfile->containerFormatType;
+    if (containerFormatType.compare(ContainerFormatType::CFT_MPEG_4) == 0) {
+        camcorderProfile->outputFormat = OutputFormatType::FORMAT_MPEG_4;
+    } else if (containerFormatType.compare(ContainerFormatType::CFT_MPEG_4A) == 0) {
+        camcorderProfile->outputFormat = OutputFormatType::FORMAT_M4A;
+    }
+
+    std::string audioCodec = videoRecorderProfile->audioCodec;
+    if (audioCodec.compare(CodecMimeType::AUDIO_AAC) == 0) {
+        camcorderProfile->audioCodecFormat = AudioCodecFormat::AAC_LC;
+    }
+
+    std::string videoCodec = videoRecorderProfile->videoCodec;
+    if (videoCodec.compare(CodecMimeType::VIDEO_MPEG4) == 0) {
+        camcorderProfile->videoCodecFormat = VideoCodecFormat::MPEG4;
+    } else if (videoCodec.compare(CodecMimeType::VIDEO_AVC) == 0) {
+        camcorderProfile->videoCodecFormat = VideoCodecFormat::H264;
+    }
+
+    camcorderProfile->audioBitrate = videoRecorderProfile->audioBitrate;
+    camcorderProfile->audioChannels = videoRecorderProfile->audioChannels;
+    camcorderProfile->audioSampleRate = videoRecorderProfile->audioSampleRate;
+    camcorderProfile->duration = videoRecorderProfile->durationTime;
+    camcorderProfile->videoBitrate = videoRecorderProfile->videoBitrate;
+    camcorderProfile->videoFrameWidth = videoRecorderProfile->videoFrameWidth;
+    camcorderProfile->videoFrameHeight = videoRecorderProfile->videoFrameHeight;
+    camcorderProfile->videoFrameRate = videoRecorderProfile->videoFrameRate;
+
+    return camcorderProfile;
 }
 } // namespace Media
 } // namespace OHOS
