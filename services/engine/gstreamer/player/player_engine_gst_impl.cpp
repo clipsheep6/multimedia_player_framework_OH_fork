@@ -901,10 +901,6 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
             codecCtrl_.SetCapsFixErrorCb(notifier);
         }
     }
-
-    if (appsrcWrap_ && metaStr.find("Codec/Parser") != std::string::npos) {
-        appsrcWrap_->SetParserParam(elem);
-    }
 }
 
 void PlayerEngineGstImpl::OnNotifyElemUnSetup(GstElement &elem)

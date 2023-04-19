@@ -85,7 +85,10 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
     CHECK_AND_RETURN_RET_LOG(work != nullptr, 0, "Failed to new uv_work_t");
     ON_SCOPE_EXIT(1) { delete work; };
 
-    work->data = reinterpret_cast<void *>(cb_.get());
+    MediaDataSourceJsCallbackWraper *cbWrap = new(std::nothrow) MediaDataSourceJsCallbackWraper();
+    CHECK_AND_RETURN_RET_LOG(cbWrap != nullptr, 0, "Failed to new MediaDataSourceJsCallbackWraper");
+    cbWrap->cb_ = cb_;
+    work->data = reinterpret_cast<void *>(cbWrap);
     // async callback, jsWork and jsWork->data should be heap object.
     int ret = UvWork(loop, work);
     CHECK_AND_RETURN_RET_LOG(ret == 0, SOURCE_ERROR_IO, "Failed to execute uv queue work");
@@ -100,7 +103,9 @@ int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
     return uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr && work->data != nullptr, "work is nullptr");
-        MediaDataSourceJsCallback *event = reinterpret_cast<MediaDataSourceJsCallback *>(work->data);
+        MediaDataSourceJsCallbackWraper *wrap = reinterpret_cast<MediaDataSourceJsCallbackWraper *>(work->data);
+        std::shared_ptr<MediaDataSourceJsCallback> event = wrap->cb_.lock();
+        CHECK_AND_RETURN_LOG(event != nullptr, "MediaDataSourceJsCallback is nullptr");
         MEDIA_LOGD("length is %{public}u", event->length_);
         do {
             CHECK_AND_BREAK(status != UV_ECANCELED);

@@ -30,7 +30,7 @@ GstShMemoryWrapAllocator *gst_shmemory_wrap_allocator_new(void)
 }
 
 GstMemory *gst_shmemory_wrap(GstAllocator *allocator, std::shared_ptr<OHOS::Media::AVSharedMemory> shmem,
-    int32_t offset, int32_t length, FreeMemory free_memory)
+    int32_t offset, int32_t length, int32_t sub, FreeMemory free_memory)
 {
     g_return_val_if_fail(allocator != nullptr, nullptr);
     g_return_val_if_fail(shmem != nullptr, nullptr);
@@ -45,6 +45,7 @@ GstMemory *gst_shmemory_wrap(GstAllocator *allocator, std::shared_ptr<OHOS::Medi
     memory->shmemory = shmem;
     memory->offset = offset;
     memory->length = length;
+    memory->sub = sub;
     memory->free_memory = free_memory;
     GST_DEBUG("wrap memory for size: %" PRIu64 ", addr: 0x%06" PRIXPTR "",
         static_cast<uint64_t>(length), FAKE_POINTER(
@@ -74,7 +75,7 @@ static void gst_shmemory_wrap_allocator_free(GstAllocator *allocator, GstMemory 
 
     shWrapMem->shmemory = nullptr;
     if (shWrapMem->free_memory) {
-        shWrapMem->free_memory(shWrapMem->offset, shWrapMem->length);
+        shWrapMem->free_memory(shWrapMem->offset, shWrapMem->length, shWrapMem->sub);
     }
     g_slice_free(GstShMemoryWrapMemory, shWrapMem);
 }

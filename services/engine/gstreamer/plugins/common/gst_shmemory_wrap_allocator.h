@@ -48,7 +48,8 @@ GType gst_shmemory_wrap_allocator_get_type(void);
 
 __attribute__((visibility("default"))) GstShMemoryWrapAllocator *gst_shmemory_wrap_allocator_new(void);
 __attribute__((visibility("default"))) GstMemory *gst_shmemory_wrap(GstAllocator *allocator,
-    std::shared_ptr<OHOS::Media::AVSharedMemory> shmem, int32_t offset, int32_t length, FreeMemory free_memory);
+    std::shared_ptr<OHOS::Media::AVSharedMemory> shmem, int32_t offset,
+    int32_t length, int32_t sub, FreeMemory free_memory);
 
 G_END_DECLS
 
