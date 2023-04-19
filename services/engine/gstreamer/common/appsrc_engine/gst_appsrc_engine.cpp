@@ -136,6 +136,10 @@ void GstAppsrcEngine::Stop()
 int32_t GstAppsrcEngine::SetAppsrc(GstElement *appSrc)
 {
     MEDIA_LOGD("SetAppsrc in");
+    if (appSrc_) {
+        gst_object_unref(appSrc_);
+        appSrc_ = nullptr;
+    }
     appSrc_ = static_cast<GstElement *>(gst_object_ref(appSrc));
     CHECK_AND_RETURN_RET_LOG(appSrc_ != nullptr, MSERR_INVALID_VAL, "set appsrc failed");
     SetCallBackForAppSrc();
@@ -257,13 +261,15 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
             OnError(MSERR_EXT_API9_NO_MEMORY, "GstAppsrcEngine:Push buffer failed.");
         }
     } else {
-        if (needDataSize_ > bufferSize) {
-            if (AddSrcMem(needDataSize_ * 2 && bufferSize < MAX_BUFFER_SIZE / 2) != MSERR_OK) {  // 2 Increase to twice the required buffer
+        if (needDataSize_ > bufferSize && bufferSize < MAX_BUFFER_SIZE / 2) {
+            // 2 Increase to twice the required buffer
+            if (AddSrcMem(needDataSize_ * 2) != MSERR_OK) {
                 OnError(MSERR_EXT_API9_NO_MEMORY, "GstAppsrcEngine:AddSrcMem failed.");
             }
         } else if (availableSize + (freeSize / PULL_SIZE) * PULL_SIZE < needDataSize_ &&
             bufferSize < MAX_BUFFER_SIZE / 2) {
-            if (AddSrcMem(bufferSize * 2) != MSERR_OK) {  // 2 Increase to twice the original buffer
+            // 2 Increase to twice the original buffer
+            if (AddSrcMem(bufferSize * 2) != MSERR_OK) {
                 OnError(MSERR_EXT_API9_NO_MEMORY, "GstAppsrcEngine:AddSrcMem failed.");
             }
         }

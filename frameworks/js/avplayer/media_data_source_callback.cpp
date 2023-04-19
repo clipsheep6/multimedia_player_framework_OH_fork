@@ -85,7 +85,8 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
     CHECK_AND_RETURN_RET_LOG(work != nullptr, 0, "Failed to new uv_work_t");
     ON_SCOPE_EXIT(1) { delete work; };
 
-    MediaDataSourceJsCallbackWraper *cbWrap = new(std::nothrow) MediaDataSourceJsCallbackWraper;
+    MediaDataSourceJsCallbackWraper *cbWrap = new(std::nothrow) MediaDataSourceJsCallbackWraper();
+    CHECK_AND_RETURN_RET_LOG(cbWrap != nullptr, 0, "Failed to new MediaDataSourceJsCallbackWraper");
     cbWrap->cb_ = cb_;
     work->data = reinterpret_cast<void *>(cbWrap);
     // async callback, jsWork and jsWork->data should be heap object.

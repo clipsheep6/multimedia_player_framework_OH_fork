@@ -164,15 +164,15 @@ void AppsrcMemory::SeekAndChangePos(uint64_t pos)
     MEDIA_LOGD("Enter SeekAndChangePos");
     pushOffset_ = pos;
     bool hasUnreturnedBuffer = (end_ + 1) % bufferSize_ != availableBegin_ ? true : false;
-    uint32_t unUsedBufferEnd;
+    uint32_t unusedBufferEnd;
     uint32_t availableSize = GetAvailableSize();
     // Check availableBuffer is Successive and seek location is cached
     if ((IsMemSuccessive() || noFreeBuffer_) && filePos_ - availableSize <= pos && filePos_ >= pos) {
         // if availableBuffer is Successive and seek location is cached, Adjust end_ according to hasUnreturnedBuffer
         if (hasUnreturnedBuffer) {
-            unUsedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
-            MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unUsedBufferEnd);
-            unusedBuffers_.push({availableBegin_, unUsedBufferEnd});
+            unusedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
+            MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unusedBufferEnd);
+            unusedBuffers_.push({availableBegin_, unusedBufferEnd});
             availableBegin_ = begin_ - (filePos_ - pos);
         } else {
             uint32_t pad = noFreeBuffer_ ? bufferSize_ : 0;
@@ -182,9 +182,9 @@ void AppsrcMemory::SeekAndChangePos(uint64_t pos)
     } else if (filePos_ - availableSize <= pos && filePos_ >= pos) {
         // seek location is cached
         if (hasUnreturnedBuffer) {
-            unUsedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
-            MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unUsedBufferEnd);
-            unusedBuffers_.push({availableBegin_, unUsedBufferEnd});
+            unusedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
+            MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unusedBufferEnd);
+            unusedBuffers_.push({availableBegin_, unusedBufferEnd});
             availableBegin_ = ((begin_ + bufferSize_) - (filePos_ - pos)) % bufferSize_;
         } else {
             availableBegin_ = ((begin_ + bufferSize_) - (filePos_ - pos)) % bufferSize_;
