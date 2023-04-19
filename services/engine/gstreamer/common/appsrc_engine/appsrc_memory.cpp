@@ -38,7 +38,17 @@ static bool IsInnerRange(uint32_t srcA, uint32_t endA, uint32_t srcB, uint32_t e
     }
 }
 
-uint32_t AppsrcMemory::GetBufferSize()
+AppsrcMemory::AppsrcMemory()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+}
+
+AppsrcMemory::~AppsrcMemory()
+{
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+}
+
+uint32_t AppsrcMemory::GetBufferSize() const
 {
     return bufferSize_;
 }
@@ -48,7 +58,7 @@ std::shared_ptr<AVSharedMemory> AppsrcMemory::GetMem()
     return mem_;
 }
 
-uint32_t AppsrcMemory::GetFreeSize()
+uint32_t AppsrcMemory::GetFreeSize() const
 {
     MEDIA_LOGD("GetFreeSize, begin is: %{public}u, end is: %{public}u, availableBegin is: %{public}u",
         begin_, end_, availableBegin_);
@@ -69,7 +79,7 @@ uint32_t AppsrcMemory::GetFreeSize()
     return freeSize;
 }
 
-uint32_t AppsrcMemory::GetAvailableSize()
+uint32_t AppsrcMemory::GetAvailableSize() const
 {
     MEDIA_LOGD("GetAvailableSize, begin is: %{public}u, end is: %{public}u, availableBegin is: %{public}u",
         begin_, end_, availableBegin_);
@@ -86,22 +96,22 @@ uint32_t AppsrcMemory::GetAvailableSize()
     return availableSize;
 }
 
-uint32_t AppsrcMemory::GetBeginPos()
+uint32_t AppsrcMemory::GetBeginPos() const
 {
     return begin_;
 }
 
-uint32_t AppsrcMemory::GetAvailableBeginPos()
+uint32_t AppsrcMemory::GetAvailableBeginPos() const
 {
     return availableBegin_;
 }
 
-uint64_t AppsrcMemory::GetPushOffset()
+uint64_t AppsrcMemory::GetPushOffset() const
 {
     return pushOffset_;
 }
 
-uint64_t AppsrcMemory::GetFilePos()
+uint64_t AppsrcMemory::GetFilePos() const
 {
     return filePos_;
 }

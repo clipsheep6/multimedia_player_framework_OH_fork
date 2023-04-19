@@ -26,9 +26,10 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstAppsrcEngine"};
-    constexpr int32_t AUDIO_DEFAULT_BUFFER_SIZE = 409600;
-    constexpr int32_t VIDEO_DEFAULT_BUFFER_SIZE = 2048000;
-    constexpr int32_t PULL_SIZE = 81920;
+    constexpr int32_t AUDIO_DEFAULT_BUFFER_SIZE = 2048000;
+    constexpr int32_t VIDEO_DEFAULT_BUFFER_SIZE = 8192000;
+    constexpr int32_t MAX_BUFFER_SIZE = 40960000;
+    constexpr int32_t PULL_SIZE = 204800;
     constexpr int64_t UNKNOW_FILE_SIZE = -1;
     constexpr int32_t TIME_VAL_MS = 1000;
     constexpr int32_t TIME_VAL_US = 1000000;
@@ -239,6 +240,7 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
     int32_t ret;
     if ((needDataSize_ <= availableSize || atEos_) && !isExit_) {
         needData_ = true;
+        MEDIA_LOGD("needData_ set to true");
         if (needDataSize_ > availableSize) {
             needDataSize_ = availableSize;
         }
@@ -256,10 +258,11 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
         }
     } else {
         if (needDataSize_ > bufferSize) {
-            if (AddSrcMem(needDataSize_ * 2) != MSERR_OK) {  // 2 Increase to twice the required buffer
+            if (AddSrcMem(needDataSize_ * 2 && bufferSize < MAX_BUFFER_SIZE / 2) != MSERR_OK) {  // 2 Increase to twice the required buffer
                 OnError(MSERR_EXT_API9_NO_MEMORY, "GstAppsrcEngine:AddSrcMem failed.");
             }
-        } else if (availableSize + (freeSize / PULL_SIZE) * PULL_SIZE < needDataSize_) {
+        } else if (availableSize + (freeSize / PULL_SIZE) * PULL_SIZE < needDataSize_ &&
+            bufferSize < MAX_BUFFER_SIZE / 2) {
             if (AddSrcMem(bufferSize * 2) != MSERR_OK) {  // 2 Increase to twice the original buffer
                 OnError(MSERR_EXT_API9_NO_MEMORY, "GstAppsrcEngine:AddSrcMem failed.");
             }
@@ -410,12 +413,9 @@ int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
         appSrcMem_->GetMem(), appSrcMem_->GetAvailableBeginPos(), pushSize, curSubscript_, freeMemory);
 
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_NO_MEMORY, "Failed to call gst_shmemory_wrap");
+    ON_SCOPE_EXIT(0) { gst_memory_unref(mem); };
     GstBuffer *buffer = gst_buffer_new();
-    if (buffer == nullptr) {
-        gst_memory_unref(mem);
-        MEDIA_LOGE("Failed to call gst_buffer_new");
-        return MSERR_NO_MEMORY;
-    }
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "Failed to call gst_buffer_new");
 
     gst_buffer_append_memory(buffer, mem);
     GST_BUFFER_OFFSET(buffer) = appSrcMem_->GetPushOffset();
@@ -431,6 +431,7 @@ int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
 
     appSrcMem_->PrintCurPos();
     MEDIA_LOGD("PushBuffer out");
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return MSERR_OK;
 }
 
@@ -442,12 +443,10 @@ int32_t GstAppsrcEngine::PushBufferWithCopy(uint32_t pushSize)
 
     GstBuffer *buffer = gst_buffer_new_allocate(nullptr, static_cast<gsize>(pushSize), nullptr);
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "no mem");
+    ON_SCOPE_EXIT(0) {  gst_buffer_unref(buffer); };
     GstMapInfo info = GST_MAP_INFO_INIT;
-    if (gst_buffer_map(buffer, &info, GST_MAP_WRITE) == FALSE) {
-        gst_buffer_unref(buffer);
-        MEDIA_LOGE("map buffer failed");
-        return MSERR_NO_MEMORY;
-    }
+    CHECK_AND_RETURN_RET_LOG(gst_buffer_map(buffer, &info, GST_MAP_WRITE) != FALSE,
+        MSERR_NO_MEMORY, "map buffer failed");
 
     errno_t rc;
     guint8 *data = info.data;
@@ -479,6 +478,7 @@ int32_t GstAppsrcEngine::PushBufferWithCopy(uint32_t pushSize)
     appSrcMem_->PrintCurPos();
     pullCond_.notify_all();
     MEDIA_LOGD("PushBufferWithCopy out");
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return MSERR_OK;
 }
 
@@ -521,15 +521,14 @@ void GstAppsrcEngine::FreePointerMemory(uint32_t offset, uint32_t length, uint32
     MEDIA_LOGD("FreePointerMemory in, offset is %{public}u, length is %{public}u, subscript is %{public}u",
         offset, length, subscript);
     std::unique_lock<std::mutex> freeLock(freeMutex_);
-    CHECK_AND_RETURN_LOG(subscript <= appSrcMemVec_.size(), "Buffer pool has been free");
+    CHECK_AND_RETURN_LOG(subscript <= appSrcMemVec_.size(), "Check buffer pool subscript  failed");
     std::shared_ptr<AppsrcMemory> mem = appSrcMemVec_[subscript];
     CHECK_AND_RETURN_LOG(mem != nullptr, "Buffer pool has been free");
 
     mem->PrintCurPos();
     mem->CheckBufferUsage();
-    if (!mem->FreeBufferAndChangePos(offset, length, copyMode_)) {
-        OnError(MSERR_EXT_API9_NO_PERMISSION, "GstAppsrcEngine:Bufferpool checkout failed.");
-    }
+    CHECK_AND_RETURN_LOG(mem->FreeBufferAndChangePos(offset, length, copyMode_),
+        "Bufferpool checkout failed.");
     mem->PrintCurPos();
     if (subscript == curSubscript_) {
         pullCond_.notify_all();
@@ -545,14 +544,8 @@ static int64_t GetTime()
     struct timeval time = {};
     int ret = gettimeofday(&time, nullptr);
     CHECK_AND_RETURN_RET_LOG(ret != -1, -1, "Get current time failed!");
-    if ((static_cast<int64_t>(time.tv_sec) < (LLONG_MAX / TIME_VAL_MS)) &&
-        (static_cast<int64_t>(time.tv_usec) <= TIME_VAL_US)) {
-        return static_cast<int64_t>(time.tv_sec) * TIME_VAL_MS +
-            static_cast<int64_t>(time.tv_usec) * TIME_VAL_MS / TIME_VAL_US;
-    } else {
-        MEDIA_LOGW("time overflow");
-    }
-    return -1;
+    return static_cast<int64_t>(time.tv_sec) * TIME_VAL_MS +
+        static_cast<int64_t>(time.tv_usec) * TIME_VAL_MS / TIME_VAL_US;
 }
 
 bool GstAppsrcEngine::IsConnectTimeout()

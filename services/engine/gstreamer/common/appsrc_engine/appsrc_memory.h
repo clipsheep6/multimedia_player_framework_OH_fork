@@ -24,14 +24,16 @@ namespace OHOS {
 namespace Media {
 class AppsrcMemory : public NoCopyable {
 public:
-    uint32_t GetBufferSize();
+    AppsrcMemory();
+    ~AppsrcMemory();
+    uint32_t GetBufferSize() const;
     std::shared_ptr<AVSharedMemory> GetMem();
-    uint32_t GetFreeSize();
-    uint32_t GetAvailableSize();
-    uint32_t GetBeginPos();
-    uint32_t GetAvailableBeginPos();
-    uint64_t GetPushOffset();
-    uint64_t GetFilePos();
+    uint32_t GetFreeSize() const;
+    uint32_t GetAvailableSize() const;
+    uint32_t GetBeginPos() const;
+    uint32_t GetAvailableBeginPos() const;
+    uint64_t GetPushOffset() const;
+    uint64_t GetFilePos() const;
 
     void SetBufferSize(uint32_t bufferSize);
     void SetMem(std::shared_ptr<AVSharedMemory> mem);
