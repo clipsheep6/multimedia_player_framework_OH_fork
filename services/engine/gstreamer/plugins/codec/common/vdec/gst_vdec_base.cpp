@@ -1403,10 +1403,6 @@ static void gst_vdec_base_loop(GstVdecBase *self)
     }
     GST_DEBUG_OBJECT(self, "coding buffers %u", self->coding_outbuf_cnt);
     gint codec_ret = GST_CODEC_OK;
-    if (gst_vdec_base_is_flushing(self) || gst_vdec_check_out_format_change(self)) {
-        GST_DEBUG_OBJECT(self, "Flushing or format change");
-        return;
-    }
     {
         MediaTrace trace("VdecBase::PullOutputBuffer");
         codec_ret = self->decoder->PullOutputBuffer(&gst_buffer);
