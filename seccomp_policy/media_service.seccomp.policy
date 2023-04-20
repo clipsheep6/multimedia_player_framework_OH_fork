@@ -41,6 +41,7 @@ write;arm64
 readv;arm64
 writev;arm64
 pread64;arm64
+pselect6;arm64
 ppoll;arm64
 readlinkat;arm64
 newfstatat;arm64
