@@ -78,7 +78,7 @@ private:
     using PidPlayersInfo = std::unordered_map<int32_t, AppPlayerInfo>;
     std::unordered_map<int32_t, PidPlayersInfo> playerManage_;
     std::unique_ptr<TaskQueue> probeTaskQueue_;
-    bool isCreateProbeTask_ = true;
+    bool isAleardyCreateProbeTask_ = false;
     bool existTask_ = false;
 };
 }
