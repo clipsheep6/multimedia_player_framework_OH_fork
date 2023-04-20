@@ -27,6 +27,7 @@
 #include "gst_utils.h"
 #include "media_dfx.h"
 #include "player_xcollie.h"
+#include "param_wrapper.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinCtrlerBase"};
@@ -426,7 +427,7 @@ int32_t PlayBinCtrlerBase::SelectBitRate(uint32_t bitRate)
         MEDIA_LOGE("BitRate is empty");
         return MSERR_INVALID_OPERATION;
     }
-
+    connectSpeed_ = bitRate;
     g_object_set(playbin_, "connection-speed", static_cast<uint64_t>(bitRate), nullptr);
 
     PlayBinMessage msg = { PLAYBIN_MSG_BITRATEDONE, 0, static_cast<int32_t>(bitRate), {} };
@@ -504,7 +505,18 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         g_object_set(playbin_, "ring-buffer-max-size", RING_BUFFER_MAX_SIZE, nullptr);
         g_object_set(playbin_, "buffering-flags", true, "buffer-size", PLAYBIN_QUEUE_MAX_SIZE,
             "buffer-duration", BUFFER_DURATION, "low-percent", BUFFER_LOW_PERCENT_DEFAULT,
-            "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, "connection-speed", CONNECT_SPEED_DEFAULT, nullptr);
+            "high-percent", BUFFER_HIGH_PERCENT_DEFAULT, nullptr);
+
+        std::string autoSelectBitrate;
+        int32_t res = OHOS::system::GetStringParameter(
+            "sys.media.hls.set.autoSelectBitrate", autoSelectBitrate, "");
+        if (res == 0 && !autoSelectBitrate.empty() && autoSelectBitrate == "TRUE") {
+            SetAutoSelectBitrate(true);
+            MEDIA_LOGD("set autoSelectBitrate to true");
+        } else {
+            SetAutoSelectBitrate(false);
+            MEDIA_LOGD("set autoSelectBitrate to false");
+        }
 
         PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
@@ -994,6 +1006,7 @@ void PlayBinCtrlerBase::OnIsLiveStream(const GstElement *demux, gboolean isLiveS
     auto thizStrong  = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     thizStrong->isAdaptiveLiveStream_ = isLiveStream;
     if (isLiveStream) {
+        thizStrong->SetAutoSelectBitrate(true);
         PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_IS_LIVE_STREAM, 0, {} };
         thizStrong->ReportMessage(msg);
     }
@@ -1138,6 +1151,15 @@ void PlayBinCtrlerBase::SetNotifier(PlayBinMsgNotifier notifier)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     notifier_ = notifier;
+}
+
+void PlayBinCtrlerBase::SetAutoSelectBitrate(bool enable)
+{
+    if (enable) {
+        g_object_set(playbin_, "connection-speed", 0, nullptr);
+    } else if (connectSpeed_ == 0) {
+        g_object_set(playbin_, "connection-speed", CONNECT_SPEED_DEFAULT, nullptr);
+    }
 }
 
 void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
