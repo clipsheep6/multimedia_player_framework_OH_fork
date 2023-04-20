@@ -110,4 +110,3 @@ sched_setattr;arm64
 sched_getattr;arm64
 getrandom;arm64
 membarrier;arm64
-setuid32;arm
