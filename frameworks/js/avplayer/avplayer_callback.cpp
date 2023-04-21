@@ -405,6 +405,9 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
         case INFO_TYPE_IS_LIVE_STREAM:
             NotifyIsLiveStream();
             break;
+        case INFO_TYPE_SUBTITLE_UPDATE:
+            AVPlayerCallback::OnSubTitleUpdateCb(infoBody);
+            break;
         default:
             break;
     }
@@ -580,7 +583,7 @@ void AVPlayerCallback::OnDurationUpdateCb(int32_t duration) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void OnSubTitleUpdateCb(const Format &infoBody) const
+void AVPlayerCallback::OnSubTitleUpdateCb(const Format &infoBody) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_SUBTITLE_UPDATE) == refMap_.end()) {
