@@ -68,6 +68,7 @@ public:
     void SetAutoPlugSortListener(AutoPlugSortListener listener) final;
     void RemoveGstPlaySinkVideoConvertPlugin() final;
     void SetNotifier(PlayBinMsgNotifier notifier) final;
+    void SetAutoSelectBitrate(bool enable) final;
 protected:
     virtual int32_t OnInit() = 0;
 
@@ -177,6 +178,7 @@ private:
     int32_t rendererFlag_ = 0;
     int32_t cachePercent_ = 100; // 100% cache percent
     bool isAdaptiveLiveStream_ = true;
+    uint64_t connectSpeed_ = 0;
 
     std::atomic<bool> isDuration_ = false;
     std::atomic<bool> enableLooping_ = false;
