@@ -84,7 +84,7 @@ int32_t PlayerServiceStubMem::Init()
             std::bind(&PlayerServiceStubMem::RecoverByMemManageRecall, this),
             &playerServer_,
         };
-        MEDIA_LOGI("RegisterPlayerServer uid:%{public}d pid:%{public}d", appUid, appPid);
+        MEDIA_LOGI("RegisterPlayerServer uid:%{public}d pid:%{public}d", appUid_, appPid_);
         PlayerMemManage::GetInstance().RegisterPlayerServer(appUid_, appPid_, memRecallStruct_);
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
