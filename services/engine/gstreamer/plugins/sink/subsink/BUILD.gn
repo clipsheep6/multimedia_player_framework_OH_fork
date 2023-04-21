@@ -71,7 +71,8 @@ ohos_shared_library("gst_sub_sink") {
   configs = [ ":gst_sub_sink_config" ]
 
   deps = [
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "../../../../../../services/utils:media_service_utils",
+    # "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
