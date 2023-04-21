@@ -60,6 +60,7 @@ private:
     void OnBitRateDoneCb(int32_t bitRate) const;
     void OnPositionUpdateCb(int32_t position) const;
     void OnDurationUpdateCb(int32_t duration) const;
+    void OnSubTitleUpdateCb(const Format &infoBody) const;
     void OnBufferingUpdateCb(const Format &infoBody) const;
     void OnMessageCb(int32_t extra, const Format &infoBody) const;
     void OnStartRenderFrameCb() const;

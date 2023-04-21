@@ -51,8 +51,8 @@ private:
     void SetFirstRenderFrameFlag(bool firstRenderFrame);
     bool GetFirstRenderFrameFlag() const;
     void OnFirstRenderFrame();
-    static GstFlowReturn SubTitleTextUpdated(GstBuffer *sample, gpointer userData);
-    void OnSubTitleTextUpdated(const std::vector<Format> &subtitle);
+    static GstFlowReturn SubTitleUpdated(GstBuffer *sample, gpointer userData);
+    void OnSubTitleUpdated(const std::vector<Format> &subtitle);
     void HandleSubTitleBuffer(GstBuffer *sample, std::vector<Format> subtitle);
     static GstPadProbeReturn SinkPadProbeCb(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
     static void EosCb(GstMemSink *memSink, gpointer userData);

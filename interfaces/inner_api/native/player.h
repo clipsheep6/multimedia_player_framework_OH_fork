@@ -124,6 +124,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_DURATION_UPDATE,
     /* return the playback is live stream. */
     INFO_TYPE_IS_LIVE_STREAM,
+    /* return the subtitle of playback. */
+    INFO_TYPE_SUBTITLE_UPDATE,
 };
 
 enum PlayerStates : int32_t {

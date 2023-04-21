@@ -206,7 +206,7 @@ GstElement *PlayerSinkProvider::DoCreateSubSink(const GstCaps *caps, const gpoin
     auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subsink", "sink")));
     CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
 
-    GstSubSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubTitleTextUpdated };
+    GstSubSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubTitleUpdated };
     gst_sub_sink_set_callback(GST_SUB_SINK(sink), &sinkCallbacks, userData, nullptr);
 
     return sink;
@@ -250,24 +250,24 @@ void PlayerSinkProvider::HandleSubTitleBuffer(GstBuffer *sample, std::vector<For
     subtitle.size();
 }
 
-GstFlowReturn PlayerSinkProvider::SubTitleTextUpdated(GstBuffer *sample, gpointer userData)
+GstFlowReturn PlayerSinkProvider::SubTitleUpdated(GstBuffer *sample, gpointer userData)
 {
     CHECK_AND_RETURN_RET(userData != nullptr, GST_FLOW_ERROR);
     PlayerSinkProvider *sinkProvider = reinterpret_cast<PlayerSinkProvider *>(userData);
     std::vector<Format> subtitle;
     // fill format
     sinkProvider->HandleSubTitleBuffer(sample, subtitle);
-    sinkProvider->OnSubTitleTextUpdated(subtitle);
+    sinkProvider->OnSubTitleUpdated(subtitle);
     return GST_FLOW_OK;
 }
 
-void PlayerSinkProvider::OnSubTitleTextUpdated(const std::vector<Format> &subtitle)
+void PlayerSinkProvider::OnSubTitleUpdated(const std::vector<Format> &subtitle)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("OnSubTitleTextUpdated in");
+    MEDIA_LOGI("OnSubTitleUpdated in");
     if (notifier_ != nullptr) {
-        MediaTrace trace("PlayerSinkProvider::SubTitleTextUpdated");
-        PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_TEXT_UPDATED, 0, subtitle};
+        MediaTrace trace("PlayerSinkProvider::SubTitleUpdated");
+        PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_UPDATED, 0, subtitle};
         notifier_(msg);
         MEDIA_LOGD("Subtitle text updated");
     }

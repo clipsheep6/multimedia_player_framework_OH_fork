@@ -580,6 +580,20 @@ void AVPlayerCallback::OnDurationUpdateCb(int32_t duration) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
+void OnSubTitleUpdateCb(const Format &infoBody) const
+{
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_SUBTITLE_UPDATE) == refMap_.end()) {
+        MEDIA_LOGW("can not find subtitle update callback!");
+        return;
+    }
+    std::string value = "";
+    if (infoBody.ContainKey(std::string(PlayerKeys::SUBTITLE_TEXT))) {
+        (void)infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), value);
+    }
+}
+
+
 void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
