@@ -14,6 +14,7 @@
  */
 
 import media from '@ohos.multimedia.media'
+import fileio from '@ohos.fileio'
 import * as mediaTestBase from './MediaTestBase.js';
 
 export const AV_PLAYER_STATE = {
@@ -398,7 +399,7 @@ export async function testAVPlayerFun(src, avPlayer, playTest, playTime, done) {
     setSource(avPlayer, src);
 }
 
-export function setAVPlayerDataSrcNoSeekCb(src, avPlayer, playTest, playTime, done) {
+export function setAVPlayerDataSrcNoSeekCb(fd, filePath, src, avPlayer, playTest, playTime, done) {
     let volumeCnt = [0];
     let endOfStreamCnt = [0];
     let speedDoneCnt = [0];
@@ -468,6 +469,8 @@ export function setAVPlayerDataSrcNoSeekCb(src, avPlayer, playTest, playTime, do
                 // step 8: stop -> reset
                 avPlayer.reset().then(() => {
                     expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.IDLE);
+                    fileio.closeSync(fd[0]);
+                    fd[0] = fileio.openSync(filePath, 0o0);
                     // step 9: reset -> initialized
                     setSource(avPlayer, src);
                 }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
@@ -544,13 +547,14 @@ export function setAVPlayerDataSrcNoSeekCb(src, avPlayer, playTest, playTime, do
     });
 }
 
-export async function testAVPlayerDataSrcNoSeek(src, avPlayer, playTest, playTime, done) {
+export function testAVPlayerDataSrcNoSeek(filePath, src, avPlayer, playTest, playTime, done) {
     console.info(`case media source: ${src}`)
+    let fd = [fileio.openSync(filePath, 0o0)];
     media.createAVPlayer((err, video) => {
         if (typeof(video) != 'undefined') {
             console.info('case createAVPlayer success');
             avPlayer = video;
-            setAVPlayerDataSrcNoSeekCb(src, avPlayer, playTest, playTime, done);
+            setAVPlayerDataSrcNoSeekCb(fd, filePath, src, avPlayer, playTest, playTime, done);
             setSource(avPlayer, src);
         }
         if (err != null) {
@@ -559,6 +563,7 @@ export async function testAVPlayerDataSrcNoSeek(src, avPlayer, playTest, playTim
             done();
         }
     });
+    return fd;
 }
 
 export function setAVPlayerSeekCb(src, avPlayer, playTest, playTime, done) {
