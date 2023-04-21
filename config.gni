@@ -27,6 +27,7 @@ declare_args() {
   multimedia_player_framework_support_test = true
   multimedia_player_framework_support_xcollie = true
   multimedia_player_framework_support_jsstack = true
+  multimedia_player_framework_support_avsession_background = true
   use_memmgr_plugin = false
   if (defined(global_parts_info.resourceschedule_memmgr_plugin)) {
     use_memmgr_plugin = true
@@ -47,6 +48,10 @@ if (multimedia_player_framework_support_player) {
 
 if (multimedia_player_framework_support_player_js_api9) {
   player_framework_defines += [ "SUPPORT_PLAYER_API9" ]
+}
+
+if (multimedia_player_framework_support_avsession_background) {
+  player_framework_defines += [ "SUPPORT_AVSESSION" ]
 }
 
 if (multimedia_player_framework_support_recorder_js_api9) {

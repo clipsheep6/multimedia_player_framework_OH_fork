@@ -75,8 +75,8 @@ int32_t PlayerServiceStubMem::Init()
 {
     if (playerServer_ == nullptr) {
         playerServer_ = PlayerServerMem::Create();
-        int32_t appUid = IPCSkeleton::GetCallingUid();
-        int32_t appPid = IPCSkeleton::GetCallingPid();
+        appUid_ = IPCSkeleton::GetCallingUid();
+        appPid_ = IPCSkeleton::GetCallingPid();
         memRecallStruct_ = {
             std::bind(&PlayerServiceStubMem::ResetFrontGroundForMemManageRecall, this),
             std::bind(&PlayerServiceStubMem::ResetBackGroundForMemManageRecall, this),
@@ -85,7 +85,7 @@ int32_t PlayerServiceStubMem::Init()
             &playerServer_,
         };
         MEDIA_LOGI("RegisterPlayerServer uid:%{public}d pid:%{public}d", appUid, appPid);
-        PlayerMemManage::GetInstance().RegisterPlayerServer(appUid, appPid, memRecallStruct_);
+        PlayerMemManage::GetInstance().RegisterPlayerServer(appUid_, appPid_, memRecallStruct_);
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
 
