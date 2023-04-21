@@ -22,7 +22,7 @@ import { HlsDetailListComponent } from '../view/HlsDetailListComponent';
 import { CommonConstants } from '../common/constants/CommonConstants';
 import { VideoFdSrcDetailListComponent}  from '../view/VideoFdSrcDetailListComponent';
 import { LiveDetailListComponent } from '../view/LiveDetailListComponent'
-
+import { DataSrcSeekDetailListComponent } from '../view/DataSrcSeekDetailListComponent'
 /**
  * Detail page to display more information.
  */
@@ -67,6 +67,10 @@ struct DetailPage {
         HlsDetailListComponent();
       } else if (this.titleParam === CommonConstants.AVPLAYER_FUNCTION[5]) {
         LiveDetailListComponent();
+      } else if (this.titleParam === CommonConstants.AVPLAYER_FUNCTION[6]) {
+        DataSrcDetailListComponent();
+      } else if (this.titleParam === CommonConstants.AVPLAYER_FUNCTION[7]) {
+        DataSrcSeekDetailListComponent();
       }
 
     }

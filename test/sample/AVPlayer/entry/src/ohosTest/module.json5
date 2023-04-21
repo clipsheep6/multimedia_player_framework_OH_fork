@@ -23,6 +23,12 @@
       "default",
       "tablet"
     ],
+    "metadata": [
+      {
+        "name": "ArkTSPartialUpdate",
+        "value": "false"
+      }
+    ],
     "requestPermissions": [
       {
         "name": "ohos.permission.MEDIA_LOCATION"

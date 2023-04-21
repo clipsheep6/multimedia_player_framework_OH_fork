@@ -19,11 +19,15 @@ import common from '@ohos.app.ability.common';
 import Logger from '../model/Logger';
 
 const TAG = 'MediaDemo MediaLibraryUtils:';
+const MS_TIME: number = 1000;
+const MIN_TIME: number = 60;
+const TEN_NUMBER: number = 10;
 
 export default class MediaLibraryUtils {
   // @ts-ignore
   private context = getContext(this) as common.UIAbilityContext;
   private mediaLib: mediaLibrary.MediaLibrary = mediaLibrary.getMediaLibrary(this.context);
+
   //根据文件id查寻文件对象
   async findFile(uri: string, displayName: string): Promise<mediaLibrary.FileAsset> {
     let fileKeyObj = mediaLibrary.FileKey;
@@ -33,7 +37,7 @@ export default class MediaLibraryUtils {
       selectionArgs: [args],
     };
     const fetchFileResult = await this.mediaLib.getFileAssets(fetchOp);
-    let fileAsset : mediaLibrary.FileAsset = null;
+    let fileAsset : mediaLibrary.FileAsset;
     if (fetchFileResult.getCount() > 0) {
       fileAsset = await fetchFileResult.getFirstObject();
     }
@@ -41,7 +45,7 @@ export default class MediaLibraryUtils {
   }
 
   async openFileDescriptor(name:string): Promise<media.AVFileDescriptor> {
-    let fileDescriptor : media.AVFileDescriptor = null;
+    let fileDescriptor : media.AVFileDescriptor;
     await this.context.resourceManager.getRawFd(name).then(value => {
       fileDescriptor = {fd: value.fd, offset: value.offset, length: value.length};
       Logger.info(TAG, 'getRawFileDescriptor success fileName: ' + name);
@@ -59,16 +63,22 @@ export default class MediaLibraryUtils {
     });
   }
 
+  getFilePath(name: string): string {
+    return this.context.filesDir + '/' + name;
+  }
+
   getShowTime(ms): string {
-    let seconds: any = Math.round(ms / 1000);
-    let sec: any = seconds % 60;
-    let min: any = (seconds - sec) / 60;
-    if (sec < 10) {
-      sec = '0' + sec;
+    let seconds: number = Math.round(ms / MS_TIME);
+    let sec: number = (seconds % MIN_TIME);
+    let min: number = (seconds - sec) / MIN_TIME;
+    let secStr: string = sec.toString();
+    let minStr: string = min.toString();
+    if (sec < TEN_NUMBER) {
+      secStr = '0' + sec;
     }
-    if (min < 10) {
-      min = '0' + min;
+    if (min < TEN_NUMBER) {
+      minStr = '0' + min;
     }
-    return min + ':' + sec;
+    return minStr + ':' + secStr;
   }
 }
