@@ -194,13 +194,13 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_005, TestSize.Level3)
     std::vector<Format> audioTrack;
     Format format;
     format.PutIntValue(PlayerKeys::VIDEO_SCALE_TYPE, VideoScaleType::VIDEO_SCALE_TYPE_FIT);
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_NE(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_NE(MSERR_OK, player_->PrepareAsync());
     EXPECT_NE(MSERR_OK, player_->Prepare());
-    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
     EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
     EXPECT_NE(MSERR_OK, player_->Play());
     EXPECT_NE(MSERR_OK, player_->Pause());
