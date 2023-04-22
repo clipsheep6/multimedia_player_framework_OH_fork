@@ -22,6 +22,7 @@
 #include "player_server_state.h"
 #include "media_dfx.h"
 #include "ipc_skeleton.h"
+#include "av_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServer"};
@@ -345,6 +346,16 @@ int32_t PlayerServer::HandlePlay()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine Play Failed!");
 
     return MSERR_OK;
+}
+
+int32_t PlayerServer::BackGroundChangeState(PlayerStates state, bool isBackGroundCb)
+{
+    if (state == PLAYER_PAUSED) {
+        isBackgroundCb_ = isBackGroundCb;
+        isBackgroundChanged_ = true;
+        return PlayerServer::Pause();
+    }
+    return MSERR_INVALID_OPERATION;
 }
 
 int32_t PlayerServer::Pause()
@@ -1008,15 +1019,22 @@ void PlayerServer::OnErrorMessage(int32_t errorCode, const std::string &errorMsg
 void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::mutex> lockCb(mutexCb_);
+    // notify info
+    int32_t ret = HandleMessage(type, extra, infoBody);
+    if (type == INFO_TYPE_IS_LIVE_STREAM) {
+        isLiveStream_ = true;
+    }
 
-    if (type == INFO_TYPE_STATE_CHANGE_BY_AUDIO && extra == PLAYER_PAUSED && lastOpStatus_ == PLAYER_STARTED) {
-        (void)OnPause();
-    } else {
-        int32_t ret = HandleMessage(type, extra, infoBody);
-        if (type == INFO_TYPE_IS_LIVE_STREAM) {
-            isLiveStream_ = true;
-        }
-        if (playerCb_ != nullptr && ret == MSERR_OK) {
+    if (playerCb_ != nullptr && ret == MSERR_OK) {
+        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PAUSED) {
+            if (isBackgroundCb_) {
+                Format newInfo = infoBody;
+                newInfo.PutIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, StateChangeReason::BACKGROUND);
+                playerCb_->OnInfo(type, extra, newInfo);
+                isBackgroundCb_ = false;
+            }
+            isBackgroundChanged_ = false;
+        } else {
             playerCb_->OnInfo(type, extra, infoBody);
         }
     }
