@@ -565,6 +565,21 @@ int32_t PlayerServerMem::SelectBitRate(uint32_t bitRate)
     return ret;
 }
 
+int32_t PlayerServerMem::DumpInfo(int32_t fd)
+{
+    PlayerServer::DumpInfo(fd);
+    std::string dumpString;
+    dumpString += "PlayerServer has been reset by memory manage: ";
+    if (isReleaseMemByManage_) {
+        dumpString += "Yes\n";
+    } else {
+        dumpString += "No\n";
+    }
+    write(fd, dumpString.c_str(), dumpString.size());
+
+    return MSERR_OK;
+}
+
 void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
@@ -603,10 +618,8 @@ int32_t PlayerServerMem::ReleaseMemByManage()
         return MSERR_INVALID_OPERATION;
     }
     recoverConfig_.currState = itSatetMap->second;
-    MEDIA_LOGI("Enter, currState:%{public}s", recoverConfig_.currState->GetStateName().c_str());
     auto ret = recoverConfig_.currState->MemStateRelease();
     if (ret == MSERR_INVALID_STATE) {
-        MEDIA_LOGI("CurrState is Idle or Playing");
         return MSERR_OK;
     }
     
