@@ -77,8 +77,7 @@ config("media_service_config") {
   ]
 
   if (multimedia_player_framework_support_avsession_background) {
-    include_dirs +=
-        [ "player/avsession_background" ]
+    include_dirs += [ "player/avsession_background" ]
   }
 
   defines = []
