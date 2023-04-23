@@ -50,11 +50,17 @@ AVsessionBackground::~AVsessionBackground()
 
 void AVsessionBackground::Init()
 {
-    (void)AVSession::AVSessionManager::GetInstance().RegisterSessionListener(shared_from_this());
+    if (!init_) {
+        MEDIA_LOGI("AVSession::AVSessionManager::RegisterSessionListener");
+        int32_t ret = AVSession::AVSessionManager::GetInstance().RegisterSessionListener(shared_from_this());
+        CHECK_AND_RETURN_LOG(ret == AVSESSION_SUCCESS, "failed to AVSessionManager::RegisterSessionListener");
+        init_ = (ret == AVSESSION_SUCCESS) ? true : false;
+    }
 }
 
 void AVsessionBackground::AddListener(std::weak_ptr<IPlayerService> player, int32_t uid)
 {
+    Init();
     std::lock_guard<std::mutex> lock(mutex_);
     // clean map/list from listener list/map
     for (auto it1 = playerMap_.begin(); it1 != playerMap_.end();) {

@@ -51,6 +51,7 @@ private:
 
     static std::shared_ptr<AVsessionBackground> instance_;
     static std::once_flag onceFlag_;
+    bool init_ = false;
     std::map<int32_t, std::list<std::weak_ptr<IPlayerService>>> playerMap_;
     std::mutex mutex_;
 };
