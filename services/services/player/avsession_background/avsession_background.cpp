@@ -33,7 +33,6 @@ AVsessionBackground &AVsessionBackground::Instance()
 {
     std::call_once(onceFlag_, [] {
         instance_ = std::make_shared<AVsessionBackground>();
-        instance_->Init();
     });
     return *instance_;
 }
