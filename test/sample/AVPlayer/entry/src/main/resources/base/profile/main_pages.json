@@ -7,6 +7,8 @@
     "pages/HttpsPlayer",
     "pages/HlsPlayer",
     "pages/VideoPlayer_fdSrc",
-    "pages/LivePlayer"
+    "pages/LivePlayer",
+    "pages/DataSrc_NoSeek",
+    "pages/DataSrc_Seek"
   ]
 }
