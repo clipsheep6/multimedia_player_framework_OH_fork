@@ -24,9 +24,7 @@
 
 namespace OHOS {
 namespace Media {
-class PlayerServiceStub
-    : public IRemoteStub<IStandardPlayerService>,
-      public NoCopyable {
+class PlayerServiceStub : public IRemoteStub<IStandardPlayerService>, public NoCopyable {
 public:
     static sptr<PlayerServiceStub> Create();
     virtual ~PlayerServiceStub();
@@ -74,8 +72,6 @@ protected:
     TaskQueue taskQue_;
     std::shared_ptr<IPlayerService> playerServer_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCallback_ = nullptr;
-    int32_t appUid_ = 0;
-    int32_t appPid_ = 0;
 
 private:
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
