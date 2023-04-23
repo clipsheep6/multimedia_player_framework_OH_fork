@@ -53,8 +53,8 @@ void AVsessionBackground::Init()
     if (!init_) {
         MEDIA_LOGI("AVSession::AVSessionManager::RegisterSessionListener");
         int32_t ret = AVSession::AVSessionManager::GetInstance().RegisterSessionListener(shared_from_this());
-        CHECK_AND_RETURN_LOG(ret == AVSESSION_SUCCESS, "failed to AVSessionManager::RegisterSessionListener");
-        init_ = (ret == AVSESSION_SUCCESS) ? true : false;
+        CHECK_AND_RETURN_LOG(ret == 0, "failed to AVSessionManager::RegisterSessionListener");
+        init_ = (ret == 0) ? true : false;
     }
 }
 
