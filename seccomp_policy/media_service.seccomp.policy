@@ -111,8 +111,7 @@ sched_setattr;arm64
 sched_getattr;arm64
 getrandom;arm64
 membarrier;arm64
-bind;arm64
-bind;arm
+bind;all
 sched_getaffinity;arm
 restart_syscall;arm
 exit;arm
