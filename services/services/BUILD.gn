@@ -37,13 +37,8 @@ config("media_service_config") {
     "-Wextra",
     "-Wimplicit-fallthrough",
     "-Wsign-compare",
+    "-Wunused-parameter",
   ]
-
-  if (multimedia_player_framework_support_avsession_background) {
-    cflags += [ "-Wno-unused-parameter" ]
-  } else {
-    cflags += [ "-Wunused-parameter" ]
-  }
 
   include_dirs = [
     "sa_media/ipc",
@@ -75,10 +70,6 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
     "//third_party/glib/glibmemdfx",
   ]
-
-  if (multimedia_player_framework_support_avsession_background) {
-    include_dirs += [ "player/avsession_background" ]
-  }
 
   defines = []
   defines += player_framework_defines
@@ -182,17 +173,6 @@ ohos_shared_library("media_service") {
 
   if (multimedia_player_framework_support_video) {
     external_deps += [ "graphic_standard:surface" ]
-  }
-
-  if (multimedia_player_framework_support_avsession_background) {
-    sources += [ "player/avsession_background/avsession_background.cpp" ]
-    external_deps += [
-      "ability_base:want",
-      "ability_runtime:wantagent_innerkits",
-      "input:libmmi-client",
-      "multimedia_audio_framework:audio_client",
-      "multimedia_av_session:avsession_client",
-    ]
   }
 
   if (use_memmgr_plugin) {
