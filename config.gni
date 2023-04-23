@@ -39,7 +39,7 @@ declare_args() {
   }
   multimedia_player_framework_support_avsession_background = false
   if (defined(global_parts_info) &&
-      defined(global_parts_info.barrierfree_accessibility)) {
+      defined(global_parts_info.multimedia_multimedia_av_session)) {
     multimedia_player_framework_support_avsession_background = true
   }
 }
