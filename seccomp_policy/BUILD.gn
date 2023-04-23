@@ -14,13 +14,13 @@
 import(
     "//base/startup/init/services/modules/seccomp/scripts/seccomp_policy_fixer.gni")
 
-
-ohos_prebuilt_seccomp("media_seccomp_filter") {   
+ohos_prebuilt_seccomp("media_seccomp_filter") {
   if (build_seccomp) {
     sources = [ "media_service.seccomp.policy" ]  # 策略配置文件的路径
 
     filtername = "media_service"  # 表示最后生成的动态库名称，libmedia_service_filter.z.so，与引导文件中的service
-                                    # name保持一致，否则会使能失败
+
+    # name保持一致，否则会使能失败
     process_type =
         "system"  # init孵化的进程使用为system，app进程使用app
 
