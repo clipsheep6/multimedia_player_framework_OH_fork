@@ -35,7 +35,6 @@ int32_t PlayerServerMem::MemBaseState::MemStateRecover()
 
 int32_t PlayerServerMem::MemBaseState::MemStateRelease()
 {
-    MEDIA_LOGE("invalid operation for %{public}s", GetStateName().c_str());
     return MSERR_INVALID_STATE;
 }
 
