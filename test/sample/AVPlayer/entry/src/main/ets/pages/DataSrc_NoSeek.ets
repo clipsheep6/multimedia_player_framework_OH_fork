@@ -17,14 +17,16 @@ import router from '@ohos.router';
 import { CommonConstants } from '../common/constants/CommonConstants';
 import Logger from '../model/Logger';
 import MediaLibraryUtils from '../model/MediaLibraryUtils';
+import mediaLibrary from '@ohos.multimedia.mediaLibrary';
 import media from '@ohos.multimedia.media';
 import audio from '@ohos.multimedia.audio';
+import fileio from '@ohos.fileio'
 
-const TAG: string = 'MediaDemo VideoPlayer:';
+const TAG: string = 'MediaDemo DataSrcAVPlayer:';
 
 @Entry
 @Component
-struct VideoPlayerFdSrc {
+struct DataSrcSeek {
   @State ratio: number = 1.0;
   @State mediaLibUtils: MediaLibraryUtils = new MediaLibraryUtils();
   @State isPlaying: boolean = true;
@@ -40,22 +42,41 @@ struct VideoPlayerFdSrc {
   @State scaleTag: number = 0;
   private avPlayer: media.AVPlayer;
   private duration: number = -1;
+  private fdPath: string = '';
   private surfaceID: string = '';
   private isPrepare: boolean = false;
   private isNext = false;
-  private fileDescriptor: media.AVFileDescriptor;
   private index: number = -1;
-  private screenWidth: number = 1080; // 设备屏幕宽，建议使用接口调用获取
-  private screenHeight: number = 1920; // 设备屏幕高，建议使用接口调用获取
+  private fd: number;
+  private screenHeight: number = 1920;// 设备屏幕高，建议使用接口调用获取
   private volumeValue: number = 1.00;
   private mXcomponentController: XComponentController = new XComponentController();
   private SRC_LIST: Array<string>;
+  private filePath:string = ''
+  private fileSize: number = -1
+  private src = {
+    fileSize: -1,
+    callback: (buf, length, pos) => {
+      Logger.info(TAG, 'fileSize is:' + this.fileSize + ', pos is:' + pos)
+      let num = 0;
+      if (buf == undefined || length == undefined) {
+        Logger.info(TAG, ' buf == undefined || length == undefined' );
+        return -1;
+      }
+      num = fileio.readSync(this.fd, buf, {offset: 0, length: length});
+      Logger.info(TAG, 'case readAt num:' + num);
+      if (num > 0) {
+        return num;
+      }
+      return -1;
+    }
+  }
   // 界面初始化函数
   async aboutToAppear() {
     this.videoName = router.getParams()[CommonConstants.KEY_PARAM_DATA];
     this.SRC_LIST = CommonConstants.VIDEO_LISTS;
     this.index = CommonConstants.VIDEO_LISTS.map(item => item).indexOf(this.videoName);
-    Logger.info(TAG, 'aboutToAppear success, and play source is ' + this.videoName);
+    Logger.info(TAG, 'aboutToAppear success, and play source is' + this.videoName);
   }
   // 界面销毁监听
   async aboutToDisappear(): Promise<void> {
@@ -171,8 +192,6 @@ struct VideoPlayerFdSrc {
           this.getTrackDescription();
           // 设置焦点上报类型
           this.avPlayer.audioInterruptMode = audio.InterruptMode.INDEPENDENT_MODE;
-          this.duration = this.avPlayer.duration;
-          this.durationTimeText = this.mediaLibUtils.getShowTime(this.duration);
           Logger.info(TAG, 'state prepared called ：' + this.getCurrentTime());
           if (this.isNext) {
             this.play();
@@ -219,14 +238,14 @@ struct VideoPlayerFdSrc {
     if (this.avPlayer !== undefined) {
       ret = true;
     }
-    this.avPlayer.fdSrc = this.fileDescriptor;
+    this.avPlayer.url = this.fdPath;
     Logger.info(TAG, 'createAVPlayer end');
     return ret;
   }
   // 播放文件打开函数
-  async openMediaFile(fileName: string): Promise<media.AVFileDescriptor> {
-    let testFileDescriptor = await this.mediaLibUtils.openFileDescriptor(fileName);
-    return testFileDescriptor;
+  async openMediaFile(fileName: string): Promise<mediaLibrary.FileAsset> {
+    let fileAsset = await this.mediaLibUtils.findFile('0', fileName);
+    return fileAsset;
   }
   // 调用播放接口
   async play(): Promise<void> {
@@ -244,45 +263,6 @@ struct VideoPlayerFdSrc {
     Logger.info(TAG, 'start to pause');
     this.avPlayer.pause();
   }
-  // 设置倍数接口
-  setSpeed(speedValue: number): void {
-    Logger.info(TAG, 'set speed value is:' + speedValue);
-    switch (speedValue) {
-      case 0:
-        this.avPlayer.setSpeed(media.PlaybackSpeed.SPEED_FORWARD_0_75_X);
-        break;
-      case 1:
-        this.avPlayer.setSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_00_X);
-        break;
-      case 2:
-        this.avPlayer.setSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_25_X);
-        break;
-      case 3:
-        this.avPlayer.setSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_75_X);
-        break;
-      case 4:
-        this.avPlayer.setSpeed(media.PlaybackSpeed.SPEED_FORWARD_2_00_X);
-        break;
-      default:
-        Logger.info(TAG, 'no this mode speed:' + speedValue);
-        break;
-    }
-  }
-  // 设置视频缩放接口
-  setScaleType(sacleValue: number): void {
-    Logger.info(TAG, 'set videoScaleType value is:' + sacleValue);
-    switch (sacleValue) {
-      case 0:
-        this.avPlayer.videoScaleType = media.VideoScaleType.VIDEO_SCALE_TYPE_FIT;
-        break;
-      case 1:
-        this.avPlayer.videoScaleType = media.VideoScaleType.VIDEO_SCALE_TYPE_FIT_CROP;
-        break;
-      default:
-        Logger.info(TAG, 'no this mode videoScaleType:' + sacleValue);
-        break;
-    }
-  }
   // 获取当前播放时间函数
   getCurrentTime(): number {
     return this.avPlayer.currentTime;
@@ -290,10 +270,6 @@ struct VideoPlayerFdSrc {
   // 获取当前播放状态函数
   getState(): string {
     return this.avPlayer.state;
-  }
-  // 设置loop函数
-  setLoop(loopValue): void {
-    this.avPlayer.loop = loopValue;
   }
   // 获取轨道信息接口
   async getTrackDescription(): Promise<void> {
@@ -315,36 +291,39 @@ struct VideoPlayerFdSrc {
   // 初始化函数
   async initAVPlayer(): Promise<void> {
     Logger.info(TAG, 'initAVPlayer success');
-    this.fileDescriptor = await this.openMediaFile(this.videoName);
-    Logger.info(TAG, 'file id is : ' + this.fileDescriptor);
+    this.filePath = this.mediaLibUtils.getFilePath(this.videoName);
+    this.fd = fileio.openSync(this.filePath, 0o0);
+    Logger.info(TAG, 'file id is : ' + this.fd)
     this.surfaceID = this.mXcomponentController.getXComponentSurfaceId();
     Logger.info(TAG, 'surfaceID is : ' + this.surfaceID);
-    await this.createAVPlayer();
+    this.avPlayer = await media.createAVPlayer()
     this.setStateChangeCallback();
     this.setErrorCallback();
     this.timeUpdate();
     this.setSourceInfo();
+    // @ts-ignore
+    this.avPlayer.dataSrc = this.src;
   }
   // 切换下个视频的接口
   async nextVideo(): Promise<void> {
     // 调用reset函数，重置播放器状态至idle
     await this.avPlayer.reset();
+    fileio.closeSync(this.fd);
     this.isLoop = false;
-    // 关闭当前已经打开的视频文件
-    await this.mediaLibUtils.closeFileDescriptor(this.SRC_LIST[this.index]);
     // 获取当前播放文件的下一个视频文件在列表中的下标
     if (this.index === (this.SRC_LIST.length - 1)) {
       this.index = 0;
     } else {
       this.index = this.index + 1;
     }
-    // 打开新的视频文件
-    this.fileDescriptor = await this.openMediaFile(this.SRC_LIST[this.index]);
     this.videoName = this.SRC_LIST[this.index];
-    Logger.info(TAG, 'file id is : ' + this.fileDescriptor);
+    this.filePath = this.mediaLibUtils.getFilePath(this.videoName);
+    this.fd = fileio.openSync(this.filePath, 0o0);
+    Logger.info(TAG, 'file id is : ' + this.fd);
     // 开始进入下一个视频的播放
     if (this.getState() === 'idle') {
-      this.avPlayer.fdSrc = this.fileDescriptor;
+      // @ts-ignore
+      this.avPlayer.dataSrc = this.src
       // 将当前切视频状态置为true
       this.isNext = true;
       this.isPlaying = false;
@@ -354,20 +333,22 @@ struct VideoPlayerFdSrc {
   }
   // 切换上个视频的接口
   async preVideo(): Promise<void> {
+    // 调用reset函数，重置播放器状态至idle
     await this.avPlayer.reset();
+    fileio.closeSync(this.fd);
     this.isLoop = false;
-    // 关闭当前已经打开的视频文件
-    await this.mediaLibUtils.closeFileDescriptor(this.SRC_LIST[this.index]);
     if (this.index === (0)) {
       this.index = this.SRC_LIST.length - 1;
     } else {
       this.index = this.index - 1;
     }
-    this.fileDescriptor = await this.openMediaFile(this.SRC_LIST[this.index]);
     this.videoName = this.SRC_LIST[this.index];
-    Logger.info(TAG, 'file id is : ' + this.fileDescriptor);
+    this.filePath = this.mediaLibUtils.getFilePath(this.videoName);
+    this.fd = fileio.openSync(this.filePath, 0o0);
+    Logger.info(TAG, 'file id is : ' + this.fd);
     if (this.getState() === 'idle') {
-      this.avPlayer.fdSrc = this.fileDescriptor;
+      // @ts-ignore
+      this.avPlayer.dataSrc = this.src
       // 将当前切视频状态置为true
       this.isNext = true;
       this.isPlaying = false;
@@ -396,7 +377,7 @@ struct VideoPlayerFdSrc {
         })
           .onLoad(() => {
             // 加载完成后调用初始化播放器函数
-            this.initAVPlayer()
+            this.initAVPlayer();
           })
           .width('100%')
           .aspectRatio(this.ratio)
@@ -439,26 +420,8 @@ struct VideoPlayerFdSrc {
         }
 
         Row() {
-          Text(this.currentTime).fontSize(15).width('15%').textAlign(TextAlign.Center)
-          Slider({
-            value: this.setValue,
-            min: 0,
-            max: 100,
-            step: 1,
-            style: SliderStyle.OutSet
-          })
-            .blockColor(Color.Grey)
-            .trackColor(Color.Orange)
-            .trackColor(Color.Blue)
-            .showSteps(true)
-            .showTips(false)
-            .width('65%')
-            .onChange((value: number, mode: SliderChangeMode) => {
-              if (mode !== SliderChangeMode.Begin) {
-                this.avPlayer.seek((value / 100) * this.duration, 0);
-              }
-            })
-          Text(this.durationTimeText).fontSize(15).width('15%').textAlign(TextAlign.Center)
+          Text('播放时间:').fontSize(15).width('30%').textAlign(TextAlign.Center)
+          Text(this.currentTime).fontSize(15).width('30%').textAlign(TextAlign.Center)
         }
         .alignItems(VerticalAlign.Center)
         Row() {
@@ -473,61 +436,24 @@ struct VideoPlayerFdSrc {
           Image(this.isPlaying ? $r('app.media.icon_pause') : $r('app.media.icon_play'))
             .width('45vp').height('45vp')
             .margin({ left: '10vp' })
-            .id('play')
             .onClick(() => {
-              if (this.isPlaying) {
-                this.play();
+              if (this.getState() === 'completed') {
+                this.nextVideo();
               } else {
-                this.pause();
+                if (this.isPlaying) {
+                  this.play();
+                } else {
+                  this.pause();
+                }
+                this.isPlaying = !this.isPlaying;
               }
-              this.isPlaying = !this.isPlaying;
             })
           // 点击执行下一个视频播放
           Image($r('app.media.icon_next'))
             .width('45vp').height('45vp')
             .margin({ left: '10vp' })
-            .id('next')
             .onClick(() => {
               this.nextVideo();
-            })
-          // 点击图标设置是否循环播放
-          Image(this.isLoop ? $r('app.media.icon_single') : $r('app.media.icon_repeatplay'))
-            .width('45vp').height('45vp')
-            .margin({ left: '10vp' })
-            .onClick(() => {
-              this.isLoop = !this.isLoop;
-              this.setLoop(this.isLoop);
-            })
-          // 点击图标设置倍速
-          Select([{ value: 'speed：0.75'},
-            { value: 'speed：1.00'},
-            { value: 'speed：1.25'},
-            { value: 'speed：1.75'},
-            { value: 'speed：2.00'}])
-            .selected(this.speedTag)
-            .value('Speed')
-            .font({ size: 16, weight: 400 })
-            .fontColor('#182431')
-            .selectedOptionFont({ size: 16, weight: 400 })
-            .optionFont({ size: 16, weight: 400 })
-            .onSelect((index: number) => {
-              Logger.info(TAG, 'Select:' + index);
-              this.setSpeed(index);
-              this.speedTag = index;
-            })
-          // 点击图标设置缩放模式
-          Select([{ value: '0'},
-            { value: '1'},])
-            .selected(this.scaleTag)
-            .value('ScaleType')
-            .font({ size: 16, weight: 400 })
-            .fontColor('#182431')
-            .selectedOptionFont({ size: 16, weight: 400 })
-            .optionFont({ size: 16, weight: 400 })
-            .onSelect((index: number) => {
-              Logger.info(TAG, 'Select:' + index);
-              this.setScaleType(index);
-              this.scaleTag = index;
             })
         }.width('100%').justifyContent(FlexAlign.Center)
       }

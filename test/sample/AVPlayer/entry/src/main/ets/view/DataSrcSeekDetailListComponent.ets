@@ -22,7 +22,7 @@ import { CommonConstants } from '../common/constants/CommonConstants';
  * Detail page list component.
  */
 @Component
-export struct VideoFdSrcDetailListComponent {
+export struct DataSrcSeekDetailListComponent {
   build() {
     Column() {
       List() {
@@ -39,13 +39,13 @@ export struct VideoFdSrcDetailListComponent {
             }
             .width(CommonConstants.ROW_WIDTH_PERCENT)
             .height($r('app.float.detail_list_item_height'))
-          }.id(item.summary)
+          }
           .onClick(() => {
             router.push({
-              url: CommonConstants.PAGE_VIDEO_FDSRC,
+              url: CommonConstants.DATASRCSEEK_PLAY,
               params: {
                 data: item.summary,
-                mode: CommonConstants.MODE_VIDEO
+                mode: CommonConstants.MODE_SEEK
               }
             });
           })

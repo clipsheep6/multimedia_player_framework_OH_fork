@@ -30,7 +30,7 @@ export struct ListAreaComponent {
         LazyForEach(PageViewModel.getListDataSource(), (item: ListItemData) => {
           ListItem() {
             ListItemComponent({ itemInfo: item })
-          }
+          }.id(item.title)
           .onClick(() => {
             router.push({
               url: CommonConstants.PAGE_NAME,
