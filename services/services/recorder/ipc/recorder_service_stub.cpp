@@ -19,6 +19,7 @@
 #include "media_server_manager.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "ipc_skeleton.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServiceStub"};
@@ -43,6 +44,7 @@ RecorderServiceStub::RecorderServiceStub()
 
 RecorderServiceStub::~RecorderServiceStub()
 {
+    (void)CancellationMonitor(pid_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -81,14 +83,15 @@ int32_t RecorderServiceStub::Init()
     recFuncs_[RELEASE] = &RecorderServiceStub::Release;
     recFuncs_[SET_FILE_SPLIT_DURATION] = &RecorderServiceStub::SetFileSplitDuration;
     recFuncs_[DESTROY] = &RecorderServiceStub::DestroyStub;
-    recFuncs_[HEARTBEAT] = &RecorderServiceStub::HeartBeat;
+
+    pid_ = IPCSkeleton::GetCallingPid();
+    (void)RegisterMonitor(pid_);
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::DestroyStub()
 {
     recorderServer_ = nullptr;
-
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::RECORDER, AsObject());
     return MSERR_OK;
 }
@@ -104,15 +107,11 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         return MSERR_INVALID_OPERATION;
     }
 
-    // When the server encounters the application freeze and enters the pause state, it needs to recover in advance.
-    if (code != PAUSE) {
-        HeartBeat();
-    }
-
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {
         auto memberFunc = itFunc->second;
         if (memberFunc != nullptr) {
+            (void)IpcRecovery(false);
             int32_t ret = (this->*memberFunc)(data, reply);
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("calling memberFunc is failed.");
@@ -310,16 +309,22 @@ int32_t RecorderServiceStub::SetFileSplitDuration(FileSplitType type, int64_t ti
     return recorderServer_->SetFileSplitDuration(type, timestamp, duration);
 }
 
-int32_t RecorderServiceStub::HeartBeat()
-{
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
-    return recorderServer_->HeartBeat();
-}
-
 int32_t RecorderServiceStub::DumpInfo(int32_t fd)
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
     return std::static_pointer_cast<RecorderServer>(recorderServer_)->DumpInfo(fd);
+}
+
+int32_t RecorderServiceStub::DoIpcAbnormality()
+{
+    MEDIA_LOGI("Enter DoIpcAbnormality.");
+    return Pause();
+}
+
+int32_t RecorderServiceStub::DoIpcRecovery(bool fromMonitor)
+{
+    MEDIA_LOGI("Enter DoIpcRecovery %{public}d.", fromMonitor);
+    return Resume();
 }
 
 int32_t RecorderServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
@@ -565,13 +570,6 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
-    return MSERR_OK;
-}
-
-int32_t RecorderServiceStub::HeartBeat(MessageParcel &data, MessageParcel &reply)
-{
-    (void)data;
-    reply.WriteInt32(HeartBeat());
     return MSERR_OK;
 }
 } // namespace Media

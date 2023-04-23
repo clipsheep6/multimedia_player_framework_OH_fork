@@ -46,6 +46,7 @@ public:
         AVCODECLIST,
         AVCODEC,
         RECORDERPROFILES,
+        MONITOR,
     };
     sptr<IRemoteObject> CreateStubObject(StubType type);
     void DestroyStubObject(StubType type, sptr<IRemoteObject> object);
@@ -70,6 +71,7 @@ private:
     sptr<IRemoteObject> CreateAVCodecListStubObject();
     sptr<IRemoteObject> CreateAVCodecStubObject();
 #endif
+    sptr<IRemoteObject> GetMonitorStubObject();
 
     class AsyncExecutor {
     public:

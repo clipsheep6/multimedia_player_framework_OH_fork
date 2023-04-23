@@ -28,7 +28,7 @@ enum class RecorderWatchDogStatus : int32_t {
     WATCHDOG_WATCHING = 0,
     WATCHDOG_PAUSE,
 };
-class RecorderServer : public IRecorderService, public IRecorderEngineObs, public WatchDog, public NoCopyable {
+class RecorderServer : public IRecorderService, public IRecorderEngineObs, public NoCopyable {
 public:
     static std::shared_ptr<IRecorderService> Create();
     RecorderServer();
@@ -74,12 +74,7 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t SetParameter(int32_t sourceId, const Format &format) override;
-    int32_t HeartBeat() override;
     int32_t DumpInfo(int32_t fd);
-
-    // watchdog
-    void Alarm() override;
-    void AlarmRecovery() override;
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;
@@ -89,8 +84,6 @@ private:
     int32_t Init();
     bool CheckPermission();
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);
-    int32_t ResumeAct();
-    int32_t PauseAct();
 
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;

@@ -21,10 +21,14 @@
 #include "i_standard_player_listener.h"
 #include "media_death_recipient.h"
 #include "player_server.h"
+#include "monitor_server_object.h"
 
 namespace OHOS {
 namespace Media {
-class PlayerServiceStub : public IRemoteStub<IStandardPlayerService>, public NoCopyable {
+class PlayerServiceStub
+    : public IRemoteStub<IStandardPlayerService>,
+      public MonitorServerObject,
+      public NoCopyable {
 public:
     static sptr<PlayerServiceStub> Create();
     virtual ~PlayerServiceStub();
@@ -64,6 +68,9 @@ public:
     int32_t DumpInfo(int32_t fd);
     int32_t SelectBitRate(uint32_t bitRate) override;
 
+    // MonitorServerObject override
+    int32_t DoIpcAbnormality() override;
+    int32_t DoIpcRecovery(bool fromMonitor) override;
 protected:
     PlayerServiceStub();
     virtual int32_t Init();
@@ -72,6 +79,8 @@ protected:
     TaskQueue taskQue_;
     std::shared_ptr<IPlayerService> playerServer_ = nullptr;
     std::shared_ptr<PlayerCallback> playerCallback_ = nullptr;
+    int32_t appUid_ = 0;
+    int32_t appPid_ = 0;
 
 private:
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);

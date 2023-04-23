@@ -26,6 +26,7 @@ public:
     MediaLocal() = default;
     ~MediaLocal() = default;
 
+    std::shared_ptr<IStandardMonitorService> GetMonitorProxy() override;
     std::shared_ptr<IRecorderService> CreateRecorderService() override;
     std::shared_ptr<IPlayerService> CreatePlayerService() override;
     std::shared_ptr<IAVMetadataHelperService> CreateAVMetadataHelperService() override;

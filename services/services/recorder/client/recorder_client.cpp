@@ -33,8 +33,6 @@ std::shared_ptr<RecorderClient> RecorderClient::Create(const sptr<IStandardRecor
     int32_t ret = recorder->CreateListenerObject();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to create listener object..");
 
-    recorder->CreateWatchDog();
-
     return recorder;
 }
 
@@ -48,12 +46,12 @@ RecorderClient::~RecorderClient()
 {
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        (void)DisableMonitor();
         if (recorderProxy_ != nullptr) {
             (void)recorderProxy_->DestroyStub();
             recorderProxy_ = nullptr;
         }
     }
-    StopWatchDog();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -67,7 +65,6 @@ void RecorderClient::MediaServerDied()
             callback_->OnError(RECORDER_ERROR_INTERNAL, MSERR_SERVICE_DIED);
         }
     }
-    StopWatchDog();
 }
 
 int32_t RecorderClient::CreateListenerObject()
@@ -77,6 +74,7 @@ int32_t RecorderClient::CreateListenerObject()
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "failed to new RecorderListenerStub object");
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
+    (void)listenerStub_->SetMonitor(weak_from_this());
     sptr<IRemoteObject> object = listenerStub_->AsObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
 
@@ -283,13 +281,22 @@ int32_t RecorderClient::Prepare()
     return recorderProxy_->Prepare();
 }
 
+int32_t RecorderClient::ExecuteWhen(int32_t ret, bool ok)
+{
+    if ((ok && (ret == MSERR_OK)) || ((!ok) && (ret != MSERR_OK))) {
+        (void)DisableMonitor();
+    }
+    return ret;
+}
+
 int32_t RecorderClient::Start()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
     MEDIA_LOGD("Start");
-    return recorderProxy_->Start();
+    (void)EnableMonitor();
+    return ExecuteWhen(recorderProxy_->Start(), false);
 }
 
 int32_t RecorderClient::Pause()
@@ -298,7 +305,7 @@ int32_t RecorderClient::Pause()
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
     MEDIA_LOGD("Pause");
-    return recorderProxy_->Pause();
+    return ExecuteWhen(recorderProxy_->Pause(), true);
 }
 
 int32_t RecorderClient::Resume()
@@ -307,7 +314,8 @@ int32_t RecorderClient::Resume()
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
     MEDIA_LOGD("Resume");
-    return recorderProxy_->Resume();
+    (void)EnableMonitor();
+    return ExecuteWhen(recorderProxy_->Resume(), false);
 }
 
 int32_t RecorderClient::Stop(bool block)
@@ -316,7 +324,7 @@ int32_t RecorderClient::Stop(bool block)
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
     MEDIA_LOGD("Stop");
-    return recorderProxy_->Stop(block);
+    return ExecuteWhen(recorderProxy_->Stop(block), true);
 }
 
 int32_t RecorderClient::Reset()
@@ -325,7 +333,7 @@ int32_t RecorderClient::Reset()
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
     MEDIA_LOGD("Reset");
-    return recorderProxy_->Reset();
+    return ExecuteWhen(recorderProxy_->Reset(), true);
 }
 
 int32_t RecorderClient::Release()
@@ -334,7 +342,7 @@ int32_t RecorderClient::Release()
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
     MEDIA_LOGD("Release");
-    return recorderProxy_->Release();
+    return ExecuteWhen(recorderProxy_->Release(), true);
 }
 
 int32_t RecorderClient::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
@@ -352,49 +360,6 @@ int32_t RecorderClient::SetParameter(int32_t sourceId, const Format &format)
     (void)sourceId;
     (void)format;
     return MSERR_INVALID_OPERATION;
-}
-
-int32_t RecorderClient::HeartBeat()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
-
-    MEDIA_LOGD("HeartBeat");
-    return recorderProxy_->HeartBeat();
-}
-
-void RecorderClient::CreateWatchDog()
-{
-    watchDogThread_ = std::make_unique<std::thread>(&RecorderClient::WatchDog, this);
-}
-
-void RecorderClient::StopWatchDog()
-{
-    if (watchDogThread_ != nullptr && watchDogThread_->joinable()) {
-        stopWatchDog.store(true);
-        watchDogCond_.notify_all();
-        watchDogThread_->join();
-        watchDogThread_.reset();
-        watchDogThread_ = nullptr;
-    }
-}
-
-void RecorderClient::WatchDog()
-{
-    static constexpr uint8_t timeInterval = 1; // Heartbeat once per second
-
-    while (true) {
-        std::unique_lock<std::mutex> lock(watchDogMutex_);
-        watchDogCond_.wait_for(lock, std::chrono::seconds(timeInterval), [this] { return stopWatchDog.load(); });
-
-        if (stopWatchDog.load() == true) {
-            MEDIA_LOGD("WatchDog Stop.");
-            break;
-        }
-
-        int32_t ret = HeartBeat();
-        CHECK_AND_BREAK_LOG(ret == MSERR_OK, "failed to heartbeat..");
-    }
 }
 } // namespace Media
 } // namespace OHOS
