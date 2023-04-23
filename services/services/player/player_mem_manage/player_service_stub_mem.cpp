@@ -124,7 +124,6 @@ void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
         return;
     });
     (void)taskQue_.EnqueueTask(task);
-    (void)task->GetResult();
 }
 
 void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
@@ -136,7 +135,6 @@ void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
         return;
     });
     (void)taskQue_.EnqueueTask(task);
-    (void)task->GetResult();
 }
 
 void PlayerServiceStubMem::ResetMemmgrForMemManageRecall()
@@ -148,7 +146,6 @@ void PlayerServiceStubMem::ResetMemmgrForMemManageRecall()
         return;
     });
     (void)taskQue_.EnqueueTask(task);
-    (void)task->GetResult();
 }
 
 void PlayerServiceStubMem::RecoverByMemManageRecall()
@@ -160,7 +157,6 @@ void PlayerServiceStubMem::RecoverByMemManageRecall()
         return;
     });
     (void)taskQue_.EnqueueTask(task);
-    (void)task->GetResult();
 }
 } // namespace Media
 } // namespace OHOS
