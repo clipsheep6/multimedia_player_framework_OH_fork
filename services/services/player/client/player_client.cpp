@@ -42,6 +42,7 @@ PlayerClient::PlayerClient(const sptr<IStandardPlayerService> &ipcProxy)
 PlayerClient::~PlayerClient()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    (void)DisableMonitor();
     callback_ = nullptr;
     listenerStub_ = nullptr;
     if (playerProxy_ != nullptr) {
@@ -57,6 +58,7 @@ int32_t PlayerClient::CreateListenerObject()
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "failed to new PlayerListenerStub object");
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
 
+    (void)listenerStub_->SetMonitor(weak_from_this());
     sptr<IRemoteObject> object = listenerStub_->AsObject();
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
 
@@ -103,10 +105,19 @@ int32_t PlayerClient::SetSource(int32_t fd, int64_t offset, int64_t size)
     return playerProxy_->SetSource(fd, offset, size);
 }
 
+int32_t PlayerClient::DisableWhenOK(int32_t ret)
+{
+    if (ret == MSERR_OK) {
+        (void)DisableMonitor();
+    }
+    return ret;
+}
+
 int32_t PlayerClient::Play()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    (void)EnableMonitor();
     return playerProxy_->Play();
 }
 
@@ -128,14 +139,14 @@ int32_t PlayerClient::Pause()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerProxy_->Pause();
+    return DisableWhenOK(playerProxy_->Pause());
 }
 
 int32_t PlayerClient::Stop()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerProxy_->Stop();
+    return DisableWhenOK(playerProxy_->Stop());
 }
 
 int32_t PlayerClient::Reset()
@@ -143,7 +154,7 @@ int32_t PlayerClient::Reset()
     std::lock_guard<std::mutex> lock(mutex_);
     dataSrcStub_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerProxy_->Reset();
+    return DisableWhenOK(playerProxy_->Reset());
 }
 
 int32_t PlayerClient::Release()
@@ -154,7 +165,7 @@ int32_t PlayerClient::Release()
     dataSrcStub_ = nullptr;
 
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerProxy_->Release();
+    return DisableWhenOK(playerProxy_->Release());
 }
 
 int32_t PlayerClient::ReleaseSync()
@@ -165,7 +176,7 @@ int32_t PlayerClient::ReleaseSync()
     dataSrcStub_ = nullptr;
 
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
-    return playerProxy_->ReleaseSync();
+    return DisableWhenOK(playerProxy_->ReleaseSync());
 }
 
 int32_t PlayerClient::SetVolume(float leftVolume, float rightVolume)

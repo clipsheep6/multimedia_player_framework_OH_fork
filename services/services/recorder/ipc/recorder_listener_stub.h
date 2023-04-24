@@ -18,6 +18,7 @@
 
 #include "i_standard_recorder_listener.h"
 #include "recorder.h"
+#include "monitor_client_object.h"
 
 namespace OHOS {
 namespace Media {
@@ -29,9 +30,11 @@ public:
     void OnError(int32_t errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
     void SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback);
+    void SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor);
 
 private:
     std::shared_ptr<RecorderCallback> callback_ = nullptr;
+    std::weak_ptr<MonitorClientObject> monitor_;
 };
 } // namespace Media
 } // namespace OHOS
