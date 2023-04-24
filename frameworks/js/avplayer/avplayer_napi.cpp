@@ -23,6 +23,7 @@
 #endif
 #include "string_ex.h"
 #include "player_xcollie.h"
+#include "media_dfx.h"
 #ifdef SUPPORT_JSSTACK
 #include "xpower_event_js.h"
 #endif
@@ -158,6 +159,7 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 
 napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::createAVPlayer");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsCreateAVPlayer In");
@@ -223,6 +225,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
 
 napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::prepare");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsPrepare In");
@@ -294,6 +297,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
 
 napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::play");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsPlay In");
@@ -369,6 +373,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
 
 napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::pause");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsPause In");
@@ -436,6 +441,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
 
 napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::stop");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsStop In");
@@ -514,6 +520,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
 
 napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::reset");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsReset In");
@@ -588,6 +595,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
 
 napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::release");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsRelease In");
@@ -626,6 +634,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::seek");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSeek In");
@@ -685,6 +694,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::setSpeed");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetSpeed In");
@@ -732,6 +742,7 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::setVolume");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetVolume In");
@@ -775,6 +786,7 @@ napi_value AVPlayerNapi::JsSetVolume(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::setBitrate");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSelectBitrate In");
@@ -857,6 +869,7 @@ void AVPlayerNapi::SetSource(std::string url)
 
 napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::set url");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetUrl In");
@@ -888,6 +901,7 @@ napi_value AVPlayerNapi::JsSetUrl(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get url");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetUrl In");
@@ -904,6 +918,7 @@ napi_value AVPlayerNapi::JsGetUrl(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::set fd");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetAVFileDescriptor In");
@@ -950,6 +965,7 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
 
 napi_value AVPlayerNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get fd");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetAVFileDescriptor In");
@@ -969,6 +985,7 @@ napi_value AVPlayerNapi::JsGetAVFileDescriptor(napi_env env, napi_callback_info 
 
 napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::set dataSrc");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetDataSrc In");
@@ -1026,6 +1043,7 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsGetDataSrc(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get dataSrc");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetDataSrc In");
@@ -1086,6 +1104,7 @@ void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
 
 napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::set surface");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetSurfaceID In");
@@ -1116,6 +1135,7 @@ napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsGetSurfaceID(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get surface");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetSurfaceID In");
@@ -1132,6 +1152,7 @@ napi_value AVPlayerNapi::JsGetSurfaceID(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::set loop");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetLoop In");
@@ -1178,6 +1199,7 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsGetLoop(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get loop");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetLoop In");
@@ -1193,6 +1215,7 @@ napi_value AVPlayerNapi::JsGetLoop(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::set videoScaleType");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetVideoScaleType In");
@@ -1237,6 +1260,7 @@ napi_value AVPlayerNapi::JsSetVideoScaleType(napi_env env, napi_callback_info in
 
 napi_value AVPlayerNapi::JsGetVideoScaleType(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get videoScaleType");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetVideoScaleType In");
@@ -1252,6 +1276,7 @@ napi_value AVPlayerNapi::JsGetVideoScaleType(napi_env env, napi_callback_info in
 
 napi_value AVPlayerNapi::JsSetAudioInterruptMode(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::set audioInterruptMode");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetAudioInterruptMode In");
@@ -1299,6 +1324,7 @@ napi_value AVPlayerNapi::JsSetAudioInterruptMode(napi_env env, napi_callback_inf
 
 napi_value AVPlayerNapi::JsGetAudioInterruptMode(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get audioInterruptMode");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetAudioInterruptMode In");
@@ -1349,6 +1375,7 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
 
 napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::set audioRendererInfo");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetAudioRendererInfo In");
@@ -1390,6 +1417,7 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
 
 napi_value AVPlayerNapi::JsGetAudioRendererInfo(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get audioRendererInfo");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetAudioRendererInfo In");
@@ -1410,6 +1438,7 @@ napi_value AVPlayerNapi::JsGetAudioRendererInfo(napi_env env, napi_callback_info
 
 napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get currentTime");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetCurrentTime In");
@@ -1434,6 +1463,7 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsGetDuration(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get duration");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetDuration In");
@@ -1490,6 +1520,7 @@ std::string AVPlayerNapi::GetCurrentState()
 
 napi_value AVPlayerNapi::JsGetState(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get state");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetState In");
@@ -1506,6 +1537,7 @@ napi_value AVPlayerNapi::JsGetState(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsGetWidth(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get width");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetWidth In");
@@ -1526,6 +1558,7 @@ napi_value AVPlayerNapi::JsGetWidth(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsGetHeight(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get height");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetHeight In");
@@ -1546,6 +1579,7 @@ napi_value AVPlayerNapi::JsGetHeight(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::get trackDescription");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("GetTrackDescription In");
@@ -1590,6 +1624,7 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
 
 napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::on");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetOnCallback In");
@@ -1628,6 +1663,7 @@ napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 
 napi_value AVPlayerNapi::JsClearOnCallback(napi_env env, napi_callback_info info)
 {
+    MediaTrace trace("AVPlayerNapi::off");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsClearOnCallback In");
