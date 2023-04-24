@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
 
 group("media_services_package") {
   deps = [
@@ -21,6 +22,9 @@ group("media_services_package") {
     "etc:media_service.cfg",
     "services:media_service",
   ]
+  if (multimedia_player_framework_support_seccomp) {
+    deps += [ "seccomp_policy:media_seccomp_filter" ]
+  }
 }
 
 ohos_prebuilt_etc("codec_caps") {
