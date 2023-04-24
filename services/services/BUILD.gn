@@ -37,8 +37,13 @@ config("media_service_config") {
     "-Wextra",
     "-Wimplicit-fallthrough",
     "-Wsign-compare",
-    "-Wunused-parameter",
   ]
+
+  if (multimedia_player_framework_support_avsession_background) {
+    cflags += [ "-Wno-unused-parameter" ]
+  } else {
+    cflags += [ "-Wunused-parameter" ]
+  }
 
   include_dirs = [
     "sa_media/ipc",
@@ -49,6 +54,9 @@ config("media_service_config") {
     "player/server",
     "media_data_source/ipc",
     "media_data_source/server",
+    "monitor/client",
+    "monitor/ipc",
+    "monitor/server",
     "recorder/ipc",
     "recorder/server",
     "avmetadatahelper/ipc",
@@ -70,6 +78,10 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
     "//third_party/glib/glibmemdfx",
   ]
+
+  if (multimedia_player_framework_support_avsession_background) {
+    include_dirs += [ "player/avsession_background" ]
+  }
 
   defines = []
   defines += player_framework_defines
@@ -93,6 +105,9 @@ ohos_shared_library("media_service") {
     "//foundation/multimedia/player_framework/services/utils/avsharedmemorybase.cpp",
     "common/avsharedmemory_ipc.cpp",
     "factory/engine_factory_repo.cpp",
+    "monitor/ipc/monitor_service_stub.cpp",
+    "monitor/server/monitor_server.cpp",
+    "monitor/server/monitor_server_object.cpp",
     "sa_media/ipc/media_listener_proxy.cpp",
     "sa_media/ipc/media_parcel.cpp",
     "sa_media/ipc/media_service_stub.cpp",
@@ -173,6 +188,17 @@ ohos_shared_library("media_service") {
 
   if (multimedia_player_framework_support_video) {
     external_deps += [ "graphic_standard:surface" ]
+  }
+
+  if (multimedia_player_framework_support_avsession_background) {
+    sources += [ "player/avsession_background/avsession_background.cpp" ]
+    external_deps += [
+      "ability_base:want",
+      "ability_runtime:wantagent_innerkits",
+      "audio_framework:audio_client",
+      "input:libmmi-client",
+      "multimedia_av_session:avsession_client",
+    ]
   }
 
   if (use_memmgr_plugin) {

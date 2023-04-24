@@ -31,6 +31,11 @@ IMediaService &MediaServiceFactory::GetInstance()
     return instance;
 }
 
+sptr<IStandardMonitorService> MediaLocal::GetMonitorProxy()
+{
+    return MonitorServiceStub::GetInstance();
+}
+
 std::shared_ptr<IRecorderService> MediaLocal::CreateRecorderService()
 {
     return RecorderServer::Create();

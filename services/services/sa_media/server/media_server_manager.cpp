@@ -32,6 +32,7 @@
 #include "avcodec_service_stub.h"
 #include "avcodeclist_service_stub.h"
 #endif
+#include "monitor_service_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_dfx.h"
@@ -125,6 +126,12 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         return OHOS::INVALID_OPERATION;
     }
 
+    if (MonitorServiceStub::GetInstance()->DumpInfo(fd,
+        argSets.find(u"monitor") != argSets.end()) != OHOS::NO_ERROR) {
+        MEDIA_LOGW("Failed to write monitor dump information");
+        return OHOS::INVALID_OPERATION;
+    }
+
     return OHOS::NO_ERROR;
 }
 
@@ -168,6 +175,9 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
             return CreateAVCodecStubObject();
         }
 #endif
+        case MONITOR: {
+            return GetMonitorStubObject();
+        }
         default: {
             MEDIA_LOGE("default case, media server manager failed");
             return nullptr;
@@ -366,6 +376,14 @@ sptr<IRemoteObject> MediaServerManager::CreateAVCodecStubObject()
 }
 #endif
 
+sptr<IRemoteObject> MediaServerManager::GetMonitorStubObject()
+{
+    sptr<MonitorServiceStub> monitorStub = MonitorServiceStub::GetInstance();
+    CHECK_AND_RETURN_RET_LOG(monitorStub != nullptr, nullptr, "failed to create MonitorServiceStub");
+    sptr<IRemoteObject> object = monitorStub->AsObject();
+    return object;
+}
+
 void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -521,6 +539,8 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
         }
     }
     MEDIA_LOGD("mediaprofile stub services(%{public}zu).", recorderProfilesStubMap_.size());
+
+    MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
 }
 
