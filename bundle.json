@@ -45,7 +45,7 @@
           "libxml2",
           "thirdparty_bounds_checking_function",
           "hitrace_native",
-          "multimedia_audio_framework",
+          "audio_framework",
           "ipc",
           "graphic_standard",
           "hisysevent_native",
