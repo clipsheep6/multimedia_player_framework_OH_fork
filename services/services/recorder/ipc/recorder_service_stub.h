@@ -22,10 +22,12 @@
 #include "media_death_recipient.h"
 #include "recorder_server.h"
 #include "nocopyable.h"
+#include "monitor_server_object.h"
 
 namespace OHOS {
 namespace Media {
-class RecorderServiceStub : public IRemoteStub<IStandardRecorderService>, public NoCopyable {
+class RecorderServiceStub : public IRemoteStub<IStandardRecorderService>,
+    public MonitorServerObject, public NoCopyable {
 public:
     static sptr<RecorderServiceStub> Create();
     virtual ~RecorderServiceStub();
@@ -62,8 +64,11 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t DestroyStub() override;
-    int32_t HeartBeat() override;
     int32_t DumpInfo(int32_t fd);
+
+    // MonitorServerObject override
+    int32_t DoIpcAbnormality() override;
+    int32_t DoIpcRecovery(bool fromMonitor) override;
 
 private:
     RecorderServiceStub();
@@ -98,11 +103,11 @@ private:
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t SetFileSplitDuration(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
-    int32_t HeartBeat(MessageParcel &data, MessageParcel &reply);
 
     std::shared_ptr<IRecorderService> recorderServer_ = nullptr;
     std::map<uint32_t, RecorderStubFunc> recFuncs_;
     std::mutex mutex_;
+    int32_t pid_;
 };
 } // namespace Media
 } // namespace OHOS

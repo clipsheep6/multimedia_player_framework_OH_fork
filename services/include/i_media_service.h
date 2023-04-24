@@ -31,6 +31,7 @@
 #include "i_avcodec_service.h"
 #include "i_avcodeclist_service.h"
 #endif
+#include "i_standard_monitor_service.h"
 
 namespace OHOS {
 namespace Media {
@@ -183,6 +184,17 @@ public:
      */
     virtual int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) = 0;
 #endif
+
+    /**
+     * @brief Get an monitor proxy.
+     *
+     * To communicate with the server monitor, you must first obtain the monitor proxy.
+     *
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual sptr<IStandardMonitorService> GetMonitorProxy() = 0;
 };
 
 class __attribute__((visibility("default"))) MediaServiceFactory {
