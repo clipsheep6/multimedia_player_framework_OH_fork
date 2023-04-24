@@ -24,6 +24,9 @@
 #include "parameter.h"
 #include "media_dfx.h"
 #include "player_xcollie.h"
+#ifdef SUPPORT_AVSESSION
+#include "avsession_background.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServiceStub"};
@@ -103,7 +106,8 @@ int32_t PlayerServiceStub::Init()
         playerServer_ = PlayerServer::Create();
     }
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "failed to create PlayerServer");
-
+    appUid_ = IPCSkeleton::GetCallingUid();
+    appPid_ = IPCSkeleton::GetCallingPid();
     SetPlayerFuncs();
     return MSERR_OK;
 }
@@ -124,6 +128,7 @@ int32_t PlayerServiceStub::DestroyStub()
 int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
+    MediaTrace trace("binder::OnRemoteRequest");
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (PlayerServiceStub::GetDescriptor() != remoteDescriptor) {
         MEDIA_LOGE("Invalid descriptor");
@@ -200,6 +205,9 @@ int32_t PlayerServiceStub::Play()
 {
     MediaTrace trace("binder::Play");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+#ifdef SUPPORT_AVSESSION
+    AVsessionBackground::Instance().AddListener(playerServer_, appUid_);
+#endif
     return playerServer_->Play();
 }
 

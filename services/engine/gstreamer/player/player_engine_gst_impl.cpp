@@ -400,11 +400,7 @@ void PlayerEngineGstImpl::HandleAudioStateMessage(const PlayBinMessage &msg)
     MEDIA_LOGI("HandleAudioStateMessage:%{public}d", value);
 
     if (value == AudioStandard::RendererState::RENDERER_PAUSED) {
-        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
-        Format format;
-        if (notifyObs != nullptr) {
-            notifyObs->OnInfo(INFO_TYPE_STATE_CHANGE_BY_AUDIO, PlayerStates::PLAYER_PAUSED, format);
-        }
+        MEDIA_LOGW("avsession background audio paused");
     }
 }
 
