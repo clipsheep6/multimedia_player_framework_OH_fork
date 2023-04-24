@@ -11,25 +11,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-STARTUP_ROOT_DIR = "//base/startup"
+STARTUP_INIT_ROOT_DIR = "//base/startup/init"
 import(
-    "$STARTUP_ROOT_DIR/init/services/modules/seccomp/scripts/seccomp_policy_fixer.gni")
+    "$STARTUP_ROOT_DIR/services/modules/seccomp/scripts/seccomp_policy_fixer.gni")
 
-if (defined(build_seccomp) && build_seccomp) {
-  ohos_prebuilt_seccomp("media_seccomp_filter") {
-    sources = [ "media_service.seccomp.policy" ]
+ohos_prebuilt_seccomp("media_seccomp_filter") {
+  sources = [ "media_service.seccomp.policy" ]
 
-    filtername = "media_service"
+  filtername = "media_service"
 
-    process_type = "system"
+  process_type = "system"
 
-    subsystem_name = "multimedia"
-    part_name = "multimedia_player_framework"
+  subsystem_name = "multimedia"
+  part_name = "multimedia_player_framework"
 
-    install_enable = true
-    install_images = [ "system" ]
-  }
-} else {
-  group("media_seccomp_filter") {
-  }
+  install_enable = true
+  install_images = [ "system" ]
 }
