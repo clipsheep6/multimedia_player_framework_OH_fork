@@ -27,6 +27,10 @@ declare_args() {
   multimedia_player_framework_support_test = true
   multimedia_player_framework_support_xcollie = true
   multimedia_player_framework_support_jsstack = true
+  multimedia_player_framework_support_seccomp = false
+  if (defined(build_seccomp) && build_seccomp) {
+    multimedia_player_framework_support_seccomp = true
+  }
   use_memmgr_plugin = false
   if (defined(global_parts_info.resourceschedule_memmgr_plugin)) {
     use_memmgr_plugin = true

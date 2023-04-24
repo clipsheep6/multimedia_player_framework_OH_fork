@@ -21,7 +21,7 @@ group("media_services_package") {
     "etc:media_service.cfg",
     "services:media_service",
   ]
-  if (defined(build_seccomp) && build_seccomp) {
+  if (multimedia_player_framework_support_seccomp) {
     deps += [ "seccomp_policy:media_seccomp_filter" ]
   }
 }
