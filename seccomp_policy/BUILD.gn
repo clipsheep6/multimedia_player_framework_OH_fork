@@ -1,0 +1,35 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+STARTUP_ROOT_DIR = "//base/startup"
+import(
+    "$STARTUP_ROOT_DIR/init/services/modules/seccomp/scripts/seccomp_policy_fixer.gni")
+
+if (defined(build_seccomp) && build_seccomp) {
+  ohos_prebuilt_seccomp("media_seccomp_filter") {
+    sources = [ "media_service.seccomp.policy" ]
+
+    filtername = "media_service"
+
+    process_type = "system"
+
+    subsystem_name = "multimedia"
+    part_name = "multimedia_player_framework"
+
+    install_enable = true
+    install_images = [ "system" ]
+  }
+} else {
+  group("media_seccomp_filter") {
+  }
+}

@@ -74,7 +74,8 @@
           ],
           "service_group": [
             "//foundation/multimedia/player_framework/services:media_services_package",
-            "//foundation/multimedia/player_framework/sa_profile:media_service_sa_profile"
+            "//foundation/multimedia/player_framework/sa_profile:media_service_sa_profile",
+            "//foundation/multimedia/player_framework/seccomp_policy:media_seccomp_filter"
           ]
         },
         "inner_kits": [
