@@ -39,7 +39,7 @@ constexpr int32_t MSEC_PER_USEC = 1000;
 constexpr int32_t MSEC_PER_NSEC = 1000000;
 constexpr int32_t BUFFER_TIME_DEFAULT = 15000; // 15s
 constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
-constexpr int32_t POSITION_REPORT_PER_TIMES = 10;
+constexpr int32_t POSITION_REPORT_PER_TIMES = 1;
 
 PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid)
     : appuid_(uid), apppid_(pid)
@@ -400,11 +400,7 @@ void PlayerEngineGstImpl::HandleAudioStateMessage(const PlayBinMessage &msg)
     MEDIA_LOGI("HandleAudioStateMessage:%{public}d", value);
 
     if (value == AudioStandard::RendererState::RENDERER_PAUSED) {
-        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
-        Format format;
-        if (notifyObs != nullptr) {
-            notifyObs->OnInfo(INFO_TYPE_STATE_CHANGE_BY_AUDIO, PlayerStates::PLAYER_PAUSED, format);
-        }
+        MEDIA_LOGW("avsession background audio paused");
     }
 }
 

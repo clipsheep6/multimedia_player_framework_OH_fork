@@ -24,7 +24,9 @@
 #include "parameter.h"
 #include "media_dfx.h"
 #include "player_xcollie.h"
-#include "ipc_skeleton.h"
+#ifdef SUPPORT_AVSESSION
+#include "avsession_background.h"
+#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServiceStub"};
@@ -208,6 +210,9 @@ int32_t PlayerServiceStub::Play()
 {
     MediaTrace trace("binder::Play");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+#ifdef SUPPORT_AVSESSION
+    AVsessionBackground::Instance().AddListener(playerServer_, appUid_);
+#endif
     return playerServer_->Play();
 }
 

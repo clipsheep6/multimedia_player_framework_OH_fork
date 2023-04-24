@@ -128,11 +128,11 @@ ohos_shared_library("media") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
+    "audio_framework:audio_client",
     "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_single",
-    "multimedia_audio_framework:audio_client",
     "napi:ace_napi",
   ]
 

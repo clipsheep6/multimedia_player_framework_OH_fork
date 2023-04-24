@@ -146,6 +146,18 @@ int32_t HdiVdecParamsMgr::GetOutputVideoCommon(GstElement *element)
     base->rect.width = base->output.width;
     base->rect.height = base->output.height;
 
+    OMX_CONFIG_RECTTYPE rect;
+    InitParam(rect, verInfo_);
+    rect.nPortIndex = outPortDef_.nPortIndex;
+    if (HdiGetConfig(handle_, OMX_IndexConfigCommonOutputCrop, rect) == OMX_ErrorNone) {
+        base->rect.x = rect.nLeft;
+        base->rect.y = rect.nTop;
+        base->rect.width = rect.nWidth;
+        base->rect.height = rect.nHeight;
+        MEDIA_LOGD("rect nLeft %{public}d nTop %{public}d width %{public}d height %{public}d ",
+            rect.nLeft, rect.nTop, rect.nWidth, rect.nHeight);
+    }
+
     return GST_CODEC_OK;
 }
 
