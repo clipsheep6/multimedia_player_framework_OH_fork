@@ -1031,6 +1031,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
 
     if (playerCb_ != nullptr && ret == MSERR_OK) {
         if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == backgroundState_) {
+            MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
             if (isBackgroundCb_) {
                 Format newInfo = infoBody;
                 newInfo.PutIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, StateChangeReason::BACKGROUND);
@@ -1038,7 +1039,6 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
                 isBackgroundCb_ = false;
             }
             isBackgroundChanged_ = false;
-            MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
         } else {
             playerCb_->OnInfo(type, extra, infoBody);
         }
