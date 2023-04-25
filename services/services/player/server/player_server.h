@@ -179,6 +179,7 @@ private:
     bool disableNextSeekDone_ = false;
     bool isBackgroundCb_ = false;
     bool isBackgroundChanged_ = false;
+    PlayerStates backgroundState_ = PLAYER_IDLE;
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
     bool isLiveStream_ = false;
