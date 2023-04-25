@@ -39,6 +39,8 @@ private:
     PlayerServiceStubMem();
     int32_t Init() override;
     MemManageRecall memRecallStruct_;
+    std::recursive_mutex recMutex_;
+    bool isControlByMemManage_ = false;
 };
 } // namespace Media
 } // namespace OHOS
