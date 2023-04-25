@@ -25,6 +25,9 @@ class PlayerServiceStubMem : public PlayerServiceStub {
 public:
     static sptr<PlayerServiceStub> Create();
     virtual ~PlayerServiceStubMem();
+    int32_t SetSource(const std::string &url) override;
+    int32_t SetSource(const sptr<IRemoteObject> &object) override;
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t DestroyStub() override;
     int32_t Release() override;
     void ResetFrontGroundForMemManageRecall();
@@ -36,6 +39,8 @@ private:
     PlayerServiceStubMem();
     int32_t Init() override;
     MemManageRecall memRecallStruct_;
+    std::recursive_mutex recMutex_;
+    bool isControlByMemManage_ = false;
 };
 } // namespace Media
 } // namespace OHOS
