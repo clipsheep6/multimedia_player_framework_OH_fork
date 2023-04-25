@@ -93,6 +93,27 @@ int32_t PlayerServiceStubMem::Init()
     return MSERR_OK;
 }
 
+int32_t PlayerServiceStubMem::SetSource(const std::string &url)
+{
+    isControlByMemManage_ = false;
+    if (url.find(".m3u8") != std::string::npos) {
+        isControlByMemManage_ = true;
+    }
+    return PlayerServiceStub::SetSource(url);
+}
+
+int32_t PlayerServiceStubMem::SetSource(const sptr<IRemoteObject> &object)
+{
+    isControlByMemManage_ = true;
+    return PlayerServiceStub::SetSource(object);
+}
+
+int32_t PlayerServiceStubMem::SetSource(int32_t fd, int64_t offset, int64_t size)
+{
+    isControlByMemManage_ = true;
+    return PlayerServiceStub::SetSource(fd, offset, size);
+}
+
 int32_t PlayerServiceStubMem::DestroyStub()
 {
     MediaTrace trace("binder::DestroyStub");
@@ -117,6 +138,9 @@ int32_t PlayerServiceStubMem::Release()
 
 void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
 {
+    if (!isControlByMemManage_) {
+        return;
+    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetFrontGroundForMemManageRecall");
         std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetFrontGroundForMemManage();
@@ -128,6 +152,9 @@ void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
 
 void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
 {
+    if (!isControlByMemManage_) {
+        return;
+    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetBackGroundForMemManageRecall");
         std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetBackGroundForMemManage();
@@ -139,6 +166,9 @@ void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
 
 void PlayerServiceStubMem::ResetMemmgrForMemManageRecall()
 {
+    if (!isControlByMemManage_) {
+        return;
+    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetMemmgrForMemManageRecall");
         std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetMemmgrForMemManage();
@@ -150,6 +180,9 @@ void PlayerServiceStubMem::ResetMemmgrForMemManageRecall()
 
 void PlayerServiceStubMem::RecoverByMemManageRecall()
 {
+    if (!isControlByMemManage_) {
+        return;
+    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("RecoverByMemManage");
         std::static_pointer_cast<PlayerServerMem>(playerServer_)->RecoverByMemManage();
