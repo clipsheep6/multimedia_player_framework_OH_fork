@@ -107,6 +107,6 @@ ohos_executable("media_demo") {
   ]
   install_enable = false
 
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
   subsystem_name = "multimedia"
 }

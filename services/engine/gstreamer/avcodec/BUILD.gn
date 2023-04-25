@@ -110,5 +110,5 @@ ohos_static_library("media_engine_gst_avcodec") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

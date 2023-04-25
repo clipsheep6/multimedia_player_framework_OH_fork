@@ -91,5 +91,5 @@ ohos_static_library("gst_codec_plugins_common") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

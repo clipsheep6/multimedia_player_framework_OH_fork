@@ -28,7 +28,7 @@ group("napi_packages") {
 }
 
 js_declaration("media_js") {
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
   sources = [ "./@ohos.multimedia.media.d.ts" ]
 }
 
@@ -148,6 +148,6 @@ ohos_shared_library("media") {
   defines += player_framework_defines
 
   relative_install_dir = "module/multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
   subsystem_name = "multimedia"
 }
