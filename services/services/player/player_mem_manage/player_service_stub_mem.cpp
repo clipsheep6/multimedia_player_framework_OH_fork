@@ -95,54 +95,48 @@ int32_t PlayerServiceStubMem::Init()
 
 int32_t PlayerServiceStubMem::SetSource(const std::string &url)
 {
-    {
+    auto ret = PlayerServiceStub::SetSource(url);
+    if (ret == MSERR_OK) {
         std::lock_guard<std::recursive_mutex> lock(recMutex_);
         isControlByMemManage_ = false;
-        if (url.find(".m3u8") != std::string::npos) {
+        if (url.find(".m3u8") != std::string::npos ||
+            url.find("fd://") != std::string::npos) {
             isControlByMemManage_ = true;
         }
     }
-    return PlayerServiceStub::SetSource(url);
+    return ret;
 }
 
 int32_t PlayerServiceStubMem::SetSource(const sptr<IRemoteObject> &object)
 {
-    {
+    auto ret = PlayerServiceStub::SetSource(object);
+    if (ret == MSERR_OK) {
         std::lock_guard<std::recursive_mutex> lock(recMutex_);
-        isControlByMemManage_ = true;
+        isControlByMemManage_ = false;
     }
-    return PlayerServiceStub::SetSource(object);
+    return ret;
 }
 
 int32_t PlayerServiceStubMem::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
-    {
+    auto ret = PlayerServiceStub::SetSource(fd, offset, size);
+    if (ret == MSERR_OK) {
         std::lock_guard<std::recursive_mutex> lock(recMutex_);
         isControlByMemManage_ = true;
     }
-    return PlayerServiceStub::SetSource(fd, offset, size);
+    return ret;
 }
 
 int32_t PlayerServiceStubMem::DestroyStub()
 {
-    MediaTrace trace("binder::DestroyStub");
-    playerCallback_ = nullptr;
-    if (playerServer_ != nullptr) {
-        PlayerMemManage::GetInstance().DeregisterPlayerServer(memRecallStruct_);
-        (void)playerServer_->Release();
-        playerServer_ = nullptr;
-    }
-
-    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, AsObject());
-    return MSERR_OK;
+    PlayerMemManage::GetInstance().DeregisterPlayerServer(memRecallStruct_);
+    return PlayerServiceStub::DestroyStub();
 }
 
 int32_t PlayerServiceStubMem::Release()
 {
-    MediaTrace trace("binder::Release");
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     PlayerMemManage::GetInstance().DeregisterPlayerServer(memRecallStruct_);
-    return playerServer_->Release();
+    return PlayerServiceStub::Release();
 }
 
 void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
