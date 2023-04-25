@@ -350,10 +350,14 @@ int32_t PlayerServer::HandlePlay()
 
 int32_t PlayerServer::BackGroundChangeState(PlayerStates state, bool isBackGroundCb)
 {
+    backgroundState_ = state;
+    isBackgroundCb_ = isBackGroundCb;
     if (state == PLAYER_PAUSED) {
-        isBackgroundCb_ = isBackGroundCb;
         isBackgroundChanged_ = true;
         return PlayerServer::Pause();
+    } else if (state == PLAYER_STARTED) {
+        isBackgroundChanged_ = true;
+        return PlayerServer::Play();
     }
     return MSERR_INVALID_OPERATION;
 }
@@ -1026,7 +1030,8 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     }
 
     if (playerCb_ != nullptr && ret == MSERR_OK) {
-        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PAUSED) {
+        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == backgroundState_) {
+            MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
             if (isBackgroundCb_) {
                 Format newInfo = infoBody;
                 newInfo.PutIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, StateChangeReason::BACKGROUND);
