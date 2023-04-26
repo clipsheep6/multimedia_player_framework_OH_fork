@@ -262,7 +262,7 @@ void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
             if (notifyObs != nullptr) {
                 Format format;
                 (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION),
-                                        static_cast<int32_t>(mqBufferingTime));
+                    static_cast<int32_t>(mqBufferingTime));
                 notifyObs->OnInfo(INFO_TYPE_BUFFERING_UPDATE, 0, format);
             }
         }
