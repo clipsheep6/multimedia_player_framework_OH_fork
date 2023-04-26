@@ -328,7 +328,7 @@ int32_t GstAppsrcEngine::PullBuffer()
         std::unique_lock<std::mutex> freeLock(freeMutex_);
         appSrcMem_->PrintCurPos();
         auto mem = appSrcMem_->GetMem();
-        int32_t pullSize = appSrcMem_->GetBufferSize() - appSrcMem_->GetBeginPos();
+        int32_t pullSize = static_cast<int32_t>(appSrcMem_->GetBufferSize() - appSrcMem_->GetBeginPos());
         pullSize = std::min(pullSize, PULL_SIZE);
         MEDIA_LOGD("ReadAt begin, length is %{public}d", pullSize);
         std::static_pointer_cast<AVDataSrcMemory>(mem)->SetOffset(appSrcMem_->GetBeginPos());
