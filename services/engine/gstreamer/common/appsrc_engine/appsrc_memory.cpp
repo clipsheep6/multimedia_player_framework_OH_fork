@@ -408,8 +408,8 @@ void AppsrcMemory::PrintCurPos()
 void AppsrcMemory::CheckBufferUsage()
 {
     MEDIA_LOGD("Enter CheckBufferUsage");
-    int32_t queueSize = unusedBuffers_.size();
-    for (int i = 0; i < queueSize; i++) {
+    size_t queueSize = unusedBuffers_.size();
+    for (auto i = 0; i < queueSize; i++) {
         MEDIA_LOGD("unusedBuffers begin: %{public}u, end: %{public}u",
             unusedBuffers_.front().first, unusedBuffers_.front().second);
         unusedBuffers_.push(unusedBuffers_.front());
