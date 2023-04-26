@@ -1399,7 +1399,7 @@ static void gst_vdec_base_loop(GstVdecBase *self)
 
     pthread_setname_np(pthread_self(), "VDecOutPut");
     GstBuffer *gst_buffer = nullptr;
-    if (gst_vdec_base_push_out_buffers(self) != TRUE || gst_vdec_base_is_flushing(self)) {
+    if (gst_vdec_base_is_flushing(self) || gst_vdec_base_push_out_buffers(self) != TRUE) {
         gst_vdec_base_pause_loop(self);
         return;
     }
@@ -1675,7 +1675,6 @@ static gboolean gst_vdec_base_event(GstVideoDecoder *decoder, GstEvent *event)
                 if (kclass->flush_cache_slice_buffer != nullptr) {
                     (void)kclass->flush_cache_slice_buffer(self);
                 }
-                gst_buffer_pool_set_active(self->outpool, FALSE);
                 gst_vdec_base_set_flushing(self, TRUE);
                 self->decoder_start = FALSE;
                 g_mutex_lock(&self->format_change_lock);
@@ -1686,7 +1685,6 @@ static gboolean gst_vdec_base_event(GstVideoDecoder *decoder, GstEvent *event)
             }
             break;
         case GST_EVENT_FLUSH_STOP:
-            gst_buffer_pool_set_active(self->outpool, TRUE);
             self->flushing_stoping = TRUE;
             ret = GST_VIDEO_DECODER_CLASS(parent_class)->sink_event(decoder, event);
             {
