@@ -437,6 +437,10 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             if (sink->audio_sink == nullptr) {
                 break;
             }
+            // close audio/video sync
+            g_mutex_lock(&sink->render_lock);
+            sink->last_running_time_diff = 0;
+            g_mutex_unlock(&sink->render_lock);
             if (sink->audio_sink->Drain() != MSERR_OK) {
                 GST_ERROR_OBJECT(basesink, "fail to call Drain when handling EOS event");
             }
