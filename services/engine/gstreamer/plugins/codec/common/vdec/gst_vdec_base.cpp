@@ -1380,10 +1380,6 @@ static gboolean gst_vdec_base_push_out_buffers(GstVdecBase *self)
             params.flags = GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
         }
     }
-    if (flow == GST_FLOW_FLUSHING) {
-        GST_DEBUG_OBJECT(self, "flushing");
-        return FALSE;
-    }
     if (flow != GST_FLOW_EOS) {
         GST_ELEMENT_ERROR(self, STREAM, DECODE, ("hardware decoder error!"), ("%s", "acquire buffer"));
         return FALSE;
