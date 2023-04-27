@@ -1006,7 +1006,6 @@ void PlayBinCtrlerBase::OnIsLiveStream(const GstElement *demux, gboolean isLiveS
     auto thizStrong  = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
     thizStrong->isAdaptiveLiveStream_ = isLiveStream;
     if (isLiveStream) {
-        thizStrong->SetAutoSelectBitrate(true);
         PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_IS_LIVE_STREAM, 0, {} };
         thizStrong->ReportMessage(msg);
     }
