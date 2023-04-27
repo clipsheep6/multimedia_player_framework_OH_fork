@@ -100,6 +100,7 @@ AVCodecServiceStub::~AVCodecServiceStub()
 
 int32_t AVCodecServiceStub::Init()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     codecServer_ = AVCodecServer::Create();
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "failed to create AVCodecServer");
 
@@ -127,6 +128,7 @@ int32_t AVCodecServiceStub::Init()
 
 int32_t AVCodecServiceStub::DestroyStub()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     codecServer_ = nullptr;
     outputBufferCache_ = nullptr;
     inputBufferCache_ = nullptr;
@@ -162,6 +164,7 @@ int AVCodecServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
 
 int32_t AVCodecServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set listener object is nullptr");
 
     sptr<IStandardAVCodecListener> listener = iface_cast<IStandardAVCodecListener>(object);
@@ -177,18 +180,21 @@ int32_t AVCodecServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
 
 int32_t AVCodecServiceStub::InitParameter(AVCodecType type, bool isMimeType, const std::string &name)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->InitParameter(type, isMimeType, name);
 }
 
 int32_t AVCodecServiceStub::Configure(const Format &format)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->Configure(format);
 }
 
 int32_t AVCodecServiceStub::Prepare()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     if (outputBufferCache_ == nullptr) {
         outputBufferCache_ = std::make_unique<AVCodecBufferCache>();
@@ -201,24 +207,28 @@ int32_t AVCodecServiceStub::Prepare()
 
 int32_t AVCodecServiceStub::Start()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->Start();
 }
 
 int32_t AVCodecServiceStub::Stop()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->Stop();
 }
 
 int32_t AVCodecServiceStub::Flush()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->Flush();
 }
 
 int32_t AVCodecServiceStub::Reset()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     inputBufferCache_ = nullptr;
     outputBufferCache_ = nullptr;
@@ -227,6 +237,7 @@ int32_t AVCodecServiceStub::Reset()
 
 int32_t AVCodecServiceStub::Release()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     inputBufferCache_ = nullptr;
     outputBufferCache_ = nullptr;
@@ -235,60 +246,70 @@ int32_t AVCodecServiceStub::Release()
 
 int32_t AVCodecServiceStub::NotifyEos()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->NotifyEos();
 }
 
 sptr<OHOS::Surface> AVCodecServiceStub::CreateInputSurface()
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, nullptr, "avcodec server is nullptr");
     return codecServer_->CreateInputSurface();
 }
 
 int32_t AVCodecServiceStub::SetOutputSurface(sptr<OHOS::Surface> surface)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->SetOutputSurface(surface);
 }
 
 std::shared_ptr<AVSharedMemory> AVCodecServiceStub::GetInputBuffer(uint32_t index)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, nullptr, "avcodec server is nullptr");
     return codecServer_->GetInputBuffer(index);
 }
 
 int32_t AVCodecServiceStub::QueueInputBuffer(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->QueueInputBuffer(index, info, flag);
 }
 
 std::shared_ptr<AVSharedMemory> AVCodecServiceStub::GetOutputBuffer(uint32_t index)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, nullptr, "avcodec server is nullptr");
     return codecServer_->GetOutputBuffer(index);
 }
 
 int32_t AVCodecServiceStub::GetOutputFormat(Format &format)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->GetOutputFormat(format);
 }
 
 int32_t AVCodecServiceStub::ReleaseOutputBuffer(uint32_t index, bool render)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->ReleaseOutputBuffer(index, render);
 }
 
 int32_t AVCodecServiceStub::SetParameter(const Format &format)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "avcodec server is nullptr");
     return codecServer_->SetParameter(format);
 }
 
 int32_t AVCodecServiceStub::DumpInfo(int32_t fd)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, MSERR_NO_MEMORY, "codec server is nullptr");
     return std::static_pointer_cast<AVCodecServer>(codecServer_)->DumpInfo(fd);
 }
