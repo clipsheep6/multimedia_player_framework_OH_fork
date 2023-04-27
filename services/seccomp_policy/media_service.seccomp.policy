@@ -14,7 +14,7 @@
 # For now, it supports architechture of ['arm', 'arm64'].
 
 @returnValue
-TRAP
+LOG
 
 @allowList
 getcwd;all
@@ -137,3 +137,4 @@ statx;arm
 clock_gettime64;arm
 set_tls;arm
 setpriority;all
+sched_yield;all
