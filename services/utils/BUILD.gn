@@ -68,6 +68,9 @@ ohos_shared_library("media_service_utils") {
     "//third_party/libxml2/include",
   ]
 
+  defines = []
+  defines += player_framework_defines
+
   cflags = [
     "-std=c++17",
     "-fno-rtti",
@@ -97,6 +100,7 @@ ohos_shared_library("media_service_utils") {
 
   external_deps = [
     "c_utils:utils",
+    "hicollie_native:libhicollie",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
