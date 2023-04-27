@@ -840,7 +840,6 @@ void AVPlayerNapi::SetSource(std::string url)
             }
         });
         (void)taskQue_->EnqueueTask(task);
-        task->GetResult();
     } else if (isFd) {
         const std::string fdHead = "fd://";
         std::string inputFd = url.substr(fdHead.size());
@@ -860,7 +859,6 @@ void AVPlayerNapi::SetSource(std::string url)
             }
         });
         (void)taskQue_->EnqueueTask(task);
-        task->GetResult();
     } else {
         OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, The input parameter is not fd:// or network address");
@@ -957,7 +955,6 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    task->GetResult();
 
     MEDIA_LOGI("JsSetAVFileDescriptor Out");
     return result;
@@ -1035,7 +1032,6 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    task->GetResult();
 
     MEDIA_LOGI("JsSetDataSrc Out");
     return result;
@@ -1092,7 +1088,6 @@ void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
         }
     });
     (void)taskQue_->EnqueueTask(task);
-    task->GetResult();
 }
 #else
 void AVPlayerNapi::SetSurface(const std::string &surfaceStr)
@@ -1410,7 +1405,6 @@ napi_value AVPlayerNapi::JsSetAudioRendererInfo(napi_env env, napi_callback_info
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
-    task->GetResult();
     MEDIA_LOGI("JsSetAudioRendererInfo Out");
     return result;
 }
