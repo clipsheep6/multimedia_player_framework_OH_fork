@@ -183,7 +183,7 @@ int32_t AudioSinkSvImpl::GetVolume(float &volume)
 {
     MEDIA_LOGD("GetVolume");
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED, "audioRenderer_ is nullptr");
-    LISTENER_AFTER("AudioRenderer::GetVolume", PlayerXCollie::timerTimeout)
+    LISTENER_AFTER("AudioRenderer::GetVolume", PlayerXCollie::timerTimeout);
     volume = audioRenderer_->GetVolume();
     return MSERR_OK;
 }
@@ -456,14 +456,14 @@ void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, g
     errorCb_ = errorCb;
     audioRendererMediaCallback_->SaveInterruptCallback(interruptCb);
     audioRendererMediaCallback_->SaveStateCallback(stateCb);
-    LISTENER_AFTER("AudioRenderer::SetRendererCallback", PlayerXCollie::timerTimeout)
+    LISTENER_AFTER("AudioRenderer::SetRendererCallback", PlayerXCollie::timerTimeout);
     audioRenderer_->SetRendererCallback(audioRendererMediaCallback_);
 }
 
 void AudioSinkSvImpl::SetAudioInterruptMode(int32_t interruptMode)
 {
     CHECK_AND_RETURN(audioRendererMediaCallback_ != nullptr);
-    LISTENER_AFTER("AudioRenderer::SetInterruptMode", PlayerXCollie::timerTimeout)
+    LISTENER_AFTER("AudioRenderer::SetInterruptMode", PlayerXCollie::timerTimeout);
     audioRenderer_->SetInterruptMode(static_cast<AudioStandard::InterruptMode>(interruptMode));
 }
 

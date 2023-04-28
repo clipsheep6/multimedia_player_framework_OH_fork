@@ -74,7 +74,7 @@ static bool gst_surface_request_buffer(const GstSurfaceAllocator *allocator, Gst
         wait_time
     };
     int32_t release_fence = -1;
-    OHOS::SurfaceError ret;
+    OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
     LISTENER(ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config),
         "surface::RequestBuffer", PlayerXCollie::timerTimeout)
     if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK || buffer == nullptr) {
@@ -102,7 +102,7 @@ static bool gst_surface_request_buffer(const GstSurfaceAllocator *allocator, Gst
         MediaTrace scaleTrace("Surface::SetScalingMode");
         auto scaleType = gst_surface_allocator_get_scale_type(param);
         LISTENER(ret = allocator->surface->SetScalingMode(buffer->GetSeqNum(), scaleType),
-                "surface::SetScalingMode", PlayerXCollie::timerTimeout)
+            "surface::SetScalingMode", PlayerXCollie::timerTimeout)
         if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
             GST_ERROR("surface buffer set scaling mode failed");
             LISTENER(allocator->surface->CancelBuffer(buffer),
