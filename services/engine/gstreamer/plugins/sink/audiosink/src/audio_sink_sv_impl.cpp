@@ -183,7 +183,7 @@ int32_t AudioSinkSvImpl::GetVolume(float &volume)
 {
     MEDIA_LOGD("GetVolume");
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED, "audioRenderer_ is nullptr");
-    LISTENER_AFTER("AudioRenderer::SetRendererCallback", PlayerXCollie::timerTimeout)
+    LISTENER_AFTER("AudioRenderer::GetVolume", PlayerXCollie::timerTimeout)
     volume = audioRenderer_->GetVolume();
     return MSERR_OK;
 }

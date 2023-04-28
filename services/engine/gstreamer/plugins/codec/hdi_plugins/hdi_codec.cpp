@@ -73,7 +73,7 @@ void HdiCodec::InitVersion()
     (void)memset_s(&verInfo_, sizeof(verInfo_), 0, sizeof(verInfo_));
     int32_t ret = HDF_SUCCESS;
     LISTENER(ret = handle_->GetComponentVersion(handle_, &verInfo_),
-        "HdiCodec::InitVersion", PlayerXCollie::timerTimeout)
+        "HdiCodec::GetComponentVersion", PlayerXCollie::timerTimeout)
     CHECK_AND_RETURN_LOG(ret == HDF_SUCCESS, "get version failed");
 }
 

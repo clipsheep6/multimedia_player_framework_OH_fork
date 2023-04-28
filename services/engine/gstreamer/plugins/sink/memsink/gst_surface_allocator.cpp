@@ -76,7 +76,7 @@ static bool gst_surface_request_buffer(const GstSurfaceAllocator *allocator, Gst
     int32_t release_fence = -1;
     OHOS::SurfaceError ret;
     LISTENER(ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config),
-                "surface::CancelBuffer", PlayerXCollie::timerTimeout)
+        "surface::RequestBuffer", PlayerXCollie::timerTimeout)
     if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK || buffer == nullptr) {
         GST_ERROR("there is no more surface buffer");
         return false;
@@ -85,8 +85,7 @@ static bool gst_surface_request_buffer(const GstSurfaceAllocator *allocator, Gst
         MediaTrace mapTrace("Surface::Map");
         if (buffer->Map() != OHOS::SurfaceError::SURFACE_ERROR_OK) {
             GST_ERROR("surface buffer Map failed");
-            LISTENER(allocator->surface->CancelBuffer(buffer),
-                "surface::CancelBuffer", PlayerXCollie::timerTimeout)
+            LISTENER(allocator->surface->CancelBuffer(buffer), "surface::CancelBuffer", PlayerXCollie::timerTimeout)
             return false;
         }
     }
@@ -127,8 +126,7 @@ GstSurfaceMemory *gst_surface_allocator_alloc(GstSurfaceAllocator *allocator, Gs
     GstSurfaceMemory *memory = reinterpret_cast<GstSurfaceMemory *>(g_slice_alloc0(sizeof(GstSurfaceMemory)));
     if (memory == nullptr) {
         GST_ERROR("alloc GstSurfaceMemory slice failed");
-        LISTENER(allocator->surface->CancelBuffer(buffer),
-            "surface::CancelBuffer", PlayerXCollie::timerTimeout)
+        LISTENER(allocator->surface->CancelBuffer(buffer), "surface::CancelBuffer", PlayerXCollie::timerTimeout)
         return nullptr;
     }
 
