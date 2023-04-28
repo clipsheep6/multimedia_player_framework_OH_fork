@@ -231,16 +231,16 @@ int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecall
             FindDeregisterPlayerFromVec(isFind, appPlayerInfo, memRecallStruct);
             if (appPlayerInfo.memRecallStructVec.size() == 0) {
                 Memory::MemMgrClient::GetInstance().DeregisterActiveApps(pid, uid);
-                pidPlayersInfo.erase(pid);
                 MEDIA_LOGI("DeregisterActiveApps pid:%{public}d uid:%{public}d pidPlayersInfo size:%{public}u",
                     pid, uid, static_cast<uint32_t>(pidPlayersInfo.size()));
+                pidPlayersInfo.erase(pid);
                 break;
             }
         }
         if (pidPlayersInfo.size() == 0) {
-            playerManage_.erase(uid);
             MEDIA_LOGI("remove uid:%{public}d playerManage_ size:%{public}u",
                 uid, static_cast<uint32_t>(playerManage_.size()));
+            playerManage_.erase(uid);
             break;
         }
     }
