@@ -17,6 +17,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
+#include "player_xcollie.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerListenerProxy"};
@@ -46,7 +47,7 @@ void PlayerListenerProxy::OnError(int32_t errorCode, const std::string &errorMsg
 
     data.WriteInt32(errorCode);
     data.WriteString(errorMsg);
-    int error = Remote()->SendRequest(PlayerListenerMsg::ON_ERROR_MSG, data, reply, option);
+    int error = SendRequest(PlayerListenerMsg::ON_ERROR_MSG, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on error failed, error: %{public}d", error);
 }
 
@@ -65,11 +66,11 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
     if (type == INFO_TYPE_BUFFERING_UPDATE) {
         // message concurrency, preventing client disorder
         MessageOption option;
-        int error = Remote()->SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
+        int error = SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
         CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
     } else {
         MessageOption option(MessageOption::TF_ASYNC);
-        int error = Remote()->SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
+        int error = SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
         CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
     }
 }
@@ -97,6 +98,13 @@ void PlayerListenerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const 
     if (listener_ != nullptr) {
         listener_->OnInfo(type, extra, infoBody);
     }
+}
+
+int32_t PlayerListenerProxy::SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+{
+    int32_t error = -1;
+    LISTENER(error = Remote()->SendRequest(code, data, reply, option), "PlayerListenerProxy::SendRequest", false)
+    return error;
 }
 } // namespace Media
 } // namespace OHOS

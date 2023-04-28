@@ -16,11 +16,16 @@
 #include "player_xcollie.h"
 #include <unistd.h>
 #include "media_errors.h"
+#include "media_log.h"
 #include "param_wrapper.h"
 #ifdef HICOLLIE_ENABLE
 #include "xcollie/xcollie.h"
 #include "xcollie/xcollie_define.h"
 #endif
+
+namespace {
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerXCollie"};
+}
 
 namespace OHOS {
 namespace Media {
@@ -34,6 +39,7 @@ void PlayerXCollie::TimerCallback(void *data)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     threadDeadlockCount_++;
+    MEDIA_LOGE("threadDeadlockCount: %{public}d", threadDeadlockCount_);
     static constexpr uint32_t threshold = 5; // >5 Restart service
     if (threadDeadlockCount_ >= threshold) {
         _exit(-1);
