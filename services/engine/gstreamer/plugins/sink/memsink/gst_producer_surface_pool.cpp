@@ -196,7 +196,7 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
             spool->maxBuffers = dynamicBuffers;
             OHOS::SurfaceError err = OHOS::SurfaceError::SURFACE_ERROR_OK;
             LISTENER(err = spool->surface->SetQueueSize(spool->maxBuffers),
-                "surface::SetQueueSize", PlayerXCollie::timerTimeout)
+                "surface::SetQueueSize", OHOS::Media::PlayerXCollie::timerTimeout)
             if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {
                 GST_BUFFER_POOL_UNLOCK(spool);
                 GST_ERROR_OBJECT(spool, "set queue size to %u failed", spool->maxBuffers);
@@ -459,7 +459,7 @@ static gboolean gst_producer_surface_pool_start(GstBufferPool *pool)
 
     OHOS::SurfaceError err = OHOS::SurfaceError::SURFACE_ERROR_OK;
     LISTENER(err = spool->surface->SetQueueSize(spool->maxBuffers),
-        "surface::SetQueueSize", PlayerXCollie::timerTimeout)
+        "surface::SetQueueSize", OHOS::Media::PlayerXCollie::timerTimeout)
     if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {
         GST_BUFFER_POOL_UNLOCK(spool);
         GST_ERROR_OBJECT(spool, "set queue size to %u failed", spool->maxBuffers);
@@ -502,7 +502,7 @@ static gboolean gst_producer_surface_pool_stop(GstBufferPool *pool)
     spool->started = FALSE;
     GST_BUFFER_POOL_NOTIFY(spool); // wakeup immediately
     if (spool->surface != nullptr) {
-        LISTENER(spool->surface->CleanCache(), "surface::CancelBuffer", PlayerXCollie::timerTimeout)
+        LISTENER(spool->surface->CleanCache(), "surface::CancelBuffer", OHOS::Media::PlayerXCollie::timerTimeout)
     }
     GST_BUFFER_POOL_UNLOCK(spool);
     (void)gst_task_stop(spool->task);
