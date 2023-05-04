@@ -16,6 +16,7 @@
 #include "gst_appsrc_engine.h"
 #include <algorithm>
 #include <sys/time.h>
+#include <unistd.h>
 #include "avdatasrcmemory.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -241,7 +242,6 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
     uint32_t freeSize = appSrcMem_->GetFreeSize();
     uint32_t availableSize = appSrcMem_->GetAvailableSize();
     uint32_t bufferSize = appSrcMem_->GetBufferSize();
-    int32_t ret;
     if ((needDataSize_ <= availableSize || atEos_) && !isExit_) {
         needData_ = true;
         MEDIA_LOGD("needData_ set to true");
@@ -250,6 +250,7 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
         }
         bool needcopy = appSrcMem_->IsNeedCopy(needDataSize_);
         MEDIA_LOGD("PushBuffer pushSize is %{public}u", needDataSize_);
+        int32_t ret;
         if (availableSize == 0 && atEos_) {
             ret = PushEos();
         } else if (copyMode_ || needcopy) {
@@ -328,7 +329,7 @@ int32_t GstAppsrcEngine::PullBuffer()
         std::unique_lock<std::mutex> freeLock(freeMutex_);
         appSrcMem_->PrintCurPos();
         auto mem = appSrcMem_->GetMem();
-        int32_t pullSize = appSrcMem_->GetBufferSize() - appSrcMem_->GetBeginPos();
+        int32_t pullSize = static_case<int32_t>(appSrcMem_->GetBufferSize() - appSrcMem_->GetBeginPos());
         pullSize = std::min(pullSize, PULL_SIZE);
         MEDIA_LOGD("ReadAt begin, length is %{public}d", pullSize);
         std::static_pointer_cast<AVDataSrcMemory>(mem)->SetOffset(appSrcMem_->GetBeginPos());
@@ -337,10 +338,10 @@ int32_t GstAppsrcEngine::PullBuffer()
         } else {
             readSize = dataSrc_->ReadAt(mem, pullSize, appSrcMem_->GetFilePos());
         }
-        MEDIA_LOGD("ReadAt end");
+        MEDIA_LOGD("ReadAt end, readSize is %{public}d", readSize);
         if (readSize > pullSize) {
             MEDIA_LOGE("PullBuffer loop end, readSize > length");
-            ret = MSERR_INVALID_VAL;
+            return MSERR_INVALID_VAL;
         }
 
         if (readSize < 0) {
@@ -355,6 +356,9 @@ int32_t GstAppsrcEngine::PullBuffer()
         } else if (IsConnectTimeout()) {
             OnError(MSERR_EXT_API9_TIMEOUT, "GstAppsrcEngine:Pull buffer timeout!!!");
         }
+        freeLock.unlock();
+        lock.unlock();
+        usleep(3000);
     }
     return ret;
 }
@@ -464,7 +468,7 @@ int32_t GstAppsrcEngine::PushBufferWithCopy(uint32_t pushSize)
         CHECK_AND_RETURN_RET_LOG(rc == EOK, MSERR_NO_MEMORY, "get mem is nullptr");
     } else {
         uint32_t dataSize = bufferSize - copyBegin;
-        errno_t rc = memcpy_s(data, dataSize, srcBase + copyBegin, dataSize);
+        rc = memcpy_s(data, dataSize, srcBase + copyBegin, dataSize);
         CHECK_AND_RETURN_RET_LOG(rc == EOK, MSERR_NO_MEMORY, "get mem is failed");
         rc = memcpy_s(data + dataSize, pushSize - dataSize, srcBase, pushSize - dataSize);
         CHECK_AND_RETURN_RET_LOG(rc == EOK, MSERR_NO_MEMORY, "get mem is failed");
@@ -532,7 +536,6 @@ void GstAppsrcEngine::FreePointerMemory(uint32_t offset, uint32_t length, uint32
     CHECK_AND_RETURN_LOG(mem != nullptr, "Buffer pool has been free");
 
     mem->PrintCurPos();
-    mem->CheckBufferUsage();
     CHECK_AND_RETURN_LOG(mem->FreeBufferAndChangePos(offset, length, copyMode_),
         "Bufferpool checkout failed.");
     mem->PrintCurPos();
