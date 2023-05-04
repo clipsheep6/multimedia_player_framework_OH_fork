@@ -20,6 +20,7 @@
 #include "buffer_type_meta.h"
 #include "media_log.h"
 #include "param_wrapper.h"
+#include "player_xcollie.h"
 #include "scope_guard.h"
 #include "media_dfx.h"
 #include "av_common.h"
@@ -354,7 +355,9 @@ static GstFlowReturn gst_surface_do_render_buffer(GstMemSink *memsink, GstBuffer
             {
                 MediaTrace trace("Surface::FlushBuffer");
                 surface_mem->need_render = TRUE;
-                OHOS::SurfaceError ret = priv->surface->FlushBuffer(surface_mem->buf, surface_mem->fence, flushConfig);
+                OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
+                LISTENER(ret = priv->surface->FlushBuffer(surface_mem->buf, surface_mem->fence, flushConfig),
+                    "surface::FlushBuffer", OHOS::Media::PlayerXCollie::timerTimeout)
                 if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
                     surface_mem->need_render = FALSE;
                     GST_ERROR_OBJECT(surface_sink, "flush buffer to surface failed, %d", ret);
@@ -388,8 +391,9 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
         GST_DEBUG_OBJECT(surface_sink, "set rotation: %u", surface_sink->priv->rotation);
         if (surface_sink->priv->surface) {
             MediaTrace trace("Surface::SetTransform");
-            (void)surface_sink->priv->surface->SetTransform(
-                gst_surface_mem_sink_get_rotation(surface_sink->priv->rotation));
+            LISTENER((void)surface_sink->priv->surface->SetTransform(
+                gst_surface_mem_sink_get_rotation(surface_sink->priv->rotation)),
+                "surface::SetTransform", OHOS::Media::PlayerXCollie::timerTimeout)
         }
     }
 
