@@ -103,7 +103,7 @@ void PlayerListenerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const 
 int32_t PlayerListenerProxy::SendRequest(uint32_t code, MessageParcel &data,
     MessageParcel &reply, MessageOption &option)
 {
-    int32_t error = -1;
+    int32_t error = MSERR_OK;
     LISTENER(error = Remote()->SendRequest(code, data, reply, option), "PlayerListenerProxy::SendRequest", false)
     return error;
 }

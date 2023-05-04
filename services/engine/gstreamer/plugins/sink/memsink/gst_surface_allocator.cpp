@@ -73,9 +73,7 @@ static bool gst_surface_request_buffer(const GstSurfaceAllocator *allocator, Gst
         param.usage | BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA, wait_time
     };
     int32_t release_fence = -1;
-    OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
-    LISTENER(ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config),
-        "surface::RequestBuffer", OHOS::Media::PlayerXCollie::timerTimeout)
+    OHOS::SurfaceError ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config);
     if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK || buffer == nullptr) {
         GST_ERROR("there is no more surface buffer");
         return false;

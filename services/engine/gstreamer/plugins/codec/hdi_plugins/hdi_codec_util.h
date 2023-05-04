@@ -61,49 +61,49 @@ inline void InitHdiParam(T &param, CompVerInfo &verInfo)
 template <typename T, typename U>
 inline int32_t HdiSetParameter(T *handle, uint32_t paramIndex, U &param)
 {
-    LISTENER_AFTER("HdiSetParameter", PlayerXCollie::timerTimeout);
+    XcollieTimer xCollie("HdiSetParameter", PlayerXCollie::timerTimeout);
     return handle->SetParameter(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiGetParameter(T *handle, uint32_t paramIndex, U &param)
 {
-    LISTENER_AFTER("HdiGetParameter", PlayerXCollie::timerTimeout);
+    XcollieTimer xCollie("HdiGetParameter", PlayerXCollie::timerTimeout);
     return handle->GetParameter(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiGetConfig(T *handle, uint32_t paramIndex, U &param)
 {
-    LISTENER_AFTER("HdiGetConfig", PlayerXCollie::timerTimeout);
+    XcollieTimer xCollie("HdiGetConfig", PlayerXCollie::timerTimeout);
     return handle->GetConfig(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiSetConfig(T *handle, uint32_t paramIndex, U &param)
 {
-    LISTENER_AFTER("HdiSetConfig", PlayerXCollie::timerTimeout);
+    XcollieTimer xCollie("HdiSetConfig", PlayerXCollie::timerTimeout);
     return handle->SetConfig(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiSendCommand(T *handle, OMX_COMMANDTYPE cmd, uint32_t param, U &&cmdData)
 {
-    LISTENER_AFTER("HdiSendCommand", PlayerXCollie::timerTimeout);
+    XcollieTimer xCollie("HdiSendCommand", PlayerXCollie::timerTimeout);
     return handle->SendCommand(handle, cmd, param, reinterpret_cast<int8_t *>(&cmdData), sizeof(cmdData));
 }
 
 template <typename T, typename U>
 inline int32_t HdiFillThisBuffer(T *handle, U *buffer)
 {
-    LISTENER_AFTER("HdiFillThisBuffer", PlayerXCollie::timerTimeout);
+    XcollieTimer xCollie("HdiFillThisBuffer", PlayerXCollie::timerTimeout);
     return handle->FillThisBuffer(handle, buffer);
 }
 
 template <typename T, typename U>
 inline int32_t HdiEmptyThisBuffer(T *handle, U *buffer)
 {
-    LISTENER_AFTER("HdiEmptyThisBuffer", PlayerXCollie::timerTimeout);
+    XcollieTimer xCollie("HdiEmptyThisBuffer", PlayerXCollie::timerTimeout);
     return handle->EmptyThisBuffer(handle, buffer);
 }
 

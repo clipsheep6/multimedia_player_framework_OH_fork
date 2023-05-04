@@ -347,7 +347,7 @@ void HdiInit::InitCaps()
     CodecCompCapability *hdiCaps = new CodecCompCapability[len];
     CHECK_AND_RETURN_LOG(hdiCaps != nullptr, "New CodecCompCapability fail");
     ON_SCOPE_EXIT(0) { delete[] hdiCaps; };
-    int32_t ret = 0;
+    int32_t ret = HDF_SUCCESS;
     LISTENER(ret = mgr_->GetComponentCapabilityList(hdiCaps, len),
         "HdiInit::GetComponentCapabilityList", PlayerXCollie::timerTimeout)
     CHECK_AND_RETURN_LOG(ret == HDF_SUCCESS, "GetComponentCapabilityList fail");

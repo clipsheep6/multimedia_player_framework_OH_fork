@@ -61,7 +61,6 @@ private:
 };
 
 #define LISTENER(statement, args...) { OHOS::Media::XcollieTimer xCollie(args); statement; }
-#define LISTENER_AFTER(args...) OHOS::Media::XcollieTimer xCollie(args)
 } // namespace Media
 } // namespace OHOS
 #endif

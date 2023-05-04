@@ -502,7 +502,7 @@ static gboolean gst_producer_surface_pool_stop(GstBufferPool *pool)
     spool->started = FALSE;
     GST_BUFFER_POOL_NOTIFY(spool); // wakeup immediately
     if (spool->surface != nullptr) {
-        LISTENER(spool->surface->CleanCache(), "surface::CancelBuffer", OHOS::Media::PlayerXCollie::timerTimeout)
+        LISTENER(spool->surface->CleanCache(), "surface::CleanCache", OHOS::Media::PlayerXCollie::timerTimeout)
     }
     GST_BUFFER_POOL_UNLOCK(spool);
     (void)gst_task_stop(spool->task);
