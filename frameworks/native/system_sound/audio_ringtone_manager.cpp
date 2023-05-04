@@ -263,6 +263,12 @@ int32_t RingtonePlayer::PrepareRingtonePlayer(bool isReInitNeeded)
         auto ret = player_->SetSource(kvstoreUri);
         CHECK_AND_RETURN_RET_LOG(ret == SUCCESS, ret, "Set source failed %{public}d", ret);
 
+        Format format;
+        format.PutIntValue(PlayerKeys::CONTENT_TYPE, AudioStandard::CONTENT_TYPE_RINGTONE);
+        format.PutIntValue(PlayerKeys::STREAM_USAGE, AudioStandard::STREAM_USAGE_NOTIFICATION_RINGTONE);
+        ret = player_->SetParameter(format);
+        CHECK_AND_RETURN_RET_LOG(ret == SUCCESS, ret, "Set stream type to ring failed %{public}d", ret);
+
         ret = player_->PrepareAsync();
         CHECK_AND_RETURN_RET_LOG(ret == SUCCESS, ret, "Prepare failed %{public}d", ret);
 
@@ -371,12 +377,6 @@ void RingtonePlayer::SetPlayerState(RingtoneState ringtoneState)
 
     if (ringtoneState_ == RingtoneState::STATE_PREPARED) {
         MEDIA_LOGI("Player prepared callback received. loop:%{public}d volume:%{public}f", loop_, volume_);
-
-        Format format;
-        format.PutIntValue(PlayerKeys::CONTENT_TYPE, AudioStandard::CONTENT_TYPE_RINGTONE);
-        format.PutIntValue(PlayerKeys::STREAM_USAGE, AudioStandard::STREAM_USAGE_NOTIFICATION_RINGTONE);
-
-        (void)player_->SetParameter(format);
         (void)player_->SetVolume(volume_, volume_);
         (void)player_->SetLooping(loop_);
 

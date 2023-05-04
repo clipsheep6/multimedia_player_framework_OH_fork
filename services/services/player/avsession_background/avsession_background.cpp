@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -96,19 +96,23 @@ void AVsessionBackground::AddListener(std::weak_ptr<IPlayerService> player, int3
 
 void AVsessionBackground::OnAudioSessionChecked(const int32_t uid)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto it1 = playerMap_.find(uid);
-    if (it1 != playerMap_.end()) {
-        std::list<std::weak_ptr<IPlayerService>> &playerList = it1->second;
-        for (auto &it2 : playerList) {
-            auto player = it2.lock();
-            if (player != nullptr && player->IsPlaying()) {
-                MediaTrace trace("AVsessionBackground::Pause");
-                auto playerServer = std::static_pointer_cast<PlayerServer>(player);
-                (void)playerServer->BackGroundChangeState(PlayerStates::PLAYER_PAUSED, true);
-                MEDIA_LOGW("The application uid %{public}d has not registered avsession", uid);
-                MEDIA_LOGW("The application has been logged back to the background");
-            }
+    std::list<std::weak_ptr<IPlayerService>> playerList;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto it1 = playerMap_.find(uid);
+        if (it1 != playerMap_.end()) {
+            playerList = it1->second; // copylist and unlock mutex, Avoid locking the addlist
+        }
+    }
+
+    MEDIA_LOGW("The application uid %{public}d has not registered avsession", uid);
+    for (auto &it2 : playerList) {
+        auto player = it2.lock();
+        if (player != nullptr && player->IsPlaying()) {
+            MediaTrace trace("AVsessionBackground::Pause");
+            auto playerServer = std::static_pointer_cast<PlayerServer>(player);
+            (void)playerServer->BackGroundChangeState(PlayerStates::PLAYER_PAUSED, true);
+            MEDIA_LOGW("The application has been logged back to the background");
         }
     }
 }

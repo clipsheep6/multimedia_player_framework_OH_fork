@@ -176,16 +176,6 @@ int32_t AudioSinkSvImpl::SetRendererInfo(int32_t desc, int32_t rendererFlags)
     rendererOptions_.rendererInfo.contentType = static_cast<AudioStandard::ContentType>(contentType);
     rendererOptions_.rendererInfo.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
     rendererOptions_.rendererInfo.rendererFlags = rendererFlags;
-    if (audioRenderer_ != nullptr) {
-        OHOS::AudioStandard::AudioRendererDesc audioRenderDesc;
-        audioRenderDesc.contentType = static_cast<AudioStandard::ContentType>(contentType);
-        audioRenderDesc.streamUsage = static_cast<AudioStandard::StreamUsage>(streamUsage);
-        int32_t ret = audioRenderer_->SetAudioRendererDesc(audioRenderDesc);
-        MEDIA_LOGI("audioRenderer SetRendererInfo content: %{public}d, usage: %{public}d, ret: %{public}d",
-            contentType, streamUsage, ret);
-        CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, MSERR_AUD_RENDER_FAILED,
-            "audio server SetRendererInfo failed!");
-    }
     return MSERR_OK;
 }
 
@@ -193,6 +183,7 @@ int32_t AudioSinkSvImpl::GetVolume(float &volume)
 {
     MEDIA_LOGD("GetVolume");
     CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED, "audioRenderer_ is nullptr");
+    XcollieTimer xCollie("AudioRenderer::GetVolume", PlayerXCollie::timerTimeout);
     volume = audioRenderer_->GetVolume();
     return MSERR_OK;
 }
@@ -465,12 +456,14 @@ void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, g
     errorCb_ = errorCb;
     audioRendererMediaCallback_->SaveInterruptCallback(interruptCb);
     audioRendererMediaCallback_->SaveStateCallback(stateCb);
+    XcollieTimer xCollie("AudioRenderer::SetRendererCallback", PlayerXCollie::timerTimeout);
     audioRenderer_->SetRendererCallback(audioRendererMediaCallback_);
 }
 
 void AudioSinkSvImpl::SetAudioInterruptMode(int32_t interruptMode)
 {
     CHECK_AND_RETURN(audioRendererMediaCallback_ != nullptr);
+    XcollieTimer xCollie("AudioRenderer::SetInterruptMode", PlayerXCollie::timerTimeout);
     audioRenderer_->SetInterruptMode(static_cast<AudioStandard::InterruptMode>(interruptMode));
 }
 

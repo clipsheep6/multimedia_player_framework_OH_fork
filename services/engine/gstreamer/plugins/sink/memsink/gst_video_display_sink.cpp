@@ -365,11 +365,12 @@ static void gst_video_display_sink_adjust_reach_time_handle(GstVideoDisplaySink 
             }
         }
     } else if (video_running_time_diff < audio_running_time_diff &&
-               audio_running_time_diff > DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD) {
+               (audio_running_time_diff - video_running_time_diff) > DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD) {
+        // The deviation between sound and image exceeds 20ms
         GST_DEBUG_OBJECT(video_display_sink, "audio is too late, adjust video reach_time, new reach_time=%"
             G_GUINT64_FORMAT "audio_running_time_diff=%" G_GINT64_FORMAT,
-            reach_time + audio_running_time_diff, audio_running_time_diff);
-        reach_time += audio_running_time_diff;
+            reach_time + (audio_running_time_diff - video_running_time_diff), audio_running_time_diff);
+        reach_time += (audio_running_time_diff - video_running_time_diff);
     }
 
     if (priv->enable_drop == TRUE) {

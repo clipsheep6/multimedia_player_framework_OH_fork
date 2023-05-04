@@ -24,6 +24,7 @@
 #include "gst/video/gstvideometa.h"
 #include "media_dfx.h"
 #include "securec.h"
+#include "player_xcollie.h"
 
 namespace {
     const std::unordered_map<GstVideoFormat, PixelFormat> FORMAT_MAPPING = {
@@ -177,9 +178,7 @@ static void gst_producer_surface_pool_finalize(GObject *obj)
 static void gst_producer_surface_pool_set_property(GObject *object, guint prop_id,
     const GValue *value, GParamSpec *pspec)
 {
-    g_return_if_fail(object != nullptr);
-    g_return_if_fail(value != nullptr);
-    g_return_if_fail(pspec != nullptr);
+    g_return_if_fail(object != nullptr && value != nullptr && pspec != nullptr);
     GstProducerSurfacePool *spool = GST_PRODUCER_SURFACE_POOL(object);
 
     switch (prop_id) {
@@ -195,7 +194,9 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
             }
             spool->freeBufCnt += (dynamicBuffers - spool->maxBuffers);
             spool->maxBuffers = dynamicBuffers;
-            OHOS::SurfaceError err = spool->surface->SetQueueSize(spool->maxBuffers);
+            OHOS::SurfaceError err = OHOS::SurfaceError::SURFACE_ERROR_OK;
+            LISTENER(err = spool->surface->SetQueueSize(spool->maxBuffers),
+                "surface::SetQueueSize", OHOS::Media::PlayerXCollie::timerTimeout)
             if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {
                 GST_BUFFER_POOL_UNLOCK(spool);
                 GST_ERROR_OBJECT(spool, "set queue size to %u failed", spool->maxBuffers);
@@ -456,7 +457,9 @@ static gboolean gst_producer_surface_pool_start(GstBufferPool *pool)
         return FALSE;
     }
 
-    OHOS::SurfaceError err = spool->surface->SetQueueSize(spool->maxBuffers);
+    OHOS::SurfaceError err = OHOS::SurfaceError::SURFACE_ERROR_OK;
+    LISTENER(err = spool->surface->SetQueueSize(spool->maxBuffers),
+        "surface::SetQueueSize", OHOS::Media::PlayerXCollie::timerTimeout)
     if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {
         GST_BUFFER_POOL_UNLOCK(spool);
         GST_ERROR_OBJECT(spool, "set queue size to %u failed", spool->maxBuffers);
@@ -499,7 +502,7 @@ static gboolean gst_producer_surface_pool_stop(GstBufferPool *pool)
     spool->started = FALSE;
     GST_BUFFER_POOL_NOTIFY(spool); // wakeup immediately
     if (spool->surface != nullptr) {
-        spool->surface->CleanCache();
+        LISTENER(spool->surface->CleanCache(), "surface::CleanCache", OHOS::Media::PlayerXCollie::timerTimeout)
     }
     GST_BUFFER_POOL_UNLOCK(spool);
     (void)gst_task_stop(spool->task);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -93,30 +93,60 @@ int32_t PlayerServiceStubMem::Init()
     return MSERR_OK;
 }
 
+int32_t PlayerServiceStubMem::SetSource(const std::string &url)
+{
+    auto ret = PlayerServiceStub::SetSource(url);
+    if (ret == MSERR_OK) {
+        std::lock_guard<std::recursive_mutex> lock(recMutex_);
+        isControlByMemManage_ = false;
+        if (url.find(".m3u8") != std::string::npos ||
+            url.find("fd://") != std::string::npos) {
+            isControlByMemManage_ = true;
+        }
+    }
+    return ret;
+}
+
+int32_t PlayerServiceStubMem::SetSource(const sptr<IRemoteObject> &object)
+{
+    auto ret = PlayerServiceStub::SetSource(object);
+    if (ret == MSERR_OK) {
+        std::lock_guard<std::recursive_mutex> lock(recMutex_);
+        isControlByMemManage_ = false;
+    }
+    return ret;
+}
+
+int32_t PlayerServiceStubMem::SetSource(int32_t fd, int64_t offset, int64_t size)
+{
+    auto ret = PlayerServiceStub::SetSource(fd, offset, size);
+    if (ret == MSERR_OK) {
+        std::lock_guard<std::recursive_mutex> lock(recMutex_);
+        isControlByMemManage_ = true;
+    }
+    return ret;
+}
+
 int32_t PlayerServiceStubMem::DestroyStub()
 {
-    MediaTrace trace("binder::DestroyStub");
-    playerCallback_ = nullptr;
-    if (playerServer_ != nullptr) {
-        PlayerMemManage::GetInstance().DeregisterPlayerServer(memRecallStruct_);
-        (void)playerServer_->Release();
-        playerServer_ = nullptr;
-    }
-
-    MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::PLAYER, AsObject());
-    return MSERR_OK;
+    PlayerMemManage::GetInstance().DeregisterPlayerServer(memRecallStruct_);
+    return PlayerServiceStub::DestroyStub();
 }
 
 int32_t PlayerServiceStubMem::Release()
 {
-    MediaTrace trace("binder::Release");
-    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     PlayerMemManage::GetInstance().DeregisterPlayerServer(memRecallStruct_);
-    return playerServer_->Release();
+    return PlayerServiceStub::Release();
 }
 
 void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
 {
+    {
+        std::lock_guard<std::recursive_mutex> lock(recMutex_);
+        if (!isControlByMemManage_) {
+            return;
+        }
+    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetFrontGroundForMemManageRecall");
         std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetFrontGroundForMemManage();
@@ -128,6 +158,12 @@ void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
 
 void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
 {
+    {
+        std::lock_guard<std::recursive_mutex> lock(recMutex_);
+        if (!isControlByMemManage_) {
+            return;
+        }
+    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetBackGroundForMemManageRecall");
         std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetBackGroundForMemManage();
@@ -139,6 +175,12 @@ void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
 
 void PlayerServiceStubMem::ResetMemmgrForMemManageRecall()
 {
+    {
+        std::lock_guard<std::recursive_mutex> lock(recMutex_);
+        if (!isControlByMemManage_) {
+            return;
+        }
+    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetMemmgrForMemManageRecall");
         std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetMemmgrForMemManage();
@@ -150,6 +192,12 @@ void PlayerServiceStubMem::ResetMemmgrForMemManageRecall()
 
 void PlayerServiceStubMem::RecoverByMemManageRecall()
 {
+    {
+        std::lock_guard<std::recursive_mutex> lock(recMutex_);
+        if (!isControlByMemManage_) {
+            return;
+        }
+    }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("RecoverByMemManage");
         std::static_pointer_cast<PlayerServerMem>(playerServer_)->RecoverByMemManage();

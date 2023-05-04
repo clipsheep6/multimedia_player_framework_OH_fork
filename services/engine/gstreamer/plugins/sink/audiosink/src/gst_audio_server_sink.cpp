@@ -279,9 +279,6 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
             break;
         case PROP_AUDIO_RENDERER_DESC:
             sink->renderer_desc = g_value_get_int(value);
-            if (sink->audio_sink != nullptr) {
-                sink->audio_sink->SetRendererInfo(sink->renderer_desc, sink->renderer_flag);
-            }
             break;
         case PROP_APP_UID:
             sink->appuid = g_value_get_int(value);
@@ -295,9 +292,6 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
             break;
         case PROP_AUDIO_RENDERER_FLAG:
             sink->renderer_flag = g_value_get_int(value);
-            if (sink->audio_sink != nullptr) {
-                sink->audio_sink->SetRendererInfo(sink->renderer_desc, sink->renderer_flag);
-            }
             break;
         case PROP_AUDIO_INTERRUPT_MODE:
             g_return_if_fail(sink->audio_sink != nullptr);
@@ -437,6 +431,10 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             if (sink->audio_sink == nullptr) {
                 break;
             }
+            // close audio/video sync
+            g_mutex_lock(&sink->render_lock);
+            sink->last_running_time_diff = 0;
+            g_mutex_unlock(&sink->render_lock);
             if (sink->audio_sink->Drain() != MSERR_OK) {
                 GST_ERROR_OBJECT(basesink, "fail to call Drain when handling EOS event");
             }

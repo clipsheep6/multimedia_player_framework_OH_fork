@@ -60,7 +60,7 @@ private:
     int32_t id_ = 0;
 };
 
-#define LISTENER(statement, args...) { XcollieTimer xCollie(args); statement; }
+#define LISTENER(statement, args...) { OHOS::Media::XcollieTimer xCollie(args); statement; }
 } // namespace Media
 } // namespace OHOS
 #endif

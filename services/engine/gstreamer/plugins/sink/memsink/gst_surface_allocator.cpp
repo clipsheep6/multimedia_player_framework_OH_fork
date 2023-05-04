@@ -17,6 +17,7 @@
 #include <sync_fence.h>
 #include "media_log.h"
 #include "media_dfx.h"
+#include "player_xcollie.h"
 
 GST_DEBUG_CATEGORY_STATIC(gst_surface_allocator_debug_category);
 #define GST_CAT_DEFAULT gst_surface_allocator_debug_category
@@ -69,8 +70,7 @@ static bool gst_surface_request_buffer(const GstSurfaceAllocator *allocator, Gst
     int32_t wait_time = param.dont_wait ? 0 : INT_MAX; // wait forever or no wait.
     OHOS::BufferRequestConfig request_config = {
         param.width, param.height, stride_alignment, param.format,
-        param.usage | BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
-        wait_time
+        param.usage | BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA, wait_time
     };
     int32_t release_fence = -1;
     OHOS::SurfaceError ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config);
@@ -82,7 +82,8 @@ static bool gst_surface_request_buffer(const GstSurfaceAllocator *allocator, Gst
         MediaTrace mapTrace("Surface::Map");
         if (buffer->Map() != OHOS::SurfaceError::SURFACE_ERROR_OK) {
             GST_ERROR("surface buffer Map failed");
-            allocator->surface->CancelBuffer(buffer);
+            LISTENER(allocator->surface->CancelBuffer(buffer),
+                "surface::CancelBuffer", OHOS::Media::PlayerXCollie::timerTimeout)
             return false;
         }
     }
@@ -98,10 +99,12 @@ static bool gst_surface_request_buffer(const GstSurfaceAllocator *allocator, Gst
     {
         MediaTrace scaleTrace("Surface::SetScalingMode");
         auto scaleType = gst_surface_allocator_get_scale_type(param);
-        ret = allocator->surface->SetScalingMode(buffer->GetSeqNum(), scaleType);
+        LISTENER(ret = allocator->surface->SetScalingMode(buffer->GetSeqNum(), scaleType),
+            "surface::SetScalingMode", OHOS::Media::PlayerXCollie::timerTimeout)
         if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
             GST_ERROR("surface buffer set scaling mode failed");
-            allocator->surface->CancelBuffer(buffer);
+            LISTENER(allocator->surface->CancelBuffer(buffer),
+                "surface::CancelBuffer", OHOS::Media::PlayerXCollie::timerTimeout)
             return false;
         }
     }
@@ -121,7 +124,8 @@ GstSurfaceMemory *gst_surface_allocator_alloc(GstSurfaceAllocator *allocator, Gs
     GstSurfaceMemory *memory = reinterpret_cast<GstSurfaceMemory *>(g_slice_alloc0(sizeof(GstSurfaceMemory)));
     if (memory == nullptr) {
         GST_ERROR("alloc GstSurfaceMemory slice failed");
-        allocator->surface->CancelBuffer(buffer);
+        LISTENER(allocator->surface->CancelBuffer(buffer),
+            "surface::CancelBuffer", OHOS::Media::PlayerXCollie::timerTimeout)
         return nullptr;
     }
 
@@ -148,7 +152,9 @@ static void gst_surface_allocator_free(GstAllocator *baseAllocator, GstMemory *b
         memory->need_render, memory->fence);
 
     if (!memory->need_render) {
-        OHOS::SurfaceError ret = allocator->surface->CancelBuffer(memory->buf);
+        OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
+        LISTENER(ret = allocator->surface->CancelBuffer(memory->buf),
+            "surface::CancelBuffer", OHOS::Media::PlayerXCollie::timerTimeout)
         if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
             GST_INFO("cancel buffer to surface failed, %d", ret);
         }

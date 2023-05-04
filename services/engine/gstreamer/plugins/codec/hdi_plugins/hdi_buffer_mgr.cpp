@@ -125,7 +125,9 @@ int32_t HdiBufferMgr::UseHdiBuffers(std::vector<std::shared_ptr<HdiBufferWrap>> 
     CHECK_AND_RETURN_RET_LOG(buffers.size() == mPortDef_.nBufferCountActual, GST_CODEC_ERROR, "BufferNum error");
     for (auto buffer : buffers) {
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, GST_CODEC_ERROR, "buffer is nullptr");
-        auto ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, &buffer->hdiBuffer);
+        int32_t ret = HDF_SUCCESS;
+        LISTENER(ret = handle_->UseBuffer(handle_, (uint32_t)mPortIndex_, &buffer->hdiBuffer),
+            "Hdi::UseBuffer", PlayerXCollie::timerTimeout)
         CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "UseBuffer failed");
         MEDIA_LOGD("Enter buffer id %{public}d", buffer->hdiBuffer.bufferId);
         availableBuffers_.push_back(buffer);
@@ -139,7 +141,9 @@ void HdiBufferMgr::FreeCodecBuffers()
     MEDIA_LOGD("Enter FreeCodecBuffers");
     for (auto codecBuffer : availableBuffers_) {
         CHECK_AND_BREAK_LOG(!bufferRleased_, "bufferRleased!");
-        auto ret = handle_->FreeBuffer(handle_, mPortIndex_, &codecBuffer->hdiBuffer);
+        int32_t ret = HDF_SUCCESS;
+        LISTENER(ret = handle_->FreeBuffer(handle_, mPortIndex_, &codecBuffer->hdiBuffer),
+            "Hdi::FreeBuffer", PlayerXCollie::timerTimeout)
         if (ret != HDF_SUCCESS) {
             MEDIA_LOGE("free buffer %{public}u fail", codecBuffer->hdiBuffer.bufferId);
         }
