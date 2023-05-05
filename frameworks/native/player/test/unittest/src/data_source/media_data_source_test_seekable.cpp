@@ -84,7 +84,7 @@ int32_t MediaDataSourceTestSeekable::ReadAt(const std::shared_ptr<AVSharedMemory
     }
     size_t readRet = 0;
     int32_t realLen = static_cast<int32_t>(length);
-    if (pos_ >= size_) {
+    if (pos_ >= fixedSize_) {
         MEDIA_LOGI("Is eos");
         return SOURCE_ERROR_EOF;
     }
@@ -98,7 +98,7 @@ int32_t MediaDataSourceTestSeekable::ReadAt(const std::shared_ptr<AVSharedMemory
         return SOURCE_ERROR_IO;
     }
     if (readRet == 0) {
-        realLen = static_cast<int32_t>(size_ - pos_);
+        realLen = static_cast<int32_t>(fixedSize_ - pos_);
     }
     MEDIA_LOGD("length %{public}u realLen %{public}d", length, realLen);
     return realLen;

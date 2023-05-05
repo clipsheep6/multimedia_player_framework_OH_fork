@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include "gst_appsrc_engine.h"
 #include <algorithm>
 #include <sys/time.h>
+#include <unistd.h>
 #include "avdatasrcmemory.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -34,6 +35,7 @@ namespace {
     constexpr int32_t TIME_VAL_MS = 1000;
     constexpr int32_t TIME_VAL_US = 1000000;
     constexpr int32_t PLAY_TIME_OUT_MS = 15000;
+    constexpr int32_t PULL_BUFFER_SLEEP_US = 3000;
 }
 
 namespace OHOS {
@@ -241,7 +243,6 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
     uint32_t freeSize = appSrcMem_->GetFreeSize();
     uint32_t availableSize = appSrcMem_->GetAvailableSize();
     uint32_t bufferSize = appSrcMem_->GetBufferSize();
-    int32_t ret;
     if ((needDataSize_ <= availableSize || atEos_) && !isExit_) {
         needData_ = true;
         MEDIA_LOGD("needData_ set to true");
@@ -250,6 +251,7 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
         }
         bool needcopy = appSrcMem_->IsNeedCopy(needDataSize_);
         MEDIA_LOGD("PushBuffer pushSize is %{public}u", needDataSize_);
+        int32_t ret;
         if (availableSize == 0 && atEos_) {
             ret = PushEos();
         } else if (copyMode_ || needcopy) {
@@ -337,10 +339,10 @@ int32_t GstAppsrcEngine::PullBuffer()
         } else {
             readSize = dataSrc_->ReadAt(mem, pullSize, appSrcMem_->GetFilePos());
         }
-        MEDIA_LOGD("ReadAt end");
+        MEDIA_LOGD("ReadAt end, readSize is %{public}d", readSize);
         if (readSize > pullSize) {
             MEDIA_LOGE("PullBuffer loop end, readSize > length");
-            ret = MSERR_INVALID_VAL;
+            return MSERR_INVALID_VAL;
         }
 
         if (readSize < 0) {
@@ -355,6 +357,9 @@ int32_t GstAppsrcEngine::PullBuffer()
         } else if (IsConnectTimeout()) {
             OnError(MSERR_EXT_API9_TIMEOUT, "GstAppsrcEngine:Pull buffer timeout!!!");
         }
+        freeLock.unlock();
+        lock.unlock();
+        usleep(PULL_BUFFER_SLEEP_US);
     }
     return ret;
 }
@@ -464,7 +469,7 @@ int32_t GstAppsrcEngine::PushBufferWithCopy(uint32_t pushSize)
         CHECK_AND_RETURN_RET_LOG(rc == EOK, MSERR_NO_MEMORY, "get mem is nullptr");
     } else {
         uint32_t dataSize = bufferSize - copyBegin;
-        errno_t rc = memcpy_s(data, dataSize, srcBase + copyBegin, dataSize);
+        rc = memcpy_s(data, dataSize, srcBase + copyBegin, dataSize);
         CHECK_AND_RETURN_RET_LOG(rc == EOK, MSERR_NO_MEMORY, "get mem is failed");
         rc = memcpy_s(data + dataSize, pushSize - dataSize, srcBase, pushSize - dataSize);
         CHECK_AND_RETURN_RET_LOG(rc == EOK, MSERR_NO_MEMORY, "get mem is failed");
@@ -532,7 +537,6 @@ void GstAppsrcEngine::FreePointerMemory(uint32_t offset, uint32_t length, uint32
     CHECK_AND_RETURN_LOG(mem != nullptr, "Buffer pool has been free");
 
     mem->PrintCurPos();
-    mem->CheckBufferUsage();
     CHECK_AND_RETURN_LOG(mem->FreeBufferAndChangePos(offset, length, copyMode_),
         "Bufferpool checkout failed.");
     mem->PrintCurPos();

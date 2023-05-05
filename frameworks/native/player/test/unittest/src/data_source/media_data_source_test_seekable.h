@@ -38,7 +38,6 @@ private:
     int32_t Init();
     std::string uri_;
     FILE *fd_ = nullptr;
-    int64_t size_ = 0;
     int64_t pos_ = 0;
     int32_t fixedSize_ = 0;
 };
