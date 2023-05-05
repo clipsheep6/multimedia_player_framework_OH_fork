@@ -1374,6 +1374,77 @@ HWTEST_F(PlayerUnitTest, Player_SetInterrupt_001, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SetDataSource API
+ * @tc.number: Player_SetDataSource_001
+ * @tc.desc  : Test Player SetDataSource
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDataSource_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", 1894386, false));  // 1894386 file size
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME);
+    EXPECT_NE(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test SetDataSource API
+ * @tc.number: Player_SetDataSource_002
+ * @tc.desc  : Test Player SetDataSource
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDataSource_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", 1894386, true));  // 1894386 file size
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test SetDataSource API
+ * @tc.number: Player_SetDataSource_003
+ * @tc.desc  : Test Player SetDataSource
+ */
+HWTEST_F(PlayerUnitTest, Player_SetDataSource_003, TestSize.Level0)
+{
+    system("param set sys.media.datasrc.set.copymode TRUE");
+    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", 1894386, true));  // 1894386 file size
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_NEXT_SYNC));
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME);
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    system("param set sys.media.datasrc.set.copymode FALSE");
+}
+
+/**
  * @tc.name  : Test Player SelectBitRate API
  * @tc.number: Player_SelectBitRate_001
  * @tc.desc  : Test Player SelectBitRate interface

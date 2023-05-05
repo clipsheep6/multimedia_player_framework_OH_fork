@@ -80,10 +80,6 @@ int32_t MediaDataSourceTestNoSeek::ReadAt(const std::shared_ptr<AVSharedMemory> 
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_INVALID_VAL, "Mem is nullptr");
     size_t readRet = 0;
     int32_t realLen = static_cast<int32_t>(length);
-    if (pos_ >= size_) {
-        MEDIA_LOGI("Is eos");
-        return SOURCE_ERROR_EOF;
-    }
     if (mem->GetBase() == nullptr) {
         MEDIA_LOGI("Is null mem");
         return SOURCE_ERROR_IO;
@@ -94,9 +90,12 @@ int32_t MediaDataSourceTestNoSeek::ReadAt(const std::shared_ptr<AVSharedMemory> 
         return SOURCE_ERROR_IO;
     }
     if (readRet == 0) {
-        realLen = static_cast<int32_t>(size_ - pos_);
+        realLen = static_cast<int32_t>(fixedSize_ - pos_);
     }
     MEDIA_LOGD("length %{public}u realLen %{public}d", length, realLen);
+    if (realLen == 0) {
+        return SOURCE_ERROR_EOF;
+    }
     pos_ += realLen;
     return realLen;
 }
@@ -118,7 +117,7 @@ int32_t MediaDataSourceTestNoSeek::ReadAt(uint32_t length, const std::shared_ptr
 
 int32_t MediaDataSourceTestNoSeek::GetSize(int64_t &size)
 {
-    size = fixedSize_;
+    size = -1;
     return MSERR_OK;
 }
 } // namespace Media

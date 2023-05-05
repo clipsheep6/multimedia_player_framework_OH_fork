@@ -172,8 +172,9 @@ void AppsrcMemory::SeekAndChangePos(uint64_t pos)
         if (hasUnreturnedBuffer) {
             unusedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
             MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unusedBufferEnd);
-            unusedBuffers_.push({availableBegin_, unusedBufferEnd});
+            PushUnusedBuffers({availableBegin_, unusedBufferEnd});
             availableBegin_ = begin_ - (filePos_ - pos);
+            CheckBufferUsage();
         } else {
             uint32_t pad = noFreeBuffer_ ? bufferSize_ : 0;
             availableBegin_ = (begin_ + pad) - (filePos_ - pos);
@@ -184,8 +185,9 @@ void AppsrcMemory::SeekAndChangePos(uint64_t pos)
         if (hasUnreturnedBuffer) {
             unusedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
             MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unusedBufferEnd);
-            unusedBuffers_.push({availableBegin_, unusedBufferEnd});
+            PushUnusedBuffers({availableBegin_, unusedBufferEnd});
             availableBegin_ = ((begin_ + bufferSize_) - (filePos_ - pos)) % bufferSize_;
+            CheckBufferUsage();
         } else {
             availableBegin_ = ((begin_ + bufferSize_) - (filePos_ - pos)) % bufferSize_;
             end_ = availableBegin_ == 0 ? bufferSize_ - 1 : availableBegin_ - 1;
@@ -224,6 +226,7 @@ void AppsrcMemory::PushBufferAndChangePos(uint32_t pushSize, bool isCopy)
             end_ = (end_ + pushSize) % bufferSize_;
         } else {
             PushUnusedBuffers({availableBegin_, (availableBegin_ + pushSize) % bufferSize_});
+            CheckBufferUsage();
         }
     }
     pushOffset_ += pushSize;
@@ -282,15 +285,15 @@ bool AppsrcMemory::CopyBufferAndChangePos(std::shared_ptr<AppsrcMemory> &mem)
             CHECK_AND_RETURN_RET_LOG(rc == EOK, false, "get mem is failed");
         }
     }
+    begin_ = availableSize;
+    filePos_ = mem->GetFilePos();
+    pushOffset_ = mem->GetPushOffset();
     if (availableSize == size) {
         mem->SetMem(nullptr);
         mem = nullptr;
     } else if (availableSize) {
         mem->PushUnusedBuffers({copyBegin, mem->GetBeginPos()});
     }
-    begin_ = availableSize;
-    filePos_ = mem->GetFilePos();
-    pushOffset_ = mem->GetPushOffset();
     PrintCurPos();
     MEDIA_LOGD("Exit CopyBufferAndChangePos");
     return true;
@@ -359,6 +362,7 @@ bool AppsrcMemory::IsUnreturnedBuffer(uint32_t offset, uint32_t length,
         } else {
             iter = unreturnedBuffers_.insert(iter, {iter->first, offset});
             MEDIA_LOGD("unreturnedBuffers insert : %{public}u, %{public}u", iter->first, offset);
+            CheckBufferUsage();
             (iter + 1)->first = (offset + length) % bufferSize_;
             MEDIA_LOGD("unreturnedBuffers first change to : %{public}u", (iter + 1)->first);
         }
@@ -379,6 +383,7 @@ bool AppsrcMemory::PushBufferToUnreturnedBuffers(uint32_t offset, uint32_t lengt
     unreturnedBuffers_.push_back({(end_ + 1) % bufferSize_, offset});
     MEDIA_LOGD("unreturnedBuffers push begin: %{public}u, end: %{public}u",
         (end_ + 1) % bufferSize_, offset);
+    CheckBufferUsage();
     return true;
 }
 
@@ -409,7 +414,7 @@ void AppsrcMemory::CheckBufferUsage()
 {
     MEDIA_LOGD("Enter CheckBufferUsage");
     size_t queueSize = unusedBuffers_.size();
-    for (auto i = 0; i < queueSize; i++) {
+    for (size_t i = 0; i < queueSize; i++) {
         MEDIA_LOGD("unusedBuffers begin: %{public}u, end: %{public}u",
             unusedBuffers_.front().first, unusedBuffers_.front().second);
         unusedBuffers_.push(unusedBuffers_.front());
