@@ -28,7 +28,7 @@ namespace OHOS {
 namespace Media {
 constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 60.0;
 constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 120.0;
-constexpr int32_t RESERVE_BACK_GROUND_APP_NUM = 1;
+constexpr int32_t RESERVE_BACK_GROUND_APP_NUM = 0;
 PlayerMemManage& PlayerMemManage::GetInstance()
 {
     static PlayerMemManage instance;
@@ -68,7 +68,6 @@ void PlayerMemManage::FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
         return;
     }
 
-    MEDIA_LOGI("Back ground destroy instance, duration cost: %{public}fms", durationCost.count());
     for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
         ((*iter).resetBackGroundRecall)();
     }
@@ -86,7 +85,6 @@ void PlayerMemManage::FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
         return;
     }
 
-    MEDIA_LOGI("Front ground destroy instance, duration cost: %{public}fms", durationCost.count());
     for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
         ((*iter).resetFrontGroundRecall)();
     }
@@ -315,6 +313,7 @@ int32_t PlayerMemManage::HandleOnTrim(Memory::SystemMemoryLevel level)
 
     switch (level) {
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:  // remain 800MB trigger
+            HandleOnTrimLevelLow();
             break;
 
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:  // remain 700MB trigger
@@ -322,6 +321,7 @@ int32_t PlayerMemManage::HandleOnTrim(Memory::SystemMemoryLevel level)
             break;
 
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL: // remain 600MB trigger
+            HandleOnTrimLevelLow();
             break;
 
         default:
