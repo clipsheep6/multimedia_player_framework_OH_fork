@@ -182,11 +182,6 @@ GValueArray *AVMetadataHelperEngineGstImpl::OnNotifyAutoPlugSort(GValueArray &fa
     for (uint32_t i = 0; i < factories.n_values; i++) {
         GstElementFactory *factory =
             static_cast<GstElementFactory *>(g_value_get_object(g_value_array_get_nth(&factories, i)));
-        if (strstr(gst_element_factory_get_metadata(factory, GST_ELEMENT_METADATA_KLASS),
-            "Codec/Decoder/Video/Hardware")) {
-            MEDIA_LOGD("set remove hardware codec plugins from pipeline");
-            continue;
-        }
         GValue val = G_VALUE_INIT;
         g_value_init(&val, G_TYPE_OBJECT);
         g_value_set_object(&val, factory);
@@ -435,6 +430,8 @@ void AVMetadataHelperEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
     if (metaStr.find("Codec/Decoder/Video") != std::string::npos) {
         MEDIA_LOGI("Only need one frame!");
         g_object_set(const_cast<GstElement *>(&elem), "only-one-frame-required", TRUE, nullptr);
+        MEDIA_LOGI("Set avmeta mode!");
+        g_object_set(const_cast<GstElement *>(&elem), "metadata-mode", TRUE, nullptr);
     }
     
     std::unique_lock<std::mutex> lock(mutex_);

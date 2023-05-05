@@ -66,6 +66,8 @@ int32_t HdiVdecParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element
         case GST_VENDOR:
             MEDIA_LOGD("Set vendor property");
             break;
+        case GST_METADATA_MODE:
+            return SetMetadataMode();
         default:
             break;
     }
@@ -108,6 +110,18 @@ int32_t HdiVdecParamsMgr::SetVideoFormat(GstElement *element)
     videoFormat_.codecColorFormat = (OMX_COLOR_FORMATTYPE)HdiCodecUtil::FormatGstToHdi(base->format); // need to do
     MEDIA_LOGD("videoFormat_.codecColorFormat %{public}d", videoFormat_.codecColorFormat);
     auto ret = HdiSetParameter(handle_, OMX_IndexCodecVideoPortFormat, videoFormat_);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
+    return GST_CODEC_OK;
+}
+
+int32_t HdiVdecParamsMgr::SetMetadataMode()
+{
+    MEDIA_LOGD("SetMetadataMode");
+    CodecEnableNativeBufferParams nativeBufferParam;
+    InitHdiParam(nativeBufferParam, verInfo_);
+    nativeBufferParam.portIndex = outPortDef_.nPortIndex;
+    nativeBufferParam.enable = OMX_FALSE;
+    auto ret = HdiSetParameter(handle_, OMX_IndexCodecExtEnableNativeBuffer, nativeBufferParam);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
     return GST_CODEC_OK;
 }
