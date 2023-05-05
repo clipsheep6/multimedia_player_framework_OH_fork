@@ -414,7 +414,7 @@ void AppsrcMemory::CheckBufferUsage()
 {
     MEDIA_LOGD("Enter CheckBufferUsage");
     size_t queueSize = unusedBuffers_.size();
-    for (size_t i = 0; i < unusedBuffers_.size(); i++) {
+    for (size_t i = 0; i < queueSize; i++) {
         MEDIA_LOGD("unusedBuffers begin: %{public}u, end: %{public}u",
             unusedBuffers_.front().first, unusedBuffers_.front().second);
         unusedBuffers_.push(unusedBuffers_.front());

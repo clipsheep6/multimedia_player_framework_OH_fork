@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -35,6 +35,7 @@ namespace {
     constexpr int32_t TIME_VAL_MS = 1000;
     constexpr int32_t TIME_VAL_US = 1000000;
     constexpr int32_t PLAY_TIME_OUT_MS = 15000;
+    constexpr int32_t PULL_BUFFER_SLEEP_US = 3000;
 }
 
 namespace OHOS {
@@ -358,7 +359,7 @@ int32_t GstAppsrcEngine::PullBuffer()
         }
         freeLock.unlock();
         lock.unlock();
-        usleep(3000);
+        usleep(PULL_BUFFER_SLEEP_US);
     }
     return ret;
 }

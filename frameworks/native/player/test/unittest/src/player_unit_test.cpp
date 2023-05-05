@@ -1426,7 +1426,7 @@ HWTEST_F(PlayerUnitTest, Player_SetDataSource_002, TestSize.Level0)
 HWTEST_F(PlayerUnitTest, Player_SetDataSource_003, TestSize.Level0)
 {
     system("param set sys.media.datasrc.set.copymode TRUE");
-    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", 1894386, true));
+    ASSERT_EQ(MSERR_OK, player_->SetDataSrc("/data/test/H264_AAC.mp4", 1894386, true));  // 1894386 file size
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
