@@ -149,7 +149,9 @@ void PlayerServiceStubMem::ResetFrontGroundForMemManageRecall()
     }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetFrontGroundForMemManageRecall");
-        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetFrontGroundForMemManage();
+        if (playerServer_ != nullptr) {
+            std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetFrontGroundForMemManage();
+        }
         PlayerXCollie::GetInstance().CancelTimer(id);
         return;
     });
@@ -166,7 +168,9 @@ void PlayerServiceStubMem::ResetBackGroundForMemManageRecall()
     }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetBackGroundForMemManageRecall");
-        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetBackGroundForMemManage();
+        if (playerServer_ != nullptr) {
+            std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetBackGroundForMemManage();
+        }
         PlayerXCollie::GetInstance().CancelTimer(id);
         return;
     });
@@ -183,7 +187,9 @@ void PlayerServiceStubMem::ResetMemmgrForMemManageRecall()
     }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("ResetMemmgrForMemManageRecall");
-        std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetMemmgrForMemManage();
+        if (playerServer_ != nullptr) {
+            std::static_pointer_cast<PlayerServerMem>(playerServer_)->ResetMemmgrForMemManage();
+        }
         PlayerXCollie::GetInstance().CancelTimer(id);
         return;
     });
@@ -200,7 +206,9 @@ void PlayerServiceStubMem::RecoverByMemManageRecall()
     }
     auto task = std::make_shared<TaskHandler<void>>([&, this] {
         int32_t id = PlayerXCollie::GetInstance().SetTimer("RecoverByMemManage");
-        std::static_pointer_cast<PlayerServerMem>(playerServer_)->RecoverByMemManage();
+        if (playerServer_ != nullptr) {
+            std::static_pointer_cast<PlayerServerMem>(playerServer_)->RecoverByMemManage();
+        }
         PlayerXCollie::GetInstance().CancelTimer(id);
         return;
     });
