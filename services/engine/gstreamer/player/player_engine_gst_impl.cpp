@@ -335,7 +335,7 @@ void PlayerEngineGstImpl::HandleIsLiveStream(const PlayBinMessage &msg)
     }
 }
 
-void PlayerEngineGstImpl::HandleSubTitleUpdate(const PlayBinMessage &msg)
+void PlayerEngineGstImpl::HandleSubtitleUpdate(const PlayBinMessage &msg)
 {
     (void)msg;
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
@@ -474,7 +474,7 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_VIDEO_SIZE_CHANGED] = &PlayerEngineGstImpl::HandleVideoSizeChanged;
     subMsgHandler_[PLAYBIN_SUB_MSG_BITRATE_COLLECT] = &PlayerEngineGstImpl::HandleBitRateCollect;
     subMsgHandler_[PLAYBIN_SUB_MSG_IS_LIVE_STREAM] = &PlayerEngineGstImpl::HandleIsLiveStream;
-    subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_UPDATED] = &PlayerEngineGstImpl::HandleSubTitleUpdate;
+    subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_UPDATED] = &PlayerEngineGstImpl::HandleSubtitleUpdate;
 
     MEDIA_LOGD("PlayBinCtrlerInit out");
     return MSERR_OK;

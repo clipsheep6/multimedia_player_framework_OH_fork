@@ -26,6 +26,15 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerCa
 
 namespace OHOS {
 namespace Media {
+typedef struct {
+    const char *text;
+    const char *color;
+    int size;
+    int style;
+    int weight;
+    int decorationType;
+} GstSubtitleMeta;
+
 class NapiCallback {
 public:
     struct Base {
@@ -211,6 +220,56 @@ public:
             status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,
                 "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
+
+    struct SubtitleProperty : public Base {
+        napi_value textInfo;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            // callback: (textInfo: TextInfoDescriptor)
+            napi_value args[1] = {nullptr};
+            args[0] = textInfo;
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+
+        void CreateValue(GstSubtitleMeta meta)
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+            napi_get_undefined(ref->env_, &textInfo); 
+            (void)napi_create_object(ref->env_, &textInfo);
+
+            CommonNapi::SetPropertyString(ref->env_, textInfo, "text", std::string(meta.text));
+            CommonNapi::SetPropertyString(ref->env_, textInfo, "color", std::string(meta.color));
+            CommonNapi::SetPropertyInt32(ref->env_, textInfo, "size", meta.size);
+            CommonNapi::SetPropertyInt32(ref->env_, textInfo, "style", meta.style);
+            CommonNapi::SetPropertyInt32(ref->env_, textInfo, "weight", meta.weight);
+            CommonNapi::SetPropertyInt32(ref->env_, textInfo, "decorationType", meta.decorationType);
         }
     };
 
@@ -406,7 +465,7 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
             NotifyIsLiveStream();
             break;
         case INFO_TYPE_SUBTITLE_UPDATE:
-            AVPlayerCallback::OnSubTitleUpdateCb(infoBody);
+            AVPlayerCallback::OnSubtitleUpdateCb(infoBody);
             break;
         default:
             break;
@@ -583,17 +642,41 @@ void AVPlayerCallback::OnDurationUpdateCb(int32_t duration) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnSubTitleUpdateCb(const Format &infoBody) const
+void AVPlayerCallback::OnSubtitleUpdateCb(const Format &infoBody) const
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     if (refMap_.find(AVPlayerEvent::EVENT_SUBTITLE_UPDATE) == refMap_.end()) {
         MEDIA_LOGW("can not find subtitle update callback!");
         return;
     }
-    std::string value = "";
-    if (infoBody.ContainKey(std::string(PlayerKeys::SUBTITLE_TEXT))) {
-        (void)infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), value);
+    NapiCallback::SubtitleProperty *cb = new(std::nothrow) NapiCallback::SubtitleProperty();
+    GstSubtitleMeta meta;
+    std::string text;
+    if (infoBody.ContainKey("text")) {
+        (void)infoBody.GetStringValue("text", text);
     }
+    meta.text = text.c_str();
+    std::string color;
+    if (infoBody.ContainKey("color")) {
+        (void)infoBody.GetStringValue("color", color);
+    }
+    meta.color = color.c_str();
+    if (infoBody.ContainKey("size")) {
+        (void)infoBody.GetIntValue("size", meta.size);
+    }
+    if (infoBody.ContainKey("style")) {
+        (void)infoBody.GetIntValue("style", meta.style);
+    }
+    if (infoBody.ContainKey("weight")) {
+        (void)infoBody.GetIntValue("weight", meta.weight);
+    }
+    if (infoBody.ContainKey("decorationType")) {
+        (void)infoBody.GetIntValue("decorationType", meta.decorationType);
+    }
+    cb->CreateValue(meta);
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUBTITLE_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_SUBTITLE_UPDATE;
+    NapiCallback::CompleteCallback(env_, cb);
 }
 
 

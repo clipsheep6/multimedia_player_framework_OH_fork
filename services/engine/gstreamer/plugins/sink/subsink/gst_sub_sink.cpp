@@ -17,6 +17,7 @@
 #include <gst/gst.h>
 #include <cinttypes>
 #include "gst_sub_sink.h"
+#include "gst_subtitle_meta.h"
 
 using namespace OHOS::Media;
 #define POINTER_MASK 0x00FFFFFF

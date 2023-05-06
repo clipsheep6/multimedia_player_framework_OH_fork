@@ -13,7 +13,7 @@
 
 import("//build/ohos.gni")
 
-MEDIA_ROOT_DIR = "$MEDIA_ROOT_DIR/player_framework"
+MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
 
 config("gst_sub_sink_config") {
   visibility = [ ":*" ]
@@ -43,9 +43,9 @@ config("gst_sub_sink_config") {
   include_dirs = [
     "//commonlibrary/c_utils/base/include",
     "$MEDIA_ROOT_DIR/services/utils/include",
-    "$MEDIA_ROOT_DIR/player_framework/interfaces/inner_api/native",
-    "$MEDIA_ROOT_DIR/player_framework/services/engine/gstreamer/plugins/common",
-    "$MEDIA_ROOT_DIR/player_framework/services/engine/gstreamer/plugins/sink/subsink",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/common",
+    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/sink/subsink",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base",
@@ -68,12 +68,13 @@ ohos_shared_library("gst_sub_sink") {
 
   sources = [
     "gst_sub_sink.cpp",
+    "gst_subtitle_meta.cpp",
   ]
 
   configs = [ ":gst_sub_sink_config" ]
 
   deps = [
-    "$MEDIA_ROOT_DIR/player_framework/services/utils:media_service_utils",
+    "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
@@ -88,7 +89,10 @@ ohos_shared_library("gst_sub_sink") {
 }
 
 ohos_static_library("gst_sub_sink_base") {
-  sources = [ "gst_sub_sink.cpp" ]
+  sources = [
+    "gst_sub_sink.cpp",
+    "gst_subtitle_meta.cpp",
+  ]
   configs = [ ":gst_sub_sink_config" ]
   deps = [ "../../../../../utils:media_service_utils" ]
   subsystem_name = "multimedia"

@@ -14,6 +14,7 @@
  */
 
 #include "player_sinkprovider.h"
+#include "gst_subtitle_meta.h"
 #include <sync_fence.h>
 #include "securec.h"
 #include "display_type.h"
@@ -206,7 +207,7 @@ GstElement *PlayerSinkProvider::DoCreateSubSink(const GstCaps *caps, const gpoin
     auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subsink", "sink")));
     CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
 
-    GstSubSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubTitleUpdated };
+    GstSubSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };
     gst_sub_sink_set_callback(GST_SUB_SINK(sink), &sinkCallbacks, userData, nullptr);
 
     return sink;
@@ -239,34 +240,41 @@ void PlayerSinkProvider::OnFirstRenderFrame()
     }
 }
 
-void PlayerSinkProvider::HandleSubTitleBuffer(GstBuffer *sample, std::vector<Format> subtitle)
+void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitle)
 {
-    /**
-     * @brief SubtitleDescriptor
-     * isRender: boolean;
-     * textSubInfo?: TextSubDescriptor
-     */
-    (void)sample;
-    subtitle.size();
+    GstMapInfo mapInfo;
+    GstSubtitleMeta *meta =
+        reinterpret_cast<GstSubtitleMeta *>(gst_buffer_get_meta(sample, GST_SUBTITLE_META_API_TYPE));
+    if (!gst_buffer_map(sample, &mapInfo, GST_MAP_READ)) {
+        MEDIA_LOGE("gst buffer map failed");
+        return;
+    }
+
+    (void)subtitle.PutStringValue("text", std::string_view(meta->text));
+    (void)subtitle.PutStringValue("color", std::string_view(meta->color));
+    (void)subtitle.PutIntValue("size", meta->size);
+    (void)subtitle.PutIntValue("style", meta->style);
+    (void)subtitle.PutIntValue("weight", meta->weight);
+    (void)subtitle.PutIntValue("decoration", meta->decorationType);
+    gst_buffer_unmap(sample, &mapInfo);
 }
 
-GstFlowReturn PlayerSinkProvider::SubTitleUpdated(GstBuffer *sample, gpointer userData)
+GstFlowReturn PlayerSinkProvider::SubtitleUpdated(GstBuffer *sample, gpointer userData)
 {
     CHECK_AND_RETURN_RET(userData != nullptr, GST_FLOW_ERROR);
     PlayerSinkProvider *sinkProvider = reinterpret_cast<PlayerSinkProvider *>(userData);
-    std::vector<Format> subtitle;
-    // fill format
-    sinkProvider->HandleSubTitleBuffer(sample, subtitle);
-    sinkProvider->OnSubTitleUpdated(subtitle);
+    Format subtitle;
+    sinkProvider->HandleSubtitleBuffer(sample, subtitle);
+    sinkProvider->OnSubtitleUpdated(subtitle);
     return GST_FLOW_OK;
 }
 
-void PlayerSinkProvider::OnSubTitleUpdated(const std::vector<Format> &subtitle)
+void PlayerSinkProvider::OnSubtitleUpdated(const Format &subtitle)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("OnSubTitleUpdated in");
+    MEDIA_LOGI("OnSubtitleUpdated in");
     if (notifier_ != nullptr) {
-        MediaTrace trace("PlayerSinkProvider::SubTitleUpdated");
+        MediaTrace trace("PlayerSinkProvider::SubtitleUpdated");
         PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_UPDATED, 0, subtitle};
         notifier_(msg);
         MEDIA_LOGD("Subtitle text updated");

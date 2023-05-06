@@ -95,7 +95,7 @@ private:
     void HandleInterruptMessage(const PlayBinMessage &msg);
     void HandleAudioStateMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
-    void HandleSubTitleUpdate(const PlayBinMessage &msg);
+    void HandleSubtitleUpdate(const PlayBinMessage &msg);
     void OnCapsFixError();
     void ResetPlaybinToSoftDec();
 
