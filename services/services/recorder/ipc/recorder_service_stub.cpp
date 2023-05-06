@@ -111,6 +111,7 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     if (itFunc != recFuncs_.end()) {
         auto memberFunc = itFunc->second;
         if (memberFunc != nullptr) {
+            std::lock_guard<std::mutex> lock(mutex_);
             (void)IpcRecovery(false);
             int32_t ret = (this->*memberFunc)(data, reply);
             if (ret != MSERR_OK) {
