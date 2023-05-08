@@ -64,8 +64,8 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
     data.WriteInt32(extra);
     MediaParcel::Marshalling(data, infoBody);
 
-    bool token = data.WriteInterfaceToken(PlayerListenerProxy::GetDescriptor());
-    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
+    int error = Remote()->SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
+    CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
 }
 
 PlayerListenerCallback::PlayerListenerCallback(const sptr<IStandardPlayerListener> &listener) : listener_(listener)
