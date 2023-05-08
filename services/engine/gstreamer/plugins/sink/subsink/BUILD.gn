@@ -56,37 +56,37 @@ config("gst_sub_sink_config") {
   ]
 }
 
-ohos_shared_library("gst_sub_sink") {
-  install_enable = true
+# ohos_shared_library("gst_sub_sink") {
+#   install_enable = true
 
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-    blocklist = "../../../../../../cfi_blocklist.txt"
-  }
+#   sanitize = {
+#     cfi = true
+#     cfi_cross_dso = true
+#     debug = false
+#     blocklist = "../../../../../../cfi_blocklist.txt"
+#   }
 
-  sources = [
-    "gst_sub_sink.cpp",
-    "gst_subtitle_meta.cpp",
-  ]
+#   sources = [
+#     "gst_sub_sink.cpp",
+#     "gst_subtitle_meta.cpp",
+#   ]
 
-  configs = [ ":gst_sub_sink_config" ]
+#   configs = [ ":gst_sub_sink_config" ]
 
-  deps = [
-    "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
-    "//third_party/glib:glib",
-    "//third_party/glib:gmodule",
-    "//third_party/glib:gobject",
-    "//third_party/gstreamer/gstreamer:gstbase",
-    "//third_party/gstreamer/gstplugins_base:gstapp_plugin",
-    "//third_party/gstreamer/gstreamer:gstreamer",
-  ]
+#   deps = [
+#     "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
+#     "//third_party/glib:glib",
+#     "//third_party/glib:gmodule",
+#     "//third_party/glib:gobject",
+#     "//third_party/gstreamer/gstreamer:gstbase",
+#     "//third_party/gstreamer/gstplugins_base:gstapp_plugin",
+#     "//third_party/gstreamer/gstreamer:gstreamer",
+#   ]
 
-  relative_install_dir = "media/plugins"
-  subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
-}
+#   relative_install_dir = "media/plugins"
+#   subsystem_name = "multimedia"
+#   part_name = "multimedia_player_framework"
+# }
 
 ohos_static_library("gst_sub_sink_base") {
   sources = [
@@ -94,7 +94,10 @@ ohos_static_library("gst_sub_sink_base") {
     "gst_subtitle_meta.cpp",
   ]
   configs = [ ":gst_sub_sink_config" ]
-  deps = [ "../../../../../utils:media_service_utils" ]
+  deps = [
+    "../../../../../utils:media_service_utils",
+    "//third_party/gstreamer/gstplugins_base:gstapp_plugin",
+  ]
   subsystem_name = "multimedia"
   part_name = "multimedia_player_framework"
 }
