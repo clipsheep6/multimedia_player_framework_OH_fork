@@ -128,6 +128,8 @@ struct _GstVdecBase {
     gboolean is_support_swap_width_height;
     gboolean codec_data_update;
     GstBuffer *codec_data;
+    gboolean codec_change;
+    GMutex codec_change_mutex;
 };
 
 struct _GstVdecBaseClass {
