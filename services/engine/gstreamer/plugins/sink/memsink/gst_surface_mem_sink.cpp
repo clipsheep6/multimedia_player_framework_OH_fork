@@ -58,6 +58,7 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
 static void gst_surface_mem_sink_dump_from_sys_param(GstSurfaceMemSink *self);
 static void gst_surface_mem_sink_dump_buffer(GstSurfaceMemSink *self, GstBuffer *buffer);
 static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *element, GstStateChange transition);
+static gboolean gst_surface_mem_sink_send_event(GstElement *element, GstEvent *event);
 static gboolean gst_surface_mem_sink_event(GstBaseSink *bsink, GstEvent *event);
 static GstFlowReturn gst_surface_mem_sink_subclass_do_app_render(GstSurfaceMemSink *sink,
     GstBuffer *buffer, bool is_preroll);
@@ -85,6 +86,7 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
     gobject_class->set_property = gst_surface_mem_sink_set_property;
     gobject_class->get_property = gst_surface_mem_sink_get_property;
     element_class->change_state = gst_surface_mem_sink_change_state;
+    element_class->send_event = gst_surface_mem_sink_send_event;
 
     gst_element_class_set_static_metadata(element_class,
         "SurfaceMemSink", "Sink/Video",
@@ -140,6 +142,8 @@ static void gst_surface_mem_sink_init(GstSurfaceMemSink *sink)
     sink->priv->rotation = 0;
     sink->prerollBuffer = nullptr;
     sink->firstRenderFrame = TRUE;
+    sink->setRateEvent = FALSE;
+    sink->curRate = 1.0;
     sink->preInitPool = FALSE;
     sink->dump.enable_dump = FALSE;
     sink->dump.dump_file = nullptr;
@@ -397,10 +401,11 @@ static GstFlowReturn gst_surface_mem_sink_do_app_render(GstMemSink *memsink, Gst
         }
     }
 
-    if (surface_sink->firstRenderFrame && is_preroll) {
+    if ((surface_sink->firstRenderFrame || surface_sink->setRateEvent) && is_preroll) {
         MediaTrace firstRenderTrace("Surface::firstRenderFrame and isPreroll");
-        GST_DEBUG_OBJECT(surface_sink, "first render frame");
+        GST_DEBUG_OBJECT(surface_sink, "first render frame or discard set rate preroll frame");
         surface_sink->firstRenderFrame = FALSE;
+        surface_sink->setRateEvent = FALSE;
         GST_OBJECT_UNLOCK(surface_sink);
         return GST_FLOW_OK;
     }
@@ -501,7 +506,7 @@ static gboolean gst_surface_mem_sink_event(GstBaseSink *bsink, GstEvent *event)
     g_return_val_if_fail(surface_mem_sink != nullptr, FALSE);
     g_return_val_if_fail(event != nullptr, FALSE);
 
-    GST_DEBUG_OBJECT(surface_mem_sink, "event->type %d", event->type);
+    GST_DEBUG_OBJECT(surface_mem_sink, "event->type %d event_name %s", event->type, GST_EVENT_TYPE_NAME(event));
     switch (event->type) {
         case GST_EVENT_CAPS: {
             GstCaps *caps;
@@ -592,4 +597,34 @@ static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *elemen
             break;
     }
     return GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
+}
+
+static gboolean gst_surface_mem_sink_send_event(GstElement *element, GstEvent *event)
+{
+    g_return_val_if_fail(element != nullptr && event != nullptr, FALSE);
+    GstBaseSink *basesink = GST_BASE_SINK(element);
+    GstSurfaceMemSink *self = GST_SURFACE_MEM_SINK(element);
+    gdouble rate;
+    GstFormat seek_format;
+    GstSeekFlags flags;
+    GstSeekType start_type, stop_type;
+    gint64 start, stop;
+    const gdouble EPS = 1e-6;
+
+    GST_DEBUG_OBJECT(basesink, "handling event name %s", GST_EVENT_TYPE_NAME(event));
+    switch (GST_EVENT_TYPE(event)) {
+        case GST_EVENT_SEEK:
+            gst_event_parse_seek(event, &rate, &seek_format, &flags, &start_type, &start, &stop_type, &stop);
+            GST_DEBUG_OBJECT(basesink, "parse seek rate: %f curRate: %f", rate, self->curRate);
+            if (fabs(self->curRate - rate) > EPS) {
+                GST_DEBUG_OBJECT(basesink, "setRateEvent True");
+                self->setRateEvent = TRUE;
+                self->curRate = rate;
+            }
+            break;
+
+        default:
+            break;
+    }
+    return GST_ELEMENT_CLASS(parent_class)->send_event(element, event);
 }
