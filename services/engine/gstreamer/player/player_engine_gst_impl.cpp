@@ -470,7 +470,7 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_BUFFERING_TIME] = &PlayerEngineGstImpl::HandleBufferingTime;
     subMsgHandler_[PLAYBIN_SUB_MSG_BUFFERING_PERCENT] = &PlayerEngineGstImpl::HandleBufferingPercent;
     subMsgHandler_[PLAYBIN_SUB_MSG_BUFFERING_USED_MQ_NUM] = &PlayerEngineGstImpl::HandleBufferingUsedMqNum;
-    subMsgHandler_[PLAYBIN_SUB_MSG_VIDEO_RENDERING_START] = &PlayerEngineGstImpl::HandleVideoRenderingStart;
+    subMsgHandler_[PLAYBIN_SUB_MSG_VIDEO_RENDING_START] = &PlayerEngineGstImpl::HandleVideoRenderingStart;
     subMsgHandler_[PLAYBIN_SUB_MSG_VIDEO_SIZE_CHANGED] = &PlayerEngineGstImpl::HandleVideoSizeChanged;
     subMsgHandler_[PLAYBIN_SUB_MSG_BITRATE_COLLECT] = &PlayerEngineGstImpl::HandleBitRateCollect;
     subMsgHandler_[PLAYBIN_SUB_MSG_IS_LIVE_STREAM] = &PlayerEngineGstImpl::HandleIsLiveStream;

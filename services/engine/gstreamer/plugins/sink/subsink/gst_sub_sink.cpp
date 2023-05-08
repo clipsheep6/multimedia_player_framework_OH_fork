@@ -259,17 +259,3 @@ static void gst_sub_sink_finalize(GObject *obj)
     g_return_if_fail(obj != nullptr);
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
-
-static gboolean plugin_init(GstPlugin *plugin)
-{
-    g_return_val_if_fail(plugin != nullptr, FALSE);
-    gboolean ret = gst_element_register(plugin, "subsink", GST_RANK_PRIMARY, GST_TYPE_SUB_SINK);
-    return ret;
-}
-
-GST_PLUGIN_DEFINE(GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    _sub_sink,
-    "GStreamer Subtitle Sink",
-    plugin_init,
-    PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
