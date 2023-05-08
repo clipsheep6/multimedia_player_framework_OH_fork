@@ -67,7 +67,8 @@ ohos_shared_library("gst_sub_sink") {
   }
 
   sources = [
-    "gst_sub_sink_plugins.cpp"
+    "gst_sub_sink_plugins.cpp",
+    "gst_sub_sink.cpp"
   ]
 
   configs = [ ":gst_sub_sink_config" ]
