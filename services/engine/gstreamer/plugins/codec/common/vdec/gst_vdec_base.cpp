@@ -70,6 +70,7 @@ enum {
     PROP_ENABLE_SLICE_CAT,
     PROP_SEEK,
     PROP_PLAYER_MODE,
+    PROP_METADATA_MODE,
 };
 
 enum {
@@ -152,6 +153,10 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
     g_object_class_install_property(gobject_class, PROP_SEEK,
         g_param_spec_boolean("seeking", "Seeking", "Whether the decoder is in seek",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_METADATA_MODE,
+        g_param_spec_boolean("metadata-mode", "Metadata-mode", "Metadata Mode",
+        FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 }
 
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -197,6 +202,9 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             break;
         case PROP_PLAYER_MODE:
             self->player_mode = g_value_get_boolean(value);
+            break;
+        case PROP_METADATA_MODE:
+            self->metadata_mode = g_value_get_boolean(value);
             break;
         default:
             break;
@@ -259,6 +267,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->input_need_ashmem = FALSE;
     self->has_set_format = FALSE;
     self->player_mode = FALSE;
+    self->metadata_mode = FALSE;
     self->is_support_swap_width_height = FALSE;
 }
 
@@ -752,6 +761,11 @@ static gboolean gst_vdec_base_update_out_port_def(GstVdecBase *self, guint *size
     }
     ret = self->decoder->SetParameter(GST_VIDEO_OUTPUT_COMMON, GST_ELEMENT(self));
     g_return_val_if_fail(ret == GST_CODEC_OK, FALSE);
+    if (self->metadata_mode) {
+        GST_DEBUG_OBJECT(self, "Set metadata mode");
+        ret = self->decoder->SetParameter(GST_METADATA_MODE, GST_ELEMENT(self));
+        g_return_val_if_fail(ret == GST_CODEC_OK, FALSE);
+    }
     ret = self->decoder->GetParameter(GST_VIDEO_OUTPUT_COMMON, GST_ELEMENT(self));
     g_return_val_if_fail(ret == GST_CODEC_OK, FALSE);
     GST_INFO_OBJECT(self, "output params is min buffer count %u, buffer count %u, buffer size is %u",
@@ -986,6 +1000,10 @@ static int32_t gst_vdec_base_push_input_buffer_with_copy(GstVdecBase *self, GstB
     gst_buffer_unmap(dts_buffer, &dts_map);
     gst_buffer_unmap(src_buffer, &src_map);
     gst_buffer_set_size(dts_buffer, meta->length);
+    GST_BUFFER_PTS(dts_buffer) = GST_BUFFER_PTS(src_buffer);
+    GST_BUFFER_DTS(dts_buffer) = GST_BUFFER_DTS(src_buffer);
+    GST_BUFFER_DURATION(dts_buffer) = GST_BUFFER_DURATION(src_buffer);
+    GST_DEBUG_OBJECT(self, "Input frame pts %" G_GUINT64_FORMAT, GST_BUFFER_PTS(dts_buffer));
     gst_vdec_base_dump_input_buffer(self, dts_buffer);
     gint codec_ret = self->decoder->PushInputBuffer(dts_buffer);
     return codec_ret;
@@ -1112,8 +1130,13 @@ static void update_video_meta(const GstVdecBase *self, GstBuffer *buffer)
         video_meta->width = self->width;
         video_meta->height = self->height;
         video_meta->offset[0] = 0;
-        video_meta->stride[0] = self->stride;
-        video_meta->offset[1] = video_meta->stride[0] * self->stride_height;
+        if (self->metadata_mode) {
+            video_meta->stride[0] = self->width;
+            video_meta->offset[1] = self->width * self->height;
+        } else {
+            video_meta->stride[0] = self->stride;
+            video_meta->offset[1] = video_meta->stride[0] * self->stride_height;
+        }
     }
 }
 
@@ -1147,58 +1170,6 @@ static GstVideoCodecFrame *gst_vdec_base_new_frame(GstVdecBase *self, GstBuffer 
 
     return frame;
 }
-// copy for avshmem
-static void copy_to_no_stride_buffer(GstVdecBase *self, GstVideoCodecFrame *frame)
-{
-    if (self->memtype == GST_MEMTYPE_SURFACE) {
-        return;
-    }
-    GstBuffer *src_buffer = frame->output_buffer;
-    frame->output_buffer = nullptr;
-    ON_SCOPE_EXIT(0) { gst_buffer_unref(src_buffer); };
-    // yuv buffer size
-    guint size = (guint)(self->width * self->height * 3 / 2);
-    guint stride = (guint)(self->real_stride == 0 ? self->stride : self->real_stride);
-    guint stride_height = (guint)(self->real_stride_height == 0 ? self->stride_height : self->real_stride_height);
-    guint offset = stride * stride_height;
-    GstBuffer *dts_buffer = gst_buffer_new_allocate(nullptr, size, nullptr);
-    g_return_if_fail(dts_buffer != nullptr);
-    frame->output_buffer = dts_buffer;
-
-    GstMapInfo dts_map = GST_MAP_INFO_INIT;
-    if (gst_buffer_map(dts_buffer, &dts_map, GST_MAP_WRITE) != TRUE) {
-        return;
-    }
-    ON_SCOPE_EXIT(1) { gst_buffer_unmap(dts_buffer, &dts_map); };
-    GstMapInfo src_map = GST_MAP_INFO_INIT;
-    if (gst_buffer_map(src_buffer, &src_map, GST_MAP_READ) != TRUE) {
-        return;
-    }
-    ON_SCOPE_EXIT(2) { gst_buffer_unmap(src_buffer, &src_map); };
-    // yuv buffer size
-    g_return_if_fail(src_map.size >= offset * 3 / 2);
-    errno_t ret = EOK;
-    guint src_offset = 0;
-    guint dts_offset = 0;
-    for (int pos = 0; pos < self->height; pos++) {
-        ret = memcpy_s(dts_map.data + dts_offset, dts_map.size - dts_offset, src_map.data + src_offset, self->width);
-        g_return_if_fail(ret == EOK);
-        dts_offset += (guint)self->width;
-        src_offset += stride;
-    }
-    src_offset = offset;
-    for (int pos = 0; pos < self->height / 2; pos++) {
-        ret = memcpy_s(dts_map.data + dts_offset, dts_map.size - dts_offset, src_map.data + src_offset, self->width);
-        g_return_if_fail(ret == EOK);
-        dts_offset += self->width;
-        src_offset += stride;
-    }
-    gint rst_stride[GST_VIDEO_MAX_PLANES] = { self->width, self->width, 0, 0 };
-    gsize rst_offset[GST_VIDEO_MAX_PLANES] = { 0, self->width * self->height, 0, 0 };
-    static const gint nplane = 2; // nv12 or nv21 planes count
-    gst_buffer_add_video_meta_full(dts_buffer, GST_VIDEO_FRAME_FLAG_NONE, self->format,
-        self->width, self->height, nplane, rst_offset, rst_stride);
-}
 
 static void gst_vdec_base_post_resolution_changed_message(GstVdecBase *self)
 {
@@ -1215,6 +1186,11 @@ static GstFlowReturn push_output_buffer(GstVdecBase *self, GstBuffer *buffer)
 {
     MediaTrace trace("VdecBase::PushBufferToSurfaceSink");
     GST_DEBUG_OBJECT(self, "Push output buffer");
+    if (!gst_video_decoder_need_decode(GST_VIDEO_DECODER(self))) {
+        GST_INFO_OBJECT(self, "only need one frame!");
+        gst_buffer_unref(buffer);
+        return GST_FLOW_OK;
+    }
     g_return_val_if_fail(self != nullptr, GST_FLOW_ERROR);
     g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
     update_video_meta(self, buffer);
@@ -1230,7 +1206,6 @@ static GstFlowReturn push_output_buffer(GstVdecBase *self, GstBuffer *buffer)
 
     frame->output_buffer = buffer;
     gst_vdec_base_dump_output_buffer(self, buffer);
-    copy_to_no_stride_buffer(self, frame);
     GstFlowReturn flow_ret = gst_video_decoder_finish_frame(GST_VIDEO_DECODER(self), frame);
     return flow_ret;
 }
