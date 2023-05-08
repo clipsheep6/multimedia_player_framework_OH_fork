@@ -42,9 +42,9 @@ static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
 static void gst_sub_sink_dispose(GObject *obj);
 static void gst_sub_sink_finalize(GObject *obj);
 static void gst_sub_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_sub_sink_handle_buffer(GstBaseSink *basesink, GstBuffer *buffer, gboolean cancel, guint64 delayUs = 0ULL);
+static void gst_sub_sink_handle_buffer(GstSubSink *sub_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs = 0ULL);
 static GstStateChangeReturn gst_sub_sink_change_state(GstElement *element, GstStateChange transition);
-static GstFlowReturn gst_sub_sink_render (GstBaseSink * basesink, GstBuffer * buffer);
+static GstFlowReturn gst_sub_sink_display_callback (GstAppSink *appsink, gpointer user_data);
 static gboolean gst_sub_sink_event(GstBaseSink *basesink, GstEvent *event);
 
 #define gst_sub_sink_parent_class parent_class
@@ -70,8 +70,6 @@ static void gst_sub_sink_class_init(GstSubSinkClass *kclass)
     gobject_class->finalize = gst_sub_sink_finalize;
     gobject_class->set_property = gst_sub_sink_set_property;
     element_class->change_state = gst_sub_sink_change_state;
-
-    base_sink_class->render = gst_sub_sink_render;
     base_sink_class->event = gst_sub_sink_event;
     GST_DEBUG_CATEGORY_INIT(gst_sub_sink_debug_category, "subsink", 0, "subsink class");
 }
@@ -119,6 +117,11 @@ void gst_sub_sink_set_callback(GstSubSink *sub_sink, GstSubSinkCallbacks *callba
     priv->callbacks = *callbacks;
     priv->userdata = user_data;
     priv->notify = notify;
+
+    GstAppSinkCallbacks appsink_callback;
+    appsink_callback.new_sample = gst_sub_sink_display_callback;
+    gst_app_sink_set_callbacks(reinterpret_cast<GstAppSink *>(sub_sink),
+        &appsink_callback, user_data, notify);
     GST_OBJECT_UNLOCK(sub_sink);
 }
 
@@ -136,9 +139,8 @@ static void gst_sub_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts,
     }
 }
 
-static void gst_sub_sink_handle_buffer(GstBaseSink *basesink, GstBuffer *buffer, gboolean cancel, guint64 delayUs)
+static void gst_sub_sink_handle_buffer(GstSubSink *sub_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs)
 {
-    GstSubSink *sub_sink = GST_SUB_SINK_CAST(basesink);
     GstSubSinkPrivate *priv = sub_sink->priv;
     g_return_if_fail(priv != nullptr);
 
@@ -170,12 +172,11 @@ static GstStateChangeReturn gst_sub_sink_change_state(GstElement *element, GstSt
 {
     g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
     GstSubSink *sub_sink = GST_SUB_SINK(element);
-    GstBaseSink *basesink = GST_BASE_SINK(element);
     GstSubSinkPrivate *priv = sub_sink->priv;
     g_return_val_if_fail(priv != nullptr, GST_STATE_CHANGE_FAILURE);
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY:
-            gst_sub_sink_handle_buffer(basesink, nullptr, true);
+            gst_sub_sink_handle_buffer(sub_sink, nullptr, true);
             priv->timer_queue->Stop();
             GST_INFO_OBJECT(sub_sink, "sub sink has been stopped");
             break;
@@ -185,9 +186,10 @@ static GstStateChangeReturn gst_sub_sink_change_state(GstElement *element, GstSt
     return GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
 }
 
-static GstFlowReturn gst_sub_sink_render(GstBaseSink * basesink, GstBuffer * buffer)
+static GstFlowReturn gst_sub_sink_display_callback(GstAppSink *appsink, gpointer user_data)
 {
-    GstSubSink *sub_sink = GST_SUB_SINK_CAST(basesink);
+    (void)user_data;
+    GstSubSink *sub_sink = GST_SUB_SINK_CAST(appsink);
     g_return_val_if_fail(sub_sink != nullptr, GST_FLOW_ERROR);
     GstSubSinkPrivate *priv = sub_sink->priv;
     g_return_val_if_fail(priv != nullptr, GST_FLOW_ERROR);
@@ -196,7 +198,7 @@ static GstFlowReturn gst_sub_sink_render(GstBaseSink * basesink, GstBuffer * buf
 
     g_mutex_lock(&priv->mutex);
     if (!priv->started) {
-        GST_INFO_OBJECT(sub_sink, "we are not started");
+        GST_WARNING_OBJECT(sub_sink, "we are not started");
         g_mutex_unlock(&priv->mutex);
         return GST_FLOW_FLUSHING;
     }
@@ -207,6 +209,9 @@ static GstFlowReturn gst_sub_sink_render(GstBaseSink * basesink, GstBuffer * buf
         return GST_FLOW_FLUSHING;
     }
 
+    GstSample *sample = gst_app_sink_pull_sample(appsink);
+    GstBuffer *buffer = gst_sample_get_buffer(sample);
+
     GST_INFO_OBJECT(sub_sink, "app render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
 
     guint64 pts = 0;
@@ -215,8 +220,8 @@ static GstFlowReturn gst_sub_sink_render(GstBaseSink * basesink, GstBuffer * buf
     
     g_return_val_if_fail(priv != nullptr, GST_FLOW_ERROR);
     gint64 delay_us = pts - GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
-    gst_sub_sink_handle_buffer(basesink, buffer, FALSE, delay_us);
-    gst_sub_sink_handle_buffer(basesink, nullptr, FALSE, pts + duration);
+    gst_sub_sink_handle_buffer(sub_sink, buffer, FALSE, delay_us);
+    gst_sub_sink_handle_buffer(sub_sink, nullptr, FALSE, pts + duration);
     return GST_FLOW_OK;
 }
 
@@ -234,7 +239,7 @@ static gboolean gst_sub_sink_event(GstBaseSink *basesink, GstEvent *event)
             break;
         }
         case GST_EVENT_FLUSH_START: {
-            gst_sub_sink_handle_buffer(basesink, nullptr, TRUE, 0ULL);
+            gst_sub_sink_handle_buffer(sub_sink, nullptr, TRUE, 0ULL);
             sub_sink->is_flushing = TRUE;
             break;
         }
