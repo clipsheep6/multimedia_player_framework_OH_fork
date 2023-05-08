@@ -28,10 +28,11 @@ public:
     using SinkPtr = GstElement *;
     virtual SinkPtr CreateVideoSink() = 0;
     virtual SinkPtr CreateAudioSink() = 0;
-    virtual void SetAppInfo(int32_t uid, int32_t pid)
+    virtual void SetAppInfo(int32_t uid, int32_t pid, uint32_t tokenId)
     {
         (void)uid;
         (void)pid;
+        (void)tokenId;
     }
     virtual void SetVideoScaleType(const uint32_t videoScaleType)
     {

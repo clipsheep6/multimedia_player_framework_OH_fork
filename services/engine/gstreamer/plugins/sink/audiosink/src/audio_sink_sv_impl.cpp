@@ -202,13 +202,14 @@ int32_t AudioSinkSvImpl::GetMinVolume(float &volume)
     return MSERR_OK;
 }
 
-int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid)
+int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId)
 {
     MediaTrace trace("AudioSink::Prepare");
     MEDIA_LOGD("audioRenderer Prepare In");
     AudioStandard::AppInfo appInfo = {};
     appInfo.appUid = appUid;
     appInfo.appPid = appPid;
+    appInfo.appTokenId = appTokenId;
     rendererOptions_.streamInfo.samplingRate = AudioStandard::SAMPLE_RATE_8000;
     rendererOptions_.streamInfo.encoding = AudioStandard::ENCODING_PCM;
     rendererOptions_.streamInfo.format = AudioStandard::SAMPLE_S16LE;

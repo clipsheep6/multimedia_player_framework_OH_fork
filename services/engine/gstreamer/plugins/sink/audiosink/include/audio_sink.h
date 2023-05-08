@@ -33,7 +33,7 @@ public:
     virtual int32_t GetVolume(float &volume) = 0;
     virtual int32_t GetMaxVolume(float &volume) = 0;
     virtual int32_t GetMinVolume(float &volume) = 0;
-    virtual int32_t Prepare(int32_t appUid, int32_t appPid) = 0;
+    virtual int32_t Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId)) = 0;
     virtual int32_t Start() = 0;
     virtual int32_t Stop() = 0;
     virtual int32_t Pause() = 0;

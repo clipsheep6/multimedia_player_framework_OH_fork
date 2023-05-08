@@ -53,7 +53,7 @@ public:
     int32_t GetVolume(float &volume) override;
     int32_t GetMaxVolume(float &volume) override;
     int32_t GetMinVolume(float &volume) override;
-    int32_t Prepare(int32_t appUid, int32_t appPid) override;
+    int32_t Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId) override;
     int32_t Start() override;
     int32_t Stop() override;
     int32_t Pause() override;

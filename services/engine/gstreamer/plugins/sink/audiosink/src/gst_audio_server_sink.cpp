@@ -119,6 +119,11 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
             "APP PID", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_APP_TOKEN_ID,
+        g_param_spec_uint("app-token-id", "Apptokenid",
+            "APP TOKEN ID", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
     g_object_class_install_property(gobject_class, PROP_VOLUME,
         g_param_spec_float("volume", "Volume",
             "Volume", 0, G_MAXFLOAT, 0,
@@ -290,6 +295,12 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
             GST_INFO_OBJECT(sink, "set app uid success!");
             g_object_notify(G_OBJECT(sink), "app-pid");
             break;
+        case PROP_APP_TOKEN_ID:
+            sink->apptokenid = g_value_get_uint(value);
+            GST_INFO_OBJECT(sink, "set app uid success!");
+            g_object_notify(G_OBJECT(sink), "app-pid");
+            break;
+            
         case PROP_AUDIO_RENDERER_FLAG:
             sink->renderer_flag = g_value_get_int(value);
             break;
@@ -481,7 +492,7 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     MediaTrace trace("Audio::gst_audio_server_sink_start");
     g_return_val_if_fail(basesink != nullptr, FALSE);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
-    MEDIA_LOGI("uid: %{public}d, pid: %{public}d", sink->appuid, sink->apppid);
+    MEDIA_LOGI("uid: %{public}d, pid: %{public}d, tokenid: %{public}u", sink->appuid, sink->apppid, sink->apptokenid);
     g_return_val_if_fail(sink != nullptr, FALSE);
     sink->audio_sink = OHOS::Media::AudioSinkFactory::CreateAudioSink(basesink);
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
