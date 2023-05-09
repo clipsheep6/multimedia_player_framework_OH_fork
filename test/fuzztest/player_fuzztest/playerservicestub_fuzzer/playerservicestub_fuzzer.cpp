@@ -51,19 +51,19 @@ bool PlayerServiceStubFuzzer::FuzzServiceStub(uint8_t *data, size_t size)
     if (mediaProxy_ != nullptr) {
         sptr<IRemoteObject> listenerStub_ = nullptr;
         listenerStub_ = new(std::nothrow) PlayerServiceListenerStubFuzzer();
-    }
     
-    IStandardMediaService::MediaSystemAbility subSystemId[subSystemIdList] {
-        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER,
-        IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER,
-        IStandardMediaService::MediaSystemAbility::MEDIA_CODEC,
-        IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER,
-        IStandardMediaService::MediaSystemAbility::MEDIA_CODECLIST,
-        IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC,
-        IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES,
-    };
-    int32_t systemId = *reinterpret_cast<int32_t *>(data) % (subSystemIdList);
-    mediaProxy_->GetSubSystemAbility(subSystemId[systemId], listenerStub_);
+        IStandardMediaService::MediaSystemAbility subSystemId[subSystemIdList] {
+            IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER,
+            IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER,
+            IStandardMediaService::MediaSystemAbility::MEDIA_CODEC,
+            IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER,
+            IStandardMediaService::MediaSystemAbility::MEDIA_CODECLIST,
+            IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC,
+            IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES,
+        };
+        int32_t systemId = *reinterpret_cast<int32_t *>(data) % (subSystemIdList);
+        mediaProxy_->GetSubSystemAbility(subSystemId[systemId], listenerStub_);
+    }
     return true;
 }
 }
