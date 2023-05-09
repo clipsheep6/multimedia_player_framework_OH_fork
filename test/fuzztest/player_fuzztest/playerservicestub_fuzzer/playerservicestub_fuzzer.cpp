@@ -48,11 +48,10 @@ bool PlayerServiceStubFuzzer::FuzzServiceStub(uint8_t *data, size_t size)
     sptr<IRemoteObject> object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     mediaProxy_ = iface_cast<IStandardMediaService>(object);
-    if (mediaProxy_ != nullptr) {
-        sptr<IRemoteObject> listenerStub_ = nullptr;
-        listenerStub_ = new(std::nothrow) PlayerServiceListenerStubFuzzer();
-    
-        IStandardMediaService::MediaSystemAbility subSystemId[subSystemIdList] {
+    sptr<IRemoteObject> listenerStub_ = nullptr;
+    listenerStub_ = new(std::nothrow) PlayerServiceListenerStubFuzzer();
+
+    IStandardMediaService::MediaSystemAbility subSystemId[subSystemIdList] {
             IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER,
             IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER,
             IStandardMediaService::MediaSystemAbility::MEDIA_CODEC,
@@ -61,9 +60,8 @@ bool PlayerServiceStubFuzzer::FuzzServiceStub(uint8_t *data, size_t size)
             IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC,
             IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES,
         };
-        int32_t systemId = *reinterpret_cast<int32_t *>(data) % (subSystemIdList);
-        mediaProxy_->GetSubSystemAbility(subSystemId[systemId], listenerStub_);
-    }
+    int32_t systemId = *reinterpret_cast<int32_t *>(data) % (subSystemIdList);
+    mediaProxy_->GetSubSystemAbility(subSystemId[systemId], listenerStub_);
     return true;
 }
 }
