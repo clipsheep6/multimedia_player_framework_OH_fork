@@ -48,7 +48,7 @@ bool PlayerServiceStubFuzzer::FuzzServiceStub(uint8_t *data, size_t size)
     sptr<IRemoteObject> object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     mediaProxy_ = iface_cast<IStandardMediaService>(object);
-	if (mediaProxy_ != nullptr) {
+    if (mediaProxy_ != nullptr) {
         sptr<IRemoteObject> listenerStub_ = nullptr;
         listenerStub_ = new(std::nothrow) PlayerServiceListenerStubFuzzer();
     }
