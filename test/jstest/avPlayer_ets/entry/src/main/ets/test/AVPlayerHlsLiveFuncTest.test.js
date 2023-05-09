@@ -638,7 +638,29 @@ export default function AVPlayerHlsLiveFuncTest() {
             testSetMultiBitrate(avPlayer, MULTI_HLS_PATH, surfaceID, done);
         })
 
-        
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_Live_RELIABILITY_0100
+            * @tc.name      : 008.test hls live - seek
+            * @tc.desc      : Hls live playback control test
+            * @tc.size      : MediumTest
+            * @tc.type      : RELIABILITY test
+            * @tc.level     : Level2
+        */
+        it('SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_Live_RELIABILITY_0100', 0, async function (done) {
+            await media.createAVPlayer().then((video) => {
+                if (typeof (video) != 'undefined') {
+                    console.info('case createAVPlayer success');
+                    avPlayer = video;
+                } else {
+                    console.error('case createAVPlayer failed');
+                    expect().assertFail();
+                    done();
+                }
+            }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+            let Steps = new Array('src', 'prepare', 'seek', 6, 'error', 'play', 'seek', 0, 'error',
+                        'pause', 'seek', 5, 'error', 'stop', 'seek', 1, 'error', 'release'); // 6, 0, 5, 1 is seek target
+            testReliability(avPlayer, HLS_PATH, surfaceID, Steps, done);
+        })
 
         /* *
             * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_HLS_Live_RELIABILITY_0200
