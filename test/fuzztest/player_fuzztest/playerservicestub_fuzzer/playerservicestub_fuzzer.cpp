@@ -49,11 +49,10 @@ bool PlayerServiceStubFuzzer::FuzzServiceStub(uint8_t *data, size_t size)
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     mediaProxy_ = iface_cast<IStandardMediaService>(object);
 	if (mediaProxy_ != nullptr) {
-		sptr<IRemoteObject> listenerStub_ = nullptr;
-    	listenerStub_ = new(std::nothrow) PlayerServiceListenerStubFuzzer();
-	}
+        sptr<IRemoteObject> listenerStub_ = nullptr;
+        listenerStub_ = new(std::nothrow) PlayerServiceListenerStubFuzzer();
+    }
     
-
     IStandardMediaService::MediaSystemAbility subSystemId[subSystemIdList] {
         IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER,
         IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER,
