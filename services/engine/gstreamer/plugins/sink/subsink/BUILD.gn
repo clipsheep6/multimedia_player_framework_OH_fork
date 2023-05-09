@@ -68,13 +68,14 @@ ohos_shared_library("gst_sub_sink") {
 
   sources = [
     "gst_sub_sink_plugins.cpp",
-    "gst_sub_sink.cpp"
+    "gst_sub_display_sink.cpp"
   ]
 
   configs = [ ":gst_sub_sink_config" ]
 
   deps = [
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
+    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/common:gst_media_common",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",

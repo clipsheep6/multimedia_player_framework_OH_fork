@@ -204,7 +204,7 @@ GstElement *PlayerSinkProvider::DoCreateSubSink(const GstCaps *caps, const gpoin
     (void)caps;
     CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
 
-    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subsink", "sink")));
+    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subdisplaysink", "sink")));
     CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
 
     GstSubSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };

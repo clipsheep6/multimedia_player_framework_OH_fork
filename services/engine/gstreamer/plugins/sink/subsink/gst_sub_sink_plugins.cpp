@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 #include "config.h"
-#include "gst_sub_sink.h"
+#include "gst_sub_display_sink.h"
 
 static gboolean plugin_init(GstPlugin *plugin)
 {
     g_return_val_if_fail(plugin != nullptr, false);
-    gboolean ret = gst_element_register(plugin, "subsink", GST_RANK_PRIMARY, GST_TYPE_SUB_SINK);
+    gboolean ret = gst_element_register(plugin, "subdisplaysink", GST_RANK_PRIMARY, GST_TYPE_SUB_DISPLAY_SINK);
     if (ret == FALSE) {
-        GST_WARNING_OBJECT(nullptr, "register subsink failed");
+        GST_WARNING_OBJECT(nullptr, "register subdisplaysink failed");
     }
     return TRUE;
 }

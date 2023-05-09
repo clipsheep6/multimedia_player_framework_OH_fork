@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 #define GST_SUB_SINK(obj) \
     (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_SUB_SINK, GstSubSink))
 #define GST_SUB_SINK_CLASS(kclass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_SUB_SINK, GstSubSinkClass))
+    (G_TYPE_CHECK_CLASS_CAST((kclass), GST_TYPE_SUB_SINK, GstSubSinkClass))
 #define GST_IS_SUB_SINK(obj) \
     (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_SUB_SINK))
 #define GST_IS_SUB_SINK_CLASS(kclass) \
@@ -56,10 +56,15 @@ struct _GstSubSink {
 };
 
 struct _GstSubSinkClass {
+    void (*handle_buffer)(GstSubSink *sub_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs);
+    GstFlowReturn (*subtitle_display_callback)(GstAppSink *appsink, gpointer user_data);
     GstAppSinkClass parent_class;
 };
 
 GST_API_EXPORT GType gst_sub_sink_get_type(void);
+
+
+GST_API_EXPORT GstFlowReturn gst_sub_sink_display(GstSubSink *sub_sink, GstBuffer *buffer);
 
 /**
  * @brief call this interface to set the notifiers for new_sample.
