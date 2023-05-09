@@ -117,10 +117,11 @@ public:
         volume = 0.0; // default min volume 0.0
         return MSERR_OK;
     }
-    int32_t Prepare(int32_t appUid, int32_t appPid) override
+    int32_t Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId) override
     {
         (void)appUid;
         (void)appPid;
+        (void)appTokenId;
         return MSERR_OK;
     }
     int32_t Start() override

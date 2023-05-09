@@ -113,9 +113,9 @@ private:
     int32_t updatePercent_ = -1;
     uint32_t mqNum_ = 0;
     uint64_t bufferingTime_ = 0;
-    uint32_t apptokenid_ = 0;
     int32_t appuid_ = 0;
     int32_t apppid_ = 0;
+    uint32_t apptokenid_ = 0;
     std::map<uint32_t, uint64_t> mqBufferingTime_;
     VideoScaleType videoScaleType_ = VIDEO_SCALE_TYPE_FIT;
     int32_t contentType_ = AudioStandard::CONTENT_TYPE_MUSIC; // CONTENT_TYPE_MUSIC

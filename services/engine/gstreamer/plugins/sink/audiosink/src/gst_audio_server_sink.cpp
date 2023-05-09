@@ -47,6 +47,7 @@ enum {
     PROP_SAMPLE_RATE,
     PROP_APP_UID,
     PROP_APP_PID,
+    PROP_APP_TOKEN_ID,
     PROP_VOLUME,
     PROP_MAX_VOLUME,
     PROP_MIN_VOLUME,
@@ -297,8 +298,8 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
             break;
         case PROP_APP_TOKEN_ID:
             sink->apptokenid = g_value_get_uint(value);
-            GST_INFO_OBJECT(sink, "set app uid success!");
-            g_object_notify(G_OBJECT(sink), "app-pid");
+            GST_INFO_OBJECT(sink, "set app token id success!");
+            g_object_notify(G_OBJECT(sink), "app-token-id");
             break;
             
         case PROP_AUDIO_RENDERER_FLAG:
@@ -498,7 +499,7 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     g_return_val_if_fail(sink->audio_sink != nullptr, FALSE);
     g_return_val_if_fail(sink->audio_sink->SetRendererInfo(sink->renderer_desc,
         sink->renderer_flag) == MSERR_OK, FALSE);
-    g_return_val_if_fail(sink->audio_sink->Prepare(sink->appuid, sink->apppid) == MSERR_OK, FALSE);
+    g_return_val_if_fail(sink->audio_sink->Prepare(sink->appuid, sink->apppid, sink->apptokenid) == MSERR_OK, FALSE);
     sink->audio_sink->SetAudioSinkCb(gst_audio_server_sink_interrupt_callback,
                                      gst_audio_server_sink_state_callback,
                                      gst_audio_server_sink_error_callback);

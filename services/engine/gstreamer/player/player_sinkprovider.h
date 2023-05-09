@@ -35,7 +35,7 @@ public:
     SinkPtr CreateVideoSink() override;
     SinkPtr GetVideoSink() override;
 
-    void SetAppInfo(int32_t uid, int32_t pid, uint32_t tokenId)) override;
+    void SetAppInfo(int32_t uid, int32_t pid, uint32_t tokenId) override;
     void SetVideoScaleType(const uint32_t videoScaleType) override;
     void SetMsgNotifier(PlayBinMsgNotifier notifier) override;
 
