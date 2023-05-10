@@ -37,7 +37,6 @@ public:
 
     int32_t Score(Scene scene, const std::string &uri) override;
 #ifdef SUPPORT_PLAYER
-    std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0) override;
     std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0, uint32_t tokenId = 0) override;
 #endif
 #ifdef SUPPORT_RECORDER
@@ -60,12 +59,6 @@ int32_t GstEngineFactory::Score(Scene scene, const std::string &uri)
 }
 
 #ifdef SUPPORT_PLAYER
-std::unique_ptr<IPlayerEngine> GstEngineFactory::CreatePlayerEngine(int32_t uid, int32_t pid)
-{
-    GstLoader::Instance().UpdateLogLevel();
-    return std::make_unique<PlayerEngineGstImpl>(uid, pid);
-}
-
 std::unique_ptr<IPlayerEngine> GstEngineFactory::CreatePlayerEngine(int32_t uid, int32_t pid, uint32_t tokenId)
 {
     GstLoader::Instance().UpdateLogLevel();
