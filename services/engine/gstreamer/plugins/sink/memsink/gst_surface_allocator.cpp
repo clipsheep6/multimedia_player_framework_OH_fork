@@ -152,7 +152,7 @@ static void gst_surface_allocator_free(GstAllocator *baseAllocator, GstMemory *b
         memory->need_render, memory->fence);
 
     if (!memory->need_render) {
-        OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
+        OHOS::SurfaceError ret;
         LISTENER(ret = allocator->surface->CancelBuffer(memory->buf),
             "surface::CancelBuffer", OHOS::Media::PlayerXCollie::timerTimeout)
         if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {

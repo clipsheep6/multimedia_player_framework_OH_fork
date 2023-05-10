@@ -449,6 +449,7 @@ int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
 int32_t GstAppsrcEngine::PushBufferWithCopy(uint32_t pushSize)
 {
     MEDIA_LOGD("PushBufferWithCopy in");
+    std::unique_lock<std::mutex> freeLock(freeMutex_);
     CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr && appSrcMem_->GetMem() != nullptr, MSERR_NO_MEMORY, "no mem");
     appSrcMem_->PrintCurPos();
 
@@ -498,6 +499,7 @@ int32_t GstAppsrcEngine::AddSrcMem(uint32_t bufferSize)
     MEDIA_LOGD("AddSrcMem in");
     appSrcMemVec_.push_back(std::make_shared<AppsrcMemory>());
     curSubscript_ += 1;
+    MEDIA_LOGD("curSubscript_ change to %{public}u", curSubscript_);
     std::shared_ptr<AppsrcMemory> appSrcMemTemp = appSrcMem_;
     appSrcMem_ = appSrcMemVec_[curSubscript_];
     CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr, MSERR_NO_MEMORY, "appSrcMem_ is nullptr");
@@ -537,6 +539,7 @@ void GstAppsrcEngine::FreePointerMemory(uint32_t offset, uint32_t length, uint32
     CHECK_AND_RETURN_LOG(mem != nullptr, "Buffer pool has been free");
 
     mem->PrintCurPos();
+    mem->CheckBufferUsage();
     CHECK_AND_RETURN_LOG(mem->FreeBufferAndChangePos(offset, length, copyMode_),
         "Bufferpool checkout failed.");
     mem->PrintCurPos();
