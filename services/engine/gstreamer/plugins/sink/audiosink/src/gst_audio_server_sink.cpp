@@ -22,6 +22,7 @@
 #include "media_log.h"
 #include "media_dfx.h"
 #include "audio_sink_factory.h"
+#include "securec.h"
 
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
     GST_PAD_SINK,
@@ -37,7 +38,7 @@ namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "audio_server_sink"};
     constexpr float DEFAULT_VOLUME = 1.0f;
     constexpr uint32_t DEFAULT_BITS_PER_SAMPLE = 16;
-    constexpr uint64_t DEFAULT_AUDIO_RENDER_DELAY = 145000; // unit us, empirical value
+    constexpr uint64_t DEFAULT_AUDIO_RENDER_DELAY = 0; // unit us, empirical value
 }
 
 enum {
@@ -201,7 +202,8 @@ static void gst_audio_server_sink_init(GstAudioServerSink *sink)
     g_mutex_init(&sink->render_lock);
     sink->last_render_pts = 0;
     sink->enable_opt_render_delay = FALSE;
-    sink->last_running_time_diff = 0;
+    sink->audio_render_delay_time = 0;
+    sink->prePoweron = FALSE;
 }
 
 static void gst_audio_server_sink_finalize(GObject *object)
@@ -342,7 +344,7 @@ static void gst_audio_server_sink_get_property(GObject *object, guint prop_id, G
             break;
         case PROP_LAST_RUNNING_TIME_DIFF:
             g_mutex_lock(&sink->render_lock);
-            g_value_set_int64(value, static_cast<gint64>(sink->last_running_time_diff));
+            g_value_set_int64(value, static_cast<gint64>(sink->audio_render_delay_time));
             g_mutex_unlock(&sink->render_lock);
             break;
         default:
@@ -377,7 +379,7 @@ static GstClockTime gst_audio_server_sink_update_reach_time(GstBaseSink *basesin
     }
     GstClockTime cur_running_time = cur_clock_time - base_time; // get running time
     g_mutex_lock(&sink->render_lock);
-    sink->last_running_time_diff =
+    sink->audio_render_delay_time =
         static_cast<GstClockTimeDiff>(cur_running_time) - static_cast<GstClockTimeDiff>(reach_time);
     g_mutex_unlock(&sink->render_lock);
 
@@ -412,8 +414,9 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
     g_return_val_if_fail(sink->audio_sink->GetMinimumBufferSize(sink->min_buffer_size) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinimumFrameCount(sink->min_frame_count) == MSERR_OK, FALSE);
 
-    if (GST_STATE(sink) == GST_STATE_PLAYING) {
-        g_return_val_if_fail(sink->audio_sink->Start() == MSERR_OK, FALSE);
+    if (sink->prePoweron) {
+        g_return_val_if_fail(sink->audio_sink->Pause() == MSERR_OK, FALSE);
+        sink->prePoweron = FALSE;
     }
 
     return TRUE;
@@ -433,7 +436,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             }
             // close audio/video sync
             g_mutex_lock(&sink->render_lock);
-            sink->last_running_time_diff = 0;
+            sink->audio_render_delay_time = 0;
             g_mutex_unlock(&sink->render_lock);
             if (sink->audio_sink->Drain() != MSERR_OK) {
                 GST_ERROR_OBJECT(basesink, "fail to call Drain when handling EOS event");
@@ -575,7 +578,7 @@ static GstStateChangeReturn gst_audio_server_sink_change_state(GstElement *eleme
             gst_audio_server_sink_clear_cache_buffer(sink);
             g_mutex_lock(&sink->render_lock);
             sink->last_render_pts = 0;
-            sink->last_running_time_diff = 0;
+            sink->audio_render_delay_time = 0;
             g_mutex_unlock(&sink->render_lock);
             break;
         default:
