@@ -68,6 +68,11 @@ config("media_engine_gst_avmeta_config") {
 }
 
 ohos_static_library("media_engine_gst_avmeta") {
+  sanitize = {
+    integer_overflow = true
+    boundary_sanitize = true
+  }
+
   sources = [
     "avmeta_buffer_blocker.cpp",
     "avmeta_elem_meta_collector.cpp",

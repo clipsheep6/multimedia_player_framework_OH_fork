@@ -66,6 +66,11 @@ config("media_engine_gst_avcodec_config") {
 }
 
 ohos_static_library("media_engine_gst_avcodec") {
+  sanitize = {
+    integer_overflow = true
+    boundary_sanitize = true
+  }
+
   sources = [
     "avcodec_engine_ctrl.cpp",
     "avcodec_engine_factory.cpp",

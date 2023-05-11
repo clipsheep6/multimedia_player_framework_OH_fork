@@ -111,6 +111,11 @@ ohos_shared_library("gst_mem_sink") {
 }
 
 ohos_static_library("gst_mem_sink_base") {
+  sanitize = {
+    integer_overflow = true
+    boundary_sanitize = true
+  }
+
   sources = [ "gst_mem_sink.cpp" ]
   configs = [ ":gst_mem_sink_config" ]
   deps = [ "../../../../../utils:media_service_utils" ]

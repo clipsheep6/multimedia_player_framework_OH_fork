@@ -57,6 +57,11 @@ config("media_engine_gst_recorder_config") {
 }
 
 ohos_static_library("media_engine_gst_recorder") {
+  sanitize = {
+    integer_overflow = true
+    boundary_sanitize = true
+  }
+
   sources = [
     "element_wrapper/audio_converter.cpp",
     "element_wrapper/audio_encoder.cpp",

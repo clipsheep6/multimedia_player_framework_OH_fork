@@ -66,6 +66,11 @@ config("media_engine_gst_common_config") {
 }
 
 ohos_static_library("media_engine_gst_common") {
+  sanitize = {
+    integer_overflow = true
+    boundary_sanitize = true
+  }
+
   sources = [
     "appsrc_engine/appsrc_memory.cpp",
     "appsrc_engine/gst_appsrc_engine.cpp",
@@ -149,6 +154,11 @@ config("media_gst_dfx_config") {
 }
 
 ohos_static_library("media_gst_dfx") {
+  sanitize = {
+    integer_overflow = true
+    boundary_sanitize = true
+  }
+
   sources = [
     "utils/dumper.cpp",
     "utils/gst_utils.cpp",

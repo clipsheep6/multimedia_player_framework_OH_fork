@@ -69,6 +69,11 @@ config("media_engine_gst_factory_config") {
 }
 
 ohos_static_library("media_engine_gst_factory") {
+  sanitize = {
+    integer_overflow = true
+    boundary_sanitize = true
+  }
+
   sources = [ "engine_factory.cpp" ]
 
   configs = [
