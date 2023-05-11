@@ -242,6 +242,10 @@ void PlayerSinkProvider::OnFirstRenderFrame()
 
 void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitle)
 {
+    if (sample == nullptr) {
+        (void)subtitle.PutStringValue("text", "");
+        return;
+    }
     GstMapInfo mapInfo;
     GstSubtitleMeta *meta =
         reinterpret_cast<GstSubtitleMeta *>(gst_buffer_get_meta(sample, GST_SUBTITLE_META_API_TYPE));

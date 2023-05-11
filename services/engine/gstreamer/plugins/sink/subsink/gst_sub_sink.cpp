@@ -257,11 +257,13 @@ static gboolean gst_sub_sink_event(GstBaseSink *basesink, GstEvent *event)
             break;
         }
         case GST_EVENT_FLUSH_START: {
+            GST_DEBUG_OBJECT(sub_sink, "flush start");
             gst_sub_sink_handle_buffer(sub_sink, nullptr, TRUE, 0ULL);
             sub_sink->is_flushing = TRUE;
             break;
         }
         case GST_EVENT_FLUSH_STOP: {
+            GST_DEBUG_OBJECT(sub_sink, "flush stop");
             sub_sink->is_flushing = FALSE;
             break;
         }

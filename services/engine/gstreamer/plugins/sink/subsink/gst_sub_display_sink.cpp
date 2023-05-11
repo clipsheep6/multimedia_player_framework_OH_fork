@@ -119,9 +119,6 @@ static GstStateChangeReturn gst_sub_display_sink_change_state(GstElement *elemen
     GstSubSinkClass *subsink_class = GST_SUB_SINK_GET_CLASS(subsink);
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY:
-            if (subsink_class->handle_buffer != nullptr) {
-                subsink_class->handle_buffer(subsink, nullptr, TRUE, 0ULL);                
-            }
             GST_INFO_OBJECT(sub_display_sink, "sub displaysink has been stopped");
             break;
         default:
@@ -174,7 +171,7 @@ static gboolean gst_sub_display_sink_event(GstBaseSink *basesink, GstEvent *even
         default:
             break;
     }
-    return GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
+    return GST_SUB_SINK_CLASS(parent_class)->event(basesink, event);
 }
 
 static void gst_sub_display_sink_dispose(GObject *obj)
