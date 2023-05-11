@@ -194,7 +194,7 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
             }
             spool->freeBufCnt += (dynamicBuffers - spool->maxBuffers);
             spool->maxBuffers = dynamicBuffers;
-            OHOS::SurfaceError err = OHOS::SurfaceError::SURFACE_ERROR_OK;
+            OHOS::SurfaceError err;
             LISTENER(err = spool->surface->SetQueueSize(spool->maxBuffers),
                 "surface::SetQueueSize", OHOS::Media::PlayerXCollie::timerTimeout)
             if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {
@@ -457,7 +457,7 @@ static gboolean gst_producer_surface_pool_start(GstBufferPool *pool)
         return FALSE;
     }
 
-    OHOS::SurfaceError err = OHOS::SurfaceError::SURFACE_ERROR_OK;
+    OHOS::SurfaceError err;
     LISTENER(err = spool->surface->SetQueueSize(spool->maxBuffers),
         "surface::SetQueueSize", OHOS::Media::PlayerXCollie::timerTimeout)
     if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {
