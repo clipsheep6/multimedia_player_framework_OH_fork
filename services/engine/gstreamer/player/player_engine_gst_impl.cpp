@@ -347,7 +347,11 @@ void PlayerEngineGstImpl::HandleSubtitleUpdate(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleSubTypeMessage(const PlayBinMessage &msg)
 {
-    (this->*subMsgHandler_[msg.subType])(msg);
+    if (subMsgHandler_.count(msg.subType) > 0) {
+        (this->*subMsgHandler_[msg.subType])(msg);
+    } else {
+        MEDIA_LOGD("No this sub msg handler, subType = %{public}d", msg.subType);
+    }
 }
 
 void PlayerEngineGstImpl::HandleAudioMessage(const PlayBinMessage &msg)
