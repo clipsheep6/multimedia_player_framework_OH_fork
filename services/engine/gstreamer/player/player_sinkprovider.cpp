@@ -249,13 +249,7 @@ void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitl
         MEDIA_LOGE("gst buffer map failed");
         return;
     }
-
     (void)subtitle.PutStringValue("text", std::string_view(meta->text));
-    (void)subtitle.PutStringValue("color", std::string_view(meta->color));
-    (void)subtitle.PutIntValue("size", meta->size);
-    (void)subtitle.PutIntValue("style", meta->style);
-    (void)subtitle.PutIntValue("weight", meta->weight);
-    (void)subtitle.PutIntValue("decoration", meta->decorationType);
     gst_buffer_unmap(sample, &mapInfo);
 }
 

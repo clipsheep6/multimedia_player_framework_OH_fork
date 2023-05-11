@@ -26,12 +26,7 @@ using namespace OHOS::Media;
 
 
 struct _GstSubDisplaySinkPrivate {
-    GstCaps *caps;
     GMutex mutex;
-    gboolean started;
-    GstSubDisplaySinkCallbacks callbacks;
-    gpointer userdata;
-    GDestroyNotify notify;
 };
 
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
@@ -83,39 +78,6 @@ static void gst_sub_display_sink_init(GstSubDisplaySink *sub_display_sink)
     g_return_if_fail(priv != nullptr);
     sub_display_sink->priv = priv;
     g_mutex_init(&priv->mutex);
-
-    priv->started = FALSE;
-    priv->caps = nullptr;
-    priv->callbacks.new_sample = nullptr;
-    priv->userdata = nullptr;
-    priv->notify = nullptr;
-}
-
-void gst_sub_display_sink_set_callback(GstSubDisplaySink *sub_display_sink, GstSubDisplaySinkCallbacks *callbacks,
-    gpointer user_data, GDestroyNotify notify)
-{
-    g_return_if_fail(GST_IS_SUB_DISPLAY_SINK(sub_display_sink));
-    g_return_if_fail(callbacks != nullptr);
-    GstSubDisplaySinkPrivate *priv = sub_display_sink->priv;
-    g_return_if_fail(priv != nullptr);
-
-    GST_OBJECT_LOCK(sub_display_sink);
-    GDestroyNotify old_notify = priv->notify;
-    if (old_notify) {
-        gpointer old_data = priv->userdata;
-        priv->userdata = nullptr;
-        priv->notify = nullptr;
-
-        GST_OBJECT_UNLOCK(sub_display_sink);
-        old_notify(old_data);
-        GST_OBJECT_LOCK(sub_display_sink);
-    }
-
-    priv->callbacks = *callbacks;
-    priv->userdata = user_data;
-    priv->notify = notify;
-
-    GST_OBJECT_UNLOCK(sub_display_sink);
 }
 
 static void gst_sub_display_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts, guint32 &duration)
@@ -181,12 +143,17 @@ static GstFlowReturn gst_sub_display_sink_render(GstAppSink *appsink, gpointer u
     guint64 pts = 0;
     guint32 duration = 0;
     gst_sub_display_sink_get_gst_buffer_info(buffer, pts, duration);
-    
+    if (!GST_CLOCK_TIME_IS_VALID(pts) || !GST_CLOCK_TIME_IS_VALID(duration)) {
+        GST_ERROR_OBJECT(sub_display_sink, "pts or duration invalid");
+        return GST_FLOW_ERROR;
+    }
     GstSubSinkClass *subsink_class = GST_SUB_SINK_GET_CLASS(subsink);
     gint64 delay_us = pts - GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
     if (subsink_class->handle_buffer != nullptr) {
         subsink_class->handle_buffer(subsink, buffer, FALSE, delay_us);
-        subsink_class->handle_buffer(subsink, nullptr, FALSE, pts + duration);
+        if (pts + duration > pts) {
+            subsink_class->handle_buffer(subsink, nullptr, FALSE, pts + duration);
+        }
     }
     return GST_FLOW_OK;
 }
@@ -219,5 +186,10 @@ static void gst_sub_display_sink_dispose(GObject *obj)
 static void gst_sub_display_sink_finalize(GObject *obj)
 {
     g_return_if_fail(obj != nullptr);
+    GstSubDisplaySink *sub_display_sink = GST_SUB_DISPLAY_SINK_CAST(obj);
+    GstSubDisplaySinkPrivate *priv = sub_display_sink->priv;
+    if (priv != nullptr) {
+        g_mutex_clear(&priv->mutex);
+    }
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }

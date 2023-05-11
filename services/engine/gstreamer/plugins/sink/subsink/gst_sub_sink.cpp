@@ -204,7 +204,7 @@ GstFlowReturn gst_sub_sink_new_sample(GstAppSink *appsink, gpointer user_data)
     g_mutex_unlock(&priv->mutex);
 
     if (sub_sink->is_flushing) {
-        GST_INFO_OBJECT(sub_sink, "we are flushing");
+        GST_DEBUG_OBJECT(sub_sink, "we are flushing");
         return GST_FLOW_FLUSHING;
     }
     if (sub_sink_class->subtitle_display_callback != nullptr) {
@@ -274,11 +274,26 @@ static gboolean gst_sub_sink_event(GstBaseSink *basesink, GstEvent *event)
 static void gst_sub_sink_dispose(GObject *obj)
 {
     g_return_if_fail(obj != nullptr);
+    GstSubSink *subsink = GST_SUB_SINK_CAST(obj);
+    GstSubSinkPrivate *priv = subsink->priv;
+    g_mutex_lock (&priv->mutex);
+    if (priv->timer_queue != nullptr) {
+        priv->timer_queue = nullptr;
+    }
+    g_mutex_unlock (&priv->mutex);
     G_OBJECT_CLASS(parent_class)->dispose(obj);
 }
 
 static void gst_sub_sink_finalize(GObject *obj)
 {
     g_return_if_fail(obj != nullptr);
+    GstSubSink *subsink = GST_SUB_SINK_CAST(obj);
+    GstSubSinkPrivate *priv = subsink->priv;
+    if (priv != nullptr) {
+        if (priv->timer_queue != nullptr) {
+            priv->timer_queue = nullptr;
+        }
+        g_mutex_clear(&priv->mutex);
+    }
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }

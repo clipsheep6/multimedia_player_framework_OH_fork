@@ -35,10 +35,6 @@ typedef struct _GstSubDisplaySink GstSubDisplaySink;
 typedef struct _GstSubDisplaySinkClass GstSubDisplaySinkClass;
 typedef struct _GstSubDisplaySinkPrivate GstSubDisplaySinkPrivate;
 
-typedef struct {
-    GstFlowReturn (*new_sample)(GstBuffer *sample, gpointer user_data);
-} GstSubDisplaySinkCallbacks;
-
 struct _GstSubDisplaySink {
     GstSubSink parent;
     /* < private > */

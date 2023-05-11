@@ -28,11 +28,6 @@ namespace OHOS {
 namespace Media {
 typedef struct {
     const char *text;
-    const char *color;
-    int size;
-    int style;
-    int weight;
-    int decorationType;
 } GstSubtitleMeta;
 
 class NapiCallback {
@@ -246,11 +241,6 @@ public:
             napi_value args[1] = {nullptr};
             napi_create_object(ref->env_, &args[0]);
             CommonNapi::SetPropertyString(ref->env_, args[0], "text", std::string(meta.text));
-            CommonNapi::SetPropertyString(ref->env_, args[0], "color", std::string(meta.color));
-            CommonNapi::SetPropertyInt32(ref->env_, args[0], "size", meta.size);
-            CommonNapi::SetPropertyInt32(ref->env_, args[0], "style", meta.style);
-            CommonNapi::SetPropertyInt32(ref->env_, args[0], "weight", meta.weight);
-            CommonNapi::SetPropertyInt32(ref->env_, args[0], "decorationType", meta.decorationType);
             napi_value result = nullptr;
             status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,
@@ -641,23 +631,6 @@ void AVPlayerCallback::OnSubtitleUpdateCb(const Format &infoBody) const
         (void)infoBody.GetStringValue("text", text);
     }
     meta.text = text.c_str();
-    std::string color;
-    if (infoBody.ContainKey("color")) {
-        (void)infoBody.GetStringValue("color", color);
-    }
-    meta.color = color.c_str();
-    if (infoBody.ContainKey("size")) {
-        (void)infoBody.GetIntValue("size", meta.size);
-    }
-    if (infoBody.ContainKey("style")) {
-        (void)infoBody.GetIntValue("style", meta.style);
-    }
-    if (infoBody.ContainKey("weight")) {
-        (void)infoBody.GetIntValue("weight", meta.weight);
-    }
-    if (infoBody.ContainKey("decorationType")) {
-        (void)infoBody.GetIntValue("decorationType", meta.decorationType);
-    }
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUBTITLE_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_SUBTITLE_UPDATE;
     cb->meta = meta;
