@@ -19,7 +19,7 @@ import AVPlayerHttpSeekTest from './AVPlayerHttpSeekTest.test.ets'
 import AVPlayerDataSrcNoSeekCompatibilityTest from './AVPlayerDataSrcNoSeekCompatibilityTest.test.js'
 import AVPlayerDataSrcNoSeekReliabilityTest from './AVPlayerDataSrcNoSeekReliabilityTest.test.js'
 import AVPlayerDataSrcNoSeekAPITest from './AVPlayerDataSrcNoSeekAPITest.test.js'
-
+import AVPlayerDataSrcSeekReliabilityTest from './AVPlayerDataSrcSeekReliabilityTest.test.js'
 import AVPlayerDataSrcSeekCompatibilityTest from './AVPlayerDataSrcSeekCompatibilityTest.test.js'
 import AVPlayerLocalTest from './AVPlayerLocalTest.test.js'
 import AVPlayerLocalTestH265 from './AVPlayerLocalTesth265.test.js'
@@ -34,6 +34,7 @@ export default function testsuite() {
   AVPlayerDataSrcNoSeekReliabilityTest();
   AVPlayerDataSrcNoSeekAPITest();
   AVPlayerDataSrcSeekCompatibilityTest();
+  AVPlayerDataSrcSeekReliabilityTest();
   AVPlayerLocalTest();
   AVPlayerLocalTestH265();
 }
