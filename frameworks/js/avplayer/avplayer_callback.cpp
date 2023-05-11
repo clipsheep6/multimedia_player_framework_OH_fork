@@ -261,6 +261,7 @@ public:
             CHECK_AND_RETURN_LOG(scope != nullptr,
                 "%{public}s scope is nullptr", callbackName.c_str());
             ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+            textInfo = nullptr;
             napi_get_undefined(ref->env_, &textInfo); 
             (void)napi_create_object(ref->env_, &textInfo);
 
@@ -673,9 +674,9 @@ void AVPlayerCallback::OnSubtitleUpdateCb(const Format &infoBody) const
     if (infoBody.ContainKey("decorationType")) {
         (void)infoBody.GetIntValue("decorationType", meta.decorationType);
     }
-    cb->CreateValue(meta);
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUBTITLE_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_SUBTITLE_UPDATE;
+    cb->CreateValue(meta);
     NapiCallback::CompleteCallback(env_, cb);
 }
 
