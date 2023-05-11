@@ -63,9 +63,6 @@ struct _GstSubSinkClass {
 
 GST_API_EXPORT GType gst_sub_sink_get_type(void);
 
-
-GST_API_EXPORT GstFlowReturn gst_sub_sink_display(GstSubSink *sub_sink, GstBuffer *buffer);
-
 /**
  * @brief call this interface to set the notifiers for new_sample.
  *

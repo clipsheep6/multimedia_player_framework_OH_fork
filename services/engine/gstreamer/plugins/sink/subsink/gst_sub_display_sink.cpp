@@ -48,7 +48,7 @@ static gboolean gst_sub_display_sink_event(GstBaseSink *basesink, GstEvent *even
 
 #define gst_sub_display_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE(GstSubDisplaySink, gst_sub_display_sink,
-                        GST_TYPE_APP_SINK, G_ADD_PRIVATE(GstSubDisplaySink));
+                        GST_TYPE_SUB_SINK, G_ADD_PRIVATE(GstSubDisplaySink));
 
 GST_DEBUG_CATEGORY_STATIC(gst_sub_display_sink_debug_category);
 #define GST_CAT_DEFAULT gst_sub_display_sink_debug_category
