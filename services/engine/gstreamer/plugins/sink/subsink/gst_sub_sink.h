@@ -56,9 +56,9 @@ struct _GstSubSink {
 };
 
 struct _GstSubSinkClass {
+    GstAppSinkClass parent_class;
     void (*handle_buffer)(GstSubSink *sub_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs);
     GstFlowReturn (*subtitle_display_callback)(GstAppSink *appsink, gpointer user_data);
-    GstAppSinkClass parent_class;
 };
 
 GST_API_EXPORT GType gst_sub_sink_get_type(void);
