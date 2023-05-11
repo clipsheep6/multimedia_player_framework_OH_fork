@@ -24,12 +24,7 @@ using namespace OHOS::Media;
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
-
-struct _GstSubDisplaySinkPrivate {
-    GMutex mutex;
-};
-
-static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
+static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subdisplaysink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
@@ -42,8 +37,7 @@ static GstFlowReturn gst_sub_display_sink_render (GstAppSink *appsink, gpointer 
 static gboolean gst_sub_display_sink_event(GstBaseSink *basesink, GstEvent *event);
 
 #define gst_sub_display_sink_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE(GstSubDisplaySink, gst_sub_display_sink,
-                        GST_TYPE_SUB_SINK, G_ADD_PRIVATE(GstSubDisplaySink));
+G_DEFINE_TYPE(GstSubDisplaySink, gst_sub_display_sink, GST_TYPE_SUB_SINK);
 
 GST_DEBUG_CATEGORY_STATIC(gst_sub_display_sink_debug_category);
 #define GST_CAT_DEFAULT gst_sub_display_sink_debug_category
@@ -73,11 +67,6 @@ static void gst_sub_display_sink_class_init(GstSubDisplaySinkClass *kclass)
 static void gst_sub_display_sink_init(GstSubDisplaySink *sub_display_sink)
 {
     g_return_if_fail(sub_display_sink != nullptr);
-
-    auto priv = reinterpret_cast<GstSubDisplaySinkPrivate *>(gst_sub_display_sink_get_instance_private(sub_display_sink));
-    g_return_if_fail(priv != nullptr);
-    sub_display_sink->priv = priv;
-    g_mutex_init(&priv->mutex);
 }
 
 static void gst_sub_display_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts, guint32 &duration)
@@ -99,10 +88,6 @@ static void gst_sub_display_sink_set_property(GObject *object, guint prop_id, co
     g_return_if_fail(object != nullptr);
     g_return_if_fail(value != nullptr);
     g_return_if_fail(pspec != nullptr);
-
-    GstSubDisplaySink *sub_display_sink = GST_SUB_DISPLAY_SINK_CAST(object);
-    GstSubDisplaySinkPrivate *priv = sub_display_sink->priv;
-    g_return_if_fail(priv != nullptr);
     switch (prop_id) {
         default:
             G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -114,9 +99,6 @@ static GstStateChangeReturn gst_sub_display_sink_change_state(GstElement *elemen
 {
     g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
     GstSubDisplaySink *sub_display_sink = GST_SUB_DISPLAY_SINK(element);
-    GstSubSink *subsink = GST_SUB_SINK_CAST(sub_display_sink);
-
-    GstSubSinkClass *subsink_class = GST_SUB_SINK_GET_CLASS(subsink);
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             GST_INFO_OBJECT(sub_display_sink, "sub displaysink has been stopped");
@@ -159,8 +141,6 @@ static gboolean gst_sub_display_sink_event(GstBaseSink *basesink, GstEvent *even
 {
     GstSubDisplaySink *sub_display_sink = GST_SUB_DISPLAY_SINK_CAST(basesink);
     g_return_val_if_fail(sub_display_sink != nullptr, FALSE);
-    GstSubDisplaySinkPrivate *priv = sub_display_sink->priv;
-    g_return_val_if_fail(priv != nullptr, FALSE);
     g_return_val_if_fail(event != nullptr, FALSE);
 
     switch (event->type) {
@@ -171,7 +151,7 @@ static gboolean gst_sub_display_sink_event(GstBaseSink *basesink, GstEvent *even
         default:
             break;
     }
-    return GST_SUB_SINK_CLASS(parent_class)->event(basesink, event);
+    return GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
 }
 
 static void gst_sub_display_sink_dispose(GObject *obj)
@@ -183,10 +163,5 @@ static void gst_sub_display_sink_dispose(GObject *obj)
 static void gst_sub_display_sink_finalize(GObject *obj)
 {
     g_return_if_fail(obj != nullptr);
-    GstSubDisplaySink *sub_display_sink = GST_SUB_DISPLAY_SINK_CAST(obj);
-    GstSubDisplaySinkPrivate *priv = sub_display_sink->priv;
-    if (priv != nullptr) {
-        g_mutex_clear(&priv->mutex);
-    }
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }

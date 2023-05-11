@@ -34,7 +34,7 @@ struct _GstSubSinkPrivate {
 };
 
 
-static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
+static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subsink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
@@ -96,7 +96,7 @@ static void gst_sub_sink_init(GstSubSink *sub_sink)
     priv->callbacks.new_sample = nullptr;
     priv->userdata = nullptr;
     priv->notify = nullptr;
-    priv->timer_queue = std::make_unique<TaskQueue>("GstSubSink");
+    priv->timer_queue = std::make_unique<TaskQueue>("GstSubSinkTask");
 }
 
 void gst_sub_sink_set_callback(GstSubSink *sub_sink, GstSubSinkCallbacks *callbacks,

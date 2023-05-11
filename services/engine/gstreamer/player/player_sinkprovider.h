@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
+#include <vector>
 #include <gst/gst.h>
 #include "gst_mem_sink.h"
 #include "gst_sub_sink.h"
@@ -62,7 +63,7 @@ private:
 
     GstElement *audioSink_ = nullptr;
     GstElement *videoSink_ = nullptr;
-    GstElement *subSink_ = nullptr;
+    std::vector<GstElement *> subSinks_;
     GstCaps *audioCaps_ = nullptr;
     GstCaps *videoCaps_ = nullptr;
     GstCaps *subCaps_ = nullptr;

@@ -50,6 +50,12 @@ PlayerSinkProvider::~PlayerSinkProvider()
         gst_object_unref(videoSink_);
         videoSink_ = nullptr;
     }
+    for (auto subSink : subSinks_) {
+        if (subSink != nullptr) {
+            gst_object_unref(subSink);
+            subSink = nullptr;
+        }
+    }
     if (audioCaps_ != nullptr) {
         gst_caps_unref(audioCaps_);
         audioCaps_ = nullptr;
@@ -57,6 +63,10 @@ PlayerSinkProvider::~PlayerSinkProvider()
     if (videoCaps_ != nullptr) {
         gst_caps_unref(videoCaps_);
         videoCaps_ = nullptr;
+    }
+    if (subCaps_ != nullptr) {
+        gst_caps_unref(subCaps_);
+        subCaps_ = nullptr;
     }
 }
 
@@ -193,9 +203,10 @@ GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpo
 
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubSink()
 {
-    subSink_ = DoCreateSubSink(subCaps_, reinterpret_cast<gpointer>(this));
-    CHECK_AND_RETURN_RET_LOG(subSink_ != nullptr, nullptr, "CreateSubSink failed..");
-    return subSink_;
+    auto *subSink = DoCreateSubSink(subCaps_, reinterpret_cast<gpointer>(this));
+    CHECK_AND_RETURN_RET_LOG(subSink != nullptr, nullptr, "CreateSubSink failed..");
+    subSinks_.emplace_back(subSink);
+    return subSink;
 }
 
 GstElement *PlayerSinkProvider::DoCreateSubSink(const GstCaps *caps, const gpointer userData)
