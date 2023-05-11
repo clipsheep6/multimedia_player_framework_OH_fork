@@ -17,6 +17,14 @@ import("//foundation/multimedia/player_framework/config.gni")
 import("./../../../multimedia_player_framework_aafwk.gni")
 
 ohos_shared_library("systemsoundmanager") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    integer_overflow = true
+    boundary_sanitize = true
+    debug = false
+  }
+
   include_dirs = [
     "${multimedia_player_framework_path}/frameworks/js/ringtone_manager/include",
     "${multimedia_player_framework_path}/interfaces/inner_api/native",

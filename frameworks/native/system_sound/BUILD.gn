@@ -16,6 +16,14 @@ import("//foundation/multimedia/player_framework/config.gni")
 import("./../../../multimedia_player_framework_aafwk.gni")
 
 ohos_shared_library("audio_ringtone_client") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    integer_overflow = true
+    boundary_sanitize = true
+    debug = false
+  }
+
   install_enable = true
   sources = [ "audio_ringtone_manager.cpp" ]
 
