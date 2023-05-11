@@ -40,12 +40,12 @@ static bool IsInnerRange(uint32_t srcA, uint32_t endA, uint32_t srcB, uint32_t e
 
 AppsrcMemory::AppsrcMemory()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 AppsrcMemory::~AppsrcMemory()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 uint32_t AppsrcMemory::GetBufferSize() const
@@ -119,6 +119,7 @@ uint64_t AppsrcMemory::GetFilePos() const
 void AppsrcMemory::SetBufferSize(uint32_t bufferSize)
 {
     bufferSize_ = bufferSize;
+    MEDIA_LOGD("Set bufferSize_ is %{public}u", bufferSize_);
 }
 
 void AppsrcMemory::SetMem(std::shared_ptr<AVSharedMemory> mem)
@@ -174,7 +175,6 @@ void AppsrcMemory::SeekAndChangePos(uint64_t pos)
             MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unusedBufferEnd);
             PushUnusedBuffers({availableBegin_, unusedBufferEnd});
             availableBegin_ = begin_ - (filePos_ - pos);
-            CheckBufferUsage();
         } else {
             uint32_t pad = noFreeBuffer_ ? bufferSize_ : 0;
             availableBegin_ = (begin_ + pad) - (filePos_ - pos);
@@ -187,7 +187,6 @@ void AppsrcMemory::SeekAndChangePos(uint64_t pos)
             MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unusedBufferEnd);
             PushUnusedBuffers({availableBegin_, unusedBufferEnd});
             availableBegin_ = ((begin_ + bufferSize_) - (filePos_ - pos)) % bufferSize_;
-            CheckBufferUsage();
         } else {
             availableBegin_ = ((begin_ + bufferSize_) - (filePos_ - pos)) % bufferSize_;
             end_ = availableBegin_ == 0 ? bufferSize_ - 1 : availableBegin_ - 1;
@@ -226,7 +225,6 @@ void AppsrcMemory::PushBufferAndChangePos(uint32_t pushSize, bool isCopy)
             end_ = (end_ + pushSize) % bufferSize_;
         } else {
             PushUnusedBuffers({availableBegin_, (availableBegin_ + pushSize) % bufferSize_});
-            CheckBufferUsage();
         }
     }
     pushOffset_ += pushSize;
@@ -319,7 +317,7 @@ bool AppsrcMemory::ProcessBuffer(uint32_t offset, uint32_t length)
     std::deque<std::pair<uint32_t, uint32_t>>::iterator iter;
     bool flag = IsUnreturnedBuffer(offset, length, iter);
     if (flag) {
-        while (flag && !unusedBuffers_.empty() && iter != unreturnedBuffers_.end() &&
+        while (!unusedBuffers_.empty() && iter != unreturnedBuffers_.end() &&
             iter->first == unusedBuffers_.front().first) {
             MEDIA_LOGI("unusedBuffers %{public}u - %{public}u",
                 unusedBuffers_.front().first, unusedBuffers_.front().second);
@@ -346,7 +344,6 @@ bool AppsrcMemory::IsUnreturnedBuffer(uint32_t offset, uint32_t length,
     uint32_t pad;
     for (iter = unreturnedBuffers_.begin(); iter != unreturnedBuffers_.end(); ++iter) {
         pad = iter->first < iter->second ? 0 : bufferSize_;
-        MEDIA_LOGD("unreturnedBuffers begin: %{public}u, end: %{public}u", iter->first, iter->second);
         if (!IsInnerRange(iter->first, iter->second + pad, offset, offset + length)) {
             continue;
         }
@@ -362,7 +359,6 @@ bool AppsrcMemory::IsUnreturnedBuffer(uint32_t offset, uint32_t length,
         } else {
             iter = unreturnedBuffers_.insert(iter, {iter->first, offset});
             MEDIA_LOGD("unreturnedBuffers insert : %{public}u, %{public}u", iter->first, offset);
-            CheckBufferUsage();
             (iter + 1)->first = (offset + length) % bufferSize_;
             MEDIA_LOGD("unreturnedBuffers first change to : %{public}u", (iter + 1)->first);
         }
@@ -383,7 +379,6 @@ bool AppsrcMemory::PushBufferToUnreturnedBuffers(uint32_t offset, uint32_t lengt
     unreturnedBuffers_.push_back({(end_ + 1) % bufferSize_, offset});
     MEDIA_LOGD("unreturnedBuffers push begin: %{public}u, end: %{public}u",
         (end_ + 1) % bufferSize_, offset);
-    CheckBufferUsage();
     return true;
 }
 

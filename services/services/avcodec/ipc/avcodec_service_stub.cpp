@@ -267,7 +267,6 @@ int32_t AVCodecServiceStub::SetOutputSurface(sptr<OHOS::Surface> surface)
 
 std::shared_ptr<AVSharedMemory> AVCodecServiceStub::GetInputBuffer(uint32_t index)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, nullptr, "avcodec server is nullptr");
     return codecServer_->GetInputBuffer(index);
 }
@@ -281,7 +280,6 @@ int32_t AVCodecServiceStub::QueueInputBuffer(uint32_t index, AVCodecBufferInfo i
 
 std::shared_ptr<AVSharedMemory> AVCodecServiceStub::GetOutputBuffer(uint32_t index)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(codecServer_ != nullptr, nullptr, "avcodec server is nullptr");
     return codecServer_->GetOutputBuffer(index);
 }
@@ -419,6 +417,7 @@ int32_t AVCodecServiceStub::SetOutputSurface(MessageParcel &data, MessageParcel 
 
 int32_t AVCodecServiceStub::GetInputBuffer(MessageParcel &data, MessageParcel &reply)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(inputBufferCache_ != nullptr, MSERR_INVALID_OPERATION);
 
     uint32_t index = data.ReadUint32();
@@ -440,6 +439,7 @@ int32_t AVCodecServiceStub::QueueInputBuffer(MessageParcel &data, MessageParcel 
 
 int32_t AVCodecServiceStub::GetOutputBuffer(MessageParcel &data, MessageParcel &reply)
 {
+    std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET(outputBufferCache_ != nullptr, MSERR_INVALID_OPERATION);
 
     uint32_t index = data.ReadUint32();
