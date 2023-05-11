@@ -224,7 +224,7 @@ public:
     };
 
     struct SubtitleProperty : public Base {
-        napi_value textInfo;
+        GstSubtitleMeta meta;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> ref = callback.lock();
@@ -244,33 +244,17 @@ public:
 
             // callback: (textInfo: TextInfoDescriptor)
             napi_value args[1] = {nullptr};
-            args[0] = textInfo;
+            napi_create_object(ref->env_, &args[0]);
+            CommonNapi::SetPropertyString(ref->env_, args[0], "text", std::string(meta.text));
+            CommonNapi::SetPropertyString(ref->env_, args[0], "color", std::string(meta.color));
+            CommonNapi::SetPropertyInt32(ref->env_, args[0], "size", meta.size);
+            CommonNapi::SetPropertyInt32(ref->env_, args[0], "style", meta.style);
+            CommonNapi::SetPropertyInt32(ref->env_, args[0], "weight", meta.weight);
+            CommonNapi::SetPropertyInt32(ref->env_, args[0], "decorationType", meta.decorationType);
             napi_value result = nullptr;
             status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,
                 "%{public}s fail to napi_call_function", callbackName.c_str());
-        }
-
-        void CreateValue(GstSubtitleMeta meta)
-        {
-            std::shared_ptr<AutoRef> ref = callback.lock();
-            CHECK_AND_RETURN_LOG(ref != nullptr,
-                "%{public}s AutoRef is nullptr", callbackName.c_str());
-            napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(ref->env_, &scope);
-            CHECK_AND_RETURN_LOG(scope != nullptr,
-                "%{public}s scope is nullptr", callbackName.c_str());
-            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
-            textInfo = nullptr;
-            napi_get_undefined(ref->env_, &textInfo); 
-            (void)napi_create_object(ref->env_, &textInfo);
-
-            CommonNapi::SetPropertyString(ref->env_, textInfo, "text", std::string(meta.text));
-            CommonNapi::SetPropertyString(ref->env_, textInfo, "color", std::string(meta.color));
-            CommonNapi::SetPropertyInt32(ref->env_, textInfo, "size", meta.size);
-            CommonNapi::SetPropertyInt32(ref->env_, textInfo, "style", meta.style);
-            CommonNapi::SetPropertyInt32(ref->env_, textInfo, "weight", meta.weight);
-            CommonNapi::SetPropertyInt32(ref->env_, textInfo, "decorationType", meta.decorationType);
         }
     };
 
@@ -676,7 +660,7 @@ void AVPlayerCallback::OnSubtitleUpdateCb(const Format &infoBody) const
     }
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUBTITLE_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_SUBTITLE_UPDATE;
-    cb->CreateValue(meta);
+    cb->meta = meta;
     NapiCallback::CompleteCallback(env_, cb);
 }
 
