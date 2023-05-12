@@ -1306,6 +1306,7 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "ActiveBufferMgr", TRUE), GST_FLOW_ERROR);
     g_return_val_if_fail(gst_vdec_base_allocate_out_buffers(self), GST_FLOW_ERROR);
     ret = self->decoder->Start();
+    self->decoder_start = true;
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "Start", TRUE), GST_FLOW_ERROR);
     GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change end");
     return GST_FLOW_OK;
@@ -1413,6 +1414,9 @@ static void gst_vdec_base_loop(GstVdecBase *self)
             flow_ret = push_output_buffer(self, gst_buffer);
             break;
         case GST_CODEC_FORMAT_CHANGE:
+            if (gst_buffer != nullptr) {
+                gst_buffer_unref(gst_buffer);
+            }
             (void)gst_vdec_base_format_change(self);
             return;
         case GST_CODEC_EOS:
@@ -1672,8 +1676,8 @@ static gboolean gst_vdec_base_event(GstVideoDecoder *decoder, GstEvent *event)
                     (void)kclass->flush_cache_slice_buffer(self);
                 }
                 gst_vdec_base_set_flushing(self, TRUE);
-                self->decoder_start = FALSE;
                 g_mutex_lock(&self->format_change_lock);
+                self->decoder_start = FALSE;
                 if (self->decoder != nullptr) {
                     (void)self->decoder->Flush(GST_CODEC_ALL);
                 }
