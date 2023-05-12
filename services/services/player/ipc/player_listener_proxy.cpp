@@ -63,8 +63,7 @@ void PlayerListenerProxy::OnInfo(PlayerOnInfoType type, int32_t extra, const For
     data.WriteInt32(type);
     data.WriteInt32(extra);
     MediaParcel::Marshalling(data, infoBody);
-
-    int error = Remote()->SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
+    int error = SendRequest(PlayerListenerMsg::ON_INFO, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on info failed, error: %{public}d", error);
 }
 

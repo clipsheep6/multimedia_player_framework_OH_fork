@@ -35,7 +35,7 @@ public:
     SinkPtr CreateVideoSink() override;
     SinkPtr GetVideoSink() override;
 
-    void SetAppInfo(int32_t uid, int32_t pid) override;
+    void SetAppInfo(int32_t uid, int32_t pid, uint32_t tokenId) override;
     void SetVideoScaleType(const uint32_t videoScaleType) override;
     void SetMsgNotifier(PlayBinMsgNotifier notifier) override;
 
@@ -60,6 +60,7 @@ private:
     GstCaps *videoCaps_ = nullptr;
     sptr<Surface> producerSurface_ = nullptr;
     uint32_t queueSize_ = 0;
+    uint32_t tokenId_ = 0;
     int32_t uid_ = 0;
     int32_t pid_ = 0;
     uint32_t videoScaleType_ = 0;

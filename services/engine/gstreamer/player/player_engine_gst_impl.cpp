@@ -41,8 +41,8 @@ constexpr int32_t BUFFER_TIME_DEFAULT = 15000; // 15s
 constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
 constexpr int32_t POSITION_REPORT_PER_TIMES = 1;
 
-PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid)
-    : appuid_(uid), apppid_(pid)
+PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid, uint32_t tokenId)
+    : appuid_(uid), apppid_(pid), apptokenid_(tokenId)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -520,7 +520,7 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerPrepare()
     {
         std::unique_lock<std::mutex> lk(trackParseMutex_);
         sinkProvider_ = std::make_shared<PlayerSinkProvider>(producerSurface_);
-        sinkProvider_->SetAppInfo(appuid_, apppid_);
+        sinkProvider_->SetAppInfo(appuid_, apppid_, apptokenid_);
     }
 
     IPlayBinCtrler::PlayBinCreateParam createParam = {

@@ -109,6 +109,7 @@ GstElement *PlayerSinkProvider::DoCreateAudioSink(const GstCaps *caps, const gpo
 
     g_object_set(G_OBJECT(sink), "app-uid", uid_, nullptr);
     g_object_set(G_OBJECT(sink), "app-pid", pid_, nullptr);
+    g_object_set(G_OBJECT(sink), "app-token-id", tokenId_, nullptr);
 
     gboolean enable = static_cast<gboolean>(EnableOptRenderDelay());
     g_object_set(G_OBJECT(sink), "enable-opt-render-delay", enable, nullptr);
@@ -293,10 +294,11 @@ void PlayerSinkProvider::SetVideoScaleType(const uint32_t videoScaleType)
     }
 }
 
-void PlayerSinkProvider::SetAppInfo(int32_t uid, int32_t pid)
+void PlayerSinkProvider::SetAppInfo(int32_t uid, int32_t pid, uint32_t tokenId)
 {
     uid_ = uid;
     pid_ = pid;
+    tokenId_ = tokenId;
 }
 }
 }
