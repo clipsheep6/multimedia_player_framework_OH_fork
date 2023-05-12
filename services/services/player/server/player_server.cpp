@@ -119,9 +119,10 @@ int32_t PlayerServer::Init()
     pausedState_ = std::make_shared<PausedState>(*this);
     stoppedState_ = std::make_shared<StoppedState>(*this);
     playbackCompletedState_ = std::make_shared<PlaybackCompletedState>(*this);
+    appTokenId_ = IPCSkeleton::GetCallingTokenID();
     appUid_ = IPCSkeleton::GetCallingUid();
     appPid_ = IPCSkeleton::GetCallingPid();
-    MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d", appUid_, appPid_);
+    MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d, app tokenId: %{public}u", appUid_, appPid_, appTokenId_);
 
     PlayerServerStateMachine::Init(idleState_);
     return MSERR_OK;
@@ -194,7 +195,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_PLAYBACK, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to get engine factory");
-    playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_);
+    playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_, appTokenId_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
 

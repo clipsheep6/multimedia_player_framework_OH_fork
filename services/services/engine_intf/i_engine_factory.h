@@ -53,10 +53,11 @@ public:
     }
 
 #ifdef SUPPORT_PLAYER
-    virtual std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0)
+    virtual std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0, uint32_t tokenId = 0)
     {
         (void)uid;
         (void)pid;
+        (void)tokenId;
         return nullptr;
     }
 #endif
