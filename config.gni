@@ -110,7 +110,7 @@ if (multimedia_player_framework_support_jsstack) {
 }
 
 if (use_memmgr_plugin || use_memmgr) {
-  player_framework_defines += [ "USE_PURGEABLE_MEMORY" ]
+  player_framework_defines += [ "PLAYER_USE_MEMORY_MANAGE" ]
 }
 
 if (multimedia_player_framework_support_monitor) {
