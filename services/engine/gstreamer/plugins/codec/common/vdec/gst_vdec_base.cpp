@@ -1299,7 +1299,6 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
         g_object_set(self->outpool, "dynamic-buffer-num", self->out_buffer_cnt, nullptr);
     }
     g_mutex_lock(&self->decoder_lock);
-    g_return_val_if_fail(self->decoder != nullptr, GST_FLOW_ERROR);
     ret = self->decoder->ActiveBufferMgr(GST_CODEC_OUTPUT, true);
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "ActiveBufferMgr", TRUE), GST_FLOW_ERROR);
     g_return_val_if_fail(gst_vdec_base_allocate_out_buffers(self), GST_FLOW_ERROR);
