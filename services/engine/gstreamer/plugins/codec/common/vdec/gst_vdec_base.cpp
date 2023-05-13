@@ -1088,14 +1088,12 @@ static GstFlowReturn gst_vdec_base_handle_frame(GstVideoDecoder *decoder, GstVid
         self->prepared = TRUE;
     }
     GstPad *pad = GST_VIDEO_DECODER_SRC_PAD(self);
-    g_mutex_lock(&self->decoder_lock);
     if (!self->decoder_start) {
         gint ret = self->decoder->Start();
         g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "start", TRUE), GST_FLOW_ERROR);
         self->decoder_start = TRUE;
         GST_WARNING_OBJECT(decoder, "KPI-TRACE-VDEC: start end");
     }
-    g_mutex_unlock(&self->decoder_lock);
     if (gst_pad_get_task_state(pad) != GST_TASK_STARTED &&
         gst_pad_start_task(pad, (GstTaskFunction)gst_vdec_base_loop, decoder, nullptr) != TRUE) {
         return GST_FLOW_ERROR;
