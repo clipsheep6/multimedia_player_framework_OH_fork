@@ -169,7 +169,6 @@ static GstStateChangeReturn gst_sub_sink_change_state(GstElement *element, GstSt
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             gst_sub_sink_handle_buffer(sub_sink, nullptr, TRUE, 0ULL);
-            priv->timer_queue->Stop();
             GST_INFO_OBJECT(sub_sink, "sub sink has been stopped");
             break;
         default:
