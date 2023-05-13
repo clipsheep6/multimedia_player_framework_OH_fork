@@ -414,10 +414,8 @@ static gboolean gst_vdec_base_close(GstVideoDecoder *decoder)
     g_return_val_if_fail(decoder != nullptr, FALSE);
     GstVdecBase *self = GST_VDEC_BASE(decoder);
     g_return_val_if_fail(self->decoder != nullptr, FALSE);
-    g_mutex_lock(&self->decoder_lock);
     self->decoder->Deinit();
     self->decoder = nullptr;
-    g_mutex_unlock(&self->decoder_lock);
     return TRUE;
 }
 
@@ -1306,7 +1304,7 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "ActiveBufferMgr", TRUE), GST_FLOW_ERROR);
     g_return_val_if_fail(gst_vdec_base_allocate_out_buffers(self), GST_FLOW_ERROR);
     ret = self->decoder->Start();
-    self->decoder_start = true;
+    self->decoder_start = TRUE;
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "Start", TRUE), GST_FLOW_ERROR);
     GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change end");
     return GST_FLOW_OK;
