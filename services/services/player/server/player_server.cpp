@@ -289,7 +289,9 @@ int32_t PlayerServer::HandlePrepare()
         MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
         auto rateTask = std::make_shared<TaskHandler<void>>([this]() {
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-            (void)currState->SetPlaybackSpeed(config_.speedMode);
+            PlaybackRateMode speedMode = config_.speedMode;
+            config_.speedMode = SPEED_FORWARD_1_00_X;
+            (void)currState->SetPlaybackSpeed(speedMode);
         });
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
             MEDIA_LOGI("Interrupted speed action");
@@ -760,13 +762,6 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         return MSERR_INVALID_OPERATION;
     }
 
-    if (config_.speedMode == mode) {
-        MEDIA_LOGD("The speed mode is same, mode = %{public}d", mode);
-        Format format;
-        OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
-        return MSERR_OK;
-    }
-
     auto rateTask = std::make_shared<TaskHandler<void>>([this, mode]() {
         MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
@@ -788,6 +783,14 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
 
 int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
 {
+    if (config_.speedMode == mode) {
+        MEDIA_LOGD("The speed mode is same, mode = %{public}d", mode);
+        Format format;
+        OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
+        taskMgr_.MarkTaskDone("set speed mode is same");
+        return MSERR_OK;
+    }
+
     if (playerEngine_ != nullptr) {
         int ret = playerEngine_->SetPlaybackSpeed(mode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetPlaybackSpeed Failed!");
