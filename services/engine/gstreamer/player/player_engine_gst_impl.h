@@ -127,6 +127,7 @@ private:
     bool isPlaySinkFlagsSet_ = false;
     bool useSoftDec_ = false;
     std::unique_ptr<TaskQueue> taskQueue_;
+    bool isAdaptiveLiveStream_ = false;
 };
 } // namespace Media
 } // namespace OHOS

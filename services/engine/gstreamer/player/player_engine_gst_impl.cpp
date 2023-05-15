@@ -242,6 +242,9 @@ void PlayerEngineGstImpl::HandleBufferingEnd()
 
 void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
 {
+    if (isAdaptiveLiveStream_) {
+        return;
+    }
     std::pair<uint32_t, int64_t> bufferingTimePair = std::any_cast<std::pair<uint32_t, int64_t>>(msg.extra);
     uint32_t mqNumId = bufferingTimePair.first;
     uint64_t bufferingTime = bufferingTimePair.second / MSEC_PER_NSEC;
@@ -325,6 +328,7 @@ void PlayerEngineGstImpl::HandleBitRateCollect(const PlayBinMessage &msg)
 void PlayerEngineGstImpl::HandleIsLiveStream(const PlayBinMessage &msg)
 {
     (void)msg;
+    isAdaptiveLiveStream_ = true;
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     Format format;
     if (notifyObs != nullptr) {
@@ -423,6 +427,9 @@ void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandlePositionUpdateMessage(const PlayBinMessage &msg)
 {
+    if (isAdaptiveLiveStream_) {
+        return;
+    }
     currentTime_ = msg.code;
     int32_t duration = std::any_cast<int32_t>(msg.extra);
     MEDIA_LOGD("update position %{public}d ms, duration %{public}d ms", currentTime_, duration);
