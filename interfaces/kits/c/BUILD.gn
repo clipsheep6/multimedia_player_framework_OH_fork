@@ -83,7 +83,7 @@ ohos_shared_library("native_media_core") {
   ]
 
   external_deps = [
-    "graphic_standard:surface",
+    "graphic_2d:surface",
     "hiviewdfx_hilog_native:libhilog",
   ]
   output_extension = "so"
@@ -199,7 +199,7 @@ ohos_shared_library("native_media_vdec") {
 
   external_deps = [
     "c_utils:utils",
-    "graphic_standard:surface",
+    "graphic_2d:surface",
     "hiviewdfx_hilog_native:libhilog",
   ]
 
@@ -232,7 +232,7 @@ ohos_shared_library("native_media_venc") {
 
   external_deps = [
     "c_utils:utils",
-    "graphic_standard:surface",
+    "graphic_2d:surface",
     "hiviewdfx_hilog_native:libhilog",
   ]
   output_extension = "so"
