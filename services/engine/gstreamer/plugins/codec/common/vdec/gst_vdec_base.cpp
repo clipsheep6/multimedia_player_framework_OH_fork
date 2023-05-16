@@ -1127,16 +1127,13 @@ static void update_video_meta(const GstVdecBase *self, GstBuffer *buffer)
     if (video_meta == nullptr) {
         gst_buffer_add_video_meta(buffer, GST_VIDEO_FRAME_FLAG_NONE, self->format, self->width, self->height);
     } else {
+        GST_DEBUG_OBJECT(self, "stride is %d, stride_height is %d", self->real_stride, self->real_stride_height);
         video_meta->width = self->width;
         video_meta->height = self->height;
         video_meta->offset[0] = 0;
-        if (self->metadata_mode) {
-            video_meta->stride[0] = self->width;
-            video_meta->offset[1] = self->width * self->height;
-        } else {
-            video_meta->stride[0] = self->stride;
-            video_meta->offset[1] = video_meta->stride[0] * self->stride_height;
-        }
+        video_meta->stride[0] = self->real_stride;
+        video_meta->stride[1] = self->real_stride;
+        video_meta->offset[1] = self->real_stride * self->real_stride_height;
     }
 }
 
@@ -1530,6 +1527,8 @@ static gboolean gst_vdec_base_set_format(GstVideoDecoder *decoder, GstVideoCodec
     if (is_format_change && info->width != 0 && GST_VIDEO_INFO_FIELD_HEIGHT(info) != 0) {
         self->width = info->width;
         self->height = GST_VIDEO_INFO_FIELD_HEIGHT(info);
+        self->real_stride = self->width;
+        self->real_stride_height = self->height;
         self->frame_rate  = static_cast<gfloat>(info->fps_n) / static_cast<gfloat>(info->fps_d);
         gst_vdec_base_post_resolution_changed_message(self);
         self->resolution_changed = TRUE;
