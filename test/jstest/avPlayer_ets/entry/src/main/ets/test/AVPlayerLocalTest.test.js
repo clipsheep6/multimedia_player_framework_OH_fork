@@ -652,7 +652,7 @@ export default function AVPlayerLocalTest() {
 
         /* *
             * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_AUDIOEFFECTMODE_RELIABILITY_0100
-            * @tc.name      : 002.test audioEffectMode - set value in abnormal state
+            * @tc.name      : 002.test audioEffectMode - set nonconforming value
             * @tc.desc      : Local Video playback control test
             * @tc.size      : MediumTest
             * @tc.type      : Reliability test
@@ -739,7 +739,7 @@ export default function AVPlayerLocalTest() {
 
         /* *
             * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_AUDIOEFFECTMODE_RELIABILITY_0200
-            * @tc.name      : 003.test audioEffectMode - set nonconforming value
+            * @tc.name      : 003.test audioEffectMode - set value in abnormal state
             * @tc.desc      : Local Video playback control test
             * @tc.size      : MediumTest
             * @tc.type      : Reliability test
