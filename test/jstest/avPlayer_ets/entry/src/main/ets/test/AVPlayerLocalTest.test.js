@@ -544,5 +544,363 @@ export default function AVPlayerLocalTest() {
         it('SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_OFF_CALLBACK_0100', 0, async function (done) {
             testOffCallback(fileDescriptor, avPlayer, done);
         })
+	
+	/* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_AUDIOEFFECTMODE_FUNCTION_0100
+            * @tc.name      : 001.test audioEffectMode - base function
+            * @tc.desc      : Local Video playback control test
+            * @tc.size      : MediumTest
+            * @tc.type      : Function test
+            * @tc.level     : Level1
+        */
+        it('SUB_MULTIMEDIA_MEDIA_AVPLAYER_AUDIOEFFECTMODE_FUNCTION_0100', 0, async function (done) {
+            media.createAVPlayer((err, video) => {
+                console.info(`case media err: ${err}`)
+                if (typeof (video) != 'undefined') {
+                    avPlayer = video; 
+                }
+                if (err != null) {
+                    console.error(`case createAVPlayer error, errMessage is ${err.message}`);
+                    expect().assertFail();
+                    done();
+                }
+            })
+            
+            avPlayer.on('stateChange', async (state, reason) => {
+                let audioEffectMode = [
+                    audio.AudioEffectMode.DEFAULT,
+                    audio.AudioEffectMode.BYPASS,
+                    audio.AudioEffectMode.DEFAULT,
+                    audio.AudioEffectMode.BYPASS,
+                    audio.AudioEffectMode.DEFAULT
+                ]
+                let i = 1;
+                let playCount = 1;
+                let resetConfig = 1;
+                switch (state) {
+                    case AV_PLAYER_STATE.IDLE:
+                        console.info(`case AV_PLAYER_STATE.IDLE`);
+                        if (resetConfig != 1) {
+                            setSource(avPlayer, fileDescriptor);
+                        }
+                        break;
+                    case AV_PLAYER_STATE.INITIALIZED:
+                        console.info(`case AV_PLAYER_STATE.INITIALIZED`);
+                        avPlayer.surfaceId = globalThis.value;
+                        if (resetConfig == 3) {
+                            let audioRendererInfo = {
+                                content: audio.ContentType.CONTENT_TYPE_RINGTONE ,
+                                usage: audio.StreamUsage.STREAM_USAGE_NOTIFICATION_RINGTONE,
+                                rendererFlags: 0,
+                            }
+                            avPlayer.audioRendererInfo = audioRendererInfo;
+                        }
+                        if (resetConfig == 2) {
+                            expect(avPlayer.audioEffectMode).assertEqual(audioEffectMode[i]);
+                            resetConfig++;
+                            avPlayer.reset();
+                        } else if (resetConfig == 3) {
+                            expect(avPlayer.audioEffectMode).assertEqual(audioEffectMode[++i]);
+                            avPlayer.release();
+                        } else {
+                            expect(avPlayer.audioEffectMode).assertEqual(audioEffectMode[0]);
+                            avPlayer.prepare();
+                        }
+                        break;
+                    case AV_PLAYER_STATE.PREPARED:
+                        console.info(`case AV_PLAYER_STATE.PREPARED`);
+                        avPlayer.audioEffectMode = audioEffectMode[i++];
+                        avPlayer.play();
+                        break;
+                    case AV_PLAYER_STATE.PLAYING:
+                        console.info(`case AV_PLAYER_STATE.PLAYING`);
+                        if (playCount++ == 1) {
+                            avPlayer.audioEffectMode = audioEffectMode[i++];
+                            avPlayer.pause();
+                        } else if (playCount == 2) {
+                            avPlayer.seek(avPlayer.duration);
+                            await mediaTestBase.msleepAsync(500); // wait 500ms, until enter completed state
+                        }
+                        break;
+                    case AV_PLAYER_STATE.PAUSED:
+                        console.info(`case AV_PLAYER_STATE.PLAYING`);
+                        avPlayer.audioEffectMode = audioEffectMode[i++];
+                        avPlayer.play();
+                        break;
+                    case AV_PLAYER_STATE.COMPLETED:
+                        console.info(`case AV_PLAYER_STATE.COMPLETED`);
+                        avPlayer.audioEffectMode = audioEffectMode[i];
+                        resetConfig++;
+                        avPlayer.reset();
+                        break;
+                    case AV_PLAYER_STATE.RELEASED:
+                        console.info(`case AV_PLAYER_STATE.RELEASED`);
+                        avPlayer = null;
+                        done();
+                        break;
+                    default:
+                        break;
+                }
+                avPlayer.on('error', (err) => {
+                    console.error(`error occurred, message is ${err.message}`);
+                    expect().assertFail();
+                    avPlayer.release();
+                })
+            }) 
+            setSource(avPlayer, fileDescriptor);
+        })
+
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_AUDIOEFFECTMODE_RELIABILITY_0100
+            * @tc.name      : 002.test audioEffectMode - set value in abnormal state
+            * @tc.desc      : Local Video playback control test
+            * @tc.size      : MediumTest
+            * @tc.type      : Reliability test
+            * @tc.level     : Level1
+        */
+        it('SUB_MULTIMEDIA_MEDIA_AVPLAYER_AUDIOEFFECTMODE_RELIABILITY_0100', 0, async function (done) {
+            media.createAVPlayer((err, video) => {
+                console.info(`case media err: ${err}`)
+                if (typeof (video) != 'undefined') {
+                    avPlayer = video; 
+                }
+                if (err != null) {
+                    console.error(`case createAVPlayer error, errMessage is ${err.message}`);
+                    expect().assertFail();
+                    done();
+                }
+            })
+            let playCount = 1;
+            let expecterror = False;
+            let invalidmode = 'undefined';
+            let steps = new Array('play', 'pause', 'play', 'release');
+            avPlayer.on('stateChange', async (state, reason) => {
+                
+                switch (state) {
+                    case AV_PLAYER_STATE.INITIALIZED:
+                        console.info(`case AV_PLAYER_STATE.INITIALIZED`);
+                        avPlayer.surfaceId = globalThis.value;
+                        avPlayer.prepare();
+                        break;
+                    case AV_PLAYER_STATE.PREPARED:
+                        console.info(`case AV_PLAYER_STATE.PREPARED`);
+                        expecterror = True;
+                        avPlayer.audioEffectMode = invalidmode;
+                        break;
+                    case AV_PLAYER_STATE.PLAYING:
+                        console.info(`case AV_PLAYER_STATE.PLAYING`);
+                        if (playCount++ == 1) {
+                            expecterror = True;
+                            avPlayer.audioEffectMode = invalidmode;
+                        } else if (playCount == 2) {
+                            avPlayer.seek(avPlayer.duration);
+                            await mediaTestBase.msleepAsync(500); // wait 500ms, until enter completed state
+                        }
+                        break;
+                    case AV_PLAYER_STATE.PAUSED:
+                        expecterror = True;
+                        avPlayer.audioEffectMode = invalidmode;
+                        break;
+                    case AV_PLAYER_STATE.COMPLETED:
+                        console.info(`case AV_PLAYER_STATE.COMPLETED`);
+                        expecterror = True;
+                        avPlayer.audioEffectMode = invalidmode;
+                        break;
+                    case AV_PLAYER_STATE.RELEASED:
+                        console.info(`case AV_PLAYER_STATE.RELEASED`);
+                        avPlayer = null;
+                        done();
+                        break;
+                    default:
+                        break;
+                }
+                avPlayer.on('error', (err) => {
+                    console.error(`error occurred, message is ${err.message}`);
+                    expect(expecterror).assertEqual(True);
+                    expecterror = False;
+                    switch(steps) {
+                        case 'play':
+                            avPlayer.play();
+                            break;
+                        case 'pause':
+                            avPlayer.pause();
+                            break;
+                        case 'release':
+                            avPlayer.release();
+                            break;
+                        default:
+                            break;
+                    }
+                })
+            }) 
+            
+            setSource(avPlayer, fileDescriptor);
+        })
+
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_AUDIOEFFECTMODE_RELIABILITY_0200
+            * @tc.name      : 003.test audioEffectMode - set nonconforming value
+            * @tc.desc      : Local Video playback control test
+            * @tc.size      : MediumTest
+            * @tc.type      : Reliability test
+            * @tc.level     : Level1
+        */
+        it('SUB_MULTIMEDIA_MEDIA_AVPLAYER_AUDIOEFFECTMODE_RELIABILITY_0200', 0, async function (done) {
+            media.createAVPlayer((err, video) => {
+                console.info(`case media err: ${err}`)
+                if (typeof (video) != 'undefined') {
+                    avPlayer = video; 
+                }
+                if (err != null) {
+                    console.error(`case createAVPlayer error, errMessage is ${err.message}`);
+                    expect().assertFail();
+                    done();
+                }
+            })
+            let expecterror = False;
+            let invalidmode = 'undefined';
+            let steps = new Array('prepare', 'reset', 'release');
+            avPlayer.on('stateChange', async (state, reason) => {
+                
+                switch (state) {
+                    case AV_PLAYER_STATE.IDLE:
+                        console.info(`case AV_PLAYER_STATE.IDLE`);
+                        expecterror = True;
+                        avPlayer.audioEffectMode = invalidmode;
+                        break;
+                    case AV_PLAYER_STATE.INITIALIZED:
+                        console.info(`case AV_PLAYER_STATE.INITIALIZED`);
+                        avPlayer.surfaceId = globalThis.value;
+                        expecterror = True;
+                        avPlayer.audioEffectMode = invalidmode;
+                        break;
+                    case AV_PLAYER_STATE.PREPARED:
+                        console.info(`case AV_PLAYER_STATE.PREPARED`);
+                        avPlayer.play();
+                        break;
+                    case AV_PLAYER_STATE.PLAYING:
+                        console.info(`case AV_PLAYER_STATE.PLAYING`);
+                        avPlayer.stop();
+                        break;
+                    case AV_PLAYER_STATE.STOPPED:
+                        expecterror = True;
+                        avPlayer.audioEffectMode = invalidmode;
+                        break;
+                    case AV_PLAYER_STATE.RELEASED:
+                        console.info(`case AV_PLAYER_STATE.RELEASED`);
+                        avPlayer = null;
+                        done();
+                        break;
+                    default:
+                        break;
+                }
+                avPlayer.on('error', (err) => {
+                    console.error(`error occurred, message is ${err.message}`);
+                    expect(expecterror).assertEqual(True);
+                    expecterror = False;
+                    switch(steps) {
+                        case 'prepare':
+                            avPlayer.prepare();
+                            break;
+                        case 'reset':
+                            avPlayer.reset();
+                            break;
+                        case 'release':
+                            avPlayer.release();
+                            break;
+                        default:
+                            break;
+                    }
+                })
+            }) 
+            setSource(avPlayer, fileDescriptor);
+        })
+
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_AVPLAYER_AUDIOEFFECTMODE_STABILITY_0100
+            * @tc.name      : 004.test audioEffectMode - multiple calls
+            * @tc.desc      : Local Video playback control test
+            * @tc.size      : MediumTest
+            * @tc.type      : Stability test
+            * @tc.level     : Level1
+        */
+        it('SUB_MULTIMEDIA_MEDIA_AVPLAYER_AUDIOEFFECTMODE_STABILITY_0100', 0, async function (done) {
+            media.createAVPlayer((err, video) => {
+                console.info(`case media err: ${err}`)
+                if (typeof (video) != 'undefined') {
+                    avPlayer = video; 
+                }
+                if (err != null) {
+                    console.error(`case createAVPlayer error, errMessage is ${err.message}`);
+                    expect().assertFail();
+                    done();
+                }
+            })
+            avPlayer.on('stateChange', async (state, reason) => {
+                let audioEffectMode = [
+                    audio.AudioEffectMode.DEFAULT,
+                    audio.AudioEffectMode.BYPASS
+                ]
+                let playCount = 1;
+                switch (state) {
+                    case AV_PLAYER_STATE.INITIALIZED:
+                        console.info(`case AV_PLAYER_STATE.INITIALIZED`);
+                        avPlayer.surfaceId = globalThis.value;
+                        let audioRendererInfo = {
+                            content: audio.ContentType.CONTENT_TYPE_RINGTONE ,
+                            usage: audio.StreamUsage.STREAM_USAGE_NOTIFICATION_RINGTONE,
+                            rendererFlags: 0,
+                        }
+                        avPlayer.audioRendererInfo = audioRendererInfo;
+                        avPlayer.prepare();
+                        break;
+                    case AV_PLAYER_STATE.PREPARED:
+                        console.info(`case AV_PLAYER_STATE.PREPARED`);
+                        for (let i = 0; i < 1000; i++) {
+                            avPlayer.audioEffectMode = audioEffectMode[Math.floor((Math.random()*audioEffectMode.length))];
+                        }
+                        avPlayer.play();
+                        break;
+                    case AV_PLAYER_STATE.PLAYING:
+                        console.info(`case AV_PLAYER_STATE.PLAYING`);
+                        if (playCount++ == 1) {
+                            for (let i = 0; i < 1000; i++) {
+                                avPlayer.audioEffectMode = audioEffectMode[Math.floor((Math.random()*audioEffectMode.length))];
+                            }
+                            avPlayer.pause();
+                        } else if (playCount == 2) {
+                            avPlayer.seek(avPlayer.duration);
+                            await mediaTestBase.msleepAsync(500); // wait 500ms, until enter completed state
+                        }
+                        break;
+                    case AV_PLAYER_STATE.PAUSED:
+                        console.info(`case AV_PLAYER_STATE.PLAYING`);
+                        for (let i = 0; i < 1000; i++) {
+                            avPlayer.audioEffectMode = audioEffectMode[Math.floor((Math.random()*audioEffectMode.length))];
+                        }
+                        avPlayer.play();
+                        break;
+                    case AV_PLAYER_STATE.COMPLETED:
+                        console.info(`case AV_PLAYER_STATE.COMPLETED`);
+                        for (let i = 0; i < 1000; i++) {
+                            avPlayer.audioEffectMode = audioEffectMode[Math.floor((Math.random()*audioEffectMode.length))];
+                        }
+                        avPlayer.release();
+                        break;
+                    case AV_PLAYER_STATE.RELEASED:
+                        console.info(`case AV_PLAYER_STATE.RELEASED`);
+                        avPlayer = null;
+                        done();
+                        break;
+                    default:
+                        break;
+                }
+                avPlayer.on('error', (err) => {
+                    console.error(`error occurred, message is ${err.message}`);
+                    expect().assertFail();
+                    avPlayer.release();
+                })
+            })
+        })
     })
 }
