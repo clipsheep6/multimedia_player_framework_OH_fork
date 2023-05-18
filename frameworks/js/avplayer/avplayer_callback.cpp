@@ -26,10 +26,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerCa
 
 namespace OHOS {
 namespace Media {
-typedef struct {
-    const char *text;
-} GstSubtitleMeta;
-
 class NapiCallback {
 public:
     struct Base {
