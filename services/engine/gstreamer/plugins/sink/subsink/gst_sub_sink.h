@@ -58,7 +58,7 @@ struct _GstSubSink {
 struct _GstSubSinkClass {
     GstAppSinkClass parent_class;
     void (*handle_buffer)(GstSubSink *sub_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs);
-    void (*cancel_not_executed_task)();
+    void (*cancel_not_executed_task)(GstSubSink *subsink);
     GstFlowReturn (*subtitle_display_callback)(GstAppSink *appsink, gpointer user_data);
 };
 

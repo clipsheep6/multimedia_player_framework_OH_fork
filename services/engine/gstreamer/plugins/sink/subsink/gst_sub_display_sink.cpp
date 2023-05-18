@@ -23,8 +23,9 @@
 using namespace OHOS::Media;
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
+#define USECOND_TO_MSECOND(us) (us * 1000)
 
-struct _GstSubSinkPrivate {
+struct _GstSubDisplaySinkPrivate {
     guint64 running_time;
     guint64 text_frame_duration;
 };
@@ -75,7 +76,7 @@ static void gst_sub_display_sink_init(GstSubDisplaySink *sub_display_sink)
     g_return_if_fail(sub_display_sink != nullptr);
     auto priv = reinterpret_cast<GstSubDisplaySinkPrivate *>(gst_sub_display_sink_get_instance_private(sub_display_sink));
     g_return_if_fail(priv != nullptr);
-    subdisplay_sink->priv = priv;
+    sub_display_sink->priv = priv;
     priv->running_time = 0;
     priv->text_frame_duration = 0;
 }
@@ -109,20 +110,25 @@ static void gst_sub_display_sink_set_property(GObject *object, guint prop_id, co
 static GstStateChangeReturn gst_sub_display_sink_change_state(GstElement *element, GstStateChange transition)
 {
     g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
-    GstSubDisplaySink *sub_display_sink = GST_SUB_DISPLAY_SINK(element);
-    GstSubSinkClass *subsink_class = GST_SUB_SINK_GET_CLASS(GST_SUB_SINK_CAST(sub_display_sink));
+    GstSubDisplaySink *subdisplay_sink = GST_SUB_DISPLAY_SINK(element);
+    GstSubSink *subsink = GST_SUB_SINK(element);
+    GstSubSinkClass *subsink_class = GST_SUB_SINK_GET_CLASS(subsink);
     GstSubDisplaySinkPrivate *priv = subdisplay_sink->priv;
     switch (transition) {
-        case GST_STATE_PAUSED_TO_PLAYING:
-            guint64 left_duration = priv->text_frame_duration - priv->running_time;
-            subsink_class->handle_buffer(subsink, nullptr, FALSE, left_duration);
+        case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
+            guint64 left_duration = 0;
+            left_duration = priv->text_frame_duration - priv->running_time;
+            subsink_class->handle_buffer(subsink, nullptr, FALSE, USECOND_TO_MSECOND(left_duration));
+        }
             break;
-        case GST_STATE_PLAYING_TO_PAUSED:
+        case GST_STATE_CHANGE_PLAYING_TO_PAUSED: {
             priv->running_time = GST_TIME_AS_MSECONDS(gst_util_get_timestamp()) - priv->running_time;
-            subsink_class->cancel_not_executed_task();
+            subsink_class->cancel_not_executed_task(subsink);
+        }
             break;
-        case GST_STATE_CHANGE_PAUSED_TO_READY:
-            GST_INFO_OBJECT(sub_display_sink, "sub displaysink has been stopped");
+        case GST_STATE_CHANGE_PAUSED_TO_READY: {
+            GST_INFO_OBJECT(subdisplay_sink, "sub displaysink has been stopped");
+        }
             break;
         default:
             break;
@@ -152,9 +158,9 @@ static GstFlowReturn gst_sub_display_sink_render(GstAppSink *appsink, gpointer u
     if (subsink_class->handle_buffer != nullptr) {
         GstSubDisplaySinkPrivate *priv = subdisplay_sink->priv;
         priv->text_frame_duration = duration;
-        priv->runnint_time = GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
-        subsink_class->handle_buffer(subsink, buffer, TRUE);
-        subsink_class->handle_buffer(subsink, nullptr, FALSE, duration);
+        priv->running_time = GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
+        subsink_class->handle_buffer(subsink, buffer, TRUE, 0ULL);
+        subsink_class->handle_buffer(subsink, nullptr, FALSE, USECOND_TO_MSECOND(duration));
     }
     return GST_FLOW_OK;
 }

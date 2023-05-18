@@ -262,7 +262,11 @@ void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitl
         MEDIA_LOGE("gst buffer map failed");
         return;
     }
-    (void)subtitle.PutStringValue("text", std::string_view(reinterpret_cast<char *>(mapInfo.data)));
+    uint32_t gstBufferSize = static_cast<uint32_t>(gst_buffer_get_size(sample));
+    char *textFrame = new (std::nothrow) char[gstBufferSize + 1];
+    textFrame = reinterpret_cast<char *>(mapInfo.data);
+    textFrame[gstBufferSize] = static_cast<char>(0);
+    (void)subtitle.PutStringValue("text", std::string_view(textFrame));
     gst_buffer_unmap(sample, &mapInfo);
 }
 

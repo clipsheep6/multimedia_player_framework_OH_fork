@@ -42,7 +42,7 @@ static void gst_sub_sink_dispose(GObject *obj);
 static void gst_sub_sink_finalize(GObject *obj);
 static void gst_sub_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_sub_sink_handle_buffer(GstSubSink *sub_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs = 0ULL);
-static void gst_sub_sink_cancel_not_executed_task();
+static void gst_sub_sink_cancel_not_executed_task(GstSubSink *subsink);
 static GstStateChangeReturn gst_sub_sink_change_state(GstElement *element, GstStateChange transition);
 static GstFlowReturn gst_sub_sink_new_sample(GstAppSink *appsink, gpointer user_data);
 static GstFlowReturn gst_sub_sink_new_preroll(GstAppSink *appsink, gpointer user_data);
@@ -144,9 +144,9 @@ static void gst_sub_sink_handle_buffer(GstSubSink *sub_sink, GstBuffer *buffer, 
     priv->timer_queue->EnqueueTask(handler, cancel, delayUs);
 }
 
-static void gst_sub_sink_cancel_not_executed_task()
+static void gst_sub_sink_cancel_not_executed_task(GstSubSink *subsink)
 {
-    GstSubSinkPrivate *priv = sub_sink->priv;
+    GstSubSinkPrivate *priv = subsink->priv;
     g_return_if_fail(priv != nullptr);
     auto handler = std::make_shared<TaskHandler<void>>([]() {});
     priv->timer_queue->EnqueueTask(handler, true);
