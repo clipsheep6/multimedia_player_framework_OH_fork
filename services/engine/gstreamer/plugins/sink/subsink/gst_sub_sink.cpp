@@ -42,7 +42,7 @@ static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subsink",
 static void gst_sub_sink_dispose(GObject *obj);
 static void gst_sub_sink_finalize(GObject *obj);
 static void gst_sub_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_sub_sink_handle_buffer(GstSubSink *sub_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs);
+static void gst_sub_sink_handle_buffer(GstSubSink *sub_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs = 0ULL);
 static GstStateChangeReturn gst_sub_sink_change_state(GstElement *element, GstStateChange transition);
 static GstFlowReturn gst_sub_sink_new_sample(GstAppSink *appsink, gpointer user_data);
 static GstFlowReturn gst_sub_sink_new_preroll(GstAppSink *appsink, gpointer user_data);
@@ -168,7 +168,7 @@ static GstStateChangeReturn gst_sub_sink_change_state(GstElement *element, GstSt
     g_return_val_if_fail(priv != nullptr, GST_STATE_CHANGE_FAILURE);
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY:
-            gst_sub_sink_handle_buffer(sub_sink, nullptr, TRUE, 0ULL);
+            gst_sub_sink_handle_buffer(sub_sink, nullptr, TRUE);
             GST_INFO_OBJECT(sub_sink, "sub sink stop");
             break;
         default:
@@ -258,7 +258,7 @@ static gboolean gst_sub_sink_event(GstBaseSink *basesink, GstEvent *event)
         }
         case GST_EVENT_FLUSH_START: {
             GST_DEBUG_OBJECT(sub_sink, "flush start");
-            gst_sub_sink_handle_buffer(sub_sink, nullptr, TRUE, 0ULL);
+            gst_sub_sink_handle_buffer(sub_sink, nullptr, TRUE);
             sub_sink->is_flushing = TRUE;
             break;
         }
