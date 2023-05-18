@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "scope_guard.h"
+#include "event_queue.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVPlayerCallback"};
@@ -55,6 +56,11 @@ public:
             status = napi_call_function(ref->env_, nullptr, jsCallback, 0, nullptr, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,
                 "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+        virtual void JsCallback()
+        {
+            UvWork();
+            delete this;
         }
     };
 
@@ -310,12 +316,27 @@ public:
         }
         CANCEL_SCOPE_EXIT_GUARD(0);
     }
+
+    static void CompleteCallbackInOrder(NapiCallback::Base *jsCb, std::shared_ptr<AppExecFwk::EventHandler> handler)
+    {
+        ON_SCOPE_EXIT(0) { delete jsCb; };
+        CHECK_AND_RETURN_LOG(handler != nullptr, "handler is nullptr");
+
+        bool ret = handler->PostTask(std::bind(&Base::JsCallback, jsCb),
+            AppExecFwk::EventQueue::Priority::IMMEDIATE);
+        CHECK_AND_RETURN_LOG(ret, "Failed to execute PostTask");
+        CANCEL_SCOPE_EXIT_GUARD(0);
+    }
 };
 
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     : env_(env), listener_(listener)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    auto runner = AppExecFwk::EventRunner::GetMainEventRunner();
+    if (runner != nullptr) {
+        handler_ = std::make_shared<AppExecFwk::EventHandler>(runner);
+    }
 }
 
 AVPlayerCallback::~AVPlayerCallback()
@@ -614,7 +635,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(const Format &infoBody) const
     cb->callbackName = AVPlayerEvent::EVENT_BUFFERING_UPDATE;
     cb->valueVec.push_back(bufferingType);
     cb->valueVec.push_back(value);
-    NapiCallback::CompleteCallback(env_, cb);
+    NapiCallback::CompleteCallbackInOrder(cb, handler_);
 }
 
 void AVPlayerCallback::OnMessageCb(int32_t extra, const Format &infoBody) const
