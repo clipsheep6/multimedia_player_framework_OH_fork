@@ -169,7 +169,7 @@ static GstStateChangeReturn gst_sub_sink_change_state(GstElement *element, GstSt
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             gst_sub_sink_handle_buffer(sub_sink, nullptr, TRUE, 0ULL);
-            GST_INFO_OBJECT(sub_sink, "sub sink has been stopped");
+            GST_INFO_OBJECT(sub_sink, "sub sink stop");
             break;
         default:
             break;
@@ -217,6 +217,7 @@ static gboolean gst_sub_sink_start(GstBaseSink * basesink)
     GstSubSink *sub_sink = GST_SUB_SINK_CAST (basesink);
     GstSubSinkPrivate *priv = sub_sink->priv;
 
+    GST_BASE_SINK_CLASS(parent_class)->start(basesink);
     g_mutex_lock (&priv->mutex);
     GST_DEBUG_OBJECT (sub_sink, "starting");
     sub_sink->is_flushing = FALSE;
@@ -238,7 +239,7 @@ static gboolean gst_sub_sink_stop(GstBaseSink * basesink)
     priv->started = FALSE;
     priv->timer_queue->Stop();
     g_mutex_unlock (&priv->mutex);
-
+    GST_BASE_SINK_CLASS(parent_class)->stop(basesink);
     return TRUE;
 }
 
@@ -252,7 +253,7 @@ static gboolean gst_sub_sink_event(GstBaseSink *basesink, GstEvent *event)
 
     switch (event->type) {
         case GST_EVENT_EOS: {
-            GST_INFO_OBJECT(sub_sink, "receiving EOS");
+            GST_INFO_OBJECT(sub_sink, "received EOS");
             break;
         }
         case GST_EVENT_FLUSH_START: {

@@ -119,6 +119,7 @@ static GstFlowReturn gst_sub_display_sink_render(GstAppSink *appsink, gpointer u
 
     GST_INFO_OBJECT(sub_display_sink, "app render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
 
+    g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
     guint64 pts = 0;
     guint32 duration = 0;
     gst_sub_display_sink_get_gst_buffer_info(buffer, pts, duration);
