@@ -426,7 +426,7 @@ void RingtonePlayer::NotifyInterruptEvent(AudioStandard::InterruptEvent &interru
 RingtonePlayerCallback::RingtonePlayerCallback(RingtonePlayer &ringtonePlayer) : ringtonePlayer_(ringtonePlayer)
 {}
 
-void RingtonePlayerCallback::OnError(PlayerErrorType errorType, int32_t errorCode)
+void RingtonePlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     MEDIA_LOGE("Error reported from media server %{public}d", errorCode);
 }
