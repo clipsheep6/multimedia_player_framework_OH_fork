@@ -128,12 +128,9 @@ static GstFlowReturn gst_sub_display_sink_render(GstAppSink *appsink, gpointer u
         return GST_FLOW_ERROR;
     }
     GstSubSinkClass *subsink_class = GST_SUB_SINK_GET_CLASS(subsink);
-    gint64 delay_us = pts - GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
     if (subsink_class->handle_buffer != nullptr) {
-        subsink_class->handle_buffer(subsink, buffer, FALSE, delay_us);
-        if (pts + duration > pts) {
-            subsink_class->handle_buffer(subsink, nullptr, FALSE, pts + duration);
-        }
+        subsink_class->handle_buffer(subsink, buffer, TRUE);
+        subsink_class->handle_buffer(subsink, nullptr, FALSE, duration);
     }
     return GST_FLOW_OK;
 }
