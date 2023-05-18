@@ -219,7 +219,7 @@ public:
     };
 
     struct SubtitleProperty : public Base {
-        GstSubtitleMeta meta;
+        std::string text;
         void UvWork() override
         {
             std::shared_ptr<AutoRef> ref = callback.lock();
@@ -240,7 +240,7 @@ public:
             // callback: (textInfo: TextInfoDescriptor)
             napi_value args[1] = {nullptr};
             napi_create_object(ref->env_, &args[0]);
-            CommonNapi::SetPropertyString(ref->env_, args[0], "text", std::string(meta.text));
+            CommonNapi::SetPropertyString(ref->env_, args[0], "text", text);
             napi_value result = nullptr;
             status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_RETURN_LOG(status == napi_ok,
@@ -625,15 +625,11 @@ void AVPlayerCallback::OnSubtitleUpdateCb(const Format &infoBody) const
         return;
     }
     NapiCallback::SubtitleProperty *cb = new(std::nothrow) NapiCallback::SubtitleProperty();
-    GstSubtitleMeta meta;
-    std::string text;
     if (infoBody.ContainKey("text")) {
-        (void)infoBody.GetStringValue("text", text);
+        (void)infoBody.GetStringValue("text", cb->text);
     }
-    meta.text = text.c_str();
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUBTITLE_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_SUBTITLE_UPDATE;
-    cb->meta = meta;
     NapiCallback::CompleteCallback(env_, cb);
 }
 

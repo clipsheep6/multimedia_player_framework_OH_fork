@@ -258,13 +258,11 @@ void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitl
         return;
     }
     GstMapInfo mapInfo;
-    GstSubtitleMeta *meta =
-        reinterpret_cast<GstSubtitleMeta *>(gst_buffer_get_meta(sample, GST_SUBTITLE_META_API_TYPE));
     if (!gst_buffer_map(sample, &mapInfo, GST_MAP_READ)) {
         MEDIA_LOGE("gst buffer map failed");
         return;
     }
-    (void)subtitle.PutStringValue("text", std::string_view(meta->text));
+    (void)subtitle.PutStringValue("text", std::string_view(reinterpret_cast<char *>(mapInfo.data)));
     gst_buffer_unmap(sample, &mapInfo);
 }
 
