@@ -392,6 +392,8 @@ int32_t PlayerServiceStub::DoIpcAbnormality()
     MEDIA_LOGI("Enter DoIpcAbnormality.");
     auto task = std::make_shared<TaskHandler<int>>([&, this] {
         MEDIA_LOGI("DoIpcAbnormality.");
+        CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, static_cast<int>(MSERR_NO_MEMORY),
+            "player server is nullptr");
         CHECK_AND_RETURN_RET_LOG(IsPlaying(), static_cast<int>(MSERR_INVALID_OPERATION), "Not in playback state");
         auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
         return playerServer->BackGroundChangeState(PlayerStates::PLAYER_PAUSED, false);
