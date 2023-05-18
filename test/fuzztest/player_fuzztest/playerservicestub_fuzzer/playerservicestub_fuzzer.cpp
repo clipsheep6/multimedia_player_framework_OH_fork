@@ -33,6 +33,33 @@ public:
     ~PlayerServiceListenerStubFuzzer() = default;
 };
 
+class MediaServiceProxyFuzzer : public IRemoteProxy<IStandardMediaService>, public NoCopyable {
+public:
+    explicit MediaServiceProxyFuzzer(const sptr<IRemoteObject> &impl) : IRemoteProxy<IStandardMediaService>(impl) {}
+    virtual ~MediaServiceProxyFuzzer() {}
+
+    sptr<IRemoteObject> GetSubSystemAbility(IStandardMediaService::MediaSystemAbility subSystemId,
+        const sptr<IRemoteObject> &listener)
+    {
+        MessageParcel data;
+        MessageParcel reply;
+        MessageOption option;
+
+        bool token = data.WriteInterfaceToken(MediaServiceProxyFuzzer::GetDescriptor());
+        if (!token) {
+            cout << "Failed to write descriptor!" << endl;
+            return nullptr;
+        }
+        (void)data.WriteInt32(static_cast<int32_t>(subSystemId));
+        (void)data.WriteRemoteObject(listener);
+        (void)Remote()->SendRequest(MediaServiceMsg::GET_SUBSYSTEM, data, reply, option);
+        return reply.ReadRemoteObject();
+    }
+
+private:
+    static inline BrokerDelegator<MediaServiceProxyFuzzer> delegator_;
+};
+
 PlayerServiceStubFuzzer::PlayerServiceStubFuzzer()
 {
 }
@@ -46,8 +73,16 @@ bool PlayerServiceStubFuzzer::FuzzServiceStub(uint8_t *data, size_t size)
     constexpr int32_t subSystemIdList = 8;
     auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     sptr<IRemoteObject> object = samgr->GetSystemAbility(OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
+    if (object == nullptr) {
+        cout << "media object is nullptr." << endl;
+        return false;
+    }
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     mediaProxy_ = iface_cast<IStandardMediaService>(object);
+    if (mediaProxy_ == nullptr) {
+        cout << "media proxy is nullptr." << endl;
+        return false;
+    }
     sptr<IRemoteObject> listenerStub_ = nullptr;
     listenerStub_ = new(std::nothrow) PlayerServiceListenerStubFuzzer();
 
