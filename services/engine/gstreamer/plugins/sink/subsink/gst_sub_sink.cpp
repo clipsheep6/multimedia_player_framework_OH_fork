@@ -24,7 +24,6 @@ using namespace OHOS::Media;
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
 struct _GstSubSinkPrivate {
-    GstCaps *caps;
     GMutex mutex;
     gboolean started;
     GstSubSinkCallbacks callbacks;
@@ -43,6 +42,7 @@ static void gst_sub_sink_dispose(GObject *obj);
 static void gst_sub_sink_finalize(GObject *obj);
 static void gst_sub_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_sub_sink_handle_buffer(GstSubSink *sub_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs = 0ULL);
+static void gst_sub_sink_cancel_not_executed_task();
 static GstStateChangeReturn gst_sub_sink_change_state(GstElement *element, GstStateChange transition);
 static GstFlowReturn gst_sub_sink_new_sample(GstAppSink *appsink, gpointer user_data);
 static GstFlowReturn gst_sub_sink_new_preroll(GstAppSink *appsink, gpointer user_data);
@@ -77,6 +77,7 @@ static void gst_sub_sink_class_init(GstSubSinkClass *kclass)
     basesink_class->stop = gst_sub_sink_stop;
     basesink_class->start = gst_sub_sink_start;
     kclass->handle_buffer = gst_sub_sink_handle_buffer;
+    kclass->cancel_not_executed_task = gst_sub_sink_cancel_not_executed_task;
     GST_DEBUG_CATEGORY_INIT(gst_sub_sink_debug_category, "subsink", 0, "subsink class");
 }
 
@@ -92,7 +93,6 @@ static void gst_sub_sink_init(GstSubSink *sub_sink)
     g_mutex_init(&priv->mutex);
 
     priv->started = FALSE;
-    priv->caps = nullptr;
     priv->callbacks.new_sample = nullptr;
     priv->userdata = nullptr;
     priv->notify = nullptr;
@@ -142,6 +142,14 @@ static void gst_sub_sink_handle_buffer(GstSubSink *sub_sink, GstBuffer *buffer, 
         }
     });
     priv->timer_queue->EnqueueTask(handler, cancel, delayUs);
+}
+
+static void gst_sub_sink_cancel_not_executed_task()
+{
+    GstSubSinkPrivate *priv = sub_sink->priv;
+    g_return_if_fail(priv != nullptr);
+    auto handler = std::make_shared<TaskHandler<void>>([]() {});
+    priv->timer_queue->EnqueueTask(handler, true);
 }
 
 static void gst_sub_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)

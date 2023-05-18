@@ -24,6 +24,11 @@ using namespace OHOS::Media;
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
+struct _GstSubSinkPrivate {
+    guint64 running_time;
+    guint64 text_frame_duration;
+};
+
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subdisplaysink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -37,7 +42,8 @@ static GstFlowReturn gst_sub_display_sink_render (GstAppSink *appsink, gpointer 
 static gboolean gst_sub_display_sink_event(GstBaseSink *basesink, GstEvent *event);
 
 #define gst_sub_display_sink_parent_class parent_class
-G_DEFINE_TYPE(GstSubDisplaySink, gst_sub_display_sink, GST_TYPE_SUB_SINK);
+G_DEFINE_TYPE_WITH_CODE(GstSubDisplaySink, gst_sub_display_sink,
+                        GST_TYPE_SUB_SINK, G_ADD_PRIVATE(GstSubDisplaySink));
 
 GST_DEBUG_CATEGORY_STATIC(gst_sub_display_sink_debug_category);
 #define GST_CAT_DEFAULT gst_sub_display_sink_debug_category
@@ -67,6 +73,11 @@ static void gst_sub_display_sink_class_init(GstSubDisplaySinkClass *kclass)
 static void gst_sub_display_sink_init(GstSubDisplaySink *sub_display_sink)
 {
     g_return_if_fail(sub_display_sink != nullptr);
+    auto priv = reinterpret_cast<GstSubDisplaySinkPrivate *>(gst_sub_display_sink_get_instance_private(sub_display_sink));
+    g_return_if_fail(priv != nullptr);
+    subdisplay_sink->priv = priv;
+    priv->running_time = 0;
+    priv->text_frame_duration = 0;
 }
 
 static void gst_sub_display_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts, guint32 &duration)
@@ -99,7 +110,17 @@ static GstStateChangeReturn gst_sub_display_sink_change_state(GstElement *elemen
 {
     g_return_val_if_fail(element != nullptr, GST_STATE_CHANGE_FAILURE);
     GstSubDisplaySink *sub_display_sink = GST_SUB_DISPLAY_SINK(element);
+    GstSubSinkClass *subsink_class = GST_SUB_SINK_GET_CLASS(GST_SUB_SINK_CAST(sub_display_sink));
+    GstSubDisplaySinkPrivate *priv = subdisplay_sink->priv;
     switch (transition) {
+        case GST_STATE_PAUSED_TO_PLAYING:
+            guint64 left_duration = priv->text_frame_duration - priv->running_time;
+            subsink_class->handle_buffer(subsink, nullptr, FALSE, left_duration);
+            break;
+        case GST_STATE_PLAYING_TO_PAUSED:
+            priv->running_time -= GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
+            subsink_class->cancel_not_executed_task();
+            break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             GST_INFO_OBJECT(sub_display_sink, "sub displaysink has been stopped");
             break;
@@ -112,23 +133,26 @@ static GstStateChangeReturn gst_sub_display_sink_change_state(GstElement *elemen
 static GstFlowReturn gst_sub_display_sink_render(GstAppSink *appsink, gpointer user_data)
 {
     (void)user_data;
-    GstSubDisplaySink *sub_display_sink = GST_SUB_DISPLAY_SINK_CAST(appsink);
+    GstSubDisplaySink *subdisplay_sink = GST_SUB_DISPLAY_SINK_CAST(appsink);
     GstSubSink *subsink = GST_SUB_SINK_CAST(appsink);
     GstSample *sample = gst_app_sink_pull_sample(appsink);
     GstBuffer *buffer = gst_sample_get_buffer(sample);
 
-    GST_INFO_OBJECT(sub_display_sink, "app render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
+    GST_INFO_OBJECT(subdisplay_sink, "app render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
 
     g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
     guint64 pts = 0;
     guint32 duration = 0;
     gst_sub_display_sink_get_gst_buffer_info(buffer, pts, duration);
     if (!GST_CLOCK_TIME_IS_VALID(pts) || !GST_CLOCK_TIME_IS_VALID(duration)) {
-        GST_ERROR_OBJECT(sub_display_sink, "pts or duration invalid");
+        GST_ERROR_OBJECT(subdisplay_sink, "pts or duration invalid");
         return GST_FLOW_ERROR;
     }
     GstSubSinkClass *subsink_class = GST_SUB_SINK_GET_CLASS(subsink);
     if (subsink_class->handle_buffer != nullptr) {
+        GstSubDisplaySinkPrivate *priv = subdisplay_sink->priv;
+        priv->text_frame_duration = duration;
+        priv->runnint_time = GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
         subsink_class->handle_buffer(subsink, buffer, TRUE);
         subsink_class->handle_buffer(subsink, nullptr, FALSE, duration);
     }
