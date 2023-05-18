@@ -118,7 +118,7 @@ static GstStateChangeReturn gst_sub_display_sink_change_state(GstElement *elemen
             subsink_class->handle_buffer(subsink, nullptr, FALSE, left_duration);
             break;
         case GST_STATE_PLAYING_TO_PAUSED:
-            priv->running_time -= GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
+            priv->running_time = GST_TIME_AS_MSECONDS(gst_util_get_timestamp()) - priv->running_time;
             subsink_class->cancel_not_executed_task();
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
