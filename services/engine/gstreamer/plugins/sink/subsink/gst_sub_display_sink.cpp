@@ -26,6 +26,7 @@ using namespace OHOS::Media;
 #define USECOND_TO_MSECOND(us) (us * 1000)
 
 struct _GstSubDisplaySinkPrivate {
+    GMutex mutex;
     guint64 running_time;
     guint64 text_frame_duration;
 };
@@ -79,6 +80,7 @@ static void gst_sub_display_sink_init(GstSubDisplaySink *sub_display_sink)
     sub_display_sink->priv = priv;
     priv->running_time = 0;
     priv->text_frame_duration = 0;
+    g_mutex_init(&priv->mutex);
 }
 
 static void gst_sub_display_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts, guint32 &duration)
@@ -116,13 +118,17 @@ static GstStateChangeReturn gst_sub_display_sink_change_state(GstElement *elemen
     GstSubDisplaySinkPrivate *priv = subdisplay_sink->priv;
     switch (transition) {
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
+            g_mutex_lock(&priv->mutex);
             guint64 left_duration = 0;
             left_duration = priv->text_frame_duration - priv->running_time;
+            g_mutex_unlock(&priv->mutex);
             subsink_class->handle_buffer(subsink, nullptr, FALSE, USECOND_TO_MSECOND(left_duration));
         }
             break;
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED: {
+            g_mutex_lock(&priv->mutex);
             priv->running_time = GST_TIME_AS_MSECONDS(gst_util_get_timestamp()) - priv->running_time;
+            g_mutex_unlock(&priv->mutex);
             subsink_class->cancel_not_executed_task(subsink);
         }
             break;
@@ -157,8 +163,10 @@ static GstFlowReturn gst_sub_display_sink_render(GstAppSink *appsink, gpointer u
     GstSubSinkClass *subsink_class = GST_SUB_SINK_GET_CLASS(subsink);
     if (subsink_class->handle_buffer != nullptr) {
         GstSubDisplaySinkPrivate *priv = subdisplay_sink->priv;
+        g_mutex_lock(&priv->mutex);
         priv->text_frame_duration = duration;
         priv->running_time = GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
+        g_mutex_unlock(&priv->mutex);
         subsink_class->handle_buffer(subsink, buffer, TRUE, 0ULL);
         subsink_class->handle_buffer(subsink, nullptr, FALSE, USECOND_TO_MSECOND(duration));
     }
@@ -191,5 +199,8 @@ static void gst_sub_display_sink_dispose(GObject *obj)
 static void gst_sub_display_sink_finalize(GObject *obj)
 {
     g_return_if_fail(obj != nullptr);
+    GstSubDisplaySink *subdisplay_sink = GST_SUB_DISPLAY_SINK_CAST(obj);
+    GstSubDisplaySinkPrivate *priv = subdisplay_sink->priv;
+    g_mutex_clear(&priv->mutex);
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
