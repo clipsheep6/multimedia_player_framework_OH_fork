@@ -21,6 +21,7 @@
 #include "player.h"
 #include "media_errors.h"
 #include "common_napi.h"
+#include "event_handler.h"
 
 namespace OHOS {
 namespace Media {
@@ -75,6 +76,7 @@ private:
     AVPlayerNotify *listener_ = nullptr;
     std::atomic<bool> isloaded_ = false;
     PlayerStates state_ = PLAYER_IDLE;
+    std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

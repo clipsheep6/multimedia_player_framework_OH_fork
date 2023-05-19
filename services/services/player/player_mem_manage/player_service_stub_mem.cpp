@@ -36,9 +36,10 @@ sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
 {
     int32_t availableMemory = Memory::MemMgrClient::GetInstance().GetAvailableMemory();
     int32_t totalMemory = Memory::MemMgrClient::GetInstance().GetTotalMemory();
+    MEDIA_LOGD("System available memory:%{public}d, total memory:%{public}d", availableMemory, totalMemory);
     if (availableMemory > 0 && totalMemory > 0 &&
         availableMemory <= totalMemory / ONE_HUNDRED * PER_INSTANCE_NEED_MEMORY_PERCENT) {
-        MEDIA_LOGE("System available memory:%{public}d insufficient, total memory:%{public}d",
+        MEDIA_LOGE("System available memory:%{public}d is less than total memory:%{public}d",
             availableMemory, totalMemory);
         return nullptr;
     }
