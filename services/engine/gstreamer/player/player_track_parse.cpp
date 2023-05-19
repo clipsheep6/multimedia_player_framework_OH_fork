@@ -93,6 +93,7 @@ void PlayerTrackParse::ConvertToPlayerKeys(const Format &innerMeta, Format &outM
 
         std::string strVal;
         int32_t intVal;
+        double douVal;
         FormatDataType type = innerMeta.GetValueType(innerKey);
         switch (type) {
             case FORMAT_TYPE_STRING:
@@ -102,6 +103,10 @@ void PlayerTrackParse::ConvertToPlayerKeys(const Format &innerMeta, Format &outM
             case FORMAT_TYPE_INT32:
                 innerMeta.GetIntValue(innerKey, intVal);
                 outMeta.PutIntValue(std::string(playerKey), intVal);
+                break;
+            case FORMAT_TYPE_DOUBLE:
+                innerMeta.GetDoubleValue(innerKey, douVal);
+                outMeta.PutDoubleValue(std::string(playerKey), douVal);
                 break;
             default:
                 break;
