@@ -299,7 +299,7 @@ static bool FractionMetaSetter(const GValue &gval, const std::string_view &key, 
     CHECK_AND_RETURN_RET(denominator != 0, false);
 
     float val = static_cast<float>(numerator) / denominator;
-    static constexpr int32_t FACTOR = 100; // Keep two decimal places
+    static constexpr int32_t FACTOR = 100;
     bool ret = metadata.PutDoubleValue(key, static_cast<double>(static_cast<int32_t>(val * FACTOR)) / FACTOR);
     if (!ret) {
         MEDIA_LOGE("Parse gvalue for %{public}s failed, num = %{public}d, den = %{public}d",
