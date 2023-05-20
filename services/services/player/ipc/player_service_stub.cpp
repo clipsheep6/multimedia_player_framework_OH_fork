@@ -431,21 +431,21 @@ int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
 
 int32_t PlayerServiceStub::SelectTrack(int32_t index)
 {
-    MediaTrace trace("binder::SelectTrack");
+    MediaTrace trace("PlayerServiceStub::SelectTrack");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SelectTrack(index);
 }
 
 int32_t PlayerServiceStub::DeselectTrack(int32_t index)
 {
-    MediaTrace trace("binder::DeselectTrack");
+    MediaTrace trace("PlayerServiceStub::DeselectTrack");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->DeselectTrack(index);
 }
 
 int32_t PlayerServiceStub::GetCurrentTrack(int32_t trackType, int32_t &index)
 {
-    MediaTrace trace("binder::GetCurrentTrack");
+    MediaTrace trace("PlayerServiceStub::GetCurrentTrack");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetCurrentTrack(trackType, index);
 }

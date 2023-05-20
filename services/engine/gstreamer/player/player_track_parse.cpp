@@ -61,7 +61,7 @@ int32_t PlayerTrackParse::GetTrackInfo(int32_t index, int32_t &innerIndex, int32
     std::unique_lock<std::mutex> lock(trackInfoMutex_);
     CHECK_AND_RETURN_RET_LOG(demuxerElementFind_, MSERR_INVALID_OPERATION, "Plugin not found");
     CHECK_AND_RETURN_RET_LOG(index >= 0 && index < static_cast<int32_t>(trackInfos_.size()), MSERR_INVALID_VAL,
-        "Invalid index %{public}d, trackInfos size %{public}lu", index, trackInfos_.size());
+        "Invalid index %{public}d", index);
 
     StartUpdatTrackInfo();
 
@@ -223,7 +223,7 @@ GstPadProbeReturn PlayerTrackParse::GetTrackParse(GstPad *pad, GstPadProbeInfo *
             gst_event_parse_caps(event, &caps);
             CHECK_AND_RETURN_RET_LOG(caps != nullptr, GST_PAD_PROBE_OK, "caps is nullptr")
             MEDIA_LOGI("catch caps at pad %{public}s", PAD_NAME(pad));
-            GstMetaParser::ParseStreamCaps(*caps, it->second);            
+            GstMetaParser::ParseStreamCaps(*caps, it->second);
         }
     }
     (void)UpdatTrackInfo();
@@ -250,6 +250,7 @@ bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
         // The order of pad creation is consistent with the index of "current-audio"/"current-text"
         innerMeta.PutIntValue(INNER_META_KEY_TRACK_INDEX, trackcount_);
         trackcount_++;
+        MEDIA_LOGI("trackcount_:0x%{public}d", trackcount_);
         (void)trackInfos_.emplace(pad, innerMeta);
     }
 

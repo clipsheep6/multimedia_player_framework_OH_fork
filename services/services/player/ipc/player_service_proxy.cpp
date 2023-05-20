@@ -622,7 +622,7 @@ int32_t PlayerServiceProxy::SetPlayerCallback()
 
 int32_t PlayerServiceProxy::SelectTrack(int32_t index)
 {
-    MediaTrace trace("binder::SelectTrack");
+    MediaTrace trace("PlayerServiceProxy::SelectTrack");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -639,7 +639,7 @@ int32_t PlayerServiceProxy::SelectTrack(int32_t index)
 
 int32_t PlayerServiceProxy::DeselectTrack(int32_t index)
 {
-    MediaTrace trace("binder::DeselectTrack");
+    MediaTrace trace("PlayerServiceProxy::DeselectTrack");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -656,7 +656,7 @@ int32_t PlayerServiceProxy::DeselectTrack(int32_t index)
 
 int32_t PlayerServiceProxy::GetCurrentTrack(int32_t trackType, int32_t &index)
 {
-    MediaTrace trace("binder::GetCurrentTrack");
+    MediaTrace trace("PlayerServiceProxy::GetCurrentTrack");
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
