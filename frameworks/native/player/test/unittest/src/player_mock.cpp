@@ -44,6 +44,12 @@ void PlayerCallbackTest::SetSeekPosition(int32_t seekPosition)
     seekPosition_ = seekPosition;
 }
 
+void PlayerCallbackTest::SetTrackDoneFlag(bool trackDoneFlag)
+{
+    std::unique_lock<std::mutex> lockSpeed(mutexCond_);
+    trackDoneFlag_ = trackDoneFlag;
+}
+
 int32_t PlayerCallbackTest::PrepareSync()
 {
     if (state_ != PLAYER_PREPARED) {
@@ -128,8 +134,23 @@ int32_t PlayerCallbackTest::SpeedSync()
     return MSERR_OK;
 }
 
+int32_t PlayerCallbackTest::TrackSync()
+{
+    if (trackDoneFlag_ == false) {
+        std::unique_lock<std::mutex> lockTrackDone(mutexCond_);
+        condVarTrackDone_.wait_for(lockTrackDone, std::chrono::seconds(WAITSECOND));
+        if (trackDoneFlag_ == false) {
+            return -1;
+        }
+    }
+
+    return MSERR_OK;
+}
+
 void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
+    int32_t index = -1;
+    int32_t isSelect = -1;
     switch (type) {
         case INFO_TYPE_SEEKDONE:
             SetSeekDoneFlag(true);
@@ -155,6 +176,13 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
         case INFO_TYPE_RESOLUTION_CHANGE:
             std::cout << "INFO_TYPE_RESOLUTION_CHANGE: " << extra << std::endl;
             break;
+        case INFO_TYPE_TRACKCHANGE:
+            trackDoneFlag_ = true;
+            condVarTrackDone_.notify_all();
+            infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+            infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
+            std::cout << "INFO_TYPE_TRACKCHANGE: index " << index << " isSelect " << isSelect << std::endl;
+            break;
         default:
             break;
     }
@@ -162,7 +190,11 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
 
 void PlayerCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
 {
-    std::cout << "Error received, errorCode: " << errorCode << "errorMsg: " << errorMsg << std::endl;
+    if (!trackDoneFlag_) {
+        trackDoneFlag_ = true;
+        condVarTrackDone_.notify_all();
+    }
+    std::cout << "Error received, errorCode: " << errorCode << " errorMsg: " << errorMsg << std::endl;
 }
 
 void PlayerCallbackTest::Notify(PlayerStates currentState)
@@ -511,6 +543,37 @@ int32_t PlayerMock::SetVideoSurface(sptr<Surface> surface)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->SetVideoSurface(surface);
+}
+
+int32_t PlayerMock::SelectTrack(int32_t index)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    callback_->SetTrackDoneFlag(false);
+    int32_t ret = player_->SelectTrack(index);
+    if (callback_->TrackSync() != MSERR_OK) {
+        return -1;
+    }
+    return ret;
+}
+
+int32_t PlayerMock::DeselectTrack(int32_t index)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    callback_->SetTrackDoneFlag(false);
+    int32_t ret = player_->DeselectTrack(index);
+    if (callback_->TrackSync() != MSERR_OK) {
+        return -1;
+    }
+    return ret;
+}
+
+int32_t PlayerMock::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->GetCurrentTrack(trackType, index);
 }
 } // namespace Media
 } // namespace OHOS

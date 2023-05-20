@@ -35,6 +35,8 @@ public:
     void SetUpDemuxerElementCb(GstElement &elem);
     void SetUpParseElementCb(GstElement &elem);
     void Stop();
+    int32_t GetTrackInfo(int32_t index, int32_t &innerIndex, int32_t &trackType);
+    int32_t GetTrackIndex(int32_t innerIndex, int32_t trackType, int32_t &index);
     static void OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
     PlayerTrackParse();
     ~PlayerTrackParse();
@@ -44,9 +46,14 @@ private:
     void ConvertToPlayerKeys(const Format &innerMeta, Format &outMeta) const;
     bool AddProbeToPad(const GstElement *element, GstPad *pad);
     bool AddProbeToPadList(const GstElement *element, GList &list);
+    void UpdatTrackInfo();
+    void StartUpdatTrackInfo();
     static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
+    bool updateTrackInfo_ = false;
     bool demuxerElementFind_ = false;
     std::unordered_map<GstPad *, Format> trackInfos_;
+    std::vector<Format> videoTracks;
+    std::vector<Format> audioTracks;
     int32_t trackcount_ = 0;
     struct SignalInfo {
         GstElement *element;

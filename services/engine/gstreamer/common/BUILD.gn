@@ -57,6 +57,7 @@ config("media_engine_gst_common_config") {
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/playbin_adapter",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/state_machine",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/utils",
+    "//foundation/multimedia/player_framework/services/engine/gstreamer/player",
     "./appsrc_engine",
     "../plugins/common",
     "//foundation/multimedia/player_framework/services/utils/include",
@@ -76,6 +77,7 @@ ohos_static_library("media_engine_gst_common") {
     "playbin_adapter/playbin_ctrler_base.cpp",
     "playbin_adapter/playbin_state.cpp",
     "state_machine/state_machine.cpp",
+    "../player/player_track_parse.cpp",
   ]
 
   configs = [

@@ -25,7 +25,6 @@
 #include "i_player_engine.h"
 #include "i_playbin_ctrler.h"
 #include "gst_appsrc_engine.h"
-#include "player_track_parse.h"
 #include "player_codec_ctrl.h"
 #include "task_queue.h"
 
@@ -63,6 +62,9 @@ public:
     int32_t SetAudioRendererInfo(const int32_t contentType, const int32_t streamUsage,
         const int32_t rendererFlag) override;
     int32_t SetAudioInterruptMode(const int32_t interruptMode) override;
+    int32_t SelectTrack(int32_t index) override;
+    int32_t DeselectTrack(int32_t index) override;
+    int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
 
 private:
     void OnNotifyMessage(const PlayBinMessage &msg);
@@ -91,6 +93,8 @@ private:
     void HandleVideoSizeChanged(const PlayBinMessage &msg);
     void HandleBitRateCollect(const PlayBinMessage &msg);
     void HandleIsLiveStream(const PlayBinMessage &msg);
+    void HandleTrackChanged(const PlayBinMessage &msg);
+    void HandleOnError(const PlayBinMessage &msg);
     void HandleAudioMessage(const PlayBinMessage &msg);
     void HandleInterruptMessage(const PlayBinMessage &msg);
     void HandleAudioStateMessage(const PlayBinMessage &msg);
@@ -106,7 +110,6 @@ private:
     sptr<Surface> producerSurface_ = nullptr;
     std::string url_ = "";
     std::shared_ptr<GstAppsrcEngine> appsrcWrap_ = nullptr;
-    std::shared_ptr<PlayerTrackParse> trackParse_ = nullptr;
     PlayerCodecCtrl codecCtrl_;
     int32_t videoWidth_ = 0;
     int32_t videoHeight_ = 0;
