@@ -420,7 +420,7 @@ napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
                 break;
             case FORMAT_TYPE_DOUBLE:
                 if (format.GetDoubleValue(iter.first, doubleValue)) {
-                    CHECK_AND_RETURN_RET(SetPropertyDouble(env, buffer, iter.first, strValue) == true, nullptr);
+                    CHECK_AND_RETURN_RET(SetPropertyDouble(env, buffer, iter.first, doubleValue) == true, nullptr);
                 }
                 break;
             default:
