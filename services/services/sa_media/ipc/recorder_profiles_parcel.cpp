@@ -144,6 +144,10 @@ bool RecorderProfilesParcel::Unmarshalling(
     MessageParcel &parcel, std::vector<RecorderProfilesData> &profileCapabilityDataArray)
 {
     uint32_t size = parcel.ReadUint32();
+    if (size > 1000) {
+        MEDIA_LOGE("failed to Unmarshalling profileCapabilityDataArray, array is too large");
+        return false;
+    }
     for (uint32_t index = 0; index < size; index++) {
         RecorderProfilesData profileCapabilityData;
         UnmarshallingRecorderProfilesData(parcel, profileCapabilityData);
