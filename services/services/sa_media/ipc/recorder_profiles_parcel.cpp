@@ -16,6 +16,8 @@
 #include "recorder_profiles_parcel.h"
 #include "media_log.h"
 
+#define MAX_PARCEL_SIZE 1000
+
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderProfilesParcel"};
 }
@@ -144,6 +146,10 @@ bool RecorderProfilesParcel::Unmarshalling(
     MessageParcel &parcel, std::vector<RecorderProfilesData> &profileCapabilityDataArray)
 {
     uint32_t size = parcel.ReadUint32();
+    if (size > MAX_PARCEL_SIZE) {
+        MEDIA_LOGE("failed to Unmarshalling profileCapabilityDataArray, array is too large");
+        return false;
+    }
     for (uint32_t index = 0; index < size; index++) {
         RecorderProfilesData profileCapabilityData;
         UnmarshallingRecorderProfilesData(parcel, profileCapabilityData);
