@@ -20,9 +20,16 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "ipc_skeleton.h"
+#include "media_permission.h"
+#include "accesstoken_kit.h"
+#include <set>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServiceStub"};
+static const std::set<int32_t> AUDIO_REQUEST = {8, 9, 10, 11, 12};
+static const std::set<int32_t> VIDEO_REQUEST = {1, 2, 3, 4, 5, 6, 7};
+static const std::set<int32_t> COMMON_REQUEST = {0, 13, 14, 15, 16, 17, 18, 19, 20,
+    21, 22, 23, 24, 25, 26, 27, 28, 29};
 }
 
 namespace OHOS {
@@ -100,6 +107,20 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     MessageOption &option)
 {
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
+    int32_t permissionResult = Security::AccessToken::PERMISSION_DENIED;
+    if (AUDIO_REQUEST.count(code) != 0) {
+        permissionResult = MediaPermission::CheckPermission(
+            MediaPermission::RecorderPermissionType::PERMISSION_AUDIO);
+    } else if (VIDEO_REQUEST.count(code) != 0) {
+        permissionResult = MediaPermission::CheckPermission(
+            MediaPermission::RecorderPermissionType::PERMISSION_VIDEO);
+    } else if (COMMON_REQUEST.count(code) != 0) {
+        permissionResult = MediaPermission::CheckPermission(
+            MediaPermission::RecorderPermissionType::PERMISSION_COMMON);
+    }
+    if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
+        return MSERR_INVALID_OPERATION;
+    }
 
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (RecorderServiceStub::GetDescriptor() != remoteDescriptor) {
