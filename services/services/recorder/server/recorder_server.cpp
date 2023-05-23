@@ -39,7 +39,6 @@ namespace OHOS {
 namespace Media {
 const std::string START_TAG = "RecorderCreate->Start";
 const std::string STOP_TAG = "RecorderStop->Destroy";
-const int32_t ROOT_UID = 0;
 #define CHECK_STATUS_FAILED_AND_LOGE_RET(statusFailed, ret) \
     do { \
         if (statusFailed) { \
@@ -105,26 +104,6 @@ int32_t RecorderServer::Init()
     status_ = REC_INITIALIZED;
     BehaviorEventWrite(GetStatusDescription(status_), "Recorder");
     return MSERR_OK;
-}
-
-bool RecorderServer::CheckPermission()
-{
-    auto callerUid = IPCSkeleton::GetCallingUid();
-    // Root users should be whitelisted
-    if (callerUid == ROOT_UID) {
-        MEDIA_LOGI("Root user. Permission Granted");
-        return true;
-    }
-
-    Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
-    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller, "ohos.permission.MICROPHONE");
-    if (result == Security::AccessToken::PERMISSION_GRANTED) {
-        MEDIA_LOGI("user have the right to access MICROPHONE!");
-        return true;
-    } else {
-        MEDIA_LOGE("user do not have the right to access MICROPHONE!");
-        return false;
-    }
 }
 
 const std::string& RecorderServer::GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status)
@@ -281,10 +260,6 @@ int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
 
-    if (!CheckPermission()) {
-        MEDIA_LOGE("Permission check failed!");
-        return MSERR_INVALID_VAL;
-    }
     config_.audioSource = source;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetAudioSource(source, sourceId);
