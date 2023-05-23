@@ -452,9 +452,6 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
         case INFO_TYPE_EOS:
             AVPlayerCallback::OnEosCb(extra);
             break;
-        case INFO_TYPE_IS_LIVE_STREAM:
-            NotifyIsLiveStream();
-            break;
         default:
             break;
     }
@@ -464,6 +461,9 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
 void AVPlayerCallback::OnInfo2(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     switch (type) {
+        case INFO_TYPE_IS_LIVE_STREAM:
+            NotifyIsLiveStream();
+            break;
         case INFO_TYPE_TRACKCHANGE:
             AVPlayerCallback::OnTrackChangedCb(infoBody);
             break;

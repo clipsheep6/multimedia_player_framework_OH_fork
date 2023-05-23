@@ -84,6 +84,7 @@ private:
     void HandleSeekDoneMessage(const PlayBinMessage &msg);
     void HandleSpeedDoneMessage(const PlayBinMessage &msg);
     void HandleSubTypeMessage(const PlayBinMessage &msg);
+    void HandleSubTypeMessage2(const PlayBinMessage &msg);
     void HandleBufferingStart();
     void HandleBufferingEnd();
     void HandleBufferingTime(const PlayBinMessage &msg);

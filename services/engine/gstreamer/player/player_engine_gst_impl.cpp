@@ -400,6 +400,16 @@ void PlayerEngineGstImpl::HandleSubTypeMessage(const PlayBinMessage &msg)
             HandleTrackChanged(msg);
             break;
         }
+        default: {
+            break;
+        }
+    }
+    HandleSubTypeMessage2(msg);
+}
+
+void PlayerEngineGstImpl::HandleSubTypeMessage2(const PlayBinMessage &msg)
+{
+    switch (msg.subType) {
         case PLAYBIN_SUB_MSG_ONERROR: {
             HandleOnError(msg);
             break;
