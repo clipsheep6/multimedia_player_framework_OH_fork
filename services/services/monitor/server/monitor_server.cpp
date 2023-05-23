@@ -284,7 +284,10 @@ void MonitorServer::MonitorThread()
             return !enableThread_ || waitingAgain_;
         });
 
-        CHECK_AND_BREAK_LOG(enableThread_, "MonitorThread Stop.");
+        if (!enableThread_) {
+            MEDIA_LOGI("MonitorThread Stop.");
+            break;
+        }
 
         waitTime = static_cast<int32_t>(GetTimeMS() - timeStart);
 
