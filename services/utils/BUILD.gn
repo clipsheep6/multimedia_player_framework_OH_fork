@@ -54,6 +54,7 @@ ohos_shared_library("media_service_utils") {
     "avsharedmemorybase.cpp",
     "avsharedmemorypool.cpp",
     "media_dfx.cpp",
+    "media_permission.cpp",
     "player_xcollie.cpp",
     "task_queue.cpp",
     "time_perf.cpp",
@@ -99,12 +100,14 @@ ohos_shared_library("media_service_utils") {
   deps = [ "//third_party/libxml2:xml2" ]
 
   external_deps = [
+    "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "hicollie_native:libhicollie",
     "hisysevent_native:libhisysevent",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
+    "ipc:ipc_single",
   ]
 
   subsystem_name = "multimedia"
