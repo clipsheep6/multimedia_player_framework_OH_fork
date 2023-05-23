@@ -35,6 +35,7 @@
             <option name="push" value="test_videofile/MP4_ROTATE_90.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/1kb.mp3 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/01.mp3 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/mpeg4_1920_1080_aac_flac.mkv -> /data/test" src="res"/>
             <option name="push" value="error.mp4 -> /data/test" src="res"/>
             <option name="shell" value="mkdir /data/media"/>
         </preparer>
