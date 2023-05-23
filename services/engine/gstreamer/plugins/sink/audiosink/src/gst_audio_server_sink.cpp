@@ -437,8 +437,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
     g_return_val_if_fail(event != nullptr, FALSE);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     g_return_val_if_fail(sink != nullptr, FALSE);
-    GstEventType type = GST_EVENT_TYPE(event);
-    switch (type) {
+    switch (GST_EVENT_TYPE(event)) {
         case GST_EVENT_EOS:
             if (sink->audio_sink == nullptr) {
                 break;
