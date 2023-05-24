@@ -15,6 +15,7 @@
 
 #include "recorder_service_stub.h"
 #include <unistd.h>
+#include <set>
 #include "recorder_listener_proxy.h"
 #include "media_server_manager.h"
 #include "media_log.h"
@@ -22,7 +23,6 @@
 #include "ipc_skeleton.h"
 #include "media_permission.h"
 #include "accesstoken_kit.h"
-#include <set>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServiceStub"};

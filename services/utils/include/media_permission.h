@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- #ifndef MEDIA_PERMISSION_H
- #define MEDIA_PERMISSION_H
+#ifndef MEDIA_PERMISSION_H
+#define MEDIA_PERMISSION_H
 
 namespace OHOS {
 namespace Media {
@@ -30,4 +30,4 @@ public:
 } // namespace Media
 } // namespace OHOS
 
- #endif
+#endif
