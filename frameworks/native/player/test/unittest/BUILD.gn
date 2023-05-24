@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "multimedia_player_framework/player"
+module_output_path = "player_framework/player"
 
 ohos_unittest("player_unit_test") {
   module_out_path = module_output_path

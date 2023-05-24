@@ -53,7 +53,7 @@ ohos_fuzztest("PlayerSetVolumeFuzzTest") {
   ]
   external_deps = [
     "hiviewdfx_hilog_native:libhilog",
-    "multimedia_player_framework:media_client",
+    "player_framework:media_client",
   ]
 }
 

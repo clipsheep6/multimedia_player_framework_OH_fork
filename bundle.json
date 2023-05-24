@@ -10,7 +10,7 @@
     "dirs": {},
     "scripts": {},
     "component": {
-      "name": "multimedia_player_framework",
+      "name": "player_framework",
       "subsystem": "multimedia",
       "syscap": [
         "SystemCapability.Multimedia.Media.Core",

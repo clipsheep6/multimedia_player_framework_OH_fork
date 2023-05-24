@@ -208,5 +208,5 @@ ohos_shared_library("media_service") {
   }
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
