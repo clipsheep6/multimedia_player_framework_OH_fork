@@ -19,12 +19,6 @@ namespace OHOS {
 namespace Media {
 class __attribute__((visibility("default"))) MediaPermission {
 public:
-    enum RecorderPermissionType : uint8_t {
-        PERMISSION_AUDIO,
-        PERMISSION_VIDEO,
-        PERMISSION_COMMON,
-    };
-
     static int32_t CheckMicPermission();
 };
 } // namespace Media
