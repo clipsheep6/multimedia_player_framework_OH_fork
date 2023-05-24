@@ -335,6 +335,9 @@ int32_t AVMetadataHelperEngineGstImpl::ExtractMetadata()
 
 void AVMetadataHelperEngineGstImpl::Reset()
 {
+    // If call Reset immediately after setSource, the state of multiple plug-ins (for example, qtdemux)
+    // will be confused, the ExtractMetadata call is added here to ensure stable state
+    (void)ExtractMetadata();
     std::unique_lock<std::mutex> lock(mutex_);
 
     if (metaCollector_ != nullptr) {
