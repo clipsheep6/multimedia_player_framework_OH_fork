@@ -18,7 +18,6 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 #include <unordered_map>
 #include <mutex>
 #include <gst/gst.h>
