@@ -18,8 +18,8 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
+#include <unordered_map>
 #include <mutex>
 #include <gst/gst.h>
 #include "nocopyable.h"
