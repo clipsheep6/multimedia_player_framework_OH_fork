@@ -693,10 +693,6 @@ void PlayBinCtrlerBase::SetupCustomElement()
         } else if (audioSink_ != nullptr) {
             g_object_set(playbin_, "video-sink", audioSink_, nullptr);
         }
-        subSink_ = sinkProvider_->CreateSubSink();
-        if (subSink_ != nullptr) {
-            g_object_set(playbin_, "text-sink", subSink_, nullptr);
-        }
         auto msgNotifier = std::bind(&PlayBinCtrlerBase::OnSinkMessageReceived, this, std::placeholders::_1);
         sinkProvider_->SetMsgNotifier(msgNotifier);
     } else {

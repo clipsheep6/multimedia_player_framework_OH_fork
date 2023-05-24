@@ -79,7 +79,7 @@ ohos_shared_library("gst_media_common") {
   deps = [
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/codec/common:gst_codec_plugins_common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink:gst_mem_sink_base",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/subsink:gst_sub_sink_base",
+    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/subtitlesink:gst_subtitle_sink_base",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/source/memsource:gst_mem_src_base",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",

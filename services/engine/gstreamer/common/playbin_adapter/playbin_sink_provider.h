@@ -28,7 +28,7 @@ public:
     using SinkPtr = GstElement *;
     virtual SinkPtr CreateVideoSink() = 0;
     virtual SinkPtr CreateAudioSink() = 0;
-    virtual SinkPtr CreateSubSink()
+    virtual SinkPtr CreateSubtitleSink()
     {
         return nullptr;
     }

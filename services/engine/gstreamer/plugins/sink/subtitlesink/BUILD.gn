@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
 
-config("gst_sub_sink_config") {
+config("gst_subtitle_sink_config") {
   visibility = [ ":*" ]
 
   cflags = [
@@ -45,7 +45,7 @@ config("gst_sub_sink_config") {
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/common",
-    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/sink/subsink",
+    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/sink/subtitle_sink",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base",
@@ -56,7 +56,7 @@ config("gst_sub_sink_config") {
   ]
 }
 
-ohos_shared_library("gst_sub_sink") {
+ohos_shared_library("gst_subtitle_sink") {
   install_enable = true
 
   sanitize = {
@@ -67,11 +67,11 @@ ohos_shared_library("gst_sub_sink") {
   }
 
   sources = [
-    "gst_sub_sink_plugins.cpp",
-    "gst_sub_display_sink.cpp"
+    "gst_subtitle_sink_plugins.cpp",
+    "gst_subtitle_display_sink.cpp"
   ]
 
-  configs = [ ":gst_sub_sink_config" ]
+  configs = [ ":gst_subtitle_sink_config" ]
 
   deps = [
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
@@ -89,12 +89,11 @@ ohos_shared_library("gst_sub_sink") {
   part_name = "multimedia_player_framework"
 }
 
-ohos_static_library("gst_sub_sink_base") {
+ohos_static_library("gst_subtitle_sink_base") {
   sources = [
-    "gst_sub_sink.cpp",
-    "gst_subtitle_meta.cpp",
+    "gst_subtitle_sink.cpp",
   ]
-  configs = [ ":gst_sub_sink_config" ]
+  configs = [ ":gst_subtitle_sink_config" ]
   deps = [
     "../../../../../utils:media_service_utils",
     "//third_party/gstreamer/gstplugins_base:gstapp_plugin",

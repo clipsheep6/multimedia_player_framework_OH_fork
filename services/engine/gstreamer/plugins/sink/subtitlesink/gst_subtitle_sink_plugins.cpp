@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 #include "config.h"
-#include "gst_sub_display_sink.h"
+#include "gst_subtitle_display_sink.h"
 
 static gboolean plugin_init(GstPlugin *plugin)
 {
     g_return_val_if_fail(plugin != nullptr, false);
-    gboolean ret = gst_element_register(plugin, "subdisplaysink", GST_RANK_PRIMARY, GST_TYPE_SUB_DISPLAY_SINK);
+    gboolean ret = gst_element_register(plugin, "subtitledisplaysink", GST_RANK_PRIMARY, GST_TYPE_SUBTITLE_DISPLAY_SINK);
     if (ret == FALSE) {
-        GST_WARNING_OBJECT(nullptr, "register subdisplaysink failed");
+        GST_WARNING_OBJECT(nullptr, "register subtitledisplaysink failed");
     }
     return TRUE;
 }
 
 GST_PLUGIN_DEFINE(GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    _sub_sink,
+    _subtitle_sink,
     "GStreamer Subtitle Sink",
     plugin_init,
     PACKAGE_VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

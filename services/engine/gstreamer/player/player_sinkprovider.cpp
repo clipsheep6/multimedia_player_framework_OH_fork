@@ -14,7 +14,6 @@
  */
 
 #include "player_sinkprovider.h"
-#include "gst_subtitle_meta.h"
 #include <sync_fence.h>
 #include "securec.h"
 #include "display_type.h"
@@ -50,11 +49,9 @@ PlayerSinkProvider::~PlayerSinkProvider()
         gst_object_unref(videoSink_);
         videoSink_ = nullptr;
     }
-    for (auto subSink : subSinks_) {
-        if (subSink != nullptr) {
-            gst_object_unref(subSink);
-            subSink = nullptr;
-        }
+    if (subSink_ != nullptr) {
+        gst_object_unref(subSink_);
+        subSink_ = nullptr;
     }
     if (audioCaps_ != nullptr) {
         gst_caps_unref(audioCaps_);
@@ -63,10 +60,6 @@ PlayerSinkProvider::~PlayerSinkProvider()
     if (videoCaps_ != nullptr) {
         gst_caps_unref(videoCaps_);
         videoCaps_ = nullptr;
-    }
-    if (subCaps_ != nullptr) {
-        gst_caps_unref(subCaps_);
-        subCaps_ = nullptr;
     }
 }
 
@@ -201,25 +194,23 @@ GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpo
     return sink;
 }
 
-PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubSink()
+PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
 {
-    auto *subSink = DoCreateSubSink(subCaps_, reinterpret_cast<gpointer>(this));
-    CHECK_AND_RETURN_RET_LOG(subSink != nullptr, nullptr, "CreateSubSink failed..");
-    subSinks_.emplace_back(subSink);
+    auto *subSink = DoCreateSubtitleSink(reinterpret_cast<gpointer>(this));
+    CHECK_AND_RETURN_RET_LOG(subSink != nullptr, nullptr, "CreateSubtitleSink failed..");
     return subSink;
 }
 
-GstElement *PlayerSinkProvider::DoCreateSubSink(const GstCaps *caps, const gpointer userData)
+GstElement *PlayerSinkProvider::DoCreateSubtitleSink(const gpointer userData)
 {
-    MEDIA_LOGI("CreateSubSink in.");
-    (void)caps;
+    MEDIA_LOGI("CreateSubtitleSink in.");
     CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
 
     auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subdisplaysink", "subdisplaysink")));
     CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
 
-    GstSubSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };
-    gst_sub_sink_set_callback(GST_SUB_SINK(sink), &sinkCallbacks, userData, nullptr);
+    GstSubtitleSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };
+    gst_subtitle_sink_set_callback(GST_SUBTITLE_SINK(sink), &sinkCallbacks, userData, nullptr);
 
     return sink;
 }
