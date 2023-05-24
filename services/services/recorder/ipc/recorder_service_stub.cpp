@@ -120,7 +120,7 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     }
     if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
         MEDIA_LOGE("user do not have the right to access MICROPHONE");
-        return MSERR_INVALID_OPERATION;
+        return MSERR_EXT_API9_PERMISSION_DENIED;
     }
 
     auto remoteDescriptor = data.ReadInterfaceToken();
