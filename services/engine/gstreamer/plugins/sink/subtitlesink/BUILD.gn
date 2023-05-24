@@ -74,7 +74,6 @@ ohos_shared_library("gst_subtitle_sink") {
   configs = [ ":gst_subtitle_sink_config" ]
 
   deps = [
-    "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
     "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/common:gst_media_common",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
