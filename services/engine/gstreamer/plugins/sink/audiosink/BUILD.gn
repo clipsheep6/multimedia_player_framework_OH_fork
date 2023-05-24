@@ -96,5 +96,5 @@ ohos_shared_library("gst_audio_server_sink") {
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

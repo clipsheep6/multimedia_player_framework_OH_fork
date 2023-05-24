@@ -33,7 +33,7 @@ ohos_static_library("media_format") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 config("media_service_utils_public_config") {
@@ -108,5 +108,5 @@ ohos_shared_library("media_service_utils") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

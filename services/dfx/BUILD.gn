@@ -64,7 +64,7 @@ ohos_shared_library("media_service_log_dfx") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 ohos_shared_library("media_service_dfx") {
@@ -117,5 +117,5 @@ ohos_shared_library("media_service_dfx") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
