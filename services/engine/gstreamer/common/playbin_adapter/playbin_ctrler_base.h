@@ -159,7 +159,6 @@ private:
     
     PlayBinSinkProvider::SinkPtr audioSink_ = nullptr;
     PlayBinSinkProvider::SinkPtr videoSink_ = nullptr;
-    PlayBinSinkProvider::SinkPtr subtitleSink_ = nullptr;
 
     int64_t duration_ = 0;
     double rate_ = 0;
