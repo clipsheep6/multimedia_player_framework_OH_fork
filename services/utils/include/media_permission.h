@@ -25,7 +25,7 @@ public:
         PERMISSION_COMMON,
     };
 
-    static int32_t CheckPermission(MediaPermission::RecorderPermissionType code);
+    static int32_t CheckMicPermission();
 };
 } // namespace Media
 } // namespace OHOS

@@ -15,7 +15,6 @@
 
 #include "recorder_service_stub.h"
 #include <unistd.h>
-#include <set>
 #include "recorder_listener_proxy.h"
 #include "media_server_manager.h"
 #include "media_log.h"
@@ -26,10 +25,6 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServiceStub"};
-static const std::set<int32_t> AUDIO_REQUEST = {8, 9, 10, 11, 12};
-static const std::set<int32_t> VIDEO_REQUEST = {1, 2, 3, 4, 5, 6, 7};
-static const std::set<int32_t> COMMON_REQUEST = {0, 13, 14, 15, 16, 17, 18, 19, 20,
-    21, 22, 23, 24, 25, 26, 27, 28, 29};
 }
 
 namespace OHOS {
@@ -52,6 +47,7 @@ RecorderServiceStub::RecorderServiceStub()
 RecorderServiceStub::~RecorderServiceStub()
 {
     (void)CancellationMonitor(pid_);
+    needAudioPermissionCheck = false;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -109,16 +105,21 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
     int32_t permissionResult = Security::AccessToken::PERMISSION_DENIED;
     if (AUDIO_REQUEST.count(code) != 0) {
-        permissionResult = MediaPermission::CheckPermission(
-            MediaPermission::RecorderPermissionType::PERMISSION_AUDIO);
-    } else if (VIDEO_REQUEST.count(code) != 0) {
-        permissionResult = MediaPermission::CheckPermission(
-            MediaPermission::RecorderPermissionType::PERMISSION_VIDEO);
+        permissionResult = MediaPermission::CheckMicPermission();
+        needAudioPermissionCheck = true;
     } else if (COMMON_REQUEST.count(code) != 0) {
-        permissionResult = MediaPermission::CheckPermission(
-            MediaPermission::RecorderPermissionType::PERMISSION_COMMON);
+        if (needAudioPermissionCheck) {
+            permissionResult = MediaPermission::CheckMicPermission();
+        } else {
+            // none audio request no need to check permission in recorder server
+            permissionResult = Security::AccessToken::PERMISSION_GRANTED;
+        }
+    } else {
+        // none audio request no need to check permission in recorder server
+        permissionResult = Security::AccessToken::PERMISSION_GRANTED;
     }
     if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
+        MEDIA_LOGE("user do not have the right to access MICROPHONE");
         return MSERR_INVALID_OPERATION;
     }
 
