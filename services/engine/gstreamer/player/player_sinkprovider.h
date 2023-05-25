@@ -19,7 +19,6 @@
 #include <cstdint>
 #include <memory>
 #include <mutex>
-#include <vector>
 #include <gst/gst.h>
 #include "gst_mem_sink.h"
 #include "gst_subtitle_sink.h"
