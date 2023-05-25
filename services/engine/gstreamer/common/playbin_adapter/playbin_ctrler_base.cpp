@@ -427,12 +427,13 @@ int32_t PlayBinCtrlerBase::SelectBitRate(uint32_t bitRate)
         MEDIA_LOGE("BitRate is empty");
         return MSERR_INVALID_OPERATION;
     }
-    connectSpeed_ = bitRate;
-    g_object_set(playbin_, "connection-speed", static_cast<uint64_t>(bitRate), nullptr);
-
-    PlayBinMessage msg = { PLAYBIN_MSG_BITRATEDONE, 0, static_cast<int32_t>(bitRate), {} };
-    ReportMessage(msg);
-
+    if (connectSpeed_ == bitRate) {
+        PlayBinMessage msg = { PLAYBIN_MSG_BITRATEDONE, 0, static_cast<int32_t>(bitRate), {} };
+        ReportMessage(msg);
+    } else {
+        connectSpeed_ = bitRate;
+        g_object_set(playbin_, "connection-speed", static_cast<uint64_t>(bitRate), nullptr);
+    }
     return MSERR_OK;
 }
 
@@ -523,6 +524,11 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
 
         gulong id = g_signal_connect_data(playbin_, "bitrate-parse-complete",
             G_CALLBACK(&PlayBinCtrlerBase::OnBitRateParseCompleteCb), wrapper,
+            (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+        AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+
+        id = g_signal_connect_data(playbin_, "video-changed",
+            G_CALLBACK(&PlayBinCtrlerBase::OnSelectBitrateDoneCb), wrapper,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
         AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
     }
@@ -1126,6 +1132,16 @@ void PlayBinCtrlerBase::OnBitRateParseCompleteCb(const GstElement *playbin, uint
         (void)format.PutBuffer(std::string(PlayerKeys::PLAYER_BITRATE),
             static_cast<uint8_t *>(static_cast<void *>(bitrateInfo)), bitrateNum * sizeof(uint32_t));
         PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BITRATE_COLLECT, 0, format };
+        thizStrong->ReportMessage(msg);
+    }
+}
+
+void PlayBinCtrlerBase::OnSelectBitrateDoneCb(const GstElement *playbin, bool addPad, gpointer userData)
+{
+    (void)playbin;
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
+    if (thizStrong != nullptr && addPad) {
+        PlayBinMessage msg = { PLAYBIN_MSG_BITRATEDONE, 0, static_cast<int32_t>(thizStrong->connectSpeed_), {} };
         thizStrong->ReportMessage(msg);
     }
 }
