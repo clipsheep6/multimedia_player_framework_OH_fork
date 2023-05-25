@@ -1048,8 +1048,8 @@ HWTEST_F(PlayerUnitTest, Player_GetVideoTrackInfo_002, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
     EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
     EXPECT_EQ(MSERR_OK, player_->Stop());
-    EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
-    EXPECT_EQ(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
+    EXPECT_NE(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
+    EXPECT_NE(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_NE(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
     EXPECT_NE(MSERR_OK, player_->GetAudioTrackInfo(audioTrack));

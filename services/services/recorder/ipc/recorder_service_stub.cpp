@@ -20,6 +20,8 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "ipc_skeleton.h"
+#include "media_permission.h"
+#include "accesstoken_kit.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "RecorderServiceStub"};
@@ -45,6 +47,7 @@ RecorderServiceStub::RecorderServiceStub()
 RecorderServiceStub::~RecorderServiceStub()
 {
     (void)CancellationMonitor(pid_);
+    needAudioPermissionCheck = false;
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -100,6 +103,25 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     MessageOption &option)
 {
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
+    int32_t permissionResult = Security::AccessToken::PERMISSION_DENIED;
+    if (AUDIO_REQUEST.count(code) != 0) {
+        permissionResult = MediaPermission::CheckMicPermission();
+        needAudioPermissionCheck = true;
+    } else if (COMMON_REQUEST.count(code) != 0) {
+        if (needAudioPermissionCheck) {
+            permissionResult = MediaPermission::CheckMicPermission();
+        } else {
+            // none audio request no need to check permission in recorder server
+            permissionResult = Security::AccessToken::PERMISSION_GRANTED;
+        }
+    } else {
+        // none audio request no need to check permission in recorder server
+        permissionResult = Security::AccessToken::PERMISSION_GRANTED;
+    }
+    if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
+        MEDIA_LOGE("user do not have the right to access MICROPHONE");
+        return MSERR_EXT_API9_PERMISSION_DENIED;
+    }
 
     auto remoteDescriptor = data.ReadInterfaceToken();
     if (RecorderServiceStub::GetDescriptor() != remoteDescriptor) {
@@ -116,6 +138,10 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
             int32_t ret = (this->*memberFunc)(data, reply);
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("calling memberFunc is failed.");
+            }
+            if (AUDIO_REQUEST.count(code) != 0 && reply.ReadInt32() != MSERR_OK) {
+                MEDIA_LOGE("audio memberFunc failed, reset permission check.");
+                needAudioPermissionCheck = false;
             }
             return MSERR_OK;
         }
@@ -547,6 +573,7 @@ int32_t RecorderServiceStub::Reset(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
     reply.WriteInt32(Reset());
+    needAudioPermissionCheck = false;
     return MSERR_OK;
 }
 
@@ -554,6 +581,7 @@ int32_t RecorderServiceStub::Release(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
     reply.WriteInt32(Release());
+    needAudioPermissionCheck = false;
     return MSERR_OK;
 }
 
@@ -571,6 +599,7 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
+    needAudioPermissionCheck = false;
     return MSERR_OK;
 }
 } // namespace Media

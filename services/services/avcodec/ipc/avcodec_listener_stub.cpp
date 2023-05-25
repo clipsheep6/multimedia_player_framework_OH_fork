@@ -80,29 +80,33 @@ int AVCodecListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
 
 void AVCodecListenerStub::OnError(AVCodecErrorType errorType, int32_t errorCode)
 {
-    if (callback_ != nullptr) {
-        callback_->OnError(errorType, errorCode);
+    std::shared_ptr<AVCodecCallback> cb = callback_.lock();
+    if (cb != nullptr) {
+        cb->OnError(errorType, errorCode);
     }
 }
 
 void AVCodecListenerStub::OnOutputFormatChanged(const Format &format)
 {
-    if (callback_ != nullptr) {
-        callback_->OnOutputFormatChanged(format);
+    std::shared_ptr<AVCodecCallback> cb = callback_.lock();
+    if (cb != nullptr) {
+        cb->OnOutputFormatChanged(format);
     }
 }
 
 void AVCodecListenerStub::OnInputBufferAvailable(uint32_t index)
 {
-    if (callback_ != nullptr) {
-        callback_->OnInputBufferAvailable(index);
+    std::shared_ptr<AVCodecCallback> cb = callback_.lock();
+    if (cb != nullptr) {
+        cb->OnInputBufferAvailable(index);
     }
 }
 
 void AVCodecListenerStub::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag)
 {
-    if (callback_ != nullptr) {
-        callback_->OnOutputBufferAvailable(index, info, flag);
+    std::shared_ptr<AVCodecCallback> cb = callback_.lock();
+    if (cb != nullptr) {
+        cb->OnOutputBufferAvailable(index, info, flag);
     }
 }
 

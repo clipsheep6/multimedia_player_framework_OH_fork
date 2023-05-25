@@ -23,7 +23,7 @@ ohos_prebuilt_seccomp("media_seccomp_filter") {
   process_type = "system"
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 
   install_enable = true
   install_images = [ "system" ]

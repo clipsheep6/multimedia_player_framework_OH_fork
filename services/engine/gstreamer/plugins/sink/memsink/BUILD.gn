@@ -105,7 +105,7 @@ ohos_shared_library("gst_mem_sink") {
 
   relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 ohos_static_library("gst_mem_sink_base") {
@@ -113,5 +113,5 @@ ohos_static_library("gst_mem_sink_base") {
   configs = [ ":gst_mem_sink_config" ]
   deps = [ "../../../../../utils:media_service_utils" ]
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

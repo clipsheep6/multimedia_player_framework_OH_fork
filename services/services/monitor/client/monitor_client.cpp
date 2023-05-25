@@ -123,7 +123,10 @@ void MonitorClient::ClickThread()
         std::unique_lock<std::mutex> threadLock(threadMutex_);
         clickCond_.wait_for(threadLock, std::chrono::seconds(timeInterval), [this] { return !enableThread_; });
 
-        CHECK_AND_BREAK_LOG(enableThread_, "ClickThread Stop.");
+        if (!enableThread_) {
+            MEDIA_LOGI("ClickThread Stop.");
+            break;
+        }
         CHECK_AND_BREAK_LOG(monitorProxy_ != nullptr, "Proxy is invaild!");
         CHECK_AND_BREAK_LOG(monitorProxy_->Click() == MSERR_OK, "failed to Click");
     }

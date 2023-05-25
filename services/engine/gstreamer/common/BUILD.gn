@@ -106,7 +106,7 @@ ohos_static_library("media_engine_gst_common") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 config("media_gst_dfx_config") {
@@ -176,5 +176,5 @@ ohos_static_library("media_gst_dfx") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
