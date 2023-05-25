@@ -139,6 +139,10 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("calling memberFunc is failed.");
             }
+            if (AUDIO_REQUEST.count(code) != 0 && reply.ReadInt32() != MSERR_OK) {
+                MEDIA_LOGE("audio memberFunc failed, reset permission check.");
+                needAudioPermissionCheck = false;
+            }
             return MSERR_OK;
         }
     }
@@ -569,6 +573,7 @@ int32_t RecorderServiceStub::Reset(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
     reply.WriteInt32(Reset());
+    needAudioPermissionCheck = false;
     return MSERR_OK;
 }
 
@@ -576,6 +581,7 @@ int32_t RecorderServiceStub::Release(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
     reply.WriteInt32(Release());
+    needAudioPermissionCheck = false;
     return MSERR_OK;
 }
 
@@ -593,6 +599,7 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
+    needAudioPermissionCheck = false;
     return MSERR_OK;
 }
 } // namespace Media
