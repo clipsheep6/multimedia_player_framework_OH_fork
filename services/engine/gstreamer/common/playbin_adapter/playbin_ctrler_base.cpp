@@ -881,6 +881,8 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
     int32_t trackType = -1;
     int32_t innerIndex = -1;
     int32_t ret = trackParse_->GetTrackInfo(index, innerIndex, trackType);
+    CHECK_AND_RETURN_RET(ret != MSERR_UNSUPPORT,
+        (OnError(ret, "This track is currently not supported!"), ret));
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (OnError(ret, "Invalid track index!"), ret));
 
     if (trackType == MediaType::MEDIA_TYPE_AUD) {
@@ -1168,18 +1170,8 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         (void)signalIds_.emplace_back(SignalInfo { &elem, id });
     }
     
-    if (trackParse_ != nullptr && trackParse_->GetDemuxerElementFind() == false) {
-        const gchar *metadata = gst_element_get_metadata(&elem, GST_ELEMENT_METADATA_KLASS);
-        CHECK_AND_RETURN_LOG(metadata != nullptr, "gst_element_get_metadata return nullptr");
-        MEDIA_LOGD("get element_name %{public}s, get metadata %{public}s", GST_ELEMENT_NAME(&elem), metadata);
-        std::string metaStr(metadata);
-        if (metaStr.find("Codec/Demuxer") != std::string::npos) {
-            trackParse_->SetUpDemuxerElementCb(elem);
-            trackParse_->SetDemuxerElementFind(true);
-        } else if (metaStr.find("Codec/Parser") != std::string::npos) {
-            trackParse_->SetUpParseElementCb(elem);
-            trackParse_->SetDemuxerElementFind(true);
-        }
+    if (trackParse_ != nullptr) {
+        trackParse_->OnElementSetup(elem);
     }
 
     decltype(elemSetupListener_) listener = nullptr;
@@ -1196,6 +1188,9 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
 {
     MEDIA_LOGI("element unsetup: %{public}s", ELEM_NAME(&elem));
+    if (trackParse_ != nullptr) {
+        trackParse_->OnElementUnSetup(elem);
+    }
 
     decltype(elemUnSetupListener_) listener = nullptr;
     {
