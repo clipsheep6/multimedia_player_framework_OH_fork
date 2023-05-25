@@ -145,6 +145,7 @@ private:
             for (auto id : signalIds_[element]) {
                 g_signal_handler_disconnect(element, id);
             }
+            signalIds_.erase(element);
         }
     }
     std::mutex mutex_;
