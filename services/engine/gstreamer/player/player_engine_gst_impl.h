@@ -84,7 +84,6 @@ private:
     void HandleSeekDoneMessage(const PlayBinMessage &msg);
     void HandleSpeedDoneMessage(const PlayBinMessage &msg);
     void HandleSubTypeMessage(const PlayBinMessage &msg);
-    void HandleSubTypeMessage2(const PlayBinMessage &msg);
     void HandleBufferingStart();
     void HandleBufferingEnd();
     void HandleBufferingTime(const PlayBinMessage &msg);
@@ -132,6 +131,7 @@ private:
     bool useSoftDec_ = false;
     std::unique_ptr<TaskQueue> taskQueue_;
     bool isAdaptiveLiveStream_ = false;
+    std::map<int32_t, void(PlayerEngineGstImpl::*)(const PlayBinMessage &msg)> subMsgHandler_;
 };
 } // namespace Media
 } // namespace OHOS

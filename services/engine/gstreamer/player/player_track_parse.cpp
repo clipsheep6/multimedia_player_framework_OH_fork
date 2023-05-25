@@ -131,7 +131,8 @@ void PlayerTrackParse::SetUpInputSelectElementCb(GstElement &elem)
     MEDIA_LOGD("SetUpInputSelectElementCb elem %{public}s", ELEM_NAME(&elem));
     {
         std::unique_lock<std::mutex> lock(signalIdMutex_);
-        gulong signalId = g_signal_connect(&elem, "pad-added", G_CALLBACK(PlayerTrackParse::OnInputSelectPadAddedCb), this);
+        gulong signalId = g_signal_connect(&elem, "pad-added",
+            G_CALLBACK(PlayerTrackParse::OnInputSelectPadAddedCb), this);
         CHECK_AND_RETURN_LOG(signalId != 0, "listen to pad-added failed");
         (void)signalIds_.emplace_back(SignalInfo { &elem, signalId });
     }
@@ -190,8 +191,7 @@ GstPadProbeReturn PlayerTrackParse::CheckDemux(GstPad *pad, GstPadProbeInfo *inf
 
     for (auto demuxIt = demuxMap_.begin(); demuxIt != demuxMap_.end(); demuxIt++) {
         for (auto padIt = demuxIt->second.trackInfos.begin(); padIt != demuxIt->second.trackInfos.end(); padIt++) {
-            gchar *stream_id;
-            stream_id = gst_pad_get_stream_id (padIt->first);
+            gchar *stream_id = gst_pad_get_stream_id (padIt->first);
             if (strcmp (current_stream_id, stream_id) == 0) {
                 currentDemux_ = demuxIt->first;
                 MEDIA_LOGD("Matched to a valid demux 0x%{public}06" PRIXPTR ", streamid:%{public}s",
@@ -207,7 +207,7 @@ GstPadProbeReturn PlayerTrackParse::CheckDemux(GstPad *pad, GstPadProbeInfo *inf
     return GST_PAD_PROBE_OK;
 }
 
-void PlayerTrackParse::UnknownType(const GstElement * element, GstPad * pad, GstCaps * caps, gpointer userData)
+void PlayerTrackParse::UnknownType(const GstElement *element, GstPad *pad, GstCaps *caps, gpointer userData)
 {
     CHECK_AND_RETURN_LOG(userData != nullptr, "param is invalid");
 
@@ -215,7 +215,7 @@ void PlayerTrackParse::UnknownType(const GstElement * element, GstPad * pad, Gst
     return playerTrackParse->OnUnknownType(element, pad, caps);
 }
 
-void PlayerTrackParse::OnUnknownType(const GstElement * element, GstPad * pad, GstCaps * caps)
+void PlayerTrackParse::OnUnknownType(const GstElement *element, GstPad *pad, GstCaps *caps)
 {
     (void)caps;
     CHECK_AND_RETURN_LOG(element != nullptr && pad != nullptr, "param is invalid");
@@ -262,7 +262,7 @@ int32_t PlayerTrackParse::GetTrackInfo(int32_t index, int32_t &innerIndex, int32
         if (trackIndex == index) {
             trackType = MediaType::MEDIA_TYPE_VID;
             videoTracks_[i].GetIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), innerIndex);
-            MEDIA_LOGI("index:0x%{public}d innerIndex:0x%{public}d trackType:0x%{public}d ", index, innerIndex, trackType);
+            MEDIA_LOGI("index:0x%{public}d inner:0x%{public}d Type:0x%{public}d",index, innerIndex, trackType);
             CHECK_AND_RETURN_RET_LOG(innerIndex >= 0, MSERR_UNSUPPORT, "This track is not supported");
             return MSERR_OK;
         }
@@ -274,7 +274,7 @@ int32_t PlayerTrackParse::GetTrackInfo(int32_t index, int32_t &innerIndex, int32
         if (trackIndex == index) {
             trackType = MediaType::MEDIA_TYPE_AUD;
             audioTracks_[i].GetIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), innerIndex);
-            MEDIA_LOGI("index:0x%{public}d innerIndex:0x%{public}d trackType:0x%{public}d ", index, innerIndex, trackType);
+            MEDIA_LOGI("index:0x%{public}d inner:0x%{public}d Type:0x%{public}d", index, innerIndex, trackType);
             CHECK_AND_RETURN_RET_LOG(innerIndex >= 0, MSERR_UNSUPPORT, "This track is not supported");
             return MSERR_OK;
         }
@@ -299,7 +299,7 @@ int32_t PlayerTrackParse::GetTrackIndex(int32_t innerIndex, int32_t trackType, i
             audioTracks_[i].GetIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), trackInnerIndex);
             if (trackInnerIndex == innerIndex) {
                 audioTracks_[i].GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
-                MEDIA_LOGI("innerIndex:0x%{public}d trackType:0x%{public}d index:0x%{public}d", innerIndex, trackType, index);
+                MEDIA_LOGI("inner:0x%{public}d Type:0x%{public}d index:0x%{public}d", innerIndex, trackType, index);
                 return MSERR_OK;
             }
         }
@@ -309,7 +309,7 @@ int32_t PlayerTrackParse::GetTrackIndex(int32_t innerIndex, int32_t trackType, i
             videoTracks_[i].GetIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), trackInnerIndex);
             if (trackInnerIndex == innerIndex) {
                 videoTracks_[i].GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
-                MEDIA_LOGI("innerIndex:0x%{public}d trackType:0x%{public}d index:0x%{public}d", innerIndex, trackType, index);
+                MEDIA_LOGI("inner:0x%{public}d Type:0x%{public}d index:0x%{public}d", innerIndex, trackType, index);
                 return MSERR_OK;
             }
         }
@@ -440,28 +440,28 @@ GstPadProbeReturn PlayerTrackParse::GetTrackParse(GstPad *pad, GstPadProbeInfo *
 {
     std::unique_lock<std::mutex> lock(trackInfoMutex_);
     bool isParsePad = (parsePadSet_.count(pad) != 0);
-    if (isParsePad) {
-        for (auto demuxIt = demuxMap_.begin(); demuxIt != demuxMap_.end(); demuxIt++) {
-            for (auto padIt = demuxIt->second.trackInfos.begin(); padIt != demuxIt->second.trackInfos.end(); padIt++) {
-                if (IsSameStreamId(pad, padIt->first)) {
-                    return ParseTrackInfo(pad, info, padIt->second);
-                }
-            }
-        }
-    } else {
+    if (!isParsePad) {
         for (auto demuxIt = demuxMap_.begin(); demuxIt != demuxMap_.end(); demuxIt++) {
             auto padIt = demuxIt->second.trackInfos.find(pad);
             if (padIt != demuxIt->second.trackInfos.end()) {
                 return ParseTrackInfo(pad, info, padIt->second);
             }
         }
+        return GST_PAD_PROBE_OK;
     }
 
+    for (auto demuxIt = demuxMap_.begin(); demuxIt != demuxMap_.end(); demuxIt++) {
+        for (auto padIt = demuxIt->second.trackInfos.begin(); padIt != demuxIt->second.trackInfos.end(); padIt++) {
+            if (IsSameStreamId(pad, padIt->first)) {
+                return ParseTrackInfo(pad, info, padIt->second);
+            }
+        }
+    }
     return GST_PAD_PROBE_OK;
 }
 
 GstPadProbeReturn PlayerTrackParse::ParseTrackInfo(GstPad *pad, GstPadProbeInfo *info, Format &format)
-{   
+{
     if (static_cast<unsigned int>(info->type) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
         GstEvent *event = gst_pad_probe_info_get_event(info);
         CHECK_AND_RETURN_RET_LOG(event != nullptr, GST_PAD_PROBE_OK, "event is null");
@@ -516,7 +516,8 @@ bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
             innerMeta.PutIntValue(std::string(INNER_META_KEY_TRACK_INDEX), demuxIt->second.trackcount);
             innerMeta.PutIntValue(std::string(INNER_META_KEY_TRACK_VALID), true);
             demuxIt->second.trackcount++;
-            MEDIA_LOGI("demux:0x%{public}06" PRIXPTR " trackcount:0x%{public}d", FAKE_POINTER(element), demuxIt->second.trackcount);
+            MEDIA_LOGI("demux:0x%{public}06" PRIXPTR " trackcount:0x%{public}d",
+                FAKE_POINTER(element), demuxIt->second.trackcount);
             (void)demuxIt->second.trackInfos.emplace(pad, innerMeta);
         }
     }

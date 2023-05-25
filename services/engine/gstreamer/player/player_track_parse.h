@@ -51,8 +51,8 @@ private:
     static void OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
     void SetUpDemuxerElementCb(GstElement &elem);
 
-    void OnUnknownType(const GstElement * element, GstPad * pad, GstCaps * caps);
-    static void UnknownType(const GstElement * element, GstPad * pad, GstCaps * caps, gpointer userData);
+    void OnUnknownType(const GstElement *element, GstPad *pad, GstCaps *caps);
+    static void UnknownType(const GstElement *element, GstPad *pad, GstCaps *caps, gpointer userData);
     
     void SetUpInputSelectElementCb(GstElement &elem);
     static void OnInputSelectPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
@@ -64,7 +64,7 @@ private:
     void UpdateTrackInfo();
     void StartUpdateTrackInfo();
     
-    struct DemuxInfo{
+    struct DemuxInfo {
         DemuxInfo() = default;
         ~DemuxInfo() = default;
 
