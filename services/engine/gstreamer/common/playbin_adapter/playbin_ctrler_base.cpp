@@ -524,7 +524,7 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         gulong id = g_signal_connect_data(playbin_, "bitrate-parse-complete",
             G_CALLBACK(&PlayBinCtrlerBase::OnBitRateParseCompleteCb), wrapper,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-        (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
+        AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
     }
 }
 
@@ -611,7 +611,9 @@ void PlayBinCtrlerBase::ExitInitializedState()
         sinkProvider_->SetMsgNotifier(nullptr);
     }
     for (auto &item : signalIds_) {
-        g_signal_handler_disconnect(item.element, item.signalId);
+        for (auto id : item.second) {
+            g_signal_handler_disconnect(item.first, id);
+        }
     }
     signalIds_.clear();
 
@@ -675,7 +677,7 @@ void PlayBinCtrlerBase::SetupInterruptEventCb()
     gulong id = g_signal_connect_data(audioSink_, "interrupt-event",
         G_CALLBACK(&PlayBinCtrlerBase::OnInterruptEventCb), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(audioSink_), id });
+    AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
 }
 
 void PlayBinCtrlerBase::SetupAudioStateEventCb()
@@ -686,7 +688,7 @@ void PlayBinCtrlerBase::SetupAudioStateEventCb()
     gulong id = g_signal_connect_data(audioSink_, "audio-state-event",
         G_CALLBACK(&PlayBinCtrlerBase::OnAudioStateEventCb), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(audioSink_), id });
+    AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
 }
 
 void PlayBinCtrlerBase::SetupCustomElement()
@@ -729,7 +731,7 @@ void PlayBinCtrlerBase::SetupSourceSetupSignal()
     gulong id = g_signal_connect_data(playbin_, "source-setup",
         G_CALLBACK(&PlayBinCtrlerBase::SourceSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
         static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
+    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
 }
 
 int32_t PlayBinCtrlerBase::SetupSignalMessage()
@@ -742,7 +744,7 @@ int32_t PlayBinCtrlerBase::SetupSignalMessage()
     gulong id = g_signal_connect_data(playbin_, "element-setup",
         G_CALLBACK(&PlayBinCtrlerBase::ElementSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
         static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
+    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
 
     GstBus *bus = gst_pipeline_get_bus(playbin_);
     CHECK_AND_RETURN_RET_LOG(bus != nullptr, MSERR_UNKNOWN, "can not get bus");
@@ -773,7 +775,7 @@ int32_t PlayBinCtrlerBase::SetupElementUnSetupSignal()
     gulong id = g_signal_connect_data(playbin_, "deep-element-removed",
         G_CALLBACK(&PlayBinCtrlerBase::ElementUnSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
         static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { GST_ELEMENT_CAST(playbin_), id });
+    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
 
     return MSERR_OK;
 }
@@ -1004,7 +1006,6 @@ void PlayBinCtrlerBase::OnIsLiveStream(const GstElement *demux, gboolean isLiveS
     (void)demux;
     MEDIA_LOGI("is live stream: %{public}d", isLiveStream);
     auto thizStrong  = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    thizStrong->isAdaptiveLiveStream_ = isLiveStream;
     if (isLiveStream) {
         PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_IS_LIVE_STREAM, 0, {} };
         thizStrong->ReportMessage(msg);
@@ -1027,7 +1028,7 @@ void PlayBinCtrlerBase::OnAdaptiveElementSetup(GstElement &elem)
     CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
     gulong id = g_signal_connect_data(&elem, "is-live-scene", G_CALLBACK(&PlayBinCtrlerBase::OnIsLiveStream), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    (void)signalIds_.emplace_back(SignalInfo { &elem, id });
+    AddSignalIds(&elem, id);
 }
 
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
@@ -1050,7 +1051,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         gulong id = g_signal_connect_data(&elem, "autoplug-sort",
             G_CALLBACK(&PlayBinCtrlerBase::AutoPlugSort), wrapper,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-        (void)signalIds_.emplace_back(SignalInfo { &elem, id });
+        AddSignalIds(&elem, id);
     }
 
     decltype(elemSetupListener_) listener = nullptr;
@@ -1077,6 +1078,7 @@ void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
     if (listener != nullptr) {
         listener(elem);
     }
+    RemoveSignalIds(&elem);
 }
 
 void PlayBinCtrlerBase::OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType,
