@@ -263,7 +263,6 @@ int32_t PlayerTrackParse::GetTrackInfo(int32_t index, int32_t &innerIndex, int32
             trackType = MediaType::MEDIA_TYPE_VID;
             videoTracks_[i].GetIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), innerIndex);
             MEDIA_LOGI("index:0x%{public}d inner:0x%{public}d Type:0x%{public}d", index, innerIndex, trackType);
-            CHECK_AND_RETURN_RET_LOG(innerIndex >= 0, MSERR_UNSUPPORT, "This track is not supported");
             return MSERR_OK;
         }
     }
@@ -275,7 +274,6 @@ int32_t PlayerTrackParse::GetTrackInfo(int32_t index, int32_t &innerIndex, int32
             trackType = MediaType::MEDIA_TYPE_AUD;
             audioTracks_[i].GetIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), innerIndex);
             MEDIA_LOGI("index:0x%{public}d inner:0x%{public}d Type:0x%{public}d", index, innerIndex, trackType);
-            CHECK_AND_RETURN_RET_LOG(innerIndex >= 0, MSERR_UNSUPPORT, "This track is not supported");
             return MSERR_OK;
         }
     }
@@ -383,6 +381,9 @@ int32_t PlayerTrackParse::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     CHECK_AND_RETURN_RET_LOG(currentDemux_ != nullptr, MSERR_INVALID_OPERATION, "Plugin not found");
     StartUpdateTrackInfo();
     videoTrack.assign(videoTracks_.begin(), videoTracks_.end());
+    for (int32_t i = 0; i < static_cast<int32_t>(videoTracks_.size()); i++) {
+        videoTrack[i].RemoveKey(std::string(INNER_META_KEY_TRACK_INNER_INDEX));
+    }
     return MSERR_OK;
 }
 
@@ -392,6 +393,9 @@ int32_t PlayerTrackParse::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     CHECK_AND_RETURN_RET_LOG(currentDemux_ != nullptr, MSERR_INVALID_OPERATION, "Plugin not found");
     StartUpdateTrackInfo();
     audioTrack.assign(audioTracks_.begin(), audioTracks_.end());
+    for (int32_t i = 0; i < static_cast<int32_t>(audioTrack.size()); i++) {
+        audioTrack[i].RemoveKey(std::string(INNER_META_KEY_TRACK_INNER_INDEX));
+    }
     return MSERR_OK;
 }
 

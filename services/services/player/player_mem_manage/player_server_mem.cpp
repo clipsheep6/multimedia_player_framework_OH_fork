@@ -649,6 +649,11 @@ int32_t PlayerServerMem::DumpInfo(int32_t fd)
 void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
+    if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
+        MEDIA_LOGI("state change to prepared");
+        (void)PlayerServer::GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, defaultAudioIndex_);
+    }
+
     PlayerServer::OnInfo(type, extra, infoBody);
 
     CheckHasRecover(type, extra);
@@ -878,8 +883,8 @@ void PlayerServerMem::RecoverByMemManage()
 
 bool PlayerServerMem::NeedSelectAudioTrack()
 {
-    return (recoverConfig_.audioIndex >= 0 &&
-        recoverConfig_.audioIndex != static_cast<int32_t>(recoverConfig_.videoTrack.size()));
+    return (recoverConfig_.audioIndex >= 0 && defaultAudioIndex_ >= 0 &&
+        recoverConfig_.audioIndex != defaultAudioIndex_);
 }
 }
 }

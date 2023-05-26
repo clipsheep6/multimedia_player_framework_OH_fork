@@ -969,7 +969,17 @@ int32_t PlayerServer::SelectTrack(int32_t index)
         "invalid state %{public}s", GetStatusDescription(lastOpStatus_).c_str());
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    return playerEngine_->SelectTrack(index);
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, index]() -> int32_t {
+        MediaTrace::TraceBegin("PlayerServer::SelectTrack", FAKE_POINTER(this));
+        CHECK_AND_RETURN_RET(IsEngineStarted(), MSERR_INVALID_OPERATION);
+        return playerEngine_->SelectTrack(index);
+    });
+    int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "SelectTrack");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SelectTrack launch task failed");
+
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_INVALID_OPERATION);
+    return result.Value();
 }
 
 int32_t PlayerServer::DeselectTrack(int32_t index)
@@ -980,7 +990,17 @@ int32_t PlayerServer::DeselectTrack(int32_t index)
         "invalid state %{public}s", GetStatusDescription(lastOpStatus_).c_str());
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    return playerEngine_->DeselectTrack(index);
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, index]() -> int32_t {
+        MediaTrace::TraceBegin("PlayerServer::DeselectTrack", FAKE_POINTER(this));
+        CHECK_AND_RETURN_RET(IsEngineStarted(), MSERR_INVALID_OPERATION);
+        return playerEngine_->DeselectTrack(index);
+    });
+    int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "DeselectTrack");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "DeselectTrack launch task failed");
+
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_INVALID_OPERATION);
+    return result.Value();
 }
 
 int32_t PlayerServer::GetCurrentTrack(int32_t trackType, int32_t &index)
@@ -994,7 +1014,23 @@ int32_t PlayerServer::GetCurrentTrack(int32_t trackType, int32_t &index)
         "invalid state %{public}s", GetStatusDescription(lastOpStatus_).c_str());
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    return playerEngine_->GetCurrentTrack(trackType, index);
+    auto task = std::make_shared<TaskHandler<std::pair<int32_t, int32_t>>>
+        ([this, trackType]() -> std::pair<int32_t, int32_t> {
+        MediaTrace::TraceBegin("PlayerServer::DeselectTrack", FAKE_POINTER(this));
+        if (IsEngineStarted()) {
+            int32_t index = -1;
+            int32_t ret = playerEngine_->GetCurrentTrack(trackType, index);
+            return std::pair<int32_t, int32_t>(ret, index);
+        }
+        return std::pair<int32_t, int32_t>(MSERR_INVALID_OPERATION, 0);
+    });
+    int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "GetCurrentTrack");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetCurrentTrack launch task failed");
+
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_INVALID_OPERATION);
+    index = result.Value().second;
+    return result.Value().first;
 }
 
 void PlayerServer::FormatToString(std::string &dumpString, std::vector<Format> &videoTrack)

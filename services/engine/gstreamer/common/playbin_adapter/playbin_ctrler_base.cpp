@@ -889,9 +889,9 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
     int32_t trackType = -1;
     int32_t innerIndex = -1;
     int32_t ret = trackParse_->GetTrackInfo(index, innerIndex, trackType);
-    CHECK_AND_RETURN_RET(ret != MSERR_UNSUPPORT,
-        (OnError(MSERR_INVALID_OPERATION, "This track is currently not supported!"), MSERR_INVALID_OPERATION));
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (OnError(ret, "Invalid track index!"), ret));
+    CHECK_AND_RETURN_RET(innerIndex >= 0,
+        (OnError(MSERR_INVALID_OPERATION, "This track is currently not supported!"), MSERR_INVALID_OPERATION));
 
     if (trackType == MediaType::MEDIA_TYPE_AUD) {
         ret = MSERR_INVALID_OPERATION;
@@ -921,6 +921,8 @@ int32_t PlayBinCtrlerBase::DeselectTrack(int32_t index)
     int32_t innerIndex = -1;
     int32_t ret = trackParse_->GetTrackInfo(index, innerIndex, trackType);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (OnError(ret, "Invalid track index!"), ret));
+    CHECK_AND_RETURN_RET(innerIndex >= 0,
+        (OnError(MSERR_INVALID_OPERATION, "This track has not been selected yet!"), MSERR_INVALID_OPERATION));
     
     if (trackType == MediaType::MEDIA_TYPE_AUD) {
         ret = MSERR_INVALID_OPERATION;

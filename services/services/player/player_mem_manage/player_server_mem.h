@@ -144,6 +144,7 @@ private:
     std::mutex preparedMutex_;
     std::condition_variable preparedCond_;
     bool prepared_ = false;
+    int32_t defaultAudioIndex_ = -1;
 
     int32_t Init() override;
     void SetStateMap();
