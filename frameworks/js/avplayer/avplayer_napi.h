@@ -54,6 +54,7 @@ const std::string EVENT_START_RENDER_FRAME = "startRenderFrame";
 const std::string EVENT_VIDEO_SIZE_CHANGE = "videoSizeChange";
 const std::string EVENT_AUDIO_INTERRUPT = "audioInterrupt";
 const std::string EVENT_AVAILABLE_BITRATES = "availableBitrates";
+const std::string EVENT_TRACKCHANGE = "trackChange";
 const std::string EVENT_ERROR = "error";
 }
 
@@ -185,6 +186,19 @@ private:
      */
     static napi_value JsGetTrackDescription(napi_env env, napi_callback_info info);
     /**
+     * selectTrack(index: number): void;
+     */
+    static napi_value JsSelectTrack(napi_env env, napi_callback_info info);
+    /**
+     * deselectTrack(index: number): void;
+     */
+    static napi_value JsDeselectTrack(napi_env env, napi_callback_info info);
+    /**
+     * GetCurrentTrack(trackType: MediaType, callback: AsyncCallback<number>): void;
+     * GetCurrentTrack(trackType: MediaType): Promise<number>;
+     */
+    static napi_value JsGetCurrentTrack(napi_env env, napi_callback_info info);
+    /**
     * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
     * off(type: 'stateChange'): void;
     * on(type: 'volumeChange', callback: Callback<number>): void;
@@ -264,6 +278,7 @@ private:
         std::shared_ptr<TaskHandler<TaskRet>> asyncTask = nullptr;
         AVPlayerNapi *napi = nullptr;
     };
+    void GetCurrentTrackTask(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args);
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
     std::shared_ptr<Player> player_ = nullptr;
