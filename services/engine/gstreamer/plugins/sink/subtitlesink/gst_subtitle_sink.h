@@ -57,9 +57,6 @@ struct _GstSubtitleSink {
 
 struct _GstSubtitleSinkClass {
     GstAppSinkClass parent_class;
-    void (*handle_buffer)(GstSubtitleSink *subtitle_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs);
-    void (*cancel_not_executed_task)(GstSubtitleSink *subtitle_sink);
-    GstFlowReturn (*subtitle_display_callback)(GstAppSink *appsink, gpointer user_data);
 };
 
 GST_API_EXPORT GType gst_subtitle_sink_get_type(void);

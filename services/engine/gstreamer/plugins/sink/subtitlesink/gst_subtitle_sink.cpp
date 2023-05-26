@@ -21,7 +21,8 @@
 using namespace OHOS::Media;
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
-#define USECOND_TO_MSECOND(us) (us * 1000)
+#define USECOND_TO_MSECOND(us) ((us) * 1000)
+#define MSECOND_TO_SECOND(ms) ((ms) * 1000)
 
 struct _GstSubtitleSinkPrivate {
     GMutex mutex;
@@ -35,7 +36,7 @@ struct _GstSubtitleSinkPrivate {
 };
 
 
-static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subtitle_sink",
+static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subtitlesink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
@@ -45,6 +46,7 @@ static void gst_subtitle_sink_finalize(GObject *obj);
 static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
 static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs = 0ULL);
 static void gst_subtitle_sink_cancel_not_executed_task(GstSubtitleSink *subtitle_sink);
+static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts, guint32 &duration);
 static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, GstStateChange transition);
 static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink);
 static GstFlowReturn gst_subtitle_sink_new_sample(GstAppSink *appsink, gpointer user_data);
@@ -158,15 +160,7 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
     g_return_if_fail(object != nullptr);
     g_return_if_fail(value != nullptr);
     g_return_if_fail(pspec != nullptr);
-
-    GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(object);
-    GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
-    g_return_if_fail(priv != nullptr);
-    switch (prop_id) {
-        default:
-            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-            break;
-    }
+    (void)prop_id;
 }
 
 static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, GstStateChange transition)
@@ -180,8 +174,10 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
             g_mutex_lock(&priv->mutex);
             guint64 left_duration = 0;
             left_duration = priv->text_frame_duration - priv->running_time;
+            GST_DEBUG_OBJECT(subtitle_sink, "text left duration is %" GST_TIME_FORMAT,
+                GST_TIME_ARGS(MSECOND_TO_SECOND(left_duration)));
             g_mutex_unlock(&priv->mutex);
-            gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, USECOND_TO_MSECOND(left_duration));
+            gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, left_duration);
             break;
         }
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED: {
@@ -202,14 +198,6 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
     return GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
 }
 
-GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer user_data)
-{
-    (void)appsink;
-    (void)user_data;
-    GST_DEBUG_OBJECT(appsink, "new preroll");
-    return GST_FLOW_OK;
-}
-
 static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts, guint32 &duration)
 {
     if (GST_BUFFER_PTS_IS_VALID(buffer)) {
@@ -224,9 +212,36 @@ static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gs
     }
 }
 
+GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer user_data)
+{
+    (void)user_data;
+    GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(appsink);
+    GstSample *sample = gst_app_sink_pull_preroll(appsink);
+    GstBuffer *buffer = gst_sample_get_buffer(sample);
+
+    GST_INFO_OBJECT(subtitle_sink, "app render preroll buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
+    g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
+    guint64 pts = 0;
+    guint32 duration = 0;
+    gst_subtitle_sink_get_gst_buffer_info(buffer, pts, duration);
+    if (!GST_CLOCK_TIME_IS_VALID(pts) || !GST_CLOCK_TIME_IS_VALID(duration)) {
+        GST_ERROR_OBJECT(subtitle_sink, "pts or duration invalid");
+        return GST_FLOW_ERROR;
+    }
+    GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
+    g_mutex_lock(&priv->mutex);
+    priv->text_frame_duration = USECOND_TO_MSECOND(duration);
+    priv->running_time = 0ULL;
+    g_mutex_unlock(&priv->mutex);
+    gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
+
+    return GST_FLOW_OK;
+}
+
 static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(appsink);
+    GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     GstSample *sample = gst_app_sink_pull_sample(appsink);
     GstBuffer *buffer = gst_sample_get_buffer(sample);
 
@@ -240,11 +255,15 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
         GST_ERROR_OBJECT(subtitle_sink, "pts or duration invalid");
         return GST_FLOW_ERROR;
     }
-    GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
+
     g_mutex_lock(&priv->mutex);
-    priv->text_frame_duration = duration;
+    priv->text_frame_duration = USECOND_TO_MSECOND(duration);
     priv->running_time = GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
+
+    GST_DEBUG_OBJECT(subtitle_sink, "text duration is %" GST_TIME_FORMAT,
+        GST_TIME_ARGS(MSECOND_TO_SECOND(priv->text_frame_duration)));
     g_mutex_unlock(&priv->mutex);
+
     gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
     gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, USECOND_TO_MSECOND(duration));
     return GST_FLOW_OK;
