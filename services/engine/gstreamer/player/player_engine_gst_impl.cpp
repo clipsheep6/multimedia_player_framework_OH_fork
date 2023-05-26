@@ -219,8 +219,9 @@ void PlayerEngineGstImpl::HandleSpeedDoneMessage(const PlayBinMessage &msg)
     }
 }
 
-void PlayerEngineGstImpl::HandleBufferingStart()
+void PlayerEngineGstImpl::HandleBufferingStart(const PlayBinMessage &msg)
 {
+    (void)msg;
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_START), 0);
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
@@ -229,8 +230,9 @@ void PlayerEngineGstImpl::HandleBufferingStart()
     }
 }
 
-void PlayerEngineGstImpl::HandleBufferingEnd()
+void PlayerEngineGstImpl::HandleBufferingEnd(const PlayBinMessage &msg)
 {
+    (void)msg;
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_BUFFERING_END), 0);
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
@@ -292,8 +294,9 @@ void PlayerEngineGstImpl::HandleBufferingUsedMqNum(const PlayBinMessage &msg)
     mqNum_ = std::any_cast<uint32_t>(msg.extra);
 }
 
-void PlayerEngineGstImpl::HandleVideoRenderingStart()
+void PlayerEngineGstImpl::HandleVideoRenderingStart(const PlayBinMessage &msg)
 {
+    (void)msg;
     Format format;
     MEDIA_LOGD("video rendering start");
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
@@ -338,47 +341,9 @@ void PlayerEngineGstImpl::HandleIsLiveStream(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleSubTypeMessage(const PlayBinMessage &msg)
 {
-    switch (msg.subType) {
-        case PLAYBIN_SUB_MSG_BUFFERING_START: {
-            HandleBufferingStart();
-            break;
-        }
-        case PLAYBIN_SUB_MSG_BUFFERING_END: {
-            HandleBufferingEnd();
-            break;
-        }
-        case PLAYBIN_SUB_MSG_BUFFERING_TIME: {
-            HandleBufferingTime(msg);
-            break;
-        }
-        case PLAYBIN_SUB_MSG_BUFFERING_PERCENT: {
-            HandleBufferingPercent(msg);
-            break;
-        }
-        case PLAYBIN_SUB_MSG_BUFFERING_USED_MQ_NUM: {
-            HandleBufferingUsedMqNum(msg);
-            break;
-        }
-        case PLAYBIN_SUB_MSG_VIDEO_RENDERING_START: {
-            HandleVideoRenderingStart();
-            break;
-        }
-        case PLAYBIN_SUB_MSG_VIDEO_SIZE_CHANGED: {
-            HandleVideoSizeChanged(msg);
-            break;
-        }
-        case PLAYBIN_SUB_MSG_BITRATE_COLLECT: {
-            HandleBitRateCollect(msg);
-            break;
-        }
-        case PLAYBIN_SUB_MSG_IS_LIVE_STREAM: {
-            HandleIsLiveStream(msg);
-            break;
-        }
-        default: {
-            break;
-        }
-    }
+    CHECK_AND_RETURN_LOG(subMsgHandler_.count(msg.subType) > 0,
+        "No this sub msg handler, subType = %{public}d", msg.subType);
+    (this->*subMsgHandler_[msg.subType])(msg);
 }
 
 void PlayerEngineGstImpl::HandleAudioMessage(const PlayBinMessage &msg)
@@ -494,6 +459,16 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
         PlayBinCtrlerDeInit();
         return MSERR_INVALID_VAL;
     }
+
+    subMsgHandler_[PLAYBIN_SUB_MSG_BUFFERING_START] = &PlayerEngineGstImpl::HandleBufferingStart;
+    subMsgHandler_[PLAYBIN_SUB_MSG_BUFFERING_END] = &PlayerEngineGstImpl::HandleBufferingEnd;
+    subMsgHandler_[PLAYBIN_SUB_MSG_BUFFERING_TIME] = &PlayerEngineGstImpl::HandleBufferingTime;
+    subMsgHandler_[PLAYBIN_SUB_MSG_BUFFERING_PERCENT] = &PlayerEngineGstImpl::HandleBufferingPercent;
+    subMsgHandler_[PLAYBIN_SUB_MSG_BUFFERING_USED_MQ_NUM] = &PlayerEngineGstImpl::HandleBufferingUsedMqNum;
+    subMsgHandler_[PLAYBIN_SUB_MSG_VIDEO_RENDERING_START] = &PlayerEngineGstImpl::HandleVideoRenderingStart;
+    subMsgHandler_[PLAYBIN_SUB_MSG_VIDEO_SIZE_CHANGED] = &PlayerEngineGstImpl::HandleVideoSizeChanged;
+    subMsgHandler_[PLAYBIN_SUB_MSG_BITRATE_COLLECT] = &PlayerEngineGstImpl::HandleBitRateCollect;
+    subMsgHandler_[PLAYBIN_SUB_MSG_IS_LIVE_STREAM] = &PlayerEngineGstImpl::HandleIsLiveStream;
 
     MEDIA_LOGD("PlayBinCtrlerInit out");
     return MSERR_OK;
