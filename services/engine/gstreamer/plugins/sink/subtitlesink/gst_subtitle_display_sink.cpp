@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include <gst/gst.h>
 #include <cinttypes>
+#include "config.h"
 #include "gst_subtitle_display_sink.h"
 
 using namespace OHOS::Media;
@@ -27,7 +27,8 @@ static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
 
 static void gst_subtitle_display_sink_dispose(GObject *obj);
 static void gst_subtitle_display_sink_finalize(GObject *obj);
-static void gst_subtitle_display_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
+static void gst_subtitle_display_sink_set_property(GObject *object,
+    guint prop_id, const GValue *value, GParamSpec *pspec);
 static GstStateChangeReturn gst_subtitle_display_sink_change_state(GstElement *element, GstStateChange transition);
 static gboolean gst_subtitle_display_sink_event(GstBaseSink *basesink, GstEvent *event);
 
@@ -54,7 +55,8 @@ static void gst_subtitle_display_sink_class_init(GstSubtitleDisplaySinkClass *kc
     gobject_class->set_property = gst_subtitle_display_sink_set_property;
     element_class->change_state = gst_subtitle_display_sink_change_state;
     base_sink_class->event = gst_subtitle_display_sink_event;
-    GST_DEBUG_CATEGORY_INIT(gst_subtitle_display_sink_debug_category, "subtitledisplaysink", 0, "subtitledisplaysink class");
+    GST_DEBUG_CATEGORY_INIT(gst_subtitle_display_sink_debug_category,
+        "subtitledisplaysink", 0, "subtitledisplaysink class");
 }
 
 static void gst_subtitle_display_sink_init(GstSubtitleDisplaySink *subtitle_display_sink)
@@ -62,16 +64,13 @@ static void gst_subtitle_display_sink_init(GstSubtitleDisplaySink *subtitle_disp
     g_return_if_fail(subtitle_display_sink != nullptr);
 }
 
-static void gst_subtitle_display_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+static void gst_subtitle_display_sink_set_property(GObject *object,
+    guint prop_id, const GValue *value, GParamSpec *pspec)
 {
     g_return_if_fail(object != nullptr);
     g_return_if_fail(value != nullptr);
     g_return_if_fail(pspec != nullptr);
-    switch (prop_id) {
-        default:
-            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-            break;
-    }
+    (void)prop_id;
 }
 
 static GstStateChangeReturn gst_subtitle_display_sink_change_state(GstElement *element, GstStateChange transition)

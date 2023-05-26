@@ -40,13 +40,13 @@ G_BEGIN_DECLS
 #define GST_API_EXPORT __attribute__((visibility("default")))
 #endif
 
-typedef struct _GstSubtitleSink GstSubtitleSink;
-typedef struct _GstSubtitleSinkClass GstSubtitleSinkClass;
-typedef struct _GstSubtitleSinkPrivate GstSubtitleSinkPrivate;
+using GstSubtitleSink = struct _GstSubtitleSink;
+using GstSubtitleSinkClass = struct _GstSubtitleSinkClass;
+using GstSubtitleSinkPrivate = struct _GstSubtitleSinkPrivate;
 
-typedef struct {
+using GstSubtitleSinkCallbacks = struct {
     GstFlowReturn (*new_sample)(GstBuffer *sample, gpointer user_data);
-} GstSubtitleSinkCallbacks;
+};
 
 struct _GstSubtitleSink {
     GstAppSink appsink;
@@ -71,9 +71,7 @@ GST_API_EXPORT GType gst_subtitle_sink_get_type(void);
  * @return void.
  */
 GST_API_EXPORT void gst_subtitle_sink_set_callback(GstSubtitleSink *subtitle_sink,
-                                              GstSubtitleSinkCallbacks *callbacks,
-                                              gpointer user_data,
-                                              GDestroyNotify notify);
+    GstSubtitleSinkCallbacks *callbacks, gpointer user_data, GDestroyNotify notify);
 #ifdef G_DEFINE_AUTOPTR_CLEANUP_FUNC
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstSubtitleSink, gst_object_unref)
 #endif

@@ -18,7 +18,8 @@
 static gboolean plugin_init(GstPlugin *plugin)
 {
     g_return_val_if_fail(plugin != nullptr, false);
-    gboolean ret = gst_element_register(plugin, "subtitledisplaysink", GST_RANK_PRIMARY, GST_TYPE_SUBTITLE_DISPLAY_SINK);
+    gboolean ret = gst_element_register(plugin,
+        "subtitledisplaysink", GST_RANK_PRIMARY, GST_TYPE_SUBTITLE_DISPLAY_SINK);
     if (ret == FALSE) {
         GST_WARNING_OBJECT(nullptr, "register subtitledisplaysink failed");
     }

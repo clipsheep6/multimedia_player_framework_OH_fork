@@ -206,7 +206,8 @@ GstElement *PlayerSinkProvider::DoCreateSubtitleSink(const gpointer userData)
     MEDIA_LOGI("CreateSubtitleSink in.");
     CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
 
-    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subtitledisplaysink", "subtitledisplaysink")));
+    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subtitledisplaysink",
+        "subtitledisplaysink")));
     CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
 
     GstSubtitleSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };

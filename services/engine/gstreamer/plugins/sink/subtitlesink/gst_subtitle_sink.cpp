@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include <gst/gst.h>
 #include <cinttypes>
+#include "config.h"
 #include "gst_subtitle_sink.h"
 
 using namespace OHOS::Media;
@@ -44,15 +44,16 @@ static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subtitlesi
 static void gst_subtitle_sink_dispose(GObject *obj);
 static void gst_subtitle_sink_finalize(GObject *obj);
 static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec);
-static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs = 0ULL);
+static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
+    GstBuffer *buffer, gboolean cancel, guint64 delayUs = 0ULL);
 static void gst_subtitle_sink_cancel_not_executed_task(GstSubtitleSink *subtitle_sink);
 static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts, guint32 &duration);
 static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, GstStateChange transition);
 static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink);
 static GstFlowReturn gst_subtitle_sink_new_sample(GstAppSink *appsink, gpointer user_data);
 static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer user_data);
-static gboolean gst_subtitle_sink_start(GstBaseSink * basesink);
-static gboolean gst_subtitle_sink_stop(GstBaseSink * basesink);
+static gboolean gst_subtitle_sink_start(GstBaseSink *basesink);
+static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink);
 static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event);
 
 #define gst_subtitle_sink_parent_class parent_class
@@ -134,7 +135,8 @@ void gst_subtitle_sink_set_callback(GstSubtitleSink *subtitle_sink, GstSubtitleS
     GST_OBJECT_UNLOCK(subtitle_sink);
 }
 
-static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink, GstBuffer *buffer, gboolean cancel, guint64 delayUs)
+static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
+    GstBuffer *buffer, gboolean cancel, guint64 delayUs)
 {
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_return_if_fail(priv != nullptr);
@@ -212,7 +214,7 @@ static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gs
     }
 }
 
-GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer user_data)
+static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer user_data)
 {
     (void)user_data;
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(appsink);
@@ -269,7 +271,7 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
     return GST_FLOW_OK;
 }
 
-GstFlowReturn gst_subtitle_sink_new_sample(GstAppSink *appsink, gpointer user_data)
+static GstFlowReturn gst_subtitle_sink_new_sample(GstAppSink *appsink, gpointer user_data)
 {
     (void)user_data;
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK(appsink);
@@ -292,7 +294,7 @@ GstFlowReturn gst_subtitle_sink_new_sample(GstAppSink *appsink, gpointer user_da
     return gst_subtitle_sink_render(appsink);
 }
 
-static gboolean gst_subtitle_sink_start(GstBaseSink * basesink)
+static gboolean gst_subtitle_sink_start(GstBaseSink *basesink)
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST (basesink);
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
@@ -308,7 +310,7 @@ static gboolean gst_subtitle_sink_start(GstBaseSink * basesink)
     return TRUE;
 }
 
-static gboolean gst_subtitle_sink_stop(GstBaseSink * basesink)
+static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink)
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST (basesink);
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;

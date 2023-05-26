@@ -71,7 +71,8 @@ int32_t TaskQueue::Stop() noexcept
 }
 
 // cancelNotExecuted = false, delayUs = 0ULL.
-__attribute__((no_sanitize("cfi"))) int32_t TaskQueue::EnqueueTask(const std::shared_ptr<ITaskHandler> &task, bool cancelNotExecuted, uint64_t delayUs)
+__attribute__((no_sanitize("cfi"))) int32_t TaskQueue::EnqueueTask(const std::shared_ptr<ITaskHandler> &task,
+    bool cancelNotExecuted, uint64_t delayUs)
 {
     constexpr uint64_t MAX_DELAY_US = 10000000ULL; // max delay.
 

@@ -31,8 +31,9 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_SUBTITLE_DISPLAY_SINK))
 #define GST_SUBTITLE_DISPLAY_SINK_CAST(obj) ((GstSubtitleDisplaySink*)(obj))
 
-typedef struct _GstSubtitleDisplaySink GstSubtitleDisplaySink;
-typedef struct _GstSubtitleDisplaySinkClass GstSubtitleDisplaySinkClass;
+using GstSubtitleDisplaySink = struct _GstSubtitleDisplaySink;
+using GstSubtitleDisplaySinkClass = struct _GstSubtitleDisplaySinkClass;
+
 struct _GstSubtitleDisplaySink {
     GstSubtitleSink parent;
 };
