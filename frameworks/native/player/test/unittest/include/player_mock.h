@@ -43,7 +43,8 @@ protected:
     PlayerStates state_ = PLAYER_IDLE;
     int32_t seekPosition_;
     bool seekDoneFlag_;
-    bool speedDoneFlag_;
+    bool speedDoneFlag_ = false;
+    bool trackDoneFlag_;
     PlayerSeekMode seekMode_ = PlayerSeekMode::SEEK_CLOSEST;
     std::mutex mutexCond_;
     std::condition_variable condVarPrepare_;
@@ -53,6 +54,7 @@ protected:
     std::condition_variable condVarReset_;
     std::condition_variable condVarSeek_;
     std::condition_variable condVarSpeed_;
+    std::condition_variable condVarTrackDone_;
 };
 
 class PlayerCallbackTest : public PlayerCallback, public NoCopyable, public PlayerSignal {
@@ -66,6 +68,7 @@ public:
     void SetSpeedDoneFlag(bool speedDoneFlag);
     void SetSeekPosition(int32_t seekPosition);
     void SetState(PlayerStates state);
+    void SetTrackDoneFlag(bool trackDoneFlag);
     int32_t PrepareSync();
     int32_t PlaySync();
     int32_t PauseSync();
@@ -73,6 +76,7 @@ public:
     int32_t ResetSync();
     int32_t SeekSync();
     int32_t SpeedSync();
+    int32_t TrackSync();
 };
 
 class PlayerMock : public NoCopyable {
@@ -109,6 +113,9 @@ public:
     int32_t SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback);
     int32_t SetVideoSurface(sptr<Surface> surface);
     sptr<Surface> GetVideoSurface();
+    int32_t SelectTrack(int32_t index);
+    int32_t DeselectTrack(int32_t index);
+    int32_t GetCurrentTrack(int32_t trackType, int32_t &index);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;

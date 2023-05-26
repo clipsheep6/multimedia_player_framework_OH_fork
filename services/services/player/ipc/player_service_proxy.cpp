@@ -62,6 +62,9 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[GET_VIDEO_WIDTH] = "Player::GetVideoWidth";
     playerFuncs_[GET_VIDEO_HEIGHT] = "Player::GetVideoHeight";
     playerFuncs_[SELECT_BIT_RATE] = "Player::SelectBitRate";
+    playerFuncs_[SELECT_TRACK] = "Player::SelectTrack";
+    playerFuncs_[DESELECT_TRACK] = "Player::DeslectTrack";
+    playerFuncs_[GET_CURRENT_TRACK] = "Player::GetCurrentTrack";
 }
 
 PlayerServiceProxy::~PlayerServiceProxy()
@@ -614,6 +617,58 @@ int32_t PlayerServiceProxy::SetPlayerCallback()
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetPlayerCallback failed, error: %{public}d", error);
 
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::SelectTrack(int32_t index)
+{
+    MediaTrace trace("PlayerServiceProxy::SelectTrack");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(index);
+    int32_t error = SendRequest(SELECT_TRACK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SelectTrack failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::DeselectTrack(int32_t index)
+{
+    MediaTrace trace("PlayerServiceProxy::DeselectTrack");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(index);
+    int32_t error = SendRequest(DESELECT_TRACK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "DeselectTrack failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    MediaTrace trace("PlayerServiceProxy::GetCurrentTrack");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(trackType);
+    int32_t error = SendRequest(GET_CURRENT_TRACK, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetCurrentTrack failed, error: %{public}d", error);
+    index = reply.ReadInt32();
     return reply.ReadInt32();
 }
 } // namespace Media

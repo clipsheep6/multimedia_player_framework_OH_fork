@@ -69,6 +69,7 @@ private:
     void OnBitRateCollectedCb(int32_t extra, const Format &infoBody);
     void OnEosCb(int32_t extra, const Format &infoBody);
     void NotifyIsLiveStream(int32_t extra, const Format &infoBody);
+    void OnTrackChangedCb(int32_t extra, const Format &infoBody);
 
     std::mutex mutex_;
     napi_env env_ = nullptr;

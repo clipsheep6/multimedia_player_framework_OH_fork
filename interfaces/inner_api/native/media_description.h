@@ -120,6 +120,11 @@ namespace MediaDescriptionKey {
      * custom key prefix, media service will pass through to HAL.
      */
     static constexpr std::string_view MD_KEY_CUSTOM_PREFIX = "vendor.custom";
+
+    /**
+     * Key for language, value type is string
+     */
+    static constexpr std::string_view MD_KEY_LANGUAGE = "language";
 };
 } // namespace Media
 } // namespace OHOS
