@@ -19,6 +19,8 @@
 #include <mutex>
 #include <vector>
 #include <unordered_map>
+#include <map>
+#include <set>
 #include <gst/gst.h>
 #include <gst/player/player.h>
 #include "format.h"
@@ -30,24 +32,53 @@ public:
     static std::shared_ptr<PlayerTrackParse> Create();
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack);
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack);
-    void SetDemuxerElementFind(bool isFind);
     bool GetDemuxerElementFind() const;
-    void SetUpDemuxerElementCb(GstElement &elem);
-    void SetUpParseElementCb(GstElement &elem);
+    void OnElementSetup(GstElement &elem);
+    void OnElementUnSetup(GstElement &elem);
     void Stop();
-    static void OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
+    int32_t GetTrackInfo(int32_t index, int32_t &innerIndex, int32_t &trackType);
+    int32_t GetTrackIndex(int32_t innerIndex, int32_t trackType, int32_t &index);
     PlayerTrackParse();
     ~PlayerTrackParse();
 
 private:
     GstPadProbeReturn GetTrackParse(GstPad *pad, GstPadProbeInfo *info);
+    GstPadProbeReturn ParseTrackInfo(GstPad *pad, GstPadProbeInfo *info, Format &format);
     void ConvertToPlayerKeys(const Format &innerMeta, Format &outMeta) const;
     bool AddProbeToPad(const GstElement *element, GstPad *pad);
     bool AddProbeToPadList(const GstElement *element, GList &list);
     static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
-    bool demuxerElementFind_ = false;
-    std::unordered_map<GstPad *, Format> trackInfos_;
-    int32_t trackcount_ = 0;
+    static void OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
+    void SetUpDemuxerElementCb(GstElement &elem);
+
+    void OnUnknownType(const GstElement *element, GstPad *pad, GstCaps *caps);
+    static void UnknownType(const GstElement *element, GstPad *pad, GstCaps *caps, gpointer userData);
+    
+    void SetUpInputSelectElementCb(GstElement &elem);
+    static void OnInputSelectPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
+    bool InputSelectAddProbeToPad(const GstElement *element, GstPad *pad);
+    static GstPadProbeReturn InputSelectProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
+    GstPadProbeReturn CheckDemux(GstPad *pad, GstPadProbeInfo *info);
+
+    static bool IsSameStreamId(GstPad *padA, GstPad *padB);
+    void UpdateTrackInfo();
+    void StartUpdateTrackInfo();
+    
+    struct DemuxInfo {
+        DemuxInfo() = default;
+        ~DemuxInfo() = default;
+
+        int32_t trackcount = 0;
+        std::map<GstPad *, Format> trackInfos;
+    };
+
+    bool updateTrackInfo_ = false;
+    GstElement *currentDemux_ = nullptr;
+    std::set<GstElement *> inputSelectSet_;
+    std::set<GstPad *> parsePadSet_;
+    std::map<GstElement *, DemuxInfo> demuxMap_;
+    std::vector<Format> videoTracks_;
+    std::vector<Format> audioTracks_;
     struct SignalInfo {
         GstElement *element;
         gulong signalId;

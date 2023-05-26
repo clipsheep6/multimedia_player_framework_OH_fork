@@ -68,7 +68,9 @@ private:
     void OnAudioInterruptCb(const Format &infoBody) const;
     void OnBitRateCollectedCb(const Format &infoBody) const;
     void OnEosCb(int32_t isLooping) const;
+    void OnTrackChangedCb(const Format &infoBody) const;
     void NotifyIsLiveStream() const;
+    void OnInfo2(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
 
     std::mutex mutex_;
     napi_env env_ = nullptr;

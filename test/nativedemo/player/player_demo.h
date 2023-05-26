@@ -73,6 +73,9 @@ private:
     int32_t ChangeSpeedToMode(const double &rate, PlaybackRateMode &mode) const;
     void SetVideoScaleType();
     sptr<Surface> GetSubWindowSurface();
+    void SelectTrack();
+    void DeselectTrack();
+    void GetCurrentTrack();
     void RegisterTable();
     sptr<Rosen::Window> previewWindow_ = nullptr;
     std::map<std::string, std::function<int32_t()>> playerTable_;
@@ -96,6 +99,7 @@ private:
     void PrintResolution(const Format &infoBody) const;
     void PrintBufferingUpdate(const Format &infoBody) const;
     void PrintBitRate(const Format &infoBody) const;
+    void PrintTrackChange(const Format &infoBody) const;
     int32_t updateCount_ = 0;
     int32_t bufferingOut_ = 0;
     PlayerStates state_ = PLAYER_STATE_ERROR;
