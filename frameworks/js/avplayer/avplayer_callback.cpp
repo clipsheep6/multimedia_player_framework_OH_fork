@@ -397,13 +397,11 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("OnInfo is called, PlayerOnInfoType: %{public}d", type);
-
-    auto itFunc = onInfoFuncs_.find(type);
-    CHECK_AND_RETURN_LOG(itFunc != onInfoFuncs_.end(), "OnInfo: no member func supporting, %{public}d", type);
-    (this->*itFunc)(extra, infoBody);
+    CHECK_AND_RETURN_LOG(onInfoFuncs_.count(type) > 0, "OnInfo: no member func supporting, %{public}d", type);
+    (this->*onInfoFuncs_[type])(extra, infoBody);
 }
 
-void AVPlayerCallback::NotifyIsLiveStream(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::NotifyIsLiveStream(int32_t extra, const Format &infoBody)
 {
     (void)extra;
     (void)infoBody;
@@ -477,7 +475,7 @@ void AVPlayerCallback::OnVolumeChangeCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnSeekDoneCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnSeekDoneCb(int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -497,7 +495,7 @@ void AVPlayerCallback::OnSeekDoneCb(int32_t extra, const Format &infoBody) const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnSpeedDoneCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnSpeedDoneCb(int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -517,7 +515,7 @@ void AVPlayerCallback::OnSpeedDoneCb(int32_t extra, const Format &infoBody) cons
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnBitRateDoneCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnBitRateDoneCb(int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -537,7 +535,7 @@ void AVPlayerCallback::OnBitRateDoneCb(int32_t extra, const Format &infoBody) co
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnPositionUpdateCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnPositionUpdateCb(int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -562,7 +560,7 @@ void AVPlayerCallback::OnPositionUpdateCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnDurationUpdateCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnDurationUpdateCb(int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -587,7 +585,7 @@ void AVPlayerCallback::OnDurationUpdateCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnBufferingUpdateCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnBufferingUpdateCb(int32_t extra, const Format &infoBody)
 {
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -625,7 +623,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(int32_t extra, const Format &infoBody
     NapiCallback::CompleteCallbackInOrder(cb, handler_);
 }
 
-void AVPlayerCallback::OnMessageCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnMessageCb(int32_t extra, const Format &infoBody)
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGI("OnMessageCb is called, extra: %{public}d", extra);
@@ -679,7 +677,7 @@ void AVPlayerCallback::OnVideoSizeChangedCb(int32_t extra, const Format &infoBod
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnAudioInterruptCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnAudioInterruptCb(int32_t extra, const Format &infoBody)
 {
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -708,7 +706,7 @@ void AVPlayerCallback::OnAudioInterruptCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnBitRateCollectedCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnBitRateCollectedCb(int32_t extra, const Format &infoBody)
 {
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -747,7 +745,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(int32_t extra, const Format &infoBod
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnEosCb(int32_t extra, const Format &infoBody) const
+void AVPlayerCallback::OnEosCb(int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
