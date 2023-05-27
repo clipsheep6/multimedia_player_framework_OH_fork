@@ -480,10 +480,7 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_VIDEO_SIZE_CHANGED] = &PlayerEngineGstImpl::HandleVideoSizeChanged;
     subMsgHandler_[PLAYBIN_SUB_MSG_BITRATE_COLLECT] = &PlayerEngineGstImpl::HandleBitRateCollect;
     subMsgHandler_[PLAYBIN_SUB_MSG_IS_LIVE_STREAM] = &PlayerEngineGstImpl::HandleIsLiveStream;
-<<<<<<< HEAD
     subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_UPDATED] = &PlayerEngineGstImpl::HandleSubtitleUpdate;
-=======
->>>>>>> f47cb9b0f7dd07e23ef4e17417b159eb264f387a
 
     MEDIA_LOGD("PlayBinCtrlerInit out");
     return MSERR_OK;
