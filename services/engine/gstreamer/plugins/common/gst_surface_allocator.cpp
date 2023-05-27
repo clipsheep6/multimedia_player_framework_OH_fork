@@ -105,7 +105,6 @@ static OHOS::ScalingMode gst_surface_allocator_get_scale_type(GstSurfaceAllocPar
 static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfaceAllocParam param,
     OHOS::sptr<OHOS::SurfaceBuffer> &buffer)
 {
-    MediaTrace trace("Surface::RequestBuffer");
     {
         GST_SURFACE_ALLOCATOR_LOCK(allocator);
         while (allocator->cacheBufferNum == 0 && allocator->clean == FALSE) {
@@ -125,11 +124,14 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
     };
     int32_t release_fence = -1;
     OHOS::SurfaceError ret = OHOS::Surface::SURFACE_ERROR_OK;
-    LISTENER(ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config),
-        "surface::RequestBuffer", PlayerXCollie::timerTimeout)
-    if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK || buffer == nullptr) {
-        GST_ERROR("there is no more surface buffer");
-        return false;
+    {
+        MediaTrace trace("Surface::RequestBuffer");
+        LISTENER(ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config),
+            "surface::RequestBuffer", PlayerXCollie::timerTimeout)
+        if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK || buffer == nullptr) {
+            GST_ERROR("there is no more surface buffer");
+            return false;
+        }
     }
     {
         GST_SURFACE_ALLOCATOR_LOCK(allocator);

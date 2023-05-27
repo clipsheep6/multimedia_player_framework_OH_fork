@@ -117,7 +117,7 @@ int32_t HdiOutBufferMgr::FreeBuffers()
     std::unique_lock<std::mutex> lock(mutex_);
     static constexpr int32_t timeout = 2;
     freeCond_.wait_for(lock, std::chrono::seconds(timeout),
-        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual || bufferRleased_; });
+        [this]() { return availableBuffers_.size() == mPortDef_.nBufferCountActual || bufferReleased_; });
     FreeCodecBuffers();
     MEDIA_LOGI("unref mBuffers %{public}zu", mBuffers.size());
     std::for_each(mBuffers.begin(), mBuffers.end(), [&](GstBufferWrap buffer) { gst_buffer_unref(buffer.gstBuffer); });

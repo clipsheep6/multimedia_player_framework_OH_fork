@@ -57,6 +57,7 @@ public:
     int32_t ActiveBufferMgr(GstCodecDirect direct, bool active) override;
     void Deinit() override;
     void OnCodecDied() override;
+    void SetOutputPool(GstBufferPool *pool) override;
 
 private:
     struct AppData {
