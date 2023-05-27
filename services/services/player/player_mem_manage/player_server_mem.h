@@ -67,6 +67,9 @@ public:
     int32_t SelectBitRate(uint32_t bitRate) override;
     int32_t DumpInfo(int32_t fd) override;
     void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {}) override;
+    int32_t SelectTrack(int32_t index) override;
+    int32_t DeselectTrack(int32_t index) override;
+    int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
 
     void ResetFrontGroundForMemManage();
     void ResetBackGroundForMemManage();
@@ -119,6 +122,9 @@ private:
         int32_t videoWidth = 0;
         int32_t videoHeight = 0;
         int32_t duration = 0;
+        int32_t audioIndex = 0;
+        int32_t videoIndex = 0;
+        int32_t textIndex = 0;
     } recoverConfig_;
     struct PlayerServerConfig {
         bool errorCbOnce = false;
@@ -134,6 +140,11 @@ private:
     int32_t continueReset = 0;
     std::map<void *, std::shared_ptr<MemBaseState>> stateMap_;
     std::chrono::steady_clock::time_point lastestUserSetTime_;
+
+    std::mutex preparedMutex_;
+    std::condition_variable preparedCond_;
+    bool prepared_ = false;
+    int32_t defaultAudioIndex_ = -1;
 
     int32_t Init() override;
     void SetStateMap();
@@ -153,6 +164,7 @@ private:
     void CheckHasRecover(PlayerOnInfoType type, int32_t extra);
     int32_t ReleaseMemByManage();
     int32_t RecoverMemByUser();
+    bool NeedSelectAudioTrack();
 };
 }
 }

@@ -88,6 +88,23 @@ public:
         (void)interruptMode;
         return 0;
     }
+    
+    virtual int32_t SelectTrack(int32_t index)
+    {
+        (void)index;
+        return 0;
+    }
+    virtual int32_t DeselectTrack(int32_t index)
+    {
+        (void)index;
+        return 0;
+    }
+    virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index)
+    {
+        (void)trackType;
+        (void)index;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

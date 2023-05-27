@@ -1819,5 +1819,140 @@ HWTEST_F(PlayerUnitTest, Player_Histreamer_004, TestSize.Level0)
     player_ = nullptr;
     system("param set debug.media_service.histreamer 0");
 }
+
+/**
+ * @tc.name  : Test SelectTrack
+ * @tc.number: Player_SelectTrack_001
+ * @tc.desc  : Test Player SelectTrack input parameters
+ */
+HWTEST_F(PlayerUnitTest, Player_SelectTrack_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mpeg4_1920_1080_aac_flac.mkv", 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(2));
+    EXPECT_NE(MSERR_OK, player_->SelectTrack(0));    // Video type not supported
+    EXPECT_NE(MSERR_OK, player_->SelectTrack(100));  // Illegal index value
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(2));    // Repeat selection to return to OK
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(1));
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test SelectTrack
+ * @tc.number: Player_SelectTrack_002
+ * @tc.desc  : Test Player SelectTrack state machine
+ */
+HWTEST_F(PlayerUnitTest, Player_SelectTrack_002, TestSize.Level0)
+{
+    EXPECT_NE(MSERR_OK, player_->SelectTrack(2));    // Illegal state machine
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mpeg4_1920_1080_aac_flac.mkv", 0, 0));
+    EXPECT_NE(MSERR_OK, player_->SelectTrack(2));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(2));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_NE(MSERR_OK, player_->SelectTrack(2));    // Illegal state machine for audio selection
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_NE(MSERR_OK, player_->SelectTrack(2));    // Illegal state machine for audio selection
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->SelectTrack(2));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->SelectTrack(2));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    EXPECT_NE(MSERR_OK, player_->SelectTrack(2));    // Illegal state machine
+}
+
+/**
+ * @tc.name  : Test DeselectTrack
+ * @tc.number: Player_DeselectTrack_001
+ * @tc.desc  : Test Player DeselectTrack input parameters
+ */
+HWTEST_F(PlayerUnitTest, Player_DeselectTrack_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mpeg4_1920_1080_aac_flac.mkv", 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->DeselectTrack(1));  // Audio is already the default track and returned successfully
+    EXPECT_NE(MSERR_OK, player_->DeselectTrack(2));  // Not selected yet
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(2));
+    EXPECT_EQ(MSERR_OK, player_->DeselectTrack(2));
+    EXPECT_NE(MSERR_OK, player_->DeselectTrack(100)); // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test DeselectTrack
+ * @tc.number: Player_DeselectTrack_002
+ * @tc.desc  : Test Player DeselectTrack state machine
+ */
+HWTEST_F(PlayerUnitTest, Player_DeselectTrack_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mpeg4_1920_1080_aac_flac.mkv", 0, 0));
+    EXPECT_NE(MSERR_OK, player_->DeselectTrack(1)); // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->DeselectTrack(1));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_NE(MSERR_OK, player_->DeselectTrack(1)); // Illegal state machine for audio selection
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_NE(MSERR_OK, player_->DeselectTrack(1)); // Illegal state machine for audio selection
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->DeselectTrack(1)); // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->DeselectTrack(1)); // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    EXPECT_NE(MSERR_OK, player_->DeselectTrack(1)); // Illegal state machine
+}
+
+/**
+ * @tc.name  : Test GetCurrentTrack
+ * @tc.number: Player_GetCurrentTrack_001
+ * @tc.desc  : Test Player GetCurrentTrack Input and output parameters
+ */
+HWTEST_F(PlayerUnitTest, Player_GetCurrentTrack_001, TestSize.Level0)
+{
+    int32_t index = -1;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mpeg4_1920_1080_aac_flac.mkv", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(0, index));
+    EXPECT_EQ(1, index);                                        // Audio default track index is 1
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(1, index));
+    EXPECT_EQ(0, index);                                        // The default track index for videos is 0
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(2, index));
+    EXPECT_EQ(-1, index);                                       // No subtitle tracks, return to -1
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(2));
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(0, index));
+    EXPECT_EQ(2, index);
+    EXPECT_NE(MSERR_OK, player_->GetCurrentTrack(100, index));  // Invalid input parameter
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test GetCurrentTrack
+ * @tc.number: Player_GetCurrentTrack_002
+ * @tc.desc  : Test Player GetCurrentTrack state machine
+ */
+HWTEST_F(PlayerUnitTest, Player_GetCurrentTrack_002, TestSize.Level0)
+{
+    int32_t index = -1;
+    ASSERT_NE(MSERR_OK, player_->GetCurrentTrack(0, index));    // Illegal state machine
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mpeg4_1920_1080_aac_flac.mkv", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->GetCurrentTrack(0, index));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(0, index));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(0, index));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(0, index));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->GetCurrentTrack(0, index));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->GetCurrentTrack(0, index));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    EXPECT_NE(MSERR_OK, player_->GetCurrentTrack(0, index));    // Illegal state machine
+}
 } // namespace Media
 } // namespace OHOS

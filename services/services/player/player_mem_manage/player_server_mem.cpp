@@ -23,6 +23,7 @@
 #include "param_wrapper.h"
 #include "ipc_skeleton.h"
 #include "player_server_mem_state.h"
+#include "av_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerServerMem"};
@@ -113,6 +114,8 @@ void PlayerServerMem::SetPlayerServerConfig()
     disableStoppedCb_ = playerServerConfig_.disableStoppedCb;
     lastErrMsg_ = playerServerConfig_.lastErrMsg;
     uriHelper_ = std::move(playerServerConfig_.uriHelper);
+    std::unique_lock<std::mutex> lock(preparedMutex_);
+    prepared_ = false;
 }
 
 void PlayerServerMem::GetPlayerServerConfig()
@@ -157,7 +160,8 @@ int32_t PlayerServerMem::SetConfigInternal()
 int32_t PlayerServerMem::SetBehaviorInternal()
 {
     int ret = MSERR_OK;
-    MEDIA_LOGI("speedMode:%{public}d currentTime:%{public}d", recoverConfig_.speedMode, recoverConfig_.currentTime);
+    MEDIA_LOGI("speedMode:%{public}d currentTime:%{public}d audioIndex:%{public}d",
+        recoverConfig_.speedMode, recoverConfig_.currentTime, recoverConfig_.audioIndex);
     if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
         ret = PlayerServer::SetPlaybackSpeed(recoverConfig_.speedMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SetPlaybackSpeed");
@@ -168,15 +172,34 @@ int32_t PlayerServerMem::SetBehaviorInternal()
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to Seek");
     }
 
+    if (NeedSelectAudioTrack()) {
+        std::unique_lock<std::mutex> lock(preparedMutex_);
+        static constexpr int32_t timeout = 2;
+        MEDIA_LOGI("Keep waiting until prepared");
+        preparedCond_.wait_for(lock, std::chrono::seconds(timeout), [this] { return prepared_; });
+        ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectTrack");
+    }
+
     return ret;
 }
 
 int32_t PlayerServerMem::SetPlaybackSpeedInternal()
 {
-    MEDIA_LOGI("speedMode:%{public}d", recoverConfig_.speedMode);
+    MEDIA_LOGI("speedMode:%{public}d audioIndex:%{public}d", recoverConfig_.speedMode, recoverConfig_.audioIndex);
+    int ret = MSERR_OK;
     if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
-        auto ret = PlayerServer::SetPlaybackSpeed(recoverConfig_.speedMode);
+        ret = PlayerServer::SetPlaybackSpeed(recoverConfig_.speedMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PreparedState failed to SetPlaybackSpeed");
+    }
+
+    if (NeedSelectAudioTrack()) {
+        std::unique_lock<std::mutex> lock(preparedMutex_);
+        static constexpr int32_t timeout = 2;
+        MEDIA_LOGI("Keep waiting until prepared");
+        preparedCond_.wait_for(lock, std::chrono::seconds(timeout), [this] { return prepared_; });
+        ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectTrack");
     }
     return MSERR_OK;
 }
@@ -565,6 +588,49 @@ int32_t PlayerServerMem::SelectBitRate(uint32_t bitRate)
     return ret;
 }
 
+int32_t PlayerServerMem::SelectTrack(int32_t index)
+{
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
+    if (RecoverMemByUser() != MSERR_OK) {
+        return MSERR_INVALID_OPERATION;
+    }
+
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
+    return PlayerServer::SelectTrack(index);
+}
+
+int32_t PlayerServerMem::DeselectTrack(int32_t index)
+{
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
+    if (RecoverMemByUser() != MSERR_OK) {
+        return MSERR_INVALID_OPERATION;
+    }
+
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
+    return PlayerServer::DeselectTrack(index);
+}
+
+int32_t PlayerServerMem::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
+    if (isReleaseMemByManage_) {
+        if (trackType == MediaType::MEDIA_TYPE_AUD) {
+            index = recoverConfig_.audioIndex;
+        } else if (trackType == MediaType::MEDIA_TYPE_VID) {
+            index = recoverConfig_.videoIndex;
+        } else if (trackType == MediaType::MEDIA_TYPE_SUBTITLE) {
+            index = recoverConfig_.textIndex;
+        }  else {
+            MEDIA_LOGE("User call GetCurrentTrack, Invalid trackType %{public}d", trackType);
+            return MSERR_INVALID_OPERATION;
+        }
+
+        MEDIA_LOGI("User call GetCurrentTrack, type %{public}d, index %{public}d", trackType, index);
+        return MSERR_OK;
+    }
+    return PlayerServer::GetCurrentTrack(trackType, index);
+}
+
 int32_t PlayerServerMem::DumpInfo(int32_t fd)
 {
     PlayerServer::DumpInfo(fd);
@@ -583,6 +649,11 @@ int32_t PlayerServerMem::DumpInfo(int32_t fd)
 void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
+    if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
+        MEDIA_LOGI("state change to prepared");
+        (void)PlayerServer::GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, defaultAudioIndex_);
+    }
+
     PlayerServer::OnInfo(type, extra, infoBody);
 
     CheckHasRecover(type, extra);
@@ -596,6 +667,14 @@ int32_t PlayerServerMem::GetInformationBeforeMemReset()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to GetVideoTrack");
     ret = PlayerServer::GetAudioTrackInfo(recoverConfig_.audioTrack);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to GetAudioTrack");
+
+    ret = PlayerServer::GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, recoverConfig_.audioIndex);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to GetCurrentTrack");
+    ret = PlayerServer::GetCurrentTrack(MediaType::MEDIA_TYPE_VID, recoverConfig_.videoIndex);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to GetCurrentTrack");
+    ret = PlayerServer::GetCurrentTrack(MediaType::MEDIA_TYPE_SUBTITLE, recoverConfig_.textIndex);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to GetCurrentTrack");
+
     recoverConfig_.videoWidth = PlayerServer::GetVideoWidth();
     recoverConfig_.videoHeight = PlayerServer::GetVideoHeight();
     ret = PlayerServer::GetDuration(recoverConfig_.duration);
@@ -676,7 +755,18 @@ void PlayerServerMem::RecoverToInitialized(PlayerOnInfoType type, int32_t extra)
 
 void PlayerServerMem::RecoverToPrepared(PlayerOnInfoType type, int32_t extra)
 {
-    if (recoverConfig_.currentTime != 0) {
+    if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
+        MEDIA_LOGI("state change to prepared");
+        std::unique_lock<std::mutex> lock(preparedMutex_);
+        prepared_ = true;
+        preparedCond_.notify_one();
+    }
+
+    if (NeedSelectAudioTrack()) {
+        if (type == INFO_TYPE_TRACKCHANGE) {
+            (void)RecoverPlayerCb();
+        }
+    } else if (recoverConfig_.currentTime != 0) {
         if (type == INFO_TYPE_SEEKDONE) {
             (void)RecoverPlayerCb();
         }
@@ -691,7 +781,18 @@ void PlayerServerMem::RecoverToPrepared(PlayerOnInfoType type, int32_t extra)
 
 void PlayerServerMem::RecoverToCompleted(PlayerOnInfoType type, int32_t extra)
 {
-    if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
+    if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
+        MEDIA_LOGI("state change to prepared");
+        std::unique_lock<std::mutex> lock(preparedMutex_);
+        prepared_ = true;
+        preparedCond_.notify_one();
+    }
+
+    if (NeedSelectAudioTrack()) {
+        if (type == INFO_TYPE_TRACKCHANGE) {
+            (void)RecoverPlayerCb();
+        }
+    } else if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
         if (type == INFO_TYPE_SPEEDDONE) {
             (void)RecoverPlayerCb();
         }
@@ -778,6 +879,12 @@ void PlayerServerMem::RecoverByMemManage()
     if (RecoverMemByUser() != MSERR_OK) {
         MEDIA_LOGE("RecoverMemByUser fail");
     }
+}
+
+bool PlayerServerMem::NeedSelectAudioTrack()
+{
+    return (recoverConfig_.audioIndex >= 0 && defaultAudioIndex_ >= 0 &&
+        recoverConfig_.audioIndex != defaultAudioIndex_);
 }
 }
 }

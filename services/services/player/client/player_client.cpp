@@ -306,5 +306,26 @@ int32_t PlayerClient::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &c
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->SetPlayerCallback();
 }
+
+int32_t PlayerClient::SelectTrack(int32_t index)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->SelectTrack(index);
+}
+
+int32_t PlayerClient::DeselectTrack(int32_t index)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->DeselectTrack(index);
+}
+
+int32_t PlayerClient::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetCurrentTrack(trackType, index);
+}
 } // namespace Media
 } // namespace OHOS
