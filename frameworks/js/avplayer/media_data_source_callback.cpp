@@ -94,6 +94,7 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
     CHECK_AND_RETURN_RET_LOG(ret == 0, SOURCE_ERROR_IO, "Failed to execute uv queue work");
     CANCEL_SCOPE_EXIT_GUARD(1);
     cb_->WaitResult();
+    MEDIA_LOGD("ReadAt out");
     return cb_->readSize_;
 }
 
@@ -144,6 +145,7 @@ int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
             CHECK_AND_BREAK(nstatus == napi_ok);
             nstatus = napi_get_value_int32(ref->env_, size, &event->readSize_);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "get size failed");
+            std::unique_lock<std::mutex> lock(event->mutexCond_);
             event->setResult_ = true;
             event->cond_.notify_all();
         } while (0);

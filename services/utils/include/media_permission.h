@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,25 +12,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#ifndef MEDIA_ENUM_NAPI_H_
-#define MEDIA_ENUM_NAPI_H_
-
-#include "napi/native_api.h"
-#include "napi/native_node_api.h"
+#ifndef MEDIA_PERMISSION_H
+#define MEDIA_PERMISSION_H
 
 namespace OHOS {
 namespace Media {
-class MediaEnumNapi {
+class __attribute__((visibility("default"))) MediaPermission {
 public:
-    MediaEnumNapi() = default;
-    ~MediaEnumNapi() = default;
-    static napi_value Init(napi_env env, napi_value exports);
-
-private:
-    static napi_value JsEnumIntInit(napi_env env, napi_value exports);
-    static napi_value JsEnumStringInit(napi_env env, napi_value exports);
+    static int32_t CheckMicPermission();
 };
 } // namespace Media
 } // namespace OHOS
-#endif // MEDIA_ENUM_NAPI_H_
+
+#endif

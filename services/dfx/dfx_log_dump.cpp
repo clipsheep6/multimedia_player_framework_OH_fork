@@ -97,7 +97,7 @@ void DfxLogDump::SaveLog(const char *level, const OHOS::HiviewDFX::HiLogLabel &l
 
     va_list ap;
     va_start(ap, fmt);
-    constexpr uint8_t maxLogLen = 255;
+    constexpr uint32_t maxLogLen = 1024;
     char logBuf[maxLogLen];
     auto ret = vsnprintf_s(logBuf, maxLogLen, maxLogLen - 1, temp.c_str(), ap);
     va_end(ap);

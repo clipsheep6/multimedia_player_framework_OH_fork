@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -123,7 +123,10 @@ void MonitorClient::ClickThread()
         std::unique_lock<std::mutex> threadLock(threadMutex_);
         clickCond_.wait_for(threadLock, std::chrono::seconds(timeInterval), [this] { return !enableThread_; });
 
-        CHECK_AND_BREAK_LOG(enableThread_, "ClickThread Stop.");
+        if (!enableThread_) {
+            MEDIA_LOGI("ClickThread Stop.");
+            break;
+        }
         CHECK_AND_BREAK_LOG(monitorProxy_ != nullptr, "Proxy is invaild!");
         CHECK_AND_BREAK_LOG(monitorProxy_->Click() == MSERR_OK, "failed to Click");
     }

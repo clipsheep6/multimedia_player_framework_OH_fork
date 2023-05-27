@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@ namespace OHOS {
 namespace Media {
 constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 60.0;
 constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 120.0;
-constexpr int32_t RESERVE_BACK_GROUND_APP_NUM = 1;
+constexpr int32_t RESERVE_BACK_GROUND_APP_NUM = 0;
 PlayerMemManage& PlayerMemManage::GetInstance()
 {
     static PlayerMemManage instance;
@@ -68,7 +68,6 @@ void PlayerMemManage::FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
         return;
     }
 
-    MEDIA_LOGI("Back ground destroy instance, duration cost: %{public}fms", durationCost.count());
     for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
         ((*iter).resetBackGroundRecall)();
     }
@@ -86,7 +85,6 @@ void PlayerMemManage::FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
         return;
     }
 
-    MEDIA_LOGI("Front ground destroy instance, duration cost: %{public}fms", durationCost.count());
     for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
         ((*iter).resetFrontGroundRecall)();
     }
@@ -231,16 +229,16 @@ int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecall
             FindDeregisterPlayerFromVec(isFind, appPlayerInfo, memRecallStruct);
             if (appPlayerInfo.memRecallStructVec.size() == 0) {
                 Memory::MemMgrClient::GetInstance().DeregisterActiveApps(pid, uid);
-                pidPlayersInfo.erase(pid);
                 MEDIA_LOGI("DeregisterActiveApps pid:%{public}d uid:%{public}d pidPlayersInfo size:%{public}u",
                     pid, uid, static_cast<uint32_t>(pidPlayersInfo.size()));
+                pidPlayersInfo.erase(pid);
                 break;
             }
         }
         if (pidPlayersInfo.size() == 0) {
-            playerManage_.erase(uid);
             MEDIA_LOGI("remove uid:%{public}d playerManage_ size:%{public}u",
                 uid, static_cast<uint32_t>(playerManage_.size()));
+            playerManage_.erase(uid);
             break;
         }
     }
@@ -315,6 +313,7 @@ int32_t PlayerMemManage::HandleOnTrim(Memory::SystemMemoryLevel level)
 
     switch (level) {
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_MODERATE:  // remain 800MB trigger
+            HandleOnTrimLevelLow();
             break;
 
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_LOW:  // remain 700MB trigger
@@ -322,6 +321,7 @@ int32_t PlayerMemManage::HandleOnTrim(Memory::SystemMemoryLevel level)
             break;
 
         case Memory::SystemMemoryLevel::MEMORY_LEVEL_CRITICAL: // remain 600MB trigger
+            HandleOnTrimLevelLow();
             break;
 
         default:

@@ -119,9 +119,10 @@ int32_t PlayerServer::Init()
     pausedState_ = std::make_shared<PausedState>(*this);
     stoppedState_ = std::make_shared<StoppedState>(*this);
     playbackCompletedState_ = std::make_shared<PlaybackCompletedState>(*this);
+    appTokenId_ = IPCSkeleton::GetCallingTokenID();
     appUid_ = IPCSkeleton::GetCallingUid();
     appPid_ = IPCSkeleton::GetCallingPid();
-    MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d", appUid_, appPid_);
+    MEDIA_LOGD("Get app uid: %{public}d, app pid: %{public}d, app tokenId: %{public}u", appUid_, appPid_, appTokenId_);
 
     PlayerServerStateMachine::Init(idleState_);
     return MSERR_OK;
@@ -194,7 +195,7 @@ int32_t PlayerServer::InitPlayEngine(const std::string &url)
     auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_PLAYBACK, url);
     CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to get engine factory");
-    playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_);
+    playerEngine_ = engineFactory->CreatePlayerEngine(appUid_, appPid_, appTokenId_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_CREATE_PLAYER_ENGINE_FAILED,
         "failed to create player engine");
 
@@ -289,7 +290,9 @@ int32_t PlayerServer::HandlePrepare()
         MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
         auto rateTask = std::make_shared<TaskHandler<void>>([this]() {
             auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-            (void)currState->SetPlaybackSpeed(config_.speedMode);
+            PlaybackRateMode speedMode = config_.speedMode;
+            config_.speedMode = SPEED_FORWARD_1_00_X;
+            (void)currState->SetPlaybackSpeed(speedMode);
         });
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
             MEDIA_LOGI("Interrupted speed action");
@@ -350,10 +353,14 @@ int32_t PlayerServer::HandlePlay()
 
 int32_t PlayerServer::BackGroundChangeState(PlayerStates state, bool isBackGroundCb)
 {
+    backgroundState_ = state;
+    isBackgroundCb_ = isBackGroundCb;
     if (state == PLAYER_PAUSED) {
-        isBackgroundCb_ = isBackGroundCb;
         isBackgroundChanged_ = true;
         return PlayerServer::Pause();
+    } else if (state == PLAYER_STARTED) {
+        isBackgroundChanged_ = true;
+        return PlayerServer::Play();
     }
     return MSERR_INVALID_OPERATION;
 }
@@ -652,8 +659,7 @@ int32_t PlayerServer::GetVideoTrackInfo(std::vector<Format> &videoTrack)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
-        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_STOPPED &&
-        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_LOGE("Can not get track info, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
@@ -669,8 +675,7 @@ int32_t PlayerServer::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
-        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_STOPPED &&
-        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
         MEDIA_LOGE("Can not get track info, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
@@ -756,13 +761,6 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
         return MSERR_INVALID_OPERATION;
     }
 
-    if (config_.speedMode == mode) {
-        MEDIA_LOGD("The speed mode is same, mode = %{public}d", mode);
-        Format format;
-        OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
-        return MSERR_OK;
-    }
-
     auto rateTask = std::make_shared<TaskHandler<void>>([this, mode]() {
         MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
@@ -784,6 +782,14 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
 
 int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
 {
+    if (config_.speedMode == mode) {
+        MEDIA_LOGD("The speed mode is same, mode = %{public}d", mode);
+        Format format;
+        OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
+        taskMgr_.MarkTaskDone("set speed mode is same");
+        return MSERR_OK;
+    }
+
     if (playerEngine_ != nullptr) {
         int ret = playerEngine_->SetPlaybackSpeed(mode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "Engine SetPlaybackSpeed Failed!");
@@ -1026,7 +1032,8 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     }
 
     if (playerCb_ != nullptr && ret == MSERR_OK) {
-        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PAUSED) {
+        if (isBackgroundChanged_ && type == INFO_TYPE_STATE_CHANGE && extra == backgroundState_) {
+            MEDIA_LOGI("Background change state to %{public}d, Status reporting %{public}d", extra, isBackgroundCb_);
             if (isBackgroundCb_) {
                 Format newInfo = infoBody;
                 newInfo.PutIntValue(PlayerKeys::PLAYER_STATE_CHANGED_REASON, StateChangeReason::BACKGROUND);

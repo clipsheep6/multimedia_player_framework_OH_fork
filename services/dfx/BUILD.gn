@@ -112,7 +112,6 @@ ohos_shared_library("media_service_dfx") {
 
   external_deps = [
     "c_utils:utils",
-    "hicollie_native:libhicollie",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
   ]

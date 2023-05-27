@@ -17,6 +17,7 @@
 #define RECORDER_SERVICE_STUB_H
 
 #include <map>
+#include <set>
 #include "i_standard_recorder_service.h"
 #include "i_standard_recorder_listener.h"
 #include "media_death_recipient.h"
@@ -108,6 +109,12 @@ private:
     std::map<uint32_t, RecorderStubFunc> recFuncs_;
     std::mutex mutex_;
     int32_t pid_;
+    bool needAudioPermissionCheck = false;
+    const std::set<uint32_t> AUDIO_REQUEST = {SET_AUDIO_SOURCE, SET_AUDIO_ENCODER, SET_AUDIO_ENCODER,
+        SET_AUDIO_CHANNELS, SET_AUDIO_ENCODING_BIT_RATE};
+    const std::set<uint32_t> COMMON_REQUEST = {SET_LISTENER_OBJ, SET_DATA_SOURCE, SET_MAX_DURATION,
+        SET_OUTPUT_FORMAT, SET_OUTPUT_FILE, SET_NEXT_OUTPUT_FILE, SET_MAX_FILE_SIZE, SET_LOCATION, SET_ORIENTATION_HINT,
+        PREPARE, START, PAUSE, RESUME, STOP, RESET, RELEASE, SET_FILE_SPLIT_DURATION, DESTROY};
 };
 } // namespace Media
 } // namespace OHOS

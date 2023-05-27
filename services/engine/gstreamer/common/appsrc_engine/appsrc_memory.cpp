@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2023-2023. All rights reserved.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,12 +40,12 @@ static bool IsInnerRange(uint32_t srcA, uint32_t endA, uint32_t srcB, uint32_t e
 
 AppsrcMemory::AppsrcMemory()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 AppsrcMemory::~AppsrcMemory()
 {
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 uint32_t AppsrcMemory::GetBufferSize() const
@@ -119,6 +119,7 @@ uint64_t AppsrcMemory::GetFilePos() const
 void AppsrcMemory::SetBufferSize(uint32_t bufferSize)
 {
     bufferSize_ = bufferSize;
+    MEDIA_LOGD("Set bufferSize_ is %{public}u", bufferSize_);
 }
 
 void AppsrcMemory::SetMem(std::shared_ptr<AVSharedMemory> mem)
@@ -172,7 +173,7 @@ void AppsrcMemory::SeekAndChangePos(uint64_t pos)
         if (hasUnreturnedBuffer) {
             unusedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
             MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unusedBufferEnd);
-            unusedBuffers_.push({availableBegin_, unusedBufferEnd});
+            PushUnusedBuffers({availableBegin_, unusedBufferEnd});
             availableBegin_ = begin_ - (filePos_ - pos);
         } else {
             uint32_t pad = noFreeBuffer_ ? bufferSize_ : 0;
@@ -184,7 +185,7 @@ void AppsrcMemory::SeekAndChangePos(uint64_t pos)
         if (hasUnreturnedBuffer) {
             unusedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
             MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unusedBufferEnd);
-            unusedBuffers_.push({availableBegin_, unusedBufferEnd});
+            PushUnusedBuffers({availableBegin_, unusedBufferEnd});
             availableBegin_ = ((begin_ + bufferSize_) - (filePos_ - pos)) % bufferSize_;
         } else {
             availableBegin_ = ((begin_ + bufferSize_) - (filePos_ - pos)) % bufferSize_;
@@ -282,15 +283,15 @@ bool AppsrcMemory::CopyBufferAndChangePos(std::shared_ptr<AppsrcMemory> &mem)
             CHECK_AND_RETURN_RET_LOG(rc == EOK, false, "get mem is failed");
         }
     }
+    begin_ = availableSize;
+    filePos_ = mem->GetFilePos();
+    pushOffset_ = mem->GetPushOffset();
     if (availableSize == size) {
         mem->SetMem(nullptr);
         mem = nullptr;
     } else if (availableSize) {
         mem->PushUnusedBuffers({copyBegin, mem->GetBeginPos()});
     }
-    begin_ = availableSize;
-    filePos_ = mem->GetFilePos();
-    pushOffset_ = mem->GetPushOffset();
     PrintCurPos();
     MEDIA_LOGD("Exit CopyBufferAndChangePos");
     return true;
@@ -316,7 +317,7 @@ bool AppsrcMemory::ProcessBuffer(uint32_t offset, uint32_t length)
     std::deque<std::pair<uint32_t, uint32_t>>::iterator iter;
     bool flag = IsUnreturnedBuffer(offset, length, iter);
     if (flag) {
-        while (flag && !unusedBuffers_.empty() && iter != unreturnedBuffers_.end() &&
+        while (!unusedBuffers_.empty() && iter != unreturnedBuffers_.end() &&
             iter->first == unusedBuffers_.front().first) {
             MEDIA_LOGI("unusedBuffers %{public}u - %{public}u",
                 unusedBuffers_.front().first, unusedBuffers_.front().second);
@@ -343,7 +344,6 @@ bool AppsrcMemory::IsUnreturnedBuffer(uint32_t offset, uint32_t length,
     uint32_t pad;
     for (iter = unreturnedBuffers_.begin(); iter != unreturnedBuffers_.end(); ++iter) {
         pad = iter->first < iter->second ? 0 : bufferSize_;
-        MEDIA_LOGD("unreturnedBuffers begin: %{public}u, end: %{public}u", iter->first, iter->second);
         if (!IsInnerRange(iter->first, iter->second + pad, offset, offset + length)) {
             continue;
         }
@@ -408,8 +408,8 @@ void AppsrcMemory::PrintCurPos()
 void AppsrcMemory::CheckBufferUsage()
 {
     MEDIA_LOGD("Enter CheckBufferUsage");
-    int32_t queueSize = unusedBuffers_.size();
-    for (int i = 0; i < queueSize; i++) {
+    size_t queueSize = unusedBuffers_.size();
+    for (size_t i = 0; i < queueSize; i++) {
         MEDIA_LOGD("unusedBuffers begin: %{public}u, end: %{public}u",
             unusedBuffers_.front().first, unusedBuffers_.front().second);
         unusedBuffers_.push(unusedBuffers_.front());

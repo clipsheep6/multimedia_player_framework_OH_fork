@@ -60,9 +60,14 @@ void RingtonePlayerCallbackNapi::SaveCallbackReference(const std::string &callba
 
 static void SetValueInt32(const napi_env& env, const std::string& fieldStr, const int intValue, napi_value& result)
 {
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(env, &scope);
+
     napi_value value = nullptr;
     napi_create_int32(env, intValue, &value);
     napi_set_named_property(env, result, fieldStr.c_str(), value);
+
+    napi_close_handle_scope(env, scope);
 }
 
 static void NativeInterruptEventToJsObj(const napi_env& env, napi_value& jsObj,
@@ -93,15 +98,10 @@ void RingtonePlayerCallbackNapi::OnJsCallbackInterrupt(std::unique_ptr<RingtoneP
 {
     uv_loop_s *loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    if (loop == nullptr) {
-        return;
-    }
+    CHECK_AND_RETURN(loop != nullptr);
 
     uv_work_t *work = new(std::nothrow) uv_work_t;
-    if (work == nullptr) {
-        MEDIA_LOGE("RingtonePlayerCallbackNapi: OnJsCallBackInterrupt: No memory");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(work != nullptr, "RingtonePlayerCallbackNapi: OnJsCallBackInterrupt: No memory");
     if (jsCb.get() == nullptr) {
         MEDIA_LOGE("RingtonePlayerCallbackNapi: OnJsCallBackInterrupt: jsCb.get() is null");
         delete work;
@@ -115,6 +115,8 @@ void RingtonePlayerCallbackNapi::OnJsCallbackInterrupt(std::unique_ptr<RingtoneP
         std::string request = event->callbackName;
         napi_env env = event->callback->env_;
         napi_ref callback = event->callback->cb_;
+        napi_handle_scope scope = nullptr;
+        napi_open_handle_scope(env, &scope);
         MEDIA_LOGI("RingtonePlayerCallbackNapi: JsCallBack %{public}s, uv_queue_work start", request.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s cancelled", request.c_str());
@@ -135,6 +137,7 @@ void RingtonePlayerCallbackNapi::OnJsCallbackInterrupt(std::unique_ptr<RingtoneP
             nstatus = napi_call_function(env, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s fail to call Interrupt callback", request.c_str());
         } while (0);
+        napi_close_handle_scope(env, scope);
         delete event;
         delete work;
     });

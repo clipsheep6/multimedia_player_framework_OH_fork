@@ -104,6 +104,7 @@ private:
     static void SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userData);
     static void OnBitRateParseCompleteCb(const GstElement *playbin, uint32_t *bitrateInfo,
         uint32_t bitrateNum, gpointer userData);
+    static void OnSelectBitrateDoneCb(const GstElement *playbin, bool addPad, gpointer userData);
     static GValueArray *AutoPlugSort(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
         GValueArray *factories, gpointer userData);
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
@@ -131,7 +132,23 @@ private:
     void HandleCacheCtrlWhenNoBuffering(int32_t percent);
     void HandleCacheCtrlWhenBuffering(int32_t percent);
     void OnAdaptiveElementSetup(GstElement &elem);
-
+    inline void AddSignalIds(GstElement *element, gulong signalId)
+    {
+        if (signalIds_.find(element) == signalIds_.end()) {
+            signalIds_[element] = {signalId};
+        } else {
+            signalIds_[element].push_back(signalId);
+        }
+    }
+    inline void RemoveSignalIds(GstElement *element)
+    {
+        if (signalIds_.find(element) != signalIds_.end()) {
+            for (auto id : signalIds_[element]) {
+                g_signal_handler_disconnect(element, id);
+            }
+            signalIds_.erase(element);
+        }
+    }
     std::mutex mutex_;
     std::mutex cacheCtrlMutex_;
     std::mutex listenerMutex_;
@@ -146,11 +163,7 @@ private:
     std::unique_ptr<GstMsgProcessor> msgProcessor_;
     std::string uri_;
 
-    struct SignalInfo {
-        GstElement *element;
-        gulong signalId;
-    };
-    std::vector<SignalInfo> signalIds_;
+    std::map<GstElement *, std::vector<gulong>> signalIds_;
     std::vector<uint32_t> bitRateVec_;
     bool isInitialized_ = false;
 
@@ -177,7 +190,6 @@ private:
     uint32_t rendererInfo_ = 0;
     int32_t rendererFlag_ = 0;
     int32_t cachePercent_ = 100; // 100% cache percent
-    bool isAdaptiveLiveStream_ = true;
     uint64_t connectSpeed_ = 0;
 
     std::atomic<bool> isDuration_ = false;
