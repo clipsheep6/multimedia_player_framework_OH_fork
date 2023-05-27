@@ -194,7 +194,6 @@ static gboolean gst_subtitle_sink_send_event(GstElement *element, GstEvent *even
 {
     g_return_val_if_fail(element != nullptr && event != nullptr, FALSE);
     GstBaseSink *basesink = GST_BASE_SINK(element);
-    GstSubtitleSink *self = GST_SUBTITLE_SINK(element);
     GstFormat seek_format;
     GstSeekFlags flags;
     GstSeekType start_type, stop_type;
