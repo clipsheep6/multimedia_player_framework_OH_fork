@@ -100,8 +100,7 @@ int32_t PlayerServiceStubMem::SetSource(const std::string &url)
     if (ret == MSERR_OK) {
         std::lock_guard<std::recursive_mutex> lock(recMutex_);
         isControlByMemManage_ = false;
-        if (url.find(".m3u8") != std::string::npos ||
-            url.find("fd://") != std::string::npos) {
+        if (url.find("fd://") != std::string::npos) {
             isControlByMemManage_ = true;
         }
     }
