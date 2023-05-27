@@ -234,6 +234,12 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     GstSample *sample = gst_app_sink_pull_preroll(appsink);
     GstBuffer *buffer = gst_sample_get_buffer(sample);
 
+    if (subtitle_sink->preroll_buffer == buffer) {
+        subtitle_sink->preroll_buffer = nullptr;
+        GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer has been rendererd, no need render again");
+        return GST_FLOW_OK;
+    }
+
     GST_INFO_OBJECT(subtitle_sink, "app render preroll buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
     g_return_val_if_fail(buffer != nullptr, GST_FLOW_ERROR);
     guint64 pts = 0;
