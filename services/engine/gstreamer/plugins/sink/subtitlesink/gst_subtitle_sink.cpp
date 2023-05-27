@@ -393,6 +393,7 @@ static void gst_subtitle_sink_dispose(GObject *obj)
     g_return_if_fail(obj != nullptr);
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(obj);
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
+    subtitle_sink->preroll_buffer = nullptr;
     g_mutex_lock (&priv->mutex);
     if (priv->timer_queue != nullptr) {
         priv->timer_queue = nullptr;
@@ -406,6 +407,7 @@ static void gst_subtitle_sink_finalize(GObject *obj)
     g_return_if_fail(obj != nullptr);
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(obj);
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
+    subtitle_sink->preroll_buffer = nullptr;
     if (priv != nullptr) {
         if (priv->timer_queue != nullptr) {
             priv->timer_queue = nullptr;
