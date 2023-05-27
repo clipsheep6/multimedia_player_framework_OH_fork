@@ -130,9 +130,9 @@ int32_t AudioSource::CheckConfigReady()
         return MSERR_INVALID_OPERATION;
     }
 
-    bool isSupportedParams = false;
+    int32_t isSupportedParams = 0;
     g_object_get(gstElem_, "supported-audio-params", &isSupportedParams, nullptr);
-    CHECK_AND_RETURN_RET_LOG(isSupportedParams, MSERR_UNSUPPORT_AUD_PARAMS, "unsupport audio params");
+    CHECK_AND_RETURN_RET_LOG(isSupportedParams != 0, MSERR_UNSUPPORT_AUD_PARAMS, "unsupport audio params");
 
     return MSERR_OK;
 }

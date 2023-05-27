@@ -78,6 +78,7 @@ public:
     virtual void RemoveGstPlaySinkVideoConvertPlugin() = 0;
     virtual int64_t QueryPosition() = 0;
     virtual void SetNotifier(PlayBinMsgNotifier notifier) = 0;
+    virtual void SetAutoSelectBitrate(bool enable) = 0;
 };
 } // namespace Media
 } // namespace OHOS

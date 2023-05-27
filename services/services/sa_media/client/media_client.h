@@ -42,6 +42,8 @@ class MediaClient : public IMediaService, public NoCopyable {
 public:
     MediaClient() noexcept;
     ~MediaClient();
+
+    sptr<IStandardMonitorService> GetMonitorProxy() override;
 #ifdef SUPPORT_RECORDER
     std::shared_ptr<IRecorderService> CreateRecorderService() override;
     int32_t DestroyRecorderService(std::shared_ptr<IRecorderService> recorder) override;

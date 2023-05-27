@@ -58,5 +58,5 @@ ohos_shared_library("audio_ringtone_client") {
   defines += player_framework_defines
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

@@ -43,6 +43,9 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "$MEDIA_ROOT_DIR/services/services/sa_media/client",
     "$MEDIA_ROOT_DIR/services/services/sa_media/server",
     "$MEDIA_ROOT_DIR/services/services/common",
+    "$MEDIA_ROOT_DIR/services/services/monitor/ipc",
+    "$MEDIA_ROOT_DIR/services/services/monitor/client",
+    "$MEDIA_ROOT_DIR/services/services/monitor/server",
     "$MEDIA_ROOT_DIR/services/services/player/ipc",
     "$MEDIA_ROOT_DIR/services/services/player/client",
     "$MEDIA_ROOT_DIR/services/services/player/server",
@@ -109,7 +112,7 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "multimedia_player_framework:media_client",
+    "player_framework:media_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

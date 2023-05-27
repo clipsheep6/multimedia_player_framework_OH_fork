@@ -77,7 +77,7 @@ int32_t SinkBytebufferImpl::Flush()
 std::shared_ptr<AVSharedMemory> SinkBytebufferImpl::GetOutputBuffer(uint32_t index)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET(index <= bufferList_.size(), nullptr);
+    CHECK_AND_RETURN_RET(index < bufferList_.size(), nullptr);
     CHECK_AND_RETURN_RET(bufferList_[index] != nullptr, nullptr);
     CHECK_AND_RETURN_RET(bufferList_[index]->owner_ == BufferWrapper::SERVER, nullptr);
 

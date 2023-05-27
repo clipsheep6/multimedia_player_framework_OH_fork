@@ -88,7 +88,7 @@ ohos_shared_library("native_media_core") {
   ]
   output_extension = "so"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 ohos_shared_library("native_media_codecbase") {
@@ -110,7 +110,7 @@ ohos_shared_library("native_media_codecbase") {
   external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
   output_extension = "so"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 ohos_shared_library("native_media_adec") {
@@ -141,7 +141,7 @@ ohos_shared_library("native_media_adec") {
   ]
   output_extension = "so"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 ohos_shared_library("native_media_aenc") {
@@ -172,7 +172,7 @@ ohos_shared_library("native_media_aenc") {
   ]
   output_extension = "so"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 ohos_shared_library("native_media_vdec") {
@@ -205,7 +205,7 @@ ohos_shared_library("native_media_vdec") {
 
   output_extension = "so"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 ohos_shared_library("native_media_venc") {
@@ -237,5 +237,5 @@ ohos_shared_library("native_media_venc") {
   ]
   output_extension = "so"
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

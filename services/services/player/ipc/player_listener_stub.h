@@ -19,6 +19,7 @@
 #include "i_standard_player_listener.h"
 #include "player.h"
 #include "format.h"
+#include "monitor_client_object.h"
 
 namespace OHOS {
 namespace Media {
@@ -35,8 +36,11 @@ public:
     // PlayerListenerStub
     void SetPlayerCallback(const std::weak_ptr<PlayerCallback> &callback);
 
+    void SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor);
+
 private:
     std::weak_ptr<PlayerCallback> callback_;
+    std::weak_ptr<MonitorClientObject> monitor_;
 };
 } // namespace Media
 } // namespace OHOS

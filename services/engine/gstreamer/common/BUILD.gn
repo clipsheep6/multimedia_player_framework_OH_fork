@@ -67,6 +67,7 @@ config("media_engine_gst_common_config") {
 
 ohos_static_library("media_engine_gst_common") {
   sources = [
+    "appsrc_engine/appsrc_memory.cpp",
     "appsrc_engine/gst_appsrc_engine.cpp",
     "message/gst_msg_converter.cpp",
     "message/gst_msg_processor.cpp",
@@ -103,7 +104,7 @@ ohos_static_library("media_engine_gst_common") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }
 
 config("media_gst_dfx_config") {
@@ -173,5 +174,5 @@ ohos_static_library("media_gst_dfx") {
   ]
 
   subsystem_name = "multimedia"
-  part_name = "multimedia_player_framework"
+  part_name = "player_framework"
 }

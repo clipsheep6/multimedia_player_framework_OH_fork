@@ -39,10 +39,10 @@ constexpr int32_t MSEC_PER_USEC = 1000;
 constexpr int32_t MSEC_PER_NSEC = 1000000;
 constexpr int32_t BUFFER_TIME_DEFAULT = 15000; // 15s
 constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
-constexpr int32_t POSITION_REPORT_PER_TIMES = 10;
+constexpr int32_t POSITION_REPORT_PER_TIMES = 1;
 
-PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid)
-    : appuid_(uid), apppid_(pid)
+PlayerEngineGstImpl::PlayerEngineGstImpl(int32_t uid, int32_t pid, uint32_t tokenId)
+    : appuid_(uid), apppid_(pid), apptokenid_(tokenId)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -244,6 +244,9 @@ void PlayerEngineGstImpl::HandleBufferingEnd(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
 {
+    if (isAdaptiveLiveStream_) {
+        return;
+    }
     std::pair<uint32_t, int64_t> bufferingTimePair = std::any_cast<std::pair<uint32_t, int64_t>>(msg.extra);
     uint32_t mqNumId = bufferingTimePair.first;
     uint64_t bufferingTime = bufferingTimePair.second / MSEC_PER_NSEC;
@@ -264,7 +267,7 @@ void PlayerEngineGstImpl::HandleBufferingTime(const PlayBinMessage &msg)
             if (notifyObs != nullptr) {
                 Format format;
                 (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_CACHED_DURATION),
-                                        static_cast<int32_t>(mqBufferingTime));
+                    static_cast<int32_t>(mqBufferingTime));
                 notifyObs->OnInfo(INFO_TYPE_BUFFERING_UPDATE, 0, format);
             }
         }
@@ -328,6 +331,7 @@ void PlayerEngineGstImpl::HandleBitRateCollect(const PlayBinMessage &msg)
 void PlayerEngineGstImpl::HandleIsLiveStream(const PlayBinMessage &msg)
 {
     (void)msg;
+    isAdaptiveLiveStream_ = true;
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     Format format;
     if (notifyObs != nullptr) {
@@ -349,7 +353,7 @@ void PlayerEngineGstImpl::HandleSubTypeMessage(const PlayBinMessage &msg)
     if (subMsgHandler_.count(msg.subType) > 0) {
         (this->*subMsgHandler_[msg.subType])(msg);
     } else {
-        MEDIA_LOGD("No this sub msg handler, subType = %{public}d", msg.subType);
+        MEDIA_LOGI("No this sub msg handler, subType = %{public}d", msg.subType);
     }
 }
 
@@ -376,11 +380,7 @@ void PlayerEngineGstImpl::HandleAudioStateMessage(const PlayBinMessage &msg)
     MEDIA_LOGI("HandleAudioStateMessage:%{public}d", value);
 
     if (value == AudioStandard::RendererState::RENDERER_PAUSED) {
-        std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
-        Format format;
-        if (notifyObs != nullptr) {
-            notifyObs->OnInfo(INFO_TYPE_STATE_CHANGE_BY_AUDIO, PlayerStates::PLAYER_PAUSED, format);
-        }
+        MEDIA_LOGW("avsession background audio paused");
     }
 }
 
@@ -403,6 +403,9 @@ void PlayerEngineGstImpl::HandleInterruptMessage(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandlePositionUpdateMessage(const PlayBinMessage &msg)
 {
+    if (isAdaptiveLiveStream_) {
+        return;
+    }
     currentTime_ = msg.code;
     int32_t duration = std::any_cast<int32_t>(msg.extra);
     MEDIA_LOGD("update position %{public}d ms, duration %{public}d ms", currentTime_, duration);
@@ -477,7 +480,10 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_VIDEO_SIZE_CHANGED] = &PlayerEngineGstImpl::HandleVideoSizeChanged;
     subMsgHandler_[PLAYBIN_SUB_MSG_BITRATE_COLLECT] = &PlayerEngineGstImpl::HandleBitRateCollect;
     subMsgHandler_[PLAYBIN_SUB_MSG_IS_LIVE_STREAM] = &PlayerEngineGstImpl::HandleIsLiveStream;
+<<<<<<< HEAD
     subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_UPDATED] = &PlayerEngineGstImpl::HandleSubtitleUpdate;
+=======
+>>>>>>> f47cb9b0f7dd07e23ef4e17417b159eb264f387a
 
     MEDIA_LOGD("PlayBinCtrlerInit out");
     return MSERR_OK;
@@ -511,7 +517,7 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerPrepare()
     {
         std::unique_lock<std::mutex> lk(trackParseMutex_);
         sinkProvider_ = std::make_shared<PlayerSinkProvider>(producerSurface_);
-        sinkProvider_->SetAppInfo(appuid_, apppid_);
+        sinkProvider_->SetAppInfo(appuid_, apppid_, apptokenid_);
     }
 
     IPlayBinCtrler::PlayBinCreateParam createParam = {
@@ -887,10 +893,6 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
             auto notifier = std::bind(&PlayerEngineGstImpl::OnCapsFixError, this);
             codecCtrl_.SetCapsFixErrorCb(notifier);
         }
-    }
-
-    if (appsrcWrap_ && metaStr.find("Codec/Parser") != std::string::npos) {
-        appsrcWrap_->SetParserParam(elem);
     }
 }
 

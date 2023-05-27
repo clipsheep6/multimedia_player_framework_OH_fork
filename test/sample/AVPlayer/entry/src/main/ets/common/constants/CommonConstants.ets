@@ -31,9 +31,9 @@ export class CommonConstants {
     'httpS://xxx/index.m3u8',
     'httpS://xxx/index.m3u8']
   static readonly VIDEO_HLS_NAME: Array<string> = ['测试码流1', '测试码流2', '测试码流3', '测试码流4']
-  static readonly AVPLAYER_FUNCTION: Array<string> = ['本地视频播放_url', '本地视频播放_fdSrc', '本地音频播放', 'Https网络播放', 'Hls网络播放', '网络直播']
+  static readonly AVPLAYER_FUNCTION: Array<string> = ['本地视频播放_url', '本地视频播放_fdSrc', '本地音频播放', 'Https网络播放', 'Hls网络播放', '网络直播', '流式播放(no seek)', '流式播放(seek)']
   static readonly AVPLAYER_REMAK: Array<string> = ['播放本地视频码流_url', '播放本地视频码流_fdSrc', '播放本地音频码流',
-    'http/https网络播放，需连接网络', 'hls网络播放，需连接网络', '网络直播，需连接网络']
+    'http/https网络播放，需连接网络', 'hls网络播放，需连接网络', '网络直播，需连接网络', '流式播放', '流式播放']
   /**
    * Search font weight.
    */
@@ -129,7 +129,12 @@ export class CommonConstants {
   /**
    * Detail page datasrc url.
    */
-  static readonly DATASRC_PLAY: string = 'pages/DataSrc';
+  static readonly DATASRC_PLAY: string = 'pages/DataSrc_NoSeek';
+
+  /**
+   * Detail page datasrc url.
+   */
+  static readonly DATASRCSEEK_PLAY: string = 'pages/DataSrc_Seek';
 
   /**
    * Mode of local video

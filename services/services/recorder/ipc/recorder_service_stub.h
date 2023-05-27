@@ -17,15 +17,18 @@
 #define RECORDER_SERVICE_STUB_H
 
 #include <map>
+#include <set>
 #include "i_standard_recorder_service.h"
 #include "i_standard_recorder_listener.h"
 #include "media_death_recipient.h"
 #include "recorder_server.h"
 #include "nocopyable.h"
+#include "monitor_server_object.h"
 
 namespace OHOS {
 namespace Media {
-class RecorderServiceStub : public IRemoteStub<IStandardRecorderService>, public NoCopyable {
+class RecorderServiceStub : public IRemoteStub<IStandardRecorderService>,
+    public MonitorServerObject, public NoCopyable {
 public:
     static sptr<RecorderServiceStub> Create();
     virtual ~RecorderServiceStub();
@@ -62,8 +65,11 @@ public:
     int32_t Release() override;
     int32_t SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration) override;
     int32_t DestroyStub() override;
-    int32_t HeartBeat() override;
     int32_t DumpInfo(int32_t fd);
+
+    // MonitorServerObject override
+    int32_t DoIpcAbnormality() override;
+    int32_t DoIpcRecovery(bool fromMonitor) override;
 
 private:
     RecorderServiceStub();
@@ -98,11 +104,17 @@ private:
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t SetFileSplitDuration(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
-    int32_t HeartBeat(MessageParcel &data, MessageParcel &reply);
 
     std::shared_ptr<IRecorderService> recorderServer_ = nullptr;
     std::map<uint32_t, RecorderStubFunc> recFuncs_;
     std::mutex mutex_;
+    int32_t pid_;
+    bool needAudioPermissionCheck = false;
+    const std::set<uint32_t> AUDIO_REQUEST = {SET_AUDIO_SOURCE, SET_AUDIO_ENCODER, SET_AUDIO_ENCODER,
+        SET_AUDIO_CHANNELS, SET_AUDIO_ENCODING_BIT_RATE};
+    const std::set<uint32_t> COMMON_REQUEST = {SET_LISTENER_OBJ, SET_DATA_SOURCE, SET_MAX_DURATION,
+        SET_OUTPUT_FORMAT, SET_OUTPUT_FILE, SET_NEXT_OUTPUT_FILE, SET_MAX_FILE_SIZE, SET_LOCATION, SET_ORIENTATION_HINT,
+        PREPARE, START, PAUSE, RESUME, STOP, RESET, RELEASE, SET_FILE_SPLIT_DURATION, DESTROY};
 };
 } // namespace Media
 } // namespace OHOS

@@ -74,7 +74,7 @@ int32_t PlayerServerTaskMgr::LaunchTask(const std::shared_ptr<ITaskHandler> &tas
         }
         MEDIA_LOGI("current two phase task[%{public}s] is in processing, the new task[%{public}s]",
             currTwoPhaseTaskName_.c_str(), taskName.c_str());
-        for (auto &item : pendingTwoPhaseTasks_)  {
+        for (auto &item : pendingTwoPhaseTasks_) {
             if (item.type == type) {
                 item.type = PlayerServerTaskType::CANCEL_TASK;
                 MEDIA_LOGI("replace old task");

@@ -26,6 +26,7 @@
 #include "display_type.h"
 #include "codec_component_if.h"
 #include "codec_omx_ext.h"
+#include "player_xcollie.h"
 
 namespace OHOS {
 namespace Media {
@@ -60,42 +61,49 @@ inline void InitHdiParam(T &param, CompVerInfo &verInfo)
 template <typename T, typename U>
 inline int32_t HdiSetParameter(T *handle, uint32_t paramIndex, U &param)
 {
+    XcollieTimer xCollie("HdiSetParameter", PlayerXCollie::timerTimeout);
     return handle->SetParameter(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiGetParameter(T *handle, uint32_t paramIndex, U &param)
 {
+    XcollieTimer xCollie("HdiGetParameter", PlayerXCollie::timerTimeout);
     return handle->GetParameter(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiGetConfig(T *handle, uint32_t paramIndex, U &param)
 {
+    XcollieTimer xCollie("HdiGetConfig", PlayerXCollie::timerTimeout);
     return handle->GetConfig(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiSetConfig(T *handle, uint32_t paramIndex, U &param)
 {
+    XcollieTimer xCollie("HdiSetConfig", PlayerXCollie::timerTimeout);
     return handle->SetConfig(handle, paramIndex, reinterpret_cast<int8_t *>(&param), sizeof(param));
 }
 
 template <typename T, typename U>
 inline int32_t HdiSendCommand(T *handle, OMX_COMMANDTYPE cmd, uint32_t param, U &&cmdData)
 {
+    XcollieTimer xCollie("HdiSendCommand", PlayerXCollie::timerTimeout);
     return handle->SendCommand(handle, cmd, param, reinterpret_cast<int8_t *>(&cmdData), sizeof(cmdData));
 }
 
 template <typename T, typename U>
 inline int32_t HdiFillThisBuffer(T *handle, U *buffer)
 {
+    XcollieTimer xCollie("HdiFillThisBuffer", PlayerXCollie::timerTimeout);
     return handle->FillThisBuffer(handle, buffer);
 }
 
 template <typename T, typename U>
 inline int32_t HdiEmptyThisBuffer(T *handle, U *buffer)
 {
+    XcollieTimer xCollie("HdiEmptyThisBuffer", PlayerXCollie::timerTimeout);
     return handle->EmptyThisBuffer(handle, buffer);
 }
 

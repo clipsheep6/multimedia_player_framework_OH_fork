@@ -76,7 +76,7 @@ void MediaDataSourceTestSeekable::Reset()
 
 int32_t MediaDataSourceTestSeekable::ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos)
 {
-    MEDIA_LOGD("ReadAt in");
+    MEDIA_LOGD("ReadAt in, pos is %{public}" PRIu64 "", pos);
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_INVALID_VAL, "Mem is nullptr");
     if (pos != pos_) {
         (void)fseek(fd_, static_cast<long>(pos), SEEK_SET);
@@ -84,7 +84,7 @@ int32_t MediaDataSourceTestSeekable::ReadAt(const std::shared_ptr<AVSharedMemory
     }
     size_t readRet = 0;
     int32_t realLen = static_cast<int32_t>(length);
-    if (pos_ >= size_) {
+    if (pos_ >= fixedSize_) {
         MEDIA_LOGI("Is eos");
         return SOURCE_ERROR_EOF;
     }
@@ -98,9 +98,10 @@ int32_t MediaDataSourceTestSeekable::ReadAt(const std::shared_ptr<AVSharedMemory
         return SOURCE_ERROR_IO;
     }
     if (readRet == 0) {
-        realLen = static_cast<int32_t>(size_ - pos_);
+        realLen = static_cast<int32_t>(fixedSize_ - pos_);
     }
     MEDIA_LOGD("length %{public}u realLen %{public}d", length, realLen);
+    pos_ += realLen;
     return realLen;
 }
 

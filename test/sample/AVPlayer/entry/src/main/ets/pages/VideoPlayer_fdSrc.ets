@@ -473,6 +473,7 @@ struct VideoPlayerFdSrc {
           Image(this.isPlaying ? $r('app.media.icon_pause') : $r('app.media.icon_play'))
             .width('45vp').height('45vp')
             .margin({ left: '10vp' })
+            .id('play')
             .onClick(() => {
               if (this.isPlaying) {
                 this.play();
@@ -485,6 +486,7 @@ struct VideoPlayerFdSrc {
           Image($r('app.media.icon_next'))
             .width('45vp').height('45vp')
             .margin({ left: '10vp' })
+            .id('next')
             .onClick(() => {
               this.nextVideo();
             })

@@ -20,10 +20,11 @@
 #include "i_standard_player_service.h"
 #include "player_listener_stub.h"
 #include "media_data_source_stub.h"
+#include "monitor_client_object.h"
 
 namespace OHOS {
 namespace Media {
-class PlayerClient : public IPlayerService {
+class PlayerClient : public IPlayerService, public MonitorClientObject {
 public:
     static std::shared_ptr<PlayerClient> Create(const sptr<IStandardPlayerService> &ipcProxy);
     explicit PlayerClient(const sptr<IStandardPlayerService> &ipcProxy);
@@ -65,6 +66,7 @@ public:
 
 private:
     int32_t CreateListenerObject();
+    int32_t DisableWhenOK(int32_t ret);
 
     sptr<IStandardPlayerService> playerProxy_ = nullptr;
     sptr<PlayerListenerStub> listenerStub_ = nullptr;
