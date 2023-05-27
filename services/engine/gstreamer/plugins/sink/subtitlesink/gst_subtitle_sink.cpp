@@ -34,7 +34,6 @@ struct _GstSubtitleSinkPrivate {
     std::unique_ptr<TaskQueue> timer_queue;
 };
 
-
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subtitlesink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -193,17 +192,17 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
 static gboolean gst_subtitle_sink_send_event(GstElement *element, GstEvent *event)
 {
     g_return_val_if_fail(element != nullptr && event != nullptr, FALSE);
-    GstBaseSink *basesink = GST_BASE_SINK(element);
+    GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK(element);
     GstFormat seek_format;
     GstSeekFlags flags;
     GstSeekType start_type, stop_type;
     gint64 start, stop;
 
-    GST_DEBUG_OBJECT(basesink, "handling event name %s", GST_EVENT_TYPE_NAME(event));
+    GST_DEBUG_OBJECT(subtitle_sink, "handling event name %s", GST_EVENT_TYPE_NAME(event));
     switch (GST_EVENT_TYPE(event)) {
         case GST_EVENT_SEEK: {
             gst_event_parse_seek(event, &subtitle_sink->rate, &seek_format, &flags, &start_type, &start, &stop_type, &stop);
-            GST_DEBUG_OBJECT(basesink, "parse seek rate: %f", subtitle_sink->rate);
+            GST_DEBUG_OBJECT(subtitle_sink, "parse seek rate: %f", subtitle_sink->rate);
             break;
         }
         default:
