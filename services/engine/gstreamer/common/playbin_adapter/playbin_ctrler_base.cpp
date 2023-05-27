@@ -527,8 +527,11 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
         AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
 
+        PlayBinCtrlerWrapper *wrap = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+        CHECK_AND_RETURN_LOG(wrap != nullptr, "can not create this wrap");
+
         id = g_signal_connect_data(playbin_, "video-changed",
-            G_CALLBACK(&PlayBinCtrlerBase::OnSelectBitrateDoneCb), wrapper,
+            G_CALLBACK(&PlayBinCtrlerBase::OnSelectBitrateDoneCb), wrap,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
         AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
     }
