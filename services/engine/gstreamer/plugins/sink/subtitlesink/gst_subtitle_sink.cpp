@@ -31,7 +31,6 @@ struct _GstSubtitleSinkPrivate {
     guint64 text_frame_duration;
     GstSubtitleSinkCallbacks callbacks;
     gpointer userdata;
-    GDestroyNotify notify;
     std::unique_ptr<TaskQueue> timer_queue;
 };
 
@@ -49,6 +48,7 @@ static void gst_subtitle_sink_handle_buffer(GstSubtitleSink *subtitle_sink,
 static void gst_subtitle_sink_cancel_not_executed_task(GstSubtitleSink *subtitle_sink);
 static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts, guint32 &duration);
 static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, GstStateChange transition);
+static gboolean gst_subtitle_sink_send_event(GstElement *element, GstEvent *event);
 static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink);
 static GstFlowReturn gst_subtitle_sink_new_sample(GstAppSink *appsink, gpointer user_data);
 static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer user_data);
@@ -79,6 +79,7 @@ static void gst_subtitle_sink_class_init(GstSubtitleSinkClass *kclass)
     gobject_class->finalize = gst_subtitle_sink_finalize;
     gobject_class->set_property = gst_subtitle_sink_set_property;
     element_class->change_state = gst_subtitle_sink_change_state;
+    element_class->send_event = gst_subtitle_sink_send_event;
     basesink_class->event = gst_subtitle_sink_event;
     basesink_class->stop = gst_subtitle_sink_stop;
     basesink_class->start = gst_subtitle_sink_start;
@@ -90,6 +91,8 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     g_return_if_fail(subtitle_sink != nullptr);
 
     subtitle_sink->is_flushing = FALSE;
+    subtitle_sink->preroll_buffer = nullptr;
+    subtitle_sink->rate = 1.0f;
 
     auto priv = reinterpret_cast<GstSubtitleSinkPrivate *>(gst_subtitle_sink_get_instance_private(subtitle_sink));
     g_return_if_fail(priv != nullptr);
@@ -99,7 +102,6 @@ static void gst_subtitle_sink_init(GstSubtitleSink *subtitle_sink)
     priv->started = FALSE;
     priv->callbacks.new_sample = nullptr;
     priv->userdata = nullptr;
-    priv->notify = nullptr;
     priv->timer_queue = std::make_unique<TaskQueue>("GstSubtitleSinkTask");
 }
 
@@ -112,20 +114,8 @@ void gst_subtitle_sink_set_callback(GstSubtitleSink *subtitle_sink, GstSubtitleS
     g_return_if_fail(priv != nullptr);
 
     GST_OBJECT_LOCK(subtitle_sink);
-    GDestroyNotify old_notify = priv->notify;
-    if (old_notify) {
-        gpointer old_data = priv->userdata;
-        priv->userdata = nullptr;
-        priv->notify = nullptr;
-
-        GST_OBJECT_UNLOCK(subtitle_sink);
-        old_notify(old_data);
-        GST_OBJECT_LOCK(subtitle_sink);
-    }
-
     priv->callbacks = *callbacks;
     priv->userdata = user_data;
-    priv->notify = notify;
 
     GstAppSinkCallbacks appsink_callback;
     appsink_callback.new_sample = gst_subtitle_sink_new_sample;
@@ -200,6 +190,29 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
     return GST_ELEMENT_CLASS(parent_class)->change_state(element, transition);
 }
 
+static gboolean gst_subtitle_sink_send_event(GstElement *element, GstEvent *event)
+{
+    g_return_val_if_fail(element != nullptr && event != nullptr, FALSE);
+    GstBaseSink *basesink = GST_BASE_SINK(element);
+    GstSubtitleSink *self = GST_SUBTITLE_SINK(element);
+    GstFormat seek_format;
+    GstSeekFlags flags;
+    GstSeekType start_type, stop_type;
+    gint64 start, stop;
+
+    GST_DEBUG_OBJECT(basesink, "handling event name %s", GST_EVENT_TYPE_NAME(event));
+    switch (GST_EVENT_TYPE(event)) {
+        case GST_EVENT_SEEK: {
+            gst_event_parse_seek(event, &subtitle_sink->rate, &seek_format, &flags, &start_type, &start, &stop_type, &stop);
+            GST_DEBUG_OBJECT(basesink, "parse seek rate: %f", subtitle_sink->rate);
+            break;
+        }
+        default:
+            break;
+    }
+    return GST_ELEMENT_CLASS(parent_class)->send_event(element, event);
+}
+
 static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gstPts, guint32 &duration)
 {
     if (GST_BUFFER_PTS_IS_VALID(buffer)) {
@@ -232,11 +245,17 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     }
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_mutex_lock(&priv->mutex);
-    priv->text_frame_duration = USECOND_TO_MSECOND(duration);
+    priv->text_frame_duration = USECOND_TO_MSECOND(duration / subtitle_sink->rate);
     priv->running_time = 0ULL;
     g_mutex_unlock(&priv->mutex);
-    gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
+    GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer text duration is %" GST_TIME_FORMAT,
+        GST_TIME_ARGS(MSECOND_TO_SECOND(priv->text_frame_duration)));
 
+    subtitle_sink->preroll_buffer = buffer;
+    gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
+    if (sample != nullptr) {
+        gst_sample_unref(sample);
+    }
     return GST_FLOW_OK;
 }
 
@@ -246,6 +265,12 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     GstSample *sample = gst_app_sink_pull_sample(appsink);
     GstBuffer *buffer = gst_sample_get_buffer(sample);
+
+    if (subtitle_sink->preroll_buffer == buffer) {
+        subtitle_sink->preroll_buffer = nullptr;
+        GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer, no need render again");
+        return GST_FLOW_OK;
+    }
 
     GST_INFO_OBJECT(subtitle_sink, "app render buffer 0x%06" PRIXPTR "", FAKE_POINTER(buffer));
 
@@ -259,7 +284,7 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
     }
 
     g_mutex_lock(&priv->mutex);
-    priv->text_frame_duration = USECOND_TO_MSECOND(duration);
+    priv->text_frame_duration = USECOND_TO_MSECOND(duration / subtitle_sink->rate);
     priv->running_time = GST_TIME_AS_MSECONDS(gst_util_get_timestamp());
 
     GST_DEBUG_OBJECT(subtitle_sink, "text duration is %" GST_TIME_FORMAT,
@@ -267,7 +292,10 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
     g_mutex_unlock(&priv->mutex);
 
     gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
-    gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, USECOND_TO_MSECOND(duration));
+    gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, USECOND_TO_MSECOND(priv->text_frame_duration));
+    if (sample != nullptr) {
+        gst_sample_unref(sample);
+    }
     return GST_FLOW_OK;
 }
 

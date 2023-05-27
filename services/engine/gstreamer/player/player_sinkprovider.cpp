@@ -264,6 +264,7 @@ void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitl
 
 GstFlowReturn PlayerSinkProvider::SubtitleUpdated(GstBuffer *sample, gpointer userData)
 {
+    MediaTrace trace("PlayerSinkProvider::SubtitleUpdated");
     CHECK_AND_RETURN_RET(userData != nullptr, GST_FLOW_ERROR);
     PlayerSinkProvider *sinkProvider = reinterpret_cast<PlayerSinkProvider *>(userData);
     Format subtitle;
@@ -277,7 +278,6 @@ void PlayerSinkProvider::OnSubtitleUpdated(const Format &subtitle)
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGI("OnSubtitleUpdated in");
     if (notifier_ != nullptr) {
-        MediaTrace trace("PlayerSinkProvider::SubtitleUpdated");
         PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_UPDATED, 0, subtitle};
         notifier_(msg);
         MEDIA_LOGD("Subtitle text updated");

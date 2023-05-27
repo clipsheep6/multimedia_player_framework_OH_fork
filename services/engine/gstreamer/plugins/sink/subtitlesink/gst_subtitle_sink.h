@@ -51,6 +51,8 @@ using GstSubtitleSinkCallbacks = struct {
 struct _GstSubtitleSink {
     GstAppSink appsink;
     gboolean is_flushing;
+    GstBuffer *preroll_buffer;
+    gdouble rate;
     /* private */
     GstSubtitleSinkPrivate *priv;
 };
