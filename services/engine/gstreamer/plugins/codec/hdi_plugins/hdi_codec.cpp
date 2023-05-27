@@ -440,11 +440,11 @@ int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
     return ret;
 }
 
-void HidCodec::SetOutputPool(GstBufferPool *pool)
+void HdiCodec::SetOutputPool(GstBufferPool *pool)
 {
     std::shared_lock<std::shared_mutex> rLock(bufferMgrMutex_);
     CHECK_AND_RETURN_LOG(outBufferMgr_ != nullptr, "outBufferMgr_ is nullptr");
-    outBufferMgr_->SetOutputBuffer(pool);
+    outBufferMgr_->SetOutputPool(pool);
 }
 
 int32_t HdiCodec::FreeOutputBuffers()

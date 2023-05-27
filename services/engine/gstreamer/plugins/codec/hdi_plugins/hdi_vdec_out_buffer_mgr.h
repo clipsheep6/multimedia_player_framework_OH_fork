@@ -44,7 +44,7 @@ private:
     bool isCallBackMode_ = false;
     static GstFlowReturn NewBuffer(GstBuffer *buffer, gpointer userData);
     int32_t OnNewBuffer(GstBuffer *buffer);
-    void ClearPreBuffer();
+    void ClearPreBuffers();
 };
 } // namespace Media
 } // namespace OHOS

@@ -47,7 +47,7 @@ public:
     OHOS::GSError OnBufferReleased(OHOS::sptr<OHOS::SurfaceBuffer> &buffer);
 private:
     GstSurfaceAllocator &owner_;
-}
+};
 
 struct _GstSurfaceAllocator {
     GstAllocator parent;

@@ -259,13 +259,13 @@ GstProducerSurfacePool *gst_producer_surface_pool_new(void)
     return pool;
 }
 
-gboolean gst_producer_surface_pool_set_callback(GstBufferPool *pool, ProSuffaceNewBuffer callback, gpointer userdata)
+gboolean gst_producer_surface_pool_set_callback(GstBufferPool *pool, ProSurfaceNewBuffer callback, gpointer userdata)
 {
-     g_return_if_fail(pool != nullptr);
-     GstProducerSurfacePool *spool = GST_PRODUCER_SURFACE_POOL(pool);
-     spool->newBuffer = callback;
-     spool->userdata = userdata;
-     return TRUE;
+    g_return_val_if_fail(pool != nullptr, FALSE);
+    GstProducerSurfacePool *spool = GST_PRODUCER_SURFACE_POOL(pool);
+    spool->newBuffer = callback;
+    spool->userdata = userdata;
+    return TRUE;
 }
 
 static const gchar **gst_producer_surface_pool_get_options(GstBufferPool *pool)
@@ -694,6 +694,6 @@ static void gst_producer_surface_pool_flush_start(GstBufferPool *pool)
 gboolean gst_producer_surface_pool_flush_buffer(GstProducerSurfacePool *pool,
     sptr<SurfaceBuffer>& buffer, int32_t fence, BufferFlushConfig &config)
 {
-    g_return_if_fail(pool != nullptr);
+    g_return_val_if_fail(pool != nullptr, FALSE);
     return gst_surface_allocator_flush_buffer(pool->allocator, buffer, fence, config);
 }

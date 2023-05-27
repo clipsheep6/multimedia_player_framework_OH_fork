@@ -25,8 +25,8 @@ GST_DEBUG_CATEGORY_STATIC(gst_surface_allocator_debug_category);
 #define gst_surface_allocator_parent_class parent_class
 G_DEFINE_TYPE(GstSurfaceAllocator, gst_surface_allocator, GST_TYPE_ALLOCATOR);
 
-#define GST_SURFACE_ALLOCATOR_LOCK(allocator) (g_mutex_lock(&allocator->lock))
-#define GST_SURFACE_ALLOCATOR_UNLOCK(allocator) (g_mutex_unlock(&allocator->lock))
+#define GST_SURFACE_ALLOCATOR_LOCK(allocator) (g_mutex_lock(&(allocator)->lock))
+#define GST_SURFACE_ALLOCATOR_UNLOCK(allocator) (g_mutex_unlock(&(allocator)->lock))
 #define GST_SURFACE_ALLOCATOR_WAIT(allocator) (g_cond_wait(&(allocator)->cond, &(allocator)->lock))
 #define GST_SURFACE_ALLOCATOR_NOTIFY(allocator) (g_cond_signal(&(allocator)->cond))
 
@@ -50,8 +50,8 @@ namespace {
 #define SURFACE_BUFFER_LOG_INFO(allocator, id) \
     GST_DEBUG_OBJECT(allocator, \
     "buffer %u requestBuffer %d flushBuffer %d cacheBuffer %d totalBuffer %d", \
-    id, allocator->requestBuffer, allocator->flushBuffer, \
-    allocator->cacheBuffer, allocator->totalBuffer)
+    id, allocator->requestBufferNum, allocator->flushBufferNum, \
+    allocator->cacheBufferNum, allocator->totalBufferNum)
 
 void gst_surface_allocator_buffer_release(GstSurfaceAllocator *allocator, sptr<SurfaceBuffer> &buffer)
 {
@@ -61,6 +61,7 @@ void gst_surface_allocator_buffer_release(GstSurfaceAllocator *allocator, sptr<S
     allocator->flushBufferNum--;
     allocator->cacheBufferNum++;
     SURFACE_BUFFER_LOG_INFO(allocator, 0);
+    GST_SURFACE_ALLOCATOR_NOTIFY(allocator);
     GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
 }
 
@@ -123,7 +124,7 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
         param.usage | BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA, wait_time
     };
     int32_t release_fence = -1;
-    OHOS::SurfaceError ret = OHOS::Surface::SURFACE_ERROR_OK;
+    OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
     {
         MediaTrace trace("Surface::RequestBuffer");
         LISTENER(ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config),
@@ -224,7 +225,7 @@ static void gst_surface_allocator_free(GstAllocator *baseAllocator, GstMemory *b
         memory->buf->GetSize(), memory->need_render, memory->fence);
 
     if (!memory->need_render) {
-        OHOS::SurfaceError ret = OHOS::Surface::SURFACE_ERROR_OK;
+        OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
         LISTENER(ret = allocator->surface->CancelBuffer(memory->buf),
             "surface::CancelBuffer", PlayerXCollie::timerTimeout)
         if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
@@ -274,7 +275,7 @@ gboolean gst_surface_allocator_flush_buffer(GstSurfaceAllocator *allocator, sptr
 {
     if (allocator->surface) {
         GST_DEBUG_OBJECT(allocator, "FlushBuffer");
-        OHOS::SurfaceError ret = OHOS::Surface::SURFACE_ERROR_OK;
+        OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
         LISTENER(ret = allocator->surface->FlushBuffer(buffer, fence, config),
             "surface::FlushBuffer", PlayerXCollie::timerTimeout)
         if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
@@ -296,7 +297,7 @@ gboolean gst_surface_allocator_set_queue_size(GstSurfaceAllocator *allocator, in
 {
     if (allocator->surface) {
         GST_DEBUG_OBJECT(allocator, "set queue size %d", size);
-        OHOS::SurfaceError err = OHOS::Surface::SURFACE_ERROR_OK;
+        OHOS::SurfaceError err = OHOS::SurfaceError::SURFACE_ERROR_OK;
         LISTENER(err = allocator->surface->SetQueueSize(size),
             "surface::SetQueueSize", PlayerXCollie::timerTimeout)
         if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {
@@ -319,7 +320,7 @@ void gst_surface_allocator_clean_cache(GstSurfaceAllocator *allocator)
 {
     GST_INFO_OBJECT(allocator, "clean cache");
     if (allocator->surface) {
-        OHOS::SurfaceError err = OHOS::Surface::SURFACE_ERROR_OK;
+        OHOS::SurfaceError err = OHOS::SurfaceError::SURFACE_ERROR_OK;
         LISTENER(err = allocator->surface->CleanCache(),
             "surface::CleanCache", PlayerXCollie::timerTimeout)
         if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {

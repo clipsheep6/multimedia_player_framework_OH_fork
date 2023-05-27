@@ -31,12 +31,12 @@ namespace Media {
 HdiVdecOutBufferMgr::HdiVdecOutBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
-    ClearPreBuffers();
 }
 
 HdiVdecOutBufferMgr::~HdiVdecOutBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
+    ClearPreBuffers();
     delete appData_;
 }
 
@@ -84,6 +84,7 @@ int32_t HdiVdecOutBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
             preBufferCond_.wait_for(lock, std::chrono::seconds(timeout),
                 [this]() { return preBuffers_.size() == mPortDef.nBufferCountActual || bufferReleased_; });
             MEDIA_LOGD("preBuffers size %{public}lu bufferCount %{public}d", preBuffers_.size(), mPortDef_.nBufferCountActual);
+            buffers.swap(preBuffers_);
         }
         enableNativeBuffer_ = true;
         (void)UseHandleMems(buffers);
@@ -119,7 +120,7 @@ GstFlowReturn HdiVdecOutBufferMgr::NewBuffer(GstBuffer *buffer, gpointer userDat
     MediaTrace trace("HdiVdecOutBufferMgr::NewBuffer");
     ON_SCOPE_EXIT(0) {
         gst_buffer_unref(buffer);
-    }
+    };
     AppData *mAppData = reinterpret_cast<AppData *>(userData);
     CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, GST_FLOW_ERROR, "appData is null");
     auto instance = mAppData->instance_.lock();
@@ -153,6 +154,7 @@ int32_t HdiVdecOutBufferMgr::OnNewBuffer(GstBuffer *buffer)
         auto ret = HdiOutBufferMgr::PushBuffer(buffer);
         //PushBuffer will not deal buffer ref count, we need unref after push.
         gst_buffer_unref(buffer);
+        return ret;
     } else {
         std::unique_lock<std::mutex> lock(mutex_);
         // preBuffers get the ref count.
@@ -175,7 +177,7 @@ void HdiVdecOutBufferMgr::SetOutputPool(GstBufferPool *pool)
 
 void HdiVdecOutBufferMgr::ClearPreBuffers()
 {
-    std::for_each(PreBuffers_.begin(), preBuffers_.end(), [&](auto buffer) { gst_buffer_unref(buffer); });
+    std::for_each(preBuffers_.begin(), preBuffers_.end(), [&](auto buffer) { gst_buffer_unref(buffer); });
     std::vector<GstBuffer *> temp;
     swap(temp, preBuffers_);
 }

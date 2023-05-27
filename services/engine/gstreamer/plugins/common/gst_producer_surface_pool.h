@@ -84,7 +84,6 @@ GST_API_EXPORT gboolean gst_producer_surface_pool_flush_buffer(GstProducerSurfac
 GST_API_EXPORT gboolean gst_producer_surface_pool_set_callback(GstBufferPool *pool,
     ProSurfaceNewBuffer callback, gpointer userdata);
 
-GST_API_EXPORT
 G_END_DECLS
 
 #endif
