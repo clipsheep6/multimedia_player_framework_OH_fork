@@ -341,9 +341,11 @@ void PlayerEngineGstImpl::HandleIsLiveStream(const PlayBinMessage &msg)
 
 void PlayerEngineGstImpl::HandleSubTypeMessage(const PlayBinMessage &msg)
 {
-    CHECK_AND_RETURN_LOG(subMsgHandler_.count(msg.subType) > 0,
-        "No this sub msg handler, subType = %{public}d", msg.subType);
-    (this->*subMsgHandler_[msg.subType])(msg);
+    if (subMsgHandler_.count(msg.subType) > 0) {
+        (this->*subMsgHandler_[msg.subType])(msg);
+    } else {
+        MEDIA_LOGI("No this sub msg handler, subType = %{public}d", msg.subType);
+    }
 }
 
 void PlayerEngineGstImpl::HandleAudioMessage(const PlayBinMessage &msg)

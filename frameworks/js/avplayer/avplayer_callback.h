@@ -55,20 +55,20 @@ public:
 
 private:
     void OnStartRenderFrameCb() const;
-    void OnStateChangeCb(int32_t extra, const Format &infoBody);
-    void OnVolumeChangeCb(int32_t extra, const Format &infoBody);
-    void OnSeekDoneCb(int32_t extra, const Format &infoBody);
-    void OnSpeedDoneCb(int32_t extra, const Format &infoBody);
-    void OnBitRateDoneCb(int32_t extra, const Format &infoBody);
-    void OnPositionUpdateCb(int32_t extra, const Format &infoBody);
-    void OnDurationUpdateCb(int32_t extra, const Format &infoBody);
-    void OnBufferingUpdateCb(int32_t extra, const Format &infoBody);
-    void OnMessageCb(int32_t extra, const Format &infoBody);
-    void OnVideoSizeChangedCb(int32_t extra, const Format &infoBody);
-    void OnAudioInterruptCb(int32_t extra, const Format &infoBody);
-    void OnBitRateCollectedCb(int32_t extra, const Format &infoBody);
-    void OnEosCb(int32_t extra, const Format &infoBody);
-    void NotifyIsLiveStream(int32_t extra, const Format &infoBody);
+    void OnStateChangeCb(const int32_t extra, const Format &infoBody);
+    void OnVolumeChangeCb(const int32_t extra, const Format &infoBody);
+    void OnSeekDoneCb(const int32_t extra, const Format &infoBody);
+    void OnSpeedDoneCb(const int32_t extra, const Format &infoBody);
+    void OnBitRateDoneCb(const int32_t extra, const Format &infoBody);
+    void OnPositionUpdateCb(const int32_t extra, const Format &infoBody);
+    void OnDurationUpdateCb(const int32_t extra, const Format &infoBody);
+    void OnBufferingUpdateCb(const int32_t extra, const Format &infoBody);
+    void OnMessageCb(const int32_t extra, const Format &infoBody);
+    void OnVideoSizeChangedCb(const int32_t extra, const Format &infoBody);
+    void OnAudioInterruptCb(const int32_t extra, const Format &infoBody);
+    void OnBitRateCollectedCb(const int32_t extra, const Format &infoBody);
+    void OnEosCb(const int32_t extra, const Format &infoBody);
+    void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
@@ -77,7 +77,7 @@ private:
     std::atomic<bool> isloaded_ = false;
     PlayerStates state_ = PLAYER_IDLE;
     std::shared_ptr<AppExecFwk::EventHandler> handler_ = nullptr;
-    std::map<uint32_t, void(AVPlayerCallback::*)(int32_t extra, const Format &infoBody)> onInfoFuncs_;
+    std::map<uint32_t, void(AVPlayerCallback::*)(const int32_t extra, const Format &infoBody)> onInfoFuncs_;
 };
 } // namespace Media
 } // namespace OHOS

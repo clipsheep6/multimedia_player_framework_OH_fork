@@ -397,11 +397,14 @@ void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("OnInfo is called, PlayerOnInfoType: %{public}d", type);
-    CHECK_AND_RETURN_LOG(onInfoFuncs_.count(type) > 0, "OnInfo: no member func supporting, %{public}d", type);
-    (this->*onInfoFuncs_[type])(extra, infoBody);
+    if (onInfoFuncs_.count(type) > 0) {
+        (this->*onInfoFuncs_[type])(extra, infoBody);
+    } else {
+        MEDIA_LOGI("OnInfo: no member func supporting, %{public}d", type);
+    }
 }
 
-void AVPlayerCallback::NotifyIsLiveStream(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::NotifyIsLiveStream(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
     (void)infoBody;
@@ -410,7 +413,7 @@ void AVPlayerCallback::NotifyIsLiveStream(int32_t extra, const Format &infoBody)
     }
 }
 
-void AVPlayerCallback::OnStateChangeCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnStateChangeCb(const int32_t extra, const Format &infoBody)
 {
     PlayerStates state = static_cast<PlayerStates>(extra);
     MEDIA_LOGI("OnStateChanged is called, current state: %{public}d", state);
@@ -454,7 +457,7 @@ void AVPlayerCallback::OnStateChangeCb(int32_t extra, const Format &infoBody)
     }
 }
 
-void AVPlayerCallback::OnVolumeChangeCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnVolumeChangeCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -475,7 +478,7 @@ void AVPlayerCallback::OnVolumeChangeCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnSeekDoneCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnSeekDoneCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -495,7 +498,7 @@ void AVPlayerCallback::OnSeekDoneCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnSpeedDoneCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnSpeedDoneCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -515,7 +518,7 @@ void AVPlayerCallback::OnSpeedDoneCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnBitRateDoneCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnBitRateDoneCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -535,7 +538,7 @@ void AVPlayerCallback::OnBitRateDoneCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnPositionUpdateCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnPositionUpdateCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -560,7 +563,7 @@ void AVPlayerCallback::OnPositionUpdateCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnDurationUpdateCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -585,7 +588,7 @@ void AVPlayerCallback::OnDurationUpdateCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnBufferingUpdateCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -623,7 +626,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(int32_t extra, const Format &infoBody
     NapiCallback::CompleteCallbackInOrder(cb, handler_);
 }
 
-void AVPlayerCallback::OnMessageCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnMessageCb(const int32_t extra, const Format &infoBody)
 {
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGI("OnMessageCb is called, extra: %{public}d", extra);
@@ -649,7 +652,7 @@ void AVPlayerCallback::OnStartRenderFrameCb() const
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnVideoSizeChangedCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnVideoSizeChangedCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -677,7 +680,7 @@ void AVPlayerCallback::OnVideoSizeChangedCb(int32_t extra, const Format &infoBod
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnAudioInterruptCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnAudioInterruptCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -706,7 +709,7 @@ void AVPlayerCallback::OnAudioInterruptCb(int32_t extra, const Format &infoBody)
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnBitRateCollectedCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnBitRateCollectedCb(const int32_t extra, const Format &infoBody)
 {
     (void)extra;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
@@ -745,7 +748,7 @@ void AVPlayerCallback::OnBitRateCollectedCb(int32_t extra, const Format &infoBod
     NapiCallback::CompleteCallback(env_, cb);
 }
 
-void AVPlayerCallback::OnEosCb(int32_t extra, const Format &infoBody)
+void AVPlayerCallback::OnEosCb(const int32_t extra, const Format &infoBody)
 {
     (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
