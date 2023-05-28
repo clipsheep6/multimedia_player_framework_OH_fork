@@ -21,6 +21,7 @@
 #include "buffer_type_meta.h"
 #include "scope_guard.h"
 #include "gst_producer_surface_pool.h"
+#include "media_dfx.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVdecOutBufferMgr"};
@@ -37,7 +38,6 @@ HdiVdecOutBufferMgr::~HdiVdecOutBufferMgr()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     ClearPreBuffers();
-    delete appData_;
 }
 
 int32_t HdiVdecOutBufferMgr::UseHandleMems(std::vector<GstBuffer *> &buffers)
@@ -82,8 +82,7 @@ int32_t HdiVdecOutBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
             std::unique_lock<std::mutex> lock(mutex_);
             static constexpr int32_t timeout = 2;
             preBufferCond_.wait_for(lock, std::chrono::seconds(timeout),
-                [this]() { return preBuffers_.size() == mPortDef.nBufferCountActual || bufferReleased_; });
-            MEDIA_LOGD("preBuffers size %{public}lu bufferCount %{public}d", preBuffers_.size(), mPortDef_.nBufferCountActual);
+                [this]() { return preBuffers_.size() == mPortDef_.nBufferCountActual || bufferReleased_; });
             buffers.swap(preBuffers_);
         }
         enableNativeBuffer_ = true;
