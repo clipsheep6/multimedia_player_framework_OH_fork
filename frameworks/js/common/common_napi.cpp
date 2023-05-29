@@ -361,24 +361,6 @@ bool CommonNapi::SetPropertyInt32(napi_env env, napi_value &obj, const std::stri
     return true;
 }
 
-bool CommonNapi::SetPropertyDouble(napi_env env, napi_value &obj, const std::string &key, double value)
-{
-    CHECK_AND_RETURN_RET(obj != nullptr, false);
-
-    napi_value keyNapi = nullptr;
-    napi_status status = napi_create_string_utf8(env, key.c_str(), NAPI_AUTO_LENGTH, &keyNapi);
-    CHECK_AND_RETURN_RET(status == napi_ok, false);
-
-    napi_value valueNapi = nullptr;
-    status = napi_create_double(env, value, &valueNapi);
-    CHECK_AND_RETURN_RET(status == napi_ok, false);
-
-    status = napi_set_property(env, obj, keyNapi, valueNapi);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, false, "failed to set property");
-
-    return true;
-}
-
 bool CommonNapi::SetPropertyString(napi_env env, napi_value &obj, const std::string &key, const std::string &value)
 {
     CHECK_AND_RETURN_RET(obj != nullptr, false);
@@ -402,7 +384,6 @@ napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
     napi_value buffer = nullptr;
     int32_t intValue = 0;
     std::string strValue;
-    double doubleValue = 0;
     napi_status status = napi_create_object(env, &buffer);
     CHECK_AND_RETURN_RET(status == napi_ok, nullptr);
 
@@ -416,11 +397,6 @@ napi_value CommonNapi::CreateFormatBuffer(napi_env env, Format &format)
             case FORMAT_TYPE_STRING:
                 if (format.GetStringValue(iter.first, strValue)) {
                     CHECK_AND_RETURN_RET(SetPropertyString(env, buffer, iter.first, strValue) == true, nullptr);
-                }
-                break;
-            case FORMAT_TYPE_DOUBLE:
-                if (format.GetDoubleValue(iter.first, doubleValue)) {
-                    CHECK_AND_RETURN_RET(SetPropertyDouble(env, buffer, iter.first, doubleValue) == true, nullptr);
                 }
                 break;
             default:
