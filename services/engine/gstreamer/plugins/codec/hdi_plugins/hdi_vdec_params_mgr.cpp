@@ -68,9 +68,25 @@ int32_t HdiVdecParamsMgr::SetParameter(GstCodecParamKey key, GstElement *element
             break;
         case GST_METADATA_MODE:
             return SetMetadataMode();
+        case GST_DYNAMIC_FRAME_RATE:
+            return SetFrameRate(element);
         default:
             break;
     }
+    return GST_CODEC_OK;
+}
+
+int32_t HdiVdecParamsMgr::SetFrameRate(GstElement *element)
+{
+    GstVdecBase *base = GST_VDEC_BASE(element);
+    OMX_PARAM_U32TYPE param;
+    param.nSize = sizeof(OMX_PARAM_U32TYPE);
+    param.nU32 = static_cast<uint32_t>(base->seek_frame_rate);
+    param.nPortIndex = inPortDef_.nPortIndex;
+        MEDIA_LOGI("SetFrameRate frame rate %{public}u", param.nU32);
+    param.nU32 = param.nU32 << HDI_FRAME_RATE_MOVE;
+    auto ret = HdiSetConfig(handle_, OMX_IndexOtherStartUnused + 3, param);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetConfig failed");
     return GST_CODEC_OK;
 }
 

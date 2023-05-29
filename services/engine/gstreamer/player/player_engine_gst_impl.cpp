@@ -876,9 +876,8 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
             CHECK_AND_RETURN_LOG(sinkProvider_ != nullptr, "sinkProvider_ is nullptr");
             GstElement *videoSink = sinkProvider_->GetVideoSink();
             CHECK_AND_RETURN_LOG(videoSink != nullptr, "videoSink is nullptr");
-            codecCtrl_.DetectCodecSetup(metaStr, &elem, videoSink);
             auto notifier = std::bind(&PlayerEngineGstImpl::OnCapsFixError, this);
-            codecCtrl_.SetCapsFixErrorCb(notifier);
+            codecCtrl_.DetectCodecSetup(metaStr, &elem, videoSink, notifier);
         }
     }
 }

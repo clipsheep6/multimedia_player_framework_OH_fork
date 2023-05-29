@@ -47,7 +47,7 @@ private:
         bool isHardware = false;
         gulong signalId = 0;
     };
-    std::unordererd_map<GstElement *, DecoderElement> elementMap_;
+    std::unordered_map<GstElement *, DecoderElement> elementMap_;
     GstElement *decoder_ = nullptr;
     std::list<bool> codecTypeList_;
     std::mutex mutex_;

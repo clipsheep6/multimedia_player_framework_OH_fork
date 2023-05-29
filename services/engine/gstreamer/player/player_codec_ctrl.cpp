@@ -124,7 +124,7 @@ void PlayerCodecCtrl::DetectCodecUnSetup(GstElement *src, GstElement *videoSink)
         if (elementMap_[src].signalId != 0) {
             g_signal_handler_disconnect(src, elementMap_[src].signalId);
             elementMap_[src].signalId = 0;
-        } 
+        }
         elementMap_.erase(it);
     }
     MEDIA_LOGD("del decoder element size = %{public}zu", elementMap_.size());
