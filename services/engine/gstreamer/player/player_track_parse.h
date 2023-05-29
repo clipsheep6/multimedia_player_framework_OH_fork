@@ -32,7 +32,7 @@ public:
     static std::shared_ptr<PlayerTrackParse> Create();
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack);
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack);
-    bool GetDemuxerElementFind() const;
+    bool FindTrackInfo();
     void OnElementSetup(GstElement &elem);
     void OnElementUnSetup(GstElement &elem);
     void Stop();
@@ -50,33 +50,39 @@ private:
     static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
     static void OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
     void SetUpDemuxerElementCb(GstElement &elem);
-
-    void OnUnknownType(const GstElement *element, GstPad *pad, GstCaps *caps);
-    static void UnknownType(const GstElement *element, GstPad *pad, GstCaps *caps, gpointer userData);
     
     void SetUpInputSelectElementCb(GstElement &elem);
     static void OnInputSelectPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
     bool InputSelectAddProbeToPad(const GstElement *element, GstPad *pad);
     static GstPadProbeReturn InputSelectProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
-    GstPadProbeReturn CheckDemux(GstPad *pad, GstPadProbeInfo *info);
+    GstPadProbeReturn GetUsedDemux(GstPad *pad, GstPadProbeInfo *info);
 
     static bool IsSameStreamId(GstPad *padA, GstPad *padB);
     void UpdateTrackInfo();
     void StartUpdateTrackInfo();
+    int32_t GetInputSelectPadIndex(GstPad *pad);
     
     struct DemuxInfo {
-        DemuxInfo() = default;
+        explicit DemuxInfo(GstElement *value): demux(value) {}
         ~DemuxInfo() = default;
-
+        GstElement * demux = nullptr;
+        bool inUse = false;
         int32_t trackcount = 0;
         std::map<GstPad *, Format> trackInfos;
     };
 
+    struct InputSelectInfo {
+        InputSelectInfo() = default;
+        ~InputSelectInfo() = default;
+        int32_t padCount = 0;
+        std::map<GstPad *, int32_t> padIndexMap;
+    };
+
+    bool findTrackInfo_ = false;
     bool updateTrackInfo_ = false;
-    GstElement *currentDemux_ = nullptr;
-    std::set<GstElement *> inputSelectSet_;
     std::set<GstPad *> parsePadSet_;
-    std::map<GstElement *, DemuxInfo> demuxMap_;
+    std::map<GstElement *, InputSelectInfo> inputSelectMap_;
+    std::vector<DemuxInfo> trackVec_;
     std::vector<Format> videoTracks_;
     std::vector<Format> audioTracks_;
     struct SignalInfo {

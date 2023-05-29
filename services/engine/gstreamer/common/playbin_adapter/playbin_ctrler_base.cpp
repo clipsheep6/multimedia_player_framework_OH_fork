@@ -1277,12 +1277,18 @@ void PlayBinCtrlerBase::AudioChanged(const GstElement *playbin, gpointer userDat
 void PlayBinCtrlerBase::OnAudioChanged()
 {
     CHECK_AND_RETURN(playbin_ != nullptr && trackParse_ != nullptr);
-    CHECK_AND_RETURN_LOG(trackParse_->GetDemuxerElementFind(), "The plugin has been cleared, no need to report it");
+    if (!trackParse_->FindTrackInfo()) {
+        MEDIA_LOGI("The plugin has been cleared, no need to report it");
+        return;
+    }
 
     int32_t audioIndex = -1;
     g_object_get(playbin_, "current-audio", &audioIndex, nullptr);
     MEDIA_LOGI("AudioChanged, current-audio %{public}d", audioIndex);
-    CHECK_AND_RETURN_LOG(audioIndex != audioIndex_, "Audio Not Changed");
+    if (audioIndex == audioIndex_) {
+        MEDIA_LOGI("Audio Not Changed");
+        return;
+    }
 
     audioIndex_ = audioIndex;
     if (GetCurrState() == preparingState_) {
