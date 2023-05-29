@@ -71,6 +71,7 @@ void PlayerTrackParse::OnElementSetup(GstElement &elem)
         std::unique_lock<std::mutex> lock(trackInfoMutex_);
         DemuxInfo demux(&elem);
         trackVec_.push_back(demux);
+        lock.unlock();
         SetUpDemuxerElementCb(elem);
     }
 
@@ -84,6 +85,7 @@ void PlayerTrackParse::OnElementSetup(GstElement &elem)
         std::unique_lock<std::mutex> lock(trackInfoMutex_);
         InputSelectInfo info;
         inputSelectMap_.insert(std::pair<GstElement *, InputSelectInfo>(&elem, info));
+        lock.unlock();
         SetUpInputSelectElementCb(elem);
     }
 }
