@@ -767,7 +767,10 @@ int32_t PlayBinCtrlerBase::SetupSignalMessage()
         static_cast<GConnectFlags>(0));
     AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
 
-    id = g_signal_connect(playbin_, "audio-changed", G_CALLBACK(&PlayBinCtrlerBase::AudioChanged), wrapper);
+    PlayBinCtrlerWrapper *wrap = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_RET_LOG(wrap != nullptr, MSERR_NO_MEMORY, "can not create this wrapper");
+    id = g_signal_connect_data(playbin_, "audio-changed", G_CALLBACK(&PlayBinCtrlerBase::AudioChanged),
+        wrap, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
     AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
 
     GstBus *bus = gst_pipeline_get_bus(playbin_);

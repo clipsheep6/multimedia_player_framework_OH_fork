@@ -68,9 +68,9 @@ void PlayerTrackParse::OnElementSetup(GstElement &elem)
     std::string metaStr(metadata);
     if (metaStr.find("Codec/Demuxer") != std::string::npos && elementName.find("hlsdemux") == std::string::npos) {
         // Collect trackinfo information
-        SetUpDemuxerElementCb(elem);
         DemuxInfo demux;
         demuxMap_.insert(std::pair<GstElement *, DemuxInfo>(&elem, demux));
+        SetUpDemuxerElementCb(elem);
     }
 
     if (metaStr.find("Codec/Parser") != std::string::npos) {
