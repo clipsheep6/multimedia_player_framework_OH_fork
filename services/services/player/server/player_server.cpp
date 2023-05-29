@@ -289,10 +289,8 @@ int32_t PlayerServer::HandlePrepare()
     if (config_.speedMode != SPEED_FORWARD_1_00_X) {
         MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
         auto rateTask = std::make_shared<TaskHandler<void>>([this]() {
-            auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
-            PlaybackRateMode speedMode = config_.speedMode;
-            config_.speedMode = SPEED_FORWARD_1_00_X;
-            (void)currState->SetPlaybackSpeed(speedMode);
+            int ret = playerEngine_->SetPlaybackSpeed(config_.speedMode);
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Engine SetPlaybackSpeed Failed!");
         });
         auto cancelTask = std::make_shared<TaskHandler<void>>([this]() {
             MEDIA_LOGI("Interrupted speed action");
