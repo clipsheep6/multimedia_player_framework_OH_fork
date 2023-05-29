@@ -610,7 +610,7 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
         taskMgr_.MarkTaskDone("interrupted seek done");
     });
 
-    int ret = taskMgr_.LaunchTask(seekTask, PlayerServerTaskType::SEEKING, "seek", cancelTask);
+    int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
 
     return MSERR_OK;
@@ -814,7 +814,7 @@ void PlayerServer::HandleEos()
         });
 
         disableNextSeekDone_ = true;
-        int ret = taskMgr_.LaunchTask(seekTask, PlayerServerTaskType::SEEKING, "eos seek", cancelTask);
+        int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "eos seek", SEEK_PREVIOUS_SYNC, 0);
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Seek failed");
     }
 }
