@@ -34,7 +34,7 @@ protected:
 private:
     struct AppData {
         std::weak_ptr<HdiVdecOutBufferMgr> instance_;
-        AppData(std::weak_ptr<HdiVdecOutBufferMgr> mgr) : instance_(mgr) {}
+        explicit AppData(std::weak_ptr<HdiVdecOutBufferMgr> mgr) : instance_(mgr) {}
     };
     bool enableNativeBuffer_ = false;
     int32_t UseHandleMems(std::vector<GstBuffer *> &buffers);

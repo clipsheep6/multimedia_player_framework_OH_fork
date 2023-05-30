@@ -53,7 +53,7 @@ namespace {
     id, allocator->requestBufferNum, allocator->flushBufferNum, \
     allocator->cacheBufferNum, allocator->totalBufferNum)
 
-void gst_surface_allocator_buffer_release(GstSurfaceAllocator *allocator, sptr<SurfaceBuffer> &buffer)
+static void gst_surface_allocator_buffer_release(GstSurfaceAllocator *allocator, sptr<SurfaceBuffer> &buffer)
 {
     GST_DEBUG_OBJECT(allocator, "buffer released");
     (void)buffer;

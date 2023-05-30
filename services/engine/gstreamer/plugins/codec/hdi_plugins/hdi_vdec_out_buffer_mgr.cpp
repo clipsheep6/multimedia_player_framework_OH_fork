@@ -151,7 +151,7 @@ int32_t HdiVdecOutBufferMgr::OnNewBuffer(GstBuffer *buffer)
         mBuffers.push_back(bufferWarp);
     } else if (isStart_) {
         auto ret = HdiOutBufferMgr::PushBuffer(buffer);
-        //PushBuffer will not deal buffer ref count, we need unref after push.
+        // PushBuffer will not deal buffer ref count, we need unref after push.
         gst_buffer_unref(buffer);
         return ret;
     } else {
