@@ -160,6 +160,11 @@ private:
     static napi_value JsSetAudioRendererInfo(napi_env env, napi_callback_info info);
 
     /**
+     * audioEffectMode ?: audio.AudioEffectMode;
+     */
+    static napi_value JsGetAudioEffectMode(napi_env env, napi_callback_info info);
+    static napi_value JsSetAudioEffectMode(napi_env env, napi_callback_info info);
+    /**
      * readonly currentTime: number
      */
     static napi_value JsGetCurrentTime(napi_env env, napi_callback_info info);
@@ -283,6 +288,7 @@ private:
         OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
         0
     };
+    int32_t audioEffectMode_ = 0; // XYJ
     std::unique_ptr<TaskQueue> taskQue_;
     std::mutex mutex_;
     std::mutex taskMutex_;

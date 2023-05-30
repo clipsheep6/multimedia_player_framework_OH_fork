@@ -695,6 +695,11 @@ int32_t PlayerEngineGstImpl::SetParameter(const Format &param)
         param.GetIntValue(PlayerKeys::AUDIO_INTERRUPT_MODE, interruptMode);
         return SetAudioInterruptMode(interruptMode);
     }
+    if (param.ContainKey(PlayerKeys::AUDIO_EFFECT_MODE)) {
+        int32_t effectMode = 0;
+        param.GetIntValue(PlayerKeys::AUDIO_EFFECT_MODE, effectMode);
+        return SetAudioEffectMode(effectMode);
+    }
     return MSERR_OK;
 }
 
@@ -808,6 +813,15 @@ int32_t PlayerEngineGstImpl::SetAudioInterruptMode(const int32_t interruptMode)
         playBinCtrler_->SetAudioInterruptMode(interruptMode);
     }
     return MSERR_OK;
+}
+
+int32_t PlayerEngineGstImpl::SetAudioEffectMode(const int32_t effectMode)
+{
+    MEDIA_LOGD("SetAudioEffectMode in");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    //参数校验
+    return playBinCtrler_->SetAudioEffectMode(effectMode);
 }
 
 GValueArray *PlayerEngineGstImpl::OnNotifyAutoPlugSort(GValueArray &factories)

@@ -88,6 +88,11 @@ public:
         (void)interruptMode;
         return 0;
     }
+    virtual int32_t SetAudioEffectMode(const int32_t effectMode)
+    {
+        (void)effectMode;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

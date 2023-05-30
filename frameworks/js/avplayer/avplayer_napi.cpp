@@ -78,6 +78,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER_SETTER("videoScaleType", JsGetVideoScaleType, JsSetVideoScaleType),
         DECLARE_NAPI_GETTER_SETTER("audioInterruptMode", JsGetAudioInterruptMode, JsSetAudioInterruptMode),
         DECLARE_NAPI_GETTER_SETTER("audioRendererInfo", JsGetAudioRendererInfo, JsSetAudioRendererInfo),
+        DECLARE_NAPI_GETTER_SETTER("audioEffectMode", JsGetAudioEffectMode, JsSetAudioEffectMode),
 
         DECLARE_NAPI_GETTER("state", JsGetState),
         DECLARE_NAPI_GETTER("currentTime", JsGetCurrentTime),
@@ -1333,6 +1334,72 @@ napi_value AVPlayerNapi::JsGetAudioInterruptMode(napi_env env, napi_callback_inf
     return value;
 }
 
+// xyj暂时认为0=default 即生效
+// 认为1=bypass，即失效
+napi_value AVPlayerNapi::JsSetAudioEffectMode(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::set audioInterruptMode");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsSetAudioEffectMode In");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport audio effect mode operation");
+        return result;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "audioEffectMode is not number");
+        return result;
+    }
+
+    int32_t effectMode = 0;
+    napi_status status = napi_get_value_int32(env, args[0], &effectMode);
+    if (status != napi_ok ||
+        effectMode < 0 ||
+        effectMode > 1) { // XYJ
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid audioEffectMode, please check the input interrupt Mode");
+        return result;
+    }
+    jsPlayer->audioEffectMode_ = static_cast<AudioStandard::InterruptMode>(effectMode); // XYJ
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+        MEDIA_LOGI("JsSetAudioEffectMode Task");
+        if (jsPlayer->player_ != nullptr) {
+            Format format;
+            (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, jsPlayer->audioEffectMode_);
+            (void)jsPlayer->player_->SetParameter(format);
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    MEDIA_LOGI("JsSetAudioEffectMode Out");
+    return result;
+}
+
+napi_value AVPlayerNapi::JsGetAudioEffectMode(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::get audioInterruptMode");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsGetAudioEffectMode In");
+
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
+
+    napi_value value = nullptr;
+    (void)napi_create_int32(env, static_cast<int32_t>(jsPlayer->audioEffectMode_), &value);
+    MEDIA_LOGI("JsGetAudioEffectMode Out");
+    return value;
+}
+
 bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi *jsPlayer)
 {
     int32_t content = -1;
@@ -1360,6 +1427,13 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
         std::find(usages.begin(), usages.end(), usage) == usages.end()) {
         return false;
     }
+
+    if (jsPlayer->audioRendererInfo_.contentType != content ||
+        jsPlayer->audioRendererInfo_.streamUsage != usage ||
+        jsPlayer->audioRendererInfo_.rendererFlags != rendererFlags) {
+        jsPlayer->audioEffectMode_ = 0; //xyj
+    }
+
     jsPlayer->audioRendererInfo_ = AudioStandard::AudioRendererInfo {
         static_cast<AudioStandard::ContentType>(content),
         static_cast<AudioStandard::StreamUsage>(usage),
