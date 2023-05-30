@@ -63,6 +63,8 @@ static void gst_surface_allocator_buffer_release(GstSurfaceAllocator *allocator,
     SURFACE_BUFFER_LOG_INFO(allocator, 0);
     GST_SURFACE_ALLOCATOR_NOTIFY(allocator);
     GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
+    MediaTrace::CounterTrace("flushBufferNum", allocator->flushBufferNum);
+    MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
 }
 
 GSError AllocatorWrap::OnBufferReleased(sptr<SurfaceBuffer> &buffer)
@@ -140,6 +142,8 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
         allocator->cacheBufferNum--;
         SURFACE_BUFFER_LOG_INFO(allocator, buffer->GetSeqNum());
         GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
+        MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
+        MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
     }
     {
         MediaTrace mapTrace("Surface::Map");
@@ -152,6 +156,8 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
             allocator->cacheBufferNum++;
             SURFACE_BUFFER_LOG_INFO(allocator, buffer->GetSeqNum());
             GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
+            MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
+            MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
             return false;
         }
     }
@@ -178,6 +184,8 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
             allocator->cacheBufferNum++;
             SURFACE_BUFFER_LOG_INFO(allocator, buffer->GetSeqNum());
             GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
+            MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
+            MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
             return false;
         }
     }
@@ -225,6 +233,7 @@ static void gst_surface_allocator_free(GstAllocator *baseAllocator, GstMemory *b
         memory->buf->GetSize(), memory->need_render, memory->fence);
 
     if (!memory->need_render) {
+        MediaTrace trace("Surface::CancelBuffer");
         OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
         LISTENER(ret = allocator->surface->CancelBuffer(memory->buf),
             "surface::CancelBuffer", PlayerXCollie::timerTimeout)
@@ -237,6 +246,8 @@ static void gst_surface_allocator_free(GstAllocator *baseAllocator, GstMemory *b
             SURFACE_BUFFER_LOG_INFO(allocator, memory->buf->GetSeqNum());
             GST_SURFACE_ALLOCATOR_NOTIFY(allocator);
             GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
+            MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
+            MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
         }
     }
 
@@ -275,6 +286,7 @@ gboolean gst_surface_allocator_flush_buffer(GstSurfaceAllocator *allocator, sptr
 {
     if (allocator->surface) {
         GST_DEBUG_OBJECT(allocator, "FlushBuffer");
+        MediaTrace trace("Surface::FlushBuffer");
         OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
         LISTENER(ret = allocator->surface->FlushBuffer(buffer, fence, config),
             "surface::FlushBuffer", PlayerXCollie::timerTimeout)
@@ -289,6 +301,8 @@ gboolean gst_surface_allocator_flush_buffer(GstSurfaceAllocator *allocator, sptr
         allocator->requestBufferNum--;
         SURFACE_BUFFER_LOG_INFO(allocator, buffer->GetSeqNum());
         GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
+        MediaTrace::CounterTrace("flushBufferNum", allocator->flushBufferNum);
+        MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
     }
     return TRUE;
 }
@@ -297,6 +311,7 @@ gboolean gst_surface_allocator_set_queue_size(GstSurfaceAllocator *allocator, in
 {
     if (allocator->surface) {
         GST_DEBUG_OBJECT(allocator, "set queue size %d", size);
+        MediaTrace trace("Surface::SetQueueSize");
         OHOS::SurfaceError err = OHOS::SurfaceError::SURFACE_ERROR_OK;
         LISTENER(err = allocator->surface->SetQueueSize(size),
             "surface::SetQueueSize", PlayerXCollie::timerTimeout)
@@ -312,6 +327,8 @@ gboolean gst_surface_allocator_set_queue_size(GstSurfaceAllocator *allocator, in
         SURFACE_BUFFER_LOG_INFO(allocator, 0);
         GST_SURFACE_ALLOCATOR_NOTIFY(allocator);
         GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
+        MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
+        MediaTrace::CounterTrace("totalBufferNum", allocator->totalBufferNum);
     }
     return TRUE;
 }
@@ -321,6 +338,7 @@ void gst_surface_allocator_clean_cache(GstSurfaceAllocator *allocator)
     GST_INFO_OBJECT(allocator, "clean cache");
     if (allocator->surface) {
         OHOS::SurfaceError err = OHOS::SurfaceError::SURFACE_ERROR_OK;
+        MediaTrace trace("Surface::CleanCache");
         LISTENER(err = allocator->surface->CleanCache(),
             "surface::CleanCache", PlayerXCollie::timerTimeout)
         if (err != OHOS::SurfaceError::SURFACE_ERROR_OK) {
