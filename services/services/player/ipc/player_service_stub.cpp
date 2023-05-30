@@ -407,6 +407,7 @@ int32_t PlayerServiceStub::DoIpcAbnormality()
 int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
 {
     MEDIA_LOGI("Enter DoIpcRecovery %{public}d.", fromMonitor);
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     if (fromMonitor) {
         auto task = std::make_shared<TaskHandler<int>>([&, this] {
             MEDIA_LOGI("DoIpcRecovery.");
