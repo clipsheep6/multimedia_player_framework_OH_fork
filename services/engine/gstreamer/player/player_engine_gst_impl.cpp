@@ -348,6 +348,14 @@ void PlayerEngineGstImpl::HandleTrackChanged(const PlayBinMessage &msg)
     }
 }
 
+void PlayerEngineGstImpl::HandleDefaultTrack(const PlayBinMessage &msg)
+{
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        notifyObs->OnInfo(INFO_TYPE_DEFAULTTRACK, 0, std::any_cast<Format>(msg.extra));
+    }
+}
+
 void PlayerEngineGstImpl::HandleOnError(const PlayBinMessage &msg)
 {
     Format format;
@@ -493,6 +501,7 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_BITRATE_COLLECT] = &PlayerEngineGstImpl::HandleBitRateCollect;
     subMsgHandler_[PLAYBIN_SUB_MSG_IS_LIVE_STREAM] = &PlayerEngineGstImpl::HandleIsLiveStream;
     subMsgHandler_[PLAYBIN_SUB_MSG_AUDIO_CHANGED] = &PlayerEngineGstImpl::HandleTrackChanged;
+    subMsgHandler_[PLAYBIN_SUB_MSG_DEFAULE_TRACK] = &PlayerEngineGstImpl::HandleDefaultTrack;
     subMsgHandler_[PLAYBIN_SUB_MSG_ONERROR] = &PlayerEngineGstImpl::HandleOnError;
 
     MEDIA_LOGD("PlayBinCtrlerInit out");

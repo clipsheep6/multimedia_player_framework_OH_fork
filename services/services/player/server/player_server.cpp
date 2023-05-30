@@ -969,19 +969,17 @@ int32_t PlayerServer::SelectTrack(int32_t index)
         "invalid state %{public}s", GetStatusDescription(lastOpStatus_).c_str());
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, index]() -> int32_t {
+    auto task = std::make_shared<TaskHandler<void>>([this, index]() {
         MediaTrace::TraceBegin("PlayerServer::SelectTrack", FAKE_POINTER(this));
-        CHECK_AND_RETURN_RET(IsEngineStarted(), MSERR_INVALID_OPERATION);
+        CHECK_AND_RETURN(IsEngineStarted());
         int32_t ret = playerEngine_->SelectTrack(index);
         taskMgr_.MarkTaskDone("SelectTrack done");
-        return ret;
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to SelectTrack");
     });
     int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "SelectTrack");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SelectTrack launch task failed");
 
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_INVALID_OPERATION);
-    return result.Value();
+    return MSERR_OK;
 }
 
 int32_t PlayerServer::DeselectTrack(int32_t index)
@@ -992,19 +990,17 @@ int32_t PlayerServer::DeselectTrack(int32_t index)
         "invalid state %{public}s", GetStatusDescription(lastOpStatus_).c_str());
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, index]() -> int32_t {
+    auto task = std::make_shared<TaskHandler<void>>([this, index]() {
         MediaTrace::TraceBegin("PlayerServer::DeselectTrack", FAKE_POINTER(this));
-        CHECK_AND_RETURN_RET(IsEngineStarted(), MSERR_INVALID_OPERATION);
+        CHECK_AND_RETURN(IsEngineStarted());
         int32_t ret = playerEngine_->DeselectTrack(index);
         taskMgr_.MarkTaskDone("DeselectTrack done");
-        return ret;
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to DeselectTrack");
     });
     int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "DeselectTrack");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "DeselectTrack launch task failed");
 
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET(result.HasResult(), MSERR_INVALID_OPERATION);
-    return result.Value();
+    return MSERR_OK;
 }
 
 int32_t PlayerServer::GetCurrentTrack(int32_t trackType, int32_t &index)

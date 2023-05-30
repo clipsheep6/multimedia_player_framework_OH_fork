@@ -122,6 +122,8 @@ void PlayerTrackParse::OnElementUnSetup(GstElement &elem)
             MEDIA_LOGI("Remove all inputselect plugins");
         }
     }
+
+    RemoveSignalIds(&elem);
 }
 
 void PlayerTrackParse::SetUpInputSelectElementCb(GstElement &elem)
@@ -132,7 +134,7 @@ void PlayerTrackParse::SetUpInputSelectElementCb(GstElement &elem)
         gulong signalId = g_signal_connect(&elem, "pad-added",
             G_CALLBACK(PlayerTrackParse::OnInputSelectPadAddedCb), this);
         CHECK_AND_RETURN_LOG(signalId != 0, "listen to pad-added failed");
-        (void)signalIds_.emplace_back(SignalInfo { &elem, signalId });
+        AddSignalIds(&elem, signalId);
     }
 }
 
@@ -195,8 +197,8 @@ GstPadProbeReturn PlayerTrackParse::GetUsedDemux(GstPad *pad, GstPadProbeInfo *i
     std::unique_lock<std::mutex> lock(trackInfoMutex_);
     for (int32_t i = 0; i < static_cast<int32_t>(trackVec_.size()); i++) {
         for (auto padIt = trackVec_[i].trackInfos.begin(); padIt != trackVec_[i].trackInfos.end(); padIt++) {
-            gchar *stream_id = gst_pad_get_stream_id (padIt->first);
-            if (strcmp (current_stream_id, stream_id) == 0) {
+            gchar *stream_id = gst_pad_get_stream_id(padIt->first);
+            if (strcmp(current_stream_id, stream_id) == 0) {
                 findTrackInfo_ = true;
                 trackVec_[i].inUse = true;
                 int32_t index = GetInputSelectPadIndex(pad);
@@ -230,14 +232,11 @@ int32_t PlayerTrackParse::GetInputSelectPadIndex(GstPad *pad)
 
 bool PlayerTrackParse::IsSameStreamId(GstPad *padA, GstPad *padB)
 {
-    gchar *streamIdA;
-    gchar *streamIdB;
-    
-    streamIdA = gst_pad_get_stream_id (padA);
-    streamIdB = gst_pad_get_stream_id (padB);
-    bool ret = (strcmp (streamIdA, streamIdB) == 0);
-    g_free (streamIdA);
-    g_free (streamIdB);
+    gchar *streamIdA = gst_pad_get_stream_id(padA);
+    gchar *streamIdB = gst_pad_get_stream_id(padB);
+    bool ret = (strcmp(streamIdA, streamIdB) == 0);
+    g_free(streamIdA);
+    g_free(streamIdB);
     return ret;
 }
 
@@ -560,7 +559,7 @@ void PlayerTrackParse::SetUpDemuxerElementCb(GstElement &elem)
         std::unique_lock<std::mutex> lock(signalIdMutex_);
         gulong signalId = g_signal_connect(&elem, "pad-added", G_CALLBACK(PlayerTrackParse::OnPadAddedCb), this);
         CHECK_AND_RETURN_LOG(signalId != 0, "listen to pad-added failed");
-        (void)signalIds_.emplace_back(SignalInfo { &elem, signalId });
+        AddSignalIds(&elem, signalId);
     }
 }
 
@@ -591,7 +590,9 @@ void PlayerTrackParse::Stop()
         std::unique_lock<std::mutex> lock(signalIdMutex_);
         // PlayerTrackParse::OnPadAddedCb
         for (auto &item : signalIds_) {
-            g_signal_handler_disconnect(item.element, item.signalId);
+            for (auto id : item.second) {
+                g_signal_handler_disconnect(item.first, id);
+            }
         }
         signalIds_.clear();
     }

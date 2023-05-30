@@ -48,6 +48,7 @@ void PlayerCallbackTest::SetTrackDoneFlag(bool trackDoneFlag)
 {
     std::unique_lock<std::mutex> lockSpeed(mutexCond_);
     trackDoneFlag_ = trackDoneFlag;
+    trackChange_ = trackDoneFlag;
 }
 
 int32_t PlayerCallbackTest::PrepareSync()
@@ -134,7 +135,7 @@ int32_t PlayerCallbackTest::SpeedSync()
     return MSERR_OK;
 }
 
-int32_t PlayerCallbackTest::TrackSync()
+int32_t PlayerCallbackTest::TrackSync(bool &trackChange)
 {
     if (trackDoneFlag_ == false) {
         std::unique_lock<std::mutex> lockTrackDone(mutexCond_);
@@ -144,13 +145,15 @@ int32_t PlayerCallbackTest::TrackSync()
         }
     }
 
+    trackChange = trackChange_;
+
     return MSERR_OK;
 }
 
 void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    int32_t index = -1;
-    int32_t isSelect = -1;
+    int32_t index;
+    int32_t isSelect;
     switch (type) {
         case INFO_TYPE_SEEKDONE:
             SetSeekDoneFlag(true);
@@ -177,6 +180,7 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             std::cout << "INFO_TYPE_RESOLUTION_CHANGE: " << extra << std::endl;
             break;
         case INFO_TYPE_TRACKCHANGE:
+            trackChange_ = true;
             trackDoneFlag_ = true;
             condVarTrackDone_.notify_all();
             infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
@@ -545,25 +549,25 @@ int32_t PlayerMock::SetVideoSurface(sptr<Surface> surface)
     return player_->SetVideoSurface(surface);
 }
 
-int32_t PlayerMock::SelectTrack(int32_t index)
+int32_t PlayerMock::SelectTrack(int32_t index, bool &trackChange)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     callback_->SetTrackDoneFlag(false);
     int32_t ret = player_->SelectTrack(index);
-    if (callback_->TrackSync() != MSERR_OK) {
+    if (callback_->TrackSync(trackChange) != MSERR_OK) {
         return -1;
     }
     return ret;
 }
 
-int32_t PlayerMock::DeselectTrack(int32_t index)
+int32_t PlayerMock::DeselectTrack(int32_t index, bool &trackChange)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     callback_->SetTrackDoneFlag(false);
     int32_t ret = player_->DeselectTrack(index);
-    if (callback_->TrackSync() != MSERR_OK) {
+    if (callback_->TrackSync(trackChange) != MSERR_OK) {
         return -1;
     }
     return ret;

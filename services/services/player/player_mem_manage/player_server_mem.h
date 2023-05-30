@@ -141,9 +141,6 @@ private:
     std::map<void *, std::shared_ptr<MemBaseState>> stateMap_;
     std::chrono::steady_clock::time_point lastestUserSetTime_;
 
-    std::mutex preparedMutex_;
-    std::condition_variable preparedCond_;
-    bool prepared_ = false;
     int32_t defaultAudioIndex_ = -1;
 
     int32_t Init() override;
@@ -165,6 +162,7 @@ private:
     int32_t ReleaseMemByManage();
     int32_t RecoverMemByUser();
     bool NeedSelectAudioTrack();
+    void GetDefauleTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
 };
 }
 }

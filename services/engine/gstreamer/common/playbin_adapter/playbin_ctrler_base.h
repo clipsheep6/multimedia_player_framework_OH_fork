@@ -172,7 +172,7 @@ private:
     std::shared_ptr<PlayBinSinkProvider> sinkProvider_;
     std::unique_ptr<GstMsgProcessor> msgProcessor_;
     std::string uri_;
-    std::shared_ptr<PlayerTrackParse> trackParse_ = nullptr;
+    std::shared_ptr<PlayerTrackParse> trackParse_;
 
     std::map<GstElement *, std::vector<gulong>> signalIds_;
     std::vector<uint32_t> bitRateVec_;

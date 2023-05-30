@@ -98,6 +98,7 @@ private:
     void HandleAudioStateMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
     void HandleTrackChanged(const PlayBinMessage &msg);
+    void HandleDefaultTrack(const PlayBinMessage &msg);
     void HandleOnError(const PlayBinMessage &msg);
     void OnCapsFixError();
     void ResetPlaybinToSoftDec();

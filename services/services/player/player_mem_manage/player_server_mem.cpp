@@ -114,8 +114,6 @@ void PlayerServerMem::SetPlayerServerConfig()
     disableStoppedCb_ = playerServerConfig_.disableStoppedCb;
     lastErrMsg_ = playerServerConfig_.lastErrMsg;
     uriHelper_ = std::move(playerServerConfig_.uriHelper);
-    std::unique_lock<std::mutex> lock(preparedMutex_);
-    prepared_ = false;
 }
 
 void PlayerServerMem::GetPlayerServerConfig()
@@ -173,10 +171,6 @@ int32_t PlayerServerMem::SetBehaviorInternal()
     }
 
     if (NeedSelectAudioTrack()) {
-        std::unique_lock<std::mutex> lock(preparedMutex_);
-        static constexpr int32_t timeout = 2;
-        MEDIA_LOGI("Keep waiting until prepared");
-        preparedCond_.wait_for(lock, std::chrono::seconds(timeout), [this] { return prepared_; });
         ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectTrack");
     }
@@ -194,10 +188,6 @@ int32_t PlayerServerMem::SetPlaybackSpeedInternal()
     }
 
     if (NeedSelectAudioTrack()) {
-        std::unique_lock<std::mutex> lock(preparedMutex_);
-        static constexpr int32_t timeout = 2;
-        MEDIA_LOGI("Keep waiting until prepared");
-        preparedCond_.wait_for(lock, std::chrono::seconds(timeout), [this] { return prepared_; });
         ret = PlayerServer::SelectTrack(recoverConfig_.audioIndex);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SelectTrack");
     }
@@ -649,11 +639,7 @@ int32_t PlayerServerMem::DumpInfo(int32_t fd)
 void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
-    if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
-        MEDIA_LOGI("state change to prepared");
-        (void)PlayerServer::GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, defaultAudioIndex_);
-    }
-
+    GetDefauleTrack(type, extra, infoBody);
     PlayerServer::OnInfo(type, extra, infoBody);
 
     CheckHasRecover(type, extra);
@@ -755,13 +741,6 @@ void PlayerServerMem::RecoverToInitialized(PlayerOnInfoType type, int32_t extra)
 
 void PlayerServerMem::RecoverToPrepared(PlayerOnInfoType type, int32_t extra)
 {
-    if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
-        MEDIA_LOGI("state change to prepared");
-        std::unique_lock<std::mutex> lock(preparedMutex_);
-        prepared_ = true;
-        preparedCond_.notify_one();
-    }
-
     if (NeedSelectAudioTrack()) {
         if (type == INFO_TYPE_TRACKCHANGE) {
             (void)RecoverPlayerCb();
@@ -781,13 +760,6 @@ void PlayerServerMem::RecoverToPrepared(PlayerOnInfoType type, int32_t extra)
 
 void PlayerServerMem::RecoverToCompleted(PlayerOnInfoType type, int32_t extra)
 {
-    if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
-        MEDIA_LOGI("state change to prepared");
-        std::unique_lock<std::mutex> lock(preparedMutex_);
-        prepared_ = true;
-        preparedCond_.notify_one();
-    }
-
     if (NeedSelectAudioTrack()) {
         if (type == INFO_TYPE_TRACKCHANGE) {
             (void)RecoverPlayerCb();
@@ -885,6 +857,19 @@ bool PlayerServerMem::NeedSelectAudioTrack()
 {
     return (recoverConfig_.audioIndex >= 0 && defaultAudioIndex_ >= 0 &&
         recoverConfig_.audioIndex != defaultAudioIndex_);
+}
+
+void PlayerServerMem::GetDefauleTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+{
+    if (type == INFO_TYPE_DEFAULTTRACK) {
+        int32_t mediaType = -1;
+        (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_TYPE), mediaType);
+        if (mediaType == MediaType::MEDIA_TYPE_AUD) {
+            infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), defaultAudioIndex_);
+            MEDIA_LOGI("default audio track index %{public}d", defaultAudioIndex_);
+        }
+        return;
+    }
 }
 }
 }

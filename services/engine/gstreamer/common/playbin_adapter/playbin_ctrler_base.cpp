@@ -123,9 +123,6 @@ PlayBinCtrlerBase::~PlayBinCtrlerBase()
         sinkProvider_ = nullptr;
         notifier_ = nullptr;
     }
-    if (trackParse_ != nullptr) {
-        trackParse_ = nullptr;
-    }
 }
 
 int32_t PlayBinCtrlerBase::Init()
@@ -1291,13 +1288,20 @@ void PlayBinCtrlerBase::OnAudioChanged()
     }
 
     audioIndex_ = audioIndex;
+    int32_t index;
+    CHECK_AND_RETURN(trackParse_->GetTrackIndex(audioIndex, MediaType::MEDIA_TYPE_AUD, index) == MSERR_OK);
+
     if (GetCurrState() == preparingState_) {
-        // No need to report during the prepare process
+        MEDIA_LOGI("defaule audio index %{public}d, inner index %{public}d", index, audioIndex);        
+        Format format;
+        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_TYPE), MediaType::MEDIA_TYPE_AUD);
+        PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE,
+            PlayBinMsgSubType::PLAYBIN_SUB_MSG_DEFAULE_TRACK, 0, format };
+        ReportMessage(msg);  
         return;
     }
 
-    int32_t index = -1;
-    CHECK_AND_RETURN(trackParse_->GetTrackIndex(audioIndex, MediaType::MEDIA_TYPE_AUD, index) == MSERR_OK);
     Format format;
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), true);

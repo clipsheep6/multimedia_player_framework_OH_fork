@@ -61,7 +61,26 @@ private:
     void UpdateTrackInfo();
     void StartUpdateTrackInfo();
     int32_t GetInputSelectPadIndex(GstPad *pad);
-    
+
+    inline void AddSignalIds(GstElement *element, gulong signalId)
+    {
+        if (signalIds_.find(element) == signalIds_.end()) {
+            signalIds_[element] = {signalId};
+        } else {
+            signalIds_[element].push_back(signalId);
+        }
+    }
+    inline void RemoveSignalIds(GstElement *element)
+    {
+        if (signalIds_.find(element) != signalIds_.end()) {
+            for (auto id : signalIds_[element]) {
+                g_signal_handler_disconnect(element, id);
+            }
+            signalIds_.erase(element);
+        }
+    }
+    std::map<GstElement *, std::vector<gulong>> signalIds_;
+
     struct DemuxInfo {
         explicit DemuxInfo(GstElement *value): demux(value) {}
         ~DemuxInfo() = default;
@@ -85,11 +104,6 @@ private:
     std::vector<DemuxInfo> trackVec_;
     std::vector<Format> videoTracks_;
     std::vector<Format> audioTracks_;
-    struct SignalInfo {
-        GstElement *element;
-        gulong signalId;
-    };
-    std::vector<SignalInfo> signalIds_;
     struct PadInfo {
         GstPad *pad;
         gulong probeId;

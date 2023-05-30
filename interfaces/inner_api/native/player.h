@@ -129,6 +129,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_IS_LIVE_STREAM,
     /* return the message when track changes. */
     INFO_TYPE_TRACKCHANGE,
+    /* return the default audio track. */
+    INFO_TYPE_DEFAULTTRACK,
     /* Return error message to prompt the user. */
     INFO_TYPE_ERROR_MSG,
 };
