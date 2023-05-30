@@ -239,6 +239,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->draining = FALSE;
     self->flushing = FALSE;
     self->prepared = FALSE;
+    self->idrframe = FALSE;
     self->width = DEFAULT_WIDTH;
     self->height = DEFAULT_HEIGHT;
     self->frame_rate = 0;
@@ -469,6 +470,7 @@ static void gst_vdec_base_stop_after(GstVdecBase *self)
 {
     g_return_if_fail(self != nullptr);
     self->prepared = FALSE;
+    self->idrframe = FALSE;
     self->input.first_frame = TRUE;
     self->output.first_frame = TRUE;
     self->decoder_start = FALSE;
@@ -1088,6 +1090,14 @@ static GstFlowReturn gst_vdec_base_handle_frame(GstVideoDecoder *decoder, GstVid
         return GST_FLOW_FLUSHING;
     }
     gst_vdec_base_clean_all_frames(decoder);
+
+    GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
+    if (kclass->bypass_frame != nullptr) {
+        if (kclass->bypass_frame(self, frame)) {
+            return GST_FLOW_OK;
+        }
+    }
+
     if (!self->prepared) {
         if (!gst_vdec_base_prepare(self)) {
             GST_WARNING_OBJECT(self, "hdi video dec enable failed");
@@ -1643,6 +1653,7 @@ static gboolean gst_vdec_base_event(GstVideoDecoder *decoder, GstEvent *event)
                 }
                 gst_vdec_base_set_flushing(self, TRUE);
                 self->decoder_start = FALSE;
+                self->idrframe = FALSE;
                 if (self->decoder != nullptr) {
                     (void)self->decoder->Flush(GST_CODEC_ALL);
                 }

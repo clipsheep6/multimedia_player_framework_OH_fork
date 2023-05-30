@@ -28,6 +28,7 @@ static void flush_cache_slice_buffer(GstVdecBase *self);
 static GstStateChangeReturn gst_vdec_h264_change_state(GstElement *element, GstStateChange transition);
 static void gst_vdec_h264_finalize(GObject *object);
 static gboolean gst_buffer_extend(GstBuffer **buffer, gsize &size);
+static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame *frame);
 
 static void gst_vdec_h264_class_init(GstVdecH264Class *klass)
 {
@@ -37,6 +38,7 @@ static void gst_vdec_h264_class_init(GstVdecH264Class *klass)
     GstVdecBaseClass *base_class = GST_VDEC_BASE_CLASS(klass);
     base_class->handle_slice_buffer = handle_slice_buffer;
     base_class->flush_cache_slice_buffer = flush_cache_slice_buffer;
+    base_class->bypass_frame = gst_vdec_h264_bypass_frame;
     element_class->change_state = gst_vdec_h264_change_state;
     gobject_class->finalize = gst_vdec_h264_finalize;
 
@@ -273,4 +275,26 @@ static void gst_vdec_h264_finalize(GObject *object)
     }
     g_mutex_clear(&vdec_h264->cat_lock);
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame *frame)
+{
+    // enable by h264parse
+    if (!base->idrframe) {
+        if (gst_buffer_has_flags(frame->input_buffer, GST_BUFFER_FLAG_KEY_FRAME_DECODER)) {
+            if (gst_buffer_has_flags(frame->input_buffer, GST_BUFFER_FLAG_HEADER)) {
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SPS/PPS/SEI frame");
+            } else if (gst_buffer_has_flags(frame->input_buffer, GST_BUFFER_FLAG_KEY_IDR_FRAME)) {
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv IDR frame");
+                base->idrframe = TRUE;
+            } else {
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: bypass B/P frame");
+                return TRUE;
+            }
+        } else {
+            GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: disable keyframe decoder");
+            base->idrframe = TRUE;
+        }
+    }
+    return FALSE;
 }
