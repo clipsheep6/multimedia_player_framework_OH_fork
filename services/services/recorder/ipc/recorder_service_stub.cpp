@@ -103,7 +103,7 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     MessageOption &option)
 {
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
-    int32_t permissionResult = Security::AccessToken::PERMISSION_DENIED;
+    int32_t permissionResult;
     if (AUDIO_REQUEST.count(code) != 0) {
         permissionResult = MediaPermission::CheckMicPermission();
         needAudioPermissionCheck = true;
