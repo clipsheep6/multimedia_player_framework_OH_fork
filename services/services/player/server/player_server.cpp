@@ -970,10 +970,9 @@ int32_t PlayerServer::SelectTrack(int32_t index)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     auto task = std::make_shared<TaskHandler<void>>([this, index]() {
-        MediaTrace::TraceBegin("PlayerServer::SelectTrack", FAKE_POINTER(this));
+        MediaTrace::TraceBegin("PlayerServer::track", FAKE_POINTER(this));
         CHECK_AND_RETURN(IsEngineStarted());
         int32_t ret = playerEngine_->SelectTrack(index);
-        taskMgr_.MarkTaskDone("SelectTrack done");
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to SelectTrack");
     });
     int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "SelectTrack");
@@ -991,10 +990,9 @@ int32_t PlayerServer::DeselectTrack(int32_t index)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     auto task = std::make_shared<TaskHandler<void>>([this, index]() {
-        MediaTrace::TraceBegin("PlayerServer::DeselectTrack", FAKE_POINTER(this));
+        MediaTrace::TraceBegin("PlayerServer::track", FAKE_POINTER(this));
         CHECK_AND_RETURN(IsEngineStarted());
         int32_t ret = playerEngine_->DeselectTrack(index);
-        taskMgr_.MarkTaskDone("DeselectTrack done");
         CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to DeselectTrack");
     });
     int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "DeselectTrack");
@@ -1086,6 +1084,10 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     int32_t ret = HandleMessage(type, extra, infoBody);
     if (type == INFO_TYPE_IS_LIVE_STREAM) {
         isLiveStream_ = true;
+    }
+
+    if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE) {
+        return;
     }
 
     if (playerCb_ != nullptr && ret == MSERR_OK) {

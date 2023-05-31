@@ -99,6 +99,7 @@ private:
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
     void HandleTrackChanged(const PlayBinMessage &msg);
     void HandleDefaultTrack(const PlayBinMessage &msg);
+    void HandleTrackDone(const PlayBinMessage &msg);
     void HandleOnError(const PlayBinMessage &msg);
     void OnCapsFixError();
     void ResetPlaybinToSoftDec();

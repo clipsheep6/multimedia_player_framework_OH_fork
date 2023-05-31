@@ -131,6 +131,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_TRACKCHANGE,
     /* return the default audio track. */
     INFO_TYPE_DEFAULTTRACK,
+    /* Return to the end of track processing. */
+    INFO_TYPE_TRACK_DONE,
     /* Return error message to prompt the user. */
     INFO_TYPE_ERROR_MSG,
 };

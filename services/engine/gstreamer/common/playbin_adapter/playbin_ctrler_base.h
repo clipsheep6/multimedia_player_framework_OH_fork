@@ -28,6 +28,7 @@
 #include "gst_msg_processor.h"
 #include "task_queue.h"
 #include "player_track_parse.h"
+#include "av_common.h"
 
 namespace OHOS {
 namespace Media {
@@ -95,7 +96,7 @@ private:
     int32_t EnterInitializedState();
     void ExitInitializedState();
     int32_t PrepareAsyncInternal();
-    int32_t SeekInternal(int64_t timeUs, int32_t seekOption, bool report = true);
+    int32_t SeekInternal(int64_t timeUs, int32_t seekOption);
     int32_t StopInternal();
     int32_t SetRateInternal(double rate);
     void SetupCustomElement();
@@ -140,6 +141,8 @@ private:
     void HandleCacheCtrlWhenBuffering(int32_t percent);
     void OnAdaptiveElementSetup(GstElement &elem);
     void OnAudioChanged();
+    void ReportTrackChange();
+    void OnTrackDone();
     void OnError(int32_t errorCode, std::string message);
 
     inline void AddSignalIds(GstElement *element, gulong signalId)
@@ -202,6 +205,9 @@ private:
     int32_t rendererFlag_ = 0;
     int32_t cachePercent_ = 100; // 100% cache percent
     uint64_t connectSpeed_ = 0;
+
+    bool isTrackChanging_ = false;
+    int32_t trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
     int32_t audioIndex_ = -1;
 
     std::atomic<bool> isDuration_ = false;

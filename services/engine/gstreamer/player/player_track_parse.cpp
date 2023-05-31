@@ -458,14 +458,15 @@ GstPadProbeReturn PlayerTrackParse::ParseTrackInfo(GstPad *pad, GstPadProbeInfo 
             CHECK_AND_RETURN_RET_LOG(tagList != nullptr, GST_PAD_PROBE_OK, "tags is nullptr");
             GstMetaParser::ParseTagList(*tagList, format);
             MEDIA_LOGI("catch tags at pad %{public}s:0x%{public}06" PRIXPTR, PAD_NAME(pad), FAKE_POINTER(pad));
+            (void)UpdateTrackInfo();
         } else if (GST_EVENT_TYPE(event) == GST_EVENT_CAPS) {
             GstCaps *caps = nullptr;
             gst_event_parse_caps(event, &caps);
             CHECK_AND_RETURN_RET_LOG(caps != nullptr, GST_PAD_PROBE_OK, "caps is nullptr");
             GstMetaParser::ParseStreamCaps(*caps, format);
             MEDIA_LOGI("catch caps at pad %{public}s:0x%{public}06" PRIXPTR, PAD_NAME(pad), FAKE_POINTER(pad));
+            (void)UpdateTrackInfo();
         }
-        (void)UpdateTrackInfo();
     }
     return GST_PAD_PROBE_OK;
 }

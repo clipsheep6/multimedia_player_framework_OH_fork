@@ -28,7 +28,6 @@
 #include "media_dfx.h"
 #include "player_xcollie.h"
 #include "param_wrapper.h"
-#include "av_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinCtrlerBase"};
@@ -663,7 +662,7 @@ int32_t PlayBinCtrlerBase::PrepareAsyncInternal()
     return MSERR_OK;
 }
 
-int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption, bool report)
+int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
 {
     MEDIA_LOGI("execute seek, time: %{public}" PRIi64 ", option: %{public}d", timeUs, seekOption);
 
@@ -674,9 +673,7 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption, bool
     constexpr int32_t usecToNanoSec = 1000;
     int64_t timeNs = timeUs * usecToNanoSec;
     seekPos_ = timeUs;
-    if (report) {
-        isSeeking_ = true;
-    }
+    isSeeking_ = true;
     GstEvent *event = gst_event_new_seek(rate_, GST_FORMAT_TIME, static_cast<GstSeekFlags>(seekFlags),
         GST_SEEK_TYPE_SET, timeNs, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
     CHECK_AND_RETURN_RET_LOG(event != nullptr, MSERR_NO_MEMORY, "seek failed");
@@ -885,6 +882,8 @@ int32_t PlayBinCtrlerBase::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    ON_SCOPE_EXIT(0) { OnTrackDone(); };
+
     CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
     int32_t trackType = -1;
     int32_t innerIndex = -1;
@@ -905,7 +904,10 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
 
         g_object_set(playbin_, "current-audio", innerIndex, nullptr);
         // The seek operation clears the original audio data and re parses the new track data.
-        SeekInternal(seekPos_, IPlayBinCtrler::PlayBinSeekMode::CLOSET_SYNC, false);
+        isTrackChanging_ = true;
+        trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
+        SeekInternal(seekPos_, IPlayBinCtrler::PlayBinSeekMode::CLOSET_SYNC);
+        CANCEL_SCOPE_EXIT_GUARD(0);
     } else {
         OnError(MSERR_INVALID_VAL, "The track type does not support this operation!");
         return MSERR_INVALID_OPERATION;
@@ -916,6 +918,8 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
 int32_t PlayBinCtrlerBase::DeselectTrack(int32_t index)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    ON_SCOPE_EXIT(0) { OnTrackDone(); };
+
     CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
     int32_t trackType = -1;
     int32_t innerIndex = -1;
@@ -939,7 +943,10 @@ int32_t PlayBinCtrlerBase::DeselectTrack(int32_t index)
 
         g_object_set(playbin_, "current-audio", 0, nullptr); // 0 is the default track
         // The seek operation clears the original audio data and re parses the new track data.
-        SeekInternal(seekPos_, IPlayBinCtrler::PlayBinSeekMode::CLOSET_SYNC, false);
+        isTrackChanging_ = true;
+        trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
+        SeekInternal(seekPos_, IPlayBinCtrler::PlayBinSeekMode::CLOSET_SYNC);
+        CANCEL_SCOPE_EXIT_GUARD(0);
     } else {
         OnError(MSERR_INVALID_VAL, "The track type does not support this operation!");
         return MSERR_INVALID_VAL;
@@ -954,12 +961,18 @@ int32_t PlayBinCtrlerBase::GetCurrentTrack(int32_t trackType, int32_t &index)
     CHECK_AND_RETURN_RET(trackParse_ != nullptr, MSERR_INVALID_OPERATION);
     int32_t innerIndex = -1;
     if (trackType == MediaType::MEDIA_TYPE_AUD) {
-        g_object_get(playbin_, "current-audio", &innerIndex, nullptr);
+        if (isTrackChanging_) {
+            // During the change track process, return the original value.
+            innerIndex = audioIndex_;
+        } else {
+            g_object_get(playbin_, "current-audio", &innerIndex, nullptr);
+        }
     } else if (trackType == MediaType::MEDIA_TYPE_VID) {
         g_object_get(playbin_, "current-video", &innerIndex, nullptr);
     } else {
         g_object_get(playbin_, "current-text", &innerIndex, nullptr);
     }
+
     if (innerIndex >= 0) {
         return trackParse_->GetTrackIndex(innerIndex, trackType, index);
     } else {
@@ -1287,6 +1300,11 @@ void PlayBinCtrlerBase::OnAudioChanged()
         return;
     }
 
+    if (isTrackChanging_) {
+        MEDIA_LOGI("Waiting for the seek event to complete, not reporting at this time!");
+        return;
+    }
+
     audioIndex_ = audioIndex;
     int32_t index;
     CHECK_AND_RETURN(trackParse_->GetTrackIndex(audioIndex, MediaType::MEDIA_TYPE_AUD, index) == MSERR_OK);
@@ -1307,6 +1325,21 @@ void PlayBinCtrlerBase::OnAudioChanged()
     (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), true);
     PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE,
         PlayBinMsgSubType::PLAYBIN_SUB_MSG_AUDIO_CHANGED, 0, format };
+    ReportMessage(msg);
+}
+
+void PlayBinCtrlerBase::ReportTrackChange()
+{
+    MEDIA_LOGI("Seek event completed, report track change!");
+    if (trackChangeType_ == MediaType::MEDIA_TYPE_AUD) {
+        OnAudioChanged();
+    }
+    OnTrackDone();
+}
+
+void PlayBinCtrlerBase::OnTrackDone()
+{
+    PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE, PlayBinMsgSubType::PLAYBIN_SUB_MSG_TRACK_DONE, 0, {} };
     ReportMessage(msg);
 }
 
