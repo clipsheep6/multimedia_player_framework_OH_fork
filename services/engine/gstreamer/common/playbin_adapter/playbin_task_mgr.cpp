@@ -128,12 +128,6 @@ int32_t PlayBinTaskMgr::MarkSecondPhase()
     return MSERR_OK;
 }
 
-PlayBinTaskType PlayBinTaskMgr::GetCurrTaskType()
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    return currTwoPhaseType_;
-}
-
 void PlayBinTaskMgr::ClearAllTask()
 {
     MEDIA_LOGD("enter");
