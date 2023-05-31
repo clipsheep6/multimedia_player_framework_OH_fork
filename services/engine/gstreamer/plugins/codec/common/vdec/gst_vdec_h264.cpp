@@ -289,7 +289,7 @@ static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame
     }
 
     GstMapInfo info = GST_MAP_INFO_INIT;
-    g_return_val_if_fail(gst_buffer_map(frame->input_buffer, &info, GST_MAP_READ));
+    g_return_val_if_fail(gst_buffer_map(frame->input_buffer, &info, GST_MAP_READ), false);
     ON_SCOPE_EXIT(0) { gst_buffer_unmap(frame->input_buffer, &info); };
 
     guint8 offset = 2; // data[i] and data[i+1] 
