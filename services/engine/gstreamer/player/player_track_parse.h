@@ -84,7 +84,7 @@ private:
     struct DemuxInfo {
         explicit DemuxInfo(GstElement *value): demux(value) {}
         ~DemuxInfo() = default;
-        GstElement * demux = nullptr;
+        GstElement *demux = nullptr;
         bool inUse = false;
         int32_t trackcount = 0;
         std::map<GstPad *, Format> trackInfos;

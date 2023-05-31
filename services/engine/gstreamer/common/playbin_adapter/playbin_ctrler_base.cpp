@@ -1292,13 +1292,13 @@ void PlayBinCtrlerBase::OnAudioChanged()
     CHECK_AND_RETURN(trackParse_->GetTrackIndex(audioIndex, MediaType::MEDIA_TYPE_AUD, index) == MSERR_OK);
 
     if (GetCurrState() == preparingState_) {
-        MEDIA_LOGI("defaule audio index %{public}d, inner index %{public}d", index, audioIndex);        
+        MEDIA_LOGI("defaule audio index %{public}d, inner index %{public}d", index, audioIndex);
         Format format;
         (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
         (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_TYPE), MediaType::MEDIA_TYPE_AUD);
         PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE,
             PlayBinMsgSubType::PLAYBIN_SUB_MSG_DEFAULE_TRACK, 0, format };
-        ReportMessage(msg);  
+        ReportMessage(msg);
         return;
     }
 
