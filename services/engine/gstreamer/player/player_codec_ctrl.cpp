@@ -37,7 +37,7 @@ PlayerCodecCtrl::~PlayerCodecCtrl()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     notifier_ = nullptr;
     for (auto &it : elementMap_) {
-        if (it.second.signalId_ != 0) {
+        if (it.second.signalId != 0) {
             g_signal_handler_disconnect(it.first, it.second.signalId);
             it.second.signalId = 0;
         }
