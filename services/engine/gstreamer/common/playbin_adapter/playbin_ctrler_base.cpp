@@ -276,6 +276,10 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
 {
     MEDIA_LOGD("enter");
     std::unique_lock<std::mutex> lock(mutex_);
+    if (trackParse_ != nullptr) {
+        trackParse_->Stop();
+    }
+    audioIndex_ = -1;
 
     if (GetCurrState() == preparingState_ && needWait) {
         MEDIA_LOGD("begin wait stop for current status is preparing");
@@ -484,6 +488,11 @@ void PlayBinCtrlerBase::SetElemSetupListener(ElemSetupListener listener)
     std::unique_lock<std::mutex> lock(mutex_);
     std::unique_lock<std::mutex> lk(listenerMutex_);
     elemSetupListener_ = listener;
+    
+    if (trackParse_ == nullptr) {
+        trackParse_ = PlayerTrackParse::Create();
+    }
+    CHECK_AND_RETURN_LOG(trackParse_ != nullptr, "creat track parse failed")
 }
 
 void PlayBinCtrlerBase::SetElemUnSetupListener(ElemSetupListener listener)
@@ -755,6 +764,12 @@ int32_t PlayBinCtrlerBase::SetupSignalMessage()
         static_cast<GConnectFlags>(0));
     AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
 
+    PlayBinCtrlerWrapper *wrap = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_RET_LOG(wrap != nullptr, MSERR_NO_MEMORY, "can not create this wrapper");
+    id = g_signal_connect_data(playbin_, "audio-changed", G_CALLBACK(&PlayBinCtrlerBase::AudioChanged),
+        wrap, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+
     GstBus *bus = gst_pipeline_get_bus(playbin_);
     CHECK_AND_RETURN_RET_LOG(bus != nullptr, MSERR_UNKNOWN, "can not get bus");
 
@@ -851,6 +866,127 @@ int32_t PlayBinCtrlerBase::DoInitializeForDataSource()
         g_object_set(playbin_, "uri", "appsrc://", nullptr);
     }
     return MSERR_OK;
+}
+
+int32_t PlayBinCtrlerBase::GetVideoTrackInfo(std::vector<Format> &videoTrack)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
+    return trackParse_->GetVideoTrackInfo(videoTrack);
+}
+
+int32_t PlayBinCtrlerBase::GetAudioTrackInfo(std::vector<Format> &audioTrack)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
+    return trackParse_->GetAudioTrackInfo(audioTrack);
+}
+
+int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    ON_SCOPE_EXIT(0) {
+        OnTrackDone();
+    };
+
+    CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
+    int32_t trackType = -1;
+    int32_t innerIndex = -1;
+    int32_t ret = trackParse_->GetTrackInfo(index, innerIndex, trackType);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, (OnError(ret, "Invalid track index!"), ret));
+    CHECK_AND_RETURN_RET(innerIndex >= 0,
+        (OnError(MSERR_INVALID_OPERATION, "This track is currently not supported!"), MSERR_INVALID_OPERATION));
+
+    if (trackType == MediaType::MEDIA_TYPE_AUD) {
+        ret = MSERR_INVALID_OPERATION;
+        CHECK_AND_RETURN_RET(GetCurrState() == preparedState_,
+            (OnError(ret, "Audio tracks can only be selected in the prepared state!"), ret));
+ 
+        int32_t currentIndex = -1;
+        g_object_get(playbin_, "current-audio", &currentIndex, nullptr);
+        CHECK_AND_RETURN_RET(innerIndex != currentIndex,
+            (OnError(MSERR_OK, "This track has already been selected!"), MSERR_OK));
+
+        g_object_set(playbin_, "current-audio", innerIndex, nullptr);
+        // The seek operation clears the original audio data and re parses the new track data.
+        isTrackChanging_ = true;
+        trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
+        SeekInternal(seekPos_, IPlayBinCtrler::PlayBinSeekMode::CLOSET_SYNC);
+        CANCEL_SCOPE_EXIT_GUARD(0);
+    } else {
+        OnError(MSERR_INVALID_VAL, "The track type does not support this operation!");
+        return MSERR_INVALID_OPERATION;
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayBinCtrlerBase::DeselectTrack(int32_t index)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    ON_SCOPE_EXIT(0) {
+        OnTrackDone();
+    };
+
+    CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
+    int32_t trackType = -1;
+    int32_t innerIndex = -1;
+    int32_t ret = trackParse_->GetTrackInfo(index, innerIndex, trackType);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, (OnError(ret, "Invalid track index!"), ret));
+    CHECK_AND_RETURN_RET(innerIndex >= 0,
+        (OnError(MSERR_INVALID_OPERATION, "This track has not been selected yet!"), MSERR_INVALID_OPERATION));
+    
+    if (trackType == MediaType::MEDIA_TYPE_AUD) {
+        ret = MSERR_INVALID_OPERATION;
+        CHECK_AND_RETURN_RET(GetCurrState() == preparedState_,
+            (OnError(ret, "Audio tracks can only be deselected in the prepared state!"), ret));
+
+        int32_t currentIndex = -1;
+        g_object_get(playbin_, "current-audio", &currentIndex, nullptr);
+        CHECK_AND_RETURN_RET(innerIndex == currentIndex,
+            (OnError(ret, "This track has not been selected yet!"), ret));
+
+        CHECK_AND_RETURN_RET(currentIndex != 0,
+            (OnError(MSERR_OK, "The current audio track is already the default track!"), MSERR_OK));
+
+        g_object_set(playbin_, "current-audio", 0, nullptr); // 0 is the default track
+        // The seek operation clears the original audio data and re parses the new track data.
+        isTrackChanging_ = true;
+        trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
+        SeekInternal(seekPos_, IPlayBinCtrler::PlayBinSeekMode::CLOSET_SYNC);
+        CANCEL_SCOPE_EXIT_GUARD(0);
+    } else {
+        OnError(MSERR_INVALID_VAL, "The track type does not support this operation!");
+        return MSERR_INVALID_VAL;
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayBinCtrlerBase::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGI("GetCurrentTrack in");
+    CHECK_AND_RETURN_RET(trackParse_ != nullptr, MSERR_INVALID_OPERATION);
+    int32_t innerIndex = -1;
+    if (trackType == MediaType::MEDIA_TYPE_AUD) {
+        if (isTrackChanging_) {
+            // During the change track process, return the original value.
+            innerIndex = audioIndex_;
+        } else {
+            g_object_get(playbin_, "current-audio", &innerIndex, nullptr);
+        }
+    } else if (trackType == MediaType::MEDIA_TYPE_VID) {
+        g_object_get(playbin_, "current-video", &innerIndex, nullptr);
+    } else {
+        g_object_get(playbin_, "current-text", &innerIndex, nullptr);
+    }
+
+    if (innerIndex >= 0) {
+        return trackParse_->GetTrackIndex(innerIndex, trackType, index);
+    } else {
+        // There are no tracks currently playing, return to -1.
+        index = innerIndex;
+        return MSERR_OK;
+    }
 }
 
 void PlayBinCtrlerBase::HandleCacheCtrl(int32_t percent)
@@ -1062,6 +1198,10 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
         AddSignalIds(&elem, id);
     }
+    
+    if (trackParse_ != nullptr) {
+        trackParse_->OnElementSetup(elem);
+    }
 
     decltype(elemSetupListener_) listener = nullptr;
     {
@@ -1077,6 +1217,9 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
 void PlayBinCtrlerBase::OnElementUnSetup(GstElement &elem)
 {
     MEDIA_LOGI("element unsetup: %{public}s", ELEM_NAME(&elem));
+    if (trackParse_ != nullptr) {
+        trackParse_->OnElementUnSetup(elem);
+    }
 
     decltype(elemUnSetupListener_) listener = nullptr;
     {
@@ -1137,6 +1280,82 @@ void PlayBinCtrlerBase::OnBitRateParseCompleteCb(const GstElement *playbin, uint
         PlayBinMessage msg = { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_BITRATE_COLLECT, 0, format };
         thizStrong->ReportMessage(msg);
     }
+}
+
+void PlayBinCtrlerBase::AudioChanged(const GstElement *playbin, gpointer userData)
+{
+    (void)playbin;
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
+    if (thizStrong != nullptr) {
+        thizStrong->OnAudioChanged();
+    }
+}
+
+void PlayBinCtrlerBase::OnAudioChanged()
+{
+    CHECK_AND_RETURN(playbin_ != nullptr && trackParse_ != nullptr);
+    if (!trackParse_->FindTrackInfo()) {
+        MEDIA_LOGI("The plugin has been cleared, no need to report it");
+        return;
+    }
+
+    int32_t audioIndex = -1;
+    g_object_get(playbin_, "current-audio", &audioIndex, nullptr);
+    MEDIA_LOGI("AudioChanged, current-audio %{public}d", audioIndex);
+    if (audioIndex == audioIndex_) {
+        MEDIA_LOGI("Audio Not Changed");
+        return;
+    }
+
+    if (isTrackChanging_) {
+        MEDIA_LOGI("Waiting for the seek event to complete, not reporting at this time!");
+        return;
+    }
+
+    audioIndex_ = audioIndex;
+    int32_t index;
+    CHECK_AND_RETURN(trackParse_->GetTrackIndex(audioIndex, MediaType::MEDIA_TYPE_AUD, index) == MSERR_OK);
+
+    if (GetCurrState() == preparingState_) {
+        MEDIA_LOGI("defaule audio index %{public}d, inner index %{public}d", index, audioIndex);
+        Format format;
+        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+        (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_TYPE), MediaType::MEDIA_TYPE_AUD);
+        PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE,
+            PlayBinMsgSubType::PLAYBIN_SUB_MSG_DEFAULE_TRACK, 0, format };
+        ReportMessage(msg);
+        return;
+    }
+
+    Format format;
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), true);
+    PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE,
+        PlayBinMsgSubType::PLAYBIN_SUB_MSG_AUDIO_CHANGED, 0, format };
+    ReportMessage(msg);
+}
+
+void PlayBinCtrlerBase::ReportTrackChange()
+{
+    MEDIA_LOGI("Seek event completed, report track change!");
+    if (trackChangeType_ == MediaType::MEDIA_TYPE_AUD) {
+        OnAudioChanged();
+    }
+    OnTrackDone();
+}
+
+void PlayBinCtrlerBase::OnTrackDone()
+{
+    PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE, PlayBinMsgSubType::PLAYBIN_SUB_MSG_TRACK_DONE, 0, {} };
+    ReportMessage(msg);
+}
+
+void PlayBinCtrlerBase::OnError(int32_t errorCode, std::string message)
+{
+    // There is no limit on the number of reports and the state machine is not changed.
+    PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE,
+        PlayBinMsgSubType::PLAYBIN_SUB_MSG_ONERROR, errorCode, message };
+    ReportMessage(msg);
 }
 
 void PlayBinCtrlerBase::OnSelectBitrateDoneCb(const GstElement *playbin, bool addPad, gpointer userData)

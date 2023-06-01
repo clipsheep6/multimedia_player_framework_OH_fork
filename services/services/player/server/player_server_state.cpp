@@ -76,11 +76,20 @@ int32_t PlayerServer::BaseState::MessageSeekDone(int32_t extra)
     int32_t ret = MSERR_OK;
     (void)server_.taskMgr_.MarkTaskDone("seek done");
     MediaTrace::TraceEnd("PlayerServer::Seek", FAKE_POINTER(&server_));
+    MediaTrace::TraceEnd("PlayerServer::track", FAKE_POINTER(&server_));
     if (server_.disableNextSeekDone_ && extra == 0) {
         ret = MSERR_UNSUPPORT;
     }
     server_.disableNextSeekDone_ = false;
     return ret;
+}
+
+int32_t PlayerServer::BaseState::MessageTrackDone(int32_t extra)
+{
+    (void)extra;
+    (void)server_.taskMgr_.MarkTaskDone("track done");
+    MediaTrace::TraceEnd("PlayerServer::track", FAKE_POINTER(&server_));
+    return MSERR_OK;
 }
 
 int32_t PlayerServer::BaseState::MessageSpeedDone()
@@ -131,6 +140,9 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
             ret = MessageStateChange(extra);
             break;
 
+        case INFO_TYPE_TRACK_DONE:
+            ret = MessageTrackDone(extra);
+            break;
         default:
             break;
     }

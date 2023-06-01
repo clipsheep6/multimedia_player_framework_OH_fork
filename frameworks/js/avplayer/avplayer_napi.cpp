@@ -27,6 +27,7 @@
 #ifdef SUPPORT_JSSTACK
 #include "xpower_event_js.h"
 #endif
+#include "av_common.h"
 
 using namespace OHOS::AudioStandard;
 
@@ -69,6 +70,9 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setSpeed", JsSetSpeed),
         DECLARE_NAPI_FUNCTION("setBitrate", JsSelectBitrate),
         DECLARE_NAPI_FUNCTION("getTrackDescription", JsGetTrackDescription),
+        DECLARE_NAPI_FUNCTION("selectTrack", JsSelectTrack),
+        DECLARE_NAPI_FUNCTION("deselectTrack", JsDeselectTrack),
+        DECLARE_NAPI_FUNCTION("getCurrentTrack", JsGetCurrentTrack),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -1614,6 +1618,171 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
     promiseCtx.release();
     MEDIA_LOGI("GetTrackDescription Out");
     return result;
+}
+
+napi_value AVPlayerNapi::JsSelectTrack(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::selectTrack");
+    MEDIA_LOGI("JsSelectTrack In");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    size_t argCount = 1; // 1 prarm, args[0]:index
+    napi_value args[1] = { nullptr };
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
+        return result;
+    }
+
+    int32_t index = -1;
+    napi_status status = napi_get_value_int32(env, args[0], &index);
+    if (status != napi_ok || index < 0) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the track index");
+        return result;
+    }
+
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport selectTrack operation");
+        return result;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, index]() {
+        MEDIA_LOGI("selectTrack Task");
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->SelectTrack(index);
+        }
+        MEDIA_LOGI("selectTrack Task end");
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    return result;
+}
+
+napi_value AVPlayerNapi::JsDeselectTrack(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::deselectTrack");
+    MEDIA_LOGI("deselectTrack In");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    size_t argCount = 1;     // 1 prarm, args[0]:index
+    napi_value args[1] = { nullptr };
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
+        return result;
+    }
+
+    int32_t index = -1;
+    napi_status status = napi_get_value_int32(env, args[0], &index);
+    if (status != napi_ok || index < 0) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the track index");
+        return result;
+    }
+
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport deselecttrack operation");
+        return result;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, index]() {
+        MEDIA_LOGI("deselectTrack Task");
+        if (jsPlayer->player_ != nullptr) {
+            (void)jsPlayer->player_->DeselectTrack(index);
+        }
+        MEDIA_LOGI("deselectTrack Task end");
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+    return result;
+}
+
+napi_value AVPlayerNapi::JsGetCurrentTrack(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::JsGetCurrentTrack");
+    MEDIA_LOGI("GetCurrentTrack In");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    size_t argCount = 2; // 2 param: trackType + callback
+    napi_value args[2] = { nullptr };
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(promiseCtx->napi != nullptr, result, "failed to GetJsInstanceWithParameter");
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+
+    promiseCtx->napi->GetCurrentTrackTask(promiseCtx, env, args[0]);
+
+    // async work
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsGetCurrentTrack", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            MEDIA_LOGI("GetCurrentTrack Task");
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            CHECK_AND_RETURN_LOG(promiseCtx->asyncTask != nullptr, "asyncTask is nullptr!");
+            auto result = promiseCtx->asyncTask->GetResult();
+            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
+                promiseCtx->SignError(result.Value().first, result.Value().second);
+            } else {
+                promiseCtx->JsResult = std::make_unique<MediaJsResultInt>(stoi(result.Value().second));
+            }
+            MEDIA_LOGI("GetCurrentTrack Task end");
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    promiseCtx.release();
+    return result;
+}
+
+void AVPlayerNapi::GetCurrentTrackTask(std::unique_ptr<AVPlayerContext> &promiseCtx, napi_env env, napi_value args)
+{
+    if (!promiseCtx->napi->IsControllable()) {
+        promiseCtx->napi->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport getCurrentTrack operation");
+        return;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok || valueType != napi_number) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "track index is not number");
+        return;
+    }
+
+    int32_t trackType = MediaType::MEDIA_TYPE_AUD;
+    napi_status status = napi_get_value_int32(env, args, &trackType);
+    if (status != napi_ok || trackType < MediaType::MEDIA_TYPE_AUD || trackType > MediaType::MEDIA_TYPE_VID) {
+        promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid track Type");
+        return;
+    }
+
+    auto task = std::make_shared<TaskHandler<TaskRet>>([this, trackType]() {
+        MEDIA_LOGI("GetCurrentTrack Task In");
+        std::unique_lock<std::mutex> lock(taskMutex_);
+        CHECK_AND_RETURN_RET(IsControllable(), TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport getCurrentTrack operation"));
+
+        int32_t index = 0;
+        int32_t ret = player_->GetCurrentTrack(trackType, index);
+        if (ret != MSERR_OK) {
+            auto errCode = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
+            return TaskRet(errCode, "failed to GetCurrentTrack");
+        }
+        MEDIA_LOGI("GetCurrentTrack Task Out");
+        return TaskRet(MSERR_EXT_API9_OK, std::to_string(index));
+    });
+    (void)taskQue_->EnqueueTask(task);
+    promiseCtx->asyncTask = task;
+    return;
 }
 
 napi_value AVPlayerNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
