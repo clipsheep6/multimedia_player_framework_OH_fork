@@ -16,7 +16,9 @@
 #include "gst_vdec_h264.h"
 #include "securec.h"
 #include "media_dfx.h"
+#include "scope_guard.h"
 
+using namespace OHOS;
 using namespace OHOS::Media;
 #define gst_vdec_h264_parent_class parent_class
 G_DEFINE_TYPE(GstVdecH264, gst_vdec_h264, GST_TYPE_VDEC_BASE);
@@ -28,6 +30,7 @@ static void flush_cache_slice_buffer(GstVdecBase *self);
 static GstStateChangeReturn gst_vdec_h264_change_state(GstElement *element, GstStateChange transition);
 static void gst_vdec_h264_finalize(GObject *object);
 static gboolean gst_buffer_extend(GstBuffer **buffer, gsize &size);
+static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame *frame);
 
 static void gst_vdec_h264_class_init(GstVdecH264Class *klass)
 {
@@ -37,6 +40,7 @@ static void gst_vdec_h264_class_init(GstVdecH264Class *klass)
     GstVdecBaseClass *base_class = GST_VDEC_BASE_CLASS(klass);
     base_class->handle_slice_buffer = handle_slice_buffer;
     base_class->flush_cache_slice_buffer = flush_cache_slice_buffer;
+    base_class->bypass_frame = gst_vdec_h264_bypass_frame;
     element_class->change_state = gst_vdec_h264_change_state;
     gobject_class->finalize = gst_vdec_h264_finalize;
 
@@ -273,4 +277,35 @@ static void gst_vdec_h264_finalize(GObject *object)
     }
     g_mutex_clear(&vdec_h264->cat_lock);
     G_OBJECT_CLASS(parent_class)->finalize(object);
+}
+
+static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame *frame)
+{
+    if (base->idrframe) {
+        return false;
+    }
+
+    if (gst_buffer_has_flags(frame->input_buffer, GST_BUFFER_FLAG_HEADER)) {
+        GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SPS/PPS/SEI frame");
+        return false;
+    }
+
+    GstMapInfo info = GST_MAP_INFO_INIT;
+    g_return_val_if_fail(gst_buffer_map(frame->input_buffer, &info, GST_MAP_READ), false);
+    ON_SCOPE_EXIT(0) { gst_buffer_unmap(frame->input_buffer, &info); };
+
+    guint8 offset = 2; // data[i] and data[i+1] 
+    for (gsize i = 0; i < info.size - offset; i++) {
+        if (info.data[i] == 0x01) {
+            if ((info.data[i + 1] & 0x1F) == 0x05) { // 0x1F is the mask of last 5 bits, 0x05 is IDR flag
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv IDR frame");
+                base->idrframe = true;
+                return false;
+            } else {
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: bypass B/P frame");
+                return true;
+            }
+        }
+    }
+    return false;
 }

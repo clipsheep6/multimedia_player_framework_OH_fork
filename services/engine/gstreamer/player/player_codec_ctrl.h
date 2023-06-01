@@ -19,6 +19,7 @@
 #include <mutex>
 #include <string>
 #include <list>
+#include <unordered_map>
 #include <gst/gst.h>
 #include <gst/player/player.h>
 
@@ -29,23 +30,27 @@ public:
     using CapsFixErrorNotifier = std::function<void()>;
     PlayerCodecCtrl();
     ~PlayerCodecCtrl();
-    void DetectCodecSetup(const std::string &metaStr, GstElement *src, GstElement *videoSink);
+    void DetectCodecSetup(const std::string &metaStr, GstElement *src, GstElement *videoSink,
+        CapsFixErrorNotifier notifier);
     void DetectCodecUnSetup(GstElement *src, GstElement *videoSink);
     void EnhanceSeekPerformance(bool enable);
-    void SetCapsFixErrorCb(CapsFixErrorNotifier notifier);
 
 private:
-    void SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink);
+    void SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink,
+        CapsFixErrorNotifier notifier);
     void HlsSwichSoftAndHardCodec(GstElement *videoSink);
     void SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const;
     static void CapsFixErrorCb(const GstElement *decoder, gpointer userData);
 
     bool isHardwareDec_ = false;
-    GstElement *decoder_ = nullptr;
+    struct DecoderElement {
+        bool isHardware = false;
+        gulong signalId = 0;
+    };
+    std::unordered_map<GstElement *, DecoderElement> elementMap_;
     std::list<bool> codecTypeList_;
     std::mutex mutex_;
     CapsFixErrorNotifier notifier_;
-    gulong signalId_ = 0;
 };
 } // Media
 } // OHOS
