@@ -48,7 +48,6 @@ private:
         gulong signalId = 0;
     };
     std::unordered_map<GstElement *, DecoderElement> elementMap_;
-    GstElement *decoder_ = nullptr;
     std::list<bool> codecTypeList_;
     std::mutex mutex_;
     CapsFixErrorNotifier notifier_;
