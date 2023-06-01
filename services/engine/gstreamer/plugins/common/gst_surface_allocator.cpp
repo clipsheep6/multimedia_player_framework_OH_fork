@@ -91,8 +91,8 @@ gboolean gst_surface_allocator_set_surface(GstSurfaceAllocator *allocator, OHOS:
         "surface::RegisterReleaseListener", PlayerXCollie::timerTimeout)
 
     if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
+        allocator->isCallbackMode = FALSE;
         GST_ERROR("Register Release Listener failed");
-        return FALSE;
     }
     return TRUE;
 }
@@ -110,7 +110,7 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
 {
     {
         GST_SURFACE_ALLOCATOR_LOCK(allocator);
-        while (allocator->cacheBufferNum == 0 && allocator->clean == FALSE) {
+        while (allocator->cacheBufferNum == 0 && allocator->clean == FALSE && allocator->isCallbackMode) {
             GST_SURFACE_ALLOCATOR_WAIT(allocator);
         }
         GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
@@ -120,7 +120,7 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
     }
 
     static constexpr int32_t stride_alignment = 8;
-    int32_t wait_time = param.dont_wait ? 0 : INT_MAX; // wait forever or no wait.
+    int32_t wait_time = (param.dont_wait && allocator->isCallbackMode) ? 0 : INT_MAX; // wait forever or no wait.
     OHOS::BufferRequestConfig request_config = {
         param.width, param.height, stride_alignment, param.format,
         param.usage | BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA, wait_time
@@ -360,6 +360,7 @@ static void gst_surface_allocator_init(GstSurfaceAllocator *allocator)
     base_allocator->mem_map = (GstMemoryMapFunction)gst_surface_allocator_mem_map;
     base_allocator->mem_unmap = (GstMemoryUnmapFunction)gst_surface_allocator_mem_unmap;
     allocator->allocatorWrap = nullptr;
+    allocator->isCallbackMode = TRUE;
     g_mutex_init(&allocator->lock);
     g_cond_init(&allocator->cond);
 }

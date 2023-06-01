@@ -60,6 +60,7 @@ struct _GstSurfaceAllocator {
     int32_t totalBufferNum;
     gboolean clean;
     AllocatorWrap *allocatorWrap;
+    gboolean isCallbackMode;
 };
 
 struct _GstSurfaceAllocatorClass {
