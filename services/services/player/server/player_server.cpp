@@ -408,6 +408,7 @@ int32_t PlayerServer::Stop()
 
     if (lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED) {
+        MediaTrace::TraceBegin("PlayerServer::Stop", FAKE_POINTER(this));
         return OnStop(false);
     } else {
         MEDIA_LOGE("Can not Stop, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
@@ -422,7 +423,6 @@ int32_t PlayerServer::OnStop(bool sync)
     taskMgr_.ClearAllTask();
 
     auto stopTask = std::make_shared<TaskHandler<void>>([this]() {
-        MediaTrace::TraceBegin("PlayerServer::Stop", FAKE_POINTER(this));
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Stop();
     });
@@ -496,6 +496,7 @@ int32_t PlayerServer::HandleReset()
 int32_t PlayerServer::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("PlayerServer::Release");
     {
         std::lock_guard<std::mutex> lockCb(mutexCb_);
         playerCb_ = nullptr;
@@ -785,6 +786,7 @@ int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
         Format format;
         OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
         taskMgr_.MarkTaskDone("set speed mode is same");
+        MediaTrace::TraceEnd("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
         return MSERR_OK;
     }
 
