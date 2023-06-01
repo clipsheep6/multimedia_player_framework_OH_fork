@@ -31,6 +31,7 @@ config("gst_codec_plugins_common_config") {
     "-Wdate-time",
     "-DOHOS_EXT_FUNC",
     "-DOHOS_OPT_COMPAT",
+    "-DOHOS_OPT_PERFORMANCE",
     "-Werror",
     "-Wextra",
     "-Wimplicit-fallthrough",
