@@ -882,7 +882,9 @@ int32_t PlayBinCtrlerBase::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    ON_SCOPE_EXIT(0) { OnTrackDone(); };
+    ON_SCOPE_EXIT(0) {
+        OnTrackDone();
+    };
 
     CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
     int32_t trackType = -1;
@@ -918,7 +920,9 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
 int32_t PlayBinCtrlerBase::DeselectTrack(int32_t index)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    ON_SCOPE_EXIT(0) { OnTrackDone(); };
+    ON_SCOPE_EXIT(0) {
+        OnTrackDone();
+    };
 
     CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
     int32_t trackType = -1;

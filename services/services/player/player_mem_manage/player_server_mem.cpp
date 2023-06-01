@@ -861,6 +861,7 @@ bool PlayerServerMem::NeedSelectAudioTrack()
 
 void PlayerServerMem::GetDefauleTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
+    (void)extra;
     if (type == INFO_TYPE_DEFAULTTRACK) {
         int32_t mediaType = -1;
         (void)infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_TYPE), mediaType);
