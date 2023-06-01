@@ -21,6 +21,7 @@
 #include "directory_ex.h"
 #include "audio_system_manager.h"
 #include "player_sinkprovider.h"
+#include "av_common.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerEngineGstImpl"};
@@ -338,6 +339,42 @@ void PlayerEngineGstImpl::HandleIsLiveStream(const PlayBinMessage &msg)
         notifyObs->OnInfo(INFO_TYPE_IS_LIVE_STREAM, 0, format);
     }
 }
+void PlayerEngineGstImpl::HandleTrackChanged(const PlayBinMessage &msg)
+{
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        notifyObs->OnInfo(INFO_TYPE_TRACKCHANGE, 0, std::any_cast<Format>(msg.extra));
+    }
+}
+
+void PlayerEngineGstImpl::HandleDefaultTrack(const PlayBinMessage &msg)
+{
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        notifyObs->OnInfo(INFO_TYPE_DEFAULTTRACK, 0, std::any_cast<Format>(msg.extra));
+    }
+}
+
+void PlayerEngineGstImpl::HandleTrackDone(const PlayBinMessage &msg)
+    (void)msg;
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        Format format;
+        notifyObs->OnInfo(INFO_TYPE_TRACK_DONE, 0, format);
+    }
+}
+
+void PlayerEngineGstImpl::HandleOnError(const PlayBinMessage &msg)
+{
+    Format format;
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_ERROR_TYPE), msg.code);
+    (void)format.PutStringValue(std::string(PlayerKeys::PLAYER_ERROR_MSG), std::any_cast<std::string>(msg.extra));
+
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        notifyObs->OnInfo(INFO_TYPE_ERROR_MSG, 0, format);
+    }
+}
 
 void PlayerEngineGstImpl::HandleSubtitleUpdate(const PlayBinMessage &msg)
 {
@@ -480,6 +517,10 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_VIDEO_SIZE_CHANGED] = &PlayerEngineGstImpl::HandleVideoSizeChanged;
     subMsgHandler_[PLAYBIN_SUB_MSG_BITRATE_COLLECT] = &PlayerEngineGstImpl::HandleBitRateCollect;
     subMsgHandler_[PLAYBIN_SUB_MSG_IS_LIVE_STREAM] = &PlayerEngineGstImpl::HandleIsLiveStream;
+    subMsgHandler_[PLAYBIN_SUB_MSG_AUDIO_CHANGED] = &PlayerEngineGstImpl::HandleTrackChanged;
+    subMsgHandler_[PLAYBIN_SUB_MSG_DEFAULE_TRACK] = &PlayerEngineGstImpl::HandleDefaultTrack;
+    subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_DONE] = &PlayerEngineGstImpl::HandleTrackDone;
+    subMsgHandler_[PLAYBIN_SUB_MSG_ONERROR] = &PlayerEngineGstImpl::HandleOnError;
     subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_UPDATED] = &PlayerEngineGstImpl::HandleSubtitleUpdate;
 
     MEDIA_LOGD("PlayBinCtrlerInit out");
@@ -818,6 +859,27 @@ int32_t PlayerEngineGstImpl::SetAudioInterruptMode(const int32_t interruptMode)
         playBinCtrler_->SetAudioInterruptMode(interruptMode);
     }
     return MSERR_OK;
+}
+
+int32_t PlayerEngineGstImpl::SelectTrack(int32_t index)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    return playBinCtrler_->SelectTrack(index);
+}
+
+int32_t PlayerEngineGstImpl::DeselectTrack(int32_t index)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    return playBinCtrler_->DeselectTrack(index);
+}
+
+int32_t PlayerEngineGstImpl::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    return playBinCtrler_->GetCurrentTrack(trackType, index);
 }
 
 GValueArray *PlayerEngineGstImpl::OnNotifyAutoPlugSort(GValueArray &factories)
