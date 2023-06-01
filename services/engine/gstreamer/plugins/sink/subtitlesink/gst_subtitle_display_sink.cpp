@@ -62,8 +62,8 @@ static void gst_subtitle_display_sink_class_init(GstSubtitleDisplaySinkClass *kc
     base_sink_class->event = gst_subtitle_display_sink_event;
 
     g_object_class_install_property(gobject_class, PROP_AUDIO_SINK,
-            g_param_spec_pointer("audio-sink", "audio sink", "audio sink",
-                (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+        g_param_spec_pointer("audio-sink", "audio sink", "audio sink",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     GST_DEBUG_CATEGORY_INIT(gst_subtitle_display_sink_debug_category,
         "subtitledisplaysink", 0, "subtitledisplaysink class");

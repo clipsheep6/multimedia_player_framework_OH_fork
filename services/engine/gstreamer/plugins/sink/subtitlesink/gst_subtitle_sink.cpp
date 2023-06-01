@@ -104,8 +104,8 @@ static void gst_subtitle_sink_class_init(GstSubtitleSinkClass *kclass)
     basesink_class->update_reach_time = gst_subtitle_sink_update_reach_time;
 
     g_object_class_install_property(gobject_class, PROP_AUDIO_SINK,
-            g_param_spec_pointer("audio-sink", "audio sink", "audio sink",
-                (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+        g_param_spec_pointer("audio-sink", "audio sink", "audio sink",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     GST_DEBUG_CATEGORY_INIT(gst_subtitle_sink_debug_category, "subtitlesink", 0, "subtitlesink class");
 }
@@ -220,8 +220,9 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
             g_mutex_lock(&priv->mutex);
             subtitle_sink->paused = TRUE;
-            guint64 left_duration = 0;
-            left_duration = priv->text_frame_duration - priv->running_time;
+            gint64 left_duration = 0;
+            left_duration = max(left_duration, priv->text_frame_duration - priv->running_time);
+            priv->running_time = gst_util_get_timestamp();
             GST_DEBUG_OBJECT(subtitle_sink, "text left duration is %" GST_TIME_FORMAT,
                 GST_TIME_ARGS(left_duration));
             g_mutex_unlock(&priv->mutex);
@@ -360,7 +361,7 @@ static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, G
 static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(appsink);
-    GstSubtitleSinkPrivate *priv = subtitle_sink->priv;    
+    GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     GstSample *sample = gst_app_sink_pull_sample(appsink);
     GstBuffer *buffer = gst_sample_get_buffer(sample);
 
@@ -490,6 +491,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             GST_DEBUG_OBJECT(subtitle_sink, "subtitle flush start");
             gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, TRUE);
             subtitle_sink->is_flushing = TRUE;
+            priv->running_time = 0;
             break;
         }
         case GST_EVENT_FLUSH_STOP: {
