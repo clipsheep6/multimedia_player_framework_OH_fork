@@ -16,6 +16,7 @@
 #include "gst_vdec_h264.h"
 #include "securec.h"
 #include "media_dfx.h"
+#include "scope_guard.h"
 
 using namespace OHOS::Media;
 #define gst_vdec_h264_parent_class parent_class
