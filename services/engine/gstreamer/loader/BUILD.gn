@@ -51,6 +51,11 @@ config("media_engine_gst_loader_config") {
 }
 
 ohos_static_library("media_engine_gst_loader") {
+  sanitize = {
+    integer_overflow = true
+    boundary_sanitize = true
+  }
+
   sources = [ "gst_loader.cpp" ]
 
   configs = [

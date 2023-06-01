@@ -62,6 +62,11 @@ config("gst_codec_plugins_common_config") {
 }
 
 ohos_static_library("gst_codec_plugins_common") {
+  sanitize = {
+    integer_overflow = true
+    boundary_sanitize = true
+  }
+
   sources = [
     "vdec/gst_vdec_base.cpp",
     "vdec/gst_vdec_h264.cpp",

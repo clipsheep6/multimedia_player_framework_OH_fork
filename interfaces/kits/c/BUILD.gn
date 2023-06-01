@@ -66,6 +66,8 @@ ohos_shared_library("native_media_core") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    integer_overflow = true
+    boundary_sanitize = true
     debug = false
     blocklist = "../../../cfi_blocklist.txt"
   }
@@ -97,6 +99,8 @@ ohos_shared_library("native_media_codecbase") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    integer_overflow = true
+    boundary_sanitize = true
     debug = false
     blocklist = "../../../cfi_blocklist.txt"
   }
@@ -119,6 +123,8 @@ ohos_shared_library("native_media_adec") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    integer_overflow = true
+    boundary_sanitize = true
     debug = false
     blocklist = "../../../cfi_blocklist.txt"
   }
@@ -150,6 +156,8 @@ ohos_shared_library("native_media_aenc") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    integer_overflow = true
+    boundary_sanitize = true
     debug = false
     blocklist = "../../../cfi_blocklist.txt"
   }
@@ -181,6 +189,8 @@ ohos_shared_library("native_media_vdec") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    integer_overflow = true
+    boundary_sanitize = true
     debug = false
     blocklist = "../../../cfi_blocklist.txt"
   }
@@ -214,6 +224,8 @@ ohos_shared_library("native_media_venc") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    integer_overflow = true
+    boundary_sanitize = true
     debug = false
     blocklist = "../../../cfi_blocklist.txt"
   }

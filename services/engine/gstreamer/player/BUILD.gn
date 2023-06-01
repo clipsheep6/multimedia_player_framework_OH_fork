@@ -71,6 +71,11 @@ config("media_engine_gst_player_config") {
 }
 
 ohos_static_library("media_engine_gst_player") {
+  sanitize = {
+    integer_overflow = true
+    boundary_sanitize = true
+  }
+
   sources = [
     "player_codec_ctrl.cpp",
     "player_engine_gst_impl.cpp",

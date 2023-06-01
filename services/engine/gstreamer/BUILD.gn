@@ -25,6 +25,8 @@ ohos_shared_library("media_engine_gst") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
+    integer_overflow = true
+    boundary_sanitize = true
     debug = false
   }
 
