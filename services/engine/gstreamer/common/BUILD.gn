@@ -57,6 +57,7 @@ config("media_engine_gst_common_config") {
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/playbin_adapter",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/state_machine",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/common/utils",
+    "../player",
     "./appsrc_engine",
     "../plugins/common",
     "//foundation/multimedia/player_framework/services/utils/include",
@@ -67,6 +68,7 @@ config("media_engine_gst_common_config") {
 
 ohos_static_library("media_engine_gst_common") {
   sources = [
+    "../player/player_track_parse.cpp",
     "appsrc_engine/appsrc_memory.cpp",
     "appsrc_engine/gst_appsrc_engine.cpp",
     "message/gst_msg_converter.cpp",

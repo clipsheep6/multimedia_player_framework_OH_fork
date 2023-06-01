@@ -327,6 +327,35 @@ public:
         CHECK_AND_RETURN_LOG(ret, "Failed to execute PostTask");
         CANCEL_SCOPE_EXIT_GUARD(0);
     }
+
+    struct TrackChange : public Base {
+        int32_t number = 0;
+        bool isSelect = false;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            const int32_t argCount = 2; // 2 prapm, callback: (index: number, isSelect: boolean)
+            napi_value args[argCount] = {nullptr};
+            (void)napi_create_int32(ref->env_, number, &args[0]);
+            (void)napi_get_boolean(ref->env_, isSelect, &args[1]);
+
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
 };
 
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
@@ -352,6 +381,7 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     onInfoFuncs_[INFO_TYPE_BITRATE_COLLECT] = &AVPlayerCallback::OnBitRateCollectedCb;
     onInfoFuncs_[INFO_TYPE_EOS] = &AVPlayerCallback::OnEosCb;
     onInfoFuncs_[INFO_TYPE_IS_LIVE_STREAM] = &AVPlayerCallback::NotifyIsLiveStream;
+    onInfoFuncs_[INFO_TYPE_TRACKCHANGE] = &AVPlayerCallback::OnTrackChangedCb;
 }
 
 AVPlayerCallback::~AVPlayerCallback()
@@ -764,6 +794,28 @@ void AVPlayerCallback::OnEosCb(const int32_t extra, const Format &infoBody)
 
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_END_OF_STREAM);
     cb->callbackName = AVPlayerEvent::EVENT_END_OF_STREAM;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnTrackChangedCb(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    int32_t index = -1;
+    int32_t isSelect = -1;
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+    infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
+    MEDIA_LOGI("OnTrackChangedCb index %{public}d, isSelect = %{public}d", index, isSelect);
+ 
+    CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_TRACKCHANGE) != refMap_.end(),
+        "can not find trackChange callback!");
+
+    NapiCallback::TrackChange *cb = new(std::nothrow) NapiCallback::TrackChange();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new TrackChange");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_TRACKCHANGE);
+    cb->callbackName = AVPlayerEvent::EVENT_TRACKCHANGE;
+    cb->number = index;
+    cb->isSelect = isSelect ? true : false;
     NapiCallback::CompleteCallback(env_, cb);
 }
 

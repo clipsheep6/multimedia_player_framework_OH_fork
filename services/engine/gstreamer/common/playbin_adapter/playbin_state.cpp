@@ -179,7 +179,11 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
         MEDIA_LOGI("BaseState::HandleAsyncDone %{public}d, %{public}d",
             static_cast<int32_t>(stateRet), static_cast<int32_t>(state));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state >= GST_STATE_PAUSED)) {
-            if (ctrler_.isSeeking_) {
+            if (ctrler_.isTrackChanging_) {
+                ctrler_.isSeeking_ = false;
+                ctrler_.isTrackChanging_ = false;
+                ctrler_.ReportTrackChange();
+            } else if (ctrler_.isSeeking_) {
                 int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
                 ctrler_.isSeeking_ = false;
                 ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
@@ -471,7 +475,11 @@ void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg
         GstStateChangeReturn stateRet = gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
             nullptr, static_cast<GstClockTime>(0));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state == GST_STATE_PLAYING)) {
-            if (ctrler_.isSeeking_) {
+            if (ctrler_.isTrackChanging_) {
+                ctrler_.isSeeking_ = false;
+                ctrler_.isTrackChanging_ = false;
+                ctrler_.ReportTrackChange();
+            } else if (ctrler_.isSeeking_) {
                 int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
                 ctrler_.isSeeking_ = false;
                 ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;

@@ -23,6 +23,7 @@
 #include "playbin_msg_define.h"
 #include "playbin_sink_provider.h"
 #include "gst_appsrc_engine.h"
+#include "format.h"
 
 namespace OHOS {
 namespace Media {
@@ -79,6 +80,11 @@ public:
     virtual int64_t QueryPosition() = 0;
     virtual void SetNotifier(PlayBinMsgNotifier notifier) = 0;
     virtual void SetAutoSelectBitrate(bool enable) = 0;
+    virtual int32_t SelectTrack(int32_t index) = 0;
+    virtual int32_t DeselectTrack(int32_t index) = 0;
+    virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
+    virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
+    virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
 };
 } // namespace Media
 } // namespace OHOS

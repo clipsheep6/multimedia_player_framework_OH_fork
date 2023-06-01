@@ -958,6 +958,61 @@ int32_t PlayerServer::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &c
     return MSERR_OK;
 }
 
+int32_t PlayerServer::SelectTrack(int32_t index)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
+        lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE, MSERR_INVALID_OPERATION,
+        "invalid state %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    auto task = std::make_shared<TaskHandler<void>>([this, index]() {
+        MediaTrace::TraceBegin("PlayerServer::track", FAKE_POINTER(this));
+        CHECK_AND_RETURN(IsEngineStarted());
+        int32_t ret = playerEngine_->SelectTrack(index);
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to SelectTrack");
+    });
+    int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "SelectTrack");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SelectTrack launch task failed");
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::DeselectTrack(int32_t index)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
+        lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE, MSERR_INVALID_OPERATION,
+        "invalid state %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    auto task = std::make_shared<TaskHandler<void>>([this, index]() {
+        MediaTrace::TraceBegin("PlayerServer::track", FAKE_POINTER(this));
+        CHECK_AND_RETURN(IsEngineStarted());
+        int32_t ret = playerEngine_->DeselectTrack(index);
+        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "failed to DeselectTrack");
+    });
+    int32_t ret = taskMgr_.LaunchTask(task, PlayerServerTaskType::STATE_CHANGE, "DeselectTrack");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "DeselectTrack launch task failed");
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    CHECK_AND_RETURN_RET_LOG(trackType >= MediaType::MEDIA_TYPE_AUD && trackType <= MediaType::MEDIA_TYPE_SUBTITLE,
+        MSERR_INVALID_VAL, "Invalid trackType %{public}d", trackType);
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
+        lastOpStatus_ == PLAYER_PAUSED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE, MSERR_INVALID_OPERATION,
+        "invalid state %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    return playerEngine_->GetCurrentTrack(trackType, index);
+}
+
 void PlayerServer::FormatToString(std::string &dumpString, std::vector<Format> &videoTrack)
 {
     for (auto iter = videoTrack.begin(); iter != videoTrack.end(); iter++) {
@@ -1027,6 +1082,10 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
     int32_t ret = HandleMessage(type, extra, infoBody);
     if (type == INFO_TYPE_IS_LIVE_STREAM) {
         isLiveStream_ = true;
+    }
+
+    if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE) {
+        return;
     }
 
     if (playerCb_ != nullptr && ret == MSERR_OK) {
