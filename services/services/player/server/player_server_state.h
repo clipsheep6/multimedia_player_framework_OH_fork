@@ -45,6 +45,7 @@ protected:
     void ReportInvalidOperation() const;
     virtual void HandleEos() {}
     int32_t MessageSeekDone(int32_t extra);
+    int32_t MessageTrackDone(int32_t extra);
     int32_t MessageSpeedDone();
     int32_t MessageStateChange(int32_t extra);
 

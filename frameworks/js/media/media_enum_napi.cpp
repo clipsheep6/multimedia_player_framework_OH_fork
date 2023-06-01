@@ -300,6 +300,7 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
     { "MD_KEY_AUD_CHANNEL_COUNT", "channel_count" },
     { "MD_KEY_AUD_SAMPLE_RATE", "sample_rate" },
     { "MD_KEY_CUSTOM", "vendor.custom" },
+    { "MD_KEY_LANGUAGE", "language" },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {

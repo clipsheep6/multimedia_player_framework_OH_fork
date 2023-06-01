@@ -99,6 +99,9 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[GET_VIDEO_WIDTH] = { &PlayerServiceStub::GetVideoWidth, "Player::GetVideoWidth" };
     playerFuncs_[GET_VIDEO_HEIGHT] = { &PlayerServiceStub::GetVideoHeight, "Player::GetVideoHeight" };
     playerFuncs_[SELECT_BIT_RATE] = { &PlayerServiceStub::SelectBitRate, "Player::SelectBitRate" };
+    playerFuncs_[SELECT_TRACK] = { &PlayerServiceStub::SelectTrack, "Player::SelectTrack" };
+    playerFuncs_[DESELECT_TRACK] = { &PlayerServiceStub::DeselectTrack, "Player::DeselectTrack" };
+    playerFuncs_[GET_CURRENT_TRACK] = { &PlayerServiceStub::GetCurrentTrack, "Player::GetCurrentTrack" };
 
     (void)RegisterMonitor(appPid_);
 }
@@ -427,6 +430,27 @@ int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
     }
 }
 
+int32_t PlayerServiceStub::SelectTrack(int32_t index)
+{
+    MediaTrace trace("PlayerServiceStub::SelectTrack");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->SelectTrack(index);
+}
+
+int32_t PlayerServiceStub::DeselectTrack(int32_t index)
+{
+    MediaTrace trace("PlayerServiceStub::DeselectTrack");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->DeselectTrack(index);
+}
+
+int32_t PlayerServiceStub::GetCurrentTrack(int32_t trackType, int32_t &index)
+{
+    MediaTrace trace("PlayerServiceStub::GetCurrentTrack");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetCurrentTrack(trackType, index);
+}
+
 int32_t PlayerServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
 {
     sptr<IRemoteObject> object = data.ReadRemoteObject();
@@ -675,6 +699,30 @@ int32_t PlayerServiceStub::SetPlayerCallback(MessageParcel &data, MessageParcel 
 {
     (void)data;
     reply.WriteInt32(SetPlayerCallback());
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::SelectTrack(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t index = data.ReadInt32();
+    reply.WriteInt32(SelectTrack(index));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::DeselectTrack(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t index = data.ReadInt32();
+    reply.WriteInt32(DeselectTrack(index));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetCurrentTrack(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t trackType = data.ReadInt32();
+    int32_t index = -1;
+    int32_t ret = GetCurrentTrack(trackType, index);
+    reply.WriteInt32(index);
+    reply.WriteInt32(ret);
     return MSERR_OK;
 }
 } // namespace Media

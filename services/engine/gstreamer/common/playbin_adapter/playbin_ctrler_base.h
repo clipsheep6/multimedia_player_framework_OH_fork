@@ -27,6 +27,8 @@
 #include "state_machine.h"
 #include "gst_msg_processor.h"
 #include "task_queue.h"
+#include "player_track_parse.h"
+#include "av_common.h"
 
 namespace OHOS {
 namespace Media {
@@ -69,6 +71,11 @@ public:
     void RemoveGstPlaySinkVideoConvertPlugin() final;
     void SetNotifier(PlayBinMsgNotifier notifier) final;
     void SetAutoSelectBitrate(bool enable) final;
+    int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
+    int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
+    int32_t SelectTrack(int32_t index) override;
+    int32_t DeselectTrack(int32_t index) override;
+    int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
 protected:
     virtual int32_t OnInit() = 0;
 
@@ -111,6 +118,7 @@ private:
         const uint32_t hintType, gpointer userData);
     static void OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData);
     static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
+    static void AudioChanged(const GstElement *playbin, gpointer userData);
     void SetupInterruptEventCb();
     void SetupAudioStateEventCb();
     void OnElementSetup(GstElement &elem);
@@ -132,6 +140,11 @@ private:
     void HandleCacheCtrlWhenNoBuffering(int32_t percent);
     void HandleCacheCtrlWhenBuffering(int32_t percent);
     void OnAdaptiveElementSetup(GstElement &elem);
+    void OnAudioChanged();
+    void ReportTrackChange();
+    void OnTrackDone();
+    void OnError(int32_t errorCode, std::string message);
+
     inline void AddSignalIds(GstElement *element, gulong signalId)
     {
         if (signalIds_.find(element) == signalIds_.end()) {
@@ -162,6 +175,7 @@ private:
     std::shared_ptr<PlayBinSinkProvider> sinkProvider_;
     std::unique_ptr<GstMsgProcessor> msgProcessor_;
     std::string uri_;
+    std::shared_ptr<PlayerTrackParse> trackParse_;
 
     std::map<GstElement *, std::vector<gulong>> signalIds_;
     std::vector<uint32_t> bitRateVec_;
@@ -191,6 +205,10 @@ private:
     int32_t rendererFlag_ = 0;
     int32_t cachePercent_ = 100; // 100% cache percent
     uint64_t connectSpeed_ = 0;
+
+    bool isTrackChanging_ = false;
+    int32_t trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
+    int32_t audioIndex_ = -1;
 
     std::atomic<bool> isDuration_ = false;
     std::atomic<bool> enableLooping_ = false;

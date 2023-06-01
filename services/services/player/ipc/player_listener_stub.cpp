@@ -87,6 +87,14 @@ void PlayerListenerStub::OnError(PlayerErrorType errorType, int32_t errorCode)
 
 void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
+    if (type == INFO_TYPE_ERROR_MSG) {
+        int32_t errtype = -1;
+        std::string msg;
+        infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_ERROR_TYPE), errtype);
+        infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_ERROR_MSG), msg);
+        return OnError(errtype, msg);
+    }
+
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
     if (cb != nullptr) {
         cb->OnInfo(type, extra, infoBody);

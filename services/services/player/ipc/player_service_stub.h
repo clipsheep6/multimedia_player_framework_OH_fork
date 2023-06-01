@@ -67,6 +67,9 @@ public:
     int32_t SetPlayerCallback() override;
     int32_t DumpInfo(int32_t fd);
     int32_t SelectBitRate(uint32_t bitRate) override;
+    int32_t SelectTrack(int32_t index) override;
+    int32_t DeselectTrack(int32_t index) override;
+    int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
 
     // MonitorServerObject override
     int32_t DoIpcAbnormality() override;
@@ -114,6 +117,9 @@ private:
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
     int32_t SetPlayerCallback(MessageParcel &data, MessageParcel &reply);
     int32_t SelectBitRate(MessageParcel &data, MessageParcel &reply);
+    int32_t SelectTrack(MessageParcel &data, MessageParcel &reply);
+    int32_t DeselectTrack(MessageParcel &data, MessageParcel &reply);
+    int32_t GetCurrentTrack(MessageParcel &data, MessageParcel &reply);
 
     std::mutex mutex_;
     using PlayerStubFunc = int32_t(PlayerServiceStub::*)(MessageParcel &data, MessageParcel &reply);

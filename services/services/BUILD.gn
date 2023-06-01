@@ -196,8 +196,8 @@ ohos_shared_library("media_service") {
       "ability_base:want",
       "ability_runtime:wantagent_innerkits",
       "audio_framework:audio_client",
+      "av_session:avsession_client",
       "input:libmmi-client",
-      "multimedia_av_session:avsession_client",
     ]
   }
 
