@@ -16,11 +16,17 @@
 #include <gst/gst.h>
 #include <cinttypes>
 #include "config.h"
+#include "gst_subtitle_sink.h"
 #include "gst_subtitle_display_sink.h"
 
 using namespace OHOS::Media;
 
-static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
+enum {
+    PROP_0,
+    PROP_AUDIO_SINK,
+}
+
+static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subdisplaysink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
@@ -46,7 +52,6 @@ static void gst_subtitle_display_sink_class_init(GstSubtitleDisplaySinkClass *kc
     GstElementClass *element_class = GST_ELEMENT_CLASS(kclass);
     GstBaseSinkClass *base_sink_class = GST_BASE_SINK_CLASS(kclass);
     gst_element_class_add_static_pad_template(element_class, &g_sinktemplate);
-
     gst_element_class_set_static_metadata(element_class,
         "SutitlebDisplaySink", "Sink/Subtitle", " Subtitle Display Sink", "OpenHarmony");
 
@@ -55,6 +60,11 @@ static void gst_subtitle_display_sink_class_init(GstSubtitleDisplaySinkClass *kc
     gobject_class->set_property = gst_subtitle_display_sink_set_property;
     element_class->change_state = gst_subtitle_display_sink_change_state;
     base_sink_class->event = gst_subtitle_display_sink_event;
+
+    g_object_class_install_property(gobject_class, PROP_AUDIO_SINK,
+            g_param_spec_pointer("audio-sink", "audio sink", "audio sink",
+                (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     GST_DEBUG_CATEGORY_INIT(gst_subtitle_display_sink_debug_category,
         "subtitledisplaysink", 0, "subtitledisplaysink class");
 }
@@ -70,7 +80,16 @@ static void gst_subtitle_display_sink_set_property(GObject *object,
     g_return_if_fail(object != nullptr);
     g_return_if_fail(value != nullptr);
     g_return_if_fail(pspec != nullptr);
-    (void)prop_id;
+    GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(object);
+    switch (prop_id) {
+        case PROP_AUDIO_SINK: {
+            g_object_set(G_OBJECT(GST_SUBTITLE_SINK_CAST(object)), "audio-sink", g_value_get_pointer(value), nullptr);
+            break;
+        }
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
+            break;
+    }
 }
 
 static GstStateChangeReturn gst_subtitle_display_sink_change_state(GstElement *element, GstStateChange transition)

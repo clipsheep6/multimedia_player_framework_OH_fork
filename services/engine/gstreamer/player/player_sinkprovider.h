@@ -62,7 +62,7 @@ private:
 
     GstElement *audioSink_ = nullptr;
     GstElement *videoSink_ = nullptr;
-    GstElement *subSink_ = nullptr;
+    GstElement *subtitleSink_ = nullptr;
     GstCaps *audioCaps_ = nullptr;
     GstCaps *videoCaps_ = nullptr;
     sptr<Surface> producerSurface_ = nullptr;

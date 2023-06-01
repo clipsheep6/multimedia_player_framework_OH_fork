@@ -197,9 +197,10 @@ GstElement *PlayerSinkProvider::DoCreateVideoSink(const GstCaps *caps, const gpo
 
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
 {
-    auto *subSink = DoCreateSubtitleSink(reinterpret_cast<gpointer>(this));
-    CHECK_AND_RETURN_RET_LOG(subSink != nullptr, nullptr, "CreateSubtitleSink failed..");
-    return subSink;
+    subtitleSink_ = DoCreateSubtitleSink(reinterpret_cast<gpointer>(this));
+    CHECK_AND_RETURN_RET_LOG(subtitleSink_ != nullptr, nullptr, "CreateSubtitleSink failed..");
+    g_object_set(G_OBJECT(subtitleSink_), "audio-sink", nullptr);
+    return subtitleSink_;
 }
 
 GstElement *PlayerSinkProvider::DoCreateSubtitleSink(const gpointer userData)
