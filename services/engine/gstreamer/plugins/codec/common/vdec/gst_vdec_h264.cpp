@@ -18,6 +18,7 @@
 #include "media_dfx.h"
 #include "scope_guard.h"
 
+using namespace OHOS;
 using namespace OHOS::Media;
 #define gst_vdec_h264_parent_class parent_class
 G_DEFINE_TYPE(GstVdecH264, gst_vdec_h264, GST_TYPE_VDEC_BASE);
