@@ -36,27 +36,29 @@ PlayerCodecCtrl::~PlayerCodecCtrl()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     notifier_ = nullptr;
-    if (decoder_ != nullptr) {
-        if (signalId_ != 0) {
-            g_signal_handler_disconnect(decoder_, signalId_);
-            signalId_ = 0;
+    for (auto &it : elementMap_) {
+        if (it.second.signalId != 0) {
+            g_signal_handler_disconnect(it.first, it.second.signalId);
+            it.second.signalId = 0;
         }
-        gst_object_unref(decoder_);
-        decoder_ = nullptr;
+        gst_object_unref(it.first);
     }
+    elementMap_.clear();
 }
 
-void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink)
+void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink,
+    CapsFixErrorNotifier notifier)
 {
     if (metaStr.find("Codec/Decoder/Video/Hardware") != std::string::npos) {
         // hardware dec
         isHardwareDec_ = true;
-        if (decoder_ != nullptr) {
-            gst_object_unref(decoder_);
-            decoder_ = nullptr;
-        }
+        notifier_ = notifier;
+        DecoderElement element;
+        element.isHardware = true;
+        element.signalId = g_signal_connect(src, "caps-fix-error", G_CALLBACK(&PlayerCodecCtrl::CapsFixErrorCb), this);
+        elementMap_[src] = element;
+        MEDIA_LOGD("add decoder element size = %{public}zu", elementMap_.size());
         g_object_set(G_OBJECT(src), "player-mode", TRUE, nullptr);
-        decoder_ = GST_ELEMENT_CAST(gst_object_ref(src));
         if (!codecTypeList_.empty()) {
             // For hls scene when change codec, the second codec should not go performance mode process.
             codecTypeList_.push_back(true);
@@ -84,11 +86,12 @@ void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, 
     }
 }
 
-void PlayerCodecCtrl::DetectCodecSetup(const std::string &metaStr, GstElement *src, GstElement *videoSink)
+void PlayerCodecCtrl::DetectCodecSetup(const std::string &metaStr, GstElement *src, GstElement *videoSink,
+    CapsFixErrorNotifier notifier)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("Codec Setup");
-    SetupCodecCb(metaStr, src, videoSink);
+    SetupCodecCb(metaStr, src, videoSink, notifier);
     SetupCodecBufferNum(metaStr, src);
 }
 
@@ -100,20 +103,11 @@ void PlayerCodecCtrl::SetupCodecBufferNum(const std::string &metaStr, GstElement
     }
 }
 
-void PlayerCodecCtrl::SetCapsFixErrorCb(CapsFixErrorNotifier notifier)
-{
-    notifier_ = notifier;
-    CHECK_AND_RETURN_LOG(decoder_ != nullptr, "decoder_ is nullptr");
-    signalId_ = g_signal_connect(decoder_, "caps-fix-error", G_CALLBACK(&PlayerCodecCtrl::CapsFixErrorCb), this);
-}
-
 void PlayerCodecCtrl::CapsFixErrorCb(const GstElement *decoder, gpointer userData)
 {
+    CHECK_AND_RETURN_LOG(decoder != nullptr, "decoder is nullptr");
+    CHECK_AND_RETURN_LOG(userData != nullptr, "userData is nullptr");
     MEDIA_LOGD("CapsFixErrorCb in");
-    if (decoder == nullptr || userData == nullptr) {
-        MEDIA_LOGE("param is nullptr");
-        return;
-    }
 
     auto playerCodecCtrl = static_cast<PlayerCodecCtrl *>(userData);
     if (playerCodecCtrl->notifier_ != nullptr) {
@@ -124,21 +118,22 @@ void PlayerCodecCtrl::CapsFixErrorCb(const GstElement *decoder, gpointer userDat
 void PlayerCodecCtrl::DetectCodecUnSetup(GstElement *src, GstElement *videoSink)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    (void)src;
     MEDIA_LOGD("Codec UnSetup");
-    if (decoder_ != nullptr) {
-        gst_object_unref(decoder_);
-        decoder_ = nullptr;
+    auto it = elementMap_.find(src);
+    if (it != elementMap_.end()) {
+        if (elementMap_[src].signalId != 0) {
+            g_signal_handler_disconnect(src, elementMap_[src].signalId);
+            elementMap_[src].signalId = 0;
+        }
+        elementMap_.erase(it);
     }
+    MEDIA_LOGD("del decoder element size = %{public}zu", elementMap_.size());
     HlsSwichSoftAndHardCodec(videoSink);
 }
 
 void PlayerCodecCtrl::HlsSwichSoftAndHardCodec(GstElement *videoSink)
 {
-    if (codecTypeList_.empty()) {
-        MEDIA_LOGE("codec type list is empty");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(!codecTypeList_.empty(), "codec type list is empty");
 
     bool codecType = codecTypeList_.front();
     codecTypeList_.pop_front();
@@ -164,8 +159,11 @@ void PlayerCodecCtrl::HlsSwichSoftAndHardCodec(GstElement *videoSink)
 void PlayerCodecCtrl::EnhanceSeekPerformance(bool enable)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (isHardwareDec_ && decoder_ != nullptr) {
-        g_object_set(decoder_, "seeking", enable, nullptr);
+    MEDIA_LOGD("EnhanceSeekPerformance %{public}d", enable);
+    for (auto &it : elementMap_) {
+        if (it.second.isHardware) {
+            g_object_set(it.first, "seeking", enable, nullptr);
+        }
     }
 }
 } // Media
