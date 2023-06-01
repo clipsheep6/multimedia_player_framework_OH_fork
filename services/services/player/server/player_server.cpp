@@ -496,6 +496,7 @@ int32_t PlayerServer::HandleReset()
 int32_t PlayerServer::Release()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("PlayerServer::Release");
     {
         std::lock_guard<std::mutex> lockCb(mutexCb_);
         playerCb_ = nullptr;
