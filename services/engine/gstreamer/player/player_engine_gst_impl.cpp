@@ -339,6 +339,7 @@ void PlayerEngineGstImpl::HandleIsLiveStream(const PlayBinMessage &msg)
         notifyObs->OnInfo(INFO_TYPE_IS_LIVE_STREAM, 0, format);
     }
 }
+
 void PlayerEngineGstImpl::HandleTrackChanged(const PlayBinMessage &msg)
 {
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
@@ -356,6 +357,7 @@ void PlayerEngineGstImpl::HandleDefaultTrack(const PlayBinMessage &msg)
 }
 
 void PlayerEngineGstImpl::HandleTrackDone(const PlayBinMessage &msg)
+{
     (void)msg;
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
     if (notifyObs != nullptr) {
@@ -541,8 +543,7 @@ void PlayerEngineGstImpl::PlayBinCtrlerDeInit()
     }
 
     {
-        std::unique_lock<std::mutex> lk(trackParseMutex_);
-        trackParse_ = nullptr;
+        std::unique_lock<std::mutex> lk(sinkProviderMutex_);
         sinkProvider_ = nullptr;
     }
 }
@@ -553,7 +554,7 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerPrepare()
     auto notifier = std::bind(&PlayerEngineGstImpl::OnNotifyMessage, this, std::placeholders::_1);
 
     {
-        std::unique_lock<std::mutex> lk(trackParseMutex_);
+        std::unique_lock<std::mutex> lk(sinkProviderMutex_);
         sinkProvider_ = std::make_shared<PlayerSinkProvider>(producerSurface_);
         sinkProvider_->SetAppInfo(appuid_, apppid_, apptokenid_);
     }
@@ -587,14 +588,6 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerPrepare()
     auto autoPlugSortListener = std::bind(&PlayerEngineGstImpl::OnNotifyAutoPlugSort, this, std::placeholders::_1);
     playBinCtrler_->SetAutoPlugSortListener(autoPlugSortListener);
 
-    {
-        std::unique_lock<std::mutex> lk(trackParseMutex_);
-        trackParse_ = PlayerTrackParse::Create();
-        if (trackParse_ == nullptr) {
-            MEDIA_LOGE("creat track parse failed");
-        }
-    }
-
     return MSERR_OK;
 }
 
@@ -627,16 +620,16 @@ int32_t PlayerEngineGstImpl::GetCurrentTime(int32_t &currentTime)
 
 int32_t PlayerEngineGstImpl::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
-    CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
-
-    return trackParse_->GetVideoTrackInfo(videoTrack);
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    return playBinCtrler_->GetVideoTrackInfo(videoTrack);
 }
 
 int32_t PlayerEngineGstImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
-    CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
-
-    return trackParse_->GetAudioTrackInfo(audioTrack);
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    return playBinCtrler_->GetAudioTrackInfo(audioTrack);
 }
 
 int32_t PlayerEngineGstImpl::GetVideoWidth()
@@ -755,9 +748,6 @@ int32_t PlayerEngineGstImpl::Stop()
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
     MEDIA_LOGD("Stop in");
-    if (trackParse_ != nullptr) {
-        trackParse_->Stop();
-    }
     playBinCtrler_->Stop(true);
     return MSERR_OK;
 }
@@ -925,23 +915,13 @@ GValueArray *PlayerEngineGstImpl::OnNotifyAutoPlugSort(GValueArray &factories)
 
 void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
 {
-    std::unique_lock<std::mutex> lock(trackParseMutex_);
+    std::unique_lock<std::mutex> lock(sinkProviderMutex_);
 
     const gchar *metadata = gst_element_get_metadata(&elem, GST_ELEMENT_METADATA_KLASS);
     CHECK_AND_RETURN_LOG(metadata != nullptr, "gst_element_get_metadata return nullptr");
 
     MEDIA_LOGD("get element_name %{public}s, get metadata %{public}s", GST_ELEMENT_NAME(&elem), metadata);
     std::string metaStr(metadata);
-
-    if (trackParse_ != nullptr && trackParse_->GetDemuxerElementFind() == false) {
-        if (metaStr.find("Codec/Demuxer") != std::string::npos) {
-            trackParse_->SetUpDemuxerElementCb(elem);
-            trackParse_->SetDemuxerElementFind(true);
-        } else if (metaStr.find("Codec/Parser") != std::string::npos) {
-            trackParse_->SetUpParseElementCb(elem);
-            trackParse_->SetDemuxerElementFind(true);
-        }
-    }
 
     if (metaStr.find("Codec/Decoder/Video") != std::string::npos || metaStr.find("Sink/Video") != std::string::npos) {
         if (producerSurface_ != nullptr) {
@@ -956,7 +936,7 @@ void PlayerEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
 
 void PlayerEngineGstImpl::OnNotifyElemUnSetup(GstElement &elem)
 {
-    std::unique_lock<std::mutex> lock(trackParseMutex_);
+    std::unique_lock<std::mutex> lock(sinkProviderMutex_);
 
     const gchar *metadata = gst_element_get_metadata(&elem, GST_ELEMENT_METADATA_KLASS);
     CHECK_AND_RETURN_LOG(metadata != nullptr, "gst_element_get_metadata return nullptr");
@@ -1014,8 +994,7 @@ void PlayerEngineGstImpl::ResetPlaybinToSoftDec()
     }
 
     {
-        std::unique_lock<std::mutex> lk(trackParseMutex_);
-        trackParse_ = nullptr;
+        std::unique_lock<std::mutex> lk(sinkProviderMutex_);
         sinkProvider_ = nullptr;
     }
 
