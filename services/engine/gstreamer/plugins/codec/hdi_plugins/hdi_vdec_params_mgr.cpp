@@ -80,6 +80,7 @@ int32_t HdiVdecParamsMgr::SetFrameRate(GstElement *element)
 {
     GstVdecBase *base = GST_VDEC_BASE(element);
     OMX_PARAM_U32TYPE param;
+    InitParam(param, verInfo_);
     param.nSize = sizeof(OMX_PARAM_U32TYPE);
     param.nU32 = static_cast<uint32_t>(base->seek_frame_rate);
     param.nPortIndex = inPortDef_.nPortIndex;
