@@ -49,9 +49,9 @@ PlayerSinkProvider::~PlayerSinkProvider()
         gst_object_unref(videoSink_);
         videoSink_ = nullptr;
     }
-    if (subSink_ != nullptr) {
-        gst_object_unref(subSink_);
-        subSink_ = nullptr;
+    if (subtitleSink_ != nullptr) {
+        gst_object_unref(subtitleSink_);
+        subtitleSink_ = nullptr;
     }
     if (audioCaps_ != nullptr) {
         gst_caps_unref(audioCaps_);
