@@ -80,7 +80,6 @@ static void gst_subtitle_display_sink_set_property(GObject *object,
     g_return_if_fail(object != nullptr);
     g_return_if_fail(value != nullptr);
     g_return_if_fail(pspec != nullptr);
-    GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(object);
     switch (prop_id) {
         case PROP_AUDIO_SINK: {
             g_object_set(G_OBJECT(GST_SUBTITLE_SINK_CAST(object)), "audio-sink", g_value_get_pointer(value), nullptr);

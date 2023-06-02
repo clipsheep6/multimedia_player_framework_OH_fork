@@ -288,8 +288,8 @@ static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &gs
 
 static GstClockTime gst_subtitle_sink_get_current_running_time(GstBaseSink *basesink)
 {
-    GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(base_sink)); // get base time
-    GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(base_sink)); // get current clock time
+    GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(basesink)); // get base time
+    GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(basesink)); // get current clock time
     if (!GST_CLOCK_TIME_IS_VALID(base_time) || !GST_CLOCK_TIME_IS_VALID(cur_clock_time)) {
         return GST_CLOCK_TIME_NONE;
     }
@@ -449,10 +449,10 @@ static gboolean gst_subtitle_sink_stop(GstBaseSink *basesink)
     g_mutex_lock (&priv->mutex);
     GST_DEBUG_OBJECT (subtitle_sink, "stopping");
     subtitle_sink->is_flushing = TRUE;
+    subtitle_sink->is_first_segment = FALSE;
+    subtitle_sink->preroll_buffer = nullptr;
+    subtitle_sink->paused = FALSE;
     priv->started = FALSE;
-    priv->is_first_segment = FALSE;
-    priv->preroll_buffer = nullptr;
-    priv->paused = FALSE;
     priv->timer_queue->Stop();
     g_mutex_unlock (&priv->mutex);
     GST_BASE_SINK_CLASS(parent_class)->stop(basesink);
@@ -480,9 +480,9 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             if (!subtitle_sink->is_first_segment) {
                 subtitle_sink->is_first_segment = TRUE;
                 GST_WARNING_OBJECT(subtitle_sink, "recv first segment event, update segment start time = %"
-                    GST_TIME_FORMAT ", old segment start time = %"
-                    GST_TIME_FORMAT, GST_TIME_ARGS(priv->audio_sink->segment.time), GST_TIME_ARGS(new_segment.start));
-                new_segment.start = priv->audio_sink->segment.time;
+                    GST_TIME_FORMAT ", old segment start time = %" GST_TIME_FORMAT,
+                    GST_TIME_ARGS(GST_BASE_SINK(priv->audio_sink)->segment.time), GST_TIME_ARGS(new_segment.start));
+                new_segment.start = GST_BASE_SINK(priv->audio_sink)->segment.time;
             }
             subtitle_sink->rate = new_segment.rate;
             event = gst_event_new_segment(&new_segment);
