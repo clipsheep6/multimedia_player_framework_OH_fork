@@ -33,6 +33,17 @@ constexpr uint64_t NS_TO_MS = 1000000;
 MonitorServer::MonitorServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> cmdLock(cmdMutex_);
+    std::unique_lock<std::mutex> threadLock(threadMutex_);
+    enableThread_ = false;
+    if (thread_ != nullptr && thread_->joinable()) {
+        MEDIA_LOGI("clear monitor server thread");
+        cond_.notify_all();
+        threadLock.unlock();
+        thread_->join();
+        thread_.reset();
+        thread_ = nullptr;
+    }
 }
 
 MonitorServer::~MonitorServer()

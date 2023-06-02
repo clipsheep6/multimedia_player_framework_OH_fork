@@ -32,10 +32,11 @@ MonitorClient::MonitorClient()
 MonitorClient::~MonitorClient()
 {
     MEDIA_LOGI("Instances destroy");
+    std::lock_guard<std::mutex> cmdLock(cmdMutex_);
     std::unique_lock<std::mutex> threadLock(threadMutex_);
     enableThread_ = false;
     if (clickThread_ != nullptr && clickThread_->joinable()) {
-        MEDIA_LOGI("clear thread");
+        MEDIA_LOGI("clear monitor client thread");
         clickCond_.notify_all();
         threadLock.unlock();
         clickThread_->join();
