@@ -480,7 +480,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                     GST_TIME_FORMAT, GST_TIME_ARGS(priv->audio_sink->segment.time), GST_TIME_ARGS(new_segment.start));
                 new_segment.start = priv->audio_sink->segment.time;
             } else {
-                gst_segment_copy_into(priv->audio_sink->segment, new_segment);
+                gst_segment_copy_into(&priv->audio_sink->segment, &new_segment);
             }
             subtitle_sink->rate = new_segment.rate;
             event = gst_event_new_segment(&new_segment);
