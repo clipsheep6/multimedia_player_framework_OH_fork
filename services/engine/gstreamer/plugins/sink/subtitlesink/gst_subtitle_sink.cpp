@@ -479,7 +479,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             } else {
                 new_segment = priv->audio_sink->segment;
             }
-            subtitle->rate = new_segment.rate;
+            subtitle_sink->rate = new_segment.rate;
             event = gst_event_new_segment(&new_segment);
             GST_DEBUG_OBJECT (basesink,
                 "received upstream segment %u %" GST_SEGMENT_FORMAT, seqnum,
