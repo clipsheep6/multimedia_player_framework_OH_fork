@@ -33,6 +33,11 @@ constexpr uint64_t NS_TO_MS = 1000000;
 MonitorServer::MonitorServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+}
+
+MonitorServer::~MonitorServer()
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
     std::lock_guard<std::mutex> cmdLock(cmdMutex_);
     std::unique_lock<std::mutex> threadLock(threadMutex_);
     enableThread_ = false;
@@ -44,11 +49,6 @@ MonitorServer::MonitorServer()
         thread_.reset();
         thread_ = nullptr;
     }
-}
-
-MonitorServer::~MonitorServer()
-{
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 MonitorServer &MonitorServer::GetInstance()
