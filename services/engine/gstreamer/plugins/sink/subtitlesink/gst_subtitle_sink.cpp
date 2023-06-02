@@ -220,8 +220,8 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
             g_mutex_lock(&priv->mutex);
             subtitle_sink->paused = TRUE;
-            gint64 left_duration = 0;
-            left_duration = max(left_duration, priv->text_frame_duration - priv->running_time);
+            gint64 left_duration = priv->text_frame_duration - priv->running_time;
+            left_duration = left_duration > 0 ? left_duration : 0;
             priv->running_time = gst_util_get_timestamp();
             GST_DEBUG_OBJECT(subtitle_sink, "text left duration is %" GST_TIME_FORMAT,
                 GST_TIME_ARGS(left_duration));
@@ -352,6 +352,7 @@ static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, G
     GST_LOG_OBJECT(basesink, "subtitle_running_time_diff = %" GST_TIME_FORMAT
         ", audio_running_time_diff = %" GST_TIME_FORMAT,
         GST_TIME_ARGS(abs(subtitle_running_time_diff)), GST_TIME_ARGS(abs(audio_running_time_diff)));
+    // too late
     if (subtitle_running_time_diff - audio_running_time_diff > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
         *need_drop_this_buffer = TRUE;
     }
@@ -475,7 +476,10 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                     GST_TIME_FORMAT ", old segment start time = %"
                     GST_TIME_FORMAT, GST_TIME_ARGS(priv->audio_sink->segment.time), GST_TIME_ARGS(new_segment.start));
                 new_segment.start = priv->audio_sink->segment.time;
+            } else {
+                new_segment = priv->audio_sink->segment;
             }
+            priv->rate = new_segment.rate;
             event = gst_event_new_segment(&new_segment);
             GST_DEBUG_OBJECT (basesink,
                 "received upstream segment %u %" GST_SEGMENT_FORMAT, seqnum,
