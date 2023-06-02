@@ -24,7 +24,7 @@ using namespace OHOS::Media;
 enum {
     PROP_0,
     PROP_AUDIO_SINK,
-}
+};
 
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("subdisplaysink",
     GST_PAD_SINK,

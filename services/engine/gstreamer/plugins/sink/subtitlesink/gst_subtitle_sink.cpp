@@ -38,7 +38,7 @@ namespace {
 enum {
     PROP_0,
     PROP_AUDIO_SINK,
-}
+};
 
 struct _GstSubtitleSinkPrivate {
     GstElement *audio_sink;
@@ -311,6 +311,8 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     GstBuffer *buffer = gst_sample_get_buffer(sample);
 
     if (subtitle_sink->preroll_buffer == buffer) {
+        gst_buffer_unref(buffer);
+        gst_sample_unref(sample);
         GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer has been rendererd, no need render again");
         return GST_FLOW_OK;
     }
@@ -321,6 +323,8 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     guint32 duration = 0;
     gst_subtitle_sink_get_gst_buffer_info(buffer, pts, duration);
     if (!GST_CLOCK_TIME_IS_VALID(pts) || !GST_CLOCK_TIME_IS_VALID(duration)) {
+        gst_buffer_unref(buffer);
+        gst_sample_unref(sample);
         GST_ERROR_OBJECT(subtitle_sink, "pts or duration invalid");
         return GST_FLOW_ERROR;
     }
@@ -479,8 +483,6 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
                     GST_TIME_FORMAT ", old segment start time = %"
                     GST_TIME_FORMAT, GST_TIME_ARGS(priv->audio_sink->segment.time), GST_TIME_ARGS(new_segment.start));
                 new_segment.start = priv->audio_sink->segment.time;
-            } else {
-                gst_segment_copy_into(&priv->audio_sink->segment, &new_segment);
             }
             subtitle_sink->rate = new_segment.rate;
             event = gst_event_new_segment(&new_segment);
