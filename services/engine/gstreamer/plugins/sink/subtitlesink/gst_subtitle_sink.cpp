@@ -352,7 +352,7 @@ static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, G
     GST_LOG_OBJECT(basesink, "subtitle_running_time_diff = %" GST_TIME_FORMAT
         ", audio_running_time_diff = %" GST_TIME_FORMAT,
         GST_TIME_ARGS(abs(subtitle_running_time_diff)), GST_TIME_ARGS(abs(audio_running_time_diff)));
-    // too late
+
     if (subtitle_running_time_diff - audio_running_time_diff > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
         *need_drop_this_buffer = TRUE;
     }
@@ -479,7 +479,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             } else {
                 new_segment = priv->audio_sink->segment;
             }
-            priv->rate = new_segment.rate;
+            subtitle->rate = new_segment.rate;
             event = gst_event_new_segment(&new_segment);
             GST_DEBUG_OBJECT (basesink,
                 "received upstream segment %u %" GST_SEGMENT_FORMAT, seqnum,
