@@ -493,5 +493,104 @@ export default function AVPlayerMultiTrackTest() {
 
             await testChangeTrack(avFd, preparedOperation, playedOperation, stoppedOperation, extraOperation);
         })
+
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_MULTI_AUDIOTRACK_ABNORMAL_INPUT_0100
+            * @tc.name      : 008.test selectTrack/deselectTrack/getCurrentTrack invalid input
+            * @tc.desc      : test change audio track after re-prepared
+            * @tc.size      : MediumTest
+            * @tc.type      : Function test
+            * @tc.level     : Level2
+        */
+        it('SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_MULTI_AUDIOTRACK_ABNORMAL_INPUT_0100', 0, async function (done) {
+            const NOAUDIOTRACK = -1;
+            let un = undefined;
+            let typeInvalid = [-1, 2, 1000000, '', 'aaa', un];
+            async function preparedOperation() {
+                await getAudioTracks();
+                await avPlayer.getCurrentTrack(0).then((index) => {
+                    console.info(`case current audio track index is ${index}`);
+                }, printFailureCallback).catch(printCatchCallback);
+
+                for (let type in typeInvalid) {
+                    console.info(`case current invalid track type in is ${typeInvalid[type]}`);
+                    await avPlayer.getCurrentTrack(typeInvalid[type]).then((index) => {
+                        console.info(`case current audio track index is ${index}`);
+                    }, printFailureCallback).catch(printCatchCallback);
+                }
+                let trackInvalid = [-1, 0, 1000000, '', 'aaa', un];
+                for (let track in trackInvalid) {
+                    console.info(`case current invalid track in is ${trackInvalid[track]}`);
+                    avPlayer.selectTrack(trackInvalid[track]);
+                    await mediaTestBase.msleepAsync(1000);
+                    await getCurrentAudioTrack();
+                    expect(currentTrack).assertEqual(NOAUDIOTRACK);
+                }
+
+                for (let track in trackInvalid) {
+                    console.info(`case current invalid track in 2 is ${trackInvalid[track]}`);
+                    avPlayer.deselectTrack(trackInvalid[track]);
+                    await mediaTestBase.msleepAsync(1000);
+                    await getCurrentAudioTrack();
+                    expect(currentTrack).assertEqual(NOAUDIOTRACK);
+                }
+                await changeAudioTrack();
+                avPlayer.selectTrack(selectedTrack);
+                avPlayer.deselectTrack(NOAUDIOTRACK);
+            }
+
+            async function playedOperation() {
+                await getCurrentAudioTrack();
+                expect(currentTrack).assertEqual(NOAUDIOTRACK);
+            }
+
+            async function stoppedOperation() {
+                await resetAndCallbackOff();
+                done();
+            }
+
+            await testChangeTrack(videoFd, preparedOperation, playedOperation, stoppedOperation, undefined);
+        })
+    
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_MULTI_AUDIOTRACK_UNSUPPORTED_FORMAT_0100
+            * @tc.name      : 009.test unsupported audio track
+            * @tc.desc      : test unsupported audio track
+            * @tc.size      : MediumTest
+            * @tc.type      : Function test
+            * @tc.level     : Level2
+        */
+        it('SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_MULTI_AUDIOTRACK_UNSUPPORTED_FORMAT_0100', 0, async function (done) {
+            let newFd;
+            await mediaTestBase.getFileDescriptor(UNSUPPORTED_AUDIO).then((res) => {
+                newFd = res;
+            });
+
+            async function preparedOperation() {
+                await getAudioTracks();
+                await getCurrentAudioTrack();
+                await changeAudioTrack();
+                avPlayer.selectTrack(selectedTrack);
+                await getCurrentAudioTrack();
+                expect(currentTrack).assertEqual(defaultTrack);
+                await getCurrentAudioTrack();
+                avPlayer.deselectTrack(currentTrack);
+                await getCurrentAudioTrack();
+                expect(currentTrack).assertEqual(defaultTrack);
+            }
+
+            async function playedOperation() {
+                await getCurrentAudioTrack();
+                expect(currentTrack).assertEqual(defaultTrack);
+            }
+
+            async function stoppedOperation() {
+                await resetAndCallbackOff();
+                await mediaTestBase.closeFileDescriptor(UNSUPPORTED_AUDIO);
+                done();
+            }
+
+            await testChangeTrack(newFd, preparedOperation, playedOperation, stoppedOperation, undefined);
+        })
     })
 }
