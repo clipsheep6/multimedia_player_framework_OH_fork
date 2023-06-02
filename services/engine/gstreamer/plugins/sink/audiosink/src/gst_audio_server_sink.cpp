@@ -57,6 +57,7 @@ enum {
     PROP_LAST_RENDER_PTS,
     PROP_ENABLE_OPT_RENDER_DELAY,
     PROP_LAST_RUNNING_TIME_DIFF,
+    PROP_AUDIO_EFFECT_MODE,
 };
 
 #define gst_audio_server_sink_parent_class parent_class
@@ -153,6 +154,11 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
     g_object_class_install_property(gobject_class, PROP_AUDIO_INTERRUPT_MODE,
         g_param_spec_int("audio-interrupt-mode", "Audio Interrupt Mode",
             "Audio Interrupt Mode", 0, G_MAXINT32, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_AUDIO_EFFECT_MODE,
+        g_param_spec_int("audio-effect-mode", "Audio Effect Mode",
+            "Audio Effect Mode", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_LAST_RENDER_PTS,
@@ -312,6 +318,10 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
         case PROP_ENABLE_OPT_RENDER_DELAY:
             sink->enable_opt_render_delay = g_value_get_boolean(value);
             break;
+        case PROP_AUDIO_EFFECT_MODE:
+            g_return_if_fail(sink->audio_sink != nullptr);
+            (void)sink->audio_sink->SetAudioEffectMode(g_value_get_int(value));
+            break;
         default:
             break;
     }
@@ -320,6 +330,7 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
 static void gst_audio_server_sink_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
 {
     MediaTrace trace("Audio::gst_audio_server_sink_get_property");
+    gint mode = -1;
     g_return_if_fail(object != nullptr);
     g_return_if_fail(value != nullptr);
     (void)pspec;
@@ -356,6 +367,12 @@ static void gst_audio_server_sink_get_property(GObject *object, guint prop_id, G
             g_mutex_lock(&sink->render_lock);
             g_value_set_int64(value, static_cast<gint64>(sink->last_running_time_diff));
             g_mutex_unlock(&sink->render_lock);
+            break;
+        case PROP_AUDIO_EFFECT_MODE:
+            if (sink->audio_sink != nullptr) {
+                (void)sink->audio_sink->GetAudioEffectMode(mode);
+            }
+            g_value_set_int(value, mode);
             break;
         default:
             break;

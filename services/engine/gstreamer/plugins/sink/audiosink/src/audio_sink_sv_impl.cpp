@@ -468,6 +468,30 @@ void AudioSinkSvImpl::SetAudioInterruptMode(int32_t interruptMode)
     audioRenderer_->SetInterruptMode(static_cast<AudioStandard::InterruptMode>(interruptMode));
 }
 
+int32_t AudioSinkSvImpl::SetAudioEffectMode(int32_t effectMode)
+{
+    MEDIA_LOGD("SetAudioEffectMode %{public}d", effectMode);
+    CHECK_AND_RETURN_RET(audioRendererMediaCallback_ != nullptr, MSERR_INVALID_OPERATION);
+    XcollieTimer xCollie("AudioRenderer::SetAudioEffectMode", PlayerXCollie::timerTimeout);
+    int32_t ret = MSERR_OK;
+    effectMode_ = effectMode;
+    // audioRenderer_->SetInterruptMode(static_cast<AudioStandard::InterruptMode>(interruptMode)); xyj
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to SetAudioEffectMode!");
+    return MSERR_OK;
+}
+
+int32_t AudioSinkSvImpl::GetAudioEffectMode(int32_t &effectMode)
+{
+    CHECK_AND_RETURN_RET(audioRendererMediaCallback_ != nullptr, MSERR_INVALID_OPERATION);
+    XcollieTimer xCollie("AudioRenderer::SetAudioEffectMode", PlayerXCollie::timerTimeout);
+    int32_t ret = MSERR_OK;
+    effectMode = effectMode_;
+    // audioRenderer_->SetInterruptMode(static_cast<AudioStandard::InterruptMode>(interruptMode)); xyj
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to SetAudioEffectMode!");
+    MEDIA_LOGD("GetAudioEffectMode %{public}d", effectMode);
+    return MSERR_OK;
+}
+
 void AudioSinkSvImpl::SetAudioDumpBySysParam()
 {
     std::string dump_enable;

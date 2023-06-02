@@ -606,6 +606,13 @@ declare namespace media {
     audioRendererInfo ?: audio.AudioRendererInfo;
 
     /**
+     * Obtains the current audio effect mode, refer to {@link #audio.AudioEffectMode}.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVPlayer
+     */
+    audioEffectMode ?: audio.AudioEffectMode;
+
+    /**
      * Current playback position.
      * @since 9
      * @syscap SystemCapability.Multimedia.Media.AVPlayer

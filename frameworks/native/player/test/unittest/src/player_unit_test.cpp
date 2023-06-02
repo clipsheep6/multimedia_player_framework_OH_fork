@@ -1973,5 +1973,63 @@ HWTEST_F(PlayerUnitTest, Player_GetCurrentTrack_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Release());
     EXPECT_NE(MSERR_OK, player_->GetCurrentTrack(0, index));    // Illegal state machine
 }
+
+/**
+ * @tc.name  : Test SetEffect API
+ * @tc.number: Player_SetEffect_001
+ * @tc.desc  : Test Player SetEffect state machine
+ */
+HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
+{
+    Format format;
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, EFFECT_DEFAULT);
+
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "01.mp3"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+}
+
+/**
+ * @tc.name  : Test SetEffect API
+ * @tc.number: Player_SetEffect_002
+ * @tc.desc  : Test Player SetEffect param
+ */
+HWTEST_F(PlayerUnitTest, Player_SetEffect_002, TestSize.Level0)
+{
+    Format format;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "01.mp3"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, EFFECT_DEFAULT);
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, EFFECT_BYPASS);
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, 100);
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, -1);
+    EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
 } // namespace Media
 } // namespace OHOS
