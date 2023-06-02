@@ -21,6 +21,7 @@
 #include "param_wrapper.h"
 #include "player_xcollie.h"
 #include "scope_guard.h"
+#include "audio_effect.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AudioSinkSvImpl"};
@@ -473,10 +474,8 @@ int32_t AudioSinkSvImpl::SetAudioEffectMode(int32_t effectMode)
     MEDIA_LOGD("SetAudioEffectMode %{public}d", effectMode);
     CHECK_AND_RETURN_RET(audioRendererMediaCallback_ != nullptr, MSERR_INVALID_OPERATION);
     XcollieTimer xCollie("AudioRenderer::SetAudioEffectMode", PlayerXCollie::timerTimeout);
-    int32_t ret = MSERR_OK;
-    effectMode_ = effectMode;
-    // audioRenderer_->SetInterruptMode(static_cast<AudioStandard::InterruptMode>(interruptMode)); xyj
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to SetAudioEffectMode!");
+    int32_t ret = audioRenderer_->SetAudioEffectMode(static_cast<OHOS::AudioStandard::AudioEffectMode>(effectMode));
+    CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, ret, "failed to SetAudioEffectMode!");
     return MSERR_OK;
 }
 
@@ -484,10 +483,7 @@ int32_t AudioSinkSvImpl::GetAudioEffectMode(int32_t &effectMode)
 {
     CHECK_AND_RETURN_RET(audioRendererMediaCallback_ != nullptr, MSERR_INVALID_OPERATION);
     XcollieTimer xCollie("AudioRenderer::SetAudioEffectMode", PlayerXCollie::timerTimeout);
-    int32_t ret = MSERR_OK;
-    effectMode = effectMode_;
-    // audioRenderer_->SetInterruptMode(static_cast<AudioStandard::InterruptMode>(interruptMode)); xyj
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to SetAudioEffectMode!");
+    effectMode = audioRenderer_->GetAudioEffectMode();
     MEDIA_LOGD("GetAudioEffectMode %{public}d", effectMode);
     return MSERR_OK;
 }

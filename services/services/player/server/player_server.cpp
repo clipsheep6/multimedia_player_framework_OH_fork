@@ -300,7 +300,7 @@ int32_t PlayerServer::HandlePrepare()
         (void)taskMgr_.LaunchTask(rateTask, PlayerServerTaskType::RATE_CHANGE, "speed", cancelTask);
     }
 
-    if (config_.effectMode != EFFECT_DEFAULT) {
+    if (config_.effectMode != OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT) {
         MediaTrace::TraceBegin("PlayerServer::SetAudioEffectMode", FAKE_POINTER(this));
         auto effectTask = std::make_shared<TaskHandler<void>>([this]() {
             int ret = playerEngine_->SetAudioEffectMode(config_.effectMode);
@@ -945,7 +945,7 @@ int32_t PlayerServer::SetParameter(const Format &param)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     if (param.ContainKey(PlayerKeys::AUDIO_EFFECT_MODE)) {
-        int32_t effectMode = EFFECT_DEFAULT;
+        int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
         CHECK_AND_RETURN_RET(param.GetIntValue(PlayerKeys::AUDIO_EFFECT_MODE, effectMode), MSERR_INVALID_VAL);
         return SetAudioEffectMode(effectMode);
     }
@@ -954,7 +954,7 @@ int32_t PlayerServer::SetParameter(const Format &param)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetParameter Failed!");
 
     if (param.ContainKey(PlayerKeys::CONTENT_TYPE)) {
-        config_.effectMode = EFFECT_DEFAULT;
+        config_.effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     }
 
     return MSERR_OK;
@@ -966,7 +966,8 @@ int32_t PlayerServer::SetAudioEffectMode(const int32_t effectMode)
     CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
         lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
-    CHECK_AND_RETURN_RET_LOG(effectMode >= EFFECT_DEFAULT && effectMode <= EFFECT_BYPASS, MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(effectMode <= OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT &&
+        effectMode >= OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE, MSERR_INVALID_VAL,
         "Invalid effectMode parameter");
     int32_t ret = playerEngine_->SetAudioEffectMode(effectMode);
     if (ret == MSERR_OK) {

@@ -1362,9 +1362,10 @@ napi_value AVPlayerNapi::JsSetAudioEffectMode(napi_env env, napi_callback_info i
         return result;
     }
 
-    int32_t effectMode = EFFECT_DEFAULT;
+    int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     napi_status status = napi_get_value_int32(env, args[0], &effectMode);
-    if (status != napi_ok || effectMode < EFFECT_DEFAULT || effectMode > EFFECT_BYPASS) {
+    if (status != napi_ok || effectMode > OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT ||
+        effectMode < OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid audioEffectMode, please check the input audio effect Mode");
         return result;
@@ -1443,7 +1444,7 @@ bool AVPlayerNapi::JsHandleParameter(napi_env env, napi_value args, AVPlayerNapi
 
     if (jsPlayer->audioRendererInfo_.contentType != content ||
         jsPlayer->audioRendererInfo_.streamUsage != usage) {
-        jsPlayer->audioEffectMode_ = EFFECT_DEFAULT;
+        jsPlayer->audioEffectMode_ = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     }
 
     jsPlayer->audioRendererInfo_ = AudioStandard::AudioRendererInfo {

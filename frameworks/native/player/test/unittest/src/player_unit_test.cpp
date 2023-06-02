@@ -15,6 +15,7 @@
 
 #include "player_unit_test.h"
 #include "media_errors.h"
+#include "audio_effect.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -1982,7 +1983,7 @@ HWTEST_F(PlayerUnitTest, Player_GetCurrentTrack_002, TestSize.Level0)
 HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
 {
     Format format;
-    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, EFFECT_DEFAULT);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT);
 
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
 
@@ -2020,9 +2021,9 @@ HWTEST_F(PlayerUnitTest, Player_SetEffect_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
 
-    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, EFFECT_DEFAULT);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT);
     EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
-    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, EFFECT_BYPASS);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE);
     EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
     (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, 100);
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));

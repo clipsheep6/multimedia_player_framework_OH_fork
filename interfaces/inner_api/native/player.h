@@ -58,15 +58,6 @@ public:
     static constexpr std::string_view AUDIO_EFFECT_MODE = "audio_effect_mode";
 };
 
-// xyj暂时认为0=default 即生效
-// 认为1=bypass，即失效
-enum AUDIOEFFECTMODE : int32_t {
-    /* begin to b buffering */
-    EFFECT_DEFAULT = 0,
-    /* end to buffering */
-    EFFECT_BYPASS = 1,
-};
-
 enum BufferingInfoType : int32_t {
     /* begin to b buffering */
     BUFFERING_START = 1,

@@ -92,7 +92,6 @@ private:
     bool enableDump_ = false;
     FILE *dumpFile_ = nullptr;
     std::shared_ptr<AudioRendererMediaCallback> audioRendererMediaCallback_ = nullptr;
-    int32_t effectMode_ = 0;
 };
 
 class AudioSinkBypass : public AudioSinkSvImpl {

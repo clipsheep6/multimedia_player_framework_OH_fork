@@ -24,6 +24,7 @@
 #include "media_data_source_callback.h"
 #include "common_napi.h"
 #include "audio_info.h"
+#include "audio_effect.h"
 #include "task_queue.h"
 
 namespace OHOS {
@@ -303,7 +304,7 @@ private:
         OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
         0
     };
-    int32_t audioEffectMode_ = EFFECT_DEFAULT;
+    int32_t audioEffectMode_ = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     std::unique_ptr<TaskQueue> taskQue_;
     std::mutex mutex_;
     std::mutex taskMutex_;

@@ -21,6 +21,7 @@
 #include "nocopyable.h"
 #include "uri_helper.h"
 #include "player_server_task_mgr.h"
+#include "audio_effect.h"
 
 namespace OHOS {
 namespace Media {
@@ -147,7 +148,7 @@ protected:
         float rightVolume = INVALID_VALUE;
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
         std::string url;
-        int32_t effectMode = EFFECT_DEFAULT;
+        int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     } config_;
 
 private:

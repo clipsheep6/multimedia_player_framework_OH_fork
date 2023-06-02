@@ -114,7 +114,7 @@ private:
         int32_t streamUsage = -1;
         int32_t rendererFlag = -1;
         int32_t interruptMode = -1;
-        int32_t effectMode = EFFECT_DEFAULT;
+        int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
         std::shared_ptr<PlayerCallback> callback = nullptr;
         uint32_t bitRate = 0;
         int32_t currentTime = 0;

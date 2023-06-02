@@ -67,6 +67,7 @@ config("media_service_config") {
     "avcodeclist/server",
     "recorder_profiles/ipc",
     "recorder_profiles/server",
+    "//foundation/multimedia/audio_framework/interfaces/inner_api/native/audiocommon/include",
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/services/factory",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
