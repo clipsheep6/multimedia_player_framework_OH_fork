@@ -27,15 +27,19 @@ namespace Media {
 namespace PlayerTestParam {
 inline constexpr int32_t SEEK_TIME_5_SEC = 5000;
 inline constexpr int32_t SEEK_TIME_2_SEC = 2000;
+inline constexpr int32_t ONE_SEC = 1;
 inline constexpr int32_t WAITSECOND = 6;
 inline constexpr int32_t DELTA_TIME = 1000;
 inline constexpr int32_t PLAYING_TIME = 2;
 const std::string MEDIA_ROOT = "file:///data/test/";
 const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
+const std::string SUBTITLE_SRT_FIELE = MEDIA_ROOT + "utf8.srt";
 const std::string HTTPS_PLAY = "HTTPS";
 const std::string HTTP_PLAY = "HTTP";
 const std::string LOCAL_PLAY = "LOCAL";
 const std::string HLS_PLAY = "HLS";
+const std::string SUBTITLE_5_SEC = "MediaOS: test for subtitle_6";
+const std::string SUBTITLE_2_SEC = "MediaOS: test for subtitle_3";
 } // namespace PlayerTestParam
 
 class PlayerSignal {
@@ -117,6 +121,9 @@ public:
     int32_t SelectTrack(int32_t index, bool &trackChange);
     int32_t DeselectTrack(int32_t index, bool &trackChange);
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index);
+    int32_t AddSubSource(const std::string &url);
+    int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size);
+    std::string SubtitleUpdate();
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;
@@ -126,6 +133,8 @@ private:
     int32_t height_ = 1080;
     int32_t width_ = 1920;
     std::mutex mutex_;
+    std::mutex subtitleMutex_;
+    std::string text = "";
 };
 } // namespace Media
 } // namespace OHOS

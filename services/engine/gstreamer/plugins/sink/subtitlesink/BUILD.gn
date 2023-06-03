@@ -13,7 +13,7 @@
 
 import("//build/ohos.gni")
 
-MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
+MEDIA_ROOT_DIR = "../../../../../.."
 
 config("gst_subtitle_sink_config") {
   visibility = [ ":*" ]

@@ -187,9 +187,21 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
             std::cout << "INFO_TYPE_TRACKCHANGE: index " << index << " isSelect " << isSelect << std::endl;
             break;
+        case INFO_TYPE_SUBTITLE_UPDATE: {
+            std::unique_lock<std::mutex> lock(subtitleMutex_);
+            infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), text);
+            std::cout << "INFO_TYPE_SUBTITLE_UPDATE: text = " << text << std::endl;
+            break;
+        }
         default:
             break;
     }
+}
+
+std::string SubtitleUpdate()
+{
+    std::unique_lock<std::mutex> lock(subtitleMutex_);
+    return text;
 }
 
 void PlayerCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
@@ -578,6 +590,16 @@ int32_t PlayerMock::GetCurrentTrack(int32_t trackType, int32_t &index)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->GetCurrentTrack(trackType, index);
+}
+
+int32_t AddSubSource(const std::string &url)
+{
+    return player_->AddSubSource(url);
+}
+
+int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    return player_->AddSubSource(fd, offset, size);
 }
 } // namespace Media
 } // namespace OHOS

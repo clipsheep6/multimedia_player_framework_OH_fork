@@ -54,6 +54,7 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_TYPE = "audio_interrupt_type";
     static constexpr std::string_view AUDIO_INTERRUPT_FORCE = "audio_interrupt_force";
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
+    static constexpr std::string_view SUBTITLE_TEXT = "subtitle_text";
 };
 
 enum BufferingInfoType : int32_t {
