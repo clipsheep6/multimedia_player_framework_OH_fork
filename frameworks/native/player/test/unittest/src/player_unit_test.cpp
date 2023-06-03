@@ -2025,9 +2025,9 @@ HWTEST_F(PlayerUnitTest, Player_SetEffect_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
     (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE);
     EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
-    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, 100);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, 100); // 100 is an invalid parameter.
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
-    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, -1);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, -1); // -1 is an invalid parameter.
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
 
     EXPECT_EQ(MSERR_OK, player_->Release());
