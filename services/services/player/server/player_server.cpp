@@ -299,6 +299,17 @@ int32_t PlayerServer::HandlePrepare()
 
         (void)taskMgr_.LaunchTask(rateTask, PlayerServerTaskType::RATE_CHANGE, "speed", cancelTask);
     }
+
+    if (config_.effectMode != OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT) {
+        MediaTrace::TraceBegin("PlayerServer::SetAudioEffectMode", FAKE_POINTER(this));
+        auto effectTask = std::make_shared<TaskHandler<void>>([this]() {
+            int ret = playerEngine_->SetAudioEffectMode(config_.effectMode);
+            taskMgr_.MarkTaskDone("SetAudioEffectMode done");
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Engine SetAudioEffectMode Failed!");
+        });
+        (void)taskMgr_.LaunchTask(effectTask, PlayerServerTaskType::STATE_CHANGE, "SetAudioEffectMode", nullptr);
+    }
+    
     return MSERR_OK;
 }
 
@@ -931,15 +942,39 @@ int32_t PlayerServer::SetParameter(const Format &param)
         return MSERR_INVALID_OPERATION;
     }
 
-    if (playerEngine_ != nullptr) {
-        int32_t ret = playerEngine_->SetParameter(param);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetParameter Failed!");
-    } else {
-        MEDIA_LOGE("playerEngine_ is nullptr");
-        return MSERR_NO_MEMORY;
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (param.ContainKey(PlayerKeys::AUDIO_EFFECT_MODE)) {
+        int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
+        CHECK_AND_RETURN_RET(param.GetIntValue(PlayerKeys::AUDIO_EFFECT_MODE, effectMode), MSERR_INVALID_VAL);
+        return SetAudioEffectMode(effectMode);
+    }
+
+    int32_t ret = playerEngine_->SetParameter(param);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetParameter Failed!");
+
+    if (param.ContainKey(PlayerKeys::CONTENT_TYPE)) {
+        config_.effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     }
 
     return MSERR_OK;
+}
+
+int32_t PlayerServer::SetAudioEffectMode(const int32_t effectMode)
+{
+    MEDIA_LOGD("SetAudioEffectMode in");
+    CHECK_AND_RETURN_RET(lastOpStatus_ == PLAYER_PREPARED || lastOpStatus_ == PLAYER_STARTED ||
+        lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE || lastOpStatus_ == PLAYER_PAUSED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(effectMode <= OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT &&
+        effectMode >= OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE, MSERR_INVALID_VAL,
+        "Invalid effectMode parameter");
+    int32_t ret = playerEngine_->SetAudioEffectMode(effectMode);
+    if (ret == MSERR_OK) {
+        config_.effectMode = effectMode;
+    }
+
+    return ret;
 }
 
 int32_t PlayerServer::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback)
@@ -1040,6 +1075,7 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     dumpString += "PlayerServer current " + loopflag + "in looping mode\n";
     dumpString += "PlayerServer left volume and right volume is: " +
         std::to_string(config_.leftVolume) + ", " + std::to_string(config_.rightVolume) + "\n";
+    dumpString += "PlayerServer audio effect mode is: " + std::to_string(config_.effectMode) + "\n";
 
     std::vector<Format> videoTrack;
     (void)GetVideoTrackInfo(videoTrack);

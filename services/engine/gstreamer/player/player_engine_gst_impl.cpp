@@ -841,6 +841,14 @@ int32_t PlayerEngineGstImpl::SetAudioInterruptMode(const int32_t interruptMode)
     return MSERR_OK;
 }
 
+int32_t PlayerEngineGstImpl::SetAudioEffectMode(const int32_t effectMode)
+{
+    MEDIA_LOGD("SetAudioEffectMode in");
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    return playBinCtrler_->SetAudioEffectMode(effectMode);
+}
+
 int32_t PlayerEngineGstImpl::SelectTrack(int32_t index)
 {
     std::unique_lock<std::mutex> lock(mutex_);

@@ -24,6 +24,7 @@
 #include "media_data_source_callback.h"
 #include "common_napi.h"
 #include "audio_info.h"
+#include "audio_effect.h"
 #include "task_queue.h"
 
 namespace OHOS {
@@ -160,6 +161,11 @@ private:
     static napi_value JsGetAudioRendererInfo(napi_env env, napi_callback_info info);
     static napi_value JsSetAudioRendererInfo(napi_env env, napi_callback_info info);
 
+    /**
+     * audioEffectMode ?: audio.AudioEffectMode;
+     */
+    static napi_value JsGetAudioEffectMode(napi_env env, napi_callback_info info);
+    static napi_value JsSetAudioEffectMode(napi_env env, napi_callback_info info);
     /**
      * readonly currentTime: number
      */
@@ -298,6 +304,7 @@ private:
         OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
         0
     };
+    int32_t audioEffectMode_ = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     std::unique_ptr<TaskQueue> taskQue_;
     std::mutex mutex_;
     std::mutex taskMutex_;

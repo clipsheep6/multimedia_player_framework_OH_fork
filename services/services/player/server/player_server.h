@@ -21,6 +21,7 @@
 #include "nocopyable.h"
 #include "uri_helper.h"
 #include "player_server_task_mgr.h"
+#include "audio_effect.h"
 
 namespace OHOS {
 namespace Media {
@@ -141,6 +142,15 @@ protected:
     void ClearConfigInfo();
     bool IsPrepared();
 
+    struct ConfigInfo {
+        std::atomic<bool> looping = false;
+        float leftVolume = INVALID_VALUE;
+        float rightVolume = INVALID_VALUE;
+        PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
+        std::string url;
+        int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
+    } config_;
+
 private:
     bool IsValidSeekMode(PlayerSeekMode mode);
     bool IsEngineStarted();
@@ -157,6 +167,7 @@ private:
     int32_t HandleReset();
     int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
+    int32_t SetAudioEffectMode(const int32_t effectMode);
 
     void HandleEos();
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
@@ -172,13 +183,6 @@ private:
     std::mutex mutexCb_;
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
     static constexpr float INVALID_VALUE = 2.0f;
-    struct ConfigInfo {
-        std::atomic<bool> looping = false;
-        float leftVolume = INVALID_VALUE;
-        float rightVolume = INVALID_VALUE;
-        PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
-        std::string url;
-    } config_;
     bool disableNextSeekDone_ = false;
     bool isBackgroundCb_ = false;
     bool isBackgroundChanged_ = false;
