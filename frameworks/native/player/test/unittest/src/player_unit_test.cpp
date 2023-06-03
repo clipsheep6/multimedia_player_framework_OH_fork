@@ -1636,6 +1636,268 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GstBuffer_001, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_001
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_001, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    system("hidumper -s 1909 -a \"-t 1\"");
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_002
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    system("hidumper -s 1909 -a \"-t 1\"");
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_003
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_003, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("hidumper -s 1909 -a \"-t 1\"");
+    EXPECT_EQ(MSERR_OK, player_->SetVolume(1, 1));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_004
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_004, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("hidumper -s 1909 -a \"-t 1\"");
+    int32_t currentTime = 0;
+    std::vector<Format> videoTrack;
+    std::vector<Format> audioTrack;
+    int32_t duration = 0;
+    PlaybackRateMode mode;
+    EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(videoTrack));
+    EXPECT_EQ(MSERR_OK, player_->GetVideoTrackInfo(audioTrack));
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTime(currentTime));
+    EXPECT_NE(0, player_->GetVideoWidth());
+    EXPECT_NE(0, player_->GetVideoHeight());
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
+    EXPECT_EQ(false, player_->IsPlaying());
+    EXPECT_EQ(false, player_->IsLooping());
+    EXPECT_EQ(MSERR_OK, player_->Seek(1000, SEEK_NEXT_SYNC));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_005
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("hidumper -s 1909 -a \"-t 1\"");
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_006
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_006, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("hidumper -s 1909 -a \"-t 1\"");
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_007
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_007, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("hidumper -s 1909 -a \"-t 1\"");
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_008
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_008, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("hidumper -s 1909 -a \"-t 1\"");
+    EXPECT_EQ(MSERR_OK, player_->SetLooping(1));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_009
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_009, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("hidumper -s 1909 -a \"-t 1\"");
+    EXPECT_NE(MSERR_OK, player_->SelectBitRate(0));
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_010
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_010, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    system("hidumper -s 1909 -a \"-t 1\"");
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_011
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_011, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("hidumper -s 1909 -a \"-t 0\"");
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_012
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_012, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("hidumper -s 1909 -a \"-t 2\"");
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
+ * @tc.name  : Test Player Mem Recycle
+ * @tc.number: Player_Mem_Recycle_013
+ * @tc.desc  : Test Player Mem Recycle
+ */
+HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_013, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MPEG4_MP3.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    system("hidumper -s 1909 -a -f");
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
+
+/**
  * @tc.name  : Test Player Histreamer
  * @tc.number: Player_Histreamer_001
  * @tc.desc  : Test Player function with Histreamer
