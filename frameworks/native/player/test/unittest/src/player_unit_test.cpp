@@ -1973,5 +1973,65 @@ HWTEST_F(PlayerUnitTest, Player_GetCurrentTrack_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Release());
     EXPECT_NE(MSERR_OK, player_->GetCurrentTrack(0, index));    // Illegal state machine
 }
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_001
+ * @tc.desc  : Test Player AddSubSource state machine
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_001, TestSize.Level0)
+{
+    ASSERT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Stop());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Reset());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
+    EXPECT_EQ(MSERR_OK, player_->Release());
+    EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
+}
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_002
+ * @tc.desc  : Test Player AddSubSource behavior
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(ONE_SEC);
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_CLOSEST));
+    EXPECT_EQ(SUBTITLE_5_SEC, player_->SubtileUpdate());
+    sleep(ONE_SEC);
+    EXPECT_EQ("", player_->SubtileUpdate());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
+    EXPECT_EQ(SUBTITLE_2_SEC, player_->SubtileUpdate());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_CLOSEST));
+    EXPECT_EQ(SUBTITLE_5_SEC, player_->SubtileUpdate());
+    int duration = 0;
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ("", player_->SubtileUpdate());
+    sleep(ONE_SEC);
+}
+
 } // namespace Media
 } // namespace OHOS

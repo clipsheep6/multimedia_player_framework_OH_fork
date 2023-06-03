@@ -1,4 +1,4 @@
-# Copyright (C) 2021 Huawei Device Co., Ltd.
+# Copyright (C) 2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -13,7 +13,9 @@
 
 import("//build/ohos.gni")
 
-config("gst_plugins_common_config") {
+MEDIA_ROOT_DIR = "../../../../../.."
+
+config("gst_subtitle_sink_config") {
   visibility = [ ":*" ]
 
   cflags = [
@@ -22,6 +24,7 @@ config("gst_plugins_common_config") {
     "-Wall",
     "-fno-common",
     "-fstack-protector-strong",
+    "-Wshadow",
     "-FPIC",
     "-FS",
     "-O2",
@@ -38,57 +41,62 @@ config("gst_plugins_common_config") {
   ]
 
   include_dirs = [
-    "include",
     "//commonlibrary/c_utils/base/include",
-    "//foundation/multimedia/player_framework/services/utils/include",
-    "//foundation/multimedia/player_framework/services/dfx",
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "$MEDIA_ROOT_DIR/services/utils/include",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/common",
+    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/sink/subtitle_sink",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base",
-    "//third_party/gstreamer/gstplugins_base/gst-libs",
+    "//third_party/gstreamer/gstplugins_base/gst-libs",    
     "//third_party/glib/glib",
     "//third_party/glib",
     "//third_party/glib/gmodule",
   ]
 }
 
-ohos_shared_library("gst_media_common") {
+ohos_shared_library("gst_subtitle_sink") {
   install_enable = true
 
   sanitize = {
     cfi = true
     cfi_cross_dso = true
     debug = false
-    blocklist = "../../../../../cfi_blocklist.txt"
+    blocklist = "../../../../../../cfi_blocklist.txt"
   }
 
-  configs = [
-    ":gst_plugins_common_config",
-    "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
+  sources = [
+    "gst_subtitle_sink_plugins.cpp",
+    "gst_subtitle_display_sink.cpp"
   ]
 
-  sources = [
-    "buffer_type_meta.c",
-    "gst_shmem_allocator.cpp",
-    "gst_shmem_pool.cpp",
-    "gst_shmem_wrap_allocator.cpp",
-    "gst_shmemory_wrap_allocator.cpp",
-  ]
+  configs = [ ":gst_subtitle_sink_config" ]
 
   deps = [
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/codec/common:gst_codec_plugins_common",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink:gst_mem_sink_base",
-    "../../../../../services/engine/gstreamer/plugins/sink/subtitlesink:gst_subtitle_sink_base",
-    "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/source/memsource:gst_mem_src_base",
+    "$MEDIA_ROOT_DIR/services/engine/gstreamer/plugins/common:gst_media_common",
     "//third_party/glib:glib",
     "//third_party/glib:gmodule",
     "//third_party/glib:gobject",
+    "//third_party/gstreamer/gstreamer:gstbase",
+    "//third_party/gstreamer/gstplugins_base:gstapp_plugin",
     "//third_party/gstreamer/gstreamer:gstreamer",
   ]
 
-  external_deps = [ "hiviewdfx_hilog_native:libhilog" ]
-
+  relative_install_dir = "media/plugins"
   subsystem_name = "multimedia"
-  part_name = "player_framework"
+  part_name = "multimedia_player_framework"
+}
+
+ohos_static_library("gst_subtitle_sink_base") {
+  sources = [
+    "gst_subtitle_sink.cpp",
+  ]
+  configs = [ ":gst_subtitle_sink_config" ]
+  deps = [
+    "../../../../../utils:media_service_utils",
+    "//third_party/gstreamer/gstplugins_base:gstapp_plugin",
+  ]
+  subsystem_name = "multimedia"
+  part_name = "multimedia_player_framework"
 }

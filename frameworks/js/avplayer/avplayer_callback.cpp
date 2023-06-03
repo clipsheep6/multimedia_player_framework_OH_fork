@@ -220,6 +220,36 @@ public:
         }
     };
 
+    struct SubtitleProperty : public Base {
+        std::string text;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr,
+                "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr,
+                "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            // callback: (textInfo: TextInfoDescriptor)
+            napi_value args[1] = {nullptr};
+            napi_create_object(ref->env_, &args[0]);
+            CommonNapi::SetPropertyString(ref->env_, args[0], "text", text);
+            napi_value result = nullptr;
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s fail to napi_call_function", callbackName.c_str());
+        }
+    };
+
     struct PropertyInt : public Base {
         std::map<std::string, int32_t> valueMap;
         void UvWork() override
@@ -381,6 +411,7 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     onInfoFuncs_[INFO_TYPE_BITRATE_COLLECT] = &AVPlayerCallback::OnBitRateCollectedCb;
     onInfoFuncs_[INFO_TYPE_EOS] = &AVPlayerCallback::OnEosCb;
     onInfoFuncs_[INFO_TYPE_IS_LIVE_STREAM] = &AVPlayerCallback::NotifyIsLiveStream;
+    onInfoFuncs_[INFO_TYPE_SUBTITLE_UPDATE] = &AVPlayerCallback::OnSubtitleUpdateCb;
     onInfoFuncs_[INFO_TYPE_TRACKCHANGE] = &AVPlayerCallback::OnTrackChangedCb;
 }
 
@@ -615,6 +646,22 @@ void AVPlayerCallback::OnDurationUpdateCb(const int32_t extra, const Format &inf
     cb->callback = refMap_.at(AVPlayerEvent::EVENT_DURATION_UPDATE);
     cb->callbackName = AVPlayerEvent::EVENT_DURATION_UPDATE;
     cb->value = duration;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnSubtitleUpdateCb(const int32_t extra, const Format &infoBody)
+{
+    CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
+    if (refMap_.find(AVPlayerEvent::EVENT_SUBTITLE_UPDATE) == refMap_.end()) {
+        MEDIA_LOGW("can not find subtitle update callback!");
+        return;
+    }
+    NapiCallback::SubtitleProperty *cb = new(std::nothrow) NapiCallback::SubtitleProperty();
+    if (infoBody.ContainKey("text")) {
+        (void)infoBody.GetStringValue("text", cb->text);
+    }
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_SUBTITLE_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_SUBTITLE_UPDATE;
     NapiCallback::CompleteCallback(env_, cb);
 }
 
