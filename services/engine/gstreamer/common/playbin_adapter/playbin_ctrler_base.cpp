@@ -424,6 +424,18 @@ void PlayBinCtrlerBase::SetAudioInterruptMode(const int32_t interruptMode)
     }
 }
 
+int32_t PlayBinCtrlerBase::SetAudioEffectMode(const int32_t effectMode)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (audioSink_ != nullptr) {
+        g_object_set(audioSink_, "audio-effect-mode", effectMode, nullptr);
+        int32_t effectModeNow = -1;
+        g_object_get(audioSink_, "audio-effect-mode", &effectModeNow, nullptr);
+        CHECK_AND_RETURN_RET_LOG(effectModeNow == effectMode, MSERR_INVALID_VAL, "failed to set audio-effect-mode");
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayBinCtrlerBase::SelectBitRate(uint32_t bitRate)
 {
     std::unique_lock<std::mutex> lock(mutex_);

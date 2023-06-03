@@ -63,6 +63,7 @@ public:
     void SetVolume(const float &leftVolume, const float &rightVolume) override;
     void SetAudioInterruptMode(const int32_t interruptMode) override;
     int32_t SetAudioRendererInfo(const uint32_t rendererInfo, const int32_t rendererFlag) override;
+    int32_t SetAudioEffectMode(const int32_t effectMode) override;
     int32_t SelectBitRate(uint32_t bitRate) override;
 
     void SetElemSetupListener(ElemSetupListener listener) final;

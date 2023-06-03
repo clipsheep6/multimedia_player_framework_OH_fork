@@ -530,6 +530,7 @@ int32_t PlayerServerMem::SetSaveParameter()
         ret = playerEngine_->SetAudioInterruptMode(recoverConfig_.interruptMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to SetAudioInterruptMode");
     }
+    config_.effectMode = recoverConfig_.effectMode;
     return ret;
 }
 
@@ -666,6 +667,7 @@ int32_t PlayerServerMem::GetInformationBeforeMemReset()
     ret = PlayerServer::GetDuration(recoverConfig_.duration);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to GetDuration");
     recoverConfig_.isPlaying = PlayerServer::IsPlaying();
+    recoverConfig_.effectMode = config_.effectMode;
     GetPlayerServerConfig();
 
     return MSERR_OK;

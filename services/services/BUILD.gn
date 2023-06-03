@@ -178,6 +178,7 @@ ohos_shared_library("media_service") {
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "audio_framework:audio_client",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",

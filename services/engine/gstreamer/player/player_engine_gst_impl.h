@@ -65,6 +65,7 @@ public:
     int32_t SelectTrack(int32_t index) override;
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
+    int32_t SetAudioEffectMode(const int32_t effectMode) override;
 
 private:
     void OnNotifyMessage(const PlayBinMessage &msg);
