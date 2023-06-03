@@ -326,7 +326,7 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
         gst_buffer_unref(buffer);
         gst_sample_unref(sample);
         GST_ERROR_OBJECT(subtitle_sink, "pts or duration invalid");
-        return GST_FLOW_ERROR;
+        return GST_FLOW_OK;
     }
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_mutex_lock(&priv->mutex);

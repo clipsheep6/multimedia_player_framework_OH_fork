@@ -199,7 +199,7 @@ PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
 {
     subtitleSink_ = DoCreateSubtitleSink(reinterpret_cast<gpointer>(this));
     CHECK_AND_RETURN_RET_LOG(subtitleSink_ != nullptr, nullptr, "CreateSubtitleSink failed..");
-    g_object_set(G_OBJECT(subtitleSink_), "audio-sink", nullptr);
+    g_object_set(G_OBJECT(subtitleSink_), "audio-sink", audioSink_, nullptr);
     return subtitleSink_;
 }
 
@@ -208,8 +208,7 @@ GstElement *PlayerSinkProvider::DoCreateSubtitleSink(const gpointer userData)
     MEDIA_LOGI("CreateSubtitleSink in.");
     CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
 
-    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subtitledisplaysink",
-        "subtitledisplaysink")));
+    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subtitledisplaysink", nullptr)));
     CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
 
     GstSubtitleSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };
