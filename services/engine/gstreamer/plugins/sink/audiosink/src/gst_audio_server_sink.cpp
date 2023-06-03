@@ -277,8 +277,7 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
 {
     MEDIA_LOGI("audiorender: gst_audio_server_sink_set_property");
     MediaTrace trace("Audio::gst_audio_server_sink_set_property");
-    g_return_if_fail(object != nullptr);
-    g_return_if_fail(value != nullptr);
+    g_return_if_fail(object != nullptr && value != nullptr);
     (void)pspec;
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(object);
     g_return_if_fail(sink != nullptr);
@@ -307,7 +306,6 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
             GST_INFO_OBJECT(sink, "set app token id success!");
             g_object_notify(G_OBJECT(sink), "app-token-id");
             break;
-            
         case PROP_AUDIO_RENDERER_FLAG:
             sink->renderer_flag = g_value_get_int(value);
             break;
