@@ -551,7 +551,7 @@ export default function AVPlayerMultiTrackTest() {
 
             await testChangeTrack(videoFd, preparedOperation, playedOperation, stoppedOperation, undefined);
         })
-    
+
         /* *
             * @tc.number    : SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_MULTI_AUDIOTRACK_UNSUPPORTED_FORMAT_0100
             * @tc.name      : 009.test unsupported audio track
