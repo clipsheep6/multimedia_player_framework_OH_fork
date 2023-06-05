@@ -22,6 +22,7 @@
 #include "task_queue.h"
 #include "media_data_source.h"
 #include "appsrc_memory.h"
+#include "inner_msg_define.h"
 #include "gst/app/gstappsrc.h"
 #include "gst_shmemory_wrap_allocator.h"
 
@@ -29,7 +30,7 @@ namespace OHOS {
 namespace Media {
 class GstAppsrcEngine : public std::enable_shared_from_this<GstAppsrcEngine>, public NoCopyable {
 public:
-    using AppsrcErrorNotifier = std::function<void(int32_t, std::string)>;
+    using AppsrcErrorNotifier = std::function<void(const InnerMessage &msg)>;
     static std::shared_ptr<GstAppsrcEngine> Create(const std::shared_ptr<IMediaDataSource> &dataSrc);
     GstAppsrcEngine(const std::shared_ptr<IMediaDataSource> &dataSrc, const int64_t size);
     ~GstAppsrcEngine();
@@ -37,7 +38,7 @@ public:
     int32_t Prepare();
     void Stop();
     int32_t SetAppsrc(GstElement *appSrc);
-    int32_t SetErrorCallback(AppsrcErrorNotifier notifier);
+    int32_t SetCallback(AppsrcErrorNotifier notifier);
     bool IsLiveMode() const;
     void SetVideoMode();
     void SetPushBufferMode();
@@ -59,6 +60,8 @@ private:
     int32_t PushBufferWithCopy(uint32_t pushSize);
     int32_t AddSrcMem(uint32_t bufferSize);
     void OnError(int32_t errorCode, std::string message);
+    void OnBufferReport(int32_t percent);
+    void ReportMessage(const InnerMessage &msg);
     void FreePointerMemory(uint32_t offset, uint32_t length, uint32_t subscript);
     bool IsConnectTimeout();
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
@@ -85,6 +88,7 @@ private:
     bool videoMode_ = false;
     uint32_t curSubscript_ = 0;
     bool decoderSwitch_ = false;
+    bool playState_ = true;
 };
 } // namespace Media
 } // namespace OHOS

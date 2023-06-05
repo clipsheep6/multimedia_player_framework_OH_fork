@@ -118,7 +118,7 @@ private:
     void OnSourceSetup(const GstElement *playbin, GstElement *src,
         const std::shared_ptr<PlayBinCtrlerBase> &playbinCtrl);
     bool OnVideoDecoderSetup(GstElement &elem);
-    void OnAppsrcErrorMessageReceived(int32_t errorCode, std::string message);
+    void OnAppsrcMessageReceived(const InnerMessage &msg);
     void OnMessageReceived(const InnerMessage &msg);
     void OnSinkMessageReceived(const PlayBinMessage &msg);
     GValueArray *OnAutoPlugSort(GValueArray &factories);
