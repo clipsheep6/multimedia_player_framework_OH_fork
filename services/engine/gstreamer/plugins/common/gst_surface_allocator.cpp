@@ -105,6 +105,47 @@ static OHOS::ScalingMode gst_surface_allocator_get_scale_type(GstSurfaceAllocPar
     return SCALEMODE_MAP.at(static_cast<VideoScaleType>(param.scale_type));
 }
 
+static void gst_surface_cancel_buffer(GstSurfaceAllocator *allocator, OHOS::sptr<OHOS::SurfaceBuffer> &buffer)
+{
+    MediaTrace scaleTrace("Surface::CancelBuffer");
+    LISTENER(allocator->surface->CancelBuffer(buffer),
+        "surface::CancelBuffer", PlayerXCollie::timerTimeout)
+    GST_SURFACE_ALLOCATOR_LOCK(allocator);
+    allocator->requestBufferNum--;
+    allocator->cacheBufferNum++;
+    SURFACE_BUFFER_LOG_INFO(allocator, buffer->GetSeqNum());
+    GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
+    MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
+    MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
+}
+
+static bool gst_surface_scale_buffer(GstSurfaceAllocator *allocator, GstSurfaceAllocParam param,
+    OHOS::sptr<OHOS::SurfaceBuffer> &buffer)
+{
+    MediaTrace scaleTrace("Surface::SetScalingMode");
+    auto scaleType = gst_surface_allocator_get_scale_type(param);
+    OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
+    LISTENER(ret = allocator->surface->SetScalingMode(buffer->GetSeqNum(), scaleType),
+        "surface::SetScalingMode", PlayerXCollie::timerTimeout)
+    if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
+        GST_ERROR("surface buffer set scaling mode failed");
+        gst_surface_cancel_buffer(allocator, buffer);
+        return false;
+    }
+    return true;
+}
+
+static bool gst_surface_map_buffer(GstSurfaceAllocator *allocator, OHOS::sptr<OHOS::SurfaceBuffer> &buffer)
+{
+    MediaTrace mapTrace("Surface::Map");
+    if (buffer->Map() != OHOS::SurfaceError::SURFACE_ERROR_OK) {
+        GST_ERROR("surface buffer Map failed");
+        gst_surface_cancel_buffer(allocator, buffer);
+        return false;
+    }
+    return true;
+}
+
 static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfaceAllocParam param,
     OHOS::sptr<OHOS::SurfaceBuffer> &buffer)
 {
@@ -145,22 +186,8 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
         MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
         MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
     }
-    {
-        MediaTrace mapTrace("Surface::Map");
-        if (buffer->Map() != OHOS::SurfaceError::SURFACE_ERROR_OK) {
-            GST_ERROR("surface buffer Map failed");
-            LISTENER(allocator->surface->CancelBuffer(buffer),
-                "surface::CancelBuffer", PlayerXCollie::timerTimeout)
-            GST_SURFACE_ALLOCATOR_LOCK(allocator);
-            allocator->requestBufferNum--;
-            allocator->cacheBufferNum++;
-            SURFACE_BUFFER_LOG_INFO(allocator, buffer->GetSeqNum());
-            GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
-            MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
-            MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
-            return false;
-        }
-    }
+
+    g_return_val_if_fail(gst_surface_map_buffer(allocator, buffer), false);
 
     {
         MediaTrace FenceTrace("Surface::WaitFence");
@@ -170,25 +197,7 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
         }
     }
 
-    {
-        MediaTrace scaleTrace("Surface::SetScalingMode");
-        auto scaleType = gst_surface_allocator_get_scale_type(param);
-        LISTENER(ret = allocator->surface->SetScalingMode(buffer->GetSeqNum(), scaleType),
-            "surface::SetScalingMode", PlayerXCollie::timerTimeout)
-        if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
-            GST_ERROR("surface buffer set scaling mode failed");
-            LISTENER(allocator->surface->CancelBuffer(buffer),
-                "surface::CancelBuffer", PlayerXCollie::timerTimeout)
-            GST_SURFACE_ALLOCATOR_LOCK(allocator);
-            allocator->requestBufferNum--;
-            allocator->cacheBufferNum++;
-            SURFACE_BUFFER_LOG_INFO(allocator, buffer->GetSeqNum());
-            GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
-            MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
-            MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
-            return false;
-        }
-    }
+    g_return_val_if_fail(gst_surface_scale_buffer(allocator, param, buffer), false);
     return true;
 }
 
