@@ -853,8 +853,7 @@ void AVPlayerNapi::SetSource(std::string url)
         });
         (void)taskQue_->EnqueueTask(task);
     } else if (isFd) {
-        const std::string fdHead = "fd://";
-        std::string inputFd = url.substr(fdHead.size());
+        std::string inputFd = url.substr(sizeof("fd://") - 1);
         int32_t fd = -1;
         if (!StrToInt(inputFd, fd) || fd < 0) {
             OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
