@@ -34,6 +34,7 @@ namespace {
     constexpr int64_t UNKNOW_FILE_SIZE = -1;
     constexpr int32_t TIME_VAL_MS = 1000;
     constexpr int32_t TIME_VAL_US = 1000000;
+    constexpr int32_t PULL_BUFFER_TIME_OUT_MS = 100;
     constexpr int32_t PLAY_TIME_OUT_MS = 15000;
     constexpr int32_t PULL_BUFFER_SLEEP_US = 3000;
 }
@@ -149,7 +150,7 @@ int32_t GstAppsrcEngine::SetAppsrc(GstElement *appSrc)
     return MSERR_OK;
 }
 
-int32_t GstAppsrcEngine::SetErrorCallback(AppsrcErrorNotifier notifier)
+int32_t GstAppsrcEngine::SetCallback(AppsrcErrorNotifier notifier)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     notifier_ = notifier;
@@ -324,9 +325,7 @@ int32_t GstAppsrcEngine::PullBuffer()
         CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr, MSERR_NO_MEMORY, "no mem");
         MEDIA_LOGD("PullBuffer loop in");
         pullCond_.wait(lock, [this] { return (!atEos_ && appSrcMem_->GetFreeSize() >= PULL_SIZE) || isExit_; });
-        if (isExit_) {
-            break;
-        }
+        CHECK_AND_BREAK(!isExit_);
         std::unique_lock<std::mutex> freeLock(freeMutex_);
         appSrcMem_->PrintCurPos();
         auto mem = appSrcMem_->GetMem();
@@ -352,6 +351,11 @@ int32_t GstAppsrcEngine::PullBuffer()
         } else if (readSize > 0) {
             appSrcMem_->PullBufferAndChangePos(readSize);
             timer_ = 0;
+            if (!playState_ && (appSrcMem_->GetAvailableSize() >= PULL_SIZE ||
+                appSrcMem_->GetAvailableSize() + static_cast<int64_t>(appSrcMem_->GetFilePos()) >= size_)) {
+                OnBufferReport(100);  // 100 buffering 100%, begin set to play
+                playState_ = true;
+            }
             appSrcMem_->PrintCurPos();
             pushCond_.notify_all();
         } else if (IsConnectTimeout()) {
@@ -524,8 +528,25 @@ void GstAppsrcEngine::OnError(int32_t errorCode, std::string message)
     isExit_ = true;
     pullCond_.notify_all();
     pushCond_.notify_all();
+    InnerMessage innerMsg {};
+    innerMsg.type = INNER_MSG_ERROR;
+    innerMsg.detail1 = errorCode;
+    innerMsg.extend = message;
+    ReportMessage(innerMsg);
+}
+
+void GstAppsrcEngine::OnBufferReport(int32_t percent)
+{
+    InnerMessage innerMsg {};
+    innerMsg.type = INNER_MSG_BUFFERING;
+    innerMsg.detail1 = percent;
+    ReportMessage(innerMsg);
+}
+
+void GstAppsrcEngine::ReportMessage(const InnerMessage &msg)
+{
     if (notifier_ != nullptr) {
-        notifier_(errorCode, message);
+        notifier_(msg);
     }
 }
 
@@ -571,7 +592,10 @@ bool GstAppsrcEngine::IsConnectTimeout()
         MEDIA_LOGI("Waiting to receive data");
     } else {
         int64_t curTime = GetTime();
-        if (curTime - timer_ > PLAY_TIME_OUT_MS) {
+        if (curTime - timer_ > PULL_BUFFER_TIME_OUT_MS && playState_) {
+            playState_ = false;
+            OnBufferReport(0);
+        } else if (curTime - timer_ > PLAY_TIME_OUT_MS) {
             MEDIA_LOGE("No data was received for 15 seconds");
             return true;
         }

@@ -870,9 +870,8 @@ int32_t PlayBinCtrlerBase::DoInitializeForDataSource()
         if (isInitialized_) {
             return MSERR_OK;
         }
-        auto msgNotifier = std::bind(&PlayBinCtrlerBase::OnAppsrcErrorMessageReceived,
-            this, std::placeholders::_1, std::placeholders::_2);
-        CHECK_AND_RETURN_RET_LOG(appsrcWrap_->SetErrorCallback(msgNotifier) == MSERR_OK,
+        auto msgNotifier = std::bind(&PlayBinCtrlerBase::OnAppsrcMessageReceived, this, std::placeholders::_1);
+        CHECK_AND_RETURN_RET_LOG(appsrcWrap_->SetCallback(msgNotifier) == MSERR_OK,
             MSERR_INVALID_OPERATION, "set appsrc error callback failed");
 
         g_object_set(playbin_, "uri", "appsrc://", nullptr);
@@ -1380,12 +1379,35 @@ void PlayBinCtrlerBase::OnSelectBitrateDoneCb(const GstElement *playbin, bool ad
     }
 }
 
-void PlayBinCtrlerBase::OnAppsrcErrorMessageReceived(int32_t errorCode, std::string message)
+void PlayBinCtrlerBase::OnAppsrcMessageReceived(const InnerMessage &msg)
 {
-    PlayBinMessage msg { PlayBinMsgType::PLAYBIN_MSG_ERROR,
-        PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
-        errorCode, message };
-    ReportMessage(msg);
+    MEDIA_LOGI("in OnAppsrcMessageReceived");
+    if (msg.type == INNER_MSG_ERROR) {
+        PlayBinMessage message { PlayBinMsgType::PLAYBIN_MSG_ERROR,
+            PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
+            msg.detail1, msg.extend };
+        ReportMessage(message);
+    } else if (msg.type == INNER_MSG_BUFFERING) {
+        if (msg.detail1 < static_cast<float>(BUFFER_LOW_PERCENT_DEFAULT) / BUFFER_HIGH_PERCENT_DEFAULT *
+            BUFFER_PERCENT_THRESHOLD && GetCurrState() == playingState_ &&
+            !isSeeking_ && !isRating_ && !isUserSetPause_) {
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
+            MEDIA_LOGI("begin set to pause");
+            GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
+            if (ret == GST_STATE_CHANGE_FAILURE) {
+                MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PAUSED");
+                return;
+            }
+        } else if (msg.detail1 >= BUFFER_PERCENT_THRESHOLD && GetCurrState() == playingState_ && !isUserSetPause_) {
+            std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
+            MEDIA_LOGI("begin set to play");
+            GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PLAYING);
+            if (ret == GST_STATE_CHANGE_FAILURE) {
+                MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PLAYING");
+                return;
+            }
+        }
+    }
 }
 
 void PlayBinCtrlerBase::OnMessageReceived(const InnerMessage &msg)

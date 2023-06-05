@@ -37,14 +37,14 @@ void MediaDataSourceJsCallback::WaitResult()
 {
     std::unique_lock<std::mutex> lock(mutexCond_);
     if (!setResult_) {
-        static constexpr int32_t timeout = 3;
-        cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() { return setResult_ || isExit_; });
+        static constexpr int32_t timeout = 100;
+        cond_.wait_for(lock, std::chrono::milliseconds(timeout), [this]() { return setResult_ || isExit_; });
         if (!setResult_) {
             readSize_ = 0;
             if (isExit_) {
                 MEDIA_LOGW("Reset, ReadAt has been cancel!");
             } else {
-                MEDIA_LOGW("timeout 3s!");
+                MEDIA_LOGW("timeout 100ms!");
             }
         }
     }
