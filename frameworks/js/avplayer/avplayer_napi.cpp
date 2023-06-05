@@ -1402,12 +1402,6 @@ napi_value AVPlayerNapi::JsGetAudioEffectMode(napi_env env, napi_callback_info i
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
 
-    if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport audio effect mode operation");
-        return result;
-    }
-
     napi_value value = nullptr;
     (void)napi_create_int32(env, static_cast<int32_t>(jsPlayer->audioEffectMode_), &value);
     MEDIA_LOGI("JsGetAudioEffectMode Out");
