@@ -404,21 +404,17 @@ export default function AVPlayerMultiTrackTest() {
                     await getCurrentAudioTrack();
                 } if (prepareCnt == 2) {
                     await getCurrentAudioTrack();
-                    await changeAudioTrack();
-                    avPlayer.selectTrack(selectedTrack);
-                    console.info('case selectedTrack is: ' + selectedTrack)
                 } else {
                     await getCurrentAudioTrack();
+                    await changeAudioTrack();
+                    avPlayer.selectTrack(selectedTrack);
+                    console.info('case selectedTrack is: ' + selectedTrack);
                 }
             }
 
             async function playedOperation() {
                 await getCurrentAudioTrack();
-                if (prepareCnt == 2) {
-                    expect(currentTrack).assertEqual(selectedTrack);
-                } else {
-                    expect(currentTrack).assertEqual(defaultTrack);
-                }
+                expect(currentTrack).assertEqual(selectedTrack);
             }
 
             async function stoppedOperation() {
