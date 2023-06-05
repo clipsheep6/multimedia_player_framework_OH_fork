@@ -839,9 +839,11 @@ void AVPlayerNapi::SetSource(std::string url)
             MEDIA_LOGI("SetNetworkSource Task");
             std::unique_lock<std::mutex> lock(taskMutex_);
             auto state = GetCurrentState();
-            if (state == AVPlayerState::STATE_IDLE) {
+            if (state != AVPlayerState::STATE_IDLE) {
                 OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
-            } else if (player_ != nullptr) {
+                return;
+            }
+            if (player_ != nullptr) {
                 if (player_->SetSource(url) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
                 }
@@ -864,9 +866,11 @@ void AVPlayerNapi::SetSource(std::string url)
             MEDIA_LOGI("SetFdSource Task");
             std::unique_lock<std::mutex> lock(taskMutex_);
             auto state = GetCurrentState();
-            if (state == AVPlayerState::STATE_IDLE) {
+            if (state != AVPlayerState::STATE_IDLE) {
                 OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
-            } else if (player_ != nullptr) {
+                return;
+            }
+            if (player_ != nullptr) {
                 if (player_->SetSource(fd, 0, -1) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
                 }
