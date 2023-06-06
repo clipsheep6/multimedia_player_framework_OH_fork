@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import AVPlayerAudioEffectModeTest from './AVPlayerAudioEffectModeTest.test.js'
 import AVPlayerHlsFuncTest from './AVPlayerHlsFuncTest.test.js'
 import AVPlayerHlsLiveFuncTest from './AVPlayerHlsLiveFuncTest.test.js'
 import AVPlayerHttpCompatibilityTest from './AVPlayerHttpCompatibilityTest.test.ets'
@@ -25,6 +26,7 @@ import AVPlayerLocalTest from './AVPlayerLocalTest.test.js'
 import AVPlayerLocalTestH265 from './AVPlayerLocalTesth265.test.js'
 
 export default function testsuite() {
+  AVPlayerAudioEffectModeTest();
   AVPlayerHlsFuncTest()
   AVPlayerHlsLiveFuncTest();
   AVPlayerHlsFuncTest();
