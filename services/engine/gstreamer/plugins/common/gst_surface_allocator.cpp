@@ -170,8 +170,12 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
     OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
     {
         MediaTrace trace("Surface::RequestBuffer");
-        LISTENER(ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config),
-            "surface::RequestBuffer", PlayerXCollie::timerTimeout)
+        if (wait_time == 0) {
+            LISTENER(ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config),
+                "surface::RequestBuffer", PlayerXCollie::timerTimeout)
+        } else {
+            ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config);
+        }
         if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK || buffer == nullptr) {
             GST_ERROR("there is no more surface buffer");
             return false;
