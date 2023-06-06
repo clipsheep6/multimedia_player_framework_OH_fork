@@ -312,6 +312,21 @@ int32_t PlayerTrackParse::GetTrackIndex(int32_t innerIndex, int32_t trackType, i
     return MSERR_INVALID_VAL;
 }
 
+int32_t PlayerTrackParse::GetHLSStreamBandwidth(const char *streamId)
+{
+    int32_t bandwidth;
+    for (auto iter = trackVec_.begin(); iter != trackVec_.end(); ++iter) {
+        for (auto it = iter->trackInfos.begin(); it != iter->trackInfos.end(); ++it) {
+            if (strcmp(gst_pad_get_stream_id(it->first), streamId) == 0) {
+                (it->second).GetIntValue(std::string(INNER_META_KEY_BANDWIDTH), bandwidth);
+                return bandwidth;
+            }
+        }
+    }
+    MEDIA_LOGE("Failed to find streamId: %{public}s", streamId);
+    return 0;
+}
+
 void PlayerTrackParse::StartUpdateTrackInfo()
 {
     if (!updateTrackInfo_) {
