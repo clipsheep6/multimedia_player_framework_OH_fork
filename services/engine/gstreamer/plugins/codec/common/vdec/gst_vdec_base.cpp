@@ -784,7 +784,7 @@ static gboolean gst_vdec_base_allocate_out_buffers(GstVdecBase *self)
     g_return_val_if_fail(self->decoder != nullptr, FALSE);
     std::vector<GstBuffer*> buffers;
     self->coding_outbuf_cnt = self->out_buffer_cnt;
-    {
+    if (self->memtype != GST_MEMTYPE_SURFACE) {
         MediaTrace trace("VdecBase::AllocateOutPutBuffer");
         for (guint i = 0; i < self->out_buffer_cnt; ++i) {
             GST_DEBUG_OBJECT(self, "Allocate output buffer %u", i);
@@ -1261,8 +1261,6 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
     g_return_val_if_fail(self->decoder != nullptr, GST_FLOW_ERROR);
     gint ret = self->decoder->ActiveBufferMgr(GST_CODEC_OUTPUT, false);
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "ActiveBufferMgr", TRUE), GST_FLOW_ERROR);
-    ret = self->decoder->FreeOutputBuffers();
-    g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "freebuffer", TRUE), GST_FLOW_ERROR);
     ret = self->decoder->GetParameter(GST_VIDEO_OUTPUT_COMMON, GST_ELEMENT(self));
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "GetParameter", TRUE), GST_FLOW_ERROR);
     gst_vdec_base_get_real_stride(self);
@@ -1273,9 +1271,14 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
         self->resolution_changed = TRUE;
     }
     if (format_change || (buffer_cnt_change && self->memtype != GST_MEMTYPE_SURFACE)) {
+        g_return_val_if_fail(gst_buffer_pool_set_active(GST_BUFFER_POOL(self->outpool), FALSE), GST_FLOW_ERROR);
+        ret = self->decoder->FreeOutputBuffers();
+        g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "freebuffer", TRUE), GST_FLOW_ERROR);
         g_return_val_if_fail(gst_vdec_base_set_outstate(self), GST_FLOW_ERROR);
         g_return_val_if_fail(gst_video_decoder_negotiate(GST_VIDEO_DECODER(self)), GST_FLOW_ERROR);
     } else if (buffer_cnt_change) {
+        ret = self->decoder->FreeOutputBuffers();
+        g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "freebuffer", TRUE), GST_FLOW_ERROR);
         g_object_set(self->outpool, "dynamic-buffer-num", self->out_buffer_cnt, nullptr);
     }
 
@@ -1364,6 +1367,13 @@ static gboolean gst_vdec_base_push_out_buffers(GstVdecBase *self)
     return TRUE;
 }
 
+inline static void gst_vdec_reduce_coding_buffer(GstVdecBase *self)
+{
+    if (self->memtype != GST_MEMTYPE_SURFACE) {
+        self->coding_outbuf_cnt--;
+    }
+}
+
 static void gst_vdec_base_loop(GstVdecBase *self)
 {
     GST_DEBUG_OBJECT(self, "Loop in");
@@ -1372,11 +1382,13 @@ static void gst_vdec_base_loop(GstVdecBase *self)
 
     pthread_setname_np(pthread_self(), "VDecOutPut");
     GstBuffer *gst_buffer = nullptr;
-    if (gst_vdec_base_push_out_buffers(self) != TRUE) {
-        gst_vdec_base_pause_loop(self);
-        return;
+    if (self->memtype != GST_MEMTYPE_SURFACE) {
+        if (gst_vdec_base_push_out_buffers(self) != TRUE) {
+            gst_vdec_base_pause_loop(self);
+            return;
+        }
+        GST_DEBUG_OBJECT(self, "coding buffers %u", self->coding_outbuf_cnt);
     }
-    GST_DEBUG_OBJECT(self, "coding buffers %u", self->coding_outbuf_cnt);
     gint codec_ret = GST_CODEC_OK;
     {
         MediaTrace trace("VdecBase::PullOutputBuffer");
@@ -1386,14 +1398,14 @@ static void gst_vdec_base_loop(GstVdecBase *self)
     GST_DEBUG_OBJECT(self, "Pull ret %d", codec_ret);
     switch (codec_ret) {
         case GST_CODEC_OK:
-            self->coding_outbuf_cnt--;
+            gst_vdec_reduce_coding_buffer(self);
             flow_ret = push_output_buffer(self, gst_buffer);
             break;
         case GST_CODEC_FORMAT_CHANGE:
             (void)gst_vdec_base_format_change(self);
             return;
         case GST_CODEC_EOS:
-            self->coding_outbuf_cnt--;
+            gst_vdec_reduce_coding_buffer(self);
             flow_ret = gst_vdec_base_codec_eos(self);
             break;
         case GST_CODEC_FLUSH:
@@ -1727,13 +1739,17 @@ static GstBufferPool *gst_vdec_base_new_in_shmem_pool(GstVdecBase *self, GstCaps
 static void gst_vdec_base_update_out_pool(GstVdecBase *self, GstBufferPool **pool, GstCaps *outcaps,
     gint size)
 {
+    g_return_if_fail(self != nullptr);
+    g_return_if_fail(self->decoder != nullptr);
     g_return_if_fail(*pool != nullptr);
+    GST_INFO_OBJECT(self, "vdec memType %d", self->memtype);
     ON_SCOPE_EXIT(0) { gst_object_unref(*pool); *pool = nullptr; };
     GstStructure *config = gst_buffer_pool_get_config(*pool);
     g_return_if_fail(config != nullptr);
     gst_buffer_pool_config_set_params(config, outcaps, size, self->out_buffer_cnt, self->out_buffer_cnt);
     if (self->memtype == GST_MEMTYPE_SURFACE) {
         gst_structure_set(config, "usage", G_TYPE_UINT64, self->usage, nullptr);
+        self->decoder->SetOutputPool(*pool);
     }
     g_return_if_fail(gst_buffer_pool_set_config(*pool, config));
     CANCEL_SCOPE_EXIT_GUARD(0);

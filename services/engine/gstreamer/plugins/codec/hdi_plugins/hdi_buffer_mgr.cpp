@@ -140,7 +140,7 @@ void HdiBufferMgr::FreeCodecBuffers()
     // Caller lock protection
     MEDIA_LOGD("Enter FreeCodecBuffers");
     for (auto codecBuffer : availableBuffers_) {
-        CHECK_AND_BREAK_LOG(!bufferRleased_, "bufferRleased!");
+        CHECK_AND_BREAK_LOG(!bufferReleased_, "bufferRleased!");
         int32_t ret = HDF_SUCCESS;
         LISTENER(ret = handle_->FreeBuffer(handle_, mPortIndex_, &codecBuffer->hdiBuffer),
             "Hdi::FreeBuffer", PlayerXCollie::timerTimeout)
@@ -227,11 +227,12 @@ void HdiBufferMgr::BufferReleased()
 {
     MEDIA_LOGI("Enter BufferReleased");
     std::unique_lock<std::mutex> lock(mutex_);
-    bufferRleased_ = true;
+    bufferReleased_ = true;
     isStart_ = false;
     bufferCond_.notify_all();
     flushCond_.notify_all();
     freeCond_.notify_all();
+    preBufferCond_.notify_all();
 }
 }  // namespace Media
 }  // namespace OHOS

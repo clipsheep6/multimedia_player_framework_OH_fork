@@ -82,6 +82,11 @@ public:
         return GST_CODEC_OK;
     }
 
+    virtual void SetOutputPool(GstBufferPool *pool)
+    {
+        (void)pool;
+    }
+
     virtual int32_t Flush(bool enable) override;
     virtual int32_t Stop(bool isFormatChange);
     virtual void WaitFlushed();
@@ -90,7 +95,7 @@ public:
 protected:
     void FreeCodecBuffers();
     void ClearCodingBuffers();
-    std::atomic<bool> bufferRleased_ = false;
+    std::atomic<bool> bufferReleased_ = false;
     bool isFlushing_ = false;
     bool isFlushed_ = false;
     bool isStart_ = false;
@@ -101,6 +106,7 @@ protected:
     std::condition_variable flushCond_;
     std::condition_variable bufferCond_;
     std::condition_variable freeCond_;
+    std::condition_variable preBufferCond_;
     OMX_PARAM_PORTDEFINITIONTYPE mPortDef_ = {};
     CodecComponentType *handle_ = nullptr;
     std::list<std::shared_ptr<HdiBufferWrap>> availableBuffers_;

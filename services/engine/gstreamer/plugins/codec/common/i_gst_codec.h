@@ -259,6 +259,14 @@ public:
      * @version 1.0
      */
     virtual void OnCodecDied() = 0;
+
+    /**
+     * @brief Set surface pool for callback mode.
+     *
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual void SetOutputPool(GstBufferPool *pool) = 0;
 };
 } // namespace Media
 } // namespace OHOS

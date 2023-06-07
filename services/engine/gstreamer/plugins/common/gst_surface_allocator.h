@@ -33,21 +33,43 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_SURFACE_ALLOCATOR))
 #define GST_SURFACE_ALLOCATOR_CAST(obj) ((GstSurfaceAllocator*)(obj))
 
+#ifndef GST_API_EXPORT
+#define GST_API_EXPORT __attribute__((visibility("default")))
+#endif
+
 typedef struct _GstSurfaceAllocator GstSurfaceAllocator;
 typedef struct _GstSurfaceAllocatorClass GstSurfaceAllocatorClass;
+
+class AllocatorWrap : public OHOS::NoCopyable {
+public:
+    explicit AllocatorWrap(GstSurfaceAllocator &owner) : owner_(owner) {}
+    ~AllocatorWrap() = default;
+    OHOS::GSError OnBufferReleased(OHOS::sptr<OHOS::SurfaceBuffer> &buffer);
+private:
+    GstSurfaceAllocator &owner_;
+};
 
 struct _GstSurfaceAllocator {
     GstAllocator parent;
     OHOS::sptr<OHOS::Surface> surface;
+    GMutex lock;
+    GCond cond;
+    int32_t requestBufferNum;
+    int32_t flushBufferNum;
+    int32_t cacheBufferNum;
+    int32_t totalBufferNum;
+    gboolean clean;
+    AllocatorWrap *allocatorWrap;
+    gboolean isCallbackMode;
 };
 
 struct _GstSurfaceAllocatorClass {
     GstAllocatorClass parent;
 };
 
-GType gst_surface_allocator_get_type(void);
+GST_API_EXPORT GType gst_surface_allocator_get_type(void);
 
-GstSurfaceAllocator *gst_surface_allocator_new();
+GST_API_EXPORT GstSurfaceAllocator *gst_surface_allocator_new();
 
 gboolean gst_surface_allocator_set_surface(GstSurfaceAllocator *allocator, OHOS::sptr<OHOS::Surface> surface);
 
@@ -63,6 +85,13 @@ typedef struct _GstSurfaceAllocParam {
 GstSurfaceMemory *gst_surface_allocator_alloc(GstSurfaceAllocator *allocator, GstSurfaceAllocParam param);
 
 void gst_surface_allocator_free(GstSurfaceAllocator *allocator, GstSurfaceMemory *memory);
+
+gboolean gst_surface_allocator_flush_buffer(GstSurfaceAllocator *allocator, OHOS::sptr<OHOS::SurfaceBuffer>& buffer,
+    int32_t fence, OHOS::BufferFlushConfig &config);
+
+gboolean gst_surface_allocator_set_queue_size(GstSurfaceAllocator *allocator, int32_t size);
+
+void gst_surface_allocator_clean_cache(GstSurfaceAllocator *allocator);
 
 G_END_DECLS
 
