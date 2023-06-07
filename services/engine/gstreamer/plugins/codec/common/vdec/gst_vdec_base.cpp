@@ -235,6 +235,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     g_mutex_init(&self->lock);
 
     g_mutex_init(&self->drain_lock);
+    g_mutex_init(&self->decoder_lock);
     g_cond_init(&self->drain_cond);
     self->draining = FALSE;
     self->flushing = FALSE;
@@ -311,6 +312,7 @@ static void gst_vdec_base_finalize(GObject *object)
     g_mutex_clear(&self->drain_lock);
     g_cond_clear(&self->drain_cond);
     g_mutex_clear(&self->lock);
+    g_mutex_clear(&self->decoder_lock);
     if (self->input.allocator) {
         gst_object_unref(self->input.allocator);
         self->input.allocator = nullptr;
@@ -387,13 +389,12 @@ static GstStateChangeReturn gst_vdec_base_change_state(GstElement *element, GstS
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: stop start");
             gst_buffer_pool_set_active(self->outpool, FALSE);
-            GST_VIDEO_DECODER_STREAM_LOCK(self);
+            g_mutex_lock(&self->decoder_lock);
             if (self->decoder != nullptr) {
                 (void)self->decoder->Flush(GST_CODEC_ALL);
             }
+            g_mutex_unlock(&self->decoder_lock);
             gst_vdec_base_set_flushing(self, TRUE);
-
-            GST_VIDEO_DECODER_STREAM_UNLOCK(self);
             break;
         case GST_STATE_CHANGE_READY_TO_NULL:
             GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: close start");
@@ -1253,8 +1254,8 @@ static void gst_vdec_base_get_real_stride(GstVdecBase *self)
 
 static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
 {
-    GST_STATE_LOCK(self);
-    ON_SCOPE_EXIT(0) { GST_STATE_UNLOCK(self); };
+    g_mutex_lock(&self->decoder_lock);
+    ON_SCOPE_EXIT(0) { g_mutex_unlock(&self->decoder_lock); };
     MediaTrace trace("VdecBase::FormatChange");
     GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change start");
     g_return_val_if_fail(self != nullptr, GST_FLOW_ERROR);
@@ -1272,17 +1273,19 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
         gst_vdec_base_post_resolution_changed_message(self);
         self->resolution_changed = TRUE;
     }
+    g_mutex_unlock(&self->decoder_lock);
     if (format_change || (buffer_cnt_change && self->memtype != GST_MEMTYPE_SURFACE)) {
         g_return_val_if_fail(gst_vdec_base_set_outstate(self), GST_FLOW_ERROR);
         g_return_val_if_fail(gst_video_decoder_negotiate(GST_VIDEO_DECODER(self)), GST_FLOW_ERROR);
     } else if (buffer_cnt_change) {
         g_object_set(self->outpool, "dynamic-buffer-num", self->out_buffer_cnt, nullptr);
     }
-
+    g_mutex_lock(&self->decoder_lock);
     ret = self->decoder->ActiveBufferMgr(GST_CODEC_OUTPUT, true);
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "ActiveBufferMgr", TRUE), GST_FLOW_ERROR);
     g_return_val_if_fail(gst_vdec_base_allocate_out_buffers(self), GST_FLOW_ERROR);
     ret = self->decoder->Start();
+    self->decoder_start = TRUE;
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "Start", TRUE), GST_FLOW_ERROR);
     GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change end");
     return GST_FLOW_OK;
@@ -1372,7 +1375,7 @@ static void gst_vdec_base_loop(GstVdecBase *self)
 
     pthread_setname_np(pthread_self(), "VDecOutPut");
     GstBuffer *gst_buffer = nullptr;
-    if (gst_vdec_base_push_out_buffers(self) != TRUE) {
+    if (gst_vdec_base_is_flushing(self) || gst_vdec_base_push_out_buffers(self) != TRUE) {
         gst_vdec_base_pause_loop(self);
         return;
     }
@@ -1390,6 +1393,9 @@ static void gst_vdec_base_loop(GstVdecBase *self)
             flow_ret = push_output_buffer(self, gst_buffer);
             break;
         case GST_CODEC_FORMAT_CHANGE:
+            if (gst_buffer != nullptr) {
+                gst_buffer_unref(gst_buffer);
+            }
             (void)gst_vdec_base_format_change(self);
             return;
         case GST_CODEC_EOS:
@@ -1646,18 +1652,18 @@ static gboolean gst_vdec_base_event(GstVideoDecoder *decoder, GstEvent *event)
                     gst_vdec_base_set_flushing(self, TRUE);
                     break;
                 }
-                GST_VIDEO_DECODER_STREAM_LOCK(self);
                 GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
                 if (kclass->flush_cache_slice_buffer != nullptr) {
                     (void)kclass->flush_cache_slice_buffer(self);
                 }
                 gst_vdec_base_set_flushing(self, TRUE);
+                g_mutex_lock(&self->decoder_lock);
                 self->decoder_start = FALSE;
                 self->idrframe = FALSE;
                 if (self->decoder != nullptr) {
                     (void)self->decoder->Flush(GST_CODEC_ALL);
                 }
-                GST_VIDEO_DECODER_STREAM_UNLOCK(self);
+                g_mutex_unlock(&self->decoder_lock);
             }
             break;
         case GST_EVENT_FLUSH_STOP:
