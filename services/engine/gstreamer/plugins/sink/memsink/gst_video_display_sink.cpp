@@ -347,12 +347,12 @@ static GstClockTime gst_video_get_current_running_time(GstBaseSink *base_sink)
 }
 
 static void gst_video_display_sink_adjust_reach_time_handle(GstVideoDisplaySink *video_display_sink,
-    GstClockTime &reach_time, gint64 video_running_time_diff, gint64 audio_running_time_diff,
+    GstClockTime &reach_time, gint64 video_render_delay_time, gint64 audio_render_delay_time,
     gboolean *need_drop_this_buffer)
 {
     GstVideoDisplaySinkPrivate *priv = video_display_sink->priv;
 
-    if (video_running_time_diff - audio_running_time_diff > DEFAULT_VIDEO_BEHIND_AUDIO_THD) {
+    if (video_render_delay_time - audio_render_delay_time > DEFAULT_VIDEO_BEHIND_AUDIO_THD) {
         if (priv->enable_drop == TRUE) {
             if (priv->buffer_count % DEFAULT_DROP_BEHIND_VIDEO_BUF_FREQUENCY == 0) {
                 GST_DEBUG_OBJECT(video_display_sink, "drop this video buffer, num:%" G_GUINT64_FORMAT,
@@ -364,13 +364,16 @@ static void gst_video_display_sink_adjust_reach_time_handle(GstVideoDisplaySink 
                 return;
             }
         }
-    } else if (video_running_time_diff < audio_running_time_diff &&
-               (audio_running_time_diff - video_running_time_diff) > DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD) {
+    } else if (audio_render_delay_time > 0 &&
+               video_render_delay_time < audio_render_delay_time &&
+               (audio_render_delay_time - video_render_delay_time) > DEFAULT_AUDIO_RUNNING_TIME_DIFF_THD) {
+        GST_INFO_OBJECT(video_display_sink, "audio is too late, adjust video reach_time, video_render_delay_time=%"
+            G_GINT64_FORMAT ", audio_render_delay_time=%" G_GINT64_FORMAT ", old reach_time=%"
+            G_GINT64_FORMAT ", new reach_time=%" G_GINT64_FORMAT,
+            video_render_delay_time, audio_render_delay_time, reach_time,
+            audio_render_delay_time - video_render_delay_time);
         // The deviation between sound and image exceeds 20ms
-        GST_DEBUG_OBJECT(video_display_sink, "audio is too late, adjust video reach_time, new reach_time=%"
-            G_GUINT64_FORMAT "audio_running_time_diff=%" G_GINT64_FORMAT,
-            reach_time + (audio_running_time_diff - video_running_time_diff), audio_running_time_diff);
-        reach_time += (audio_running_time_diff - video_running_time_diff);
+        reach_time += (audio_render_delay_time - video_render_delay_time);
     }
 
     if (priv->enable_drop == TRUE) {
@@ -388,20 +391,20 @@ static GstClockTime gst_video_display_sink_adjust_reach_time_by_jitter(GstBaseSi
 
     g_mutex_lock(&priv->mutex);
     if (priv->audio_sink != nullptr) {
-        gint64 audio_running_time_diff = 0;
-        g_object_get(priv->audio_sink, "last-running-time-diff", &audio_running_time_diff, nullptr);
+        gint64 audio_render_delay_time = 0;
+        g_object_get(priv->audio_sink, "last-running-time-diff", &audio_render_delay_time, nullptr);
         GstClockTime cur_running_time = gst_video_get_current_running_time(base_sink);
         g_return_val_if_fail(GST_CLOCK_TIME_IS_VALID(cur_running_time), reach_time);
-        gint64 video_running_time_diff = cur_running_time - reach_time;
+        gint64 video_render_delay_time = cur_running_time - reach_time;
 
-        GST_LOG_OBJECT(video_display_sink, "videosink buffer num:%" G_GUINT64_FORMAT ", video_running_time_diff:%"
-            G_GINT64_FORMAT " = cur_running_time:%" G_GUINT64_FORMAT " - reach_time:%" G_GUINT64_FORMAT
-            ", audio_running_time_diff:%" G_GINT64_FORMAT ", buffer_count:%u", priv->total_video_buffer_num,
-            video_running_time_diff, cur_running_time, reach_time, audio_running_time_diff,
+        GST_LOG_OBJECT(video_display_sink, "videosink buffer num:%" G_GUINT64_FORMAT ", video_render_delay_time:%"
+            G_GINT64_FORMAT " = cur_running_time:%" G_GINT64_FORMAT " - reach_time:%" G_GINT64_FORMAT
+            ", audio_render_delay_time:%" G_GINT64_FORMAT ", buffer_count:%u", priv->total_video_buffer_num,
+            video_render_delay_time, cur_running_time, reach_time, audio_render_delay_time,
             priv->buffer_count);
 
         gst_video_display_sink_adjust_reach_time_handle(video_display_sink, reach_time,
-            video_running_time_diff, audio_running_time_diff, need_drop_this_buffer);
+            video_render_delay_time, audio_render_delay_time, need_drop_this_buffer);
     }
     g_mutex_unlock(&priv->mutex);
     return reach_time;
@@ -436,9 +439,9 @@ static GstClockTime gst_video_display_sink_update_reach_time(GstBaseSink *base_s
         new_reach_time = new_reach_time - (running_time_diff - priv->render_time_diff_threshold);
     }
     if (new_reach_time != reach_time) {
-        GST_LOG_OBJECT(video_display_sink,
-            "running_time_diff:%" G_GUINT64_FORMAT " old reach_time:%" G_GUINT64_FORMAT
-            " new reach_time:%" G_GUINT64_FORMAT, running_time_diff, reach_time, new_reach_time);
+        GST_INFO_OBJECT(video_display_sink,
+            "running_time_diff:%" G_GINT64_FORMAT " old reach_time:%" G_GINT64_FORMAT
+            " new reach_time:%" G_GINT64_FORMAT, running_time_diff, reach_time, new_reach_time);
     }
     return new_reach_time;
 }
