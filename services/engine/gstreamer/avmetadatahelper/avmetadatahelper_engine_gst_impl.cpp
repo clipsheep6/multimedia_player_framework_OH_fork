@@ -436,7 +436,11 @@ void AVMetadataHelperEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
         MEDIA_LOGI("Set avmeta mode!");
         g_object_set(const_cast<GstElement *>(&elem), "metadata-mode", TRUE, nullptr);
     }
-    
+
+    if (metaStr.find("Codec/Decoder/Video/Hardware") != std::string::npos) {
+        g_object_set(const_cast<GstElement *>(&elem), "enable-slice-cat", TRUE, nullptr);
+    }
+
     std::unique_lock<std::mutex> lock(mutex_);
     if (metaCollector_ != nullptr) {
         metaCollector_->AddMetaSource(elem);
