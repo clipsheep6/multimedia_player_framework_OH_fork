@@ -268,6 +268,11 @@ private:
     void NotifyState(PlayerStates state) override;
     void NotifyVideoSize(int32_t width, int32_t height) override;
     void NotifyIsLiveStream() override;
+    void StopTaskQue();
+    void WaitTaskQueStop();
+
+    std::condition_variable stopTaskQueCond_;
+    bool taskQueStoped_ = false;
 
     struct AVPlayerContext : public MediaAsyncContext {
         explicit AVPlayerContext(napi_env env) : MediaAsyncContext(env) {}
