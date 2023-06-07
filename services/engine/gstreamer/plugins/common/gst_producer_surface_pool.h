@@ -35,6 +35,8 @@ G_BEGIN_DECLS
     (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_PRODUCER_SURFACE_POOL))
 #define GST_PRODUCER_SURFACE_POOL_CAST(obj) ((GstProducerSurfacePool*)(obj))
 
+using ProSurfaceNewBuffer = GstFlowReturn (*)(GstBuffer *buffer, gpointer user_data);
+
 typedef struct _GstProducerSurfacePool GstProducerSurfacePool;
 typedef struct _GstProducerSurfacePoolClass GstProducerSurfacePoolClass;
 
@@ -61,18 +63,26 @@ struct _GstProducerSurfacePool {
     gboolean isDynamicCached;
     guint cachedBuffers;
     guint scale_type;
+    ProSurfaceNewBuffer newBuffer;
+    gpointer userdata;
 };
 
 struct _GstProducerSurfacePoolClass {
     GstBufferPoolClass basepool_class;
 };
 
-GType gst_producer_surface_pool_get_type(void);
+GST_API_EXPORT GType gst_producer_surface_pool_get_type(void);
 
-GstProducerSurfacePool *gst_producer_surface_pool_new(void);
+GST_API_EXPORT GstProducerSurfacePool *gst_producer_surface_pool_new(void);
 
-GST_API gboolean gst_producer_surface_pool_set_surface(GstProducerSurfacePool *pool,
+GST_API_EXPORT gboolean gst_producer_surface_pool_set_surface(GstProducerSurfacePool *pool,
     OHOS::sptr<OHOS::Surface> surface);
+
+GST_API_EXPORT gboolean gst_producer_surface_pool_flush_buffer(GstProducerSurfacePool *pool,
+    OHOS::sptr<OHOS::SurfaceBuffer>& buffer, int32_t fence, OHOS::BufferFlushConfig &config);
+
+GST_API_EXPORT gboolean gst_producer_surface_pool_set_callback(GstBufferPool *pool,
+    ProSurfaceNewBuffer callback, gpointer userdata);
 
 G_END_DECLS
 

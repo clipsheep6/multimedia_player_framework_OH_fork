@@ -16,8 +16,6 @@
 #include "config.h"
 #include "gst_mem_sink.h"
 #include <cinttypes>
-#include "gst_surface_mem_sink.h"
-#include "gst_shared_mem_sink.h"
 #include "media_dfx.h"
 
 using namespace OHOS::Media;

@@ -359,10 +359,9 @@ static GstFlowReturn gst_surface_do_render_buffer(GstMemSink *memsink, GstBuffer
             {
                 MediaTrace trace("Surface::FlushBuffer");
                 surface_mem->need_render = TRUE;
-                OHOS::SurfaceError ret;
-                LISTENER(ret = priv->surface->FlushBuffer(surface_mem->buf, surface_mem->fence, flushConfig),
-                    "surface::FlushBuffer", OHOS::Media::PlayerXCollie::timerTimeout)
-                if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK) {
+                gboolean ret = gst_producer_surface_pool_flush_buffer(priv->pool, surface_mem->buf,
+                    surface_mem->fence, flushConfig);
+                if (ret != TRUE) {
                     surface_mem->need_render = FALSE;
                     GST_ERROR_OBJECT(surface_sink, "flush buffer to surface failed, %d", ret);
                 }
