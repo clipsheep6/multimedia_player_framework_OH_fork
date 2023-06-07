@@ -294,7 +294,7 @@ static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame
     g_return_val_if_fail(gst_buffer_map(frame->input_buffer, &info, GST_MAP_READ), false);
     ON_SCOPE_EXIT(0) { gst_buffer_unmap(frame->input_buffer, &info); };
 
-    guint8 offset = 2; // data[i] and data[i+1] 
+    guint8 offset = 2; // data[i] and data[i+1]
     for (gsize i = 0; i < info.size - offset; i++) {
         if (info.data[i] == 0x01) {
             if ((info.data[i + 1] & 0x1F) == 0x05) { // 0x1F is the mask of last 5 bits, 0x05 is IDR flag
