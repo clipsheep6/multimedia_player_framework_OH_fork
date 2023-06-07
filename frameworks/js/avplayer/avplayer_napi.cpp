@@ -156,7 +156,7 @@ void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
             task->GetResult(); // sync release
             MEDIA_LOGI("Destructor Wait Release Task End");
         }
-        jsPlayer->taskQue_->Stop();
+        jsPlayer->WaitTaskQueStop();
         delete jsPlayer;
     }
     MEDIA_LOGI("Destructor success");
@@ -568,6 +568,23 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
     return result;
 }
 
+void AVPlayerNapi::WaitTaskQueStop()
+{
+    MEDIA_LOGI("WaitTaskQueStop In");
+    std::unique_lock<std::mutex> lock(taskMutex_);
+    LISTENER(stopTaskQueCond_.wait(lock, [this]() { return taskQueStoped_; }), "StopTaskQue", false)
+    MEDIA_LOGI("WaitTaskQueStop Out");
+}
+
+void AVPlayerNapi::StopTaskQue()
+{
+    MEDIA_LOGI("StopTaskQue In");
+    taskQue_->Stop();
+    taskQueStoped_ = true;
+    stopTaskQueCond_.notify_all();
+    MEDIA_LOGI("StopTaskQue Out");
+}
+
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
 {
     std::shared_ptr<TaskHandler<TaskRet>> task = nullptr;
@@ -586,6 +603,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ReleaseTask()
                 playerCb_->Release();
             }
             MEDIA_LOGI("Release Task Out");
+            std::thread(&AVPlayerNapi::StopTaskQue, this).detach();
             return TaskRet(MSERR_EXT_API9_OK, "Success");
         });
 
