@@ -163,41 +163,45 @@ bool PlayerMemManage::Init()
 
 int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const MemManageRecall &memRecallStruct)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
+    {
+        std::lock_guard<std::recursive_mutex> lock(recMutex_);
+        MEDIA_LOGI("Register PlayerServerTask uid:%{public}d, pid:%{public}d", uid, pid);
+        auto objIter = playerManage_.find(uid);
+        if (objIter == playerManage_.end()) {
+            MEDIA_LOGI("new user in uid:%{public}d", uid);
+            auto ret = playerManage_.emplace(uid, PidPlayersInfo {});
+            objIter = ret.first;
+        }
 
-    if (!isAleardyCreateProbeTask_) {
-        MEDIA_LOGI("Start probe task");
-        isAleardyCreateProbeTask_ = true;
-        existTask_ = false;
-        probeTaskQueue_ = std::make_unique<TaskQueue>("probeTaskQueue");
-        CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->Start() == MSERR_OK, false, "init task failed");
-        auto task = std::make_shared<TaskHandler<void>>([this] {
-            ProbeTask();
-        });
-        CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->EnqueueTask(task) == MSERR_OK, false, "enque task fail");
+        auto &pidPlayersInfo = objIter->second;
+        auto pidIter = pidPlayersInfo.find(pid);
+        if (pidIter == pidPlayersInfo.end()) {
+            MEDIA_LOGI("new app in pid:%{public}d", pid);
+            auto ret = pidPlayersInfo.emplace(pid, AppPlayerInfo {std::vector<MemManageRecall>(),
+                static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND), false,
+                std::chrono::steady_clock::now(), std::chrono::steady_clock::now()});
+            Memory::MemMgrClient::GetInstance().RegisterActiveApps(pid, uid);
+            pidIter = ret.first;
+        }
+
+        auto &appPlayerInfo = pidIter->second;
+        appPlayerInfo.memRecallStructVec.push_back(memRecallStruct);
     }
 
-    MEDIA_LOGI("Register PlayerServerTask uid:%{public}d, pid:%{public}d", uid, pid);
-    auto objIter = playerManage_.find(uid);
-    if (objIter == playerManage_.end()) {
-        MEDIA_LOGI("new user in uid:%{public}d", uid);
-        auto ret = playerManage_.emplace(uid, PidPlayersInfo {});
-        objIter = ret.first;
+    {
+        std::lock_guard<std::recursive_mutex> lock(recTaskMutex_);
+        if (!isAleardyCreateProbeTask_) {
+            MEDIA_LOGI("Start probe task");
+            isAleardyCreateProbeTask_ = true;
+            existTask_ = false;
+            probeTaskQueue_ = std::make_unique<TaskQueue>("probeTaskQueue");
+            CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->Start() == MSERR_OK, false, "init task failed");
+            auto task = std::make_shared<TaskHandler<void>>([this] {
+                ProbeTask();
+            });
+            CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->EnqueueTask(task) == MSERR_OK, false, "enque task fail");
+        }
     }
-
-    auto &pidPlayersInfo = objIter->second;
-    auto pidIter = pidPlayersInfo.find(pid);
-    if (pidIter == pidPlayersInfo.end()) {
-        MEDIA_LOGI("new app in pid:%{public}d", pid);
-        auto ret = pidPlayersInfo.emplace(pid, AppPlayerInfo {std::vector<MemManageRecall>(),
-            static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND), false,
-            std::chrono::steady_clock::now(), std::chrono::steady_clock::now()});
-        Memory::MemMgrClient::GetInstance().RegisterActiveApps(pid, uid);
-        pidIter = ret.first;
-    }
-
-    auto &appPlayerInfo = pidIter->second;
-    appPlayerInfo.memRecallStructVec.push_back(memRecallStruct);
 
     return MSERR_OK;
 }
@@ -220,36 +224,39 @@ void PlayerMemManage::FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &a
 
 int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecallStruct)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-
-    MEDIA_LOGI("Deregister PlayerServerTask");
     bool isFind = false;
-    for (auto &[uid, pidPlayersInfo] : playerManage_) {
-        for (auto &[pid, appPlayerInfo] : pidPlayersInfo) {
-            FindDeregisterPlayerFromVec(isFind, appPlayerInfo, memRecallStruct);
-            if (appPlayerInfo.memRecallStructVec.size() == 0) {
-                Memory::MemMgrClient::GetInstance().DeregisterActiveApps(pid, uid);
-                MEDIA_LOGI("DeregisterActiveApps pid:%{public}d uid:%{public}d pidPlayersInfo size:%{public}u",
-                    pid, uid, static_cast<uint32_t>(pidPlayersInfo.size()));
-                pidPlayersInfo.erase(pid);
+    {
+        std::lock_guard<std::recursive_mutex> lock(recMutex_);
+        MEDIA_LOGI("Deregister PlayerServerTask");
+        for (auto &[uid, pidPlayersInfo] : playerManage_) {
+            for (auto &[pid, appPlayerInfo] : pidPlayersInfo) {
+                FindDeregisterPlayerFromVec(isFind, appPlayerInfo, memRecallStruct);
+                if (appPlayerInfo.memRecallStructVec.size() == 0) {
+                    Memory::MemMgrClient::GetInstance().DeregisterActiveApps(pid, uid);
+                    MEDIA_LOGI("DeregisterActiveApps pid:%{public}d uid:%{public}d pidPlayersInfo size:%{public}u",
+                        pid, uid, static_cast<uint32_t>(pidPlayersInfo.size()));
+                    pidPlayersInfo.erase(pid);
+                    break;
+                }
+            }
+            if (pidPlayersInfo.size() == 0) {
+                MEDIA_LOGI("remove uid:%{public}d playerManage_ size:%{public}u",
+                    uid, static_cast<uint32_t>(playerManage_.size()));
+                playerManage_.erase(uid);
                 break;
             }
         }
-        if (pidPlayersInfo.size() == 0) {
-            MEDIA_LOGI("remove uid:%{public}d playerManage_ size:%{public}u",
-                uid, static_cast<uint32_t>(playerManage_.size()));
-            playerManage_.erase(uid);
-            break;
-        }
     }
 
-    if (isAleardyCreateProbeTask_ && playerManage_.size() == 0) {
-        MEDIA_LOGI("Stop probe task");
-        isAleardyCreateProbeTask_ = false;
-        existTask_ = true;
-        probeTaskQueue_->Stop();
-        probeTaskQueue_ = nullptr;
-        playerManage_.clear();
+    {
+        std::lock_guard<std::recursive_mutex> lock(recTaskMutex_);
+        if (isAleardyCreateProbeTask_ && playerManage_.size() == 0) {
+            MEDIA_LOGI("Stop probe task");
+            isAleardyCreateProbeTask_ = false;
+            existTask_ = true;
+            probeTaskQueue_->Stop();
+            probeTaskQueue_ = nullptr;
+        }
     }
 
     if (!isFind) {
