@@ -45,6 +45,7 @@ inline constexpr std::string_view INNER_META_KEY_TITLE = "title";
 inline constexpr std::string_view INNER_META_KEY_TRACK_INDEX = "track-index";
 inline constexpr std::string_view INNER_META_KEY_TRACK_TYPE = "track-type";
 inline constexpr std::string_view INNER_META_KEY_VIDEO_WIDTH = "width";
+inline constexpr std::string_view INNER_META_KEY_BANDWIDTH = "bandwidth";
 
 // video codec mime
 inline constexpr std::string_view VIDEO_MIMETYPE_AVC = "video/avc";

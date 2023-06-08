@@ -181,7 +181,7 @@ int32_t PlayerServerMem::SetBehaviorInternal()
 int32_t PlayerServerMem::SetPlaybackSpeedInternal()
 {
     MEDIA_LOGI("speedMode:%{public}d audioIndex:%{public}d", recoverConfig_.speedMode, recoverConfig_.audioIndex);
-    int ret = MSERR_OK;
+    int ret;
     if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
         ret = PlayerServer::SetPlaybackSpeed(recoverConfig_.speedMode);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "PreparedState failed to SetPlaybackSpeed");

@@ -70,10 +70,11 @@ static const std::unordered_map<std::string_view, MetaParseItem> GST_CAPS_PARSE_
     { "rate", { INNER_META_KEY_SAMPLE_RATE, G_TYPE_INT, nullptr } },
     { "framerate", { INNER_META_KEY_FRAMERATE, GST_FRACTION_TYPE, FractionMetaSetter } },
     { "channels", { INNER_META_KEY_CHANNEL_COUNT, G_TYPE_INT, nullptr } },
+    { "bandwidth", { INNER_META_KEY_BANDWIDTH, G_TYPE_INT, nullptr } },
 };
 
 static const std::unordered_map<std::string_view, std::vector<std::string_view>> STREAM_CAPS_FIELDS = {
-    { "video", { "width", "height", "framerate", "format" } },
+    { "video", { "width", "height", "framerate", "format", "bandwidth" } },
     { "audio", { "rate", "channels" } },
     { "text", { "format" } },
 };
