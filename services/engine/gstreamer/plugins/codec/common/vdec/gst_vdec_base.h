@@ -120,7 +120,7 @@ struct _GstVdecBase {
     DisplayRect rect;
     gboolean pre_init_pool;
     gboolean performance_mode;
-    gboolean enable_slice_cat;
+    gboolean player_scene;
     gboolean resolution_changed;
     GstCaps *sink_caps;
     gboolean input_need_ashmem;

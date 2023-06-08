@@ -67,7 +67,7 @@ enum {
     PROP_SURFACE_POOL,
     PROP_SINK_CAPS,
     PROP_PERFORMANCE_MODE,
-    PROP_ENABLE_SLICE_CAT,
+    PROP_PLAYER_SCENE,
     PROP_SEEK,
     PROP_PLAYER_MODE,
     PROP_METADATA_MODE,
@@ -142,8 +142,8 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
         g_param_spec_boolean("performance-mode", "performance mode", "performance mode",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
-    g_object_class_install_property(gobject_class, PROP_ENABLE_SLICE_CAT,
-        g_param_spec_boolean("enable-slice-cat", "enable slice cat", "enable slice cat",
+    g_object_class_install_property(gobject_class, PROP_PLAYER_SCENE,
+        g_param_spec_boolean("player-scene", "player scene", "player scene",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_PLAYER_MODE,
@@ -188,8 +188,8 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
         case PROP_PERFORMANCE_MODE:
             self->performance_mode = g_value_get_boolean(value);
             break;
-        case PROP_ENABLE_SLICE_CAT:
-            self->enable_slice_cat = g_value_get_boolean(value);
+        case PROP_PLAYER_SCENE:
+            self->player_scene = g_value_get_boolean(value);
             break;
         case PROP_SEEK:
             GST_OBJECT_LOCK(self);
@@ -263,7 +263,7 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->out_buffer_max_cnt = DEFAULT_MAX_QUEUE_SIZE;
     self->pre_init_pool = FALSE;
     self->performance_mode = FALSE;
-    self->enable_slice_cat = FALSE;
+    self->player_scene = FALSE;
     self->resolution_changed = FALSE;
     self->input_need_ashmem = FALSE;
     self->has_set_format = FALSE;
@@ -1026,7 +1026,7 @@ static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, G
     gst_vdec_base_input_frame_pts_to_list(self, frame);
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
     GstBuffer *buf = nullptr;
-    if (kclass->handle_slice_buffer != nullptr && self->enable_slice_cat == true) {
+    if (kclass->handle_slice_buffer != nullptr && self->player_scene == true) {
         bool ready_push_slice_buffer = false;
         GstBuffer *cat_buffer = kclass->handle_slice_buffer(self, frame->input_buffer, ready_push_slice_buffer, false);
         if (cat_buffer != nullptr && ready_push_slice_buffer == true) {
@@ -1092,7 +1092,7 @@ static GstFlowReturn gst_vdec_base_handle_frame(GstVideoDecoder *decoder, GstVid
     gst_vdec_base_clean_all_frames(decoder);
 
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
-    if (kclass->bypass_frame != nullptr) {
+    if (kclass->bypass_frame != nullptr && self->player_scene == true) {
         if (kclass->bypass_frame(self, frame)) {
             return GST_FLOW_OK;
         }
@@ -1588,7 +1588,7 @@ static GstFlowReturn gst_vdec_base_finish(GstVideoDecoder *decoder)
         return GST_FLOW_OK;
     }
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
-    if (kclass->handle_slice_buffer != nullptr && self->enable_slice_cat == true) {
+    if (kclass->handle_slice_buffer != nullptr && self->player_scene == true) {
         bool ready_push_slice_buffer = false;
         GstBuffer *cat_buffer = kclass->handle_slice_buffer(self, nullptr, ready_push_slice_buffer, true);
         if (cat_buffer != nullptr && ready_push_slice_buffer == true) {
