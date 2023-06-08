@@ -67,7 +67,7 @@ void PlayerCodecCtrl::SetupCodecCb(const std::string &metaStr, GstElement *src, 
         // For performance mode.
         codecTypeList_.push_back(true);
 
-        g_object_set(G_OBJECT(src), "enable-slice-cat", TRUE, nullptr); // Enable slice
+        g_object_set(G_OBJECT(src), "player-scene", TRUE, nullptr);
         g_object_set(G_OBJECT(src), "performance-mode", TRUE, nullptr);
         g_object_set(G_OBJECT(videoSink), "performance-mode", TRUE, nullptr);
 
