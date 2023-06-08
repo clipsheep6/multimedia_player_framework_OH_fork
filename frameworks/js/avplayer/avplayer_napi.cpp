@@ -856,16 +856,23 @@ void AVPlayerNapi::SetSource(std::string url)
     if (isNetwork) {
         auto task = std::make_shared<TaskHandler<void>>([this, url]() {
             MEDIA_LOGI("SetNetworkSource Task");
+            std::unique_lock<std::mutex> lock(taskMutex_);
+            auto state = GetCurrentState();
+            if (state != AVPlayerState::STATE_IDLE) {
+                OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
+                return;
+            }
             if (player_ != nullptr) {
                 if (player_->SetSource(url) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to SetSourceNetWork");
                 }
+                stopWait_ = false;
+                LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceNetWork", false)
             }
         });
         (void)taskQue_->EnqueueTask(task);
     } else if (isFd) {
-        const std::string fdHead = "fd://";
-        std::string inputFd = url.substr(fdHead.size());
+        std::string inputFd = url.substr(sizeof("fd://") - 1);
         int32_t fd = -1;
         if (!StrToInt(inputFd, fd) || fd < 0) {
             OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
@@ -875,10 +882,18 @@ void AVPlayerNapi::SetSource(std::string url)
 
         auto task = std::make_shared<TaskHandler<void>>([this, fd]() {
             MEDIA_LOGI("SetFdSource Task");
+            std::unique_lock<std::mutex> lock(taskMutex_);
+            auto state = GetCurrentState();
+            if (state != AVPlayerState::STATE_IDLE) {
+                OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
+                return;
+            }
             if (player_ != nullptr) {
                 if (player_->SetSource(fd, 0, -1) != MSERR_OK) {
                     OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to SetSourceFd");
                 }
+                stopWait_ = false;
+                LISTENER(stateChangeCond_.wait(lock, [this]() { return stopWait_.load(); }), "SetSourceFd", false)
             }
         });
         (void)taskQue_->EnqueueTask(task);
