@@ -1369,12 +1369,14 @@ void PlayBinCtrlerBase::OnError(int32_t errorCode, std::string message)
     ReportMessage(msg);
 }
 
-void PlayBinCtrlerBase::OnSelectBitrateDoneCb(const GstElement *playbin, bool addPad, gpointer userData)
+void PlayBinCtrlerBase::OnSelectBitrateDoneCb(const GstElement *playbin, const char *streamId, gpointer userData)
 {
     (void)playbin;
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    if (thizStrong != nullptr && addPad) {
-        PlayBinMessage msg = { PLAYBIN_MSG_BITRATEDONE, 0, static_cast<int32_t>(thizStrong->connectSpeed_), {} };
+    MEDIA_LOGD("Get streamId is: %{public}s", streamId);
+    if (thizStrong != nullptr && strcmp(streamId, "") != 0) {
+        int32_t bandwidth = thizStrong->trackParse_->GetHLSStreamBandwidth(streamId);
+        PlayBinMessage msg = { PLAYBIN_MSG_BITRATEDONE, 0, bandwidth, {} };
         thizStrong->ReportMessage(msg);
     }
 }
