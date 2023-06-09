@@ -22,6 +22,7 @@
       *OHOS::Media::AudioDecoderFactory::CreateBy*;
       *OHOS::Media::AVMetadataHelperFactory::Create*;
       *OHOS::Media::RecorderProfilesFactory::Create*;
+      *OHOS::Media::ScreenCaptureFactory::CreateScreenCapture*;
       *OHOS::Media::Format::*;
       *OHOS::Media::VideoCaps::*;
       *OHOS::Media::AudioCaps::*;

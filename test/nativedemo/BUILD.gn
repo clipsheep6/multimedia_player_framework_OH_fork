@@ -25,6 +25,7 @@ ohos_executable("media_demo") {
     "./recorder_profiles",
     "./avcodecvenc",
     "./avcodecvdec",
+    "./screencapture",
     "./baselib",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/utils/include",
@@ -33,6 +34,7 @@ ohos_executable("media_demo") {
     "//drivers/peripheral/display/interfaces/include",
     "//foundation/multimedia/image_framework/interfaces/innerkits/include",
     "//foundation/window/window_manager/interfaces/innerkits/wm",
+    "//foundation/graphic/graphic_2d/frameworks/surface/include",
   ]
 
   cflags = [
@@ -71,6 +73,12 @@ ohos_executable("media_demo") {
     ]
   }
 
+  if (multimedia_player_framework_support_screen_capture) {
+    sources += [
+      "./screencapture/screen_capture_demo.cpp",
+    ]
+  }
+
   if (multimedia_player_framework_support_recorder) {
     sources += [
       "./recorder/recorder_demo.cpp",
@@ -104,6 +112,10 @@ ohos_executable("media_demo") {
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "player_framework:media_client",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "window_manager:libdm",
   ]
   install_enable = false
 

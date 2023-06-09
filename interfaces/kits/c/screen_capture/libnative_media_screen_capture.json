@@ -1,0 +1,13 @@
+[
+    { "name": "OH_ScreenCapture_Create" },
+    { "name": "OH_ScreenCapture_Init" },
+    { "name": "OH_ScreenCapture_StartScreenCapture" },
+    { "name": "OH_ScreenCapture_StopScreenCapture" },
+    { "name": "OH_ScreenCapture_AcquireAudioBuffer" },
+    { "name": "OH_ScreenCapture_AcquireVideoBuffer" },
+    { "name": "OH_ScreenCapture_ReleaseAudioBuffer" },
+    { "name": "OH_ScreenCapture_ReleaseVideoBuffer" },
+    { "name": "OH_ScreenCapture_SetCallback" },
+    { "name": "OH_ScreenCapture_Realease" },
+    { "name": "OH_ScreenCapture_SetMicrophoneEnable" }
+]
