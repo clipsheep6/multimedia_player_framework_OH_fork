@@ -72,6 +72,7 @@ private:
 
     bool isParsered_ = false;
     std::recursive_mutex recMutex_;
+    std::recursive_mutex recTaskMutex_;
     std::shared_ptr<AppStateListener> appStateListener_;
     bool appStateListenerIsConnected_ = false;
     bool appStateListenerRomoteDied_ = false;
