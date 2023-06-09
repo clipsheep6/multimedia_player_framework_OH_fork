@@ -85,6 +85,9 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
         case MediaSystemAbility::MEDIA_MONITOR: {
             return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::MONITOR);
         }
+        case MediaSystemAbility::MEDIA_SCREEN_CAPTURE: {
+            return MediaServerManager::GetInstance().CreateStubObject(MediaServerManager::SCREEN_CAPTURE);
+        }
         default: {
             MEDIA_LOGE("default case, media client need check subSystemId");
             return nullptr;

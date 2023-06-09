@@ -67,6 +67,8 @@ config("media_service_config") {
     "avcodeclist/server",
     "recorder_profiles/ipc",
     "recorder_profiles/server",
+    "screen_capture/server",
+    "screen_capture/ipc",
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/services/factory",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
@@ -77,6 +79,8 @@ config("media_service_config") {
     "//foundation/multimedia/player_framework/services/engine/common/avcodeclist",
     "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
     "//third_party/glib/glibmemdfx",
+    "//graphic/graphic_2d/interfaces/innerkits/surface",
+    "//foundation/graphic/graphic_2d/utils/sync_fence/export",
   ]
 
   if (multimedia_player_framework_support_avsession_background) {
@@ -163,6 +167,14 @@ ohos_shared_library("media_service") {
     ]
   }
 
+  if (multimedia_player_framework_support_screen_capture) {
+    sources += [
+      "screen_capture/ipc/screen_capture_service_stub.cpp",
+      "screen_capture/server/screen_capture_server.cpp",
+      "screen_capture/ipc/screen_capture_listener_proxy.cpp",
+    ]
+  }
+
   configs = [
     ":media_service_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
@@ -175,6 +187,15 @@ ohos_shared_library("media_service") {
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//third_party/libxml2:xml2",
   ]
+
+  if (multimedia_player_framework_support_screen_capture) {
+    deps += [
+      "//foundation/graphic/graphic_2d/utils:sync_fence",
+      "//foundation/graphic/graphic_2d:libsurface",
+      "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+      "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    ]
+  }
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
@@ -189,6 +210,18 @@ ohos_shared_library("media_service") {
 
   if (multimedia_player_framework_support_video) {
     external_deps += [ "graphic_standard:surface" ]
+  }
+
+  if (multimedia_player_framework_support_screen_capture) {
+    external_deps += [
+      "window_manager:libdm",
+      "ability_runtime:runtime",
+      "napi:ace_napi",
+      "audio_framework:audio_capturer",
+      "audio_framework:audio_client",
+      "access_token:libnativetoken",
+      "access_token:libtoken_setproc",
+    ]
   }
 
   if (multimedia_player_framework_support_avsession_background) {

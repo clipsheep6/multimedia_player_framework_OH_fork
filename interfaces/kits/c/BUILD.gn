@@ -26,6 +26,7 @@ group("capi_packages") {
       "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
       "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_vdec",
       "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_venc",
+      "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_screen_capture",
     ]
   }
 }
@@ -38,6 +39,7 @@ config("media_capi_config") {
     "$MEDIA_ROOT_DIR/frameworks/native/capi/common",
     "$MEDIA_ROOT_DIR/services/utils/include",
     "//foundation/graphic/graphic_2d/frameworks/surface/include",
+    "//graphic/graphic_2d/interfaces/innerkits/surface",
   ]
 
   cflags = [
@@ -234,6 +236,40 @@ ohos_shared_library("native_media_venc") {
     "c_utils:utils",
     "graphic_standard:surface",
     "hiviewdfx_hilog_native:libhilog",
+  ]
+  output_extension = "so"
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+}
+
+ohos_shared_library("native_media_screen_capture") {
+  install_enable = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    blocklist = "../../../cfi_blocklist.txt"
+  }
+
+  sources = [
+    "$MEDIA_ROOT_DIR/frameworks/native/capi/screencapture/native_media_screen_capture.cpp",
+  ]
+
+  configs = [ ":media_capi_config" ]
+
+  deps = [
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_codecbase",
+    "//foundation/multimedia/player_framework/interfaces/kits/c:native_media_core",
+    "//foundation/graphic/graphic_2d/frameworks/surface:surface",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "graphic_standard:surface",
+    "hiviewdfx_hilog_native:libhilog",
+    "window_manager:libdm",
   ]
   output_extension = "so"
   subsystem_name = "multimedia"
