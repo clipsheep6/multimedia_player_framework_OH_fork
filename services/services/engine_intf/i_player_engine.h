@@ -110,6 +110,16 @@ public:
         (void)effectMode;
         return 0;
     }
+    virtual int32_t FreeCodecBuffers(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
+    virtual int32_t RecoverCodecBuffers(bool enable)
+    {
+        (void)enable;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

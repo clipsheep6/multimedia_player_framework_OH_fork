@@ -582,7 +582,7 @@ bool PlayerServer::IsValidSeekMode(PlayerSeekMode mode)
     return true;
 }
 
-int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
+int32_t PlayerServer::SeekInner(int32_t mSeconds, PlayerSeekMode mode, bool isAllowSeekCurTime)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
@@ -602,6 +602,17 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
         MEDIA_LOGE("Can not Seek, it is live-stream");
         OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
         return MSERR_INVALID_OPERATION;
+    }
+
+    int32_t currentTime = 0;
+    CHECK_AND_RETURN_RET_LOG(GetCurrentTime(currentTime) == MSERR_OK, MSERR_INVALID_OPERATION, "GetCurrentTime failed");
+    if (!isAllowSeekCurTime && currentTime == mSeconds) {
+        MEDIA_LOGW("current time same to seek time, invalid seek");
+        Format format;
+        if (playerCb_ != nullptr) {
+            playerCb_->OnInfo(INFO_TYPE_SEEKDONE, mSeconds, format);
+        }
+        return MSERR_OK;
     }
 
     MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
@@ -624,6 +635,16 @@ int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
 
     return MSERR_OK;
+}
+
+int32_t PlayerServer::SeekCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
+{
+    return SeekInner(mSeconds, mode, true);
+}
+
+int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
+{
+    return SeekInner(mSeconds, mode, false);
 }
 
 int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
@@ -1056,6 +1077,33 @@ void PlayerServer::FormatToString(std::string &dumpString, std::vector<Format> &
         dumpString += iter->Stringify();
         dumpString += '\n';
     }
+}
+
+int32_t PlayerServer::FreeCodecBuffers()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not FreeCodecBuffers, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    return playerEngine_->FreeCodecBuffers(true);
+}
+
+int32_t PlayerServer::RecoverCodecBuffers()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not RecoverCodecBuffers, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    return playerEngine_->RecoverCodecBuffers(true);
 }
 
 int32_t PlayerServer::DumpInfo(int32_t fd)
