@@ -23,6 +23,7 @@
 #include "avcodec_vdec_demo.h"
 #include "recorder_profiles_demo.h"
 #include "baselib_demo.h"
+#include "screen_capture_demo.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -101,6 +102,17 @@ static int RunMediaProfile(const string &path)
     return 0;
 }
 
+static int RunScreenRecord()
+{
+    auto capture = std::make_unique<ScreenCaptureDemo>();
+    if (capture == nullptr) {
+        cout << "screen_capture is null" << endl;
+        return 0;
+    }
+    capture->RunScreenRecord();
+    return 0;
+}
+
 static int RunBaseLib()
 {
     auto baselib = std::make_unique<BaseLibDemo>();
@@ -128,6 +140,7 @@ int main(int argc, char *argv[])
     cout << "4:video-encoder" << endl;
     cout << "5:recorder_profiles" << endl;
     cout << "6:baselib" << endl;
+    cout << "7:screen_capture" << endl;
 
     string mode;
     (void)getline(cin, mode);
@@ -145,6 +158,8 @@ int main(int argc, char *argv[])
         (void)RunMediaProfile(path);
     } else if (mode == "6") {
         (void)RunBaseLib();
+    } else if (mode == "7") {
+        (void)RunScreenRecord();
     } else {
         cout << "no that selection" << endl;
     }
