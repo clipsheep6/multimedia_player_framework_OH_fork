@@ -60,6 +60,9 @@ static GstStateChangeReturn gst_vdec_base_change_state(GstElement *element, GstS
 static gboolean gst_vdec_base_update_out_port_def(GstVdecBase *self, guint *size);
 static void gst_vdec_base_update_out_pool(GstVdecBase *self, GstBufferPool **pool, GstCaps *outcaps, gint size);
 static void gst_vdec_base_post_resolution_changed_message(GstVdecBase *self);
+static void gst_vdec_base_set_flushing(GstVdecBase *self, const gboolean flushing);
+static gboolean gst_vdec_base_allocate_in_buffers(GstVdecBase *self);
+static gboolean gst_vdec_base_allocate_out_buffers(GstVdecBase *self);
 
 enum {
     PROP_0,
@@ -71,6 +74,8 @@ enum {
     PROP_SEEK,
     PROP_PLAYER_MODE,
     PROP_METADATA_MODE,
+    PROP_FREE_CODEC_BUFFERS,
+    PROP_RECOVER_CODEC_BUFFERS,
 };
 
 enum {
@@ -157,6 +162,104 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
     g_object_class_install_property(gobject_class, PROP_METADATA_MODE,
         g_param_spec_boolean("metadata-mode", "Metadata-mode", "Metadata Mode",
         FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_FREE_CODEC_BUFFERS,
+        g_param_spec_boolean("free-codec-buffers", "Free-codec-buffers", "Free Codec Buffers",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_RECOVER_CODEC_BUFFERS,
+        g_param_spec_boolean("recover-codec-buffers", "Recover-codec-buffers", "Recover Codec Buffers",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+}
+
+static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
+{
+    g_return_val_if_fail(self != nullptr, FALSE);
+    g_return_val_if_fail(self->decoder != nullptr, FALSE);
+    GstVideoDecoder *decoder = GST_VIDEO_DECODER(self);
+    gint ret;
+    GST_DEBUG_OBJECT(self, "enter free buffers, is_free_codec_buffers:%d is_eos_state:%d",
+        self->is_free_codec_buffers, self->is_eos_state);
+    if (!self->is_free_codec_buffers) {
+        if (!self->is_eos_state) {
+            g_return_val_if_fail(gst_pad_push_event(decoder->srcpad, gst_event_new_flush_start()), FALSE);
+            GST_VIDEO_DECODER_STREAM_LOCK(self);
+            if (self->decoder != nullptr) {
+                ret = self->decoder->Flush(GST_CODEC_ALL);
+                g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "Flush", TRUE), FALSE);
+            }
+            gst_vdec_base_set_flushing(self, TRUE);
+            GST_VIDEO_DECODER_STREAM_UNLOCK(self);
+        }
+
+        if (self->decoder_start) {
+            ret = self->decoder->Stop();
+            g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "DecoderStop", TRUE), FALSE);
+            self->decoder_start = FALSE;
+        }
+
+        GstPad *pad = GST_VIDEO_DECODER_SRC_PAD(self);
+        if (gst_pad_get_task_state(pad) != GST_TASK_STOPPED) {
+            g_return_val_if_fail(gst_pad_stop_task(pad), FALSE);
+        }
+
+        ret = self->decoder->FreeInputBuffers();
+        g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "FreeInput", TRUE), FALSE);
+        ret = self->decoder->FreeOutputBuffers();
+        g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE), FALSE);
+
+        if (self->outpool) {
+            g_return_val_if_fail(gst_buffer_pool_set_active(self->outpool, FALSE), FALSE);
+        }
+        if (!self->is_eos_state) {
+            g_return_val_if_fail(gst_pad_push_event(decoder->srcpad, gst_event_new_flush_stop(FALSE)), FALSE);
+            self->is_eos_state = FALSE;
+        }
+        self->is_free_codec_buffers = TRUE;
+    }
+    return TRUE;
+}
+
+static gboolean gst_vdec_base_recover_codec_buffers(GstVdecBase *self)
+{
+    g_return_val_if_fail(self != nullptr, FALSE);
+    if (self->is_free_codec_buffers) {
+        if (self->outpool) {
+            g_return_val_if_fail(gst_buffer_pool_set_active(self->outpool, TRUE), FALSE);
+        }
+        g_return_val_if_fail(gst_vdec_base_allocate_in_buffers(self), FALSE);
+        g_return_val_if_fail(gst_vdec_base_allocate_out_buffers(self), FALSE);
+        self->is_free_codec_buffers = FALSE;
+    }
+    return TRUE;
+}
+
+static void gst_vdec_base_prob_seek(GstVdecBase *self, const GValue *value)
+{
+    GST_OBJECT_LOCK(self);
+    if (self->decoder != nullptr) {
+        self->seek_frame_rate = g_value_get_boolean(value) ? DEFAULT_SEEK_FRAME_RATE : self->frame_rate;
+        self->decoder->SetParameter(GST_DYNAMIC_FRAME_RATE, GST_ELEMENT(self));
+    }
+    GST_OBJECT_UNLOCK(self);
+}
+
+static void gst_vdec_base_prob_surface_pool(GstVdecBase *self, const GValue *value)
+{
+    if (self->outpool != nullptr) {
+        gst_object_unref(self->outpool);
+    }
+    self->outpool = static_cast<GstBufferPool *>(g_value_get_pointer(value));
+    gst_object_ref(self->outpool);
+}
+
+static void gst_vdec_base_prob_sink_caps(GstVdecBase *self, const GValue *value)
+{
+    const GstCaps *caps = gst_value_get_caps(value);
+    if (self->sink_caps != nullptr) {
+        gst_caps_unref(self->sink_caps);
+    }
+    self->sink_caps = gst_caps_copy(caps);
 }
 
 static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
@@ -164,27 +267,17 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
     (void)pspec;
     g_return_if_fail(object != nullptr && value != nullptr);
     GstVdecBase *self = GST_VDEC_BASE(object);
-    gint ret = GST_CODEC_OK;
 
     switch (prop_id) {
         case PROP_VENDOR:
             GST_INFO_OBJECT(object, "Set vendor property");
             break;
         case PROP_SURFACE_POOL:
-            if (self->outpool != nullptr) {
-                gst_object_unref(self->outpool);
-            }
-            self->outpool = static_cast<GstBufferPool *>(g_value_get_pointer(value));
-            gst_object_ref(self->outpool);
+            gst_vdec_base_prob_surface_pool(self, value);
             break;
-        case PROP_SINK_CAPS: {
-            const GstCaps *caps = gst_value_get_caps(value);
-            if (self->sink_caps != nullptr) {
-                gst_caps_unref(self->sink_caps);
-            }
-            self->sink_caps = gst_caps_copy(caps);
+        case PROP_SINK_CAPS:
+            gst_vdec_base_prob_sink_caps(self, value);
             break;
-        }
         case PROP_PERFORMANCE_MODE:
             self->performance_mode = g_value_get_boolean(value);
             break;
@@ -192,19 +285,19 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
             self->player_scene = g_value_get_boolean(value);
             break;
         case PROP_SEEK:
-            GST_OBJECT_LOCK(self);
-            if (self->decoder != nullptr) {
-                self->seek_frame_rate = g_value_get_boolean(value) ? DEFAULT_SEEK_FRAME_RATE : self->frame_rate;
-                ret = self->decoder->SetParameter(GST_DYNAMIC_FRAME_RATE, GST_ELEMENT(self));
-            }
-            GST_OBJECT_UNLOCK(self);
-            g_return_if_fail(ret == GST_CODEC_OK);
+            gst_vdec_base_prob_seek(self, value);
             break;
         case PROP_PLAYER_MODE:
             self->player_mode = g_value_get_boolean(value);
             break;
         case PROP_METADATA_MODE:
             self->metadata_mode = g_value_get_boolean(value);
+            break;
+        case PROP_FREE_CODEC_BUFFERS:
+            (void)gst_vdec_base_free_codec_buffers(self);
+            break;
+        case PROP_RECOVER_CODEC_BUFFERS:
+            (void)gst_vdec_base_recover_codec_buffers(self);
             break;
         default:
             break;
@@ -269,6 +362,8 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->has_set_format = FALSE;
     self->player_mode = FALSE;
     self->metadata_mode = FALSE;
+    self->is_free_codec_buffers = FALSE;
+    self->is_eos_state = FALSE;
     self->is_support_swap_width_height = FALSE;
 }
 
@@ -1117,6 +1212,7 @@ static GstFlowReturn gst_vdec_base_handle_frame(GstVideoDecoder *decoder, GstVid
         gint ret = self->decoder->Start();
         g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "start", TRUE), GST_FLOW_ERROR);
         self->decoder_start = TRUE;
+        self->is_eos_state = FALSE;
         GST_WARNING_OBJECT(decoder, "KPI-TRACE-VDEC: start end");
     }
     if (gst_pad_get_task_state(pad) != GST_TASK_STARTED &&
@@ -1686,6 +1782,9 @@ static gboolean gst_vdec_base_event(GstVideoDecoder *decoder, GstEvent *event)
             self->flushing_stoping = FALSE;
             GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: flush stop");
             return ret;
+        case GST_EVENT_EOS:
+            self->is_eos_state = TRUE;
+            break;
         default:
             break;
     }
