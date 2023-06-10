@@ -106,6 +106,8 @@ public:
     int32_t SelectTrack(int32_t index) override;
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
+    virtual int32_t FreeCodecBuffers();
+    virtual int32_t RecoverCodecBuffers();
 
     // IPlayerEngineObs override
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;

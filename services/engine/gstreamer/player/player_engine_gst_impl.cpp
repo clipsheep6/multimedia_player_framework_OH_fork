@@ -765,7 +765,7 @@ int32_t PlayerEngineGstImpl::Seek(int32_t mSeconds, PlayerSeekMode mode)
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
     MEDIA_LOGI("Seek in %{public}dms", mSeconds);
 
-    if (playBinCtrler_->QueryPosition() == mSeconds) {
+    if (playBinCtrler_->QueryPosition() == mSeconds && !isFreeCodecBuffers) {
         MEDIA_LOGW("current time same to seek time, invalid seek");
         Format format;
         std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
@@ -990,6 +990,22 @@ void PlayerEngineGstImpl::ResetPlaybinToSoftDec()
 
     lock.unlock();
     PrepareAsync();
+}
+
+void PlayerEngineGstImpl::FreeCodecBuffers(bool enable)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGD("FreeCodecBuffers in");
+    isFreeCodecBuffers = true;
+    codecCtrl_.FreeCodecBuffers(enable);
+}
+
+void PlayerEngineGstImpl::RecoverCodecBuffers(bool enable)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGD("RecoverCodecBuffers in");
+    isFreeCodecBuffers = false;
+    codecCtrl_.RecoverCodecBuffers(enable);
 }
 } // namespace Media
 } // namespace OHOS

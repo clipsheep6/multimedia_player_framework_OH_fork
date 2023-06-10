@@ -1023,6 +1023,24 @@ void PlayerServer::FormatToString(std::string &dumpString, std::vector<Format> &
     }
 }
 
+int32_t PlayerServer::FreeCodecBuffers()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    playerEngine_->FreeCodecBuffers(TRUE);
+    return MSERR_OK;
+}
+
+int32_t PlayerServer::RecoverCodecBuffers()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    playerEngine_->RecoverCodecBuffers(TRUE);
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::DumpInfo(int32_t fd)
 {
     std::string dumpString;

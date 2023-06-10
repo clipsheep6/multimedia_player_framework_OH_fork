@@ -105,6 +105,8 @@ public:
         (void)index;
         return 0;
     }
+    virtual void FreeCodecBuffers(bool enable) = 0;
+    virtual void RecoverCodecBuffers(bool enable) = 0;
 };
 } // namespace Media
 } // namespace OHOS

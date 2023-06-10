@@ -65,6 +65,8 @@ public:
     int32_t SelectTrack(int32_t index) override;
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
+    void FreeCodecBuffers(bool enable) override;
+    void RecoverCodecBuffers(bool enable) override;
 
 private:
     void OnNotifyMessage(const PlayBinMessage &msg);
@@ -131,6 +133,7 @@ private:
     int32_t currentTimeOnInfoCnt_ = 0;
     bool isPlaySinkFlagsSet_ = false;
     bool useSoftDec_ = false;
+    bool isFreeCodecBuffers = false;
     std::unique_ptr<TaskQueue> taskQueue_;
     bool isAdaptiveLiveStream_ = false;
     std::map<int32_t, void(PlayerEngineGstImpl::*)(const PlayBinMessage &msg)> subMsgHandler_;

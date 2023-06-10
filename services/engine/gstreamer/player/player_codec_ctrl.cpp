@@ -166,5 +166,23 @@ void PlayerCodecCtrl::EnhanceSeekPerformance(bool enable)
         }
     }
 }
+
+void PlayerCodecCtrl::FreeCodecBuffers(bool enable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("FreeCodecBuffers %{public}d", enable);
+    if (isHardwareDec_ && decoder_ != nullptr) {
+        g_object_set(decoder_, "free_codec_buffers", enable, nullptr);
+    }
+}
+
+void PlayerCodecCtrl::RecoverCodecBuffers(bool enable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("RecoverCodecBuffers %{public}d", enable);
+    if (isHardwareDec_ && decoder_ != nullptr) {
+        g_object_set(decoder_, "recover_codec_buffers", enable, nullptr);
+    }
+}
 } // Media
 } // OHOS
