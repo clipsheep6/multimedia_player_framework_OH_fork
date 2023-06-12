@@ -65,6 +65,8 @@ private:
     int32_t SetDataSrc(const std::string &path, bool seekable);
     int32_t SetFdSource(const std::string &path);
     int32_t SelectSource(const std::string &path);
+    void AddSubSource(const std::string &url) const;
+    int32_t AddSubFdSource(const std::string &path) const;
     int32_t SetSurfaceSize();
     int32_t SelectBufferingOut();
     int32_t SelectRendererMode();

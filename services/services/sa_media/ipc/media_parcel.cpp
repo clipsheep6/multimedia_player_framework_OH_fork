@@ -22,7 +22,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaParce
 
 namespace OHOS {
 namespace Media {
-bool MediaParcel::Marshalling(MessageParcel &parcel, const Format &format)
+static bool DoMarshalling(MessageParcel &parcel, const Format &format)
 {
     auto dataMap = format.GetFormatMap();
     (void)parcel.WriteUint32(dataMap.size());
@@ -58,7 +58,33 @@ bool MediaParcel::Marshalling(MessageParcel &parcel, const Format &format)
     return true;
 }
 
-bool MediaParcel::Unmarshalling(MessageParcel &parcel, Format &format)
+bool MediaParcel::Marshalling(MessageParcel &parcel, const Format &format)
+{
+    auto vecMap = format.GetFormatVectorMap();
+    if (!vecMap.empty()) {
+        for (auto it = vecMap.begin(); it != vecMap.end(); ++it) {
+            uint32_t vecSize = static_cast<uint32_t>(it->second.size());
+            (void)parcel.WriteUint32(vecSize);
+            if (vecSize == 0) {
+                MEDIA_LOGW("Marshal FormatVectorMap, vector is empty!");
+                (void)parcel.WriteUint32(0);
+            } else {
+                (void)parcel.WriteString(it->first);
+            }
+
+            for (uint32_t index = 0; index < vecSize; index++) {
+                CHECK_AND_RETURN_RET(DoMarshalling(parcel, it->second[index]), false);
+            }
+        }
+    } else {
+        (void)parcel.WriteUint32(0); // vecSize is 0
+        return DoMarshalling(parcel, format);
+    }
+
+    return true;
+}
+
+static bool DoUnmarshalling(MessageParcel &parcel, Format &format)
 {
     uint32_t size = parcel.ReadUint32();
     for (uint32_t index = 0; index < size; index++) {
@@ -95,6 +121,27 @@ bool MediaParcel::Unmarshalling(MessageParcel &parcel, Format &format)
                 return false;
         }
         MEDIA_LOGD("success to Unmarshalling Key: %{public}s", key.c_str());
+    }
+
+    return true;
+}
+
+bool MediaParcel::Unmarshalling(MessageParcel &parcel, Format &format)
+{
+    uint32_t vecSize = parcel.ReadUint32();
+    if (vecSize != 0) {
+        std::string key = parcel.ReadString();
+        std::vector<Format> vecFormat;
+        for (uint32_t index = 0; index < vecSize; index++) {
+            Format formatItem;
+            if (!DoUnmarshalling(parcel, formatItem)) {
+                return false;
+            }
+            vecFormat.emplace_back(formatItem);
+        }
+        (void)format.PutFormatVector(key, vecFormat);
+    } else {
+        return DoUnmarshalling(parcel, format);
     }
 
     return true;

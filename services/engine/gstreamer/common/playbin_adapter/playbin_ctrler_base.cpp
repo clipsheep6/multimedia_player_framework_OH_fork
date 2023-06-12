@@ -176,6 +176,18 @@ int32_t PlayBinCtrlerBase::SetSource(const std::shared_ptr<GstAppsrcEngine> &app
     return MSERR_OK;
 }
 
+int32_t PlayBinCtrlerBase::AddSubSource(const std::string &url)
+{
+    MEDIA_LOGD("enter");
+
+    std::unique_lock<std::mutex> lock(mutex_);
+
+    isAddingSubtitle_ = true;
+    g_object_set(playbin_, "add-suburi", url.c_str(), nullptr);
+
+    return MSERR_OK;
+}
+
 int32_t PlayBinCtrlerBase::Prepare()
 {
     MEDIA_LOGD("enter");
@@ -486,6 +498,7 @@ int32_t PlayBinCtrlerBase::Reset() noexcept
     lastTime_ = 0;
     isSeeking_ = false;
     isRating_ = false;
+    isAddingSubtitle_ = false;
     isBuffering_ = false;
     cachePercent_ = BUFFER_PERCENT_THRESHOLD;
     isDuration_ = false;
@@ -1036,7 +1049,7 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
             g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_BUFFERING, nullptr);
         }
 
-        if (GetCurrState() == playingState_ && !isSeeking_ && !isRating_ && !isUserSetPause_) {
+        if (GetCurrState() == playingState_ && !isSeeking_ && !isRating_ && !isAddingSubtitle_ && !isUserSetPause_) {
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to paused", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);

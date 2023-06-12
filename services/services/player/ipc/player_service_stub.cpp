@@ -72,6 +72,8 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[SET_SOURCE] = { &PlayerServiceStub::SetSource, "Player::SetSource" };
     playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = { &PlayerServiceStub::SetMediaDataSource, "Player::SetMediaDataSource" };
     playerFuncs_[SET_FD_SOURCE] = { &PlayerServiceStub::SetFdSource, "Player::SetFdSource" };
+    playerFuncs_[ADD_SUB_SOURCE] = { &PlayerServiceStub::AddSubSource, "Player::AddSubSource" };
+    playerFuncs_[ADD_SUB_FD_SOURCE] = { &PlayerServiceStub::AddSubFdSource, "Player::AddSubFdSource" };
     playerFuncs_[PLAY] = { &PlayerServiceStub::Play, "Player::Play" };
     playerFuncs_[PREPARE] = { &PlayerServiceStub::Prepare, "Player::Prepare" };
     playerFuncs_[PREPAREASYNC] = { &PlayerServiceStub::PrepareAsync, "Player::PrepareAsync" };
@@ -207,6 +209,20 @@ int32_t PlayerServiceStub::SetSource(int32_t fd, int64_t offset, int64_t size)
     MediaTrace trace("binder::SetSource(fd)");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->SetSource(fd, offset, size);
+}
+
+int32_t PlayerServiceStub::AddSubSource(const std::string &url)
+{
+    MediaTrace trace("binder::AddSubSource(url)");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->AddSubSource(url);
+}
+
+int32_t PlayerServiceStub::AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    MediaTrace trace("binder::AddSubSource(fd)");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->AddSubSource(fd, offset, size);
 }
 
 int32_t PlayerServiceStub::Play()
@@ -484,6 +500,23 @@ int32_t PlayerServiceStub::SetFdSource(MessageParcel &data, MessageParcel &reply
     int64_t offset = data.ReadInt64();
     int64_t size = data.ReadInt64();
     reply.WriteInt32(SetSource(fd, offset, size));
+    (void)::close(fd);
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::AddSubSource(MessageParcel &data, MessageParcel &reply)
+{
+    std::string url = data.ReadString();
+    reply.WriteInt32(AddSubSource(url));
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::AddSubFdSource(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t fd = data.ReadFileDescriptor();
+    int64_t offset = data.ReadInt64();
+    int64_t size = data.ReadInt64();
+    reply.WriteInt32(AddSubSource(fd, offset, size));
     (void)::close(fd);
     return MSERR_OK;
 }

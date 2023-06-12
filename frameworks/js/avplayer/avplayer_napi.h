@@ -56,6 +56,7 @@ const std::string EVENT_VIDEO_SIZE_CHANGE = "videoSizeChange";
 const std::string EVENT_AUDIO_INTERRUPT = "audioInterrupt";
 const std::string EVENT_AVAILABLE_BITRATES = "availableBitrates";
 const std::string EVENT_TRACKCHANGE = "trackChange";
+const std::string EVENT_TRACK_INFO_UPDATE = "trackInfoUpdate";
 const std::string EVENT_ERROR = "error";
 }
 
@@ -119,6 +120,14 @@ private:
      * selectBitrate(bitRate: number): void
      */
     static napi_value JsSelectBitrate(napi_env env, napi_callback_info info);
+    /**
+     * addSubtitleUrl: string
+     */
+    static napi_value JsAddSubtitleUrl(napi_env env, napi_callback_info info);
+    /**
+     * addSubtitleFdSrc: AVFileDescriptor
+     */
+    static napi_value JsAddSubtitleAVFileDescriptor(napi_env env, napi_callback_info info);
     /**
      * url: string
      */
@@ -250,6 +259,7 @@ private:
     void PauseListenCurrentResource();
     void OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     void SetSource(std::string url);
+    void AddSubSource(std::string url);
     void SetSurface(const std::string &surfaceStr);
     void ResetUserParameters();
 
@@ -299,6 +309,8 @@ private:
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;
     struct AVDataSrcDescriptor dataSrcDescriptor_;
+    std::string subUrl_ = "";
+    struct AVFileDescriptor subFileDescriptor_;
     std::string surface_ = "";
     bool loop_ = false;
     int32_t videoScaleType_ = 0;

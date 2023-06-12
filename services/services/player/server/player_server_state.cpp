@@ -92,6 +92,13 @@ int32_t PlayerServer::BaseState::MessageTrackDone(int32_t extra)
     return MSERR_OK;
 }
 
+int32_t PlayerServer::BaseState::MessageTrackInfoUpdate()
+{
+    (void)server_.taskMgr_.MarkTaskDone("addsubtitle done");
+    MediaTrace::TraceEnd("PlayerServer::AddSubSource", FAKE_POINTER(&server_));
+    return MSERR_OK;
+}
+
 int32_t PlayerServer::BaseState::MessageSpeedDone()
 {
     (void)server_.taskMgr_.MarkTaskDone("speed done");
@@ -143,6 +150,9 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
         case INFO_TYPE_TRACK_DONE:
             ret = MessageTrackDone(extra);
             break;
+
+        case INFO_TYPE_TRACK_INFO_UPDATE:
+            ret = MessageTrackInfoUpdate();
         default:
             break;
     }

@@ -45,6 +45,11 @@ public:
 
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) = 0;
+    virtual int32_t AddSubSource(const std::string &url)
+    {
+        (void)url;
+        return 0;
+    }
     virtual int32_t Play() = 0;
     virtual int32_t Prepare() = 0;
     virtual int32_t PrepareAsync() = 0;

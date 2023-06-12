@@ -158,6 +158,43 @@ int32_t PlayerServiceProxy::SetSource(int32_t fd, int64_t offset, int64_t size)
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::AddSubSource(const std::string &url)
+{
+    MediaTrace trace("binder::AddSubSource");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteString(url);
+    int32_t error = SendRequest(ADD_SUB_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "AddSubSource failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    MediaTrace trace("binder::AddSubSource");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteFileDescriptor(fd);
+    (void)data.WriteInt64(offset);
+    (void)data.WriteInt64(size);
+    int32_t error = SendRequest(ADD_SUB_FD_SOURCE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "AddSubSource failed, error: %{public}d", error);
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::Play()
 {
     MediaTrace trace("binder::Play");

@@ -39,6 +39,8 @@ public:
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
+    int32_t AddSubSource(const std::string &url) override;
+    int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t Play() override;
     int32_t Prepare() override;
     int32_t PrepareAsync() override;
@@ -95,6 +97,11 @@ private:
     std::shared_ptr<MemPausedState> memPausedState_ = nullptr;
     std::shared_ptr<MemStoppedState> memStoppedState_ = nullptr;
     std::shared_ptr<MemPlaybackCompletedState> memPlaybackCompletedState_ = nullptr;
+    struct FdSrcInfo {
+        int32_t fd = 0;
+        int64_t offset = 0;
+        int64_t size = 0;
+    };
     struct RecoverConfigInfo {
         std::shared_ptr<MemBaseState> currState = nullptr;
         int32_t sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_NULL);
@@ -103,6 +110,8 @@ private:
         int32_t fd = 0;
         int64_t offset = 0;
         int64_t size = 0;
+        std::vector<std::string> subUrl;
+        std::vector<FdSrcInfo> subFdSrc;
         float leftVolume = 1.0f;
         float rightVolume = 1.0f;
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
@@ -149,6 +158,7 @@ private:
     void SaveParameter(const Format &param);
     int32_t SetSaveParameter();
     int32_t SetSourceInternal();
+    int32_t AddSubSourceInternal();
     void SetPlayerServerConfig();
     void GetPlayerServerConfig();
     int32_t SetConfigInternal();

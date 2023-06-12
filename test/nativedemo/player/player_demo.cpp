@@ -92,6 +92,9 @@ void PlayerCallbackDemo::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
         case INFO_TYPE_TRACKCHANGE:
             PrintTrackChange(infoBody);
             break;
+        case INFO_TYPE_TRACK_INFO_UPDATE:
+            cout << "PlayerCallback: track info updated" << endl;
+            break;
         default:
             break;
     }
@@ -493,8 +496,12 @@ void PlayerDemo::DoCmd(const std::string &cmd)
         SelectTrack();
     } else if (cmd.find("detrack") != std::string::npos) {
         DeselectTrack();
-    }  else if (cmd.find("gettrack") != std::string::npos) {
+    } else if (cmd.find("gettrack") != std::string::npos) {
         GetCurrentTrack();
+    } else if (cmd.find("addsub ") != std::string::npos) {
+        AddSubSource(cmd.substr(cmd.find("addsub ") + std::string("addsub ").length()));
+    } else if (cmd.find("addsubfd ") != std::string::npos) {
+        (void)AddSubFdSource(cmd.substr(cmd.find("addsubfd ") + std::string("addsubfd ").length()));
     }
 }
 
@@ -717,6 +724,36 @@ void PlayerDemo::GetCurrentTrack()
     } else {
         cout << "GetCurrentTrack failed" << endl;
     }
+}
+
+void PlayerDemo::AddSubSource(const std::string &url) const
+{
+    cout << "Add subtitle source: " << url << endl;
+    (void)player_->AddSubSource(url);
+}
+
+int32_t PlayerDemo::AddSubFdSource(const std::string &path) const
+{
+    int32_t fd = open(path.c_str(), O_RDONLY);
+    int32_t offset = 0;
+
+    if (fd < 0) {
+        cout << "Open file failed" << endl;
+        return -1;
+    }
+
+    struct stat64 buffer;
+    if (fstat64(fd, &buffer) != 0) {
+        cout << "Get file state failed" << endl;
+        return -1;
+    }
+    int64_t length = static_cast<int64_t>(buffer.st_size);
+
+    cout << "add subtitle fdsource: fd = " << fd << ", offset = " << offset << ", length = " << length << endl;
+
+    int32_t ret = player_->AddSubSource(fd, offset, length);
+    (void)close(fd);
+    return ret;
 }
 
 int32_t PlayerDemo::SetSurfaceSize()

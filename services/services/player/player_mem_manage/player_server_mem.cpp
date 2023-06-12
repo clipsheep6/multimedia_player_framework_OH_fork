@@ -108,6 +108,23 @@ int32_t PlayerServerMem::SetSourceInternal()
     return ret;
 }
 
+int32_t PlayerServerMem::AddSubSourceInternal()
+{
+    if (!recoverConfig_.subUrl.empty()) {
+        for (auto &url : recoverConfig_.subUrl) {
+            (void)PlayerServer::AddSubSource(url);
+        }
+    }
+
+    if (!recoverConfig_.subFdSrc.empty()) {
+        for (auto &fdSrc : recoverConfig_.subFdSrc) {
+            (void)PlayerServer::AddSubSource(fdSrc.fd, fdSrc.offset, fdSrc.size);
+        }
+    }
+
+    return MSERR_OK;
+}
+
 void PlayerServerMem::SetPlayerServerConfig()
 {
     errorCbOnce_ = playerServerConfig_.errorCbOnce;
@@ -240,6 +257,37 @@ int32_t PlayerServerMem::SetSource(int32_t fd, int64_t offset, int64_t size)
         recoverConfig_.offset = offset;
         recoverConfig_.size = size;
         recoverConfig_.sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_FD);
+    }
+    return ret;
+}
+
+int32_t PlayerServerMem::AddSubSource(const std::string &url)
+{
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
+    if (RecoverMemByUser() != MSERR_OK) {
+        return MSERR_INVALID_OPERATION;
+    }
+
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
+    auto ret = PlayerServer::AddSubSource(url);
+    if (ret == MSERR_OK) {
+        recoverConfig_.subUrl.emplace_back(url);
+    }
+    return ret;
+}
+
+int32_t PlayerServerMem::AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    std::lock_guard<std::recursive_mutex> lock(recMutex_);
+    if (RecoverMemByUser() != MSERR_OK) {
+        return MSERR_INVALID_OPERATION;
+    }
+
+    lastestUserSetTime_ = std::chrono::steady_clock::now();
+    auto ret = PlayerServer::AddSubSource(fd, offset, size);
+    if (ret == MSERR_OK) {
+        FdSrcInfo fdSrc {fd, offset, size};
+        recoverConfig_.subFdSrc.emplace_back(fdSrc);
     }
     return ret;
 }
@@ -757,6 +805,7 @@ void PlayerServerMem::RecoverToPrepared(PlayerOnInfoType type, int32_t extra)
         }
     } else if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
         (void)RecoverPlayerCb();
+        (void)AddSubSourceInternal();
     }
 }
 
@@ -772,6 +821,7 @@ void PlayerServerMem::RecoverToCompleted(PlayerOnInfoType type, int32_t extra)
         }
     } else if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
         (void)RecoverPlayerCb();
+        (void)AddSubSourceInternal();
     }
 }
 

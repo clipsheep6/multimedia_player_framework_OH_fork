@@ -80,6 +80,21 @@ int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
     return playerService_->SetSource(fd, offset, size);
 }
 
+int32_t PlayerImpl::AddSubSource(const std::string &url)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " AddSubSource in(url): %{public}s", FAKE_POINTER(this), url.c_str());
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
+    return playerService_->AddSubSource(url);
+}
+
+int32_t PlayerImpl::AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " AddSubSource in(fd)", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->AddSubSource(fd, offset, size);
+}
+
 int32_t PlayerImpl::Play()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Play in", FAKE_POINTER(this));

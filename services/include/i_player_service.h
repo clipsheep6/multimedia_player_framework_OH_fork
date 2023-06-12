@@ -58,6 +58,28 @@ public:
      */
     virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size) = 0;
     /**
+     * @brief Add a subtitle source for the player. The corresponding source can be local file url.
+     *
+     * @param url Indicates the subtitle source.
+     * @return Returns {@link MSERR_OK} if the url is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t AddSubSource(const std::string &url) = 0;
+    /**
+     * @brief Add a playback subtitle file descriptor source for the player.
+     *
+     * @param fd Indicates the file descriptor of subtitle source.
+     * @param offset Indicates the offset of subtitle source in file descriptor.
+     * @param size Indicates the size of subtitle source.
+     * @return Returns {@link MSERR_OK} if the fd source is set successfully; returns an error code defined
+     * in {@link media_errors.h} otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) = 0;
+    /**
      * @brief Start playback.
      *
      * This function must be called after {@link Prepare}. If the player state is <b>Prepared</b>,
@@ -70,7 +92,7 @@ public:
      */
     virtual int32_t Play() = 0;
 
-  /**
+    /**
      * @brief Prepares the playback environment and buffers media data.
      *
      * This function must be called after {@link SetSource}.

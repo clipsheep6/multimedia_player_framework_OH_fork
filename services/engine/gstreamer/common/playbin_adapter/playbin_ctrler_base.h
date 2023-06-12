@@ -50,6 +50,7 @@ public:
     int32_t Init();
     int32_t SetSource(const std::string &url)  override;
     int32_t SetSource(const std::shared_ptr<GstAppsrcEngine> &appsrcWrap) override;
+    int32_t AddSubSource(const std::string &url) override;
     int32_t Prepare() override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
@@ -189,6 +190,7 @@ private:
     
     PlayBinSinkProvider::SinkPtr audioSink_ = nullptr;
     PlayBinSinkProvider::SinkPtr videoSink_ = nullptr;
+    PlayBinSinkProvider::SinkPtr subtitleSink_ = nullptr;
 
     int64_t duration_ = 0;
     double rate_ = 0;
@@ -197,6 +199,7 @@ private:
 
     bool isSeeking_ = false;
     bool isRating_ = false;
+    bool isAddingSubtitle_ = false;
     bool isBuffering_ = false;
     bool isNetWorkPlay_ = false;
     bool isUserSetPlay_ = false;

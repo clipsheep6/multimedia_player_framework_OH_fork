@@ -55,6 +55,9 @@ protected:
     virtual void HandlePositionUpdate() {}
 
     PlayBinCtrlerBase &ctrler_;
+
+private:
+    void HandleAsyncDoneMsg();
 };
 
 class PlayBinCtrlerBase::IdleState : public PlayBinCtrlerBase::BaseState {
@@ -120,6 +123,9 @@ protected:
     void ProcessStateChange(const InnerMessage &msg) override;
     void HandleAsyncDone(const InnerMessage &msg) override;
     void StateEnter() override;
+
+private:
+    void ProcessPlayingStateChange();
 };
 
 class PlayBinCtrlerBase::PausedState : public PlayBinCtrlerBase::BaseState {

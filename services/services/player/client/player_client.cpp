@@ -113,6 +113,20 @@ int32_t PlayerClient::DisableWhenOK(int32_t ret)
     return ret;
 }
 
+int32_t PlayerClient::AddSubSource(const std::string &url)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->AddSubSource(url);
+}
+
+int32_t PlayerClient::AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->AddSubSource(fd, offset, size);
+}
+
 int32_t PlayerClient::Play()
 {
     std::lock_guard<std::mutex> lock(mutex_);

@@ -356,6 +356,40 @@ public:
             CHECK_AND_RETURN_LOG(status == napi_ok, "%{public}s fail to napi_call_function", callbackName.c_str());
         }
     };
+
+    struct TrackInfoUpdate : public Base {
+        std::vector<Format> trackInfo;
+        void UvWork() override
+        {
+            std::shared_ptr<AutoRef> ref = callback.lock();
+            CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", callbackName.c_str());
+
+            napi_handle_scope scope = nullptr;
+            napi_open_handle_scope(ref->env_, &scope);
+            CHECK_AND_RETURN_LOG(scope != nullptr, "%{public}s scope is nullptr", callbackName.c_str());
+            ON_SCOPE_EXIT(0) { napi_close_handle_scope(ref->env_, scope); };
+
+            napi_value jsCallback = nullptr;
+            napi_status status = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            CHECK_AND_RETURN_LOG(status == napi_ok && jsCallback != nullptr,
+                "%{public}s failed to napi_get_reference_value", callbackName.c_str());
+
+            napi_value array = nullptr;
+            (void)napi_create_array_with_length(ref->env_, trackInfo.size(), &array);
+
+            for (uint32_t i = 0; i < trackInfo.size(); i++) {
+                napi_value trackDescription = nullptr;
+                trackDescription = CommonNapi::CreateFormatBuffer(ref->env_, trackInfo[i]);
+                (void)napi_set_element(ref->env_, array, i, trackDescription);
+            }
+
+            napi_value result = nullptr;
+            napi_value args[1] = {array};
+            status = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
+            CHECK_AND_RETURN_LOG(status == napi_ok,
+                "%{public}s failed to napi_call_function", callbackName.c_str());
+        }
+    };
 };
 
 AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
@@ -382,6 +416,7 @@ AVPlayerCallback::AVPlayerCallback(napi_env env, AVPlayerNotify *listener)
     onInfoFuncs_[INFO_TYPE_EOS] = &AVPlayerCallback::OnEosCb;
     onInfoFuncs_[INFO_TYPE_IS_LIVE_STREAM] = &AVPlayerCallback::NotifyIsLiveStream;
     onInfoFuncs_[INFO_TYPE_TRACKCHANGE] = &AVPlayerCallback::OnTrackChangedCb;
+    onInfoFuncs_[INFO_TYPE_TRACK_INFO_UPDATE] = &AVPlayerCallback::OnTrackInfoUpdate;
 }
 
 AVPlayerCallback::~AVPlayerCallback()
@@ -816,6 +851,25 @@ void AVPlayerCallback::OnTrackChangedCb(const int32_t extra, const Format &infoB
     cb->callbackName = AVPlayerEvent::EVENT_TRACKCHANGE;
     cb->number = index;
     cb->isSelect = isSelect ? true : false;
+    NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnTrackInfoUpdate(const int32_t extra, const Format &infoBody)
+{
+    (void)extra;
+    std::vector<Format> trackInfo;
+    (void)infoBody.GetFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
+    MEDIA_LOGI("OnTrackInfoUpdate callback");
+ 
+    CHECK_AND_RETURN_LOG(refMap_.find(AVPlayerEvent::EVENT_TRACK_INFO_UPDATE) != refMap_.end(),
+        "can not find trackInfoUpdate callback!");
+
+    NapiCallback::TrackInfoUpdate *cb = new(std::nothrow) NapiCallback::TrackInfoUpdate();
+    CHECK_AND_RETURN_LOG(cb != nullptr, "failed to new TrackInfoUpdate");
+
+    cb->callback = refMap_.at(AVPlayerEvent::EVENT_TRACK_INFO_UPDATE);
+    cb->callbackName = AVPlayerEvent::EVENT_TRACK_INFO_UPDATE;
+    cb->trackInfo = trackInfo;
     NapiCallback::CompleteCallback(env_, cb);
 }
 

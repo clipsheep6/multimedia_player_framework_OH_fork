@@ -112,6 +112,29 @@ int32_t PlayerEngineGstImpl::SetSource(const std::shared_ptr<IMediaDataSource> &
     return MSERR_OK;
 }
 
+int32_t PlayerEngineGstImpl::AddSubSource(const std::string &url)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_VAL, "playBinCtrler_ is nullptr");
+
+    std::string subUrl = "";
+    int32_t ret = MSERR_OK;
+
+    if (IsFileUrl(url)) {
+        std::string realUriPath;
+        ret = GetRealPath(url, realUriPath);
+        if (ret != MSERR_OK) {
+            return ret;
+        }
+        subUrl = "file://" + realUriPath;
+    } else {
+        subUrl = url;
+    }
+
+    MEDIA_LOGD("add subtitle source: %{public}s", subUrl.c_str());
+    return playBinCtrler_->AddSubSource(subUrl);
+}
+
 int32_t PlayerEngineGstImpl::SetObs(const std::weak_ptr<IPlayerEngineObs> &obs)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -378,6 +401,30 @@ void PlayerEngineGstImpl::HandleOnError(const PlayBinMessage &msg)
     }
 }
 
+void PlayerEngineGstImpl::HandleTrackNumUpdate(const PlayBinMessage &msg)
+{
+    int32_t textTrackNum = msg.code;
+
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        Format format;
+        MEDIA_LOGI("track num update, textTrackNum = %{public}d", textTrackNum);
+        notifyObs->OnInfo(INFO_TYPE_TRACK_NUM_UPDATE, textTrackNum, format);
+    }
+}
+
+void PlayerEngineGstImpl::HandleTrackInfoUpdate(const PlayBinMessage &msg)
+{
+    std::vector<Format> trackInfo = std::any_cast<std::vector<Format>>(msg.extra);
+    Format format;
+    format.PutFormatVector(std::string(PlayerKeys::PLAYER_TRACK_INFO), trackInfo);
+
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        notifyObs->OnInfo(INFO_TYPE_TRACK_INFO_UPDATE, 0, format);
+    }
+}
+
 void PlayerEngineGstImpl::HandleSubTypeMessage(const PlayBinMessage &msg)
 {
     if (subMsgHandler_.count(msg.subType) > 0) {
@@ -514,6 +561,8 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_DEFAULE_TRACK] = &PlayerEngineGstImpl::HandleDefaultTrack;
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_DONE] = &PlayerEngineGstImpl::HandleTrackDone;
     subMsgHandler_[PLAYBIN_SUB_MSG_ONERROR] = &PlayerEngineGstImpl::HandleOnError;
+    subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE] = &PlayerEngineGstImpl::HandleTrackNumUpdate;
+    subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_INFO_UPDATE] = &PlayerEngineGstImpl::HandleTrackInfoUpdate;
 
     MEDIA_LOGD("PlayBinCtrlerInit out");
     return MSERR_OK;

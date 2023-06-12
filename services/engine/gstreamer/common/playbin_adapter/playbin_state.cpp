@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "dumper.h"
+#include "format.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayBinState"};
@@ -122,7 +123,7 @@ void PlayBinCtrlerBase::BaseState::HandleStateChange(const InnerMessage &msg)
         } else if (targetState == GST_STATE_PAUSED) {
             int32_t tickType = INNER_MSG_POSITION_UPDATE;
             ctrler_.msgProcessor_->RemoveTickSourceByType(tickType);
-            if (!ctrler_.isSeeking_ && !ctrler_.isRating_) {
+            if (!ctrler_.isSeeking_ && !ctrler_.isRating_ && !ctrler_.isAddingSubtitle_) {
                 int64_t position = ctrler_.QueryPosition();
                 PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
                     static_cast<int32_t>(position), static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
@@ -169,6 +170,55 @@ void PlayBinCtrlerBase::BaseState::HandleResolutionChange(const InnerMessage &ms
     ctrler_.ReportMessage(playBinMsg);
 }
 
+void PlayBinCtrlerBase::BaseState::HandleAsyncDoneMsg()
+{
+    if (ctrler_.isTrackChanging_) {
+        ctrler_.isSeeking_ = false;
+        ctrler_.isTrackChanging_ = false;
+        ctrler_.ReportTrackChange();
+    } else if (ctrler_.isSeeking_) {
+        int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
+        ctrler_.isSeeking_ = false;
+        ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
+        MEDIA_LOGI("asyncdone after seek done, pos = %{public}" PRIi64 "ms", position);
+        PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
+            static_cast<int32_t>(ctrler_.QueryPosition()),
+            static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
+        ctrler_.ReportMessage(posUpdateMsg);
+
+        PlayBinMessage playBinMsg { PLAYBIN_MSG_SEEKDONE, 0, static_cast<int32_t>(position), {} };
+        ctrler_.ReportMessage(playBinMsg);
+    } else if (ctrler_.isRating_) {
+        ctrler_.isRating_ = false;
+        MEDIA_LOGI("asyncdone after setRate done, rate = %{public}lf", ctrler_.rate_);
+        PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
+            static_cast<int32_t>(ctrler_.QueryPosition()),
+            static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
+        ctrler_.ReportMessage(posUpdateMsg);
+
+        PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, 0, ctrler_.rate_ };
+        ctrler_.ReportMessage(playBinMsg);
+    } else if (ctrler_.isAddingSubtitle_) {
+        ctrler_.isAddingSubtitle_ = false;
+        MEDIA_LOGI("asyncdone after adding subtitle");
+
+        int32_t textTrackNum = 0;
+        g_object_get(ctrler_.playbin_, "n-text", &textTrackNum, nullptr);
+        PlayBinMessage subtitleMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE, textTrackNum, {} };
+        ctrler_.ReportMessage(subtitleMsg);
+
+        std::vector<Format> trackInfo;
+        ctrler_.GetVideoTrackInfo(trackInfo);
+        ctrler_.GetAudioTrackInfo(trackInfo);
+        PlayBinMessage playBinMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_INFO_UPDATE, 0, trackInfo };
+        ctrler_.ReportMessage(playBinMsg);
+    } else {
+        MEDIA_LOGD("Async done, not seeking or rating!");
+        PlayBinMessage playBinMsg { PLAYBIN_MSG_ASYNC_DONE, 0, 0, {} };
+        ctrler_.ReportMessage(playBinMsg);
+    }
+}
+
 void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
 {
     MEDIA_LOGI("BaseState::HandleAsyncDone");
@@ -179,37 +229,7 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDone(const InnerMessage &msg)
         MEDIA_LOGI("BaseState::HandleAsyncDone %{public}d, %{public}d",
             static_cast<int32_t>(stateRet), static_cast<int32_t>(state));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state >= GST_STATE_PAUSED)) {
-            if (ctrler_.isTrackChanging_) {
-                ctrler_.isSeeking_ = false;
-                ctrler_.isTrackChanging_ = false;
-                ctrler_.ReportTrackChange();
-            } else if (ctrler_.isSeeking_) {
-                int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
-                ctrler_.isSeeking_ = false;
-                ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
-                MEDIA_LOGI("asyncdone after seek done, pos = %{public}" PRIi64 "ms", position);
-                PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
-                    static_cast<int32_t>(ctrler_.QueryPosition()),
-                    static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
-                ctrler_.ReportMessage(posUpdateMsg);
-
-                PlayBinMessage playBinMsg { PLAYBIN_MSG_SEEKDONE, 0, static_cast<int32_t>(position), {} };
-                ctrler_.ReportMessage(playBinMsg);
-            } else if (ctrler_.isRating_) {
-                ctrler_.isRating_ = false;
-                MEDIA_LOGI("asyncdone after setRate done, rate = %{public}lf", ctrler_.rate_);
-                PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
-                    static_cast<int32_t>(ctrler_.QueryPosition()),
-                    static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
-                ctrler_.ReportMessage(posUpdateMsg);
-
-                PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, 0, ctrler_.rate_ };
-                ctrler_.ReportMessage(playBinMsg);
-            } else {
-                MEDIA_LOGD("Async done, not seeking or rating!");
-                PlayBinMessage playBinMsg { PLAYBIN_MSG_ASYNC_DONE, 0, 0, {} };
-                ctrler_.ReportMessage(playBinMsg);
-            }
+            HandleAsyncDoneMsg();
         }
     }
 }
@@ -460,6 +480,53 @@ void PlayBinCtrlerBase::PlayingState::HandleAsyncDone(const InnerMessage &msg)
     BaseState::HandleAsyncDone(msg);
 }
 
+void PlayBinCtrlerBase::PlayingState::ProcessPlayingStateChange()
+{
+    if (ctrler_.isTrackChanging_) {
+        ctrler_.isSeeking_ = false;
+        ctrler_.isTrackChanging_ = false;
+        ctrler_.ReportTrackChange();
+    } else if (ctrler_.isSeeking_) {
+        int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
+        ctrler_.isSeeking_ = false;
+        ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
+        MEDIA_LOGI("playing after seek done, pos = %{public}" PRIi64 "ms", position);
+        PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
+            static_cast<int32_t>(ctrler_.QueryPosition()),
+            static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
+        ctrler_.ReportMessage(posUpdateMsg);
+
+        PlayBinMessage playBinMsg { PLAYBIN_MSG_SEEKDONE, 0, static_cast<int32_t>(position), {} };
+        ctrler_.ReportMessage(playBinMsg);
+    } else if (ctrler_.isRating_) {
+        ctrler_.isRating_ = false;
+        MEDIA_LOGI("playing after setRate done, rate = %{public}lf", ctrler_.rate_);
+        PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
+            static_cast<int32_t>(ctrler_.QueryPosition()),
+            static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
+        ctrler_.ReportMessage(posUpdateMsg);
+
+        PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, 0, ctrler_.rate_ };
+        ctrler_.ReportMessage(playBinMsg);
+    } else if (ctrler_.isAddingSubtitle_) {
+        ctrler_.isAddingSubtitle_ = false;
+        MEDIA_LOGI("playing after adding subtitle");
+
+        int32_t textTrackNum = 0;
+        g_object_get(ctrler_.playbin_, "n-text", &textTrackNum, nullptr);
+        PlayBinMessage subtitleMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE, textTrackNum, {} };
+        ctrler_.ReportMessage(subtitleMsg);
+
+        std::vector<Format> trackInfo;
+        ctrler_.GetVideoTrackInfo(trackInfo);
+        ctrler_.GetAudioTrackInfo(trackInfo);
+        PlayBinMessage playBinMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_INFO_UPDATE, 0, trackInfo };
+        ctrler_.ReportMessage(playBinMsg);
+    } else {
+        MEDIA_LOGD("playing, not seeking or rating!");
+    }
+}
+
 void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg)
 {
     MEDIA_LOGI("PreparingState::ProcessStateChange");
@@ -475,35 +542,7 @@ void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg
         GstStateChangeReturn stateRet = gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state,
             nullptr, static_cast<GstClockTime>(0));
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state == GST_STATE_PLAYING)) {
-            if (ctrler_.isTrackChanging_) {
-                ctrler_.isSeeking_ = false;
-                ctrler_.isTrackChanging_ = false;
-                ctrler_.ReportTrackChange();
-            } else if (ctrler_.isSeeking_) {
-                int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
-                ctrler_.isSeeking_ = false;
-                ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
-                MEDIA_LOGI("playing after seek done, pos = %{public}" PRIi64 "ms", position);
-                PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
-                    static_cast<int32_t>(ctrler_.QueryPosition()),
-                    static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
-                ctrler_.ReportMessage(posUpdateMsg);
-
-                PlayBinMessage playBinMsg { PLAYBIN_MSG_SEEKDONE, 0, static_cast<int32_t>(position), {} };
-                ctrler_.ReportMessage(playBinMsg);
-            } else if (ctrler_.isRating_) {
-                ctrler_.isRating_ = false;
-                MEDIA_LOGI("playing after setRate done, rate = %{public}lf", ctrler_.rate_);
-                PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
-                    static_cast<int32_t>(ctrler_.QueryPosition()),
-                    static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
-                ctrler_.ReportMessage(posUpdateMsg);
-
-                PlayBinMessage playBinMsg { PLAYBIN_MSG_SPEEDDONE, 0, 0, ctrler_.rate_ };
-                ctrler_.ReportMessage(playBinMsg);
-            } else {
-                MEDIA_LOGD("playing, not seeking or rating!");
-            }
+            ProcessPlayingStateChange();
         }
     }
 }

@@ -58,6 +58,7 @@ public:
 
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const std::shared_ptr<GstAppsrcEngine> &appsrcWrap) = 0;
+    virtual int32_t AddSubSource(const std::string &url) = 0;
     virtual int32_t Prepare() = 0; // sync
     virtual int32_t PrepareAsync() = 0; // async
     virtual int32_t Play() = 0; // async

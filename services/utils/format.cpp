@@ -61,6 +61,11 @@ void CopyFormatDataMap(const Format::FormatDataMap &from, Format::FormatDataMap 
     }
 }
 
+void CopyFormatVectorMap(const Format::FormatVectorMap &from, Format::FormatVectorMap &to)
+{
+    to = from;
+}
+
 Format::~Format()
 {
     for (auto it = formatMap_.begin(); it != formatMap_.end(); ++it) {
@@ -78,11 +83,13 @@ Format::Format(const Format &rhs)
     }
 
     CopyFormatDataMap(rhs.formatMap_, formatMap_);
+    CopyFormatVectorMap(rhs.formatVecMap_, formatVecMap_);
 }
 
 Format::Format(Format &&rhs) noexcept
 {
     std::swap(formatMap_, rhs.formatMap_);
+    std::swap(formatVecMap_, rhs.formatVecMap_);
 }
 
 Format &Format::operator=(const Format &rhs)
@@ -92,6 +99,7 @@ Format &Format::operator=(const Format &rhs)
     }
 
     CopyFormatDataMap(rhs.formatMap_, this->formatMap_);
+    CopyFormatVectorMap(rhs.formatVecMap_, this->formatVecMap_);
     return *this;
 }
 
@@ -102,6 +110,7 @@ Format &Format::operator=(Format &&rhs) noexcept
     }
 
     std::swap(this->formatMap_, rhs.formatMap_);
+    std::swap(this->formatVecMap_, rhs.formatVecMap_);
     return *this;
 }
 
@@ -257,6 +266,24 @@ bool Format::GetBuffer(const std::string_view &key, uint8_t **addr, size_t &size
     return true;
 }
 
+bool Format::PutFormatVector(const std::string_view &key, std::vector<Format> &value)
+{
+    RemoveKey(key);
+    auto ret = formatVecMap_.insert(std::make_pair(key, value));
+    return ret.second;
+}
+
+bool Format::GetFormatVector(const std::string_view &key, std::vector<Format> &value) const
+{
+    auto iter = formatVecMap_.find(key);
+    if (iter == formatVecMap_.end()) {
+        MEDIA_LOGE("Format::GetFormatVector failed. Key: %{public}s", key.data());
+        return false;
+    }
+    value.assign(iter->second.begin(), iter->second.end());
+    return true;
+}
+
 bool Format::ContainKey(const std::string_view &key) const
 {
     auto iter = formatMap_.find(key);
@@ -287,11 +314,21 @@ void Format::RemoveKey(const std::string_view &key)
         }
         formatMap_.erase(iter);
     }
+
+    auto vecMapIter = formatVecMap_.find(key);
+    if (vecMapIter != formatVecMap_.end()) {
+        formatVecMap_.erase(vecMapIter);
+    }
 }
 
 const Format::FormatDataMap &Format::GetFormatMap() const
 {
     return formatMap_;
+}
+
+const Format::FormatVectorMap &Format::GetFormatVectorMap() const
+{
+    return formatVecMap_;
 }
 
 std::string Format::Stringify() const

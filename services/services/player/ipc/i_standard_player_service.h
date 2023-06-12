@@ -31,6 +31,8 @@ public:
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t SetSource(int32_t fd, int64_t offset, int64_t size) = 0;
+    virtual int32_t AddSubSource(const std::string &url) = 0;
+    virtual int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) = 0;
     virtual int32_t Play() = 0;
     virtual int32_t Prepare() = 0;
     virtual int32_t PrepareAsync() = 0;
@@ -73,6 +75,8 @@ public:
         SET_SOURCE,
         SET_MEDIA_DATA_SRC_OBJ,
         SET_FD_SOURCE,
+        ADD_SUB_SOURCE,
+        ADD_SUB_FD_SOURCE,
         PLAY,
         PREPARE,
         PREPAREASYNC,

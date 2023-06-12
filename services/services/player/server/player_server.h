@@ -76,6 +76,8 @@ public:
     int32_t SetSource(const std::string &url) override;
     int32_t SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc) override;
     int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override;
+    int32_t AddSubSource(const std::string &url) override;
+    int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override;
     int32_t Play() override;
     int32_t Prepare() override;
     int32_t PrepareAsync() override;
@@ -138,6 +140,7 @@ protected:
     bool disableStoppedCb_ = false;
     std::string lastErrMsg_;
     std::unique_ptr<UriHelper> uriHelper_ = nullptr;
+    std::vector<std::shared_ptr<UriHelper>> subUriHelpers_;
     virtual int32_t Init();
     void ClearConfigInfo();
     bool IsPrepared();
@@ -188,6 +191,7 @@ private:
     bool isBackgroundChanged_ = false;
     PlayerStates backgroundState_ = PLAYER_IDLE;
     uint32_t appTokenId_ = 0;
+    uint32_t subtitleTrackNum_ = 0;
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
     bool isLiveStream_ = false;

@@ -73,6 +73,8 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("selectTrack", JsSelectTrack),
         DECLARE_NAPI_FUNCTION("deselectTrack", JsDeselectTrack),
         DECLARE_NAPI_FUNCTION("getCurrentTrack", JsGetCurrentTrack),
+        DECLARE_NAPI_FUNCTION("addSubtitleUrl", JsAddSubtitleUrl),
+        DECLARE_NAPI_FUNCTION("addSubtitleFdSrc", JsAddSubtitleAVFileDescriptor),
 
         DECLARE_NAPI_GETTER_SETTER("url", JsGetUrl, JsSetUrl),
         DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetAVFileDescriptor, JsSetAVFileDescriptor),
@@ -845,6 +847,123 @@ napi_value AVPlayerNapi::JsSelectBitrate(napi_env env, napi_callback_info info)
         }
     });
     (void)jsPlayer->taskQue_->EnqueueTask(task);
+    return result;
+}
+
+void AVPlayerNapi::AddSubSource(std::string url)
+{
+    MEDIA_LOGI("input url is %{public}s!", url.c_str());
+    bool isFd = (url.find("fd://") != std::string::npos) ? true : false;
+    bool isNetwork = (url.find("http") != std::string::npos) ? true : false;
+    if (isNetwork) {
+        auto task = std::make_shared<TaskHandler<void>>([this, url]() {
+            MEDIA_LOGI("AddSubtitleNetworkSource Task");
+            if (player_ != nullptr) {
+                if (player_->AddSubSource(url) != MSERR_OK) {
+                    OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to AddSubtitleNetworkSource");
+                }
+            }
+        });
+        (void)taskQue_->EnqueueTask(task);
+    } else if (isFd) {
+        const std::string fdHead = "fd://";
+        std::string inputFd = url.substr(fdHead.size());
+        int32_t fd = -1;
+        if (!StrToInt(inputFd, fd) || fd < 0) {
+            OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+                "invalid parameters, The input parameter is not a fd://+numeric string");
+            return;
+        }
+
+        auto task = std::make_shared<TaskHandler<void>>([this, fd]() {
+            MEDIA_LOGI("AddSubtitleFdSource Task");
+            if (player_ != nullptr) {
+                if (player_->AddSubSource(fd, 0, -1) != MSERR_OK) {
+                    OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "failed to AddSubtitleFdSource");
+                }
+            }
+        });
+        (void)taskQue_->EnqueueTask(task);
+    } else {
+        OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, The input parameter is not fd:// or network address");
+    }
+}
+
+napi_value AVPlayerNapi::JsAddSubtitleUrl(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::addSubtitleUrl");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsAddSubtitleUrl In");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1; // addSubtitleUrl(url: string)
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport add subtitle source operation");
+        return result;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "url is not string");
+        return result;
+    }
+
+    // get subUrl from js
+    jsPlayer->subUrl_ = CommonNapi::GetStringArgument(env, args[0]);
+    jsPlayer->AddSubSource(jsPlayer->subUrl_);
+
+    MEDIA_LOGI("JsAddSubtitleUrl Out");
+    return result;
+}
+
+napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callback_info info)
+{
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsAddSubtitleAVFileDescriptor In");
+
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1; // url: string
+    AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
+
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "current state is not prepared/playing/paused/completed, unsupport add subtitle fd operation");
+        return result;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "fileDescriptor is not napi_object");
+        return result;
+    }
+
+    if (!CommonNapi::GetFdArgument(env, args[0], jsPlayer->subFileDescriptor_)) {
+        MEDIA_LOGE("get fileDescriptor argument failed!");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check the input parameters(fileDescriptor)");
+        return result;
+    }
+
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+        MEDIA_LOGI("AddSubtitleAVFileDescriptor Task");
+        if (jsPlayer->player_ != nullptr) {
+            auto playerFd = jsPlayer->subFileDescriptor_;
+            if (jsPlayer->player_->AddSubSource(playerFd.fd, playerFd.offset, playerFd.length) != MSERR_OK) {
+                jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to AddSubtitleAVFileDescriptor");
+            }
+        }
+    });
+    (void)jsPlayer->taskQue_->EnqueueTask(task);
+
+    MEDIA_LOGI("JsAddSubtitleAVFileDescriptor Out");
     return result;
 }
 
@@ -2029,6 +2148,10 @@ void AVPlayerNapi::ResetUserParameters()
     url_.clear();
     fileDescriptor_.fd = 0;
     fileDescriptor_.offset = 0;
+    fileDescriptor_.length = -1;
+    subUrl_.clear();
+    subFileDescriptor_.fd = 0;
+    subFileDescriptor_.offset = 0;
     fileDescriptor_.length = -1;
     width_ = 0;
     height_ = 0;

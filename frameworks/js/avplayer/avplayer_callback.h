@@ -70,6 +70,7 @@ private:
     void OnEosCb(const int32_t extra, const Format &infoBody);
     void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);
     void OnTrackChangedCb(const int32_t extra, const Format &infoBody);
+    void OnTrackInfoUpdate(const int32_t extra, const Format &infoBody);
 
     std::mutex mutex_;
     napi_env env_ = nullptr;
