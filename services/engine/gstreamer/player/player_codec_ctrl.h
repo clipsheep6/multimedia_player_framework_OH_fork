@@ -34,6 +34,8 @@ public:
         CapsFixErrorNotifier notifier);
     void DetectCodecUnSetup(GstElement *src, GstElement *videoSink);
     void EnhanceSeekPerformance(bool enable);
+    int32_t FreeCodecBuffers(bool enable);
+    int32_t RecoverCodecBuffers(bool enable);
 
 private:
     void SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink,

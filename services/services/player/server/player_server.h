@@ -107,6 +107,8 @@ public:
     int32_t SelectTrack(int32_t index) override;
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
+    virtual int32_t FreeCodecBuffers();
+    virtual int32_t RecoverCodecBuffers();
 
     // IPlayerEngineObs override
     void OnError(PlayerErrorType errorType, int32_t errorCode) override;
@@ -141,6 +143,7 @@ protected:
     virtual int32_t Init();
     void ClearConfigInfo();
     bool IsPrepared();
+    int32_t SeekCurrentTime(int32_t mSeconds, PlayerSeekMode mode);
 
     struct ConfigInfo {
         std::atomic<bool> looping = false;
@@ -168,6 +171,7 @@ private:
     int32_t HandleSeek(int32_t mSeconds, PlayerSeekMode mode);
     int32_t HandleSetPlaybackSpeed(PlaybackRateMode mode);
     int32_t SetAudioEffectMode(const int32_t effectMode);
+    int32_t SeekInner(int32_t mSeconds, PlayerSeekMode mode, bool isAllowSeekCurTime);
 
     void HandleEos();
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
