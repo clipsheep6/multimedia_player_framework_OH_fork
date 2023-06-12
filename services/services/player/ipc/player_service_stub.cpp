@@ -399,14 +399,15 @@ int32_t PlayerServiceStub::DoIpcAbnormality()
             "player server is nullptr");
         CHECK_AND_RETURN_RET_LOG(IsPlaying(), static_cast<int>(MSERR_INVALID_OPERATION), "Not in playback state");
         auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
-        return playerServer->BackGroundChangeState(PlayerStates::PLAYER_PAUSED, false);
+        int32_t ret = playerServer->BackGroundChangeState(PlayerStates::PLAYER_PAUSED, false);
+        if (ret == MSERR_OK) {
+            SetIpcAlarmedFlag();
+        }
+        MEDIA_LOGI("DoIpcAbnormality End.");
+        return ret;
     });
     (void)taskQue_.EnqueueTask(task);
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_UNKNOWN,
-        "DoIpcAbnormality task failed to start");
-    MEDIA_LOGI("Exit DoIpcAbnormality.");
-    return result.Value();
+    return MSERR_OK;
 }
 
 int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
@@ -417,17 +418,22 @@ int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
         auto task = std::make_shared<TaskHandler<int>>([&, this] {
             MEDIA_LOGI("DoIpcRecovery.");
             auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
-            return playerServer->BackGroundChangeState(PlayerStates::PLAYER_STARTED, false);
+            int32_t ret = playerServer->BackGroundChangeState(PlayerStates::PLAYER_STARTED, false);
+            if (ret == MSERR_OK || ret == MSERR_INVALID_OPERATION) {
+                UnSetIpcAlarmedFlag();
+            }
+            MEDIA_LOGI("DoIpcRecovery End.");
+            return ret;
         });
         (void)taskQue_.EnqueueTask(task);
-        auto result = task->GetResult();
-        CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_UNKNOWN, "DoIpcRecovery task failed to start");
-        MEDIA_LOGI("Exit DoIpcRecovery.");
-        return result.Value();
     } else {
         auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
-        return playerServer->BackGroundChangeState(PlayerStates::PLAYER_STARTED, false);
+        int32_t ret = playerServer->BackGroundChangeState(PlayerStates::PLAYER_STARTED, false);
+        if (ret == MSERR_OK || ret == MSERR_INVALID_OPERATION) {
+            UnSetIpcAlarmedFlag();
+        }
     }
+    return MSERR_OK;
 }
 
 int32_t PlayerServiceStub::SelectTrack(int32_t index)

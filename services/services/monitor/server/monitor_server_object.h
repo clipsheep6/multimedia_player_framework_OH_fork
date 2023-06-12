@@ -29,6 +29,8 @@ public:
     virtual int32_t DoIpcRecovery(bool fromMonitor) = 0;
     int32_t IpcAbnormality();
     int32_t IpcRecovery(bool fromMonitor);
+    void SetIpcAlarmedFlag();
+    void UnSetIpcAlarmedFlag();
 
 protected:
     int32_t RegisterMonitor(int32_t pid);

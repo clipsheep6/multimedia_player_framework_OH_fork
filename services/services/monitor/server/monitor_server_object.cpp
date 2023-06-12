@@ -26,14 +26,12 @@ namespace Media {
 int32_t MonitorServerObject::RegisterMonitor(int32_t pid)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Pid %{public}d RegisterMonitor", FAKE_POINTER(this), pid);
-    std::lock_guard<std::mutex> lock(monitorMutex_);
     return MonitorServer::GetInstance().RegisterObj(pid, wptr(this));
 }
 
 int32_t MonitorServerObject::CancellationMonitor(int32_t pid)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Pid %{public}d CancellationMonitor", FAKE_POINTER(this), pid);
-    std::lock_guard<std::mutex> lock(monitorMutex_);
     return MonitorServer::GetInstance().CancellationObj(pid, wptr(this));
 }
 
@@ -45,10 +43,7 @@ int32_t MonitorServerObject::IpcAbnormality()
     }
 
     MEDIA_LOGE("IpcAbnormality");
-    if (DoIpcAbnormality() == MSERR_OK) {
-        alarmed_ = true;
-    }
-    return MSERR_OK;
+    return DoIpcAbnormality();
 }
 
 int32_t MonitorServerObject::IpcRecovery(bool fromMonitor)
@@ -59,10 +54,17 @@ int32_t MonitorServerObject::IpcRecovery(bool fromMonitor)
     }
 
     MEDIA_LOGE("IpcRecovery %{public}d ", fromMonitor);
-    if (DoIpcRecovery(fromMonitor) == MSERR_OK) {
-        alarmed_ = false;
-    }
-    return MSERR_OK;
+    return DoIpcRecovery(fromMonitor);
+}
+
+void MonitorServerObject::SetIpcAlarmedFlag()
+{
+    alarmed_ = true;
+}
+
+void MonitorServerObject::UnSetIpcAlarmedFlag()
+{
+    alarmed_ = false;
 }
 } // namespace Media
 } // namespace OHOS

@@ -345,13 +345,20 @@ int32_t RecorderServiceStub::DumpInfo(int32_t fd)
 int32_t RecorderServiceStub::DoIpcAbnormality()
 {
     MEDIA_LOGI("Enter DoIpcAbnormality.");
-    return Pause();
+    if (Pause() == MSERR_OK) {
+        SetIpcAlarmedFlag();
+    }
+    return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::DoIpcRecovery(bool fromMonitor)
 {
     MEDIA_LOGI("Enter DoIpcRecovery %{public}d.", fromMonitor);
-    return Resume();
+    int32_t ret = Resume();
+    if (ret == MSERR_OK || ret == MSERR_INVALID_OPERATION) {
+        UnSetIpcAlarmedFlag();
+    }
+    return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
