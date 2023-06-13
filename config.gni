@@ -28,6 +28,7 @@ declare_args() {
   multimedia_player_framework_support_xcollie = true
   multimedia_player_framework_support_jsstack = true
   multimedia_player_framework_support_seccomp = false
+  multimedia_player_framework_support_screen_capture = true
   if (defined(build_seccomp) && build_seccomp) {
     multimedia_player_framework_support_seccomp = true
   }
@@ -115,4 +116,14 @@ if (use_memmgr_plugin || use_memmgr) {
 
 if (multimedia_player_framework_support_monitor) {
   player_framework_defines += [ "USE_MONITOR" ]
+}
+
+if (multimedia_player_framework_support_screen_capture) {
+  player_framework_defines += [ "SUPPORT_SCREEN_CAPTURE" ]
+
+  # Config path
+  MEDIA_PLAYER_ROOT_DIR = "//foundation/multimedia/player_framework"
+  MEDIA_PLAYER_GRAPHIC = "//foundation/graphic/graphic_2d"
+} else {
+  player_framework_defines += [ "UNSUPPORT_SCREEN_CAPTURE" ]
 }

@@ -25,7 +25,8 @@
         "SystemCapability.Multimedia.Media.CodecBase",
         "SystemCapability.Multimedia.Media.AVPlayer",
         "SystemCapability.Multimedia.Media.AVRecorder",
-        "SystemCapability.Multimedia.SystemSound.Core"
+        "SystemCapability.Multimedia.SystemSound.Core",
+        "SystemCapability.Multimedia.Media.AVScreenCapture"
       ],
       "features": [],
       "adapted_system_type": [ "standard" ],
@@ -77,6 +78,7 @@
           "base_group": [],
           "fwk_group": [
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
+            "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
             "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
           ],
           "service_group": [
@@ -95,7 +97,8 @@
                 "avcodec_video_decoder.h",
                 "avcodec_video_encoder.h",
                 "player.h",
-                "recorder.h"
+                "recorder.h",
+                "screen_capture.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
             }

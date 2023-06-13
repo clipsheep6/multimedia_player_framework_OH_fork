@@ -67,6 +67,8 @@ config("media_service_config") {
     "avcodeclist/server",
     "recorder_profiles/ipc",
     "recorder_profiles/server",
+    "screen_capture/server",
+    "screen_capture/ipc",
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/services/factory",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
@@ -163,6 +165,14 @@ ohos_shared_library("media_service") {
     ]
   }
 
+  if (multimedia_player_framework_support_screen_capture) {
+    sources += [
+      "screen_capture/ipc/screen_capture_listener_proxy.cpp",
+      "screen_capture/ipc/screen_capture_service_stub.cpp",
+      "screen_capture/server/screen_capture_server.cpp",
+    ]
+  }
+
   configs = [
     ":media_service_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
@@ -189,6 +199,18 @@ ohos_shared_library("media_service") {
 
   if (multimedia_player_framework_support_video) {
     external_deps += [ "graphic_standard:surface" ]
+  }
+
+  if (multimedia_player_framework_support_screen_capture) {
+    external_deps += [
+      "ability_runtime:runtime",
+      "access_token:libnativetoken",
+      "access_token:libprivacy_sdk",
+      "access_token:libtoken_setproc",
+      "audio_framework:audio_capturer",
+      "audio_framework:audio_client",
+      "window_manager:libdm",
+    ]
   }
 
   if (multimedia_player_framework_support_avsession_background) {
