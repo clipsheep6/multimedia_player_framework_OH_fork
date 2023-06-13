@@ -29,6 +29,9 @@
 #ifdef SUPPORT_METADATA
 #include "i_standard_avmetadatahelper_service.h"
 #endif
+#ifdef SUPPORT_SCREEN_CAPTURE
+#include "i_standard_screen_capture_service.h"
+#endif
 #include "media_log.h"
 #include "media_errors.h"
 #include "player_xcollie.h"
@@ -253,6 +256,39 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
 }
 #endif
 
+#ifdef SUPPORT_SCREEN_CAPTURE
+std::shared_ptr<IScreenCaptureService> MediaClient::CreateScreenCaptureService()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (!IsAlived()) {
+        MEDIA_LOGE("media service does not exist.");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE, listenerStub_->AsObject());
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "screenCapture proxy object is nullptr.");
+
+    sptr<IStandardScreenCaptureService> screenCaptureProxy = iface_cast<IStandardScreenCaptureService>(object);
+    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy != nullptr, nullptr, "screenCapture proxy is nullptr.");
+
+    std::shared_ptr<ScreenCaptureClient> screenCapture = ScreenCaptureClient::Create(screenCaptureProxy);
+    CHECK_AND_RETURN_RET_LOG(screenCapture != nullptr, nullptr, "failed to create screenCapture client.");
+
+    screenCaptureClientList_.push_back(screenCapture);
+    return screenCapture;
+}
+
+int32_t MediaClient::DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureService> screenCapture)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(screenCapture != nullptr, MSERR_NO_MEMORY,
+        "input screenCapture is nullptr.");
+    screenCaptureClientList_.remove(screenCapture);
+    return MSERR_OK;
+}
+#endif
+
 sptr<IStandardMonitorService> MediaClient::GetMonitorProxy()
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -361,6 +397,15 @@ void MediaClient::DoMediaServerDied()
         auto avCodecListClient = std::static_pointer_cast<AVCodecListClient>(it);
         if (avCodecListClient != nullptr) {
             avCodecListClient->MediaServerDied();
+        }
+    }
+#endif
+
+#ifdef SUPPORT_SCREEN_CAPTURE
+    for (auto &it : screenCaptureClientList_) {
+        auto screenCaptureClient = std::static_pointer_cast<ScreenCaptureClient>(it);
+        if (screenCaptureClient != nullptr) {
+            screenCaptureClient->MediaServerDied();
         }
     }
 #endif

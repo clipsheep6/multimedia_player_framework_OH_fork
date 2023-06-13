@@ -32,6 +32,9 @@
 #include "avcodec_service_stub.h"
 #include "avcodeclist_service_stub.h"
 #endif
+#ifdef SUPPORT_SCREEN_CAPTURE
+#include "screen_capture_service_stub.h"
+#endif
 #include "monitor_service_stub.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -173,6 +176,11 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         }
         case AVCODEC: {
             return CreateAVCodecStubObject();
+        }
+#endif
+#ifdef SUPPORT_SCREEN_CAPTURE
+        case SCREEN_CAPTURE: {
+            return CreateScreenCaptureStubObject();
         }
 #endif
         case MONITOR: {
@@ -376,6 +384,28 @@ sptr<IRemoteObject> MediaServerManager::CreateAVCodecStubObject()
 }
 #endif
 
+#ifdef SUPPORT_SCREEN_CAPTURE
+sptr<IRemoteObject> MediaServerManager::CreateScreenCaptureStubObject()
+{
+    if (screenCaptureStubMap_.size() >= SERVER_MAX_NUMBER) {
+        MEDIA_LOGE("The number of screen capture services(%{public}zu) has reached the upper limit."
+            "Please release the applied resources.", screenCaptureStubMap_.size());
+        return nullptr;
+    }
+    sptr<ScreenCaptureServiceStub> screenCaptureStub = ScreenCaptureServiceStub::Create();
+    if (screenCaptureStub == nullptr) {
+        MEDIA_LOGE("failed to create ScreenCaptureServiceStub");
+        return nullptr;
+    }
+    sptr<IRemoteObject> object = screenCaptureStub->AsObject();
+    if (object != nullptr) {
+        pid_t pid = IPCSkeleton::GetCallingPid();
+        screenCaptureStubMap_[object] = pid;
+        MEDIA_LOGD("The number of screen capture services(%{public}zu).", screenCaptureStubMap_.size());
+    }
+    return object;
+}
+#endif
 sptr<IRemoteObject> MediaServerManager::GetMonitorStubObject()
 {
     sptr<MonitorServiceStub> monitorStub = MonitorServiceStub::GetInstance();
@@ -463,6 +493,18 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             MEDIA_LOGE("find mediaprofile object failed, pid(%{public}d).", pid);
             break;
         }
+        case SCREEN_CAPTURE: {
+            for (auto it = screenCaptureStubMap_.begin(); it != screenCaptureStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy screen capture stub services(%{public}zu) pid(%{public}d).",
+                        screenCaptureStubMap_.size(), pid);
+                    (void)screenCaptureStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find screen capture object failed, pid(%{public}d).", pid);
+            break;
+        }
         default: {
             MEDIA_LOGE("default case, media server manager failed, pid(%{public}d).", pid);
             break;
@@ -540,6 +582,16 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
     }
     MEDIA_LOGD("mediaprofile stub services(%{public}zu).", recorderProfilesStubMap_.size());
 
+    MEDIA_LOGD("screencapture stub services(%{public}zu) pid(%{public}d).", screenCaptureStubMap_.size(), pid);
+    for (auto itScreenCapture = screenCaptureStubMap_.begin(); itScreenCapture != screenCaptureStubMap_.end();) {
+        if (itScreenCapture->second == pid) {
+            executor_.Commit(itScreenCapture->first);
+            itScreenCapture = screenCaptureStubMap_.erase(itScreenCapture);
+        } else {
+            itScreenCapture++;
+        }
+    }
+    MEDIA_LOGD("screencapture stub services(%{public}zu).", screenCaptureStubMap_.size());
     MonitorServiceStub::GetInstance()->OnClientDie(pid);
     executor_.Clear();
 }

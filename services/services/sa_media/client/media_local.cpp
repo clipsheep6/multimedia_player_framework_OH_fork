@@ -22,6 +22,7 @@
 #include "recorder_server.h"
 #include "avcodeclist_server.h"
 #include "recorder_profiles_server.h"
+#include "screen_capture_server.h"
 
 namespace OHOS {
 namespace Media {
@@ -66,6 +67,11 @@ std::shared_ptr<IRecorderProfilesService> MediaLocal::CreateRecorderProfilesServ
     return RecorderProfilesServer::Create();
 }
 
+std::shared_ptr<IScreenCaptureService> MediaLocal::CreateScreenCaptureService()
+{
+    return ScreenCaptureServer::Create();
+}
+
 int32_t MediaLocal::DestroyRecorderService(std::shared_ptr<IRecorderService> recorder)
 {
     (void)recorder;
@@ -99,6 +105,12 @@ int32_t MediaLocal::DestroyAVCodecListService(std::shared_ptr<IAVCodecListServic
 int32_t MediaLocal::DestroyMediaProfileService(std::shared_ptr<IRecorderProfilesService> recorderProfiles)
 {
     (void)recorderProfiles;
+    return MSERR_OK;
+}
+
+int32_t MediaLocal::DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureService> screenCapture)
+{
+    (void)screenCapture;
     return MSERR_OK;
 }
 } // namespace Media
