@@ -64,7 +64,7 @@ HWTEST_F(AVCodecListUnitTest, AVCdecList_FindVideoDecoder_0100, TestSize.Level0)
     (void)format->PutIntValue(widthKey_, DEFAULT_WIDTH);
     (void)format->PutIntValue(heightKey_, DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormatKey_, enum_->GetVideoPixelFormat(VideoPixelFormatMock::MOCK_NV12));
-    (void)format->PutIntValue(frameRateKey_, MAX_FRAME_RATE);
+    (void)format->PutIntValue(frameRateKey_, MAX_FRAME_RATE_HARD);
     codecName = avCodecList_->FindVideoDecoder(format);
     EXPECT_NE("", codecName);
 }
@@ -84,7 +84,7 @@ HWTEST_F(AVCodecListUnitTest, AVCdecList_FindVideoEncoder_0100, TestSize.Level0)
     (void)format->PutIntValue(widthKey_, DEFAULT_WIDTH);
     (void)format->PutIntValue(heightKey_, DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormatKey_, enum_->GetVideoPixelFormat(VideoPixelFormatMock::MOCK_NV21));
-    (void)format->PutIntValue(frameRateKey_, MAX_FRAME_RATE);
+    (void)format->PutIntValue(frameRateKey_, MAX_FRAME_RATE_SOFT);
     codecName = avCodecList_->FindVideoEncoder(format);
     EXPECT_NE("", codecName);
 }
@@ -172,7 +172,7 @@ void AVCodecListUnitTest::CheckAVDecH264(const std::shared_ptr<VideoCapsMock> &v
     EXPECT_EQ(MIN_HEIGHT, videoCaps->GetSupportedHeight().minVal);
     EXPECT_EQ(MAX_HEIGHT, videoCaps->GetSupportedHeight().maxVal);
     EXPECT_EQ(1, videoCaps->GetSupportedFrameRate().minVal);
-    EXPECT_EQ(MAX_FRAME_RATE, videoCaps->GetSupportedFrameRate().maxVal);
+    EXPECT_EQ(MAX_FRAME_RATE_SOFT, videoCaps->GetSupportedFrameRate().maxVal);
     EXPECT_EQ(0, videoCaps->GetSupportedEncodeQuality().minVal);
     EXPECT_EQ(0, videoCaps->GetSupportedEncodeQuality().maxVal);
     EXPECT_EQ(0, videoCaps->GetSupportedQuality().minVal);
@@ -205,7 +205,7 @@ void AVCodecListUnitTest::CheckAVDecH263(const std::shared_ptr<VideoCapsMock> &v
     EXPECT_EQ(MIN_HEIGHT, videoCaps->GetSupportedHeight().minVal);
     EXPECT_EQ(MAX_HEIGHT, videoCaps->GetSupportedHeight().maxVal);
     EXPECT_EQ(1, videoCaps->GetSupportedFrameRate().minVal);
-    EXPECT_EQ(MAX_FRAME_RATE, videoCaps->GetSupportedFrameRate().maxVal);
+    EXPECT_EQ(MAX_FRAME_RATE_SOFT, videoCaps->GetSupportedFrameRate().maxVal);
     EXPECT_EQ(0, videoCaps->GetSupportedEncodeQuality().minVal);
     EXPECT_EQ(0, videoCaps->GetSupportedEncodeQuality().maxVal);
     EXPECT_EQ(0, videoCaps->GetSupportedQuality().minVal);
@@ -238,7 +238,7 @@ void AVCodecListUnitTest::CheckAVDecMpeg2Video(const std::shared_ptr<VideoCapsMo
     EXPECT_EQ(MIN_HEIGHT, videoCaps->GetSupportedHeight().minVal);
     EXPECT_EQ(MAX_HEIGHT, videoCaps->GetSupportedHeight().maxVal);
     EXPECT_EQ(1, videoCaps->GetSupportedFrameRate().minVal);
-    EXPECT_EQ(MAX_FRAME_RATE, videoCaps->GetSupportedFrameRate().maxVal);
+    EXPECT_EQ(MAX_FRAME_RATE_SOFT, videoCaps->GetSupportedFrameRate().maxVal);
     EXPECT_EQ(0, videoCaps->GetSupportedEncodeQuality().minVal);
     EXPECT_EQ(0, videoCaps->GetSupportedEncodeQuality().maxVal);
     EXPECT_EQ(0, videoCaps->GetSupportedQuality().minVal);
@@ -273,7 +273,7 @@ void AVCodecListUnitTest::CheckAVDecMpeg4(const std::shared_ptr<VideoCapsMock> &
     EXPECT_EQ(MIN_HEIGHT, videoCaps->GetSupportedHeight().minVal);
     EXPECT_EQ(MAX_HEIGHT, videoCaps->GetSupportedHeight().maxVal);
     EXPECT_EQ(1, videoCaps->GetSupportedFrameRate().minVal);
-    EXPECT_EQ(MAX_FRAME_RATE, videoCaps->GetSupportedFrameRate().maxVal);
+    EXPECT_EQ(MAX_FRAME_RATE_SOFT, videoCaps->GetSupportedFrameRate().maxVal);
     EXPECT_EQ(0, videoCaps->GetSupportedEncodeQuality().minVal);
     EXPECT_EQ(0, videoCaps->GetSupportedEncodeQuality().maxVal);
     EXPECT_EQ(0, videoCaps->GetSupportedQuality().minVal);
@@ -306,7 +306,7 @@ void AVCodecListUnitTest::CheckAVEncMpeg4(const std::shared_ptr<VideoCapsMock> &
     EXPECT_EQ(MIN_HEIGHT, videoCaps->GetSupportedHeight().minVal);
     EXPECT_EQ(DEFAULT_HEIGHT, videoCaps->GetSupportedHeight().maxVal);
     EXPECT_EQ(1, videoCaps->GetSupportedFrameRate().minVal);
-    EXPECT_EQ(MAX_FRAME_RATE, videoCaps->GetSupportedFrameRate().maxVal);
+    EXPECT_EQ(MAX_FRAME_RATE_SOFT, videoCaps->GetSupportedFrameRate().maxVal);
     EXPECT_EQ(0, videoCaps->GetSupportedEncodeQuality().minVal);
     EXPECT_EQ(0, videoCaps->GetSupportedEncodeQuality().maxVal);
     EXPECT_EQ(0, videoCaps->GetSupportedQuality().minVal);
@@ -560,13 +560,13 @@ HWTEST_F(AVCodecListUnitTest, AVCdecList_GetSupportedFrameRatesFor_0100, TestSiz
         std::shared_ptr<VideoCapsMock> pVideoCaps = *iter;
         ret = (*iter)->GetSupportedFrameRatesFor(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         EXPECT_GE(ret.minVal, 0);
-        EXPECT_LE(ret.maxVal, MAX_FRAME_RATE);
+        EXPECT_LE(ret.maxVal, MAX_FRAME_RATE_HARD);
     }
     std::vector<std::shared_ptr<VideoCapsMock>> videoEncoderArray = avCodecList_->GetVideoEncoderCaps();
     for (auto iter = videoEncoderArray.begin(); iter != videoEncoderArray.end(); iter++) {
         ret = (*iter)->GetSupportedFrameRatesFor(DEFAULT_WIDTH, DEFAULT_HEIGHT);
         EXPECT_GE(ret.minVal, 0);
-        EXPECT_LE(ret.maxVal, MAX_FRAME_RATE);
+        EXPECT_LE(ret.maxVal, MAX_FRAME_RATE_HARD);
     }
 }
 
@@ -584,13 +584,13 @@ HWTEST_F(AVCodecListUnitTest, AVCdecList_GetSupportedFrameRatesFor_0200, TestSiz
         std::shared_ptr<VideoCapsMock> pVideoCaps = *iter;
         ret = (*iter)->GetSupportedFrameRatesFor(MAX_WIDTH + 1, MAX_HEIGHT + 1);
         EXPECT_GE(ret.minVal, 0);
-        EXPECT_LE(ret.maxVal, MAX_FRAME_RATE);
+        EXPECT_LE(ret.maxVal, MAX_FRAME_RATE_HARD);
     }
     std::vector<std::shared_ptr<VideoCapsMock>> videoEncoderArray = avCodecList_->GetVideoEncoderCaps();
     for (auto iter = videoEncoderArray.begin(); iter != videoEncoderArray.end(); iter++) {
         ret = (*iter)->GetSupportedFrameRatesFor(MIN_WIDTH - 1, MIN_HEIGHT - 1);
         EXPECT_GE(ret.minVal, 0);
-        EXPECT_LE(ret.maxVal, MAX_FRAME_RATE);
+        EXPECT_LE(ret.maxVal, MAX_FRAME_RATE_HARD);
     }
 }
 
