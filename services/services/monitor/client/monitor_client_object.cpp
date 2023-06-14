@@ -33,9 +33,9 @@ int32_t MonitorClientObject::EnableMonitor()
         return MSERR_OK;
     }
 
-    monitor_ = MonitorClient::GetInstance();
-    CHECK_AND_RETURN_RET_LOG(monitor_ != nullptr, MSERR_NO_MEMORY, "Failed to GetInstance!");
-    int32_t ret = monitor_->StartClick(this);
+    std::shared_ptr<MonitorClient> monitor = MonitorClient::GetInstance();
+    CHECK_AND_RETURN_RET_LOG(monitor != nullptr, MSERR_NO_MEMORY, "Failed to GetInstance!");
+    int32_t ret = monitor->StartClick(this);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to StartClick!");
     monitorEnable_ = true;
     return ret;
@@ -52,11 +52,11 @@ int32_t MonitorClientObject::DisableMonitor()
         return MSERR_OK;
     }
 
-    CHECK_AND_RETURN_RET_LOG(monitor_ != nullptr, MSERR_NO_MEMORY, "Failed to GetInstance!");
-    int32_t ret = monitor_->StopClick(this);
+    std::shared_ptr<MonitorClient> monitor = MonitorClient::GetInstance();
+    CHECK_AND_RETURN_RET_LOG(monitor != nullptr, MSERR_NO_MEMORY, "Failed to GetInstance!");
+    int32_t ret = monitor->StopClick(this);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to StopClick!");
     monitorEnable_ = false;
-    monitor_ = nullptr;
     return ret;
 }
 } // namespace Media
