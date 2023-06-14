@@ -24,6 +24,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MonitorCli
 
 namespace OHOS {
 namespace Media {
+std::mutex MonitorClient::monitorMutex;
 MonitorClient::MonitorClient()
 {
     MEDIA_LOGI("Instances create");
@@ -45,9 +46,15 @@ MonitorClient::~MonitorClient()
     }
 }
 
-MonitorClient &MonitorClient::GetInstance()
+std::shared_ptr<MonitorClient> MonitorClient::GetInstance()
 {
-    static MonitorClient monitor;
+    static std::shared_ptr<MonitorClient> monitor = nullptr;
+    if (monitor == nullptr) {
+        std::lock_guard<std::mutex> lock(monitorMutex);
+        if (monitor == nullptr) {
+            monitor = std::make_shared<MonitorClient>();
+        }
+    }
     return monitor;
 }
 

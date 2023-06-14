@@ -28,7 +28,7 @@ public:
     MonitorClient();
     ~MonitorClient();
 
-    static MonitorClient &GetInstance();
+    static std::shared_ptr<MonitorClient> GetInstance();
     int32_t StartClick(MonitorClientObject *obj);
     int32_t StopClick(MonitorClientObject *obj);
     void MediaServerDied();
@@ -44,6 +44,7 @@ private:
     std::condition_variable clickCond_;
     std::unique_ptr<std::thread> clickThread_ = nullptr;
     std::set<MonitorClientObject *> objSet_;
+    static std::mutex monitorMutex;
 };
 } // namespace Media
 } // namespace OHOS
