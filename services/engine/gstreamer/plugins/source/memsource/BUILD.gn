@@ -79,7 +79,10 @@ ohos_shared_library("gst_mem_src") {
     "gst_surface_src.cpp",
   ]
 
-  configs = [ ":gst_mem_src_config" ]
+  configs = [
+    "//foundation/multimedia/player_framework/test:coverage_flags",
+    ":gst_mem_src_config",
+  ]
 
   deps = [
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common:gst_media_common",
@@ -105,7 +108,10 @@ ohos_shared_library("gst_mem_src") {
 
 ohos_static_library("gst_mem_src_base") {
   sources = [ "gst_mem_src.cpp" ]
-  configs = [ ":gst_mem_src_config" ]
+  configs = [
+    "//foundation/multimedia/player_framework/test:coverage_flags",
+    ":gst_mem_src_config",
+  ]
   subsystem_name = "multimedia"
   part_name = "player_framework"
 }

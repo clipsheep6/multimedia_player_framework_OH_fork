@@ -73,7 +73,10 @@ ohos_shared_library("gst_mem_sink") {
     "gst_video_display_sink.cpp",
   ]
 
-  configs = [ ":gst_mem_sink_config" ]
+  configs = [
+    "//foundation/multimedia/player_framework/test:coverage_flags",
+    ":gst_mem_sink_config",
+  ]
 
   deps = [
     "//foundation/graphic/graphic_2d/utils:sync_fence",
@@ -99,7 +102,10 @@ ohos_shared_library("gst_mem_sink") {
 
 ohos_static_library("gst_mem_sink_base") {
   sources = [ "gst_mem_sink.cpp" ]
-  configs = [ ":gst_mem_sink_config" ]
+  configs = [
+    "//foundation/multimedia/player_framework/test:coverage_flags",
+    ":gst_mem_sink_config",
+  ]
   deps = [ "../../../../../utils:media_service_utils" ]
   subsystem_name = "multimedia"
   part_name = "player_framework"

@@ -28,6 +28,7 @@ declare_args() {
   multimedia_player_framework_support_xcollie = true
   multimedia_player_framework_support_jsstack = true
   multimedia_player_framework_support_seccomp = false
+  player_framework_feature_coverage = false
   if (defined(build_seccomp) && build_seccomp) {
     multimedia_player_framework_support_seccomp = true
   }

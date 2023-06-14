@@ -83,6 +83,7 @@ ohos_static_library("media_engine_gst_avcodec") {
   ]
 
   configs = [
+    "//foundation/multimedia/player_framework/test:coverage_flags",
     ":media_engine_gst_avcodec_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils_public_config",

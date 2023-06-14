@@ -156,13 +156,17 @@ ohos_shared_library("media_client") {
   }
 
   configs = [
+    "//foundation/multimedia/player_framework/test:coverage_flags",
     ":media_client_base_config",
     ":media_client_ipc_config",
   ]
 
   deps = [ "../../../services/utils:media_format" ]
 
-  public_configs = [ ":media_public_config" ]
+  public_configs = [
+    "//foundation/multimedia/player_framework/test:coverage_flags",
+    ":media_public_config"
+  ]
 
   external_deps = [
     "audio_framework:audio_client",

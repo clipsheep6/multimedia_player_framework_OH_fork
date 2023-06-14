@@ -68,6 +68,7 @@ ohos_shared_library("gst_media_common") {
   }
 
   configs = [
+    "//foundation/multimedia/player_framework/test:coverage_flags",
     ":gst_plugins_common_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]

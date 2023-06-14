@@ -15,6 +15,13 @@ import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
 
+config("coverage_flags") {
+  if (player_framework_feature_coverage) {
+    cflags = [ "--coverage" ]
+    ldflags = [ "--coverage" ]
+  }
+}
+
 group("media_unit_test") {
   testonly = true
   deps = []
