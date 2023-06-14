@@ -44,7 +44,8 @@ private:
     std::condition_variable clickCond_;
     std::unique_ptr<std::thread> clickThread_ = nullptr;
     std::set<MonitorClientObject *> objSet_;
-    static std::mutex monitorMutex;
+    static std::mutex monitorClientMutex_;
+    static std::atomic<bool> monitorClientDestroy_;
 };
 } // namespace Media
 } // namespace OHOS

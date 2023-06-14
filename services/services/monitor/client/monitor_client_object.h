@@ -30,6 +30,7 @@ public:
 protected:
     bool monitorEnable_ = false;
     std::mutex monitorMutex_;
+    std::shared_ptr<MonitorClient> monitor_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS
