@@ -124,7 +124,7 @@ void MonitorClient::MediaServerDied()
     MEDIA_LOGI("MediaServerDied");
     std::lock_guard<std::mutex> cmdLock(cmdMutex_);
     std::unique_lock<std::mutex> threadLock(threadMutex_);
-    CHECK_AND_RETURN_RET(monitorClientDestroy_.load(), MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_LOG(monitorClientDestroy_.load(), "monitor client destroy");
     objSet_.clear();
     enableThread_ = false;
     monitorProxy_ = nullptr;
