@@ -282,6 +282,12 @@ int32_t PlayerMock::SetSource(const std::string url)
     return ret;
 }
 
+int32_t PlayerMock::SetSource(int32_t fd, int64_t offset, int64_t size)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    return player_->SetSource(fd, offset, size);
+}
+
 int32_t PlayerMock::SetSource(const std::string &path, int64_t offset, int64_t size)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");

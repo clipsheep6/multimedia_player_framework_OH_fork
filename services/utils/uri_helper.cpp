@@ -37,26 +37,18 @@ static const std::map<std::string_view, uint8_t> g_validUriTypes = {
 
 static bool PathToRealFileUrl(const std::string_view &path, std::string &realPath)
 {
-    if (path.empty()) {
-        MEDIA_LOGE("path is empty!");
-        return false;
-    }
-
-    if ((path.length() >= PATH_MAX)) {
-        MEDIA_LOGE("path len is error, the len is: [%{public}zu]", path.length());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(!path.empty(), false, "path is empty!");
+    CHECK_AND_RETURN_RET_LOG(path.length() < PATH_MAX, false,
+        "path len is error, the len is: [%{public}zu]", path.length());
 
     char tmpPath[PATH_MAX] = {0};
-    if (realpath(path.data(), tmpPath) == nullptr) {
-        MEDIA_LOGE("path to realpath error, %{public}s", path.data());
-        return false;
-    }
+    char *pathAddr = realpath(path.data(), tmpPath);
+    CHECK_AND_RETURN_RET_LOG(pathAddr != nullptr, false,
+        "path to realpath error, %{public}s", path.data());
 
-    if (access(tmpPath, F_OK) != 0) {
-        MEDIA_LOGE("check realpath (%{private}s) error", tmpPath);
-        return false;
-    }
+    int ret = access(tmpPath, F_OK);
+    CHECK_AND_RETURN_RET_LOG(ret == 0, false,
+        "check realpath (%{private}s) error", tmpPath);
 
     realPath = std::string("file://") + tmpPath;
     return true;
@@ -74,17 +66,14 @@ bool StrToInt(const std::string_view& str, T& value)
     errno = 0;
     const char* addr = valStr.c_str();
     long long result = strtoll(addr, &end, 10); /* 10 means decimal */
-    if ((end == addr) || (end[0] != '\0') || (errno == ERANGE) ||
-            (result > LLONG_MAX) || (result < LLONG_MIN)) {
-        MEDIA_LOGE("call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(result >= LLONG_MIN && result <= LLONG_MAX, false,
+        "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
+    CHECK_AND_RETURN_RET_LOG(end != addr && end[0] == '\0' && errno != ERANGE, false,
+        "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
 
     if constexpr (std::is_same<int32_t, T>::value) {
-        if ((result > INT_MAX) || (result < INT_MIN)) {
-            MEDIA_LOGE("call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
-            return false;
-        }
+        CHECK_AND_RETURN_RET_LOG(result >= INT_MIN && result <= INT_MAX, false,
+            "call StrToInt func false,  input str is: %{public}s!", valStr.c_str());
         value = static_cast<int32_t>(result);
         return true;
     }
@@ -98,50 +87,16 @@ std::pair<std::string_view, std::string_view> SplitUriHeadAndBody(const std::str
     std::string_view::size_type start = str.find_first_not_of(' ');
     std::string_view::size_type end = str.find_last_not_of(' ');
     std::pair<std::string_view, std::string_view> result;
-    std::string_view noSpaceStr;
-
-    if (end == std::string_view::npos) {
-        noSpaceStr = str.substr(start);
-    } else {
-        noSpaceStr = str.substr(start, end - start + 1);
-    }
+    std::string_view noSpaceStr =
+        (end != std::string_view::npos ? str.substr(start, end - start + 1) : str.substr(start));
 
     std::string_view delimiter = "://";
     std::string_view::size_type pos = noSpaceStr.find(delimiter);
-    if (pos == std::string_view::npos) {
-        result.first = "";
-        result.second = noSpaceStr;
-    } else {
-        result.first = noSpaceStr.substr(0, pos);
-        result.second = noSpaceStr.substr(pos + delimiter.size());
-    }
+    result.first = (pos != std::string_view::npos ? noSpaceStr.substr(0, pos) : "");
+    result.second =
+        (pos != std::string_view::npos ? noSpaceStr.substr(pos + delimiter.size()) : noSpaceStr);
 
     return result;
-}
-
-void UriHelper::Swap(UriHelper &&rhs) noexcept
-{
-    formattedUri_.swap(rhs.formattedUri_);
-    type_ = rhs.type_;
-    rawFileUri_ = rhs.rawFileUri_;
-    std::swap(fd_, rhs.fd_);
-    offset_ = rhs.offset_;
-    size_ = rhs.size_;
-}
-
-void UriHelper::Copy(const UriHelper &rhs) noexcept
-{
-    formattedUri_ = rhs.formattedUri_;
-    type_ = rhs.type_;
-    if (type_ == UriHelper::URI_TYPE_FILE) {
-        rawFileUri_ = formattedUri_;
-        rawFileUri_ = rawFileUri_.substr(strlen("file://"));
-    }
-    if (rhs.fd_ > 0) {
-        fd_ = ::dup(rhs.fd_);
-    }
-    offset_ = rhs.offset_;
-    size_ = rhs.size_;
 }
 
 UriHelper::UriHelper(const std::string_view &uri)
@@ -161,46 +116,13 @@ UriHelper::~UriHelper()
     }
 }
 
-UriHelper::UriHelper(const UriHelper &rhs)
-{
-    Copy(rhs);
-}
-
-UriHelper &UriHelper::operator=(const UriHelper &rhs)
-{
-    if (&rhs == this) {
-        return *this;
-    }
-
-    Copy(rhs);
-    return *this;
-}
-
-UriHelper::UriHelper(UriHelper &&rhs) noexcept
-{
-    Swap(std::forward<UriHelper &&>(rhs));
-}
-
-UriHelper &UriHelper::operator=(UriHelper &&rhs) noexcept
-{
-    if (&rhs == this) {
-        return *this;
-    }
-
-    Swap(std::forward<UriHelper &&>(rhs));
-    return *this;
-}
-
 void UriHelper::FormatMeForUri(const std::string_view &uri) noexcept
 {
-    if (!formattedUri_.empty()) {
-        return;
-    }
+    CHECK_AND_RETURN_LOG(formattedUri_.empty(),
+        "formattedUri is valid:%{public}s", formattedUri_.c_str());
 
     auto [head, body] = SplitUriHeadAndBody(uri);
-    if (g_validUriTypes.count(head) == 0) {
-        return;
-    }
+    CHECK_AND_RETURN(g_validUriTypes.count(head) != 0);
     type_ = g_validUriTypes.at(head);
 
     // verify whether the uri is readable and generate the formatted uri.
@@ -232,10 +154,8 @@ void UriHelper::FormatMeForUri(const std::string_view &uri) noexcept
 
 void UriHelper::FormatMeForFd() noexcept
 {
-    if (!formattedUri_.empty()) {
-        return;
-    }
-
+    CHECK_AND_RETURN_LOG(formattedUri_.empty(),
+        "formattedUri is valid:%{public}s", formattedUri_.c_str());
     type_ = URI_TYPE_FD;
     (void)CorrectFdParam();
 }
@@ -246,10 +166,8 @@ bool UriHelper::CorrectFdParam()
     CHECK_AND_RETURN_RET_LOG(flags != -1, false, "Fail to get File Status Flags");
 
     struct stat64 st;
-    if (fstat64(fd_, &st) != 0) {
-        MEDIA_LOGE("can not get file state");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(fstat64(fd_, &st) == 0, false,
+        "can not get file state");
 
     int64_t fdSize = static_cast<int64_t>(st.st_size);
     if (offset_ < 0 || offset_ > fdSize) {
@@ -278,18 +196,14 @@ std::string UriHelper::FormattedUri() const
 
 bool UriHelper::AccessCheck(uint8_t flag) const
 {
-    if (type_ == URI_TYPE_UNKNOWN) {
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(type_ != URI_TYPE_UNKNOWN, false, "type is unknown");
 
     if (type_ == URI_TYPE_FILE) {
         uint32_t mode = (flag & URI_READ) ? R_OK : 0;
         mode |= (flag & URI_WRITE) ? W_OK : 0;
         int ret = access(rawFileUri_.data(), static_cast<int>(mode));
-        if (ret != 0) {
-            MEDIA_LOGE("Fail to access path: %{public}s", rawFileUri_.data());
-            return false;
-        }
+        CHECK_AND_RETURN_RET_LOG(ret == 0, false,
+            "Fail to access path: %{public}s", rawFileUri_.data());
         return true;
     } else if (type_ == URI_TYPE_FD) {
         CHECK_AND_RETURN_RET_LOG(fd_ > 0, false, "Fail to get file descriptor from uri, fd %{public}d", fd_);
@@ -298,10 +212,7 @@ bool UriHelper::AccessCheck(uint8_t flag) const
         CHECK_AND_RETURN_RET_LOG(flags != -1, false, "Fail to get File Status Flags, fd %{public}d", fd_);
 
         uint32_t mode = (flag & URI_WRITE) ? O_RDWR : O_RDONLY;
-        if ((static_cast<unsigned int>(flags) & mode) != mode) {
-            return false;
-        }
-        return true;
+        return ((static_cast<unsigned int>(flags) & mode) != mode) ? false : true;
     }
 
     return true; // Not implemented, defaultly return true.

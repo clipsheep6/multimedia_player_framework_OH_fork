@@ -114,7 +114,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0100, TestSize.Level0)
         {AV_KEY_DATE_TIME, "2022-05-29 22:10:43"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("H264_AAC.mp4");
+        std::string("H264_AAC.mp4");
     CheckMeta(uri, expectMeta);
 }
 
@@ -144,7 +144,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0200, Function | MediumT
         {AV_KEY_DATE_TIME, "2022"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/H264_MP3.mp4");
+        std::string("/H264_MP3.mp4");
     CheckMeta(uri, expectMeta);
 }
 
@@ -174,7 +174,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0300, Function | MediumT
         {AV_KEY_DATE_TIME, "2012-06-30 22:46:43"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/MPEG2_AAC.mp4");
+        std::string("/MPEG2_AAC.mp4");
     CheckMeta(uri, expectMeta);
 }
 
@@ -204,7 +204,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0400, Function | MediumT
         {AV_KEY_DATE_TIME, "2022-05-19"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/MPEG2_MP3.mp4");
+        std::string("/MPEG2_MP3.mp4");
     CheckMeta(uri, expectMeta);
 }
 
@@ -234,7 +234,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0500, Function | MediumT
         {AV_KEY_DATE_TIME, "2022-05-29 22:46:43"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/MPEG4_AAC.mp4");
+        std::string("/MPEG4_AAC.mp4");
     CheckMeta(uri, expectMeta);
 }
 
@@ -264,7 +264,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP4_0600, Function | MediumT
         {AV_KEY_DATE_TIME, "2022-05"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/MPEG4_MP3.mp4");
+        std::string("/MPEG4_MP3.mp4");
     CheckMeta(uri, expectMeta);
 }
 
@@ -294,7 +294,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_M4A_0100, Function | MediumT
         {AV_KEY_DATE_TIME, "2015-11-23"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/aac_48000Hz_70kbs_mono.m4a");
+        std::string("/aac_48000Hz_70kbs_mono.m4a");
     CheckMeta(uri, expectMeta);
 }
 
@@ -324,7 +324,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_MP3_0100, Function | MediumT
         {AV_KEY_DATE_TIME, "2022-05"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/mp3_48000Hz_64kbs_mono.mp3");
+        std::string("/mp3_48000Hz_64kbs_mono.mp3");
     CheckMeta(uri, expectMeta);
 }
 
@@ -353,7 +353,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_AAC_0100, Function | MediumT
         {AV_KEY_VIDEO_WIDTH, ""},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/aac_44100Hz_143kbs_stereo.aac");
+        std::string("/aac_44100Hz_143kbs_stereo.aac");
     CheckMeta(uri, expectMeta);
 }
 
@@ -383,7 +383,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_OGG_0100, Function | MediumT
         {AV_KEY_DATE_TIME, "2015-11-23"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/vorbis_48000Hz_80kbs_mono.ogg");
+        std::string("/vorbis_48000Hz_80kbs_mono.ogg");
     CheckMeta(uri, expectMeta);
 }
 
@@ -413,7 +413,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_WAV_0100, Function | MediumT
         {AV_KEY_DATE_TIME, "2022-05-29 22:46:43"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/pcm_s16le_48000Hz_768kbs_mono.wav");
+        std::string("/pcm_s16le_48000Hz_768kbs_mono.wav");
     CheckMeta(uri, expectMeta);
 }
 
@@ -443,7 +443,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_WAV_0200, Function | MediumT
         {AV_KEY_DATE_TIME, "2022"},
     };
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("/pcm_s16le_48000Hz_768kbs_mono_date.wav");
+        std::string("/pcm_s16le_48000Hz_768kbs_mono_date.wav");
     CheckMeta(uri, expectMeta);
 }
 
@@ -455,7 +455,7 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_WAV_0200, Function | MediumT
 HWTEST_F(AVMetadataUnitTest, FetchArtPicture_Format_MP3_0100, Function | MediumTest | Level0)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("MP3_SURFACE.mp3");
+        std::string("MP3_SURFACE.mp3");
 
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
@@ -474,7 +474,7 @@ HWTEST_F(AVMetadataUnitTest, FetchArtPicture_Format_MP3_0100, Function | MediumT
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0100, TestSize.Level0)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("out_170_170.mp4");
+        std::string("out_170_170.mp4");
     GetThumbnail(uri);
 }
 
@@ -486,7 +486,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0100, TestSize.Level0)
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0200, TestSize.Level0)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("out_480_320.mp4");
+        std::string("out_480_320.mp4");
     GetThumbnail(uri);
 }
 
@@ -498,7 +498,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0200, TestSize.Level0)
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0300, TestSize.Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("MPEG2_AAC.mp4");
+        std::string("MPEG2_AAC.mp4");
     GetThumbnail(uri);
 }
 
@@ -510,7 +510,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0300, TestSize.Level2)
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0400, TestSize.Level0)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("MPEG4_AAC.mp4");
+        std::string("MPEG4_AAC.mp4");
     GetThumbnail(uri);
 }
 
@@ -522,7 +522,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0400, TestSize.Level0)
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0100, TestSize.Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("H264_AAC.mp4");
+        std::string("H264_AAC.mp4");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -578,7 +578,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0100, TestSize.Level2)
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0200, TestSize.Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("H264_AAC.mp4");
+        std::string("H264_AAC.mp4");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -600,7 +600,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0200, TestSize.Level2)
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0300, TestSize.Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("H264_AAC.mp4");
+        std::string("H264_AAC.mp4");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -622,7 +622,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0300, TestSize.Level2)
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0400, TestSize.Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("H264_AAC.mp4");
+        std::string("H264_AAC.mp4");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -644,7 +644,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0400, TestSize.Level2)
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0500, Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("H264_AAC.mp4");
+        std::string("H264_AAC.mp4");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -669,7 +669,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0500, Level2)
 HWTEST_F(AVMetadataUnitTest, SetSource_API_0100, Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("H264_AAC.mp4");
+        std::string("H264_AAC.mp4");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -685,7 +685,7 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0100, Level2)
 HWTEST_F(AVMetadataUnitTest, SetSource_API_0200, Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("H264_AAC.mp4");
+        std::string("H264_AAC.mp4");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -707,7 +707,7 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0200, Level2)
 HWTEST_F(AVMetadataUnitTest, SetSource_API_0300, Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("1kb.mp3");
+        std::string("1kb.mp3");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -734,7 +734,7 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0300, Level2)
 HWTEST_F(AVMetadataUnitTest, SetSource_API_0400, Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("aac_44100Hz_143kbs_stereo.aac");
+        std::string("aac_44100Hz_143kbs_stereo.aac");
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
@@ -761,7 +761,21 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0400, Level2)
 HWTEST_F(AVMetadataUnitTest, SetSource_API_0500, Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-    std::string("error.mp4");
+        std::string("error.mp4");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_NE(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+}
+
+/**
+    * @tc.number    : SetSource_API_0600
+    * @tc.name      : SetSource invalid.mp4
+    * @tc.desc      : SetSource API
+*/
+HWTEST_F(AVMetadataUnitTest, SetSource_API_0600, Level2)
+{
+    std::string uri = "file:///data/test/invalid.mp4";
     std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
     ASSERT_NE(nullptr, helper);
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());

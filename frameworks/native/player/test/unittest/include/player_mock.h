@@ -36,6 +36,7 @@ const std::string HTTPS_PLAY = "HTTPS";
 const std::string HTTP_PLAY = "HTTP";
 const std::string LOCAL_PLAY = "LOCAL";
 const std::string HLS_PLAY = "HLS";
+const std::string INVALID_FILE = MEDIA_ROOT + "invalid.mp4";
 } // namespace PlayerTestParam
 
 class PlayerSignal {
@@ -88,6 +89,7 @@ public:
     int32_t SetSource(const std::string url);
     int32_t SetDataSrc(const std::string &path, int32_t size, bool seekable);
     int32_t SetSource(const std::string &path, int64_t offset, int64_t size);
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size);
     int32_t Prepare();
     int32_t PrepareAsync();
     int32_t Play();
