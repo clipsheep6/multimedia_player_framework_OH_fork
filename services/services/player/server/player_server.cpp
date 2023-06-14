@@ -552,6 +552,7 @@ int32_t PlayerServer::HandleReset()
     playerEngine_ = nullptr;
     dataSrc_ = nullptr;
     config_.looping = false;
+    uriHelper_ = nullptr;
     {
         decltype(subUriHelpers_) temp;
         temp.swap(subUriHelpers_);
