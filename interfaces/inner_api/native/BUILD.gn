@@ -165,7 +165,7 @@ ohos_shared_library("media_client") {
 
   public_configs = [
     "//foundation/multimedia/player_framework/test:coverage_flags",
-    ":media_public_config"
+    ":media_public_config",
   ]
 
   external_deps = [

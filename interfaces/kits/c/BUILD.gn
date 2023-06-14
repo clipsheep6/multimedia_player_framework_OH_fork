@@ -169,7 +169,7 @@ ohos_shared_library("native_media_aenc") {
 
   configs = [
     "//foundation/multimedia/player_framework/test:coverage_flags",
-    ":media_capi_config"
+    ":media_capi_config",
   ]
 
   deps = [

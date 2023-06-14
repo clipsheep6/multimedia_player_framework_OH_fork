@@ -20,6 +20,8 @@ ohos_shared_library("media_engine_common") {
     debug = false
   }
 
+  configs = [ "//foundation/multimedia/player_framework/test:coverage_flags" ]
+
   deps = [ "avcodeclist:media_engine_common_avcodeclist" ]
 
   subsystem_name = "multimedia"
