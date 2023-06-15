@@ -25,6 +25,9 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MonitorCli
 
 namespace OHOS {
 namespace Media {
+std::mutex MonitorClient::monitorClientMutex_;
+std::atomic<bool> MonitorClient::clientDestroy_ = false;
+
 MonitorClient::MonitorClient()
 {
     MEDIA_LOGI("Instances create");
@@ -47,9 +50,17 @@ MonitorClient::~MonitorClient()
     }
 }
 
-MonitorClient &MonitorClient::GetInstance()
+std::shared_ptr<MonitorClient> MonitorClient::GetInstance()
 {
-    static MonitorClient monitor;
+    static std::shared_ptr<MonitorClient> monitor = nullptr;
+
+    CHECK_AND_RETURN_RET(!clientDestroy_, nullptr);
+    if (monitor == nullptr) {
+        std::lock_guard<std::mutex> lock(monitorClientMutex_);
+        if (monitor == nullptr) {
+            monitor = std::make_shared<MonitorClient>();
+        }
+    }
     return monitor;
 }
 
@@ -67,8 +78,10 @@ bool MonitorClient::IsVaildProxy()
 
 int32_t MonitorClient::StartClick(MonitorClientObject *obj)
 {
+    CHECK_AND_RETURN_RET(!clientDestroy_, MSERR_INVALID_OPERATION);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " StartClick", FAKE_POINTER(obj));
     std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET(!clientDestroy_, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(objSet_.count(obj) == 0, MSERR_OK, "It has already been activated");
 
     objSet_.insert(obj);
@@ -93,8 +106,10 @@ int32_t MonitorClient::StartClick(MonitorClientObject *obj)
 
 int32_t MonitorClient::StopClick(MonitorClientObject *obj)
 {
+    CHECK_AND_RETURN_RET(!clientDestroy_, MSERR_INVALID_OPERATION);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " StopClick", FAKE_POINTER(obj));
     std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET(!clientDestroy_, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(objSet_.count(obj), MSERR_OK, "Not started");
 
     objSet_.erase(obj);
@@ -107,8 +122,10 @@ int32_t MonitorClient::StopClick(MonitorClientObject *obj)
 
 void MonitorClient::MediaServerDied()
 {
+    CHECK_AND_RETURN(!clientDestroy_);
     MEDIA_LOGI("MediaServerDied");
     std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN(!clientDestroy_);
     objSet_.clear();
     isVaildProxy_ = false;
     clickCond_.notify_all();
