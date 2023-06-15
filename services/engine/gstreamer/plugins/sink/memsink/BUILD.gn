@@ -74,7 +74,7 @@ ohos_shared_library("gst_mem_sink") {
   ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "../../../../../../test:coverage_flags",
     ":gst_mem_sink_config",
   ]
 
@@ -103,7 +103,7 @@ ohos_shared_library("gst_mem_sink") {
 ohos_static_library("gst_mem_sink_base") {
   sources = [ "gst_mem_sink.cpp" ]
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "../../../../../../test:coverage_flags",
     ":gst_mem_sink_config",
   ]
   deps = [ "../../../../../utils:media_service_utils" ]

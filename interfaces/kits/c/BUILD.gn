@@ -76,7 +76,7 @@ ohos_shared_library("native_media_core") {
   ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "$MEDIA_ROOT_DIR/test:coverage_flags",
     ":media_capi_config",
   ]
 
@@ -109,7 +109,7 @@ ohos_shared_library("native_media_codecbase") {
   ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "$MEDIA_ROOT_DIR/test:coverage_flags",
     ":media_capi_config",
   ]
 
@@ -134,7 +134,7 @@ ohos_shared_library("native_media_adec") {
   ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "$MEDIA_ROOT_DIR/test:coverage_flags",
     ":media_capi_config",
   ]
 
@@ -168,7 +168,7 @@ ohos_shared_library("native_media_aenc") {
   ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "$MEDIA_ROOT_DIR/test:coverage_flags",
     ":media_capi_config",
   ]
 
@@ -202,7 +202,7 @@ ohos_shared_library("native_media_vdec") {
   ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "$MEDIA_ROOT_DIR/test:coverage_flags",
     ":media_capi_config",
   ]
 
@@ -238,7 +238,7 @@ ohos_shared_library("native_media_venc") {
   ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "$MEDIA_ROOT_DIR/test:coverage_flags",
     ":media_capi_config",
   ]
 

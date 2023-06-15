@@ -72,7 +72,7 @@ ohos_shared_library("gst_audio_server_sink") {
   ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "../../../../../../test:coverage_flags",
     ":gst_audio_server_sink_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]

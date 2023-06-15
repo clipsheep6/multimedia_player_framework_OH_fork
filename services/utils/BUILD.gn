@@ -96,7 +96,7 @@ ohos_shared_library("media_service_utils") {
   ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "../../test:coverage_flags",
     ":media_service_utils_public_config",
   ]
 

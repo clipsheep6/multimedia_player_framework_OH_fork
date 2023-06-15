@@ -65,7 +65,7 @@ ohos_shared_library("gst_codec_bin") {
   sources = [ "src/gst_codec_bin.cpp" ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "../../../../../../test:coverage_flags",
     ":gst_codec_bin_config",
   ]
 

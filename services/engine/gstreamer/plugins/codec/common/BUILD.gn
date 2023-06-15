@@ -75,7 +75,7 @@ ohos_static_library("gst_codec_plugins_common") {
   ]
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "../../../../../../test:coverage_flags",
     ":gst_codec_plugins_common_config",
   ]
 

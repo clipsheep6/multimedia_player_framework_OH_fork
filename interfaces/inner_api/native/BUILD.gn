@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
+MEDIA_ROOT_DIR = "../../.."
 
 config("media_public_config") {
   include_dirs = [
@@ -156,15 +156,15 @@ ohos_shared_library("media_client") {
   }
 
   configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "$MEDIA_ROOT_DIR/test:coverage_flags",
     ":media_client_base_config",
     ":media_client_ipc_config",
   ]
 
-  deps = [ "../../../services/utils:media_format" ]
+  deps = [ "$MEDIA_ROOT_DIR/services/utils:media_format" ]
 
   public_configs = [
-    "//foundation/multimedia/player_framework/test:coverage_flags",
+    "$MEDIA_ROOT_DIR/test:coverage_flags",
     ":media_public_config",
   ]
 
