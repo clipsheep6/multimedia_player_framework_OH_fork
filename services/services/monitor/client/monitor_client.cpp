@@ -24,6 +24,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MonitorCli
 
 namespace OHOS {
 namespace Media {
+std::mutex MonitorClient::monitorClientMutex_;
+std::atomic<bool> MonitorClient::monitorClientDestroy_ = false;
 MonitorClient::MonitorClient()
 {
     MEDIA_LOGI("Instances create");
@@ -31,6 +33,7 @@ MonitorClient::MonitorClient()
 
 MonitorClient::~MonitorClient()
 {
+    monitorClientDestroy_ = true;
     MEDIA_LOGI("Instances destroy");
     std::lock_guard<std::mutex> cmdLock(cmdMutex_);
     std::unique_lock<std::mutex> threadLock(threadMutex_);
@@ -45,9 +48,17 @@ MonitorClient::~MonitorClient()
     }
 }
 
-MonitorClient &MonitorClient::GetInstance()
+std::shared_ptr<MonitorClient> MonitorClient::GetInstance()
 {
-    static MonitorClient monitor;
+    static std::shared_ptr<MonitorClient> monitor = nullptr;
+
+    CHECK_AND_RETURN_RET(monitorClientDestroy_.load() == false, nullptr);
+    if (monitor == nullptr) {
+        std::lock_guard<std::mutex> lock(monitorClientMutex_);
+        if (monitor == nullptr) {
+            monitor = std::make_shared<MonitorClient>();
+        }
+    }
     return monitor;
 }
 
@@ -64,8 +75,10 @@ bool MonitorClient::IsVaildProxy()
 int32_t MonitorClient::StartClick(MonitorClientObject *obj)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " StartClick", FAKE_POINTER(obj));
+    CHECK_AND_RETURN_RET(monitorClientDestroy_.load() == false, MSERR_INVALID_OPERATION);
     std::lock_guard<std::mutex> cmdLock(cmdMutex_);
     std::lock_guard<std::mutex> threadLock(threadMutex_);
+    CHECK_AND_RETURN_RET(monitorClientDestroy_.load() == false, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(objSet_.count(obj) == 0, MSERR_OK, "It has already been activated");
 
     CHECK_AND_RETURN_RET_LOG(IsVaildProxy(), MSERR_INVALID_OPERATION, "Proxy is invaild!");
@@ -84,8 +97,10 @@ int32_t MonitorClient::StartClick(MonitorClientObject *obj)
 int32_t MonitorClient::StopClick(MonitorClientObject *obj)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " StopClick", FAKE_POINTER(obj));
+    CHECK_AND_RETURN_RET(monitorClientDestroy_.load() == false, MSERR_INVALID_OPERATION);
     std::lock_guard<std::mutex> cmdLock(cmdMutex_);
     std::unique_lock<std::mutex> threadLock(threadMutex_);
+    CHECK_AND_RETURN_RET(monitorClientDestroy_.load() == false, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(objSet_.count(obj), MSERR_OK, "Not started");
 
     objSet_.erase(obj);
@@ -109,8 +124,10 @@ int32_t MonitorClient::StopClick(MonitorClientObject *obj)
 void MonitorClient::MediaServerDied()
 {
     MEDIA_LOGI("MediaServerDied");
+    CHECK_AND_RETURN_LOG(monitorClientDestroy_.load() == false, "monitor client destroy");
     std::lock_guard<std::mutex> cmdLock(cmdMutex_);
     std::unique_lock<std::mutex> threadLock(threadMutex_);
+    CHECK_AND_RETURN_LOG(monitorClientDestroy_.load() == false, "monitor client destroy");
     objSet_.clear();
     enableThread_ = false;
     monitorProxy_ = nullptr;
