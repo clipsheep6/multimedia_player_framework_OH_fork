@@ -906,6 +906,13 @@ int32_t PlayBinCtrlerBase::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return trackParse_->GetAudioTrackInfo(audioTrack);
 }
 
+int32_t PlayBinCtrlerBase::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(trackParse_ != nullptr, MSERR_INVALID_OPERATION, "trackParse_ is nullptr");
+    return trackParse_->GetSubtitleTrackInfo(subtitleTrack);
+}
+
 int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
 {
     std::unique_lock<std::mutex> lock(mutex_);

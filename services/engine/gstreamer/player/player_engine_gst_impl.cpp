@@ -671,6 +671,13 @@ int32_t PlayerEngineGstImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return playBinCtrler_->GetAudioTrackInfo(audioTrack);
 }
 
+int32_t PlayerEngineGstImpl::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
+    return playBinCtrler_->GetSubtitleTrackInfo(subtitleTrack);
+}
+
 int32_t PlayerEngineGstImpl::GetVideoWidth()
 {
     return videoWidth_;

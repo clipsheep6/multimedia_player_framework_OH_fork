@@ -108,7 +108,8 @@ enum AUDIO_MPEG_TYPE {
 static const std::unordered_map<std::string_view, std::vector<std::string_view>> CODEC_MIME_TYPE_MAPPING = {
     { "video/x-h264", {VIDEO_MIMETYPE_AVC} },
     { "video/mpeg", {VIDEO_MIMETYPE_MPEG4} },
-    { "audio/mpeg", {AUDIO_MIMETYPE_MPEG, AUDIO_MIMETYPE_AAC} }
+    { "audio/mpeg", {AUDIO_MIMETYPE_MPEG, AUDIO_MIMETYPE_AAC} },
+    { "text/x-raw", {SUBTITLE_MIMETYPE_SRT} }
 };
 
 static void ParseGValue(const GValue &value, const MetaParseItem &item, Format &metadata)

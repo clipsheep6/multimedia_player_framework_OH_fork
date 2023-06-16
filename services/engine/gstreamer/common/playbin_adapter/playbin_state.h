@@ -54,6 +54,7 @@ protected:
     void HandleVideoRotation(const InnerMessage &msg);
     virtual void HandlePositionUpdate() {}
 
+    void HandleTrackInfoUpdate();
     PlayBinCtrlerBase &ctrler_;
 
 private:

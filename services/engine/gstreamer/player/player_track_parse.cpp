@@ -72,12 +72,15 @@ void PlayerTrackParse::OnElementSetup(GstElement &elem)
         DemuxInfo demux(&elem);
         trackVec_.push_back(demux);
         lock.unlock();
-        SetUpDemuxerElementCb(elem);
+        SetUpDemuxerElementCb(elem, false);
     }
 
-    if (metaStr.find("Codec/Parser") != std::string::npos) {
+    if (metaStr.find("Codec/Parser/Subtitle") != std::string::npos) {
+        // Collect external subtitle trackinfo
+        SetUpDemuxerElementCb(elem, true);
+    } else if (metaStr.find("Codec/Parser") != std::string::npos) {
         // HLS stream demux has no width and height data, and requires prase as a supplement
-        SetUpDemuxerElementCb(elem);
+        SetUpDemuxerElementCb(elem, false);
     }
 
     if (elementName.find("inputselector") != std::string::npos) {
@@ -240,6 +243,19 @@ bool PlayerTrackParse::IsSameStreamId(GstPad *padA, GstPad *padB)
     return ret;
 }
 
+bool PlayerTrackParse::HasSameStreamIdInDemux(GstPad *pad)
+{
+    for (int32_t i = 0; i < static_cast<int32_t>(trackVec_.size()); i++) {
+        for (auto padIt = trackVec_[i].trackInfos.begin(); padIt != trackVec_[i].trackInfos.end(); padIt++) {
+            if (IsSameStreamId(pad, padIt->first)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 int32_t PlayerTrackParse::GetTrackInfo(int32_t index, int32_t &innerIndex, int32_t &trackType)
 {
     std::unique_lock<std::mutex> lock(trackInfoMutex_);
@@ -265,6 +281,17 @@ int32_t PlayerTrackParse::GetTrackInfo(int32_t index, int32_t &innerIndex, int32
         if (trackIndex == index) {
             trackType = MediaType::MEDIA_TYPE_AUD;
             audioTracks_[i].GetIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), innerIndex);
+            MEDIA_LOGI("index:0x%{public}d inner:0x%{public}d Type:0x%{public}d", index, innerIndex, trackType);
+            return MSERR_OK;
+        }
+    }
+
+    for (int32_t i = 0; i < static_cast<int32_t>(subtitleTracks_.size()); i++) {
+        int32_t trackIndex = -1;
+        subtitleTracks_[i].GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), trackIndex);
+        if (trackIndex == index) {
+            trackType = MediaType::MEDIA_TYPE_SUBTITLE;
+            subtitleTracks_[i].GetIntValue(std::string(INNER_META_KEY_TRACK_INNER_INDEX), innerIndex);
             MEDIA_LOGI("index:0x%{public}d inner:0x%{public}d Type:0x%{public}d", index, innerIndex, trackType);
             return MSERR_OK;
         }
@@ -308,7 +335,7 @@ int32_t PlayerTrackParse::GetTrackIndex(int32_t innerIndex, int32_t trackType, i
         MEDIA_LOGI("inner:0x%{public}d Type:0x%{public}d index:0x%{public}d", innerIndex, trackType, index);
         return MSERR_OK;
     }
-    
+
     return MSERR_INVALID_VAL;
 }
 
@@ -346,6 +373,7 @@ void PlayerTrackParse::UpdateTrackInfo()
     CHECK_AND_RETURN(findTrackInfo_);
     videoTracks_.clear();
     audioTracks_.clear();
+    subtitleTracks_.clear();
 
     int32_t index;
     int32_t baseIndex = 0;
@@ -372,6 +400,8 @@ void PlayerTrackParse::UpdateTrackInfo()
             videoTracks_.emplace_back(outMeta);
         } else if (trackType == MediaType::MEDIA_TYPE_AUD) {
             audioTracks_.emplace_back(outMeta);
+        } else if (trackType == MediaType::MEDIA_TYPE_SUBTITLE) {
+            subtitleTracks_.emplace_back(outMeta);
         }
     }
     return;
@@ -397,6 +427,18 @@ int32_t PlayerTrackParse::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     audioTrack.assign(audioTracks_.begin(), audioTracks_.end());
     for (int32_t i = 0; i < static_cast<int32_t>(audioTrack.size()); i++) {
         audioTrack[i].RemoveKey(std::string(INNER_META_KEY_TRACK_INNER_INDEX));
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerTrackParse::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    std::unique_lock<std::mutex> lock(trackInfoMutex_);
+    CHECK_AND_RETURN_RET_LOG(findTrackInfo_, MSERR_INVALID_OPERATION, "trackinfo not found");
+    StartUpdateTrackInfo();
+    subtitleTrack.assign(subtitleTracks_.begin(), subtitleTracks_.end());
+    for (int32_t i = 0; i < static_cast<int32_t>(subtitleTrack.size()); i++) {
+        subtitleTrack[i].RemoveKey(std::string(INNER_META_KEY_TRACK_INNER_INDEX));
     }
     return MSERR_OK;
 }
@@ -534,7 +576,7 @@ bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
     return true;
 }
 
-bool PlayerTrackParse::AddProbeToPadList(const GstElement *element, GList &list)
+bool PlayerTrackParse::AddProbeToPadList(GstElement *element, GList &list, bool isSubtitle)
 {
     MEDIA_LOGD("AddProbeToPadList element %{public}s", ELEM_NAME(element));
     for (GList *padNode = g_list_first(&list); padNode != nullptr; padNode = padNode->next) {
@@ -543,6 +585,18 @@ bool PlayerTrackParse::AddProbeToPadList(const GstElement *element, GList &list)
         }
 
         GstPad *pad = reinterpret_cast<GstPad *>(padNode->data);
+        if (isSubtitle) {
+            if (HasSameStreamIdInDemux(pad)) {
+                MEDIA_LOGD("internal subtitle parser, do not need to probe");
+                return false;
+            } else {
+                MEDIA_LOGD("external subtitle parser, handle it as demux");
+                std::unique_lock<std::mutex> lock(trackInfoMutex_);
+                DemuxInfo demux(element);
+                trackVec_.push_back(demux);
+            }
+        }
+
         if (!AddProbeToPad(element, pad)) {
             return false;
         }
@@ -568,10 +622,10 @@ bool PlayerTrackParse::FindTrackInfo()
     return findTrackInfo_;
 }
 
-void PlayerTrackParse::SetUpDemuxerElementCb(GstElement &elem)
+void PlayerTrackParse::SetUpDemuxerElementCb(GstElement &elem, bool isSubtitle)
 {
     MEDIA_LOGD("SetUpDemuxerElementCb elem %{public}s", ELEM_NAME(&elem));
-    if (!AddProbeToPadList(&elem, *elem.srcpads)) {
+    if (!AddProbeToPadList(&elem, *elem.srcpads, isSubtitle)) {
         return;
     }
     {

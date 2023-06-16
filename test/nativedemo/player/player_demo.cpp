@@ -332,6 +332,7 @@ int32_t PlayerDemo::GetVideoTrackInfo()
     }
     return 0;
 }
+
 int32_t PlayerDemo::GetAudioTrackInfo()
 {
     std::vector<Format> audioTrack;
@@ -360,10 +361,34 @@ int32_t PlayerDemo::GetAudioTrackInfo()
     }
     return 0;
 }
+
+int32_t PlayerDemo::GetSubtitleTrackInfo()
+{
+    std::vector<Format> subtitleTrack;
+    int32_t ret = player_->GetSubtitleTrackInfo(subtitleTrack);
+    if (ret == 0) {
+        cout << "Subtitle Track cnt: " << subtitleTrack.size() << endl;
+        std::string mime = "";
+        int32_t type = -1;
+        int32_t index = -1;
+        std::string language = "";
+        for (auto iter = subtitleTrack.begin(); iter != subtitleTrack.end(); iter++) {
+            iter->GetStringValue(std::string(PlayerKeys::PLAYER_MIME), mime);
+            iter->GetStringValue(std::string(PlayerKeys::PLAYER_LANGUGAE), language);
+            iter->GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_TYPE), type);
+            iter->GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+            cout << "mime: " << mime.c_str() << ", language: " << language.c_str()  << ", type: " << type <<
+                ", index: " << index << endl;
+        }
+    }
+    return 0;
+}
+
 int32_t PlayerDemo::GetTrackInfo()
 {
     GetVideoTrackInfo();
     GetAudioTrackInfo();
+    GetSubtitleTrackInfo();
     return 0;
 }
 

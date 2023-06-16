@@ -201,17 +201,7 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDoneMsg()
     } else if (ctrler_.isAddingSubtitle_) {
         ctrler_.isAddingSubtitle_ = false;
         MEDIA_LOGI("asyncdone after adding subtitle");
-
-        int32_t textTrackNum = 0;
-        g_object_get(ctrler_.playbin_, "n-text", &textTrackNum, nullptr);
-        PlayBinMessage subtitleMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE, textTrackNum, {} };
-        ctrler_.ReportMessage(subtitleMsg);
-
-        std::vector<Format> trackInfo;
-        ctrler_.GetVideoTrackInfo(trackInfo);
-        ctrler_.GetAudioTrackInfo(trackInfo);
-        PlayBinMessage playBinMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_INFO_UPDATE, 0, trackInfo };
-        ctrler_.ReportMessage(playBinMsg);
+        HandleTrackInfoUpdate();
     } else {
         MEDIA_LOGD("Async done, not seeking or rating!");
         PlayBinMessage playBinMsg { PLAYBIN_MSG_ASYNC_DONE, 0, 0, {} };
@@ -326,6 +316,35 @@ void PlayBinCtrlerBase::BaseState::OnMessageReceived(const InnerMessage &msg)
         default:
             break;
     }
+}
+
+void PlayBinCtrlerBase::BaseState::HandleTrackInfoUpdate()
+{
+    int32_t textTrackNum = 0;
+    g_object_get(ctrler_.playbin_, "n-text", &textTrackNum, nullptr);
+    PlayBinMessage subtitleMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE, textTrackNum, {} };
+    ctrler_.ReportMessage(subtitleMsg);
+
+    std::vector<Format> videoTrackInfo;
+    std::vector<Format> audioTrackInfo;
+    std::vector<Format> subtitleTrackInfo;
+    ctrler_.GetVideoTrackInfo(videoTrackInfo);
+    ctrler_.GetAudioTrackInfo(audioTrackInfo);
+    ctrler_.GetSubtitleTrackInfo(subtitleTrackInfo);
+
+    std::vector<Format> trackInfo;
+    for (auto &info: videoTrackInfo) {
+        trackInfo.emplace_back(info);
+    }
+    for (auto &info: audioTrackInfo) {
+        trackInfo.emplace_back(info);
+    }
+    for (auto &info: subtitleTrackInfo) {
+        trackInfo.emplace_back(info);
+    }
+
+    PlayBinMessage playBinMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_INFO_UPDATE, 0, trackInfo };
+    ctrler_.ReportMessage(playBinMsg);
 }
 
 void PlayBinCtrlerBase::IdleState::StateEnter()
@@ -511,17 +530,7 @@ void PlayBinCtrlerBase::PlayingState::ProcessPlayingStateChange()
     } else if (ctrler_.isAddingSubtitle_) {
         ctrler_.isAddingSubtitle_ = false;
         MEDIA_LOGI("playing after adding subtitle");
-
-        int32_t textTrackNum = 0;
-        g_object_get(ctrler_.playbin_, "n-text", &textTrackNum, nullptr);
-        PlayBinMessage subtitleMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE, textTrackNum, {} };
-        ctrler_.ReportMessage(subtitleMsg);
-
-        std::vector<Format> trackInfo;
-        ctrler_.GetVideoTrackInfo(trackInfo);
-        ctrler_.GetAudioTrackInfo(trackInfo);
-        PlayBinMessage playBinMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_INFO_UPDATE, 0, trackInfo };
-        ctrler_.ReportMessage(playBinMsg);
+        BaseState::HandleTrackInfoUpdate();
     } else {
         MEDIA_LOGD("playing, not seeking or rating!");
     }

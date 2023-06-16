@@ -87,6 +87,7 @@ public:
     virtual int32_t GetCurrentTrack(int32_t trackType, int32_t &index) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
     virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
+    virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
 };
 } // namespace Media
 } // namespace OHOS

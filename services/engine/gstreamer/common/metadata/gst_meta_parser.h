@@ -55,6 +55,9 @@ inline constexpr std::string_view VIDEO_MIMETYPE_MPEG4 = "video/mp4v-es";
 inline constexpr std::string_view AUDIO_MIMETYPE_AAC = "audio/mp4a-latm";
 inline constexpr std::string_view AUDIO_MIMETYPE_MPEG = "audio/mpeg";
 
+// subtitle codec mime
+inline constexpr std::string_view SUBTITLE_MIMETYPE_SRT = "subtitle/srt";
+
 // container mime
 inline constexpr std::string_view FILE_MIMETYPE_VIDEO_MP4 = "video/mp4";
 inline constexpr std::string_view FILE_MIMETYPE_AUDIO_MP4 = "audio/mp4";

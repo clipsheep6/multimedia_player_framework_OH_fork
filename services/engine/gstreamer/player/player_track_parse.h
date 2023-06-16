@@ -32,6 +32,7 @@ public:
     static std::shared_ptr<PlayerTrackParse> Create();
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack);
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack);
+    int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack);
     bool FindTrackInfo();
     void OnElementSetup(GstElement &elem);
     void OnElementUnSetup(GstElement &elem);
@@ -47,10 +48,10 @@ private:
     GstPadProbeReturn ParseTrackInfo(GstPad *pad, GstPadProbeInfo *info, Format &format);
     void ConvertToPlayerKeys(const Format &innerMeta, Format &outMeta) const;
     bool AddProbeToPad(const GstElement *element, GstPad *pad);
-    bool AddProbeToPadList(const GstElement *element, GList &list);
+    bool AddProbeToPadList(GstElement *element, GList &list, bool isSubtitle);
     static GstPadProbeReturn ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData);
     static void OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
-    void SetUpDemuxerElementCb(GstElement &elem);
+    void SetUpDemuxerElementCb(GstElement &elem, bool isSubtitle);
     
     void SetUpInputSelectElementCb(GstElement &elem);
     static void OnInputSelectPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData);
@@ -59,6 +60,7 @@ private:
     GstPadProbeReturn GetUsedDemux(GstPad *pad, GstPadProbeInfo *info);
 
     static bool IsSameStreamId(GstPad *padA, GstPad *padB);
+    bool HasSameStreamIdInDemux(GstPad *pad);
     void UpdateTrackInfo();
     void StartUpdateTrackInfo();
     int32_t GetInputSelectPadIndex(GstPad *pad);
@@ -105,6 +107,7 @@ private:
     std::vector<DemuxInfo> trackVec_;
     std::vector<Format> videoTracks_;
     std::vector<Format> audioTracks_;
+    std::vector<Format> subtitleTracks_;
     struct PadInfo {
         GstPad *pad;
         gulong probeId;

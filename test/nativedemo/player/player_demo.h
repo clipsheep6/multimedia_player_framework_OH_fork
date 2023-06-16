@@ -60,6 +60,7 @@ private:
     void GetCurrentTime();
     int32_t GetVideoTrackInfo();
     int32_t GetAudioTrackInfo();
+    int32_t GetSubtitleTrackInfo();
     int32_t GetTrackInfo();
     int32_t GetPlaybackSpeed() const;
     int32_t SetDataSrc(const std::string &path, bool seekable);

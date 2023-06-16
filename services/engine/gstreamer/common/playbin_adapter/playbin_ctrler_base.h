@@ -75,6 +75,7 @@ public:
     void SetAutoSelectBitrate(bool enable) final;
     int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override;
     int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override;
+    int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
     int32_t SelectTrack(int32_t index) override;
     int32_t DeselectTrack(int32_t index) override;
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;

@@ -49,6 +49,7 @@ public:
     virtual int32_t GetCurrentTime(int32_t &currentTime) = 0;
     virtual int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) = 0;
     virtual int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) = 0;
+    virtual int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) = 0;
     virtual int32_t GetVideoWidth() = 0;
     virtual int32_t GetVideoHeight() = 0;
     virtual int32_t GetDuration(int32_t &duration) = 0;
@@ -104,7 +105,8 @@ public:
         SELECT_BIT_RATE,
         SELECT_TRACK,
         DESELECT_TRACK,
-        GET_CURRENT_TRACK
+        GET_CURRENT_TRACK,
+        GET_SUBTITLE_TRACK_INFO,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

@@ -1836,6 +1836,7 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
             if (jsPlayer->IsControllable()) {
                 (void)jsPlayer->player_->GetVideoTrackInfo(trackInfo);
                 (void)jsPlayer->player_->GetAudioTrackInfo(trackInfo);
+                (void)jsPlayer->player_->GetSubtitleTrackInfo(trackInfo);
             } else {
                 return promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                     "current state unsupport get track description");

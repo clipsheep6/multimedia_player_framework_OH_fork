@@ -228,6 +228,13 @@ int32_t PlayerClient::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return playerProxy_->GetAudioTrackInfo(audioTrack);
 }
 
+int32_t PlayerClient::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->GetSubtitleTrackInfo(subtitleTrack);
+}
+
 int32_t PlayerClient::GetVideoWidth()
 {
     std::lock_guard<std::mutex> lock(mutex_);

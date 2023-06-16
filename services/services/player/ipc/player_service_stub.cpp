@@ -98,6 +98,9 @@ void PlayerServiceStub::SetPlayerFuncs()
     playerFuncs_[SET_CALLBACK] = { &PlayerServiceStub::SetPlayerCallback, "Player::SetPlayerCallback" };
     playerFuncs_[GET_VIDEO_TRACK_INFO] = { &PlayerServiceStub::GetVideoTrackInfo, "Player::GetVideoTrackInfo" };
     playerFuncs_[GET_AUDIO_TRACK_INFO] = { &PlayerServiceStub::GetAudioTrackInfo, "Player::GetAudioTrackInfo" };
+    playerFuncs_[GET_SUBTITLE_TRACK_INFO] = {
+        &PlayerServiceStub::GetSubtitleTrackInfo, "Player::GetSubtitleTrackInfo"
+    };
     playerFuncs_[GET_VIDEO_WIDTH] = { &PlayerServiceStub::GetVideoWidth, "Player::GetVideoWidth" };
     playerFuncs_[GET_VIDEO_HEIGHT] = { &PlayerServiceStub::GetVideoHeight, "Player::GetVideoHeight" };
     playerFuncs_[SELECT_BIT_RATE] = { &PlayerServiceStub::SelectBitRate, "Player::SelectBitRate" };
@@ -310,6 +313,13 @@ int32_t PlayerServiceStub::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     MediaTrace trace("binder::GetAudioTrackInfo");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->GetAudioTrackInfo(audioTrack);
+}
+
+int32_t PlayerServiceStub::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    MediaTrace trace("binder::GetSubtitleTrackInfo");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->GetSubtitleTrackInfo(subtitleTrack);
 }
 
 int32_t PlayerServiceStub::GetVideoWidth()
@@ -617,6 +627,20 @@ int32_t PlayerServiceStub::GetAudioTrackInfo(MessageParcel &data, MessageParcel 
     int32_t ret = GetAudioTrackInfo(audioTrack);
     reply.WriteInt32(static_cast<int32_t>(audioTrack.size()));
     for (auto iter = audioTrack.begin(); iter != audioTrack.end(); iter++) {
+        (void)MediaParcel::Marshalling(reply, *iter);
+    }
+    reply.WriteInt32(ret);
+
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::GetSubtitleTrackInfo(MessageParcel &data, MessageParcel &reply)
+{
+    (void)data;
+    std::vector<Format> subtitleTrack;
+    int32_t ret = GetSubtitleTrackInfo(subtitleTrack);
+    reply.WriteInt32(static_cast<int32_t>(subtitleTrack.size()));
+    for (auto iter = subtitleTrack.begin(); iter != subtitleTrack.end(); iter++) {
         (void)MediaParcel::Marshalling(reply, *iter);
     }
     reply.WriteInt32(ret);

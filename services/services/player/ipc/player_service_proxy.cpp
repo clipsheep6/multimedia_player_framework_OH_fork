@@ -59,6 +59,7 @@ PlayerServiceProxy::PlayerServiceProxy(const sptr<IRemoteObject> &impl)
     playerFuncs_[SET_CALLBACK] = "Player::SetPlayerCallback";
     playerFuncs_[GET_VIDEO_TRACK_INFO] = "Player::GetVideoTrackInfo";
     playerFuncs_[GET_AUDIO_TRACK_INFO] = "Player::GetAudioTrackInfo";
+    playerFuncs_[GET_SUBTITLE_TRACK_INFO] = "Player::GetSubtitleTrackInfo";
     playerFuncs_[GET_VIDEO_WIDTH] = "Player::GetVideoWidth";
     playerFuncs_[GET_VIDEO_HEIGHT] = "Player::GetVideoHeight";
     playerFuncs_[SELECT_BIT_RATE] = "Player::SelectBitRate";
@@ -417,6 +418,29 @@ int32_t PlayerServiceProxy::GetAudioTrackInfo(std::vector<Format> &audioTrack)
         (void)MediaParcel::Unmarshalling(reply, trackInfo);
 
         audioTrack.push_back(trackInfo);
+    }
+    return reply.ReadInt32();
+}
+
+int32_t PlayerServiceProxy::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    MediaTrace trace("PlayerServiceProxy::GetSubtitleTrackInfo");
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    int32_t error = SendRequest(GET_SUBTITLE_TRACK_INFO, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "GetSubtitleTrackInfo failed, error: %{public}d", error);
+    int32_t trackCnt = reply.ReadInt32();
+    for (int32_t i = 0; i < trackCnt; i++) {
+        Format trackInfo;
+        (void)MediaParcel::Unmarshalling(reply, trackInfo);
+
+        subtitleTrack.push_back(trackInfo);
     }
     return reply.ReadInt32();
 }

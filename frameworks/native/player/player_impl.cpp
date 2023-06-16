@@ -194,6 +194,13 @@ int32_t PlayerImpl::GetAudioTrackInfo(std::vector<Format> &audioTrack)
     return playerService_->GetAudioTrackInfo(audioTrack);
 }
 
+int32_t PlayerImpl::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
+{
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetSubtitleTrackInfo in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerService_->GetSubtitleTrackInfo(subtitleTrack);
+}
+
 int32_t PlayerImpl::GetVideoWidth()
 {
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " GetVideoWidth in", FAKE_POINTER(this));
