@@ -181,10 +181,6 @@ static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
         self->is_free_codec_buffers, self->is_eos_state);
     if (!self->is_free_codec_buffers) {
         if (!self->is_eos_state) {
-            g_return_val_if_fail(gst_pad_push_event(GST_VIDEO_DECODER_SRC_PAD(self),
-                gst_event_new_flush_start()), FALSE);
-            g_return_val_if_fail(gst_pad_push_event(GST_VIDEO_DECODER_SINK_PAD(self),
-                gst_event_new_flush_start()), FALSE);
             GST_VIDEO_DECODER_STREAM_LOCK(self);
             if (self->decoder != nullptr) {
                 ret = self->decoder->Flush(GST_CODEC_ALL);
@@ -192,6 +188,11 @@ static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
             }
             gst_vdec_base_set_flushing(self, TRUE);
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
+            g_return_val_if_fail(gst_pad_push_event(GST_VIDEO_DECODER_SRC_PAD(self),
+                gst_event_new_flush_start()), FALSE);
+            g_return_val_if_fail(gst_pad_push_event(GST_VIDEO_DECODER_SRC_PAD(self),
+                gst_event_new_flush_stop(FALSE)), FALSE);
+            self->is_eos_state = FALSE;
         }
 
         if (self->decoder_start) {
@@ -213,13 +214,6 @@ static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
         ret = self->decoder->FreeOutputBuffers();
         g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE), FALSE);
 
-        if (!self->is_eos_state) {
-            g_return_val_if_fail(gst_pad_push_event(GST_VIDEO_DECODER_SRC_PAD(self),
-                gst_event_new_flush_stop(FALSE)), FALSE);
-            g_return_val_if_fail(gst_pad_push_event(GST_VIDEO_DECODER_SINK_PAD(self),
-                gst_event_new_flush_stop(FALSE)), FALSE);
-            self->is_eos_state = FALSE;
-        }
         self->is_free_codec_buffers = TRUE;
     }
     return TRUE;

@@ -275,12 +275,27 @@ int32_t PlayerServerMem::DumpInfo(int32_t fd)
     return MSERR_OK;
 }
 
+int32_t PlayerServerMem::HandleCodecBuffers(bool enable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGD("HandleCodecBuffers in, enable:%{public}d", enable);
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not HandleCodecBuffers, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    return playerEngine_->HandleCodecBuffers(enable);
+}
+
 int32_t PlayerServerMem::ReleaseMemByManage()
 {
     if (!isReleaseMemByManage_) {
         MediaTrace trace("PlayerServerMem::ReleaseMemByManage");
         MEDIA_LOGI("enter");
-        int32_t ret = PlayerServer::HandleCodecBuffers(true);
+        int32_t ret = HandleCodecBuffers(true);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "FreeCodecBuffers Fail");
         isReleaseMemByManage_ = true;
         MEDIA_LOGI("exit");
@@ -293,19 +308,71 @@ int32_t PlayerServerMem::RecoverMemByUser()
     if (isReleaseMemByManage_) {
         MediaTrace trace("PlayerServerMem::RecoverMemByUser");
         MEDIA_LOGI("enter");
-        int32_t ret = PlayerServer::HandleCodecBuffers(false);
+        int32_t ret = HandleCodecBuffers(false);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RecoverCodecBuffers Fail");
         int32_t currentTime = 0;
         if (!IsCompleted()) {
             ret = PlayerServer::GetCurrentTime(currentTime);
             CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetCurrentTime Fail");
         }
-        ret = PlayerServer::SeekByInner(currentTime, SEEK_CLOSEST);
+        ret = SeekToCurrentTime(currentTime, SEEK_CLOSEST);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek Fail");
         isReleaseMemByManage_ = false;
         MEDIA_LOGI("exit");
     }
     return MSERR_OK;
+}
+
+int32_t PlayerServerMem::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    if (IsValidSeekMode(mode) != true) {
+        MEDIA_LOGE("Seek failed, inValid mode");
+        return MSERR_INVALID_VAL;
+    }
+
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not Seek, it is live-stream");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
+    mSeconds = std::max(0, mSeconds);
+
+    auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
+        MediaTrace::TraceBegin("PlayerServerMem::Seek", FAKE_POINTER(this));
+        playerEngine_->SeekToCurrentTime(mSeconds, mode);
+    });
+
+    auto cancelTask = std::make_shared<TaskHandler<void>>([&, this]() {
+        MEDIA_LOGI("Interrupted seek action");
+        taskMgr_.MarkTaskDone("interrupted seek done");
+    });
+    isSeekToCurrentTime_ = true;
+    int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
+
+    return MSERR_OK;
+}
+
+void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+{
+    if (isSeekToCurrentTime_ && type == INFO_TYPE_SEEKDONE) {
+        std::lock_guard<std::mutex> lockCb(mutexCb_);
+        isSeekToCurrentTime_ = false;
+        HandleMessage(type, extra, infoBody);
+    } else {
+        PlayerServer::OnInfo(type, extra, infoBody);
+    }
 }
 
 void PlayerServerMem::ResetFrontGroundForMemManage()

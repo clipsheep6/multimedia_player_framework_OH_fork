@@ -53,6 +53,7 @@ public:
     int32_t DumpInfo(int32_t fd) override;
     int32_t SelectTrack(int32_t index) override;
     int32_t DeselectTrack(int32_t index) override;
+    void OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody) override;
 
     void ResetFrontGroundForMemManage();
     void ResetBackGroundForMemManage();
@@ -64,11 +65,14 @@ private:
     bool isReleaseMemByManage_ = false;
     bool isAudioPlayer_ = true;
     int32_t continueReset = 0;
+    bool isSeekToCurrentTime_ = false;
     std::chrono::steady_clock::time_point lastestUserSetTime_;
 
     int32_t Init() override;
     int32_t ReleaseMemByManage();
     int32_t RecoverMemByUser();
+    int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode);
+    int32_t HandleCodecBuffers(bool enable);
 };
 }
 }

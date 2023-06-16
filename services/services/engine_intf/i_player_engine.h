@@ -120,6 +120,12 @@ public:
         (void)enable;
         return 0;
     }
+    virtual int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
+    {
+        (void)mSeconds;
+        (void)mode;
+        return 0;
+    }
 };
 } // namespace Media
 } // namespace OHOS

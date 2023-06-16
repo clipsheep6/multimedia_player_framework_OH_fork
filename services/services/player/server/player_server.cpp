@@ -643,7 +643,7 @@ bool PlayerServer::IsValidSeekMode(PlayerSeekMode mode)
     return true;
 }
 
-int32_t PlayerServer::SeekInner(int32_t mSeconds, PlayerSeekMode mode, bool isSeekByInner)
+int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
@@ -665,17 +665,6 @@ int32_t PlayerServer::SeekInner(int32_t mSeconds, PlayerSeekMode mode, bool isSe
         return MSERR_INVALID_OPERATION;
     }
 
-    int32_t currentTime = 0;
-    CHECK_AND_RETURN_RET_LOG(GetCurrentTime(currentTime) == MSERR_OK, MSERR_INVALID_OPERATION, "GetCurrentTime failed");
-    if (!isSeekByInner && currentTime == mSeconds) {
-        MEDIA_LOGW("current time same to seek time, invalid seek");
-        Format format;
-        if (playerCb_ != nullptr) {
-            playerCb_->OnInfo(INFO_TYPE_SEEKDONE, mSeconds, format);
-        }
-        return MSERR_OK;
-    }
-
     MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
     mSeconds = std::max(0, mSeconds);
 
@@ -685,32 +674,17 @@ int32_t PlayerServer::SeekInner(int32_t mSeconds, PlayerSeekMode mode, bool isSe
         (void)currState->Seek(mSeconds, mode);
     });
 
-    auto cancelTask = std::make_shared<TaskHandler<void>>([&, this]() {
+    auto cancelTask = std::make_shared<TaskHandler<void>>([this, mSeconds]() {
         MEDIA_LOGI("Interrupted seek action");
         Format format;
-        if (!isSeekByInner) {
-            OnInfoNoChangeStatus(INFO_TYPE_SEEKDONE, mSeconds, format);
-        }
+        OnInfoNoChangeStatus(INFO_TYPE_SEEKDONE, mSeconds, format);
         taskMgr_.MarkTaskDone("interrupted seek done");
     });
 
     int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
-    if (isSeekByInner) {
-        isSeekByInner_ = true;
-    }
 
     return MSERR_OK;
-}
-
-int32_t PlayerServer::SeekByInner(int32_t mSeconds, PlayerSeekMode mode)
-{
-    return SeekInner(mSeconds, mode, true);
-}
-
-int32_t PlayerServer::Seek(int32_t mSeconds, PlayerSeekMode mode)
-{
-    return SeekInner(mSeconds, mode, false);
 }
 
 int32_t PlayerServer::HandleSeek(int32_t mSeconds, PlayerSeekMode mode)
@@ -1156,21 +1130,6 @@ void PlayerServer::FormatToString(std::string &dumpString, std::vector<Format> &
     }
 }
 
-int32_t PlayerServer::HandleCodecBuffers(bool enable)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
-    MEDIA_LOGD("HandleCodecBuffers in, enable:%{public}d", enable);
-
-    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
-        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
-        MEDIA_LOGE("Can not HandleCodecBuffers, currentState is %{public}s",
-            GetStatusDescription(lastOpStatus_).c_str());
-        return MSERR_INVALID_OPERATION;
-    }
-    return playerEngine_->HandleCodecBuffers(enable);
-}
-
 int32_t PlayerServer::DumpInfo(int32_t fd)
 {
     std::string dumpString;
@@ -1253,11 +1212,7 @@ void PlayerServer::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &in
             }
             isBackgroundChanged_ = false;
         } else {
-            if (isSeekByInner_ && type == INFO_TYPE_SEEKDONE) {
-                isSeekByInner_ = false;
-            } else {
-                playerCb_->OnInfo(type, extra, infoBody);
-            }
+            playerCb_->OnInfo(type, extra, infoBody);
         }
     }
 }
