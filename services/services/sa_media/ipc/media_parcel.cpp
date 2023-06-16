@@ -61,6 +61,8 @@ bool MediaParcel::Marshalling(MessageParcel &parcel, const Format &format)
 bool MediaParcel::Unmarshalling(MessageParcel &parcel, Format &format)
 {
     uint32_t size = parcel.ReadUint32();
+    constexpr uint32_t MAX_PARCEL_SIZE = 256;
+    CHECK_AND_RETURN_RET(size <= MAX_PARCEL_SIZE, false);
     for (uint32_t index = 0; index < size; index++) {
         std::string key = parcel.ReadString();
         uint32_t valType = parcel.ReadUint32();
