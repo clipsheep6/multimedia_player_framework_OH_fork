@@ -438,7 +438,7 @@ void AVMetadataHelperEngineGstImpl::OnNotifyElemSetup(GstElement &elem)
     }
 
     if (metaStr.find("Codec/Decoder/Video/Hardware") != std::string::npos) {
-        g_object_set(const_cast<GstElement *>(&elem), "enable-slice-cat", TRUE, nullptr);
+        g_object_set(const_cast<GstElement *>(&elem), "player-scene", TRUE, nullptr);
     }
 
     std::unique_lock<std::mutex> lock(mutex_);
