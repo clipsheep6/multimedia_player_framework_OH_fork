@@ -36,14 +36,17 @@ public:
 private:
     bool IsVaildProxy();
     void ClickThread();
+    void ClickThreadCtrl();
 
     sptr<IStandardMonitorService> monitorProxy_ = nullptr;
-    bool enableThread_ = false;
-    std::mutex cmdMutex_;
-    std::mutex threadMutex_;
+    bool isVaildProxy_ = false;
+    std::mutex mutex_;
+    std::mutex thredMutex_;
     std::condition_variable clickCond_;
     std::unique_ptr<std::thread> clickThread_ = nullptr;
+    bool threadRunning_ = false;
     std::set<MonitorClientObject *> objSet_;
+    std::atomic<bool> clientDestroy_ = false;
 };
 } // namespace Media
 } // namespace OHOS

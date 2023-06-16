@@ -17,6 +17,7 @@
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "scope_guard.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MonitorClient"};
@@ -32,14 +33,14 @@ MonitorClient::MonitorClient()
 MonitorClient::~MonitorClient()
 {
     MEDIA_LOGI("Instances destroy");
-    std::lock_guard<std::mutex> cmdLock(cmdMutex_);
-    std::unique_lock<std::mutex> threadLock(threadMutex_);
-    enableThread_ = false;
-    if (clickThread_ != nullptr && clickThread_->joinable()) {
+    clientDestroy_ = true;
+    std::lock_guard<std::mutex> threadLock(thredMutex_);
+    if (clickThread_ != nullptr) {
         MEDIA_LOGI("clear monitor client thread");
-        clickCond_.notify_all();
-        threadLock.unlock();
-        clickThread_->join();
+        if (clickThread_->joinable()) {
+            clickCond_.notify_all();
+            clickThread_->join();
+        }
         clickThread_.reset();
         clickThread_ = nullptr;
     }
@@ -53,10 +54,19 @@ MonitorClient &MonitorClient::GetInstance()
 
 bool MonitorClient::IsVaildProxy()
 {
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!isVaildProxy_) {
+            monitorProxy_ = nullptr;
+        }
+    }
+
     if (monitorProxy_ == nullptr) {
         monitorProxy_ = MediaServiceFactory::GetInstance().GetMonitorProxy();
+        CHECK_AND_RETURN_RET_LOG(monitorProxy_ != nullptr, false, "monitorProxy_ is nullptr!");
+        std::lock_guard<std::mutex> lock(mutex_);
+        isVaildProxy_ = true;
     }
-    CHECK_AND_RETURN_RET_LOG(monitorProxy_ != nullptr, false, "monitorProxy_ is nullptr!");
 
     return true;
 }
@@ -64,18 +74,29 @@ bool MonitorClient::IsVaildProxy()
 int32_t MonitorClient::StartClick(MonitorClientObject *obj)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " StartClick", FAKE_POINTER(obj));
-    std::lock_guard<std::mutex> cmdLock(cmdMutex_);
-    std::lock_guard<std::mutex> threadLock(threadMutex_);
-    CHECK_AND_RETURN_RET_LOG(objSet_.count(obj) == 0, MSERR_OK, "It has already been activated");
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        CHECK_AND_RETURN_RET_LOG(objSet_.count(obj) == 0, MSERR_OK, "It has already been activated");
+        objSet_.insert(obj);
+        if (threadRunning_) {
+            return MSERR_OK;
+        }
+        threadRunning_ = true;
+    }
 
-    CHECK_AND_RETURN_RET_LOG(IsVaildProxy(), MSERR_INVALID_OPERATION, "Proxy is invaild!");
-    objSet_.insert(obj);
-    if (objSet_.size() > 0 && clickThread_ == nullptr) {
-        enableThread_ = true;
-        clickThread_ = std::make_unique<std::thread>(&MonitorClient::ClickThread, this);
+    std::lock_guard<std::mutex> threadLock(thredMutex_);
+    // The original thread has already exited. Need to recycle resources
+    if (clickThread_ != nullptr) {
+        if (clickThread_->joinable()) {
+            clickThread_->join();
+        }
+        clickThread_.reset();
+        clickThread_ = nullptr;
+    }
 
-        CHECK_AND_RETURN_RET_LOG(monitorProxy_ != nullptr, MSERR_INVALID_OPERATION, "Proxy is invaild!");
-        (void)monitorProxy_->EnableMonitor();
+    // Start Thread
+    if (clickThread_ == nullptr && !clientDestroy_) {
+        clickThread_ = std::make_unique<std::thread>(&MonitorClient::ClickThreadCtrl, this);
     }
 
     return MSERR_OK;
@@ -84,23 +105,12 @@ int32_t MonitorClient::StartClick(MonitorClientObject *obj)
 int32_t MonitorClient::StopClick(MonitorClientObject *obj)
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " StopClick", FAKE_POINTER(obj));
-    std::lock_guard<std::mutex> cmdLock(cmdMutex_);
-    std::unique_lock<std::mutex> threadLock(threadMutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(objSet_.count(obj), MSERR_OK, "Not started");
 
     objSet_.erase(obj);
     if (objSet_.empty()) {
-        CHECK_AND_RETURN_RET_LOG(monitorProxy_ != nullptr, MSERR_OK, "Proxy is invaild!");
-        (void)monitorProxy_->DisableMonitor();
-
-        enableThread_ = false;
-        if (clickThread_ != nullptr && clickThread_->joinable()) {
-            clickCond_.notify_all();
-            threadLock.unlock();
-            clickThread_->join();
-            clickThread_.reset();
-            clickThread_ = nullptr;
-        }
+        clickCond_.notify_all();
     }
 
     return MSERR_OK;
@@ -109,19 +119,10 @@ int32_t MonitorClient::StopClick(MonitorClientObject *obj)
 void MonitorClient::MediaServerDied()
 {
     MEDIA_LOGI("MediaServerDied");
-    std::lock_guard<std::mutex> cmdLock(cmdMutex_);
-    std::unique_lock<std::mutex> threadLock(threadMutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     objSet_.clear();
-    enableThread_ = false;
-    monitorProxy_ = nullptr;
-
-    if (clickThread_ != nullptr && clickThread_->joinable()) {
-        clickCond_.notify_all();
-        threadLock.unlock();
-        clickThread_->join();
-        clickThread_.reset();
-        clickThread_ = nullptr;
-    }
+    isVaildProxy_ = false;
+    clickCond_.notify_all();
 }
 
 void MonitorClient::ClickThread()
@@ -130,18 +131,51 @@ void MonitorClient::ClickThread()
     MEDIA_LOGI("ClickThread start");
     static constexpr uint8_t timeInterval = 1; // Heartbeat once per second
 
-    while (true) {
-        std::unique_lock<std::mutex> threadLock(threadMutex_);
-        clickCond_.wait_for(threadLock, std::chrono::seconds(timeInterval), [this] { return !enableThread_; });
+    CHECK_AND_RETURN_LOG(IsVaildProxy(), "Proxy is invaild!");
+    CHECK_AND_RETURN_LOG(monitorProxy_->EnableMonitor() == MSERR_OK, "failed to EnableMonitor");
 
-        if (!enableThread_) {
-            MEDIA_LOGI("ClickThread Stop.");
-            break;
+    while (true) {
+        {
+            std::unique_lock<std::mutex> lock(mutex_);
+            clickCond_.wait_for(lock, std::chrono::seconds(timeInterval), [this] {
+                return objSet_.empty() || !isVaildProxy_ || clientDestroy_;
+            });
+
+            if (clientDestroy_) {
+                MEDIA_LOGI("clientDestroy.");
+                return;
+            }
+            if (objSet_.empty()) {
+                MEDIA_LOGI("objSet empty.");
+                break;
+            }
+            if (!isVaildProxy_) {
+                monitorProxy_ = nullptr;
+                MEDIA_LOGI("Proxy is invaild.");
+                return;
+            }
         }
-        CHECK_AND_BREAK_LOG(monitorProxy_ != nullptr, "Proxy is invaild!");
-        CHECK_AND_BREAK_LOG(monitorProxy_->Click() == MSERR_OK, "failed to Click");
+        CHECK_AND_RETURN_LOG(monitorProxy_ != nullptr, "monitorProxy_ is nullptr!");
+        CHECK_AND_CONTINUE(monitorProxy_->Click() == MSERR_OK);
     }
+
+    CHECK_AND_RETURN_LOG(IsVaildProxy(), "Proxy is invaild!");
+    CHECK_AND_RETURN_LOG(monitorProxy_->DisableMonitor() == MSERR_OK, "failed to DisableMonitor");
     MEDIA_LOGI("ClickThread End");
+}
+
+void MonitorClient::ClickThreadCtrl()
+{
+    while (true) {
+        ClickThread();
+        std::unique_lock<std::mutex> lock(mutex_);
+        if (objSet_.empty() || clientDestroy_) {
+            threadRunning_ = false;
+            MEDIA_LOGI("objSetsize %{public}zu, clientDestroy %{public}d.",
+                objSet_.size(), clientDestroy_.load());
+            return;
+        }
+    }
 }
 } // namespace Media
 } // namespace OHOS

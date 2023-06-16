@@ -42,10 +42,11 @@ public:
 
 private:
     uint64_t GetTimeMS();
-    int32_t Abnormality(int32_t pid);
-    int32_t Recovery(int32_t pid);
     void MonitorThread();
     int32_t GetWaitTime();
+    int32_t GetObjListByPid(int32_t pid, std::list<wptr<MonitorServerObject>> &list);
+    int32_t ObjCtrl(std::list<wptr<MonitorServerObject>> &recoveryList,
+        std::list<wptr<MonitorServerObject>> &abnormalList);
 
     struct TimeInfo {
         TimeInfo(int32_t t, bool flag)
@@ -58,12 +59,12 @@ private:
     };
  
     bool waitingAgain_ = false;
-    bool enableThread_ = false;
     std::map<int32_t, std::list<wptr<MonitorServerObject>>> objListMap_;
     std::multimap<int32_t, TimeInfo> timesMap_;
-    std::mutex cmdMutex_;
-    std::mutex threadMutex_;
+    std::mutex mutex_;
+    std::mutex thredMutex_;
     std::unique_ptr<std::thread> thread_;
+    bool threadRunning_ = false;
     std::condition_variable cond_;
 };
 } // namespace Media
