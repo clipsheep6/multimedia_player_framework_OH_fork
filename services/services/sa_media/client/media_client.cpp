@@ -364,7 +364,10 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
-    MonitorClient::GetInstance().MediaServerDied();
+
+    std::shared_ptr<MonitorClient> monitor = MonitorClient::GetInstance();
+    CHECK_AND_RETURN_LOG(monitor != nullptr, "Failed to get monitor Instance!");
+    monitor->MediaServerDied();
 }
 } // namespace Media
 } // namespace OHOS
