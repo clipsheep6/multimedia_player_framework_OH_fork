@@ -380,7 +380,7 @@ static void gst_surface_allocator_init(GstSurfaceAllocator *allocator)
 
 static void gst_surface_allocator_finalize(GObject *obj)
 {
-    GstSurfaceAllocator *allocator = GST_SURFACE_ALLOCATOR_CAST(obj);
+    GstSurfaceAllocator *allocator = GST_SURFACE_ALLOCATOR(obj);
     g_return_if_fail(allocator != nullptr);
 
     allocator->surface = nullptr;
@@ -410,7 +410,7 @@ static void gst_surface_allocator_class_init(GstSurfaceAllocatorClass *klass)
 
 GstSurfaceAllocator *gst_surface_allocator_new()
 {
-    GstSurfaceAllocator *alloc = GST_SURFACE_ALLOCATOR_CAST(g_object_new(
+    GstSurfaceAllocator *alloc = GST_SURFACE_ALLOCATOR(g_object_new(
         GST_TYPE_SURFACE_ALLOCATOR, "name", "SurfaceAllocator", nullptr));
     (void)gst_object_ref_sink(alloc);
 
