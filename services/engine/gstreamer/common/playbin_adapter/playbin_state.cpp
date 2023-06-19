@@ -689,9 +689,6 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
 {
     ctrler_.isUserSetPlay_ = true;
     ctrler_.isDuration_ = false;
-    PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
-        0, static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
-    ctrler_.ReportMessage(posUpdateMsg);
 
     GstState state = GST_STATE_NULL;
     gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
