@@ -32,6 +32,12 @@
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
+    <target name="PlayerStubFuzzTest">
+        <preparer>
+            <option name="push" value="player/H264_AAC.mp4 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
     <target name="AVmetadataFetchFrameAtTimeFuzzTest">
         <preparer>
             <option name="push" value="avmetadata/H264_AAC.mp4 -> /data/test/media" src="res"/>
@@ -51,6 +57,12 @@
         </preparer>
     </target>
     <target name="AVmetadataSetSource">
+        <preparer>
+            <option name="push" value="avmetadata/H264_AAC.mp4 -> /data/test/media" src="res"/>
+            <option name="shell" value="restorecon /data/test/media"/>
+        </preparer>
+    </target>
+    <target name="AVmetadataStubFuzzTest">
         <preparer>
             <option name="push" value="avmetadata/H264_AAC.mp4 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>

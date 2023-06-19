@@ -370,12 +370,9 @@ bool AppsrcMemory::IsUnreturnedBuffer(uint32_t offset, uint32_t length,
 bool AppsrcMemory::PushBufferToUnreturnedBuffers(uint32_t offset, uint32_t length)
 {
     MEDIA_LOGD("Enter PushBufferToUnreturnedBuffers");
-    if (!unreturnedBuffers_.empty() &&
-        IsInnerRange(unreturnedBuffers_.begin()->first, unreturnedBuffers_.rbegin()->second,
-            offset, (offset + length) % bufferSize_)) {
-        MEDIA_LOGE("mempool error, end_ is %{public}u offset is %{public}u", end_, offset);
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(unreturnedBuffers_.empty() || !IsInnerRange(unreturnedBuffers_.begin()->first,
+        unreturnedBuffers_.rbegin()->second, offset, (offset + length) % bufferSize_),
+        false, "mempool error, end_ is %{public}u offset is %{public}u", end_, offset)
     unreturnedBuffers_.push_back({(end_ + 1) % bufferSize_, offset});
     MEDIA_LOGD("unreturnedBuffers push begin: %{public}u, end: %{public}u",
         (end_ + 1) % bufferSize_, offset);

@@ -133,7 +133,9 @@ void UriHelper::FormatMeForUri(const std::string_view &uri) noexcept
                 formattedUri_ = body;
             }
             rawFileUri_ = formattedUri_;
-            rawFileUri_ = rawFileUri_.substr(strlen("file://"));
+            if (rawFileUri_.size() > strlen("file://")) {
+                rawFileUri_ = rawFileUri_.substr(strlen("file://"));
+            }
             break;
         }
         case URI_TYPE_FD: {

@@ -1,0 +1,73 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+module_output_path = "player_framework/media_player"
+MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
+
+##############################fuzztest##########################################
+ohos_fuzztest("PlayerStubFuzzTest") {
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest/playerstub_fuzzer"
+
+  include_dirs = [
+    "$MEDIA_ROOT_DIR/services/services/sa_media/ipc",
+    "$MEDIA_ROOT_DIR/test/fuzztest/player_fuzztest",
+    "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_ROOT_DIR/test/fuzztest/common",
+  ]
+  cflags = [
+    "-std=c++17",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-fvisibility=hidden",
+    "-Wformat=2",
+    "-Wfloat-equal",
+    "-Wdate-time",
+    "-Werror",
+    "-Wextra",
+    "-Wimplicit-fallthrough",
+    "-Wsign-compare",
+    "-Wunused-parameter",
+    "-DBINDER_IPC_32BIT",
+  ]
+  if (multimedia_player_framework_support_player) {
+    sources = [
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/stub_common.cpp",
+      "player_service_proxy_fuzzer.cpp",
+      "playerstub_fuzzer.cpp",
+    ]
+  }
+  deps = [
+    "$MEDIA_ROOT_DIR/services/services:media_service",
+    "$MEDIA_ROOT_DIR/services/utils:media_format",
+  ]
+  external_deps = [
+    "ipc:ipc_single",
+    "player_framework:media_client",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+}
