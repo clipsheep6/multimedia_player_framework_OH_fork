@@ -69,7 +69,6 @@
           "base_group": [],
           "fwk_group": [
             "//foundation/multimedia/player_framework/interfaces/kits/js:napi_packages",
-            "//foundation/multimedia/player_framework/interfaces/kits/c:capi_packages",
             "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client"
           ],
           "service_group": [
@@ -116,9 +115,6 @@
           }
         ],
         "test": [
-            "//foundation/multimedia/player_framework/test:media_demo_test",
-            "//foundation/multimedia/player_framework/test:media_fuzz_test",
-            "//foundation/multimedia/player_framework/test:media_unit_test"
         ]
       }
     }

@@ -352,7 +352,7 @@ int32_t GstAppsrcEngine::PullBuffer()
             appSrcMem_->PullBufferAndChangePos(readSize);
             timer_ = 0;
             if (!playState_ && (appSrcMem_->GetAvailableSize() >= PULL_SIZE ||
-                appSrcMem_->GetAvailableSize() + static_cast<int64_t>(appSrcMem_->GetFilePos()) >= size_)) {
+                static_cast<int64_t>(appSrcMem_->GetAvailableSize() + appSrcMem_->GetFilePos()) >= size_)) {
                 OnBufferReport(100);  // 100 buffering 100%, begin set to play
                 playState_ = true;
             }
@@ -523,7 +523,7 @@ int32_t GstAppsrcEngine::AddSrcMem(uint32_t bufferSize)
     return MSERR_OK;
 }
 
-void GstAppsrcEngine::OnError(int32_t errorCode, std::string message)
+void GstAppsrcEngine::OnError(int32_t errorCode, const std::string message)
 {
     isExit_ = true;
     pullCond_.notify_all();

@@ -25,6 +25,10 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MonitorCli
 
 namespace OHOS {
 namespace Media {
+std::mutex MonitorClient::instanceMutex_;
+std::shared_ptr<MonitorClient> MonitorClient::monitorClient_ = std::make_shared<MonitorClient>();
+MonitorClient::Destroy MonitorClient::destroy_;
+
 MonitorClient::MonitorClient()
 {
     MEDIA_LOGI("Instances create");
@@ -44,12 +48,13 @@ MonitorClient::~MonitorClient()
         clickThread_.reset();
         clickThread_ = nullptr;
     }
+    MEDIA_LOGI("Instances Destroy end");
 }
 
-MonitorClient &MonitorClient::GetInstance()
+std::shared_ptr<MonitorClient> MonitorClient::GetInstance()
 {
-    static MonitorClient monitor;
-    return monitor;
+    std::lock_guard<std::mutex> lock(instanceMutex_);
+    return monitorClient_;
 }
 
 bool MonitorClient::IsVaildProxy()
@@ -176,6 +181,18 @@ void MonitorClient::ClickThreadCtrl()
             return;
         }
     }
+}
+
+MonitorClient::Destroy::~Destroy()
+{
+    MEDIA_LOGI("MonitorClient Destroy start");
+    std::shared_ptr<MonitorClient> temp;
+    std::lock_guard<std::mutex> lock(instanceMutex_);
+    if (monitorClient_ != nullptr) {
+        temp = monitorClient_;
+        monitorClient_ = nullptr;
+    }
+    MEDIA_LOGI("MonitorClient Destroy end");
 }
 } // namespace Media
 } // namespace OHOS

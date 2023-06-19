@@ -331,7 +331,7 @@ int32_t PlayerTrackParse::GetTrackIndex(int32_t innerIndex, int32_t trackType, i
             }
         }
     } else {
-        index = innerIndex + videoTracks_.size() + audioTracks_.size();
+        index = static_cast<size_t>(innerIndex) + videoTracks_.size() + audioTracks_.size();
         MEDIA_LOGI("inner:0x%{public}d Type:0x%{public}d index:0x%{public}d", innerIndex, trackType, index);
         return MSERR_OK;
     }
