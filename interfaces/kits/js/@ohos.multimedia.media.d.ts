@@ -120,6 +120,24 @@ declare namespace media {
   function createVideoRecorder(): Promise<VideoRecorder>;
 
   /**
+   * Creates an AVScreenCapture instance.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   * @param callback Callback used to return AVScreenCapture instance if the operation is successful; return null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Return by callback.
+   */
+  function createAVScreenCapture(callback: AsyncCallback<AVScreenCapture>): void;
+
+  /**
+   * Creates an AVScreenCapture instance.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   * @returns A Promise instance used to return AVScreenCapture instance if the operation is successful; return null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Return by promise.
+   */
+  function createAVScreenCapture(): Promise<AVScreenCapture>;
+
+  /**
    * Enumerates state change reason.
    * @since 9
    * @syscap SystemCapability.Multimedia.Media.Core
@@ -3032,6 +3050,678 @@ declare namespace media {
      * @syscap SystemCapability.Multimedia.Media.Core
      */
     AUDIO_FLAC = 'audio/flac',
+  }
+
+  /**
+   * Manages and captures audio/video. Before calling an AVScreenCapture method, you must use createAVScreenCapture()
+   * to create an createAVScreenCapture instance.
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   * @since 10
+  */
+  interface AVScreenCapture {
+    /**
+     * Init some necessary config for AVScreenCapture, refer to AVScreenCaptureConfig for
+     * init config information details.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param config Init parameters.
+     * @param callback A callback instance used to return when init completed.
+     * @permission ohos.permission.MICROPHONE
+     * @permission ohos.permission.CAPTURE_SCREEN
+     * @permission ohos.permission.CAPTURE_INTERNAL_AUDIO, used during interal audio recording.
+     * @throws { BusinessError } 201 - Permission denied. Return by callback.
+     * @throws { BusinessError } 401 - Parameter error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     */
+    init(config: AVScreenCaptureConfig, callback: AsyncCallback<void>): void;
+
+    /**
+     * Init some necessary config for AVScreenCapture, refer to AVScreenCaptureConfig for
+     * init config information details.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param config Init parameters.
+     * @permission ohos.permission.MICROPHONE
+     * @permission ohos.permission.CAPTURE_SCREEN
+     * @permission ohos.permission.CAPTURE_INTERNAL_AUDIO
+     * @returns A Promise instance used to return.
+     * @throws { BusinessError } 201 - Permission denied. Return by callback.
+     * @throws { BusinessError } 401 - Parameter error. Return by callback.
+     * @throws { BusinessError } 5400105 - Service died. Return by callback.
+     */
+    init(config: AVScreenCaptureConfig): Promise<void>;
+
+    /**
+     * Start a screen recording method that can generate screen recording file.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param callback A callback instance used to return when startScreenRecording completed.
+     */
+    startScreenRecording(callback: AsyncCallback<void>): void;
+
+    /**
+     * Start a screen recording method that can generate screen recording file.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @returns A Promise instance used to return when startScreenRecording completed.
+     */
+    startScreenRecording(): Promise<void>;
+
+    /**
+     * Start a screen capture method that can get original or encoded stream based on datatype.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param callback A callback instance used to return when startScreenCapture completed.
+     */
+    startScreenCapture(callback: AsyncCallback<void>): void;
+
+    /**
+     * Start a screen capture method that can get original or encoded stream based on datatype.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @returns A Promise instance used to return when startScreenCapture completed.
+     */
+    startScreenCapture(): Promise<void>;
+
+    /**
+     * Stop generate screen recording file.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param callback A callback instance used to return when stopScreenRecording completed.
+     */
+    stopScreenRecording(callback: AsyncCallback<void>): void;
+
+    /**
+     * Stop generate screen recording file.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @returns A Promise instance used to return when stopScreenRecording completed.
+     */
+    stopScreenRecording(): Promise<void>;
+
+    /**
+     * Stop generate screen capture original/encoded stream based on datatype.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param callback A callback instance used to return when stopScreenCapture completed.
+     */
+    stopScreenCapture(callback: AsyncCallback<void>): void;
+
+    /**
+     * Stop generate screen capture original/encoded stream based on datatype.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @returns A Promise instance used to return when stopScreenCapture completed.
+     */
+    stopScreenCapture(): Promise<void>;
+
+    /**
+     * Release AVScreenCapture instance. The AVScreenCapture becomes inoperable after calling.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param callback A callback instance used to return when release completed.
+     */
+    release(callback: AsyncCallback<void>): void;
+
+    /**
+     * Release AVScreenCapture instance. The AVScreenCapture becomes inoperable after calling.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @returns A Promise instance used to return when release completed.
+     */
+    release(): Promise<void>;
+
+    /**
+     * Allocate audio buffer when enable audio during AVScreenCapture.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param type The type of the audio stream
+     * @param callback A callback used to used to acquire audiobuffer
+     */
+    acquireAudioBuffer(type: AudioCaptureSourceType, callback: AsyncCallback<AudioBuffer>): void;
+
+    /**
+     * Allocate audio buffer when enable audio during AVScreenCapture.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param type The type of the audio stream
+     * @returns A Promise instance used to return AudioBuffer
+     */
+    acquireAudioBuffer(type: AudioCaptureSourceType): Promise<AudioBuffer>;
+
+    /**
+     * Allocate video buffer during AVScreenCapture.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param callback A callback used to used to acquire videobuffer
+     */
+    acquireVideoBuffer(callback: AsyncCallback<VideoBuffer>): void;
+
+    /**
+     * Allocate video buffer during AVScreenCapture.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @returns A Promise instance used to return VideoBuffer
+     */
+    acquireVideoBuffer(): Promise<VideoBuffer>;
+
+    /**
+     * Release allocated audiobuffer. The current audiobuffer becomes inoperable after calling.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param type The type of the audio stream
+     * @param callback A callback instance used to return when releaseAudioBuffer completed.
+     */
+    releaseAudioBuffer(type: AudioCaptureSourceType, callback: AsyncCallback<void>): void;
+
+    /**
+     * Release allocated audiobuffer. The current audiobuffer becomes inoperable after calling.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param type The type of the audio stream
+     * @returns A Promise instance used to return when releaseAudioBuffer completed.
+     */
+    releaseAudioBuffer(type: AudioCaptureSourceType): Promise<void>;
+
+    /**
+     * Release allocated videobuffer. The current videobuffer becomes inoperable after calling.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param callback A callback instance used to return when releaseVideoBuffer completed.
+     */
+    releaseVideoBuffer(callback: AsyncCallback<void>): void;
+
+    /**
+     * Release allocated videobuffer. The current videobuffer becomes inoperable after calling.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @returns A Promise instance used to return when releaseVideoBuffer completed.
+     */
+    releaseVideoBuffer(): Promise<void>;
+
+    /**
+     * Set microphone state, use to mute/unmute screen recording.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param enable Set mic on or off
+     * @param callback A callback instance used to return when releaseVideoBuffer completed.
+     */
+    setMicrophoneEnabled(enable: boolean, callback: AsyncCallback<void>): void;
+
+    /**
+     * Set microphone state, use to mute/unmute screen recording.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param enable Set mic on or off
+     * @returns A Promise instance used to return when setMicrophoneEnabled completed.
+     */
+    setMicrophoneEnabled(enable: boolean): Promise<void>;
+
+    /**
+     * Listens for AVScreenCapture error events.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param type Type of the AVScreenCapture error event to listen for.
+     * @param callback A callback used to listen for the AVScreenCapture error event.
+     */
+    on(type: 'error', callback: ErrorCallback): void;
+
+    /**
+     * Listens for AVScreenCapture error events.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param type Type of the AVScreenCapture error event to listen for.
+     */
+    off(type: 'error'): void;
+
+    /**
+     * Listens for ScreenCapture AudioBufferAvailable.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param type Type of the audioBuffer available to listen for.
+     * @param callback The state and audio stream type
+     */
+    on(type: 'audioBufferAvailable', callback: (state: boolean, type: AudioCaptureSourceType) => void): void;
+
+    /**
+     * Listens for ScreenCapture AudioBufferAvailable.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param type Type of the audioBuffer available to listen for.
+     */
+    off(type: 'audioBufferAvailable'): void;
+
+    /**
+     * Listens for ScreenCapture VideoBufferAvailable.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param type Type of the videobuffer available to listen for.
+     * @param callback The videobuffer state
+     */
+    on(type: 'videoBufferAvailable', callback: (state: boolean) => void): void;
+
+    /**
+     * Listens for ScreenCapture VideoBufferAvailable.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @param type Type of the videobuffer available to listen for.
+     */
+    off(type: 'videoBufferAvailable'): void;
+  }
+
+  /**
+   * VideoBuffer Rect info
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface Rect {
+    /**
+     * Indicates the x-coordinate of screen recording.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    x: number;
+    /**
+     * Indicates the y-coordinate of screen recording.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    y: number;
+    /**
+     * Indicates the width of screen recording.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    width: number;
+    /**
+     * Indicates the height of screen recording.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    height: number;
+  }
+
+  /**
+   * VideoBuffer info.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface VideoBuffer {
+    /**
+     * Indicates the video buffer data.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    buffer: ArrayBuffer;
+    /**
+     * Indicates the buffer size.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    size: number;
+    /**
+     * Indicates the buffer fence info.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    fence: number;
+    /**
+     * Indicates the buffer timestamp info.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    timestamp: number;
+    /**
+     * Indicates the buffer Rect info, details see @Rect .
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    damage: Rect;
+  }
+
+  /**
+   * AudioBuffer info
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface AudioBuffer {
+    /**
+     * Indicates the audio buffer data
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    buffer: ArrayBuffer;
+    /**
+     * Indicates the audio buffer size
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    size: number;
+    /**
+     * Indicates the audio buffer timestamp info.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    timestamp: number;
+    /**
+     * Indicates the audio buffer source type info, details see @AudioCaptureSourceType .
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    type: AudioCaptureSourceType;
+  }
+
+  /**
+   * Enumerates screen capture data type.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  enum DataType {
+    /**
+     * YUV/RGBA/PCM, etc. original stream
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    ORIGINAL_STREAM = 0,
+    /**
+     * h264/AAC, etc. encoded stream
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    ENCODED_STREAM = 1,
+    /**
+     * endcoded to mp4 file
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    CAPTURE_FILE = 2,
+  }
+
+  /**
+   * Enumerates audio cap source type.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  enum AudioCaptureSourceType {
+    /**
+     * Invalid audio source type.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    SOURCE_INVALID = -1,
+    /**
+     * Default audio source type, default use mic.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    SOURCE_DEFAULT = 0,
+    /**
+     * Microphone audio source type.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    SOURCE_MIC = 1,
+    /**
+     * All PlayBack audio source type.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    SOURCE_ALL_PLAYBACK = 2,
+    /**
+     * App PlayBack audio source type.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    SOURCE_APP_PLAYBACK = 3,
+  }
+
+  /**
+   * Enumerates screen capture mode.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  enum CaptureMode {
+    /**
+     * capture home screen
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    CAPTURE_HOME_SCREEN = 0,
+    /**
+     * capture a specified screen
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    CAPTURE_SPECIFIED_SCREEN = 1,
+    /**
+     * capture a specified window
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    CAPTURE_SPECIFIED_WINDOW = 2,
+    /**
+     * capture a invalid type
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    CAPTURE_INVALID = -1,
+  }
+
+  /**
+   * Audio capture info struct
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface AudioCaptureInfo {
+    /**
+     * Audio capture sample rate info.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    audioSampleRate: number;
+    /**
+     * Audio capture channel info.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    audioChannels: number;
+    /**
+     * Audio capture channel info, details see @AudioCaptureSourceType .
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    audioSource: AudioCaptureSourceType;
+  }
+
+  /**
+   * Audio encoder info.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface AudioEncoderInfo {
+    /**
+     * Audio encoder bitrate.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    audioBitrate: number;
+    /**
+     * Audio codec format, details see @CodecMimeType .
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    audioCodecformat: CodecMimeType;
+  }
+
+  /**
+   * Video capture info
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface VideoCaptureInfo {
+    /**
+     * Display id, should be set while captureMode = CAPTURE_SPECIFIED_SCREEN
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    displayId?: number;
+    /**
+     * The ids of mission, should be set while captureMode = CAPTURE_SPECIFIED_WINDOW
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    missionIDs?: Array<number>;
+    /**
+     * Video frame width of screencapture
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    videoFrameWidth: number;
+    /**
+     * Video frame height of screencapture
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    videoFrameHeight: number;
+    /**
+     * Video source type of screencapture
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    videoSource: VideoSourceType;
+  }
+
+  /**
+   * video encode info
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface VideoEncoderInfo {
+    /**
+     * Video encoder format
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    videoCodec: CodecMimeType;
+    /**
+     * Video encoder bit rate
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    videoBitrate: number;
+    /**
+     * Video encoder frame rate
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    videoFrameRate: number;
+  }
+
+  /**
+   * Set audioinfo to AVScreenCapture.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface AudioInfo {
+    /**
+     * Audio capture info of microphone
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    micCaptureInfo: AudioCaptureInfo;
+    /**
+     * Audio capture info of inner
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    innerCaptureInfo?: AudioCaptureInfo;
+    /**
+     * Audio encoder info
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    audioEncoderInfo?: AudioEncoderInfo;
+  }
+
+  /**
+   * Set videoinfo to AVScreenCapture.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface VideoInfo {
+    /**
+     * Video capture information
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     * @deprecated since 10
+     */
+    videoCapInfo: VideoCaptureInfo;
+    /**
+     * Video encoder information
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    videoEncoderInfo?: VideoEncoderInfo;
+  }
+
+  /**
+   * AVScreen Recorder file info, use to generate file. This need to
+   * config all video & audio info content.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface RecorderInfo {
+    /**
+     * File output uri, support a kind of uri now.
+     * format like: "fd://" + "context".
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    url: string;
+    /**
+     * Output file format. It used to replace "format".
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    fileFormat: ContainerFormatType;
+  }
+
+  /**
+   * AVScreenCapture config info, user to initialize AVScreenCapture.
+   * @since 10
+   * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+   */
+  interface AVScreenCaptureConfig {
+    /**
+     * Content range of the screen capture.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    captureMode: CaptureMode;
+    /**
+     * Capture flow type.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    dataType: DataType;
+    /**
+     * Screen audio info.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    audioInfo: AudioInfo;
+    /**
+     * Screen video info.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    videoInfo: VideoInfo;
+    /**
+     * Screen recorder to file info.
+     * @since 10
+     * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+     */
+    recorderInfo?: RecorderInfo;
   }
 }
 export default media;
