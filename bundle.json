@@ -47,7 +47,7 @@
           "hitrace_native",
           "audio_framework",
           "ipc",
-          "graphic_standard",
+          "graphic_2d",
           "hisysevent_native",
           "c_utils",
           "hilog_native",

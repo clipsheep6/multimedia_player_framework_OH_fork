@@ -88,7 +88,7 @@ ohos_shared_library("gst_mem_sink") {
   ]
 
   external_deps = [
-    "graphic_standard:surface",
+    "graphic_2d:surface",
     "init:libbegetutil",
   ]
 
