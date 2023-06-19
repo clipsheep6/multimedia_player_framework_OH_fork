@@ -49,8 +49,6 @@ public:
     void StopPerfRecord(uintptr_t obj, std::string_view tag);
     void DumpObjectRecord(uintptr_t obj);
     void CleanObjectRecord(uintptr_t obj);
-    void DumpAllRecord();
-    void CleanAllRecord();
 
 private:
     TimePerf() = default;
