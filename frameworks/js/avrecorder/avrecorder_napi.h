@@ -226,7 +226,7 @@ private:
     static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVRecorderNapi *avnapi, const std::string &opt);
     static std::shared_ptr<TaskHandler<RetInfo>> GetAVRecorderProfileTask(
-        std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> SetAVRecorderConfigTask(
         std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt);
@@ -237,6 +237,9 @@ private:
 
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result,
         bool &getValue);
+
+    static int32_t GetAVRecorderProfile(std::shared_ptr<AVRecorderProfile> &profile,
+        const int32_t sourceId, const int32_t qualityLevel);
 
     AVRecorderNapi();
     ~AVRecorderNapi();
@@ -264,8 +267,6 @@ private:
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetSourceIdAndQuality(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
         napi_value sourceIdArgs, napi_value qualityArgs, const std::string &opt);
-    int32_t GetAVRecorderProfile(std::shared_ptr<AVRecorderProfile> &profile,
-        int32_t sourceId, int32_t qualityLevel);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
     RetInfo Configure(std::shared_ptr<AVRecorderConfig> config);
 

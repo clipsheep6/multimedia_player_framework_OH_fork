@@ -342,6 +342,7 @@ napi_value AVRecorderNapi::JsRelease(napi_env env, napi_callback_info info)
 napi_value AVRecorderNapi::JsGetAVRecorderProfile(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVRecorder::JsGetAVRecorderProfile");
+    MEDIA_LOGI("AVRecorder::JsGetAVRecorderProfile");
     const std::string &opt = AVRecordergOpt::GET_AV_RECORDER_PROFILE;
     MEDIA_LOGI("Js %{public}s Start", opt.c_str());
 
@@ -389,7 +390,7 @@ napi_value AVRecorderNapi::JsGetAVRecorderProfile(napi_env env, napi_callback_in
 }
 
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetAVRecorderProfileTask(
-    std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
     return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, &profile = asyncCtx->profile_]() {
         const std::string &option = AVRecordergOpt::GET_AV_RECORDER_PROFILE;
@@ -410,7 +411,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetAVRecorderProfileTask(
             napi->qualityLevel_ <= RECORDER_QUALITY_HIGH_SPEED_1080P)),
             GetRetInfo(MSERR_INVALID_VAL, "GetAVRecorderProfileTask", ""), "sourceId or qualityLevel is null");
 
-        int32_t ret = napi->GetAVRecorderProfile(profile, napi->sourceId_, napi->qualityLevel_);
+        int32_t ret = AVRecorderNapi::GetAVRecorderProfile(profile, napi->sourceId_, napi->qualityLevel_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(MSERR_INVALID_VAL, "GetAVRecorderProfileTask", ""),
             "get AVRecorderProfile failed");
 
@@ -1093,7 +1094,7 @@ int32_t AVRecorderNapi::GetSourceIdAndQuality(std::unique_ptr<AVRecorderAsyncCon
 }
 
 int32_t AVRecorderNapi::GetAVRecorderProfile(std::shared_ptr<AVRecorderProfile> &profile,
-    int32_t sourceId, int32_t qualityLevel)
+    const int32_t sourceId, const int32_t qualityLevel)
 {
     MediaTrace trace("AVRecorder::GetAVRecorderProfile");
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
