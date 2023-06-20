@@ -111,5 +111,6 @@ ohos_shared_library("media_service_utils") {
   ]
 
   subsystem_name = "multimedia"
+  innerapi_tags = [ "platformsdk" ]
   part_name = "player_framework"
 }
