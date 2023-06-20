@@ -17,8 +17,7 @@
 #define PLAYER_H
 
 #include <cstdint>
-#ifdef SUPPORT_AUDIO_ONLY
-#else
+#ifndef SUPPORT_AUDIO_ONLY
 #include "surface.h"
 #endif
 #include "format.h"
@@ -57,6 +56,7 @@ public:
     static constexpr std::string_view AUDIO_INTERRUPT_FORCE = "audio_interrupt_force";
     static constexpr std::string_view AUDIO_INTERRUPT_HINT = "audio_interrupt_hint";
     static constexpr std::string_view AUDIO_EFFECT_MODE = "audio_effect_mode";
+    static constexpr std::string_view SUBTITLE_TEXT = "text";
 };
 
 enum BufferingInfoType : int32_t {
@@ -129,6 +129,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_DURATION_UPDATE,
     /* return the playback is live stream. */
     INFO_TYPE_IS_LIVE_STREAM,
+    /* return the subtitle of playback. */
+    INFO_TYPE_SUBTITLE_UPDATE,
     /* return the message when track changes. */
     INFO_TYPE_TRACKCHANGE,
     /* return the default audio track. */

@@ -237,6 +237,10 @@ bool PlayerTrackParse::IsSameStreamId(GstPad *padA, GstPad *padB)
 {
     gchar *streamIdA = gst_pad_get_stream_id(padA);
     gchar *streamIdB = gst_pad_get_stream_id(padB);
+    if (streamIdA == nullptr || streamIdB == nullptr) {
+        MEDIA_LOGW("streamId is nullptr");
+        return false;
+    }
     bool ret = (strcmp(streamIdA, streamIdB) == 0);
     g_free(streamIdA);
     g_free(streamIdB);

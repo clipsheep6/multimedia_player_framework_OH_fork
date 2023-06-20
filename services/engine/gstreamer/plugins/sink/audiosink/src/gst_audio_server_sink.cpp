@@ -58,6 +58,7 @@ enum {
     PROP_ENABLE_OPT_RENDER_DELAY,
     PROP_LAST_RUNNING_TIME_DIFF,
     PROP_AUDIO_EFFECT_MODE,
+    PROP_SUBTITLE_SINK,
 };
 
 #define gst_audio_server_sink_parent_class parent_class
@@ -174,6 +175,10 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
         g_param_spec_int64("last-running-time-diff", "last running time diff", "last running time diff",
             0, G_MAXINT64, 0, (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_SUBTITLE_SINK,
+        g_param_spec_pointer("subtitle-sink", "subtitle sink", "subtitle sink",
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     gst_element_class_set_static_metadata(gstelement_class,
         "Audio server sink", "Sink/Audio",
         "Push pcm data to Audio server", "OpenHarmony");
@@ -196,6 +201,7 @@ static void gst_audio_server_sink_init(GstAudioServerSink *sink)
     MediaTrace trace("Audio::gst_audio_server_sink_init");
     g_return_if_fail(sink != nullptr);
     sink->audio_sink = nullptr;
+    sink->subtitle_sink = nullptr;
     sink->bits_per_sample = DEFAULT_BITS_PER_SAMPLE;
     sink->channels = 0;
     sink->sample_rate = 0;
@@ -229,6 +235,7 @@ static void gst_audio_server_sink_finalize(GObject *object)
         (void)sink->audio_sink->Release();
         sink->audio_sink = nullptr;
     }
+    sink->subtitle_sink = nullptr;
     gst_audio_server_sink_clear_cache_buffer(sink);
 
     G_OBJECT_CLASS(parent_class)->finalize(object);
@@ -270,6 +277,13 @@ static void gst_audio_server_sink_error_callback(GstBaseSink *basesink, const st
     MEDIA_LOGE("audio render error: %{public}s", errMsg.c_str());
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     GST_ELEMENT_ERROR(sink, STREAM, FAILED, (NULL), ("audio render error: %s", errMsg.c_str()));
+}
+
+static void gst_audio_server_sink_set_subtitle_sink(GstAudioServerSink *sink, gpointer subtitle_sink)
+{
+    g_return_if_fail(subtitle_sink != nullptr);
+    sink->subtitle_sink = GST_ELEMENT_CAST(gst_object_ref(subtitle_sink));
+    GST_INFO_OBJECT(subtitle_sink, "get subtitle sink: %s", GST_ELEMENT_NAME(sink->subtitle_sink));
 }
 
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
@@ -319,6 +333,9 @@ static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
         case PROP_AUDIO_EFFECT_MODE:
             g_return_if_fail(sink->audio_sink != nullptr);
             (void)sink->audio_sink->SetAudioEffectMode(g_value_get_int(value));
+            break;
+        case PROP_SUBTITLE_SINK:
+            gst_audio_server_sink_set_subtitle_sink(sink, g_value_get_pointer(value));
             break;
         default:
             break;
@@ -452,6 +469,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
     g_return_val_if_fail(event != nullptr, FALSE);
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     g_return_val_if_fail(sink != nullptr, FALSE);
+    gboolean ret = FALSE;
     switch (GST_EVENT_TYPE(event)) {
         case GST_EVENT_EOS:
             if (sink->audio_sink == nullptr) {
@@ -469,7 +487,9 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             g_mutex_lock(&sink->render_lock);
             sink->frame_after_segment = TRUE;
             g_mutex_unlock(&sink->render_lock);
-            break;
+            ret = GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
+            g_object_set(G_OBJECT(sink->subtitle_sink), "segment-updated", TRUE, nullptr);
+            return ret;
         case GST_EVENT_FLUSH_START:
             basesink->stream_group_done = FALSE;
             gst_audio_server_sink_clear_cache_buffer(sink);
@@ -487,6 +507,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
         case GST_EVENT_STREAM_GROUP_DONE:
             basesink->stream_group_done = TRUE;
             GST_DEBUG_OBJECT(basesink, "received STREAM_GROUP_DONE, set stream_group_done TRUE");
+            g_object_set(G_OBJECT(sink->subtitle_sink), "segment-updated", TRUE, nullptr);
             if (basesink->need_preroll) {
                 /* may async start to change state, preroll STREAM_GROUP_DONE to async done */
                 gst_base_sink_do_preroll (basesink, GST_MINI_OBJECT_CAST(event));
@@ -542,7 +563,7 @@ static gboolean gst_audio_server_sink_stop(GstBaseSink *basesink)
     g_return_val_if_fail(sink->audio_sink->Stop() == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->Release() == MSERR_OK, FALSE);
     sink->audio_sink = nullptr;
-
+    sink->subtitle_sink = nullptr;
     return TRUE;
 }
 

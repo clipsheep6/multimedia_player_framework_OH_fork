@@ -220,7 +220,7 @@ public:
     int32_t Stop() noexcept;
 
     // delayUs cannot be gt 10000000ULL.
-    int32_t EnqueueTask(const std::shared_ptr<ITaskHandler> &task,
+    __attribute__((no_sanitize("cfi"))) int32_t EnqueueTask(const std::shared_ptr<ITaskHandler> &task,
         bool cancelNotExecuted = false, uint64_t delayUs = 0ULL);
 
 private:
@@ -228,8 +228,8 @@ private:
         std::shared_ptr<ITaskHandler> task_ { nullptr };
         uint64_t executeTimeNs_ { 0ULL };
     };
-    void TaskProcessor();
-    void CancelNotExecutedTaskLocked();
+    __attribute__((no_sanitize("cfi"))) void TaskProcessor();
+    __attribute__((no_sanitize("cfi"))) void CancelNotExecutedTaskLocked();
 
     bool isExit_ = true;
     std::unique_ptr<std::thread> thread_;

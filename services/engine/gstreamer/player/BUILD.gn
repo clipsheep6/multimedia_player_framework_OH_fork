@@ -44,6 +44,7 @@ config("media_engine_gst_player_config") {
 
   include_dirs = [
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/sink/memsink",
+    "../../../../services/engine/gstreamer/plugins/sink/subtitlesink",
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/services/engine_intf",
