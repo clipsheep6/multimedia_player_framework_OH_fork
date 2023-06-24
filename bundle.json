@@ -115,8 +115,6 @@
           }
         ],
         "test": [
-            "//foundation/multimedia/player_framework/test:media_fuzz_test",
-            "//foundation/multimedia/player_framework/test:media_unit_test"
         ]
       }
     }

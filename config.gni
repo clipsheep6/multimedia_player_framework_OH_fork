@@ -23,6 +23,7 @@ declare_args() {
   multimedia_player_framework_support_histreamer = true
   multimedia_player_framework_support_video = true
   multimedia_player_framework_support_jsapi = true
+  multimedia_player_framework_support_capi = true
   multimedia_player_framework_support_test = true
   multimedia_player_framework_support_xcollie = true
   multimedia_player_framework_support_jsstack = true
