@@ -32,14 +32,9 @@ protected:
     void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<HdiBufferWrap> &codecBuffer) override;
 
 private:
-    struct AppData {
-        std::weak_ptr<HdiVdecOutBufferMgr> instance_;
-        explicit AppData(std::weak_ptr<HdiVdecOutBufferMgr> mgr) : instance_(mgr) {}
-    };
     bool enableNativeBuffer_ = false;
     int32_t UseHandleMems(std::vector<GstBuffer *> &buffers);
     GstBufferPool *pool_ = nullptr;
-    std::shared_ptr<AppData> appData_ = nullptr;
     std::vector<GstBuffer *> preBuffers_;
     bool isCallBackMode_ = false;
     static GstFlowReturn NewBuffer(GstBuffer *buffer, gpointer userData);

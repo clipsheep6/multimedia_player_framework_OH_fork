@@ -22,6 +22,7 @@
 #include "scope_guard.h"
 #include "gst_producer_surface_pool.h"
 #include "media_dfx.h"
+#include "gst_utils.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "HdiVdecOutBufferMgr"};
@@ -114,18 +115,19 @@ void HdiVdecOutBufferMgr::UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::sh
     }
 }
 
+using HdiVdecOutBufferMgrWrapper = ThizWrapper<HdiVdecOutBufferMgr>;
+
 GstFlowReturn HdiVdecOutBufferMgr::NewBuffer(GstBuffer *buffer, gpointer userData)
 {
     MediaTrace trace("HdiVdecOutBufferMgr::NewBuffer");
     ON_SCOPE_EXIT(0) {
         gst_buffer_unref(buffer);
     };
-    AppData *mAppData = reinterpret_cast<AppData *>(userData);
-    CHECK_AND_RETURN_RET_LOG(mAppData != nullptr, GST_FLOW_ERROR, "appData is null");
-    auto instance = mAppData->instance_.lock();
-    CHECK_AND_RETURN_RET_LOG(instance != nullptr, GST_FLOW_ERROR, "instance is null");
+
+    auto thizStrong = HdiVdecOutBufferMgrWrapper::TakeStrongThiz(userData);
+    CHECK_AND_RETURN_RET_LOG(thizStrong != nullptr, GST_FLOW_ERROR, "thizStrong is null");
     CANCEL_SCOPE_EXIT_GUARD(0);
-    if (instance->OnNewBuffer(buffer) == GST_CODEC_ERROR) {
+    if (thizStrong->OnNewBuffer(buffer) == GST_CODEC_ERROR) {
         MEDIA_LOGE("new buffer done failed");
         return GST_FLOW_ERROR;
     }
@@ -167,10 +169,10 @@ void HdiVdecOutBufferMgr::SetOutputPool(GstBufferPool *pool)
 {
     MEDIA_LOGI("SetOutputPool");
     pool_ = pool;
-    if (appData_ == nullptr) {
-        appData_ = std::make_shared<AppData>(weak_from_this());
-    }
-    gst_producer_surface_pool_set_callback(pool, HdiVdecOutBufferMgr::NewBuffer, appData_.get());
+    HdiVdecOutBufferMgrWrapper *wrapper = new(std::nothrow) HdiVdecOutBufferMgrWrapper(shared_from_this());
+    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+    gst_producer_surface_pool_set_callback(pool, HdiVdecOutBufferMgr::NewBuffer, wrapper,
+        &HdiVdecOutBufferMgrWrapper::OnDestory);
     isCallBackMode_ = true;
 }
 

@@ -36,6 +36,7 @@ G_BEGIN_DECLS
 #define GST_PRODUCER_SURFACE_POOL_CAST(obj) ((GstProducerSurfacePool*)(obj))
 
 using ProSurfaceNewBuffer = GstFlowReturn (*)(GstBuffer *buffer, gpointer user_data);
+using ProSurfaceOnDestroy = void (*)(gpointer user_data);
 
 typedef struct _GstProducerSurfacePool GstProducerSurfacePool;
 typedef struct _GstProducerSurfacePoolClass GstProducerSurfacePoolClass;
@@ -65,6 +66,7 @@ struct _GstProducerSurfacePool {
     guint scale_type;
     ProSurfaceNewBuffer newBuffer;
     gpointer userdata;
+    ProSurfaceOnDestroy onDestroy;
 };
 
 struct _GstProducerSurfacePoolClass {
@@ -82,7 +84,7 @@ GST_API_EXPORT gboolean gst_producer_surface_pool_flush_buffer(GstProducerSurfac
     OHOS::sptr<OHOS::SurfaceBuffer>& buffer, int32_t fence, OHOS::BufferFlushConfig &config);
 
 GST_API_EXPORT gboolean gst_producer_surface_pool_set_callback(GstBufferPool *pool,
-    ProSurfaceNewBuffer callback, gpointer userdata);
+    ProSurfaceNewBuffer callback, gpointer userdata, ProSurfaceOnDestroy onDestroy);
 
 G_END_DECLS
 

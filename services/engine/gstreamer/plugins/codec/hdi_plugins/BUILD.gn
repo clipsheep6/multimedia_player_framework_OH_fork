@@ -48,6 +48,7 @@ config("gst_codec_plugin_hdi_config") {
     "//foundation/multimedia/player_framework/interfaces/innerkits/native/media/include",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common",
+    "../../../common/utils",
     "//third_party/gstreamer/gstreamer",
     "//third_party/gstreamer/gstreamer/libs",
     "//third_party/gstreamer/gstplugins_base",

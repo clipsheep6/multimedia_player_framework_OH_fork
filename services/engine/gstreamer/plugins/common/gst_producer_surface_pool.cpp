@@ -71,6 +71,16 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
     const GValue *value, GParamSpec *pspec);
 static void gst_producer_surface_pool_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
 
+static void gst_producer_surface_pool_reset_callback(GstProducerSurfacePool *spool)
+{
+    if (spool->onDestroy) {
+       spool->onDestroy(spool->userdata);
+       spool->onDestroy = nullptr;
+    }
+    spool->newBuffer = nullptr;
+    spool->userdata = nullptr;
+}
+
 static void clear_preallocated_buffer(GstProducerSurfacePool *spool)
 {
     g_return_if_fail(spool != nullptr);
@@ -161,6 +171,7 @@ static void gst_producer_surface_pool_finalize(GObject *obj)
     clear_preallocated_buffer(spool);
     (void)gst_buffer_pool_set_active(pool, FALSE);
 
+    gst_producer_surface_pool_reset_callback(spool);
     spool->surface = nullptr;
     gst_object_unref(spool->allocator);
     spool->allocator = nullptr;
@@ -259,12 +270,15 @@ GstProducerSurfacePool *gst_producer_surface_pool_new(void)
     return pool;
 }
 
-gboolean gst_producer_surface_pool_set_callback(GstBufferPool *pool, ProSurfaceNewBuffer callback, gpointer userdata)
+gboolean gst_producer_surface_pool_set_callback(GstBufferPool *pool, ProSurfaceNewBuffer callback, gpointer userdata,
+    ProSurfaceOnDestroy onDestroy)
 {
     g_return_val_if_fail(pool != nullptr, FALSE);
     GstProducerSurfacePool *spool = GST_PRODUCER_SURFACE_POOL(pool);
+    gst_producer_surface_pool_reset_callback(spool);
     spool->newBuffer = callback;
     spool->userdata = userdata;
+    spool->onDestroy = onDestroy;
     return TRUE;
 }
 
@@ -528,8 +542,7 @@ static gboolean gst_producer_surface_pool_stop(GstBufferPool *pool)
     (void)gst_task_join(spool->task);
     gst_object_unref(spool->task);
     spool->task = nullptr;
-    spool->newBuffer = nullptr;
-    spool->userdata = nullptr;
+    gst_producer_surface_pool_reset_callback(spool);
 
     return ret;
 }
