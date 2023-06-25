@@ -34,11 +34,7 @@ std::shared_ptr<AVSharedMemory> AVDataSrcMemory::CreateFromLocal(
 {
     std::shared_ptr<AVDataSrcMemory> memory = std::make_shared<AVDataSrcMemory>(size, flags, name);
     int32_t ret = memory->Init();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("Create avsharedmemory failed, ret = %{public}d", ret);
-        return nullptr;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "Create avsharedmemory failed, ret = %{public}d", ret);
     return memory;
 }
 
@@ -47,11 +43,7 @@ std::shared_ptr<AVSharedMemory> AVDataSrcMemory::CreateFromRemote(
 {
     std::shared_ptr<AVDataSrcMemory> memory = std::make_shared<AVSharedMemoryBaseImpl>(fd, size, flags, name);
     int32_t ret = memory->Init();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("Create avsharedmemory failed, ret = %{public}d", ret);
-        return nullptr;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "Create avsharedmemory failed, ret = %{public}d", ret);
     return memory;
 }
 

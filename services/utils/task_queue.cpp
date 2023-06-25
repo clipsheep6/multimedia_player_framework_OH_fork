@@ -32,12 +32,10 @@ TaskQueue::~TaskQueue()
 int32_t TaskQueue::Start()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (thread_ != nullptr) {
-        MEDIA_LOGW("Started already, ignore ! [%{public}s]", name_.c_str());
-        return MSERR_OK;
+    if (thread_ == nullptr)  {
+        isExit_ = false;
+        thread_ = std::make_unique<std::thread>(&TaskQueue::TaskProcessor, this);
     }
-    isExit_ = false;
-    thread_ = std::make_unique<std::thread>(&TaskQueue::TaskProcessor, this);
     MEDIA_LOGI("thread started [%{public}s]", name_.c_str());
     return MSERR_OK;
 }
@@ -50,10 +48,8 @@ int32_t TaskQueue::Stop() noexcept
         return MSERR_OK;
     }
 
-    if (std::this_thread::get_id() == thread_->get_id()) {
-        MEDIA_LOGI("Stop at the task thread, reject");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(std::this_thread::get_id() != thread_->get_id(),
+        MSERR_INVALID_OPERATION, "Stop at the task thread, reject");
 
     std::unique_ptr<std::thread> t;
     isExit_ = true;
