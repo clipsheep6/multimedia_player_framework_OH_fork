@@ -1,0 +1,14 @@
+{
+  "src": [
+    "pages/ListPage",
+    "pages/DetailPage",
+    "pages/AudioPlayer",
+    "pages/VideoPlayer_url",
+    "pages/HttpsPlayer",
+    "pages/HlsPlayer",
+    "pages/VideoPlayer_fdSrc",
+    "pages/LivePlayer",
+    "pages/DataSrc_NoSeek",
+    "pages/DataSrc_Seek"
+  ]
+}
