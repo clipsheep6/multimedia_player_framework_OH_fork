@@ -21,7 +21,6 @@
 #include "hitrace_meter.h"
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaDFX"};
     constexpr uint32_t MAX_STRING_SIZE = 256;
 }
 
@@ -32,14 +31,10 @@ bool MediaEvent::CreateMsg(const char *format, ...)
     va_list args;
     va_start(args, format);
     char msg[MAX_STRING_SIZE] = {0};
-    if (vsnprintf_s(msg, sizeof(msg), sizeof(msg) - 1, format, args) < 0) {
-        MEDIA_LOGE("failed to call vsnprintf_s");
-        va_end(args);
-        return false;
-    }
+    auto ret = vsnprintf_s(msg, sizeof(msg), sizeof(msg) - 1, format, args);
     va_end(args);
     msg_ = msg;
-    return true;
+    return ret < 0 ? false : true;
 }
 
 void MediaEvent::EventWrite(std::string eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
@@ -59,8 +54,6 @@ void BehaviorEventWrite(std::string status, std::string moudle)
     MediaEvent event;
     if (event.CreateMsg("%s, current state is: %s", "state change", status.c_str())) {
         event.EventWrite("PLAYER_STATE", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, moudle);
-    } else {
-        MEDIA_LOGW("Failed to call CreateMsg");
     }
 }
 
@@ -69,8 +62,6 @@ void FaultEventWrite(std::string msg, std::string moudle)
     MediaEvent event;
     if (event.CreateMsg("%s", msg.c_str())) {
         event.EventWrite("PLAYER_ERR", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, moudle);
-    } else {
-        MEDIA_LOGW("Failed to call CreateMsg");
     }
 }
 

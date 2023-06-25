@@ -105,12 +105,10 @@ void PlayerXCollie::CancelTimer(int32_t id)
     if (id != HiviewDFX::INVALID_ID) {
         std::lock_guard<std::mutex> lock(mutex_);
         auto it = dfxDumper_.find(id);
-        if (it == dfxDumper_.end()) {
-            return;
+        if (it != dfxDumper_.end()) {
+            dfxDumper_.erase(it);
+            return HiviewDFX::XCollie::GetInstance().CancelTimer(id);
         }
-
-        dfxDumper_.erase(it);
-        return HiviewDFX::XCollie::GetInstance().CancelTimer(id);
     }
 #else
     (void)id;
