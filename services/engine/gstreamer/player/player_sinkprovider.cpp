@@ -49,6 +49,10 @@ PlayerSinkProvider::~PlayerSinkProvider()
         gst_object_unref(videoSink_);
         videoSink_ = nullptr;
     }
+    if (subtitleSink_ != nullptr) {
+        gst_object_unref(subtitleSink_);
+        subtitleSink_ = nullptr;
+    }
     if (audioCaps_ != nullptr) {
         gst_caps_unref(audioCaps_);
         audioCaps_ = nullptr;
@@ -216,6 +220,74 @@ void PlayerSinkProvider::OnFirstRenderFrame()
             MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
         }
     }
+}
+
+PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
+{
+    if (subtitleSink_ != nullptr) {
+        gst_object_unref(subtitleSink_);
+        subtitleSink_ = nullptr;
+    }
+    subtitleSink_ = DoCreateSubtitleSink(reinterpret_cast<gpointer>(this));
+    CHECK_AND_RETURN_RET_LOG(subtitleSink_ != nullptr, nullptr, "CreateSubtitleSink failed..");
+    g_object_set(G_OBJECT(subtitleSink_), "audio-sink", audioSink_, nullptr);
+    return subtitleSink_;
+}
+
+GstElement *PlayerSinkProvider::DoCreateSubtitleSink(const gpointer userData)
+{
+    MEDIA_LOGI("CreateSubtitleSink in.");
+    CHECK_AND_RETURN_RET_LOG(userData != nullptr, nullptr, "input userData is nullptr..");
+
+    auto sink = GST_ELEMENT_CAST(gst_object_ref_sink(gst_element_factory_make("subtitledisplaysink", nullptr)));
+    CHECK_AND_RETURN_RET_LOG(sink != nullptr, nullptr, "gst_element_factory_make failed..");
+
+    GstSubtitleSinkCallbacks sinkCallbacks = { PlayerSinkProvider::SubtitleUpdated };
+    gst_subtitle_sink_set_callback(GST_SUBTITLE_SINK(sink), &sinkCallbacks, userData, nullptr);
+    MEDIA_LOGI("CreateSubtitleSink out.");
+    return sink;
+}
+
+void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitle)
+{
+    if (sample == nullptr) {
+        (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, "");
+        return;
+    }
+    GstMapInfo mapInfo;
+    CHECK_AND_RETURN(gst_buffer_map(sample, &mapInfo, GST_MAP_READ));
+    uint32_t gstBufferSize = static_cast<uint32_t>(gst_buffer_get_size(sample));
+    char *textFrame = new (std::nothrow) char[gstBufferSize + 1];
+    (void)memcpy_s(textFrame, gstBufferSize + 1, mapInfo.data, gstBufferSize);
+    textFrame[gstBufferSize] = static_cast<char>(0);
+    (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, std::string_view(textFrame));
+    delete[] textFrame;
+    gst_buffer_unmap(sample, &mapInfo);
+}
+
+GstFlowReturn PlayerSinkProvider::SubtitleUpdated(GstBuffer *sample, gpointer userData)
+{
+    MediaTrace trace("PlayerSinkProvider::SubtitleUpdated");
+    CHECK_AND_RETURN_RET(userData != nullptr, GST_FLOW_ERROR);
+    PlayerSinkProvider *sinkProvider = reinterpret_cast<PlayerSinkProvider *>(userData);
+    Format subtitle;
+    sinkProvider->HandleSubtitleBuffer(sample, subtitle);
+    sinkProvider->OnSubtitleUpdated(subtitle);
+    return GST_FLOW_OK;
+}
+
+void PlayerSinkProvider::OnSubtitleUpdated(const Format &subtitle)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGD("OnSubtitleUpdated enter");
+    auto temp_notifier = notifier_;
+    lock.unlock();
+    if (temp_notifier != nullptr) {
+        PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_UPDATED, 0, subtitle};
+        temp_notifier(msg);
+        MEDIA_LOGD("Subtitle text updated");
+    }
+    MEDIA_LOGD("OnSubtitleUpdated exit");
 }
 
 void PlayerSinkProvider::EosCb(GstMemSink *memSink, gpointer userData)

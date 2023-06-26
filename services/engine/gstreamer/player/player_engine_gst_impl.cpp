@@ -425,6 +425,14 @@ void PlayerEngineGstImpl::HandleTrackInfoUpdate(const PlayBinMessage &msg)
     }
 }
 
+void PlayerEngineGstImpl::HandleSubtitleUpdate(const PlayBinMessage &msg)
+{
+    std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    if (notifyObs != nullptr) {
+        notifyObs->OnInfo(INFO_TYPE_SUBTITLE_UPDATE, 0, std::any_cast<Format>(msg.extra));
+    }
+}
+
 void PlayerEngineGstImpl::HandleSubTypeMessage(const PlayBinMessage &msg)
 {
     if (subMsgHandler_.count(msg.subType) > 0) {
@@ -563,6 +571,7 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_ONERROR] = &PlayerEngineGstImpl::HandleOnError;
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE] = &PlayerEngineGstImpl::HandleTrackNumUpdate;
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_INFO_UPDATE] = &PlayerEngineGstImpl::HandleTrackInfoUpdate;
+    subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_UPDATED] = &PlayerEngineGstImpl::HandleSubtitleUpdate;
 
     MEDIA_LOGD("PlayBinCtrlerInit out");
     return MSERR_OK;

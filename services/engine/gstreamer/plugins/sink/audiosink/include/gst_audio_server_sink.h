@@ -39,7 +39,6 @@ G_BEGIN_DECLS
 
 struct _GstAudioServerSink {
     GstBaseSink parent;
-
     /* private */
     std::unique_ptr<OHOS::Media::AudioSink> audio_sink;
     guint bits_per_sample;

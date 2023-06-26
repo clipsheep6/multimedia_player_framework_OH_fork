@@ -96,6 +96,9 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
         static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
         NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT); // 1 parameters
 
+    g_signal_new("segment-updated", G_TYPE_FROM_CLASS(klass),
+        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
+        NULL, NULL, G_TYPE_NONE, 0); // no parameters
     g_object_class_install_property(gobject_class, PROP_BITS_PER_SAMPLE,
         g_param_spec_uint("bps", "Bits Per Sample",
             "Audio Format", 0, G_MAXINT32, 0,
@@ -272,6 +275,12 @@ static void gst_audio_server_sink_error_callback(GstBaseSink *basesink, const st
     GST_ELEMENT_ERROR(sink, STREAM, FAILED, (NULL), ("audio render error: %s", errMsg.c_str()));
 }
 
+static void gst_audio_server_sink_segment_callback(GstBaseSink *basesink)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_signal_emit_by_name(sink, "segment-updated");
+}
+
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
     const GValue *value, GParamSpec *pspec)
 {
@@ -446,6 +455,17 @@ static gboolean gst_audio_server_sink_set_caps(GstBaseSink *basesink, GstCaps *c
     return TRUE;
 }
 
+static gboolean gst_audio_server_sink_handle_segment_event(GstBaseSink *basesink, GstEvent *event)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_mutex_lock(&sink->render_lock);
+    gboolean ret = GST_BASE_SINK_CLASS(parent_class)->event(basesink, event);
+    sink->frame_after_segment = TRUE;
+    gst_audio_server_sink_segment_callback(basesink);
+    g_mutex_unlock(&sink->render_lock);
+    return ret;
+}
+
 static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *event)
 {
     g_return_val_if_fail(basesink != nullptr, FALSE);
@@ -466,10 +486,7 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             }
             break;
         case GST_EVENT_SEGMENT:
-            g_mutex_lock(&sink->render_lock);
-            sink->frame_after_segment = TRUE;
-            g_mutex_unlock(&sink->render_lock);
-            break;
+            return gst_audio_server_sink_handle_segment_event(basesink, event);
         case GST_EVENT_FLUSH_START:
             basesink->stream_group_done = FALSE;
             gst_audio_server_sink_clear_cache_buffer(sink);

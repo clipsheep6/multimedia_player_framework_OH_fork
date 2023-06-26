@@ -237,6 +237,7 @@ bool PlayerTrackParse::IsSameStreamId(GstPad *padA, GstPad *padB)
 {
     gchar *streamIdA = gst_pad_get_stream_id(padA);
     gchar *streamIdB = gst_pad_get_stream_id(padB);
+    CHECK_AND_RETURN_RET((streamIdA != nullptr && streamIdB != nullptr), false);
     bool ret = (strcmp(streamIdA, streamIdB) == 0);
     g_free(streamIdA);
     g_free(streamIdB);

@@ -50,6 +50,7 @@ const std::string EVENT_SPEED_DONE = "speedDone";
 const std::string EVENT_BITRATE_DONE = "bitrateDone";
 const std::string EVENT_TIME_UPDATE = "timeUpdate";
 const std::string EVENT_DURATION_UPDATE = "durationUpdate";
+const std::string EVENT_SUBTITLE_TEXT_UPDATE = "subtitleTextUpdate";
 const std::string EVENT_BUFFERING_UPDATE = "bufferingUpdate";
 const std::string EVENT_START_RENDER_FRAME = "startRenderFrame";
 const std::string EVENT_VIDEO_SIZE_CHANGE = "videoSizeChange";
