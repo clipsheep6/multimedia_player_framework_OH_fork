@@ -98,6 +98,12 @@ int32_t HdiVdecOutBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
     if (!enableNativeBuffer_) {
         auto omxBuffers = PreUseAshareMems(buffers);
         (void)UseHdiBuffers(omxBuffers);
+        for (auto buffer : buffers) {
+            GstBufferWrap bufferWarp = {};
+            bufferWarp.gstBuffer = buffer;
+            mBuffers.push_back(bufferWarp);
+            gst_buffer_ref(buffer);
+        }
     }
     MEDIA_LOGD("UseBuffer end");
     return GST_CODEC_OK;
