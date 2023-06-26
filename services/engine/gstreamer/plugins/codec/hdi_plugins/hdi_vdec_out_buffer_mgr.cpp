@@ -180,6 +180,7 @@ void HdiVdecOutBufferMgr::SetOutputPool(GstBufferPool *pool)
     gst_producer_surface_pool_set_callback(pool, HdiVdecOutBufferMgr::NewBuffer, wrapper,
         &HdiVdecOutBufferMgrWrapper::OnDestory);
     isCallBackMode_ = true;
+    ClearPreBuffers();
 }
 
 void HdiVdecOutBufferMgr::ClearPreBuffers()
