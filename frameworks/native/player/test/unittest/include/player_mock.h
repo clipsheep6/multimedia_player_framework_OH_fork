@@ -25,11 +25,13 @@
 namespace OHOS {
 namespace Media {
 namespace PlayerTestParam {
+inline constexpr int32_t SEEK_TIME_9_SEC = 9000;
 inline constexpr int32_t SEEK_TIME_5_SEC = 5000;
 inline constexpr int32_t SEEK_TIME_2_SEC = 2000;
 inline constexpr int32_t WAITSECOND = 6;
 inline constexpr int32_t DELTA_TIME = 1000;
 inline constexpr int32_t PLAYING_TIME = 2;
+inline constexpr int32_t PLAYING_TIME_10_SEC = 10;
 const std::string MEDIA_ROOT = "file:///data/test/";
 const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
 const std::string HTTPS_PLAY = "HTTPS";

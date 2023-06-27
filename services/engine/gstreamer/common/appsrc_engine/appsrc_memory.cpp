@@ -246,9 +246,7 @@ bool AppsrcMemory::FreeBufferAndChangePos(uint32_t offset, uint32_t length, bool
             return true;
         }
         if ((end_ + 1) % bufferSize_ != offset) {
-            if (!PushBufferToUnreturnedBuffers(offset, length)) {
-                return false;
-            }
+            CHECK_AND_RETURN_RET(PushBufferToUnreturnedBuffers(offset, length), false);
         }
     }
     end_ = offset + length - 1;

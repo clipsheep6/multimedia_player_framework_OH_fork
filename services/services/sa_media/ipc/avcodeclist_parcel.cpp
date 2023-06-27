@@ -92,6 +92,8 @@ bool AVCodecListParcel::Marshalling(MessageParcel &parcel, const std::map<int32_
 bool AVCodecListParcel::Unmarshalling(MessageParcel &parcel, std::vector<CapabilityData> &capabilityDataArray)
 {
     uint32_t size = parcel.ReadUint32();
+    constexpr uint32_t MAX_PARCEL_SIZE = 256;
+    CHECK_AND_RETURN_RET(size <= MAX_PARCEL_SIZE, false);
     for (uint32_t index = 0; index < size; index++) {
         CapabilityData capabilityData;
         capabilityData.codecName = parcel.ReadString();

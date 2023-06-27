@@ -339,10 +339,8 @@ int32_t GstAppsrcEngine::PullBuffer()
             readSize = dataSrc_->ReadAt(mem, pullSize, appSrcMem_->GetFilePos());
         }
         MEDIA_LOGD("ReadAt end, readSize is %{public}d", readSize);
-        if (readSize > pullSize) {
-            MEDIA_LOGE("PullBuffer loop end, readSize > length");
-            return MSERR_INVALID_VAL;
-        }
+        CHECK_AND_RETURN_RET_LOG(readSize <= pullSize, MSERR_INVALID_VAL,
+            "PullBuffer loop end, readSize > length");
 
         if (readSize < 0) {
             MEDIA_LOGD("no buffer, receive eos!!!");

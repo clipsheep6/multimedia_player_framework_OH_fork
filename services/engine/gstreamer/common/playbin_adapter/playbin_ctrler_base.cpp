@@ -382,10 +382,6 @@ int32_t PlayBinCtrlerBase::SetRate(double rate)
     std::unique_lock<std::mutex> lock(mutex_);
     std::unique_lock<std::mutex> cacheLock(cacheCtrlMutex_);
 
-    if (IsLiveSource()) {
-        return MSERR_INVALID_OPERATION;
-    }
-
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     int32_t ret = currState->SetRate(rate);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetRate failed");
@@ -402,9 +398,6 @@ double PlayBinCtrlerBase::GetRate()
 
 int32_t PlayBinCtrlerBase::SetLoop(bool loop)
 {
-    if (IsLiveSource()) {
-        return MSERR_INVALID_OPERATION;
-    }
     enableLooping_ = loop;
     return MSERR_OK;
 }

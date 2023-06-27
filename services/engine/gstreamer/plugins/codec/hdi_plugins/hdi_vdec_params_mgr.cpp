@@ -86,8 +86,7 @@ int32_t HdiVdecParamsMgr::SetFrameRate(GstElement *element)
     param.nPortIndex = inPortDef_.nPortIndex;
         MEDIA_LOGI("SetFrameRate frame rate %{public}u", param.nU32);
     param.nU32 = param.nU32 << HDI_FRAME_RATE_MOVE;
-    // OMX_IndexOtherStartUnused + 3 is frame_rate cmd
-    auto ret = HdiSetConfig(handle_, OMX_IndexOtherStartUnused + 3, param);
+    auto ret = HdiSetConfig(handle_, OMX_IndexCodecExtConfigOperatingRate, param);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetConfig failed");
     return GST_CODEC_OK;
 }
