@@ -689,6 +689,13 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Play()
 {
     ctrler_.isUserSetPlay_ = true;
     ctrler_.isDuration_ = false;
+    if (!isCompletedSeek_) {
+        PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
+            0, static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
+        ctrler_.ReportMessage(posUpdateMsg);
+    } else {
+        isCompletedSeek_ = false;
+    }
 
     GstState state = GST_STATE_NULL;
     gst_element_get_state(GST_ELEMENT_CAST(ctrler_.playbin_), &state, nullptr, static_cast<GstClockTime>(0));
@@ -725,6 +732,9 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::Seek(int64_t timeUs, int32_t 
         GstStateChangeReturn ret;
         MEDIA_LOGI("completed GST_STATE_PLAYING->GST_STATE_PAUSED");
         (void)ChangePlayBinState(GST_STATE_PAUSED, ret);
+    }
+    if (timeUs != 0) {
+        isCompletedSeek_ = true;
     }
     return ctrler_.SeekInternal(timeUs, option);
 }

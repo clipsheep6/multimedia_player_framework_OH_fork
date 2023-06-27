@@ -187,6 +187,9 @@ protected:
     void ProcessStateChange(const InnerMessage &msg) override;
     void StateEnter() override;
     void HandleAsyncDone(const InnerMessage &msg) override;
+
+private:
+    bool isCompletedSeek_ = false;
 };
 } // namespace Media
 } // namespace OHOS
