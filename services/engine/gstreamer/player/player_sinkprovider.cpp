@@ -14,7 +14,6 @@
  */
 
 #include "player_sinkprovider.h"
-#include <sync_fence.h>
 #include "securec.h"
 #include "display_type.h"
 #include "param_wrapper.h"

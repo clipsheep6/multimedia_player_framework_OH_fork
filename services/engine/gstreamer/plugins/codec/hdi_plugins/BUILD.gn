@@ -101,11 +101,6 @@ ohos_shared_library("gst_codec_plugin_hdi") {
   ]
 
   deps = [
-    "//drivers/hdf_core/adapter/uhdf2/hdi:libhdi",
-    "//drivers/hdf_core/adapter/uhdf2/host:libhdf_host",
-    "//drivers/hdf_core/adapter/uhdf2/ipc:libhdf_ipc_adapter",
-    "//drivers/hdf_core/adapter/uhdf2/utils:libhdf_utils",
-    "//drivers/peripheral/codec/hal:libcodec_hdi_omx_client",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/engine/common:media_engine_common",
     "//foundation/multimedia/player_framework/services/engine/gstreamer/plugins/common:gst_media_common",
@@ -116,7 +111,12 @@ ohos_shared_library("gst_codec_plugin_hdi") {
   ]
 
   external_deps = [
+    "drivers_peripheral_codec:libcodec_hdi_omx_client",
     "graphic_standard:surface",
+    "hdf_core:libhdf_host",
+    "hdf_core:libhdf_ipc_adapter",
+    "hdf_core:libhdf_utils",
+    "hdf_core:libhdi",
     "hiviewdfx_hilog_native:libhilog",
   ]
 

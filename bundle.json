@@ -42,8 +42,6 @@
           "napi",
           "startup_l2",
           "samgr",
-          "libxml2",
-          "thirdparty_bounds_checking_function",
           "hitrace_native",
           "audio_framework",
           "ipc",
@@ -55,13 +53,21 @@
           "access_token",
           "multimedia_image_framework",
           "common",
-          "hiview"
+          "hiview",
+          "eventhandler",
+          "init",
+          "memmgr_plugin",
+          "hicollie_native",
+          "drivers_peripheral_codec",
+          "hdf_core"
         ],
         "third_party": [
           "glib",
           "gstreamer",
           "libffi",
-          "ffmpeg"
+          "ffmpeg",
+          "libxml2",
+          "bounds_checking_function"
         ]
       },
       "build": {

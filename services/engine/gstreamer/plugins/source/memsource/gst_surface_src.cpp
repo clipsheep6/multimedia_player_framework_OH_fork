@@ -15,7 +15,6 @@
 
 #include "gst_surface_src.h"
 #include <gst/video/video.h>
-#include <sync_fence.h>
 #include "gst_consumer_surface_pool.h"
 #include "gst_consumer_surface_allocator.h"
 #include "media_errors.h"
