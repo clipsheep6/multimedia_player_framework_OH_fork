@@ -84,18 +84,22 @@ bool StrToInt(const std::string_view& str, T& value)
 
 std::pair<std::string_view, std::string_view> SplitUriHeadAndBody(const std::string_view &str)
 {
+    MEDIA_LOGI("in SplitUriHeadAndBody, str is %{public}s", str.data());
     std::string_view::size_type start = str.find_first_not_of(' ');
     std::string_view::size_type end = str.find_last_not_of(' ');
     std::pair<std::string_view, std::string_view> result;
+    MEDIA_LOGI("in SplitUriHeadAndBody 1");
     std::string_view noSpaceStr =
         (end != std::string_view::npos ? str.substr(start, end - start + 1) : str.substr(start));
-
+    MEDIA_LOGI("in SplitUriHeadAndBody 2");
     std::string_view delimiter = "://";
     std::string_view::size_type pos = noSpaceStr.find(delimiter);
+    MEDIA_LOGI("in SplitUriHeadAndBody 3");
     result.first = (pos != std::string_view::npos ? noSpaceStr.substr(0, pos) : "");
+    MEDIA_LOGI("in SplitUriHeadAndBody 4");
     result.second =
         (pos != std::string_view::npos ? noSpaceStr.substr(pos + delimiter.size()) : noSpaceStr);
-
+    MEDIA_LOGI("in SplitUriHeadAndBody 5");
     return result;
 }
 
