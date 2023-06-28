@@ -88,7 +88,7 @@ ohos_static_library("gst_codec_plugins_common") {
 
   external_deps = [
     "graphic_standard:surface",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 

@@ -90,7 +90,7 @@ ohos_static_library("media_engine_gst_avmeta") {
   ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "multimedia_image_framework:image_native",
   ]
 

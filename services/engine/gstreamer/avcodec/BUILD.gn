@@ -106,7 +106,7 @@ ohos_static_library("media_engine_gst_avcodec") {
   external_deps = [
     "audio_framework:audio_client",
     "graphic_standard:surface",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   subsystem_name = "multimedia"

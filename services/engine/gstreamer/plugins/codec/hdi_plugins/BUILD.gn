@@ -117,7 +117,7 @@ ohos_shared_library("gst_codec_plugin_hdi") {
     "hdf_core:libhdf_ipc_adapter",
     "hdf_core:libhdf_utils",
     "hdf_core:libhdi",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   relative_install_dir = "media/plugins"

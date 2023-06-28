@@ -102,7 +102,7 @@ ohos_shared_library("gst_media_common") {
   external_deps = [
     "graphic_standard:surface",
     "graphic_standard:sync_fence",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   subsystem_name = "multimedia"

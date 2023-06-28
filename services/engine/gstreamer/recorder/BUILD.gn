@@ -91,7 +91,7 @@ ohos_static_library("media_engine_gst_recorder") {
 
   external_deps = [
     "graphic_standard:surface",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   subsystem_name = "multimedia"

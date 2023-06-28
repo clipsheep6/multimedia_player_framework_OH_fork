@@ -167,7 +167,7 @@ ohos_shared_library("media_client") {
   external_deps = [
     "audio_framework:audio_client",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_single",
     "multimedia_image_framework:image_native",
     "samgr:samgr_proxy",

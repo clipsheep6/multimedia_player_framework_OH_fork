@@ -68,7 +68,7 @@ ohos_static_library("media_engine_gst_loader") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 

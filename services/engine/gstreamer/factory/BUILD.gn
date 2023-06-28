@@ -82,7 +82,7 @@ ohos_static_library("media_engine_gst_factory") {
     "audio_framework:audio_client",
     "c_utils:utils",
     "graphic_standard:surface",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "multimedia_image_framework:image_native",
   ]
 

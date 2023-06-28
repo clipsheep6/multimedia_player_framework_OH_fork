@@ -90,7 +90,7 @@ ohos_shared_library("gst_audio_server_sink") {
   external_deps = [
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
   ]
 

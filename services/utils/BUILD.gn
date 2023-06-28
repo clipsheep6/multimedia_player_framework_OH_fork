@@ -29,7 +29,7 @@ ohos_static_library("media_format") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   subsystem_name = "multimedia"
@@ -103,9 +103,9 @@ ohos_shared_library("media_service_utils") {
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
     "hicollie:libhicollie",
-    "hisysevent_native:libhisysevent",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
   ]

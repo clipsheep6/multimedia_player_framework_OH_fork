@@ -78,7 +78,7 @@ ohos_shared_library("gst_subtitle_parse_plugin") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   relative_install_dir = "media/plugins"

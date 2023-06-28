@@ -89,7 +89,7 @@ ohos_shared_library("gst_audio_capture_src") {
   external_deps = [
     "audio_framework:audio_capturer",
     "audio_framework:audio_client",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   relative_install_dir = "media/plugins"
