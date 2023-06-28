@@ -183,7 +183,7 @@ ohos_shared_library("media_service") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
+    "image_framework:image_native",
     "safwk:system_ability_fwk",
   ]
 

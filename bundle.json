@@ -51,7 +51,7 @@
           "hilog_native",
           "zlib",
           "access_token",
-          "multimedia_image_framework",
+          "image_framework",
           "common",
           "hiview",
           "eventhandler",
