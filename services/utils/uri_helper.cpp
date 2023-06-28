@@ -87,15 +87,22 @@ std::pair<std::string_view, std::string_view> SplitUriHeadAndBody(const std::str
     std::string_view::size_type start = str.find_first_not_of(' ');
     std::string_view::size_type end = str.find_last_not_of(' ');
     std::pair<std::string_view, std::string_view> result;
-    std::string_view noSpaceStr =
-        (end != std::string_view::npos ? str.substr(start, end - start + 1) : str.substr(start));
+    std::string_view noSpaceStr;
 
+    if (end == std::string_view::npos) {
+        noSpaceStr = str.substr(start);
+    } else {
+        noSpaceStr = str.substr(start, end - start + 1);
+    }
     std::string_view delimiter = "://";
     std::string_view::size_type pos = noSpaceStr.find(delimiter);
-    result.first = (pos != std::string_view::npos ? noSpaceStr.substr(0, pos) : "");
-    result.second =
-        (pos != std::string_view::npos ? noSpaceStr.substr(pos + delimiter.size()) : noSpaceStr);
-
+    if (pos == std::string_view::npos) {
+        result.first = "";
+        result.second = noSpaceStr;
+    } else {
+        result.first = noSpaceStr.substr(0, pos);
+        result.second = noSpaceStr.substr(pos + delimiter.size());
+    }
     return result;
 }
 
