@@ -14,12 +14,18 @@
  */
 
 #include "system_sound_manager_napi.h"
+
+#include "access_token.h"
+#include "accesstoken_kit.h"
 #include "audio_renderer_info_napi.h"
 #include "hilog/log.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
 
 using namespace std;
 using OHOS::HiviewDFX::HiLog;
 using OHOS::HiviewDFX::HiLogLabel;
+using OHOS::Security::AccessToken::AccessTokenKit;
 
 namespace {
     /* Constants for array index */
@@ -206,8 +212,35 @@ void SystemSoundManagerNapi::Destructor(napi_env env, void* nativeObject, void* 
     }
 }
 
+bool SystemSoundManagerNapi::VerifySystemPermission()
+{
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto tokenTypeFlag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenTypeFlag == Security::AccessToken::TOKEN_NATIVE) {
+        return true;
+    }
+    if (tokenTypeFlag == Security::AccessToken::TOKEN_SHELL) {
+        return true;
+    }
+    if (VerifySystemApp()) {
+        return true;
+    }
+    return false;
+}
+
+bool SystemSoundManagerNapi::VerifySystemApp()
+{
+    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
+    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
+    return isSystemApp;
+}
+
 napi_value SystemSoundManagerNapi::GetSystemSoundManager(napi_env env, napi_callback_info info)
 {
+    if (!VerifySystemPermission()) {
+        HiLog::Error(LABEL, "System permission validation failed.");
+        return nullptr;
+    }
     napi_status status;
     napi_value result = nullptr;
     napi_value ctor;

@@ -53,6 +53,8 @@ private:
     static napi_status AddNamedProperty(napi_env env, napi_value object, const std::string name, int32_t enumValue);
     static napi_value CreateRingtoneTypeObject(napi_env env);
     static std::shared_ptr<AbilityRuntime::Context> GetAbilityContext(napi_env env, napi_value contextArg);
+    static bool VerifySystemPermission();
+    static bool VerifySystemApp();
 
     static napi_ref ringtoneType_;
     static napi_ref sConstructor_;
