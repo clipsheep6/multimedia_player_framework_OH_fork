@@ -54,7 +54,7 @@ int32_t AVSharedMemoryPool::Init(const InitializeOption &option)
                option_.enableFixedSize);
     for (uint32_t i = 0; i < option_.preAllocMemCnt; ++i) {
         auto memory = AllocMemory(option_.memSize);
-        CHECK_AND_RETURN_RET(memory != nullptr, MSERR_NO_MEMORY);
+        CHECK_AND_RETURN_RET_LOG(memory != nullptr, MSERR_NO_MEMORY, "failed to AllocMemory");
         idleList_.push_back(memory);
     }
 
@@ -147,8 +147,8 @@ bool AVSharedMemoryPool::DoAcquireMemory(int32_t size, AVSharedMemory **outMemor
 
 bool AVSharedMemoryPool::CheckSize(int32_t size)
 {
-    CHECK_AND_RETURN_RET(size > 0 || size == -1, false);
-    CHECK_AND_RETURN_RET(option_.enableFixedSize || size == -1, false);
+    CHECK_AND_RETURN_RET(!(size <= 0 && size != -1), false);
+    CHECK_AND_RETURN_RET(!(!option_.enableFixedSize && size == -1), false);
 
     if (option_.enableFixedSize) {
         CHECK_AND_RETURN_RET(size <= option_.memSize, false);

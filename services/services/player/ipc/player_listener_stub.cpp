@@ -57,8 +57,7 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
             int32_t extra = data.ReadInt32();
             Format format;
             (void)MediaParcel::Unmarshalling(data, format);
-            std::string info = "empty";
-            info = format.Stringify();
+            std::string info = format.Stringify();
             MEDIA_LOGI("0x%{public}06" PRIXPTR " listen on info type: %{public}d extra %{public}d, format %{public}s",
                        FAKE_POINTER(this), type, extra, info.c_str());
             OnInfo(static_cast<PlayerOnInfoType>(type), extra, format);
