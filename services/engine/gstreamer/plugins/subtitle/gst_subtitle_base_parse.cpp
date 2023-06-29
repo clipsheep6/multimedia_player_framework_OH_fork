@@ -475,9 +475,7 @@ static gboolean sink_event_handle_flush_stop(GstEvent *event, GstSubtitleBasePar
         event = gst_event_new_flush_stop(FALSE);
     }
 
-    if (self->sinkpad != nullptr) {
-        ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
-    }
+    ret = gst_pad_event_default(self->sinkpad, (GstObject *)self, event);
 
     GST_INFO_OBJECT(self, "subtitle base flushed streams, stream_id: %d", self->stream_id);
 
@@ -521,22 +519,18 @@ static void sink_event_handle_caps_event(GstEvent *event, GstSubtitleBaseParse *
     gboolean internal = FALSE;
 
     gst_event_parse_caps(event, &caps);
-    if (caps == nullptr) {
-        GST_WARNING_OBJECT(self, "caps is nullptr, gst_event_parse_caps failed");
-        return;
-    }
+    g_return_if_fail(caps != nullptr);
 
     gchar *str_caps = gst_caps_to_string(caps);
     GstStructure *structure = gst_caps_get_structure(caps, 0);
-    if (structure != nullptr) {
-        if (!gst_structure_get_boolean(structure, "parsed", &internal)) {
-            internal = FALSE;
-        }
-        const gchar *language = gst_structure_get_string(structure, "language");
-        if (language != nullptr) {
-            g_free(self->language);
-            self->language = gst_subtitle_str_dup(language, FALSE, 0);
-        }
+    g_return_if_fail(structure != nullptr);
+    if (!gst_structure_get_boolean(structure, "parsed", &internal)) {
+        internal = FALSE;
+    }
+    const gchar *language = gst_structure_get_string(structure, "language");
+    if (language != nullptr) {
+        g_free(self->language);
+        self->language = gst_subtitle_str_dup(language, FALSE, 0);
     }
     self->from_internal = internal;
 

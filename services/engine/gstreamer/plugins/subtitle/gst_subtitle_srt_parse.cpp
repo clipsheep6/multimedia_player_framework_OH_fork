@@ -115,18 +115,12 @@ static gboolean gst_subtitle_srt_parse_decode_frame(GstSubtitleBaseParse *base, 
 {
     GstSubtitleSrtParse *parse = GST_SUBTITLE_SRT_PARSE_CAST(base);
 
-    g_return_val_if_fail((parse != nullptr) && (frame != nullptr) && (frame->data != nullptr) &&
-        (decoded_frame != nullptr), FALSE);
+    g_return_val_if_fail((parse != nullptr) && (decoded_frame != nullptr), FALSE);
 
-    if ((frame->len == 0) || (frame->len > MAX_BUFFER_SIZE)) {
-        return FALSE;
-    }
+    g_return_val_if_fail((frame->len != 0) && (frame->len <= MAX_BUFFER_SIZE), FALSE);
 
     decoded_frame->data = static_cast<guint8 *>(g_malloc((gsize)frame->len + 1));
-    if (decoded_frame->data == nullptr) {
-        GST_WARNING_OBJECT(parse, "srt memory allocated failed");
-        return FALSE;
-    }
+    g_return_val_if_fail(decoded_frame->data != nullptr, FALSE);
 
     if (memcpy_s(decoded_frame->data, frame->len + 1, frame->data, frame->len) != EOK) {
         GST_WARNING_OBJECT(parse, "srt memory copy failed");
@@ -158,9 +152,7 @@ static void srt_trailing_newlines(gchar *text, gsize len)
 static void srt_fix_up_markup_handle_slash_tag(const gchar **next_tag, guint *num_open_tags, const gchar *open_tags)
 {
     ++(*next_tag);
-    if ((*num_open_tags == 0) || (open_tags[*num_open_tags - 1] != **next_tag)) {
-        return;
-    }
+    g_return_if_fail((*num_open_tags != 0) && (open_tags[*num_open_tags - 1] == **next_tag));
     /* it's all good, closing tag which is open */
     --(*num_open_tags);
 }
@@ -215,12 +207,7 @@ BEACH:
 static gboolean srt_remove_tag(gchar *des, const gchar *src)
 {
     g_return_val_if_fail((des != nullptr) && (src != nullptr), FALSE);
-
-    if (memmove_s(des, strlen(des) + 1, src, strlen(src) + 1) != EOK) {
-        GST_WARNING("srt memmove_s failed");
-        return FALSE;
-    }
-
+    g_return_val_if_fail(memmove_s(des, strlen(des) + 1, src, strlen(src) + 1) == EOK, FALSE);
     return TRUE;
 }
 
@@ -341,20 +328,14 @@ static void srt_fix_up_markup(gchar **text)
             break;
         }
         ++next_tag;
-        if (srt_fix_up_markup_handle(next_tag, &num_open_tags, text, open_tags, SRT_MAX_OPEN_TAGS_NUM) == FALSE) {
-            return;
-        }
+        g_return_if_fail(srt_fix_up_markup_handle(next_tag, &num_open_tags,
+            text, open_tags, SRT_MAX_OPEN_TAGS_NUM) != FALSE);
         cur = next_tag;
     }
 
-    if (num_open_tags == 0) {
-        return;
-    }
-
+    g_return_if_fail(num_open_tags != 0);
     GString *s = srt_fix_up_markup_add_tag(num_open_tags, open_tags, *text);
-    if (s == nullptr) {
-        return;
-    }
+    g_return_if_fail(s != nullptr);
     g_free(*text);
     *text = g_string_free(s, FALSE);
 }
@@ -366,43 +347,42 @@ static gsize read_frame_from_internal(GstSubtitleBaseParse *base, GstSubtitleFra
     GstMapInfo info;
     GstBuffer *buffer = gst_subtitle_read_buffer(base);
 
-    if (buffer != nullptr) {
-        base->state.start_time = GST_BUFFER_PTS(buffer);
-        base->state.duration = GST_BUFFER_DURATION(buffer);
-        if (!gst_buffer_map(buffer, &info, GST_MAP_READ)) {
-            GST_WARNING_OBJECT(parse, "srt map buffer failed");
-            gst_buffer_unref(buffer);
-            return 0;
-        }
+    g_return_val_if_fail(buffer != nullptr, num);
+    base->state.start_time = GST_BUFFER_PTS(buffer);
+    base->state.duration = GST_BUFFER_DURATION(buffer);
+    if (!gst_buffer_map(buffer, &info, GST_MAP_READ)) {
+        GST_WARNING_OBJECT(parse, "srt map buffer failed");
+        gst_buffer_unref(buffer);
+        return 0;
+    }
 
-        size_t data_size = ((size_t)info.size < strlen((gchar *)info.data)) ?
-            (size_t)info.size : strlen((gchar *)info.data);
-        gchar *read_str = static_cast<gchar *>(g_malloc((gsize)data_size + 1));
-        if (read_str == nullptr) {
-            GST_WARNING_OBJECT(parse, "srt memory allocated failed");
-            gst_buffer_unmap(buffer, &info);
-            gst_buffer_unref(buffer);
-            return 0;
-        }
-
-        if (memcpy_s(read_str, data_size + 1, info.data, data_size) != EOK) {
-            GST_WARNING_OBJECT(parse, "srt memory copy failed");
-            gst_buffer_unmap(buffer, &info);
-            gst_buffer_unref(buffer);
-            g_free(read_str);
-            return 0;
-        }
-        read_str[data_size] = '\0';
-
-        srt_trailing_newlines(read_str, (gsize)strlen(read_str));
-        srt_fix_up_markup(&read_str);
-
-        frame->data = (guint8 *)read_str;
-        frame->len = strlen(read_str);
-        num = frame->len;
+    size_t data_size = ((size_t)info.size < strlen((gchar *)info.data)) ?
+        (size_t)info.size : strlen((gchar *)info.data);
+    gchar *read_str = static_cast<gchar *>(g_malloc((gsize)data_size + 1));
+    if (read_str == nullptr) {
+        GST_WARNING_OBJECT(parse, "srt memory allocated failed");
         gst_buffer_unmap(buffer, &info);
         gst_buffer_unref(buffer);
+        return 0;
     }
+
+    if (memcpy_s(read_str, data_size + 1, info.data, data_size) != EOK) {
+        GST_WARNING_OBJECT(parse, "srt memory copy failed");
+        gst_buffer_unmap(buffer, &info);
+        gst_buffer_unref(buffer);
+        g_free(read_str);
+        return 0;
+    }
+    read_str[data_size] = '\0';
+
+    srt_trailing_newlines(read_str, (gsize)strlen(read_str));
+    srt_fix_up_markup(&read_str);
+
+    frame->data = (guint8 *)read_str;
+    frame->len = strlen(read_str);
+    num = frame->len;
+    gst_buffer_unmap(buffer, &info);
+    gst_buffer_unref(buffer);
 
     return num;
 }
@@ -458,27 +438,17 @@ static gboolean srt_parse_time(const gchar *ts_string, GstClockTime *timestamp)
         ++ts_string;
     }
 
-    if (g_strlcpy(srt_str, ts_string, (gsize)sizeof(srt_str)) == 0) {
-        GST_WARNING("g_strlcpy failed");
-        return FALSE;
-    }
+    g_return_val_if_fail(g_strlcpy(srt_str, ts_string, (gsize)sizeof(srt_str)) != 0, FALSE);
     gchar *end = strstr(srt_str, "-->");
     if (end != nullptr) {
         *end = '\0';
     }
-    if (g_strchomp(srt_str) == nullptr) {
-        GST_WARNING("g_strchomp failed");
-        return FALSE;
-    }
-
+    g_return_val_if_fail(g_strchomp(srt_str) != nullptr, FALSE);
     srt_parse_calibrate_time(srt_str, strlen(srt_str));
 
     /* make sure we have exactly three digits after comma */
     gchar *p = strchr(srt_str, ',');
-    if (p == nullptr) {
-        GST_WARNING("srt find ',' failed");
-        return FALSE;
-    }
+    g_return_val_if_fail(p != nullptr, FALSE);
     ++p;
     gsize len = static_cast<gsize>(strlen(p));
     if (len > MSEC_CONTAIN_BITS) {
@@ -529,10 +499,7 @@ static gchar *parse_subsrt_subtext(GstSubtitleBaseParse *base, const gchar *line
     GstSubtitleSrtParse *parse = GST_SUBTITLE_SRT_PARSE_CAST(base);
     gchar *ret = nullptr;
     gchar *line_end = nullptr;
-    if ((line == nullptr) || (parse->buf == nullptr)) {
-        GST_ERROR_OBJECT(parse, "srt error: line/buf is nullptr");
-        return nullptr;
-    }
+    g_return_val_if_fail(line != nullptr && parse->buf != nullptr, nullptr);
 
     line_end = const_cast<gchar *>(strchr(line, '\n'));
     if (line_end != nullptr) {
@@ -616,15 +583,11 @@ static gsize read_frame_from_external(GstSubtitleBaseParse *base, GstSubtitleFra
     GstSubtitleSrtParse *parse = GST_SUBTITLE_SRT_PARSE_CAST(base);
     gchar *subtitle = nullptr;
     gchar *line = nullptr;
-    if (parse->buf == nullptr) {
-        return 0;
-    }
+    g_return_val_if_fail(parse->buf != nullptr, 0);
 
     gsize num = gst_subtitle_read_line(base, &line);
     if (num == 0) {
-        if (parse->buf->str == nullptr) {
-            return 0;
-        }
+        g_return_val_if_fail(parse->buf->str != nullptr, 0);
         if (base->recv_eos && (parse->state == SUBTEXT_STATE) && (strlen(parse->buf->str) != 0)) {
             subtitle = g_strdup(parse->buf->str);
             if (subtitle == nullptr) {
@@ -761,16 +724,10 @@ static void gst_subtitle_srt_parse_type_find(GstTypeFind *tf, gpointer priv)
 gboolean gst_subtitle_srt_parse_register(GstPlugin *plugin)
 {
     GST_INFO_OBJECT(plugin, "srt parse register in");
-    if (!gst_type_find_register(plugin, "srt_typefind", GST_RANK_PRIMARY + 1, gst_subtitle_srt_parse_type_find,
-        "srt,txt", SRT_CAPS, nullptr, nullptr)) {
-        return FALSE;
-    }
-
-    if (!gst_element_register(plugin, "srt", GST_RANK_PRIMARY + 1, GST_TYPE_SUBTITLE_SRT_PARSE)) {
-        GST_ERROR("Register of subtitle srt parse failed");
-        return FALSE;
-    }
-
+    g_return_val_if_fail(gst_type_find_register(plugin, "srt_typefind",
+        GST_RANK_PRIMARY + 1, gst_subtitle_srt_parse_type_find, "srt,txt", SRT_CAPS, nullptr, nullptr), FALSE);
+    g_return_val_if_fail(gst_element_register(plugin, "srt",
+        GST_RANK_PRIMARY + 1, GST_TYPE_SUBTITLE_SRT_PARSE), FALSE);
     GST_INFO_OBJECT(plugin, "srt parse register out");
     return TRUE;
 }

@@ -187,9 +187,28 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
             std::cout << "INFO_TYPE_TRACKCHANGE: index " << index << " isSelect " << isSelect << std::endl;
             break;
+        case INFO_TYPE_SUBTITLE_UPDATE: {
+            infoBody.GetStringValue(std::string(PlayerKeys::SUBTITLE_TEXT), text);
+            std::cout << "text = " << text << std::endl;
+            textUpdate_ = true;
+            condVarText_.notify_all();
+            break;
+        }
         default:
             break;
     }
+}
+
+std::string PlayerCallbackTest::SubtitleTextUpdate()
+{
+    std::unique_lock<std::mutex> lock(subtitleMutex_);
+    std::cout << "wait for text update" <<std::endl;
+    condVarText_.wait_for(lock, std::chrono::seconds(WAITSECOND), [this]() {
+        return textUpdate_;
+    });
+    std::cout << "text updated" <<std::endl;
+    textUpdate_ = false;
+    return text;
 }
 
 void PlayerCallbackTest::OnError(int32_t errorCode, const std::string &errorMsg)
@@ -584,6 +603,47 @@ int32_t PlayerMock::GetCurrentTrack(int32_t trackType, int32_t &index)
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
     return player_->GetCurrentTrack(trackType, index);
+}
+
+int32_t PlayerMock::AddSubSource(const std::string &url)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    return player_->AddSubSource(url);
+}
+
+int32_t PlayerMock::AddSubSource(const std::string &path, int64_t offset, int64_t size)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
+    std::string rawFile = path.substr(strlen("file://"));
+    int32_t fd = open(rawFile.c_str(), O_RDONLY);
+    if (fd <= 0) {
+        std::cout << "Open file failed" << std::endl;
+        return -1;
+    }
+
+    struct stat64 st;
+    if (fstat64(fd, &st) != 0) {
+        std::cout << "Get file state failed" << std::endl;
+        (void)close(fd);
+        return -1;
+    }
+    int64_t length = static_cast<int64_t>(st.st_size);
+    if (size > 0) {
+        length = size;
+    }
+    int32_t ret = player_->AddSubSource(fd, offset, length);
+    if (ret != 0) {
+        (void)close(fd);
+        return -1;
+    }
+
+    (void)close(fd);
+    return ret;
+}
+
+std::string PlayerMock::GetSubtitleText()
+{
+    return callback_->SubtitleTextUpdate();
 }
 } // namespace Media
 } // namespace OHOS

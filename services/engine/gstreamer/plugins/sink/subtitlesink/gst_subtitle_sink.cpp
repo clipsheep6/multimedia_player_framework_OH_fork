@@ -24,7 +24,7 @@ using namespace OHOS::Media;
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
 namespace {
-    constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 90000000; // 90ms
+    constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 150000000; // 150ms
 }
 
 enum {
@@ -155,10 +155,6 @@ static void gst_subtitle_sink_set_audio_sink(GstSubtitleSink *subtitle_sink, gpo
 
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_mutex_lock(&priv->mutex);
-    if (priv->audio_sink != nullptr) {
-        GST_INFO_OBJECT(subtitle_sink, "has audio sink: %s, unref it", GST_ELEMENT_NAME(priv->audio_sink));
-        gst_object_unref(priv->audio_sink);
-    }
     priv->audio_sink = GST_ELEMENT_CAST(gst_object_ref(audio_sink));
     GST_INFO_OBJECT(subtitle_sink, "get audio sink: %s", GST_ELEMENT_NAME(priv->audio_sink));
     g_mutex_unlock(&priv->mutex);
@@ -224,7 +220,6 @@ static void gst_subtitle_sink_set_property(GObject *object, guint prop_id, const
     switch (prop_id) {
         case PROP_AUDIO_SINK: {
             gst_subtitle_sink_set_audio_sink(subtitle_sink, g_value_get_pointer(value));
-            g_object_set(G_OBJECT(subtitle_sink->priv->audio_sink), "subtitle-sink", subtitle_sink, nullptr);
             break;
         }
         case RPOP_SEGMENT_UPDATED: {
@@ -250,14 +245,16 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
         }
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
             g_mutex_lock(&priv->mutex);
-            subtitle_sink->stop_render = FALSE;
             gint64 left_duration = priv->text_frame_duration - priv->time_rendered;
             left_duration = left_duration > 0 ? left_duration : 0;
             priv->time_rendered = gst_util_get_timestamp();
             GST_DEBUG_OBJECT(subtitle_sink, "text left duration is %" GST_TIME_FORMAT,
                 GST_TIME_ARGS(left_duration));
             g_mutex_unlock(&priv->mutex);
-            gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, GST_TIME_AS_USECONDS(left_duration));
+            if (subtitle_sink->preroll_buffer != nullptr) {
+                gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, GST_TIME_AS_USECONDS(left_duration));
+            }
+            subtitle_sink->stop_render = FALSE;
             break;
         }
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED: {
@@ -349,7 +346,7 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
         return GST_FLOW_OK;
     }
     guint64 pts_end = pts + duration;
-    if (pts > subtitle_sink->segment.start) {
+    if (pts > GST_BASE_SINK(subtitle_sink)->segment.start) {
         GST_DEBUG_OBJECT(subtitle_sink, "pts = %" GST_TIME_FORMAT ", pts end = %"
             GST_TIME_FORMAT " segment start = %" GST_TIME_FORMAT ", not yet render time",
             GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(subtitle_sink->segment.start));
@@ -359,7 +356,7 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_mutex_lock(&priv->mutex);
     duration = std::min(duration, pts_end - subtitle_sink->segment.start);
-    priv->text_frame_duration = (pts_end - subtitle_sink->segment.start) / subtitle_sink->rate;
+    priv->text_frame_duration = duration / subtitle_sink->rate;
     priv->time_rendered = 0ULL;
     g_mutex_unlock(&priv->mutex);
     GST_DEBUG_OBJECT(subtitle_sink, "preroll buffer pts is %" GST_TIME_FORMAT ", duration is %" GST_TIME_FORMAT,
@@ -380,8 +377,8 @@ static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, G
     g_object_get(priv->audio_sink, "last-running-time-diff", &audio_running_time_diff, nullptr);
     gint64 late_time = subtitle_running_time_diff - audio_running_time_diff;
     if (late_time > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
-        GST_LOG_OBJECT(basesink, "subtitle is too late, %"
-        GST_TIME_FORMAT " behind", GST_TIME_ARGS(abs(late_time)));
+        GST_DEBUG_OBJECT(basesink, "the text frame is too late, %"
+        GST_TIME_FORMAT " behind", GST_TIME_ARGS(abs(subtitle_running_time_diff)));
         *need_drop_this_buffer = TRUE;
     }
     return reach_time;
@@ -502,10 +499,7 @@ static gboolean gst_subtitle_sink_event(GstBaseSink *basesink, GstEvent *event)
             auto audio_base = GST_BASE_SINK(priv->audio_sink);
             if (!subtitle_sink->have_first_segment) {
                 subtitle_sink->have_first_segment = TRUE;
-                GST_WARNING_OBJECT(subtitle_sink, "recv first segment event, update segment start time = %"
-                    GST_TIME_FORMAT ", old segment start time = %" GST_TIME_FORMAT,
-                    GST_TIME_ARGS(audio_base->segment.time), GST_TIME_ARGS(new_segment.start));
-                new_segment.start = audio_base->segment.time;
+                GST_WARNING_OBJECT(subtitle_sink, "recv first segment event");
                 new_segment.rate = audio_base->segment.applied_rate;
                 gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
             } else {
@@ -575,9 +569,7 @@ static void gst_subtitle_sink_finalize(GObject *obj)
         gst_object_unref(priv->audio_sink);
         priv->audio_sink = nullptr;
     }
-    if (priv->timer_queue != nullptr) {
-        priv->timer_queue = nullptr;
-    }
+    priv->timer_queue = nullptr;
     g_mutex_clear(&priv->mutex);
     G_OBJECT_CLASS(parent_class)->finalize(obj);
 }
