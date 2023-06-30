@@ -31,6 +31,9 @@
 #include "i_avcodec_service.h"
 #include "i_avcodeclist_service.h"
 #endif
+#ifdef SUPPORT_SCREEN_CAPTURE
+#include "i_screen_capture_service.h"
+#endif
 #include "i_standard_monitor_service.h"
 
 namespace OHOS {
@@ -183,6 +186,31 @@ public:
      * @version 1.0
      */
     virtual int32_t DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataHelperService> avMetadataHelper) = 0;
+#endif
+
+#ifdef SUPPORT_SCREEN_CAPTURE
+    /**
+     * @brief Create an screenCaptureHelper service.
+     *
+     * All player functions must be created and obtained first.
+     *
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual std::shared_ptr<IScreenCaptureService> CreateScreenCaptureService() = 0;
+
+    /**
+     * @brief Destroy a screenCaptureHelper service.
+     *
+     * call the API to destroy the screenCaptureHelper service.
+     *
+     * @param pointer to the screenCaptureHelper service.
+     * @return Returns a valid pointer if the setting is successful;
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t DestroyScreenCaptureService(std::shared_ptr<IScreenCaptureService> screenCaptureHelper) = 0;
 #endif
 
     /**
