@@ -47,7 +47,6 @@
           "graphic_standard",
           "hisysevent",
           "c_utils",
-          "hilog_native",
           "zlib",
           "access_token",
           "multimedia_image_framework",

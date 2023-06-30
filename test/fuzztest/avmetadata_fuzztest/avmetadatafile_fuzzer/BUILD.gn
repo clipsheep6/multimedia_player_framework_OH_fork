@@ -65,7 +65,7 @@ ohos_fuzztest("AVmetadataFileFuzzTest") {
   ]
   external_deps = [
     "graphic_standard:surface",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "player_framework:media_client",
   ]
 }
