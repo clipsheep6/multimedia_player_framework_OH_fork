@@ -61,7 +61,7 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
     "../../../../services/utils:media_format",
   ]
   external_deps = [
-    "graphic_standard:surface",
+    "graphic_2d:surface",
     "ipc:ipc_single",
     "player_framework:media_client",
     "safwk:system_ability_fwk",
