@@ -495,7 +495,7 @@ int32_t PlayBinCtrlerBase::PlayingState::SetRate(double rate)
 
 void PlayBinCtrlerBase::PlayingState::HandleAsyncDone(const InnerMessage &msg)
 {
-    MEDIA_LOGI("PreparingState::HandleAsyncDone");
+    MEDIA_LOGI("PlayingState::HandleAsyncDone");
     BaseState::HandleAsyncDone(msg);
 }
 

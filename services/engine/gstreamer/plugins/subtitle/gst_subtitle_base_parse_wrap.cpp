@@ -940,8 +940,9 @@ gboolean chain_push_new_segment_event(GstFlowReturn ret, GstSubtitleBaseParse *s
 gboolean decode_one_frame(const GstSubtitleBaseParseClass *baseclass, GstSubtitleBaseParse *self,
     GstSubtitleFrame *frame, GstSubtitleDecodedFrame *decoded_frame)
 {
-    if ((baseclass == nullptr) || (baseclass->decode_frame_pfn == nullptr) ||
-        (self == nullptr) || (frame == nullptr) || (frame->data == nullptr) || (decoded_frame == nullptr)) {
+    g_return_val_if_fail((baseclass != nullptr) && (baseclass->decode_frame_pfn != nullptr) &&
+        (self != nullptr), FALSE);
+    if ((frame == nullptr) || (frame->data == nullptr) || (decoded_frame == nullptr)) {
         return FALSE;
     }
 

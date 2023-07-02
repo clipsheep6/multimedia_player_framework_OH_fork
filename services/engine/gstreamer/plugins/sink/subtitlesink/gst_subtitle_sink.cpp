@@ -24,7 +24,7 @@ using namespace OHOS::Media;
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
 namespace {
-    constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 150000000; // 150ms
+    constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 120000000; // 120ms
 }
 
 enum {
@@ -164,7 +164,7 @@ static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
     GstSegment *segment, guint64 pts, guint64 pts_end)
 {
     guint64 start = segment->start;
-    if (pts <= start && start <= pts_end) {
+    if (pts <= start && start < pts_end) {
         GST_LOG_OBJECT(basesink, "no need drop, segment start is intersects with buffer time range, pts"
         " = %" GST_TIME_FORMAT ", pts end = %" GST_TIME_FORMAT " segment start = %"
         GST_TIME_FORMAT, GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(segment->start));
@@ -248,10 +248,10 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
             gint64 left_duration = priv->text_frame_duration - priv->time_rendered;
             left_duration = left_duration > 0 ? left_duration : 0;
             priv->time_rendered = gst_util_get_timestamp();
-            GST_DEBUG_OBJECT(subtitle_sink, "text left duration is %" GST_TIME_FORMAT,
-                GST_TIME_ARGS(left_duration));
             g_mutex_unlock(&priv->mutex);
             if (subtitle_sink->preroll_buffer != nullptr) {
+                GST_DEBUG_OBJECT(subtitle_sink, "text left duration is %" GST_TIME_FORMAT,
+                    GST_TIME_ARGS(left_duration));
                 gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, GST_TIME_AS_USECONDS(left_duration));
             }
             subtitle_sink->stop_render = FALSE;

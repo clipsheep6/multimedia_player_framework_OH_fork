@@ -147,11 +147,8 @@ bool PlayerSinkProvider::EnableKpiAVSyncLog() const
 
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateVideoSink()
 {
-    if (producerSurface_ == nullptr) {
-        MEDIA_LOGI("producerSurface_ is nullptr, cannot create video sink!");
-        return nullptr;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, nullptr,
+        "producerSurface_ is nullptr, cannot create video sink!");
     if (videoCaps_ == nullptr) {
         videoCaps_ = gst_caps_new_simple("video/x-raw", "format", G_TYPE_STRING, "RGBA", nullptr);
         CHECK_AND_RETURN_RET_LOG(videoCaps_ != nullptr, nullptr, "gst_caps_new_simple failed..");
@@ -211,14 +208,11 @@ void PlayerSinkProvider::FirstRenderFrame(gpointer userData)
 void PlayerSinkProvider::OnFirstRenderFrame()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (notifier_ != nullptr) {
-        if (GetFirstRenderFrameFlag()) {
-            PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_VIDEO_RENDERING_START, 0, {} };
-            notifier_(msg);
-            SetFirstRenderFrameFlag(false);
-            MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
-        }
-    }
+    CHECK_AND_RETURN(notifier_ != nullptr && GetFirstRenderFrameFlag());
+    PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_VIDEO_RENDERING_START, 0, {} };
+    notifier_(msg);
+    SetFirstRenderFrameFlag(false);
+    MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
 }
 
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
@@ -260,6 +254,7 @@ void PlayerSinkProvider::HandleSubtitleBuffer(GstBuffer *sample, Format &subtitl
     (void)memcpy_s(textFrame, gstBufferSize + 1, mapInfo.data, gstBufferSize);
     textFrame[gstBufferSize] = static_cast<char>(0);
     (void)subtitle.PutStringValue(PlayerKeys::SUBTITLE_TEXT, std::string_view(textFrame));
+    MEDIA_LOGD("text = %{public}s", textFrame);
     delete[] textFrame;
     gst_buffer_unmap(sample, &mapInfo);
 }
@@ -281,11 +276,9 @@ void PlayerSinkProvider::OnSubtitleUpdated(const Format &subtitle)
     MEDIA_LOGD("OnSubtitleUpdated enter");
     auto temp_notifier = notifier_;
     lock.unlock();
-    if (temp_notifier != nullptr) {
-        PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_UPDATED, 0, subtitle};
-        temp_notifier(msg);
-        MEDIA_LOGD("Subtitle text updated");
-    }
+    CHECK_AND_RETURN(temp_notifier != nullptr);
+    PlayBinMessage msg = {PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_SUBTITLE_UPDATED, 0, subtitle};
+    temp_notifier(msg);
     MEDIA_LOGD("OnSubtitleUpdated exit");
 }
 

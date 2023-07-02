@@ -60,8 +60,9 @@ protected:
     bool speedDoneFlag_;
     bool trackDoneFlag_ = false;
     bool trackChange_ = false;
+    bool trackInfoUpdate_ = false;
     bool textUpdate_ = false;
-    std::string text = "";
+    std::string text_ = "";
     PlayerSeekMode seekMode_ = PlayerSeekMode::SEEK_CLOSEST;
     std::mutex mutexCond_;
     std::mutex subtitleMutex_;
@@ -74,6 +75,7 @@ protected:
     std::condition_variable condVarSeek_;
     std::condition_variable condVarSpeed_;
     std::condition_variable condVarTrackDone_;
+    std::condition_variable condVarTrackInfoUpdate_;
 };
 
 class PlayerCallbackTest : public PlayerCallback, public NoCopyable, public PlayerSignal {
@@ -96,7 +98,11 @@ public:
     int32_t SeekSync();
     int32_t SpeedSync();
     int32_t TrackSync(bool &trackChange);
-    std::string SubtitleTextUpdate();
+    int32_t TrackInfoUpdateSync();
+    std::string SubtitleTextUpdate(std::string text);
+private:
+    void HandleSubtitleCallback(int32_t extra, const Format &infoBody);
+    void HandleTrackInfoCallback(int32_t extra, const Format &infoBody);
 };
 
 class PlayerMock : public NoCopyable {
@@ -139,7 +145,7 @@ public:
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index);
     int32_t AddSubSource(const std::string &url);
     int32_t AddSubSource(const std::string &path, int64_t offset, int64_t size);
-    std::string GetSubtitleText();
+    std::string GetSubtitleText(std::string text);
 private:
     void SeekPrepare(int32_t &mseconds, PlayerSeekMode &mode);
     std::shared_ptr<Player> player_ = nullptr;
