@@ -61,6 +61,9 @@ struct _GstAudioServerSink {
     GstClockTime last_render_pts;
     gboolean enable_opt_render_delay;
     GstClockTimeDiff last_running_time_diff;
+    gboolean pre_power_on;
+    gboolean start_first_render;
+    guint delay_time;
 };
 
 struct _GstAudioServerSinkClass {
