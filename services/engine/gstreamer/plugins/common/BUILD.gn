@@ -100,8 +100,8 @@ ohos_shared_library("gst_media_common") {
   ]
 
   external_deps = [
-    "graphic_standard:surface",
-    "graphic_standard:sync_fence",
+    "graphic_2d:surface",
+    "graphic_2d:sync_fence",
     "hilog:libhilog",
   ]
 

@@ -112,7 +112,7 @@ ohos_shared_library("gst_codec_plugin_hdi") {
 
   external_deps = [
     "drivers_peripheral_codec:libcodec_hdi_omx_client",
-    "graphic_standard:surface",
+    "graphic_2d:surface",
     "hdf_core:libhdf_host",
     "hdf_core:libhdf_ipc_adapter",
     "hdf_core:libhdf_utils",

@@ -100,7 +100,7 @@ ohos_static_library("media_engine_gst_common") {
 
   external_deps = [
     "c_utils:utils",
-    "graphic_standard:surface",
+    "graphic_2d:surface",
     "hilog:libhilog",
     "init:libbegetutil",
   ]

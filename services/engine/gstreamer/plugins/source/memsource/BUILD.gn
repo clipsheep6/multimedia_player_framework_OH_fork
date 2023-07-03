@@ -92,7 +92,7 @@ ohos_shared_library("gst_mem_src") {
   ]
 
   external_deps = [
-    "graphic_standard:surface",
+    "graphic_2d:surface",
     "hilog:libhilog",
     "init:libbegetutil",
   ]
