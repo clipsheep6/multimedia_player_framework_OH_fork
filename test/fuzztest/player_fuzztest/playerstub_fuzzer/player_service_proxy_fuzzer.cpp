@@ -538,10 +538,7 @@ int32_t PlayerServiceProxyFuzzer::SetParameter(uint8_t *inputData, size_t size, 
         return false;
     }
 
-    Format format;
-    std::string url(reinterpret_cast<const char *>(inputData), size);
-    format.PutIntValue(url, *reinterpret_cast<int32_t *>(inputData));
-    MediaParcel::Marshalling(data, format);
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
     return SendRequest(SET_RENDERER_DESC, data, reply, option);
 }
 
