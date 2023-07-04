@@ -58,35 +58,30 @@ PlayerMemManage::~PlayerMemManage()
 
 void PlayerMemManage::FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
-    if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND) ||
-        appPlayerInfo.isReserve) {
-        return;
-    }
-    std::chrono::duration<double> durationCost = std::chrono::duration_cast<
+    if (appPlayerInfo.appState == static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND) &&
+        !appPlayerInfo.isReserve) {
+        std::chrono::duration<double> durationCost = std::chrono::duration_cast<
         std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterBackTime);
-    if (durationCost.count() <= APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
-        return;
-    }
-
-    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-        ((*iter).resetBackGroundRecall)();
+        if (durationCost.count() > APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
+            for (auto iter = appPlayerInfo.memRecallStructVec.begin();
+                iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+                ((*iter).resetBackGroundRecall)();
+            }
+        }
     }
 }
 
 void PlayerMemManage::FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
-    if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
-        return;
-    }
-
-    std::chrono::duration<double> durationCost = std::chrono::duration_cast<
-        std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterFrontTime);
-    if (durationCost.count() <= APP_FRONT_GROUND_DESTROY_MEMERY_TIME) {
-        return;
-    }
-
-    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-        ((*iter).resetFrontGroundRecall)();
+    if (appPlayerInfo.appState == static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
+        std::chrono::duration<double> durationCost = std::chrono::duration_cast<
+            std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterFrontTime);
+        if (durationCost.count() > APP_FRONT_GROUND_DESTROY_MEMERY_TIME) {
+            for (auto iter = appPlayerInfo.memRecallStructVec.begin();
+                iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+                ((*iter).resetFrontGroundRecall)();
+            }
+        }
     }
 }
 

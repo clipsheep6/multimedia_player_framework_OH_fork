@@ -129,6 +129,8 @@ struct _GstVdecBase {
     gboolean metadata_mode;
     gboolean is_support_swap_width_height;
     gboolean codec_data_update;
+    gboolean is_free_codec_buffers;
+    gboolean is_eos_state;
     GstBuffer *codec_data;
 };
 

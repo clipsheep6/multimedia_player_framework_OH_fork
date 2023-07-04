@@ -156,8 +156,26 @@ void PlayerCodecCtrl::EnhanceSeekPerformance(bool enable)
     for (auto &it : elementMap_) {
         if (it.second.isHardware) {
             g_object_set(it.first, "seeking", enable, nullptr);
+            return;
         }
     }
+}
+
+int32_t PlayerCodecCtrl::HandleCodecBuffers(bool enable)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("HandleCodecBuffers %{public}d", enable);
+    for (auto &it : elementMap_) {
+        if (it.second.isHardware) {
+            if (enable) {
+                g_object_set(it.first, "free_codec_buffers", enable, nullptr);
+            } else {
+                g_object_set(it.first, "recover_codec_buffers", enable, nullptr);
+            }
+            return MSERR_OK;
+        }
+    }
+    return MSERR_INVALID_OPERATION;
 }
 } // Media
 } // OHOS
