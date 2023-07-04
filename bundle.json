@@ -56,7 +56,12 @@
           "memmgr_plugin",
           "hicollie",
           "drivers_peripheral_codec",
-          "hdf_core"
+          "hdf_core",
+          "ability_base",
+          "ability_runtime",
+          "bundle_framework",
+          "relational_store",
+          "resource_management"
         ],
         "third_party": [
           "glib",

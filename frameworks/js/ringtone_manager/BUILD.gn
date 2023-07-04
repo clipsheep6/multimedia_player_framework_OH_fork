@@ -27,15 +27,15 @@ ohos_shared_library("systemsoundmanager") {
   ]
 
   sources = [
-    "${multimedia_player_framework_path}/frameworks/js/ringtone_manager/src/audio_renderer_info_napi.cpp",
-    "${multimedia_player_framework_path}/frameworks/js/ringtone_manager/src/ringtone_common_napi.cpp",
-    "${multimedia_player_framework_path}/frameworks/js/ringtone_manager/src/ringtone_options_napi.cpp",
-    "${multimedia_player_framework_path}/frameworks/js/ringtone_manager/src/ringtone_player_callback_napi.cpp",
-    "${multimedia_player_framework_path}/frameworks/js/ringtone_manager/src/ringtone_player_napi.cpp",
-    "${multimedia_player_framework_path}/frameworks/js/ringtone_manager/src/system_sound_manager_napi.cpp",
+    "./src/audio_renderer_info_napi.cpp",
+    "./src/ringtone_common_napi.cpp",
+    "./src/ringtone_options_napi.cpp",
+    "./src/ringtone_player_callback_napi.cpp",
+    "./src/ringtone_player_napi.cpp",
+    "./src/system_sound_manager_napi.cpp",
   ]
 
-  deps = [ "${multimedia_player_framework_path}/frameworks/native/system_sound:audio_ringtone_client" ]
+  deps = [ "./../../native/system_sound:audio_ringtone_client" ]
 
   external_deps = [
     "ability_runtime:abilitykit_native",

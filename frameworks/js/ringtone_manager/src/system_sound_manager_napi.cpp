@@ -212,33 +212,30 @@ void SystemSoundManagerNapi::Destructor(napi_env env, void* nativeObject, void* 
     }
 }
 
-bool SystemSoundManagerNapi::VerifySystemPermission()
+bool SystemSoundManagerNapi::VerifySelfSystemPermission()
 {
-    auto tokenId = IPCSkeleton::GetCallingTokenID();
-    auto tokenTypeFlag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    Security::AccessToken::FullTokenID selfToken = IPCSkeleton::GetSelfTokenID();
+
+    auto tokenTypeFlag = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(static_cast<uint32_t>(selfToken));
     if (tokenTypeFlag == Security::AccessToken::TOKEN_NATIVE) {
         return true;
     }
+
     if (tokenTypeFlag == Security::AccessToken::TOKEN_SHELL) {
         return true;
     }
-    if (VerifySystemApp()) {
+
+    if (Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(selfToken)) {
         return true;
     }
-    return false;
-}
 
-bool SystemSoundManagerNapi::VerifySystemApp()
-{
-    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
-    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
-    return isSystemApp;
+    return false;
 }
 
 napi_value SystemSoundManagerNapi::GetSystemSoundManager(napi_env env, napi_callback_info info)
 {
-    if (!VerifySystemPermission()) {
-        HiLog::Error(LABEL, "System permission validation failed.");
+    if (!VerifySelfSystemPermission()) {
+        HiLog::Error(LABEL, "GetSystemSoundManager: System permission validation failed.");
         return nullptr;
     }
     napi_status status;

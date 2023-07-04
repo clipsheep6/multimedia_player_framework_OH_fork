@@ -30,20 +30,18 @@ ohos_shared_library("audio_ringtone_client") {
     "${multimedia_media_library_path}/frameworks/utils/include",
   ]
 
-  deps = [
-    "${ability_runtime_path}/frameworks/native/ability/native:data_ability_helper",
-    "${ability_runtime_path}/frameworks/native/appkit:appkit_native",
-    "${graphic_2d_path}/frameworks/surface:surface",
-    "${multimedia_audio_framework_path}/services/audio_service:audio_client",
-    "${multimedia_player_framework_path}/interfaces/inner_api/native:media_client",
-  ]
+  deps = [ "./../../../interfaces/inner_api/native:media_client" ]
 
   external_deps = [
     "ability_base:want",
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "ability_runtime:appkit_native",
+    "ability_runtime:data_ability_helper",
+    "audio_framework:audio_client",
     "bundle_framework:appexecfwk_base",
+    "graphic_standard:surface",
     "hilog:libhilog",
     "relational_store:native_dataability",
     "relational_store:native_rdb",
