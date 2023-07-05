@@ -152,6 +152,8 @@ private:
     std::chrono::steady_clock::time_point lastestUserSetTime_;
     std::condition_variable recoverCond_;
     int32_t defaultAudioIndex_ = -1;
+    bool isSeekToCurrentTime_ = false;
+    bool isLocalResource_ = false;
 
     int32_t Init() override;
     void SetStateMap();
@@ -175,6 +177,12 @@ private:
     int32_t RecoverMemByUser();
     bool NeedSelectAudioTrack();
     void GetDefauleTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode);
+    int32_t HandleCodecBuffers(bool enable);
+    int32_t LocalResourceRelease();
+    int32_t NetworkResourceRelease();
+    int32_t LocalResourceRecover();
+    int32_t NetworkRecover();
 };
 }
 }

@@ -220,7 +220,14 @@ int32_t PlayerServerMem::SetSource(const std::string &url)
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     recoverConfig_.url = url;
     recoverConfig_.sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_URL);
-    return PlayerServer::SetSource(url);
+    auto ret = PlayerServer::SetSource(url);
+    if (ret == MSERR_OK) {
+        isLocalResource_ = false;
+        if (url.find("fd://") != std::string::npos || url.find("file://") != std::string::npos) {
+            isLocalResource_ = true;
+        }
+    }
+    return ret;
 }
 
 int32_t PlayerServerMem::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
@@ -231,7 +238,11 @@ int32_t PlayerServerMem::SetSource(const std::shared_ptr<IMediaDataSource> &data
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     recoverConfig_.dataSrc = dataSrc;
     recoverConfig_.sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_DATASRC);
-    return PlayerServer::SetSource(dataSrc);
+    auto ret = PlayerServer::SetSource(dataSrc);
+    if (ret == MSERR_OK) {
+        isLocalResource_ = false;
+    }
+    return ret;
 }
 
 int32_t PlayerServerMem::SetSource(int32_t fd, int64_t offset, int64_t size)
@@ -245,7 +256,11 @@ int32_t PlayerServerMem::SetSource(int32_t fd, int64_t offset, int64_t size)
     recoverConfig_.offset = offset;
     recoverConfig_.size = size;
     recoverConfig_.sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_FD);
-    return PlayerServer::SetSource(fd, offset, size);
+    auto ret = PlayerServer::SetSource(fd, offset, size);
+    if (ret == MSERR_OK) {
+        isLocalResource_ = true;
+    }
+    return ret;
 }
 
 int32_t PlayerServerMem::AddSubSource(const std::string &url)
@@ -316,7 +331,11 @@ int32_t PlayerServerMem::Stop()
     CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        return !isRecoverMemByUser_;
+        if (isLocalResource_) {
+            return !isRecoverMemByUser_;
+        } else {
+            return !isSeekToCurrentTime_;
+        }
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Stop();
@@ -325,17 +344,14 @@ int32_t PlayerServerMem::Stop()
 int32_t PlayerServerMem::Reset()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
-        if (recoverConfig_.callback != nullptr) {
-            playerCb_ = recoverConfig_.callback;
-            Format format;
-            playerCb_->OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
-        }
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        return !isRecoverMemByUser_;
+        if (isLocalResource_) {
+            return !isRecoverMemByUser_;
+        } else {
+            return !isSeekToCurrentTime_;
+        }
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Reset();
@@ -344,13 +360,14 @@ int32_t PlayerServerMem::Reset()
 int32_t PlayerServerMem::Release()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
-        MEDIA_LOGI("User call Release");
-        isReleaseMemByManage_ = false;
-    }
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        return !isRecoverMemByUser_;
+        if (isLocalResource_) {
+            return !isRecoverMemByUser_;
+        } else {
+            return !isSeekToCurrentTime_;
+        }
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Release();
@@ -379,7 +396,7 @@ int32_t PlayerServerMem::Seek(int32_t mSeconds, PlayerSeekMode mode)
 int32_t PlayerServerMem::GetCurrentTime(int32_t &currentTime)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetCurrentTime:%{public}d", recoverConfig_.currentTime);
         currentTime = recoverConfig_.currentTime;
         return MSERR_OK;
@@ -390,7 +407,7 @@ int32_t PlayerServerMem::GetCurrentTime(int32_t &currentTime)
 int32_t PlayerServerMem::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetVideoTrackInfo");
         videoTrack = recoverConfig_.videoTrack;
         return MSERR_OK;
@@ -401,7 +418,7 @@ int32_t PlayerServerMem::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 int32_t PlayerServerMem::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetAudioTrackInfo");
         audioTrack = recoverConfig_.audioTrack;
         return MSERR_OK;
@@ -412,7 +429,7 @@ int32_t PlayerServerMem::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 int32_t PlayerServerMem::GetVideoWidth()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetVideoWidth:%{public}d", recoverConfig_.videoWidth);
         return recoverConfig_.videoWidth;
     }
@@ -422,7 +439,7 @@ int32_t PlayerServerMem::GetVideoWidth()
 int32_t PlayerServerMem::GetVideoHeight()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetVideoHeight:%{public}d", recoverConfig_.videoHeight);
         return recoverConfig_.videoHeight;
     }
@@ -432,7 +449,7 @@ int32_t PlayerServerMem::GetVideoHeight()
 int32_t PlayerServerMem::GetDuration(int32_t &duration)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetDuration:%{public}d", recoverConfig_.duration);
         duration = recoverConfig_.duration;
         return MSERR_OK;
@@ -453,7 +470,7 @@ int32_t PlayerServerMem::SetPlaybackSpeed(PlaybackRateMode mode)
 int32_t PlayerServerMem::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetPlaybackSpeed:%{public}d", recoverConfig_.speedMode);
         mode = recoverConfig_.speedMode;
         return MSERR_OK;
@@ -477,7 +494,7 @@ int32_t PlayerServerMem::SetVideoSurface(sptr<Surface> surface)
 bool PlayerServerMem::IsPlaying()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call IsPlaying:%{public}d", recoverConfig_.isPlaying);
         return recoverConfig_.isPlaying;
     }
@@ -487,7 +504,7 @@ bool PlayerServerMem::IsPlaying()
 bool PlayerServerMem::IsLooping()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call IsLooping:%{public}d", recoverConfig_.loop);
         return recoverConfig_.loop;
     }
@@ -591,7 +608,7 @@ int32_t PlayerServerMem::DeselectTrack(int32_t index)
 int32_t PlayerServerMem::GetCurrentTrack(int32_t trackType, int32_t &index)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (isReleaseMemByManage_) {
+    if (isLocalResource_ && isReleaseMemByManage_) {
         if (trackType == MediaType::MEDIA_TYPE_AUD) {
             index = recoverConfig_.audioIndex;
         } else if (trackType == MediaType::MEDIA_TYPE_VID) {
@@ -624,13 +641,80 @@ int32_t PlayerServerMem::DumpInfo(int32_t fd)
     return MSERR_OK;
 }
 
+int32_t PlayerServerMem::HandleCodecBuffers(bool enable)
+{
+    std::lock_guard<std::mutex> lock(PlayerServer::mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGD("HandleCodecBuffers in, enable:%{public}d", enable);
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not HandleCodecBuffers, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    return playerEngine_->HandleCodecBuffers(enable);
+}
+
+int32_t PlayerServerMem::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
+{
+    std::lock_guard<std::mutex> lock(PlayerServer::mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    if (IsValidSeekMode(mode) != true) {
+        MEDIA_LOGE("Seek failed, inValid mode");
+        return MSERR_INVALID_VAL;
+    }
+
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not Seek, it is live-stream");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
+    mSeconds = std::max(0, mSeconds);
+
+    auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
+        MediaTrace::TraceBegin("PlayerServerMem::Seek", FAKE_POINTER(this));
+        playerEngine_->SeekToCurrentTime(mSeconds, mode);
+    });
+
+    auto cancelTask = std::make_shared<TaskHandler<void>>([&, this]() {
+        MEDIA_LOGI("Interrupted seek action");
+        taskMgr_.MarkTaskDone("interrupted seek done");
+    });
+    isSeekToCurrentTime_ = true;
+    int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
+
+    return MSERR_OK;
+}
+
 void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    std::unique_lock<std::mutex> lockCb(mutexCb_);
-    GetDefauleTrack(type, extra, infoBody);
-    PlayerServer::OnInfo(type, extra, infoBody);
-
-    CheckHasRecover(type, extra);
+    if (isLocalResource_) {
+        std::unique_lock<std::mutex> lockCb(mutexCb_);
+        GetDefauleTrack(type, extra, infoBody);
+        PlayerServer::OnInfo(type, extra, infoBody);
+        CheckHasRecover(type, extra);
+    } else {
+        if (isSeekToCurrentTime_ && type == INFO_TYPE_SEEKDONE) {
+            MediaTrace::TraceEnd("PlayerServerMem::Seek", FAKE_POINTER(this));
+            std::lock_guard<std::mutex> lockCb(PlayerServer::mutexCb_);
+            isSeekToCurrentTime_ = false;
+            recoverCond_.notify_all();
+            PlayerServer::HandleMessage(type, extra, infoBody);
+        } else {
+            PlayerServer::OnInfo(type, extra, infoBody);
+        }
+    }
 }
 
 int32_t PlayerServerMem::GetInformationBeforeMemReset()
@@ -660,7 +744,7 @@ int32_t PlayerServerMem::GetInformationBeforeMemReset()
     return MSERR_OK;
 }
 
-int32_t PlayerServerMem::ReleaseMemByManage()
+int32_t PlayerServerMem::LocalResourceRelease()
 {
     if (isReleaseMemByManage_ || isRecoverMemByUser_) {
         return MSERR_OK;
@@ -683,7 +767,29 @@ int32_t PlayerServerMem::ReleaseMemByManage()
     return ret;
 }
 
-int32_t PlayerServerMem::RecoverMemByUser()
+int32_t PlayerServerMem::NetworkResourceRelease()
+{
+    if (!isReleaseMemByManage_) {
+        MediaTrace trace("PlayerServerMem::ReleaseMemByManage");
+        MEDIA_LOGI("enter");
+        int32_t ret = HandleCodecBuffers(true);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "FreeCodecBuffers Fail");
+        isReleaseMemByManage_ = true;
+        MEDIA_LOGI("exit");
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerServerMem::ReleaseMemByManage()
+{
+    if (isLocalResource_) {
+        return LocalResourceRelease();
+    } else {
+        return NetworkResourceRelease();
+    }
+}
+
+int32_t PlayerServerMem::LocalResourceRecover()
 {
     if (!isReleaseMemByManage_ || isRecoverMemByUser_) {
         return MSERR_OK;
@@ -702,6 +808,35 @@ int32_t PlayerServerMem::RecoverMemByUser()
     
     MEDIA_LOGI("exit");
     return ret;
+}
+
+int32_t PlayerServerMem::NetworkRecover()
+{
+    if (isReleaseMemByManage_) {
+        MediaTrace trace("PlayerServerMem::RecoverMemByUser");
+        MEDIA_LOGI("enter");
+        int32_t ret = HandleCodecBuffers(false);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RecoverCodecBuffers Fail");
+        int32_t currentTime = 0;
+        if (!IsCompleted()) {
+            ret = PlayerServer::GetCurrentTime(currentTime);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetCurrentTime Fail");
+        }
+        ret = SeekToCurrentTime(currentTime, SEEK_CLOSEST);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek Fail");
+        isReleaseMemByManage_ = false;
+        MEDIA_LOGI("exit");
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerServerMem::RecoverMemByUser()
+{
+    if (isLocalResource_) {
+        return LocalResourceRecover();
+    } else {
+        return NetworkRecover();
+    }
 }
 
 int32_t PlayerServerMem::RecoverPlayerCb()
@@ -772,7 +907,7 @@ void PlayerServerMem::ResetFrontGroundForMemManage()
     std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<
         std::chrono::duration<double>>(std::chrono::steady_clock::now() - lastestUserSetTime_);
     if (lastSetToNow.count() > APP_FRONT_GROUND_DESTROY_MEMERY_LAST_SET_TIME) {
-        MEDIA_LOGW("From lastest set to now duration: %{public}f less than threshold value", lastSetToNow.count());
+        MEDIA_LOGI("From lastest set to now duration: %{public}f greater than threshold value", lastSetToNow.count());
         ReleaseMemByManage();
     }
 }
@@ -793,7 +928,7 @@ void PlayerServerMem::ResetBackGroundForMemManage()
     std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<
         std::chrono::duration<double>>(std::chrono::steady_clock::now() - lastestUserSetTime_);
     if (lastSetToNow.count() > APP_BACK_GROUND_DESTROY_MEMERY_LAST_SET_TIME) {
-        MEDIA_LOGW("From lastest set to now duration: %{public}f less than threshold value", lastSetToNow.count());
+        MEDIA_LOGI("From lastest set to now duration: %{public}f greater than threshold value", lastSetToNow.count());
         ReleaseMemByManage();
     }
 }

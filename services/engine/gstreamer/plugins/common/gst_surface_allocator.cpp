@@ -84,7 +84,18 @@ gboolean gst_surface_allocator_set_surface(GstSurfaceAllocator *allocator, OHOS:
         return FALSE;
     }
     allocator->surface = surface;
+    if (allocator->allocatorWrap) {
+        delete allocator->allocatorWrap;
+        allocator->allocatorWrap = nullptr;
+    }
     allocator->allocatorWrap = new AllocatorWrap(*allocator);
+    allocator->clean = FALSE;
+    GST_SURFACE_ALLOCATOR_LOCK(allocator);
+    allocator->requestBufferNum = 0;
+    allocator->totalBufferNum = 0;
+    allocator->cacheBufferNum = 0;
+    allocator->flushBufferNum = 0;
+    GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
     auto bufferReleased = std::bind(&AllocatorWrap::OnBufferReleased, allocator->allocatorWrap, std::placeholders::_1);
     GSError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
     LISTENER(ret = surface->RegisterReleaseListener(bufferReleased),
@@ -386,6 +397,7 @@ static void gst_surface_allocator_finalize(GObject *obj)
     allocator->surface = nullptr;
     if (allocator->allocatorWrap) {
         delete allocator->allocatorWrap;
+        allocator->allocatorWrap = nullptr;
     }
     g_mutex_clear(&allocator->lock);
     g_cond_clear(&allocator->cond);
