@@ -142,15 +142,15 @@ private:
         std::string lastErrMsg = "";
         std::unique_ptr<UriHelper> uriHelper = nullptr;
     } playerServerConfig_;
-    std::recursive_mutex recMutex_;
-    std::recursive_mutex recMutexCb_;
+    std::mutex mutex_;
+    std::mutex mutexCb_;
     bool isReleaseMemByManage_ = false;
     bool isRecoverMemByUser_ = false;
     bool isAudioPlayer_ = true;
     int32_t continueReset = 0;
     std::map<void *, std::shared_ptr<MemBaseState>> stateMap_;
     std::chrono::steady_clock::time_point lastestUserSetTime_;
-
+    std::condition_variable recoverCond_;
     int32_t defaultAudioIndex_ = -1;
 
     int32_t Init() override;
@@ -159,6 +159,7 @@ private:
     int32_t SetSaveParameter();
     int32_t SetSourceInternal();
     int32_t AddSubSourceInternal();
+    int32_t PrepareAsyncInner();
     void SetPlayerServerConfig();
     void GetPlayerServerConfig();
     int32_t SetConfigInternal();

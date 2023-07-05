@@ -97,11 +97,12 @@ int32_t PlayerServiceStubMem::Init()
 int32_t PlayerServiceStubMem::SetSource(const std::string &url)
 {
     auto ret = PlayerServiceStub::SetSource(url);
-    if (ret == MSERR_OK) {
+    {
         std::lock_guard<std::recursive_mutex> lock(recMutex_);
         isControlByMemManage_ = false;
         if (url.find(".m3u8") != std::string::npos ||
-            url.find("fd://") != std::string::npos) {
+            url.find("fd://") != std::string::npos ||
+            url.find("file://") != std::string::npos) {
             isControlByMemManage_ = true;
         }
     }
@@ -111,7 +112,7 @@ int32_t PlayerServiceStubMem::SetSource(const std::string &url)
 int32_t PlayerServiceStubMem::SetSource(const sptr<IRemoteObject> &object)
 {
     auto ret = PlayerServiceStub::SetSource(object);
-    if (ret == MSERR_OK) {
+    {
         std::lock_guard<std::recursive_mutex> lock(recMutex_);
         isControlByMemManage_ = false;
     }
@@ -121,7 +122,7 @@ int32_t PlayerServiceStubMem::SetSource(const sptr<IRemoteObject> &object)
 int32_t PlayerServiceStubMem::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
     auto ret = PlayerServiceStub::SetSource(fd, offset, size);
-    if (ret == MSERR_OK) {
+    {
         std::lock_guard<std::recursive_mutex> lock(recMutex_);
         isControlByMemManage_ = true;
     }

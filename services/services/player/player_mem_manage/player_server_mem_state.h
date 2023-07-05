@@ -92,9 +92,6 @@ class PlayerServerMem::MemStoppedState : public PlayerServerMem::MemBaseState {
 public:
     explicit MemStoppedState(PlayerServerMem &playerServerMem) : MemBaseState(playerServerMem, "mem_stopped_state") {}
     ~MemStoppedState() override = default;
-    int32_t MemStateRecover() override;
-    int32_t MemStateRelease() override;
-    int32_t MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra) override;
 };
 
 class PlayerServerMem::MemPlaybackCompletedState : public PlayerServerMem::MemBaseState {
