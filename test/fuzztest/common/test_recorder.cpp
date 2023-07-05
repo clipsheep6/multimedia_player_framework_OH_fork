@@ -136,6 +136,12 @@ void TestRecorder::SetVideoSource(RecorderTestParam::VideoRecorderConfig_ &recor
     recorder->SetVideoSource(recorderConfig.vSource, recorderConfig.videoSourceId);
 }
 
+void TestRecorder::SetDataSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    DataSourceType dataSourceType = DataSourceType::METADATA;
+    recorder->SetDataSource(dataSourceType, recorderConfig.videoSourceId);
+}
+
 void TestRecorder::SetAudioSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     recorder->SetAudioSource(recorderConfig.aSource, recorderConfig.audioSourceId);
@@ -196,6 +202,16 @@ void TestRecorder::Stop(bool block, RecorderTestParam::VideoRecorderConfig_ &rec
 {
     recorder->Stop(block);
     isExit_.store(true);
+}
+
+void TestRecorder::Pause(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->Pause();
+}
+
+void TestRecorder::Start(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->Resume();
 }
 
 void TestRecorder::Reset(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
