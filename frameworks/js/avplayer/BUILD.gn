@@ -61,13 +61,13 @@ ohos_shared_library("media_avplayer") {
   ]
 
   deps = [
-    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "../../../../../../foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    "../../../../../../foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "../../../../../../third_party/bounds_checking_function:libsec_shared",
   ]
 
   external_deps = [
     "audio_framework:audio_client",
-    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
