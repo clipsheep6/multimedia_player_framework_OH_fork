@@ -40,9 +40,8 @@ AVMetadataSetSourceFuzzer::~AVMetadataSetSourceFuzzer()
 bool AVMetadataSetSourceFuzzer::FuzzAVMetadataSetSource(uint8_t *data, size_t size)
 {
     constexpr int32_t USAGE_LIST = 2;
-    avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
+    std::shared_ptr<AVMetadataHelper> avmetadata = AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
-        avmetadata->Release();
         return false;
     }
 

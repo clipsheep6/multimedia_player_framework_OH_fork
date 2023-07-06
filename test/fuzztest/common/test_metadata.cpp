@@ -29,7 +29,7 @@ TestMetadata::~TestMetadata()
 {
 }
 
-int32_t TestMetadata::MetaDataSetSource(const string &path)
+int32_t TestMetadata::MetaDataSetSource(const string &path, std::shared_ptr<AVMetadataHelper> avmetadata)
 {
     int32_t fdMetaDataSetSource = open(path.c_str(), O_RDONLY);
     if (fdMetaDataSetSource < 0) {

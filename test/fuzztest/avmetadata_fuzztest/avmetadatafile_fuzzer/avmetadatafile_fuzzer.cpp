@@ -38,9 +38,8 @@ AVMetadataFileFuzzer::~AVMetadataFileFuzzer()
 
 bool AVMetadataFileFuzzer::FuzzAVMetadataFile(uint8_t *data, size_t size)
 {
-    avmetadata = OHOS::Media::AVMetadataHelperFactory::CreateAVMetadataHelper();
+    std::shared_ptr<AVMetadataHelper> avmetadata = OHOS::Media::AVMetadataHelperFactory::CreateAVMetadataHelper();
     if (avmetadata == nullptr) {
-        avmetadata->Release();
         return false;
     }
 
@@ -52,7 +51,7 @@ bool AVMetadataFileFuzzer::FuzzAVMetadataFile(uint8_t *data, size_t size)
         return false;
     }
 
-    int32_t retMetadatasetsource = MetaDataSetSource(path);
+    int32_t retMetadatasetsource = MetaDataSetSource(path, avmetadata);
     if (retMetadatasetsource != 0) {
         avmetadata->Release();
         return true;
