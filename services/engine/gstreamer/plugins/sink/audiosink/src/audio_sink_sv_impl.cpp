@@ -229,7 +229,8 @@ int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid, uint32_t appTok
         "AudioRenderer::Create", PlayerXCollie::timerTimeout)
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     SetMuteVolumeBySysParam();
-    int32_t effectMode = DisableAudioEffectBySysParam() ? OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE :
+    OHOS::AudioStandard::AudioEffectMode effectMode = DisableAudioEffectBySysParam() ?
+        OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE :
         OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     audioRenderer_->SetAudioEffectMode(effectMode);
     MEDIA_LOGD("audioRenderer Prepare Out");
