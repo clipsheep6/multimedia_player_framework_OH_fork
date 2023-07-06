@@ -86,6 +86,8 @@ void PlayerCodecCtrl::DetectCodecSetup(const std::string &metaStr, GstElement *s
     MEDIA_LOGD("Codec Setup");
     SetupCodecCb(metaStr, src, videoSink, notifier);
     SetupCodecBufferNum(metaStr, src);
+    MEDIA_LOGI("Set isHardwareDec_ %{public}d", isHardwareDec_);
+    g_object_set(videoSink, "is-hardware-decoder", isHardwareDec_, nullptr);
 }
 
 void PlayerCodecCtrl::SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const

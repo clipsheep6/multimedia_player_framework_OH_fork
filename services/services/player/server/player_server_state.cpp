@@ -153,6 +153,8 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
 
         case INFO_TYPE_TRACK_INFO_UPDATE:
             ret = MessageTrackInfoUpdate();
+            break;
+
         default:
             break;
     }

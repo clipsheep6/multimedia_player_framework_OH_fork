@@ -653,7 +653,6 @@ export default function AVPlayerDataSrcNoSeekAPITest() {
                     let startTime = avPlayer.currentTime;
                     console.info(TAG + 'start checkSpeedTime 11,start time is :' + startTime);
                     await mediaTestBase.msleepAsync(PLAY_TIME);
-                    //checkSpeedTime(avPlayer, speedValue, startTime);
                     toNextStep(avPlayer, steps, done);
                 } else if ((err != null) && (steps[stepCount] == ERROR_EVENT)) {
                     stepCount++;

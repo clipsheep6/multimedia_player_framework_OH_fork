@@ -66,6 +66,7 @@ struct _GstProducerSurfacePool {
     guint scale_type;
     ProSurfaceNewBuffer newBuffer;
     gpointer userdata;
+    gboolean isHardwareDec;
     ProSurfaceOnDestroy onDestroy;
 };
 

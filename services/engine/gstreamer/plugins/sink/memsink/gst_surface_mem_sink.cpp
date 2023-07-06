@@ -42,6 +42,7 @@ enum {
     PROP_PERFORMANCE_MODE,
     PROP_VIDEO_SCALE_TYPE,
     PROP_VIDEO_ROTATION,
+    PROP_IS_HARDWARE_DEC,
 };
 
 static GstStaticPadTemplate g_sinktemplate = GST_STATIC_PAD_TEMPLATE("sink",
@@ -121,6 +122,10 @@ static void gst_surface_mem_sink_class_init(GstSurfaceMemSinkClass *klass)
         g_param_spec_uint("video-rotation", "Video Rotation",
             "Set video rotation for surface",
             0, G_MAXUINT, 0, (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_IS_HARDWARE_DEC,
+        g_param_spec_boolean("is-hardware-decoder", "Is Hardware Decoder", "Set Decoder Type",
+        FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     mem_sink_class->do_propose_allocation = gst_surface_mem_sink_do_propose_allocation;
     mem_sink_class->do_app_render = gst_surface_mem_sink_do_app_render;
@@ -235,6 +240,12 @@ static void gst_surface_mem_sink_set_property(GObject *object, guint propId, con
         }
         case PROP_VIDEO_ROTATION: {
             priv->rotation = g_value_get_uint(value);
+            break;
+        }
+        case PROP_IS_HARDWARE_DEC: {
+            gboolean isHardwareDec = g_value_get_boolean(value);
+            GST_INFO_OBJECT(surface_sink, "spool->isHardwareDec is %d", isHardwareDec);
+            g_object_set(G_OBJECT(priv->pool), "is-hardware-decoder", isHardwareDec, nullptr);
             break;
         }
         default:

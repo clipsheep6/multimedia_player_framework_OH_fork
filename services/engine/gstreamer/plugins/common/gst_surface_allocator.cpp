@@ -164,7 +164,7 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
     int32_t wait_time = (param.dont_wait && allocator->isCallbackMode) ? 0 : INT_MAX; // wait forever or no wait.
     OHOS::BufferRequestConfig request_config = {
         param.width, param.height, stride_alignment, param.format,
-        param.usage | BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA, wait_time
+        param.usage, wait_time
     };
     int32_t release_fence = -1;
     OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;

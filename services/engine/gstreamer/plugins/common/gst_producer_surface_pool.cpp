@@ -42,6 +42,7 @@ enum {
     PROP_DYNAMIC_BUFFER_NUM,
     PROP_CACHE_BUFFERS_NUM,
     PROP_VIDEO_SCALE_TYPE,
+    PROP_IS_HARDWARE_DEC,
 };
 
 #define GST_BUFFER_POOL_LOCK(pool)   (g_mutex_lock(&(pool)->lock))
@@ -120,6 +121,10 @@ static void gst_producer_surface_pool_class_init(GstProducerSurfacePoolClass *kl
             "Set video scale type for graphic",
             0, G_MAXUINT, 0, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobjectClass, PROP_IS_HARDWARE_DEC,
+        g_param_spec_boolean("is-hardware-decoder", "Is Hardware Decoder", "Set Decoder Type",
+        FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
     poolClass->get_options = gst_producer_surface_pool_get_options;
     poolClass->set_config = gst_producer_surface_pool_set_config;
     poolClass->start = gst_producer_surface_pool_start;
@@ -157,6 +162,7 @@ static void gst_producer_surface_pool_init(GstProducerSurfacePool *pool)
     pool->isDynamicCached = FALSE;
     pool->cachedBuffers = 0;
     pool->scale_type = 1; // VIDEO_SCALE_TYPE_FIT_CROP
+    pool->isHardwareDec = false;
     pool->newBuffer = nullptr;
     pool->userdata = nullptr;
 }
@@ -232,6 +238,13 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
         case PROP_VIDEO_SCALE_TYPE: {
             GST_BUFFER_POOL_LOCK(spool);
             spool->scale_type = g_value_get_uint(value);
+            GST_BUFFER_POOL_UNLOCK(spool);
+            break;
+        }
+        case PROP_IS_HARDWARE_DEC: {
+            GST_BUFFER_POOL_LOCK(spool);
+            spool->isHardwareDec = g_value_get_boolean(value);
+            GST_INFO_OBJECT(spool, "spool->isHardwareDec is %d", spool->isHardwareDec);
             GST_BUFFER_POOL_UNLOCK(spool);
             break;
         }
@@ -556,6 +569,16 @@ static GstFlowReturn do_alloc_memory_locked(GstProducerSurfacePool *spool,
         (params != nullptr ? ((params->flags & GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT) != 0) : TRUE),
         spool->scale_type
     };
+
+    if (spool->isHardwareDec) {
+        GST_INFO_OBJECT(spool, "Hardware Decoder enable HEBC");
+        allocParam.usage = allocParam.usage | BUFFER_USAGE_HW_TEXTURE |
+            BUFFER_USAGE_HW_COMPOSER | BUFFER_USAGE_VIDEO_DECODER;
+    } else {
+        GST_INFO_OBJECT(spool, "Software Decoder no enable HEBC");
+        allocParam.usage = allocParam.usage | BUFFER_USAGE_CPU_READ |
+            BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA;
+    }
 
     GST_DEBUG_OBJECT(spool, "do_alloc_memory_locked");
     *memory = gst_surface_allocator_alloc(spool->allocator, allocParam);
