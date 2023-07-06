@@ -23,6 +23,7 @@ import AVPlayerDataSrcSeekReliabilityTest from './AVPlayerDataSrcSeekReliability
 import AVPlayerDataSrcSeekCompatibilityTest from './AVPlayerDataSrcSeekCompatibilityTest.test.js'
 import AVPlayerLocalTest from './AVPlayerLocalTest.test.js'
 import AVPlayerLocalTestH265 from './AVPlayerLocalTesth265.test.js'
+import AVPlayerSubTitleFuncTest from './AVPlayerSubTitleFuncTest.test.js'
 
 export default function testsuite() {
   AVPlayerHlsFuncTest()
@@ -37,4 +38,5 @@ export default function testsuite() {
   AVPlayerDataSrcSeekReliabilityTest();
   AVPlayerLocalTest();
   AVPlayerLocalTestH265();
+  AVPlayerSubTitleFuncTest();
 }
