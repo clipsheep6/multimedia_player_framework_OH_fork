@@ -74,7 +74,10 @@ ohos_static_library("gst_codec_plugins_common") {
     "venc/gst_venc_mpeg4.cpp",
   ]
 
-  configs = [ ":gst_codec_plugins_common_config" ]
+  configs = [
+    "../../../../../../test:coverage_flags",
+    ":gst_codec_plugins_common_config",
+  ]
 
   deps = [
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",

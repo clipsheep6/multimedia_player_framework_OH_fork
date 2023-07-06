@@ -81,6 +81,7 @@ ohos_static_library("media_engine_gst_common") {
   ]
 
   configs = [
+    "../../../../test:coverage_flags",
     ":media_engine_gst_common_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]
@@ -157,6 +158,7 @@ ohos_static_library("media_gst_dfx") {
   ]
 
   configs = [
+    "../../../../test:coverage_flags",
     ":media_gst_dfx_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]

@@ -28,6 +28,8 @@ ohos_shared_library("media_engine_gst") {
     debug = false
   }
 
+  configs = [ "../../../test:coverage_flags" ]
+
   deps = [
     "common:media_engine_gst_common",
     "factory:media_engine_gst_factory",

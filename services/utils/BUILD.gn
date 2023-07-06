@@ -95,7 +95,10 @@ ohos_shared_library("media_service_utils") {
     "-Wunused-parameter",
   ]
 
-  configs = [ ":media_service_utils_public_config" ]
+  configs = [
+    "../../test:coverage_flags",
+    ":media_service_utils_public_config",
+  ]
 
   deps = [ "//third_party/libxml2:xml2" ]
 

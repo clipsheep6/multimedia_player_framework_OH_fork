@@ -72,6 +72,7 @@ ohos_static_library("media_engine_gst_factory") {
   sources = [ "engine_factory.cpp" ]
 
   configs = [
+    "../../../../test:coverage_flags",
     ":media_engine_gst_factory_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]

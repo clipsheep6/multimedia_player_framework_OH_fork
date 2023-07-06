@@ -96,6 +96,7 @@ ohos_shared_library("gst_codec_plugin_hdi") {
   ]
 
   configs = [
+    "../../../../../../test:coverage_flags",
     ":gst_codec_plugin_hdi_config",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
   ]
