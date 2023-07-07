@@ -49,6 +49,32 @@ void RecorderUnitTest::TearDown(void)
 }
 
 /**
+ * @tc.name: recorder_video_yuv_mpeg4
+ * @tc.desc: record video with yuv mpeg4
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetLocation_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = MPEG4;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_yuv_mpeg4.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_ERROR, g_videoRecorderConfig));
+    recorder_->Start();
+    sleep(RECORDER_TIME);
+    EXPECT_NE(MSERR_OK, recorder_->Stop(false));
+    recorder_->SetLocation(1, 1);
+    recorder_->StopBuffer(PURE_VIDEO);
+    recorder_->Reset();
+    recorder_->SetLocation(1, 1);
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
  * @tc.name: recorder_configure_001
  * @tc.desc: record with sampleRate -1
  * @tc.type: FUNC
