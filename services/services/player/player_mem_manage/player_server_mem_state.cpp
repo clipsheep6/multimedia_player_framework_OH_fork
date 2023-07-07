@@ -68,9 +68,9 @@ int32_t PlayerServerMem::MemBaseState::MemRecoverToPrepared()
     ret = playerServerMem_.SetConfigInternal();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
         "curState:%{public}s failed to SetConfigInternal", GetStateName().c_str());
-    ret = playerServerMem_.PrepareAsync();
+    ret = playerServerMem_.PrepareAsyncInner();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "curState:%{public}s failed to PrepareAsync", GetStateName().c_str());
+        "curState:%{public}s failed to PrepareAsyncInner", GetStateName().c_str());
     ret = playerServerMem_.SetBehaviorInternal();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
         "curState:%{public}s failed to SetBehaviorInternal", GetStateName().c_str());
@@ -87,9 +87,9 @@ int32_t PlayerServerMem::MemBaseState::MemRecoverToCompleted()
     ret = playerServerMem_.SetConfigInternal();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
         "curState:%{public}s failed to SetConfigInternal", GetStateName().c_str());
-    ret = playerServerMem_.PrepareAsync();
+    ret = playerServerMem_.PrepareAsyncInner();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "curState:%{public}s failed to PrepareAsync", GetStateName().c_str());
+        "curState:%{public}s failed to PrepareAsyncInner", GetStateName().c_str());
     ret = playerServerMem_.SetPlaybackSpeedInternal();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
         "curState:%{public}s failed to SetPlaybackSpeedInternal", GetStateName().c_str());
@@ -159,22 +159,6 @@ int32_t PlayerServerMem::MemPausedState::MemStateRelease()
 int32_t PlayerServerMem::MemPausedState::MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra)
 {
     playerServerMem_.RecoverToPrepared(type, extra);
-    return MSERR_OK;
-}
-
-int32_t PlayerServerMem::MemStoppedState::MemStateRecover()
-{
-    return MemRecoverToInitialized();
-}
-
-int32_t PlayerServerMem::MemStoppedState::MemStateRelease()
-{
-    return playerServerMem_.GetInformationBeforeMemReset();
-}
-
-int32_t PlayerServerMem::MemStoppedState::MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra)
-{
-    playerServerMem_.RecoverToInitialized(type, extra);
     return MSERR_OK;
 }
 

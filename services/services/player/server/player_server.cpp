@@ -972,6 +972,17 @@ bool PlayerServer::IsPrepared()
     return lastOpStatus_ == PLAYER_PREPARED;
 }
 
+bool PlayerServer::IsCompleted()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
+        MEDIA_LOGE("Can not judge IsCompleted, currentState is PLAYER_STATE_ERROR");
+        return false;
+    }
+
+    return lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE;
+}
+
 bool PlayerServer::IsLooping()
 {
     std::lock_guard<std::mutex> lock(mutex_);
