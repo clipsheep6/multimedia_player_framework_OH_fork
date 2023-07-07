@@ -151,6 +151,10 @@ int32_t HdiOutBufferMgr::CodecBufferAvailable(const OmxCodecBuffer *buffer)
                 GST_BUFFER_PTS(bufferWarp.gstBuffer) = buffer->pts;
                 MEDIA_LOGD("get from hdi, pts = %{public}" PRId64 "", buffer->pts);
             }
+            if (!firstFramePrinted && buffer->pts != 0) {
+                MEDIA_LOGI("first output buffer, pts = %{public}" PRId64 "", buffer->pts);
+                firstFramePrinted = true;
+            }
             SetFlagToBuffer(bufferWarp.gstBuffer, buffer->flag);
             mBuffers.push_back(bufferWarp);
             (void)codingBuffers_.erase(iter);

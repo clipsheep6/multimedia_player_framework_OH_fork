@@ -38,6 +38,7 @@ public:
 protected:
     void ClearmBuffers();
     std::list<GstBufferWrap> mBuffers;
+    bool firstFramePrinted = false;
 };
 } // namespace Media
 } // namespace OHOS
