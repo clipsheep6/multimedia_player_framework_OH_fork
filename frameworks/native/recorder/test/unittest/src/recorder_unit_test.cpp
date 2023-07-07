@@ -14,6 +14,7 @@
  */
 
 #include "recorder_unit_test.h"
+#include <fcntl.h>
 #include "media_errors.h"
 
 using namespace OHOS;

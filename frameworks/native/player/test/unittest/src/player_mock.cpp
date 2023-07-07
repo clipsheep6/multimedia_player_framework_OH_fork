@@ -14,6 +14,7 @@
  */
 
 #include "player_mock.h"
+#include <fcntl.h>
 #include <sys/stat.h>
 #include "media_errors.h"
 #include "transaction/rs_transaction.h"
