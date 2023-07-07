@@ -871,6 +871,11 @@ int32_t PlayerEngineGstImpl::SetAudioEffectMode(const int32_t effectMode)
     return playBinCtrler_->SetAudioEffectMode(effectMode);
 }
 
+int32_t PlayerEngineGstImpl::GetHEBCMode()
+{
+    return codecCtrl_.GetHEBCMode();
+}
+
 int32_t PlayerEngineGstImpl::SelectTrack(int32_t index)
 {
     std::unique_lock<std::mutex> lock(mutex_);

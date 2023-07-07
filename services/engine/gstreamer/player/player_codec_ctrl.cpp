@@ -85,9 +85,12 @@ void PlayerCodecCtrl::DetectCodecSetup(const std::string &metaStr, GstElement *s
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("Codec Setup");
     SetupCodecCb(metaStr, src, videoSink, notifier);
-    SetupCodecBufferNum(metaStr, src);
-    MEDIA_LOGI("Set isHardwareDec_ %{public}d", isHardwareDec_);
-    g_object_set(videoSink, "is-hardware-decoder", isHardwareDec_, nullptr);
+    if (IsFirstCodecSetup()) {
+        SetupCodecBufferNum(metaStr, videoSink);
+        MEDIA_LOGI("Set isHardwareDec_ %{public}d", isHardwareDec_);
+        g_object_set(videoSink, "is-hardware-decoder", isHardwareDec_, nullptr);
+        isHEBCMode_ = isHardwareDec_;
+    }
 }
 
 void PlayerCodecCtrl::SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const
@@ -147,6 +150,9 @@ void PlayerCodecCtrl::HlsSwichSoftAndHardCodec(GstElement *videoSink)
         g_object_set(G_OBJECT(videoSink), "max-pool-capacity", MAX_SOFT_BUFFERS, nullptr);
         g_object_set(G_OBJECT(videoSink), "cache-buffers-num", DEFAULT_CACHE_BUFFERS, nullptr);
     }
+    MEDIA_LOGI("Set isHardwareDec_ %{public}d", codecTypeList_.front());
+    g_object_set(videoSink, "is-hardware-decoder", codecTypeList_.front(), nullptr);
+    isHEBCMode_ = codecTypeList_.front();
     g_object_set(G_OBJECT(videoSink), "caps", caps, nullptr);
     gst_caps_unref(caps);
 }
@@ -160,6 +166,16 @@ void PlayerCodecCtrl::EnhanceSeekPerformance(bool enable)
             g_object_set(it.first, "seeking", enable, nullptr);
         }
     }
+}
+
+int32_t PlayerCodecCtrl::GetHEBCMode()
+{
+    return isHEBCMode_;
+}
+
+bool PlayerCodecCtrl::IsFirstCodecSetup()
+{
+    return codecTypeList_.size() == 1;
 }
 } // Media
 } // OHOS

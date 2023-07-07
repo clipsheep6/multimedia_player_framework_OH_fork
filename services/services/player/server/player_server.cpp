@@ -1154,6 +1154,9 @@ int32_t PlayerServer::DumpInfo(int32_t fd)
     dumpString += "PlayerServer left volume and right volume is: " +
         std::to_string(config_.leftVolume) + ", " + std::to_string(config_.rightVolume) + "\n";
     dumpString += "PlayerServer audio effect mode is: " + std::to_string(config_.effectMode) + "\n";
+    if (playerEngine_ != nullptr) {
+        dumpString += "PlayerServer enable HEBC: " + std::to_string(playerEngine_->GetHEBCMode()) + "\n";
+    }
 
     std::vector<Format> videoTrack;
     (void)GetVideoTrackInfo(videoTrack);
