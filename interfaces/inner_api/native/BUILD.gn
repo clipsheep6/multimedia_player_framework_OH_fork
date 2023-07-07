@@ -46,6 +46,8 @@ config("media_client_ipc_config") {
     "$MEDIA_ROOT_DIR/services/services/avcodeclist/ipc",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/client",
     "$MEDIA_ROOT_DIR/services/services/recorder_profiles/ipc",
+    "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc",
+    "$MEDIA_ROOT_DIR/services/services/screen_capture/client",
   ]
 }
 
@@ -56,6 +58,7 @@ config("media_client_base_config") {
     "$MEDIA_ROOT_DIR/services/utils/include",
     "//utils/system/safwk/native/include",
     "//commonlibrary/c_utils/base/include",
+    "$MEDIA_PLAYER_GRAPHIC/frameworks/surface/include",
   ]
 
   cflags = [
@@ -152,6 +155,14 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/client/avmetadatahelper_client.cpp",
       "$MEDIA_ROOT_DIR/services/services/avmetadatahelper/ipc/avmetadatahelper_service_proxy.cpp",
+    ]
+  }
+  if (multimedia_player_framework_support_screen_capture) {
+    sources += [
+      "$MEDIA_ROOT_DIR/frameworks/native/screen_capture/screen_capture_impl.cpp",
+      "$MEDIA_ROOT_DIR/services/services/screen_capture/client/screen_capture_client.cpp",
+      "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_listener_stub.cpp",
+      "$MEDIA_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_service_proxy.cpp",
     ]
   }
 
