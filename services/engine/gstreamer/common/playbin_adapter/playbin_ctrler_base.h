@@ -48,17 +48,16 @@ public:
     virtual ~PlayBinCtrlerBase();
 
     int32_t Init();
+    bool EnableBufferingBySysParam() const;
     int32_t SetSource(const std::string &url)  override;
     int32_t SetSource(const std::shared_ptr<GstAppsrcEngine> &appsrcWrap) override;
     int32_t AddSubSource(const std::string &url) override;
-    int32_t Prepare() override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause() override;
     int32_t Seek(int64_t timeUs, int32_t seekOption) override;
     int32_t Stop(bool needWait) override;
     int32_t SetRate(double rate) override;
-    double GetRate() override;
     int64_t QueryPosition() override;
     int32_t SetLoop(bool loop) override;
     void SetVolume(const float &leftVolume, const float &rightVolume) override;
@@ -120,11 +119,9 @@ private:
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
         const uint32_t hintType, gpointer userData);
     static void OnAudioSegmentEventCb(const GstElement *audioSink, gpointer userData);
-    static void OnAudioStateEventCb(const GstElement *audioSink, const uint32_t audioState, gpointer userData);
     static void OnIsLiveStream(const GstElement *demux, gboolean isLiveStream, gpointer userData);
     static void AudioChanged(const GstElement *playbin, gpointer userData);
     void SetupInterruptEventCb();
-    void SetupAudioStateEventCb();
     void SetupAudioSegmentEventCb();
     void OnElementSetup(GstElement &elem);
     void OnElementUnSetup(GstElement &elem);

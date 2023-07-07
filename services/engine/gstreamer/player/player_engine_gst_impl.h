@@ -40,7 +40,6 @@ public:
     int32_t AddSubSource(const std::string &url) override;
     int32_t SetObs(const std::weak_ptr<IPlayerEngineObs> &obs) override;
     int32_t SetVideoSurface(sptr<Surface> surface) override;
-    int32_t Prepare() override;
     int32_t PrepareAsync() override;
     int32_t Play() override;
     int32_t Pause() override;
@@ -100,7 +99,6 @@ private:
     void HandleTrackInfoUpdate(const PlayBinMessage &msg);
     void HandleAudioMessage(const PlayBinMessage &msg);
     void HandleInterruptMessage(const PlayBinMessage &msg);
-    void HandleAudioStateMessage(const PlayBinMessage &msg);
     void HandlePositionUpdateMessage(const PlayBinMessage &msg);
     void HandleSubtitleUpdate(const PlayBinMessage &msg);
     void HandleTrackChanged(const PlayBinMessage &msg);

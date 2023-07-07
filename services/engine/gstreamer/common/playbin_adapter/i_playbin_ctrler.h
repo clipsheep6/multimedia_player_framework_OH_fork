@@ -59,14 +59,12 @@ public:
     virtual int32_t SetSource(const std::string &url) = 0;
     virtual int32_t SetSource(const std::shared_ptr<GstAppsrcEngine> &appsrcWrap) = 0;
     virtual int32_t AddSubSource(const std::string &url) = 0;
-    virtual int32_t Prepare() = 0; // sync
     virtual int32_t PrepareAsync() = 0; // async
     virtual int32_t Play() = 0; // async
     virtual int32_t Pause() = 0; // async
     virtual int32_t Seek(int64_t timeUs, int32_t seekOption) = 0; // async
     virtual int32_t Stop(bool needWait) = 0; // async
     virtual int32_t SetRate(double rate) = 0;
-    virtual double GetRate() = 0;
     virtual int32_t SetLoop(bool loop) = 0;
     virtual void SetVolume(const float &leftVolume, const float &rightVolume) = 0;
     virtual int32_t SelectBitRate(uint32_t bitRate) = 0;
