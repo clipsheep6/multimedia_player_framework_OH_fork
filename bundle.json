@@ -123,6 +123,18 @@
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native/audio_ringtone/include"
             }
+          },
+          {
+            "type": "so",
+            "name": "//foundation/multimedia/player_framework/interfaces/kits/c:native_avscreen_capture",
+            "header": {
+              "header_files": [
+                "native_avscreen_capture_base.h",
+                "native_avscreen_capture_errors.h",
+                "native_avscreen_capture.h"
+              ],
+              "header_base": "//foundation/multimedia/player_framework/interfaces/kits/c/"
+            }
           }
         ],
         "test": [
