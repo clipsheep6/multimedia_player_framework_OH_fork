@@ -80,16 +80,14 @@ PlayerListenerCallback::~PlayerListenerCallback()
 void PlayerListenerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     MEDIA_LOGE("player callback onError, errorCode: %{public}d, errorMsg: %{public}s", errorCode, errorMsg.c_str());
-    if (listener_ != nullptr) {
-        listener_->OnError(errorCode, errorMsg);
-    }
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnError(errorCode, errorMsg);
 }
 
 void PlayerListenerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    if (listener_ != nullptr) {
-        listener_->OnInfo(type, extra, infoBody);
-    }
+    CHECK_AND_RETURN(listener_ != nullptr);
+    listener_->OnInfo(type, extra, infoBody);
 }
 
 int32_t PlayerListenerProxy::SendRequest(uint32_t code, MessageParcel &data,

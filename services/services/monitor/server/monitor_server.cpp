@@ -124,9 +124,7 @@ int32_t MonitorServer::EnableMonitor(int32_t pid)
     }
 
     // Start Thread
-    if (thread_ == nullptr) {
-        thread_ = std::make_unique<std::thread>(&MonitorServer::MonitorThread, this);
-    }
+    thread_ = std::make_unique<std::thread>(&MonitorServer::MonitorThread, this);
 
     return MSERR_OK;
 }

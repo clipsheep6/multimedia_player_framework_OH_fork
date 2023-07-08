@@ -142,10 +142,8 @@ int PlayerServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Messa
 {
     MediaTrace trace("binder::OnRemoteRequest");
     auto remoteDescriptor = data.ReadInterfaceToken();
-    if (PlayerServiceStub::GetDescriptor() != remoteDescriptor) {
-        MEDIA_LOGE("Invalid descriptor");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(PlayerServiceStub::GetDescriptor() == remoteDescriptor,
+        MSERR_INVALID_OPERATION, "Invalid descriptor");
 
     auto itFunc = playerFuncs_.find(code);
     if (itFunc != playerFuncs_.end()) {
@@ -426,9 +424,8 @@ int32_t PlayerServiceStub::DoIpcAbnormality()
         CHECK_AND_RETURN_RET_LOG(IsPlaying(), static_cast<int>(MSERR_INVALID_OPERATION), "Not in playback state");
         auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
         int32_t ret = playerServer->BackGroundChangeState(PlayerStates::PLAYER_PAUSED, false);
-        if (ret == MSERR_OK) {
-            SetIpcAlarmedFlag();
-        }
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "DoIpcAbnormality End.");
+        SetIpcAlarmedFlag();
         MEDIA_LOGI("DoIpcAbnormality End.");
         return ret;
     });
@@ -445,9 +442,8 @@ int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
             MEDIA_LOGI("DoIpcRecovery.");
             auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
             int32_t ret = playerServer->BackGroundChangeState(PlayerStates::PLAYER_STARTED, false);
-            if (ret == MSERR_OK || ret == MSERR_INVALID_OPERATION) {
-                UnSetIpcAlarmedFlag();
-            }
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK || ret == MSERR_INVALID_OPERATION, ret, "Failed to ChangeState");
+            UnSetIpcAlarmedFlag();
             MEDIA_LOGI("DoIpcRecovery End.");
             return ret;
         });
@@ -455,9 +451,8 @@ int32_t PlayerServiceStub::DoIpcRecovery(bool fromMonitor)
     } else {
         auto playerServer = std::static_pointer_cast<PlayerServer>(playerServer_);
         int32_t ret = playerServer->BackGroundChangeState(PlayerStates::PLAYER_STARTED, false);
-        if (ret == MSERR_OK || ret == MSERR_INVALID_OPERATION) {
-            UnSetIpcAlarmedFlag();
-        }
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK || ret == MSERR_INVALID_OPERATION, ret, "Failed to ChangeState");
+        UnSetIpcAlarmedFlag();
     }
     return MSERR_OK;
 }
