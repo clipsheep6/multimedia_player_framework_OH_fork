@@ -34,7 +34,8 @@ static bool IsInnerRange(uint32_t srcA, uint32_t endA, uint32_t srcB, uint32_t e
     if (srcA < endA) {
         return srcB < endB && srcB >= srcA && endB <= endA;
     } else {
-        return (srcB >= srcA && endB >= srcA) || (srcB <= endA && endB <= endA) || (srcB >= srcA && endB <= endA);
+        return (srcB < endB && srcB >= srcA && endB >= srcA) || (srcB < endB && srcB <= endA && endB <= endA) ||
+            (srcB >= srcA && endB <= endA);
     }
 }
 
@@ -164,14 +165,13 @@ void AppsrcMemory::SeekAndChangePos(uint64_t pos)
 {
     MEDIA_LOGD("Enter SeekAndChangePos");
     pushOffset_ = pos;
-    bool hasUnreturnedBuffer = (end_ + 1) % bufferSize_ != availableBegin_ ? true : false;
-    uint32_t unusedBufferEnd;
+    bool hasUnreturnedBuffer = (((end_ + 1) % bufferSize_) != availableBegin_) ? true : false;
     uint32_t availableSize = GetAvailableSize();
     // Check availableBuffer is Successive and seek location is cached
     if ((IsMemSuccessive() || noFreeBuffer_) && filePos_ - availableSize <= pos && filePos_ >= pos) {
         // if availableBuffer is Successive and seek location is cached, Adjust end_ according to hasUnreturnedBuffer
         if (hasUnreturnedBuffer) {
-            unusedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
+            uint32_t unusedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
             MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unusedBufferEnd);
             PushUnusedBuffers({availableBegin_, unusedBufferEnd});
             availableBegin_ = begin_ - (filePos_ - pos);
@@ -183,7 +183,7 @@ void AppsrcMemory::SeekAndChangePos(uint64_t pos)
     } else if (filePos_ - availableSize <= pos && filePos_ >= pos) {
         // seek location is cached
         if (hasUnreturnedBuffer) {
-            unusedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
+            uint32_t unusedBufferEnd = (availableBegin_ + availableSize - (filePos_ - pos)) % bufferSize_;
             MEDIA_LOGD("unusedBuffers push begin: %{public}u, end: %{public}u", availableBegin_, unusedBufferEnd);
             PushUnusedBuffers({availableBegin_, unusedBufferEnd});
             availableBegin_ = ((begin_ + bufferSize_) - (filePos_ - pos)) % bufferSize_;
@@ -257,8 +257,6 @@ bool AppsrcMemory::FreeBufferAndChangePos(uint32_t offset, uint32_t length, bool
 bool AppsrcMemory::CopyBufferAndChangePos(std::shared_ptr<AppsrcMemory> &mem)
 {
     MEDIA_LOGD("Enter CopyBufferAndChangePos");
-    errno_t rc;
-    uint32_t copySize;
     uint8_t *dstBase = std::static_pointer_cast<AVDataSrcMemory>(mem_)->GetInnerBase();
     uint8_t *srcBase = std::static_pointer_cast<AVDataSrcMemory>(mem->GetMem())->GetInnerBase();
     uint32_t size = mem->GetBufferSize();
@@ -266,12 +264,12 @@ bool AppsrcMemory::CopyBufferAndChangePos(std::shared_ptr<AppsrcMemory> &mem)
     uint32_t availableSize = mem->GetAvailableSize();
     if (availableSize && mem->IsMemSuccessive()) {
         MEDIA_LOGD("Copy buffer, and buffer size is: %{public}u", availableSize);
-        rc = memcpy_s(dstBase, availableSize, srcBase + copyBegin, availableSize);
+        errno_t rc = memcpy_s(dstBase, availableSize, srcBase + copyBegin, availableSize);
         CHECK_AND_RETURN_RET_LOG(rc == EOK, false, "get mem is failed");
     } else if (availableSize) {
-        copySize = size - copyBegin;
+        uint32_t copySize = size - copyBegin;
         MEDIA_LOGD("Copy buffer, and buffer size is: %{public}u", copySize);
-        rc = memcpy_s(dstBase, copySize, srcBase + copyBegin, copySize);
+        errno_t rc = memcpy_s(dstBase, copySize, srcBase + copyBegin, copySize);
         CHECK_AND_RETURN_RET_LOG(rc == EOK, false, "get mem is failed");
         dstBase += copySize;
         copySize = availableSize - (size - copyBegin);

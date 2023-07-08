@@ -64,17 +64,17 @@ void AVsessionBackground::AddListener(std::weak_ptr<IPlayerService> player, int3
     // clean map/list from listener list/map
     for (auto it1 = playerMap_.begin(); it1 != playerMap_.end();) {
         std::list<std::weak_ptr<IPlayerService>> &playerList = it1->second;
+        for (auto it2 = playerList.begin(); it2 != playerList.end();) {
+            std::weak_ptr<IPlayerService> &temp = *it2;
+            if (temp.lock() == nullptr) {
+                it2 = playerList.erase(it2);
+            } else {
+                ++it2;
+            }
+        }
         if (playerList.empty()) {
             it1 = playerMap_.erase(it1);
         } else {
-            for (auto it2 = playerList.begin(); it2 != playerList.end();) {
-                std::weak_ptr<IPlayerService> &temp = *it2;
-                if (temp.lock() == nullptr) {
-                    it2 = playerList.erase(it2);
-                } else {
-                    ++it2;
-                }
-            }
             ++it1;
         }
     }
