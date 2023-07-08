@@ -1711,7 +1711,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_001, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1736,7 +1736,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_002, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1759,7 +1759,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_003, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1784,7 +1784,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_004, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1828,7 +1828,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_005, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1852,7 +1852,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_006, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1883,7 +1883,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_007, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     std::vector<PlaybackRateMode> speedMode = {SPEED_FORWARD_2_00_X, SPEED_FORWARD_1_25_X};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
@@ -1909,7 +1909,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_008, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1937,7 +1937,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_009, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1962,7 +1962,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_010, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -1986,7 +1986,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_011, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -2010,7 +2010,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_012, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -2034,7 +2034,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_013, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_MP3.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_MP3.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -2060,7 +2060,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_014, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_AAC.mkv"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_AAC.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
@@ -2085,7 +2085,7 @@ HWTEST_F(PlayerUnitTest, Player_Mem_Recycle_015, TestSize.Level0)
 {
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
-    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", HTTP_ROOT + "H264_AAC.mp4"};
+    std::vector<std::string> srcVec = {MEDIA_ROOT + "MPEG4_MP3.mp4", MEDIA_ROOT + "H264_AAC.mp4"};
     for (int32_t i = 0; i < srcVec.size(); i++) {
         ASSERT_EQ(MSERR_OK, player_->SetSource(srcVec[i]));
         EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));

@@ -63,6 +63,8 @@ static void gst_vdec_base_post_resolution_changed_message(GstVdecBase *self);
 static void gst_vdec_base_set_flushing(GstVdecBase *self, const gboolean flushing);
 static gboolean gst_vdec_base_allocate_in_buffers(GstVdecBase *self);
 static gboolean gst_vdec_base_allocate_out_buffers(GstVdecBase *self);
+static GstBufferPool *gst_vdec_base_new_in_shmem_pool(GstVdecBase *self, GstCaps *outcaps, gint size,
+    guint min_buffer_cnt, guint max_buffer_cnt);
 
 enum {
     PROP_0,
@@ -209,6 +211,17 @@ static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
         if (self->outpool) {
             g_return_val_if_fail(gst_buffer_pool_set_active(self->outpool, FALSE), FALSE);
         }
+
+        if (self->input.allocator) {
+            gst_object_unref(self->input.allocator);
+            self->input.allocator = nullptr;
+        }
+        if (self->inpool) {
+            g_return_val_if_fail(gst_buffer_pool_set_active(self->inpool, FALSE), FALSE);
+            gst_object_unref(self->inpool);
+            self->inpool = nullptr;
+            self->input.av_shmem_pool = nullptr;
+        }
         ret = self->decoder->FreeInputBuffers();
         g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "FreeInput", TRUE), FALSE);
         ret = self->decoder->FreeOutputBuffers();
@@ -223,6 +236,12 @@ static gboolean gst_vdec_base_recover_codec_buffers(GstVdecBase *self)
 {
     g_return_val_if_fail(self != nullptr, FALSE);
     if (self->is_free_codec_buffers) {
+        self->input.allocator = gst_shmem_allocator_new();
+        self->inpool = gst_vdec_base_new_in_shmem_pool(self, self->input_state->caps, self->input.buffer_size,
+            self->input.buffer_cnt, self->input.buffer_cnt);
+        g_return_val_if_fail(self->inpool != nullptr, FALSE);
+        g_return_val_if_fail(gst_buffer_pool_set_active(self->inpool, TRUE), FALSE);
+
         if (self->outpool) {
             self->decoder->SetOutputPool(self->outpool);
             g_return_val_if_fail(gst_buffer_pool_set_active(self->outpool, TRUE), FALSE);

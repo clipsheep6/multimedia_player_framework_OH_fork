@@ -38,7 +38,6 @@ const std::string HTTPS_PLAY = "HTTPS";
 const std::string HTTP_PLAY = "HTTP";
 const std::string LOCAL_PLAY = "LOCAL";
 const std::string HLS_PLAY = "HLS";
-const std::string HTTP_ROOT = "http://121.37.18.123:8081/";
 const std::string INVALID_FILE = MEDIA_ROOT + "invalid.mp4";
 } // namespace PlayerTestParam
 

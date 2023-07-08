@@ -907,7 +907,6 @@ void PlayerServerMem::ResetFrontGroundForMemManage()
     std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<
         std::chrono::duration<double>>(std::chrono::steady_clock::now() - lastestUserSetTime_);
     if (lastSetToNow.count() > APP_FRONT_GROUND_DESTROY_MEMERY_LAST_SET_TIME) {
-        MEDIA_LOGI("From lastest set to now duration: %{public}f greater than threshold value", lastSetToNow.count());
         ReleaseMemByManage();
     }
 }
@@ -928,7 +927,6 @@ void PlayerServerMem::ResetBackGroundForMemManage()
     std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<
         std::chrono::duration<double>>(std::chrono::steady_clock::now() - lastestUserSetTime_);
     if (lastSetToNow.count() > APP_BACK_GROUND_DESTROY_MEMERY_LAST_SET_TIME) {
-        MEDIA_LOGI("From lastest set to now duration: %{public}f greater than threshold value", lastSetToNow.count());
         ReleaseMemByManage();
     }
 }
