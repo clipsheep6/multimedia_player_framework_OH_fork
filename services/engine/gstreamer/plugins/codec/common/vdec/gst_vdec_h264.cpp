@@ -289,6 +289,7 @@ static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame
     g_return_val_if_fail(gst_buffer_map(frame->input_buffer, &info, GST_MAP_READ), false);
     ON_SCOPE_EXIT(0) { gst_buffer_unmap(frame->input_buffer, &info); };
 
+    GstVdecH264 *vdec_h264 = GST_VDEC_H264(base);
     guint8 offset = 2; // data[i] and data[i+1]
     for (gsize i = 0; i < info.size - offset; i++) {
         if (info.data[i] == 0x01) {
@@ -300,9 +301,14 @@ static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame
                 // 0x1F is the mask of last 5 bits, 0x06 is SEI flag
                 GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SEI frame");
                 return false;
-            } else if ((info.data[i + 1] & 0x1F) == 0x07) {
+            } else if ((info.data[i + 1] & 0x1F) == 0x07 && vdec_h264->has_data_after_sps == true) {
                 // 0x1F is the mask of last 5 bits, 0x07 is SPS flag
                 GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SPS frame");
+                return false;
+            } else if ((info.data[i + 1] & 0x1F) == 0x07 && vdec_h264->has_data_after_sps == false) {
+                // For special packet sequences: sps frame, pps frame, sps-pps-I frame
+                GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv IDR frame which contains sps header");
+                base->idrframe = true;
                 return false;
             } else if ((info.data[i + 1] & 0x1F) == 0x08) {
                 // 0x1F is the mask of last 5 bits, 0x08 is PPS flag
