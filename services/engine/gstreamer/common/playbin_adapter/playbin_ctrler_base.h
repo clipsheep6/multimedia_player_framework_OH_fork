@@ -143,6 +143,7 @@ private:
     void HandleCacheCtrlWhenBuffering(int32_t percent);
     void OnAdaptiveElementSetup(GstElement &elem);
     void OnAudioChanged();
+    void OnSubtitleChanged();
     void ReportTrackChange();
     void OnTrackDone();
     void OnError(int32_t errorCode, std::string message);
@@ -213,6 +214,7 @@ private:
     bool isTrackChanging_ = false;
     int32_t trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
     int32_t audioIndex_ = -1;
+    bool hasSubtitleTrackSelected_ = true;
 
     std::atomic<bool> isDuration_ = false;
     std::atomic<bool> enableLooping_ = false;

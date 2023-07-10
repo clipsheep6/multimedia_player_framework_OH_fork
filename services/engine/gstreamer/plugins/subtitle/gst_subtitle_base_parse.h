@@ -103,6 +103,7 @@ typedef struct {
     gint pad_num;
     gboolean seek_snap_after;
     gboolean switching;
+    gboolean has_send_stream_start;
     GMutex buffermutex;
     GMutex segmentmutex;
     GMutex pushmutex;

@@ -915,8 +915,8 @@ napi_value AVPlayerNapi::JsAddSubtitleUrl(napi_env env, napi_callback_info info)
     }
 
     // get subUrl from js
-    jsPlayer->subUrl_ = CommonNapi::GetStringArgument(env, args[0]);
-    jsPlayer->AddSubSource(jsPlayer->subUrl_);
+    std::string subUrl = CommonNapi::GetStringArgument(env, args[0]);
+    jsPlayer->AddSubSource(subUrl);
 
     MEDIA_LOGI("JsAddSubtitleUrl Out");
     return result;
@@ -945,17 +945,17 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
         return result;
     }
 
-    if (!CommonNapi::GetFdArgument(env, args[0], jsPlayer->subFileDescriptor_)) {
+    struct AVFileDescriptor playerFd;
+    if (!CommonNapi::GetFdArgument(env, args[0], playerFd)) {
         MEDIA_LOGE("get fileDescriptor argument failed!");
         jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
             "invalid parameters, please check the input parameters(fileDescriptor)");
         return result;
     }
 
-    auto task = std::make_shared<TaskHandler<void>>([jsPlayer]() {
+    auto task = std::make_shared<TaskHandler<void>>([jsPlayer, playerFd]() {
         MEDIA_LOGI("AddSubtitleAVFileDescriptor Task");
         if (jsPlayer->player_ != nullptr) {
-            auto playerFd = jsPlayer->subFileDescriptor_;
             if (jsPlayer->player_->AddSubSource(playerFd.fd, playerFd.offset, playerFd.length) != MSERR_OK) {
                 jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to AddSubtitleAVFileDescriptor");
             }
@@ -2149,10 +2149,6 @@ void AVPlayerNapi::ResetUserParameters()
     url_.clear();
     fileDescriptor_.fd = 0;
     fileDescriptor_.offset = 0;
-    fileDescriptor_.length = -1;
-    subUrl_.clear();
-    subFileDescriptor_.fd = 0;
-    subFileDescriptor_.offset = 0;
     fileDescriptor_.length = -1;
     width_ = 0;
     height_ = 0;

@@ -27,6 +27,7 @@ gboolean handle_first_frame(GstPad *sinkpad, GstBuffer *buf, GstSubtitleBasePars
 GstSubtitleStream *gst_subtitle_get_stream(GstSubtitleBaseParse *base_parse, const GstSubtitleInfo *info);
 gboolean get_subtitle_streams(const GstSubtitleBaseParseClass *baseclass,
     GstBuffer *buf, GstSubtitleBaseParse *self);
+void gst_subtitle_push_stream_start_event(GstSubtitleBaseParse *base_parse);
 gboolean gst_subtitle_set_caps(GstSubtitleBaseParse *base_parse);
 gboolean gst_subtitle_set_tags(GstSubtitleBaseParse *base_parse);
 gboolean chain_set_caps_and_tags(GstSubtitleBaseParse *self);

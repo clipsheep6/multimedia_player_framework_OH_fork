@@ -526,6 +526,7 @@ int32_t PlayerEngineGstImpl::PlayBinCtrlerInit()
     subMsgHandler_[PLAYBIN_SUB_MSG_BITRATE_COLLECT] = &PlayerEngineGstImpl::HandleBitRateCollect;
     subMsgHandler_[PLAYBIN_SUB_MSG_IS_LIVE_STREAM] = &PlayerEngineGstImpl::HandleIsLiveStream;
     subMsgHandler_[PLAYBIN_SUB_MSG_AUDIO_CHANGED] = &PlayerEngineGstImpl::HandleTrackChanged;
+    subMsgHandler_[PLAYBIN_SUB_MSG_SUBTITLE_CHANGED] = &PlayerEngineGstImpl::HandleTrackChanged;
     subMsgHandler_[PLAYBIN_SUB_MSG_DEFAULE_TRACK] = &PlayerEngineGstImpl::HandleDefaultTrack;
     subMsgHandler_[PLAYBIN_SUB_MSG_TRACK_DONE] = &PlayerEngineGstImpl::HandleTrackDone;
     subMsgHandler_[PLAYBIN_SUB_MSG_ONERROR] = &PlayerEngineGstImpl::HandleOnError;

@@ -310,8 +310,6 @@ private:
     std::string url_ = "";
     struct AVFileDescriptor fileDescriptor_;
     struct AVDataSrcDescriptor dataSrcDescriptor_;
-    std::string subUrl_ = "";
-    struct AVFileDescriptor subFileDescriptor_;
     std::string surface_ = "";
     bool loop_ = false;
     int32_t videoScaleType_ = 0;

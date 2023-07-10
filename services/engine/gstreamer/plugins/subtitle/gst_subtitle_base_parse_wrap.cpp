@@ -102,6 +102,37 @@ static gboolean src_event_seek_event(const GstSubtitleBaseParseClass *baseclass,
     return TRUE;
 }
 
+static GstSubtitleStream *gst_subtitle_base_parse_get_stream_by_pad(const GstSubtitleBaseParse *self,
+    const GstPad *pad)
+{
+    GstSubtitleStream *stream = nullptr;
+    gint index = 0;
+
+    while (index < self->stream_num) {
+        if (pad == self->streams[index]->pad) {
+            stream = self->streams[index];
+            break;
+        }
+        index++;
+    }
+
+    return stream;
+}
+
+static void gst_subtitle_base_parse_switch_stream(GstSubtitleBaseParse *self, const GstPad *pad, gboolean active)
+{
+    g_return_if_fail(self != nullptr && pad != nullptr);
+
+    GstSubtitleBaseParseClass *baseclass = GST_SUBTITLE_BASE_PARSE_GET_CLASS(self);
+    g_return_if_fail(baseclass != nullptr);
+
+    GstSubtitleStream *stream = gst_subtitle_base_parse_get_stream_by_pad(self, pad);
+    g_return_if_fail(stream != nullptr);
+
+    stream->active = active;
+    GST_INFO_OBJECT(self, "stream->stream_id: %d, active: %d", stream->stream_id, active);
+}
+
 static gboolean gst_subtitle_base_parse_src_event(GstPad *pad, GstObject *parent, GstEvent *event)
 {
     g_return_val_if_fail((pad != nullptr) && (parent != nullptr) && (event != nullptr), FALSE);
@@ -121,6 +152,29 @@ static gboolean gst_subtitle_base_parse_src_event(GstPad *pad, GstObject *parent
             ret = src_event_seek_event(baseclass, self, event);
             gst_event_unref(event);
             event = nullptr;
+            break;
+        }
+        case GST_EVENT_CUSTOM_UPSTREAM: {
+            gboolean active = FALSE;
+
+            const GstStructure *structure = gst_event_get_structure(event);
+            if (structure == nullptr) {
+                gst_event_unref(event);
+                break;
+            }
+
+            if (strcmp(gst_structure_get_name(structure), "select-stream") == 0) {
+                if (!gst_structure_get_boolean(structure, "activity", &active)) {
+                    active = TRUE;
+                }
+
+                gst_subtitle_base_parse_switch_stream(self, pad, active);
+                self->switching = TRUE;
+                ret = TRUE;
+                gst_event_unref(event);
+            } else {
+                ret = gst_pad_event_default(pad, parent, event);
+            }
             break;
         }
         default: {
@@ -808,6 +862,34 @@ gboolean get_subtitle_streams(const GstSubtitleBaseParseClass *baseclass,
     }
 
     return TRUE;
+}
+
+void gst_subtitle_push_stream_start_event(GstSubtitleBaseParse *base_parse)
+{
+    g_return_if_fail(base_parse != nullptr);
+    g_return_if_fail(base_parse->stream_num != 0);
+
+    gint i;
+    for (i = 0; i < base_parse->stream_num; i++) {
+        g_return_if_fail(base_parse->streams[i] != nullptr);
+
+        gchar *stream_name = g_strdup_printf("%s_stream%d", GST_ELEMENT_NAME(base_parse), i);
+        GstEvent *event = gst_event_new_stream_start(stream_name);
+        if (event == nullptr) {
+            GST_ERROR_OBJECT(base_parse, "new event stream start for streams[%d] failed", i);
+            g_free(stream_name);
+            return;
+        }
+        const gchar *event_name = gst_event_type_get_name(GST_EVENT_TYPE(event));
+        GST_DEBUG_OBJECT(base_parse, "pushing event %s on pad %s",
+            event_name, GST_PAD_NAME(base_parse->streams[i]->pad));
+
+        if (!gst_pad_push_event(base_parse->streams[i]->pad, event)) {
+            GST_ERROR_OBJECT(base_parse, "pad %s send event %s failed", GST_PAD_NAME(base_parse->streams[i]->pad),
+                event_name);
+        }
+        g_free(stream_name);
+    }
 }
 
 gboolean gst_subtitle_set_caps(GstSubtitleBaseParse *base_parse)

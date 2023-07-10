@@ -2447,5 +2447,31 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_003, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_2_SEC, SEEK_CLOSEST));
     EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText(SUBTITLE_2_SEC));
 }
+
+/**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_004
+ * @tc.desc  : Test Player AddSubSource behavior
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
+{
+    int32_t index = -1;
+    bool trackChange = false;
+    int32_t duration = 0;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->GetCurrentTrack(2, index)); // get current subtitle track
+    EXPECT_EQ(MSERR_OK, player_->DeselectTrack(index, trackChange));
+    EXPECT_EQ(trackChange, true);
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ("", player_->GetSubtitleText(""));
+    EXPECT_EQ(MSERR_OK, player_->Release());
+}
 } // namespace Media
 } // namespace OHOS

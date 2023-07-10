@@ -894,6 +894,18 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
         trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
         SeekInternal(seekPos_, IPlayBinCtrler::PlayBinSeekMode::CLOSET_SYNC);
         CANCEL_SCOPE_EXIT_GUARD(0);
+    } else if (trackType == MediaType::MEDIA_TYPE_SUBTITLE) {
+        int32_t currentIndex = -1;
+        g_object_get(playbin_, "current-text", &currentIndex, nullptr);
+        CHECK_AND_RETURN_RET((!hasSubtitleTrackSelected_ || innerIndex != currentIndex),
+            (OnError(MSERR_OK, "This track has already been selected!"), MSERR_OK));
+
+        g_object_set(playbin_, "current-text", innerIndex, nullptr);
+        hasSubtitleTrackSelected_ = true;
+        g_object_set(subtitleSink_, "enable-display", hasSubtitleTrackSelected_, nullptr);
+        isTrackChanging_ = true;
+        trackChangeType_ = MediaType::MEDIA_TYPE_SUBTITLE;
+        CANCEL_SCOPE_EXIT_GUARD(0);
     } else {
         OnError(MSERR_INVALID_VAL, "The track type does not support this operation!");
         return MSERR_INVALID_OPERATION;
@@ -915,7 +927,7 @@ int32_t PlayBinCtrlerBase::DeselectTrack(int32_t index)
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (OnError(ret, "Invalid track index!"), ret));
     CHECK_AND_RETURN_RET(innerIndex >= 0,
         (OnError(MSERR_INVALID_OPERATION, "This track has not been selected yet!"), MSERR_INVALID_OPERATION));
-    
+
     if (trackType == MediaType::MEDIA_TYPE_AUD) {
         ret = MSERR_INVALID_OPERATION;
         CHECK_AND_RETURN_RET(GetCurrState() == preparedState_,
@@ -934,6 +946,18 @@ int32_t PlayBinCtrlerBase::DeselectTrack(int32_t index)
         isTrackChanging_ = true;
         trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
         SeekInternal(seekPos_, IPlayBinCtrler::PlayBinSeekMode::CLOSET_SYNC);
+        CANCEL_SCOPE_EXIT_GUARD(0);
+    } else if (trackType == MediaType::MEDIA_TYPE_SUBTITLE) {
+        ret = MSERR_INVALID_OPERATION;
+        int32_t currentIndex = -1;
+        g_object_get(playbin_, "current-text", &currentIndex, nullptr);
+        CHECK_AND_RETURN_RET((hasSubtitleTrackSelected_ && innerIndex == currentIndex),
+            (OnError(ret, "This track has not been selected yet!"), ret));
+
+        hasSubtitleTrackSelected_ = false;
+        g_object_set(subtitleSink_, "enable-display", hasSubtitleTrackSelected_, nullptr);
+        trackChangeType_ = MediaType::MEDIA_TYPE_SUBTITLE;
+        ReportTrackChange();
         CANCEL_SCOPE_EXIT_GUARD(0);
     } else {
         OnError(MSERR_INVALID_VAL, "The track type does not support this operation!");
@@ -958,7 +982,11 @@ int32_t PlayBinCtrlerBase::GetCurrentTrack(int32_t trackType, int32_t &index)
     } else if (trackType == MediaType::MEDIA_TYPE_VID) {
         g_object_get(playbin_, "current-video", &innerIndex, nullptr);
     } else {
-        g_object_get(playbin_, "current-text", &innerIndex, nullptr);
+        if (hasSubtitleTrackSelected_) {
+            g_object_get(playbin_, "current-text", &innerIndex, nullptr);
+        } else {
+            innerIndex = -1;
+        }
     }
 
     if (innerIndex >= 0) {
@@ -1306,11 +1334,40 @@ void PlayBinCtrlerBase::OnAudioChanged()
     ReportMessage(msg);
 }
 
+void PlayBinCtrlerBase::OnSubtitleChanged()
+{
+    CHECK_AND_RETURN(playbin_ != nullptr && trackParse_ != nullptr);
+    if (!trackParse_->FindTrackInfo()) {
+        MEDIA_LOGI("The plugin has been cleared, no need to report it");
+        return;
+    }
+
+    int32_t index;
+    if (!hasSubtitleTrackSelected_) {
+        index = -1;
+        MEDIA_LOGI("SubtitleChanged, current text: -1");
+    } else {
+        int32_t subtitleIndex = -1;
+        g_object_get(playbin_, "current-text", &subtitleIndex, nullptr);
+        MEDIA_LOGI("SubtitleChanged, current text: %{public}d", subtitleIndex);
+        CHECK_AND_RETURN(trackParse_->GetTrackIndex(subtitleIndex, MediaType::MEDIA_TYPE_SUBTITLE, index) == MSERR_OK);
+    }
+
+    Format format;
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
+    (void)format.PutIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), true);
+    PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE,
+        PlayBinMsgSubType::PLAYBIN_SUB_MSG_SUBTITLE_CHANGED, 0, format };
+    ReportMessage(msg);
+}
+
 void PlayBinCtrlerBase::ReportTrackChange()
 {
     MEDIA_LOGI("Seek event completed, report track change!");
     if (trackChangeType_ == MediaType::MEDIA_TYPE_AUD) {
         OnAudioChanged();
+    } else if (trackChangeType_ == MediaType::MEDIA_TYPE_SUBTITLE) {
+        OnSubtitleChanged();
     }
     OnTrackDone();
 }

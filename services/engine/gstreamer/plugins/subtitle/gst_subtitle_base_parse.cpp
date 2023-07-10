@@ -303,6 +303,11 @@ static GstFlowReturn gst_subtitle_base_parse_chain(GstPad *sinkpad, GstObject *p
         return ret;
     }
 
+    if (G_UNLIKELY(!self->has_send_stream_start)) {
+        gst_subtitle_push_stream_start_event(self);
+        self->has_send_stream_start = TRUE;
+    }
+
     if (!chain_set_caps_and_tags(self)) {
         return GST_FLOW_EOS;
     }
