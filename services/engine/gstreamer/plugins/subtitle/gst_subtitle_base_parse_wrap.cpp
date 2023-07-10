@@ -56,7 +56,7 @@ static gboolean src_event_seek_event_handle(GstSeekFlags *flags, gdouble *rate, 
         GST_INFO_OBJECT(self, "segment after seek: 0x%06" PRIXPTR ", seek_snap_after: %d",
             FAKE_POINTER(&self->segment), self->seek_snap_after);
 
-        if (!self->switching && (self->segment != nullptr) && (self->event_segment != nullptr)) {
+        if ((self->segment != nullptr) && (self->event_segment != nullptr)) {
             gst_segment_copy_into((GstSegment *)self->segment, (GstSegment *)self->event_segment);
         }
     } else {

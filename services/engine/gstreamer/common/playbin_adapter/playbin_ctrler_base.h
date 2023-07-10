@@ -210,6 +210,7 @@ private:
     int32_t rendererFlag_ = 0;
     int32_t cachePercent_ = 100; // 100% cache percent
     uint64_t connectSpeed_ = 0;
+    GstClockTime lastStartTime_ = GST_CLOCK_TIME_NONE;
 
     bool isTrackChanging_ = false;
     int32_t trackChangeType_ = MediaType::MEDIA_TYPE_AUD;

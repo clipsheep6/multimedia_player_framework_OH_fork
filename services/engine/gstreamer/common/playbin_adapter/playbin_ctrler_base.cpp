@@ -888,6 +888,7 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
         CHECK_AND_RETURN_RET(innerIndex != currentIndex,
             (OnError(MSERR_OK, "This track has already been selected!"), MSERR_OK));
 
+        lastStartTime_ = gst_element_get_start_time(GST_ELEMENT_CAST(playbin_));
         g_object_set(playbin_, "current-audio", innerIndex, nullptr);
         // The seek operation clears the original audio data and re parses the new track data.
         isTrackChanging_ = true;
@@ -900,6 +901,9 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
         CHECK_AND_RETURN_RET((!hasSubtitleTrackSelected_ || innerIndex != currentIndex),
             (OnError(MSERR_OK, "This track has already been selected!"), MSERR_OK));
 
+        g_object_set(subtitleSink_, "change-track", true, nullptr);
+        lastStartTime_ = gst_element_get_start_time(GST_ELEMENT_CAST(playbin_));
+        gst_element_set_start_time(GST_ELEMENT_CAST(playbin_), GST_CLOCK_TIME_NONE);
         g_object_set(playbin_, "current-text", innerIndex, nullptr);
         hasSubtitleTrackSelected_ = true;
         g_object_set(subtitleSink_, "enable-display", hasSubtitleTrackSelected_, nullptr);

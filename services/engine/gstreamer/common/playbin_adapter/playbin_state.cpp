@@ -175,6 +175,8 @@ void PlayBinCtrlerBase::BaseState::HandleAsyncDoneMsg()
     if (ctrler_.isTrackChanging_) {
         ctrler_.isSeeking_ = false;
         ctrler_.isTrackChanging_ = false;
+        g_object_set(ctrler_.subtitleSink_, "change-track", FALSE, nullptr);
+        gst_element_set_start_time(GST_ELEMENT_CAST(ctrler_.playbin_), ctrler_.lastStartTime_);
         ctrler_.ReportTrackChange();
     } else if (ctrler_.isSeeking_) {
         int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
@@ -504,6 +506,8 @@ void PlayBinCtrlerBase::PlayingState::ProcessPlayingStateChange()
     if (ctrler_.isTrackChanging_) {
         ctrler_.isSeeking_ = false;
         ctrler_.isTrackChanging_ = false;
+        g_object_set(ctrler_.subtitleSink_, "change-track", FALSE, nullptr);
+        gst_element_set_start_time(GST_ELEMENT_CAST(ctrler_.playbin_), ctrler_.lastStartTime_);
         ctrler_.ReportTrackChange();
     } else if (ctrler_.isSeeking_) {
         int64_t position = ctrler_.seekPos_ / USEC_PER_MSEC;
@@ -757,6 +761,12 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::SetRate(double rate)
 void PlayBinCtrlerBase::PlaybackCompletedState::ProcessStateChange(const InnerMessage &msg)
 {
     MEDIA_LOGI("PlaybackCompletedState::ProcessStateChange");
+    if (ctrler_.isTrackChanging_ && msg.detail2 == GST_STATE_PLAYING) {
+        ctrler_.isTrackChanging_ = false;
+        g_object_set(ctrler_.subtitleSink_, "change-track", FALSE, nullptr);
+        gst_element_set_start_time(GST_ELEMENT_CAST(ctrler_.playbin_), ctrler_.lastStartTime_);
+        ctrler_.ReportTrackChange();
+    }
     if (msg.detail2 == GST_STATE_PLAYING && ctrler_.isUserSetPlay_) {
         ctrler_.isUserSetPlay_ = false;
         ctrler_.ChangeState(ctrler_.playingState_);
