@@ -388,7 +388,7 @@ int32_t PlayerMock::Prepare()
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
-    int32_t ret = player_->Prepare();
+    int32_t ret = player_->PrepareAsync();
     if (ret == MSERR_OK) {
         return callback_->PrepareSync();
     }
