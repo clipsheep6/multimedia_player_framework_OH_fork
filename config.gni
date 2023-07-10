@@ -120,10 +120,10 @@ if (multimedia_player_framework_support_monitor) {
 
 if (multimedia_player_framework_support_screen_capture) {
   player_framework_defines += [ "SUPPORT_SCREEN_CAPTURE" ]
-
-  # Config path
-  MEDIA_PLAYER_ROOT_DIR = "//foundation/multimedia/player_framework"
-  MEDIA_PLAYER_GRAPHIC = "//foundation/graphic/graphic_2d"
 } else {
   player_framework_defines += [ "UNSUPPORT_SCREEN_CAPTURE" ]
 }
+
+# Config path
+MEDIA_PLAYER_ROOT_DIR = "//foundation/multimedia/player_framework"
+MEDIA_PLAYER_GRAPHIC = "//foundation/graphic/graphic_2d"
