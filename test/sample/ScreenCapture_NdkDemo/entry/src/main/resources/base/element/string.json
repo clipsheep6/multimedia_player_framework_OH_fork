@@ -1,0 +1,31 @@
+{
+  "string": [
+    {
+      "name": "entry_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "description"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "ScreenCapture"
+    },
+    {
+      "name": "title",
+      "value": "Screen Capture"
+    },
+    {
+      "name": "capture_desc",
+      "value": "Screen Capture Controller"
+    },    {
+      "name": "start_rec",
+      "value": "start"
+    },
+    {
+      "name": "stop_rec",
+      "value": "stop"
+    }
+  ]
+}
