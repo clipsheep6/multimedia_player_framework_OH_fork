@@ -32,6 +32,7 @@ namespace {
 namespace OHOS {
 namespace Media {
 constexpr int32_t CONTINUE_RESET_MAX_NUM = 5;
+constexpr int32_t WAIT_RECOVER_TIME_SEC = 1;
 constexpr double APP_BACK_GROUND_DESTROY_MEMERY_LAST_SET_TIME = 60.0;
 constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_LAST_SET_TIME = 120.0;
 std::shared_ptr<IPlayerService> PlayerServerMem::Create()
@@ -213,91 +214,80 @@ int32_t PlayerServerMem::SetPlaybackSpeedInternal()
 
 int32_t PlayerServerMem::SetSource(const std::string &url)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
     
     lastestUserSetTime_ = std::chrono::steady_clock::now();
+    recoverConfig_.url = url;
+    recoverConfig_.sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_URL);
     auto ret = PlayerServer::SetSource(url);
     if (ret == MSERR_OK) {
-        recoverConfig_.url = url;
-        recoverConfig_.sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_URL);
+        isLocalResource_ = false;
+        if (url.find("fd://") != std::string::npos || url.find("file://") != std::string::npos) {
+            isLocalResource_ = true;
+        }
     }
     return ret;
 }
 
 int32_t PlayerServerMem::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
+    recoverConfig_.dataSrc = dataSrc;
+    recoverConfig_.sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_DATASRC);
     auto ret = PlayerServer::SetSource(dataSrc);
     if (ret == MSERR_OK) {
-        recoverConfig_.dataSrc = dataSrc;
-        recoverConfig_.sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_DATASRC);
+        isLocalResource_ = false;
     }
     return ret;
 }
 
 int32_t PlayerServerMem::SetSource(int32_t fd, int64_t offset, int64_t size)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
+
+    recoverConfig_.fd = fd;
+    recoverConfig_.offset = offset;
+    recoverConfig_.size = size;
+    recoverConfig_.sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_FD);
     auto ret = PlayerServer::SetSource(fd, offset, size);
     if (ret == MSERR_OK) {
-        recoverConfig_.fd = fd;
-        recoverConfig_.offset = offset;
-        recoverConfig_.size = size;
-        recoverConfig_.sourceType = static_cast<int32_t>(PlayerSourceType::SOURCE_TYPE_FD);
+        isLocalResource_ = true;
     }
     return ret;
 }
 
 int32_t PlayerServerMem::AddSubSource(const std::string &url)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    auto ret = PlayerServer::AddSubSource(url);
-    if (ret == MSERR_OK) {
-        recoverConfig_.subUrl.emplace_back(url);
-    }
-    return ret;
+    recoverConfig_.subUrl.emplace_back(url);
+    return PlayerServer::AddSubSource(url);
 }
 
 int32_t PlayerServerMem::AddSubSource(int32_t fd, int64_t offset, int64_t size)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    auto ret = PlayerServer::AddSubSource(fd, offset, size);
-    if (ret == MSERR_OK) {
-        FdSrcInfo fdSrc {fd, offset, size};
-        recoverConfig_.subFdSrc.emplace_back(fdSrc);
-    }
-    return ret;
+    FdSrcInfo fdSrc {fd, offset, size};
+    recoverConfig_.subFdSrc.emplace_back(fdSrc);
+    return PlayerServer::AddSubSource(fd, offset, size);
 }
 
 int32_t PlayerServerMem::Play()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Play();
@@ -305,10 +295,8 @@ int32_t PlayerServerMem::Play()
 
 int32_t PlayerServerMem::Prepare()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Prepare();
@@ -316,21 +304,22 @@ int32_t PlayerServerMem::Prepare()
 
 int32_t PlayerServerMem::PrepareAsync()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::PrepareAsync();
 }
 
+int32_t PlayerServerMem::PrepareAsyncInner()
+{
+    return PlayerServer::PrepareAsync();
+}
+
 int32_t PlayerServerMem::Pause()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Pause();
@@ -338,66 +327,67 @@ int32_t PlayerServerMem::Pause()
 
 int32_t PlayerServerMem::Stop()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
+    recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
+        if (isLocalResource_) {
+            return !isRecoverMemByUser_;
+        } else {
+            return !isSeekToCurrentTime_;
+        }
+    });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Stop();
 }
 
 int32_t PlayerServerMem::Reset()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
-        if (recoverConfig_.callback != nullptr) {
-            playerCb_ = recoverConfig_.callback;
-            Format format;
-            playerCb_->OnInfo(INFO_TYPE_STATE_CHANGE, PLAYER_IDLE, format);
-            return MSERR_OK;
-        }
-        return MSERR_OK;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
+    recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
+        if (isLocalResource_) {
+            return !isRecoverMemByUser_;
+        } else {
+            return !isSeekToCurrentTime_;
+        }
+    });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Reset();
 }
 
 int32_t PlayerServerMem::Release()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
-        MEDIA_LOGI("User call Release");
-        isReleaseMemByManage_ = false;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
+    recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
+        if (isLocalResource_) {
+            return !isRecoverMemByUser_;
+        } else {
+            return !isSeekToCurrentTime_;
+        }
+    });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Release();
 }
 
 int32_t PlayerServerMem::SetVolume(float leftVolume, float rightVolume)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    auto ret = PlayerServer::SetVolume(leftVolume, rightVolume);
-    if (ret == MSERR_OK) {
-        recoverConfig_.leftVolume = leftVolume;
-        recoverConfig_.rightVolume = rightVolume;
-    }
-    return ret;
+    recoverConfig_.leftVolume = leftVolume;
+    recoverConfig_.rightVolume = rightVolume;
+    return PlayerServer::SetVolume(leftVolume, rightVolume);
 }
 
 int32_t PlayerServerMem::Seek(int32_t mSeconds, PlayerSeekMode mode)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Seek(mSeconds, mode);
@@ -405,8 +395,8 @@ int32_t PlayerServerMem::Seek(int32_t mSeconds, PlayerSeekMode mode)
 
 int32_t PlayerServerMem::GetCurrentTime(int32_t &currentTime)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetCurrentTime:%{public}d", recoverConfig_.currentTime);
         currentTime = recoverConfig_.currentTime;
         return MSERR_OK;
@@ -416,8 +406,8 @@ int32_t PlayerServerMem::GetCurrentTime(int32_t &currentTime)
 
 int32_t PlayerServerMem::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetVideoTrackInfo");
         videoTrack = recoverConfig_.videoTrack;
         return MSERR_OK;
@@ -427,8 +417,8 @@ int32_t PlayerServerMem::GetVideoTrackInfo(std::vector<Format> &videoTrack)
 
 int32_t PlayerServerMem::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetAudioTrackInfo");
         audioTrack = recoverConfig_.audioTrack;
         return MSERR_OK;
@@ -438,8 +428,8 @@ int32_t PlayerServerMem::GetAudioTrackInfo(std::vector<Format> &audioTrack)
 
 int32_t PlayerServerMem::GetVideoWidth()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetVideoWidth:%{public}d", recoverConfig_.videoWidth);
         return recoverConfig_.videoWidth;
     }
@@ -448,8 +438,8 @@ int32_t PlayerServerMem::GetVideoWidth()
 
 int32_t PlayerServerMem::GetVideoHeight()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetVideoHeight:%{public}d", recoverConfig_.videoHeight);
         return recoverConfig_.videoHeight;
     }
@@ -458,8 +448,8 @@ int32_t PlayerServerMem::GetVideoHeight()
 
 int32_t PlayerServerMem::GetDuration(int32_t &duration)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetDuration:%{public}d", recoverConfig_.duration);
         duration = recoverConfig_.duration;
         return MSERR_OK;
@@ -469,23 +459,18 @@ int32_t PlayerServerMem::GetDuration(int32_t &duration)
 
 int32_t PlayerServerMem::SetPlaybackSpeed(PlaybackRateMode mode)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    auto ret = PlayerServer::SetPlaybackSpeed(mode);
-    if (ret == MSERR_OK) {
-        recoverConfig_.speedMode = mode;
-    }
-    return ret;
+    recoverConfig_.speedMode = mode;
+    return PlayerServer::SetPlaybackSpeed(mode);
 }
 
 int32_t PlayerServerMem::GetPlaybackSpeed(PlaybackRateMode &mode)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call GetPlaybackSpeed:%{public}d", recoverConfig_.speedMode);
         mode = recoverConfig_.speedMode;
         return MSERR_OK;
@@ -496,25 +481,20 @@ int32_t PlayerServerMem::GetPlaybackSpeed(PlaybackRateMode &mode)
 #ifdef SUPPORT_VIDEO
 int32_t PlayerServerMem::SetVideoSurface(sptr<Surface> surface)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
     isAudioPlayer_ = false;
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    auto ret = PlayerServer::SetVideoSurface(surface);
-    if (ret == MSERR_OK) {
-        recoverConfig_.surface = surface;
-    }
-    return ret;
+    recoverConfig_.surface = surface;
+    return PlayerServer::SetVideoSurface(surface);
 }
 #endif
 
 bool PlayerServerMem::IsPlaying()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call IsPlaying:%{public}d", recoverConfig_.isPlaying);
         return recoverConfig_.isPlaying;
     }
@@ -523,8 +503,8 @@ bool PlayerServerMem::IsPlaying()
 
 bool PlayerServerMem::IsLooping()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
         MEDIA_LOGI("User call IsLooping:%{public}d", recoverConfig_.loop);
         return recoverConfig_.loop;
     }
@@ -533,17 +513,12 @@ bool PlayerServerMem::IsLooping()
 
 int32_t PlayerServerMem::SetLooping(bool loop)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    auto ret = PlayerServer::SetLooping(loop);
-    if (ret == MSERR_OK) {
-        recoverConfig_.loop = loop;
-    }
-    return ret;
+    recoverConfig_.loop = loop;
+    return PlayerServer::SetLooping(loop);
 }
 
 void PlayerServerMem::SaveParameter(const Format &param)
@@ -584,55 +559,38 @@ int32_t PlayerServerMem::SetSaveParameter()
 
 int32_t PlayerServerMem::SetParameter(const Format &param)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    auto ret = PlayerServer::SetParameter(param);
-    if (ret == MSERR_OK) {
-        SaveParameter(param);
-    }
-    return ret;
+    SaveParameter(param);
+    return PlayerServer::SetParameter(param);
 }
 
 int32_t PlayerServerMem::SetPlayerCallback(const std::shared_ptr<PlayerCallback> &callback)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    auto ret = PlayerServer::SetPlayerCallback(callback);
-    if (ret == MSERR_OK) {
-        recoverConfig_.callback = callback;
-    }
-    return ret;
+    recoverConfig_.callback = callback;
+    return PlayerServer::SetPlayerCallback(callback);
 }
 
 int32_t PlayerServerMem::SelectBitRate(uint32_t bitRate)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
-    auto ret = PlayerServer::SelectBitRate(bitRate);
-    if (ret == MSERR_OK) {
-        recoverConfig_.bitRate = bitRate;
-    }
-    return ret;
+    recoverConfig_.bitRate = bitRate;
+    return PlayerServer::SelectBitRate(bitRate);
 }
 
 int32_t PlayerServerMem::SelectTrack(int32_t index)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::SelectTrack(index);
@@ -640,10 +598,8 @@ int32_t PlayerServerMem::SelectTrack(int32_t index)
 
 int32_t PlayerServerMem::DeselectTrack(int32_t index)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        return MSERR_INVALID_OPERATION;
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
 
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::DeselectTrack(index);
@@ -651,8 +607,8 @@ int32_t PlayerServerMem::DeselectTrack(int32_t index)
 
 int32_t PlayerServerMem::GetCurrentTrack(int32_t trackType, int32_t &index)
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isReleaseMemByManage_) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (isLocalResource_ && isReleaseMemByManage_) {
         if (trackType == MediaType::MEDIA_TYPE_AUD) {
             index = recoverConfig_.audioIndex;
         } else if (trackType == MediaType::MEDIA_TYPE_VID) {
@@ -685,13 +641,80 @@ int32_t PlayerServerMem::DumpInfo(int32_t fd)
     return MSERR_OK;
 }
 
+int32_t PlayerServerMem::HandleCodecBuffers(bool enable)
+{
+    std::lock_guard<std::mutex> lock(PlayerServer::mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    MEDIA_LOGD("HandleCodecBuffers in, enable:%{public}d", enable);
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not HandleCodecBuffers, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    return playerEngine_->HandleCodecBuffers(enable);
+}
+
+int32_t PlayerServerMem::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode)
+{
+    std::lock_guard<std::mutex> lock(PlayerServer::mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    if (IsValidSeekMode(mode) != true) {
+        MEDIA_LOGE("Seek failed, inValid mode");
+        return MSERR_INVALID_VAL;
+    }
+
+    if (isLiveStream_) {
+        MEDIA_LOGE("Can not Seek, it is live-stream");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
+        return MSERR_INVALID_OPERATION;
+    }
+
+    MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
+    mSeconds = std::max(0, mSeconds);
+
+    auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
+        MediaTrace::TraceBegin("PlayerServerMem::Seek", FAKE_POINTER(this));
+        playerEngine_->SeekToCurrentTime(mSeconds, mode);
+    });
+
+    auto cancelTask = std::make_shared<TaskHandler<void>>([&, this]() {
+        MEDIA_LOGI("Interrupted seek action");
+        taskMgr_.MarkTaskDone("interrupted seek done");
+    });
+    isSeekToCurrentTime_ = true;
+    int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
+
+    return MSERR_OK;
+}
+
 void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
-    GetDefauleTrack(type, extra, infoBody);
-    PlayerServer::OnInfo(type, extra, infoBody);
-
-    CheckHasRecover(type, extra);
+    if (isLocalResource_) {
+        std::unique_lock<std::mutex> lockCb(mutexCb_);
+        GetDefauleTrack(type, extra, infoBody);
+        PlayerServer::OnInfo(type, extra, infoBody);
+        CheckHasRecover(type, extra);
+    } else {
+        if (isSeekToCurrentTime_ && type == INFO_TYPE_SEEKDONE) {
+            MediaTrace::TraceEnd("PlayerServerMem::Seek", FAKE_POINTER(this));
+            std::lock_guard<std::mutex> lockCb(PlayerServer::mutexCb_);
+            isSeekToCurrentTime_ = false;
+            recoverCond_.notify_all();
+            PlayerServer::HandleMessage(type, extra, infoBody);
+        } else {
+            PlayerServer::OnInfo(type, extra, infoBody);
+        }
+    }
 }
 
 int32_t PlayerServerMem::GetInformationBeforeMemReset()
@@ -721,37 +744,52 @@ int32_t PlayerServerMem::GetInformationBeforeMemReset()
     return MSERR_OK;
 }
 
-int32_t PlayerServerMem::ReleaseMemByManage()
+int32_t PlayerServerMem::LocalResourceRelease()
 {
     if (isReleaseMemByManage_ || isRecoverMemByUser_) {
         return MSERR_OK;
     }
 
     auto itSatetMap = stateMap_.find(GetCurrState().get());
-    if (itSatetMap == stateMap_.end()) {
-        MEDIA_LOGE("Not find correct stateMap");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(itSatetMap != stateMap_.end(), MSERR_INVALID_OPERATION, "Not find correct stateMap");
+
     recoverConfig_.currState = itSatetMap->second;
     auto ret = recoverConfig_.currState->MemStateRelease();
-    if (ret == MSERR_INVALID_STATE) {
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET(ret != MSERR_INVALID_STATE, MSERR_OK);
     
     playerCb_ = nullptr;
     ClearConfigInfo();
     ret = PlayerServer::Reset();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("PlayerServer::Reset fail");
-        return ret;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "PlayerServer::Reset fail");
 
     isReleaseMemByManage_ = true;
     MEDIA_LOGI("exit");
     return ret;
 }
 
-int32_t PlayerServerMem::RecoverMemByUser()
+int32_t PlayerServerMem::NetworkResourceRelease()
+{
+    if (!isReleaseMemByManage_) {
+        MediaTrace trace("PlayerServerMem::ReleaseMemByManage");
+        MEDIA_LOGI("enter");
+        int32_t ret = HandleCodecBuffers(true);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "FreeCodecBuffers Fail");
+        isReleaseMemByManage_ = true;
+        MEDIA_LOGI("exit");
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerServerMem::ReleaseMemByManage()
+{
+    if (isLocalResource_) {
+        return LocalResourceRelease();
+    } else {
+        return NetworkResourceRelease();
+    }
+}
+
+int32_t PlayerServerMem::LocalResourceRecover()
 {
     if (!isReleaseMemByManage_ || isRecoverMemByUser_) {
         return MSERR_OK;
@@ -772,6 +810,35 @@ int32_t PlayerServerMem::RecoverMemByUser()
     return ret;
 }
 
+int32_t PlayerServerMem::NetworkRecover()
+{
+    if (isReleaseMemByManage_) {
+        MediaTrace trace("PlayerServerMem::RecoverMemByUser");
+        MEDIA_LOGI("enter");
+        int32_t ret = HandleCodecBuffers(false);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RecoverCodecBuffers Fail");
+        int32_t currentTime = 0;
+        if (!IsCompleted()) {
+            ret = PlayerServer::GetCurrentTime(currentTime);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetCurrentTime Fail");
+        }
+        ret = SeekToCurrentTime(currentTime, SEEK_CLOSEST);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek Fail");
+        isReleaseMemByManage_ = false;
+        MEDIA_LOGI("exit");
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerServerMem::RecoverMemByUser()
+{
+    if (isLocalResource_) {
+        return LocalResourceRecover();
+    } else {
+        return NetworkRecover();
+    }
+}
+
 int32_t PlayerServerMem::RecoverPlayerCb()
 {
     MEDIA_LOGI("enter");
@@ -779,6 +846,7 @@ int32_t PlayerServerMem::RecoverPlayerCb()
         playerCb_ = recoverConfig_.callback;
     }
     isRecoverMemByUser_ = false;
+    recoverCond_.notify_all();
     return MSERR_OK;
 }
 
@@ -791,18 +859,12 @@ void PlayerServerMem::RecoverToInitialized(PlayerOnInfoType type, int32_t extra)
 
 void PlayerServerMem::RecoverToPrepared(PlayerOnInfoType type, int32_t extra)
 {
-    if (NeedSelectAudioTrack()) {
-        if (type == INFO_TYPE_TRACKCHANGE) {
-            (void)RecoverPlayerCb();
-        }
-    } else if (recoverConfig_.currentTime != 0) {
-        if (type == INFO_TYPE_SEEKDONE) {
-            (void)RecoverPlayerCb();
-        }
-    } else if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
-        if (type == INFO_TYPE_SPEEDDONE) {
-            (void)RecoverPlayerCb();
-        }
+    if (NeedSelectAudioTrack() && type == INFO_TYPE_TRACKCHANGE) {
+        (void)RecoverPlayerCb();
+    } else if (recoverConfig_.currentTime != 0 && type == INFO_TYPE_SEEKDONE) {
+        (void)RecoverPlayerCb();
+    } else if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X && type == INFO_TYPE_SPEEDDONE) {
+        (void)RecoverPlayerCb();
     } else if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
         (void)RecoverPlayerCb();
         (void)AddSubSourceInternal();
@@ -811,14 +873,10 @@ void PlayerServerMem::RecoverToPrepared(PlayerOnInfoType type, int32_t extra)
 
 void PlayerServerMem::RecoverToCompleted(PlayerOnInfoType type, int32_t extra)
 {
-    if (NeedSelectAudioTrack()) {
-        if (type == INFO_TYPE_TRACKCHANGE) {
-            (void)RecoverPlayerCb();
-        }
-    } else if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X) {
-        if (type == INFO_TYPE_SPEEDDONE) {
-            (void)RecoverPlayerCb();
-        }
+    if (NeedSelectAudioTrack() && type == INFO_TYPE_TRACKCHANGE) {
+        (void)RecoverPlayerCb();
+    } else if (recoverConfig_.speedMode != SPEED_FORWARD_1_00_X && type == INFO_TYPE_SPEEDDONE) {
+        (void)RecoverPlayerCb();
     } else if (type == INFO_TYPE_STATE_CHANGE && extra == PLAYER_PREPARED) {
         (void)RecoverPlayerCb();
         (void)AddSubSourceInternal();
@@ -827,17 +885,16 @@ void PlayerServerMem::RecoverToCompleted(PlayerOnInfoType type, int32_t extra)
 
 void PlayerServerMem::CheckHasRecover(PlayerOnInfoType type, int32_t extra)
 {
-    if (!isRecoverMemByUser_) {
-        return;
+    if (isRecoverMemByUser_) {
+        MEDIA_LOGI("enter, type:%{public}d, extra:%{public}d", type, extra);
+        recoverConfig_.currState->MemPlayerCbRecover(type, extra);
     }
-    MEDIA_LOGI("enter, type:%{public}d, extra:%{public}d", type, extra);
-    recoverConfig_.currState->MemPlayerCbRecover(type, extra);
 }
 
 void PlayerServerMem::ResetFrontGroundForMemManage()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (!IsPrepared()) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (!PlayerServer::IsPrepared()) {
         continueReset = 0;
         return;
     }
@@ -849,20 +906,15 @@ void PlayerServerMem::ResetFrontGroundForMemManage()
 
     std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<
         std::chrono::duration<double>>(std::chrono::steady_clock::now() - lastestUserSetTime_);
-    if (lastSetToNow.count() <= APP_FRONT_GROUND_DESTROY_MEMERY_LAST_SET_TIME) {
-        MEDIA_LOGW("From lastest set to now duration: %{public}f less than threshold value", lastSetToNow.count());
-        return;
-    }
-    auto ret = ReleaseMemByManage();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("ReleaseMemByManage fail");
+    if (lastSetToNow.count() > APP_FRONT_GROUND_DESTROY_MEMERY_LAST_SET_TIME) {
+        ReleaseMemByManage();
     }
 }
 
 void PlayerServerMem::ResetBackGroundForMemManage()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (IsPlaying()) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (PlayerServer::IsPlaying()) {
         continueReset = 0;
         return;
     }
@@ -874,35 +926,23 @@ void PlayerServerMem::ResetBackGroundForMemManage()
 
     std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<
         std::chrono::duration<double>>(std::chrono::steady_clock::now() - lastestUserSetTime_);
-    if (lastSetToNow.count() <= APP_BACK_GROUND_DESTROY_MEMERY_LAST_SET_TIME) {
-        MEDIA_LOGW("From lastest set to now duration: %{public}f less than threshold value", lastSetToNow.count());
-        return;
-    }
-    auto ret = ReleaseMemByManage();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("ReleaseMemByManage fail");
+    if (lastSetToNow.count() > APP_BACK_GROUND_DESTROY_MEMERY_LAST_SET_TIME) {
+        ReleaseMemByManage();
     }
 }
 
 void PlayerServerMem::ResetMemmgrForMemManage()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isAudioPlayer_ || IsPlaying()) {
-        return;
-    }
-
-    auto ret = ReleaseMemByManage();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("ReleaseMemByManage fail");
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (!(isAudioPlayer_ || PlayerServer::IsPlaying())) {
+        ReleaseMemByManage();
     }
 }
 
 void PlayerServerMem::RecoverByMemManage()
 {
-    std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (RecoverMemByUser() != MSERR_OK) {
-        MEDIA_LOGE("RecoverMemByUser fail");
-    }
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(RecoverMemByUser() == MSERR_OK, "RecoverMemByUser fail");
 }
 
 bool PlayerServerMem::NeedSelectAudioTrack()

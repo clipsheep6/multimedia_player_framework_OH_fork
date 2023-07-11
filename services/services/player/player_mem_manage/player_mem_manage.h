@@ -51,7 +51,6 @@ private:
     struct AppPlayerInfo {
         std::vector<MemManageRecall> memRecallStructVec;
         int32_t appState;
-        bool isReserve;
         std::chrono::steady_clock::time_point appEnterFrontTime;
         std::chrono::steady_clock::time_point appEnterBackTime;
     };
@@ -66,8 +65,6 @@ private:
         const MemManageRecall &memRecallStruct);
     void AwakeFrontGroundAppMedia(AppPlayerInfo &appPlayerInfo);
     void SetAppPlayerInfo(AppPlayerInfo &appPlayerInfo, int32_t state);
-    void SetLastestExitBackGroundApp();
-    static bool BackGroundTimeGreaterSort(AppPlayerInfo *a, AppPlayerInfo *b);
     void RemoteDieAgainRegisterActiveApps();
 
     bool isParsered_ = false;

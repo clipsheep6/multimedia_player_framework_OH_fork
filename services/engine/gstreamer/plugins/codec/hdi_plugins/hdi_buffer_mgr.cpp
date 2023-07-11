@@ -158,6 +158,7 @@ int32_t HdiBufferMgr::Stop(bool isFormatChange)
     std::unique_lock<std::mutex> lock(mutex_);
     isStart_ = false;
     isFormatChange_ = isFormatChange;
+    isFlushed_ = false;
     bufferCond_.notify_all();
     flushCond_.notify_all();
     return GST_CODEC_OK;

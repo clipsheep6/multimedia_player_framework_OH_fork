@@ -28,13 +28,10 @@ namespace OHOS {
 namespace Media {
 constexpr double APP_BACK_GROUND_DESTROY_MEMERY_TIME = 60.0;
 constexpr double APP_FRONT_GROUND_DESTROY_MEMERY_TIME = 120.0;
-constexpr int32_t RESERVE_BACK_GROUND_APP_NUM = 0;
 PlayerMemManage& PlayerMemManage::GetInstance()
 {
     static PlayerMemManage instance;
-    if (!instance.Init()) {
-        MEDIA_LOGE("GetInstance Init Failed");
-    }
+    instance.Init();
     return instance;
 }
 
@@ -58,72 +55,35 @@ PlayerMemManage::~PlayerMemManage()
 
 void PlayerMemManage::FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
-    if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND) ||
-        appPlayerInfo.isReserve) {
-        return;
-    }
-    std::chrono::duration<double> durationCost = std::chrono::duration_cast<
+    if (appPlayerInfo.appState == static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND)) {
+        std::chrono::duration<double> durationCost = std::chrono::duration_cast<
         std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterBackTime);
-    if (durationCost.count() <= APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
-        return;
-    }
-
-    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-        ((*iter).resetBackGroundRecall)();
+        if (durationCost.count() > APP_BACK_GROUND_DESTROY_MEMERY_TIME) {
+            for (auto iter = appPlayerInfo.memRecallStructVec.begin();
+                iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+                ((*iter).resetBackGroundRecall)();
+            }
+        }
     }
 }
 
 void PlayerMemManage::FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo)
 {
-    if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
-        return;
-    }
-
-    std::chrono::duration<double> durationCost = std::chrono::duration_cast<
-        std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterFrontTime);
-    if (durationCost.count() <= APP_FRONT_GROUND_DESTROY_MEMERY_TIME) {
-        return;
-    }
-
-    for (auto iter = appPlayerInfo.memRecallStructVec.begin(); iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
-        ((*iter).resetFrontGroundRecall)();
-    }
-}
-
-bool PlayerMemManage::BackGroundTimeGreaterSort(AppPlayerInfo *a, AppPlayerInfo *b)
-{
-    return std::chrono::duration_cast<
-        std::chrono::duration<double>>(a->appEnterBackTime - b->appEnterBackTime).count() > 0;
-}
-
-void PlayerMemManage::SetLastestExitBackGroundApp()
-{
-    std::vector<AppPlayerInfo*> allAppVec;
-    for (auto &[uid, pidPlayersInfo] : playerManage_) {
-        for (auto &[pid, appPlayerInfo] : pidPlayersInfo) {
-            if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND)) {
-                continue;
+    if (appPlayerInfo.appState == static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND)) {
+        std::chrono::duration<double> durationCost = std::chrono::duration_cast<
+            std::chrono::duration<double>>(std::chrono::steady_clock::now() - appPlayerInfo.appEnterFrontTime);
+        if (durationCost.count() > APP_FRONT_GROUND_DESTROY_MEMERY_TIME) {
+            for (auto iter = appPlayerInfo.memRecallStructVec.begin();
+                iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
+                ((*iter).resetFrontGroundRecall)();
             }
-            allAppVec.push_back(&appPlayerInfo);
         }
-    }
-    std::sort(allAppVec.begin(), allAppVec.end(), BackGroundTimeGreaterSort);
-
-    int32_t cnt = 0;
-    for (auto iter = allAppVec.begin(); iter != allAppVec.end(); iter++) {
-        if (cnt < RESERVE_BACK_GROUND_APP_NUM) {
-            (*iter)->isReserve = true;
-        } else {
-            (*iter)->isReserve = false;
-        }
-        cnt++;
     }
 }
 
 void PlayerMemManage::FindProbeTaskPlayer()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    SetLastestExitBackGroundApp();
     for (auto &[uid, pidPlayersInfo] : playerManage_) {
         for (auto &[pid, appPlayerInfo] : pidPlayersInfo) {
             FindFrontGroundPlayerFromVec(appPlayerInfo);
@@ -178,7 +138,7 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const Me
         if (pidIter == pidPlayersInfo.end()) {
             MEDIA_LOGI("new app in pid:%{public}d", pid);
             auto ret = pidPlayersInfo.emplace(pid, AppPlayerInfo {std::vector<MemManageRecall>(),
-                static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND), false,
+                static_cast<int32_t>(AppState::APP_STATE_FRONT_GROUND),
                 std::chrono::steady_clock::now(), std::chrono::steady_clock::now()});
             Memory::MemMgrClient::GetInstance().RegisterActiveApps(pid, uid);
             pidIter = ret.first;
@@ -303,7 +263,6 @@ void PlayerMemManage::HandleOnTrimLevelLow()
             if (appPlayerInfo.appState != static_cast<int32_t>(AppState::APP_STATE_BACK_GROUND)) {
                 continue;
             }
-
             for (auto iter = appPlayerInfo.memRecallStructVec.begin();
                 iter != appPlayerInfo.memRecallStructVec.end(); iter++) {
                 ((*iter).resetMemmgrRecall)();
@@ -369,11 +328,10 @@ int32_t PlayerMemManage::RecordAppState(int32_t uid, int32_t pid, int32_t state)
             continue;
         }
         for (auto &[findPid, appPlayerInfo] : pidPlayersInfo) {
-            if (findPid != pid) {
-                continue;
+            if (findPid == pid) {
+                SetAppPlayerInfo(appPlayerInfo, state);
+                return MSERR_OK;
             }
-            SetAppPlayerInfo(appPlayerInfo, state);
-            return MSERR_OK;
         }
     }
 

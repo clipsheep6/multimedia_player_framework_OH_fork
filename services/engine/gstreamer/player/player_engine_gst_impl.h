@@ -68,6 +68,8 @@ public:
     int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override;
     int32_t SetAudioEffectMode(const int32_t effectMode) override;
     int32_t GetHEBCMode() override;
+    int32_t HandleCodecBuffers(bool enable) override;
+    int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode) override;
 
 private:
     void OnNotifyMessage(const PlayBinMessage &msg);

@@ -142,10 +142,18 @@ protected:
     std::string lastErrMsg_;
     std::unique_ptr<UriHelper> uriHelper_ = nullptr;
     std::vector<std::shared_ptr<UriHelper>> subUriHelpers_;
+    std::mutex mutex_;
+    std::mutex mutexCb_;
+    PlayerStates lastOpStatus_ = PLAYER_IDLE;
+    PlayerServerTaskMgr taskMgr_;
+    bool isLiveStream_ = false;
     virtual int32_t Init();
     void ClearConfigInfo();
     bool IsPrepared();
-
+    bool IsCompleted();
+    bool IsValidSeekMode(PlayerSeekMode mode);
+    void OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {});
+    const std::string &GetStatusDescription(int32_t status);
     struct ConfigInfo {
         std::atomic<bool> looping = false;
         float leftVolume = INVALID_VALUE;
@@ -156,7 +164,6 @@ protected:
     } config_;
 
 private:
-    bool IsValidSeekMode(PlayerSeekMode mode);
     bool IsEngineStarted();
     int32_t InitPlayEngine(const std::string &url);
     int32_t OnPrepare(bool sync);
@@ -175,16 +182,10 @@ private:
 
     void HandleEos();
     void FormatToString(std::string &dumpString, std::vector<Format> &videoTrack);
-    const std::string &GetStatusDescription(int32_t status);
-    void OnInfoNoChangeStatus(PlayerOnInfoType type, int32_t extra, const Format &infoBody = {});
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;
 #endif
-    PlayerStates lastOpStatus_ = PLAYER_IDLE;
-    PlayerServerTaskMgr taskMgr_;
-    std::mutex mutex_;
-    std::mutex mutexCb_;
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
     static constexpr float INVALID_VALUE = 2.0f;
     bool disableNextSeekDone_ = false;
@@ -195,7 +196,6 @@ private:
     uint32_t subtitleTrackNum_ = 0;
     int32_t appUid_ = 0;
     int32_t appPid_ = 0;
-    bool isLiveStream_ = false;
 };
 } // namespace Media
 } // namespace OHOS
