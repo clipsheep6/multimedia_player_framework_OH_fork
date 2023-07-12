@@ -45,7 +45,7 @@
           "hitrace",
           "audio_framework",
           "ipc",
-          "graphic_standard",
+          "graphic_2d",
           "hisysevent",
           "c_utils",
           "zlib",

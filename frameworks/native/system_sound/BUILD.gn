@@ -41,7 +41,7 @@ ohos_shared_library("audio_ringtone_client") {
     "ability_runtime:data_ability_helper",
     "audio_framework:audio_client",
     "bundle_framework:appexecfwk_base",
-    "graphic_standard:surface",
+    "graphic_2d:surface",
     "hilog:libhilog",
     "relational_store:native_dataability",
     "relational_store:native_rdb",

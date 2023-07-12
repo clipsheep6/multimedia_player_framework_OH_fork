@@ -75,7 +75,7 @@ ohos_shared_library("native_avscreen_capture") {
 
   external_deps = [
     "c_utils:utils",
-    "graphic_standard:surface",
+    "graphic_2d:surface",
     "hilog:libhilog",
     "window_manager:libdm",
   ]
