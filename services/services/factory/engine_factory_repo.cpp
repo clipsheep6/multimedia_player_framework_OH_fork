@@ -59,7 +59,7 @@ int32_t __attribute__((no_sanitize("cfi"))) EngineFactoryRepo::LoadLib(const std
     void *handle = dlopen(libPath.c_str(), RTLD_NOW | RTLD_LOCAL);
     if (handle == nullptr) {
         MEDIA_LOGE("failed to dlopen %{public}s, errno:%{public}d, errormsg:%{public}s",
-                   libPath.c_str(), errno, dlerror());
+            libPath.c_str(), errno, dlerror());
         return MSERR_OPEN_FILE_FAILED;
     }
 
@@ -86,7 +86,7 @@ int32_t __attribute__((no_sanitize("cfi"))) EngineFactoryRepo::LoadLib(const std
 int32_t EngineFactoryRepo::LoadGstreamerEngine()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (gstreamerLoad_) {
+    if (isLoadGstreamer_) {
         return MSERR_OK;
     }
 
@@ -98,7 +98,7 @@ int32_t EngineFactoryRepo::LoadGstreamerEngine()
             continue;
         } else {
             CHECK_AND_RETURN_RET_LOG(LoadLib(file) == MSERR_OK, MSERR_OPEN_FILE_FAILED, "LoadLib failed");
-            gstreamerLoad_ = true;
+            isLoadGstreamer_ = true;
             break;
         }
     }
@@ -109,8 +109,8 @@ int32_t EngineFactoryRepo::LoadGstreamerEngine()
 int32_t EngineFactoryRepo::LoadHistreamerEngine()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (histreamerLoad_) {
-        MEDIA_LOGI("histramer is enabled");
+    if (isLoadHistreamer_) {
+        MEDIA_LOGI("Histreamer is enabled");
         return MSERR_OK;
     }
 
@@ -125,7 +125,7 @@ int32_t EngineFactoryRepo::LoadHistreamerEngine()
                 continue;
             } else {
                 CHECK_AND_RETURN_RET_LOG(LoadLib(file) == MSERR_OK, MSERR_OPEN_FILE_FAILED, "LoadLib failed");
-                histreamerLoad_ = true;
+                isLoadHistreamer_ = true;
                 break;
             }
         }
@@ -141,9 +141,9 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     (void)LoadHistreamerEngine();
 
     if (factorys_.empty()) {
-        gstreamerLoad_ = false;
-        histreamerLoad_ = false;
-        MEDIA_LOGE("Failed to load libmedia_engine_gst.z.so or libmedia_engine_histreamer.z.so");
+        isLoadGstreamer_ = false;
+        isLoadHistreamer_ = false;
+        MEDIA_LOGE("Failed to load media engine library");
         return nullptr;
     }
 

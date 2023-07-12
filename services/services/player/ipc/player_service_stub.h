@@ -127,7 +127,6 @@ private:
     int32_t DeselectTrack(MessageParcel &data, MessageParcel &reply);
     int32_t GetCurrentTrack(MessageParcel &data, MessageParcel &reply);
 
-    std::mutex mutex_;
     using PlayerStubFunc = int32_t(PlayerServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, std::pair<PlayerStubFunc, std::string>> playerFuncs_;
 };
