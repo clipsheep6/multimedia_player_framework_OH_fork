@@ -40,10 +40,8 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
     MessageOption &option)
 {
     auto remoteDescriptor = data.ReadInterfaceToken();
-    if (PlayerListenerStub::GetDescriptor() != remoteDescriptor) {
-        MEDIA_LOGE("Invalid descriptor");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(PlayerListenerStub::GetDescriptor() == remoteDescriptor,
+        MSERR_INVALID_OPERATION, "Invalid descriptor");
 
     switch (code) {
         case PlayerListenerMsg::ON_ERROR: {
@@ -78,11 +76,10 @@ int PlayerListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
 void PlayerListenerStub::OnError(PlayerErrorType errorType, int32_t errorCode)
 {
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
-    if (cb != nullptr) {
-        (void)errorType;
-        auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
-        cb->OnError(errorCode, errorMsg);
-    }
+    CHECK_AND_RETURN(cb != nullptr);
+    (void)errorType;
+    auto errorMsg = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+    cb->OnError(errorCode, errorMsg);
 }
 
 void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
@@ -116,9 +113,8 @@ void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
 void PlayerListenerStub::OnError(int32_t errorCode, const std::string &errorMsg)
 {
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
-    if (cb != nullptr) {
-        cb->OnError(errorCode, errorMsg);
-    }
+    CHECK_AND_RETURN(cb != nullptr);
+    cb->OnError(errorCode, errorMsg);
 }
 
 void PlayerListenerStub::SetPlayerCallback(const std::weak_ptr<PlayerCallback> &callback)

@@ -2350,6 +2350,8 @@ HWTEST_F(PlayerUnitTest, Player_DeselectTrack_001, TestSize.Level0)
     bool trackChange = false;
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mpeg4_1920_1080_aac_flac.mkv", 0, 0));
     EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->DeselectTrack(0, trackChange));
+    EXPECT_NE(trackChange, true);  // Video type not supported
     EXPECT_EQ(MSERR_OK, player_->DeselectTrack(1, trackChange));
     EXPECT_NE(trackChange, true);  // Audio is already the default track and returned successfully
     EXPECT_EQ(MSERR_OK, player_->DeselectTrack(2, trackChange));
@@ -2452,7 +2454,7 @@ HWTEST_F(PlayerUnitTest, Player_GetCurrentTrack_002, TestSize.Level0)
 HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
 {
     Format format;
-    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT);
+    (void)format.PutIntValue(PlayerKeys::AUDIO_EFFECT_MODE, OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE);
 
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
 
@@ -2470,6 +2472,8 @@ HWTEST_F(PlayerUnitTest, Player_SetEffect_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->SetParameter(format));
     EXPECT_EQ(MSERR_OK, player_->Reset());
     EXPECT_NE(MSERR_OK, player_->SetParameter(format));
     EXPECT_EQ(MSERR_OK, player_->Release());

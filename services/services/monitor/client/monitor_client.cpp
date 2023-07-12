@@ -100,9 +100,8 @@ int32_t MonitorClient::StartClick(MonitorClientObject *obj)
     }
 
     // Start Thread
-    if (clickThread_ == nullptr && !clientDestroy_) {
-        clickThread_ = std::make_unique<std::thread>(&MonitorClient::ClickThreadCtrl, this);
-    }
+    CHECK_AND_RETURN_RET(!clientDestroy_, MSERR_OK);
+    clickThread_ = std::make_unique<std::thread>(&MonitorClient::ClickThreadCtrl, this);
 
     return MSERR_OK;
 }
@@ -146,10 +145,8 @@ void MonitorClient::ClickThread()
                 return objSet_.empty() || !isVaildProxy_ || clientDestroy_;
             });
 
-            if (clientDestroy_) {
-                MEDIA_LOGI("clientDestroy.");
-                return;
-            }
+            CHECK_AND_RETURN_LOG(!clientDestroy_, "clientDestroy, Normal exit")
+
             if (objSet_.empty()) {
                 MEDIA_LOGI("objSet empty.");
                 break;
@@ -188,10 +185,9 @@ MonitorClient::Destroy::~Destroy()
     MEDIA_LOGI("MonitorClient Destroy start");
     std::shared_ptr<MonitorClient> temp;
     std::lock_guard<std::mutex> lock(instanceMutex_);
-    if (monitorClient_ != nullptr) {
-        temp = monitorClient_;
-        monitorClient_ = nullptr;
-    }
+    CHECK_AND_RETURN_LOG(monitorClient_ != nullptr, "MonitorClient Destroy end");
+    temp = monitorClient_;
+    monitorClient_ = nullptr;
     MEDIA_LOGI("MonitorClient Destroy end");
 }
 } // namespace Media

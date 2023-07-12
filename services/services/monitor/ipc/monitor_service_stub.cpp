@@ -73,19 +73,16 @@ int MonitorServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
         MSERR_INVALID_OPERATION, "Invalid descriptor");
 
     auto itFunc = monitorFuncs_.find(code);
-    if (itFunc != monitorFuncs_.end()) {
-        auto memberFunc = itFunc->second;
-        if (memberFunc != nullptr) {
-            int32_t ret = (this->*memberFunc)(data, reply);
-            if (ret != MSERR_OK) {
-                MEDIA_LOGE("calling memberFunc is failed.");
-            }
-            return MSERR_OK;
-        }
-    }
-    MEDIA_LOGW("MonitorServiceStub: no member func supporting, applying default process");
+    CHECK_AND_RETURN_RET_LOG(itFunc != monitorFuncs_.end(), IPCObjectStub::OnRemoteRequest(code, data, reply, option),
+        "MonitorServiceStub: no member func supporting, applying default process");
 
-    return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    auto memberFunc = itFunc->second;
+    CHECK_AND_RETURN_RET_LOG(memberFunc != nullptr, IPCObjectStub::OnRemoteRequest(code, data, reply, option),
+        "MonitorServiceStub: no member func supporting, applying default process");
+
+    int32_t ret = (this->*memberFunc)(data, reply);
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_OK, MSERR_OK, "calling memberFunc is failed.");
+    return MSERR_OK;
 }
 
 int32_t MonitorServiceStub::Click()
