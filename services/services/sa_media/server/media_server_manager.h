@@ -20,6 +20,8 @@
 #include <functional>
 #include <map>
 #include <list>
+#include <vector>
+#include "i_media_stub.h"
 #include "iremote_object.h"
 #include "ipc_skeleton.h"
 #include "nocopyable.h"
@@ -88,6 +90,13 @@ private:
         std::list<sptr<IRemoteObject>> freeList_;
         std::mutex listMutex_;
     };
+    struct StubNode {
+        std::string name;
+        StubType type;
+        std::function<sptr<IMediaStub>()> create;
+        std::map<sptr<IRemoteObject>, pid_t> map;
+    };
+    std::vector<StubNode> stubNodes_;
     std::map<sptr<IRemoteObject>, pid_t> recorderStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> playerStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> avMetadataHelperStubMap_;
@@ -96,6 +105,7 @@ private:
     std::map<sptr<IRemoteObject>, pid_t> recorderProfilesStubMap_;
     std::map<sptr<IRemoteObject>, pid_t> screenCaptureStubMap_;
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
+    std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>> stubMap_;
     AsyncExecutor executor_;
 
     std::mutex mutex_;

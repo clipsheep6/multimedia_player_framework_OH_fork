@@ -193,6 +193,36 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
     }
 }
 
+// sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
+// {
+//     for (auto node : stubNodes_) {
+//         if (node.type == type) {
+//             CHECK_AND_RETURN_RET(stubMap_[type].size() < SERVER_MAX_NUMBER, nullptr);
+//             auto stub = node.create();
+//             CHECK_AND_RETURN_RET(stub != nullptr, nullptr);
+//             auto object = stub->AsObject();
+//             CHECK_AND_RETURN_RET(object != nullptr, nullptr);
+//             pid_t pid = IPCSkeleton::GetCallingPid();
+//             DumperEntry entry = [media = stub](int32_t fd) -> int32_t {
+//                 return media->DumpInfo(fd);
+//             };
+//             Dumper dumper{
+//                 pid, IPCSkeleton::GetCallingUid(), entry, object
+//             };
+//             dumperTbl_[type].emplace_back(dumper);
+//             MEDIA_LOGD("The number of %{public}s services(%{public}zu) pid(%{public}d).",
+//                 node.name, stubMap_[type].size(), pid);
+//             std::string traceName = "The number of " + node.name;
+//             MediaTrace::CounterTrace(traceName, stubMap_[type].size());
+//             if (Dump(-1, std::vector<std::u16string>()) != OHOS::NO_ERROR) {
+//                 MEDIA_LOGW("failed to call InstanceDump");
+//             }
+//             return object;
+//         }
+//     }
+//     return nullptr;
+// }
+
 #ifdef SUPPORT_PLAYER
 sptr<IRemoteObject> MediaServerManager::CreatePlayerStubObject()
 {
@@ -419,6 +449,11 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
     std::lock_guard<std::mutex> lock(mutex_);
     pid_t pid = IPCSkeleton::GetCallingPid();
     DestroyDumper(type, object);
+    for (auto node : stubNodes_) {
+        if (node.type == type) {
+            for (auto it = stubMap_[type])
+        }
+    }
     switch (type) {
         case RECORDER: {
             for (auto it = recorderStubMap_.begin(); it != recorderStubMap_.end(); it++) {
