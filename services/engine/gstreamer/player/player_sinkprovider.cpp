@@ -208,11 +208,13 @@ void PlayerSinkProvider::FirstRenderFrame(gpointer userData)
 void PlayerSinkProvider::OnFirstRenderFrame()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN(notifier_ != nullptr && GetFirstRenderFrameFlag());
-    PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_VIDEO_RENDERING_START, 0, {} };
-    notifier_(msg);
-    SetFirstRenderFrameFlag(false);
-    MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
+    CHECK_AND_RETURN(notifier_ != nullptr);
+    if (GetFirstRenderFrameFlag()) {
+        PlayBinMessage msg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_VIDEO_RENDERING_START, 0, {} };
+        notifier_(msg);
+        SetFirstRenderFrameFlag(false);
+        MEDIA_LOGW("KPI-TRACE: FIRST-VIDEO-FRAME rendered");
+    }
 }
 
 PlayBinSinkProvider::SinkPtr PlayerSinkProvider::CreateSubtitleSink()
