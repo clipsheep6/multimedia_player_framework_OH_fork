@@ -28,3 +28,9 @@
         font-size: 100px;
     }
 }
+
+@media screen and (device-type: 2in1) and (orientation: landscape) {
+    .title {
+        font-size: 100px;
+    }
+}
