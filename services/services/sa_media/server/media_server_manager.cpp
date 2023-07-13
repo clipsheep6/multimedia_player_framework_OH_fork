@@ -146,7 +146,7 @@ void MediaServerManager::Init()
 #ifdef SUPPORT_CODEC
     stubCollections_.emplace_back(StubNode {"avcodec", StubType::AVCODEC,
         AVCodecServiceStub::Create, maxSize});
-    stubCollections_.emplace_back(StubNode{"codeclist", StubType::AVCODECLIST,
+    stubCollections_.emplace_back(StubNode {"codeclist", StubType::AVCODECLIST,
         AVCodecListServiceStub::Create, SERVER_MAX_NUMBER});
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
