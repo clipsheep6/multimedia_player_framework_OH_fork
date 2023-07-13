@@ -101,6 +101,7 @@ private:
     bool alreadyInit = false;
     void Init();
     std::vector<StubNode> stubCollections_ = {};
+    std::vector<std::pair<StubType, std::u16string>> dumpCollections_ = {};
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>> stubMap_;
     AsyncExecutor executor_;

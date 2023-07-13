@@ -71,33 +71,17 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
         argSets.insert(args[index]);
     }
 
-    dumpString += "------------------PlayerServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::PLAYER],
-        argSets.find(u"player") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write PlayerServer information");
-        return OHOS::INVALID_OPERATION;
+    for (auto it : dumpCollections_) {
+        dumpString += "------------------"+ it.second +"Server------------------\n";
+        bool ret = false;
+        if (it.first == StubType::AVMETADATAHELPER) {
+            ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false);
+        } else {
+            ret = WriteInfo(fd, dumpString, dumperTbl_[it.first], argSets.find(it.second) != argSets.end());
+        }
+        std::string log = "Failed to write " + it.second +"Server information";
+        CHECK_AND_RETURN_RET_LOG(ret == OHOS::NO_ERROR, OHOS::INVALID_OPERATION, );
     }
-
-    dumpString += "------------------RecorderServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::RECORDER],
-        argSets.find(u"recorder") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write RecorderServer information");
-        return OHOS::INVALID_OPERATION;
-    }
-
-    dumpString += "------------------CodecServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::AVCODEC],
-        argSets.find(u"codec") != argSets.end()) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write CodecServer information");
-        return OHOS::INVALID_OPERATION;
-    }
-
-    dumpString += "------------------AVMetaServer------------------\n";
-    if (WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to write AVMetaServer information");
-        return OHOS::INVALID_OPERATION;
-    }
-
     if (ServiceDumpManager::GetInstance().Dump(fd, argSets) != OHOS::NO_ERROR) {
         MEDIA_LOGW("Failed to write dfx dump information");
         return OHOS::INVALID_OPERATION;
@@ -132,22 +116,26 @@ void MediaServerManager::Init()
 #ifdef SUPPORT_PLAYER
     stubCollections_.emplace_back(StubNode {"player", StubType::PLAYER,
         PlayerServiceStub::Create, maxSize});
+    dumpCollections_.emplace_back(std::make_pair(StubType::PLAYER, u"player"));
 #endif
 #ifdef SUPPORT_RECORDER
     stubCollections_.emplace_back(StubNode {"recorder", StubType::RECORDER,
         RecorderServiceStub::Create, SERVER_MAX_NUMBER / 8});
     stubCollections_.emplace_back(StubNode {"recorder_profiles", StubType::RECORDERPROFILES,
         RecorderProfilesServiceStub::Create, SERVER_MAX_NUMBER});
-#endif
-#ifdef SUPPORT_METADATA
-    stubCollections_.emplace_back(StubNode {"avmetadatahelper", StubType::AVMETADATAHELPER,
-        AVMetadataHelperServiceStub::Create, SERVER_MAX_NUMBER * 2});
+    dumpCollections_.emplace_back(std::make_pair(StubType::RECORDER, u"recorder"));
 #endif
 #ifdef SUPPORT_CODEC
     stubCollections_.emplace_back(StubNode {"avcodec", StubType::AVCODEC,
         AVCodecServiceStub::Create, maxSize});
     stubCollections_.emplace_back(StubNode {"codeclist", StubType::AVCODECLIST,
         AVCodecListServiceStub::Create, SERVER_MAX_NUMBER});
+    dumpCollections_.emplace_back(std::make_pair(StubType::AVCODEC, u"codec"));
+#endif
+#ifdef SUPPORT_METADATA
+    stubCollections_.emplace_back(StubNode {"avmetadatahelper", StubType::AVMETADATAHELPER,
+        AVMetadataHelperServiceStub::Create, SERVER_MAX_NUMBER * 2});
+    dumpCollections_.emplace_back(std::make_pair(StubType::AVMETADATAHELPER, u"avmetadatahelper"));
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
     stubCollections_.emplace_back(StubNode {"screen_capture", StubType::SCREEN_CAPTURE,
