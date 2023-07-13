@@ -172,7 +172,7 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
             DumperEntry entry = [media = stub](int32_t fd) -> int32_t {
                 return media->DumpInfo(fd);
             };
-            Dumper dumper{
+            Dumper dumper {
                 pid, IPCSkeleton::GetCallingUid(), entry, object
             };
             dumperTbl_[type].emplace_back(dumper);
