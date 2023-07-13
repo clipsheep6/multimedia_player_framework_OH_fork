@@ -129,34 +129,29 @@ MediaServerManager::~MediaServerManager()
 
 void MediaServerManager::Init()
 {
-    int maxSize = SERVER_MAX_NUMBER;
 #ifdef SUPPORT_PLAYER
-    stubCollections_.emplace_back(StubNode{"player", StubType::PLAYER,
+    stubCollections_.emplace_back(StubNode {"player", StubType::PLAYER,
         PlayerServiceStub::Create, maxSize});
 #endif
 #ifdef SUPPORT_RECORDER
-    maxSize = 2;
-    stubCollections_.emplace_back(StubNode{"recorder", StubType::RECORDER,
-        RecorderServiceStub::Create, maxSize});
-    maxSize = SERVER_MAX_NUMBER;
-    stubCollections_.emplace_back(StubNode{"recorder_profiles", StubType::RECORDERPROFILES,
-        RecorderProfilesServiceStub::Create, maxSize});
+    stubCollections_.emplace_back(StubNode {"recorder", StubType::RECORDER,
+        RecorderServiceStub::Create, SERVER_MAX_NUMBER / 8});
+    stubCollections_.emplace_back(StubNode {"recorder_profiles", StubType::RECORDERPROFILES,
+        RecorderProfilesServiceStub::Create, SERVER_MAX_NUMBER});
 #endif
 #ifdef SUPPORT_METADATA
-    maxSize = 32;
-    stubCollections_.emplace_back(StubNode{"avmetadatahelper", StubType::AVMETADATAHELPER,
-        AVMetadataHelperServiceStub::Create, maxSize});
+    stubCollections_.emplace_back(StubNode {"avmetadatahelper", StubType::AVMETADATAHELPER,
+        AVMetadataHelperServiceStub::Create, SERVER_MAX_NUMBER * 2});
 #endif
 #ifdef SUPPORT_CODEC
-    maxSize = SERVER_MAX_NUMBER;
-    stubCollections_.emplace_back(StubNode{"avcodec", StubType::AVCODEC,
+    stubCollections_.emplace_back(StubNode {"avcodec", StubType::AVCODEC,
         AVCodecServiceStub::Create, maxSize});
     stubCollections_.emplace_back(StubNode{"codeclist", StubType::AVCODECLIST,
-        AVCodecListServiceStub::Create, maxSize});
+        AVCodecListServiceStub::Create, SERVER_MAX_NUMBER});
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE
-    stubCollections_.emplace_back(StubNode{"screen_capture", StubType::SCREEN_CAPTURE,
-        ScreenCaptureServiceStub::Create, maxSize});
+    stubCollections_.emplace_back(StubNode {"screen_capture", StubType::SCREEN_CAPTURE,
+        ScreenCaptureServiceStub::Create, SERVER_MAX_NUMBER});
 #endif
     alreadyInit = true;
 }
