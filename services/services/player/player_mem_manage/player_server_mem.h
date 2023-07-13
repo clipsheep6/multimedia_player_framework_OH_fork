@@ -176,7 +176,7 @@ private:
     int32_t ReleaseMemByManage();
     int32_t RecoverMemByUser();
     bool NeedSelectAudioTrack();
-    void GetDefauleTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    void GetDefaultTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
     int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode);
     int32_t HandleCodecBuffers(bool enable);
     int32_t LocalResourceRelease();

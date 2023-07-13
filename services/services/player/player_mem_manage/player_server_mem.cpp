@@ -701,7 +701,7 @@ void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format 
 {
     if (isLocalResource_) {
         std::unique_lock<std::mutex> lockCb(mutexCb_);
-        GetDefauleTrack(type, extra, infoBody);
+        GetDefaultTrack(type, extra, infoBody);
         PlayerServer::OnInfo(type, extra, infoBody);
         CheckHasRecover(type, extra);
     } else {
@@ -951,7 +951,7 @@ bool PlayerServerMem::NeedSelectAudioTrack()
         recoverConfig_.audioIndex != defaultAudioIndex_);
 }
 
-void PlayerServerMem::GetDefauleTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+void PlayerServerMem::GetDefaultTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     (void)extra;
     if (type == INFO_TYPE_DEFAULTTRACK) {
