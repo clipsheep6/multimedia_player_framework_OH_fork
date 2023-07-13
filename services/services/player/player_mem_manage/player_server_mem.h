@@ -173,7 +173,7 @@ private:
     int32_t ReleaseMemByManage();
     int32_t RecoverMemByUser();
     bool NeedSelectAudioTrack();
-    void GetDefauleTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    void GetDefaultTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
 };
 }
 }

@@ -46,9 +46,8 @@ PlayerMemManage::PlayerMemManage()
 PlayerMemManage::~PlayerMemManage()
 {
     Memory::MemMgrClient::GetInstance().UnsubscribeAppState(*appStateListener_);
-    if (isAleardyCreateProbeTask_) {
-        isAleardyCreateProbeTask_ = false;
-        existTask_ = true;
+    if (isProbeTaskCreated_) {
+        isProbeTaskCreated_ = false;
         probeTaskQueue_->Stop();
         probeTaskQueue_ = nullptr;
     }
@@ -134,7 +133,7 @@ void PlayerMemManage::FindProbeTaskPlayer()
 
 void PlayerMemManage::ProbeTask()
 {
-    while (!existTask_) {
+    while (isProbeTaskCreated_) {
         FindProbeTaskPlayer();
         sleep(1);  // 1 : one second interval check
     }
@@ -143,8 +142,8 @@ void PlayerMemManage::ProbeTask()
 bool PlayerMemManage::Init()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    if (isParsered_) {
-        if (appStateListener_ != nullptr && appStateListenerRomoteDied_) {
+    if (isParsed) {
+        if (appStateListener_ != nullptr && isAppStateListenerRemoteDied_) {
             MEDIA_LOGE("MemMgrClient died, SubscribeAppState again");
             Memory::MemMgrClient::GetInstance().SubscribeAppState(*appStateListener_);
         }
@@ -157,7 +156,7 @@ bool PlayerMemManage::Init()
     CHECK_AND_RETURN_RET_LOG(appStateListener_ != nullptr, false, "failed to new AppStateListener");
 
     Memory::MemMgrClient::GetInstance().SubscribeAppState(*appStateListener_);
-    isParsered_ = true;
+    isParsed = true;
     return true;
 }
 
@@ -190,10 +189,9 @@ int32_t PlayerMemManage::RegisterPlayerServer(int32_t uid, int32_t pid, const Me
 
     {
         std::lock_guard<std::recursive_mutex> lock(recTaskMutex_);
-        if (!isAleardyCreateProbeTask_) {
+        if (!isProbeTaskCreated_) {
             MEDIA_LOGI("Start probe task");
-            isAleardyCreateProbeTask_ = true;
-            existTask_ = false;
+            isProbeTaskCreated_ = true;
             probeTaskQueue_ = std::make_unique<TaskQueue>("probeTaskQueue");
             CHECK_AND_RETURN_RET_LOG(probeTaskQueue_->Start() == MSERR_OK, false, "init task failed");
             auto task = std::make_shared<TaskHandler<void>>([this] {
@@ -250,10 +248,9 @@ int32_t PlayerMemManage::DeregisterPlayerServer(const MemManageRecall &memRecall
 
     {
         std::lock_guard<std::recursive_mutex> lock(recTaskMutex_);
-        if (isAleardyCreateProbeTask_ && playerManage_.size() == 0) {
+        if (isProbeTaskCreated_ && playerManage_.size() == 0) {
             MEDIA_LOGI("Stop probe task");
-            isAleardyCreateProbeTask_ = false;
-            existTask_ = true;
+            isProbeTaskCreated_ = false;
             probeTaskQueue_->Stop();
             probeTaskQueue_ = nullptr;
         }
@@ -394,11 +391,11 @@ void PlayerMemManage::RemoteDieAgainRegisterActiveApps()
 void PlayerMemManage::HandleOnConnected()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
-    MEDIA_LOGI("Enter RemoteDied:%{public}d", appStateListenerRomoteDied_);
-    appStateListenerIsConnected_ = true;
-    if (appStateListenerRomoteDied_) {
+    MEDIA_LOGI("Enter RemoteDied:%{public}d", isAppStateListenerRemoteDied_);
+    isAppStateListenerConnected_ = true;
+    if (isAppStateListenerRemoteDied_) {
         RemoteDieAgainRegisterActiveApps();
-        appStateListenerRomoteDied_ = false;
+        isAppStateListenerRemoteDied_ = false;
     }
 }
 
@@ -406,7 +403,7 @@ void PlayerMemManage::HandleOnDisconnected()
 {
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Enter");
-    appStateListenerIsConnected_ = false;
+    isAppStateListenerConnected_ = false;
 }
 
 void PlayerMemManage::HandleOnRemoteDied(const wptr<IRemoteObject> &object)
@@ -414,8 +411,8 @@ void PlayerMemManage::HandleOnRemoteDied(const wptr<IRemoteObject> &object)
     (void)object;
     std::lock_guard<std::recursive_mutex> lock(recMutex_);
     MEDIA_LOGI("Enter");
-    appStateListenerRomoteDied_ = true;
-    appStateListenerIsConnected_ = false;
+    isAppStateListenerRemoteDied_ = true;
+    isAppStateListenerConnected_ = false;
 
     for (auto &[findUid, pidPlayersInfo] : playerManage_) {
         for (auto &[findPid, appPlayerInfo] : pidPlayersInfo) {

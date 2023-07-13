@@ -688,7 +688,7 @@ int32_t PlayerServerMem::DumpInfo(int32_t fd)
 void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     std::lock_guard<std::recursive_mutex> lockCb(recMutexCb_);
-    GetDefauleTrack(type, extra, infoBody);
+    GetDefaultTrack(type, extra, infoBody);
     PlayerServer::OnInfo(type, extra, infoBody);
 
     CheckHasRecover(type, extra);
@@ -911,7 +911,7 @@ bool PlayerServerMem::NeedSelectAudioTrack()
         recoverConfig_.audioIndex != defaultAudioIndex_);
 }
 
-void PlayerServerMem::GetDefauleTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+void PlayerServerMem::GetDefaultTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
     (void)extra;
     if (type == INFO_TYPE_DEFAULTTRACK) {

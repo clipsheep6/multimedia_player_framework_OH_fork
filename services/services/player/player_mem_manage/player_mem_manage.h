@@ -70,17 +70,16 @@ private:
     static bool BackGroundTimeGreaterSort(AppPlayerInfo *a, AppPlayerInfo *b);
     void RemoteDieAgainRegisterActiveApps();
 
-    bool isParsered_ = false;
+    bool isParsed = false;
     std::recursive_mutex recMutex_;
     std::recursive_mutex recTaskMutex_;
     std::shared_ptr<AppStateListener> appStateListener_;
-    bool appStateListenerIsConnected_ = false;
-    bool appStateListenerRomoteDied_ = false;
+    bool isAppStateListenerConnected_ = false;
+    bool isAppStateListenerRemoteDied_ = false;
     using PidPlayersInfo = std::unordered_map<int32_t, AppPlayerInfo>;
     std::unordered_map<int32_t, PidPlayersInfo> playerManage_;
     std::unique_ptr<TaskQueue> probeTaskQueue_;
-    bool isAleardyCreateProbeTask_ = false;
-    bool existTask_ = false;
+    bool isProbeTaskCreated_ = false;
 };
 }
 }
