@@ -22,10 +22,11 @@
 #include "iremote_stub.h"
 #include "i_avmetadatahelper_service.h"
 #include "avsharedmemory.h"
+#include "../../engine_intf/i_media_stub_service.h"
 
 namespace OHOS {
 namespace Media {
-class IStandardAVMetadataHelperService : public IRemoteBroker {
+class IStandardAVMetadataHelperService : public IMediaStubService {
 public:
     virtual ~IStandardAVMetadataHelperService() = default;
     virtual int32_t SetSource(const std::string &uri, int32_t usage) = 0;

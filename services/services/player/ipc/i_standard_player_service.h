@@ -21,11 +21,11 @@
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 #include "player.h"
-#include "../../engine_intf/i_media_stub.h"
+#include "../../engine_intf/i_media_stub_service.h"
 
 namespace OHOS {
 namespace Media {
-class IStandardPlayerService : public IMediaStub {
+class IStandardPlayerService : public IMediaStubService {
 public:
     virtual ~IStandardPlayerService() = default;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;

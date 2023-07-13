@@ -22,6 +22,7 @@
 #include "iremote_stub.h"
 #include "i_recorder_profiles_service.h"
 #include "avsharedmemory.h"
+#include "../../engine_intf/i_media_stub_service.h"
 
 namespace OHOS {
 namespace Media {
@@ -36,7 +37,7 @@ enum class RecorderProfilesServiceMsg : uint32_t {
     RECORDER_PROFILES_GET_VIDEO_RECORDER_PROFILE,
     RECORDER_PROFILES_DESTROY
 };
-class IStandardRecorderProfilesService : public IRemoteBroker {
+class IStandardRecorderProfilesService : public IMediaStubService {
 public:
     virtual ~IStandardRecorderProfilesService() = default;
     virtual bool IsAudioRecorderConfigSupported(const RecorderProfilesData &profile) = 0;
