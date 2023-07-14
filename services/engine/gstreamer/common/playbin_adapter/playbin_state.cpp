@@ -761,15 +761,20 @@ int32_t PlayBinCtrlerBase::PlaybackCompletedState::SetRate(double rate)
 void PlayBinCtrlerBase::PlaybackCompletedState::ProcessStateChange(const InnerMessage &msg)
 {
     MEDIA_LOGI("PlaybackCompletedState::ProcessStateChange");
-    if (ctrler_.isTrackChanging_ && msg.detail2 == GST_STATE_PLAYING) {
-        ctrler_.isTrackChanging_ = false;
-        g_object_set(ctrler_.subtitleSink_, "change-track", FALSE, nullptr);
-        gst_element_set_start_time(GST_ELEMENT_CAST(ctrler_.playbin_), ctrler_.lastStartTime_);
-        ctrler_.ReportTrackChange();
-    }
-    if (msg.detail2 == GST_STATE_PLAYING && ctrler_.isUserSetPlay_) {
-        ctrler_.isUserSetPlay_ = false;
-        ctrler_.ChangeState(ctrler_.playingState_);
+    if (msg.detail2 == GST_STATE_PLAYING) {
+        if (ctrler_.isUserSetPlay_) {
+            ctrler_.isUserSetPlay_ = false;
+            ctrler_.ChangeState(ctrler_.playingState_);
+        } else if (ctrler_.isTrackChanging_) {
+            ctrler_.isTrackChanging_ = false;
+            g_object_set(ctrler_.subtitleSink_, "change-track", FALSE, nullptr);
+            gst_element_set_start_time(GST_ELEMENT_CAST(ctrler_.playbin_), ctrler_.lastStartTime_);
+            ctrler_.ReportTrackChange();
+        } else if (ctrler_.isAddingSubtitle_) {
+            ctrler_.isAddingSubtitle_ = false;
+            MEDIA_LOGI("adding subtitle done in completed state");
+            HandleTrackInfoUpdate();
+        }
     }
 }
 

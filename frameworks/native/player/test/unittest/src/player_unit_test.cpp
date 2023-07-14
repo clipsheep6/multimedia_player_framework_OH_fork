@@ -2526,6 +2526,12 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(MSERR_OK, player_->Pause());
     EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    int duration = 0;
+    EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
     EXPECT_EQ(MSERR_OK, player_->Stop());
     EXPECT_NE(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));    // Illegal state machine
     EXPECT_EQ(MSERR_OK, player_->Reset());

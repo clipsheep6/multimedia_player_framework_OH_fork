@@ -633,7 +633,7 @@ gboolean handle_first_frame(GstPad *sinkpad, GstBuffer *buf, GstSubtitleBasePars
     return TRUE;
 }
 
-static gchar *check_utf8_encoding(GstSubtitleBaseParse *self, const gchar *str, gsize len, gsize *consumed)
+static gchar *check_utf8_encoding(GstSubtitleBaseParse *self, const gchar *str, gsize len)
 {
     g_return_val_if_fail(str != nullptr && len > 0, nullptr);
 
@@ -644,7 +644,6 @@ static gchar *check_utf8_encoding(GstSubtitleBaseParse *self, const gchar *str, 
                 str += BOM_OF_UTF_8;
                 len -= BOM_OF_UTF_8;
         }
-        *consumed = len;
         return gst_subtitle_str_dup(str, TRUE, len);
     }
 
@@ -656,20 +655,14 @@ static void fill_buffer_from_adapter(GstSubtitleBaseParse *base_parse, GstSubtit
 {
     gsize avail = gst_adapter_available(buf_ctx->adapter);
     gconstpointer data = gst_adapter_map(buf_ctx->adapter, avail);
-    gsize consumed = 0;
 
-    gchar *input = check_utf8_encoding(base_parse, (const gchar *)data, avail, &consumed);
+    gchar *input = check_utf8_encoding(base_parse, (const gchar *)data, avail);
 
     gst_adapter_unmap(buf_ctx->adapter);
-    if ((input != nullptr) && (consumed > 0) && (buf_ctx->text != nullptr)) {
+    if ((input != nullptr) && (buf_ctx->text != nullptr)) {
         buf_ctx->text = g_string_append(buf_ctx->text, input);
-        if (G_UNLIKELY(consumed > avail)) {
-            GST_WARNING_OBJECT(base_parse, "consumed = %" G_GSIZE_FORMAT " > avail = %" G_GSIZE_FORMAT,
-                consumed, avail);
-            g_free(input);
-            return;
-        }
-        gst_adapter_flush(buf_ctx->adapter, consumed);
+        gst_adapter_flush(buf_ctx->adapter, avail);
+        GST_DEBUG_OBJECT(base_parse, "flush adapter size = %" G_GSIZE_FORMAT "", avail);
     }
     g_free(input);
 }
