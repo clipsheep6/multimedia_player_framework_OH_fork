@@ -72,14 +72,14 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     }
     for (const auto &it : dumpCollections_) {
         dumpString += "------------------"+ stubCollections_[it.first].name + "Server------------------\n";
-        bool ret = false;
+        auto ret = OHOS::NO_ERROR;
         if (it.first == StubType::AVMETADATAHELPER) {
             ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false);
         } else {
             ret = WriteInfo(fd, dumpString, dumperTbl_[it.first], argSets.find(it.second) != argSets.end());
         }
         std::string log = "Failed to write " + stubCollections_[it.first].name + "Server information";
-        CHECK_AND_RETURN_RET_LOG((ret == OHOS::NO_ERROR), OHOS::INVALID_OPERATION, log.c_str());
+        CHECK_AND_RETURN_RET_LOG(ret == OHOS::NO_ERROR, OHOS::INVALID_OPERATION, log.c_str());
     }
     CHECK_AND_RETURN_RET_LOG(ServiceDumpManager::GetInstance().Dump(fd, argSets) == OHOS::NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write dfx dump information");
