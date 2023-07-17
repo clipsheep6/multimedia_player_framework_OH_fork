@@ -79,7 +79,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
             ret = WriteInfo(fd, dumpString, dumperTbl_[it.first], argSets.find(it.second) != argSets.end());
         }
         std::string log = "Failed to write " + stubCollections_[it.first].name + "Server information";
-        CHECK_AND_RETURN_RET_LOG(ret == OHOS::NO_ERROR, OHOS::INVALID_OPERATION, log.c_str());
+        CHECK_AND_RETURN_RET_LOG((ret == OHOS::NO_ERROR), OHOS::INVALID_OPERATION, log.c_str());
     }
     CHECK_AND_RETURN_RET_LOG(ServiceDumpManager::GetInstance().Dump(fd, argSets) == OHOS::NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write dfx dump information");
@@ -105,6 +105,7 @@ MediaServerManager::~MediaServerManager()
 
 void MediaServerManager::Init()
 {
+    auto maxSize = SERVER_MAX_NUMBER;
 #ifdef SUPPORT_PLAYER
     stubCollections_[StubType::PLAYER] = StubNode {"player",
         PlayerServiceStub::Create, maxSize};
@@ -113,7 +114,7 @@ void MediaServerManager::Init()
 #ifdef SUPPORT_RECORDER
     stubCollections_[StubType::RECORDER] = StubNode {"recorder", RecorderServiceStub::Create, SERVER_MAX_NUMBER / 8};
     stubCollections_[StubType::RECORDERPROFILES] = StubNode {"recorder_profiles",
-        StubType::RECORDERPROFILES, RecorderProfilesServiceStub::Create, SERVER_MAX_NUMBER};
+        RecorderProfilesServiceStub::Create, SERVER_MAX_NUMBER};
     dumpCollections_.emplace_back(std::make_pair(StubType::RECORDER, u"recorder"));
 #endif
 #ifdef SUPPORT_CODEC
