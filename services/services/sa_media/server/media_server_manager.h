@@ -94,13 +94,12 @@ private:
     };
     struct StubNode {
         std::string name;
-        StubType type;
         std::function<sptr<IMediaStubService>()> create;
         unsigned int maxSize;
     };
     bool alreadyInit = false;
     void Init();
-    std::vector<StubNode> stubCollections_ = {};
+    std::map<StubType, StubNode> stubCollections_;
     std::vector<std::pair<StubType, std::u16string>> dumpCollections_ = {};
     std::map<StubType, std::vector<Dumper>> dumperTbl_;
     std::map<StubType, std::map<sptr<IRemoteObject>, pid_t>> stubMap_;
