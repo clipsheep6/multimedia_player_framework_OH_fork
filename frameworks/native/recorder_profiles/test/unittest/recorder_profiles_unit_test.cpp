@@ -52,6 +52,23 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_IsAudioRecorderConfigSupport
 }
 
 /**
+ * @tc.name: recorder_profile_IsAudioRecorderConfigSupported_0200
+ * @tc.desc: recorde profile IsAudioRecorderConfigSupported when match the wrong audioChannels
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderProfilesUnitTest, recorder_profile_IsAudioRecorderConfigSupported_0200, TestSize.Level0)
+{
+    std::shared_ptr<AudioRecorderProfile> profile  = std::make_shared<AudioRecorderProfile>();
+    profile->containerFormatType = ContainerFormatType::CFT_MPEG_4;
+    profile->audioCodec = CodecMimeType::AUDIO_AAC;
+    profile->audioBitrate = 96000; // 96000 common bitrate
+    profile->audioSampleRate = 48000; // 48000 common sample rate
+    profile->audioChannels = -1; // the wrong channels
+    EXPECT_FALSE(RecorderProfilesFactory::CreateRecorderProfiles().IsAudioRecorderConfigSupported(*profile));
+}
+
+/**
  * @tc.name: recorder_profile_HasVideoRecorderProfile_0100
  * @tc.desc: recorde profile HasVideoRecorderProfile
  * @tc.type: FUNC
@@ -62,6 +79,19 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_HasVideoRecorderProfile_0100
     int32_t sourceId = 0;
     int32_t qualityLevel = RECORDER_QUALITY_LOW;
     EXPECT_TRUE(RecorderProfilesFactory::CreateRecorderProfiles().HasVideoRecorderProfile(sourceId, qualityLevel));
+}
+
+/**
+ * @tc.name: recorder_profile_HasVideoRecorderProfile_0200
+ * @tc.desc: recorde profile HasVideoRecorderProfile when match the wrong sourceId and qualityLevel
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderProfilesUnitTest, recorder_profile_HasVideoRecorderProfile_0200, TestSize.Level0)
+{
+    int32_t sourceId = -1;
+    int32_t qualityLevel = RECORDER_QUALITY_HIGH;
+    EXPECT_FALSE(RecorderProfilesFactory::CreateRecorderProfiles().HasVideoRecorderProfile(sourceId, qualityLevel));
 }
 
 bool RecorderProfilesUnitTest::CheckAudioRecorderCapsArray(
@@ -168,6 +198,22 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetVideoRecorderProfile_0100
     EXPECT_EQ(176, videoRecorderProfile->videoFrameWidth); // 176 expect width
     EXPECT_EQ(144, videoRecorderProfile->videoFrameHeight); // 144 expect height
     EXPECT_EQ(30, videoRecorderProfile->videoFrameRate); // 30 expect frame rate
+}
+
+/**
+ * @tc.name: recorder_profile_GetVideoRecorderProfile_0200
+ * @tc.desc: recorde profile GetVideoRecorderProfile when match the wrong sourceId and qualityLevel
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetVideoRecorderProfile_0200, TestSize.Level0)
+{
+    int32_t sourceId = -1;
+    int32_t qualityLevel = RECORDER_QUALITY_HIGH;
+    std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
+    RecorderProfilesFactory::CreateRecorderProfiles().GetVideoRecorderProfile(sourceId, qualityLevel);
+    ASSERT_TRUE(videoRecorderProfile != nullptr);
+    EXPECT_NE(ContainerFormatType::CFT_MPEG_4, videoRecorderProfile->containerFormatType);
 }
 } // namespace Media
 } // namespace OHOS
