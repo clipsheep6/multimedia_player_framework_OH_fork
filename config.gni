@@ -20,7 +20,6 @@ declare_args() {
   multimedia_player_framework_support_codec_js = false
   multimedia_player_framework_support_metadata = true
   multimedia_player_framework_support_gstreamer = true
-  multimedia_player_framework_support_histreamer = true
   multimedia_player_framework_support_video = true
   multimedia_player_framework_support_jsapi = true
   multimedia_player_framework_support_capi = true
@@ -96,10 +95,6 @@ if (multimedia_player_framework_support_video) {
   player_framework_defines += [ "SUPPORT_VIDEO" ]
 } else {
   player_framework_defines += [ "SUPPORT_AUDIO_ONLY" ]
-}
-
-if (multimedia_player_framework_support_histreamer) {
-  player_framework_defines += [ "SUPPORT_HISTREAMER" ]
 }
 
 if (multimedia_player_framework_support_xcollie) {
