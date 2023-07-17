@@ -72,14 +72,14 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     }
     for (const auto &it : dumpCollections_) {
         dumpString += "------------------"+ stubCollections_[it.first].name + "Server------------------\n";
-        auto ret = OHOS::NO_ERROR;
+        int32_t ret = OHOS::NO_ERROR;
         if (it.first == StubType::AVMETADATAHELPER) {
             ret = WriteInfo(fd, dumpString, dumperTbl_[StubType::AVMETADATAHELPER], false);
         } else {
             ret = WriteInfo(fd, dumpString, dumperTbl_[it.first], argSets.find(it.second) != argSets.end());
         }
-        std::string log = "Failed to write " + stubCollections_[it.first].name + "Server information";
-        CHECK_AND_RETURN_RET_LOG(ret == OHOS::NO_ERROR, OHOS::INVALID_OPERATION, log.c_str());
+        // std::string log = "Failed to write " + stubCollections_[it.first].name + "Server information";
+        // CHECK_AND_RETURN_RET_LOG(ret == OHOS::NO_ERROR, OHOS::INVALID_OPERATION, log.c_str());
     }
     CHECK_AND_RETURN_RET_LOG(ServiceDumpManager::GetInstance().Dump(fd, argSets) == OHOS::NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to write dfx dump information");
@@ -141,8 +141,8 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
         Init();
     }
     CHECK_AND_RETURN_RET(stubCollections_.count(type) > 0, nullptr);
-    CHECK_AND_RETURN_RET(stubMap_[type].size() < node.maxSize, nullptr);
     auto node = stubCollections_[type];
+    CHECK_AND_RETURN_RET(stubMap_[type].size() < node.maxSize, nullptr);
     auto stub = node.create();
     CHECK_AND_RETURN_RET(stub != nullptr, nullptr);
     auto object = stub->AsObject();
