@@ -20,7 +20,6 @@
 #include <gst/video/video-info.h>
 #include "surface.h"
 #include "gst_surface_allocator.h"
-#include "display_type.h"
 
 G_BEGIN_DECLS
 
@@ -47,7 +46,7 @@ struct _GstProducerSurfacePool {
     gboolean started;
     GstSurfaceAllocator *allocator;
     GstAllocationParams params;
-    PixelFormat format;
+    OHOS::GraphicPixelFormat format;
     GstVideoInfo info;
     guint minBuffers;
     guint maxBuffers;

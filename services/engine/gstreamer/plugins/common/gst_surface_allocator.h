@@ -17,9 +17,7 @@
 #define GST_SURFACE_ALLOCATOR_H
 
 #include <gst/gst.h>
-#include "display_type.h"
 #include "gst_surface_memory.h"
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_SURFACE_ALLOCATOR (gst_surface_allocator_get_type())
@@ -76,7 +74,7 @@ gboolean gst_surface_allocator_set_surface(GstSurfaceAllocator *allocator, OHOS:
 typedef struct _GstSurfaceAllocParam {
     gint width;
     gint height;
-    PixelFormat format;
+    OHOS::GraphicPixelFormat format;
     guint64 usage;
     gboolean dont_wait;
     guint scale_type;
