@@ -191,9 +191,9 @@ ohos_shared_library("media_service") {
     "audio_framework:audio_client",
     "c_utils:utils",
     "hilog:libhilog",
+    "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
     "safwk:system_ability_fwk",
   ]
 

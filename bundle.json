@@ -50,7 +50,7 @@
           "c_utils",
           "zlib",
           "access_token",
-          "multimedia_image_framework",
+          "image_framework",
           "hiview",
           "eventhandler",
           "init",

@@ -179,8 +179,8 @@ ohos_shared_library("media_client") {
     "audio_framework:audio_client",
     "c_utils:utils",
     "hilog:libhilog",
+    "image_framework:image_native",
     "ipc:ipc_single",
-    "multimedia_image_framework:image_native",
     "samgr:samgr_proxy",
   ]
 

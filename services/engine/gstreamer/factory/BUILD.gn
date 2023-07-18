@@ -83,7 +83,7 @@ ohos_static_library("media_engine_gst_factory") {
     "c_utils:utils",
     "graphic_2d:surface",
     "hilog:libhilog",
-    "multimedia_image_framework:image_native",
+    "image_framework:image_native",
   ]
 
   subsystem_name = "multimedia"
