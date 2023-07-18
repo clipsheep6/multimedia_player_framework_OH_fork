@@ -761,6 +761,7 @@ int32_t PlayerEngineGstImpl::Stop()
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_OPERATION, "playBinCtrler_ is nullptr");
 
     MEDIA_LOGD("Stop in");
+    codecCtrl_.StopFormatChange();
     playBinCtrler_->Stop(true);
     return MSERR_OK;
 }

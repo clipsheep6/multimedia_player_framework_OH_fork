@@ -122,6 +122,8 @@ struct _GstVdecBase {
     gboolean performance_mode;
     gboolean player_scene;
     gboolean resolution_changed;
+    GMutex format_changed_lock;
+    gboolean unsupport_format_changed;
     GstCaps *sink_caps;
     gboolean input_need_ashmem;
     gboolean has_set_format;
