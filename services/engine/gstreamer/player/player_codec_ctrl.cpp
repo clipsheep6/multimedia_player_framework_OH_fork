@@ -168,12 +168,12 @@ void PlayerCodecCtrl::EnhanceSeekPerformance(bool enable)
     }
 }
 
-int32_t PlayerCodecCtrl::GetHEBCMode()
+int32_t PlayerCodecCtrl::GetHEBCMode() const
 {
     return isHEBCMode_;
 }
 
-bool PlayerCodecCtrl::IsFirstCodecSetup()
+bool PlayerCodecCtrl::IsFirstCodecSetup() const
 {
     return codecTypeList_.size() == 1;
 }

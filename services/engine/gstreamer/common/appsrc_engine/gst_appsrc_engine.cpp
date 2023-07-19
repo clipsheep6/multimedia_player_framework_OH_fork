@@ -521,7 +521,7 @@ int32_t GstAppsrcEngine::AddSrcMem(uint32_t bufferSize)
     return MSERR_OK;
 }
 
-void GstAppsrcEngine::OnError(int32_t errorCode, const std::string message)
+void GstAppsrcEngine::OnError(int32_t errorCode, const std::string &message)
 {
     isExit_ = true;
     pullCond_.notify_all();
