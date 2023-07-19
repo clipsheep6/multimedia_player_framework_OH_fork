@@ -17,21 +17,22 @@
 #include "gst_shared_mem_sink.h"
 #include "gst_video_display_sink.h"
 
+static inline void check_and_log(gboolean need_log, const char *log)
+{
+    if (need_log) {
+        GST_WARNING_OBJECT(nullptr, "pulgin %s", log);
+    }
+}
+
 static gboolean plugin_init(GstPlugin *plugin)
 {
     g_return_val_if_fail(plugin != nullptr, false);
     gboolean ret = gst_element_register(plugin, "surfacememsink", GST_RANK_PRIMARY, GST_TYPE_SURFACE_MEM_SINK);
-    if (ret == FALSE) {
-        GST_WARNING_OBJECT(nullptr, "register surfacememsink failed");
-    }
+    check_and_log(ret == FALSE, "register surfacememsink failed");
     ret = gst_element_register(plugin, "sharedmemsink", GST_RANK_PRIMARY, GST_TYPE_SHARED_MEM_SINK);
-    if (ret == FALSE) {
-        GST_WARNING_OBJECT(nullptr, "register sharedmemsink failed");
-    }
+    check_and_log(ret == FALSE, "register sharedmemsink failed");
     ret = gst_element_register(plugin, "videodisplaysink", GST_RANK_PRIMARY, GST_TYPE_VIDEO_DISPLAY_SINK);
-    if (ret == FALSE) {
-        GST_WARNING_OBJECT(nullptr, "register videodisplaysink failed");
-    }
+    check_and_log(ret == FALSE, "register videodisplaysink failed");
     return TRUE;
 }
 

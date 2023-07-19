@@ -196,10 +196,8 @@ void HdiBufferMgr::NotifyAvailable()
 void HdiBufferMgr::SetFlagToBuffer(GstBuffer *buffer, const uint32_t &flag)
 {
     GstBufferTypeMeta *bufferType = gst_buffer_get_buffer_type_meta(buffer);
-    if (bufferType == nullptr) {
-        MEDIA_LOGW("bufferType is null, set flag %{public}d to gstbuffer fail", flag);
-        return;
-    }
+    CHECK_AND_RETURN_LOG(bufferType != nullptr,
+        "bufferType is null, set flag %{public}d to gstbuffer fail", flag);
     bufferType->bufferFlag = BUFFER_FLAG_NONE;
     if (flag & OMX_BUFFERFLAG_EOS) {
         bufferType->bufferFlag |= BUFFER_FLAG_EOS;
@@ -217,9 +215,7 @@ void HdiBufferMgr::ClearCodingBuffers()
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGI("unref buffer %{public}zu", codingBuffers_.size());
     for (auto iter = codingBuffers_.begin(); iter != codingBuffers_.end(); ++iter) {
-        if (iter->second != nullptr) {
-            gst_buffer_unref(iter->second);
-        }
+        gst_buffer_unref(iter->second);
     }
     codingBuffers_.clear();
 }

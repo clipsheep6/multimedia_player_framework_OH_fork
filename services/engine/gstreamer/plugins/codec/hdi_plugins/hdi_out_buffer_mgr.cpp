@@ -173,9 +173,7 @@ void HdiOutBufferMgr::ClearmBuffers()
     while (!mBuffers.empty()) {
         GstBufferWrap bufferWarp = mBuffers.front();
         mBuffers.pop_front();
-        if (bufferWarp.gstBuffer) {
-            gst_buffer_unref(bufferWarp.gstBuffer);
-        }
+        gst_buffer_unref(bufferWarp.gstBuffer);
     }
 }
 }  // namespace Media
