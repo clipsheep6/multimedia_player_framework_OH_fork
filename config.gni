@@ -22,12 +22,12 @@ declare_args() {
   multimedia_player_framework_support_gstreamer = true
   multimedia_player_framework_support_video = true
   multimedia_player_framework_support_jsapi = true
-  multimedia_player_framework_support_capi = true
+  multimedia_player_framework_support_capi = false
   multimedia_player_framework_support_test = true
   multimedia_player_framework_support_xcollie = true
   multimedia_player_framework_support_jsstack = true
   multimedia_player_framework_support_seccomp = false
-  multimedia_player_framework_support_screen_capture = true
+  multimedia_player_framework_support_screen_capture = false
   if (defined(build_seccomp) && build_seccomp) {
     multimedia_player_framework_support_seccomp = true
   }
