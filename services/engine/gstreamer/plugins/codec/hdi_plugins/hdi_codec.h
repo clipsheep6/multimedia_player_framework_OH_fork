@@ -58,6 +58,7 @@ public:
     void Deinit() override;
     void OnCodecDied() override;
     void SetOutputPool(GstBufferPool *pool) override;
+    bool IsFormatChanged() override;
 
 private:
     struct AppData {
@@ -112,6 +113,7 @@ private:
     CompVerInfo verInfo_ = {};
     TaskQueue taskQue_;
     bool isError_ = false;
+    std::atomic<bool> startFormatChange_ = false;
     std::shared_mutex bufferMgrMutex_;
 };
 } // namespace Media

@@ -87,6 +87,7 @@ int32_t HdiVdecOutBufferMgr::UseBuffers(std::vector<GstBuffer *> buffers)
             buffers.swap(preBuffers_);
         }
         enableNativeBuffer_ = true;
+        CHECK_AND_RETURN_RET_LOG(!buffers.empty(), GST_CODEC_ERROR, "buffers is empty");
         (void)UseHandleMems(buffers);
         return GST_CODEC_OK;
     }
@@ -153,15 +154,17 @@ int32_t HdiVdecOutBufferMgr::FreeBuffers()
 int32_t HdiVdecOutBufferMgr::OnNewBuffer(GstBuffer *buffer)
 {
     MEDIA_LOGD("OnNewBuffer");
-    if (isFlushed_) {
-        std::unique_lock<std::mutex> lock(mutex_);
-        GstBufferWrap bufferWarp = {false, buffer};
-        mBuffers.push_back(bufferWarp);
-    } else if (isStart_) {
-        auto ret = HdiOutBufferMgr::PushBuffer(buffer);
-        // PushBuffer will not deal buffer ref count, we need unref after push.
-        gst_buffer_unref(buffer);
-        return ret;
+    if (isStart_) {
+        if (isFlushed_) {
+            std::unique_lock<std::mutex> lock(mutex_);
+            GstBufferWrap bufferWarp = {false, buffer};
+            mBuffers.push_back(bufferWarp);
+        } else {
+            auto ret = HdiOutBufferMgr::PushBuffer(buffer);
+            // PushBuffer will not deal buffer ref count, we need unref after push.
+            gst_buffer_unref(buffer);
+            return ret;
+        }
     } else {
         std::unique_lock<std::mutex> lock(mutex_);
         // preBuffers get the ref count.
