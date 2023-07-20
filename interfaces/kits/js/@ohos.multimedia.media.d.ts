@@ -15,6 +15,8 @@
 
 import { ErrorCallback, AsyncCallback, Callback } from './@ohos.base';
 import audio from "./@ohos.multimedia.audio";
+import type { SoundPool as _SoundPool } from './multimedia/soundPool';
+import type { PlayParameters as _PlayParameters } from './multimedia/soundPool';
 
 /**
  * @name media
@@ -118,6 +120,51 @@ declare namespace media {
    * @systemapi
    */
   function createVideoRecorder(): Promise<VideoRecorder>;
+
+  /**
+   * Creates a soundPool instance.
+   *
+   * @param {number} maxStreams The maximum number of simultaneous streams for this soundPool instance
+   * @param {audio.AudioRendererInfo} audioRenderInfo Audio renderer information
+   * @param {AsyncCallback<SoundPool>} callback Callback used to return soundPool instance if the operation is successful; returns null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Return by callback.
+   * @syscap SystemCapability.Multimedia.Media.SoundPool
+   * @since 10
+   */
+  function createSoundPool(
+    maxStreams: number,
+    audioRenderInfo: audio.AudioRendererInfo,
+    callback: AsyncCallback<SoundPool>
+  ): void;
+
+  /**
+   * Creates a soundPool instance.
+   *
+   * @param {number} maxStreams The maximum number of simultaneous streams for this soundPool instance
+   * @param {audio.AudioRendererInfo} audioRenderInfo Audio renderer information
+   * @returns A Promise instance used to return SoundPool instance if the operation is successful; returns null otherwise.
+   * @throws { BusinessError } 5400101 - No memory. Return by promise.
+   * @syscap SystemCapability.Multimedia.Media.SoundPool
+   * @since 10
+   */
+  function createSoundPool(maxStreams: number, audioRenderInfo: audio.AudioRendererInfo): Promise<SoundPool>;
+
+  /**
+   * Manages and plays sound. Before calling an SoundPool method, you must use createSoundPool()
+   * to create an SoundPool instance.
+   *
+   * @syscap SystemCapability.Multimedia.Media.SoundPool
+   * @since 10
+   */
+  type SoundPool = _SoundPool;
+
+  /**
+   * Describes play parameters.
+   *
+   * @syscap SystemCapability.Multimedia.Media.SoundPool
+   * @since 10
+   */
+  type PlayParameters = _PlayParameters;
 
   /**
    * Enumerates state change reason.
