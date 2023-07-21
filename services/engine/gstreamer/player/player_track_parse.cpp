@@ -20,6 +20,7 @@
 #include "gst_utils.h"
 #include "gst_meta_parser.h"
 #include "player.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerTrackParse"};
@@ -193,11 +194,13 @@ GstPadProbeReturn PlayerTrackParse::GetUsedDemux(GstPad *pad, GstPadProbeInfo *i
 
     const gchar *current_stream_id;
     gst_event_parse_stream_start (event, &current_stream_id);
+    CHECK_AND_RETURN_RET_LOG(current_stream_id != nullptr, GST_PAD_PROBE_OK, "current_stream_id is nullptr");
 
     std::unique_lock<std::mutex> lock(trackInfoMutex_);
     for (int32_t i = 0; i < static_cast<int32_t>(trackVec_.size()); i++) {
         for (auto padIt = trackVec_[i].trackInfos.begin(); padIt != trackVec_[i].trackInfos.end(); padIt++) {
             gchar *stream_id = gst_pad_get_stream_id(padIt->first);
+            CHECK_AND_CONTINUE(stream_id != nullptr);
             if (strcmp(current_stream_id, stream_id) == 0) {
                 findTrackInfo_ = true;
                 trackVec_[i].inUse = true;
@@ -233,8 +236,12 @@ int32_t PlayerTrackParse::GetInputSelectPadIndex(GstPad *pad)
 bool PlayerTrackParse::IsSameStreamId(GstPad *padA, GstPad *padB)
 {
     gchar *streamIdA = gst_pad_get_stream_id(padA);
+    CHECK_AND_RETURN_RET_LOG(streamIdA != nullptr, false, "streamIdA is nullptr");
+    ON_SCOPE_EXIT(0) { g_free(streamIdA); };
     gchar *streamIdB = gst_pad_get_stream_id(padB);
-    CHECK_AND_RETURN_RET((streamIdA != nullptr && streamIdB != nullptr), false);
+    CHECK_AND_RETURN_RET_LOG(streamIdB != nullptr, false, "streamIdB is nullptr");
+    CANCEL_SCOPE_EXIT_GUARD(0);
+
     bool ret = (strcmp(streamIdA, streamIdB) == 0);
     g_free(streamIdA);
     g_free(streamIdB);
@@ -335,24 +342,6 @@ int32_t PlayerTrackParse::GetTrackIndex(int32_t innerIndex, int32_t trackType, i
     }
 
     return MSERR_INVALID_VAL;
-}
-
-int32_t PlayerTrackParse::GetHLSStreamBandwidth(const char *streamId)
-{
-    int32_t bandwidth;
-    for (auto iter = trackVec_.begin(); iter != trackVec_.end(); ++iter) {
-        for (auto it = iter->trackInfos.begin(); it != iter->trackInfos.end(); ++it) {
-            gchar *padStreamId = gst_pad_get_stream_id(it->first);
-            if (strcmp(padStreamId, streamId) == 0) {
-                (it->second).GetIntValue(std::string(INNER_META_KEY_BANDWIDTH), bandwidth);
-                g_free(padStreamId);
-                return bandwidth;
-            }
-            g_free(padStreamId);
-        }
-    }
-    MEDIA_LOGE("Failed to find streamId: %{public}s", streamId);
-    return 0;
 }
 
 void PlayerTrackParse::StartUpdateTrackInfo()

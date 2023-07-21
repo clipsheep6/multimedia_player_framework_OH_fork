@@ -82,6 +82,7 @@ enum {
     PROP_METADATA_MODE,
     PROP_FREE_CODEC_BUFFERS,
     PROP_RECOVER_CODEC_BUFFERS,
+    PROP_STOP_FORMAT_CHANGED,
 };
 
 enum {
@@ -175,6 +176,10 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
 
     g_object_class_install_property(gobject_class, PROP_RECOVER_CODEC_BUFFERS,
         g_param_spec_boolean("recover-codec-buffers", "Recover-codec-buffers", "Recover Codec Buffers",
+            FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
+
+    g_object_class_install_property(gobject_class, PROP_STOP_FORMAT_CHANGED,
+        g_param_spec_boolean("stop-format-change", "stop-format-change", "stop-format-change",
             FALSE, (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 }
 
@@ -322,6 +327,11 @@ static void gst_vdec_base_set_property(GObject *object, guint prop_id, const GVa
         case PROP_RECOVER_CODEC_BUFFERS:
             (void)gst_vdec_base_recover_codec_buffers(self);
             break;
+        case PROP_STOP_FORMAT_CHANGED:
+            g_mutex_lock(&self->format_changed_lock);
+            self->unsupport_format_changed = g_value_get_boolean(value);
+            g_mutex_unlock(&self->format_changed_lock);
+            break;
         default:
             break;
     }
@@ -387,6 +397,8 @@ static void gst_vdec_base_property_init(GstVdecBase *self)
     self->metadata_mode = FALSE;
     self->is_eos_state = FALSE;
     self->is_support_swap_width_height = FALSE;
+    g_mutex_init(&self->format_changed_lock);
+    self->unsupport_format_changed = FALSE;
 }
 
 static void gst_vdec_base_init(GstVdecBase *self)
@@ -450,6 +462,7 @@ static void gst_vdec_base_finalize(GObject *object)
         self->sink_caps = nullptr;
     }
 
+    g_mutex_clear(&self->format_changed_lock);
     std::list<GstClockTime> tempList;
     tempList.swap(self->pts_list);
     std::vector<GstVideoFormat> tempVec;
@@ -675,6 +688,10 @@ static gboolean gst_vdec_base_flush(GstVideoDecoder *decoder)
 {
     GstVdecBase *self = GST_VDEC_BASE(decoder);
     g_return_val_if_fail(self != nullptr, FALSE);
+
+    g_mutex_lock(&self->format_changed_lock);
+    ON_SCOPE_EXIT(0) { g_mutex_unlock(&self->format_changed_lock); };
+
     g_return_val_if_fail(self->decoder != nullptr, FALSE);
     GST_DEBUG_OBJECT(self, "Flush start");
 
@@ -1371,12 +1388,17 @@ static void gst_vdec_base_get_real_stride(GstVdecBase *self)
 
 static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
 {
-    GST_STATE_LOCK(self);
-    ON_SCOPE_EXIT(0) { GST_STATE_UNLOCK(self); };
-    MediaTrace trace("VdecBase::FormatChange");
-    GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change start");
     g_return_val_if_fail(self != nullptr, GST_FLOW_ERROR);
     g_return_val_if_fail(self->decoder != nullptr, GST_FLOW_ERROR);
+
+    g_mutex_lock(&self->format_changed_lock);
+    ON_SCOPE_EXIT(0) { g_mutex_unlock(&self->format_changed_lock); };
+    if (self->unsupport_format_changed || !self->decoder->IsFormatChanged()) {
+        return GST_FLOW_OK;
+    }
+
+    MediaTrace trace("VdecBase::FormatChange");
+    GST_WARNING_OBJECT(self, "KPI-TRACE-VDEC: format change start");
     gint ret = self->decoder->ActiveBufferMgr(GST_CODEC_OUTPUT, false);
     g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "ActiveBufferMgr", TRUE), GST_FLOW_ERROR);
     ret = self->decoder->GetParameter(GST_VIDEO_OUTPUT_COMMON, GST_ELEMENT(self));
@@ -1771,6 +1793,7 @@ static void gst_vdec_base_event_flush_start(GstVideoDecoder *decoder)
         gst_vdec_base_set_flushing(self, TRUE);
         return;
     }
+    g_mutex_lock(&self->format_changed_lock);
     GST_VIDEO_DECODER_STREAM_LOCK(self);
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
     if (kclass->flush_cache_slice_buffer != nullptr) {
@@ -1783,6 +1806,7 @@ static void gst_vdec_base_event_flush_start(GstVideoDecoder *decoder)
         (void)self->decoder->Flush(GST_CODEC_ALL);
     }
     GST_VIDEO_DECODER_STREAM_UNLOCK(self);
+    g_mutex_unlock(&self->format_changed_lock);
 }
 
 static gboolean gst_vdec_base_event_flush_stop(GstVideoDecoder *decoder, GstEvent *event)

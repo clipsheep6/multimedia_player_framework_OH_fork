@@ -39,7 +39,6 @@ public:
     void Stop();
     int32_t GetTrackInfo(int32_t index, int32_t &innerIndex, int32_t &trackType);
     int32_t GetTrackIndex(int32_t innerIndex, int32_t trackType, int32_t &index);
-    int32_t GetHLSStreamBandwidth(const char *streamId);
     PlayerTrackParse();
     ~PlayerTrackParse();
 
