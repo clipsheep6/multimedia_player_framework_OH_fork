@@ -1588,7 +1588,7 @@ HWTEST_F(PlayerUnitTest, Player_Dump_Dot_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
     EXPECT_EQ(MSERR_OK, player_->Play());
-    system("param set sys.media.dump.dot.path /data/test");
+    system("param set sys.media.dump.dot.path /data/test/media");
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
     system("param set sys.media.dump.dot.path /xx");
