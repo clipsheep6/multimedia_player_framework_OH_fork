@@ -130,9 +130,9 @@ public:
     void Release() override;
 
 private:
-    bool CheckAudioCaptureMicPermssion();
-    bool CheckScreenCapturePermssion();
-    bool GetUsingPemissionFromPrivacy(VideoPermissionState state);
+    bool CheckAudioCaptureMicPermission();
+    bool CheckScreenCapturePermission();
+    bool GetUsingPermissionFromPrivacy(VideoPermissionState state);
     int32_t CheckVideoParam(VideoCaptureInfo videoInfo);
     int32_t CheckAudioParam(AudioCaptureInfo audioInfo);
     std::shared_ptr<AudioCapturer> CreateAudioCapture(AudioCaptureInfo audioInfo);
