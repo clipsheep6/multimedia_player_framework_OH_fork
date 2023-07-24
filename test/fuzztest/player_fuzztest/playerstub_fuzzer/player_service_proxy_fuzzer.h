@@ -17,57 +17,160 @@
 #define PLAYER_SERVICE_PROXY_FUZZER_H
 
 #include "stub_common.h"
+#include "i_standard_player_service.h"
 
 namespace OHOS {
 namespace Media {
-class IStandardPlayerService : public IRemoteBroker {
-public:
-    virtual ~IStandardPlayerService() = default;
-
-    enum PlayerServiceMsg {
-        SET_LISTENER_OBJ = 0,
-        SET_SOURCE,
-        SET_MEDIA_DATA_SRC_OBJ,
-        SET_FD_SOURCE,
-        PLAY,
-        PREPARE,
-        PREPAREASYNC,
-        PAUSE,
-        STOP,
-        RESET,
-        RELEASE,
-        SET_VOLUME,
-        SEEK,
-        GET_CURRENT_TIME,
-        GET_DURATION,
-        SET_PLAYERBACK_SPEED,
-        GET_PLAYERBACK_SPEED,
-        SET_VIDEO_SURFACE,
-        IS_PLAYING,
-        IS_LOOPING,
-        SET_LOOPING,
-        SET_RENDERER_DESC,
-        DESTROY,
-        SET_CALLBACK,
-        GET_VIDEO_TRACK_INFO,
-        GET_AUDIO_TRACK_INFO,
-        GET_VIDEO_WIDTH,
-        GET_VIDEO_HEIGHT,
-        SELECT_BIT_RATE,
-        SELECT_TRACK,
-        DESELECT_TRACK,
-        GET_CURRENT_TRACK
-    };
-
-    DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");
-};
-
 class PlayerServiceProxyFuzzer : public IRemoteProxy<IStandardPlayerService> {
 public:
     static sptr<PlayerServiceProxyFuzzer> Create();
     explicit PlayerServiceProxyFuzzer(const sptr<IRemoteObject> &impl);
     virtual ~PlayerServiceProxyFuzzer() {}
     void SendRequest(int32_t code, uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t SetListenerObject(const sptr<IRemoteObject> &object) override
+    {
+        return 0;
+    }
+    int32_t SetSource(const std::string &url) override
+    {
+        return 0;
+    }
+    int32_t SetSource(const sptr<IRemoteObject> &object) override
+    {
+        return 0;
+    }
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size) override
+    {
+        return 0;
+    }
+    int32_t AddSubSource(const std::string &url) override
+    {
+        return 0;
+    }
+    int32_t AddSubSource(int32_t fd, int64_t offset, int64_t size) override
+    {
+        return 0;
+    }
+    int32_t Play() override
+    {
+        return 0;
+    }
+    int32_t Prepare() override
+    {
+        return 0;
+    }
+    int32_t PrepareAsync() override
+    {
+        return 0;
+    }
+    int32_t Pause() override
+    {
+        return 0;
+    }
+    int32_t Stop() override
+    {
+        return 0;
+    }
+    int32_t Reset() override
+    {
+        return 0;
+    }
+    int32_t Release() override
+    {
+        return 0;
+    }
+    int32_t ReleaseSync() override
+    {
+        return 0;
+    }
+    int32_t SetVolume(float leftVolume, float rightVolume) override
+    {
+        return 0;
+    }
+    int32_t Seek(int32_t mSeconds, PlayerSeekMode mode) override
+    {
+        return 0;
+    }
+    int32_t GetCurrentTime(int32_t &currentTime) override
+    {
+        return 0;
+    }
+    int32_t GetVideoTrackInfo(std::vector<Format> &videoTrack) override
+    {
+        return 0;
+    }
+    int32_t GetAudioTrackInfo(std::vector<Format> &audioTrack) override
+    {
+        return 0;
+    }
+    int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override
+    {
+        return 0;
+    }
+    int32_t GetVideoWidth() override
+    {
+        return 0;
+    }
+    int32_t GetVideoHeight() override
+    {
+        return 0;
+    }
+    int32_t GetDuration(int32_t &duration) override
+    {
+        return 0;
+    }
+    int32_t SetPlaybackSpeed(PlaybackRateMode mode) override
+    {
+        return 0;
+    }
+    int32_t GetPlaybackSpeed(PlaybackRateMode &mode) override
+    {
+        return 0;
+    }
+    int32_t SetVideoSurface(sptr<Surface> surface) override
+    {
+        return 0;
+    }
+    bool IsPlaying() override
+    {
+        return 0;
+    }
+    bool IsLooping() override
+    {
+        return 0;
+    }
+    int32_t SetLooping(bool loop) override
+    {
+        return 0;
+    }
+    int32_t SetParameter(const Format &param) override
+    {
+        return 0;
+    }
+    int32_t DestroyStub() override
+    {
+        return 0;
+    }
+    int32_t SetPlayerCallback() override
+    {
+        return 0;
+    }
+    int32_t SelectBitRate(uint32_t bitRate) override
+    {
+        return 0;
+    }
+    int32_t SelectTrack(int32_t index) override
+    {
+        return 0;
+    }
+    int32_t DeselectTrack(int32_t index) override
+    {
+        return 0;
+    }
+    int32_t GetCurrentTrack(int32_t trackType, int32_t &index) override
+    {
+        return 0;
+    }
 private:
     int32_t SetSource(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetMediaDataSource(uint8_t *inputData, size_t size, bool isFuzz);

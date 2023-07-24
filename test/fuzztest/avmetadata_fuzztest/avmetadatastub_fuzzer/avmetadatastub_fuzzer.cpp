@@ -23,7 +23,7 @@ bool FuzzAVMetadataStub(uint8_t *data, size_t size)
         return true;
     }
     constexpr int32_t codeNum = 8;
-    IStandardAVMetadataService::AVMetadataServiceMsg codeIdList[codeNum] {
+    AVMetadataServiceProxyFuzzer::AVMetadataHelperServiceMsg codeIdList[codeNum] {
         AVMetadataServiceProxyFuzzer::SET_URI_SOURCE,
         AVMetadataServiceProxyFuzzer::SET_FD_SOURCE,
         AVMetadataServiceProxyFuzzer::RESOLVE_METADATA,

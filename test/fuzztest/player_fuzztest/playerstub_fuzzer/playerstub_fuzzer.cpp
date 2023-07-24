@@ -24,7 +24,7 @@ bool FuzzPlayerStub(uint8_t *data, size_t size)
         return true;
     }
     constexpr int32_t codeNum = 26;
-    IStandardPlayerService::PlayerServiceMsg codeIdList[codeNum] {
+    PlayerServiceProxyFuzzer::PlayerServiceMsg codeIdList[codeNum] {
         PlayerServiceProxyFuzzer::SET_SOURCE,
         PlayerServiceProxyFuzzer::SET_MEDIA_DATA_SRC_OBJ,
         PlayerServiceProxyFuzzer::SET_FD_SOURCE,

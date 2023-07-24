@@ -24,10 +24,12 @@ ohos_fuzztest("PlayerStubFuzzTest") {
       "../../../../test/fuzztest/player_fuzztest/playerstub_fuzzer"
 
   include_dirs = [
+    "../../../../services/services/player/ipc",
     "../../../../services/services/sa_media/ipc",
     "../../../../test/fuzztest/player_fuzztest",
     "../../../../interfaces/inner_api/native",
     "../../../../test/fuzztest/common",
+    "$MEDIA_PLAYER_GRAPHIC/frameworks/surface/include",
   ]
   cflags = [
     "-std=c++17",
@@ -64,6 +66,7 @@ ohos_fuzztest("PlayerStubFuzzTest") {
     "../../../../services/utils:media_format",
   ]
   external_deps = [
+    "graphic_2d:surface",
     "ipc:ipc_single",
     "player_framework:media_client",
     "safwk:system_ability_fwk",
