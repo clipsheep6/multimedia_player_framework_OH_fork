@@ -2438,5 +2438,31 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
     EXPECT_EQ("", player_->GetSubtitleText(""));
     EXPECT_EQ(MSERR_OK, player_->Release());
 }
+
+/**
+ * @tc.name  : Test media error
+ * @tc.number: Player_Media_Error
+ * @tc.desc  : Test Player Media Error
+ */
+HWTEST_F(PlayerUnitTest, Player_Media_Error, TestSize.Level0)
+{
+    for (int32_t code = MSERR_OK; code <= MSERR_EXTEND_START + 1; code++) {
+        MSErrorToString(static_cast<MediaServiceErrCode>(code));
+        MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(code));
+        MSErrorToExtError(static_cast<MediaServiceErrCode>(code));
+        MSErrorToExtErrorAPI9String(static_cast<MediaServiceErrCode>(code), "test1", "test2");
+        MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(code));
+    }
+
+    for (int32_t code = MSERR_EXT_OK; code <= MSERR_EXT_EXTEND_START + 1; code++) {
+        MSExtErrorToString(static_cast<MediaServiceExtErrCode>(code));
+    }
+
+    for (int32_t code = MSERR_EXT_API9_OK;
+        code <= MSERR_EXT_API9_UNSUPPORT_FORMAT + 1; code++) {
+        MSExtErrorAPI9ToString(static_cast<MediaServiceExtErrCodeAPI9>(code), "test1", "test2");
+        MSExtAVErrorToString(static_cast<MediaServiceExtErrCodeAPI9>(code));
+    }
+}
 } // namespace Media
 } // namespace OHOS
