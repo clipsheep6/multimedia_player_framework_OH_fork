@@ -328,17 +328,17 @@ public:
 
         work->data = reinterpret_cast<void *>(jsCb);
         // async callback, jsWork and jsWork->data should be heap object.
-        int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+        int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
             CHECK_AND_RETURN_LOG(work != nullptr, "Work thread is nullptr");
             (void)status;
             NapiCallback::Base *cb = reinterpret_cast<NapiCallback::Base *>(work->data);
             if (cb != nullptr) {
-                MEDIA_LOGI("JsCallBack %{public}s, uv_queue_work start", cb->callbackName.c_str());
+                MEDIA_LOGI("JsCallBack %{public}s, uv_queue_work_with_qos start", cb->callbackName.c_str());
                 cb->UvWork();
                 delete cb;
             }
             delete work;
-        });
+        }, uv_qos_user_initiated);
         if (ret != 0) {
             MEDIA_LOGE("Failed to execute libuv work queue");
             delete jsCb;
