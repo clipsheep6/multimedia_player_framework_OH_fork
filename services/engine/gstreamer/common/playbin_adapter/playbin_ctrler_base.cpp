@@ -401,15 +401,17 @@ int32_t PlayBinCtrlerBase::SetAudioEffectMode(const int32_t effectMode)
 int32_t PlayBinCtrlerBase::SelectBitRate(uint32_t bitRate)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGD("enter SelectBitRate, bandwidth: %{public}u", bitRate);
     if (bitRateVec_.empty()) {
         MEDIA_LOGE("BitRate is empty");
         return MSERR_INVALID_OPERATION;
     }
-    if (connectSpeed_ == bitRate) {
+    if (connectSpeed_ == bitRate && !isSelectBitRate_) {
         PlayBinMessage msg = { PLAYBIN_MSG_BITRATEDONE, 0, static_cast<int32_t>(bitRate), {} };
         ReportMessage(msg);
     } else {
-        connectSpeed_ = bitRate;
+        MEDIA_LOGD("set bandwidth to: %{public}u", bitRate);
+        isSelectBitRate_ = true;
         g_object_set(playbin_, "connection-speed", static_cast<uint64_t>(bitRate), nullptr);
     }
     return MSERR_OK;
@@ -450,6 +452,7 @@ int32_t PlayBinCtrlerBase::Reset() noexcept
     isRating_ = false;
     isAddingSubtitle_ = false;
     isBuffering_ = false;
+    isSelectBitRate_ = false;
     cachePercent_ = BUFFER_PERCENT_THRESHOLD;
     isDuration_ = false;
     isUserSetPause_ = false;
@@ -514,7 +517,7 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         PlayBinCtrlerWrapper *wrap = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrap != nullptr, "can not create this wrap");
 
-        id = g_signal_connect_data(playbin_, "video-changed",
+        id = g_signal_connect_data(videoSink_, "bandwidth-change",
             G_CALLBACK(&PlayBinCtrlerBase::OnSelectBitrateDoneCb), wrap,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
         AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
@@ -1038,7 +1041,8 @@ void PlayBinCtrlerBase::HandleCacheCtrlWhenNoBuffering(int32_t percent)
             g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_BUFFERING, nullptr);
         }
 
-        if (GetCurrState() == playingState_ && !isSeeking_ && !isRating_ && !isAddingSubtitle_ && !isUserSetPause_) {
+        if (GetCurrState() == playingState_ && !isSeeking_ && !isRating_ &&
+            !isAddingSubtitle_ && !isUserSetPause_ && !isSelectBitRate_) {
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("HandleCacheCtrl percent is %{public}d, begin set to paused", percent);
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
@@ -1390,13 +1394,14 @@ void PlayBinCtrlerBase::OnError(int32_t errorCode, std::string message)
     ReportMessage(msg);
 }
 
-void PlayBinCtrlerBase::OnSelectBitrateDoneCb(const GstElement *playbin, const char *streamId, gpointer userData)
+void PlayBinCtrlerBase::OnSelectBitrateDoneCb(const GstElement *playbin, uint32_t bandwidth, gpointer userData)
 {
     (void)playbin;
     auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
-    MEDIA_LOGD("Get streamId is: %{public}s", streamId);
-    if (thizStrong != nullptr && strcmp(streamId, "") != 0) {
-        int32_t bandwidth = thizStrong->trackParse_->GetHLSStreamBandwidth(streamId);
+    MEDIA_LOGD("OnSelectBitrateDoneCb, Get bandwidth is: %{public}u", bandwidth);
+    if (thizStrong != nullptr && bandwidth != 0) {
+        thizStrong->isSelectBitRate_ = false;
+        thizStrong->connectSpeed_ = bandwidth;
         PlayBinMessage msg = { PLAYBIN_MSG_BITRATEDONE, 0, bandwidth, {} };
         thizStrong->ReportMessage(msg);
     }

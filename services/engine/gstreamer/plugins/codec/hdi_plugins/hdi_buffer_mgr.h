@@ -82,6 +82,11 @@ public:
         return GST_CODEC_OK;
     }
 
+    virtual uint32_t GetWaitDisPlayBufNum()
+    {
+        return 0;
+    }
+
     virtual void SetOutputPool(GstBufferPool *pool)
     {
         (void)pool;

@@ -113,7 +113,7 @@ private:
     static void SourceSetup(const GstElement *playbin, GstElement *elem, gpointer userData);
     static void OnBitRateParseCompleteCb(const GstElement *playbin, uint32_t *bitrateInfo,
         uint32_t bitrateNum, gpointer userData);
-    static void OnSelectBitrateDoneCb(const GstElement *playbin, const char *streamId, gpointer userData);
+    static void OnSelectBitrateDoneCb(const GstElement *playbin, uint32_t bandwidth, gpointer userData);
     static GValueArray *AutoPlugSort(const GstElement *uriDecoder, GstPad *pad, GstCaps *caps,
         GValueArray *factories, gpointer userData);
     static void OnInterruptEventCb(const GstElement *audioSink, const uint32_t eventType, const uint32_t forceType,
@@ -202,6 +202,7 @@ private:
     bool isRating_ = false;
     bool isAddingSubtitle_ = false;
     bool isBuffering_ = false;
+    bool isSelectBitRate_ = false;
     bool isNetWorkPlay_ = false;
     bool isUserSetPlay_ = false;
     bool isUserSetPause_ = false;

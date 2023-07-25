@@ -27,6 +27,7 @@ public:
     int32_t UseBuffers(std::vector<GstBuffer*> buffers) override;
     void SetOutputPool(GstBufferPool *pool) override;
     int32_t FreeBuffers() override;
+    uint32_t GetWaitDisPlayBufNum() override;
 
 protected:
     void UpdateCodecMeta(GstBufferTypeMeta *bufferType, std::shared_ptr<HdiBufferWrap> &codecBuffer) override;
