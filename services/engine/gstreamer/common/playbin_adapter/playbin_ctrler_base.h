@@ -146,6 +146,7 @@ private:
     void OnSubtitleChanged();
     void ReportTrackChange();
     void OnTrackDone();
+    void OnAddSubDone();
     void OnError(int32_t errorCode, std::string message);
 
     inline void AddSignalIds(GstElement *element, gulong signalId)
@@ -217,6 +218,7 @@ private:
     int32_t trackChangeType_ = MediaType::MEDIA_TYPE_AUD;
     int32_t audioIndex_ = -1;
     bool hasSubtitleTrackSelected_ = true;
+    uint32_t subtitleTrackNum_ = 0;
 
     std::atomic<bool> isDuration_ = false;
     std::atomic<bool> enableLooping_ = false;

@@ -151,6 +151,10 @@ int32_t PlayerServer::BaseState::OnMessageReceived(PlayerOnInfoType type, int32_
             ret = MessageTrackDone(extra);
             break;
 
+        case INFO_TYPE_ADD_SUBTITLE_DONE:
+            ret = MessageTrackInfoUpdate();
+            break;
+
         case INFO_TYPE_TRACK_INFO_UPDATE:
             ret = MessageTrackInfoUpdate();
             break;

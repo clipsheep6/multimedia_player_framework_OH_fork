@@ -42,6 +42,7 @@ namespace {
     constexpr double DEFAULT_RATE = 1.0;
     constexpr uint32_t INTERRUPT_EVENT_SHIFT = 8;
     constexpr uint64_t CONNECT_SPEED_DEFAULT = 4 * 8 * 1024 * 1024;  // 4Mbps
+    constexpr uint32_t MAX_SUBTITLE_TRACK_NUN = 8;
 }
 
 namespace OHOS {
@@ -188,7 +189,14 @@ int32_t PlayBinCtrlerBase::AddSubSource(const std::string &url)
     MEDIA_LOGD("enter");
 
     std::unique_lock<std::mutex> lock(mutex_);
+    ON_SCOPE_EXIT(0) {
+        OnAddSubDone();
+    };
+
     CHECK_AND_RETURN_RET(sinkProvider_ != nullptr, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(subtitleTrackNum_ < MAX_SUBTITLE_TRACK_NUN,
+        (OnError(MSERR_INVALID_OPERATION, "subtitle tracks exceed the max num limit!"), MSERR_INVALID_OPERATION));
+
     if (subtitleSink_ == nullptr) {
         subtitleSink_ = sinkProvider_->CreateSubtitleSink();
         g_object_set(playbin_, "text-sink", subtitleSink_, nullptr);
@@ -196,6 +204,7 @@ int32_t PlayBinCtrlerBase::AddSubSource(const std::string &url)
 
     isAddingSubtitle_ = true;
     g_object_set(playbin_, "add-suburi", url.c_str(), nullptr);
+    CANCEL_SCOPE_EXIT_GUARD(0);
 
     return MSERR_OK;
 }
@@ -456,6 +465,7 @@ int32_t PlayBinCtrlerBase::Reset() noexcept
     cachePercent_ = BUFFER_PERCENT_THRESHOLD;
     isDuration_ = false;
     isUserSetPause_ = false;
+    subtitleTrackNum_ = 0;
 
     MEDIA_LOGD("exit");
     return MSERR_OK;
@@ -1383,6 +1393,13 @@ void PlayBinCtrlerBase::ReportTrackChange()
 void PlayBinCtrlerBase::OnTrackDone()
 {
     PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE, PlayBinMsgSubType::PLAYBIN_SUB_MSG_TRACK_DONE, 0, {} };
+    ReportMessage(msg);
+}
+
+void PlayBinCtrlerBase::OnAddSubDone()
+{
+    PlayBinMessage msg = { PlayBinMsgType::PLAYBIN_MSG_SUBTYPE,
+        PlayBinMsgSubType::PLAYBIN_SUB_MSG_ADD_SUBTITLE_DONE, 0, {} };
     ReportMessage(msg);
 }
 

@@ -143,6 +143,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_TRACK_INFO_UPDATE,
     /* return the subtitle of playback. */
     INFO_TYPE_SUBTITLE_UPDATE,
+    /* return to the end of adding subtitle processing. */
+    INFO_TYPE_ADD_SUBTITLE_DONE,
 };
 
 enum PlayerStates : int32_t {
