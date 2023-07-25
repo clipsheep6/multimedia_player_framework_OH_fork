@@ -41,6 +41,7 @@ public:
 private:
     std::weak_ptr<PlayerCallback> callback_;
     std::weak_ptr<MonitorClientObject> monitor_;
+    int32_t lastStateExtra_ = -1;
 };
 } // namespace Media
 } // namespace OHOS

@@ -189,7 +189,7 @@ napi_value AVPlayerNapi::JsCreateAVPlayer(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, "JsCreateAVPlayer", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {},
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncContext.get()), &asyncContext->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncContext->work));
+    napi_queue_async_work_with_qos(env, asyncContext->work, napi_qos_user_initiated);
     asyncContext.release();
     MEDIA_LOGI("JsCreateAVPlayer Out");
     return result;
@@ -266,7 +266,7 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait Prepare Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsPrepare Out");
     return result;
@@ -344,7 +344,7 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait JsPlay Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsPlay Out");
     return result;
@@ -413,7 +413,7 @@ napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait JsPause Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsPause Out");
     return result;
@@ -483,7 +483,7 @@ napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
             MEDIA_LOGI("Wait JsStop Task End");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsStop Out");
     return result;
@@ -564,7 +564,7 @@ napi_value AVPlayerNapi::JsReset(napi_env env, napi_callback_info info)
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsReset Out");
     return result;
@@ -651,7 +651,7 @@ napi_value AVPlayerNapi::JsRelease(napi_env env, napi_callback_info info)
             }
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("JsRelease Out");
     return result;
@@ -1844,7 +1844,7 @@ napi_value AVPlayerNapi::JsGetTrackDescription(napi_env env, napi_callback_info 
             promiseCtx->JsResult = std::make_unique<MediaJsResultArray>(trackInfo);
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGI("GetTrackDescription Out");
     return result;
@@ -1969,7 +1969,7 @@ napi_value AVPlayerNapi::JsGetCurrentTrack(napi_env env, napi_callback_info info
             MEDIA_LOGI("GetCurrentTrack Task end");
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, promiseCtx->work));
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     return result;
 }

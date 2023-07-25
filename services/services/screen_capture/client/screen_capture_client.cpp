@@ -26,14 +26,14 @@ namespace Media {
 std::shared_ptr<ScreenCaptureClient> ScreenCaptureClient::Create(
     const sptr<IStandardScreenCaptureService> &ipcProxy)
 {
-    std::shared_ptr<ScreenCaptureClient> screencapture = std::make_shared<ScreenCaptureClient>(ipcProxy);
+    std::shared_ptr<ScreenCaptureClient> screenCapture = std::make_shared<ScreenCaptureClient>(ipcProxy);
 
-    CHECK_AND_RETURN_RET_LOG(screencapture != nullptr, nullptr, "failed to new Screen Capture Client..");
+    CHECK_AND_RETURN_RET_LOG(screenCapture != nullptr, nullptr, "failed to new Screen Capture Client");
 
-    int32_t ret = screencapture->CreateListenerObject();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to create listener object..");
+    int32_t ret = screenCapture->CreateListenerObject();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to create listener object");
 
-    return screencapture;
+    return screenCapture;
 }
 
 ScreenCaptureClient::ScreenCaptureClient(const sptr<IStandardScreenCaptureService> &ipcProxy)
@@ -50,7 +50,7 @@ int32_t ScreenCaptureClient::CreateListenerObject()
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
     sptr<IRemoteObject> object = listenerStub_->AsObject();
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
+    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr");
 
     MEDIA_LOGD("SetListenerObject");
     return screenCaptureProxy_->SetListenerObject(object);
@@ -142,12 +142,12 @@ int32_t ScreenCaptureClient::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
     return screenCaptureProxy_->AcquireAudioBuffer(audioBuffer, type);
 }
 
-int32_t ScreenCaptureClient::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfacebuffer, int32_t &fence,
+int32_t ScreenCaptureClient::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
                                                 int64_t &timestamp, OHOS::Rect &damage)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->AcquireVideoBuffer(surfacebuffer, fence, timestamp, damage);
+    return screenCaptureProxy_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
 }
 
 int32_t ScreenCaptureClient::ReleaseAudioBuffer(AudioCaptureSourceType type)

@@ -17,38 +17,50 @@
 #define AVMETADATA_SERVICE_PROXY_FUZZER_H
 
 #include "stub_common.h"
+#include "i_standard_avmetadatahelper_service.h"
 
 namespace OHOS {
 namespace Media {
-class IStandardAVMetadataService : public IRemoteBroker {
-public:
-    virtual ~IStandardAVMetadataService() = default;
-
-    enum AVMetadataServiceMsg {
-        SET_URI_SOURCE = 0,
-        SET_FD_SOURCE,
-        RESOLVE_METADATA,
-        RESOLVE_METADATA_MAP,
-        FETCH_ART_PICTURE,
-        FETCH_FRAME_AT_TIME,
-        RELEASE,
-        DESTROY,
-    };
-
-    enum AVMetadataUsage : int32_t {
-        AV_META_USAGE_META_ONLY,
-        AV_META_USAGE_PIXEL_MAP,
-    };
-
-    DECLARE_INTERFACE_DESCRIPTOR(u"IStandardAVMetadataHelperService");
-};
-
-class AVMetadataServiceProxyFuzzer : public IRemoteProxy<IStandardAVMetadataService> {
+class AVMetadataServiceProxyFuzzer : public IRemoteProxy<IStandardAVMetadataHelperService> {
 public:
     static sptr<AVMetadataServiceProxyFuzzer> Create();
     explicit AVMetadataServiceProxyFuzzer(const sptr<IRemoteObject> &impl);
     virtual ~AVMetadataServiceProxyFuzzer() {}
     void SendRequest(int32_t code, uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t SetSource(const std::string &uri, int32_t usage) override
+    {
+        return 0;
+    }
+    int32_t SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage) override
+    {
+        return 0;
+    }
+    std::string ResolveMetadata(int32_t key) override
+    {
+        return std::string("");
+    }
+    std::unordered_map<int32_t, std::string> ResolveMetadataMap() override
+    {
+        std::unordered_map<int32_t, std::string> metadata;
+        return metadata;
+    }
+    std::shared_ptr<AVSharedMemory> FetchArtPicture() override
+    {
+        return nullptr;
+    }
+    std::shared_ptr<AVSharedMemory> FetchFrameAtTime(
+        int64_t timeUs, int32_t option, const OutputConfiguration &param) override
+    {
+        return nullptr;
+    }
+    void Release() override
+    {
+        return;
+    }
+    int32_t DestroyStub() override
+    {
+        return 0;
+    }
 private:
     int32_t SetUriSource(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetFdSource(uint8_t *inputData, size_t size, bool isFuzz);

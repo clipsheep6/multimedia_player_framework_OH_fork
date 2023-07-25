@@ -36,11 +36,10 @@ namespace OHOS {
 namespace Media {
 void Dumper::DumpDotGraph(GstPipeline &pipeline, int32_t oldState, int32_t newState)
 {
-    if ((oldState < GST_STATE_VOID_PENDING) || (oldState > GST_STATE_PLAYING) ||
-        (newState < GST_STATE_VOID_PENDING) || (newState > GST_STATE_PLAYING)) {
-        MEDIA_LOGE("invalid state, oldState: %{public}d, newState: %{public}d", oldState, newState);
-        return;
-    }
+    bool checkRet = (oldState < GST_STATE_VOID_PENDING) || (oldState > GST_STATE_PLAYING) ||
+        (newState < GST_STATE_VOID_PENDING) || (newState > GST_STATE_PLAYING);
+    CHECK_AND_RETURN_LOG(!checkRet, "invalid state, oldState: %{public}d, newState: %{public}d",
+        oldState, newState);
 
     std::string dumpDir;
     int res = OHOS::system::GetStringParameter("sys.media.dump.dot.path", dumpDir, "");
@@ -72,11 +71,8 @@ void Dumper::DumpDotGraph(GstPipeline &pipeline, int32_t oldState, int32_t newSt
     const char *format = "%s/%" PRIu64 ".%u.%u.%u-media-pipeline.0x%06" PRIXPTR ".%s_%s.dot";
     ret = sprintf_s(fullPath, PATH_MAX, format, realPath.c_str(), hour, minute, sec, millsec,
                     FAKE_POINTER(&pipeline), oldName, newName);
-    if (ret <= 0) {
-        MEDIA_LOGE("dump dot failed for 0x%{public}06" PRIXPTR " %{public}s to %{public}s",
-                   FAKE_POINTER(&pipeline), oldName, newName);
-        return;
-    }
+    CHECK_AND_RETURN_LOG(ret > 0, "dump dot failed for 0x%{public}06" PRIXPTR " %{public}s to %{public}s",
+        FAKE_POINTER(&pipeline), oldName, newName);
 
     FILE *fp = fopen(fullPath, "wb");
     CHECK_AND_RETURN_LOG(fp != nullptr, "open path failed, %{public}s", fullPath);
@@ -85,8 +81,6 @@ void Dumper::DumpDotGraph(GstPipeline &pipeline, int32_t oldState, int32_t newSt
     if (buf != nullptr) {
         (void)fputs(buf, fp);
         g_free(buf);
-    } else {
-        MEDIA_LOGD("buf is nullptr");
     }
 
     (void)fclose(fp);
@@ -131,8 +125,6 @@ GstPadProbeReturn Dumper::DumpGstBuffer(GstPad *pad, GstPadProbeInfo *info, gpoi
         (void)fflush(fp);
         (void)fclose(fp);
         fp = nullptr;
-    } else {
-        MEDIA_LOGE("open path failed, %{public}s", fullPath);
     }
 
     gst_buffer_unmap(buf, &mapInfo);
@@ -146,24 +138,14 @@ void Dumper::AddDumpGstBufferProbe(GstElement *element, const gchar *padname)
     GstPad *pad = gst_element_get_static_pad(element, padname);
     CHECK_AND_RETURN(pad != nullptr);
 
-    gulong ret = gst_pad_add_probe(pad, GST_PAD_PROBE_TYPE_BUFFER, &Dumper::DumpGstBuffer, nullptr, nullptr);
-    if (ret == 0) {
-        MEDIA_LOGE("add dump gst buffer probe to pad %{public}s:%{public}s failed", GST_DEBUG_PAD_NAME(pad));
-    } else {
-        MEDIA_LOGD("add dump gst buffer probe to pad %{public}s:%{public}s success", GST_DEBUG_PAD_NAME(pad));
-    }
-
+    (void)gst_pad_add_probe(pad, GST_PAD_PROBE_TYPE_BUFFER, &Dumper::DumpGstBuffer, nullptr, nullptr);
     gst_object_unref(pad);
 }
 
 bool Dumper::IsEnableDumpGstBuffer()
 {
     int value = OHOS::system::GetIntParameter("sys.media.dump.gstbuffer", 0);
-    if (value == 0) {
-        return false;
-    }
-
-    return true;
+    return value == 0 ? false : true;
 }
 } // namespace Media
 } // namespace OHOS

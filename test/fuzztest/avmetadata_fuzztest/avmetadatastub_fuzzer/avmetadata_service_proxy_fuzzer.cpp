@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace Media {
 AVMetadataServiceProxyFuzzer::AVMetadataServiceProxyFuzzer(const sptr<IRemoteObject> &impl)
-    : IRemoteProxy<IStandardAVMetadataService>(impl)
+    : IRemoteProxy<IStandardAVMetadataHelperService>(impl)
 {
     avmetaFuncs_[SET_URI_SOURCE] = &AVMetadataServiceProxyFuzzer::SetUriSource;
     avmetaFuncs_[SET_FD_SOURCE] = &AVMetadataServiceProxyFuzzer::SetFdSource;

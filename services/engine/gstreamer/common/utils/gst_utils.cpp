@@ -29,9 +29,7 @@ bool MatchElementByMeta(
     const GstElement &elem, const std::string_view &metaKey, const std::vector<std::string_view> &expectedMetaFields)
 {
     const gchar *metadata = gst_element_get_metadata(const_cast<GstElement *>(&elem), metaKey.data());
-    if (metadata == nullptr) {
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(metadata != nullptr, false, "failed to gst_element_get_metadata");
 
     std::vector<std::string> klassDesc;
     SplitStr(metadata, "/", klassDesc, false, true);

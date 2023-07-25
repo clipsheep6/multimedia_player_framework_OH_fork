@@ -113,7 +113,7 @@ int32_t ScreenCaptureServiceProxy::InitAudioCap(AudioCaptureInfo audioInfo)
             && data.WriteInt32(audioInfo.audioSource);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write audioinfo!");
 
-    int error = Remote()->SendRequest(INITAUDIO_CAP, data, reply, option);
+    int error = Remote()->SendRequest(INIT_AUDIO_CAP, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "InitAudioCap failed, error: %{public}d", error);
 
@@ -140,7 +140,7 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
             data.WriteInt32(videoInfo.videoSource);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write videoinfo!");
 
-    int error = Remote()->SendRequest(INITVIDEO_CAP, data, reply, option);
+    int error = Remote()->SendRequest(INIT_VIDEO_CAP, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION, "InitVideoCap, error: %{public}d", error);
 
     return reply.ReadInt32();
@@ -155,7 +155,7 @@ int32_t ScreenCaptureServiceProxy::StartScreenCapture()
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    int error = Remote()->SendRequest(STARTSCREEN_CAPTURE, data, reply, option);
+    int error = Remote()->SendRequest(START_SCREEN_CAPTURE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "StartScreenCapture failed, error: %{public}d", error);
 
@@ -171,7 +171,7 @@ int32_t ScreenCaptureServiceProxy::StopScreenCapture()
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    int error = Remote()->SendRequest(STOPSCREEN_CAPTURE, data, reply, option);
+    int error = Remote()->SendRequest(STOP_SCREEN_CAPTURE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "StopScreenCapture failed, error: %{public}d", error);
 
@@ -217,7 +217,7 @@ int32_t ScreenCaptureServiceProxy::AcquireAudioBuffer(std::shared_ptr<AudioBuffe
     return ret;
 }
 
-int32_t ScreenCaptureServiceProxy::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfacebuffer, int32_t &fence,
+int32_t ScreenCaptureServiceProxy::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
                                                       int64_t &timestamp, OHOS::Rect &damage)
 {
     MessageParcel data;
@@ -232,8 +232,8 @@ int32_t ScreenCaptureServiceProxy::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> 
                              "AcquireVideoBuffer failed, error: %{public}d", error);
     int ret = reply.ReadInt32();
     if (ret == MSERR_OK) {
-        if (surfacebuffer != nullptr) {
-            surfacebuffer->ReadFromMessageParcel(reply);
+        if (surfaceBuffer != nullptr) {
+            surfaceBuffer->ReadFromMessageParcel(reply);
         }
         fence = reply.ReadInt32();
         timestamp = reply.ReadInt64();
@@ -290,7 +290,7 @@ int32_t ScreenCaptureServiceProxy::SetMicrophoneEnabled(bool isMicrophone)
     token = data.WriteBool(isMicrophone);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write Microphone state!");
 
-    int error = Remote()->SendRequest(SETMICENABLE, data, reply, option);
+    int error = Remote()->SendRequest(SET_MIC_ENABLE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
                              "SetMicrophoneEnabled failed, error: %{public}d", error);
     return reply.ReadInt32();

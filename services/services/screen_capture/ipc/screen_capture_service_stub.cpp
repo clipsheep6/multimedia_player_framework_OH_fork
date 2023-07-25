@@ -53,12 +53,12 @@ int32_t ScreenCaptureServiceStub::Init()
         "failed to create ScreenCaptureServer Service");
     screenCaptureStubFuncs_[SET_LISTENER_OBJ] = &ScreenCaptureServiceStub::SetListenerObject;
     screenCaptureStubFuncs_[RELEASE] = &ScreenCaptureServiceStub::Release;
-    screenCaptureStubFuncs_[SETMICENABLE] = &ScreenCaptureServiceStub::SetMicrophoneEnabled;
+    screenCaptureStubFuncs_[SET_MIC_ENABLE] = &ScreenCaptureServiceStub::SetMicrophoneEnabled;
     screenCaptureStubFuncs_[SET_CAPTURE_MODE] = &ScreenCaptureServiceStub::SetCaptureMode;
-    screenCaptureStubFuncs_[INITAUDIO_CAP] = &ScreenCaptureServiceStub::InitAudioCap;
-    screenCaptureStubFuncs_[INITVIDEO_CAP] = &ScreenCaptureServiceStub::InitVideoCap;
-    screenCaptureStubFuncs_[STARTSCREEN_CAPTURE] = &ScreenCaptureServiceStub::StartScreenCapture;
-    screenCaptureStubFuncs_[STOPSCREEN_CAPTURE] = &ScreenCaptureServiceStub::StopScreenCapture;
+    screenCaptureStubFuncs_[INIT_AUDIO_CAP] = &ScreenCaptureServiceStub::InitAudioCap;
+    screenCaptureStubFuncs_[INIT_VIDEO_CAP] = &ScreenCaptureServiceStub::InitVideoCap;
+    screenCaptureStubFuncs_[START_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::StartScreenCapture;
+    screenCaptureStubFuncs_[STOP_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::StopScreenCapture;
     screenCaptureStubFuncs_[ACQUIRE_AUDIO_BUF] = &ScreenCaptureServiceStub::AcquireAudioBuffer;
     screenCaptureStubFuncs_[ACQUIRE_VIDEO_BUF] = &ScreenCaptureServiceStub::AcquireVideoBuffer;
     screenCaptureStubFuncs_[RELEASE_AUDIO_BUF] = &ScreenCaptureServiceStub::ReleaseAudioBuffer;
@@ -167,12 +167,12 @@ int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(std::shared_ptr<AudioBuffer
     return screenCaptureServer_->AcquireAudioBuffer(audioBuffer, type);
 }
 
-int32_t ScreenCaptureServiceStub::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfacebuffer, int32_t &fence,
+int32_t ScreenCaptureServiceStub::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
                                                      int64_t &timestamp, OHOS::Rect &damage)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, false,
         "screen capture server is nullptr");
-    return screenCaptureServer_->AcquireVideoBuffer(surfacebuffer, fence, timestamp, damage);
+    return screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
 }
 
 int32_t ScreenCaptureServiceStub::ReleaseAudioBuffer(AudioCaptureSourceType type)
@@ -271,17 +271,17 @@ int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(MessageParcel &data, Messag
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE,
         "screen capture server is nullptr");
     (void)data;
-    std::shared_ptr<AudioBuffer> audiobuffer;
+    std::shared_ptr<AudioBuffer> audioBuffer;
     AudioCaptureSourceType type = static_cast<AudioCaptureSourceType>(data.ReadInt32());
-    int32_t ret = AcquireAudioBuffer(audiobuffer, type);
+    int32_t ret = AcquireAudioBuffer(audioBuffer, type);
     reply.WriteInt32(ret);
     if (ret == MSERR_OK) {
-        reply.WriteInt32(audiobuffer->length);
-        if ((audiobuffer->buffer != nullptr)&&(audiobuffer->length > 0)) {
-            reply.WriteBuffer(audiobuffer->buffer, audiobuffer->length);
+        reply.WriteInt32(audioBuffer->length);
+        if ((audioBuffer->buffer != nullptr)&&(audioBuffer->length > 0)) {
+            reply.WriteBuffer(audioBuffer->buffer, audioBuffer->length);
         }
-        reply.WriteInt32(audiobuffer->sourcetype);
-        reply.WriteInt64(audiobuffer->timestamp);
+        reply.WriteInt32(audioBuffer->sourcetype);
+        reply.WriteInt64(audioBuffer->timestamp);
     }
     return MSERR_OK;
 }
@@ -294,12 +294,12 @@ int32_t ScreenCaptureServiceStub::AcquireVideoBuffer(MessageParcel &data, Messag
     int32_t fence = 0;
     int64_t timestamp = 0;
     OHOS::Rect damage;
-    sptr<OHOS::SurfaceBuffer> videobuffer = nullptr;
-    int32_t ret = AcquireVideoBuffer(videobuffer, fence, timestamp, damage);
+    sptr<OHOS::SurfaceBuffer> videoBuffer = nullptr;
+    int32_t ret = AcquireVideoBuffer(videoBuffer, fence, timestamp, damage);
     reply.WriteInt32(ret);
     if (ret == MSERR_OK) {
-        if (videobuffer != nullptr) {
-            videobuffer->WriteToMessageParcel(reply);
+        if (videoBuffer != nullptr) {
+            videoBuffer->WriteToMessageParcel(reply);
         }
         reply.WriteInt32(fence);
         reply.WriteInt64(timestamp);

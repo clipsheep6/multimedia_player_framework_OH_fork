@@ -101,7 +101,7 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &m
 int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
 {
     MEDIA_LOGD("begin UvWork");
-    return uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    return uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr && work->data != nullptr, "work is nullptr");
         MediaDataSourceJsCallbackWraper *wrap = reinterpret_cast<MediaDataSourceJsCallbackWraper *>(work->data);
@@ -150,7 +150,7 @@ int32_t MediaDataSourceCallback::UvWork(uv_loop_s *loop, uv_work_t *work)
             event->cond_.notify_all();
         } while (0);
         delete work;
-    });
+    }, uv_qos_user_initiated);
 }
 
 int32_t MediaDataSourceCallback::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
