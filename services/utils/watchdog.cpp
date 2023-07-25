@@ -44,7 +44,7 @@ void WatchDog::EnableWatchDog()
         thread_ = std::make_unique<std::thread>(&WatchDog::WatchDogThread, this);
         break;
     }
-};
+}
 
 void WatchDog::DisableWatchDog()
 {
@@ -65,7 +65,7 @@ void WatchDog::DisableWatchDog()
         alarmed_ = false;
         disabling.store(false);
     }
-};
+}
 
 void WatchDog::PauseWatchDog()
 {
@@ -75,7 +75,7 @@ void WatchDog::PauseWatchDog()
         paused_ = true;
         cond_.notify_all();
     }
-};
+}
 
 void WatchDog::ResumeWatchDog()
 {
@@ -84,13 +84,7 @@ void WatchDog::ResumeWatchDog()
         pause_ = false;
         cond_.notify_all();
     }
-};
-
-void WatchDog::SetWatchDogTimeout(uint32_t timeoutMs)
-{
-    std::unique_lock<std::mutex> lock(mutex_);
-    timeoutMs_ = timeoutMs;
-};
+}
 
 void WatchDog::Notify()
 {
@@ -106,17 +100,17 @@ void WatchDog::Notify()
         count_++;
         cond_.notify_all();
     }
-};
+}
 
 void WatchDog::Alarm()
 {
     MEDIA_LOGI("Alarm!");
-};
+}
 
 void WatchDog::AlarmRecovery()
 {
     MEDIA_LOGI("AlarmRecovery!");
-};
+}
 
 void WatchDog::WatchDogThread()
 {
