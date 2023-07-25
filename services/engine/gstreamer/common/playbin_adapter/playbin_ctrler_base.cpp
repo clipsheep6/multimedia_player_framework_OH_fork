@@ -1407,7 +1407,7 @@ void PlayBinCtrlerBase::OnSelectBitrateDoneCb(const GstElement *playbin, uint32_
     }
 }
 
-void PlayBinCtrlerBase::OnAppsrcMessageReceived(const InnerMessage &msg)
+bool PlayBinCtrlerBase::OnAppsrcMessageReceived(const InnerMessage &msg)
 {
     MEDIA_LOGI("in OnAppsrcMessageReceived");
     if (msg.type == INNER_MSG_ERROR) {
@@ -1417,25 +1417,29 @@ void PlayBinCtrlerBase::OnAppsrcMessageReceived(const InnerMessage &msg)
         ReportMessage(message);
     } else if (msg.type == INNER_MSG_BUFFERING) {
         if (msg.detail1 < static_cast<float>(BUFFER_LOW_PERCENT_DEFAULT) / BUFFER_HIGH_PERCENT_DEFAULT *
-            BUFFER_PERCENT_THRESHOLD && GetCurrState() == playingState_ &&
-            !isSeeking_ && !isRating_ && !isUserSetPause_) {
+            BUFFER_PERCENT_THRESHOLD) {
+            CHECK_AND_RETURN_RET_LOG(GetCurrState() == playingState_ && !isSeeking_ && !isRating_ && !isUserSetPause_,
+                false, "ignore change to pause");
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("begin set to pause");
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PAUSED);
             if (ret == GST_STATE_CHANGE_FAILURE) {
                 MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PAUSED");
-                return;
+                return false;
             }
-        } else if (msg.detail1 >= BUFFER_PERCENT_THRESHOLD && GetCurrState() == playingState_ && !isUserSetPause_) {
+        } else if (msg.detail1 >= BUFFER_PERCENT_THRESHOLD) {
+            CHECK_AND_RETURN_RET_LOG(GetCurrState() == playingState_ && !isUserSetPause_,
+                false, "ignore change to playing");
             std::unique_lock<std::mutex> lock(cacheCtrlMutex_);
             MEDIA_LOGI("begin set to play");
             GstStateChangeReturn ret = gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_PLAYING);
             if (ret == GST_STATE_CHANGE_FAILURE) {
                 MEDIA_LOGE("Failed to change playbin's state to GST_STATE_PLAYING");
-                return;
+                return false;
             }
         }
     }
+    return true;
 }
 
 void PlayBinCtrlerBase::OnMessageReceived(const InnerMessage &msg)
