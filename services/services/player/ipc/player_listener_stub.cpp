@@ -94,7 +94,14 @@ void PlayerListenerStub::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
 
     std::shared_ptr<PlayerCallback> cb = callback_.lock();
     if (cb != nullptr) {
-        cb->OnInfo(type, extra, infoBody);
+        if (type == INFO_TYPE_STATE_CHANGE && extra != lastStateExtra_) {
+            cb->OnInfo(type, extra, infoBody);
+            lastStateExtra_ = extra;
+        } else if (type == INFO_TYPE_STATE_CHANGE && extra == lastStateExtra_) {
+            MEDIA_LOGW("Intercept repeated change state oninfo, extra %{public}d", extra);
+        } else {
+            cb->OnInfo(type, extra, infoBody);
+        }
     }
     std::shared_ptr<MonitorClientObject> monitor = monitor_.lock();
     CHECK_AND_RETURN(monitor != nullptr);
