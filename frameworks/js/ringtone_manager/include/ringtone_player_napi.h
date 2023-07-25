@@ -52,10 +52,13 @@ private:
     static napi_value GetAudioState(napi_env env, napi_callback_info info);
     static napi_status AddNamedProperty(napi_env env, napi_value object, const std::string name, int32_t enumValue);
     static napi_value On(napi_env env, napi_callback_info info);
+    static napi_value Off(napi_env env, napi_callback_info info);
 
     static napi_value RegisterCallback(napi_env env, napi_value jsThis, napi_value* argv, const std::string& cbName);
     static napi_value RegisterRingtonePlayerCallback(napi_env env, napi_value* argv, const std::string& cbName,
         RingtonePlayerNapi *ringtonePlayerNapi);
+    static napi_value UnregisterCallback(napi_env env, napi_value jsThis, const std::string& cbName);
+    static void UnregisterRingtonePlayerCallback(RingtonePlayerNapi *ringtonePlayerNapi, const std::string& cbName);
 
     napi_env env_;
     std::shared_ptr<IRingtonePlayer> iRingtonePlayer_;

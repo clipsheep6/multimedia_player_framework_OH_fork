@@ -37,6 +37,7 @@ namespace Media {
 const int32_t  NAPI_ERR_INPUT_INVALID = 401;
 const int32_t  NAPI_ERR_INVALID_PARAM = 6800101;
 const int32_t  NAPI_ERR_NO_MEMORY = 6800102;
+const int32_t  NAPI_ERR_UNSUPPORTED = 6800104;
 const int32_t  NAPI_ERR_SYSTEM = 6800301;
 
 const std::string NAPI_ERR_INPUT_INVALID_INFO = "input parameter type or number mismatch";

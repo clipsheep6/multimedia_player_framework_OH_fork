@@ -30,6 +30,7 @@ public:
     explicit RingtonePlayerCallbackNapi(napi_env env);
     virtual ~RingtonePlayerCallbackNapi();
     void SaveCallbackReference(const std::string &callbackName, napi_value callback);
+    void RemoveCallbackReference(const std::string &callbackName);
     void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override;
 private:
     struct RingtonePlayerJsCallback {

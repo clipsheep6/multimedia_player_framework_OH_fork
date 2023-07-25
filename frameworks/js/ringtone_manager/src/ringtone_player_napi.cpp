@@ -75,12 +75,13 @@ napi_value RingtonePlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("stop", Stop),
         DECLARE_NAPI_FUNCTION("release", Release),
         DECLARE_NAPI_FUNCTION("on", On),
+        DECLARE_NAPI_FUNCTION("off", Off),
         DECLARE_NAPI_GETTER("state", GetAudioState)
     };
 
     status = napi_define_class(env, RINGTONE_PLAYER_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,
-                               RingtonePlayerNapiConstructor, nullptr, sizeof(ringtone_player_prop)
-                               / sizeof(ringtone_player_prop[0]), ringtone_player_prop, &ctorObj);
+        RingtonePlayerNapiConstructor, nullptr, sizeof(ringtone_player_prop) / sizeof(ringtone_player_prop[0]),
+        ringtone_player_prop, &ctorObj);
     if (status == napi_ok) {
         if (napi_create_reference(env, ctorObj, refCount, &sConstructor_) == napi_ok) {
             status = napi_set_named_property(env, exports, RINGTONE_PLAYER_NAPI_CLASS_NAME.c_str(), ctorObj);
@@ -699,6 +700,56 @@ napi_value RingtonePlayerNapi::RegisterRingtonePlayerCallback(napi_env env, napi
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     return result;
+}
+
+napi_value RingtonePlayerNapi::Off(napi_env env, napi_callback_info info)
+{
+    const size_t requireArgc = 2;
+    size_t argc = 3;
+
+    napi_value argv[requireArgc + 1] = {nullptr, nullptr, nullptr};
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &jsThis, nullptr);
+    THROW_ERROR_ASSERT(env, status == napi_ok, NAPI_ERR_SYSTEM);
+    THROW_ERROR_ASSERT(env, argc <= requireArgc, NAPI_ERR_INVALID_PARAM);
+
+    napi_valuetype eventType = napi_undefined;
+    napi_typeof(env, argv[0], &eventType);
+    THROW_ERROR_ASSERT(env, eventType == napi_string, NAPI_ERR_INVALID_PARAM);
+
+    string callbackName = RingtoneCommonNapi::GetStringArgument(env, argv[0]);
+    MEDIA_LOGI("Off callbackName: %{public}s", callbackName.c_str());
+
+    return UnregisterCallback(env, jsThis, callbackName);
+}
+
+napi_value RingtonePlayerNapi::UnregisterCallback(napi_env env, napi_value jsThis, const string& cbName)
+{
+    RingtonePlayerNapi *ringtonePlayerNapi = nullptr;
+    napi_status status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&ringtonePlayerNapi));
+    THROW_ERROR_ASSERT(env, status == napi_ok, NAPI_ERR_SYSTEM);
+    THROW_ERROR_ASSERT(env, ringtonePlayerNapi != nullptr, NAPI_ERR_NO_MEMORY);
+    THROW_ERROR_ASSERT(env, ringtonePlayerNapi->iRingtonePlayer_ != nullptr, NAPI_ERR_NO_MEMORY);
+
+    if (!cbName.compare(AUDIO_INTERRUPT_CALLBACK_NAME)) {
+        UnregisterRingtonePlayerCallback(ringtonePlayerNapi, cbName);
+    } else {
+        bool unknownCallback = true;
+        THROW_ERROR_ASSERT(env, !unknownCallback, NAPI_ERR_UNSUPPORTED);
+    }
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
+}
+
+void RingtonePlayerNapi::UnregisterRingtonePlayerCallback(RingtonePlayerNapi *ringtonePlayerNapi, const string& cbName)
+{
+    CHECK_AND_RETURN_LOG(ringtonePlayerNapi->callbackNapi_ != nullptr, "ringtonePlayerCallbackNapi is nullptr");
+
+    shared_ptr<RingtonePlayerCallbackNapi> cb =
+        static_pointer_cast<RingtonePlayerCallbackNapi>(ringtonePlayerNapi->callbackNapi_);
+    cb->RemoveCallbackReference(cbName);
 }
 } // namespace Media
 } // namespace OHOS

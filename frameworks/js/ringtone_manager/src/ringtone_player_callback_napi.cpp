@@ -58,6 +58,17 @@ void RingtonePlayerCallbackNapi::SaveCallbackReference(const std::string &callba
     }
 }
 
+void RingtonePlayerCallbackNapi::RemoveCallbackReference(const std::string &callbackName)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (callbackName == AUDIO_INTERRUPT_CALLBACK_NAME) {
+        interruptCallback_ = nullptr;
+    } else {
+        MEDIA_LOGE("Unknown callback type: %{public}s", callbackName.c_str());
+    }
+}
+
 static void SetValueInt32(const napi_env& env, const std::string& fieldStr, const int intValue, napi_value& result)
 {
     napi_handle_scope scope = nullptr;
