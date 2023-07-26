@@ -34,11 +34,12 @@ constexpr int32_t PER_INSTANCE_NEED_MEMORY_PERCENT = 10;
 constexpr int32_t ONE_HUNDRED = 100;
 sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
 {
-    int32_t availableMemory = Memory::MemMgrClient::GetInstance().GetAvailableMemory();
-    int32_t totalMemory = Memory::MemMgrClient::GetInstance().GetTotalMemory();
+    int32_t availableMemory;
+    int32_t totalMemory;
+    int32_t ret = Memory::MemMgrClient::GetInstance().GetAvailableMemory(availableMemory);
+    ret |= Memory::MemMgrClient::GetInstance().GetTotalMemory(totalMemory);
     MEDIA_LOGD("System available memory:%{public}d, total memory:%{public}d", availableMemory, totalMemory);
-    if (availableMemory > 0 && totalMemory > 0 &&
-        availableMemory <= totalMemory / ONE_HUNDRED * PER_INSTANCE_NEED_MEMORY_PERCENT) {
+    if (ret == MSERR_OK && availableMemory <= totalMemory / ONE_HUNDRED * PER_INSTANCE_NEED_MEMORY_PERCENT) {
         MEDIA_LOGE("System available memory:%{public}d is less than total memory:%{public}d",
             availableMemory, totalMemory);
         return nullptr;
@@ -47,7 +48,7 @@ sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
     sptr<PlayerServiceStubMem> playerStubMem = new(std::nothrow) PlayerServiceStubMem();
     CHECK_AND_RETURN_RET_LOG(playerStubMem != nullptr, nullptr, "failed to new PlayerServiceStubMem");
 
-    int32_t ret = playerStubMem->Init();
+    ret = playerStubMem->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to player stubMem init");
     return playerStubMem;
 }
