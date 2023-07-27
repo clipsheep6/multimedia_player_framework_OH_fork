@@ -120,6 +120,9 @@ PlayBinCtrlerBase::~PlayBinCtrlerBase()
         sinkProvider_ = nullptr;
         notifier_ = nullptr;
     }
+    if (audioSeekThread_.joinable()) {
+        audioSeekThread_.join();
+    }
 }
 
 int32_t PlayBinCtrlerBase::Init()
@@ -669,8 +672,16 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
         GST_SEEK_TYPE_SET, timeNs, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
     CHECK_AND_RETURN_RET_LOG(event != nullptr, MSERR_NO_MEMORY, "seek failed");
 
-    gboolean ret = gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
-    CHECK_AND_RETURN_RET_LOG(ret, MSERR_SEEK_FAILED, "seek failed");
+    if (videoSink_ != nullptr) {
+        gboolean ret = gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
+        CHECK_AND_RETURN_RET_LOG(ret, MSERR_SEEK_FAILED, "seek failed");
+    } else {
+        audioSeekThread_ = std::thread([](auto playbin_, auto event) {
+            MEDIA_LOGI("audio start async seek");
+            (void)gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
+        }, playbin_, event);
+        audioSeekThread_.detach();
+    }
 
     return MSERR_OK;
 }
