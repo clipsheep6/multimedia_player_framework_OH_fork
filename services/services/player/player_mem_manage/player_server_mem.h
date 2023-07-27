@@ -183,6 +183,7 @@ private:
     int32_t NetworkResourceRelease();
     int32_t LocalResourceRecover();
     int32_t NetworkRecover();
+    void SetResourceTypeBySysParam();
 };
 }
 }

@@ -212,6 +212,19 @@ int32_t PlayerServerMem::SetPlaybackSpeedInternal()
     return MSERR_OK;
 }
 
+void PlayerServerMem::SetResourceTypeBySysParam()
+{
+    std::string cmd;
+    int32_t ret = OHOS::system::GetStringParameter("sys.media.player.resource.type", cmd, "");
+    if (ret == 0 && !cmd.empty()) {
+        if (cmd == "NetWork") {
+            isLocalResource_ = false;
+        } else if (cmd == "Local") {
+            isLocalResource_ = true;
+        }
+    }
+}
+
 int32_t PlayerServerMem::SetSource(const std::string &url)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -226,6 +239,7 @@ int32_t PlayerServerMem::SetSource(const std::string &url)
         if (url.find("fd://") != std::string::npos || url.find("file://") != std::string::npos) {
             isLocalResource_ = true;
         }
+        SetResourceTypeBySysParam();
     }
     return ret;
 }
