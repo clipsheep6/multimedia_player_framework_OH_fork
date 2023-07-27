@@ -100,7 +100,8 @@
                 "avcodec_video_encoder.h",
                 "player.h",
                 "recorder.h",
-                "screen_capture.h"
+                "screen_capture.h",
+                "media_errors.h"
               ],
               "header_base": "//foundation/multimedia/player_framework/interfaces/inner_api/native"
             }
