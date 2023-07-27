@@ -36,6 +36,7 @@ public:
     void EnhanceSeekPerformance(bool enable);
     int32_t GetHEBCMode();
     int32_t HandleCodecBuffers(bool enable);
+    void StopFormatChange();
 
 private:
     void SetupCodecCb(const std::string &metaStr, GstElement *src, GstElement *videoSink,

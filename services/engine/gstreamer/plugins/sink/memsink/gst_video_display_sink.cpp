@@ -43,6 +43,8 @@ struct _GstVideoDisplaySinkPrivate {
     guint64 total_video_buffer_num;
     guint64 dropped_video_buffer_num;
     guint64 last_video_render_pts;
+    guint bandwidth;
+    gboolean need_report_bandwidth;
 };
 
 #define gst_video_display_sink_parent_class parent_class
@@ -81,6 +83,10 @@ static void gst_video_display_sink_class_init(GstVideoDisplaySinkClass *klass)
     gobject_class->set_property = gst_video_display_sink_set_property;
     element_class->change_state = gst_video_display_sink_change_state;
 
+    g_signal_new("bandwidth-change", G_TYPE_FROM_CLASS(klass),
+        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
+        NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);  // 1 parameters
+
     g_object_class_install_property(gobject_class, PROP_AUDIO_SINK,
         g_param_spec_pointer("audio-sink", "audio sink", "audio sink",
             (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
@@ -109,6 +115,8 @@ static void gst_video_display_sink_init(GstVideoDisplaySink *sink)
     g_mutex_init(&priv->mutex);
     priv->render_time_diff_threshold = DEFAULT_MAX_WAIT_CLOCK_TIME;
     priv->buffer_count = 1;
+    priv->bandwidth = 0;
+    priv->need_report_bandwidth = FALSE;
     priv->total_video_buffer_num = 0;
     priv->dropped_video_buffer_num = 0;
     priv->last_video_render_pts = 0;
@@ -197,6 +205,18 @@ static gboolean gst_video_display_sink_event(GstBaseSink *base_sink, GstEvent *e
                 priv->buffer_count = 1;
                 priv->last_video_render_pts = 0;
                 g_mutex_unlock(&priv->mutex);
+            }
+            break;
+        }
+        case GST_EVENT_TAG: {
+            GstTagList *tagList;
+            gst_event_parse_tag(event, &tagList);
+            guint bandwidth;
+            gst_tag_list_get_uint(tagList, "bandwidth", &bandwidth);
+            GST_DEBUG_OBJECT(video_display_sink, "bandwidth is %u", bandwidth);
+            if (priv->bandwidth != bandwidth && bandwidth != 0) {
+                priv->bandwidth = bandwidth;
+                priv->need_report_bandwidth = TRUE;
             }
             break;
         }
@@ -330,6 +350,10 @@ static GstFlowReturn gst_video_display_sink_do_app_render(GstSurfaceMemSink *sur
         ", pts %" G_GUINT64_FORMAT, GST_BUFFER_DURATION(buffer), last_duration, GST_BUFFER_PTS(buffer));
     video_display_sink->priv->last_video_render_pts = GST_BUFFER_PTS(buffer);
     gst_video_display_sink_get_render_time_diff_thd(video_display_sink, last_duration);
+    if (video_display_sink->priv->need_report_bandwidth) {
+        g_signal_emit_by_name(video_display_sink, "bandwidth-change", video_display_sink->priv->bandwidth);
+        video_display_sink->priv->need_report_bandwidth = FALSE;
+    }
     return GST_FLOW_OK;
 }
 

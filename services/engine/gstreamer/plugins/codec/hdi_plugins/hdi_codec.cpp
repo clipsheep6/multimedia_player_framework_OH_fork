@@ -309,6 +309,7 @@ int32_t HdiCodec::Flush(GstCodecDirect direct)
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSendCommand failed");
     inBufferMgr_->WaitFlushed();
     outBufferMgr_->WaitFlushed();
+    startFormatChange_.store(false);
     MEDIA_LOGD("Flush end");
     return GST_CODEC_OK;
 }
@@ -412,10 +413,12 @@ int32_t HdiCodec::PushOutputBuffer(GstBuffer *buffer)
 int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
 {
     CHECK_AND_RETURN_RET_LOG(!isError_, GST_CODEC_ERROR, "codec error");
+    CHECK_AND_RETURN_RET_LOG(outBufferMgr_ != nullptr, GST_CODEC_ERROR, "outBufferMgr_ is nullptr");
     int32_t ret = GST_CODEC_OK;
     {
         unique_lock<mutex> lock(mutex_);
-        if (ret_ != GST_CODEC_OK) {
+        if ((ret_ != GST_CODEC_OK && ret_ != GST_CODEC_FORMAT_CHANGE) ||
+            (ret_ == GST_CODEC_FORMAT_CHANGE && outBufferMgr_->GetWaitDisPlayBufNum() == 0)) {
             MEDIA_LOGD("change ret from ret %{public}d to ret %{public}d", ret, ret_);
             ret = ret_;
             ret_ = GST_CODEC_OK;
@@ -430,7 +433,8 @@ int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
     MEDIA_LOGD("ret %{public}d", ret);
     {
         unique_lock<mutex> lock(mutex_);
-        if (ret_ != GST_CODEC_OK) {
+        if ((ret_ != GST_CODEC_OK && ret_ != GST_CODEC_FORMAT_CHANGE) ||
+            (ret_ == GST_CODEC_FORMAT_CHANGE && outBufferMgr_->GetWaitDisPlayBufNum() == 0)) {
             MEDIA_LOGD("change ret from ret %{public}d to ret %{public}d", ret, ret_);
             ret = ret_;
             ret_ = GST_CODEC_OK;
@@ -589,6 +593,7 @@ void HdiCodec::HandleEventPortSettingsChanged(OMX_U32 data1, OMX_U32 data2)
     if (data2 == OMX_IndexParamPortDefinition) {
         MEDIA_LOGD("GST_CODEC_FORMAT_CHANGE");
         ret_ = GST_CODEC_FORMAT_CHANGE;
+        startFormatChange_.store(true);
         std::shared_lock<std::shared_mutex> rLock(bufferMgrMutex_);
         if (data1 == inPortIndex_) {
             CHECK_AND_RETURN_LOG(inBufferMgr_ != nullptr, "inBufferMgr_ is nullptr");
@@ -681,6 +686,13 @@ int32_t HdiCodec::OnFillBufferDone(const OmxCodecBuffer *buffer)
         return result.Value();
     }
     return GST_CODEC_OK;
+}
+
+bool HdiCodec::IsFormatChanged()
+{
+    bool ret = startFormatChange_.load();
+    startFormatChange_.store(false);
+    return ret;
 }
 }  // namespace Media
 }  // namespace OHOS

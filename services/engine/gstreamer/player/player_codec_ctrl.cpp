@@ -194,5 +194,16 @@ int32_t PlayerCodecCtrl::HandleCodecBuffers(bool enable)
     }
     return MSERR_INVALID_OPERATION;
 }
+
+void PlayerCodecCtrl::StopFormatChange()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("StopFormatChange");
+    for (auto &it : elementMap_) {
+        if (it.second.isHardware) {
+            g_object_set(it.first, "stop-format-change", TRUE, nullptr);
+        }
+    }
+}
 } // Media
 } // OHOS

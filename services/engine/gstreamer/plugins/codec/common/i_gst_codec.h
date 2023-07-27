@@ -267,6 +267,14 @@ public:
      * @version 1.0
      */
     virtual void SetOutputPool(GstBufferPool *pool) = 0;
+
+    /**
+     * @brief Format Changed.
+     *
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual bool IsFormatChanged() = 0;
 };
 } // namespace Media
 } // namespace OHOS
