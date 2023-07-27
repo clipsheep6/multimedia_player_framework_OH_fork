@@ -19,11 +19,11 @@ namespace OHOS {
 namespace Media {
 bool FuzzAVMetadataStub(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < sizeof(int32_t)) {
+    if (data == nullptr || size < sizeof(int64_t)) {
         return true;
     }
     constexpr int32_t codeNum = 8;
-    IStandardAVMetadataService::AVMetadataServiceMsg codeIdList[codeNum] {
+    AVMetadataServiceProxyFuzzer::AVMetadataHelperServiceMsg codeIdList[codeNum] {
         AVMetadataServiceProxyFuzzer::SET_URI_SOURCE,
         AVMetadataServiceProxyFuzzer::SET_FD_SOURCE,
         AVMetadataServiceProxyFuzzer::RESOLVE_METADATA,

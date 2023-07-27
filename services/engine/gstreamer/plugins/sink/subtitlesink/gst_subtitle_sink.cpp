@@ -290,6 +290,9 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
             break;
         }
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
+            if (!subtitle_sink->is_changing_track) {
+                gst_element_set_base_time(element, gst_clock_get_time(GST_ELEMENT_CLOCK(element)));
+            }
             g_mutex_lock(&priv->mutex);
             gint64 left_duration = priv->text_frame_duration - priv->time_rendered;
             left_duration = left_duration > 0 ? left_duration : 0;
@@ -530,15 +533,6 @@ static void gst_subtitle_sink_handle_speed(GstBaseSink *basesink)
     std::swap(subtitle_sink->segment.rate, subtitle_sink->segment.applied_rate);
 }
 
-static void gst_subtitle_sink_handle_seek_flags(GstBaseSink *basesink, const GstSegment *new_segment)
-{
-    GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
-    if ((subtitle_sink->seek_flags & GST_SEEK_FLAG_SNAP_NEAREST) == GST_SEEK_FLAG_SNAP_NEAREST) {
-        subtitle_sink->segment.start = new_segment->start;
-        subtitle_sink->segment.time = new_segment->time;
-    }
-}
-
 static void gst_subtitle_sink_handle_audio_segment(GstBaseSink *basesink, const GstSegment *new_segment)
 {
     GstSubtitleSink *subtitle_sink = GST_SUBTITLE_SINK_CAST(basesink);
@@ -575,7 +569,6 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
         gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
     } else if (!subtitle_sink->is_changing_track) {
         gst_subtitle_sink_handle_audio_segment(basesink, &new_segment);
-        gst_subtitle_sink_handle_seek_flags(basesink, &new_segment);
         gst_subtitle_sink_handle_speed(basesink);
         GST_DEBUG_OBJECT (basesink, "segment updated");
     }

@@ -20,6 +20,7 @@
 #include "gst_utils.h"
 #include "gst_meta_parser.h"
 #include "player.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "PlayerTrackParse"};
@@ -193,11 +194,13 @@ GstPadProbeReturn PlayerTrackParse::GetUsedDemux(GstPad *pad, GstPadProbeInfo *i
 
     const gchar *current_stream_id;
     gst_event_parse_stream_start (event, &current_stream_id);
+    CHECK_AND_RETURN_RET_LOG(current_stream_id != nullptr, GST_PAD_PROBE_OK, "current_stream_id is nullptr");
 
     std::unique_lock<std::mutex> lock(trackInfoMutex_);
     for (int32_t i = 0; i < static_cast<int32_t>(trackVec_.size()); i++) {
         for (auto padIt = trackVec_[i].trackInfos.begin(); padIt != trackVec_[i].trackInfos.end(); padIt++) {
             gchar *stream_id = gst_pad_get_stream_id(padIt->first);
+            CHECK_AND_CONTINUE(stream_id != nullptr);
             if (strcmp(current_stream_id, stream_id) == 0) {
                 findTrackInfo_ = true;
                 trackVec_[i].inUse = true;
@@ -233,8 +236,12 @@ int32_t PlayerTrackParse::GetInputSelectPadIndex(GstPad *pad)
 bool PlayerTrackParse::IsSameStreamId(GstPad *padA, GstPad *padB)
 {
     gchar *streamIdA = gst_pad_get_stream_id(padA);
+    CHECK_AND_RETURN_RET_LOG(streamIdA != nullptr, false, "streamIdA is nullptr");
+    ON_SCOPE_EXIT(0) { g_free(streamIdA); };
     gchar *streamIdB = gst_pad_get_stream_id(padB);
-    CHECK_AND_RETURN_RET((streamIdA != nullptr && streamIdB != nullptr), false);
+    CHECK_AND_RETURN_RET_LOG(streamIdB != nullptr, false, "streamIdB is nullptr");
+    CANCEL_SCOPE_EXIT_GUARD(0);
+
     bool ret = (strcmp(streamIdA, streamIdB) == 0);
     g_free(streamIdA);
     g_free(streamIdB);
@@ -335,24 +342,6 @@ int32_t PlayerTrackParse::GetTrackIndex(int32_t innerIndex, int32_t trackType, i
     }
 
     return MSERR_INVALID_VAL;
-}
-
-int32_t PlayerTrackParse::GetHLSStreamBandwidth(const char *streamId)
-{
-    int32_t bandwidth;
-    for (auto iter = trackVec_.begin(); iter != trackVec_.end(); ++iter) {
-        for (auto it = iter->trackInfos.begin(); it != iter->trackInfos.end(); ++it) {
-            gchar *padStreamId = gst_pad_get_stream_id(it->first);
-            if (strcmp(padStreamId, streamId) == 0) {
-                (it->second).GetIntValue(std::string(INNER_META_KEY_BANDWIDTH), bandwidth);
-                g_free(padStreamId);
-                return bandwidth;
-            }
-            g_free(padStreamId);
-        }
-    }
-    MEDIA_LOGE("Failed to find streamId: %{public}s", streamId);
-    return 0;
 }
 
 void PlayerTrackParse::StartUpdateTrackInfo()
@@ -473,10 +462,8 @@ void PlayerTrackParse::ConvertToPlayerKeys(const Format &innerMeta, Format &outM
 
 GstPadProbeReturn PlayerTrackParse::ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer userData)
 {
-    if (pad == nullptr || info ==  nullptr || userData == nullptr) {
-        MEDIA_LOGE("param is invalid");
-        return GST_PAD_PROBE_OK;
-    }
+    CHECK_AND_RETURN_RET_LOG(pad != nullptr && info != nullptr && userData != nullptr,
+        GST_PAD_PROBE_OK, "param is invalid");
 
     auto playerTrackParse = reinterpret_cast<PlayerTrackParse *>(userData);
     return playerTrackParse->GetTrackParse(pad, info);
@@ -546,11 +533,8 @@ bool PlayerTrackParse::AddProbeToPad(const GstElement *element, GstPad *pad)
     {
         std::unique_lock<std::mutex> lock(padProbeMutex_);
         gulong probeId = gst_pad_add_probe(pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, ProbeCallback, this, nullptr);
-        if (probeId == 0) {
-            MEDIA_LOGE("add probe for %{public}s's pad %{public}s failed",
-                GST_ELEMENT_NAME(GST_PAD_PARENT(pad)), PAD_NAME(pad));
-            return false;
-        }
+        CHECK_AND_RETURN_RET_LOG(probeId != 0, false,
+            "add probe for %{public}s's pad %{public}s failed", GST_ELEMENT_NAME(GST_PAD_PARENT(pad)), PAD_NAME(pad));
         (void)padProbes_.emplace(pad, probeId);
         gst_object_ref(pad);
     }
@@ -597,14 +581,10 @@ bool PlayerTrackParse::AddProbeToPadList(GstElement *element, GList &list)
 {
     MEDIA_LOGD("AddProbeToPadList element %{public}s", ELEM_NAME(element));
     for (GList *padNode = g_list_first(&list); padNode != nullptr; padNode = padNode->next) {
-        if (padNode->data == nullptr) {
-            continue;
-        }
+        CHECK_AND_CONTINUE(padNode->data != nullptr);
 
         GstPad *pad = reinterpret_cast<GstPad *>(padNode->data);
-        if (!AddProbeToPad(element, pad)) {
-            return false;
-        }
+        CHECK_AND_RETURN_RET(AddProbeToPad(element, pad), false);
     }
 
     return true;
@@ -612,10 +592,7 @@ bool PlayerTrackParse::AddProbeToPadList(GstElement *element, GList &list)
 
 void PlayerTrackParse::OnPadAddedCb(const GstElement *element, GstPad *pad, gpointer userData)
 {
-    if (element == nullptr || pad ==  nullptr || userData == nullptr) {
-        MEDIA_LOGE("param is nullptr");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(element != nullptr && pad != nullptr && userData != nullptr, "param is nullptr");
 
     auto playerTrackParse = reinterpret_cast<PlayerTrackParse *>(userData);
     (void)playerTrackParse->AddProbeToPad(element, pad);
@@ -630,9 +607,7 @@ bool PlayerTrackParse::FindTrackInfo()
 void PlayerTrackParse::SetUpDemuxerElementCb(GstElement &elem)
 {
     MEDIA_LOGD("SetUpDemuxerElementCb elem %{public}s", ELEM_NAME(&elem));
-    if (!AddProbeToPadList(&elem, *elem.srcpads)) {
-        return;
-    }
+    CHECK_AND_RETURN(AddProbeToPadList(&elem, *elem.srcpads));
     {
         std::unique_lock<std::mutex> lock(signalIdMutex_);
         gulong signalId = g_signal_connect(&elem, "pad-added", G_CALLBACK(PlayerTrackParse::OnPadAddedCb), this);

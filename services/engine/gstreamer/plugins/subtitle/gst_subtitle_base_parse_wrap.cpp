@@ -993,6 +993,12 @@ gboolean chain_push_new_segment_event(GstFlowReturn ret, GstSubtitleBaseParse *s
     if (G_UNLIKELY(self->need_segment)) {
         GST_INFO_OBJECT(self, "begin pushing newsegment event with 0x%06" PRIXPTR, FAKE_POINTER(&self->segment));
 
+        if (self->first_segment) {
+            self->event_segment->start = gst_subtitle_base_get_current_position(self);
+            GST_WARNING_OBJECT(self, "first segment, segment start set cur position = %" GST_TIME_FORMAT,
+                GST_TIME_ARGS(self->event_segment->start));
+            self->first_segment = FALSE;
+        }
         GstEvent *event = gst_event_new_segment((GstSegment *)self->event_segment);
         if ((event != nullptr) && gst_subtitle_send_event(self, gst_event_ref(event))) {
             GST_INFO_OBJECT(self, "end pushing newsegment event with 0x%06" PRIXPTR, FAKE_POINTER(&self->segment));

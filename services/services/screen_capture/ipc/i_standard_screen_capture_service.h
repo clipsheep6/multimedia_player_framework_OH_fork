@@ -40,7 +40,7 @@ public:
     virtual int32_t SetMicrophoneEnabled(bool isMicrophone) = 0;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) = 0;
-    virtual int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfacebuffer, int32_t &fence,
+    virtual int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
                                        int64_t &timestamp, OHOS::Rect &damage) = 0;
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
     virtual int32_t ReleaseVideoBuffer() = 0;
@@ -53,15 +53,15 @@ public:
         RELEASE,
         DESTROY,
         SET_CAPTURE_MODE,
-        INITAUDIO_CAP,
-        INITVIDEO_CAP,
+        INIT_AUDIO_CAP,
+        INIT_VIDEO_CAP,
         ACQUIRE_AUDIO_BUF,
         ACQUIRE_VIDEO_BUF,
         RELEASE_AUDIO_BUF,
         RELEASE_VIDEO_BUF,
-        SETMICENABLE,
-        STARTSCREEN_CAPTURE,
-        STOPSCREEN_CAPTURE,
+        SET_MIC_ENABLE,
+        START_SCREEN_CAPTURE,
+        STOP_SCREEN_CAPTURE,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardScreenCaptureService");

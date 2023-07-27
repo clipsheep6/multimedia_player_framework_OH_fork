@@ -220,16 +220,14 @@ int32_t MonitorServer::ObjCtrl(std::list<wptr<MonitorServerObject>> &recoveryLis
 {
     for (auto objIt = recoveryList.begin(); objIt != recoveryList.end(); objIt++) {
         sptr<MonitorServerObject> obj = objIt->promote();
-        if (obj != nullptr) {
-            (void)obj->IpcRecovery(true);
-        }
+        CHECK_AND_CONTINUE(obj != nullptr);
+        (void)obj->IpcRecovery(true);
     }
 
     for (auto objIt = abnormalList.begin(); objIt != abnormalList.end(); objIt++) {
         sptr<MonitorServerObject> obj = objIt->promote();
-        if (obj != nullptr) {
-            (void)obj->IpcAbnormality();
-        }
+        CHECK_AND_CONTINUE(obj != nullptr);
+        (void)obj->IpcAbnormality();
     }
 
     return MSERR_OK;

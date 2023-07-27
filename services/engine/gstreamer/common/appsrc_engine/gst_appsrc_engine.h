@@ -59,7 +59,7 @@ private:
     int32_t PushBuffer(uint32_t pushSize);
     int32_t PushBufferWithCopy(uint32_t pushSize);
     int32_t AddSrcMem(uint32_t bufferSize);
-    void OnError(int32_t errorCode, const std::string message);
+    void OnError(int32_t errorCode, const std::string &message);
     void OnBufferReport(int32_t percent);
     void ReportMessage(const InnerMessage &msg);
     void FreePointerMemory(uint32_t offset, uint32_t length, uint32_t subscript);

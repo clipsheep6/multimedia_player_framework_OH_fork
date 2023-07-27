@@ -37,6 +37,7 @@
       ],
       "deps": {
         "components": [
+          "av_session",
           "safwk",
           "hilog",
           "window_manager",
@@ -50,10 +51,11 @@
           "c_utils",
           "zlib",
           "access_token",
-          "multimedia_image_framework",
+          "image_framework",
           "hiview",
           "eventhandler",
           "init",
+          "input",
           "memmgr_plugin",
           "hicollie",
           "drivers_peripheral_codec",

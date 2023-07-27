@@ -20,11 +20,11 @@ namespace OHOS {
 namespace Media {
 bool FuzzPlayerStub(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < sizeof(int32_t)) {
+    if (data == nullptr || size < sizeof(int64_t)) {
         return true;
     }
     constexpr int32_t codeNum = 26;
-    IStandardPlayerService::PlayerServiceMsg codeIdList[codeNum] {
+    PlayerServiceProxyFuzzer::PlayerServiceMsg codeIdList[codeNum] {
         PlayerServiceProxyFuzzer::SET_SOURCE,
         PlayerServiceProxyFuzzer::SET_MEDIA_DATA_SRC_OBJ,
         PlayerServiceProxyFuzzer::SET_FD_SOURCE,
