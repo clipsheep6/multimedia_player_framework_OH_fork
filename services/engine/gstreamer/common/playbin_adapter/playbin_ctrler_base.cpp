@@ -680,7 +680,6 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
             MEDIA_LOGI("audio start async seek");
             (void)gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
         }, playbin_, event);
-        audioSeekThread_.detach();
     }
 
     return MSERR_OK;
