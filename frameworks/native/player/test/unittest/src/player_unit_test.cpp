@@ -1358,7 +1358,7 @@ HWTEST_F(PlayerUnitTest, Player_SetRendererInfo_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
     int32_t contentType = 1;
     int32_t streamUsage = 1;
-    int32_t rendererFlags = 1;
+    int32_t rendererFlags = 0;
     (void)format.PutIntValue(PlayerKeys::CONTENT_TYPE, contentType);
     (void)format.PutIntValue(PlayerKeys::STREAM_USAGE, streamUsage);
     (void)format.PutIntValue(PlayerKeys::RENDERER_FLAG, rendererFlags);

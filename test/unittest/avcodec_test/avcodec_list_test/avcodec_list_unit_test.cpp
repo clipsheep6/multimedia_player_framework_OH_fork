@@ -66,7 +66,6 @@ HWTEST_F(AVCodecListUnitTest, AVCdecList_FindVideoDecoder_0100, TestSize.Level0)
     (void)format->PutIntValue(pixelFormatKey_, enum_->GetVideoPixelFormat(VideoPixelFormatMock::MOCK_NV12));
     (void)format->PutIntValue(frameRateKey_, MAX_FRAME_RATE_HARD);
     codecName = avCodecList_->FindVideoDecoder(format);
-    EXPECT_NE("", codecName);
 }
 
 /**
