@@ -186,7 +186,6 @@ private:
     bool isInitialized_ = false;
 
     bool isErrorHappened_ = false;
-    std::thread audioSeekThread_;
     std::condition_variable preparingCond_;
     std::condition_variable preparedCond_;
     std::condition_variable stoppingCond_;
