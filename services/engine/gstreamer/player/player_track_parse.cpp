@@ -200,7 +200,7 @@ GstPadProbeReturn PlayerTrackParse::GetUsedDemux(GstPad *pad, GstPadProbeInfo *i
     for (int32_t i = 0; i < static_cast<int32_t>(trackVec_.size()); i++) {
         for (auto padIt = trackVec_[i].trackInfos.begin(); padIt != trackVec_[i].trackInfos.end(); padIt++) {
             gchar *stream_id = gst_pad_get_stream_id(padIt->first);
-            CHECK_AND_CONTINUE(stream_id != nullptr);
+            CHECK_AND_CONTINUE(stream_id != nullptr && current_stream_id != nullptr);
             if (strcmp(current_stream_id, stream_id) == 0) {
                 findTrackInfo_ = true;
                 trackVec_[i].inUse = true;

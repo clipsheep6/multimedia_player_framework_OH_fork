@@ -158,7 +158,7 @@ static gboolean gst_subtitle_base_parse_src_event(GstPad *pad, GstObject *parent
             gboolean active = FALSE;
 
             const GstStructure *structure = gst_event_get_structure(event);
-            if (structure == nullptr) {
+            if (structure == nullptr || gst_structure_get_name(structure) == nullptr) {
                 gst_event_unref(event);
                 break;
             }
