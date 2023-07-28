@@ -1,0 +1,93 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+module_output_path = "player_framework/screen_capture"
+
+ohos_unittest("screen_capture_native_unit_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "./",
+    "./screen_capture_unittest/include",
+    "./native/include",
+    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+  ]
+
+  if (multimedia_player_framework_support_screen_capture) {
+    sources = [
+      "native/screen_capture_mock_factory.cpp",
+      "native/src/screen_capture_native_mock.cpp",
+      "screen_capture_unittest/src/screen_capture_unit_test.cpp",
+    ]
+  }
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "c_utils:utils",
+    "graphic_2d:surface",
+    "hilog:libhilog",
+    "player_framework:media_client",
+    "window_manager:libdm",
+  ]
+}
+
+##################################################################################################################
+
+ohos_unittest("screen_capture_capi_unit_test") {
+  module_out_path = module_output_path
+  include_dirs = [
+    "./",
+    "./screen_capture_unittest/include",
+    "./capi/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
+    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+  ]
+
+  if (multimedia_player_framework_support_screen_capture) {
+    sources = [
+      "capi/screen_capture_mock_factory.cpp",
+      "capi/src/screen_capture_capi_mock.cpp",
+      "screen_capture_unittest/src/screen_capture_unit_test.cpp",
+    ]
+  }
+
+  deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c:native_avscreen_capture" ]
+
+  external_deps = [
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken",
+    "access_token:libtoken_setproc",
+    "c_utils:utils",
+    "graphic_2d:surface",
+    "hilog:libhilog",
+    "player_framework:media_client",
+    "window_manager:libdm",
+  ]
+}
