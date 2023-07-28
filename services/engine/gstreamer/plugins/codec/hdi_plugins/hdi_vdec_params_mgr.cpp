@@ -117,6 +117,13 @@ int32_t HdiVdecParamsMgr::SetOutputVideoCommon(GstElement *element)
     MEDIA_LOGD("frame_rate %{public}.3f", base->frame_rate);
     auto ret = HdiSetParameter(handle_, OMX_IndexParamPortDefinition, outPortDef_);
     CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
+
+    OMX_PARAM_U32TYPE param;
+    InitParam(param, verInfo_);
+    param.nSize = sizeof(OMX_PARAM_U32TYPE);
+    param.nU32 = 1;  // TO_WINDOW_COMPOSER_MODE_DSS
+    ret = HdiSetConfig(handle_, OMX_IndexExtConfigQueuesToWindowComposer, param);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetConfig failed");
     return GST_CODEC_OK;
 }
 
