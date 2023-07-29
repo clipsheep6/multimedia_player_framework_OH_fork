@@ -238,15 +238,11 @@ void GstAppsrcEngine::NeedData(const GstElement *appSrc, uint32_t size, gpointer
 
 void GstAppsrcEngine::NeedDataInner(uint32_t size)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> pullLock(pullMutex_);
     MEDIA_LOGD("NeedDataInner in, size %{public}u atEos_ %{public}d, isExit_ %{public}d", size, atEos_, isExit_);
     needDataSize_ = size;
-    uint32_t freeSize = appSrcMem_->GetFreeSize();
     uint32_t availableSize = appSrcMem_->GetAvailableSize();
-    uint32_t bufferSize = appSrcMem_->GetBufferSize();
     if ((needDataSize_ <= availableSize || atEos_) && !isExit_) {
-        needData_ = true;
-        MEDIA_LOGD("needData_ set to true");
         if (needDataSize_ > availableSize) {
             needDataSize_ = availableSize;
         }
@@ -264,6 +260,9 @@ void GstAppsrcEngine::NeedDataInner(uint32_t size)
             OnError(MSERR_EXT_API9_NO_MEMORY, "GstAppsrcEngine:Push buffer failed.");
         }
     } else {
+        std::unique_lock<std::mutex> freeLock(freeMutex_);
+        uint32_t freeSize = appSrcMem_->GetFreeSize();
+        uint32_t bufferSize = appSrcMem_->GetBufferSize();
         if (needDataSize_ > bufferSize && bufferSize < MAX_BUFFER_SIZE / 2) {
             // 2 Increase to twice the required buffer
             if (AddSrcMem(needDataSize_ * 2) != MSERR_OK) {
@@ -295,6 +294,10 @@ gboolean GstAppsrcEngine::SeekData(const GstElement *appSrc, uint64_t seekPos, g
 gboolean GstAppsrcEngine::SeekDataInner(uint64_t pos)
 {
     MEDIA_LOGD("SeekDataInner in");
+    if (pos == appSrcMem_->GetPushOffset()) {
+        MEDIA_LOGD("Seek to current position");
+        return TRUE;
+    }
     std::unique_lock<std::mutex> lock(mutex_);
     std::unique_lock<std::mutex> freeLock(freeMutex_);
     appSrcMem_->PrintCurPos();
@@ -326,18 +329,20 @@ int32_t GstAppsrcEngine::PullBuffer()
         MEDIA_LOGD("PullBuffer loop in");
         pullCond_.wait(lock, [this] { return (!atEos_ && appSrcMem_->GetFreeSize() >= PULL_SIZE) || isExit_; });
         CHECK_AND_BREAK(!isExit_);
-        std::unique_lock<std::mutex> freeLock(freeMutex_);
+        std::unique_lock<std::mutex> pullLock(pullMutex_);
         appSrcMem_->PrintCurPos();
         auto mem = appSrcMem_->GetMem();
         int32_t pullSize = static_cast<int32_t>(appSrcMem_->GetBufferSize() - appSrcMem_->GetBeginPos());
         pullSize = std::min(pullSize, PULL_SIZE);
         MEDIA_LOGD("ReadAt begin, length is %{public}d", pullSize);
         std::static_pointer_cast<AVDataSrcMemory>(mem)->SetOffset(appSrcMem_->GetBeginPos());
+        pullLock.unlock();
         if (size_ == UNKNOW_FILE_SIZE) {
             readSize = dataSrc_->ReadAt(mem, pullSize);
         } else {
             readSize = dataSrc_->ReadAt(mem, pullSize, appSrcMem_->GetFilePos());
         }
+        pullLock.lock();
         MEDIA_LOGD("ReadAt end, readSize is %{public}d", readSize);
         CHECK_AND_RETURN_RET_LOG(readSize <= pullSize, MSERR_INVALID_VAL,
             "PullBuffer loop end, readSize > length");
@@ -346,12 +351,13 @@ int32_t GstAppsrcEngine::PullBuffer()
             MEDIA_LOGD("no buffer, receive eos!!!");
             atEos_ = true;
             timer_ = 0;
+            pushCond_.notify_all();
         } else if (readSize > 0) {
             appSrcMem_->PullBufferAndChangePos(readSize);
             timer_ = 0;
             if (!playState_ && (appSrcMem_->GetAvailableSize() >= PULL_SIZE ||
-                static_cast<int64_t>(appSrcMem_->GetAvailableSize() + appSrcMem_->GetFilePos()) >= size_)) {
-                OnBufferReport(100);  // 100 buffering 100%, begin set to play
+                static_cast<int64_t>(appSrcMem_->GetAvailableSize() + appSrcMem_->GetFilePos()) >= size_)
+                && OnBufferReport(100)) {  // 100 buffering 100%, begin set to play
                 playState_ = true;
             }
             appSrcMem_->PrintCurPos();
@@ -359,7 +365,7 @@ int32_t GstAppsrcEngine::PullBuffer()
         } else if (IsConnectTimeout()) {
             OnError(MSERR_EXT_API9_TIMEOUT, "GstAppsrcEngine:Pull buffer timeout!!!");
         }
-        freeLock.unlock();
+        pullLock.unlock();
         lock.unlock();
         usleep(PULL_BUFFER_SLEEP_US);
     }
@@ -371,14 +377,10 @@ void GstAppsrcEngine::PushTask()
     int32_t ret = MSERR_OK;
     while (ret == MSERR_OK) {
         std::unique_lock<std::mutex> lock(mutex_);
-        pushCond_.wait_for(lock, std::chrono::seconds(PLAY_TIME_OUT_MS / TIME_VAL_MS), [this] {
+        pushCond_.wait(lock, [this] {
             return ((appSrcMem_->GetAvailableSize() >= needDataSize_ || atEos_) && needData_) || isExit_;
         });
         uint32_t availableSize = appSrcMem_->GetAvailableSize();
-        if (availableSize < needDataSize_ && appSrcMem_->GetFreeSize() < PULL_SIZE && needData_) {
-            OnError(MSERR_EXT_API9_TIMEOUT, "GstAppsrcEngine:Failed to playing, please check the user manual"
-                " to make sure that the file format is supported by datasrc mode");
-        }
         if (isExit_) {
             break;
         }
@@ -415,7 +417,6 @@ int32_t GstAppsrcEngine::PushEos()
 int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
 {
     MEDIA_LOGD("PushBuffer in");
-    std::unique_lock<std::mutex> freeLock(freeMutex_);
     CHECK_AND_RETURN_RET_LOG(appSrcMem_ != nullptr && appSrcMem_->GetMem() != nullptr, MSERR_NO_MEMORY, "no mem");
     appSrcMem_->PrintCurPos();
 
@@ -438,9 +439,7 @@ int32_t GstAppsrcEngine::PushBuffer(uint32_t pushSize)
         needData_ = false;
     }
     needDataSize_ -= pushSize;
-    freeMutex_.unlock();
     (void)gst_app_src_push_buffer(GST_APP_SRC_CAST(appSrc_), buffer);
-    freeMutex_.lock();
 
     appSrcMem_->PrintCurPos();
     MEDIA_LOGD("PushBuffer out");
@@ -530,22 +529,23 @@ void GstAppsrcEngine::OnError(int32_t errorCode, const std::string message)
     innerMsg.type = INNER_MSG_ERROR;
     innerMsg.detail1 = errorCode;
     innerMsg.extend = message;
-    ReportMessage(innerMsg);
+    (void)ReportMessage(innerMsg);
 }
 
-void GstAppsrcEngine::OnBufferReport(int32_t percent)
+bool GstAppsrcEngine::OnBufferReport(int32_t percent)
 {
     InnerMessage innerMsg {};
     innerMsg.type = INNER_MSG_BUFFERING;
     innerMsg.detail1 = percent;
-    ReportMessage(innerMsg);
+    return ReportMessage(innerMsg);
 }
 
-void GstAppsrcEngine::ReportMessage(const InnerMessage &msg)
+bool GstAppsrcEngine::ReportMessage(const InnerMessage &msg)
 {
     if (notifier_ != nullptr) {
-        notifier_(msg);
+        return notifier_(msg);
     }
+    return false;
 }
 
 void GstAppsrcEngine::FreePointerMemory(uint32_t offset, uint32_t length, uint32_t subscript)
@@ -590,9 +590,8 @@ bool GstAppsrcEngine::IsConnectTimeout()
         MEDIA_LOGI("Waiting to receive data");
     } else {
         int64_t curTime = GetTime();
-        if (curTime - timer_ > PULL_BUFFER_TIME_OUT_MS && playState_) {
+        if (curTime - timer_ > PULL_BUFFER_TIME_OUT_MS && playState_ && OnBufferReport(0)) {
             playState_ = false;
-            OnBufferReport(0);
         } else if (curTime - timer_ > PLAY_TIME_OUT_MS) {
             MEDIA_LOGE("No data was received for 15 seconds");
             return true;

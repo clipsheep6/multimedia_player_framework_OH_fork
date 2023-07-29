@@ -30,7 +30,7 @@ namespace OHOS {
 namespace Media {
 class GstAppsrcEngine : public std::enable_shared_from_this<GstAppsrcEngine>, public NoCopyable {
 public:
-    using AppsrcErrorNotifier = std::function<void(const InnerMessage &msg)>;
+    using AppsrcErrorNotifier = std::function<bool(const InnerMessage &msg)>;
     static std::shared_ptr<GstAppsrcEngine> Create(const std::shared_ptr<IMediaDataSource> &dataSrc);
     GstAppsrcEngine(const std::shared_ptr<IMediaDataSource> &dataSrc, const int64_t size);
     ~GstAppsrcEngine();
@@ -60,14 +60,15 @@ private:
     int32_t PushBufferWithCopy(uint32_t pushSize);
     int32_t AddSrcMem(uint32_t bufferSize);
     void OnError(int32_t errorCode, const std::string message);
-    void OnBufferReport(int32_t percent);
-    void ReportMessage(const InnerMessage &msg);
+    bool OnBufferReport(int32_t percent);
+    bool ReportMessage(const InnerMessage &msg);
     void FreePointerMemory(uint32_t offset, uint32_t length, uint32_t subscript);
     bool IsConnectTimeout();
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
     const int64_t size_ = 0;
     std::mutex mutex_;
     std::mutex freeMutex_;
+    std::mutex pullMutex_;
     std::condition_variable pullCond_;
     std::condition_variable pushCond_;
     GstElement *appSrc_ = nullptr;
