@@ -122,7 +122,6 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
         taskIds++;
         size--;
     }
-    size = 0;
     config_.videoInfo.videoCapInfo.videoFrameWidth = config.videoInfo.videoCapInfo.videoFrameWidth;
     config_.videoInfo.videoCapInfo.videoFrameHeight = config.videoInfo.videoCapInfo.videoFrameHeight;
     config_.videoInfo.videoCapInfo.videoSource =
@@ -132,7 +131,6 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
         .videoBitrate = config_.videoInfo.videoEncInfo. videoBitrate,
         .videoFrameRate = config_.videoInfo.videoEncInfo.videoFrameRate
     };
-    size = config.recorderInfo.urlLen;
     if (config.recorderInfo.url != nullptr) {
         config_.recorderInfo.url = config.recorderInfo.url;
     }

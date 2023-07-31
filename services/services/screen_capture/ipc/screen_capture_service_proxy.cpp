@@ -129,12 +129,12 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    token = data.WriteUint64(videoInfo.displayId);
+    token = data.WriteUint64(videoInfo.displayId) && data.WriteInt32(videoInfo.taskIDs.size());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write displayid and taskId size!");
     // write list data
-    token = data.WriteInt32(videoInfo.taskIDs.size());
-    std::list<int32_t>::iterator its;
-    for (its = videoInfo.taskIDs.begin(); its != videoInfo.taskIDs.end(); its++) {
-        token = data.WriteInt32(*its);
+    for (int32_t taskID : videoInfo.taskIDs) {
+        token = data.WriteInt32(taskID);
+        CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write video taskIDs!");
     }
     token = data.WriteInt32(videoInfo.videoFrameWidth) && data.WriteInt32(videoInfo.videoFrameHeight) &&
             data.WriteInt32(videoInfo.videoSource);
@@ -201,7 +201,7 @@ int32_t ScreenCaptureServiceProxy::AcquireAudioBuffer(std::shared_ptr<AudioBuffe
             return MSERR_INVALID_VAL;
         }
         auto buffer = reply.ReadBuffer(audioBufferLen);
-        uint8_t* audiobuffer = (uint8_t*)malloc(audioBufferLen);
+        uint8_t* audiobuffer = static_cast<uint8_t *>(malloc(audioBufferLen));
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_NO_MEMORY, "audio buffer malloc failed");
         memset_s(audiobuffer, audioBufferLen, 0, audioBufferLen);
         if (memcpy_s(audiobuffer, audioBufferLen, buffer, audioBufferLen) != EOK) {

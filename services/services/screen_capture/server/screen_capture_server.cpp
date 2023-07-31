@@ -380,6 +380,7 @@ int32_t ScreenCaptureServer::StartHomeVideoCapture()
 int32_t ScreenCaptureServer::StartAudioInnerCapture()
 {
     size_t bufferLen;
+    CHECK_AND_RETURN_RET_LOG(audioInnerCapturer_ != nullptr, MSERR_NO_MEMORY, "audioInner capture is nullptr");
     if (audioInnerCapturer_->GetBufferSize(bufferLen) < 0) {
         MEDIA_LOGE("audioMicCapturer_ GetBufferSize failed");
         return MSERR_NO_MEMORY;
@@ -393,7 +394,7 @@ int32_t ScreenCaptureServer::StartAudioInnerCapture()
             MEDIA_LOGI("audioInnerCapturer_ has been released, end the capture!!");
             break;
         }
-        uint8_t *buffer = (uint8_t *)malloc(bufferLen);
+        uint8_t *buffer = static_cast<uint8_t *>(malloc(bufferLen));
         if (buffer == nullptr)
             return MSERR_NO_MEMORY;
         memset_s(buffer, bufferLen, 0, bufferLen);
@@ -418,8 +419,6 @@ int32_t ScreenCaptureServer::StartAudioInnerCapture()
         if (screenCaptureCb_ != nullptr) {
             std::lock_guard<std::mutex> cbLock(cbMutex_);
             screenCaptureCb_->OnAudioBufferAvailable(true, audioCurrentInnerType_);
-        } else {
-            MEDIA_LOGE("no client consumer the audio buffer, drop the frame!!");
         }
         bufferCond_.notify_all();
     }
@@ -429,6 +428,7 @@ int32_t ScreenCaptureServer::StartAudioInnerCapture()
 int32_t ScreenCaptureServer::StartAudioCapture()
 {
     size_t bufferLen;
+    CHECK_AND_RETURN_RET_LOG(audioMicCapturer_ != nullptr, MSERR_NO_MEMORY, "audiomic capture is nullptr");
     if (audioMicCapturer_->GetBufferSize(bufferLen) < 0) {
         MEDIA_LOGE("audioMicCapturer_ GetBufferSize failed");
         return MSERR_NO_MEMORY;
@@ -441,7 +441,7 @@ int32_t ScreenCaptureServer::StartAudioCapture()
             MEDIA_LOGI("audioMicCapturer_ has been released,end the capture!!");
             break;
         }
-        uint8_t *buffer = (uint8_t *)malloc(bufferLen);
+        uint8_t *buffer = static_cast<uint8_t *>(malloc(bufferLen));
         if (buffer == nullptr)
             return MSERR_NO_MEMORY;
         memset_s(buffer, bufferLen, 0, bufferLen);
@@ -470,8 +470,6 @@ int32_t ScreenCaptureServer::StartAudioCapture()
         if (screenCaptureCb_ != nullptr) {
             std::lock_guard<std::mutex> cbLock(cbMutex_);
             screenCaptureCb_->OnAudioBufferAvailable(true, MIC);
-        } else {
-            MEDIA_LOGE("no client consumer the audio buffer, drop the frame!!");
         }
         bufferCond_.notify_all();
     }
@@ -628,9 +626,9 @@ int32_t ScreenCaptureServer::StopScreenCapture()
     MediaTrace trace("ScreenCaptureServer::StopScreenCapture");
 
     int32_t stopFlagSuccess = StopAudioCapture();
+    CHECK_AND_RETURN_RET_LOG(stopFlagSuccess == MSERR_OK, stopFlagSuccess, "StopAudioCapture failed");
 
     stopFlagSuccess = StopVideoCapture();
-
     return stopFlagSuccess;
 }
 
@@ -784,17 +782,15 @@ int32_t  ScreenCapBufferConsumerListener::AcquireVideoBuffer(sptr<OHOS::SurfaceB
 int32_t  ScreenCapBufferConsumerListener::ReleaseVideoBuffer()
 {
     std::unique_lock<std::mutex> vlock(vmutex_);
-    if (consumer_ != nullptr) {
-        if (availableVideoBuffers_.empty()) {
-            MEDIA_LOGE("availableVideoBuffers_ is empty,no video frame need release");
-            return MSERR_OK;
-        }
-        if (consumer_ != nullptr) {
-            consumer_->ReleaseBuffer(availableVideoBuffers_.front()->buffer,
-                availableVideoBuffers_.front()->flushFence);
-        }
-        availableVideoBuffers_.pop();
+    if (availableVideoBuffers_.empty()) {
+        MEDIA_LOGE("availableVideoBuffers_ is empty,no video frame need release");
+        return MSERR_OK;
     }
+    if (consumer_ != nullptr) {
+        consumer_->ReleaseBuffer(availableVideoBuffers_.front()->buffer,
+            availableVideoBuffers_.front()->flushFence);
+    }
+    availableVideoBuffers_.pop();
     return MSERR_OK;
 }
 
