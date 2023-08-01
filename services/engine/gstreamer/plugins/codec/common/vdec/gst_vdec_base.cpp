@@ -1165,6 +1165,9 @@ static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, G
         GstBuffer *cat_buffer = kclass->handle_slice_buffer(self, frame->input_buffer, ready_push_slice_buffer, false);
         if (cat_buffer != nullptr && ready_push_slice_buffer == true) {
             buf = cat_buffer;
+            GST_BUFFER_PTS(buf) = GST_BUFFER_PTS(frame->input_buffer);
+            GST_BUFFER_DTS(buf) = GST_BUFFER_DTS(frame->input_buffer);
+            GST_BUFFER_DURATION(buf) = GST_BUFFER_DURATION(frame->input_buffer);
         }
     } else {
         buf = frame->input_buffer;

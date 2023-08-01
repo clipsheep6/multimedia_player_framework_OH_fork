@@ -213,8 +213,8 @@ static gboolean gst_video_display_sink_event(GstBaseSink *base_sink, GstEvent *e
             gst_event_parse_tag(event, &tagList);
             guint bandwidth;
             gst_tag_list_get_uint(tagList, "bandwidth", &bandwidth);
-            GST_DEBUG_OBJECT(video_display_sink, "bandwidth is %u", bandwidth);
-            if (priv->bandwidth != bandwidth && bandwidth != 0) {
+            if (priv != nullptr && priv->bandwidth != bandwidth && bandwidth != 0) {
+                GST_DEBUG_OBJECT(video_display_sink, "bandwidth is %u", bandwidth);
                 priv->bandwidth = bandwidth;
                 priv->need_report_bandwidth = TRUE;
             }
