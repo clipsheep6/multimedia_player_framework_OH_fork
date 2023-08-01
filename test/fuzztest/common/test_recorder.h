@@ -52,6 +52,7 @@ public:
     void HDICreateYUVBuffer();
     uint64_t GetPts();
     void SetVideoSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetDataSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetAudioSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetOutputFormat(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetAudioEncoder(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
