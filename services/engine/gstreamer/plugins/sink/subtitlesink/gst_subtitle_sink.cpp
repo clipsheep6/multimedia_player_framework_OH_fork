@@ -24,7 +24,7 @@ using namespace OHOS::Media;
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
 namespace {
-    constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 120000000; // 120ms
+    constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 200000000; // 200ms
 }
 
 enum {
@@ -290,9 +290,6 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
             break;
         }
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
-            if (!subtitle_sink->is_changing_track) {
-                gst_element_set_base_time(element, gst_clock_get_time(GST_ELEMENT_CLOCK(element)));
-            }
             g_mutex_lock(&priv->mutex);
             gint64 left_duration = priv->text_frame_duration - priv->time_rendered;
             left_duration = left_duration > 0 ? left_duration : 0;
@@ -426,13 +423,9 @@ static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, G
         return reach_time;
     }
 
-    auto priv = subtitle_sink->priv;
     GstClockTime cur_running_time = gst_subtitle_sink_get_current_running_time(basesink);
     gint64 subtitle_running_time_diff = cur_running_time - reach_time;
-    gint64 audio_running_time_diff = 0;
-    g_object_get(priv->audio_sink, "last-running-time-diff", &audio_running_time_diff, nullptr);
-    gint64 late_time = subtitle_running_time_diff - audio_running_time_diff;
-    if (late_time > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
+    if (subtitle_running_time_diff > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
         GST_DEBUG_OBJECT(basesink, "the text frame is too late, %"
         GST_TIME_FORMAT " behind", GST_TIME_ARGS(abs(subtitle_running_time_diff)));
         *need_drop_this_buffer = TRUE;
@@ -567,6 +560,7 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
         GST_WARNING_OBJECT(subtitle_sink, "recv first segment event");
         new_segment.rate = audio_base->segment.applied_rate;
         gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
+        subtitle_sink->segment.start = audio_base->segment.time;
     } else if (!subtitle_sink->is_changing_track) {
         gst_subtitle_sink_handle_audio_segment(basesink, &new_segment);
         gst_subtitle_sink_handle_speed(basesink);

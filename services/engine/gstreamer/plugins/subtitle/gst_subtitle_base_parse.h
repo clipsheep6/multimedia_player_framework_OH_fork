@@ -104,7 +104,6 @@ typedef struct {
     gboolean seek_snap_after;
     gboolean switching;
     gboolean has_send_stream_start;
-    gboolean first_segment;
     GMutex buffermutex;
     GMutex segmentmutex;
     GMutex pushmutex;
