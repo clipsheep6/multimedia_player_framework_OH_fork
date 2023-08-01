@@ -176,6 +176,12 @@ void TestRecorder::SetOutputFile(RecorderTestParam::VideoRecorderConfig_ &record
     recorder->SetOutputFile(recorderConfig.outputFd);
 }
 
+void TestRecorder::SetDataSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    DataSourceType dataType = DataSourceType::METADATA;
+    recorder->SetDataSource(dataType, recorderConfig.videoSourceId);
+}
+
 void TestRecorder::SetRecorderCallback(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     std::shared_ptr<TestRecorderCallbackTest> cb = std::make_shared<TestRecorderCallbackTest>();
@@ -190,6 +196,16 @@ void TestRecorder::Prepare(RecorderTestParam::VideoRecorderConfig_ &recorderConf
 void TestRecorder::Start(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
     recorder->Start();
+}
+
+void TestRecorder::Pause(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->Pause();
+}
+
+void TestRecorder::Resume(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
+{
+    recorder->Resume();
 }
 
 void TestRecorder::Stop(bool block, RecorderTestParam::VideoRecorderConfig_ &recorderConfig)

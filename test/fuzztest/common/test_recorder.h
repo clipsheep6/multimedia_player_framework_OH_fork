@@ -60,9 +60,12 @@ public:
     void SetAudioEncodingBitRate(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetMaxDuration(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetOutputFile(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void SetDataSource(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetRecorderCallback(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void Prepare(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void Start(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void Pause(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void Resume(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void Stop(bool block, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void Reset(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void Release(RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
