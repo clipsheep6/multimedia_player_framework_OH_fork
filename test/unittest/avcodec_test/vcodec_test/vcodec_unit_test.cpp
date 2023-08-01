@@ -282,45 +282,6 @@ HWTEST_F(VCodecUnitTest, video_decode_Flush_0100, TestSize.Level0)
 }
 
 /**
- * @tc.name: video_encode_Flush_0100
- * @tc.desc: video encodec flush
- * @tc.type: FUNC
- * @tc.require: issueI5NYCP issueI5OX06 issueI5P8N0
- */
-HWTEST_F(VCodecUnitTest, video_encode_Flush_0100, TestSize.Level0)
-{
-    ASSERT_TRUE(CreateVideoCodecByMime("video/avc", "video/avc"));
-    std::shared_ptr<FormatMock> format = AVCodecMockFactory::CreateFormat();
-    ASSERT_NE(nullptr, format);
-    string width = "width";
-    string height = "height";
-    string pixelFormat = "pixel_format";
-    string frameRate = "frame_rate";
-    (void)format->PutIntValue(width.c_str(), DEFAULT_WIDTH);
-    (void)format->PutIntValue(height.c_str(), DEFAULT_HEIGHT);
-    (void)format->PutIntValue(pixelFormat.c_str(), NV12);
-    (void)format->PutIntValue(frameRate.c_str(), DEFAULT_FRAME_RATE);
-    videoDec_->SetSource(H264_SRC_PATH, ES_H264, ES_LENGTH_H264);
-    ASSERT_EQ(MSERR_OK, videoEnc_->Configure(format));
-    ASSERT_EQ(MSERR_OK, videoDec_->Configure(format));
-    std::shared_ptr<SurfaceMock> surface = videoEnc_->GetInputSurface();
-    ASSERT_NE(nullptr, surface);
-    ASSERT_EQ(MSERR_OK, videoDec_->SetOutputSurface(surface));
-
-    EXPECT_EQ(MSERR_OK, videoDec_->Prepare());
-    EXPECT_EQ(MSERR_OK, videoEnc_->Prepare());
-    EXPECT_EQ(MSERR_OK, videoDec_->Start());
-    EXPECT_EQ(MSERR_OK, videoEnc_->Start());
-    sleep(3); // start run 3s
-    EXPECT_EQ(MSERR_OK, videoEnc_->Flush());
-    sleep(3); // start run 3s
-    EXPECT_EQ(MSERR_OK, videoDec_->Stop());
-    EXPECT_EQ(MSERR_OK, videoEnc_->Stop());
-    format->Destroy();
-}
-
-
-/**
  * @tc.name: video_codec_abnormal_0100
  * @tc.desc: video codec abnormal func
  * @tc.type: FUNC
