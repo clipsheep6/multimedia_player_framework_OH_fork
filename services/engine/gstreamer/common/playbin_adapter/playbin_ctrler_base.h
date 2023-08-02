@@ -202,6 +202,7 @@ private:
     int64_t lastTime_ = 0;
 
     bool isSeeking_ = false;
+    bool isClosetSeeking_ = false;
     bool isRating_ = false;
     bool isAddingSubtitle_ = false;
     bool isBuffering_ = false;

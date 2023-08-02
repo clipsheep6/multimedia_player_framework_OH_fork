@@ -671,6 +671,9 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
     int64_t timeNs = timeUs * usecToNanoSec;
     seekPos_ = timeUs;
     isSeeking_ = true;
+    if (videoSink_ == nullptr || seekOption == IPlayBinCtrler::PlayBinSeekMode::CLOSET) {
+        isClosetSeeking_ = true;
+    }
     GstEvent *event = gst_event_new_seek(rate_, GST_FORMAT_TIME, static_cast<GstSeekFlags>(seekFlags),
         GST_SEEK_TYPE_SET, timeNs, GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE);
     CHECK_AND_RETURN_RET_LOG(event != nullptr, MSERR_NO_MEMORY, "seek failed");

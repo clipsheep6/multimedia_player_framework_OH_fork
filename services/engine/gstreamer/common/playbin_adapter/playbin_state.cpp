@@ -515,8 +515,9 @@ void PlayBinCtrlerBase::PlayingState::ProcessPlayingStateChange()
         ctrler_.isSeeking_ = false;
         ctrler_.isDuration_ = (position == ctrler_.duration_ / USEC_PER_MSEC) ? true : false;
         MEDIA_LOGI("playing after seek done, pos = %{public}" PRIi64 "ms", position);
+        int64_t curPosition = ctrler_.isClosetSeeking_ ? position : ctrler_.QueryPosition();
         PlayBinMessage posUpdateMsg { PLAYBIN_MSG_POSITION_UPDATE, PLAYBIN_SUB_MSG_POSITION_UPDATE_FORCE,
-            static_cast<int32_t>(ctrler_.QueryPosition()),
+            static_cast<int32_t>(curPosition),
             static_cast<int32_t>(ctrler_.duration_ / USEC_PER_MSEC) };
         ctrler_.ReportMessage(posUpdateMsg);
 

@@ -203,6 +203,16 @@ int32_t AudioSinkSvImpl::GetMinVolume(float &volume)
     return MSERR_OK;
 }
 
+bool AudioSinkSvImpl::DisableAudioEffectBySysParam() const
+{
+    std::string cmd;
+    int32_t ret = OHOS::system::GetStringParameter("sys.media.audio.effect.disable", cmd, "");
+    if (ret == 0 && !cmd.empty()) {
+        return cmd == "TRUE" ? TRUE : FALSE;
+    }
+    return FALSE;
+}
+
 int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId)
 {
     MediaTrace trace("AudioSink::Prepare");
@@ -219,6 +229,10 @@ int32_t AudioSinkSvImpl::Prepare(int32_t appUid, int32_t appPid, uint32_t appTok
         "AudioRenderer::Create", PlayerXCollie::timerTimeout)
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     SetMuteVolumeBySysParam();
+    OHOS::AudioStandard::AudioEffectMode effectMode = DisableAudioEffectBySysParam() ?
+        OHOS::AudioStandard::AudioEffectMode::EFFECT_NONE :
+        OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
+    audioRenderer_->SetAudioEffectMode(effectMode);
     MEDIA_LOGD("audioRenderer Prepare Out");
     return MSERR_OK;
 }
@@ -228,12 +242,13 @@ int32_t AudioSinkSvImpl::Start()
     MediaTrace trace("AudioSink::Start");
     MEDIA_LOGD("audioRenderer Start In");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
+    bool ret = false;
     LISTENER(
-        (void)audioRenderer_->Start(),
+        ret = audioRenderer_->Start(),
         "AudioRenderer::Start",
         PlayerXCollie::timerTimeout)
     MEDIA_LOGD("audioRenderer Start Out");
-    return MSERR_OK;
+    return ret ? MSERR_OK : MSERR_INVALID_OPERATION;
 }
 
 int32_t AudioSinkSvImpl::Stop()
@@ -415,6 +430,7 @@ int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
     size_t bytesWritten = 0;
     LISTENER(
         while (bytesWritten < size) {
+            MediaTrace trace("AudioSink::Write:" + std::to_string(size - bytesWritten));
             int32_t bytesSingle = audioRenderer_->Write(buffer + bytesWritten, size - bytesWritten);
             if (bytesSingle <= 0) {
                 MEDIA_LOGE("[AudioSinkSvImpl] audioRenderer write failed, drop an audio packet!");
@@ -464,6 +480,7 @@ void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, g
 
 void AudioSinkSvImpl::SetAudioInterruptMode(int32_t interruptMode)
 {
+    MediaTrace trace("AudioSink::SetInterruptMode");
     CHECK_AND_RETURN(audioRendererMediaCallback_ != nullptr);
     XcollieTimer xCollie("AudioRenderer::SetInterruptMode", PlayerXCollie::timerTimeout);
     audioRenderer_->SetInterruptMode(static_cast<AudioStandard::InterruptMode>(interruptMode));
@@ -471,6 +488,7 @@ void AudioSinkSvImpl::SetAudioInterruptMode(int32_t interruptMode)
 
 int32_t AudioSinkSvImpl::SetAudioEffectMode(int32_t effectMode)
 {
+    MediaTrace trace("AudioSink::SetAudioEffectMode");
     MEDIA_LOGD("SetAudioEffectMode %{public}d", effectMode);
     CHECK_AND_RETURN_RET(audioRendererMediaCallback_ != nullptr, MSERR_INVALID_OPERATION);
     XcollieTimer xCollie("AudioRenderer::SetAudioEffectMode", PlayerXCollie::timerTimeout);
@@ -481,8 +499,9 @@ int32_t AudioSinkSvImpl::SetAudioEffectMode(int32_t effectMode)
 
 int32_t AudioSinkSvImpl::GetAudioEffectMode(int32_t &effectMode)
 {
+    MediaTrace trace("AudioSink::GetAudioEffectMode");
     CHECK_AND_RETURN_RET(audioRendererMediaCallback_ != nullptr, MSERR_INVALID_OPERATION);
-    XcollieTimer xCollie("AudioRenderer::SetAudioEffectMode", PlayerXCollie::timerTimeout);
+    XcollieTimer xCollie("AudioRenderer::GetAudioEffectMode", PlayerXCollie::timerTimeout);
     effectMode = audioRenderer_->GetAudioEffectMode();
     MEDIA_LOGD("GetAudioEffectMode %{public}d", effectMode);
     return MSERR_OK;
