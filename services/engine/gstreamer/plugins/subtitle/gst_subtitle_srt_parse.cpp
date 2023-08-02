@@ -279,9 +279,7 @@ static gboolean srt_fix_up_markup_handle(const gchar *next_tag, guint *num_open_
 static GString *srt_fix_up_markup_add_tag(guint num_open_tags, const gchar *open_tags, const gchar *text)
 {
     GString *s = g_string_new(text);
-    if (s == nullptr) {
-        return nullptr;
-    }
+    g_return_val_if_fail(s != nullptr, nullptr);
     if (s->str == nullptr) {
         (void)g_string_free(s, (gboolean)TRUE);
         return nullptr;
@@ -333,7 +331,9 @@ static void srt_fix_up_markup(gchar **text)
         cur = next_tag;
     }
 
-    g_return_if_fail(num_open_tags != 0);
+    if (num_open_tags == 0) {
+        return;
+    }
     GString *s = srt_fix_up_markup_add_tag(num_open_tags, open_tags, *text);
     g_return_if_fail(s != nullptr);
     g_free(*text);
@@ -590,10 +590,7 @@ static gsize read_frame_from_external(GstSubtitleBaseParse *base, GstSubtitleFra
         g_return_val_if_fail(parse->buf->str != nullptr, 0);
         if (base->recv_eos && (parse->state == SUBTEXT_STATE) && (strlen(parse->buf->str) != 0)) {
             subtitle = g_strdup(parse->buf->str);
-            if (subtitle == nullptr) {
-                GST_ERROR_OBJECT(parse, "g_strdup failed");
-                return 0;
-            }
+            g_return_val_if_fail(subtitle != nullptr, 0);
             if (g_string_truncate(parse->buf, 0) == nullptr) {
                 GST_WARNING_OBJECT(parse, "g_string_truncate failed");
             }
@@ -648,9 +645,7 @@ static GstCaps *gst_subtitle_srt_parse_get_src_caps(const GstSubtitleBaseParse *
     (void)stream_id;
 
     caps = gst_caps_new_simple("text/x-raw", "format", G_TYPE_STRING, "pango-markup", nullptr);
-    if ((caps == nullptr) || (base == nullptr)) {
-        return nullptr;
-    }
+    g_return_val_if_fail(caps != nullptr && base != nullptr, nullptr);
 
     if (base->language != nullptr) {
         language = base->language;

@@ -928,6 +928,7 @@ int32_t PlayBinCtrlerBase::SelectTrack(int32_t index)
         CHECK_AND_RETURN_RET((!hasSubtitleTrackSelected_ || innerIndex != currentIndex),
             (OnError(MSERR_OK, "This track has already been selected!"), MSERR_OK));
 
+        MEDIA_LOGI("start select subtitle track %{public}d", index);
         isTrackChanging_ = true;
         trackChangeType_ = MediaType::MEDIA_TYPE_SUBTITLE;
         g_object_set(subtitleSink_, "change-track", true, nullptr);

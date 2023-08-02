@@ -202,6 +202,7 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
             condVarSpeed_.notify_all();
             break;
         case INFO_TYPE_POSITION_UPDATE:
+            std::cout << "cur position is " << static_cast<uint64_t>(extra) << std::endl;
             break;
         case INFO_TYPE_BITRATE_COLLECT:
             std::cout << "INFO_TYPE_BITRATE_COLLECT: " << extra << std::endl;
@@ -215,10 +216,10 @@ void PlayerCallbackTest::OnInfo(PlayerOnInfoType type, int32_t extra, const Form
         case INFO_TYPE_TRACKCHANGE:
             trackChange_ = true;
             trackDoneFlag_ = true;
-            condVarTrackDone_.notify_all();
             infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_TRACK_INDEX), index);
             infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_IS_SELECT), isSelect);
             std::cout << "INFO_TYPE_TRACKCHANGE: index " << index << " isSelect " << isSelect << std::endl;
+            condVarTrackDone_.notify_all();
             break;
         case INFO_TYPE_SUBTITLE_UPDATE: {
             HandleSubtitleCallback(extra, infoBody);

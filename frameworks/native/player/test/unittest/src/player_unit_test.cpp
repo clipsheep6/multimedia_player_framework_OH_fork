@@ -2209,6 +2209,35 @@ HWTEST_F(PlayerUnitTest, Player_SelectTrack_002, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test SelectTrack
+ * @tc.number: Player_SelectTrack_002
+ * @tc.desc  : Test Player Subtitle SelectTrack
+ */
+HWTEST_F(PlayerUnitTest, Player_SelectTrack_003, TestSize.Level0)
+{
+    bool trackChange = false;
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE1, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    sleep(PLAYING_TIME_2_SEC);
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(3, trackChange));
+    EXPECT_EQ(trackChange, true);
+    sleep(PLAYING_TIME_1_SEC);
+    EXPECT_EQ(SUBTITLE_3_SEC, player_->GetSubtitleText(SUBTITLE_3_SEC));
+    EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Seek(SEEK_TIME_5_SEC, SEEK_NEXT_SYNC));
+    EXPECT_EQ(SUBTITLE_8_SEC, player_->GetSubtitleText(SUBTITLE_8_SEC));
+    EXPECT_EQ(MSERR_OK, player_->SelectTrack(2, trackChange));
+    EXPECT_EQ(trackChange, true);
+    EXPECT_EQ(SUBTITLE_TEST1_8_SEC, player_->GetSubtitleText(SUBTITLE_TEST1_8_SEC));
+}
+
+/**
  * @tc.name  : Test DeselectTrack
  * @tc.number: Player_DeselectTrack_001
  * @tc.desc  : Test Player DeselectTrack input parameters
@@ -2469,7 +2498,7 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_003, TestSize.Level0)
 /**
  * @tc.name  : Test AddSubSource
  * @tc.number: Player_AddSubSource_004
- * @tc.desc  : Test Player AddSubSource behavior
+ * @tc.desc  : Test Player Subtitle DeselectTrack behavior
  */
 HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
 {
