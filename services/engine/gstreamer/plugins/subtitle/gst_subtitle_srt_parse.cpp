@@ -525,16 +525,12 @@ static gchar *parse_subsrt_subtext(GstSubtitleBaseParse *base, const gchar *line
     if (strlen(line) == 0) {
         if (strlen(parse->buf->str)) {
             ret = g_strdup(parse->buf->str);
-            if (ret == nullptr) {
-                GST_ERROR_OBJECT(parse, "g_strdup failed");
-                return nullptr;
-            }
+            g_return_val_if_fail(ret != nullptr, nullptr);
+            GST_DEBUG_OBJECT(parse, "g_strdup success");
         } else {
             ret = static_cast<gchar *>(g_malloc0(2)); // assign 2 bytes storage
-            if (ret == nullptr) {
-                GST_ERROR_OBJECT(parse, "g_malloc0 failed");
-                return nullptr;
-            }
+            g_return_val_if_fail(ret != nullptr, nullptr);
+            GST_DEBUG_OBJECT(parse, "g_malloc0 success");
             ret[0] = 0;
         }
 

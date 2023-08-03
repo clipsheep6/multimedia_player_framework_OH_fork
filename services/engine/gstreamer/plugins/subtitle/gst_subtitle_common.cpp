@@ -32,9 +32,8 @@ gchar *gst_subtitle_str_dup(const gchar *str, gboolean ndup, gsize len)
     g_return_val_if_fail(str != nullptr, nullptr);
 
     gsize dup_len = ndup ? len : (gsize)strlen(str);
-    if (dup_len > MAX_BUFFER_SIZE) {
-        return nullptr;
-    }
+    g_return_val_if_fail(dup_len <= MAX_BUFFER_SIZE, nullptr);
+
     return g_strndup(str, dup_len);
 }
 
@@ -161,10 +160,10 @@ GstBuffer *gst_subtitle_read_buffer(GstSubtitleBaseParse *base)
 
     GstBuffer *buffer = nullptr;
     GList *buflist = base->buffer_ctx.bufferlist;
-    if (buflist != nullptr) {
-        buffer = static_cast<GstBuffer *>(buflist->data);
-        base->buffer_ctx.bufferlist = g_list_delete_link(buflist, buflist);
-    }
+    g_return_val_if_fail(buflist != nullptr, nullptr);
+
+    buffer = static_cast<GstBuffer *>(buflist->data);
+    base->buffer_ctx.bufferlist = g_list_delete_link(buflist, buflist);
 
     return buffer;
 }
@@ -181,11 +180,9 @@ gsize gst_subtitle_read_line(GstSubtitleBaseParse *base, gchar **out_line)
 
     if (buf_ctx->text != nullptr) {
         while (TRUE) {
-            if ((buf_ctx->text != nullptr) && (buf_ctx->text->str != nullptr)) {
-                str = buf_ctx->text->str;
-            } else {
-                break;
-            }
+            g_return_val_if_fail((buf_ctx->text != nullptr) && (buf_ctx->text->str != nullptr), consumed);
+            str = buf_ctx->text->str;
+
             if (str[0] == '\n') {
                 buf_ctx->text = g_string_erase(buf_ctx->text, 0, 1);
                 continue;
@@ -197,9 +194,8 @@ gsize gst_subtitle_read_line(GstSubtitleBaseParse *base, gchar **out_line)
             }
             gsize line_len = static_cast<gsize>(line_end - str);
             gchar *line = gst_subtitle_str_dup(str, TRUE, line_len + 1);
-            if (line == nullptr) {
-                break;
-            }
+            g_return_val_if_fail(line != nullptr, consumed);
+
             buf_ctx->text = g_string_erase(buf_ctx->text, 0, (gssize)(line_len + 1));
             *out_line = line;
             consumed = line_len + 1;

@@ -93,13 +93,10 @@ static gboolean src_event_seek_event(const GstSubtitleBaseParseClass *baseclass,
     if (!self->from_internal) {
         err_ret = gst_pad_push_event(self->sinkpad, gst_event_new_seek(rate, GST_FORMAT_BYTES, flags,
             GST_SEEK_TYPE_SET, (gint64)0, GST_SEEK_TYPE_NONE, (gint64)0));
-        if (err_ret) {
-            GST_INFO_OBJECT(self, "push seek event success");
-        } else {
-            GST_WARNING_OBJECT(self, "seek to 0 bytes failed");
-            if (self->segment != nullptr) {
-                gst_segment_copy_into(&seeksegment, (GstSegment *)self->segment);
-            }
+        g_return_val_if_fail(!err_ret, TRUE);
+        GST_WARNING_OBJECT(self, "seek to 0 bytes failed");
+        if (self->segment != nullptr) {
+            gst_segment_copy_into(&seeksegment, (GstSegment *)self->segment);
         }
     }
 
@@ -281,7 +278,7 @@ static GstFlowReturn gst_subtitle_base_push_data(GstSubtitleBaseParse *self, Gst
         GST_BUFFER_DURATION(buffer) = clip_end - clip_start;
     }
 
-    if (G_LIKELY(in_segment) && GST_IS_PAD(pad) && GST_PAD_IS_SRC(pad)) {
+    if (in_segment && GST_IS_PAD(pad) && GST_PAD_IS_SRC(pad)) {
         ret = gst_pad_push(pad, buffer);
         if (G_LIKELY(ret != GST_FLOW_OK)) {
             GST_ERROR_OBJECT(self, "Push subtitle buffer failed, ret = %d", ret);
@@ -666,7 +663,7 @@ static void gst_subtitle_base_parse_fill_buffer(GstSubtitleBaseParse *base_parse
 
     g_mutex_lock(&base_parse->buffermutex);
     /* if it is internal subtitle, store @buffer in bufferlist */
-    if (G_UNLIKELY(base_parse->from_internal)) {
+    if (base_parse->from_internal) {
         buf_ctx->bufferlist = g_list_append(buf_ctx->bufferlist, buffer);
         g_mutex_unlock(&base_parse->buffermutex);
         return;
@@ -676,7 +673,7 @@ static void gst_subtitle_base_parse_fill_buffer(GstSubtitleBaseParse *base_parse
      * If it is external subtitle, store @buffer in GstAdapter,
      * then read as many strings as possible from the GstAdapter.
      */
-    if (G_LIKELY(buf_ctx->adapter != nullptr)) {
+    if (buf_ctx->adapter != nullptr) {
         gst_adapter_push(buf_ctx->adapter, buffer);
         fill_buffer_from_adapter(base_parse, buf_ctx);
     }
