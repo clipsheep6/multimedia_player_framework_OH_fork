@@ -42,56 +42,33 @@ static const std::unordered_map<PixelFormat, GstVideoFormat> FORMAT_HDI_GST = {
     {PIXEL_FMT_RGBA_8888, GST_VIDEO_FORMAT_RGBA}
 };
 
-static const std::unordered_map<GstVideoFormat, OMX_COLOR_FORMATTYPE> FORMAT_GST_OMX = {
-    {GST_VIDEO_FORMAT_NV12, OMX_COLOR_FormatYUV420SemiPlanar}
-};
-
-static const std::unordered_map<OMX_COLOR_FORMATTYPE, GstVideoFormat> FORMAT_OMX_GST = {
-    {OMX_COLOR_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}
-};
-
 OMX_VIDEO_CODINGTYPE HdiCodecUtil::CompressionGstToHdi(GstCompressionFormat format)
 {
+    OMX_VIDEO_CODINGTYPE ret = OMX_VIDEO_CodingUnused;
     if (COMPRESS_GST_OMX.find(format) != COMPRESS_GST_OMX.end()) {
-        return COMPRESS_GST_OMX.at(format);
+        ret = COMPRESS_GST_OMX.at(format);
     }
-    return OMX_VIDEO_CodingUnused;
+    return ret;
 }
 
 PixelFormat HdiCodecUtil::FormatGstToHdi(GstVideoFormat format)
 {
+    PixelFormat ret = PIXEL_FMT_BUTT;
     if (FORMAT_GST_HDI.find(format) != FORMAT_GST_HDI.end()) {
-        return FORMAT_GST_HDI.at(format);
+        ret = FORMAT_GST_HDI.at(format);
     }
-    MEDIA_LOGW("Unknow GstFormat %{public}d", format);
-    return PIXEL_FMT_BUTT;
+    MEDIA_LOGI("GstFormat %{public}d", format);
+    return ret;
 }
 
 GstVideoFormat HdiCodecUtil::FormatHdiToGst(PixelFormat format)
 {
+    GstVideoFormat ret = GST_VIDEO_FORMAT_UNKNOWN;
     if (FORMAT_HDI_GST.find(format) != FORMAT_HDI_GST.end()) {
-        return FORMAT_HDI_GST.at(format);
+        ret = FORMAT_HDI_GST.at(format);
     }
-    MEDIA_LOGW("Unknow PixelFormat %{public}d", format);
-    return GST_VIDEO_FORMAT_UNKNOWN;
-}
-
-OMX_COLOR_FORMATTYPE HdiCodecUtil::FormatGstToOmx(GstVideoFormat format)
-{
-    if (FORMAT_GST_OMX.find(format) != FORMAT_GST_OMX.end()) {
-        return FORMAT_GST_OMX.at(format);
-    }
-    MEDIA_LOGW("Unknow GstFormat %{public}d", format);
-    return OMX_COLOR_FormatUnused;
-}
-
-GstVideoFormat HdiCodecUtil::FormatOmxToGst(OMX_COLOR_FORMATTYPE format)
-{
-    if (FORMAT_OMX_GST.find(format) != FORMAT_OMX_GST.end()) {
-        return FORMAT_OMX_GST.at(format);
-    }
-    MEDIA_LOGW("Unknow PixelFormat %{public}d", format);
-    return GST_VIDEO_FORMAT_UNKNOWN;
+    MEDIA_LOGI("PixelFormat %{public}d", format);
+    return ret;
 }
 }  // namespace Media
 }  // namespace OHOS

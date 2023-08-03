@@ -45,6 +45,7 @@ private:
     void SetupCodecBufferNum(const std::string &metaStr, GstElement *src) const;
     static void CapsFixErrorCb(const GstElement *decoder, gpointer userData);
     bool IsFirstCodecSetup() const;
+    void DisablePerformanceBySysParam();
 
     bool isHardwareDec_ = false;
     bool isHEBCMode_ = false;
@@ -56,6 +57,7 @@ private:
     std::list<bool> codecTypeList_;
     std::mutex mutex_;
     CapsFixErrorNotifier notifier_;
+    bool isEnablePerformanceMode_ = true;
 };
 } // Media
 } // OHOS

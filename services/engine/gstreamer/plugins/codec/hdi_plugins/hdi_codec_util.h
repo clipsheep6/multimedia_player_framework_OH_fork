@@ -35,8 +35,6 @@ public:
     static OMX_VIDEO_CODINGTYPE CompressionGstToHdi(GstCompressionFormat format);
     static PixelFormat FormatGstToHdi(GstVideoFormat format);
     static GstVideoFormat FormatHdiToGst(PixelFormat format);
-    static OMX_COLOR_FORMATTYPE FormatGstToOmx(GstVideoFormat format);
-    static GstVideoFormat FormatOmxToGst(OMX_COLOR_FORMATTYPE format);
 private:
     HdiCodecUtil() = delete;
     ~HdiCodecUtil() = delete;

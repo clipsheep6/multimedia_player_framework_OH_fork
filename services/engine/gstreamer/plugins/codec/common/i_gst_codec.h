@@ -123,15 +123,6 @@ public:
     virtual int32_t Stop() = 0;
 
     /**
-     * @brief Allocate input Buffers.
-     *
-     * @return Returns GST_CODEC_OK successful;
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual int32_t AllocateInputBuffers() = 0;
-
-    /**
      * @brief Use input Buffer which can be null, and the real buffer in the push.
      *
      * @return Returns GST_CODEC_OK successful;
@@ -152,17 +143,6 @@ public:
     virtual int32_t PushInputBuffer(GstBuffer *buffer) = 0;
 
     /**
-     * @brief Get the buffer which memory is empty.
-     *
-     * Get buffer which is empty by codec.
-     *
-     * @return Returns GST_CODEC_OK successful;
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual int32_t PullInputBuffer(GstBuffer **buffer) = 0;
-
-    /**
      * @brief Free Buffers free after stop.
      *
      * @return Returns GST_CODEC_OK successful;
@@ -170,15 +150,6 @@ public:
      * @version 1.0
      */
     virtual int32_t FreeInputBuffers() = 0;
-
-    /**
-     * @brief Allocate out Buffers.
-     *
-     * @return Returns GST_CODEC_OK successful;
-     * @since 1.0
-     * @version 1.0
-     */
-    virtual int32_t AllocateOutputBuffers() = 0;
 
     /**
      * @brief Use out Buffers allocate by surface or avshmem.

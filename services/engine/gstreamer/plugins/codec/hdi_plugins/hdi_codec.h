@@ -43,12 +43,9 @@ public:
     int32_t GetParameter(GstCodecParamKey key, GstElement *element) override;
     int32_t Start() override;
     int32_t Stop() override;
-    int32_t AllocateInputBuffers() override;
     int32_t UseInputBuffers(std::vector<GstBuffer*> buffers) override;
     int32_t PushInputBuffer(GstBuffer *buffer) override;
-    int32_t PullInputBuffer(GstBuffer **buffer) override;
     int32_t FreeInputBuffers() override;
-    int32_t AllocateOutputBuffers() override;
     int32_t UseOutputBuffers(std::vector<GstBuffer*> buffers) override;
     int32_t PushOutputBuffer(GstBuffer *buffer) override;
     int32_t PullOutputBuffer(GstBuffer **buffer) override;
@@ -91,6 +88,7 @@ private:
     void HandelEventPortEnable(OMX_U32 data);
     int32_t ChangeState(OMX_STATETYPE state);
     void InitVersion();
+    void DeinitInner();
     std::shared_ptr<HdiBufferMgr> inBufferMgr_;
     std::shared_ptr<HdiBufferMgr> outBufferMgr_;
     std::shared_ptr<HdiParamsMgr> paramsMgr_;
@@ -100,7 +98,6 @@ private:
     OMX_PORT_PARAM_TYPE portParam_ = {};
     GstCodecRet ret_ = GST_CODEC_OK;
     bool eventDone_ = false;
-    bool needCrop_ = true;
     int32_t lastCmd_ = -2; // -1 for error cmd and -2 for invaild
     OMX_STATETYPE curState_ = OMX_StateInvalid;
     OMX_STATETYPE targetState_ = OMX_StateInvalid;

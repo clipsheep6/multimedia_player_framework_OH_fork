@@ -113,6 +113,9 @@ static void HdiCodecOnRemoteDied(HdfDeathRecipient *deathRecipient, HdfRemoteSer
 
 void HdiInit::CodecComponentManagerInit()
 {
+    if (mgr_ != nullptr) {
+        return;
+    }
     MEDIA_LOGD("CodecComponentManagerInit In");
 
     LISTENER(mgr_ = GetCodecComponentManager(), "HdiInit::GetCodecComponentManager", PlayerXCollie::timerTimeout)
@@ -165,9 +168,8 @@ int32_t HdiInit::GetCodecType(CodecType hdiType)
             return AVCODEC_TYPE_AUDIO_ENCODER;
         default:
             MEDIA_LOGW("Unknow codecType");
-            break;
+            return AVCODEC_TYPE_NONE;
     }
-    return AVCODEC_TYPE_NONE;
 }
 
 std::string HdiInit::GetCodecMime(AvCodecRole &role)
@@ -340,10 +342,7 @@ void HdiInit::InitCaps()
     }
     int32_t len = 0;
     LISTENER(len = mgr_->GetComponentNum(), "HdiInit::GetComponentNum", PlayerXCollie::timerTimeout)
-    if (len >= MAX_COMPONENT_NUM || len <= 0) {
-        MEDIA_LOGW("Component num is %{public}d", len);
-        return;
-    }
+    CHECK_AND_RETURN_LOG(len < MAX_COMPONENT_NUM && len > 0, "Component num is %{public}d", len);
     CodecCompCapability *hdiCaps = new CodecCompCapability[len];
     CHECK_AND_RETURN_LOG(hdiCaps != nullptr, "New CodecCompCapability fail");
     ON_SCOPE_EXIT(0) { delete[] hdiCaps; };
@@ -367,11 +366,8 @@ std::vector<CapabilityData> HdiInit::GetCapabilitys()
 int32_t HdiInit::GetHandle(CodecComponentType **component, uint32_t &id, HdiInfo info)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (mgr_ == nullptr) {
-        CodecComponentManagerInit();
-        CHECK_AND_RETURN_RET_LOG(mgr_ != nullptr, HDF_FAILURE, "mgr is nullptr");
-    }
-    
+    CodecComponentManagerInit();
+    CHECK_AND_RETURN_RET_LOG(mgr_ != nullptr, HDF_FAILURE, "mgr is nullptr");
     CHECK_AND_RETURN_RET_LOG(component != nullptr, HDF_FAILURE, "component is nullptr");
     int32_t ret = HDF_SUCCESS;
     LISTENER(ret = mgr_->CreateComponent(component, &id, const_cast<char *>(info.name.c_str()),
