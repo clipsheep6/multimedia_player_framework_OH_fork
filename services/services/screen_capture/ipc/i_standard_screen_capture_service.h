@@ -24,10 +24,11 @@
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 #include "i_screen_capture_service.h"
+#include "../../engine_intf/i_media_stub_service.h"
 
 namespace OHOS {
 namespace Media {
-class IStandardScreenCaptureService : public IRemoteBroker {
+class IStandardScreenCaptureService : public IMediaStubService {
 public:
     virtual ~IStandardScreenCaptureService() = default;
     virtual void Release() = 0;

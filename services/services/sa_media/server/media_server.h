@@ -17,6 +17,7 @@
 #define MEDIA_SERVER_H
 
 #include "media_service_stub.h"
+#include "media_server_manager.h"
 #include "system_ability.h"
 #include "nocopyable.h"
 
@@ -38,6 +39,16 @@ protected:
     void OnStart() override;
     void OnStop() override;
     int32_t Dump(int32_t fd, const std::vector<std::u16string>& args) override;
+    std::map<IStandardMediaService::MediaSystemAbility, MediaServerManager::StubType> abilityMap_ = {
+        {MediaSystemAbility::MEDIA_RECORDER, MediaServerManager::RECORDER},
+        {MediaSystemAbility::MEDIA_PLAYER, MediaServerManager::PLAYER},
+        {MediaSystemAbility::MEDIA_AVMETADATAHELPER, MediaServerManager::AVMETADATAHELPER},
+        {MediaSystemAbility::MEDIA_CODECLIST, MediaServerManager::AVCODECLIST},
+        {MediaSystemAbility::MEDIA_AVCODEC, MediaServerManager::AVCODEC},
+        {MediaSystemAbility::RECORDER_PROFILES, MediaServerManager::RECORDERPROFILES},
+        {MediaSystemAbility::MEDIA_MONITOR, MediaServerManager::MONITOR},
+        {MediaSystemAbility::MEDIA_SCREEN_CAPTURE, MediaServerManager::SCREEN_CAPTURE}
+    };
 };
 } // namespace Media
 } // namespace OHOS

@@ -24,10 +24,11 @@
 #include "avcodec_info.h"
 #include "avsharedmemory.h"
 #include "surface.h"
+#include "../../engine_intf/i_media_stub_service.h"
 
 namespace OHOS {
 namespace Media {
-class IStandardAVCodecService : public IRemoteBroker {
+class IStandardAVCodecService : public IMediaStubService {
 public:
     virtual ~IStandardAVCodecService() = default;
 
