@@ -164,7 +164,7 @@ private:
      */
     static napi_value JsGetAudioInterruptMode(napi_env env, napi_callback_info info);
     static napi_value JsSetAudioInterruptMode(napi_env env, napi_callback_info info);
-    
+
     /**
      * audioRendererInfo?: audio.AudioRendererInfo
      */
@@ -215,35 +215,35 @@ private:
      */
     static napi_value JsGetCurrentTrack(napi_env env, napi_callback_info info);
     /**
-    * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
-    * off(type: 'stateChange'): void;
-    * on(type: 'volumeChange', callback: Callback<number>): void;
-    * off(type: 'volumeChange'): void;
-    * on(type: 'endOfStream', callback: Callback<void>): void;
-    * off(type: 'endOfStream'): void;
-    * on(type: 'seekDone', callback: Callback<number>): void;
-    * off(type: 'seekDone'): void;
-    * on(type: 'speedDone', callback: Callback<number>): void;
-    * off(type: 'speedDone'): void;
-    * on(type: 'bitrateDone', callback: Callback<number>): void;
-    * off(type: 'bitrateDone'): void;
-    * on(type: 'timeUpdate', callback: Callback<number>): void;
-    * off(type: 'timeUpdate'): void;
-    * on(type: 'durationUpdate', callback: Callback<number>): void;
-    * off(type: 'durationUpdate'): void;
-    * on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
-    * off(type: 'bufferingUpdate'): void;
-    * on(type: 'startRenderFrame', callback: Callback<void>): void;
-    * off(type: 'startRenderFrame'): void;
-    * on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
-    * off(type: 'videoSizeChange'): void;
-    * on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
-    * off(type: 'audioInterrupt'): void;
-    * on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
-    * off(type: 'availableBitrates'): void;
-    * on(type: 'error', callback: ErrorCallback): void;
-    * off(type: 'error'): void;
-    */
+     * on(type: 'stateChange', callback: (state: AVPlayerState, reason: StateChangeReason) => void): void;
+     * off(type: 'stateChange'): void;
+     * on(type: 'volumeChange', callback: Callback<number>): void;
+     * off(type: 'volumeChange'): void;
+     * on(type: 'endOfStream', callback: Callback<void>): void;
+     * off(type: 'endOfStream'): void;
+     * on(type: 'seekDone', callback: Callback<number>): void;
+     * off(type: 'seekDone'): void;
+     * on(type: 'speedDone', callback: Callback<number>): void;
+     * off(type: 'speedDone'): void;
+     * on(type: 'bitrateDone', callback: Callback<number>): void;
+     * off(type: 'bitrateDone'): void;
+     * on(type: 'timeUpdate', callback: Callback<number>): void;
+     * off(type: 'timeUpdate'): void;
+     * on(type: 'durationUpdate', callback: Callback<number>): void;
+     * off(type: 'durationUpdate'): void;
+     * on(type: 'bufferingUpdate', callback: (infoType: BufferingInfoType, value: number) => void): void;
+     * off(type: 'bufferingUpdate'): void;
+     * on(type: 'startRenderFrame', callback: Callback<void>): void;
+     * off(type: 'startRenderFrame'): void;
+     * on(type: 'videoSizeChange', callback: (width: number, height: number) => void): void;
+     * off(type: 'videoSizeChange'): void;
+     * on(type: 'audioInterrupt', callback: (info: audio.InterruptEvent) => void): void;
+     * off(type: 'audioInterrupt'): void;
+     * on(type: 'availableBitrates', callback: (bitrates: Array<number>) => void): void;
+     * off(type: 'availableBitrates'): void;
+     * on(type: 'error', callback: ErrorCallback): void;
+     * off(type: 'error'): void;
+     */
     static napi_value JsSetOnCallback(napi_env env, napi_callback_info info);
     static napi_value JsClearOnCallback(napi_env env, napi_callback_info info);
 

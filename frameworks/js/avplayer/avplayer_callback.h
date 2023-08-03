@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef AV_PLAYER_CALLBACK
-#define AV_PLAYER_CALLBACK
+#ifndef AV_PLAYER_CALLBACK_H
+#define AV_PLAYER_CALLBACK_H
 
 #include <map>
 #include <mutex>
@@ -84,4 +84,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // PLAYER_CALLBACK_NAPI_H_
+#endif // AV_PLAYER_CALLBACK_H

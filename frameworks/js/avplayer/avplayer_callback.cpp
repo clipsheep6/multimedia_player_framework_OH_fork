@@ -740,6 +740,7 @@ void AVPlayerCallback::OnBufferingUpdateCb(const int32_t extra, const Format &in
 
 void AVPlayerCallback::OnMessageCb(const int32_t extra, const Format &infoBody)
 {
+    (void)infoBody;
     CHECK_AND_RETURN_LOG(isloaded_.load(), "current source is unready");
     MEDIA_LOGI("OnMessageCb is called, extra: %{public}d", extra);
     if (extra == PlayerMessageType::PLAYER_INFO_VIDEO_RENDERING_START) {

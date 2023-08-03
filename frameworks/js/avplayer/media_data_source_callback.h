@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef MEDIA_DATA_SOURCE_CALLBACK_H_
-#define MEDIA_DATA_SOURCE_CALLBACK_H_
+#ifndef MEDIA_DATA_SOURCE_CALLBACK_H
+#define MEDIA_DATA_SOURCE_CALLBACK_H
 
 #include <mutex>
 #include <uv.h>
@@ -76,4 +76,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // MEDIA_DATA_SOURCE_CALLBACK_H_
+#endif // MEDIA_DATA_SOURCE_CALLBACK_H

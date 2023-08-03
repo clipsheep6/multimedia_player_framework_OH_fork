@@ -148,6 +148,7 @@ napi_value AVPlayerNapi::Constructor(napi_env env, napi_callback_info info)
 
 void AVPlayerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 {
+    (void)env;
     (void)finalize;
     if (nativeObject != nullptr) {
         AVPlayerNapi *jsPlayer = reinterpret_cast<AVPlayerNapi *>(nativeObject);
