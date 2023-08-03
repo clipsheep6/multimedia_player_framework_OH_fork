@@ -117,7 +117,7 @@ void DfxLogDump::SaveLog(const char *level, const OHOS::HiviewDFX::HiLogLabel &l
 
 void DfxLogDump::UpdateCheckEnable()
 {
-    std::string file = "/data/media/log/check.config";
+    std::string file = "/data/test/log/check.config";
     std::ofstream ofStream(file);
     if (!ofStream.is_open()) {
         isEnable_ = false;
@@ -152,7 +152,7 @@ void DfxLogDump::TaskProcessor()
             swap(logString_, temp);
         }
 
-        std::string file = "/data/media/log/";
+        std::string file = "/data/test/log/";
         file += std::to_string(getpid());
         file += "_hilog_media.log";
         file += std::to_string(fileCount_);
