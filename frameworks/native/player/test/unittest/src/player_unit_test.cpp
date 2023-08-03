@@ -1700,8 +1700,8 @@ HWTEST_F(PlayerUnitTest, Player_Dump_GlibPool_001, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_Dump_Log_001, TestSize.Level0)
 {
-    system("mkdir /data/test/log");
-    system("chmod 777 -R /data/test");
+    system("mkdir /data/media/log");
+    system("chmod 777 -R /data/media");
     ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
     sptr<Surface> videoSurface = player_->GetVideoSurface();
     ASSERT_NE(nullptr, videoSurface);
@@ -1718,7 +1718,7 @@ HWTEST_F(PlayerUnitTest, Player_Dump_Log_001, TestSize.Level0)
     system("param set sys.media.dump.codec.vdec NULL");
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
-    system("rm -rf /data/test/log");
+    system("rm -rf /data/media/log");
 }
 
 /**
