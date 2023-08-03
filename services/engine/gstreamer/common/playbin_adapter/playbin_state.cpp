@@ -324,7 +324,7 @@ void PlayBinCtrlerBase::BaseState::HandleTrackInfoUpdate()
 {
     int32_t textTrackNum = 0;
     g_object_get(ctrler_.playbin_, "n-text", &textTrackNum, nullptr);
-    ctrler_.subtitleTrackNum_ = textTrackNum;
+    ctrler_.subtitleTrackNum_ = static_cast<uint32_t>(textTrackNum);
     PlayBinMessage subtitleMsg { PLAYBIN_MSG_SUBTYPE, PLAYBIN_SUB_MSG_TRACK_NUM_UPDATE, textTrackNum, {} };
     ctrler_.ReportMessage(subtitleMsg);
 

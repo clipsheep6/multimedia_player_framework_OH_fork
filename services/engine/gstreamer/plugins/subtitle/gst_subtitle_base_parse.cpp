@@ -223,6 +223,7 @@ static void gst_subtitle_base_parse_init(GstSubtitleBaseParse *base_parse, gpoin
 
     base_parse->seek_snap_after = FALSE;
     base_parse->switching = FALSE;
+    base_parse->first_segment = TRUE;
     g_mutex_init(&base_parse->buffermutex);
     g_mutex_init((GMutex *)&base_parse->pushmutex);
     g_mutex_init(&base_parse->segmentmutex);
@@ -597,6 +598,7 @@ static GstStateChangeReturn gst_subtitle_base_parse_change_state(GstElement *ele
             self->need_srcpad_caps = TRUE;
             self->first_buffer = TRUE;
             self->recv_eos = FALSE;
+            self->first_segment = TRUE;
             break;
         }
         default: {

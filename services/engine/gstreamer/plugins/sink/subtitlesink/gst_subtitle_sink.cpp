@@ -23,10 +23,6 @@ using namespace OHOS::Media;
 #define POINTER_MASK 0x00FFFFFF
 #define FAKE_POINTER(addr) (POINTER_MASK & reinterpret_cast<uintptr_t>(addr))
 
-namespace {
-    constexpr gint64 DEFAULT_SUBTITLE_BEHIND_AUDIO_THD = 200000000; // 200ms
-}
-
 enum {
     PROP_0,
     PROP_AUDIO_SINK,
@@ -185,6 +181,9 @@ static gboolean gst_subtitle_sink_need_drop_buffer(GstBaseSink *basesink,
     auto temp_segment = *segment;
     if (subtitle_sink->is_changing_track) {
         temp_segment.start = subtitle_sink->track_changing_position;
+    }
+    if (subtitle_sink->have_first_filter) {
+        temp_segment.start = subtitle_sink->init_position;
     }
     guint64 start = temp_segment.start;
     if (pts <= start && start < pts_end) {
@@ -351,16 +350,6 @@ static void gst_subtitle_sink_get_gst_buffer_info(GstBuffer *buffer, guint64 &pt
     duration = GST_BUFFER_DURATION_IS_VALID(buffer) ? GST_BUFFER_DURATION(buffer) : GST_CLOCK_TIME_NONE;
 }
 
-static GstClockTime gst_subtitle_sink_get_current_running_time(GstBaseSink *basesink)
-{
-    GstClockTime base_time = gst_element_get_base_time(GST_ELEMENT(basesink)); // get base time
-    GstClockTime cur_clock_time = gst_clock_get_time(GST_ELEMENT_CLOCK(basesink)); // get current clock time
-    g_return_val_if_fail(GST_CLOCK_TIME_IS_VALID(base_time) &&
-        GST_CLOCK_TIME_IS_VALID(cur_clock_time), GST_CLOCK_TIME_NONE);
-    g_return_val_if_fail(cur_clock_time >= base_time, GST_CLOCK_TIME_NONE);
-    return cur_clock_time - base_time;
-}
-
 static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer user_data)
 {
     (void)user_data;
@@ -392,11 +381,11 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
         return GST_FLOW_OK;
     }
     guint64 pts_end = pts + duration;
-    auto position = GST_BASE_SINK(subtitle_sink)->segment.position;
-    if (pts > position) {
+    auto time = GST_BASE_SINK(subtitle_sink)->segment.time;
+    if (pts > time) {
         GST_DEBUG_OBJECT(subtitle_sink, "pts = %" GST_TIME_FORMAT ", pts end = %"
-            GST_TIME_FORMAT " segment start = %" GST_TIME_FORMAT ", not yet render time",
-            GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(position));
+            GST_TIME_FORMAT " segment time = %" GST_TIME_FORMAT ", not yet render time",
+            GST_TIME_ARGS(pts), GST_TIME_ARGS(pts_end), GST_TIME_ARGS(time));
         gst_buffer_unref(buffer);
         return GST_FLOW_OK;
     }
@@ -420,15 +409,6 @@ static GstClockTime gst_subtitle_sink_update_reach_time(GstBaseSink *basesink, G
     if (!subtitle_sink->enable_display) {
         *need_drop_this_buffer = TRUE;
         GST_DEBUG_OBJECT(subtitle_sink, "subtitle display disabled, drop this buffer");
-        return reach_time;
-    }
-
-    GstClockTime cur_running_time = gst_subtitle_sink_get_current_running_time(basesink);
-    gint64 subtitle_running_time_diff = cur_running_time - reach_time;
-    if (subtitle_running_time_diff > DEFAULT_SUBTITLE_BEHIND_AUDIO_THD) {
-        GST_DEBUG_OBJECT(basesink, "the text frame is too late, %"
-        GST_TIME_FORMAT " behind", GST_TIME_ARGS(abs(subtitle_running_time_diff)));
-        *need_drop_this_buffer = TRUE;
     }
     return reach_time;
 }
@@ -464,7 +444,14 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
     }
 
     g_mutex_lock(&priv->mutex);
-    duration = std::min(duration, pts + duration - subtitle_sink->segment.start);
+    guint64 start = subtitle_sink->segment.start;
+    if (subtitle_sink->have_first_filter) {
+        start = subtitle_sink->init_position;
+    }
+    if (subtitle_sink->is_changing_track) {
+        start = subtitle_sink->track_changing_position;
+    }
+    duration = std::min(duration, pts + duration - start);
     priv->text_frame_duration = duration / subtitle_sink->rate;
     priv->time_rendered = gst_util_get_timestamp();
     GST_DEBUG_OBJECT(subtitle_sink, "buffer pts is %" GST_TIME_FORMAT ", duration is %" GST_TIME_FORMAT,
@@ -557,11 +544,14 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
     GST_DEBUG_OBJECT (basesink, "received upstream segment %u", seqnum);
     if (!subtitle_sink->have_first_segment) {
         subtitle_sink->have_first_segment = TRUE;
+        subtitle_sink->have_first_filter = TRUE;
         GST_WARNING_OBJECT(subtitle_sink, "recv first segment event");
         new_segment.rate = audio_base->segment.applied_rate;
+        subtitle_sink->init_position = new_segment.start;
         gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
         subtitle_sink->segment.start = audio_base->segment.time;
     } else if (!subtitle_sink->is_changing_track) {
+        subtitle_sink->have_first_filter = FALSE;
         gst_subtitle_sink_handle_audio_segment(basesink, &new_segment);
         gst_subtitle_sink_handle_speed(basesink);
         GST_DEBUG_OBJECT (basesink, "segment updated");
