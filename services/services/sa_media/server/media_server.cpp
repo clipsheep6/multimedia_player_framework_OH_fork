@@ -47,9 +47,7 @@ void MediaServer::OnStart()
 {
     MEDIA_LOGD("MediaServer OnStart");
     bool res = Publish(this);
-    if (res) {
-        MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
-    }
+    MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
 }
 
 void MediaServer::OnStop()
@@ -97,15 +95,11 @@ sptr<IRemoteObject> MediaServer::GetSubSystemAbility(IStandardMediaService::Medi
 
 int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
-    if (fd <= 0) {
-        MEDIA_LOGW("Failed to check fd");
-        return OHOS::INVALID_OPERATION;
-    }
-    if (MediaServerManager::GetInstance().Dump(fd, args) != OHOS::NO_ERROR) {
-        MEDIA_LOGW("Failed to call MediaServerManager::Dump");
-        return OHOS::INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(fd > 0, OHOS::INVALID_OPERATION, "Failed to check fd.");
 
+    auto ret = MediaServerManager::GetInstance().Dump(fd, args);
+    CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
+        OHOS::INVALID_OPERATION, "Failed to call MediaServerManager::Dump.");
     return OHOS::NO_ERROR;
 }
 } // namespace Media

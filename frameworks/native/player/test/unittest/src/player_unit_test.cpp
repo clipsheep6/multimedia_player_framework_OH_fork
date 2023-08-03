@@ -1609,7 +1609,25 @@ HWTEST_F(PlayerUnitTest, Player_Dump_Dot_001, TestSize.Level0)
     system("param set sys.media.dump.dot.path /data/test/media");
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->Pause());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+}
+
+/**
+ * @tc.name  : Test Player Dump Dot
+ * @tc.number: Player_Dump_Dot_002
+ * @tc.desc  : Test Player Dump Dot
+ */
+HWTEST_F(PlayerUnitTest, Player_Dump_Dot_002, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "MP4_ROTATE_90.mp4"));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
+    EXPECT_EQ(MSERR_OK, player_->Play());
     system("param set sys.media.dump.dot.path /xx");
+    EXPECT_TRUE(player_->IsPlaying());
+    EXPECT_EQ(MSERR_OK, player_->Pause());
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
 
