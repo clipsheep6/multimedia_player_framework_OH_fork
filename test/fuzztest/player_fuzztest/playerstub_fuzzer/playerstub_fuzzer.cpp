@@ -62,7 +62,6 @@ bool FuzzPlayerStub(uint8_t *data, size_t size)
     } else {
         playerProxy->SendRequest(PlayerServiceProxyFuzzer::SET_FD_SOURCE, data, size, false);
         playerProxy->SendRequest(PlayerServiceProxyFuzzer::PREPARE, data, size, false);
-        sleep(1);
         playerProxy->SendRequest(codeIdList[codeId], data, size, true);
     }
     playerProxy->SendRequest(PlayerServiceProxyFuzzer::DESTROY, data, size, false);
