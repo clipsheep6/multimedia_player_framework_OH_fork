@@ -32,6 +32,9 @@ group("fuzztest") {
     "player_fuzztest/playerservicestub_fuzzer:PlayerServiceStubFuzzTest",
     "player_fuzztest/playersetvolume_fuzzer:PlayerSetVolumeFuzzTest",
     "player_fuzztest/playerstub_fuzzer:PlayerStubFuzzTest",
+    "screen_capture_fuzztest/screencaptureaudioconfigure_fuzzer:ScreenCaptureAudioConfigureFuzzTest",
+    "screen_capture_fuzztest/screencapturecapturemode_fuzzer:ScreenCaptureCaptureModeFuzzTest",
+    "screen_capture_fuzztest/screencapturevideoconfigure_fuzzer:ScreenCaptureVideoConfigureFuzzTest",
   ]
 }
 ###############################################################################
