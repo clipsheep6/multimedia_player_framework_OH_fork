@@ -37,6 +37,7 @@ enum {
     PROP_CHANNELS,
     PROP_BITRATE,
     PROP_TOKEN_ID,
+    PROP_FULL_TOKEN_ID,
     PROP_APP_UID,
     PROP_APP_PID,
     PROP_BYPASS_AUDIO_SERVICE,
@@ -115,6 +116,10 @@ static void gst_audio_capture_src_class_init(GstAudioCaptureSrcClass *klass)
         g_param_spec_uint("token-id", "TokenID", "Token ID", 0, G_MAXUINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    g_object_class_install_property(gobject_class, PROP_FULL_TOKEN_ID,
+        g_param_spec_uint64("full-token-id", "FullTokenID", "Full Token ID", 0, G_MAXUINT64, 0,
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
     g_object_class_install_property(gobject_class, PROP_APP_UID,
         g_param_spec_int("app-uid", "Appuid", "APP UID", 0, G_MAXINT32, 0,
             (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
@@ -158,6 +163,7 @@ static void gst_audio_capture_src_init(GstAudioCaptureSrc *src)
     src->is_start = FALSE;
     src->need_caps_info = TRUE;
     src->token_id = 0;
+    src->full_token_id = 0;
     src->appuid = 0;
     src->apppid = 0;
     src->bypass_audio = FALSE;
@@ -203,6 +209,9 @@ static void gst_audio_capture_src_set_property(GObject *object, guint prop_id,
             break;
         case PROP_TOKEN_ID:
             src->token_id = g_value_get_uint(value);
+            break;
+        case PROP_FULL_TOKEN_ID:
+            src->full_token_id = g_value_get_uint64(value);
             break;
         case PROP_APP_UID:
             src->appuid = g_value_get_int(value);
@@ -322,6 +331,7 @@ static GstStateChangeReturn gst_state_change_forward_direction(GstAudioCaptureSr
             appInfo.appUid = src->appuid;
             appInfo.appPid = src->apppid;
             appInfo.appTokenId = src->token_id;
+            appInfo.appFullTokenId = src->full_token_id;
             CHECK_AND_BREAK_REP_ERR(src->audio_capture->SetCaptureParameter(src->bitrate, src->channels,
                 src->sample_rate, appInfo) == MSERR_OK, src, "SetCaptureParameter failed");
             break;

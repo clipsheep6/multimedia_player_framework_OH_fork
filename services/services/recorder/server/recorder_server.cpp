@@ -83,6 +83,7 @@ int32_t RecorderServer::Init()
 {
     MediaTrace trace("RecorderServer::Init");
     uint32_t tokenId = IPCSkeleton::GetCallingTokenID();
+    uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
     int32_t appUid = IPCSkeleton::GetCallingUid();
     int32_t appPid = IPCSkeleton::GetCallingPid();
 
@@ -90,7 +91,7 @@ int32_t RecorderServer::Init()
         auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(IEngineFactory::Scene::SCENE_RECORDER);
         CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, MSERR_CREATE_REC_ENGINE_FAILED,
             "failed to get factory");
-        recorderEngine_ = engineFactory->CreateRecorderEngine(appUid, appPid, tokenId);
+        recorderEngine_ = engineFactory->CreateRecorderEngine(appUid, appPid, tokenId, fullTokenId);
         CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_CREATE_REC_ENGINE_FAILED,
             "failed to create recorder engine");
         return MSERR_OK;

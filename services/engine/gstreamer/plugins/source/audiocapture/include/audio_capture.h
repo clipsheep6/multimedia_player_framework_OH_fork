@@ -29,6 +29,7 @@ public:
         int32_t appUid { 0 };
         uint32_t appTokenId { 0 };
         int32_t appPid { 0 };
+        uint64_t appFullTokenId { 0 };
     };
 
     /**

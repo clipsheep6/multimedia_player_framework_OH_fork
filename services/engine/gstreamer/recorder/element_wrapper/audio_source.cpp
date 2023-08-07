@@ -109,6 +109,7 @@ int32_t AudioSource::ConfigAppInfo(const RecorderParam &recParam)
 {
     const AppInfo &param = static_cast<const AppInfo &>(recParam);
     g_object_set(gstElem_, "token-id", param.appTokenId_, nullptr);
+    g_object_set(gstElem_, "full-token-id", param.appFullTokenId_, nullptr);
     g_object_set(gstElem_, "app-uid", param.appUid_, nullptr);
     g_object_set(gstElem_, "app-pid", param.appPid_, nullptr);
 

@@ -27,7 +27,7 @@ namespace OHOS {
 namespace Media {
 class RecorderPipelineBuilder : public NoCopyable {
 public:
-    RecorderPipelineBuilder(int32_t appUid, int32_t appPid, uint32_t appTokenId);
+    RecorderPipelineBuilder(int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId);
     ~RecorderPipelineBuilder();
 
     int32_t SetSource(const RecorderSourceDesc &desc);
@@ -65,6 +65,7 @@ private:
     int32_t appUid_;
     int32_t appPid_;
     uint32_t appTokenId_;
+    uint64_t appFullTokenId_;
 };
 } // namespace Media
 } // namespace OHOS

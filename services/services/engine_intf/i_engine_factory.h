@@ -63,11 +63,13 @@ public:
 #endif
 
 #ifdef SUPPORT_RECORDER
-    virtual std::unique_ptr<IRecorderEngine> CreateRecorderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId)
+    virtual std::unique_ptr<IRecorderEngine> CreateRecorderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId,
+        uint64_t appFullTokenId)
     {
         (void)appUid;
         (void)appPid;
         (void)appTokenId;
+        (void)appFullTokenId;
         return nullptr;
     }
 #endif

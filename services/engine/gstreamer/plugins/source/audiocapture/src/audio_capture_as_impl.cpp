@@ -101,6 +101,7 @@ int32_t AudioCaptureAsImpl::SetCaptureParameter(uint32_t bitrate, uint32_t chann
         audioAppInfo.appUid = appInfo.appUid;
         audioAppInfo.appPid = appInfo.appPid;
         audioAppInfo.appTokenId = appInfo.appTokenId;
+        audioAppInfo.appFullTokenId = appInfo.appFullTokenId;
 
         audioCapturer_ = AudioStandard::AudioCapturer::Create(AudioStandard::AudioStreamType::STREAM_MUSIC,
                                                               audioAppInfo);

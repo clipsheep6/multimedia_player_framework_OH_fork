@@ -69,6 +69,7 @@ struct _GstAudioCaptureSrc {
     gboolean is_start;
     gboolean need_caps_info;
     guint32 token_id;
+    guint64 full_token_id;
     gint32 appuid;
     gint32 apppid;
     gboolean bypass_audio;

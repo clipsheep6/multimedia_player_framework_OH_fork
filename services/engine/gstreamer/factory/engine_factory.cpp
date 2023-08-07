@@ -40,7 +40,8 @@ public:
     std::unique_ptr<IPlayerEngine> CreatePlayerEngine(int32_t uid = 0, int32_t pid = 0, uint32_t tokenId = 0) override;
 #endif
 #ifdef SUPPORT_RECORDER
-    std::unique_ptr<IRecorderEngine> CreateRecorderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId) override;
+    std::unique_ptr<IRecorderEngine> CreateRecorderEngine(int32_t appUid, int32_t appPid, uint32_t appTokenId,
+        uint64_t appFullTokenId) override;
 #endif
 #ifdef SUPPORT_METADATA
     std::unique_ptr<IAVMetadataHelperEngine> CreateAVMetadataHelperEngine() override;
@@ -76,10 +77,10 @@ std::unique_ptr<IAVMetadataHelperEngine> GstEngineFactory::CreateAVMetadataHelpe
 
 #ifdef SUPPORT_RECORDER
 std::unique_ptr<IRecorderEngine> GstEngineFactory::CreateRecorderEngine(
-    int32_t appUid, int32_t appPid, uint32_t appTokenId)
+    int32_t appUid, int32_t appPid, uint32_t appTokenId, uint64_t appFullTokenId)
 {
     GstLoader::Instance().UpdateLogLevel();
-    auto engine = std::make_unique<RecorderEngineGstImpl>(appUid, appPid, appTokenId);
+    auto engine = std::make_unique<RecorderEngineGstImpl>(appUid, appPid, appTokenId, appFullTokenId);
     int32_t ret = engine->Init();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("recorder engine init failed, ret = %{public}d", ret);
