@@ -139,3 +139,4 @@ set_tls;arm
 setpriority;all
 sched_yield;all
 _newselect;arm
+fsync;all
