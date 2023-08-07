@@ -1522,11 +1522,7 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
         auto msgReportHandler = std::make_shared<TaskHandler<void>>([msg, notifier]() {
             LISTENER(notifier(msg), "PlayBinCtrlerBase::ReportMessage", PlayerXCollie::timerTimeout)
         });
-        int32_t ret = msgQueue_->EnqueueTask(msgReportHandler);
-        if (ret != MSERR_OK) {
-            MEDIA_LOGE("async report msg failed, type: %{public}d, subType: %{public}d, code: %{public}d",
-                msg.type, msg.subType, msg.code);
-        };
+        (void)msgQueue_->EnqueueTask(msgReportHandler);
     }
 
     if (msg.type == PlayBinMsgType::PLAYBIN_MSG_EOS) {

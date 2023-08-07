@@ -100,10 +100,8 @@ int32_t PlayBinCtrlerBase::BaseState::ChangePlayBinState(GstState targetState, G
     }
 
     ret = gst_element_set_state(GST_ELEMENT_CAST(ctrler_.playbin_), targetState);
-    if (ret == GST_STATE_CHANGE_FAILURE) {
-        MEDIA_LOGE("Failed to change playbin's state to %{public}s", gst_element_state_get_name(targetState));
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret != GST_STATE_CHANGE_FAILURE, MSERR_INVALID_OPERATION,
+        "Failed to change playbin's state to %{public}s", gst_element_state_get_name(targetState));
 
     return MSERR_OK;
 }

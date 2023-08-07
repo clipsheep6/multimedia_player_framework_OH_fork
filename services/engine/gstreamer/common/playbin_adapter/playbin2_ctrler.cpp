@@ -26,17 +26,11 @@ namespace Media {
 std::shared_ptr<IPlayBinCtrler> IPlayBinCtrler::Create(
     PlayBinKind kind, const PlayBinCreateParam &createParam)
 {
-    if (kind != PlayBinKind::PLAYBIN2) {
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(kind == PlayBinKind::PLAYBIN2, nullptr, "kind is't PLAYBIN2");
 
     auto inst = std::make_shared<PlayBin2Ctrler>(createParam);
     int32_t ret = inst->Init();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("create playbin2ctrler failed");
-        return nullptr;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "create playbin2ctrler failed");
     return inst;
 }
 
@@ -48,11 +42,7 @@ PlayBin2Ctrler::~PlayBin2Ctrler()
 int32_t PlayBin2Ctrler::OnInit()
 {
     playbin_ = reinterpret_cast<GstPipeline *>(gst_element_factory_make("playbin", "playbin"));
-    if (playbin_ == nullptr) {
-        MEDIA_LOGE("create playbin failed");
-        return MSERR_UNKNOWN;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(playbin_ != nullptr, MSERR_UNKNOWN, "create playbin failed");
     return MSERR_OK;
 }
 } // namespace Media
