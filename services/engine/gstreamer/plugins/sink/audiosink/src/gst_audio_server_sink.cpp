@@ -521,9 +521,8 @@ static gboolean gst_audio_server_sink_event(GstBaseSink *basesink, GstEvent *eve
             if (sink->audio_sink == nullptr) {
                 break;
             }
-            if (sink->audio_sink->Pause() != MSERR_OK && sink->audio_sink->Flush() != MSERR_OK) {
-                GST_ERROR_OBJECT(basesink, "fail to call Pause and Flush when handling SEEK event");
-            }
+            (void)sink->audio_sink->Pause();
+            (void)sink->audio_sink->Flush();
             GST_DEBUG_OBJECT(basesink, "received FLUSH_START");
             break;
         case GST_EVENT_FLUSH_STOP:

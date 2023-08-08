@@ -295,13 +295,14 @@ int32_t AudioSinkSvImpl::Flush()
 {
     MediaTrace trace("AudioSink::Flush");
     CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
-    if (audioRenderer_->GetStatus() == OHOS::AudioStandard::RENDERER_RUNNING) {
-        MEDIA_LOGD("Flush");
+    OHOS::AudioStandard::RendererState state = audioRenderer_->GetStatus();
+    MEDIA_LOGD("AudioSinkSvImpl Flush in, audioRender state = %{public}d", state);
+    if (state == OHOS::AudioStandard::RENDERER_RUNNING || state == OHOS::AudioStandard::RENDERER_PAUSED ||
+        state == OHOS::AudioStandard::RENDERER_STOPPED) {
         bool ret = false;
         LISTENER(ret = audioRenderer_->Flush(), "AudioRenderer::Flush", PlayerXCollie::timerTimeout)
         CHECK_AND_RETURN_RET(ret == true, MSERR_AUD_RENDER_FAILED);
     }
-    
     return MSERR_OK;
 }
 
