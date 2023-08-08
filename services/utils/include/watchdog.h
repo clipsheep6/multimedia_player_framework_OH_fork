@@ -79,8 +79,6 @@ public:
      */
     void WatchDogThread();
 
-    void SetWatchDogTimeout(uint32_t timeoutMs);
-
 private:
     std::atomic<bool> disabling = false;
     bool enable_ = false;

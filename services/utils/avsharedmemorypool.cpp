@@ -17,6 +17,7 @@
 #include "avsharedmemorybase.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVShMemPool"};
@@ -45,31 +46,16 @@ int32_t AVSharedMemoryPool::Init(const InitializeOption &option)
     CHECK_AND_RETURN_RET(option.maxMemCnt != 0, MSERR_INVALID_VAL);
 
     option_ = option;
-    if (option.preAllocMemCnt > option.maxMemCnt) {
-        option_.preAllocMemCnt = option.maxMemCnt;
-    }
+    option_.preAllocMemCnt = std::min(option.preAllocMemCnt, option.maxMemCnt);
 
     MEDIA_LOGI("name: %{public}s, init option: preAllocMemCnt = %{public}u, memSize = %{public}d, "
                "maxMemCnt = %{public}u, enableFixedSize = %{public}d",
                name_.c_str(), option_.preAllocMemCnt, option_.memSize, option_.maxMemCnt,
                option_.enableFixedSize);
-    bool ret = true;
     for (uint32_t i = 0; i < option_.preAllocMemCnt; ++i) {
         auto memory = AllocMemory(option_.memSize);
-        if (memory == nullptr) {
-            MEDIA_LOGE("alloc memory failed");
-            ret = false;
-            break;
-        }
+        CHECK_AND_RETURN_RET_LOG(memory != nullptr, MSERR_NO_MEMORY, "failed to AllocMemory");
         idleList_.push_back(memory);
-    }
-    
-    if (!ret) {
-        for (auto iter = idleList_.begin(); iter != idleList_.end(); ++iter) {
-            delete *iter;
-            *iter = nullptr;
-        }
-        return MSERR_NO_MEMORY;
     }
 
     inited_ = true;
@@ -82,12 +68,12 @@ AVSharedMemory *AVSharedMemoryPool::AllocMemory(int32_t size)
     AVSharedMemoryBase *memory = new (std::nothrow) AVSharedMemoryBase(size, option_.flags, name_);
     CHECK_AND_RETURN_RET_LOG(memory != nullptr, nullptr, "create object failed");
 
-    if (memory->Init() != MSERR_OK) {
-        delete memory;
-        memory = nullptr;
-        MEDIA_LOGE("init avsharedmemorybase failed");
-    }
+    ON_SCOPE_EXIT(0) { delete memory; };
 
+    int32_t ret = memory->Init();
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "init avsharedmemorybase failed");
+
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return memory;
 }
 
@@ -188,10 +174,7 @@ std::shared_ptr<AVSharedMemory> AVSharedMemoryPool::AcquireMemory(int32_t size, 
                size, name_.c_str(), blocking);
 
     std::unique_lock<std::mutex> lock(mutex_);
-    if (!CheckSize(size)) {
-        MEDIA_LOGE("invalid size: %{public}d", size);
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(CheckSize(size), nullptr, "invalid size: %{public}d", size);
 
     if (option_.enableFixedSize) {
         size = option_.memSize;
@@ -210,11 +193,7 @@ std::shared_ptr<AVSharedMemory> AVSharedMemoryPool::AcquireMemory(int32_t size, 
         cond_.wait(lock);
     } while (inited_ && !forceNonBlocking_);
 
-    if (memory == nullptr) {
-        MEDIA_LOGD("acquire memory failed for size: %{public}d", size);
-        return nullptr;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(memory != nullptr, nullptr, "acquire memory failed for size: %{public}d", size);
     busyList_.push_back(memory);
 
     auto result = std::shared_ptr<AVSharedMemory>(memory, [weakPool = weak_from_this()](AVSharedMemory *memory) {

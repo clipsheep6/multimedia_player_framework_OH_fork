@@ -19,7 +19,6 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "MediaTimePerf"};
     static constexpr int32_t MICRO_SEC_PER_SEC = 1000000;
-    static constexpr int64_t MAX_SEC = LLONG_MAX / MICRO_SEC_PER_SEC;
     static constexpr int32_t INVALID_TIME = -1;
 }
 
@@ -49,45 +48,29 @@ void TimePerf::StartPerfRecord(uintptr_t obj, std::string_view tag)
     }
 
     auto &record = tagIter->second;
-    if (record.currStart != INVALID_TIME) {
-        MEDIA_LOGW("already start for obj: 0x%{public}06" PRIXPTR ", tag: %{public}s",
-                   FAKE_POINTER(obj), tag.data());
-        return;
-    }
+    CHECK_AND_RETURN_LOG(record.currStart == INVALID_TIME,
+        "already start for obj: 0x%{public}06" PRIXPTR ", tag: %{public}s",
+        FAKE_POINTER(obj), tag.data());
 
     struct timeval start {};
-    int32_t ret = gettimeofday(&start, nullptr);
-    if (ret != 0) {
-        MEDIA_LOGW("get time of day failed");
-        return;
-    }
+    gettimeofday(&start, nullptr);
     TimeVal2USec(start, record.currStart);
 }
 
 void TimePerf::StopPerfRecord(uintptr_t obj, std::string_view tag)
 {
-    struct timeval stop {};
-    int32_t getTimeRet = gettimeofday(&stop, nullptr);
-    if (getTimeRet != 0) {
-        MEDIA_LOGW("get time of day failed");
-    }
-
     std::lock_guard<std::mutex> lock(mutex_);
 
     auto objIter = objPerfRecords_.find(obj);
-    if (objIter == objPerfRecords_.end()) {
-        MEDIA_LOGW("no record exits for obj: 0x%{public}06" PRIXPTR ", tag: %{public}s",
-                   FAKE_POINTER(obj), tag.data());
-        return;
-    }
+    CHECK_AND_RETURN_LOG(objIter != objPerfRecords_.end(),
+        "no record exits for obj: 0x%{public}06" PRIXPTR ", tag: %{public}s",
+        FAKE_POINTER(obj), tag.data());
 
     auto &tagRecords = objIter->second;
     auto tagIter = tagRecords.find(tag);
-    if (tagIter == tagRecords.end()) {
-        MEDIA_LOGW("no record exits for obj: 0x%{public}06" PRIXPTR ", tag: %{public}s",
-                   FAKE_POINTER(obj), tag.data());
-        return;
-    }
+    CHECK_AND_RETURN_LOG(tagIter != tagRecords.end(),
+        "no record exits for obj: 0x%{public}06" PRIXPTR ", tag: %{public}s",
+        FAKE_POINTER(obj), tag.data());
 
     auto &record = tagIter->second;
     if (record.currStart == INVALID_TIME) {
@@ -96,11 +79,8 @@ void TimePerf::StopPerfRecord(uintptr_t obj, std::string_view tag)
         return;
     }
 
-    if (getTimeRet != 0) {
-        record.currStart = INVALID_TIME;
-        return;
-    }
-
+    struct timeval stop {};
+    gettimeofday(&stop, nullptr);
     TimeVal2USec(stop, record.currStop);
     int64_t currTime = record.currStop - record.currStart;
     if (currTime > record.peakTime || record.peakTime == INVALID_TIME) {
@@ -156,39 +136,8 @@ void TimePerf::CleanObjectRecord(uintptr_t obj)
     (void)objPerfRecords_.erase(objIter);
 }
 
-void TimePerf::DumpAllRecord()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    for (auto &[obj, tagRecords] : objPerfRecords_) {
-        for (auto &[tag, record] : tagRecords) {
-            if (record.count == 0) {
-                continue;
-            }
-            MEDIA_LOGD("obj[0x%{public}06" PRIXPTR "] tag[%{public}s], first time: %{public}" PRIi64 ""
-                ", peak time: %{public}" PRIi64 ", avg time: %{public}" PRIi64 ", count: %{public}" PRIi64 "",
-                FAKE_POINTER(obj), tag.data(), record.firstTime,
-                record.peakTime, record.avgTime, record.count);
-        }
-    }
-}
-
-void TimePerf::CleanAllRecord()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    objPerfRecords_.clear();
-}
-
 void TimePerf::TimeVal2USec(const struct timeval &time, int64_t &usec)
 {
-    if ((static_cast<int64_t>(time.tv_sec) > MAX_SEC) ||
-        (static_cast<int64_t>(time.tv_sec) == MAX_SEC && time.tv_usec > 0) ||
-        (time.tv_usec > MICRO_SEC_PER_SEC)) {
-        MEDIA_LOGW("time overflow");
-        usec = 0;
-        return;
-    }
-
     usec = static_cast<int64_t>(time.tv_sec) * MICRO_SEC_PER_SEC + time.tv_usec;
 }
 } // namespace Media

@@ -32,10 +32,8 @@ TaskQueue::~TaskQueue()
 int32_t TaskQueue::Start()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (thread_ != nullptr) {
-        MEDIA_LOGW("Started already, ignore ! [%{public}s]", name_.c_str());
-        return MSERR_OK;
-    }
+    CHECK_AND_RETURN_RET_LOG(thread_ == nullptr,
+        MSERR_OK, "Started already, ignore ! [%{public}s]", name_.c_str());
     isExit_ = false;
     thread_ = std::make_unique<std::thread>(&TaskQueue::TaskProcessor, this);
     MEDIA_LOGI("thread started [%{public}s]", name_.c_str());

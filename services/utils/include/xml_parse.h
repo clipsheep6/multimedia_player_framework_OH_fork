@@ -41,14 +41,10 @@ protected:
         const std::string &capabilityKey, const std::string &capabilityValue) const = 0;
     virtual bool IsNumberArray(const std::vector<std::string> &strArray) const final;
     virtual bool TransStrAsRange(const std::string &str, Range &range) const final;
-    virtual std::vector<int32_t> TransMapAsIntegerArray(
-        const std::unordered_map<std::string, int> &capabilityMap, const std::vector<std::string> &spilt) const final;
     virtual std::vector<int32_t> TransStrAsIntegerArray(const std::vector<std::string> &spilt) const final;
     virtual bool SpiltKeyList(
         const std::string &str, const std::string &delim, std::vector<std::string> &spilt) const final;
     virtual bool SetCapabilityStringData(std::unordered_map<std::string, std::string&> dataMap,
-        const std::string &capabilityKey, const std::string &capabilityValue) const final;
-    virtual bool SetCapabilityBoolData(std::unordered_map<std::string, bool&> dataMap,
         const std::string &capabilityKey, const std::string &capabilityValue) const final;
     virtual bool SetCapabilityRangeData(std::unordered_map<std::string, Range&> dataMap,
         const std::string &capabilityKey, const std::string &capabilityValue) const final;
