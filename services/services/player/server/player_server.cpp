@@ -256,10 +256,8 @@ int32_t PlayerServer::AddSubSource(int32_t fd, int64_t offset, int64_t size)
         return MSERR_INVALID_OPERATION;
     }
 
-    if (subtitleTrackNum_ >= MAX_SUBTITLE_TRACK_NUN) {
-        MEDIA_LOGE("Can not add sub source, subtitle track num is %{public}u, exceed the max num", subtitleTrackNum_);
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(subtitleTrackNum_ < MAX_SUBTITLE_TRACK_NUN, MSERR_INVALID_OPERATION,
+        "Can not add sub source, subtitle track num is %{public}u, exceed the max num", subtitleTrackNum_);
 
     auto uriHelper = std::make_shared<UriHelper>(fd, offset, size);
     CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read the fd");
@@ -303,6 +301,7 @@ int32_t PlayerServer::PrepareAsync()
 
 int32_t PlayerServer::OnPrepare(bool sync)
 {
+    (void)sync;
     MEDIA_LOGD("KPI-TRACE: PlayerServer OnPrepare in");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     int32_t ret = MSERR_OK;
@@ -325,9 +324,6 @@ int32_t PlayerServer::OnPrepare(bool sync)
     ret = taskMgr_.LaunchTask(preparedTask, PlayerServerTaskType::STATE_CHANGE, "prepare");
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Prepare launch task failed");
 
-    if (sync) {
-        (void)preparedTask->GetResult(); // wait HandlePrpare
-    }
     MEDIA_LOGD("KPI-TRACE: PlayerServer OnPrepare out");
     return MSERR_OK;
 }
@@ -953,10 +949,8 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 bool PlayerServer::IsPlaying()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not judge IsPlaying, currentState is PLAYER_STATE_ERROR");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ != PLAYER_STATE_ERROR, false,
+        "Can not judge IsPlaying, currentState is PLAYER_STATE_ERROR");
 
     return lastOpStatus_ == PLAYER_STARTED;
 }
@@ -964,10 +958,8 @@ bool PlayerServer::IsPlaying()
 bool PlayerServer::IsPrepared()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not judge IsPrepared, currentState is PLAYER_STATE_ERROR");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ != PLAYER_STATE_ERROR, false,
+        "Can not judge IsPrepared, currentState is PLAYER_STATE_ERROR");
 
     return lastOpStatus_ == PLAYER_PREPARED;
 }
@@ -975,10 +967,8 @@ bool PlayerServer::IsPrepared()
 bool PlayerServer::IsCompleted()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not judge IsCompleted, currentState is PLAYER_STATE_ERROR");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ != PLAYER_STATE_ERROR, false,
+        "Can not judge IsCompleted, currentState is PLAYER_STATE_ERROR");
 
     return lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE;
 }
@@ -986,10 +976,8 @@ bool PlayerServer::IsCompleted()
 bool PlayerServer::IsLooping()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not judge IsLooping, currentState is PLAYER_STATE_ERROR");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ != PLAYER_STATE_ERROR, false,
+        "Can not judge IsLooping, currentState is PLAYER_STATE_ERROR");
 
     return config_.looping;
 }
@@ -997,10 +985,8 @@ bool PlayerServer::IsLooping()
 int32_t PlayerServer::SetLooping(bool loop)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not SetLooping, currentState is PLAYER_STATE_ERROR");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ != PLAYER_STATE_ERROR, MSERR_INVALID_OPERATION,
+        "Can not judge SetLooping, currentState is PLAYER_STATE_ERROR");
     MEDIA_LOGD("PlayerServer SetLooping in, loop %{public}d", loop);
 
     if (isLiveStream_) {
@@ -1026,11 +1012,8 @@ int32_t PlayerServer::SetLooping(bool loop)
 int32_t PlayerServer::SetParameter(const Format &param)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (lastOpStatus_ == PLAYER_STATE_ERROR) {
-        MEDIA_LOGE("Can not SetParameter, currentState is PLAYER_STATE_ERROR");
-        return MSERR_INVALID_OPERATION;
-    }
-
+    CHECK_AND_RETURN_RET_LOG(lastOpStatus_ != PLAYER_STATE_ERROR, MSERR_INVALID_OPERATION,
+        "Can not judge SetParameter, currentState is PLAYER_STATE_ERROR");
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
     if (param.ContainKey(PlayerKeys::AUDIO_EFFECT_MODE)) {
@@ -1279,10 +1262,8 @@ void PlayerServerStateMachine::ChangeState(const std::shared_ptr<PlayerServerSta
     {
         // Resolve the deadlock between reset and state callback
         std::unique_lock<std::recursive_mutex> lock(recMutex_);
-
-        if (state == nullptr || (state == currState_)) {
-            return;
-        }
+        CHECK_AND_RETURN_LOG(state != nullptr, "state is nullptr");
+        CHECK_AND_RETURN_LOG(state != currState_, "state is same to currState");
 
         if (currState_) {
             MEDIA_LOGD("exit state %{public}s", currState_->name_.c_str());

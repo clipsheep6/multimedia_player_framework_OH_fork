@@ -379,9 +379,6 @@ static void gst_audio_server_sink_get_property(GObject *object, guint prop_id, G
             g_value_set_uint(value, sink->sample_rate);
             break;
         case PROP_VOLUME:
-            if (sink->audio_sink != nullptr) {
-                (void)sink->audio_sink->GetVolume(sink->volume);
-            }
             g_value_set_float(value, sink->volume);
             break;
         case PROP_MAX_VOLUME:

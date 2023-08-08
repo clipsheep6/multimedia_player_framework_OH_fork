@@ -82,10 +82,7 @@ std::unique_ptr<IRecorderEngine> GstEngineFactory::CreateRecorderEngine(
     GstLoader::Instance().UpdateLogLevel();
     auto engine = std::make_unique<RecorderEngineGstImpl>(appUid, appPid, appTokenId, appFullTokenId);
     int32_t ret = engine->Init();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("recorder engine init failed, ret = %{public}d", ret);
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "recorder engine init failed, ret = %{public}d", ret);
     return engine;
 }
 #endif
@@ -112,10 +109,7 @@ extern "C" {
 __attribute__((visibility("default"))) OHOS::Media::IEngineFactory *CreateEngineFactory()
 {
     int32_t ret = OHOS::Media::GstLoader::Instance().SetUp();
-    if (ret != OHOS::Media::MSERR_OK) {
-        MEDIA_LOGE("Gst Engine setup failed, ret = %{public}d", ret);
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == OHOS::Media::MSERR_OK, nullptr, "Gst Engine setup failed, ret = %{public}d", ret);
     return new (std::nothrow) OHOS::Media::GstEngineFactory();
 }
 #ifdef __cplusplus

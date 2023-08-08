@@ -30,7 +30,6 @@ public:
 
     virtual GstCaps *GetCaps() = 0;
     virtual int32_t SetVolume(float volume) = 0;
-    virtual int32_t GetVolume(float &volume) = 0;
     virtual int32_t GetMaxVolume(float &volume) = 0;
     virtual int32_t GetMinVolume(float &volume) = 0;
     virtual int32_t Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId) = 0;
@@ -45,7 +44,6 @@ public:
     virtual int32_t GetMinimumBufferSize(uint32_t &bufferSize) = 0;
     virtual int32_t GetMinimumFrameCount(uint32_t &frameCount) = 0;
     virtual int32_t Write(uint8_t *buffer, size_t size) = 0;
-    virtual int32_t GetAudioTime(uint64_t &time) = 0;
     virtual int32_t GetLatency(uint64_t &latency) const = 0;
     virtual int32_t SetRendererInfo(int32_t desc, int32_t rendererFlags) = 0;
     virtual void SetAudioInterruptMode(int32_t interruptMode) = 0;

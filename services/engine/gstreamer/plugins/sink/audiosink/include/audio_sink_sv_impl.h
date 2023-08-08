@@ -50,7 +50,6 @@ public:
 
     GstCaps *GetCaps() override;
     int32_t SetVolume(float volume) override;
-    int32_t GetVolume(float &volume) override;
     int32_t GetMaxVolume(float &volume) override;
     int32_t GetMinVolume(float &volume) override;
     int32_t Prepare(int32_t appUid, int32_t appPid, uint32_t appTokenId) override;
@@ -65,7 +64,6 @@ public:
     int32_t GetMinimumBufferSize(uint32_t &bufferSize) override;
     int32_t GetMinimumFrameCount(uint32_t &frameCount) override;
     int32_t Write(uint8_t *buffer, size_t size) override;
-    int32_t GetAudioTime(uint64_t &time) override;
     int32_t GetLatency(uint64_t &latency) const override;
     int32_t SetRendererInfo(int32_t desc, int32_t rendererFlags) override;
     void SetAudioInterruptMode(int32_t interruptMode) override;
@@ -77,7 +75,6 @@ public:
     bool Writeable() const override;
 
 private:
-    void OnError(std::string errMsg);
     using ErrorCbFunc = std::function<void(GstBaseSink *, const std::string &)>;
     ErrorCbFunc errorCb_ = nullptr;
     GstBaseSink *audioSink_ = nullptr;
@@ -103,11 +100,6 @@ public:
     int32_t SetVolume(float volume) override
     {
         (void)volume;
-        return MSERR_OK;
-    }
-    int32_t GetVolume(float &volume) override
-    {
-        volume = 1.0; // default volume 1.0
         return MSERR_OK;
     }
     int32_t GetMaxVolume(float &volume) override
@@ -179,11 +171,6 @@ public:
     {
         (void)buffer;
         (void)size;
-        return MSERR_OK;
-    }
-    int32_t GetAudioTime(uint64_t &time) override
-    {
-        (void)time;
         return MSERR_OK;
     }
     int32_t GetLatency(uint64_t &latency) const override
