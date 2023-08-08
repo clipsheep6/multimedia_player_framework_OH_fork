@@ -39,6 +39,7 @@ public:
     void SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor);
 
 private:
+    void OnMonitor(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
     std::weak_ptr<PlayerCallback> callback_;
     std::weak_ptr<MonitorClientObject> monitor_;
     int32_t lastStateExtra_ = -1;
