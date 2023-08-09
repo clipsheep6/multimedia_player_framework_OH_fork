@@ -232,14 +232,10 @@ std::shared_ptr<AVSharedMemory> AVMetaElemMetaCollector::DoFetchArtPicture(const
 bool AVMetaElemMetaCollector::AddProbeToPadList(GList &list)
 {
     for (GList *padNode = g_list_first(&list); padNode != nullptr; padNode = padNode->next) {
-        if (padNode->data == nullptr) {
-            continue;
-        }
+        CHECK_AND_CONTINUE(padNode->data != nullptr);
 
         GstPad *pad = reinterpret_cast<GstPad *>(padNode->data);
-        if (!AddProbeToPad(*pad)) {
-            return false;
-        }
+        CHECK_AND_RETURN_RET(AddProbeToPad(*pad), false);
     }
 
     return true;
@@ -254,10 +250,8 @@ bool AVMetaElemMetaCollector::AddProbeToPad(GstPad &pad)
     }
 
     gulong probeId = gst_pad_add_probe(&pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, ProbeCallback, this, nullptr);
-    if (probeId == 0) {
-        MEDIA_LOGE("add probe for %{public}s's pad %{public}s failed", PAD_PARENT_NAME(&pad), PAD_NAME(&pad));
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(probeId != 0, false, "add probe for %{public}s's pad %{public}s failed",
+        PAD_PARENT_NAME(&pad), PAD_NAME(&pad))
 
     (void)padProbes_.emplace(&pad, probeId);
     (void)trackInfos_.emplace(&pad, TrackInfo {});
@@ -277,10 +271,8 @@ bool AVMetaElemMetaCollector::ConnectSignal(GstElement &elem, std::string_view s
     }
 
     gulong signalId = g_signal_connect(&elem, signal.data(), callback, this);
-    if (signalId == 0) {
-        MEDIA_LOGE("connect signal '%{public}s' to %{public}s failed", signal.data(), ELEM_NAME(&elem));
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(signalId != 0, false, "connect signal '%{public}s' to %{public}s failed",
+        signal.data(), ELEM_NAME(&elem))
 
     (void)signalIds_.emplace(&elem, signalId);
     return true;
@@ -288,10 +280,8 @@ bool AVMetaElemMetaCollector::ConnectSignal(GstElement &elem, std::string_view s
 
 GstPadProbeReturn AVMetaElemMetaCollector::ProbeCallback(GstPad *pad, GstPadProbeInfo *info, gpointer usrdata)
 {
-    if (pad == nullptr || info ==  nullptr || usrdata == nullptr) {
-        MEDIA_LOGE("param is invalid");
-        return GST_PAD_PROBE_OK;
-    }
+    CHECK_AND_RETURN_RET_LOG(pad != nullptr && info !=  nullptr && usrdata != nullptr,
+        GST_PAD_PROBE_OK, "param is invalid")
 
     auto collector = reinterpret_cast<AVMetaElemMetaCollector *>(usrdata);
     if (static_cast<unsigned int>(info->type) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) {
@@ -476,10 +466,7 @@ void AVMetaElemMetaCollector::ConvertToAVMeta(const Format &innerMeta, Metadata 
 
 void TypeFindMetaCollector::HaveTypeCallback(GstElement *elem, guint probability, GstCaps *caps, gpointer userData)
 {
-    if (elem == nullptr || caps == nullptr || userData == nullptr) {
-        return;
-    }
-
+    CHECK_AND_RETURN(elem != nullptr && caps != nullptr && userData != nullptr);
     MEDIA_LOGD("typefind %{public}s have type, probalibity = %{public}u", ELEM_NAME(elem), probability);
 
     TypeFindMetaCollector *collector = reinterpret_cast<TypeFindMetaCollector *>(userData);
@@ -511,9 +498,7 @@ void TypeFindMetaCollector::AddMetaSource(GstElement &elem)
 
 void DemuxerMetaCollector::PadAddedCallback(GstElement *elem, GstPad *pad, gpointer userData)
 {
-    if (elem == nullptr || pad == nullptr || userData == nullptr) {
-        return;
-    }
+    CHECK_AND_RETURN(elem != nullptr && pad != nullptr && userData != nullptr);
 
     auto collector = reinterpret_cast<DemuxerMetaCollector *>(userData);
     collector->OnPadAdded(*elem, *pad);
@@ -527,9 +512,7 @@ void DemuxerMetaCollector::OnPadAdded(GstElement &src, GstPad &pad)
 
 void DemuxerMetaCollector::AddMetaSource(GstElement &elem)
 {
-    if (!AddProbeToPadList(*elem.srcpads)) {
-        return;
-    }
+    CHECK_AND_RETURN(AddProbeToPadList(*elem.srcpads));
 
     (void)ConnectSignal(elem, "pad-added", G_CALLBACK(&DemuxerMetaCollector::PadAddedCallback));
 }

@@ -17,7 +17,6 @@
 #include "string_ex.h"
 #include "media_errors.h"
 #include "media_log.h"
-#include "time_perf.h"
 
 namespace {
     [[maybe_unused]] constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "GstUtils"};

@@ -439,9 +439,7 @@ void AVMetaMetaCollector::StopBlocker(bool unlock)
 {
     for (auto &[type, blockerVec] : blockers_) {
         for (auto &blocker : blockerVec) {
-            if (blocker == nullptr) {
-                continue;
-            }
+            CHECK_AND_CONTINUE(blocker != nullptr);
             // place the if-else at the for-loop for cyclomatic complexity
             if (unlock) {
                 blocker->Remove();

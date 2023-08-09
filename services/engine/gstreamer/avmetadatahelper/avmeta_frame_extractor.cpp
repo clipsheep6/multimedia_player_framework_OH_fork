@@ -17,7 +17,6 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "scope_guard.h"
-#include "time_perf.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "AVMetaFrameExtract"};
@@ -47,10 +46,7 @@ int32_t AVMetaFrameExtractor::Init(const std::shared_ptr<IPlayBinCtrler> &playbi
 {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    if (playbin == nullptr) {
-        MEDIA_LOGE("playbin is nullptr");
-        return MSERR_INVALID_VAL;
-    }
+    CHECK_AND_RETURN_RET_LOG(playbin != nullptr, MSERR_INVALID_VAL, "playbin is nullptr");
     playbin_ = playbin;
     vidAppSink_ = GST_ELEMENT_CAST(gst_object_ref(&vidAppSink));
 

@@ -41,9 +41,7 @@ GstPadProbeReturn AVMetaBufferBlocker::BlockCallback(GstPad *pad, GstPadProbeInf
 
 void AVMetaBufferBlocker::PadAdded(GstElement *elem, GstPad *pad, gpointer userData)
 {
-    if (elem == nullptr || pad == nullptr || userData == nullptr) {
-        return;
-    }
+    CHECK_AND_RETURN(elem != nullptr && pad != nullptr && userData != nullptr);
 
     auto thizStrong = AVMetaBufferBlockerWrapper::TakeStrongThiz(userData);
     if (thizStrong != nullptr) {
@@ -84,9 +82,7 @@ void AVMetaBufferBlocker::Init()
 
     // Add pad probe for all pads. If the pads count is greater than 1, we just detect buffer.
     for (GList *node = g_list_first(padList); node != nullptr; node = node->next) {
-        if (node->data == nullptr) {
-            continue;
-        }
+        CHECK_AND_CONTINUE(node->data != nullptr);
         GstPad *pad = reinterpret_cast<GstPad *>(node->data);
 
         // the subtitle stream must be ignored, currently we dont support it.
