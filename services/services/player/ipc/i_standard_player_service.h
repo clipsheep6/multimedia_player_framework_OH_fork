@@ -107,6 +107,7 @@ public:
         DESELECT_TRACK,
         GET_CURRENT_TRACK,
         GET_SUBTITLE_TRACK_INFO,
+        MAX_IPC_ID,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

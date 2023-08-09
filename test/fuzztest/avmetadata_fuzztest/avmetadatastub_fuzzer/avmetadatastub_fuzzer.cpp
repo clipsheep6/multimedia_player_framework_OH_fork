@@ -22,27 +22,14 @@ bool FuzzAVMetadataStub(uint8_t *data, size_t size)
     if (data == nullptr || size < sizeof(int64_t)) {
         return true;
     }
-    constexpr int32_t codeNum = 8;
-    AVMetadataServiceProxyFuzzer::AVMetadataHelperServiceMsg codeIdList[codeNum] {
-        AVMetadataServiceProxyFuzzer::SET_URI_SOURCE,
-        AVMetadataServiceProxyFuzzer::SET_FD_SOURCE,
-        AVMetadataServiceProxyFuzzer::RESOLVE_METADATA,
-        AVMetadataServiceProxyFuzzer::RESOLVE_METADATA_MAP,
-        AVMetadataServiceProxyFuzzer::FETCH_ART_PICTURE,
-        AVMetadataServiceProxyFuzzer::FETCH_FRAME_AT_TIME,
-        AVMetadataServiceProxyFuzzer::RELEASE,
-        AVMetadataServiceProxyFuzzer::DESTROY,
-    };
-    uint32_t codeId = *reinterpret_cast<uint32_t *>(data) % (codeNum);
     sptr<AVMetadataServiceProxyFuzzer> avmetaProxy = AVMetadataServiceProxyFuzzer::Create();
     if (avmetaProxy == nullptr) {
         return false;
     }
-    if (codeIdList[codeId] <= AVMetadataServiceProxyFuzzer::SET_FD_SOURCE) {
-        avmetaProxy->SendRequest(codeIdList[codeId], data, size, true);
-    } else {
-        avmetaProxy->SendRequest(AVMetadataServiceProxyFuzzer::SET_FD_SOURCE, data, size, false);
-        avmetaProxy->SendRequest(codeIdList[codeId], data, size, true);
+    for (uint32_t codeId = 0; codeId < AVMetadataServiceProxyFuzzer::MAX_IPC_ID; codeId++) {
+        if (codeId != AVMetadataServiceProxyFuzzer::DESTROY) {
+            avmetaProxy->SendRequest(codeId, data, size, true);
+        }
     }
     avmetaProxy->SendRequest(AVMetadataServiceProxyFuzzer::DESTROY, data, size, false);
     return true;

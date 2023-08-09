@@ -25,9 +25,12 @@ namespace Media {
 PlayerServiceProxyFuzzer::PlayerServiceProxyFuzzer(const sptr<IRemoteObject> &impl)
     : IRemoteProxy<IStandardPlayerService>(impl)
 {
+    playerFuncs_[SET_LISTENER_OBJ] = &PlayerServiceProxyFuzzer::SetListenerObject;
     playerFuncs_[SET_SOURCE] = &PlayerServiceProxyFuzzer::SetSource;
     playerFuncs_[SET_MEDIA_DATA_SRC_OBJ] = &PlayerServiceProxyFuzzer::SetMediaDataSource;
     playerFuncs_[SET_FD_SOURCE] = &PlayerServiceProxyFuzzer::SetFdSource;
+    playerFuncs_[ADD_SUB_SOURCE] = &PlayerServiceProxyFuzzer::AddSubSource;
+    playerFuncs_[ADD_SUB_FD_SOURCE] = &PlayerServiceProxyFuzzer::AddSubFdSource;
     playerFuncs_[PLAY] = &PlayerServiceProxyFuzzer::Play;
     playerFuncs_[PREPARE] = &PlayerServiceProxyFuzzer::Prepare;
     playerFuncs_[PREPAREASYNC] = &PlayerServiceProxyFuzzer::PrepareAsync;
@@ -38,9 +41,6 @@ PlayerServiceProxyFuzzer::PlayerServiceProxyFuzzer(const sptr<IRemoteObject> &im
     playerFuncs_[SET_VOLUME] = &PlayerServiceProxyFuzzer::SetVolume;
     playerFuncs_[SEEK] = &PlayerServiceProxyFuzzer::Seek;
     playerFuncs_[GET_CURRENT_TIME] = &PlayerServiceProxyFuzzer::GetCurrentTime;
-    playerFuncs_[GET_VIDEO_TRACK_INFO] = &PlayerServiceProxyFuzzer::GetVideoTrackInfo;
-    playerFuncs_[GET_AUDIO_TRACK_INFO] = &PlayerServiceProxyFuzzer::GetAudioTrackInfo;
-    playerFuncs_[GET_VIDEO_WIDTH] = &PlayerServiceProxyFuzzer::GetVideoWidth;
     playerFuncs_[GET_DURATION] = &PlayerServiceProxyFuzzer::GetDuration;
     playerFuncs_[SET_PLAYERBACK_SPEED] = &PlayerServiceProxyFuzzer::SetPlaybackSpeed;
     playerFuncs_[GET_PLAYERBACK_SPEED] = &PlayerServiceProxyFuzzer::GetPlaybackSpeed;
@@ -49,9 +49,17 @@ PlayerServiceProxyFuzzer::PlayerServiceProxyFuzzer(const sptr<IRemoteObject> &im
     playerFuncs_[IS_LOOPING] = &PlayerServiceProxyFuzzer::IsLooping;
     playerFuncs_[SET_LOOPING] = &PlayerServiceProxyFuzzer::SetLooping;
     playerFuncs_[SET_RENDERER_DESC] = &PlayerServiceProxyFuzzer::SetParameter;
-    playerFuncs_[SET_CALLBACK] = &PlayerServiceProxyFuzzer::SetPlayerCallback;
-    playerFuncs_[SELECT_BIT_RATE] = &PlayerServiceProxyFuzzer::SelectBitRate;
     playerFuncs_[DESTROY] = &PlayerServiceProxyFuzzer::DestroyStub;
+    playerFuncs_[SET_CALLBACK] = &PlayerServiceProxyFuzzer::SetPlayerCallback;
+    playerFuncs_[GET_VIDEO_TRACK_INFO] = &PlayerServiceProxyFuzzer::GetVideoTrackInfo;
+    playerFuncs_[GET_AUDIO_TRACK_INFO] = &PlayerServiceProxyFuzzer::GetAudioTrackInfo;
+    playerFuncs_[GET_SUBTITLE_TRACK_INFO] = &PlayerServiceProxyFuzzer::GetSubtitleTrackInfo;
+    playerFuncs_[GET_VIDEO_WIDTH] = &PlayerServiceProxyFuzzer::GetVideoWidth;
+    playerFuncs_[GET_VIDEO_HEIGHT] = &PlayerServiceProxyFuzzer::GetVideoHeight;
+    playerFuncs_[SELECT_BIT_RATE] = &PlayerServiceProxyFuzzer::SelectBitRate;
+    playerFuncs_[SELECT_TRACK] = &PlayerServiceProxyFuzzer::SelectTrack;
+    playerFuncs_[DESELECT_TRACK] = &PlayerServiceProxyFuzzer::DeselectTrack;
+    playerFuncs_[GET_CURRENT_TRACK] = &PlayerServiceProxyFuzzer::GetCurrentTrack;
 }
 
 sptr<PlayerServiceProxyFuzzer> PlayerServiceProxyFuzzer::Create()
@@ -92,6 +100,21 @@ void PlayerServiceProxyFuzzer::SendRequest(int32_t code, uint8_t *inputData, siz
             (this->*memberFunc)(inputData, size, isFuzz);
         }
     }
+}
+
+int32_t PlayerServiceProxyFuzzer::SetListenerObject(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
+    }
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return SendRequest(SET_LISTENER_OBJ, data, reply, option);
 }
 
 int32_t PlayerServiceProxyFuzzer::SetSource(uint8_t *inputData, size_t size, bool isFuzz)
@@ -169,6 +192,47 @@ int32_t PlayerServiceProxyFuzzer::SetFdSource(uint8_t *inputData, size_t size, b
     (void)data.WriteInt64(offsetValue);
     (void)data.WriteInt64(lengthValue);
     return SendRequest(SET_FD_SOURCE, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::AddSubSource(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
+    }
+    std::string url(reinterpret_cast<const char *>(inputData), size);
+    (void)data.WriteString(url);
+    return SendRequest(ADD_SUB_SOURCE, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::AddSubFdSource(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    int32_t fdValue = *reinterpret_cast<int32_t *>(inputData);
+    int64_t lengthValue = *reinterpret_cast<int64_t *>(inputData);
+    int64_t offsetValue = *reinterpret_cast<uint32_t *>(inputData) % *reinterpret_cast<int64_t *>(inputData);
+    (void)data.WriteFileDescriptor(fdValue);
+    (void)data.WriteInt64(offsetValue);
+    (void)data.WriteInt64(lengthValue);
+    return SendRequest(ADD_SUB_FD_SOURCE, data, reply, option);
 }
 
 int32_t PlayerServiceProxyFuzzer::Play(uint8_t *inputData, size_t size, bool isFuzz)
@@ -346,60 +410,6 @@ int32_t PlayerServiceProxyFuzzer::GetCurrentTime(uint8_t *inputData, size_t size
     return SendRequest(GET_CURRENT_TIME, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::GetVideoTrackInfo(uint8_t *inputData, size_t size, bool isFuzz)
-{
-    (void)size;
-    (void)isFuzz;
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
-    if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
-        return false;
-    }
-
-    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_VIDEO_TRACK_INFO, data, reply, option);
-}
-
-int32_t PlayerServiceProxyFuzzer::GetAudioTrackInfo(uint8_t *inputData, size_t size, bool isFuzz)
-{
-    (void)size;
-    (void)isFuzz;
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
-    if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
-        return false;
-    }
-
-    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_AUDIO_TRACK_INFO, data, reply, option);
-}
-
-int32_t PlayerServiceProxyFuzzer::GetVideoWidth(uint8_t *inputData, size_t size, bool isFuzz)
-{
-    (void)size;
-    (void)isFuzz;
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
-    if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
-        return false;
-    }
-
-    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
-    return SendRequest(GET_VIDEO_WIDTH, data, reply, option);
-}
-
 int32_t PlayerServiceProxyFuzzer::GetDuration(uint8_t *inputData, size_t size, bool isFuzz)
 {
     (void)size;
@@ -542,6 +552,25 @@ int32_t PlayerServiceProxyFuzzer::SetParameter(uint8_t *inputData, size_t size, 
     return SendRequest(SET_RENDERER_DESC, data, reply, option);
 }
 
+int32_t PlayerServiceProxyFuzzer::DestroyStub(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    if (isFuzz) {
+        (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    }
+    return SendRequest(DESTROY, data, reply, option);
+}
+
 int32_t PlayerServiceProxyFuzzer::SetPlayerCallback(uint8_t *inputData, size_t size, bool isFuzz)
 {
     (void)size;
@@ -558,6 +587,96 @@ int32_t PlayerServiceProxyFuzzer::SetPlayerCallback(uint8_t *inputData, size_t s
 
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
     return SendRequest(SET_CALLBACK, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::GetVideoTrackInfo(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return SendRequest(GET_VIDEO_TRACK_INFO, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::GetAudioTrackInfo(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return SendRequest(GET_AUDIO_TRACK_INFO, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::GetSubtitleTrackInfo(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return SendRequest(GET_SUBTITLE_TRACK_INFO, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::GetVideoWidth(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return SendRequest(GET_VIDEO_WIDTH, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::GetVideoHeight(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return SendRequest(GET_VIDEO_HEIGHT, data, reply, option);
 }
 
 int32_t PlayerServiceProxyFuzzer::SelectBitRate(uint8_t *inputData, size_t size, bool isFuzz)
@@ -578,9 +697,10 @@ int32_t PlayerServiceProxyFuzzer::SelectBitRate(uint8_t *inputData, size_t size,
     return SendRequest(SELECT_BIT_RATE, data, reply, option);
 }
 
-int32_t PlayerServiceProxyFuzzer::DestroyStub(uint8_t *inputData, size_t size, bool isFuzz)
+int32_t PlayerServiceProxyFuzzer::SelectTrack(uint8_t *inputData, size_t size, bool isFuzz)
 {
     (void)size;
+    (void)isFuzz;
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -591,10 +711,44 @@ int32_t PlayerServiceProxyFuzzer::DestroyStub(uint8_t *inputData, size_t size, b
         return false;
     }
 
-    if (isFuzz) {
-        (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return SendRequest(SELECT_TRACK, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::DeselectTrack(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
     }
-    return SendRequest(DESTROY, data, reply, option);
+
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return SendRequest(DESELECT_TRACK, data, reply, option);
+}
+
+int32_t PlayerServiceProxyFuzzer::GetCurrentTrack(uint8_t *inputData, size_t size, bool isFuzz)
+{
+    (void)size;
+    (void)isFuzz;
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
+    if (!token) {
+        std::cout << "Failed to write descriptor!" << std::endl;
+        return false;
+    }
+
+    (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
+    return SendRequest(GET_CURRENT_TRACK, data, reply, option);
 }
 
 int32_t PlayerServiceProxyFuzzer::SendRequest(uint32_t code,

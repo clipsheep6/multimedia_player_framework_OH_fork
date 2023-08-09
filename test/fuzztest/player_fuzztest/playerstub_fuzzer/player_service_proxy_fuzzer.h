@@ -172,9 +172,12 @@ public:
         return 0;
     }
 private:
+    int32_t SetListenerObject(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetSource(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetMediaDataSource(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetFdSource(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t AddSubSource(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t AddSubFdSource(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t Play(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t Prepare(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t PrepareAsync(uint8_t *inputData, size_t size, bool isFuzz);
@@ -185,9 +188,6 @@ private:
     int32_t SetVolume(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t Seek(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t GetCurrentTime(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetVideoTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetAudioTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t GetVideoWidth(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t GetDuration(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetPlaybackSpeed(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t GetPlaybackSpeed(uint8_t *inputData, size_t size, bool isFuzz);
@@ -196,9 +196,17 @@ private:
     int32_t IsLooping(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetLooping(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SetParameter(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SetPlayerCallback(uint8_t *inputData, size_t size, bool isFuzz);
-    int32_t SelectBitRate(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t DestroyStub(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t SetPlayerCallback(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t GetVideoTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t GetAudioTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t GetSubtitleTrackInfo(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t GetVideoWidth(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t GetVideoHeight(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t SelectBitRate(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t SelectTrack(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t DeselectTrack(uint8_t *inputData, size_t size, bool isFuzz);
+    int32_t GetCurrentTrack(uint8_t *inputData, size_t size, bool isFuzz);
     int32_t SendRequest(uint32_t code, MessageParcel &inputData, MessageParcel &reply, MessageOption &option);
     static inline BrokerDelegator<PlayerServiceProxyFuzzer> delegator_;
     using PlayerStubFunc = int32_t(PlayerServiceProxyFuzzer::*)(uint8_t *inputData, size_t size, bool isFuzz);
