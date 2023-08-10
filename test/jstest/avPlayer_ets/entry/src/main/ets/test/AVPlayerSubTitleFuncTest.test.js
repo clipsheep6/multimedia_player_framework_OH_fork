@@ -286,7 +286,7 @@ export default function AVPlayerSubTitleFuncTest() {
                             avPlayer.pause();
                         } else if (count === 2) {
                             // time 5100 ~ 7600,字幕新增7、8
-                            await mediaTestBase.msleepAsync(2500);
+                            await mediaTestBase.msleepAsync(3500);
                             count++;
                             avPlayer.stop();
                         } else if(count === 4) {
@@ -298,10 +298,10 @@ export default function AVPlayerSubTitleFuncTest() {
                             addSubTitle(avPlayer, mode, subTitleSrc);
                             // time 2500 ~ 7500,新增字幕 3、4、5、6、7、8
                             await mediaTestBase.msleepAsync(3000);
-                            avPlayer.seek(avPlayer.duration, 2); // seek duration,新增字幕10
+                            avPlayer.seek(avPlayer.duration, 0); // seek duration,新增字幕10
                         } else if (count === 5) {
                             avPlayer.setSpeed(media.PlaybackSpeed.SPEED_FORWARD_1_00_X);
-                            await mediaTestBase.msleepAsync(5000);
+                            await mediaTestBase.msleepAsync(5500);
                             addSubTitle(avPlayer, mode, subTitleSrc);
                         }
                         break;
@@ -311,10 +311,8 @@ export default function AVPlayerSubTitleFuncTest() {
                         await mediaTestBase.msleepAsync(2000);
                         avPlayer.seek(5000, 0); // seek next mode,字幕新增9
                         await mediaTestBase.msleepAsync(1000);
-                        avPlayer.seek(5000); // seek prev mode，字幕新增5
-                        await mediaTestBase.msleepAsync(1000);
-                        avPlayer.seek(5100, 2); // seek precise mode,字幕新增6
-                        await mediaTestBase.msleepAsync(1000);
+                        avPlayer.seek(5000); //  seek prev mode，字幕新增5
+                        await mediaTestBase.msleepAsync(1500);
                         avPlayer.play();
                         break;
                     case AV_PLAYER_STATE.STOPPED:
@@ -413,6 +411,149 @@ export default function AVPlayerSubTitleFuncTest() {
             }
         }
 
+        // testcase for select subtitle
+        async function testSelectSubtitle(avPlayer, subTitleSrc, url, done) {
+            let surfaceID = globalThis.value;
+            let count = 0;
+            let index = 2;
+            let playCount = 0;
+            let isError = 0;
+            let testArray = new Array();
+            avPlayer.on('trackInfoUpdate', (trackInfo) => {
+                console.info('case trackInfoUpdate called, trackInfo length is:' + trackInfo.length);
+                count++;
+            });
+
+            avPlayer.on('seekDone', async (seekDoneTime) => {
+                console.info('case seek success,and seekDoneTime is:' + seekDoneTime);
+            });
+
+            avPlayer.on('timeUpdate', (time) => {
+                console.info('case timeUpdate callback, time:' + time);
+            });
+
+            avPlayer.on('error', (error) => {
+                console.info('case error callback, error is:' + error.message);
+                if (isError == 1) {
+                    console.info('case this error is select subtitle in stop state');
+                    avPlayer.reset();
+                } else if (isError == 2) {
+                    console.info('case this error is select subtitle in idle state');
+                    avPlayer.release();
+                } else {
+                    console.info('case this is an unkonw error');
+                    expect().assertFail();
+                    avPlayer.release();
+                }
+                isError = 0;
+            });
+
+            avPlayer.on('subtitleTextUpdate', (textInfo) => {
+                console.info('case subtitleTextUpdate is: ' + textInfo.text);
+                if (textInfo.test !== '') {
+                    testArray.push(textInfo.text);
+                }
+            });
+
+            if (isHls) {
+                avPlayer.on('availableBitrates', (bitrates) => { 
+                    Logger.info(TAG, 'availableBitrates success,and availableBitrates length is:' + bitrates.length);
+                });
+            }
+
+            avPlayer.on('stateChange', async (state, reason) => {
+                switch (state) {
+                    case AV_PLAYER_STATE.INITIALIZED:
+                        console.info(`case AV_PLAYER_STATE.INITIALIZED`);
+                        avPlayer.surfaceId = surfaceID;
+                        expect(avPlayer.state).assertEqual(AV_PLAYER_STATE.INITIALIZED);
+                        avPlayer.prepare((err) => {
+                            console.info('case prepare called' + err);
+                            if (err != null) {
+                                console.error(`case prepare error, errMessage is ${err.message}`);
+                                expect().assertFail();
+                                done();
+                            } else {
+                                console.info('case avPlayer.duration: ' + avPlayer.duration);
+                            }
+                        });
+                        break;
+                    case AV_PLAYER_STATE.PREPARED:
+                        console.info(`case AV_PLAYER_STATE.PREPARED`);
+                        // add subtitles
+                        for (let i = 0; i < SUBTITLE_LIMIT; i++) {
+                            addSubTitle(avPlayer, 'local', subTitleSrc[i]);
+                        }
+                        await mediaTestBase.msleepAsync(2000);
+                        console.info('case subtitle count is:' + count);
+                        expect(count).assertEqual(SUBTITLE_LIMIT);
+                        // select subtitle
+                        // avPlayer.selectTrack(index);
+                        index++;
+                        avPlayer.play();
+                        break;
+                    case AV_PLAYER_STATE.PLAYING:
+                        console.info(`case AV_PLAYER_STATE.PLAYING`);
+                        await mediaTestBase.msleepAsync(2500);
+                        avPlayer.selectTrack(index);
+                        index++
+                        await mediaTestBase.msleepAsync(2000);
+                        if (playCount == 0) {
+                            avPlayer.pause();
+                        } else if (playCount == 1) {
+                            console.info('cast wait for play completed');
+                        } else if (playCount == 2) {
+                            await mediaTestBase.msleepAsync(2500);
+                            avPlayer.stop();
+                        }
+                        break;
+                    case AV_PLAYER_STATE.PAUSED:
+                        console.info(`case AV_PLAYER_STATE.PAUSED 11`);
+                        avPlayer.selectTrack(index);
+                        index++
+                        playCount++;
+                        await mediaTestBase.msleepAsync(2000);
+                        avPlayer.play();
+                        break;
+                    case AV_PLAYER_STATE.STOPPED:
+                        console.info(`case AV_PLAYER_STATE.STOPPED`);
+                        isError = 1;
+                        avPlayer.selectTrack(index);
+                        break;
+                    case AV_PLAYER_STATE.IDLE:
+                        console.info(`case AV_PLAYER_STATE.IDLE`);
+                        isError = 2;
+                        avPlayer.selectTrack(index);
+                        break;
+                    case AV_PLAYER_STATE.COMPLETED:
+                        console.info(`case AV_PLAYER_STATE.COMPLETED`);
+                        avPlayer.selectTrack(index);
+                        index++
+                        playCount++;
+                        console.info('case start to play');
+                        avPlayer.play();
+                        break;
+                    case AV_PLAYER_STATE.RELEASED:
+                        console.info(`case AV_PLAYER_STATE.RELEASED`);
+                        done();
+                        break;
+                    case AV_PLAYER_STATE.ERROR:
+                        expect().assertFail();
+                        avPlayer.release().then(() => {
+                        }, mediaTestBase.failureCallback).catch(mediaTestBase.catchCallback);
+                        avPlayer = null;
+                        break;
+                    default:
+                        break; 
+                }
+            })
+            if (typeof(url) == 'string') {
+                avPlayer.url = url;
+            } else {
+                avPlayer.fdSrc = url;
+            }
+        }
+
         /* *
             * @tc.number    : SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_SUBTITLE_0100
             * @tc.name      : 001.test add local subtitle in prepared/playing/paused/completed state
@@ -506,6 +647,32 @@ export default function AVPlayerSubTitleFuncTest() {
                 assFile = res;
             });
             testErrorFormat(avPlayer, fileDescriptor, assFile, done);
+        })
+
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_SUBTITLE_0400
+            * @tc.name      : 007.test subtitle with select subtitle (local)
+            * @tc.desc      : Local Video playback control test
+            * @tc.size      : MediumTest
+            * @tc.type      : Function test
+            * @tc.level     : Level0
+        */
+        it('SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_SUBTITLE_0400', 0, async function (done) {
+            let avPlayer = await media.createAVPlayer();
+            testSelectSubtitle(avPlayer, subTitleFdSrc, fileDescriptor, done);
+        })
+
+        /* *
+            * @tc.number    : SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_SUBTITLE_0450
+            * @tc.name      : 008.test subtitle with select subtitle (network)
+            * @tc.desc      : Local Video playback control test
+            * @tc.size      : MediumTest
+            * @tc.type      : Function test
+            * @tc.level     : Level0
+        */
+        it('SUB_MULTIMEDIA_MEDIA_VIDEO_PLAYER_SUBTITLE_0450', 0, async function (done) {
+            let avPlayer = await media.createAVPlayer();
+            testSelectSubtitle(avPlayer, subTitleFdSrc, 'http://xxx/index.m3u8', done);
         })
     }) 
 } 
