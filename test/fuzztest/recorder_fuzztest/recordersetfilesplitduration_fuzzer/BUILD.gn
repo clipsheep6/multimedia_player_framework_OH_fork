@@ -68,6 +68,7 @@ ohos_fuzztest("RecorderSetFileSplitDurationFuzzTest") {
     "../../../../../../../foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
   ]
   external_deps = [
+    "c_utils:utils",
     "hilog:libhilog",
     "player_framework:media_client",
   ]

@@ -65,6 +65,7 @@ ohos_fuzztest("AVmetadataSetSourceFuzzTest") {
     "../../../../../../../foundation/window/window_manager/wm:libwm",
   ]
   external_deps = [
+    "c_utils:utils",
     "graphic_2d:surface",
     "hilog:libhilog",
     "player_framework:media_client",

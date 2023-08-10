@@ -65,6 +65,8 @@ ohos_fuzztest("AVmetadataStubFuzzTest") {
     "../../../../services/utils:media_format",
   ]
   external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
     "image_framework:image_native",
     "ipc:ipc_single",
     "player_framework:media_client",

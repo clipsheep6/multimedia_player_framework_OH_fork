@@ -68,6 +68,7 @@ ohos_fuzztest("RecorderSetAudioSourceFuzzTest") {
     "../../../../../../../foundation/graphic/graphic_2d/utils:sync_fence",
   ]
   external_deps = [
+    "c_utils:utils",
     "hilog:libhilog",
     "player_framework:media_client",
   ]
