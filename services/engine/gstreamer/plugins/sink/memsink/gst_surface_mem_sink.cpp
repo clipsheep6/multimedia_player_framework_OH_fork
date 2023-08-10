@@ -521,6 +521,9 @@ static gboolean gst_surface_mem_sink_event(GstBaseSink *bsink, GstEvent *event)
         case GST_EVENT_CAPS: {
             GstCaps *caps;
             gst_event_parse_caps(event, &caps);
+            if (surface_mem_sink->caps != nullptr) {
+                gst_caps_unref(surface_mem_sink->caps);
+            }
             surface_mem_sink->caps = caps;
             gst_caps_ref(surface_mem_sink->caps);
             break;
