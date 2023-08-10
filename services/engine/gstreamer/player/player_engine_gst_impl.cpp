@@ -117,7 +117,7 @@ int32_t PlayerEngineGstImpl::AddSubSource(const std::string &url)
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playBinCtrler_ != nullptr, MSERR_INVALID_VAL, "playBinCtrler_ is nullptr");
 
-    std::string subUrl = "";
+    std::string subUrl = url;
     int32_t ret = MSERR_OK;
 
     if (IsFileUrl(url)) {
@@ -127,8 +127,6 @@ int32_t PlayerEngineGstImpl::AddSubSource(const std::string &url)
             return ret;
         }
         subUrl = "file://" + realUriPath;
-    } else {
-        subUrl = url;
     }
 
     MEDIA_LOGD("add subtitle source: %{public}s", subUrl.c_str());

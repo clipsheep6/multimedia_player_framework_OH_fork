@@ -91,10 +91,8 @@ std::shared_ptr<ProcessorConfig> ProcessorAdecImpl::GetInputPortConfig()
     CHECK_AND_RETURN_RET(channels_ > 0 && sampleRate_ > 0 && channels_ <= MAX_CHANNELS, nullptr);
 
     guint64 channelMask = 0;
-    if (!gst_audio_channel_positions_to_mask(CHANNEL_POSITION[channels_ - 1], channels_, FALSE, &channelMask)) {
-        MEDIA_LOGE("Invalid channel positions");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(gst_audio_channel_positions_to_mask(CHANNEL_POSITION[channels_ - 1],
+        channels_, FALSE, &channelMask), nullptr, "Invalid channel positions");
 
     GstCaps *caps = nullptr;
     switch (codecName_) {

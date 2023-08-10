@@ -264,9 +264,7 @@ std::string AVCodecEngineGstImpl::FindMimeTypeByName(AVCodecType type, const std
         }
     }
 
-    if (invalid) {
-        MEDIA_LOGW("invalid avcodec mimetype name:%{public}s", name.c_str());
-    }
+    CHECK_AND_RETURN_RET_LOG(invalid != true, mimeType, "invalid avcodec mimetype name:%{public}s", name.c_str());
 
     return mimeType;
 }

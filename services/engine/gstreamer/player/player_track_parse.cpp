@@ -182,10 +182,8 @@ GstPadProbeReturn PlayerTrackParse::InputSelectProbeCallback(GstPad *pad, GstPad
 GstPadProbeReturn PlayerTrackParse::GetUsedDemux(GstPad *pad, GstPadProbeInfo *info)
 {
     (void)pad;
-
-    if ((static_cast<unsigned int>(info->type) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) == 0) {
-        return GST_PAD_PROBE_OK;
-    }
+    CHECK_AND_RETURN_RET((static_cast<unsigned int>(info->type) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) != 0,
+        GST_PAD_PROBE_OK);
 
     GstEvent *event = gst_pad_probe_info_get_event(info);
     CHECK_AND_RETURN_RET_LOG(event != nullptr, GST_PAD_PROBE_OK, "event is null");
@@ -253,9 +251,7 @@ bool PlayerTrackParse::HasSameStreamIdInDemux(GstPad *pad)
 {
     for (int32_t i = 0; i < static_cast<int32_t>(trackVec_.size()); i++) {
         for (auto padIt = trackVec_[i].trackInfos.begin(); padIt != trackVec_[i].trackInfos.end(); padIt++) {
-            if (IsSameStreamId(pad, padIt->first)) {
-                return true;
-            }
+            CHECK_AND_RETURN_RET(!IsSameStreamId(pad, padIt->first), true);
         }
     }
 

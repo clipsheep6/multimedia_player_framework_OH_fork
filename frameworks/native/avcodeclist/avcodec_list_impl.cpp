@@ -81,22 +81,14 @@ std::string AVCodecListImpl::FindAudioEncoder(const Format &format)
 
 std::vector<CapabilityData> AVCodecListImpl::GetCodecCapabilityInfos()
 {
-    if (!capabilityArray_.empty()) {
-        MEDIA_LOGD("capabilityArray_ has been assigned.");
-        return capabilityArray_;
-    }
+    CHECK_AND_RETURN_RET_LOG(capabilityArray_.empty(), capabilityArray_, "capabilityArray_ has been assigned.");
     return codecListService_->GetCodecCapabilityInfos();
 }
 
 std::vector<std::shared_ptr<VideoCaps>> AVCodecListImpl::GetVideoDecoderCaps()
 {
-    if (!videoDecoderCapsArray_.empty()) {
-        MEDIA_LOGD("videoDecoderCapsArray_ has been assigned.");
-        return videoDecoderCapsArray_;
-    }
-    if (capabilityArray_.empty()) {
-        capabilityArray_ = GetCodecCapabilityInfos();
-    }
+    CHECK_AND_RETURN_RET_LOG(videoDecoderCapsArray_.empty(), videoDecoderCapsArray_, "VdecCaps has been assigned.");
+    capabilityArray_ = capabilityArray_.empty() ? GetCodecCapabilityInfos() : capabilityArray_;
     std::vector<CapabilityData> vdecCapabilityArray = SelectTargetCapabilityDataArray(AVCODEC_TYPE_VIDEO_DECODER);
     for (auto iter = vdecCapabilityArray.begin(); iter != vdecCapabilityArray.end(); iter++) {
         std::shared_ptr<VideoCaps> videoCaps = std::make_shared<VideoCaps>(*iter);
@@ -108,13 +100,8 @@ std::vector<std::shared_ptr<VideoCaps>> AVCodecListImpl::GetVideoDecoderCaps()
 
 std::vector<std::shared_ptr<VideoCaps>> AVCodecListImpl::GetVideoEncoderCaps()
 {
-    if (!videoEncoderCapsArray_.empty()) {
-        MEDIA_LOGD("videoEncoderCapsArray_ has been assigned.");
-        return videoEncoderCapsArray_;
-    }
-    if (capabilityArray_.empty()) {
-        capabilityArray_ = GetCodecCapabilityInfos();
-    }
+    CHECK_AND_RETURN_RET_LOG(videoEncoderCapsArray_.empty(), videoEncoderCapsArray_, "VencCaps has been assigned.");
+    capabilityArray_ = capabilityArray_.empty() ? GetCodecCapabilityInfos() : capabilityArray_;
     std::vector<CapabilityData> vencCapabilityArray = SelectTargetCapabilityDataArray(AVCODEC_TYPE_VIDEO_ENCODER);
     for (auto iter = vencCapabilityArray.begin(); iter != vencCapabilityArray.end(); iter++) {
         std::shared_ptr<VideoCaps> videoCaps = std::make_shared<VideoCaps>(*iter);
@@ -126,13 +113,8 @@ std::vector<std::shared_ptr<VideoCaps>> AVCodecListImpl::GetVideoEncoderCaps()
 
 std::vector<std::shared_ptr<AudioCaps>> AVCodecListImpl::GetAudioDecoderCaps()
 {
-    if (!audioDecoderCapsArray_.empty()) {
-        MEDIA_LOGD("audioDecoderCapsArray_ has been assigned.");
-        return audioDecoderCapsArray_;
-    }
-    if (capabilityArray_.empty()) {
-        capabilityArray_ = GetCodecCapabilityInfos();
-    }
+    CHECK_AND_RETURN_RET_LOG(audioDecoderCapsArray_.empty(), audioDecoderCapsArray_, "AdecCaps has been assigned.");
+    capabilityArray_ = capabilityArray_.empty() ? GetCodecCapabilityInfos() : capabilityArray_;
     std::vector<CapabilityData> adecCapabilityArray = SelectTargetCapabilityDataArray(AVCODEC_TYPE_AUDIO_DECODER);
     for (auto iter = adecCapabilityArray.begin(); iter != adecCapabilityArray.end(); iter++) {
         std::shared_ptr<AudioCaps> audioCaps = std::make_shared<AudioCaps>(*iter);
@@ -144,13 +126,8 @@ std::vector<std::shared_ptr<AudioCaps>> AVCodecListImpl::GetAudioDecoderCaps()
 
 std::vector<std::shared_ptr<AudioCaps>> AVCodecListImpl::GetAudioEncoderCaps()
 {
-    if (!audioEncoderCapsArray_.empty()) {
-        MEDIA_LOGD("audioEncoderCapsArray_ has been assigned.");
-        return audioEncoderCapsArray_;
-    }
-    if (capabilityArray_.empty()) {
-        capabilityArray_ = GetCodecCapabilityInfos();
-    }
+    CHECK_AND_RETURN_RET_LOG(audioEncoderCapsArray_.empty(), audioEncoderCapsArray_, "AencCaps has been assigned.");
+    capabilityArray_ = capabilityArray_.empty() ? GetCodecCapabilityInfos() : capabilityArray_;
     std::vector<CapabilityData> aencCapabilityArray = SelectTargetCapabilityDataArray(AVCODEC_TYPE_AUDIO_ENCODER);
     for (auto iter = aencCapabilityArray.begin(); iter != aencCapabilityArray.end(); iter++) {
         std::shared_ptr<AudioCaps> audioCaps = std::make_shared<AudioCaps>(*iter);
