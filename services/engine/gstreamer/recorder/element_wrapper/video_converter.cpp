@@ -27,10 +27,8 @@ namespace Media {
 int32_t VideoConverter::Init()
 {
     gstElem_ = gst_element_factory_make("videoconvert", name_.c_str());
-    if (gstElem_ == nullptr) {
-        MEDIA_LOGE("Create video converter gst element failed! sourceId: %{public}d", desc_.handle_);
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(gstElem_ != nullptr, MSERR_INVALID_OPERATION,
+        "Create video converter gst element failed! sourceId: %{public}d", desc_.handle_);
 
     return MSERR_OK;
 }

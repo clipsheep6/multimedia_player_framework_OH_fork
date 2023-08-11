@@ -229,16 +229,14 @@ int32_t VideoSource::GetParameter(RecorderParam &recParam)
     GValue val = G_VALUE_INIT;
     G_VALUE_TYPE(&val) = G_TYPE_POINTER;
     if (recParam.type == RecorderPrivateParamType::SURFACE) {
-        if (g_object_class_find_property(G_OBJECT_GET_CLASS((GObject *)gstElem_), "surface") == nullptr) {
-            MEDIA_LOGE("gstelem has no surface property!");
-            return MSERR_INVALID_OPERATION;
-        }
+        CHECK_AND_RETURN_RET_LOG(
+            g_object_class_find_property(G_OBJECT_GET_CLASS((GObject *)gstElem_), "surface") != nullptr,
+            MSERR_INVALID_OPERATION, "gstelem has no surface property!");
+
         g_object_get_property((GObject *)gstElem_, "surface", &val);
         gpointer surface = g_value_get_pointer(&val);
-        if (surface == nullptr) {
-            MEDIA_LOGE("surface is nullptr, failed !");
-            return MSERR_INVALID_VAL;
-        }
+        CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "surface is nullptr, failed !");
+
         SurfaceParam &param = (SurfaceParam &)recParam;
         param.surface_ = (Surface *)surface;
     }

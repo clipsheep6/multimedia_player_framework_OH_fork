@@ -395,6 +395,10 @@ HWTEST_F(RecorderUnitTest, recorder_video_es, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
+    sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
     recorder_->StopBuffer(PURE_VIDEO);
     EXPECT_EQ(MSERR_OK, recorder_->Release());

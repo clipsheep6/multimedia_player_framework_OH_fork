@@ -56,10 +56,8 @@ int32_t VideoEncoder::CreateMpegElement()
 
     encorderName_ = GetEncorderName(CodecMimeType::VIDEO_MPEG4);
     gstElem_ = gst_element_factory_make(encorderName_.c_str(), name_.c_str());
-    if (gstElem_ == nullptr) {
-        MEDIA_LOGE("Create mpeg encoder gst_element failed! sourceId: %{public}d", desc_.handle_);
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(gstElem_ != nullptr, MSERR_INVALID_OPERATION,
+        "Create mpeg encoder gst_element failed! sourceId: %{public}d", desc_.handle_);
 
     MEDIA_LOGI("use %{public}s", encorderName_.c_str());
     return MSERR_OK;
@@ -74,10 +72,9 @@ int32_t VideoEncoder::CreateH264Element()
 
     encorderName_ = GetEncorderName(CodecMimeType::VIDEO_AVC);
     gstElem_ = gst_element_factory_make(encorderName_.c_str(), name_.c_str());
-    if (gstElem_ == nullptr) {
-        MEDIA_LOGE("Create h264 encoder gst_element failed! sourceId: %{public}d", desc_.handle_);
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(gstElem_ != nullptr, MSERR_INVALID_OPERATION,
+        "Create h264 encoder gst_element failed! sourceId: %{public}d", desc_.handle_);
+
     g_object_set(gstElem_, "i-frame-interval", DEFAULT_I_FRAME_INTERVAL, nullptr);
     g_object_set(gstElem_, "enable-surface", TRUE, nullptr);
 
@@ -151,27 +148,25 @@ int32_t VideoEncoder::CheckConfigReady()
         if ((*iter).codecName == encorderName_) {
             Range width = (*iter).width;
             Range height = (*iter).height;
-            if (setRectangle_ &&
-                (CheckRangeValid(width, width_) == false || CheckRangeValid(height, height_) == false)) {
-                MEDIA_LOGE("The %{public}s can not support of:%{public}d * %{public}d."
-                    " Valid:[%{public}d - %{public}d] * [%{public}d - %{public}d]",
-                    encorderName_.c_str(), width_, height_, width.minVal, width.maxVal, height.minVal, height.maxVal);
-                return MSERR_UNSUPPORT_VID_PARAMS;
-            }
+            CHECK_AND_RETURN_RET_LOG(!(setRectangle_ &&
+                (CheckRangeValid(width, width_) == false || CheckRangeValid(height, height_) == false)),
+                MSERR_UNSUPPORT_VID_PARAMS,
+                "The %{public}s can not support of:%{public}d * %{public}d."
+                " Valid:[%{public}d - %{public}d] * [%{public}d - %{public}d]",
+                encorderName_.c_str(), width_, height_, width.minVal, width.maxVal, height.minVal, height.maxVal);
 
             Range frameRate = (*iter).frameRate;
-            if (setFrameRate_ && CheckRangeValid(frameRate, frameRate_) == false) {
-                MEDIA_LOGE("The %{public}s can not support frameRate: %{public}d. Valid:[%{public}d - %{public}d].",
-                    encorderName_.c_str(), frameRate_, frameRate.minVal, frameRate.maxVal);
-                return MSERR_UNSUPPORT_VID_PARAMS;
-            }
+            CHECK_AND_RETURN_RET_LOG(!(setFrameRate_ && CheckRangeValid(frameRate, frameRate_) == false),
+                MSERR_UNSUPPORT_VID_PARAMS,
+                "The %{public}s can not support frameRate: %{public}d. Valid:[%{public}d - %{public}d].",
+                encorderName_.c_str(), frameRate_, frameRate.minVal, frameRate.maxVal);
 
             Range bitRate = (*iter).bitrate;
-            if (setBitRate_ && CheckRangeValid(bitRate, bitRate_) == false) {
-                MEDIA_LOGE("The %{public}s can not support bitRate:%{public}d. Valid:[%{public}d - %{public}d]",
-                    encorderName_.c_str(), bitRate_, bitRate.minVal, bitRate.maxVal);
-                return MSERR_UNSUPPORT_VID_PARAMS;
-            }
+            CHECK_AND_RETURN_RET_LOG(!(setBitRate_ && CheckRangeValid(bitRate, bitRate_) == false),
+                MSERR_UNSUPPORT_VID_PARAMS,
+                "The %{public}s can not support bitRate:%{public}d. Valid:[%{public}d - %{public}d]",
+                encorderName_.c_str(), bitRate_, bitRate.minVal, bitRate.maxVal);
+
             break;
         }
     }

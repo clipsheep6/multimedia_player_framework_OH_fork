@@ -93,24 +93,22 @@ int32_t AudioEncoder::CheckConfigReady()
     for (auto iter = capabilityDataArray.begin(); iter != capabilityDataArray.end(); ++iter) {
         if ((*iter).codecName == "avenc_aac") {
             Range bitrate = (*iter).bitrate;
-            if (setBitRate_ && CheckRangeValid(bitrate, bitRate_) == false) {
-                MEDIA_LOGE("Audio can not support bitrate: %{public}d. Valid:[%{public}d - %{public}d].",
-                    bitRate_, bitrate.minVal, bitrate.maxVal);
-                return MSERR_UNSUPPORT_AUD_PARAMS;
-            }
+            CHECK_AND_RETURN_RET_LOG(!(setBitRate_ && CheckRangeValid(bitrate, bitRate_) == false),
+                MSERR_UNSUPPORT_AUD_PARAMS,
+                "Audio can not support bitrate: %{public}d. Valid:[%{public}d - %{public}d].",
+                bitRate_, bitrate.minVal, bitrate.maxVal);
 
             Range channels = (*iter).channels;
-            if (setChannels_ && CheckRangeValid(channels, channels_) == false) {
-                MEDIA_LOGE("Audio can not support channels: %{public}d. Valid:[%{public}d - %{public}d].",
-                    channels_, channels.minVal, channels.maxVal);
-                return MSERR_UNSUPPORT_AUD_PARAMS;
-            }
+            CHECK_AND_RETURN_RET_LOG(!(setChannels_ && CheckRangeValid(channels, channels_) == false),
+                MSERR_UNSUPPORT_AUD_PARAMS,
+                "Audio can not support channels: %{public}d. Valid:[%{public}d - %{public}d].",
+                channels_, channels.minVal, channels.maxVal);
 
             std::vector<int32_t> sampleRate = (*iter).sampleRate;
-            if (setSampleRate_ && find(sampleRate.cbegin(), sampleRate.cend(), sampleRate_) == sampleRate.cend()) {
-                MEDIA_LOGE("Audio can not support sampleRate: %{public}d.", sampleRate_);
-                return MSERR_UNSUPPORT_AUD_PARAMS;
-            }
+            CHECK_AND_RETURN_RET_LOG(
+                !(setSampleRate_ && find(sampleRate.cbegin(), sampleRate.cend(), sampleRate_) == sampleRate.cend()),
+                MSERR_UNSUPPORT_AUD_PARAMS,
+                "Audio can not support sampleRate: %{public}d.", sampleRate_);
 
             break;
         }
