@@ -205,6 +205,21 @@ int32_t HdiVdecParamsMgr::GetVideoFormat(GstElement *element)
     return GST_CODEC_OK;
 }
 
+int32_t HdiVdecParamsMgr::GetBufferUsage(GstElement *element)
+{
+    MEDIA_LOGD("GetBufferUsage");
+    GetBufferHandleUsageParams usageParams;
+    InitHdiParam(usageParams, verInfo_);
+    usageParams.portIndex = outPortDef_.nPortIndex;
+    auto ret = HdiGetParameter(handle_, OMX_IndexParamGetBufferHandleUsage, usageParams);
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiSetParameter failed");
+
+    GstVdecBase *base = GST_VDEC_BASE(element);
+    base->usage = usageParams.usage;
+    MEDIA_LOGD("Usage %{public}" PRIu64" ", base->usage);
+    return GST_CODEC_OK;
+}
+
 int32_t HdiVdecParamsMgr::VideoSurfaceInit(GstElement *element)
 {
     MEDIA_LOGD("VideoSurfaceInit, inport %{public}d outport %{public}d", inPortDef_.nPortIndex, outPortDef_.nPortIndex);
@@ -247,6 +262,8 @@ int32_t HdiVdecParamsMgr::GetParameter(GstCodecParamKey key, GstElement *element
             return GetOutputVideoCommon(element);
         case GST_VIDEO_FORMAT:
             return GetVideoFormat(element);
+        case GST_BUFFER_USAGE:
+            return GetBufferUsage(element);
         default:
             return GST_CODEC_OK;
     }

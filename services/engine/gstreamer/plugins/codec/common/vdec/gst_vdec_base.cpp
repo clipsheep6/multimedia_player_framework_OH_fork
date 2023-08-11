@@ -1341,6 +1341,16 @@ static gboolean gst_vdec_check_out_buffer_cnt(GstVdecBase *self)
     return is_buffer_cnt_change;
 }
 
+static gboolean gst_vdec_check_out_buffer_usage(GstVdecBase *self)
+{
+    guint64 old_usage = self->usage;
+    (void)self->decoder->GetParameter(GST_BUFFER_USAGE, GST_ELEMENT(self));
+    GST_INFO_OBJECT(self, "buffer usage %" G_GUINT64_FORMAT " change to %" G_GUINT64_FORMAT,
+        old_usage, self->usage);
+    gboolean is_usage_change = old_usage != self->usage;
+    return is_usage_change;
+}
+
 static void gst_vdec_base_get_real_stride(GstVdecBase *self)
 {
     self->real_stride = self->stride;
@@ -1367,8 +1377,9 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
     gst_vdec_base_get_real_stride(self);
     gboolean format_change = gst_vdec_check_out_format_change(self);
     gboolean buffer_cnt_change = gst_vdec_check_out_buffer_cnt(self);
+    gboolean buffer_usage_change = gst_vdec_check_out_buffer_usage(self);
     gst_vdec_base_post_resolution_changed_message(self, format_change == TRUE);
-    if (format_change || (buffer_cnt_change && self->memtype != GST_MEMTYPE_SURFACE)) {
+    if (format_change || buffer_usage_change || (buffer_cnt_change && self->memtype != GST_MEMTYPE_SURFACE)) {
         g_return_val_if_fail(gst_buffer_pool_set_active(GST_BUFFER_POOL(self->outpool), FALSE), GST_FLOW_ERROR);
         ret = self->decoder->FreeOutputBuffers();
         g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "freebuffer", TRUE), GST_FLOW_ERROR);

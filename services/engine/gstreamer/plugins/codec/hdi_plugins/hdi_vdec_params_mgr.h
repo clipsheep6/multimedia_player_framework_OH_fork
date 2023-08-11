@@ -42,6 +42,7 @@ protected:
     int32_t GetInputVideoCommon(GstElement *element);
     int32_t GetOutputVideoCommon(GstElement *element);
     int32_t GetVideoFormat(GstElement *element);
+    int32_t GetBufferUsage(GstElement *element);
 private:
     CodecComponentType *handle_ = nullptr;
     OMX_PARAM_PORTDEFINITIONTYPE inPortDef_ = {};
