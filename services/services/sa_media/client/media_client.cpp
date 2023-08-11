@@ -71,10 +71,7 @@ bool MediaClient::IsAlived()
 std::shared_ptr<IRecorderService> MediaClient::CreateRecorderService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!IsAlived()) {
-        MEDIA_LOGE("media service does not exist.");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
     sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::MEDIA_RECORDER, listenerStub_->AsObject());
@@ -109,10 +106,7 @@ int32_t MediaClient::DestroyRecorderService(std::shared_ptr<IRecorderService> re
 std::shared_ptr<IRecorderProfilesService> MediaClient::CreateRecorderProfilesService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!IsAlived()) {
-        MEDIA_LOGE("media service does not exist.");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
     sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::RECORDER_PROFILES, listenerStub_->AsObject());
@@ -133,10 +127,7 @@ std::shared_ptr<IRecorderProfilesService> MediaClient::CreateRecorderProfilesSer
 std::shared_ptr<IPlayerService> MediaClient::CreatePlayerService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!IsAlived()) {
-        MEDIA_LOGE("media service does not exist.");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
     sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listenerStub_->AsObject());
@@ -165,10 +156,7 @@ int32_t MediaClient::DestroyPlayerService(std::shared_ptr<IPlayerService> player
 std::shared_ptr<IAVCodecListService> MediaClient::CreateAVCodecListService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!IsAlived()) {
-        MEDIA_LOGE("media service does not exist.");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
     sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::MEDIA_CODECLIST, listenerStub_->AsObject());
@@ -195,10 +183,7 @@ int32_t MediaClient::DestroyAVCodecListService(std::shared_ptr<IAVCodecListServi
 std::shared_ptr<IAVCodecService> MediaClient::CreateAVCodecService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!IsAlived()) {
-        MEDIA_LOGE("media service does not exist.");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
     sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::MEDIA_AVCODEC, listenerStub_->AsObject());
@@ -227,10 +212,7 @@ int32_t MediaClient::DestroyAVCodecService(std::shared_ptr<IAVCodecService> avCo
 std::shared_ptr<IAVMetadataHelperService> MediaClient::CreateAVMetadataHelperService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!IsAlived()) {
-        MEDIA_LOGE("media service does not exist.");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
     sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER, listenerStub_->AsObject());
@@ -260,10 +242,7 @@ int32_t MediaClient::DestroyAVMetadataHelperService(std::shared_ptr<IAVMetadataH
 std::shared_ptr<IScreenCaptureService> MediaClient::CreateScreenCaptureService()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!IsAlived()) {
-        MEDIA_LOGE("media service does not exist.");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(IsAlived(), nullptr, "media service does not exist.");
 
     sptr<IRemoteObject> object = mediaProxy_->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::MEDIA_SCREEN_CAPTURE, listenerStub_->AsObject());

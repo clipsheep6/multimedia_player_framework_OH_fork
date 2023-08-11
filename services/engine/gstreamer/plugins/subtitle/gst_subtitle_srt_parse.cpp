@@ -52,9 +52,7 @@ static void gst_subtitle_srt_parse_dispose(GObject *object)
 
     GST_INFO_OBJECT(parse, "srt parse dispose in");
     if (parse->buf != nullptr) {
-        if (g_string_free(parse->buf, (gboolean)TRUE) != nullptr) {
-            GST_WARNING_OBJECT(parse, "g_string_free failed");
-        }
+        g_warn_if_fail(g_string_free(parse->buf, (gboolean)TRUE) == nullptr);
         parse->buf = nullptr;
     }
 
@@ -91,9 +89,7 @@ static void gst_subtitle_srt_parse_init(GstSubtitleSrtParse *parse)
 
     parse->state = SUBNUM_STATE;
     if (parse->buf != nullptr) {
-        if (g_string_truncate(parse->buf, 0) == nullptr) {
-            GST_WARNING_OBJECT(parse, "g_string_truncate failed");
-        }
+        g_warn_if_fail(g_string_truncate(parse->buf, 0) != nullptr);
     } else {
         parse->buf = g_string_new(nullptr);
         if (parse->buf == nullptr) {

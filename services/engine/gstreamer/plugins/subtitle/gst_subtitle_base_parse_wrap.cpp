@@ -184,70 +184,6 @@ static gboolean gst_subtitle_base_parse_src_event(GstPad *pad, GstObject *parent
     return ret;
 }
 
-static gboolean src_query_seeking(const GstPad *pad, GstObject *parent, GstQuery *query,
-    GstSubtitleBaseParse *self)
-{
-    GstFormat fmt;
-    gboolean seekable = FALSE;
-
-    GST_WARNING_OBJECT(parent, "pad %s query seeking", GST_PAD_NAME(pad));
-
-    gst_query_parse_seeking(query, &fmt, nullptr, nullptr, nullptr);
-    if (fmt == GST_FORMAT_TIME) {
-        GstQuery *peer_query = gst_query_new_seeking(GST_FORMAT_BYTES);
-        g_return_val_if_fail(peer_query != nullptr, TRUE);
-        seekable = gst_pad_peer_query(self->sinkpad, peer_query);
-        if (seekable) {
-            gst_query_parse_seeking(peer_query, nullptr, &seekable, nullptr, nullptr);
-        }
-        gst_query_unref(peer_query);
-        peer_query = nullptr;
-    }
-    gst_query_set_seeking(query, fmt, seekable, seekable ? (gint64)0 : (gint64)-1, (gint64)-1);
-
-    return TRUE;
-}
-
-static gboolean gst_subtitle_base_parse_src_query(GstPad *pad, GstObject *parent, GstQuery *query)
-{
-    GstSubtitleBaseParse *self = static_cast<GstSubtitleBaseParse *>((void *)parent);
-    gboolean ret = FALSE;
-
-    g_return_val_if_fail((self != nullptr) && (pad != nullptr) && (query != nullptr), FALSE);
-
-    GST_DEBUG_OBJECT(self, "Handling %s query", GST_QUERY_TYPE_NAME(query));
-
-    switch (GST_QUERY_TYPE(query)) {
-        case GST_QUERY_POSITION: {
-            GstFormat fmt;
-
-            GST_WARNING_OBJECT(self, "pad %s query position", GST_PAD_NAME(pad));
-            gst_query_parse_position(query, &fmt, nullptr);
-            if ((fmt != GST_FORMAT_TIME) && (self->sinkpad != nullptr)) {
-                ret = gst_pad_peer_query(self->sinkpad, query);
-            } else if (self->segment != nullptr) {
-                ret = TRUE;
-                gst_query_set_position(query, GST_FORMAT_TIME, (gint64)self->segment->position);
-            }
-            break;
-        }
-        case GST_QUERY_SEEKING: {
-            ret = src_query_seeking(pad, parent, query, self);
-            break;
-        }
-        case GST_QUERY_SEGMENT: {
-            ret = FALSE;
-            break;
-        }
-        default: {
-            ret = gst_pad_query_default(pad, parent, query);
-            break;
-        }
-    }
-
-    return ret;
-}
-
 /* push gstbuffer to srcpad */
 static GstFlowReturn gst_subtitle_base_push_data(GstSubtitleBaseParse *self, GstPad *pad, GstBuffer *buffer)
 {
@@ -750,7 +686,6 @@ static GstSubtitleStream *gst_subtitle_get_stream_handle(GstSubtitleBaseParse *b
 static void get_stream_srcpad_set(GstSubtitleBaseParse *base_parse, GstPad *srcpad)
 {
     gst_pad_set_event_function(srcpad, gst_subtitle_base_parse_src_event);
-    gst_pad_set_query_function(srcpad, gst_subtitle_base_parse_src_query);
     base_parse->pad_num++;
 
     GST_DEBUG_OBJECT(base_parse, "adding src pad %s", GST_PAD_NAME(srcpad));
@@ -979,8 +914,8 @@ gboolean decode_one_frame(const GstSubtitleBaseParseClass *baseclass, GstSubtitl
     GstSubtitleFrame *frame, GstSubtitleDecodedFrame *decoded_frame)
 {
     g_return_val_if_fail((baseclass != nullptr) && (baseclass->decode_frame_pfn != nullptr) &&
-        (self != nullptr), FALSE);
-    if ((frame == nullptr) || (frame->data == nullptr) || (decoded_frame == nullptr)) {
+        (self != nullptr) && (frame != nullptr), FALSE);
+    if ((frame->data == nullptr) || (decoded_frame == nullptr)) {
         return FALSE;
     }
 
