@@ -259,7 +259,7 @@ int32_t AVMetadataHelperEngineGstImpl::PrepareInternel(bool async)
 
     if (!async) {
         metaCollector_->Stop(true);
-        static constexpr int32_t timeout = 5;
+        static constexpr int32_t timeout = 3;
         std::unique_lock<std::mutex> lock(mutex_);
         cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
             return (status_ == PLAYBIN_STATE_PREPARED && asyncDone_) || errHappened_;

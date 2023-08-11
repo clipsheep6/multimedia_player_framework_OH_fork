@@ -107,7 +107,7 @@ std::vector<std::shared_ptr<AVSharedMemory>> AVMetaFrameExtractor::ExtractIntern
     std::vector<std::shared_ptr<AVSharedMemory>> outFrames;
 
     std::unique_lock<std::mutex> lock(mutex_);
-    static constexpr int32_t timeout = 5;
+    static constexpr int32_t timeout = 3;
     cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
         return !originalFrames_.empty() || !startExtracting_;
     });
@@ -157,7 +157,7 @@ int32_t AVMetaFrameExtractor::StartExtract(
     ret = frameConverter_->Init(param);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init failed, cancel extract frames");
 
-    static constexpr int32_t timeout = 5;
+    static constexpr int32_t timeout = 3;
     cond_.wait_for(lock, std::chrono::seconds(timeout), [this]() {
         return seekDone_ || !startExtracting_;
     });
