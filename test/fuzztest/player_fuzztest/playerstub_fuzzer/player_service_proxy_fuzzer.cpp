@@ -169,6 +169,10 @@ int32_t PlayerServiceProxyFuzzer::SetFdSource(uint8_t *inputData, size_t size, b
         fdValue = *reinterpret_cast<int32_t *>(inputData);
         lengthValue = *reinterpret_cast<int64_t *>(inputData);
         offsetValue = *reinterpret_cast<uint32_t *>(inputData) % *reinterpret_cast<int64_t *>(inputData);
+        (void)data.WriteFileDescriptor(fdValue);
+        (void)data.WriteInt64(offsetValue);
+        (void)data.WriteInt64(lengthValue);
+        return SendRequest(SET_FD_SOURCE, data, reply, option);
     } else {
         const std::string path = "/data/test/media/H264_AAC.mp4";
         fdValue = open(path.c_str(), O_RDONLY);
@@ -186,12 +190,13 @@ int32_t PlayerServiceProxyFuzzer::SetFdSource(uint8_t *inputData, size_t size, b
             return -1;
         }
         lengthValue = static_cast<int64_t>(buffer.st_size);
+        (void)data.WriteFileDescriptor(fdValue);
+        (void)data.WriteInt64(offsetValue);
+        (void)data.WriteInt64(lengthValue);
+        int32_t ret = SendRequest(SET_FD_SOURCE, data, reply, option);
+        (void)close(fdValue);
+        return ret;
     }
-
-    (void)data.WriteFileDescriptor(fdValue);
-    (void)data.WriteInt64(offsetValue);
-    (void)data.WriteInt64(lengthValue);
-    return SendRequest(SET_FD_SOURCE, data, reply, option);
 }
 
 int32_t PlayerServiceProxyFuzzer::AddSubSource(uint8_t *inputData, size_t size, bool isFuzz)
