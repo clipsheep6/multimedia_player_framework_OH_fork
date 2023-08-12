@@ -23,7 +23,6 @@ gchar *gst_subtitle_str_dup(const gchar *str, gboolean ndup, gsize len);
 void gst_subtitle_free_frame(GstSubtitleBaseParse *base, GstSubtitleDecodedFrame *decoded_frame);
 void gst_subtitle_typefind(GstTypeFind *tf, const gpointer priv,
     const GstSubtitleFormatDetect detect_caps_pfn);
-GstBuffer *gst_subtitle_read_buffer(GstSubtitleBaseParse *base);
 gsize gst_subtitle_read_line(GstSubtitleBaseParse *base, gchar **out_line);
 GstFlowReturn gst_subtitle_push_buffer(GstSubtitleBaseParse *self,
     const GstSubtitleDecodedFrame *decoded_frame);

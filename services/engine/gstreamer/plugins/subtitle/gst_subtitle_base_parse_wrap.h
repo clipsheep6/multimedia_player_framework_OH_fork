@@ -20,7 +20,6 @@
 
 gboolean handle_text_subtitle(GstSubtitleBaseParse *self, const GstSubtitleDecodedFrame *decoded_frame,
     GstSubtitleStream *stream, GstFlowReturn *ret);
-void update_stream_cache_queue_subtitle(GstSubtitleBaseParse *self, GstSubtitleStream *stream);
 GstSubtitleStream *gst_subtitle_get_stream_by_id(const GstSubtitleBaseParse *self, gint stream_id);
 void free_subinfos_and_streams(GstSubtitleBaseParse *base_parse);
 gboolean handle_first_frame(GstPad *sinkpad, GstBuffer *buf, GstSubtitleBaseParse *self);

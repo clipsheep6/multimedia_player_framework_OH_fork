@@ -24,7 +24,6 @@ using namespace OHOS;
 using namespace OHOS::Media;
 
 namespace {
-    constexpr guint MAX_BUFFER_LENGTH = 100;
     constexpr gsize MAX_BUFFER_SIZE = 100000000;
     constexpr guint64 SEC_TO_MSEC = 1000;
     constexpr guint BOM_OF_UTF_8 = 3;
@@ -244,21 +243,7 @@ gboolean handle_text_subtitle(GstSubtitleBaseParse *self, const GstSubtitleDecod
     GST_BUFFER_PTS(buffer) = decoded_frame->pts;
     GST_BUFFER_DURATION(buffer) = decoded_frame->duration;
 
-    /* cache internal subtitle */
-    g_mutex_lock(&self->pushmutex);
-    if (self->from_internal && (stream->cache_queue != nullptr)) {
-        g_queue_push_tail(stream->cache_queue, gst_buffer_ref(buffer));
-    }
-    g_mutex_unlock(&self->pushmutex);
-
-    if (self->from_internal) {
-        if (stream->last_result == GST_FLOW_OK) {
-            *ret = gst_subtitle_base_push_data(self, pad, buffer);
-            stream->last_result = *ret;
-        } else {
-            gst_buffer_unref(buffer);
-        }
-    } else {
+    if (!self->from_internal) {
         *ret = gst_subtitle_base_push_data(self, pad, buffer);
     }
 
@@ -302,115 +287,6 @@ static guint64 gst_subtitle_base_get_current_position(GstSubtitleBaseParse *self
     return (static_cast<gint64>(position) >= 0) ? position : GST_CLOCK_TIME_NONE;
 }
 
-static gboolean update_cache_queue_handle(guint64 position, GstSubtitleStream *stream, GstBuffer *buffer)
-{
-    guint64 end_time = GST_BUFFER_PTS(buffer) + GST_BUFFER_DURATION(buffer);
-    GstBuffer *buffer_next = static_cast<GstBuffer *>(g_queue_peek_head(stream->cache_queue));
-
-    if (GST_IS_BUFFER(buffer) && (end_time > position)) {
-        /* in some cases, the duration is too long, we can only use the next subtitle to decide whether to cache it */
-        if (buffer_next != nullptr) {
-            if (GST_BUFFER_PTS(buffer_next) > position) {
-                g_queue_push_head(stream->cache_queue, buffer);
-                return FALSE;
-            }
-        } else {
-            g_queue_push_head(stream->cache_queue, buffer);
-            return FALSE;
-        }
-    }
-    return TRUE;
-}
-
-void update_stream_cache_queue_subtitle(GstSubtitleBaseParse *self, GstSubtitleStream *stream)
-{
-    g_return_if_fail((self != nullptr) && (stream != nullptr) && (stream->cache_queue != nullptr));
-
-    GstBuffer *buffer = nullptr;
-    guint64 position = gst_subtitle_base_get_current_position(self);
-
-    g_mutex_lock(&self->pushmutex);
-    if (position == GST_CLOCK_TIME_NONE) {
-        while (g_queue_get_length(stream->cache_queue) > MAX_BUFFER_LENGTH) {
-            buffer = static_cast<GstBuffer *>(g_queue_pop_head(stream->cache_queue));
-            if (buffer != nullptr) {
-                gst_buffer_unref(buffer);
-                buffer = nullptr;
-            }
-        }
-    } else {
-        buffer = static_cast<GstBuffer *>(g_queue_pop_head(stream->cache_queue));
-        while (buffer != nullptr) {
-            if (!update_cache_queue_handle(position, stream, buffer)) {
-                break;
-            }
-            gst_buffer_unref(buffer);
-            buffer = static_cast<GstBuffer *>(g_queue_pop_head(stream->cache_queue));
-        }
-    }
-    g_mutex_unlock(&self->pushmutex);
-}
-
-static gint compare_stream_cache_queue(gconstpointer a, gconstpointer b, gpointer udata)
-{
-    (void)udata;
-    const GstBuffer *buffer1 = static_cast<const GstBuffer *>(a);
-    const GstBuffer *buffer2 = static_cast<const GstBuffer *>(b);
-
-    g_return_val_if_fail((buffer1 != nullptr) && (buffer2 != nullptr), 0);
-
-    if (GST_BUFFER_PTS(buffer1) > GST_BUFFER_PTS(buffer2)) {
-        return 1;
-    } else if (GST_BUFFER_PTS(buffer1) < GST_BUFFER_PTS(buffer2)) {
-        return -1;
-    }
-    return 0;
-}
-
-static void gst_subtitle_base_push_cache_buffer(GstSubtitleBaseParse *self, GstSubtitleStream *stream)
-{
-    guint i = 0;
-
-    g_return_if_fail((self != nullptr) && (stream != nullptr) && (stream->pad != nullptr));
-
-    g_mutex_lock(&self->pushmutex);
-    g_queue_sort(stream->cache_queue, compare_stream_cache_queue, nullptr);
-    g_mutex_unlock(&self->pushmutex);
-
-    update_stream_cache_queue_subtitle(self, stream);
-
-    g_mutex_lock(&self->pushmutex);
-    gboolean ret = gst_pad_push_event(stream->pad, gst_event_new_flush_start());
-    if (ret) {
-        GST_INFO_OBJECT(self, "push flush_start event success");
-    } else {
-        GST_WARNING_OBJECT(self, "push flush_start event failed");
-    }
-
-    ret = gst_pad_push_event(stream->pad, gst_event_new_flush_stop(FALSE));
-    if (ret) {
-        GST_INFO_OBJECT(self, "push flush_stop event success");
-    } else {
-        GST_WARNING_OBJECT(self, "push flush_stop event failed");
-    }
-
-    GstBuffer *buffer = static_cast<GstBuffer *>(g_queue_peek_nth(stream->cache_queue, i));
-    while (buffer != nullptr) {
-        i++;
-        if (GST_IS_BUFFER(buffer)) {
-            GstFlowReturn flow_ret = gst_subtitle_base_push_data(self, stream->pad, gst_buffer_ref(buffer));
-            stream->last_result = flow_ret;
-            if (flow_ret != GST_FLOW_OK) {
-                break;
-            }
-        }
-        buffer = static_cast<GstBuffer *>(g_queue_peek_nth(stream->cache_queue, i));
-    }
-    g_mutex_unlock(&self->pushmutex);
-
-    update_stream_cache_queue_subtitle(self, stream);
-}
-
 GstSubtitleStream *gst_subtitle_get_stream_by_id(const GstSubtitleBaseParse *self, gint stream_id)
 {
     g_return_val_if_fail(self != nullptr, nullptr);
@@ -427,27 +303,6 @@ GstSubtitleStream *gst_subtitle_get_stream_by_id(const GstSubtitleBaseParse *sel
     }
 
     return stream;
-}
-
-static void gst_subtitle_base_loop(GstSubtitleBaseParse *self)
-{
-    g_return_if_fail(self != nullptr);
-
-    GstSubtitleStream *stream = gst_subtitle_get_stream_by_id(self, self->stream_id);
-    g_return_if_fail(stream != nullptr);
-    gst_subtitle_base_push_cache_buffer(self, stream);
-    g_return_if_fail(stream->task != nullptr);
-    (void)gst_task_pause(stream->task);
-}
-
-static void free_cache_queue_buffer(gpointer data, const gpointer user_data)
-{
-    GstBuffer *buffer = static_cast<GstBuffer *>(data);
-    (void)user_data;
-
-    if ((buffer != nullptr) && GST_IS_BUFFER(buffer)) {
-        gst_buffer_unref(buffer);
-    }
 }
 
 void free_subinfos_and_streams(GstSubtitleBaseParse *base_parse)
@@ -470,18 +325,6 @@ void free_subinfos_and_streams(GstSubtitleBaseParse *base_parse)
             gst_tag_list_unref(base_parse->streams[index]->tags);
             base_parse->streams[index]->tags = nullptr;
 
-            if (base_parse->streams[index]->task != nullptr) {
-                (void)gst_task_join(base_parse->streams[index]->task);
-                gst_object_unref(base_parse->streams[index]->task);
-                base_parse->streams[index]->task = nullptr;
-                g_rec_mutex_clear(&base_parse->streams[index]->task_rec_lock);
-            }
-
-            if (base_parse->streams[index]->cache_queue != nullptr) {
-                g_queue_free_full(base_parse->streams[index]->cache_queue, (GDestroyNotify)free_cache_queue_buffer);
-                base_parse->streams[index]->cache_queue = nullptr;
-            }
-
             g_free(base_parse->streams[index]);
             base_parse->streams[index] = nullptr;
         }
@@ -492,10 +335,6 @@ static void detect_sub_type_parse_extradata(const GstStructure *structure, GstSu
 {
     if (gst_structure_get_int(structure, "stream_id", &self->stream_id)) {
         GST_DEBUG_OBJECT(self, "stream_id:%d", self->stream_id);
-    }
-
-    if (self->from_internal) {
-        self->stream_id = 0;
     }
 }
 
@@ -598,18 +437,11 @@ static void gst_subtitle_base_parse_fill_buffer(GstSubtitleBaseParse *base_parse
     g_return_if_fail(kclass != nullptr);
 
     g_mutex_lock(&base_parse->buffermutex);
-    /* if it is internal subtitle, store @buffer in bufferlist */
-    if (base_parse->from_internal) {
-        buf_ctx->bufferlist = g_list_append(buf_ctx->bufferlist, buffer);
-        g_mutex_unlock(&base_parse->buffermutex);
-        return;
-    }
-
     /*
      * If it is external subtitle, store @buffer in GstAdapter,
      * then read as many strings as possible from the GstAdapter.
      */
-    if (buf_ctx->adapter != nullptr) {
+    if (!base_parse->from_internal && buf_ctx->adapter != nullptr) {
         gst_adapter_push(buf_ctx->adapter, buffer);
         fill_buffer_from_adapter(base_parse, buf_ctx);
     }
@@ -618,20 +450,8 @@ static void gst_subtitle_base_parse_fill_buffer(GstSubtitleBaseParse *base_parse
 
 static void get_stream_new_queue(GstSubtitleBaseParse *base_parse, GstSubtitleStream *stream)
 {
-    if (base_parse->from_internal) {
-        stream->cache_queue = g_queue_new();
-        if (stream->cache_queue == nullptr) {
-            GST_ERROR_OBJECT(base_parse, "g_queue_new failed");
-        }
-        stream->active = TRUE;
+    if (!base_parse->from_internal) {
         stream->last_result = GST_FLOW_OK;
-        stream->task = gst_task_new((GstTaskFunction)gst_subtitle_base_loop, base_parse, nullptr);
-        g_rec_mutex_init(&stream->task_rec_lock);
-        gst_task_set_lock(stream->task, &stream->task_rec_lock);
-    } else {
-        stream->cache_queue = nullptr;
-        stream->last_result = GST_FLOW_OK;
-        stream->task = nullptr;
     }
 }
 
@@ -662,13 +482,6 @@ static GstSubtitleStream *gst_subtitle_get_stream_handle(GstSubtitleBaseParse *b
         base_parse->from_internal, nullptr);
     GST_DEBUG_OBJECT(base_parse, "subtitle stream: %d, language: %s, format: %s, internal: %d",
         stream->stream_id, language, format, base_parse->from_internal);
-
-    if (base_parse->from_internal && (stream->tags != nullptr)) {
-        GstEvent *event = gst_event_new_tag(gst_tag_list_ref(stream->tags));
-        if (event != nullptr) {
-            (void)gst_pad_push_event(srcpad, event);
-        }
-    }
 
     if (!gst_element_add_pad(GST_ELEMENT(base_parse), srcpad)) {
         GST_ERROR_OBJECT(base_parse, "gst_element_add_pad failed");

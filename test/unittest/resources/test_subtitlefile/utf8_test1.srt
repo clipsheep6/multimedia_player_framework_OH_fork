@@ -1,7 +1,7 @@
 ﻿
 1
 00:00:00,000 --> 00:00:01,000
-<font color="#fff00"><i>MediaOS: test1 for subtitle_1</i></font>
+<font color="#ffff00"><i>MediaOS: test1 for subtitle_1</i></font>
 
 2
 00:00:01,000 --> 00:00:02,000

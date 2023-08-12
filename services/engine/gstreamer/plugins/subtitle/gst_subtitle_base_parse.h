@@ -65,17 +65,12 @@ typedef struct {
     GstCaps *caps;
     GstTagList *tags;
     gboolean active;
-    GQueue *cache_queue; // used to save subtitles that have not been played or have not finished playing
-    GCond cond;
     GstFlowReturn last_result;
-    GstTask *task;
-    GRecMutex task_rec_lock;
 } GstSubtitleStream;
 
 typedef struct {
     GstAdapter *adapter; // external subtitles use @adapter for buffering
     GString *text;       // subtitle text string is stored in @text
-    GList *bufferlist;   // internal subtitles use @bufferlist for buffering
 } GstSubtitleBufferContext;
 
 typedef struct {
