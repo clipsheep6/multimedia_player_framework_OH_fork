@@ -24,6 +24,7 @@ ohos_fuzztest("PlayerStubFuzzTest") {
       "../../../../test/fuzztest/player_fuzztest/playerstub_fuzzer"
 
   include_dirs = [
+    "../../../../services/services/common",
     "../../../../services/services/player/ipc",
     "../../../../services/services/sa_media/ipc",
     "../../../../test/fuzztest/player_fuzztest",

@@ -53,9 +53,9 @@ int32_t MonitorServiceStub::Init()
     return MSERR_OK;
 }
 
-int32_t MonitorServiceStub::DumpInfo(int32_t fd, bool needDetail)
+int32_t MonitorServiceStub::DumpInfo(int32_t fd)
 {
-    return MonitorServer::GetInstance().Dump(fd, needDetail);
+    return MonitorServer::GetInstance().Dump(fd);
 }
 
 int32_t MonitorServiceStub::OnClientDie(int32_t pid)
