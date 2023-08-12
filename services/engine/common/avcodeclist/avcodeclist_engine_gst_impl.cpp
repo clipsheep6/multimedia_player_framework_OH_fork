@@ -39,10 +39,8 @@ AVCodecListEngineGstImpl::~AVCodecListEngineGstImpl()
 bool AVCodecListEngineGstImpl::IsSupportMimeType(const Format &format, const CapabilityData &data)
 {
     std::string targetMimeType;
-    if (!format.ContainKey("codec_mime")) {
-        MEDIA_LOGD("Get MimeType from format failed");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(format.ContainKey("codec_mime") == true, false, "format not contain MimeType");
+
     (void)format.GetStringValue("codec_mime", targetMimeType);
     if (data.mimeType != targetMimeType) {
         return false;
@@ -153,11 +151,11 @@ bool AVCodecListEngineGstImpl::IsSupportSampleRate(const Format &format, const C
         return true;
     }
     int32_t targetSampleRate;
-    if (!format.ContainKey("samplerate")) {
-        MEDIA_LOGD("The samplerate of the format are not specified");
+    if (!format.ContainKey("sample_rate")) {
+        MEDIA_LOGD("The sample_rate of the format are not specified");
         return true;
     }
-    (void)format.GetIntValue("samplerate", targetSampleRate);
+    (void)format.GetIntValue("sample_rate", targetSampleRate);
     if (find(data.sampleRate.begin(), data.sampleRate.end(), targetSampleRate) == data.sampleRate.end()) {
         return false;
     }

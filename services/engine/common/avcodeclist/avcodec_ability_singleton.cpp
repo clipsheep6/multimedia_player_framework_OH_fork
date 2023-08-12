@@ -28,9 +28,7 @@ AVCodecAbilitySingleton& AVCodecAbilitySingleton::GetInstance()
 {
     static AVCodecAbilitySingleton instance;
     bool ret = instance.ParseCodecXml();
-    if (!ret) {
-        MEDIA_LOGD("ParseCodecXml failed");
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == true, instance, "ParseCodecXml failed");
     return instance;
 }
 
@@ -51,30 +49,12 @@ bool AVCodecAbilitySingleton::ParseCodecXml()
         return true;
     }
     AVCodecXmlParser xmlParser;
-    bool ret = xmlParser.LoadConfiguration();
-    if (!ret) {
-        this->isParsered_ = false;
-        MEDIA_LOGE("AVCodecList LoadConfiguration failed");
-        return false;
-    }
-    ret = xmlParser.Parse();
-    if (!ret) {
-        isParsered_ = false;
-        MEDIA_LOGE("AVCodecList Parse failed.");
-        return false;
-    }
+
+    CHECK_AND_RETURN_RET_LOG(xmlParser.LoadConfiguration() == true, false, "AVCodecList LoadConfiguration failed");
+    CHECK_AND_RETURN_RET_LOG(xmlParser.Parse() == true, false, "AVCodecList Parse failed");
     std::vector<CapabilityData> data = xmlParser.GetCapabilityDataArray();
     capabilityDataArray_.insert(capabilityDataArray_.end(), data.begin(), data.end());
     isParsered_ = true;
-    return true;
-}
-
-bool AVCodecAbilitySingleton::RegisterCapability(const std::vector<CapabilityData> &registerCapabilityDataArray)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    capabilityDataArray_.insert(capabilityDataArray_.begin() + hdiCapLen_, registerCapabilityDataArray.begin(),
-        registerCapabilityDataArray.end());
-    MEDIA_LOGD("RegisterCapability success");
     return true;
 }
 
@@ -84,7 +64,7 @@ bool AVCodecAbilitySingleton::RegisterHdiCapability(const std::vector<Capability
     capabilityDataArray_.insert(capabilityDataArray_.begin(), registerCapabilityDataArray.begin(),
         registerCapabilityDataArray.end());
     hdiCapLen_ = registerCapabilityDataArray.size();
-    MEDIA_LOGD("RegisterCapability success");
+    MEDIA_LOGD("RegisterHdiCapability success");
     return true;
 }
 

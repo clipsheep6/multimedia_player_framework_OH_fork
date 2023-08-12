@@ -69,6 +69,22 @@ HWTEST_F(AVCodecListUnitTest, AVCdecList_FindVideoDecoder_0100, TestSize.Level0)
 }
 
 /**
+ * @tc.name: AVCdecList_FindVideoDecoder_0200
+ * @tc.desc: AVCdecList FindVideoDecoder
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(AVCodecListUnitTest, AVCdecList_FindVideoDecoder_0200, TestSize.Level0)
+{
+    std::string codecName;
+    std::shared_ptr<FormatMock> format = AVCodecMockFactory::CreateFormat();
+    ASSERT_NE(nullptr, format);
+    (void)format->PutStringValue(codecMimeKey_, enum_->GetCodecMimeType(CodecMimeTypeMock::VIDEO_AVC));
+    (void)format->PutIntValue(frameRateKey_, DOUBLE_FRAME_RATE);
+    codecName = avCodecList_->FindVideoDecoder(format);
+}
+
+/**
  * @tc.name: AVCdecList_FindVideoEncoder_0100
  * @tc.desc: AVCdecList FindVideoEncoder
  * @tc.type: FUNC
