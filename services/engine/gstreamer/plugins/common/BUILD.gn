@@ -13,6 +13,10 @@
 
 import("//build/ohos.gni")
 
+declare_args() {
+  multimedia_player_framework_no_stride = true
+}
+
 config("gst_plugins_common_config") {
   visibility = [ ":*" ]
 
@@ -37,6 +41,10 @@ config("gst_plugins_common_config") {
     "-Wunused-parameter",
   ]
 
+  if (multimedia_player_framework_no_stride) {
+    cflags += [ "-DSURFACE_MEM_NO_STRIDE" ]
+  }
+
   include_dirs = [
     "include",
     "//commonlibrary/c_utils/base/include",
@@ -51,10 +59,6 @@ config("gst_plugins_common_config") {
     "//third_party/glib",
     "//third_party/glib/gmodule",
   ]
-}
-
-declare_args() {
-  multimedia_player_framework_no_stride = true
 }
 
 ohos_shared_library("gst_media_common") {
@@ -74,17 +78,12 @@ ohos_shared_library("gst_media_common") {
 
   sources = [
     "buffer_type_meta.c",
+    "gst_producer_surface_pool.cpp",
     "gst_shmem_allocator.cpp",
     "gst_shmem_pool.cpp",
     "gst_shmemory_wrap_allocator.cpp",
     "gst_surface_allocator.cpp",
   ]
-
-  if (!multimedia_player_framework_no_stride) {
-    sources += [ "gst_producer_surface_pool.cpp" ]
-  } else {
-    sources += [ "gst_producer_surface_pool_no_stride.cpp" ]
-  }
 
   deps = [
     "../../../../utils:media_service_utils",

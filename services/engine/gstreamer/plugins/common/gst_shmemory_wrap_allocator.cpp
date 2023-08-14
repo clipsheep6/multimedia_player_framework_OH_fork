@@ -16,6 +16,8 @@
 #include "gst_shmemory_wrap_allocator.h"
 #include "securec.h"
 #include "media_log.h"
+#include "scope_guard.h"
+using namespace OHOS;
 
 #define gst_shmemory_wrap_allocator_parent_class parent_class
 G_DEFINE_TYPE(GstShMemoryWrapAllocator, gst_shmemory_wrap_allocator, GST_TYPE_ALLOCATOR);
@@ -153,35 +155,25 @@ static GstMemory *gst_shmemory_wrap_allocator_mem_copy(GstShMemoryWrapMemory *me
 
     gssize realOffset = static_cast<gssize>(mem->offset) + offset;
     g_return_val_if_fail(realOffset >= 0, nullptr);
-    if (size == -1) {
-        size = static_cast<gssize>(mem->length) - offset;
-    }
+    size = size == -1 ? static_cast<gssize>(mem->length) - offset : size;
     g_return_val_if_fail(size > 0, nullptr);
 
     GstMemory *copy = gst_allocator_alloc(nullptr, static_cast<gsize>(size), nullptr);
     g_return_val_if_fail(copy != nullptr, nullptr);
 
     GstMapInfo info = GST_MAP_INFO_INIT;
-    if (!gst_memory_map(copy, &info, GST_MAP_READ)) {
-        gst_memory_unref(copy);
-        GST_ERROR("map failed");
-        return nullptr;
-    }
+    ON_SCOPE_EXIT(0) { gst_memory_unref(copy); };
+    g_return_val_if_fail(gst_memory_map(copy, &info, GST_MAP_READ), nullptr);
+    ON_SCOPE_EXIT(1) { gst_memory_unmap(copy, &info); };
 
     uint8_t *src = std::static_pointer_cast<OHOS::Media::AVDataSrcMemory>(mem->shmemory)->GetInnerBase() + realOffset;
     errno_t rc = memcpy_s(info.data, info.size, src, static_cast<size_t>(size));
-    if (rc != EOK) {
-        GST_ERROR("memcpy failed");
-        gst_memory_unmap(copy, &info);
-        gst_memory_unref(copy);
-        return nullptr;
-    }
+    g_return_val_if_fail(rc == EOK, nullptr);
     GST_DEBUG("realOffset is %" G_GSSIZE_FORMAT ", size is %" G_GSSIZE_FORMAT ", src addr: 0x%06" PRIXPTR "",
         realOffset, size, FAKE_POINTER(
             std::static_pointer_cast<OHOS::Media::AVDataSrcMemory>(mem->shmemory)->GetInnerBase() + realOffset));
 
-    gst_memory_unmap(copy, &info);
-
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return copy;
 }
 
