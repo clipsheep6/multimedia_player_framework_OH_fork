@@ -49,15 +49,9 @@ void RecorderPipelineCtrler::SetObs(const std::weak_ptr<IRecorderEngineObs> &obs
 
 void RecorderPipelineCtrler::SetPipeline(std::shared_ptr<RecorderPipeline> pipeline)
 {
-    if (pipeline == nullptr) {
-        MEDIA_LOGE("Null pipeline !");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(pipeline != nullptr, "Null pipeline !");
 
-    if (pipeline_ != nullptr) {
-        MEDIA_LOGE("Already set pipeline, ignore !");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(pipeline_ == nullptr, "Already set pipeline, ignore !");
 
     pipeline_ = pipeline;
 
@@ -85,10 +79,7 @@ int32_t RecorderPipelineCtrler::Prepare()
 {
     MEDIA_LOGD("enter");
 
-    if (pipeline_ == nullptr) {
-        MEDIA_LOGE("Null pipeline !");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(pipeline_ != nullptr, MSERR_INVALID_OPERATION, "Null pipeline !");
 
     auto prepareTask = std::make_shared<TaskHandler<int32_t>>([this] { return pipeline_->Prepare(); });
     int ret = cmdQ_->EnqueueTask(prepareTask);
@@ -104,10 +95,7 @@ int32_t RecorderPipelineCtrler::Start()
 {
     MEDIA_LOGD("enter");
 
-    if (pipeline_ == nullptr) {
-        MEDIA_LOGE("Null pipeline !");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(pipeline_ != nullptr, MSERR_INVALID_OPERATION, "Null pipeline !");
 
     auto startTask = std::make_shared<TaskHandler<int32_t>>([this] { return pipeline_->Start(); });
     int ret = cmdQ_->EnqueueTask(startTask);
@@ -123,10 +111,7 @@ int32_t RecorderPipelineCtrler::Pause()
 {
     MEDIA_LOGD("enter");
 
-    if (pipeline_ == nullptr) {
-        MEDIA_LOGE("Null pipeline !");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(pipeline_ != nullptr, MSERR_INVALID_OPERATION, "Null pipeline !");
 
     auto pauseTask = std::make_shared<TaskHandler<int32_t>>([this] { return pipeline_->Pause(); });
     int ret = cmdQ_->EnqueueTask(pauseTask);
@@ -142,10 +127,7 @@ int32_t RecorderPipelineCtrler::Resume()
 {
     MEDIA_LOGD("enter");
 
-    if (pipeline_ == nullptr) {
-        MEDIA_LOGE("Null pipeline !");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(pipeline_ != nullptr, MSERR_INVALID_OPERATION, "Null pipeline !");
 
     auto resumeTask = std::make_shared<TaskHandler<int32_t>>([this] { return pipeline_->Resume(); });
     int ret = cmdQ_->EnqueueTask(resumeTask);

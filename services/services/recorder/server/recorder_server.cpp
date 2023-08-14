@@ -51,10 +51,7 @@ std::shared_ptr<IRecorderService> RecorderServer::Create()
 {
     std::shared_ptr<RecorderServer> server = std::make_shared<RecorderServer>();
     int32_t ret = server->Init();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("failed to init RecorderServer");
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init RecorderServer");
     return server;
 }
 
@@ -110,10 +107,8 @@ int32_t RecorderServer::Init()
 const std::string& RecorderServer::GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status)
 {
     static const std::string ILLEGAL_STATE = "PLAYER_STATUS_ILLEGAL";
-    if (status < OHOS::Media::RecorderServer::REC_INITIALIZED ||
-        status > OHOS::Media::RecorderServer::REC_ERROR) {
-        return ILLEGAL_STATE;
-    }
+    CHECK_AND_RETURN_RET(status >= OHOS::Media::RecorderServer::REC_INITIALIZED &&
+        status <= OHOS::Media::RecorderServer::REC_ERROR, ILLEGAL_STATE);
 
     return RECORDER_STATE_MAP.find(status)->second;
 }
@@ -123,9 +118,7 @@ void RecorderServer::OnError(ErrorType errorType, int32_t errorCode)
     std::lock_guard<std::mutex> lock(cbMutex_);
     lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
     FaultEventWrite(lastErrMsg_, "Recorder");
-    if (recorderCb_ == nullptr) {
-        return;
-    }
+    CHECK_AND_RETURN(recorderCb_ != nullptr);
     recorderCb_->OnError(static_cast<RecorderErrorType>(errorType), errorCode);
 }
 

@@ -132,10 +132,7 @@ gboolean RecorderMsgProcessor::BusCallback(GstBus *bus, GstMessage *msg, gpointe
     (void)bus;
 
     RecorderMsgProcessor *processor = reinterpret_cast<RecorderMsgProcessor *>(data);
-    if (processor == nullptr) {
-        MEDIA_LOGE("processor is nullptr !");
-        return FALSE;
-    }
+    CHECK_AND_RETURN_RET_LOG(processor != nullptr, FALSE, "processor is nullptr !");
 
     CHECK_AND_RETURN_RET(msg != nullptr, FALSE);
 
@@ -161,10 +158,7 @@ RecorderMsgProcessor::~RecorderMsgProcessor()
 
 int32_t RecorderMsgProcessor::Init()
 {
-    if (msgResultCb_ == nullptr) {
-        MEDIA_LOGE("message result callback is nullptr");
-        return MSERR_INVALID_VAL;
-    }
+    CHECK_AND_RETURN_RET_LOG(msgResultCb_ != nullptr, MSERR_INVALID_VAL, "message result callback is nullptr");
 
     ON_SCOPE_EXIT(0) { (void)Reset(); };
 
@@ -188,16 +182,11 @@ int32_t RecorderMsgProcessor::Init()
 
 void RecorderMsgProcessor::AddMsgHandler(std::shared_ptr<RecorderMsgHandler> handler)
 {
-    if (handler == nullptr) {
-        MEDIA_LOGE("handler is nullptr");
-        return;
-    }
+    CHECK_AND_RETURN_LOG(handler != nullptr, "handler is nullptr");
 
     std::unique_lock<std::mutex> lock(mutex_);
     for (auto &item : msgHandlers_) {
-        if (item == handler) {
-            return;
-        }
+        CHECK_AND_RETURN(item != handler);
     }
 
     msgHandlers_.push_back(handler);
@@ -236,9 +225,7 @@ void RecorderMsgProcessor::ProcessMessage(GstMessage &msg)
         std::unique_lock<std::mutex> lock(mutex_);
         for (auto &msgHandler : msgHandlers_) {
             rst = msgHandler->OnMessageReceived(msg, prettyMsg);
-            if (rst != RecorderMsgProcResult::REC_MSG_PROC_IGNORE) {
-                break;
-            }
+            CHECK_AND_BREAK(rst == RecorderMsgProcResult::REC_MSG_PROC_IGNORE);
         }
     }
 
@@ -282,9 +269,7 @@ RecorderMsgProcResult RecorderMsgProcessor::ProcessMessageFinal(GstMessage &msg,
     prettyMsg.sourceId = INVALID_SOURCE_ID;
 
     RecorderMsgProcResult ret = ProcessExtendMessage(msg, prettyMsg);
-    if (ret != RecorderMsgProcResult::REC_MSG_PROC_IGNORE) {
-        return ret;
-    }
+    CHECK_AND_RETURN_RET(ret == RecorderMsgProcResult::REC_MSG_PROC_IGNORE, ret);
 
     auto tblIter = MSG_PROC_FUNC_TABLE.find(GST_MESSAGE_TYPE(&msg));
     if (tblIter == MSG_PROC_FUNC_TABLE.end()) {

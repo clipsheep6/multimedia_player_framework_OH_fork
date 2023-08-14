@@ -62,23 +62,16 @@ std::shared_ptr<RecorderElement> RecorderElementFactory::CreateElement(
     std::shared_ptr<RecorderElement> elem;
     {
         std::unique_lock<std::mutex> lock(tblMutex_);
-        if (creatorTbl_.find(key) == creatorTbl_.end()) {
-            MEDIA_LOGE("key %{public}s not registered !", key.c_str());
-            return nullptr;
-        }
+        CHECK_AND_RETURN_RET_LOG(creatorTbl_.find(key) != creatorTbl_.end(), nullptr,
+        "key %{public}s not registered !", key.c_str());
 
         elem = creatorTbl_[key](param);
-        if (elem == nullptr) {
-            MEDIA_LOGE("create element for key(%{public}s) failed !", key.c_str());
-            return nullptr;
-        }
+        CHECK_AND_RETURN_RET_LOG(elem != nullptr, nullptr,
+        "create element for key(%{public}s) failed !", key.c_str());
     }
 
     int32_t ret = elem->Init();
-    if (ret != MSERR_OK) {
-        MEDIA_LOGE("init element for key(%{public}s) failed !", key.c_str());
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "init element for key(%{public}s) failed !", key.c_str());
 
     return elem;
 }
@@ -105,21 +98,17 @@ int32_t RecorderElement::DrainAll(bool isDrain)
     if (!isDrain) {
         auto block = [] (GstPad *pad, GstPadProbeInfo *info, gpointer userData) {
             (void)userData;
-            if (pad == nullptr || info == nullptr) {
-                return GST_PAD_PROBE_PASS;
-            }
+            CHECK_AND_RETURN_RET(pad != nullptr && info != nullptr, GST_PAD_PROBE_PASS);
+
             MEDIA_LOGI("During flushing, pad %{public}s's probe is processing the probeInfo", GST_PAD_NAME(pad));
-            if ((static_cast<unsigned int>(info->type) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) == 0) {
-                return GST_PAD_PROBE_DROP;
-            }
+            CHECK_AND_RETURN_RET((static_cast<unsigned int>(info->type) & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM) != 0, GST_PAD_PROBE_DROP);
+
             return GST_PAD_PROBE_PASS;
         };
 
         GList *allSrcPads = gstElem_->srcpads;
         for (GList *padNode = g_list_first(allSrcPads); padNode != nullptr; padNode = padNode->next) {
-            if (padNode->data == nullptr)  {
-                continue;
-            }
+            CHECK_AND_CONTINUE(padNode->data != nullptr);
             MEDIA_LOGI("add probe for %{public}s...", name_.c_str());
             (void)gst_pad_add_probe((GstPad *)padNode->data, GST_PAD_PROBE_TYPE_DATA_DOWNSTREAM,
                                     (GstPadProbeCallback)block, nullptr, nullptr);

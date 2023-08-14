@@ -118,16 +118,12 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         // none audio request no need to check permission in recorder server
         permissionResult = Security::AccessToken::PERMISSION_GRANTED;
     }
-    if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
-        MEDIA_LOGE("user do not have the right to access MICROPHONE");
-        return MSERR_EXT_API9_PERMISSION_DENIED;
-    }
+    CHECK_AND_RETURN_RET_LOG(permissionResult == Security::AccessToken::PERMISSION_GRANTED,
+    MSERR_EXT_API9_PERMISSION_DENIED, "user do not have the right to access MICROPHONE");
 
     auto remoteDescriptor = data.ReadInterfaceToken();
-    if (RecorderServiceStub::GetDescriptor() != remoteDescriptor) {
-        MEDIA_LOGE("Invalid descriptor");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
+    MSERR_INVALID_OPERATION, "Invalid descriptor");
 
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {
