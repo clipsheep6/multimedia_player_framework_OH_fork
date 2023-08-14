@@ -20,7 +20,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "screen_capture.h"
-#include "screencapturecapturemode_fuzzer.h"
+#include "screencapturesetmicrophoneenabled_fuzzer.h"
 
 using namespace std;
 using namespace OHOS;
@@ -28,11 +28,11 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-ScreenCaptureCaptureModeFuzzer::ScreenCaptureCaptureModeFuzzer()
+ScreenCaptureSetMicrophoneEnabledFuzzer::ScreenCaptureSetMicrophoneEnabledFuzzer()
 {
 }
 
-ScreenCaptureCaptureModeFuzzer::~ScreenCaptureCaptureModeFuzzer()
+ScreenCaptureSetMicrophoneEnabledFuzzer::~ScreenCaptureSetMicrophoneEnabledFuzzer()
 {
 }
 
@@ -66,9 +66,9 @@ void SetConfig(AVScreenCaptureConfig &config)
     };
 }
 
-bool ScreenCaptureCaptureModeFuzzer::FuzzScreenCaptureCaptureMode(uint8_t *data, size_t size)
+bool ScreenCaptureSetMicrophoneEnabledFuzzer::FuzzScreenCaptureSetMicrophoneEnabled(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < sizeof(CaptureMode)) {
+    if (data == nullptr || size < sizeof(bool)) {
         return false;
     }
     bool retFlags = TestScreenCapture::CreateScreenCapture();
@@ -76,20 +76,11 @@ bool ScreenCaptureCaptureModeFuzzer::FuzzScreenCaptureCaptureMode(uint8_t *data,
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr int32_t captureModeList = 4;
     constexpr uint32_t recorderTime = 3;
-    CaptureMode captureMode_[captureModeList] {
-        CAPTURE_HOME_SCREEN,
-        CAPTURE_SPECIFIED_SCREEN,
-        CAPTURE_SPECIFIED_WINDOW,
-        CAPTURE_INVAILD
-    };
-    int32_t capturemodesubscript = *reinterpret_cast<int32_t *>(data) % (captureModeList);
-    config.captureMode = captureMode_[capturemodesubscript];
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
-    TestScreenCapture::SetMicrophoneEnabled(true);
+    TestScreenCapture::SetMicrophoneEnabled(*reinterpret_cast<bool *>(data));
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
@@ -100,17 +91,17 @@ bool ScreenCaptureCaptureModeFuzzer::FuzzScreenCaptureCaptureMode(uint8_t *data,
 }
 } // namespace Media
 
-bool FuzzTestScreenCaptureCaptureMode(uint8_t *data, size_t size)
+bool FuzzTestScreenCaptureSetMicrophoneEnabled(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
         return true;
     }
 
-    if (size < sizeof(CaptureMode)) {
+    if (size < sizeof(bool)) {
         return true;
     }
-    ScreenCaptureCaptureModeFuzzer testScreenCapture;
-    return testScreenCapture.FuzzScreenCaptureCaptureMode(data, size);
+    ScreenCaptureSetMicrophoneEnabledFuzzer testScreenCapture;
+    return testScreenCapture.FuzzScreenCaptureSetMicrophoneEnabled(data, size);
 }
 } // namespace OHOS
 
@@ -118,6 +109,6 @@ bool FuzzTestScreenCaptureCaptureMode(uint8_t *data, size_t size)
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
-    OHOS::FuzzTestScreenCaptureCaptureMode(data, size);
+    OHOS::FuzzTestScreenCaptureSetMicrophoneEnabled(data, size);
     return 0;
 }

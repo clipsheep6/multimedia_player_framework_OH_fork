@@ -19,12 +19,13 @@ module_output_path = "player_framework/screen_capture"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("ScreenCaptureCaptureModeFuzzTest") {
+ohos_fuzztest("ScreenCaptureNdkAcquireVideoBufferFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencapturecapturemode_fuzzer"
+  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencapturendkacquirevideobuffer_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
+    "$MEDIA_ROOT_DIR/interfaces/kits/c",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_ROOT_DIR/services/utils/include",
     "$MEDIA_ROOT_DIR/test/fuzztest/common/",
@@ -55,8 +56,8 @@ ohos_fuzztest("ScreenCaptureCaptureModeFuzzTest") {
   if (multimedia_player_framework_support_screen_capture) {
     sources = [
       "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
-      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_screen_capture.cpp",
-      "screencapturecapturemode_fuzzer.cpp",
+      "$MEDIA_ROOT_DIR/test/fuzztest/common/test_ndk_screen_capture.cpp",
+      "screencaptureacquirevideobuffer_ndk_fuzzer.cpp",
     ]
   }
   deps = [
@@ -65,6 +66,7 @@ ohos_fuzztest("ScreenCaptureCaptureModeFuzzTest") {
     "$MEDIA_PLAYER_GRAPHIC/rosen/modules/render_service_client:librender_service_client",
     "$MEDIA_PLAYER_GRAPHIC/utils:sync_fence",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_ROOT_DIR/interfaces/kits/c:native_avscreen_capture",
   ]
   external_deps = [
     "access_token:libaccesstoken_sdk",

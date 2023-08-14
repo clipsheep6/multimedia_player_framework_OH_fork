@@ -23,39 +23,17 @@ using namespace OHOS::Media;
 
 void TestScreenCaptureCallbackTest::OnError(ScreenCaptureErrorType errorType, int32_t errorCode)
 {
-    cout << "Error received, errorType:" << errorType << " errorCode:" << errorCode << endl;
+    cout << "Error received, errorType: " << errorType << " errorCode: " << errorCode << endl;
 }
 
 void TestScreenCaptureCallbackTest::OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type)
 {
-    if (isReady) {
-        std::shared_ptr<AudioBuffer> audioBuffer;
-        if (screenCapture->AcquireAudioBuffer(audioBuffer, type) == MSERR_OK) {
-            cout << "AcquireAudioBuffer, audioBufferLen:" << audioBuffer->length << ", timestampe:"
-                << audioBuffer->timestamp << ", audioSourceType:" << audioBuffer->sourcetype << endl;
-        }
-        screenCapture->ReleaseAudioBuffer(type);
-    } else {
-        cout << "AcquireAudioBuffer failed" << endl;
-    }
+    cout << "OnAudioBufferAvailable received: " << isReady << ", AudioCaptureSourceType: " << type << endl;
 }
 
 void TestScreenCaptureCallbackTest::OnVideoBufferAvailable(bool isReady)
 {
-    if (isReady) {
-        int32_t fence = 0;
-        int64_t timestamp = 0;
-        OHOS::Rect damage;
-        sptr<OHOS::SurfaceBuffer> surfacebuffer = screenCapture->AcquireVideoBuffer(fence, timestamp, damage);
-        if (surfacebuffer != nullptr) {
-            int32_t length = surfacebuffer->GetSize();
-            cout << "AcquireVideoBuffer, videoBufferLen:" << surfacebuffer->GetSize() << "timestamp:"
-                << timestamp << "size:"<< length << endl;
-            screenCapture->ReleaseVideoBuffer();
-        } else {
-            cout << "AcquireVideoBuffer failed" << endl;
-        }
-    }
+    cout << "OnVideoBufferAvailable received: " << isReady << endl;
 }
 
 TestScreenCapture::TestScreenCapture()
@@ -70,7 +48,6 @@ bool TestScreenCapture::CreateScreenCapture()
 {
     screenCapture = ScreenCaptureFactory::CreateScreenCapture();
     if (screenCapture == nullptr) {
-        screenCapture->Release();
         return false;
     }
     return true;
@@ -78,50 +55,82 @@ bool TestScreenCapture::CreateScreenCapture()
 
 int32_t TestScreenCapture::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack>& callback)
 {
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
     return screenCapture->SetScreenCaptureCallback(callback);
 }
 
 int32_t TestScreenCapture::Init(AVScreenCaptureConfig config)
 {
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
     return screenCapture->Init(config);
 }
 
 int32_t TestScreenCapture::StartScreenCapture()
 {
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
     return screenCapture->StartScreenCapture();
 }
 
 int32_t TestScreenCapture::StopScreenCapture()
 {
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
     return screenCapture->StopScreenCapture();
 }
 
 int32_t TestScreenCapture::Release()
 {
-    return screenCapture->Release();
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
+    screenCapture->Release();
+    screenCapture = nullptr;
+    return MSERR_OK;
 }
 
 int32_t TestScreenCapture::SetMicrophoneEnabled(bool isMicrophone)
 {
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
     return screenCapture->SetMicrophoneEnabled(isMicrophone);
 }
 
 int32_t TestScreenCapture::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type)
 {
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
     return screenCapture->AcquireAudioBuffer(audioBuffer, type);
 }
 
 sptr<OHOS::SurfaceBuffer> TestScreenCapture::AcquireVideoBuffer(int32_t &fence, int64_t &timestamp, Rect &damage)
 {
+    if (screenCapture == nullptr) {
+        cout << "error! screenCapture == nullptr!" << endl;
+    }
     return screenCapture->AcquireVideoBuffer(fence, timestamp, damage);
 }
 
 int32_t TestScreenCapture::ReleaseAudioBuffer(AudioCaptureSourceType type)
 {
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
     return screenCapture->ReleaseAudioBuffer(type);
 }
 
 int32_t TestScreenCapture::ReleaseVideoBuffer()
 {
+    if (screenCapture == nullptr) {
+        return MSERR_INVALID_OPERATION;
+    }
     return screenCapture->ReleaseVideoBuffer();
 }

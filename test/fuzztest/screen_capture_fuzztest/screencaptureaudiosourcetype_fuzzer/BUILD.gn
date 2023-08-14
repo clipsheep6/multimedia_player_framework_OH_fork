@@ -19,9 +19,9 @@ module_output_path = "player_framework/screen_capture"
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ##############################fuzztest##########################################
-ohos_fuzztest("ScreenCaptureCaptureModeFuzzTest") {
+ohos_fuzztest("ScreenCaptureAudioSourceTypeFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencapturecapturemode_fuzzer"
+  fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencaptureaudiosourcetype_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
 
   include_dirs = [
@@ -56,7 +56,7 @@ ohos_fuzztest("ScreenCaptureCaptureModeFuzzTest") {
     sources = [
       "$MEDIA_ROOT_DIR/test/fuzztest/common/aw_common.cpp",
       "$MEDIA_ROOT_DIR/test/fuzztest/common/test_screen_capture.cpp",
-      "screencapturecapturemode_fuzzer.cpp",
+      "screencaptureaudiosourcetype_fuzzer.cpp",
     ]
   }
   deps = [
