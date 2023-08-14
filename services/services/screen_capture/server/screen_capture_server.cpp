@@ -420,7 +420,7 @@ int32_t ScreenCaptureServer::StartAudioInnerCapture()
             std::lock_guard<std::mutex> cbLock(cbMutex_);
             screenCaptureCb_->OnAudioBufferAvailable(true, audioCurrentInnerType_);
         }
-        bufferCond_.notify_all();
+        bufferInnerCond_.notify_all();
     }
     return MSERR_OK;
 }
@@ -478,7 +478,7 @@ int32_t ScreenCaptureServer::StartAudioCapture()
 
 int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type)
 {
-    if (type == MIC) {
+    if ((type == MIC) || (type == SOURCE_DEFAULT)) {
         using namespace std::chrono_literals;
         std::unique_lock<std::mutex> alock(audioMutex_);
         if (availableAudioBuffers_.empty()) {
@@ -495,7 +495,7 @@ int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
         using namespace std::chrono_literals;
         std::unique_lock<std::mutex> alock(audioInnerMutex_);
         if (availableInnerAudioBuffers_.empty()) {
-            if (bufferCond_.wait_for(alock, 200ms) == std::cv_status::timeout) {
+            if (bufferInnerCond_.wait_for(alock, 200ms) == std::cv_status::timeout) {
                 MEDIA_LOGE("AcquireAudioBuffer timeout return!");
                 return MSERR_UNKNOWN;
             }
@@ -599,8 +599,10 @@ int32_t ScreenCaptureServer::StopVideoCapture()
     }
 
     if ((screenId_ < 0) || (consumer_ == nullptr) || !isConsumerStart_) {
-        MEDIA_LOGI("audio and video all start failed");
+        MEDIA_LOGI("video start failed, stop");
         stopVideoSuccess = MSERR_INVALID_OPERATION;
+        surfaceCb_ = nullptr;
+        return stopVideoSuccess;
     }
 
     if (screenId_ != SCREEN_ID_INVALID) {
