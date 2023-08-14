@@ -116,12 +116,12 @@ PlayBinCtrlerBase::PlayBinCtrlerBase(const PlayBinCreateParam &createParam)
 PlayBinCtrlerBase::~PlayBinCtrlerBase()
 {
     MEDIA_LOGD("enter dtor, instance: 0x%{public}06" PRIXPTR "", FAKE_POINTER(this));
+    if (audioSeekThread_.joinable()) {
+        audioSeekThread_.join();
+    }
     if (Reset() == MSERR_OK) {
         sinkProvider_ = nullptr;
         notifier_ = nullptr;
-    }
-    if (audioSeekThread_.joinable()) {
-        audioSeekThread_.join();
     }
 }
 
@@ -682,10 +682,14 @@ int32_t PlayBinCtrlerBase::SeekInternal(int64_t timeUs, int32_t seekOption)
         gboolean ret = gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
         CHECK_AND_RETURN_RET_LOG(ret, MSERR_SEEK_FAILED, "seek failed");
     } else {
-        audioSeekThread_ = std::thread([](auto playbin_, auto event) {
+        if (audioSeekThread_.joinable()) {
+            audioSeekThread_.join();
+        }
+        audioSeekThread_ = std::thread([this, event]() {
+            pthread_setname_np(pthread_self(), "AudioAsyncSeek");
             MEDIA_LOGI("audio start async seek");
             (void)gst_element_send_event(GST_ELEMENT_CAST(playbin_), event);
-        }, playbin_, event);
+        });
         audioSeekThread_.detach();
     }
 
