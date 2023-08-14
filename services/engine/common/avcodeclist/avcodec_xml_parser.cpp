@@ -208,7 +208,6 @@ bool AVCodecXmlParser::TransStrAsRange(const std::string &str, Range &range)
     CHECK_AND_RETURN_RET_LOG(StrToInt(tail, range.minVal) == true, false,
         "call StrToInt func false, input str is: %{public}s", tail.c_str());
     return true;
-
 }
 
 bool AVCodecXmlParser::TransStrAsSize(const std::string &str, ImgSize &size)
@@ -332,8 +331,8 @@ bool AVCodecXmlParser::SetCapabilityHashRangeData(std::unordered_map<std::string
         CHECK_AND_RETURN_RET_LOG(ret != false && resolutionFrameRateVector.size() == PAIR_LENGTH, false,
             "failed:can not trans %{public}s", iter->c_str());
         CHECK_AND_RETURN_RET_LOG(TransStrAsSize(resolutionFrameRateVector[0], resolution) &&
-              TransStrAsRange(resolutionFrameRateVector[1], frameRate), false,
-              "failed:can not trans %{public}s for resolution or frame rate", iter->c_str());
+            TransStrAsRange(resolutionFrameRateVector[1], frameRate), false,
+            "failed:can not trans %{public}s for resolution or frame rate", iter->c_str());
         resolutionFrameRateMap.insert(std::make_pair(resolution, frameRate));
     }
     dataMap.at(capabilityKey) = resolutionFrameRateMap;
