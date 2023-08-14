@@ -17,7 +17,6 @@
 #include <unordered_map>
 #include <sys/time.h>
 #include "media_log.h"
-#include "display_type.h"
 #include "surface_buffer.h"
 #include "buffer_type_meta.h"
 #include "gst_surface_allocator.h"
@@ -150,7 +149,7 @@ static void gst_producer_surface_pool_init(GstProducerSurfacePool *pool)
     pool->preAllocated = nullptr;
     pool->minBuffers = 0;
     pool->maxBuffers = 0;
-    pool->format = PixelFormat::PIXEL_FMT_BUTT;
+    pool->format = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_BUTT;
     pool->usage = 0;
     gst_video_info_init(&pool->info);
     gst_allocation_params_init(&pool->params);

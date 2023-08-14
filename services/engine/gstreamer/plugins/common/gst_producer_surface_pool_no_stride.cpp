@@ -17,7 +17,6 @@
 #include <unordered_map>
 #include <sys/time.h>
 #include "media_log.h"
-#include "display_type.h"
 #include "surface_buffer.h"
 #include "buffer_type_meta.h"
 #include "gst_surface_allocator.h"
@@ -27,11 +26,11 @@
 
 using namespace OHOS;
 namespace {
-    const std::unordered_map<GstVideoFormat, PixelFormat> FORMAT_MAPPING = {
-        { GST_VIDEO_FORMAT_RGBA, PIXEL_FMT_RGBA_8888 },
-        { GST_VIDEO_FORMAT_NV21, PIXEL_FMT_YCRCB_420_SP },
-        { GST_VIDEO_FORMAT_NV12, PIXEL_FMT_YCBCR_420_SP },
-        { GST_VIDEO_FORMAT_I420, PIXEL_FMT_YCBCR_420_P },
+    const std::unordered_map<GstVideoFormat, GraphicPixelFormat> FORMAT_MAPPING = {
+        { GST_VIDEO_FORMAT_RGBA, GRAPHIC_PIXEL_FMT_RGBA_8888 },
+        { GST_VIDEO_FORMAT_NV21, GRAPHIC_PIXEL_FMT_YCRCB_420_SP },
+        { GST_VIDEO_FORMAT_NV12, GRAPHIC_PIXEL_FMT_YCBCR_420_SP },
+        { GST_VIDEO_FORMAT_I420, GRAPHIC_PIXEL_FMT_YCBCR_420_P },
     };
     constexpr int32_t TIME_VAL_US = 1000000;
     constexpr guint32 DEFAULT_PROP_DYNAMIC_BUFFER_NUM = 10;
@@ -150,7 +149,7 @@ static void gst_producer_surface_pool_init(GstProducerSurfacePool *pool)
     pool->preAllocated = nullptr;
     pool->minBuffers = 0;
     pool->maxBuffers = 0;
-    pool->format = PixelFormat::PIXEL_FMT_BUTT;
+    pool->format = GraphicPixelFormat::GRAPHIC_PIXEL_FMT_BUTT;
     pool->usage = 0;
     gst_video_info_init(&pool->info);
     gst_allocation_params_init(&pool->params);
@@ -303,7 +302,7 @@ static const gchar **gst_producer_surface_pool_get_options(GstBufferPool *pool)
     return options;
 }
 
-static gboolean parse_caps_info(GstCaps *caps, GstVideoInfo *info, PixelFormat *format)
+static gboolean parse_caps_info(GstCaps *caps, GstVideoInfo *info, GraphicPixelFormat *format)
 {
     if (caps == nullptr) {
         GST_INFO("caps is nullptr");
@@ -352,7 +351,7 @@ static gboolean gst_producer_surface_pool_set_config(GstBufferPool *pool, GstStr
     g_return_val_if_fail(min_buffers <= max_buffers, FALSE);
 
     GstVideoInfo info;
-    PixelFormat format;
+    GraphicPixelFormat format;
     if (!parse_caps_info(caps, &info, &format)) {
         return FALSE;
     }
@@ -619,7 +618,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
     int32_t stride = buffer_handle->stride;
     GstVideoInfo *info = &spool->info;
 
-    if (buf->GetFormat() == PIXEL_FMT_RGBA_8888) {
+    if (buf->GetFormat() == GRAPHIC_PIXEL_FMT_RGBA_8888) {
         for (guint plane = 0; plane < info->finfo->n_planes; ++plane) {
             info->stride[plane] = stride;
             GST_DEBUG_OBJECT(spool, "new stride %d", stride);

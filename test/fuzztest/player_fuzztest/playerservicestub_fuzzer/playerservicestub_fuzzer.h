@@ -15,9 +15,9 @@
 
 #ifndef PLAYERSERVICESTUB_FUZZER
 #define PLAYERSERVICESTUB_FUZZER
-
+#include <stdint.h>
+#include <stdio.h>
 #define FUZZ_PROJECT_NAME "playerservicestub_fuzzer"
-#include "display_type.h"
 
 namespace OHOS {
 namespace Media {
