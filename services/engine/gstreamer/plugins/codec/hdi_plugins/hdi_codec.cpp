@@ -101,6 +101,7 @@ void HdiCodec::DeinitInner()
         MediaTrace trace("HdiCodec::Deinit");
         (void)HdiInit::GetInstance().FreeHandle(handle_, id_);
     }
+    CodecComponentTypeRelease(handle_);
     handle_ = nullptr;
     if (appData_) {
         delete appData_;
