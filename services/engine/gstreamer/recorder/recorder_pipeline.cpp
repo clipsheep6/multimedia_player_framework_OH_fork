@@ -54,16 +54,11 @@ void RecorderPipeline::SetExecuteInCmdQ(RecorderExecuteInCmdQ executeInCmdQ)
 
 int32_t RecorderPipeline::Init()
 {
-    if (desc_ == nullptr) {
-        MEDIA_LOGE("pipeline desc is nullptr");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(desc_ != nullptr, MSERR_INVALID_OPERATION, "pipeline desc is nullptr");
 
     gstPipeline_ = reinterpret_cast<GstPipeline *>(gst_pipeline_new("recorder-pipeline"));
-    if (gstPipeline_ == nullptr) {
-        MEDIA_LOGE("Create gst pipeline failed !");
-        return MSERR_NO_MEMORY;
-    }
+
+    CHECK_AND_RETURN_RET_LOG(gstPipeline_ != nullptr, MSERR_NO_MEMORY, "Create gst pipeline failed !");
 
     GstBus *bus = gst_pipeline_get_bus(gstPipeline_);
     CHECK_AND_RETURN_RET(bus != nullptr, MSERR_INVALID_OPERATION);
@@ -186,10 +181,8 @@ int32_t RecorderPipeline::GetParameter(int32_t sourceId, RecorderParam &recParam
     CHECK_AND_RETURN_RET(!errorState_.load(), MSERR_INVALID_STATE);
     CHECK_AND_RETURN_RET(desc_ != nullptr, MSERR_INVALID_STATE);
 
-    if (desc_->srcElems.find(sourceId) == desc_->srcElems.end()) {
-        MEDIA_LOGE("invalid sourceId %{public}d", sourceId);
-        return MSERR_INVALID_VAL;
-    }
+    CHECK_AND_RETURN_RET_LOG(desc_->srcElems.find(sourceId) != desc_->srcElems.end(), MSERR_INVALID_VAL,
+                             "invalid sourceId %{public}d", sourceId);
     return desc_->srcElems[sourceId]->GetParameter(recParam);
 }
 
@@ -234,10 +227,8 @@ void RecorderPipeline::DrainBuffer(bool isDrainAll)
     auto iter = desc_->allElems.begin();
     for (size_t index = 0; index < desc_->srcElems.size(); index++, iter = std::next(iter)) {
         ret = (*iter)->DrainAll(isDrainAll);
-        if (ret != MSERR_OK) {
-            MEDIA_LOGE("drain [%{public}d] failed for %{public}s", isDrainAll, (*iter)->GetName().c_str());
-            break;
-        }
+        CHECK_AND_BREAK_LOG(ret == MSERR_OK, "drain [%{public}d] failed for %{public}s",
+                            isDrainAll, (*iter)->GetName().c_str());
     }
 
     if (ret == MSERR_OK) {
@@ -256,10 +247,7 @@ bool RecorderPipeline::SyncWaitEOS()
         gstPipeCond_.wait(lock, [this] { return eosDone_ || errorState_.load(); });
     }
     
-    if (!eosDone_) {
-        MEDIA_LOGE("error happened, wait eos done failed !");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(eosDone_, false, "error happened, wait eos done failed !");
     eosDone_ = false;
     MEDIA_LOGI("EOS finished........................");
     return true;
@@ -282,15 +270,10 @@ int32_t RecorderPipeline::DoElemAction(const ElemAction &action, bool needAllSuc
     bool allSucc = true;
     for (auto &elem : desc_->allElems) {
         int32_t ret = action(*elem);
-        if (ret == MSERR_OK) {
-            continue;
-        }
+        CHECK_AND_CONTINUE(ret != MSERR_OK);
         allSucc = false;
         // if one element execute action fail, exit immediately.
-        if (needAllSucc) {
-            MEDIA_LOGE("element %{public}s execute action failed", elem->GetName().c_str());
-            return ret;
-        }
+        CHECK_AND_RETURN_RET_LOG(!needAllSucc, ret, "element %{public}s execute action failed", elem->GetName().c_str())
     }
 
     return allSucc ? MSERR_OK : MSERR_INVALID_OPERATION;
@@ -343,9 +326,7 @@ void RecorderPipeline::ProcessInfoMessage(const RecorderMessage &msg)
 void RecorderPipeline::ProcessErrorMessage(const RecorderMessage &msg)
 {
     // ignore the error msg
-    if (errorState_.load() || (errorSources_.count(msg.sourceId) != 0)) {
-        return;
-    }
+    CHECK_AND_RETURN((!errorState_.load()) && (errorSources_.count(msg.sourceId) == 0));
 
     if (CheckStopForError(msg)) {
         StopForError(msg);
