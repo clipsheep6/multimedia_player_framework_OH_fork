@@ -302,6 +302,7 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
         MEDIA_LOGD("Stop End");
     }
 
+    trackParse_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(GetCurrState() == stoppedState_, MSERR_INVALID_STATE, "Stop failed");
     return MSERR_OK;
 }
@@ -480,11 +481,6 @@ void PlayBinCtrlerBase::SetElemSetupListener(ElemSetupListener listener)
     std::unique_lock<std::mutex> lock(mutex_);
     std::unique_lock<std::mutex> lk(listenerMutex_);
     elemSetupListener_ = listener;
-    
-    if (trackParse_ == nullptr) {
-        trackParse_ = PlayerTrackParse::Create();
-    }
-    CHECK_AND_RETURN_LOG(trackParse_ != nullptr, "creat track parse failed")
 }
 
 void PlayBinCtrlerBase::SetElemUnSetupListener(ElemSetupListener listener)
@@ -646,7 +642,7 @@ int32_t PlayBinCtrlerBase::PrepareAsyncInternal()
     }
 
     CHECK_AND_RETURN_RET_LOG((!uri_.empty() || appsrcWrap_), MSERR_INVALID_OPERATION, "Set uri firsty!");
-
+    trackParse_ = PlayerTrackParse::Create();
     int32_t ret = EnterInitializedState();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
