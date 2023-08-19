@@ -205,7 +205,7 @@ bool AVCodecXmlParser::TransStrAsRange(const std::string &str, Range &range)
     std::string tail = str.substr(pos + 1);
     CHECK_AND_RETURN_RET_LOG(StrToInt(head, range.minVal) == true, false,
         "call StrToInt func false, input str is: %{public}s", head.c_str());
-    CHECK_AND_RETURN_RET_LOG(StrToInt(tail, range.minVal) == true, false,
+    CHECK_AND_RETURN_RET_LOG(StrToInt(tail, range.maxVal) == true, false,
         "call StrToInt func false, input str is: %{public}s", tail.c_str());
     return true;
 }
