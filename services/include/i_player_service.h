@@ -93,24 +93,24 @@ public:
     virtual int32_t Play() = 0;
 
     /**
-     * @brief Prepares the playback environment and buffers media data.
+     * @brief Prepares the playback environment and buffers media data asynchronous.
      *
      * This function must be called after {@link SetSource}.
      *
-     * @return Returns {@link MSERR_OK} if the playback is prepared; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if the playback is {@link Prepare} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
     virtual int32_t Prepare() = 0;
 
     /**
-     * @brief Prepare the playback environment and buffers media data asynchronous.
+     * @brief Prepares the playback environment and buffers media data asynchronous.
      *
      * This function must be called after {@link SetSource}.
      *
-     * @return Returns {@link MSERR_OK} if the playback is preparing; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link PrepareAsync} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -119,8 +119,8 @@ public:
     /**
      * @brief Pauses playback.
      *
-     * @return Returns {@link MSERR_OK} if the playback is paused; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Pause} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -129,8 +129,8 @@ public:
     /**
      * @brief Stop playback.
      *
-     * @return Returns {@link MSERR_OK} if the playback is stopped; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Stop} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -142,8 +142,8 @@ public:
      * After the function is called, add a playback source by calling {@link SetSource},
      * call {@link Play} to start playback again after {@link Prepare} is called.
      *
-     * @return Returns {@link MSERR_OK} if the playback is reset; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Reset} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */
@@ -152,8 +152,8 @@ public:
     /**
      * @brief Releases player resources async
      *
-     * @return Returns {@link MSERR_OK} if the playback is released; returns an error code defined
-     * in {@link media_errors.h} otherwise.
+     * @return Returns {@link MSERR_OK} if {@link Release} is successfully added to the task queue;
+     * returns an error code defined in {@link media_errors.h} otherwise.
      * @since 1.0
      * @version 1.0
      */

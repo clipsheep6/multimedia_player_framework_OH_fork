@@ -52,10 +52,8 @@ GstPad *RecorderPipelineLinkHelper::GetGstPad(
         pad = gst_element_request_pad_simple(elem->gstElem_, padName.c_str());
     }
 
-    if (pad == nullptr)  {
-        MEDIA_LOGE("Get pad %{public}s from element %{public}s failed !", padName.c_str(), elem->GetName().c_str());
-        return nullptr;
-    }
+    CHECK_AND_RETURN_RET_LOG(pad != nullptr, nullptr,
+        "Get pad %{public}s from element %{public}s failed !", padName.c_str(), elem->GetName().c_str());
 
     if (!isStaticPad) {
         if (requestedPads_.count(elem->gstElem_) == 0) {
@@ -96,22 +94,17 @@ int32_t RecorderPipelineLinkHelper::ExecuteOneLink(
     CHECK_AND_RETURN_RET(sinkPad != nullptr, MSERR_INVALID_OPERATION);
 
     GstPadLinkReturn ret = gst_pad_link(srcPad, sinkPad);
-    if (ret != GST_PAD_LINK_OK) {
-        MEDIA_LOGE("link elem(%{public}s)'s pad %{public}s to elem(%{public}s)'s pad %{public}s failed !",
-                   srcElem->GetName().c_str(), linkDesc.srcPad.c_str(),
-                   linkDesc.dstElem->GetName().c_str(), linkDesc.sinkPad.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == GST_PAD_LINK_OK, MSERR_INVALID_OPERATION,
+                             "link elem(%{public}s)'s pad %{public}s to elem(%{public}s)'s pad %{public}s failed !",
+                             srcElem->GetName().c_str(), linkDesc.srcPad.c_str(),
+                             linkDesc.dstElem->GetName().c_str(), linkDesc.sinkPad.c_str());
 
     return MSERR_OK;
 }
 
 int32_t RecorderPipelineLinkHelper::ExecuteLink()
 {
-    if (desc_ == nullptr) {
-        MEDIA_LOGE("pipeline desc is nullptr");
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(desc_ != nullptr, MSERR_INVALID_OPERATION, "pipeline desc is nullptr");
 
     std::set<std::shared_ptr<RecorderElement>> uniqueElems;
     for (auto &srcElemLinks : desc_->allLinkDescs) {

@@ -20,6 +20,8 @@
 #include "media_errors.h"
 #include "buffer_type_meta.h"
 #include "avsharedmemorybase.h"
+#include "scope_guard.h"
+using namespace OHOS;
 
 #define GST_BUFFER_POOL_LOCK(pool) (g_mutex_lock(&pool->lock))
 #define GST_BUFFER_POOL_UNLOCK(pool) (g_mutex_unlock(&pool->lock))
@@ -134,18 +136,10 @@ gboolean gst_shmem_pool_set_avshmempool(GstShMemPool *pool,
     g_return_val_if_fail(pool != nullptr && avshmempool != nullptr, FALSE);
 
     GST_BUFFER_POOL_LOCK(pool);
+    ON_SCOPE_EXIT(0) { GST_BUFFER_POOL_UNLOCK(pool); };
+    g_return_val_if_fail(!pool->started, FALSE);
 
-    if (pool->started) {
-        GST_ERROR("started already, reject to set avshmempool");
-        GST_BUFFER_POOL_UNLOCK(pool);
-        return FALSE;
-    }
-
-    if (pool->avshmempool != nullptr) {
-        GST_ERROR("avshmempool has already been set");
-        GST_BUFFER_POOL_UNLOCK(pool);
-        return FALSE;
-    }
+    g_return_val_if_fail(pool->avshmempool == nullptr, FALSE);
     pool->avshmempool = avshmempool;
 
     if (pool->debugName != nullptr) {
@@ -153,7 +147,6 @@ gboolean gst_shmem_pool_set_avshmempool(GstShMemPool *pool,
         pool->debugName = g_strdup(avshmempool->GetName().c_str());
     }
 
-    GST_BUFFER_POOL_UNLOCK(pool);
     return TRUE;
 }
 
@@ -186,10 +179,8 @@ static gboolean gst_shmem_pool_set_config(GstBufferPool *pool, GstStructure *con
     guint minBuffers;
     guint maxBuffers;
     static constexpr guint defaultMaxBuffers = 10;
-    if (!gst_buffer_pool_config_get_params(config, &caps, &size, &minBuffers, &maxBuffers)) {
-        GST_ERROR("wrong config");
-        return FALSE;
-    }
+    g_return_val_if_fail(gst_buffer_pool_config_get_params(config, &caps, &size, &minBuffers, &maxBuffers),
+        FALSE);
     g_return_val_if_fail(minBuffers <= maxBuffers, FALSE);
 
     GST_BUFFER_POOL_LOCK(spool);
@@ -202,15 +193,8 @@ static gboolean gst_shmem_pool_set_config(GstBufferPool *pool, GstStructure *con
     GstAllocator *allocator = nullptr;
     GstAllocationParams params;
     (void)gst_buffer_pool_config_get_allocator(config, &allocator, &params);
-    if (allocator == nullptr) {
-        GST_WARNING_OBJECT(pool, "allocator is null");
-    }
-    if (!(allocator != nullptr && GST_IS_SHMEM_ALLOCATOR(allocator))) {
-        GST_BUFFER_POOL_UNLOCK(spool);
-        GST_WARNING_OBJECT(pool, "no valid allocator in pool");
-        return FALSE;
-    }
-
+    ON_SCOPE_EXIT(0) { GST_BUFFER_POOL_UNLOCK(spool); };
+    g_return_val_if_fail(allocator != nullptr && GST_IS_SHMEM_ALLOCATOR(allocator), FALSE);
     GST_INFO("set config, size: %u, min_bufs: %u, max_bufs: %u", size, minBuffers, maxBuffers);
 
     if (spool->allocator != nullptr) {
@@ -218,7 +202,7 @@ static gboolean gst_shmem_pool_set_config(GstBufferPool *pool, GstStructure *con
     }
     spool->allocator = GST_SHMEM_ALLOCATOR_CAST(gst_object_ref(allocator));
     spool->params = params;
-
+    CANCEL_SCOPE_EXIT_GUARD(0);
     GST_BUFFER_POOL_UNLOCK(spool);
 
     // modify the minBuffers to zero, we preallocate buffer by the avshmempool's memory available notifier.
@@ -236,11 +220,8 @@ static gboolean gst_shmem_pool_start(GstBufferPool *pool)
     GST_DEBUG("pool start");
 
     GST_BUFFER_POOL_LOCK(spool);
-    if (spool->avshmempool == nullptr) {
-        GST_BUFFER_POOL_UNLOCK(spool);
-        GST_ERROR("not set avshmempool");
-        return FALSE;
-    }
+    ON_SCOPE_EXIT(0) { GST_BUFFER_POOL_UNLOCK(spool); };
+    g_return_val_if_fail(spool->avshmempool != nullptr, FALSE);
 
     // clear the configuration carried in the avshmempool
     spool->avshmempool->Reset();
@@ -258,25 +239,16 @@ static gboolean gst_shmem_pool_start(GstBufferPool *pool)
     };
 
     int32_t ret = spool->avshmempool->Init(option);
-    if (ret != OHOS::Media::MSERR_OK) {
-        GST_BUFFER_POOL_UNLOCK(spool);
-        GST_ERROR("init avshmempool failed, ret = %d", ret);
-        return FALSE;
-    }
+    g_return_val_if_fail(ret == OHOS::Media::MSERR_OK, FALSE);
 
     // Always force to non-blocking way to alloc shared memory if we use the gstbuferpool's memory manage.
     spool->avshmempool->SetNonBlocking(true);
     gst_shmem_allocator_set_pool(spool->allocator, spool->avshmempool);
 
     gboolean rc = GST_BUFFER_POOL_CLASS(parent_class)->start(pool);
-    if (!rc) {
-        GST_BUFFER_POOL_UNLOCK(spool);
-        GST_ERROR("parent class start failed");
-        return rc;
-    }
+    g_return_val_if_fail(rc, rc);
 
     spool->started = TRUE;
-    GST_BUFFER_POOL_UNLOCK(spool);
     return TRUE;
 }
 
@@ -315,15 +287,10 @@ static GstFlowReturn add_meta_to_buffer(GstShMemPool *spool, GstBuffer *buffer, 
     }
 
     auto mem = std::static_pointer_cast<OHOS::Media::AVSharedMemoryBase>(memory->mem);
-    if (mem == nullptr) {
-        GST_ERROR("invalid pointer");
-        return GST_FLOW_ERROR;
-    }
+    g_return_val_if_fail(mem != nullptr, GST_FLOW_ERROR);
 
     AVShmemFlags flag = FLAGS_READ_WRITE;
-    if (mem->GetFlags() == OHOS::Media::AVSharedMemory::FLAGS_READ_ONLY) {
-        flag = FLAGS_READ_ONLY;
-    }
+    flag = mem->GetFlags() == OHOS::Media::AVSharedMemory::FLAGS_READ_ONLY ? FLAGS_READ_ONLY : flag;
 
     GstBufferFdConfig config = { sizeof(mem->GetFd()), 0, mem->GetSize(), mem->GetSize(), flag, 0 };
     gst_buffer_add_buffer_fd_meta(buffer, mem->GetFd(), config);
@@ -342,10 +309,7 @@ static GstFlowReturn gst_shmem_pool_alloc_buffer(GstBufferPool *pool,
 
     GstShMemMemory *memory = reinterpret_cast<GstShMemMemory *>(
         gst_allocator_alloc(GST_ALLOCATOR_CAST(spool->allocator), spool->size, &spool->params));
-    if (memory == nullptr) {
-        GST_DEBUG("alloc memory failed");
-        return GST_FLOW_EOS;
-    }
+    g_return_val_if_fail(memory != nullptr, GST_FLOW_EOS);
 
     *buffer = gst_buffer_new();
     if (*buffer == nullptr) {
@@ -417,9 +381,7 @@ static void gst_shmem_pool_memory_available(GstBufferPool *pool)
 
     GST_DEBUG("memory available, fake acquire ret: %s", gst_flow_get_name(ret));
     // Get buffer maybe fail f there ary any others getting buffer concurringly.
-    if (ret != GST_FLOW_OK) {
-        return;
-    }
+    g_return_if_fail(ret == GST_FLOW_OK);
 
     gst_shmem_pool_release_buffer(pool, buffer);
 }

@@ -113,8 +113,8 @@ AVScreenCaptureConfig OH_AVScreenCapture_Convert(OH_AVScreenCaptureConfig config
         static_cast<AudioCodecFormat>(config.audioInfo.audioEncInfo.audioCodecformat);
     config_.videoInfo.videoCapInfo.displayId = config.videoInfo.videoCapInfo.displayId;
     int32_t *taskIds = config.videoInfo.videoCapInfo.missionIDs;
-    int size = config.videoInfo.videoCapInfo.missionIDsLen;
-    while (size) {
+    int32_t size = config.videoInfo.videoCapInfo.missionIDsLen;
+    while (size > 0) {
         if (taskIds == nullptr) {
             break;
         }

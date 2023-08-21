@@ -66,8 +66,6 @@ static const std::unordered_map<int32_t, int32_t> SEEK_OPTION_TO_GST_SEEK_FLAGS 
     }
 };
 
-using PlayBinCtrlerWrapper = ThizWrapper<PlayBinCtrlerBase>;
-
 void PlayBinCtrlerBase::ElementSetup(const GstElement *playbin, GstElement *elem, gpointer userData)
 {
     (void)playbin;
@@ -304,6 +302,7 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
         MEDIA_LOGD("Stop End");
     }
 
+    trackParse_ = nullptr;
     CHECK_AND_RETURN_RET_LOG(GetCurrState() == stoppedState_, MSERR_INVALID_STATE, "Stop failed");
     return MSERR_OK;
 }
@@ -482,11 +481,6 @@ void PlayBinCtrlerBase::SetElemSetupListener(ElemSetupListener listener)
     std::unique_lock<std::mutex> lock(mutex_);
     std::unique_lock<std::mutex> lk(listenerMutex_);
     elemSetupListener_ = listener;
-    
-    if (trackParse_ == nullptr) {
-        trackParse_ = PlayerTrackParse::Create();
-    }
-    CHECK_AND_RETURN_LOG(trackParse_ != nullptr, "creat track parse failed")
 }
 
 void PlayBinCtrlerBase::SetElemUnSetupListener(ElemSetupListener listener)
@@ -528,7 +522,7 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         gulong id = g_signal_connect_data(playbin_, "bitrate-parse-complete",
             G_CALLBACK(&PlayBinCtrlerBase::OnBitRateParseCompleteCb), wrapper,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-        AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+        CheckAndAddSignalIds(id, wrapper, GST_ELEMENT_CAST(playbin_));
 
         PlayBinCtrlerWrapper *wrap = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
         CHECK_AND_RETURN_LOG(wrap != nullptr, "can not create this wrap");
@@ -536,7 +530,7 @@ void PlayBinCtrlerBase::DoInitializeForHttp()
         id = g_signal_connect_data(videoSink_, "bandwidth-change",
             G_CALLBACK(&PlayBinCtrlerBase::OnSelectBitrateDoneCb), wrap,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-        AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+        CheckAndAddSignalIds(id, wrap, videoSink_);
     }
 }
 
@@ -648,7 +642,7 @@ int32_t PlayBinCtrlerBase::PrepareAsyncInternal()
     }
 
     CHECK_AND_RETURN_RET_LOG((!uri_.empty() || appsrcWrap_), MSERR_INVALID_OPERATION, "Set uri firsty!");
-
+    trackParse_ = PlayerTrackParse::Create();
     int32_t ret = EnterInitializedState();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
@@ -704,7 +698,7 @@ void PlayBinCtrlerBase::SetupInterruptEventCb()
     gulong id = g_signal_connect_data(audioSink_, "interrupt-event",
         G_CALLBACK(&PlayBinCtrlerBase::OnInterruptEventCb), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
+    CheckAndAddSignalIds(id, wrapper, audioSink_);
 }
 
 void PlayBinCtrlerBase::SetupAudioSegmentEventCb()
@@ -715,7 +709,7 @@ void PlayBinCtrlerBase::SetupAudioSegmentEventCb()
     gulong id = g_signal_connect_data(audioSink_, "segment-updated",
         G_CALLBACK(&PlayBinCtrlerBase::OnAudioSegmentEventCb), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(audioSink_), id);
+    CheckAndAddSignalIds(id, wrapper, audioSink_);
 }
 
 void PlayBinCtrlerBase::SetupCustomElement()
@@ -758,7 +752,7 @@ void PlayBinCtrlerBase::SetupSourceSetupSignal()
     gulong id = g_signal_connect_data(playbin_, "source-setup",
         G_CALLBACK(&PlayBinCtrlerBase::SourceSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
         static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+    CheckAndAddSignalIds(id, wrapper, GST_ELEMENT_CAST(playbin_));
 }
 
 int32_t PlayBinCtrlerBase::SetupSignalMessage()
@@ -771,13 +765,13 @@ int32_t PlayBinCtrlerBase::SetupSignalMessage()
     gulong id = g_signal_connect_data(playbin_, "element-setup",
         G_CALLBACK(&PlayBinCtrlerBase::ElementSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
         static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+    CheckAndAddSignalIds(id, wrapper, GST_ELEMENT_CAST(playbin_));
 
     PlayBinCtrlerWrapper *wrap = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
     CHECK_AND_RETURN_RET_LOG(wrap != nullptr, MSERR_NO_MEMORY, "can not create this wrapper");
     id = g_signal_connect_data(playbin_, "audio-changed", G_CALLBACK(&PlayBinCtrlerBase::AudioChanged),
         wrap, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+    CheckAndAddSignalIds(id, wrap, GST_ELEMENT_CAST(playbin_));
 
     GstBus *bus = gst_pipeline_get_bus(playbin_);
     CHECK_AND_RETURN_RET_LOG(bus != nullptr, MSERR_UNKNOWN, "can not get bus");
@@ -808,7 +802,7 @@ int32_t PlayBinCtrlerBase::SetupElementUnSetupSignal()
     gulong id = g_signal_connect_data(playbin_, "deep-element-removed",
         G_CALLBACK(&PlayBinCtrlerBase::ElementUnSetup), wrapper, (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory,
         static_cast<GConnectFlags>(0));
-    AddSignalIds(GST_ELEMENT_CAST(playbin_), id);
+    CheckAndAddSignalIds(id, wrapper, GST_ELEMENT_CAST(playbin_));
 
     return MSERR_OK;
 }
@@ -1222,7 +1216,7 @@ void PlayBinCtrlerBase::OnAdaptiveElementSetup(GstElement &elem)
     CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
     gulong id = g_signal_connect_data(&elem, "is-live-scene", G_CALLBACK(&PlayBinCtrlerBase::OnIsLiveStream), wrapper,
         (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-    AddSignalIds(&elem, id);
+    CheckAndAddSignalIds(id, wrapper, &elem);
 }
 
 void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
@@ -1245,7 +1239,7 @@ void PlayBinCtrlerBase::OnElementSetup(GstElement &elem)
         gulong id = g_signal_connect_data(&elem, "autoplug-sort",
             G_CALLBACK(&PlayBinCtrlerBase::AutoPlugSort), wrapper,
             (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
-        AddSignalIds(&elem, id);
+        CheckAndAddSignalIds(id, wrapper, &elem);
     }
     
     if (trackParse_ != nullptr) {
@@ -1531,6 +1525,16 @@ void PlayBinCtrlerBase::ReportMessage(const PlayBinMessage &msg)
 
     if (msg.type == PlayBinMsgType::PLAYBIN_MSG_EOS) {
         ProcessEndOfStream();
+    }
+}
+
+void PlayBinCtrlerBase::CheckAndAddSignalIds(gulong id, PlayBinCtrlerWrapper *wrapper, GstElement *elem)
+{
+    if (id == 0) {
+        delete wrapper;
+        MEDIA_LOGW("add signal failed");
+    } else {
+        AddSignalIds(elem, id);
     }
 }
 } // namespace Media

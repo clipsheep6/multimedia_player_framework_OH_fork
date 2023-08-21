@@ -36,25 +36,46 @@ ScreenCaptureCaptureModeFuzzer::~ScreenCaptureCaptureModeFuzzer()
 {
 }
 
-template<class T>
-size_t GetObject(T &object, const uint8_t *data, size_t size)
+void SetConfig(AVScreenCaptureConfig &config)
 {
-    size_t objectSize = sizeof(object);
-    if (objectSize > size) {
-        return 0;
-    }
-    return memcpy_s(&object, objectSize, data, objectSize) == EOK ? objectSize : 0;
+    AudioCaptureInfo miccapinfo = {
+        .audioSampleRate = 48000,
+        .audioChannels = 2,
+        .audioSource = SOURCE_DEFAULT
+    };
+
+    VideoCaptureInfo videocapinfo = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 1280,
+        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
+    };
+
+    AudioInfo audioinfo = {
+        .micCapInfo = miccapinfo,
+    };
+
+    VideoInfo videoinfo = {
+        .videoCapInfo = videocapinfo
+    };
+
+    config = {
+        .captureMode = CAPTURE_HOME_SCREEN,
+        .dataType = ORIGINAL_STREAM,
+        .audioInfo = audioinfo,
+        .videoInfo = videoinfo,
+    };
 }
 
 bool ScreenCaptureCaptureModeFuzzer::FuzzScreenCaptureCaptureMode(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < sizeof(int32_t)) {
+    if (data == nullptr || size < sizeof(CaptureMode)) {
         return false;
     }
     bool retFlags = TestScreenCapture::CreateScreenCapture();
     RETURN_IF(retFlags, false);
 
     AVScreenCaptureConfig config;
+    SetConfig(config);
     constexpr int32_t captureModeList = 4;
     constexpr uint32_t recorderTime = 3;
     CaptureMode captureMode_[captureModeList] {
@@ -67,7 +88,7 @@ bool ScreenCaptureCaptureModeFuzzer::FuzzScreenCaptureCaptureMode(uint8_t *data,
     config.captureMode = captureMode_[capturemodesubscript];
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
-        = std::make_shared<TestScreenCaptureCallbackTest>(screenCapture);
+        = std::make_shared<TestScreenCaptureCallbackTest>();
     TestScreenCapture::SetMicrophoneEnabled(true);
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
@@ -85,7 +106,7 @@ bool FuzzTestScreenCaptureCaptureMode(uint8_t *data, size_t size)
         return true;
     }
 
-    if (size < sizeof(int32_t)) {
+    if (size < sizeof(CaptureMode)) {
         return true;
     }
     ScreenCaptureCaptureModeFuzzer testScreenCapture;

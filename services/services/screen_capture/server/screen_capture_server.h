@@ -148,6 +148,7 @@ private:
     std::mutex audioInnerMutex_;
     std::mutex cbMutex_;
     std::condition_variable bufferCond_;
+    std::condition_variable bufferInnerCond_;
     /* use Mic AudioCaptureHandler */
     std::shared_ptr<AudioCapturer> audioMicCapturer_ = nullptr;
     std::shared_ptr<AudioCapturerCallbackImpl> cb1_ = nullptr;

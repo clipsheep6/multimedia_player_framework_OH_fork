@@ -90,14 +90,34 @@ static gboolean gst_vdec_h265_parser_codec_data(GstVdecH265 *self, GstMapInfo &s
 static gboolean gst_vdec_h265_parser_nalu(GstVdecH265 *self, const GstMapInfo &src_info,
     GstMapInfo &dts_info, guint &copy_len)
 {
-    dts_info.data[0] = 0;
-    dts_info.data[1] = 0;
-    dts_info.data[2] = 0;
-    dts_info.data[3] = 1;
-    auto ret = memcpy_s(dts_info.data + ANEEXB_HEAD, dts_info.size - ANEEXB_HEAD,
-        src_info.data + self->hvcc_nal_len, src_info.size - self->hvcc_nal_len);
-    g_return_val_if_fail(ret == EOK, FALSE);
-    copy_len = src_info.size - static_cast<guint>(self->hvcc_nal_len) + ANEEXB_HEAD;
+    gsize read_size = 0;
+    gsize dts_info_size = dts_info.size;
+    guint8 *p_src_data = src_info.data;
+    guint8 *p_dts_data = dts_info.data;
+    copy_len = 0;
+
+    while (read_size < src_info.size) {
+        /* ANEEXB_HEAD */
+        p_dts_data[0] = 0;
+        p_dts_data[1] = 0;
+        p_dts_data[2] = 0;
+        p_dts_data[3] = 1;
+
+        guint byte_count = 0;
+        gint hvcc_nal_size = self->hvcc_nal_len;
+        for (gint i = 0; i < hvcc_nal_size; ++i) {
+            // two hexadecimal code in 1 byte(8 bit)
+            byte_count = (byte_count << 8) + p_src_data[i];
+        }
+        read_size += hvcc_nal_size + byte_count;
+        copy_len += ANEEXB_HEAD;
+        auto ret = memcpy_s(p_dts_data + ANEEXB_HEAD, dts_info_size - copy_len,
+            p_src_data + hvcc_nal_size, byte_count);
+        g_return_val_if_fail(ret == EOK, FALSE);
+        p_src_data += byte_count + hvcc_nal_size;
+        p_dts_data += byte_count + ANEEXB_HEAD;
+        copy_len += byte_count;
+    }
     return TRUE;
 }
 

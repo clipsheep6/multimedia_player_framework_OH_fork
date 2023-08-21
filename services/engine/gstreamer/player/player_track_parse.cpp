@@ -57,12 +57,12 @@ PlayerTrackParse::PlayerTrackParse()
 
 PlayerTrackParse::~PlayerTrackParse()
 {
-    Stop();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 void PlayerTrackParse::OnElementSetup(GstElement &elem)
 {
+    CHECK_AND_RETURN_LOG(isStopping_.load() == false, "playbin is stopping");
     const gchar *metadata = gst_element_get_metadata(&elem, GST_ELEMENT_METADATA_KLASS);
     CHECK_AND_RETURN_LOG(metadata != nullptr, "gst_element_get_metadata return nullptr");
     std::string elementName(GST_ELEMENT_NAME(&elem));
@@ -616,6 +616,7 @@ void PlayerTrackParse::SetUpDemuxerElementCb(GstElement &elem)
 void PlayerTrackParse::Stop()
 {
     MEDIA_LOGD("Stop");
+    isStopping_ = true;
     {
         std::unique_lock<std::mutex> lock(trackInfoMutex_);
         videoTracks_.clear();

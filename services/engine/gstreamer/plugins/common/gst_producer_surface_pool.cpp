@@ -24,6 +24,7 @@
 #include "gst/video/gstvideometa.h"
 #include "media_dfx.h"
 #include "securec.h"
+#include "scope_guard.h"
 
 using namespace OHOS;
 namespace {
@@ -70,8 +71,6 @@ static void gst_producer_surface_pool_release_buffer(GstBufferPool *pool, GstBuf
 static void gst_producer_surface_pool_flush_start(GstBufferPool *pool);
 static void gst_producer_surface_pool_set_property(GObject *object, guint prop_id,
     const GValue *value, GParamSpec *pspec);
-static void gst_producer_surface_pool_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec);
-
 static void gst_producer_surface_pool_reset_callback(GstProducerSurfacePool *spool)
 {
     if (spool->onDestroy) {
@@ -87,10 +86,9 @@ static void clear_preallocated_buffer(GstProducerSurfacePool *spool)
     g_return_if_fail(spool != nullptr);
     for (GList *node = g_list_first(spool->preAllocated); node != nullptr; node = g_list_next(node)) {
         GstBuffer *buffer = GST_BUFFER_CAST(node->data);
-        if (buffer == nullptr) {
-            continue;
+        if (buffer != nullptr) {
+            gst_producer_surface_pool_free_buffer(GST_BUFFER_POOL_CAST(spool), buffer);
         }
-        gst_producer_surface_pool_free_buffer(GST_BUFFER_POOL_CAST(spool), buffer);
     }
     g_list_free(spool->preAllocated);
     spool->preAllocated = nullptr;
@@ -102,14 +100,13 @@ static void gst_producer_surface_pool_class_init(GstProducerSurfacePoolClass *kl
     GstBufferPoolClass *poolClass = GST_BUFFER_POOL_CLASS (klass);
     GObjectClass *gobjectClass = G_OBJECT_CLASS(klass);
     gobjectClass->set_property = gst_producer_surface_pool_set_property;
-    gobjectClass->get_property = gst_producer_surface_pool_get_property;
     gobjectClass->finalize = gst_producer_surface_pool_finalize;
 
     g_object_class_install_property(gobjectClass, PROP_DYNAMIC_BUFFER_NUM,
         g_param_spec_uint("dynamic-buffer-num", "Dynamic Buffer Num",
             "Dynamic set buffer num when pool is active",
             0, G_MAXUINT, DEFAULT_PROP_DYNAMIC_BUFFER_NUM,
-            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+            (GParamFlags)(G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobjectClass, PROP_CACHE_BUFFERS_NUM,
         g_param_spec_uint("cache-buffers-num", "Cached Buffer Num",
@@ -167,6 +164,14 @@ static void gst_producer_surface_pool_init(GstProducerSurfacePool *pool)
     pool->userdata = nullptr;
 }
 
+inline static void gst_producer_surface_pool_reset_task(GstProducerSurfacePool *spool)
+{
+    if (spool->task != nullptr) {
+        gst_object_unref(spool->task);
+        spool->task = nullptr;
+    }
+}
+
 static void gst_producer_surface_pool_finalize(GObject *obj)
 {
     g_return_if_fail(obj != nullptr);
@@ -184,10 +189,7 @@ static void gst_producer_surface_pool_finalize(GObject *obj)
     g_mutex_clear(&spool->lock);
     g_cond_clear(&spool->cond);
     g_rec_mutex_clear(&spool->taskLock);
-    if (spool->task != nullptr) {
-        gst_object_unref(spool->task);
-        spool->task = nullptr;
-    }
+    gst_producer_surface_pool_reset_task(spool);
 
     GST_INFO("pool finalize in");
     G_OBJECT_CLASS(parent_class)->finalize(obj);
@@ -206,32 +208,20 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
             guint dynamicBuffers = g_value_get_uint(value);
             g_return_if_fail(dynamicBuffers != 0);
             GST_BUFFER_POOL_LOCK(spool);
-            if (spool->freeBufCnt + dynamicBuffers < spool->maxBuffers) {
-                GST_BUFFER_POOL_UNLOCK(spool);
-                GST_ERROR_OBJECT(spool, "set queue size failed for free buffers %u", spool->freeBufCnt);
-                return;
-            }
+            ON_SCOPE_EXIT(0) { GST_BUFFER_POOL_UNLOCK(spool); };
+            g_return_if_fail(spool->freeBufCnt + dynamicBuffers >= spool->maxBuffers);
             spool->freeBufCnt += (dynamicBuffers - spool->maxBuffers);
             spool->maxBuffers = dynamicBuffers;
-            if (gst_surface_allocator_set_queue_size(spool->allocator, spool->maxBuffers) != TRUE) {
-                GST_BUFFER_POOL_UNLOCK(spool);
-                GST_ERROR_OBJECT(spool, "set queue size to %u failed", spool->maxBuffers);
-                return;
-            }
+            g_return_if_fail(gst_surface_allocator_set_queue_size(spool->allocator, spool->maxBuffers));
             GST_DEBUG_OBJECT(spool, "set max buffer count: %u", spool->maxBuffers);
-            GST_BUFFER_POOL_UNLOCK(spool);
             break;
         }
         case PROP_CACHE_BUFFERS_NUM: {
             GST_BUFFER_POOL_LOCK(spool);
             guint cache_num = g_value_get_uint(value);
             GST_DEBUG_OBJECT(spool, "set cache_num to: %u", cache_num);
-            if (cache_num == 0) {
-                spool->isDynamicCached = FALSE;
-            } else {
-                spool->isDynamicCached = TRUE;
-                spool->cachedBuffers = cache_num;
-            }
+            spool->isDynamicCached = cache_num == 0 ? FALSE : TRUE;
+            spool->cachedBuffers = cache_num == 0 ? spool->cachedBuffers : cache_num;
             GST_BUFFER_POOL_UNLOCK(spool);
             break;
         }
@@ -249,27 +239,6 @@ static void gst_producer_surface_pool_set_property(GObject *object, guint prop_i
             break;
         }
         default:
-            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
-            break;
-    }
-}
-
-static void gst_producer_surface_pool_get_property(GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
-{
-    g_return_if_fail(object != nullptr);
-    g_return_if_fail(value != nullptr);
-    g_return_if_fail(pspec != nullptr);
-    GstProducerSurfacePool *spool = GST_PRODUCER_SURFACE_POOL(object);
-
-    switch (prop_id) {
-        case PROP_DYNAMIC_BUFFER_NUM: {
-            GST_BUFFER_POOL_LOCK(spool);
-            g_value_set_uint(value, spool->maxBuffers);
-            GST_BUFFER_POOL_UNLOCK(spool);
-            break;
-        }
-        default:
-            G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
             break;
     }
 }
@@ -299,8 +268,12 @@ static const gchar **gst_producer_surface_pool_get_options(GstBufferPool *pool)
 {
     // add buffer type meta option at here
     (void)pool;
+#ifdef SURFACE_MEM_NO_STRIDE
+    static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, nullptr };
+#else
     static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT,
         nullptr };
+#endif
     return options;
 }
 
@@ -311,15 +284,9 @@ static gboolean parse_caps_info(GstCaps *caps, GstVideoInfo *info, PixelFormat *
         return FALSE;
     }
 
-    if (!gst_video_info_from_caps(info, caps)) {
-        GST_ERROR("wrong caps");
-        return FALSE;
-    }
+    g_return_val_if_fail(gst_video_info_from_caps(info, caps), FALSE);
 
-    if (FORMAT_MAPPING.count(GST_VIDEO_INFO_FORMAT(info)) == 0) {
-        GST_ERROR("unsupported format, %s", GST_VIDEO_INFO_NAME(info));
-        return FALSE;
-    }
+    g_return_val_if_fail(FORMAT_MAPPING.count(GST_VIDEO_INFO_FORMAT(info)) != 0, FALSE);
 
     *format = FORMAT_MAPPING.at(GST_VIDEO_INFO_FORMAT(info));
     return TRUE;
@@ -346,10 +313,9 @@ static gboolean gst_producer_surface_pool_set_config(GstBufferPool *pool, GstStr
     guint size; // ignore the size
     guint min_buffers;
     guint max_buffers;
-    if (!gst_buffer_pool_config_get_params(config, &caps, &size, &min_buffers, &max_buffers)) {
-        GST_ERROR_OBJECT(spool, "wrong config");
-        return FALSE;
-    }
+    g_return_val_if_fail(gst_buffer_pool_config_get_params(config, &caps, &size, &min_buffers, &max_buffers),
+        FALSE);
+
     g_return_val_if_fail(min_buffers <= max_buffers, FALSE);
 
     GstVideoInfo info;
@@ -361,6 +327,7 @@ static gboolean gst_producer_surface_pool_set_config(GstBufferPool *pool, GstStr
     GST_INFO_OBJECT(pool, "get usage %" G_GUINT64_FORMAT " ", spool->usage);
 
     GST_BUFFER_POOL_LOCK(spool);
+    ON_SCOPE_EXIT(0) { GST_BUFFER_POOL_UNLOCK(spool); };
 
     spool->info = info;
     spool->format = format;
@@ -373,17 +340,13 @@ static gboolean gst_producer_surface_pool_set_config(GstBufferPool *pool, GstStr
     GstAllocator *allocator = nullptr;
     GstAllocationParams params;
     (void)gst_buffer_pool_config_get_allocator(config, &allocator, &params);
-    if (!(allocator && GST_IS_SURFACE_ALLOCATOR(allocator))) {
-        GST_BUFFER_POOL_UNLOCK(spool);
-        GST_WARNING_OBJECT(pool, "no valid allocator in pool");
-        return TRUE;
-    }
+    g_return_val_if_fail(allocator && GST_IS_SURFACE_ALLOCATOR(allocator), TRUE);
+
     spool->allocator = GST_SURFACE_ALLOCATOR(allocator);
     spool->params = params;
 
     GST_INFO_OBJECT(spool, "update allocator and params");
 
-    GST_BUFFER_POOL_UNLOCK(spool);
     return TRUE;
 }
 
@@ -393,22 +356,14 @@ gboolean gst_producer_surface_pool_set_surface(GstProducerSurfacePool *pool, OHO
     g_return_val_if_fail(pool != nullptr, FALSE);
 
     GST_BUFFER_POOL_LOCK(pool);
+    ON_SCOPE_EXIT(0) { GST_BUFFER_POOL_UNLOCK(pool); };
 
-    if (pool->started) {
-        GST_INFO_OBJECT(pool, "started already, reject to set surface");
-        GST_BUFFER_POOL_UNLOCK(pool);
-        return FALSE;
-    }
+    g_return_val_if_fail(pool->started == FALSE, FALSE);
 
-    if (pool->surface != nullptr) {
-        GST_INFO_OBJECT(pool, "surface has already been set");
-        GST_BUFFER_POOL_UNLOCK(pool);
-        return FALSE;
-    }
+    g_return_val_if_fail(pool->surface == nullptr, FALSE);
 
     pool->surface = surface;
 
-    GST_BUFFER_POOL_UNLOCK(pool);
     return TRUE;
 }
 
@@ -426,8 +381,6 @@ static void gst_producer_surface_pool_statistics(GstProducerSurfacePool *spool)
             spool->callCnt)) {
             event.EventWrite("PLAYER_STATISTICS", OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC, "PLAYER");
             spool->callCnt = 0;
-        } else {
-            GST_ERROR_OBJECT(spool, "Failed to call CreateMsg");
         }
     }
 }
@@ -492,22 +445,17 @@ static gboolean gst_producer_surface_pool_start(GstBufferPool *pool)
     GST_DEBUG_OBJECT(spool, "pool start");
 
     GST_BUFFER_POOL_LOCK(spool);
-    if (spool->surface == nullptr) {
-        GST_BUFFER_POOL_UNLOCK(spool);
-        GST_ERROR_OBJECT(spool, "not set surface");
-        return FALSE;
-    }
+    ON_SCOPE_EXIT(0) { GST_BUFFER_POOL_UNLOCK(spool); };
+    g_return_val_if_fail(spool->surface != nullptr, FALSE);
 
     gst_surface_allocator_set_surface(spool->allocator, spool->surface);
-    if (gst_surface_allocator_set_queue_size(spool->allocator, spool->maxBuffers) != TRUE) {
-        GST_BUFFER_POOL_UNLOCK(spool);
-        GST_ERROR_OBJECT(spool, "set queue size to %u failed", spool->maxBuffers);
-        return FALSE;
-    }
+    auto ret = gst_surface_allocator_set_queue_size(spool->allocator, spool->maxBuffers);
+    g_return_val_if_fail(ret == TRUE, FALSE);
 
     GST_INFO_OBJECT(spool, "Set pool minbuf %u maxbuf %u", spool->minBuffers, spool->maxBuffers);
 
     spool->freeBufCnt = spool->maxBuffers;
+    CANCEL_SCOPE_EXIT_GUARD(0);
     GST_BUFFER_POOL_UNLOCK(spool);
 
     if (spool->task == nullptr) {
@@ -553,8 +501,7 @@ static gboolean gst_producer_surface_pool_stop(GstBufferPool *pool)
     GST_INFO_OBJECT(spool, "surface pool req task lock got");
     g_rec_mutex_unlock(&spool->taskLock);
     (void)gst_task_join(spool->task);
-    gst_object_unref(spool->task);
-    spool->task = nullptr;
+    gst_producer_surface_pool_reset_task(spool);
     gst_producer_surface_pool_reset_callback(spool);
 
     return ret;
@@ -600,10 +547,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
 
     GstSurfaceMemory *memory = nullptr;
     GstFlowReturn ret = do_alloc_memory_locked(spool, params, &memory);
-    if (memory == nullptr) {
-        GST_WARNING_OBJECT(spool, "allocator mem fail");
-        return ret;
-    }
+    g_return_val_if_fail(memory != nullptr, ret);
 
     *buffer = gst_buffer_new();
     if (*buffer == nullptr) {
@@ -617,6 +561,25 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
     // add buffer type meta at here.
     OHOS::sptr<OHOS::SurfaceBuffer> buf = memory->buf;
     auto buffer_handle = buf->GetBufferHandle();
+#ifdef SURFACE_MEM_NO_STRIDE
+    int32_t stride = buffer_handle->stride;
+    GstVideoInfo *info = &spool->info;
+
+    if (buf->GetFormat() == PIXEL_FMT_RGBA_8888) {
+        for (guint plane = 0; plane < info->finfo->n_planes; ++plane) {
+            info->stride[plane] = stride;
+            GST_DEBUG_OBJECT(spool, "new stride %d", stride);
+        }
+        gst_buffer_add_video_meta_full(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
+            GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info), info->finfo->n_planes, info->offset, info->stride);
+    } else {
+        gst_buffer_add_video_meta(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
+            GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info));
+    }
+    GstBufferHandleConfig config = { sizeof(buffer_handle), memory->fence, 0, 0, 0, 0, 0 };
+    gst_buffer_add_buffer_handle_meta(*buffer, reinterpret_cast<intptr_t>(buffer_handle), config);
+    return GST_FLOW_OK;
+#else
     g_return_val_if_fail(buffer_handle != nullptr, GST_FLOW_ERROR);
     int32_t stride = buffer_handle->stride;
     GstBufferHandleConfig config = { sizeof(buffer_handle), memory->fence, 0, 0, 0, 0, 0 };
@@ -631,6 +594,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
     gst_buffer_add_video_meta_full(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
         GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info), info->finfo->n_planes, info->offset, info->stride);
     return GST_FLOW_OK;
+#endif
 }
 
 static void gst_producer_surface_pool_free_buffer(GstBufferPool *pool, GstBuffer *buffer)
