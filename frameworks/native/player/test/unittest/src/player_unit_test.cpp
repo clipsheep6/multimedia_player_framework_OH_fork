@@ -2574,6 +2574,27 @@ HWTEST_F(PlayerUnitTest, Player_AddSubSource_004, TestSize.Level0)
 }
 
 /**
+ * @tc.name  : Test AddSubSource
+ * @tc.number: Player_AddSubSource_005
+ * @tc.desc  : Test Player AddSubSource in PLAYING STATE
+ */
+HWTEST_F(PlayerUnitTest, Player_AddSubSource_005, TestSize.Level0)
+{
+    ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "H264_AAC.mp4", 0, 0));
+    sptr<Surface> videoSurface = player_->GetVideoSurface();
+    ASSERT_NE(nullptr, videoSurface);
+    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
+    EXPECT_EQ(MSERR_OK, player_->Prepare());
+    EXPECT_EQ(MSERR_OK, player_->Play());
+    EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
+    usleep(ONE_SEC);
+    EXPECT_EQ(MSERR_OK, player_->AddSubSource(SUBTITLE_SRT_FIELE, 0, 0));
+    EXPECT_EQ(SUBTITLE_2_SEC, player_->GetSubtitleText(SUBTITLE_2_SEC));
+    usleep(ONE_SEC);
+    EXPECT_EQ(SUBTITLE_4_SEC, player_->GetSubtitleText(SUBTITLE_4_SEC));
+}
+
+/**
  * @tc.name  : Test media error
  * @tc.number: Player_Media_Error
  * @tc.desc  : Test Player Media Error
