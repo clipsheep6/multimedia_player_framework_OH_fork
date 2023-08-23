@@ -51,6 +51,7 @@ public:
 
 private:
     int32_t BuildPipeline();
+    int32_t StopPipeline(bool isDrainAll);
     bool CheckParamType(int32_t sourceId, const RecorderParam &recParam) const;
 
     std::unique_ptr<RecorderPipelineBuilder> builder_ = nullptr;

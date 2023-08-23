@@ -35,7 +35,7 @@ RecorderEngineGstImpl::RecorderEngineGstImpl(int32_t appUid, int32_t appPid,
 RecorderEngineGstImpl::~RecorderEngineGstImpl()
 {
     MEDIA_LOGD("enter, dtor");
-    (void)Reset();
+    (void)StopPipeline(false);
     MEDIA_LOGD("exit, dtor");
 }
 
@@ -216,7 +216,18 @@ int32_t RecorderEngineGstImpl::Resume()
 int32_t RecorderEngineGstImpl::Stop(bool isDrainAll)
 {
     std::unique_lock<std::mutex> lock(mutex_);
+    int ret = StopPipeline(isDrainAll);
+    return ret;
+}
 
+int32_t RecorderEngineGstImpl::Reset()
+{
+    (void)Stop(false);
+    return MSERR_OK;
+}
+
+int32_t RecorderEngineGstImpl::StopPipeline(bool isDrainAll)
+{
     if (allSources_.empty())  {
         return MSERR_OK;
     }
@@ -232,12 +243,6 @@ int32_t RecorderEngineGstImpl::Stop(bool isDrainAll)
     allSources_.clear();
 
     return ret;
-}
-
-int32_t RecorderEngineGstImpl::Reset()
-{
-    (void)Stop(false);
-    return MSERR_OK;
 }
 
 int32_t RecorderEngineGstImpl::SetParameter(int32_t sourceId, const RecorderParam &recParam)

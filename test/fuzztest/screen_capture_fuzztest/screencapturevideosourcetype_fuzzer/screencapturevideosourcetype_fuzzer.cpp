@@ -78,7 +78,7 @@ bool ScreenCaptureVideoSourceTypeFuzzer::FuzzScreenCaptureVideoSourceType(uint8_
     SetConfig(config);
     constexpr int32_t videoSourceTypeList = 4;
     constexpr uint32_t recorderTime = 3;
-    VideoSourceType videoSourceType[videoSourceTypeList] {
+    const VideoSourceType videoSourceType[videoSourceTypeList] {
         VIDEO_SOURCE_SURFACE_YUV,
         VIDEO_SOURCE_SURFACE_ES,
         VIDEO_SOURCE_SURFACE_RGBA,

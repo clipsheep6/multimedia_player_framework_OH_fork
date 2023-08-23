@@ -76,7 +76,7 @@ bool ScreenCaptureAudioSourceTypeNdkFuzzer::FuzzScreenCaptureAudioSourceTypeNdk(
     SetConfig(config);
     constexpr int32_t audioSourceTypesList = 5;
     constexpr uint32_t recorderTime = 3;
-    OH_AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
+    const  OH_AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
         OH_SOURCE_INVALID,
         OH_SOURCE_DEFAULT,
         OH_MIC,

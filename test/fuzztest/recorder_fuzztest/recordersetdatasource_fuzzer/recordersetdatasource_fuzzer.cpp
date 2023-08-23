@@ -44,7 +44,7 @@ bool RecorderSetDataSourceFuzzer::FuzzRecorderSetDataSource(uint8_t *data, size_
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
-    VideoSourceType VideoSourceTypes[videoSourceTypeList] {
+    const VideoSourceType VideoSourceTypes[videoSourceTypeList] {
         VideoSourceType::VIDEO_SOURCE_SURFACE_YUV,
         VideoSourceType::VIDEO_SOURCE_SURFACE_ES,
         VideoSourceType::VIDEO_SOURCE_BUTT
