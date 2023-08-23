@@ -58,7 +58,7 @@ class TestScreenCaptureCallbackTest : public ScreenCaptureCallBack, public NoCop
 public:
     TestScreenCaptureCallbackTest() {}
     ~TestScreenCaptureCallbackTest() = default;
-    std::shared_ptr<TestScreenCapture> screenCapture;
+    std::shared_ptr<TestScreenCapture> screenCapture = nullptr;
     void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
     void OnVideoBufferAvailable(bool isReady) override;
