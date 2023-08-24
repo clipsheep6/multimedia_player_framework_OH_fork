@@ -286,6 +286,7 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
     switch (transition) {
         case GST_STATE_CHANGE_READY_TO_PAUSED: {
             subtitle_sink->stop_render = TRUE;
+            subtitle_sink->prepared = TRUE;
             break;
         }
         case GST_STATE_CHANGE_PAUSED_TO_PLAYING: {
@@ -294,17 +295,19 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
             left_duration = left_duration > 0 ? left_duration : 0;
             priv->time_rendered = gst_util_get_timestamp();
             g_mutex_unlock(&priv->mutex);
-            if (subtitle_sink->preroll_buffer != nullptr) {
+            if (subtitle_sink->prepared == FALSE) {
                 GST_DEBUG_OBJECT(subtitle_sink, "text left duration is %" GST_TIME_FORMAT,
                     GST_TIME_ARGS(left_duration));
                 gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, GST_TIME_AS_USECONDS(left_duration));
             }
             subtitle_sink->stop_render = FALSE;
+            subtitle_sink->prepared = FALSE;
             break;
         }
         case GST_STATE_CHANGE_PLAYING_TO_PAUSED: {
             g_mutex_lock(&priv->mutex);
             subtitle_sink->stop_render = TRUE;
+            subtitle_sink->prepared = FALSE;
             priv->time_rendered = gst_util_get_timestamp() - priv->time_rendered;
             g_mutex_unlock(&priv->mutex);
             gst_subtitle_sink_cancel_not_executed_task(subtitle_sink);
@@ -312,6 +315,7 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
         }
         case GST_STATE_CHANGE_PAUSED_TO_READY: {
             subtitle_sink->stop_render = FALSE;
+            subtitle_sink->prepared = FALSE;
             gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, TRUE);
             GST_INFO_OBJECT(subtitle_sink, "subtitle sink stop");
             break;
@@ -391,7 +395,11 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
     }
     GstSubtitleSinkPrivate *priv = subtitle_sink->priv;
     g_mutex_lock(&priv->mutex);
-    duration = std::min(duration, pts_end - subtitle_sink->segment.start);
+    guint64 start = GST_BASE_SINK(subtitle_sink)->segment.start;
+    if (subtitle_sink->have_first_filter) {
+        start = subtitle_sink->init_position;
+    }
+    duration = std::min(duration, pts_end - start);
     priv->text_frame_duration = duration / subtitle_sink->rate;
     priv->time_rendered = 0ULL;
     g_mutex_unlock(&priv->mutex);
@@ -444,7 +452,7 @@ static GstFlowReturn gst_subtitle_sink_render(GstAppSink *appsink)
     }
 
     g_mutex_lock(&priv->mutex);
-    guint64 start = subtitle_sink->segment.start;
+    guint64 start = GST_BASE_SINK(subtitle_sink)->segment.start;
     if (subtitle_sink->have_first_filter) {
         start = subtitle_sink->init_position;
     }
@@ -542,7 +550,7 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
     GstSegment new_segment;
     gst_event_copy_segment (event, &new_segment);
     GST_DEBUG_OBJECT (basesink, "received upstream segment %u", seqnum);
-    if (!subtitle_sink->have_first_segment) {
+    if (!subtitle_sink->have_first_segment || subtitle_sink->is_changing_track) {
         subtitle_sink->have_first_segment = TRUE;
         subtitle_sink->have_first_filter = TRUE;
         GST_WARNING_OBJECT(subtitle_sink, "recv first segment event");
@@ -550,7 +558,7 @@ static GstEvent* gst_subtitle_sink_handle_segment_event(GstBaseSink *basesink, G
         subtitle_sink->init_position = new_segment.start;
         gst_segment_copy_into(&new_segment, &subtitle_sink->segment);
         subtitle_sink->segment.start = audio_base->segment.time;
-    } else if (!subtitle_sink->is_changing_track) {
+    } else {
         subtitle_sink->have_first_filter = FALSE;
         gst_subtitle_sink_handle_audio_segment(basesink, &new_segment);
         gst_subtitle_sink_handle_speed(basesink);
