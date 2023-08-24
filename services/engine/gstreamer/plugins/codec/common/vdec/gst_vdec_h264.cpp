@@ -313,7 +313,7 @@ static gboolean gst_vdec_h264_bypass_frame(GstVdecBase *base, GstVideoCodecFrame
                 // 0x1F is the mask of last 5 bits, 0x07 is SPS flag
                 GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv SPS frame");
                 return false;
-            } else if ((info.data[i + 1] & 0x1F) == 0x07 && 
+            } else if ((info.data[i + 1] & 0x1F) == 0x07 &&
                 vdec_h264->has_data_after_sps == false && vdec_h264->last_data_is_pps == true) {
                 // For special packet sequences: sps frame, pps frame, sps-pps-I frame
                 GST_WARNING_OBJECT(base, "KPI-TRACE-VDEC: recv IDR frame which contains sps header");
