@@ -294,11 +294,9 @@ static GstStateChangeReturn gst_subtitle_sink_change_state(GstElement *element, 
             left_duration = left_duration > 0 ? left_duration : 0;
             priv->time_rendered = gst_util_get_timestamp();
             g_mutex_unlock(&priv->mutex);
-            if (subtitle_sink->preroll_buffer != nullptr) {
-                GST_DEBUG_OBJECT(subtitle_sink, "text left duration is %" GST_TIME_FORMAT,
-                    GST_TIME_ARGS(left_duration));
-                gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, GST_TIME_AS_USECONDS(left_duration));
-            }
+            GST_DEBUG_OBJECT(subtitle_sink, "text left duration is %" GST_TIME_FORMAT,
+                GST_TIME_ARGS(left_duration));
+            gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, GST_TIME_AS_USECONDS(left_duration));
             subtitle_sink->stop_render = FALSE;
             break;
         }
@@ -399,6 +397,7 @@ static GstFlowReturn gst_subtitle_sink_new_preroll(GstAppSink *appsink, gpointer
         GST_TIME_ARGS(pts), GST_TIME_ARGS(priv->text_frame_duration));
     subtitle_sink->preroll_buffer = buffer;
     gst_subtitle_sink_handle_buffer(subtitle_sink, buffer, TRUE, 0ULL);
+    gst_subtitle_sink_handle_buffer(subtitle_sink, nullptr, FALSE, GST_TIME_AS_USECONDS(priv->text_frame_duration));
     return GST_FLOW_OK;
 }
 
