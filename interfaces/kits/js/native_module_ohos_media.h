@@ -25,5 +25,6 @@
 #include "video_recorder_napi.h"
 #include "media_capability_napi.h"
 #include "media_enum_napi.h"
+#include "soundpool_napi.h"
 
 #endif /* NATIVE_MODULE_OHOS_MEDIA_H_ */

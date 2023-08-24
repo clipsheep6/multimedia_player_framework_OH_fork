@@ -394,7 +394,10 @@ static void gst_surface_allocator_finalize(GObject *obj)
     GstSurfaceAllocator *allocator = GST_SURFACE_ALLOCATOR(obj);
     g_return_if_fail(allocator != nullptr);
 
-    allocator->surface = nullptr;
+    if (allocator->surface != nullptr) {
+        allocator->surface->UnRegisterReleaseListener();
+        allocator->surface = nullptr;
+    }
     if (allocator->allocatorWrap) {
         delete allocator->allocatorWrap;
         allocator->allocatorWrap = nullptr;

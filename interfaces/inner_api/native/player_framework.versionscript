@@ -28,6 +28,7 @@
       *OHOS::Media::AudioCaps::*;
       *OHOS::Media::AVCodecInfo::*;
       *OHOS::Media::AVCodecListFactory::Create*;
+      *OHOS::Media::SoundPoolFactory::CreateSoundPool*;
     };
     "*MSErrorToString*";
     "*MSExtErrorToString*";

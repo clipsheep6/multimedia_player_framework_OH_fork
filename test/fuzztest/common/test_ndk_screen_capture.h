@@ -48,7 +48,6 @@ class TestScreenCaptureNdkCallback : public OH_AVScreenCaptureCallback, public N
 public:
     TestScreenCaptureNdkCallback() {}
     ~TestScreenCaptureNdkCallback() = default;
-    OH_AVScreenCapture* screenCapture;
     static void OnError(OH_AVScreenCapture *screenCapture, int32_t errorCode);
     static void OnAudioBufferAvailable(OH_AVScreenCapture *screenCapture, bool isReady, OH_AudioCaptureSourceType type);
     static void OnVideoBufferAvailable(OH_AVScreenCapture *screenCapture, bool isReady);

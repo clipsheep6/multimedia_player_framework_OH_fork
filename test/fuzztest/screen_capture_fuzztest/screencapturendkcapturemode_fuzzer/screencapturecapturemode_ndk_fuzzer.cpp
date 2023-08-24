@@ -76,7 +76,7 @@ bool ScreenCaptureCaptureModeNdkFuzzer::FuzzScreenCaptureCaptureModeNdk(uint8_t 
     SetConfig(config);
     constexpr int32_t captureModeList = 4;
     constexpr uint32_t recorderTime = 3;
-    OH_CaptureMode captureMode_[captureModeList] {
+    const OH_CaptureMode captureMode_[captureModeList] {
         OH_CAPTURE_HOME_SCREEN,
         OH_CAPTURE_SPECIFIED_SCREEN,
         OH_CAPTURE_SPECIFIED_WINDOW,

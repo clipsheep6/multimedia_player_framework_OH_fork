@@ -78,7 +78,7 @@ bool ScreenCaptureDataTypeFuzzer::FuzzScreenCaptureDataType(uint8_t *data, size_
     SetConfig(config);
     constexpr int32_t dataTypeList = 4;
     constexpr uint32_t recorderTime = 3;
-    DataType dataType_[dataTypeList] {
+    const DataType dataType_[dataTypeList] {
         ORIGINAL_STREAM,
         ENCODED_STREAM,
         CAPTURE_FILE,

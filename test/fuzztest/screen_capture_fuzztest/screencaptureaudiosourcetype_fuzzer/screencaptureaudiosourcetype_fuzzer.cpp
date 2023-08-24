@@ -78,7 +78,7 @@ bool ScreenCaptureAudioSourceTypeFuzzer::FuzzScreenCaptureAudioSourceType(uint8_
     SetConfig(config);
     constexpr int32_t audioSourceTypesList = 5;
     constexpr uint32_t recorderTime = 3;
-    AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
+    const AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
         SOURCE_INVALID,
         SOURCE_DEFAULT,
         MIC,

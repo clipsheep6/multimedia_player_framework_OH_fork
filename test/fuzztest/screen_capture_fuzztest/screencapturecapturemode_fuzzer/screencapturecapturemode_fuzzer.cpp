@@ -78,7 +78,7 @@ bool ScreenCaptureCaptureModeFuzzer::FuzzScreenCaptureCaptureMode(uint8_t *data,
     SetConfig(config);
     constexpr int32_t captureModeList = 4;
     constexpr uint32_t recorderTime = 3;
-    CaptureMode captureMode_[captureModeList] {
+    const CaptureMode captureMode_[captureModeList] {
         CAPTURE_HOME_SCREEN,
         CAPTURE_SPECIFIED_SCREEN,
         CAPTURE_SPECIFIED_WINDOW,

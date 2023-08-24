@@ -96,7 +96,6 @@ private:
         std::function<sptr<IMediaStubService>()> create;
         unsigned int maxSize;
     };
-    bool alreadyInit = false;
     void Init();
     std::map<StubType, StubNode> stubCollections_;
     std::vector<std::pair<StubType, std::u16string>> dumpCollections_ = {};
