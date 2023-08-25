@@ -156,7 +156,7 @@ protected:
     const std::string &GetStatusDescription(int32_t status);
     struct ConfigInfo {
         std::atomic<bool> looping = false;
-        bool speedDoneFlag_ = false;
+        bool speedDoneFlag_ = true;
         float leftVolume = INVALID_VALUE;
         float rightVolume = INVALID_VALUE;
         PlaybackRateMode speedMode = SPEED_FORWARD_1_00_X;
