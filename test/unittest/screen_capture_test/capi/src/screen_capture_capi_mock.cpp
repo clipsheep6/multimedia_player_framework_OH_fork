@@ -69,7 +69,7 @@ OH_AVScreenCaptureConfig ScreenCaptureCapiMock::Convert(AVScreenCaptureConfig co
     config_.videoInfo.videoCapInfo.displayId = config.videoInfo.videoCapInfo.displayId;
     std::list<int32_t> taskIds = config.videoInfo.videoCapInfo.taskIDs;
     if (taskIds.size() > 0) {
-        int32_t *taskIds_temp = (int*)malloc(sizeof(int));
+        int32_t *taskIds_temp = static_cast<int*>(malloc(sizeof(int)));
         for (std::list<int32_t>::iterator its = taskIds.begin(); its != taskIds.end(); ++its) {
             *taskIds_temp = *its;
             taskIds_temp++;
@@ -88,7 +88,7 @@ OH_AVScreenCaptureConfig ScreenCaptureCapiMock::Convert(AVScreenCaptureConfig co
     };
     std::string url = config.recorderInfo.url;
     if (!(url.empty())) {
-        config_.recorderInfo.url = (char*)(url.data());
+        config_.recorderInfo.url = static_cast<char*>(url.data());
         config_.recorderInfo.urlLen = url.size();
     }
     if (config.recorderInfo.fileFormat == ContainerFormatType::CFT_MPEG_4A) {
@@ -180,7 +180,7 @@ int32_t ScreenCaptureCapiMock::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &
     AudioCaptureSourceType type)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(screenCapture_ != nullptr, MSERR_INVALID_OPERATION, "screenCapture_ == nullptr");
-    OH_AudioBuffer *buffer = (OH_AudioBuffer *)malloc(sizeof(OH_AudioBuffer));
+    OH_AudioBuffer *buffer = static_cast<OH_AudioBuffer *>(malloc(sizeof(OH_AudioBuffer)));
     if (buffer == nullptr) {
         return MSERR_INVALID_OPERATION;
     }

@@ -76,7 +76,7 @@ bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data,
     SetConfig(config);
     constexpr int32_t dataTypeList = 4;
     constexpr uint32_t recorderTime = 3;
-    OH_DataType dataType_[dataTypeList] {
+    const OH_DataType dataType_[dataTypeList] {
         OH_ORIGINAL_STREAM,
         OH_ENCODED_STREAM,
         OH_CAPTURE_FILE,

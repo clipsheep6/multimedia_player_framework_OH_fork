@@ -94,6 +94,7 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
 MediaServerManager::MediaServerManager()
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
+    Init();
 }
 
 MediaServerManager::~MediaServerManager()
@@ -145,14 +146,10 @@ void MediaServerManager::Init()
     stubCollections_[StubType::MONITOR] = StubNode {"Monitor",
         MonitorServiceStub::GetInstance, SERVER_MAX_NUMBER / 16
     };
-    alreadyInit = true;
 }
 
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
-    if (!alreadyInit) {
-        Init();
-    }
     CHECK_AND_RETURN_RET(stubCollections_.count(type) > 0, nullptr);
     auto node = stubCollections_[type];
     CHECK_AND_RETURN_RET(stubMap_[type].size() < node.maxSize, nullptr);
@@ -199,11 +196,11 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
 void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    DestroyDumperForPid(pid);
     for (const auto &iter : stubCollections_) {
         const auto &node = iter.second;
         auto &map = stubMap_[iter.first];
         MEDIA_LOGD("%{public}s stub services(%{public}zu) pid(%{public}d).", node.name.c_str(), map.size(), pid);
-        DestroyDumperForPid(pid);
         for (auto it = map.begin(); it != map.end();) {
             if (it->second == pid) {
                 executor_.Commit(it->first);

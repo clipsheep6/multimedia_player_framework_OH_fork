@@ -115,6 +115,7 @@ sptr<OHOS::SurfaceBuffer> TestScreenCapture::AcquireVideoBuffer(int32_t &fence, 
 {
     if (screenCapture == nullptr) {
         cout << "error! screenCapture == nullptr!" << endl;
+        return nullptr;
     }
     return screenCapture->AcquireVideoBuffer(fence, timestamp, damage);
 }

@@ -49,6 +49,7 @@ ohos_unittest("recorder_unit_test") {
 
   external_deps = [
     "c_utils:utils",
+    "drivers_peripheral_display:hdi_gralloc_client",
     "hilog:libhilog",
   ]
 

@@ -80,7 +80,7 @@ bool ScreenCaptureAcquireAudioBufferNdkFuzzer::FuzzScreenCaptureAcquireAudioBuff
         cout << "audio buffer is nullptr" << endl;
         return false;
     }
-    OH_AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
+    const OH_AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
         OH_SOURCE_INVALID,
         OH_SOURCE_DEFAULT,
         OH_MIC,

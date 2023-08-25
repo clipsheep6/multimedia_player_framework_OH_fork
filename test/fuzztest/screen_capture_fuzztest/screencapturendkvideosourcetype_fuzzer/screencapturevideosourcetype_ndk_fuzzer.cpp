@@ -76,7 +76,7 @@ bool ScreenCaptureVideoSourceTypeNdkFuzzer::FuzzScreenCaptureVideoSourceTypeNdk(
     SetConfig(config);
     constexpr int32_t videoSourceTypeList = 5;
     constexpr uint32_t recorderTime = 3;
-    OH_VideoSourceType videoSourceType[videoSourceTypeList] {
+    const OH_VideoSourceType videoSourceType[videoSourceTypeList] {
         OH_VIDEO_SOURCE_SURFACE_YUV,
         OH_VIDEO_SOURCE_SURFACE_ES,
         OH_VIDEO_SOURCE_SURFACE_RGBA,

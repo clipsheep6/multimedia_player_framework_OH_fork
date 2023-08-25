@@ -78,7 +78,7 @@ bool ScreenCaptureAcquireAudioBufferFuzzer::FuzzScreenCaptureAcquireAudioBuffer(
     SetConfig(config);
     constexpr int32_t audioSourceTypesList = 5;
     std::shared_ptr<AudioBuffer> buffer = nullptr;
-    AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
+    const AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
         SOURCE_INVALID,
         SOURCE_DEFAULT,
         MIC,

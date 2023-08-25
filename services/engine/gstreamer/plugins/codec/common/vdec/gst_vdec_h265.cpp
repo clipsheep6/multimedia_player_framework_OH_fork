@@ -104,8 +104,8 @@ static gboolean gst_vdec_h265_parser_nalu(GstVdecH265 *self, const GstMapInfo &s
         p_dts_data[3] = 1;
 
         guint byte_count = 0;
-        gint hvcc_nal_size = self->hvcc_nal_len;
-        for (gint i = 0; i < hvcc_nal_size; ++i) {
+        guint hvcc_nal_size = self->hvcc_nal_len;
+        for (guint i = 0; i < hvcc_nal_size; ++i) {
             // two hexadecimal code in 1 byte(8 bit)
             byte_count = (byte_count << 8) + p_src_data[i];
         }
