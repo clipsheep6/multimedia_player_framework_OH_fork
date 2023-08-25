@@ -600,6 +600,7 @@ static GstStateChangeReturn gst_surface_mem_sink_change_state(GstElement *elemen
             break;
         case GST_STATE_CHANGE_PAUSED_TO_READY:
             self->firstRenderFrame = TRUE;
+            self->curRate = 1.0;
             if (self->dump.enable_dump == TRUE) {
                 if (self->dump.dump_file != nullptr) {
                     fclose(self->dump.dump_file);
