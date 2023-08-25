@@ -101,6 +101,7 @@ int32_t PlayerServer::BaseState::MessageTrackInfoUpdate()
 
 int32_t PlayerServer::BaseState::MessageSpeedDone()
 {
+    server_.config_.speedDoneFlag_ = true;
     (void)server_.taskMgr_.MarkTaskDone("speed done");
     MediaTrace::TraceEnd("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(&server_));
     return MSERR_OK;

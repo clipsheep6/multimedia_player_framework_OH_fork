@@ -499,6 +499,7 @@ int32_t PlayerServer::OnStop(bool sync)
     if (sync) {
         (void)stopTask->GetResult(); // wait HandleStop
     }
+    config_.speedDoneFlag_ = false;
     lastOpStatus_ = PLAYER_STOPPED;
     MEDIA_LOGD("PlayerServer OnStop out");
     return MSERR_OK;
@@ -851,12 +852,16 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
 
     auto rateTask = std::make_shared<TaskHandler<void>>([this, mode]() {
         MediaTrace::TraceBegin("PlayerServer::SetPlaybackSpeed", FAKE_POINTER(this));
+        if (config_.speedMode != mode) {
+            config_.speedDoneFlag_ = false;
+        }
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->SetPlaybackSpeed(mode);
     });
 
     auto cancelTask = std::make_shared<TaskHandler<void>>([this, mode]() {
         MEDIA_LOGI("Interrupted speed action");
+        config_.speedDoneFlag_ = true;
         Format format;
         OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
         taskMgr_.MarkTaskDone("interrupted speed done");
@@ -870,7 +875,7 @@ int32_t PlayerServer::SetPlaybackSpeed(PlaybackRateMode mode)
 
 int32_t PlayerServer::HandleSetPlaybackSpeed(PlaybackRateMode mode)
 {
-    if (config_.speedMode == mode) {
+    if (config_.speedMode == mode && config_.speedDoneFlag_ == true) {
         MEDIA_LOGD("The speed mode is same, mode = %{public}d", mode);
         Format format;
         OnInfoNoChangeStatus(INFO_TYPE_SPEEDDONE, mode, format);
