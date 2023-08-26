@@ -229,7 +229,6 @@ bool TestRecorder::CreateRecorder()
 {
     recorder = RecorderFactory::CreateRecorder();
     if (recorder == nullptr) {
-        recorder->Release();
         return false;
     }
     return true;
@@ -375,7 +374,9 @@ void TestRecorder::HDICreateESBuffer()
             (void)producerSurface->CancelBuffer(buffer);
             break;
         }
-        (void)file->read(tempBuffer, *frameLenArray);
+        if ((file != nullptr) && (file->is_open())) {
+            (void)file->read(tempBuffer, *frameLenArray);
+        }
         if (*frameLenArray > buffer->GetSize()) {
             free(tempBuffer);
             (void)producerSurface->CancelBuffer(buffer);
@@ -397,9 +398,7 @@ void TestRecorder::HDICreateESBuffer()
         frameLenArray++;
         free(tempBuffer);
     }
-    if ((file != nullptr) && (file->is_open())) {
-        file->close();
-    }
+    (void)CloseFile();
 }
 
 void TestRecorder::HDICreateYUVBuffer()
@@ -452,5 +451,12 @@ void TestRecorder::StopBuffer(const std::string &recorderType)
 {
     if (recorderType != PURE_AUDIO && camereHDIThread != nullptr) {
         camereHDIThread->join();
+    }
+}
+
+void TestRecorder::CloseFile()
+{
+    if ((file != nullptr) && (file->is_open())) {
+        file->close();
     }
 }

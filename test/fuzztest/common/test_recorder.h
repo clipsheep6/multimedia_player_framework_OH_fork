@@ -81,6 +81,7 @@ public:
     void SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration,
         RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
     void SetParameter(int32_t sourceId, const Format &format, RecorderTestParam::VideoRecorderConfig_ &recorderConfig);
+    void CloseFile();
 
 private:
     std::atomic<bool> isExit_ { false };
