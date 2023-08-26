@@ -79,7 +79,6 @@ static gboolean get_slice_flag(GstVdecH264 *self, GstMapInfo *info, bool &ready_
     for (gsize i = 0; i < info->size - offset; i++) {
         if (info->data[i] == 0x01) {
             gboolean is_data_frame = true;
-            GST_DEBUG_OBJECT(self, "recv frame size = %lu, head = %d", info->size, info->data[i + 1]);
             // 0x1F is the mask of last 5 bits, 0x07 is SPS flag, continuous SPS header may be I frame.
             if ((info->data[i + 1] & 0x1F) == 0x07 &&
                 self->has_data_after_sps == false && self->last_data_is_pps == true) {
