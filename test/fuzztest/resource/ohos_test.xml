@@ -16,6 +16,8 @@
 <configuration ver="2.0">
     <target name="PlayerFileFuzzTest">
         <preparer>
+            <option name="shell" value="mkdir /data/test"/>
+            <option name="shell" value="mkdir /data/test/media"/>
             <option name="push" value="player/fuzztest.mp4 -> /data/test/media" src="res"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
