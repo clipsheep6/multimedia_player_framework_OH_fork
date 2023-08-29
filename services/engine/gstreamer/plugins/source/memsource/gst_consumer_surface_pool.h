@@ -18,6 +18,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstvideopool.h>
+#include "gst_consumer_surface_memory.h"
 #include "iconsumer_surface.h"
 #include "surface.h"
 
@@ -55,6 +56,7 @@ struct _GstConsumerSurfacePool {
         OHOS::sptr<OHOS::SurfaceBuffer> &surface_buffer, gint32 &fencefd);
     void (*release_surface_buffer) (GstConsumerSurfacePool *pool,
         OHOS::sptr<OHOS::SurfaceBuffer> &surface_buffer, gint32 &fencefd);
+    void (*update_video_meta) (GstConsumerSurfacePool *pool, GstConsumerSurfaceMemory *mem, GstBuffer *buffer);
 };
 
 struct _GstConsumerSurfacePoolClass {

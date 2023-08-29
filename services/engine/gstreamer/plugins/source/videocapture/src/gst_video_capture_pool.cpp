@@ -16,6 +16,8 @@
 #include "gst_video_capture_pool.h"
 #include <gst/gst.h>
 #include "buffer_type_meta.h"
+#include "display_type.h"
+#include "gst/video/gstvideometa.h"
 #include "surface.h"
 #include "scope_guard.h"
 #include "securec.h"
@@ -28,6 +30,24 @@ using namespace OHOS;
 
 GST_DEBUG_CATEGORY_STATIC(gst_video_capture_pool_debug_category);
 #define GST_CAT_DEFAULT gst_video_capture_pool_debug_category
+
+namespace {
+    const std::unordered_map<PixelFormat, guint> FORMAT_PLANE_MAP = {
+        { PIXEL_FMT_RGBA_8888, 1 },
+        { PIXEL_FMT_YCRCB_420_SP, 2},
+        { PIXEL_FMT_YCBCR_420_SP, 2 },
+        { PIXEL_FMT_YCBCR_420_P, 3 },
+    };
+    const std::unordered_map<PixelFormat, GstVideoFormat> TO_GST_MAP = {
+        { PIXEL_FMT_RGBA_8888, GST_VIDEO_FORMAT_RGBA },
+        { PIXEL_FMT_YCRCB_420_SP, GST_VIDEO_FORMAT_NV21},
+        { PIXEL_FMT_YCBCR_420_SP, GST_VIDEO_FORMAT_NV12 },
+        { PIXEL_FMT_YCBCR_420_P, GST_VIDEO_FORMAT_I420 },
+    };
+    constexpr int32_t VIDEO_PLANE_0 = 0;
+    constexpr int32_t VIDEO_PLANE_1 = 1;
+    constexpr int32_t VIDEO_PLANE_2 = 2;
+}
 
 enum {
     PROP_0,
@@ -42,6 +62,8 @@ static GstFlowReturn gst_video_capture_pool_find_buffer(GstBufferPool *gstpool, 
 static GstFlowReturn gst_video_capture_pool_get_buffer(GstConsumerSurfacePool *surfacepool,
     GstBuffer **buffer, bool *releasebuffer);
 static GstFlowReturn gst_video_capture_pool_release_buffer(GstConsumerSurfacePool *surfacepool, bool *releasebuffer);
+static void gst_video_capture_pool_update_video_meta(GstConsumerSurfacePool *surfacepool, GstConsumerSurfaceMemory *mem,
+    GstBuffer *buffer);
 
 static void gst_video_capture_pool_class_init(GstVideoCapturePoolClass *klass)
 {
@@ -63,6 +85,7 @@ static void gst_video_capture_pool_init(GstVideoCapturePool *pool)
     GstConsumerSurfacePool *surfacepool = GST_CONSUMER_SURFACE_POOL(pool);
     surfacepool->buffer_available = gst_video_capture_pool_buffer_available;
     surfacepool->find_buffer = gst_video_capture_pool_find_buffer;
+    surfacepool->update_video_meta = gst_video_capture_pool_update_video_meta;
 
     pool->cached_data = false;
     pool->poolMgr = nullptr;
@@ -242,4 +265,57 @@ static GstFlowReturn gst_video_capture_pool_release_buffer(GstConsumerSurfacePoo
     surfacepool->release_surface_buffer(surfacepool, surfacebuffer, fencefd);
     
     return GST_FLOW_OK;
+}
+
+static void gst_video_capture_pool_update_video_meta(GstConsumerSurfacePool *surfacepool, GstConsumerSurfaceMemory *mem,
+    GstBuffer *buffer)
+{
+    g_return_if_fail(surfacepool != nullptr && buffer != nullptr && mem != nullptr && mem->is_eos_frame == FALSE);
+    g_return_if_fail(mem->buffer_handle != nullptr && FORMAT_PLANE_MAP.count((PixelFormat)mem->pixel_format) != 0);
+    g_return_if_fail(mem->buffer_handle->stride > 0 && mem->buffer_handle->stride != (int32_t)mem->width);
+
+    GstVideoCapturePool *pool = GST_VIDEO_CAPTURE_POOL_CAST(surfacepool);
+    g_return_if_fail(pool != nullptr);
+
+    int32_t stride = mem->buffer_handle->stride;
+    if (stride != pool->stride[VIDEO_PLANE_0]) { // this judge optimize stride/offset info calculation.
+        switch (mem->pixel_format) {
+            case PIXEL_FMT_YCRCB_420_SP: // fall-through
+            case PIXEL_FMT_YCBCR_420_SP:
+                pool->stride[VIDEO_PLANE_0] = stride;
+                pool->stride[VIDEO_PLANE_1] = stride;
+                pool->offset[VIDEO_PLANE_0] = 0;
+                pool->offset[VIDEO_PLANE_1] = stride * mem->height; // plane 0 size is (stride * mem->height)
+                break;
+            case PIXEL_FMT_YCBCR_420_P:
+                pool->stride[VIDEO_PLANE_0] = stride;
+                pool->stride[VIDEO_PLANE_1] = stride >> 1;
+                pool->stride[VIDEO_PLANE_2] = stride >> 1;
+                pool->offset[VIDEO_PLANE_0] = 0;
+                pool->offset[VIDEO_PLANE_1] = stride * mem->height; // plane 0 size is (stride * mem->height)
+                pool->offset[VIDEO_PLANE_2] = pool->offset[VIDEO_PLANE_1] + stride * ((mem->height + 1) >> 1);
+                break;
+            case PIXEL_FMT_RGBA_8888:
+                pool->stride[VIDEO_PLANE_0] = stride;
+                pool->offset[VIDEO_PLANE_0] = 0;
+                break;
+            default:
+                GST_DEBUG_OBJECT(pool, "update buffer video meta ignore pixelformat %d", mem->pixel_format);
+                return;
+        }
+        pool->planes = FORMAT_PLANE_MAP.at((PixelFormat)mem->pixel_format);
+    }
+    GstVideoMeta *video_meta = gst_buffer_get_video_meta(buffer);
+    if (video_meta != nullptr) {
+        video_meta->n_planes = pool->planes;
+        video_meta->stride[VIDEO_PLANE_0] = pool->stride[VIDEO_PLANE_0];
+        video_meta->stride[VIDEO_PLANE_1] = pool->stride[VIDEO_PLANE_1];
+        video_meta->stride[VIDEO_PLANE_2] = pool->stride[VIDEO_PLANE_2];
+        video_meta->offset[VIDEO_PLANE_0] = pool->offset[VIDEO_PLANE_0];
+        video_meta->offset[VIDEO_PLANE_1] = pool->offset[VIDEO_PLANE_1];
+        video_meta->offset[VIDEO_PLANE_2] = pool->offset[VIDEO_PLANE_2];
+    } else {
+        gst_buffer_add_video_meta_full(buffer, GST_VIDEO_FRAME_FLAG_NONE, TO_GST_MAP.at((PixelFormat)mem->pixel_format),
+            mem->width, mem->height, pool->planes, pool->offset, pool->stride);
+    }
 }
