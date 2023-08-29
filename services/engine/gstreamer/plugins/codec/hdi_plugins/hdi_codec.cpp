@@ -261,7 +261,7 @@ int32_t HdiCodec::PushInputBuffer(GstBuffer *buffer)
 int32_t HdiCodec::Flush(GstCodecDirect direct)
 {
     MEDIA_LOGD("Flush start");
-    if (!start_ || isError_) {
+    if (!start_) {
         return GST_CODEC_OK;
     }
 
