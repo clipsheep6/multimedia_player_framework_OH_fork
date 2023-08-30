@@ -17,13 +17,13 @@
 #define I_STANDARD_MONITOR_SERVICE_H
 
 #include "ipc_types.h"
+#include "iremote_broker.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
-#include "i_media_stub_service.h"
 
 namespace OHOS {
 namespace Media {
-class IStandardMonitorService : public IMediaStubService {
+class IStandardMonitorService : public IRemoteBroker {
 public:
     virtual ~IStandardMonitorService() = default;
     virtual int32_t Click() = 0;

@@ -38,7 +38,7 @@ public:
     int32_t CancellationObj(int32_t pid, wptr<MonitorServerObject> obj);
 
     int32_t OnClientDie(int32_t pid);
-    int32_t Dump(int32_t fd);
+    int32_t Dump(int32_t fd, bool needDetail);
 
 private:
     uint64_t GetTimeMS();
