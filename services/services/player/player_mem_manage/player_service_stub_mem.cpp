@@ -32,6 +32,7 @@ namespace OHOS {
 namespace Media {
 constexpr int32_t PER_INSTANCE_NEED_MEMORY_PERCENT = 10;
 constexpr int32_t ONE_HUNDRED = 100;
+constexpr int32_t INSTANCE_NEED_MEMORY_LOW = 102400; // 100M
 sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
 {
     int32_t availableMemory;
@@ -39,7 +40,8 @@ sptr<PlayerServiceStub> PlayerServiceStubMem::Create()
     int32_t ret = Memory::MemMgrClient::GetInstance().GetAvailableMemory(availableMemory);
     ret |= Memory::MemMgrClient::GetInstance().GetTotalMemory(totalMemory);
     MEDIA_LOGD("System available memory:%{public}d, total memory:%{public}d", availableMemory, totalMemory);
-    if (ret == MSERR_OK && availableMemory <= totalMemory / ONE_HUNDRED * PER_INSTANCE_NEED_MEMORY_PERCENT) {
+    if (ret == MSERR_OK && availableMemory <= totalMemory / ONE_HUNDRED * PER_INSTANCE_NEED_MEMORY_PERCENT &&
+        availableMemory <= INSTANCE_NEED_MEMORY_LOW) {
         MEDIA_LOGE("System available memory:%{public}d is less than total memory:%{public}d",
             availableMemory, totalMemory);
         return nullptr;
