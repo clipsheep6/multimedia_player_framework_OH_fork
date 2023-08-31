@@ -145,7 +145,7 @@ void SoundPoolCallBackNapi::OnJsErrorCallBack(SoundPoolJsCallBack *jsCb) const
     };
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         CHECK_AND_RETURN_LOG(work->data != nullptr, "workdata is nullptr");
@@ -183,7 +183,7 @@ void SoundPoolCallBackNapi::OnJsErrorCallBack(SoundPoolJsCallBack *jsCb) const
         delete event;
         delete work;
     });
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work task");
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
 }
@@ -204,7 +204,7 @@ void SoundPoolCallBackNapi::OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb)
     };
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         CHECK_AND_RETURN_LOG(work->data != nullptr, "workdata is nullptr");
         SoundPoolJsCallBack *event = reinterpret_cast<SoundPoolJsCallBack *>(work->data);
@@ -235,7 +235,7 @@ void SoundPoolCallBackNapi::OnJsloadCompletedCallBack(SoundPoolJsCallBack *jsCb)
         delete event;
         delete work;
     });
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work task");
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
 }
@@ -256,7 +256,7 @@ void SoundPoolCallBackNapi::OnJsplayCompletedCallBack(SoundPoolJsCallBack *jsCb)
     };
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         CHECK_AND_RETURN_LOG(work->data != nullptr, "workdata is nullptr");
@@ -285,7 +285,7 @@ void SoundPoolCallBackNapi::OnJsplayCompletedCallBack(SoundPoolJsCallBack *jsCb)
         delete event;
         delete work;
     });
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work task");
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
 
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
