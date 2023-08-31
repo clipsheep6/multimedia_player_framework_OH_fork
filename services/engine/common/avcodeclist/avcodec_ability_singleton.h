@@ -26,7 +26,6 @@ public:
     ~AVCodecAbilitySingleton();
     static AVCodecAbilitySingleton& GetInstance();
     bool ParseCodecXml();
-    bool RegisterCapability(const std::vector<CapabilityData> &registerCapabilityDataArray);
     bool RegisterHdiCapability(const std::vector<CapabilityData> &registerCapabilityDataArray);
     std::vector<CapabilityData> GetCapabilityDataArray();
 

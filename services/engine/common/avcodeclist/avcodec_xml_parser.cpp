@@ -154,20 +154,14 @@ AVCodecXmlParser::~AVCodecXmlParser()
 bool AVCodecXmlParser::LoadConfiguration()
 {
     mDoc_ = xmlReadFile(AVCODEC_CONFIG_FILE.c_str(), nullptr, 0);
-    if (mDoc_ == nullptr) {
-        MEDIA_LOGE("AVCodec xmlReadFile failed");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(mDoc_ != nullptr, false, "AVCodec xmlReadFile failed");
     return true;
 }
 
 bool AVCodecXmlParser::Parse()
 {
     xmlNode *root = xmlDocGetRootElement(mDoc_);
-    if (root == nullptr) {
-        MEDIA_LOGE("AVCodec xmlDocGetRootElement failed");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(root != nullptr, false, "AVCodec xmlDocGetRootElement failed");
     return ParseInternal(root);
 }
 
@@ -203,51 +197,32 @@ bool AVCodecXmlParser::ParseInternal(xmlNode *node)
 
 bool AVCodecXmlParser::TransStrAsRange(const std::string &str, Range &range)
 {
-    if (str == "null" || str == "") {
-        MEDIA_LOGD("str is null");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(str != "null" && str != "", false, "str is null");
     size_t pos = str.find("-");
-    if (pos != str.npos && pos + 1 < str.size()) {
-        std::string head = str.substr(0, pos);
-        std::string tail = str.substr(pos + 1);
-        if (!StrToInt(head, range.minVal)) {
-            MEDIA_LOGE("call StrToInt func false, input str is: %{public}s", head.c_str());
-            return false;
-        }
-        if (!StrToInt(tail, range.maxVal)) {
-            MEDIA_LOGE("call StrToInt func false, input str is: %{public}s", tail.c_str());
-            return false;
-        }
-    } else {
-        MEDIA_LOGD("Can not find the delimiter of \"-\" in : %{public}s", str.c_str());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(pos != str.npos && pos + 1 < str.size(), false, "The string does not contain -");
+
+    std::string head = str.substr(0, pos);
+    std::string tail = str.substr(pos + 1);
+    CHECK_AND_RETURN_RET_LOG(StrToInt(head, range.minVal) == true, false,
+        "call StrToInt func false, input str is: %{public}s", head.c_str());
+    CHECK_AND_RETURN_RET_LOG(StrToInt(tail, range.maxVal) == true, false,
+        "call StrToInt func false, input str is: %{public}s", tail.c_str());
     return true;
 }
 
 bool AVCodecXmlParser::TransStrAsSize(const std::string &str, ImgSize &size)
 {
-    if (str == "null" || str == "") {
-        MEDIA_LOGD("str is null");
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(str != "null" && str != "", false, "str is null");
     size_t pos = str.find("x");
-    if (pos != str.npos && pos + 1 < str.size()) {
-        std::string head = str.substr(0, pos);
-        std::string tail = str.substr(pos + 1);
-        if (!StrToInt(head, size.width)) {
-            MEDIA_LOGE("call StrToInt func false, input str is: %{public}s", head.c_str());
-            return false;
-        }
-        if (!StrToInt(tail, size.height)) {
-            MEDIA_LOGE("call StrToInt func false, input str is: %{public}s", tail.c_str());
-            return false;
-        }
-    } else {
-        MEDIA_LOGD("Can not find the delimiter of \"x\" in : %{public}s", str.c_str());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(pos != str.npos && pos + 1 < str.size(), false, "The string does not contain x");
+
+    std::string head = str.substr(0, pos);
+    std::string tail = str.substr(pos + 1);
+    CHECK_AND_RETURN_RET_LOG(StrToInt(head, size.width) == true, false,
+        "call StrToInt func false, input str is: %{public}s", head.c_str());
+    CHECK_AND_RETURN_RET_LOG(StrToInt(tail, size.height) == true, false,
+        "call StrToInt func false, input str is: %{public}s", tail.c_str());
+
     return true;
 }
 
@@ -256,10 +231,8 @@ std::vector<int32_t> AVCodecXmlParser::TransStrAsIntegerArray(const std::vector<
     std::vector<int32_t> array;
     for (auto iter = spilt.begin(); iter != spilt.end(); iter++) {
         int32_t num = -1;
-        if (!StrToInt(*iter, num)) {
-            MEDIA_LOGE("call StrToInt func false, input str is: %{public}s", iter->c_str());
-            return array;
-        }
+        CHECK_AND_RETURN_RET_LOG(StrToInt(*iter, num) == true, array,
+            "call StrToInt func false, input str is: %{public}s", iter->c_str());
         array.push_back(num);
     }
     return array;
@@ -273,8 +246,6 @@ std::vector<int32_t> AVCodecXmlParser::TransMapAsIntegerArray(
     for (auto iter = spilt.begin(); iter != spilt.end(); iter++) {
         if (capabilityMap.find(*iter) != capabilityMap.end()) {
             res.emplace_back(capabilityMap.at(*iter));
-        } else {
-            MEDIA_LOGD("can not find %{public}s in capabilityMap", iter->c_str());
         }
     }
     return res;
@@ -283,9 +254,7 @@ std::vector<int32_t> AVCodecXmlParser::TransMapAsIntegerArray(
 bool AVCodecXmlParser::SpiltKeyList(const std::string &str, const std::string &delim,
     std::vector<std::string> &spilt)
 {
-    if (str == "") {
-        return false;
-    }
+    CHECK_AND_RETURN_RET(str != "", false);
     std::string strAddDelim = str;
     if (str.back() != delim.back()) {
         strAddDelim = str + delim;
@@ -312,26 +281,18 @@ bool AVCodecXmlParser::SetCapabilityStringData(std::unordered_map<std::string, s
 bool AVCodecXmlParser::SetCapabilityIntData(std::unordered_map<std::string, int32_t&> dataMap,
     const std::string &capabilityKey, const std::string &capabilityValue)
 {
-    if (CODEC_TYPE_MAP.find(capabilityValue) != CODEC_TYPE_MAP.end()) {
-        dataMap.at(capabilityKey) = CODEC_TYPE_MAP.at(capabilityValue);
-    } else {
-        MEDIA_LOGD("The value of %{public}s in the configuration file is incorrect.", capabilityValue.c_str());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(CODEC_TYPE_MAP.find(capabilityValue) != CODEC_TYPE_MAP.end(), false,
+        "The value of %{public}s in the configuration file is incorrect.", capabilityValue.c_str());
+    dataMap.at(capabilityKey) = CODEC_TYPE_MAP.at(capabilityValue);
     return true;
 }
 
 bool AVCodecXmlParser::SetCapabilityBoolData(std::unordered_map<std::string, bool&> dataMap,
     const std::string &capabilityKey, const std::string &capabilityValue)
 {
-    if (capabilityValue == "true") {
-        dataMap.at(capabilityKey) = true;
-    } else if (capabilityValue == "false") {
-        dataMap.at(capabilityKey) = false;
-    } else {
-        MEDIA_LOGD("The value of %{public}s in the configuration file is incorrect.", capabilityValue.c_str());
-        return false;
-    }
+    CHECK_AND_RETURN_RET_LOG(capabilityValue == "true" || capabilityValue == "false", false,
+        "The value of %{public}s in the configuration file is incorrect.", capabilityValue.c_str());
+    dataMap.at(capabilityKey) = (capabilityValue == "true") ? true : false;
     return true;
 }
 
@@ -369,11 +330,9 @@ bool AVCodecXmlParser::SetCapabilityHashRangeData(std::unordered_map<std::string
         ret = SpiltKeyList(*iter, "@", resolutionFrameRateVector);
         CHECK_AND_RETURN_RET_LOG(ret != false && resolutionFrameRateVector.size() == PAIR_LENGTH, false,
             "failed:can not trans %{public}s", iter->c_str());
-        if (!(TransStrAsSize(resolutionFrameRateVector[0], resolution) &&
-              TransStrAsRange(resolutionFrameRateVector[1], frameRate))) {
-            MEDIA_LOGD("failed:can not trans %{public}s for resolution or frame rate", iter->c_str());
-            return false;
-        }
+        CHECK_AND_RETURN_RET_LOG(TransStrAsSize(resolutionFrameRateVector[0], resolution) &&
+            TransStrAsRange(resolutionFrameRateVector[1], frameRate), false,
+            "failed:can not trans %{public}s for resolution or frame rate", iter->c_str());
         resolutionFrameRateMap.insert(std::make_pair(resolution, frameRate));
     }
     dataMap.at(capabilityKey) = resolutionFrameRateMap;
@@ -384,9 +343,7 @@ bool AVCodecXmlParser::IsNumberArray(const std::vector<std::string> &strArray)
 {
     for (auto iter = strArray.begin(); iter != strArray.end(); iter++) {
         for (char const &c : *iter) {
-            if (std::isdigit(c) == 0) {
-                return false;
-            }
+            CHECK_AND_RETURN_RET_LOG(std::isdigit(c) != 0, false, "str is not digit");
         }
     }
     return true;

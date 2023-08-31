@@ -22,6 +22,23 @@ using namespace OHOS;
 using namespace OHOS::Media;
 using namespace testing::ext;
 
+namespace {
+    constexpr uint32_t DEFAULT_WIDTH = 1920;
+    constexpr uint32_t DEFAULT_HEIGHT = 1080;
+    constexpr uint32_t MIN_WIDTH = 2;
+    constexpr uint32_t MIN_HEIGHT = 2;
+    constexpr uint32_t MAX_WIDTH = 3840;
+    constexpr uint32_t MAX_HEIGHT = 2160;
+    constexpr uint32_t MAX_FRAME_RATE_HARD = 240; // max hard codec framerate, affected by hardware
+    constexpr uint32_t MAX_FRAME_RATE_SOFT = 30;
+    constexpr double DOUBLE_FRAME_RATE = 29.9;
+    constexpr uint32_t MAX_VIDEO_BITRATE = 3000000;
+    constexpr uint32_t MAX_AUDIO_BITRATE = 384000;
+    constexpr uint32_t DEFAULT_SAMPLE_RATE = 8000;
+    constexpr uint32_t MAX_CHANNEL_COUNT = 2;
+    constexpr uint32_t MAX_CHANNEL_COUNT_VORBIS = 7;
+}
+
 namespace OHOS {
 namespace Media {
 void AVCodecListUnitTest::SetUpTestCase(void) {}
@@ -65,6 +82,22 @@ HWTEST_F(AVCodecListUnitTest, AVCdecList_FindVideoDecoder_0100, TestSize.Level0)
     (void)format->PutIntValue(heightKey_, DEFAULT_HEIGHT);
     (void)format->PutIntValue(pixelFormatKey_, enum_->GetVideoPixelFormat(VideoPixelFormatMock::MOCK_NV12));
     (void)format->PutIntValue(frameRateKey_, MAX_FRAME_RATE_HARD);
+    codecName = avCodecList_->FindVideoDecoder(format);
+}
+
+/**
+ * @tc.name: AVCdecList_FindVideoDecoder_0200
+ * @tc.desc: AVCdecList FindVideoDecoder
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(AVCodecListUnitTest, AVCdecList_FindVideoDecoder_0200, TestSize.Level0)
+{
+    std::string codecName;
+    std::shared_ptr<FormatMock> format = AVCodecMockFactory::CreateFormat();
+    ASSERT_NE(nullptr, format);
+    (void)format->PutStringValue(codecMimeKey_, enum_->GetCodecMimeType(CodecMimeTypeMock::VIDEO_AVC));
+    (void)format->PutIntValue(frameRateKey_, DOUBLE_FRAME_RATE);
     codecName = avCodecList_->FindVideoDecoder(format);
 }
 
