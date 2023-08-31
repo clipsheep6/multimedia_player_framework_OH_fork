@@ -44,6 +44,7 @@ struct _GstVdecH264 {
     GstVdecBase parent;
     gboolean is_slice_buffer;
     gboolean has_data_after_sps;
+    gboolean last_data_is_pps;
     guint cache_offset;
     GstBuffer *cache_slice_buffer;
     GMutex cat_lock;
