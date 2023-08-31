@@ -139,12 +139,12 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
     };
 
     work->data = reinterpret_cast<void *>(jsCb);
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
         std::string request = event->callbackName;
-        MEDIA_LOGI("uv_queue_work start, state changes to %{public}s", event->state.c_str());
+        MEDIA_LOGI("uv_queue_work_with_qos start, state changes to %{public}s", event->state.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
@@ -176,8 +176,8 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
         } while (0);
         delete event;
         delete work;
-    });
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work task");
+    }, uv_qos_user_initiated);
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
     
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
@@ -201,13 +201,13 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
 
     work->data = reinterpret_cast<void *>(jsCb);
     // async callback, jsWork and jsWork->data should be heap object.
-    int ret = uv_queue_work(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
+    int ret = uv_queue_work_with_qos(loop, work, [] (uv_work_t *work) {}, [] (uv_work_t *work, int status) {
         // Js Thread
         CHECK_AND_RETURN_LOG(work != nullptr, "work is nullptr");
         CHECK_AND_RETURN_LOG(work->data != nullptr, "workdata is nullptr");
         AVRecordJsCallback *event = reinterpret_cast<AVRecordJsCallback *>(work->data);
         std::string request = event->callbackName;
-        MEDIA_LOGI("uv_queue_work start, errorcode:%{public}d , errormessage:%{public}s:",
+        MEDIA_LOGI("uv_queue_work_with_qos start, errorcode:%{public}d , errormessage:%{public}s:",
             event->errorCode, event->errorMsg.c_str());
         do {
             CHECK_AND_BREAK_LOG(status != UV_ECANCELED, "%{public}s canceled", request.c_str());
@@ -242,8 +242,8 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
         } while (0);
         delete event;
         delete work;
-    });
-    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work task");
+    }, uv_qos_user_initiated);
+    CHECK_AND_RETURN_LOG(ret == 0, "fail to uv_queue_work_with_qos task");
     
     CANCEL_SCOPE_EXIT_GUARD(0);
     CANCEL_SCOPE_EXIT_GUARD(1);
