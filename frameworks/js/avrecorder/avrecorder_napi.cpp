@@ -183,7 +183,7 @@ napi_value AVRecorderNapi::JsCreateAVRecorder(napi_env env, napi_callback_info i
     napi_create_string_utf8(env, "JsCreateAVRecorder", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {},
               MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work), napi_qos_user_initiated);
     asyncCtx.release();
 
     MEDIA_LOGI("JsCreateAVRecorder success");
@@ -258,7 +258,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
         }
         MEDIA_LOGI("The js thread of prepare finishes execution and returns");
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work), napi_qos_user_initiated);
     asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
@@ -382,7 +382,7 @@ napi_value AVRecorderNapi::JsGetAVRecorderProfile(napi_env env, napi_callback_in
         }
         MEDIA_LOGI("The js thread of prepare finishes execution and returns");
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work), napi_qos_user_initiated);
     asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
@@ -484,7 +484,7 @@ napi_value AVRecorderNapi::JsSetAVRecorderConfig(napi_env env, napi_callback_inf
         }
         MEDIA_LOGI("The js thread of prepare finishes execution and returns");
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work), napi_qos_user_initiated);
     asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
@@ -662,7 +662,7 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
         }
         MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work), napi_qos_user_initiated);
     asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
