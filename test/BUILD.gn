@@ -23,6 +23,7 @@ group("media_unit_test") {
       "../frameworks/native/player/test/unittest:player_unit_test",
       "../frameworks/native/recorder/test/unittest:recorder_unit_test",
       "../frameworks/native/recorder_profiles/test/unittest:recorder_profiles_unit_test",
+      "../frameworks/native/soundpool/test/unittest:soundpool_unit_test",
       "unittest/avcodec_test:acodec_native_unit_test",
       "unittest/avcodec_test:avcodec_list_native_unit_test",
       "unittest/avcodec_test:format_native_unit_test",
