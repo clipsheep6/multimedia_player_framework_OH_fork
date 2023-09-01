@@ -290,6 +290,9 @@ int32_t PlayBinCtrlerBase::Stop(bool needWait)
     if (videoSink_ == nullptr) {
         g_object_set(playbin_, "state-change", GST_PLAYER_STATUS_READY, nullptr);
     }
+    if (audioSeekThread_.joinable()) {
+        audioSeekThread_.join();
+    }
     auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
     (void)currState->Stop();
 
@@ -622,9 +625,6 @@ void PlayBinCtrlerBase::ExitInitializedState()
     signalIds_.clear();
 
     MEDIA_LOGD("unref playbin start");
-    if (audioSeekThread_.joinable()) {
-        audioSeekThread_.join();
-    }
     if (playbin_ != nullptr) {
         (void)gst_element_set_state(GST_ELEMENT_CAST(playbin_), GST_STATE_NULL);
         gst_object_unref(playbin_);
