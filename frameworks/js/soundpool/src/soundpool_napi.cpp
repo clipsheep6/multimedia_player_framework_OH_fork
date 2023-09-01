@@ -495,7 +495,7 @@ napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_status status = napi_get_value_int32(env, args[PARAM0], &asyncCtx->soundId_);
     if (status != napi_ok || asyncCtx->soundId_ <= 0) {
-        asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "unLoad failed,inavild value");
+        asyncCtx->SignError(MSERR_EXT_API9_IO, "unLoad failed,inavild value");
     }
 
     napi_value resource = nullptr;
@@ -677,19 +677,19 @@ int32_t SoundPoolNapi::ParserLoadOptionFromJs(std::unique_ptr<SoundPoolAsyncCont
     if ((argCount < PARAM3) && (argCount > 0)) {
         asyncCtx->url_ = CommonNapi::GetStringArgument(env, argv[PARAM0]);
         CHECK_AND_RETURN_RET(asyncCtx->url_ != "",
-            (asyncCtx->SoundPoolAsyncSignError(MSERR_INVALID_VAL, "geturl", "url"), MSERR_INVALID_VAL));
+            (asyncCtx->SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "geturl", "url"), MSERR_OPEN_FILE_FAILED));
     } else if ((argCount >= PARAM3) && (argCount < MAX_PARAM)) {
         napi_status status = napi_get_value_int32(env, argv[PARAM0], &asyncCtx->fd_);
         CHECK_AND_RETURN_RET((status == napi_ok && asyncCtx->fd_ > 0),
-            (asyncCtx->SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getfd", "fd"), MSERR_INVALID_VAL));
+            (asyncCtx->SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "getfd", "fd"), MSERR_OPEN_FILE_FAILED));
 
         status = napi_get_value_int64(env, argv[PARAM1], &asyncCtx->offset_);
         CHECK_AND_RETURN_RET((status == napi_ok && asyncCtx->offset_ >= 0),
-            (asyncCtx->SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getoffset", "offset"), MSERR_INVALID_VAL));
+            (asyncCtx->SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "getoffset", "offset"), MSERR_OPEN_FILE_FAILED));
 
         status = napi_get_value_int64(env, argv[PARAM2], &asyncCtx->length_);
         CHECK_AND_RETURN_RET((status == napi_ok && asyncCtx->length_ > 0),
-            (asyncCtx->SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getlength", "length"), MSERR_INVALID_VAL));
+            (asyncCtx->SoundPoolAsyncSignError(MSERR_OPEN_FILE_FAILED, "getlength", "length"), MSERR_OPEN_FILE_FAILED));
     } else {
         MEDIA_LOGI("Get Value error,return error:MSERR_INVALID_VAL");
         return MSERR_INVALID_VAL;
@@ -721,8 +721,8 @@ int32_t SoundPoolNapi::ParserPlayOptionFromJs(std::unique_ptr<SoundPoolAsyncCont
     CHECK_AND_RETURN_RET((status == napi_ok && asyncCtx->soundId_ > 0),
         (asyncCtx->SoundPoolAsyncSignError(MSERR_INVALID_VAL, "getplaysoundId", "soundId"), MSERR_INVALID_VAL));
 
-    ret = CommonNapi::GetPropertyInt32(env, argv[PARAM1], "loop", asyncCtx->playParameters_.loop);
-    ret = CommonNapi::GetPropertyInt32(env, argv[PARAM1], "rate", asyncCtx->playParameters_.rate);
+    CommonNapi::GetPropertyInt32(env, argv[PARAM1], "loop", asyncCtx->playParameters_.loop);
+    CommonNapi::GetPropertyInt32(env, argv[PARAM1], "rate", asyncCtx->playParameters_.rate);
     double leftVolume;
     ret = CommonNapi::GetPropertyDouble(env, argv[PARAM1], "leftVolume", leftVolume);
     if (ret > 0) {
@@ -732,12 +732,9 @@ int32_t SoundPoolNapi::ParserPlayOptionFromJs(std::unique_ptr<SoundPoolAsyncCont
     if (ret > 0) {
         asyncCtx->playParameters_.rightVolume = static_cast<float>(leftVolume);
     }
-    ret = CommonNapi::GetPropertyInt32(env, argv[PARAM1], "priority", asyncCtx->playParameters_.priority);
-    int32_t parallelPlayFlag;
-    ret = CommonNapi::GetPropertyInt32(env, argv[PARAM1], "parallelPlayFlag", parallelPlayFlag);
-    if (ret > 0) {
-        asyncCtx->playParameters_.parallelPlayFlag = static_cast<bool>(parallelPlayFlag);
-    }
+    CommonNapi::GetPropertyInt32(env, argv[PARAM1], "priority", asyncCtx->playParameters_.priority);
+    GetPropertyBool(env, argv[PARAM1], "parallelPlayFlag", asyncCtx->playParameters_.parallelPlayFlag);
+
     std::shared_ptr<AbilityRuntime::Context> abilityContext = GetAbilityContext(env);
     if (abilityContext != nullptr) {
         asyncCtx->playParameters_.cacheDir = abilityContext->GetCacheDir();
@@ -749,7 +746,7 @@ int32_t SoundPoolNapi::ParserPlayOptionFromJs(std::unique_ptr<SoundPoolAsyncCont
         asyncCtx->playParameters_.rate, asyncCtx->playParameters_.leftVolume,
         asyncCtx->playParameters_.rightVolume, asyncCtx->playParameters_.priority,
         asyncCtx->playParameters_.parallelPlayFlag);
-    return ret;
+    return MSERR_OK;
 }
 
 int32_t SoundPoolNapi::ParserRateOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
@@ -822,6 +819,28 @@ void SoundPoolNapi::CancelCallback()
     CHECK_AND_RETURN_LOG(callbackNapi_ != nullptr, "soundpoolCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<SoundPoolCallBackNapi>(callbackNapi_);
     napiCb->ClearCallbackReference();
+}
+
+bool SoundPoolNapi::GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result)
+{
+    napi_value item = nullptr;
+    bool exist = false;
+    napi_status status = napi_has_named_property(env, configObj, type.c_str(), &exist);
+    if (status != napi_ok || !exist) {
+        MEDIA_LOGE("can not find %{public}s property", type.c_str());
+        return false;
+    }
+
+    if (napi_get_named_property(env, configObj, type.c_str(), &item) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property fail", type.c_str());
+        return false;
+    }
+
+    if (napi_get_value_bool(env, item, &result) != napi_ok) {
+        MEDIA_LOGE("get %{public}s property value fail", type.c_str());
+        return false;
+    }
+    return true;
 }
 
 RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::string &param, const std::string &add = "")

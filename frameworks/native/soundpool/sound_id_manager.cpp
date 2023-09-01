@@ -40,14 +40,22 @@ SoundIDManager::~SoundIDManager()
         queueDataValid_.notify_all();  // notify all worker threads
     }
 
+    if (callback_ != nullptr) {
+        callback_.reset();
+    }
+    for (auto soundParser : soundParsers_) {
+        if (soundParser.second != nullptr) {
+            soundParser.second->Release();
+        }
+    }
+    soundParsers_.clear();
+
     if (isParsingThreadPoolStarted_) {
         if (soundParserThreadPool_ != nullptr) {
             soundParserThreadPool_->Stop();
         }
         isParsingThreadPoolStarted_ = false;
     }
-    soundParsers_.clear();
-    if (callback_ != nullptr) callback_ = nullptr;
 }
 
 int32_t SoundIDManager::InitThreadPool()
@@ -133,12 +141,10 @@ int32_t SoundIDManager::DoParser()
 {
     std::unique_lock lock(soundManagerLock_);
     while (!quitQueue_) {
-        if (soundIDs_.size() == 0) {
+        if (soundIDs_.empty()) {
             queueDataValid_.wait_for(
                 lock, std::chrono::duration<int32_t, std::milli>(WAIT_TIME_BEFORE_CLOSE_MS));
-            if (soundIDs_.size() == 0) {
-                break; // no new sound, exit this thread.
-            }
+            if (soundIDs_.empty()) break; // no new sound, exit this thread.
             continue;
         }
         const int32_t soundID = soundIDs_.front();

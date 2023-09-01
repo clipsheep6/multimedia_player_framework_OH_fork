@@ -50,6 +50,7 @@ ohos_shared_library("soundpool_client") {
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hilog:libhilog",
+    "init:libbegetutil",
   ]
 
   cflags = [

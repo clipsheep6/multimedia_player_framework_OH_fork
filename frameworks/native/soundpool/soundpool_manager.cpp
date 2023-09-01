@@ -21,12 +21,14 @@ namespace Media {
 SoundPoolManager::~SoundPoolManager()
 {
     MEDIA_INFO_LOG("Destruction SoundPoolManager.");
+    std::lock_guard<std::mutex> lock(mutex_);
     soundPools_.clear();
 };
 
 
 int32_t SoundPoolManager::GetSoundPool(const pid_t pid, std::shared_ptr<SoundPool>& soundPool)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = soundPools_.find(pid);
     it != soundPools_.end() ? soundPool = it->second : soundPool = nullptr;
     return MSERR_OK;
@@ -34,6 +36,7 @@ int32_t SoundPoolManager::GetSoundPool(const pid_t pid, std::shared_ptr<SoundPoo
 
 int32_t SoundPoolManager::SetSoundPool(const pid_t pid, std::shared_ptr<SoundPool> soundPool)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = soundPools_.find(pid);
     if (it != soundPools_.end()) {
         MEDIA_INFO_LOG("SoundPool have setted, use old object.");
@@ -47,6 +50,7 @@ int32_t SoundPoolManager::SetSoundPool(const pid_t pid, std::shared_ptr<SoundPoo
 
 int32_t SoundPoolManager::Release(const pid_t pid)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     auto it = soundPools_.find(pid);
     if (it != soundPools_.end()) {
         MEDIA_INFO_LOG("Release soundpool, pid:%{pulibc}d.", pid);

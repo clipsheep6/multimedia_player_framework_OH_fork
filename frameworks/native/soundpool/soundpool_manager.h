@@ -42,6 +42,7 @@ public:
 
 private:
     SoundPoolManager() {}
+    std::mutex mutex_;
     std::unordered_map<pid_t, std::shared_ptr<SoundPool>> soundPools_;
 };
 } // namespace Media

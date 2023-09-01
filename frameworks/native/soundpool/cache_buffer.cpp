@@ -20,9 +20,9 @@
 
 namespace OHOS {
 namespace Media {
-CacheBuffer::CacheBuffer(MediaAVCodec::Format trackFormat,
-    std::deque<std::shared_ptr<AudioBufferEntry>> cacheData,
-    int32_t soundID, int32_t streamID) : trackFormat_(trackFormat),
+CacheBuffer::CacheBuffer(const MediaAVCodec::Format trackFormat,
+    const std::deque<std::shared_ptr<AudioBufferEntry>> cacheData,
+    const int32_t soundID, const int32_t streamID) : trackFormat_(trackFormat),
     cacheData_(cacheData), soundID_(soundID), streamID_(streamID)
 {
     MEDIA_INFO_LOG("Construction CacheBuffer");
@@ -31,18 +31,13 @@ CacheBuffer::CacheBuffer(MediaAVCodec::Format trackFormat,
 CacheBuffer::~CacheBuffer()
 {
     MEDIA_INFO_LOG("Destruction CacheBuffer dec");
-    isRunning_.store(false);
-    if (audioRenderer_ != nullptr) {
-        audioRenderer_->Stop();
-        audioRenderer_->Release();
-        audioRenderer_ = nullptr;
-    }
+    Release();
 }
 
 std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(const int32_t streamID,
     const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams)
 {
-    MEDIA_INFO_LOG("CacheBuffer::%{public}s, streamID:%{public}d, streamID_:%{public}d", __func__, streamID, streamID_);
+    MEDIA_INFO_LOG("CacheBuffer");
     CHECK_AND_RETURN_RET_LOG(streamID == streamID_, nullptr,
         "Invalid streamID, failed to create normal audioRenderer.");
     int32_t sampleRate;
@@ -64,21 +59,24 @@ std::unique_ptr<AudioStandard::AudioRenderer> CacheBuffer::CreateAudioRenderer(c
     // contentType streamUsage rendererFlags come from user.
     rendererOptions.rendererInfo.contentType = audioRendererInfo.contentType;
     rendererOptions.rendererInfo.streamUsage = audioRendererInfo.streamUsage;
-    // low-latency:1, non low-latency:0
-    rendererOptions.rendererInfo.rendererFlags = 0;
     rendererOptions.privacyType = AudioStandard::PRIVACY_TYPE_PUBLIC;
     std::string cacheDir = "/data/storage/el2/base/temp";
     if (playParams.cacheDir != "") {
         cacheDir = playParams.cacheDir;
     }
+
+    // low-latency:1, non low-latency:0
+    rendererOptions.rendererInfo.rendererFlags = audioRendererInfo.rendererFlags;
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer =
         AudioStandard::AudioRenderer::Create(cacheDir, rendererOptions);
+    MEDIA_INFO_LOG("CacheBuffer rendererFlags:%{public}d", audioRendererInfo.rendererFlags);
     return audioRenderer;
 }
 
 int32_t CacheBuffer::PreparePlay(const int32_t streamID, const AudioStandard::AudioRendererInfo audioRendererInfo,
     const PlayParams playParams)
 {
+    MEDIA_INFO_LOG("CacheBuffer should prepare before play");
     // create audioRenderer
     if (audioRenderer_ == nullptr) {
         audioRenderer_ = CreateAudioRenderer(streamID, audioRendererInfo, playParams);
@@ -86,40 +84,48 @@ int32_t CacheBuffer::PreparePlay(const int32_t streamID, const AudioStandard::Au
         MEDIA_INFO_LOG("audio render inited.");
     }
     // deal play params
-    DealPlayParamsBeforePaly(streamID, playParams);
+    DealPlayParamsBeforePlay(streamID, playParams);
     return MSERR_OK;
 }
 
-int32_t CacheBuffer::DoPlay(const int32_t streamID, const AudioStandard::AudioRendererInfo audioRendererInfo,
-    const PlayParams playParams)
+int32_t CacheBuffer::DoPlay(const int32_t streamID)
 {
     CHECK_AND_RETURN_RET_LOG(streamID == streamID_, MSERR_INVALID_VAL, "Invalid streamID, failed to DoPlay.");
     if (isRunning_.load()) {
         Stop(streamID);
     }
-    PreparePlay(streamID, audioRendererInfo, playParams);
+    std::unique_lock lock(cacheBufferLock_);
     if (audioRenderer_ != nullptr) {
         if (!audioRenderer_->Start()) {
             MEDIA_ERR_LOG("audioRenderer Start failed");
             if (callback_ != nullptr) callback_->OnError(MSERR_INVALID_VAL);
+            if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnError(MSERR_INVALID_VAL);
             return MSERR_INVALID_VAL;
         }
-    } else {
-        MEDIA_ERR_LOG("Invalid audioRenderer.");
-        return MSERR_INVALID_VAL;
+        audioRendererRunningThread_ = std::make_unique<std::thread>(&CacheBuffer::AudioRendererRunning, this);
+        isRunning_.store(true);
+        runningValid_.notify_all();
+        return MSERR_OK;
     }
+    MEDIA_ERR_LOG("Invalid audioRenderer.");
+    return MSERR_INVALID_VAL;
+}
 
-    isRunning_.store(true);
-    AudioRendererRunning();
+int32_t CacheBuffer::DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams)
+{
+    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_INVALID_VAL, "Invalid audioRenderer.");
+    loop_ = playParams.loop;
+    audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(playParams.rate));
+    audioRenderer_->SetVolume(playParams.leftVolume);
+    priority_ = playParams.priority;
+    parallelPlayFlag_ = playParams.parallelPlayFlag;
     return MSERR_OK;
 }
 
-int32_t CacheBuffer::DealPlayParamsBeforePaly(const int32_t streamID, const PlayParams playParams)
+AudioStandard::AudioRendererRate CacheBuffer::CheckAndAlignRendererRate(const int32_t rate) const
 {
-    MEDIA_INFO_LOG("CacheBuffer::%{public}s", __func__);
-    SetLoop(streamID, playParams.loop);
-    AudioStandard::AudioRendererRate renderRate;
-    switch (playParams.rate) {
+    AudioStandard::AudioRendererRate renderRate = AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
+    switch (rate) {
         case AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL:
             renderRate = AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
             break;
@@ -133,18 +139,12 @@ int32_t CacheBuffer::DealPlayParamsBeforePaly(const int32_t streamID, const Play
             renderRate = AudioStandard::AudioRendererRate::RENDER_RATE_NORMAL;
             break;
     }
-    MEDIA_INFO_LOG("CacheBuffer playParams.rate:%{public}d", playParams.rate);
-    SetRate(streamID, renderRate);
-    SetVolume(streamID, playParams.leftVolume, playParams.rightVolume);
-    SetPriority(streamID, playParams.priority);
-    SetParallelPlayFlag(streamID, playParams.parallelPlayFlag);
-
-    return MSERR_OK;
+    return renderRate;
 }
 
 void CacheBuffer::AudioRendererRunning()
 {
-    MEDIA_INFO_LOG("CacheBuffer::%{public}s", __func__);
+    MEDIA_INFO_LOG("CacheBuffer audion render running.");
     int ret = MSERR_OK;
     int32_t runningCount = 0;
     do {
@@ -167,7 +167,6 @@ void CacheBuffer::AudioRendererRunning()
                 MEDIA_ERR_LOG("write audiobuffer failed");
             }
         }
-        MEDIA_ERR_LOG("CacheBuffer loop_:%{public}d, runningCount:%{public}d", loop_, runningCount);
         if (loop_ == runningCount) {
             MEDIA_ERR_LOG("CacheBuffer loop done, loop_:%{public}d, runningCount:%{public}d", loop_, runningCount);
             break;
@@ -181,90 +180,143 @@ void CacheBuffer::AudioRendererRunning()
         }
     } while (true);
 
-    CHECK_AND_RETURN_LOG(callback_ != nullptr, "Invalid callback.");
     if (ret == MSERR_OK) {
-        callback_->OnPlayFinished();
+        if (callback_ != nullptr) callback_->OnPlayFinished();
+        if (cacheBufferCallback_ != nullptr) cacheBufferCallback_->OnPlayFinished();
     } else {
-        MEDIA_INFO_LOG("cachebuffer soundpool callback invalid.");
-        callback_->OnError(MSERR_INVALID_VAL);
+        if (callback_ != nullptr) callback_->OnError(MSERR_INVALID_VAL);
     }
 }
 
 int32_t CacheBuffer::Stop(const int32_t streamID)
 {
-    MEDIA_INFO_LOG("CacheBuffer::%{public}s streamID:%{public}d, streamID_:%{public}d", __func__, streamID, streamID_);
-    std::lock_guard lock(cachebufferLock_);
     if (streamID == streamID_) {
-        isRunning_.store(false);
+        std::unique_lock lock(cacheBufferLock_);
+        if (!isRunning_.load()) {
+            MEDIA_INFO_LOG("CacheBuffer streamID:%{public}d the stream has not been played, wait it.", streamID);
+            runningValid_.wait_for(lock, std::chrono::duration<int32_t, std::milli>(WAIT_TIME_BEFORE_RUNNING_CONFIG));
+        }
         if (audioRenderer_ != nullptr) {
+            isRunning_.store(false);
             audioRenderer_->Stop();
         }
+        if (audioRendererRunningThread_ != nullptr && audioRendererRunningThread_->joinable()) {
+            audioRendererRunningThread_ ->join();
+            audioRendererRunningThread_.reset();
+        }
+        runningValid_.notify_all();
         return MSERR_OK;
     }
-
     return MSERR_INVALID_VAL;
 }
 
 int32_t CacheBuffer::SetVolume(const int32_t streamID, const float leftVolume, const float rightVolume)
 {
-    MEDIA_INFO_LOG("CacheBuffer::%{public}s streamID:%{public}d", __func__, streamID);
-    std::lock_guard lock(cachebufferLock_);
+    int32_t ret = MSERR_OK;
     if (streamID == streamID_) {
+        std::unique_lock lock(cacheBufferLock_);
+        if (!isRunning_.load()) {
+            MEDIA_INFO_LOG("CacheBuffer streamID:%{public}d the stream has not been played, wait it.", streamID);
+            runningValid_.wait_for(lock, std::chrono::duration<int32_t, std::milli>(WAIT_TIME_BEFORE_RUNNING_CONFIG));
+        }
         if (audioRenderer_ != nullptr) {
             // audio cannot support left & right volume, all use left volume.
             (void) rightVolume;
-            return audioRenderer_->SetVolume(leftVolume);
+            ret = audioRenderer_->SetVolume(leftVolume);
+            runningValid_.notify_all();
         }
     }
-    return MSERR_INVALID_VAL;
+    return ret;
 }
 
 int32_t CacheBuffer::SetRate(const int32_t streamID, const AudioStandard::AudioRendererRate renderRate)
 {
-    MEDIA_INFO_LOG("CacheBuffer::%{public}s streamID:%{public}d", __func__, streamID);
-    std::lock_guard lock(cachebufferLock_);
+    int32_t ret = MSERR_INVALID_VAL;
     if (streamID == streamID_) {
+        std::unique_lock lock(cacheBufferLock_);
+        if (!isRunning_.load()) {
+            MEDIA_INFO_LOG("CacheBuffer streamID:%{public}d the stream has not been played, wait it.", streamID);
+            runningValid_.wait_for(lock, std::chrono::duration<int32_t, std::milli>(WAIT_TIME_BEFORE_RUNNING_CONFIG));
+        }
         if (audioRenderer_ != nullptr) {
-            return audioRenderer_->SetRenderRate(renderRate);
+            ret = audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(renderRate));
+            runningValid_.notify_all();
         }
     }
-    return MSERR_INVALID_VAL;
+    return ret;
 }
 
 int32_t CacheBuffer::SetPriority(const int32_t streamID, const int32_t priority)
 {
-    MEDIA_INFO_LOG("CacheBuffer::%{public}s streamID:%{public}d", __func__, streamID);
-    std::lock_guard lock(cachebufferLock_);
     if (streamID == streamID_) {
+        std::unique_lock lock(cacheBufferLock_);
+        if (!isRunning_.load()) {
+            MEDIA_INFO_LOG("CacheBuffer streamID:%{public}d the stream has not been played, wait it.", streamID);
+            runningValid_.wait_for(lock, std::chrono::duration<int32_t, std::milli>(WAIT_TIME_BEFORE_RUNNING_CONFIG));
+        }
         priority_ = priority;
+        runningValid_.notify_all();
     }
     return MSERR_OK;
 }
 
 int32_t CacheBuffer::SetLoop(const int32_t streamID, const int32_t loop)
 {
-    MEDIA_INFO_LOG("CacheBuffer::%{public}s streamID:%{public}d, loop:%{public}d", __func__, streamID, loop);
-    std::lock_guard lock(cachebufferLock_);
     if (streamID == streamID_) {
+        std::unique_lock lock(cacheBufferLock_);
+        if (!isRunning_.load()) {
+            MEDIA_INFO_LOG("CacheBuffer streamID:%{public}d the stream has not been played, wait it.", streamID);
+            runningValid_.wait_for(lock, std::chrono::duration<int32_t, std::milli>(WAIT_TIME_BEFORE_RUNNING_CONFIG));
+        }
         loop_ = loop;
+        runningValid_.notify_all();
     }
     return MSERR_OK;
 }
 
 int32_t CacheBuffer::SetParallelPlayFlag(const int32_t streamID, const bool parallelPlayFlag)
 {
-    std::lock_guard lock(cachebufferLock_);
-    MEDIA_INFO_LOG("CacheBuffer unsupport parallel config, streamID:%{public}d", streamID);
-    parallelPlayFlag_ = parallelPlayFlag;
-    (void) parallelPlayFlag_;
-    // 预留接口
+    if (streamID == streamID_) {
+        std::unique_lock lock(cacheBufferLock_);
+        if (!isRunning_.load()) {
+            MEDIA_INFO_LOG("CacheBuffer streamID:%{public}d the stream has not been played, wait it.", streamID);
+            runningValid_.wait_for(lock, std::chrono::duration<int32_t, std::milli>(WAIT_TIME_BEFORE_RUNNING_CONFIG));
+        }
+
+        parallelPlayFlag_ = parallelPlayFlag;
+        (void) parallelPlayFlag_;
+        // 预留接口
+        runningValid_.notify_all();
+    }
+    return MSERR_OK;
+}
+
+int32_t CacheBuffer::Release()
+{
+    MEDIA_INFO_LOG("CacheBuffer release, streamID:%{public}d", streamID_);
+    isRunning_.store(false);
+    if (audioRenderer_ != nullptr) {
+        audioRenderer_->Stop();
+        audioRenderer_->Release();
+        audioRenderer_ = nullptr;
+    }
+    if (audioRendererRunningThread_ != nullptr && audioRendererRunningThread_->joinable()) {
+        audioRendererRunningThread_ ->join();
+        audioRendererRunningThread_.reset();
+    }
+    runningValid_.notify_all();
     return MSERR_OK;
 }
 
 int32_t CacheBuffer::SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
 {
-    MEDIA_INFO_LOG("CacheBuffer SetCallback.");
     callback_ = callback;
+    return MSERR_OK;
+}
+
+int32_t CacheBuffer::SetCacheBufferCallback(const std::shared_ptr<ISoundPoolCallback> &callback)
+{
+    cacheBufferCallback_ = callback;
     return MSERR_OK;
 }
 } // namespace Media

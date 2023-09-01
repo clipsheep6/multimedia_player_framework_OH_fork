@@ -42,20 +42,19 @@ public:
     public:
         SoundDecodeListener()
         {
-            MEDIA_INFO_LOG("%{public}s:%{public}d", __func__, __LINE__);
+            MEDIA_INFO_LOG("Construction SoundDecodeListener");
         }
         virtual ~SoundDecodeListener()
         {
-            MEDIA_INFO_LOG("%{public}s:%{public}d", __func__, __LINE__);
+            MEDIA_INFO_LOG("Destruction SoundDecodeListener");
         }
-        virtual void OnSoundDecodeCompleted(std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers) = 0;
+        virtual void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>>
+            availableAudioBuffers) = 0;
     };
 
     SoundDecoderCallback(const int32_t soundID, const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer) : soundID_(soundID),
-        audioDec_(audioDec), demuxer_(demuxer), eosFlag_(false),
-        decodeShouldCompleted_(false), currentSoundBufferSize_(0) {}
-    virtual ~SoundDecoderCallback() = default;
+        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer);
+    ~SoundDecoderCallback();
     int32_t SetDecodeCallback(const std::shared_ptr<SoundDecodeListener> &listener)
     {
         MEDIA_INFO_LOG("%{public}s:%{public}d", __func__, __LINE__);
@@ -70,11 +69,12 @@ public:
         std::shared_ptr<AVSharedMemory> buffer) override;
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
+    int32_t Release();
 
 private:
     const int32_t soundID_;
-    const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
-    const std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
+    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
+    std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
     std::shared_ptr<SoundDecodeListener> listener_;
     bool eosFlag_;
     std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers_;
@@ -103,23 +103,24 @@ public:
     bool IsSoundParserCompleted() const;
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
+    int32_t Release();
 
 private:
     class SoundParserListener : public SoundDecoderCallback::SoundDecodeListener {
     public:
         explicit SoundParserListener(const std::weak_ptr<SoundParser> soundParser) : soundParserInner_(soundParser) {}
 
-        void OnSoundDecodeCompleted(std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers) override
+        void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers) override
         {
+            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             if (!soundParserInner_.expired()) {
-                std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserListenerLock_);
                 soundData_ = availableAudioBuffers;
                 isSoundParserCompleted_.store(true);
             }
         }
         int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const
         {
-            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserListenerLock_);
+            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             soundData = soundData_;
             return MSERR_OK;
         }
@@ -141,7 +142,7 @@ private:
     std::shared_ptr<MediaAVCodec::AVSource> source_;
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
     std::shared_ptr<SoundDecoderCallback> audioDecCb_;
-    std::mutex soundParserListenerLock_;
+    std::mutex soundParserLock_;
     std::shared_ptr<SoundParserListener> soundParserListener_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
 

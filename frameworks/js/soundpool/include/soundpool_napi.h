@@ -138,6 +138,7 @@ private:
     napi_env env, napi_value *argv);
     int32_t ParserVolumeOptionFromJs(std::unique_ptr<SoundPoolAsyncContext> &asyncCtx,
     napi_env env, napi_value *argv);
+    bool GetPropertyBool(napi_env env, napi_value configObj, const std::string &type, bool &result);
 
     void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -161,16 +162,16 @@ struct SoundPoolAsyncContext : public MediaAsyncContext {
         const std::string &param, const std::string &add = "");
     SoundPoolNapi *napi = nullptr;
     std::string url_ = "";
-    int32_t fd_;
-    int64_t offset_;
-    int64_t length_;
-    int32_t soundId_;
+    int32_t fd_ = 0;
+    int64_t offset_ = 0;
+    int64_t length_ = 0;
+    int32_t soundId_ = 0;
     PlayParams playParameters_;
-    int32_t streamId_;
-    int32_t loop_;
-    int32_t priority_;
-    float leftVolume_;
-    float rightVolume_;
+    int32_t streamId_ = 0;
+    int32_t loop_ = 0;
+    int32_t priority_ = 0;
+    float leftVolume_ = 0.0f;
+    float rightVolume_ = 0.0f;
     AudioStandard::AudioRendererRate renderRate_;
 };
 } // namespace Media

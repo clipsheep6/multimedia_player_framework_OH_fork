@@ -26,6 +26,7 @@ class SoundPool : public ISoundPool {
 public:
     SoundPool();
     ~SoundPool();
+    static bool CheckInitParam(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo);
 
     int32_t Init(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo);
 
@@ -53,11 +54,11 @@ public:
 
 private:
     bool CheckVolumeVaild(float *leftVol, float *rightVol);
-    bool CheckInitParam(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo);
-    SoundIDManager soundIDManager_;
+    std::shared_ptr<SoundIDManager> soundIDManager_;
     std::shared_ptr<StreamIDManager> streamIdManager_;
     std::mutex soundPoolLock_;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
+    static constexpr int32_t MIN_STREAM_PRIORITY = 0;
 };
 } // namespace Media
 } // namespace OHOS

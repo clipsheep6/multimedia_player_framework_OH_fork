@@ -52,21 +52,16 @@ SoundParser::SoundParser(int32_t soundID, int32_t fd, int64_t offset, int64_t le
 
 SoundParser::~SoundParser()
 {
-    if (demuxer_ != nullptr) demuxer_ = nullptr;
-    if (source_ != nullptr) source_ = nullptr;
-    if (audioDec_ != nullptr) audioDec_ = nullptr;
-    if (audioDecCb_ != nullptr) audioDecCb_ = nullptr;
-    if (soundParserListener_ != nullptr) soundParserListener_ = nullptr;
-    if (callback_ != nullptr) callback_ = nullptr;
+    MEDIA_INFO_LOG("SoundParser Destruction.");
+    Release();
 }
 
 int32_t SoundParser::DoParser()
 {
-    MEDIA_ERR_LOG("%{public}s:%{public}d", __func__, __LINE__);
-
+    MEDIA_ERR_LOG("SoundParser do parser.");
+    std::unique_lock<std::mutex> lock(soundParserLock_);
     DoDemuxer(&trackFormat_);
     DoDecode(trackFormat_);
-
     return MSERR_OK;
 }
 
@@ -122,7 +117,6 @@ int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
         if (callback_ != nullptr) audioDecCb_->SetCallback(callback_);
         ret = audioDec_->Start();
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to Start audioDecorder.");
-        MEDIA_INFO_LOG("decode started");
     }
     return MSERR_OK;
 }
@@ -145,6 +139,39 @@ int32_t SoundParser::SetCallback(const std::shared_ptr<ISoundPoolCallback> &call
     return MSERR_OK;
 }
 
+int32_t SoundParser::Release()
+{
+    MEDIA_INFO_LOG("SoundParser Release.");
+    int32_t ret = MSERR_OK;
+    if (soundParserListener_ != nullptr) soundParserListener_.reset();
+    if (audioDecCb_ != nullptr) {
+        ret = audioDecCb_->Release();
+        audioDecCb_.reset();
+    }
+    if (audioDec_ != nullptr) {
+        ret = audioDec_->Release();
+        audioDec_.reset();
+    }
+    if (demuxer_ != nullptr) demuxer_.reset();
+    if (source_ != nullptr) source_.reset();
+    if (callback_ != nullptr) callback_.reset();
+    return ret;
+}
+
+SoundDecoderCallback::SoundDecoderCallback(const int32_t soundID,
+    const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
+    const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer) : soundID_(soundID),
+    audioDec_(audioDec), demuxer_(demuxer), eosFlag_(false),
+    decodeShouldCompleted_(false), currentSoundBufferSize_(0)
+{
+    MEDIA_INFO_LOG("Construction SoundDecoderCallback");
+}
+
+SoundDecoderCallback::~SoundDecoderCallback()
+{
+    MEDIA_INFO_LOG("Destruction SoundDecoderCallback");
+    Release();
+}
 void SoundDecoderCallback::OnError(AVCodecErrorType errorType, int32_t errorCode)
 {
     MEDIA_INFO_LOG("Recive error, errorType:%{public}d,errorCode:%{public}d", errorType, errorCode);
@@ -157,24 +184,28 @@ void SoundDecoderCallback::OnOutputFormatChanged(const Format &format)
 
 void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_ptr<AVSharedMemory> buffer)
 {
+    std::unique_lock<std::mutex> lock(amutex_);
     MediaAVCodec::AVCodecBufferFlag bufferFlag = MediaAVCodec::AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_NONE;
     MediaAVCodec::AVCodecBufferInfo sampleInfo;
     CHECK_AND_RETURN_LOG(demuxer_ != nullptr, "Failed to obtain demuxer");
     CHECK_AND_RETURN_LOG(audioDec_ != nullptr, "Failed to obtain audio decode.");
     if (!eosFlag_ && !decodeShouldCompleted_) {
         int ret = demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag);
-        if (ret == 0 && bufferFlag == AVCODEC_BUFFER_FLAG_EOS) {
-            eosFlag_ = true;
+        if (ret == 0) {
+            if (bufferFlag == AVCODEC_BUFFER_FLAG_EOS) {
+                eosFlag_ = true;
+            }
+            audioDec_->QueueInputBuffer(index, sampleInfo, bufferFlag);
         } else if (ret != 0) {
-            MEDIA_ERR_LOG("error pareserd:%{public}d", ret);
+            MEDIA_ERR_LOG("error parser:%{public}d", ret);
         }
-        audioDec_->QueueInputBuffer(index, sampleInfo, bufferFlag);
     }
 }
 
 void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag,
     std::shared_ptr<AVSharedMemory> buffer)
 {
+    std::unique_lock<std::mutex> lock(amutex_);
     if (buffer != nullptr && !decodeShouldCompleted_) {
         if (currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE || flag == AVCODEC_BUFFER_FLAG_EOS) {
             decodeShouldCompleted_ = true;
@@ -190,7 +221,6 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
             if (memcpy_s(buf, size, buffer->GetBase(), info.size) != EOK) {
                 MEDIA_INFO_LOG("audio buffer copy failed:%{public}s", strerror(errno));
             } else {
-                std::unique_lock<std::mutex> lock(amutex_);
                 availableAudioBuffers_.push_back(std::make_shared<AudioBufferEntry>(buf, size));
                 bufferCond_.notify_all();
             }
@@ -206,6 +236,21 @@ int32_t SoundDecoderCallback::SetCallback(const std::shared_ptr<ISoundPoolCallba
     MEDIA_INFO_LOG("SoundDecoderCallback::SetCallback");
     callback_ = callback;
     return MSERR_OK;
+}
+
+int32_t SoundDecoderCallback::Release()
+{
+    int32_t ret = MSERR_OK;
+    MEDIA_INFO_LOG("SoundDecoderCallback Release.");
+    if (audioDec_ != nullptr) {
+        ret = audioDec_->Release();
+        audioDec_.reset();
+    }
+    if (demuxer_ != nullptr) demuxer_.reset();
+    if (listener_ != nullptr) listener_.reset();
+    if (!availableAudioBuffers_.empty()) availableAudioBuffers_.clear();
+    if (callback_ != nullptr) callback_.reset();
+    return ret;
 }
 } // namespace Media
 } // namespace OHOS
