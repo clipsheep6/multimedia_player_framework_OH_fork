@@ -44,7 +44,6 @@ bool RecorderSetFileSplitDurationFuzzer::FuzzRecorderSetFileSplitDuration(uint8_
     constexpr int32_t audioMaxFileSize = 5000;
     constexpr int32_t durationValue = 1000;
     constexpr int32_t timestampValue = -1;
-    recorder = RecorderFactory::CreateRecorder();
     RETURN_IF(TestRecorder::CreateRecorder(), false);
 
     static VideoRecorderConfig_ g_videoRecorderConfig;
