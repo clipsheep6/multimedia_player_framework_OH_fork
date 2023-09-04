@@ -118,7 +118,8 @@ int32_t CacheBuffer::DealPlayParamsBeforePlay(const int32_t streamID, const Play
     audioRenderer_->SetRenderRate(CheckAndAlignRendererRate(playParams.rate));
     audioRenderer_->SetVolume(playParams.leftVolume);
     priority_ = playParams.priority;
-    parallelPlayFlag_ = playParams.parallelPlayFlag;
+    MEDIA_INFO_LOG("CacheBuffer parallelPlayFlag:%{public}d.", playParams.parallelPlayFlag);
+    audioRenderer_->SetParallelPlayFlag(playParams.parallelPlayFlag);
     return MSERR_OK;
 }
 
@@ -283,9 +284,10 @@ int32_t CacheBuffer::SetParallelPlayFlag(const int32_t streamID, const bool para
             runningValid_.wait_for(lock, std::chrono::duration<int32_t, std::milli>(WAIT_TIME_BEFORE_RUNNING_CONFIG));
         }
 
-        parallelPlayFlag_ = parallelPlayFlag;
-        (void) parallelPlayFlag_;
-        // 预留接口
+        MEDIA_INFO_LOG("CacheBuffer parallelPlayFlag:%{public}d.", parallelPlayFlag);
+        if (audioRenderer_ != nullptr) {
+            audioRenderer_->SetParallelPlayFlag(parallelPlayFlag);
+        }
         runningValid_.notify_all();
     }
     return MSERR_OK;

@@ -104,7 +104,6 @@ private:
 
     int32_t loop_ = 0;
     int32_t priority_ = 0;
-    bool parallelPlayFlag_ = false;
 };
 } // namespace Media
 } // namespace OHOS
