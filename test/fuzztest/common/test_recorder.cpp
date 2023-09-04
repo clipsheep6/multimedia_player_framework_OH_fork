@@ -184,8 +184,6 @@ void TestRecorder::SetDataSource(RecorderTestParam::VideoRecorderConfig_ &record
 
 void TestRecorder::SetRecorderCallback(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
 {
-    std::shared_ptr<TestRecorderCallbackTest> cb = std::make_shared<TestRecorderCallbackTest>();
-    recorder->SetRecorderCallback(cb);
 }
 
 void TestRecorder::Prepare(RecorderTestParam::VideoRecorderConfig_ &recorderConfig)
@@ -227,7 +225,7 @@ void TestRecorder::Release(RecorderTestParam::VideoRecorderConfig_ &recorderConf
 
 bool TestRecorder::CreateRecorder()
 {
-    recorder = RecorderFactory::CreateRecorder();
+    recorder = RecorderServiceStub::Create();
     if (recorder == nullptr) {
         return false;
     }
@@ -304,7 +302,6 @@ void TestRecorder::SetFileSplitDuration(FileSplitType type, int64_t timestamp,
 
 void TestRecorder::SetParameter(int32_t sourceId, const Format &format, VideoRecorderConfig_ &recorderConfig)
 {
-    recorder->SetParameter(sourceId, format);
 }
 
 bool TestRecorder::RequesetBuffer(const std::string &recorderType, VideoRecorderConfig_ &recorderConfig)
