@@ -69,12 +69,16 @@ static gchar *detect_encoding_and_convert_str(gchar **encoding, const gchar *str
         g_return_val_if_fail(encoding != nullptr, nullptr);
     }
 
-    ret = static_cast<gchar *>(g_malloc0(len));
+    ret = static_cast<gchar *>(g_malloc0(len + 1));
     g_return_val_if_fail(ret != nullptr, nullptr);
 
     if (memcpy_s(ret, len, str, len) != EOK) {
         g_free(ret);
         ret = nullptr;
+    }
+
+    if (ret != nullptr) {
+        ret[len] = '\0';
     }
 
     return ret;
