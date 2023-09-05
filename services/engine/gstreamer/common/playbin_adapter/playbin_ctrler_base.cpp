@@ -713,6 +713,17 @@ void PlayBinCtrlerBase::SetupAudioSegmentEventCb()
     CheckAndAddSignalIds(id, wrapper, audioSink_);
 }
 
+void PlayBinCtrlerBase::SetupAudioDiedEventCb()
+{
+    PlayBinCtrlerWrapper *wrapper = new(std::nothrow) PlayBinCtrlerWrapper(shared_from_this());
+    CHECK_AND_RETURN_LOG(wrapper != nullptr, "can not create this wrapper");
+
+    gulong id = g_signal_connect_data(audioSink_, "audio-service-died",
+        G_CALLBACK(&PlayBinCtrlerBase::OnAudioDiedEventCb), wrapper,
+        (GClosureNotify)&PlayBinCtrlerWrapper::OnDestory, static_cast<GConnectFlags>(0));
+    CheckAndAddSignalIds(id, wrapper, audioSink_);
+}
+
 void PlayBinCtrlerBase::SetupCustomElement()
 {
     // There may be a risk of data competition, but the sinkProvider is unlikely to be reconfigured.
@@ -722,6 +733,7 @@ void PlayBinCtrlerBase::SetupCustomElement()
             g_object_set(playbin_, "audio-sink", audioSink_, nullptr);
             SetupInterruptEventCb();
             SetupAudioSegmentEventCb();
+            SetupAudioDiedEventCb();
         }
         videoSink_ = sinkProvider_->CreateVideoSink();
         if (videoSink_ != nullptr) {
@@ -1299,6 +1311,21 @@ void PlayBinCtrlerBase::OnAudioSegmentEventCb(const GstElement *audioSink, gpoin
     if (thizStrong->subtitleSink_ != nullptr) {
         g_object_set(G_OBJECT(thizStrong->subtitleSink_), "segment-updated", TRUE, nullptr);
     }
+}
+
+void PlayBinCtrlerBase::OnAudioDiedEventCb(const GstElement *audioSink, gpointer userData)
+{
+    (void)audioSink;
+    auto thizStrong = PlayBinCtrlerWrapper::TakeStrongThiz(userData);
+    CHECK_AND_RETURN(thizStrong != nullptr);
+    MEDIA_LOGE("audio service died callback");
+    PlayBinMessage msg {
+        PLAYBIN_MSG_ERROR,
+        PlayBinMsgErrorSubType::PLAYBIN_SUB_MSG_ERROR_WITH_MESSAGE,
+        MSERR_AUD_RENDER_FAILED,
+        std::string("audio service died!")
+    };
+    thizStrong->ReportMessage(msg);
 }
 
 void PlayBinCtrlerBase::OnBitRateParseCompleteCb(const GstElement *playbin, uint32_t *bitrateInfo,

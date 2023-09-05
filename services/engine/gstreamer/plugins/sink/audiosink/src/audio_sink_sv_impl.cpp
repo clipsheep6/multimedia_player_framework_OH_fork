@@ -15,6 +15,7 @@
 
 #include "audio_sink_sv_impl.h"
 #include <vector>
+#include <unistd.h>
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_dfx.h"
@@ -51,6 +52,22 @@ void AudioRendererMediaCallback::SaveStateCallback(StateCbFunc stateCb)
     stateCb_ = stateCb;
 }
 
+AudioServiceDiedCallback::AudioServiceDiedCallback(GstBaseSink *audioSink) : audioSink_(audioSink)
+{
+    MEDIA_LOGD("AudioServiceDiedCallback create");
+}
+
+void AudioServiceDiedCallback::SaveAudioPolicyServiceDiedCb(AudioDiedCbFunc diedCb)
+{
+    diedCb_ = diedCb;
+}
+
+void AudioServiceDiedCallback::OnAudioPolicyServiceDied()
+{
+    CHECK_AND_RETURN_LOG(diedCb_ != nullptr, "audio policy died cb is null");
+    diedCb_(audioSink_);
+}
+
 void AudioRendererMediaCallback::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
     auto task = std::make_shared<TaskHandler<void>>([this, interruptEvent] {
@@ -80,6 +97,7 @@ AudioSinkSvImpl::AudioSinkSvImpl(GstBaseSink *sink)
     : audioSink_(sink)
 {
     audioRendererMediaCallback_ = std::make_shared<AudioRendererMediaCallback>(sink);
+    audioServiceDiedCallback_ = std::make_shared<AudioServiceDiedCallback>(sink);
     SetAudioDumpBySysParam();
 }
 
@@ -469,7 +487,8 @@ int32_t AudioSinkSvImpl::GetLatency(uint64_t &latency) const
 
 void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                      void (*stateCb)(GstBaseSink *, guint),
-                                     void (*errorCb)(GstBaseSink *, const std::string &))
+                                     void (*errorCb)(GstBaseSink *, const std::string &),
+                                     void (*audioDiedCb)(GstBaseSink *))
 {
     CHECK_AND_RETURN(audioRendererMediaCallback_ != nullptr);
     errorCb_ = errorCb;
@@ -477,6 +496,8 @@ void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, g
     audioRendererMediaCallback_->SaveStateCallback(stateCb);
     XcollieTimer xCollie("AudioRenderer::SetRendererCallback", PlayerXCollie::timerTimeout);
     audioRenderer_->SetRendererCallback(audioRendererMediaCallback_);
+    audioServiceDiedCallback_->SaveAudioPolicyServiceDiedCb(audioDiedCb);
+    audioRenderer_->RegisterAudioPolicyServerDiedCb(getpid(), audioServiceDiedCallback_);
 }
 
 void AudioSinkSvImpl::SetAudioInterruptMode(int32_t interruptMode)

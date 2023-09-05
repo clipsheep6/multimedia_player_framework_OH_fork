@@ -42,6 +42,16 @@ private:
     TaskQueue taskQue_;
 };
 
+class AudioServiceDiedCallback : public AudioStandard::AudioRendererPolicyServiceDiedCallback {
+public:
+    explicit AudioServiceDiedCallback(GstBaseSink *audioSink);
+    using AudioDiedCbFunc = std::function<void(GstBaseSink *)>;
+    void SaveAudioPolicyServiceDiedCb(AudioDiedCbFunc diedCb);
+    void OnAudioPolicyServiceDied() override;
+private:
+    AudioDiedCbFunc diedCb_ = nullptr;
+    GstBaseSink *audioSink_ = nullptr;
+};
 
 class AudioSinkSvImpl : public AudioSink {
 public:
@@ -71,7 +81,8 @@ public:
     void SetAudioInterruptMode(int32_t interruptMode) override;
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
-                        void (*errorCb)(GstBaseSink *, const std::string &)) override;
+                        void (*errorCb)(GstBaseSink *, const std::string &),
+                        void (*audioDiedCb)(GstBaseSink *)) override;
     int32_t SetAudioEffectMode(int32_t effectMode) override;
     int32_t GetAudioEffectMode(int32_t &effectMode) override;
     bool Writeable() const override;
@@ -93,6 +104,7 @@ private:
     bool enableDump_ = false;
     FILE *dumpFile_ = nullptr;
     std::shared_ptr<AudioRendererMediaCallback> audioRendererMediaCallback_ = nullptr;
+    std::shared_ptr<AudioServiceDiedCallback> audioServiceDiedCallback_ = nullptr;
 };
 
 class AudioSinkBypass : public AudioSinkSvImpl {
@@ -203,11 +215,13 @@ public:
     }
     void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                         void (*stateCb)(GstBaseSink *, guint),
-                        void (*errorCb)(GstBaseSink *, const std::string &)) override
+                        void (*errorCb)(GstBaseSink *, const std::string &),
+                        void (*audioDiedCb)(GstBaseSink *)) override
     {
         (void)interruptCb;
         (void)stateCb;
         (void)errorCb;
+        (void)audioDiedCb;
     }
     bool Writeable() const override
     {

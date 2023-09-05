@@ -52,7 +52,8 @@ public:
     virtual bool Writeable() const;
     virtual void SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, guint, guint),
                                 void (*stateCb)(GstBaseSink *, guint),
-                                void (*errorCb)(GstBaseSink *, const std::string &)) = 0;
+                                void (*errorCb)(GstBaseSink *, const std::string &),
+                                void (*audioDiedCb)(GstBaseSink *)) = 0;
     virtual int32_t SetAudioEffectMode(int32_t effectMode) = 0;
     virtual int32_t GetAudioEffectMode(int32_t &effectMode) = 0;
 };

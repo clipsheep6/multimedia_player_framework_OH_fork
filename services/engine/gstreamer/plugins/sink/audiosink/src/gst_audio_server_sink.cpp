@@ -103,6 +103,10 @@ static void gst_audio_server_sink_class_init(GstAudioServerSinkClass *klass)
     g_signal_new("segment-updated", G_TYPE_FROM_CLASS(klass),
         static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
         NULL, NULL, G_TYPE_NONE, 0); // no parameters
+
+    g_signal_new("audio-service-died", G_TYPE_FROM_CLASS(klass),
+        static_cast<GSignalFlags>(G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION), 0, NULL,
+        NULL, NULL, G_TYPE_NONE, 0); // no parameters
     g_object_class_install_property(gobject_class, PROP_BITS_PER_SAMPLE,
         g_param_spec_uint("bps", "Bits Per Sample",
             "Audio Format", 0, G_MAXINT32, 0,
@@ -290,6 +294,12 @@ static void gst_audio_server_sink_segment_callback(GstBaseSink *basesink)
 {
     GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
     g_signal_emit_by_name(sink, "segment-updated");
+}
+
+static void gst_audio_server_sink_service_died_callback(GstBaseSink *basesink)
+{
+    GstAudioServerSink *sink = GST_AUDIO_SERVER_SINK(basesink);
+    g_signal_emit_by_name(sink, "audio-service-died");
 }
 
 static void gst_audio_server_sink_set_property(GObject *object, guint prop_id,
@@ -560,7 +570,8 @@ static gboolean gst_audio_server_sink_start(GstBaseSink *basesink)
     g_return_val_if_fail(sink->audio_sink->Prepare(sink->appuid, sink->apppid, sink->apptokenid) == MSERR_OK, FALSE);
     sink->audio_sink->SetAudioSinkCb(gst_audio_server_sink_interrupt_callback,
                                      gst_audio_server_sink_state_callback,
-                                     gst_audio_server_sink_error_callback);
+                                     gst_audio_server_sink_error_callback,
+                                     gst_audio_server_sink_service_died_callback);
     g_return_val_if_fail(sink->audio_sink->GetMaxVolume(sink->max_volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->GetMinVolume(sink->min_volume) == MSERR_OK, FALSE);
     g_return_val_if_fail(sink->audio_sink->Start() == MSERR_OK, FALSE);
