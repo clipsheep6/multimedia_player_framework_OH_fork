@@ -134,7 +134,8 @@ int32_t StreamIDManager::SetPlay(const int32_t soundID, const int32_t streamID, 
     // CacheBuffer must prepare before play.
     std::shared_ptr<CacheBuffer> freshCacheBuffer = FindCacheBuffer(streamID);
     freshCacheBuffer->PreparePlay(streamID, audioRendererInfo_, playParameters);
-    if (currentTaskNum_ < maxStreams_) {
+    int32_t tempMaxStream = maxStreams_;
+    if (currentTaskNum_ < static_cast<size_t>(tempMaxStream)) {
         AddPlayTask(streamID, playParameters);
     } else {
         int32_t playingStreamID = playingStreamIDs_.back();
