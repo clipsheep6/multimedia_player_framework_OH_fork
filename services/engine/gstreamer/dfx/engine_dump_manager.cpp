@@ -27,6 +27,11 @@ EngineDumpManager &EngineDumpManager::GetInstance()
     return EngineDumpManager;
 }
 
+EngineDumpManager::~EngineDumpManager()
+{
+    ServiceDumpManager::GetInstance().UnregisterDfxDumper();
+}
+
 void EngineDumpManager::Init()
 {
     auto MemInfoDump = std::bind(&EngineDumpManager::DumpGlibMemInfo, this, std::placeholders::_1);

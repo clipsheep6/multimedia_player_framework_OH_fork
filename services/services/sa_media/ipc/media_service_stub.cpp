@@ -129,6 +129,17 @@ int32_t MediaServiceStub::SetDeathListener(const sptr<IRemoteObject> &object)
         (void)mediaListener->AsObject()->AddDeathRecipient(deathRecipient);
     }
 
+    sptr<MediaDeathRecipient> oldDeathRecipient =
+        deathRecipientMap_.find(pid) != deathRecipientMap_.end() ? deathRecipientMap_[pid] : nullptr;
+    sptr<IStandardMediaListener> oldMediaListener =
+        mediaListenerMap_.find(pid) != mediaListenerMap_.end() ? mediaListenerMap_[pid] : nullptr;
+    if (oldDeathRecipient != nullptr) {
+        oldDeathRecipient->SetNotifyCb(nullptr);
+    }
+    if (oldMediaListener != nullptr && oldDeathRecipient != nullptr) {
+        oldMediaListener->AsObject()->RemoveDeathRecipient(oldDeathRecipient);
+    }
+
     MEDIA_LOGD("client pid pid:%{public}d", pid);
     mediaListenerMap_[pid] = mediaListener;
     deathRecipientMap_[pid] = deathRecipient;

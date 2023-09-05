@@ -82,6 +82,7 @@ bool StrToInt(const std::string_view& str, T& value)
     return true;
 }
 
+__attribute__((no_sanitize("cfi")))
 std::pair<std::string_view, std::string_view> SplitUriHeadAndBody(const std::string_view &str)
 {
     std::string_view::size_type start = str.find_first_not_of(' ');
@@ -127,6 +128,7 @@ void UriHelper::FormatMeForUri(const std::string_view &uri) noexcept
 {
     CHECK_AND_RETURN_LOG(formattedUri_.empty(),
         "formattedUri is valid:%{public}s", formattedUri_.c_str());
+    CHECK_AND_RETURN_LOG(!uri.empty(), "uri is empty");
 
     auto [head, body] = SplitUriHeadAndBody(uri);
     CHECK_AND_RETURN(g_validUriTypes.count(head) != 0);

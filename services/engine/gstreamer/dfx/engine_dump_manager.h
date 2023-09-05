@@ -24,7 +24,7 @@ public:
     void Init();
 private:
     EngineDumpManager() = default;
-    ~EngineDumpManager() = default;
+    ~EngineDumpManager();
     int32_t DumpGlibMemInfo(int32_t fd);
     int32_t DumpGlibMemPoolInfo(int32_t fd);
 };

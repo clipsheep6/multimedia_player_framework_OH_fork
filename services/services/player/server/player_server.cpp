@@ -133,6 +133,8 @@ int32_t PlayerServer::SetSource(const std::string &url)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("PlayerServer::SetSource url");
+    CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty");
+
     MEDIA_LOGW("KPI-TRACE: PlayerServer SetSource in(url)");
     config_.url = url;
     int32_t ret = InitPlayEngine(url);

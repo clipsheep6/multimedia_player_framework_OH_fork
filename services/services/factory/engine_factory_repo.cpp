@@ -46,6 +46,11 @@ EngineFactoryRepo &EngineFactoryRepo::Instance()
 
 EngineFactoryRepo::~EngineFactoryRepo()
 {
+    UnloadLib();
+}
+
+void __attribute__((no_sanitize("cfi"))) EngineFactoryRepo::UnloadLib()
+{
     for (auto &lib : factoryLibs_) {
         if (lib != nullptr) {
             (void)dlclose(lib);

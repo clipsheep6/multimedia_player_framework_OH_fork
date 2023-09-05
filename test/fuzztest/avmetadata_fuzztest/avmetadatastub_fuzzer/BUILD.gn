@@ -27,6 +27,7 @@ ohos_fuzztest("AVmetadataStubFuzzTest") {
     "../../../../services/include",
     "../../../../services/services/avmetadatahelper/ipc",
     "../../../../services/services/sa_media/ipc",
+    "../../../../services/services/sa_media/server",
     "../../../../test/fuzztest/avmetadata_fuzztest",
     "../../../../test/fuzztest/common",
   ]

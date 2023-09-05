@@ -15,6 +15,10 @@
 
 #include "playerstub_fuzzer.h"
 #include <unistd.h>
+#include "stub_common.h"
+#include "media_server.h"
+#include "media_parcel.h"
+#include "i_standard_player_service.h"
 
 namespace OHOS {
 namespace Media {
@@ -35,6 +39,44 @@ bool FuzzPlayerStub(uint8_t *data, size_t size)
     playerProxy->SendRequest(PlayerServiceProxyFuzzer::DESTROY, data, size, false);
     return true;
 }
+
+const int32_t SYSTEM_ABILITY_ID = 3002;
+const bool RUN_ON_CREATE = false;
+bool FuzzPlayerStubLocal(uint8_t *data, size_t size)
+{
+    if (data == nullptr || size < sizeof(int64_t)) {
+        return true;
+    }
+    std::shared_ptr<MediaServer> mediaServer =
+        std::make_shared<MediaServer>(SYSTEM_ABILITY_ID, RUN_ON_CREATE);
+    if (mediaServer == nullptr) {
+        return false;
+    }
+
+    sptr<IRemoteObject> listener = new(std::nothrow) MediaListenerStubFuzzer();
+    sptr<IRemoteObject> player = mediaServer->GetSubSystemAbility(
+        IStandardMediaService::MediaSystemAbility::MEDIA_PLAYER, listener);
+    if (player == nullptr) {
+        return false;
+    }
+
+    sptr<IRemoteStub<IStandardPlayerService>> playerStub = iface_cast<IRemoteStub<IStandardPlayerService>>(player);
+    if (playerStub == nullptr) {
+        return false;
+    }
+
+    for (uint32_t code = 0; code < PlayerServiceProxyFuzzer::MAX_IPC_ID; code++) {
+        MessageParcel msg;
+        msg.WriteInterfaceToken(playerStub->GetDescriptor());
+        msg.WriteBuffer(data, size);
+        msg.RewindRead(0);
+        MessageParcel reply;
+        MessageOption option;
+        playerStub->OnRemoteRequest(code, msg, reply, option);
+    }
+
+    return true;
+}
 }
 }
 
@@ -43,5 +85,6 @@ extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {
     /* Run your code on data */
     OHOS::Media::FuzzPlayerStub(data, size);
+    OHOS::Media::FuzzPlayerStubLocal(data, size);
     return 0;
 }
