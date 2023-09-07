@@ -139,6 +139,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_002, TestSize.Level1)
 HWTEST_F(PlayerUnitTest, Player_SetSource_003, TestSize.Level2)
 {
     system("param set sys.media.player.buffering.enable TRUE");
+    system("param set sys.media.dump.audiowrite.enable true");
     PlaybackRateMode mode;
     int32_t time = 0;
     int32_t duration = 0;
@@ -173,6 +174,7 @@ HWTEST_F(PlayerUnitTest, Player_SetSource_003, TestSize.Level2)
     EXPECT_NE(MSERR_OK, player_->Stop());
     EXPECT_EQ(MSERR_OK, player_->Reset());
     system("param set sys.media.player.buffering.enable FALSE");
+    system("param set sys.media.dump.audiowrite.enable FALSE");
 }
 
 /**
@@ -357,6 +359,7 @@ HWTEST_F(PlayerUnitTest, Player_Local_005, TestSize.Level2)
  */
 HWTEST_F(PlayerUnitTest, Player_Local_006, TestSize.Level2)
 {
+    system("param set sys.media.audiosink.disenable true");
     int32_t ret = player_->SetSource(MEDIA_ROOT + "MPEG4_AAC.mp4");
     EXPECT_EQ(MSERR_OK, ret);
     sptr<Surface> videoSurface = player_->GetVideoSurface();
@@ -366,6 +369,7 @@ HWTEST_F(PlayerUnitTest, Player_Local_006, TestSize.Level2)
     if (ret == MSERR_OK) {
         PlayFunTest(LOCAL_PLAY);
     }
+    system("param set sys.media.audiosink.disenable false");
 }
 
 /**

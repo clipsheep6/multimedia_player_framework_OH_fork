@@ -95,9 +95,7 @@ static int32_t ConvertErrorMessage(GstMessage &gstMsg, InnerMessage &innerMsg)
     GError *error = nullptr;
     gchar *debug  = nullptr;
     gst_message_parse_error(&gstMsg, &error, &debug);
-    if (error == nullptr || debug == nullptr) {
-        return MSERR_UNKNOWN;
-    }
+    CHECK_AND_RETURN_RET_LOG(error != nullptr && debug != nullptr, MSERR_UNKNOWN, "error nullptr");
     MEDIA_LOGE("[ERROR] %{public}s, %{public}s", error->message, debug);
 
     gchar *name = gst_object_get_path_string(gstMsg.src);
@@ -122,9 +120,7 @@ static int32_t ConvertWarningMessage(GstMessage &gstMsg, InnerMessage &innerMsg)
     GError *error = nullptr;
     gchar *debug  = nullptr;
     gst_message_parse_warning(&gstMsg, &error, &debug);
-    if (error == nullptr || debug == nullptr) {
-        return MSERR_UNKNOWN;
-    }
+    CHECK_AND_RETURN_RET_LOG(error != nullptr && debug != nullptr, MSERR_UNKNOWN, "error nullptr");
     MEDIA_LOGW("[WARNING] %{public}s, %{public}s", error->message, debug);
 
     innerMsg.type = INNER_MSG_WARNING;
@@ -140,9 +136,7 @@ static int32_t ConvertInfoMessage(GstMessage &gstMsg, InnerMessage &innerMsg)
     GError *error = nullptr;
     gchar *debug  = nullptr;
     gst_message_parse_info(&gstMsg, &error, &debug);
-    if (error == nullptr || debug == nullptr) {
-        return MSERR_UNKNOWN;
-    }
+    CHECK_AND_RETURN_RET_LOG(error != nullptr && debug != nullptr, MSERR_UNKNOWN, "error nullptr");
     MEDIA_LOGI("[INFO] %{public}s, %{public}s", error->message, debug);
 
     innerMsg.type = INNER_MSG_INFO;

@@ -198,15 +198,6 @@ int32_t AudioSinkSvImpl::SetRendererInfo(int32_t desc, int32_t rendererFlags)
     return MSERR_OK;
 }
 
-int32_t AudioSinkSvImpl::GetVolume(float &volume)
-{
-    MEDIA_LOGD("GetVolume");
-    CHECK_AND_RETURN_RET_LOG(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED, "audioRenderer_ is nullptr");
-    XcollieTimer xCollie("AudioRenderer::GetVolume", PlayerXCollie::timerTimeout);
-    volume = audioRenderer_->GetVolume();
-    return MSERR_OK;
-}
-
 int32_t AudioSinkSvImpl::GetMaxVolume(float &volume)
 {
     MEDIA_LOGD("GetMaxVolume");
@@ -432,13 +423,6 @@ bool AudioSinkSvImpl::Writeable() const
     return ret == AudioStandard::RENDERER_RUNNING;
 }
 
-void AudioSinkSvImpl::OnError(std::string errMsg)
-{
-    if (errorCb_ != nullptr) {
-        errorCb_(audioSink_, errMsg);
-    }
-}
-
 int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
 {
     MediaTrace trace("AudioSink::Write");
@@ -459,19 +443,6 @@ int32_t AudioSinkSvImpl::Write(uint8_t *buffer, size_t size)
             bytesWritten += static_cast<size_t>(bytesSingle);
             CHECK_AND_RETURN_RET(bytesWritten >= static_cast<size_t>(bytesSingle), MSERR_AUD_RENDER_FAILED);
         }, "AudioRenderer::Write", PlayerXCollie::timerTimeout)
-    return MSERR_OK;
-}
-
-int32_t AudioSinkSvImpl::GetAudioTime(uint64_t &time)
-{
-    MediaTrace trace("AudioSink::GetAudioTime");
-    CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
-    AudioStandard::Timestamp timeStamp;
-    bool ret = false;
-    LISTENER(ret = audioRenderer_->GetAudioTime(timeStamp, AudioStandard::Timestamp::Timestampbase::MONOTONIC),
-        "AudioRenderer::GetAudioTime", PlayerXCollie::timerTimeout)
-    CHECK_AND_RETURN_RET(ret == true, MSERR_AUD_RENDER_FAILED);
-    time = static_cast<uint64_t>(timeStamp.time.tv_nsec);
     return MSERR_OK;
 }
 
@@ -551,7 +522,7 @@ void AudioSinkSvImpl::DumpAudioBuffer(uint8_t *buffer, const size_t &bytesWritte
     }
 
     if (dumpFile_ == nullptr) {
-        std::string dumpFilePath = "/data/media/audio-write-" +
+        std::string dumpFilePath = "/data/test/media/audio-write-" +
         std::to_string(static_cast<int32_t>(FAKE_POINTER(this))) + ".pcm";
         dumpFile_ = fopen(dumpFilePath.c_str(), "wb+");
     }
