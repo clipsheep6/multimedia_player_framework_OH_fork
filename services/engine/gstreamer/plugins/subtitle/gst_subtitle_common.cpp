@@ -92,10 +92,11 @@ static void caps_detect_handle(const gchar *encoding, GstTypeFind *tf,
     g_return_if_fail(detect_caps_pfn != nullptr);
     caps = detect_caps_pfn(converted_str);
 
-    g_return_if_fail(caps != nullptr);
-    GST_DEBUG("subtitle encoding: %s", encoding);
-    gst_type_find_suggest(tf, GST_TYPE_FIND_MAXIMUM, caps);
-    gst_caps_unref(caps);
+    if (caps != nullptr) {
+        GST_DEBUG("subtitle encoding: %s", encoding);
+        gst_type_find_suggest(tf, GST_TYPE_FIND_MAXIMUM, caps);
+        gst_caps_unref(caps);
+    }
 }
 
 static void probe_type_and_detect_caps(const gchar *str, guint tf_len,

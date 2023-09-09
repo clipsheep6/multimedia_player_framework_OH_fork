@@ -606,7 +606,9 @@ static GRegex *srt_parse_data_format_autodetect_regex_once(void)
     if ((result == nullptr) && (gerr != nullptr)) {
         GST_WARNING("compilation of srt regex failed: %s", gerr->message);
     }
-    g_error_free(gerr);
+    if (gerr != nullptr) {
+        g_error_free(gerr);
+    }
     return result;
 }
 
