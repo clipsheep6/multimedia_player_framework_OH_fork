@@ -39,6 +39,7 @@ private:
     int32_t ConfigureVideoFrameRate(const RecorderParam &recParam);
     int32_t ConfigureCaptureRate(const RecorderParam &recParam);
     int32_t NoteVencFmt(const RecorderParam &recParam);
+    int32_t ConfigureSurface(const RecorderParam &recParam);
 
     int32_t width_ = 0;
     int32_t height_ = 0;

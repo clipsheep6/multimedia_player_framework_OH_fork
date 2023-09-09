@@ -84,7 +84,7 @@ static void gst_surface_src_class_init(GstSurfaceSrcClass *klass)
 
     g_object_class_install_property(gobject_class, PROP_SURFACE,
         g_param_spec_pointer("surface", "Surface", "Surface for buffer",
-            (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+            (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
     g_object_class_install_property(gobject_class, PROP_SURFACE_STRIDE,
         g_param_spec_uint("surface-stride", "surface stride",
@@ -154,6 +154,25 @@ static void gst_surface_src_set_property(GObject *object, guint prop_id, const G
     g_return_if_fail(src != nullptr && value != nullptr);
     (void)pspec;
     switch (prop_id) {
+        case PROP_SURFACE:
+            {
+                GST_DEBUG_OBJECT(src, "gst_surface_src_set_property: PROP_SURFACE");
+                if (src->consumerSurface != nullptr) {
+                    GST_ERROR_OBJECT(src, "consumerSurface exists before set, set surface fail");
+                    return;
+                }
+                gpointer surface = g_value_get_pointer(value);
+                g_return_if_fail(surface != nullptr);
+                OHOS::sptr<OHOS::IConsumerSurface> consumerSurface = static_cast<OHOS::IConsumerSurface *>(surface);
+                sptr<IBufferProducer> producer = consumerSurface->GetProducer();
+                g_return_if_fail(producer != nullptr);
+                sptr<Surface> producerSurface = Surface::CreateSurfaceAsProducer(producer);
+                g_return_if_fail(producerSurface != nullptr);
+                GST_DEBUG_OBJECT(src, "create producer surface end");
+                src->consumerSurface = consumerSurface;
+                src->producerSurface = producerSurface;
+            }
+            break;
         case PROP_SURFACE_STRIDE:
             src->stride = g_value_get_uint(value);
             if (src->stride > INT32_MAX) {
@@ -237,14 +256,19 @@ static GstStateChangeReturn gst_surface_src_change_state(GstElement *element, Gs
 static gboolean gst_surface_src_create_surface(GstSurfaceSrc *surfacesrc)
 {
     g_return_val_if_fail(surfacesrc != nullptr, FALSE);
-    sptr<IConsumerSurface> consumerSurface = IConsumerSurface::Create();
-    g_return_val_if_fail(consumerSurface != nullptr, FALSE);
-    sptr<IBufferProducer> producer = consumerSurface->GetProducer();
-    g_return_val_if_fail(producer != nullptr, FALSE);
-    sptr<Surface> producerSurface = Surface::CreateSurfaceAsProducer(producer);
-    g_return_val_if_fail(producerSurface != nullptr, FALSE);
-    surfacesrc->consumerSurface = consumerSurface;
-    surfacesrc->producerSurface = producerSurface;
+    if (surfacesrc->consumerSurface == nullptr) {
+        GST_DEBUG_OBJECT(surfacesrc, "consumer surface is empty create surface");
+        sptr<IConsumerSurface> consumerSurface = IConsumerSurface::Create();
+        g_return_val_if_fail(consumerSurface != nullptr, FALSE);
+        sptr<IBufferProducer> producer = consumerSurface->GetProducer();
+        g_return_val_if_fail(producer != nullptr, FALSE);
+        sptr<Surface> producerSurface = Surface::CreateSurfaceAsProducer(producer);
+        g_return_val_if_fail(producerSurface != nullptr, FALSE);
+        surfacesrc->consumerSurface = consumerSurface;
+        surfacesrc->producerSurface = producerSurface;
+    } else {
+        GST_DEBUG_OBJECT(surfacesrc, "consumer surface already set");
+    }
 
     SurfaceError ret = surfacesrc->consumerSurface->SetQueueSize(DEFAULT_SURFACE_QUEUE_SIZE);
     if (ret != SURFACE_ERROR_OK) {

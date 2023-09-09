@@ -69,6 +69,9 @@ int32_t VideoSource::Configure(const RecorderParam &recParam)
     ret = NoteVencFmt(recParam);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
 
+    ret = ConfigureSurface(recParam);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+
     return MSERR_OK;
 }
 
@@ -239,6 +242,20 @@ int32_t VideoSource::GetParameter(RecorderParam &recParam)
 
         SurfaceParam &param = (SurfaceParam &)recParam;
         param.surface_ = (Surface *)surface;
+    }
+    return MSERR_OK;
+}
+
+int32_t VideoSource::ConfigureSurface(const RecorderParam &recParam)
+{
+    if (recParam.type == RecorderPrivateParamType::SURFACE) {
+        MEDIA_LOGI("Configure Input Surface for VideoSource");
+        const SurfaceParam &param = static_cast<const SurfaceParam &>(recParam);
+        if (param.surface_ == nullptr) {
+            MEDIA_LOGE("Input surface is null");
+            return MSERR_INVALID_VAL;
+        }
+        g_object_set(gstElem_, "surface", static_cast<gpointer>(param.surface_), nullptr);
     }
     return MSERR_OK;
 }

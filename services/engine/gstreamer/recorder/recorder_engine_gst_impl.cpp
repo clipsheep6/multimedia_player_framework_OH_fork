@@ -76,6 +76,7 @@ int32_t RecorderEngineGstImpl::SetVideoSource(VideoSourceType source, int32_t &s
     sourceCount_[RECORDER_SOURCE_KIND_VIDEO] += 1;
 
     sourceId = desc.handle_;
+    videoSourceId_ = sourceId;
     return MSERR_OK;
 }
 
@@ -183,7 +184,12 @@ sptr<Surface> RecorderEngineGstImpl::GetSurface(int32_t sourceId)
 int32_t RecorderEngineGstImpl::Prepare()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    int32_t ret = BuildPipeline();
+    int32_t ret = SetSurface();
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("Prepare failed due to SetSurface failed!");
+        return ret;
+    }
+    ret = BuildPipeline();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("Prepare failed due to pipeline build failed !");
         return ret;
@@ -223,6 +229,7 @@ int32_t RecorderEngineGstImpl::Stop(bool isDrainAll)
 int32_t RecorderEngineGstImpl::Reset()
 {
     (void)Stop(false);
+    consumerSurface_ = nullptr;
     return MSERR_OK;
 }
 
@@ -241,6 +248,7 @@ int32_t RecorderEngineGstImpl::StopPipeline(bool isDrainAll)
         sourceCount_[i] = 0;
     }
     allSources_.clear();
+    videoSourceId_ = -1;
 
     return ret;
 }
@@ -291,6 +299,32 @@ bool RecorderEngineGstImpl::CheckParamType(int32_t sourceId, const RecorderParam
     // unreachable.
     MEDIA_LOGE("unknown error !");
     return false;
+}
+
+int32_t RecorderEngineGstImpl::SetSurface()
+{
+    if (videoSourceId_ == -1) {
+        MEDIA_LOGI("audio record no surface needed.");
+        return MSERR_OK;
+    }
+    if (consumerSurface_ == nullptr) {
+        MEDIA_LOGI("consumerSurface_ not exist");
+        consumerSurface_ = IConsumerSurface::Create();
+        if (consumerSurface_ == nullptr) {
+            MEDIA_LOGE("create consumerSurface failed, return");
+            return MSERR_INVALID_OPERATION;
+        }
+    }
+    MEDIA_LOGI("consumerSurface surfaceID: %{public}s", std::to_string(consumerSurface_->GetUniqueId()).c_str());
+    SurfaceParam surfaceParam;
+    surfaceParam.surface_ = consumerSurface_;
+    int32_t ret = builder_->Configure(videoSourceId_, surfaceParam);
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("set surface to videoSource failed");
+        return ret;
+    }
+    MEDIA_LOGI("set surface to videoSource success");
+    return ret;
 }
 } // namespace Media
 } // namespace OHOS
