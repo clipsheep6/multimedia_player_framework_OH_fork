@@ -185,8 +185,7 @@ static void gst_vdec_base_class_install_property(GObjectClass *gobject_class)
 
 static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
 {
-    g_return_val_if_fail(self != nullptr, FALSE);
-    g_return_val_if_fail(self->decoder != nullptr, FALSE);
+    g_return_val_if_fail(self != nullptr && self->decoder != nullptr, FALSE);
     gint ret;
     GST_DEBUG_OBJECT(self, "enter free buffers, is_free_codec_buffers:%d is_eos_state:%d",
         self->is_free_codec_buffers, self->is_eos_state);
@@ -194,7 +193,6 @@ static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
         if (!self->is_eos_state) {
             GST_VIDEO_DECODER_STREAM_LOCK(self);
             ret = self->decoder->Flush(GST_CODEC_ALL);
-            g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "Flush", TRUE), FALSE);
             gst_vdec_base_set_flushing(self, TRUE);
             GST_VIDEO_DECODER_STREAM_UNLOCK(self);
             g_return_val_if_fail(gst_pad_push_event(GST_VIDEO_DECODER_SRC_PAD(self),
@@ -203,22 +201,18 @@ static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
                 gst_event_new_flush_stop(FALSE)), FALSE);
             self->is_eos_state = FALSE;
         }
-
         if (self->decoder_start) {
             ret = self->decoder->Stop();
             g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "DecoderStop", TRUE), FALSE);
             self->decoder_start = FALSE;
         }
-
         GstPad *pad = GST_VIDEO_DECODER_SRC_PAD(self);
         if (gst_pad_get_task_state(pad) != GST_TASK_STOPPED) {
             g_return_val_if_fail(gst_pad_stop_task(pad), FALSE);
         }
-
         if (self->outpool) {
             g_return_val_if_fail(gst_buffer_pool_set_active(self->outpool, FALSE), FALSE);
         }
-
         if (self->input.allocator) {
             gst_object_unref(self->input.allocator);
             self->input.allocator = nullptr;
@@ -233,7 +227,6 @@ static gboolean gst_vdec_base_free_codec_buffers(GstVdecBase *self)
         g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "FreeInput", TRUE), FALSE);
         ret = self->decoder->FreeOutputBuffers();
         g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "FreeOutput", TRUE), FALSE);
-
         self->is_free_codec_buffers = TRUE;
     }
     return TRUE;
