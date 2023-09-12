@@ -47,8 +47,9 @@ MonitorServer &MonitorServer::GetInstance()
     return instance;
 }
 
-int32_t MonitorServer::Dump(int32_t fd)
+int32_t MonitorServer::Dump(int32_t fd, bool needDetail)
 {
+    (void)needDetail;
     std::unique_lock<std::mutex> lock(mutex_);
     std::string dumpString = "------------------Monitor------------------\n";
     int32_t i = 0;

@@ -28,7 +28,7 @@ public:
 
     static sptr<MonitorServiceStub> GetInstance();
 
-    int32_t DumpInfo(int32_t fd) override;
+    int32_t DumpInfo(int32_t fd, bool needDetail);
     int32_t OnClientDie(int32_t pid);
 
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
