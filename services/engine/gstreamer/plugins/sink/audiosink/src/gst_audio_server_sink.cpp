@@ -715,11 +715,7 @@ static GstFlowReturn gst_audio_server_sink_render(GstBaseSink *basesink, GstBuff
         if (sink->start_first_render) {
             // 1st write prebuf and trigger audio write rebuf
             // 2nd flush audio invalid prebuf and 3rd write valid buf
-            const int32_t bufSize = 1024; // default 1024
-            std::unique_ptr<uint8_t[]> preBuf = std::make_unique<uint8_t[]>(bufSize);
-            (void)memset_s(preBuf.get(), bufSize, 0, bufSize);
-            (void)sink->audio_sink->Write(preBuf.get(), bufSize);
-            (void)sink->audio_sink->Flush();
+            // nothing
             sink->start_first_render = FALSE;
         }
 
