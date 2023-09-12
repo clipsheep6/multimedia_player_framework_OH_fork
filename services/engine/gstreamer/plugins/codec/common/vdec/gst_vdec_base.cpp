@@ -1200,7 +1200,7 @@ static GstFlowReturn gst_vdec_base_handle_frame(GstVideoDecoder *decoder, GstVid
 
     GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
     if (kclass->bypass_frame != nullptr && self->player_scene == true) {
-        g_return_val_if_fail(!kclass->bypass_frame(self, frame), GST_FLOW_OK);
+        g_return_val_if_fail(!kclass->bypass_frame(self, frame), GST_FLOW_OK); // no fail
     }
 
     if (!self->prepared) {
@@ -1373,6 +1373,12 @@ static GstFlowReturn gst_vdec_base_format_change(GstVdecBase *self)
     gboolean buffer_usage_change = gst_vdec_check_out_buffer_usage(self);
     gst_vdec_base_post_resolution_changed_message(self, format_change == TRUE);
     if (format_change || buffer_usage_change || (buffer_cnt_change && self->memtype != GST_MEMTYPE_SURFACE)) {
+        // wait all sufacebuffer already render
+        GstQuery *query = gst_query_new_drain();
+        if (!gst_pad_peer_query(GST_VIDEO_DECODER_SRC_PAD(self), query)) {
+            GST_WARNING_OBJECT(self, "drain query failed");
+        }
+        gst_query_unref(query);
         g_return_val_if_fail(gst_buffer_pool_set_active(GST_BUFFER_POOL(self->outpool), FALSE), GST_FLOW_ERROR);
         ret = self->decoder->FreeOutputBuffers();
         g_return_val_if_fail(gst_codec_return_is_ok(self, ret, "freebuffer", TRUE), GST_FLOW_ERROR);
