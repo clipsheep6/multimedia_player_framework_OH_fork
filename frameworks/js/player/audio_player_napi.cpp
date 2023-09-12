@@ -207,7 +207,6 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
     size_t argCount = 1;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || jsThis == nullptr || args[0] == nullptr) {
-        MEDIA_LOGE("Failed to retrieve details about the callback");
         return undefinedResult;
     }
 
@@ -246,7 +245,6 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
     }
 
     if (ret != MSERR_OK) {
-        MEDIA_LOGE("input url error!");
         player->ErrorCallback(MSErrorToExtError(static_cast<MediaServiceErrCode>(ret)), "failed to SetSource");
         return undefinedResult;
     }
@@ -257,7 +255,6 @@ napi_value AudioPlayerNapi::SetSrc(napi_env env, napi_callback_info info)
         return undefinedResult;
     }
 
-    MEDIA_LOGD("SetSrc success");
     return undefinedResult;
 }
 

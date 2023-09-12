@@ -160,17 +160,16 @@ static bool gst_surface_map_buffer(GstSurfaceAllocator *allocator, OHOS::sptr<OH
 static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfaceAllocParam param,
     OHOS::sptr<OHOS::SurfaceBuffer> &buffer)
 {
-    {
-        GST_SURFACE_ALLOCATOR_LOCK(allocator);
-        while (allocator->cacheBufferNum == 0 && allocator->clean == FALSE && allocator->isCallbackMode) {
-            GST_SURFACE_ALLOCATOR_WAIT(allocator);
-        }
-        GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
+    GST_SURFACE_ALLOCATOR_LOCK(allocator);
+    while (allocator->cacheBufferNum == 0 && allocator->clean == FALSE && allocator->isCallbackMode) {
+        GST_SURFACE_ALLOCATOR_WAIT(allocator);
     }
+    GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
     if (allocator->clean == TRUE) {
         return FALSE;
     }
 
+    MediaTrace trace("Surface::RequestBuffer");
     static constexpr int32_t stride_alignment = 8;
     int32_t wait_time = (param.dont_wait && allocator->isCallbackMode) ? 0 : INT_MAX; // wait forever or no wait.
     OHOS::BufferRequestConfig request_config = {
@@ -179,37 +178,29 @@ static bool gst_surface_request_buffer(GstSurfaceAllocator *allocator, GstSurfac
     };
     int32_t release_fence = -1;
     OHOS::SurfaceError ret = OHOS::SurfaceError::SURFACE_ERROR_OK;
-    {
-        MediaTrace trace("Surface::RequestBuffer");
-        if (wait_time == 0) {
-            LISTENER(ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config),
-                "surface::RequestBuffer", PlayerXCollie::timerTimeout)
-        } else {
-            ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config);
-        }
-        if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK || buffer == nullptr) {
-            GST_ERROR("there is no more surface buffer");
-            return false;
-        }
+    if (wait_time == 0) {
+        LISTENER(ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config),
+            "surface::RequestBuffer", PlayerXCollie::timerTimeout)
+    } else {
+        ret = allocator->surface->RequestBuffer(buffer, release_fence, request_config);
     }
-    {
-        GST_SURFACE_ALLOCATOR_LOCK(allocator);
-        allocator->requestBufferNum++;
-        allocator->cacheBufferNum--;
-        SURFACE_BUFFER_LOG_INFO(allocator, buffer->GetSeqNum());
-        GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
-        MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
-        MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
+    if (ret != OHOS::SurfaceError::SURFACE_ERROR_OK || buffer == nullptr) {
+        GST_ERROR("there is no more surface buffer");
+        return false;
     }
+
+    GST_SURFACE_ALLOCATOR_LOCK(allocator);
+    allocator->requestBufferNum++;
+    allocator->cacheBufferNum--;
+    SURFACE_BUFFER_LOG_INFO(allocator, buffer->GetSeqNum());
+    GST_SURFACE_ALLOCATOR_UNLOCK(allocator);
+    MediaTrace::CounterTrace("requestBufferNum", allocator->requestBufferNum);
+    MediaTrace::CounterTrace("cacheBufferNum", allocator->cacheBufferNum);
 
     g_return_val_if_fail(gst_surface_map_buffer(allocator, buffer), false);
-
-    {
-        MediaTrace FenceTrace("Surface::WaitFence");
-        OHOS::sptr<OHOS::SyncFence> autoFence = new(std::nothrow) OHOS::SyncFence(release_fence);
-        if (autoFence != nullptr) {
-            autoFence->Wait(100); // 100ms
-        }
+    OHOS::sptr<OHOS::SyncFence> autoFence = new(std::nothrow) OHOS::SyncFence(release_fence);
+    if (autoFence != nullptr) {
+        autoFence->Wait(100); // 100ms
     }
 
     g_return_val_if_fail(gst_surface_scale_buffer(allocator, param, buffer), false);

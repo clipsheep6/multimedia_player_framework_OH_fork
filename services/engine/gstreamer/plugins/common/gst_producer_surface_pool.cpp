@@ -551,7 +551,6 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
 
     *buffer = gst_buffer_new();
     if (*buffer == nullptr) {
-        GST_ERROR_OBJECT(spool, "alloc gst buffer failed");
         gst_allocator_free(reinterpret_cast<GstAllocator*>(spool->allocator), reinterpret_cast<GstMemory*>(memory));
         return GST_FLOW_ERROR;
     }
@@ -578,7 +577,7 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
     }
     GstBufferHandleConfig config = { sizeof(buffer_handle), memory->fence, 0, 0, 0, 0, 0 };
     gst_buffer_add_buffer_handle_meta(*buffer, reinterpret_cast<intptr_t>(buffer_handle), config);
-    return GST_FLOW_OK;
+
 #else
     g_return_val_if_fail(buffer_handle != nullptr, GST_FLOW_ERROR);
     int32_t stride = buffer_handle->stride;
@@ -593,8 +592,8 @@ static GstFlowReturn gst_producer_surface_pool_alloc_buffer(GstBufferPool *pool,
     }
     gst_buffer_add_video_meta_full(*buffer, GST_VIDEO_FRAME_FLAG_NONE, GST_VIDEO_INFO_FORMAT(info),
         GST_VIDEO_INFO_WIDTH(info), GST_VIDEO_INFO_HEIGHT(info), info->finfo->n_planes, info->offset, info->stride);
-    return GST_FLOW_OK;
 #endif
+    return GST_FLOW_OK;
 }
 
 static void gst_producer_surface_pool_free_buffer(GstBufferPool *pool, GstBuffer *buffer)

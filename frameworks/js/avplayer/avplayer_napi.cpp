@@ -92,7 +92,6 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_GETTER("width", JsGetWidth),
         DECLARE_NAPI_GETTER("height", JsGetHeight),
     };
-
     napi_value constructor = nullptr;
     napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
@@ -106,8 +105,6 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
-
-    MEDIA_LOGI("Init success");
     return exports;
 }
 
@@ -663,7 +660,6 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     MediaTrace trace("AVPlayerNapi::seek");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
-    MEDIA_LOGI("JsSeek In");
 
     napi_value args[2] = { nullptr }; // args[0]:timeMs, args[1]:SeekMode
     size_t argCount = 2; // args[0]:timeMs, args[1]:SeekMode
@@ -684,8 +680,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     int32_t time = -1;
     napi_status status = napi_get_value_int32(env, args[0], &time);
     if (status != napi_ok || time < 0) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-            "invalid parameters, please check the input seek time");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek time");
         return result;
     }
 
@@ -970,12 +965,10 @@ napi_value AVPlayerNapi::JsAddSubtitleAVFileDescriptor(napi_env env, napi_callba
 
 void AVPlayerNapi::SetSource(std::string url)
 {
-    MEDIA_LOGI("input url is %{public}s!", url.c_str());
     bool isFd = (url.find("fd://") != std::string::npos) ? true : false;
     bool isNetwork = (url.find("http") != std::string::npos) ? true : false;
     if (isNetwork) {
         auto task = std::make_shared<TaskHandler<void>>([this, url]() {
-            MEDIA_LOGI("SetNetworkSource Task");
             std::unique_lock<std::mutex> lock(taskMutex_);
             auto state = GetCurrentState();
             if (state != AVPlayerState::STATE_IDLE) {
@@ -1001,7 +994,6 @@ void AVPlayerNapi::SetSource(std::string url)
         }
 
         auto task = std::make_shared<TaskHandler<void>>([this, fd]() {
-            MEDIA_LOGI("SetFdSource Task");
             std::unique_lock<std::mutex> lock(taskMutex_);
             auto state = GetCurrentState();
             if (state != AVPlayerState::STATE_IDLE) {

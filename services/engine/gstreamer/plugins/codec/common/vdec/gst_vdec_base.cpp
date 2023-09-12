@@ -1122,13 +1122,8 @@ static gboolean gst_vdec_check_ashmem_buffer(GstBuffer *buffer)
     return gst_is_shmem_memory(memory);
 }
 
-static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, GstVideoCodecFrame *frame)
+static GstBuffer *gst_vdec_base_get_input_buffer(GstVdecBase *self, GstVdecBaseClass *kclass, GstVideoCodecFrame *frame)
 {
-    MediaTrace trace("VdecBase::PushInputBuffer");
-    GstVdecBase *self = GST_VDEC_BASE(decoder);
-    gst_vdec_debug_input_time(self);
-    gst_vdec_base_input_frame_pts_to_list(self, frame);
-    GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
     GstBuffer *buf = nullptr;
     if (kclass->handle_slice_buffer != nullptr && self->player_scene == true) {
         bool ready_push_slice_buffer = false;
@@ -1143,7 +1138,17 @@ static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, G
         buf = frame->input_buffer;
         gst_buffer_ref(buf);
     }
+    return buf;
+}
 
+static GstFlowReturn gst_vdec_base_push_input_buffer(GstVideoDecoder *decoder, GstVideoCodecFrame *frame)
+{
+    MediaTrace trace("VdecBase::PushInputBuffer");
+    GstVdecBase *self = GST_VDEC_BASE(decoder);
+    gst_vdec_debug_input_time(self);
+    gst_vdec_base_input_frame_pts_to_list(self, frame);
+    GstVdecBaseClass *kclass = GST_VDEC_BASE_GET_CLASS(self);
+    GstBuffer *buf = gst_vdec_base_get_input_buffer(self, kclass, frame);
     if (buf == nullptr) {
         GST_DEBUG_OBJECT(self, "buffer is null");
         return GST_FLOW_OK;
@@ -1482,6 +1487,36 @@ inline static void gst_vdec_reduce_coding_buffer(GstVdecBase *self)
     }
 }
 
+static gint gst_vdec_base_loop_process(gint codec_ret, GstVdecBase *self, GstBuffer *gst_buffer)
+{
+    gint flow_ret = GST_FLOW_OK;
+    switch (codec_ret) {
+        case GST_CODEC_OK:
+            gst_vdec_reduce_coding_buffer(self);
+            flow_ret = push_output_buffer(self, gst_buffer);
+            break;
+        case GST_CODEC_FORMAT_CHANGE:
+            (void)gst_vdec_base_format_change(self);
+            flow_ret = GST_FLOW_OK;
+            break;
+        case GST_CODEC_EOS:
+            gst_vdec_reduce_coding_buffer(self);
+            flow_ret = gst_vdec_base_codec_eos(self);
+            break;
+        case GST_CODEC_FLUSH:
+            flow_ret = GST_FLOW_FLUSHING;
+            break;
+        case GST_CODEC_ERROR:
+            GST_ELEMENT_WARNING(self, STREAM, DECODE, ("Hardware decoder error!"), ("pull"));
+            flow_ret = GST_FLOW_ERROR;
+            break;
+        default:
+            flow_ret = GST_FLOW_ERROR;
+            GST_ERROR_OBJECT(self, "Unknown error");
+    }
+    return flow_ret;
+}
+
 static void gst_vdec_base_loop(GstVdecBase *self)
 {
     GST_DEBUG_OBJECT(self, "Loop in");
@@ -1501,31 +1536,9 @@ static void gst_vdec_base_loop(GstVdecBase *self)
         MediaTrace trace("VdecBase::PullOutputBuffer");
         codec_ret = self->decoder->PullOutputBuffer(&gst_buffer);
     }
-    gint flow_ret = GST_FLOW_OK;
+
     GST_DEBUG_OBJECT(self, "Pull ret %d", codec_ret);
-    switch (codec_ret) {
-        case GST_CODEC_OK:
-            gst_vdec_reduce_coding_buffer(self);
-            flow_ret = push_output_buffer(self, gst_buffer);
-            break;
-        case GST_CODEC_FORMAT_CHANGE:
-            (void)gst_vdec_base_format_change(self);
-            return;
-        case GST_CODEC_EOS:
-            gst_vdec_reduce_coding_buffer(self);
-            flow_ret = gst_vdec_base_codec_eos(self);
-            break;
-        case GST_CODEC_FLUSH:
-            flow_ret = GST_FLOW_FLUSHING;
-            break;
-        case GST_CODEC_ERROR:
-            GST_ELEMENT_WARNING(self, STREAM, DECODE, ("Hardware decoder error!"), ("pull"));
-            flow_ret = GST_FLOW_ERROR;
-            break;
-        default:
-            flow_ret = GST_FLOW_ERROR;
-            GST_ERROR_OBJECT(self, "Unknown error");
-    }
+    gint flow_ret = gst_vdec_base_loop_process(codec_ret, self, gst_buffer);
     switch (flow_ret) {
         case GST_FLOW_OK:
             return;

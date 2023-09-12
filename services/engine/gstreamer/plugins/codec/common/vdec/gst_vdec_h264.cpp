@@ -111,13 +111,13 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
     GstVdecH264 *vdec_h264 = GST_VDEC_H264(self);
     GstBuffer *buf = nullptr;
     g_mutex_lock(&vdec_h264->cat_lock);
+    ON_SCOPE_EXIT(0) { g_mutex_unlock(&vdec_h264->cat_lock); };
     if (is_finish) {
         buf = vdec_h264->cache_slice_buffer;
         vdec_h264->cache_slice_buffer = nullptr;
         gst_buffer_set_size(buf, vdec_h264->cache_offset);
         vdec_h264->is_slice_buffer = false;
         ready_push = true;
-        g_mutex_unlock(&vdec_h264->cat_lock);
         return buf;
     }
 
@@ -125,14 +125,12 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
     if (!gst_buffer_map(buffer, &info, GST_MAP_READ)) {
         GST_ERROR_OBJECT(self, "map buffer fail");
         gst_buffer_ref(buffer);
-        g_mutex_unlock(&vdec_h264->cat_lock);
         return buffer;
     }
     gboolean slice_flag = get_slice_flag(vdec_h264, &info, ready_push);
     if (ready_push) {
         gst_buffer_unmap(buffer, &info);
         gst_buffer_ref(buffer);
-        g_mutex_unlock(&vdec_h264->cat_lock);
         return buffer;
     }
 
@@ -157,7 +155,6 @@ static GstBuffer *handle_slice_buffer(GstVdecBase *self, GstBuffer *buffer, bool
     }
 
     gst_buffer_unmap(buffer, &info);
-    g_mutex_unlock(&vdec_h264->cat_lock);
     return buf;
 }
 

@@ -77,6 +77,8 @@ private:
     bool IsAlived();
     static void MediaServerDied(pid_t pid);
     void DoMediaServerDied();
+    void AVPlayerServerDied();
+    void AVCodecServerDied();
 
     sptr<IStandardMediaService> mediaProxy_ = nullptr;
     sptr<MediaListenerStub> listenerStub_ = nullptr;

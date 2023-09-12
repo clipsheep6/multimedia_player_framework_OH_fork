@@ -320,32 +320,8 @@ void MediaClient::MediaServerDied(pid_t pid)
     mediaClientInstance.DoMediaServerDied();
 }
 
-void MediaClient::DoMediaServerDied()
+void MediaClient::AVPlayerServerDied()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (mediaProxy_ != nullptr) {
-        (void)mediaProxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
-        mediaProxy_ = nullptr;
-    }
-    listenerStub_ = nullptr;
-    deathRecipient_ = nullptr;
-
-#ifdef SUPPORT_RECORDER
-    for (auto &it : recorderClientList_) {
-        auto recorder = std::static_pointer_cast<RecorderClient>(it);
-        if (recorder != nullptr) {
-            recorder->MediaServerDied();
-        }
-    }
-
-    for (auto &it : recorderProfilesClientList_) {
-        auto recorderProfilesClient = std::static_pointer_cast<RecorderProfilesClient>(it);
-        if (recorderProfilesClient != nullptr) {
-            recorderProfilesClient->MediaServerDied();
-        }
-    }
-#endif
-
 #ifdef SUPPORT_PLAYER
     for (auto &it : playerClientList_) {
         auto player = std::static_pointer_cast<PlayerClient>(it);
@@ -363,7 +339,10 @@ void MediaClient::DoMediaServerDied()
         }
     }
 #endif
+}
 
+void MediaClient::AVCodecServerDied()
+{
 #ifdef SUPPORT_CODEC
     for (auto &it : avCodecClientList_) {
         auto avCodecClient = std::static_pointer_cast<AVCodecClient>(it);
@@ -376,6 +355,35 @@ void MediaClient::DoMediaServerDied()
         auto avCodecListClient = std::static_pointer_cast<AVCodecListClient>(it);
         if (avCodecListClient != nullptr) {
             avCodecListClient->MediaServerDied();
+        }
+    }
+#endif
+}
+
+void MediaClient::DoMediaServerDied()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (mediaProxy_ != nullptr) {
+        (void)mediaProxy_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+        mediaProxy_ = nullptr;
+    }
+    listenerStub_ = nullptr;
+    deathRecipient_ = nullptr;
+
+    AVPlayerServerDied();
+    AVCodecServerDied();
+#ifdef SUPPORT_RECORDER
+    for (auto &it : recorderClientList_) {
+        auto recorder = std::static_pointer_cast<RecorderClient>(it);
+        if (recorder != nullptr) {
+            recorder->MediaServerDied();
+        }
+    }
+
+    for (auto &it : recorderProfilesClientList_) {
+        auto recorderProfilesClient = std::static_pointer_cast<RecorderProfilesClient>(it);
+        if (recorderProfilesClient != nullptr) {
+            recorderProfilesClient->MediaServerDied();
         }
     }
 #endif

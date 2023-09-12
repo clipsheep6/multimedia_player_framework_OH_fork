@@ -77,6 +77,9 @@ private:
 #endif
     sptr<IRemoteObject> GetMonitorStubObject();
 
+    void DestroyAVCodecStub(StubType type, sptr<IRemoteObject> object, pid_t pid);
+    void DestroyAVCodecStubForPid(pid_t pid);
+
     class AsyncExecutor {
     public:
         AsyncExecutor() = default;
