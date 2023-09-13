@@ -30,7 +30,7 @@ public:
 
     int32_t Init(int maxStreams, AudioStandard::AudioRendererInfo audioRenderInfo);
 
-    int32_t Load(std::string &url) override;
+    int32_t Load(std::string url) override;
 
     int32_t Load(int32_t fd, int64_t offset, int64_t length) override;
 
