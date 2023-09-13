@@ -216,6 +216,7 @@ void PlayerEngineGstImpl::HandleSeekDoneMessage(const PlayBinMessage &msg)
 void PlayerEngineGstImpl::HandleSpeedDoneMessage(const PlayBinMessage &msg)
 {
     std::shared_ptr<IPlayerEngineObs> notifyObs = obs_.lock();
+    codecCtrl_.EnhanceSeekPerformance(false);
     if (notifyObs != nullptr) {
         Format format;
         double rate = std::any_cast<double>(msg.extra);
@@ -721,6 +722,7 @@ int32_t PlayerEngineGstImpl::SetPlaybackSpeed(PlaybackRateMode mode)
 {
     std::unique_lock<std::mutex> lock(mutex_);
     if (playBinCtrler_ != nullptr) {
+        codecCtrl_.EnhanceSeekPerformance(true);
         double rate = ChangeModeToSpeed(mode);
         return playBinCtrler_->SetRate(rate);
     }

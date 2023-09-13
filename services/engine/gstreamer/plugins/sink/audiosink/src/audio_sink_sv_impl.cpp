@@ -495,6 +495,7 @@ void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, g
     audioRendererMediaCallback_->SaveInterruptCallback(interruptCb);
     audioRendererMediaCallback_->SaveStateCallback(stateCb);
     XcollieTimer xCollie("AudioRenderer::SetRendererCallback", PlayerXCollie::timerTimeout);
+    CHECK_AND_RETURN(audioRenderer_ != nullptr);
     audioRenderer_->SetRendererCallback(audioRendererMediaCallback_);
     audioServiceDiedCallback_->SaveAudioPolicyServiceDiedCb(audioDiedCb);
     audioRenderer_->RegisterAudioPolicyServerDiedCb(getpid(), audioServiceDiedCallback_);
@@ -503,8 +504,8 @@ void AudioSinkSvImpl::SetAudioSinkCb(void (*interruptCb)(GstBaseSink *, guint, g
 void AudioSinkSvImpl::SetAudioInterruptMode(int32_t interruptMode)
 {
     MediaTrace trace("AudioSink::SetInterruptMode");
-    CHECK_AND_RETURN(audioRendererMediaCallback_ != nullptr);
     XcollieTimer xCollie("AudioRenderer::SetInterruptMode", PlayerXCollie::timerTimeout);
+    CHECK_AND_RETURN(audioRenderer_ != nullptr);
     audioRenderer_->SetInterruptMode(static_cast<AudioStandard::InterruptMode>(interruptMode));
 }
 
@@ -512,8 +513,8 @@ int32_t AudioSinkSvImpl::SetAudioEffectMode(int32_t effectMode)
 {
     MediaTrace trace("AudioSink::SetAudioEffectMode");
     MEDIA_LOGD("SetAudioEffectMode %{public}d", effectMode);
-    CHECK_AND_RETURN_RET(audioRendererMediaCallback_ != nullptr, MSERR_INVALID_OPERATION);
     XcollieTimer xCollie("AudioRenderer::SetAudioEffectMode", PlayerXCollie::timerTimeout);
+    CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     int32_t ret = audioRenderer_->SetAudioEffectMode(static_cast<OHOS::AudioStandard::AudioEffectMode>(effectMode));
     CHECK_AND_RETURN_RET_LOG(ret == AudioStandard::SUCCESS, ret, "failed to SetAudioEffectMode!");
     return MSERR_OK;
@@ -522,8 +523,8 @@ int32_t AudioSinkSvImpl::SetAudioEffectMode(int32_t effectMode)
 int32_t AudioSinkSvImpl::GetAudioEffectMode(int32_t &effectMode)
 {
     MediaTrace trace("AudioSink::GetAudioEffectMode");
-    CHECK_AND_RETURN_RET(audioRendererMediaCallback_ != nullptr, MSERR_INVALID_OPERATION);
     XcollieTimer xCollie("AudioRenderer::GetAudioEffectMode", PlayerXCollie::timerTimeout);
+    CHECK_AND_RETURN_RET(audioRenderer_ != nullptr, MSERR_AUD_RENDER_FAILED);
     effectMode = audioRenderer_->GetAudioEffectMode();
     MEDIA_LOGD("GetAudioEffectMode %{public}d", effectMode);
     return MSERR_OK;
