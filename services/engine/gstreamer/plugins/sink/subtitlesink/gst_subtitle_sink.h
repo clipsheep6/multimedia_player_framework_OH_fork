@@ -58,6 +58,7 @@ struct _GstSubtitleSink {
     gboolean enable_display;
     gboolean need_send_empty_buffer;
     gboolean have_first_filter;
+    gboolean prepared;
     GstBuffer *preroll_buffer;
     guint64 track_changing_position;
     guint64 init_position;

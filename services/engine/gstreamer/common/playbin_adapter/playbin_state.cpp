@@ -557,9 +557,6 @@ void PlayBinCtrlerBase::PlayingState::ProcessStateChange(const InnerMessage &msg
         if ((stateRet == GST_STATE_CHANGE_SUCCESS) && (state == GST_STATE_PLAYING)) {
             ProcessPlayingStateChange();
         }
-        if (ctrler_.subtitleSink_ != nullptr) {
-            gst_element_set_state(GST_ELEMENT_CAST(ctrler_.subtitleSink_), GST_STATE_PLAYING);
-        }
     }
 }
 

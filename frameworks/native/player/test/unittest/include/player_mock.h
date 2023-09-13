@@ -33,6 +33,8 @@ inline constexpr int32_t DELTA_TIME = 1000;
 inline constexpr int32_t PLAYING_TIME_2_SEC = 2;
 inline constexpr int32_t PLAYING_TIME_1_SEC = 1;
 inline constexpr int32_t PLAYING_TIME_10_SEC = 10;
+inline constexpr int32_t ONE_SEC = 1000000; // 1 second = 1000000 microsecond;
+inline constexpr int32_t TWO_SEC = 2000000;
 const std::string MEDIA_ROOT = "file:///data/test/";
 const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
 const std::string SUBTITLE_SRT_FIELE = MEDIA_ROOT + "utf8.srt";
