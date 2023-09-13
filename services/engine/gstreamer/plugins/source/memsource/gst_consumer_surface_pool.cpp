@@ -384,6 +384,9 @@ static GstFlowReturn gst_consumer_surface_pool_alloc_buffer(GstBufferPool *pool,
     if (gst_is_consumer_surface_memory(mem)) {
         *surfacemem = reinterpret_cast<GstConsumerSurfaceMemory*>(mem);
         add_buffer_info(surfacepool, *surfacemem, *buffer);
+        if (surfacepool->update_video_meta != nullptr) {
+            surfacepool->update_video_meta(surfacepool, *surfacemem, *buffer);
+        }
     }
     gst_consumer_surface_pool_dump_gstbuffer(surfacepool, *buffer);
     return GST_FLOW_OK;
@@ -460,6 +463,7 @@ static void gst_consumer_surface_pool_init(GstConsumerSurfacePool *pool)
     pool->priv = priv;
     pool->buffer_available = nullptr;
     pool->find_buffer = nullptr;
+    pool->update_video_meta = nullptr;
     pool->get_surface_buffer = gst_consumer_surface_pool_get_surface_buffer;
     pool->release_surface_buffer = gst_consumer_surface_pool_release_surface_buffer;
     priv->available_buf_count = 0;
