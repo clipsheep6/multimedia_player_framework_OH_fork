@@ -196,7 +196,7 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
                 eosFlag_ = true;
             }
             audioDec_->QueueInputBuffer(index, sampleInfo, bufferFlag);
-        } else if (ret != 0) {
+        } else {
             MEDIA_ERR_LOG("error parser:%{public}d", ret);
         }
     }

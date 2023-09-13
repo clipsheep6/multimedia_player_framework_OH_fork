@@ -44,7 +44,7 @@ struct AudioBufferEntry {
 class CacheBuffer {
 public:
     CacheBuffer(const MediaAVCodec::Format trackFormat,
-            const std::deque<std::shared_ptr<AudioBufferEntry>> cacheData,
+            const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
             const int32_t soundID, const int32_t streamID);
     ~CacheBuffer();
     int32_t PreparePlay(const int32_t streamID, const AudioStandard::AudioRendererInfo audioRendererInfo,
@@ -82,7 +82,7 @@ private:
         const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
     void AudioRendererRunning();
     int32_t DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams);
-    AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t renderRate) const;
+    AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t rate) const;
 
     MediaAVCodec::Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
