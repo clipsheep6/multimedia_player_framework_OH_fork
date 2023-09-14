@@ -53,7 +53,7 @@ public:
     int32_t SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback> &soundPoolCallback) override;
 
 private:
-    bool CheckVolumeVaild(float *leftVol, float *rightVol);
+    bool CheckVolumeValid(float *leftVol, float *rightVol);
     std::shared_ptr<SoundIDManager> soundIDManager_;
     std::shared_ptr<StreamIDManager> streamIdManager_;
     std::mutex soundPoolLock_;

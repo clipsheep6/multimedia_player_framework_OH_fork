@@ -146,7 +146,7 @@ int32_t SoundPool::SetRate(int32_t streamID, AudioStandard::AudioRendererRate re
 
 int32_t SoundPool::SetVolume(int32_t streamID, float leftVolume, float rightVolume)
 {
-    if (!CheckVolumeVaild(&leftVolume, &rightVolume)) {
+    if (!CheckVolumeValid(&leftVolume, &rightVolume)) {
         return MSERR_INVALID_VAL;
     }
 
@@ -189,7 +189,7 @@ int32_t SoundPool::SetSoundPoolCallback(const std::shared_ptr<ISoundPoolCallback
     return MSERR_OK;
 }
 
-bool SoundPool::CheckVolumeVaild(float *leftVol, float *rightVol)
+bool SoundPool::CheckVolumeValid(float *leftVol, float *rightVol)
 {
     if (*leftVol != std::clamp(*leftVol, 0.f, 1.f) ||
         *rightVol != std::clamp(*rightVol, 0.f, 1.f)) {
