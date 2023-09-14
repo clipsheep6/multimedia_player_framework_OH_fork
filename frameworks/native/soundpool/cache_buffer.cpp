@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace Media {
 CacheBuffer::CacheBuffer(const MediaAVCodec::Format trackFormat,
-    const std::deque<std::shared_ptr<AudioBufferEntry>> &cacheData,
+    const std::deque<std::shared_ptr<AudioBufferEntry>> cacheData,
     const int32_t soundID, const int32_t streamID) : trackFormat_(trackFormat),
     cacheData_(cacheData), soundID_(soundID), streamID_(streamID)
 {
