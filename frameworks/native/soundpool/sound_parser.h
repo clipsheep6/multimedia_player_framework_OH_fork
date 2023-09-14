@@ -22,9 +22,11 @@
 #include <mutex>
 #include "ashmem.h"
 #include "avcodec_audio_decoder.h"
+#include "avcodec_errors.h"
 #include "avdemuxer.h"
 #include "avsource.h"
 #include "avsharedmemory.h"
+#include "avcodec_codec_name.h"
 #include "cache_buffer.h"
 #include "isoundpool.h"
 #include "media_description.h"
@@ -50,10 +52,11 @@ public:
         }
         virtual void OnSoundDecodeCompleted(const std::deque<std::shared_ptr<AudioBufferEntry>>
             availableAudioBuffers) = 0;
+        virtual void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) = 0;
     };
 
     SoundDecoderCallback(const int32_t soundID, const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer);
+        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, const std::string trackMimeTypeInfo);
     ~SoundDecoderCallback();
     int32_t SetDecodeCallback(const std::shared_ptr<SoundDecodeListener> &listener)
     {
@@ -76,6 +79,7 @@ private:
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_;
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer_;
     std::shared_ptr<SoundDecodeListener> listener_;
+    std::string trackMimeTypeInfo_;
     bool eosFlag_;
     std::deque<std::shared_ptr<AudioBufferEntry>> availableAudioBuffers_;
     bool decodeShouldCompleted_;
@@ -96,6 +100,7 @@ public:
         return soundID_;
     }
     int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const;
+    size_t GetSoundDataTotalSize() const;
     MediaAVCodec::Format GetSoundTrackFormat() const
     {
         return trackFormat_;
@@ -118,20 +123,35 @@ private:
                 isSoundParserCompleted_.store(true);
             }
         }
+        void SetSoundBufferTotalSize(const size_t soundBufferTotalSize) override
+        {
+            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
+            if (!soundParserInner_.expired()) {
+                soundBufferTotalSize_ = soundBufferTotalSize;
+            }
+        }
         int32_t GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> &soundData) const
         {
             std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             soundData = soundData_;
             return MSERR_OK;
         }
+
+        size_t GetSoundDataTotalSize() const
+        {
+            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
+            return soundBufferTotalSize_;
+        }
         bool IsSoundParserCompleted() const
         {
+            std::unique_lock<std::mutex> lock(soundParserInner_.lock()->soundParserLock_);
             return isSoundParserCompleted_.load();
         }
 
     private:
         std::weak_ptr<SoundParser> soundParserInner_;
         std::deque<std::shared_ptr<AudioBufferEntry>> soundData_;
+        size_t soundBufferTotalSize_;
         std::atomic<bool> isSoundParserCompleted_ = false;
     };
 

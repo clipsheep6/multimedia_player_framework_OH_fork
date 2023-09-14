@@ -20,6 +20,7 @@
 
 namespace {
     static constexpr int32_t MAX_SOUND_BUFFER_SIZE = 1 * 1024 * 1024;
+    static const std::string AUDIO_RAW_MIMETYPE_INFO = "audio/raw";
 }
 
 namespace OHOS {
@@ -103,11 +104,17 @@ int32_t SoundParser::DoDecode(MediaAVCodec::Format trackFormat)
         std::string trackMimeTypeInfo;
         trackFormat.GetStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME, trackMimeTypeInfo);
         MEDIA_INFO_LOG("SoundParser mime type:%{public}s", trackMimeTypeInfo.c_str());
-        audioDec_ = MediaAVCodec::AudioDecoderFactory::CreateByMime(trackMimeTypeInfo);
+        if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo) == 0) {
+            MEDIA_INFO_LOG("SoundParser pcm file, read it directly.");
+            audioDec_ =
+                MediaAVCodec::AudioDecoderFactory::CreateByName((AVCodecCodecName::AUDIO_DECODER_AAC_NAME).data());
+        } else {
+            audioDec_ = MediaAVCodec::AudioDecoderFactory::CreateByMime(trackMimeTypeInfo);
+        }
         CHECK_AND_RETURN_RET_LOG(audioDec_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain audioDecorder.");
         int32_t ret = audioDec_->Configure(trackFormat);
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to configure audioDecorder.");
-        audioDecCb_ = std::make_shared<SoundDecoderCallback>(soundID_, audioDec_, demuxer_);
+        audioDecCb_ = std::make_shared<SoundDecoderCallback>(soundID_, audioDec_, demuxer_, trackMimeTypeInfo);
         CHECK_AND_RETURN_RET_LOG(audioDecCb_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain decode callback.");
         ret = audioDec_->SetCallback(audioDecCb_);
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to setCallback audioDecorder");
@@ -125,6 +132,12 @@ int32_t SoundParser::GetSoundData(std::deque<std::shared_ptr<AudioBufferEntry>> 
 {
     CHECK_AND_RETURN_RET_LOG(soundParserListener_ != nullptr, MSERR_INVALID_VAL, "Invalid sound parser listener");
     return soundParserListener_->GetSoundData(soundData);
+}
+
+size_t SoundParser::GetSoundDataTotalSize() const
+{
+    CHECK_AND_RETURN_RET_LOG(soundParserListener_ != nullptr, MSERR_INVALID_VAL, "Invalid sound parser listener");
+    return soundParserListener_->GetSoundDataTotalSize();
 }
 
 bool SoundParser::IsSoundParserCompleted() const
@@ -160,8 +173,9 @@ int32_t SoundParser::Release()
 
 SoundDecoderCallback::SoundDecoderCallback(const int32_t soundID,
     const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-    const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer) : soundID_(soundID),
-    audioDec_(audioDec), demuxer_(demuxer), eosFlag_(false),
+    const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer,
+    const std::string trackMimeTypeInfo) : soundID_(soundID), audioDec_(audioDec),
+    demuxer_(demuxer), trackMimeTypeInfo_(trackMimeTypeInfo), eosFlag_(false),
     decodeShouldCompleted_(false), currentSoundBufferSize_(0)
 {
     MEDIA_INFO_LOG("Construction SoundDecoderCallback");
@@ -174,7 +188,9 @@ SoundDecoderCallback::~SoundDecoderCallback()
 }
 void SoundDecoderCallback::OnError(AVCodecErrorType errorType, int32_t errorCode)
 {
-    MEDIA_INFO_LOG("Recive error, errorType:%{public}d,errorCode:%{public}d", errorType, errorCode);
+    if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo_) != 0) {
+        MEDIA_INFO_LOG("Recive error, errorType:%{public}d,errorCode:%{public}d", errorType, errorCode);
+    }
 }
 
 void SoundDecoderCallback::OnOutputFormatChanged(const Format &format)
@@ -189,16 +205,45 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
     MediaAVCodec::AVCodecBufferInfo sampleInfo;
     CHECK_AND_RETURN_LOG(demuxer_ != nullptr, "Failed to obtain demuxer");
     CHECK_AND_RETURN_LOG(audioDec_ != nullptr, "Failed to obtain audio decode.");
-    if (!eosFlag_ && !decodeShouldCompleted_) {
-        int ret = demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag);
-        if (ret == 0) {
-            if (bufferFlag == AVCODEC_BUFFER_FLAG_EOS) {
-                eosFlag_ = true;
-            }
-            audioDec_->QueueInputBuffer(index, sampleInfo, bufferFlag);
-        } else if (ret != 0) {
-            MEDIA_ERR_LOG("error parser:%{public}d", ret);
+
+    if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo_) == 0) {
+        if (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
+            MEDIA_ERR_LOG("SoundDecoderCallback demuxer error.");
+            return;
         }
+        int32_t size = sampleInfo.size;
+        uint8_t *buf = new(std::nothrow) uint8_t[size];
+        if (currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE || bufferFlag == AVCODEC_BUFFER_FLAG_EOS) {
+            decodeShouldCompleted_ = true;
+            CHECK_AND_RETURN_LOG(listener_ != nullptr, "sound decode listener invalid.");
+            listener_->OnSoundDecodeCompleted(availableAudioBuffers_);
+            listener_->SetSoundBufferTotalSize(static_cast<size_t>(currentSoundBufferSize_));
+            CHECK_AND_RETURN_LOG(callback_ != nullptr, "sound decode:soundpool callback invalid.");
+            callback_->OnLoadCompleted(soundID_);
+            return;
+        }
+        if (buf != nullptr) {
+            if (memcpy_s(buf, size, buffer->GetBase(), size) != EOK) {
+                MEDIA_INFO_LOG("audio buffer copy failed:%{public}s", strerror(errno));
+            } else {
+                availableAudioBuffers_.push_back(std::make_shared<AudioBufferEntry>(buf, size));
+                bufferCond_.notify_all();
+            }
+        }
+        currentSoundBufferSize_ += size;
+        audioDec_->QueueInputBuffer(index, sampleInfo, bufferFlag);
+        return;
+    }
+
+    if (!eosFlag_ && !decodeShouldCompleted_) {
+        if (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
+            MEDIA_ERR_LOG("SoundDecoderCallback demuxer error.");
+            return;
+        }
+        if (bufferFlag == AVCODEC_BUFFER_FLAG_EOS) {
+            eosFlag_ = true;
+        }
+        audioDec_->QueueInputBuffer(index, sampleInfo, bufferFlag);
     }
 }
 
@@ -206,11 +251,18 @@ void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBuffer
     std::shared_ptr<AVSharedMemory> buffer)
 {
     std::unique_lock<std::mutex> lock(amutex_);
+    if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo_) == 0) {
+        MEDIA_INFO_LOG("audio raw data, return.");
+        CHECK_AND_RETURN_LOG(audioDec_ != nullptr, "Failed to obtain audio decode.");
+        audioDec_->ReleaseOutputBuffer(index);
+        return;
+    }
     if (buffer != nullptr && !decodeShouldCompleted_) {
         if (currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE || flag == AVCODEC_BUFFER_FLAG_EOS) {
             decodeShouldCompleted_ = true;
             CHECK_AND_RETURN_LOG(listener_ != nullptr, "sound decode listener invalid.");
             listener_->OnSoundDecodeCompleted(availableAudioBuffers_);
+            listener_->SetSoundBufferTotalSize(static_cast<size_t>(currentSoundBufferSize_));
             CHECK_AND_RETURN_LOG(callback_ != nullptr, "sound decode:soundpool callback invalid.");
             callback_->OnLoadCompleted(soundID_);
             return;

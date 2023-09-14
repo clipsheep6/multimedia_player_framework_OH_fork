@@ -107,8 +107,10 @@ int32_t StreamIDManager::Play(std::shared_ptr<SoundParser> soundParser, PlayPara
             streamID = nextStreamID_;
             std::deque<std::shared_ptr<AudioBufferEntry>> cacheData;
             soundParser->GetSoundData(cacheData);
+            size_t cacheDataTotalSize = soundParser->GetSoundDataTotalSize();
             auto cacheBuffer =
-                std::make_shared<CacheBuffer>(soundParser->GetSoundTrackFormat(), cacheData, soundID, streamID);
+                std::make_shared<CacheBuffer>(soundParser->GetSoundTrackFormat(), cacheData, cacheDataTotalSize,
+                     soundID, streamID);
             CHECK_AND_RETURN_RET_LOG(cacheBuffer != nullptr, -1, "failed to create cache buffer");
             CHECK_AND_RETURN_RET_LOG(callback_ != nullptr, MSERR_INVALID_VAL, "Invalid callback.");
             cacheBuffer->SetCallback(callback_);

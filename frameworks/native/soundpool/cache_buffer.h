@@ -16,11 +16,10 @@
 #ifndef CACHE_BUFFER_H
 #define CACHE_BUFFER_H
 
-#include <mutex>
 #include <deque>
-#include <thread>
 #include "audio_renderer.h"
 #include "audio_info.h"
+#include "audio_stream_info.h"
 #include "isoundpool.h"
 #include "media_description.h"
 
@@ -41,12 +40,16 @@ struct AudioBufferEntry {
     int32_t size;
 };
 
-class CacheBuffer {
+class CacheBuffer :
+    public AudioStandard::AudioRendererWriteCallback,
+    public std::enable_shared_from_this<CacheBuffer> {
 public:
     CacheBuffer(const MediaAVCodec::Format trackFormat,
-            const std::deque<std::shared_ptr<AudioBufferEntry>> cacheData,
-            const int32_t soundID, const int32_t streamID);
+        const std::deque<std::shared_ptr<AudioBufferEntry>> cacheData,
+        const size_t cacheDataTotalSize,
+        const int32_t soundID, const int32_t streamID);
     ~CacheBuffer();
+    void OnWriteData(size_t length) override;
     int32_t PreparePlay(const int32_t streamID, const AudioStandard::AudioRendererInfo audioRendererInfo,
         const PlayParams playParams);
     int32_t DoPlay(const int32_t streamID);
@@ -78,32 +81,35 @@ public:
     }
 
 private:
+    static constexpr int32_t NORMAL_PLAY_RENDERER_FLAGS = 0;
+    static constexpr int32_t LOW_LATENCY_PLAY_RENDERER_FLAGS = 1;
+
     std::unique_ptr<AudioStandard::AudioRenderer> CreateAudioRenderer(const int32_t streamID,
         const AudioStandard::AudioRendererInfo audioRendererInfo, const PlayParams playParams);
-    void AudioRendererRunning();
+    int32_t ReCombineCacheData();
     int32_t DealPlayParamsBeforePlay(const int32_t streamID, const PlayParams playParams);
     AudioStandard::AudioRendererRate CheckAndAlignRendererRate(const int32_t renderRate) const;
 
     MediaAVCodec::Format trackFormat_;
     std::deque<std::shared_ptr<AudioBufferEntry>> cacheData_;
+    std::deque<std::shared_ptr<AudioBufferEntry>> reCombineCacheData_;
+    size_t cacheDataTotalSize_;
     int32_t soundID_;
     int32_t streamID_;
 
-    std::mutex cacheBufferLock_;
     // use for save audiobuffer
     std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer_;
-    std::condition_variable bufferCond_;
-    std::mutex amutex_;
-    std::unique_ptr<std::thread> audioRendererRunningThread_;
     std::atomic<bool> isRunning_ = false;
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::shared_ptr<ISoundPoolCallback> cacheBufferCallback_ = nullptr;
-    std::condition_variable runningValid_;
-
-    static constexpr int32_t WAIT_TIME_BEFORE_RUNNING_CONFIG = 400;
+    std::mutex cacheBufferLock_;
 
     int32_t loop_ = 0;
     int32_t priority_ = 0;
+    int32_t rendererFlags_ = NORMAL_PLAY_RENDERER_FLAGS;
+
+    size_t cacheDataFrameNum_;
+    int32_t havePlayedCount_;
 };
 } // namespace Media
 } // namespace OHOS
