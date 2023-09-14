@@ -48,10 +48,6 @@ bool FuzzAVMetadataStubLocal(uint8_t *data, size_t size)
     }
     std::shared_ptr<MediaServer> mediaServer =
         std::make_shared<MediaServer>(SYSTEM_ABILITY_ID, RUN_ON_CREATE);
-    if (mediaServer == nullptr) {
-        return false;
-    }
-
     sptr<IRemoteObject> listener = new(std::nothrow) MediaListenerStubFuzzer();
     sptr<IRemoteObject> avmetadata = mediaServer->GetSubSystemAbility(
         IStandardMediaService::MediaSystemAbility::MEDIA_AVMETADATAHELPER, listener);

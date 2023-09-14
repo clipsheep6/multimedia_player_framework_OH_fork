@@ -406,24 +406,9 @@ void MediaServerManager::DestroyAVCodecStub(StubType type, sptr<IRemoteObject> o
     }
 }
 
-void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
+void MediaServerManager::DestroyAVPlayerStub(StubType type, sptr<IRemoteObject> object, pid_t pid)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    pid_t pid = IPCSkeleton::GetCallingPid();
-    DestroyDumper(type, object);
     switch (type) {
-        case RECORDER: {
-            for (auto it = recorderStubMap_.begin(); it != recorderStubMap_.end(); it++) {
-                if (it->first == object) {
-                    MEDIA_LOGD("destroy recorder stub services(%{public}zu) pid(%{public}d).",
-                        recorderStubMap_.size(), pid);
-                    (void)recorderStubMap_.erase(it);
-                    return;
-                }
-            }
-            MEDIA_LOGE("find recorder object failed, pid(%{public}d).", pid);
-            break;
-        }
         case PLAYER: {
             for (auto it = playerStubMap_.begin(); it != playerStubMap_.end(); it++) {
                 if (it->first == object) {
@@ -449,10 +434,26 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             MEDIA_LOGE("find avmetadatahelper object failed, pid(%{public}d).", pid);
             break;
         }
-        case AVCODEC:
-        case AVCODECLIST:
-            DestroyAVCodecStub(type, object, pid);
+        default:
             break;
+    }
+}
+
+void MediaServerManager::DestroyAVRecorderStub(StubType type, sptr<IRemoteObject> object, pid_t pid)
+{
+    switch (type) {
+        case RECORDER: {
+            for (auto it = recorderStubMap_.begin(); it != recorderStubMap_.end(); it++) {
+                if (it->first == object) {
+                    MEDIA_LOGD("destroy recorder stub services(%{public}zu) pid(%{public}d).",
+                        recorderStubMap_.size(), pid);
+                    (void)recorderStubMap_.erase(it);
+                    return;
+                }
+            }
+            MEDIA_LOGE("find recorder object failed, pid(%{public}d).", pid);
+            break;
+        }
         case RECORDERPROFILES: {
             for (auto it = recorderProfilesStubMap_.begin(); it != recorderProfilesStubMap_.end(); it++) {
                 if (it->first == object) {
@@ -465,6 +466,29 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
             MEDIA_LOGE("find mediaprofile object failed, pid(%{public}d).", pid);
             break;
         }
+        default:
+            break;
+    }
+}
+
+void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> object)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    pid_t pid = IPCSkeleton::GetCallingPid();
+    DestroyDumper(type, object);
+    switch (type) {
+        case RECORDER:
+        case RECORDERPROFILES:
+            DestroyAVRecorderStub(type, object, pid);
+            break;
+        case PLAYER:
+        case AVMETADATAHELPER:
+            DestroyAVPlayerStub(type, object, pid);
+            break;
+        case AVCODEC:
+        case AVCODECLIST:
+            DestroyAVCodecStub(type, object, pid);
+            break;
         case SCREEN_CAPTURE: {
             for (auto it = screenCaptureStubMap_.begin(); it != screenCaptureStubMap_.end(); it++) {
                 if (it->first == object) {
@@ -509,21 +533,8 @@ void MediaServerManager::DestroyAVCodecStubForPid(pid_t pid)
     MEDIA_LOGD("avcodeclist stub services(%{public}zu).", avCodecListStubMap_.size());
 }
 
-void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
+void MediaServerManager::DestroyAVPlayerStubForPid(pid_t pid)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGD("recorder stub services(%{public}zu) pid(%{public}d).", recorderStubMap_.size(), pid);
-    DestroyDumperForPid(pid);
-    for (auto itRecorder = recorderStubMap_.begin(); itRecorder != recorderStubMap_.end();) {
-        if (itRecorder->second == pid) {
-            executor_.Commit(itRecorder->first);
-            itRecorder = recorderStubMap_.erase(itRecorder);
-        } else {
-            itRecorder++;
-        }
-    }
-    MEDIA_LOGD("recorder stub services(%{public}zu).", recorderStubMap_.size());
-
     MEDIA_LOGD("player stub services(%{public}zu) pid(%{public}d).", playerStubMap_.size(), pid);
     for (auto itPlayer = playerStubMap_.begin(); itPlayer != playerStubMap_.end();) {
         if (itPlayer->second == pid) {
@@ -545,8 +556,20 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
         }
     }
     MEDIA_LOGD("avmetadatahelper stub services(%{public}zu).", avMetadataHelperStubMap_.size());
+}
 
-    DestroyAVCodecStubForPid(pid);
+void MediaServerManager::DestroyAVRecorderStubForPid(pid_t pid)
+{
+    MEDIA_LOGD("recorder stub services(%{public}zu) pid(%{public}d).", recorderStubMap_.size(), pid);
+    for (auto itRecorder = recorderStubMap_.begin(); itRecorder != recorderStubMap_.end();) {
+        if (itRecorder->second == pid) {
+            executor_.Commit(itRecorder->first);
+            itRecorder = recorderStubMap_.erase(itRecorder);
+        } else {
+            itRecorder++;
+        }
+    }
+    MEDIA_LOGD("recorder stub services(%{public}zu).", recorderStubMap_.size());
 
     MEDIA_LOGD("mediaprofile stub services(%{public}zu) pid(%{public}d).", recorderProfilesStubMap_.size(), pid);
     for (auto itMediaProfile = recorderProfilesStubMap_.begin(); itMediaProfile != recorderProfilesStubMap_.end();) {
@@ -558,6 +581,15 @@ void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
         }
     }
     MEDIA_LOGD("mediaprofile stub services(%{public}zu).", recorderProfilesStubMap_.size());
+}
+
+void MediaServerManager::DestroyStubObjectForPid(pid_t pid)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    DestroyDumperForPid(pid);
+    DestroyAVRecorderStubForPid(pid);
+    DestroyAVPlayerStubForPid(pid);
+    DestroyAVCodecStubForPid(pid);
 
     MEDIA_LOGD("screencapture stub services(%{public}zu) pid(%{public}d).", screenCaptureStubMap_.size(), pid);
     for (auto itScreenCapture = screenCaptureStubMap_.begin(); itScreenCapture != screenCaptureStubMap_.end();) {

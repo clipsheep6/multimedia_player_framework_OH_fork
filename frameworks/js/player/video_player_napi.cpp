@@ -766,23 +766,22 @@ napi_value VideoPlayerNapi::Seek(napi_env env, napi_callback_info info)
         }
     }
 
-    napi_valuetype valueType = napi_undefined;
-    if (args[0] != nullptr && napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_number) {
+    if (CommonNapi::CheckValueType(env, args[0], napi_number)) {
         (void)napi_get_value_int32(env, args[0], &asyncContext->seekPosition); // timeMs: number
         if (asyncContext->seekPosition < 0) {
             asyncContext->SignError(MSERR_EXT_INVALID_VAL, "seek position < 0");
         }
     }
 
-    if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_number) {
+    if (CommonNapi::CheckValueType(env, args[0], napi_number)) {
         (void)napi_get_value_int32(env, args[1], &asyncContext->seekMode); // mode:SeekMode
         if (asyncContext->seekMode < SEEK_NEXT_SYNC || asyncContext->seekMode > SEEK_CLOSEST) {
             asyncContext->SignError(MSERR_EXT_INVALID_VAL, "seek mode invalid");
         }
-        if (args[2] != nullptr && napi_typeof(env, args[2], &valueType) == napi_ok && valueType == napi_function) {
+        if (CommonNapi::CheckValueType(env, args[2], napi_function)) {
             asyncContext->callbackRef = CommonNapi::CreateReference(env, args[2]); // callback:AsyncCallback<number>
         }
-    } else if (args[1] != nullptr && napi_typeof(env, args[1], &valueType) == napi_ok && valueType == napi_function) {
+    } else if (CommonNapi::CheckValueType(env, args[1], napi_function)) {
         asyncContext->callbackRef = CommonNapi::CreateReference(env, args[1]); // callback:AsyncCallback<number>
     }
     asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);

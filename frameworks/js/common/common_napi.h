@@ -33,6 +33,7 @@ public:
     CommonNapi() = delete;
     ~CommonNapi() = delete;
     static std::string GetStringArgument(napi_env env, napi_value value);
+    static bool CheckValueType(napi_env env, napi_value arg, napi_valuetype type);
     static bool GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static bool GetPropertyUint32(napi_env env, napi_value configObj, const std::string &type, uint32_t &result);
     static bool GetPropertyInt64(napi_env env, napi_value configObj, const std::string &type, int64_t &result);

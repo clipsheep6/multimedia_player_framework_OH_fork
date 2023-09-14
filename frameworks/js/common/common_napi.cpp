@@ -44,6 +44,15 @@ std::string CommonNapi::GetStringArgument(napi_env env, napi_value value)
     return strValue;
 }
 
+bool CommonNapi::CheckValueType(napi_env env, napi_value arg, napi_valuetype type)
+{
+    napi_valuetype valueType = napi_undefined;
+    if (arg != nullptr && napi_typeof(env, arg, &valueType) == napi_ok && valueType == type) {
+        return true;
+    }
+    return false;
+}
+
 bool CommonNapi::GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result)
 {
     napi_value item = nullptr;
