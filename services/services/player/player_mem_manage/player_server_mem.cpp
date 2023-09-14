@@ -908,7 +908,7 @@ void PlayerServerMem::CheckHasRecover(PlayerOnInfoType type, int32_t extra)
 void PlayerServerMem::ResetFrontGroundForMemManage()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (!PlayerServer::IsPrepared()) {
+    if (!PlayerServer::IsPrepared() || isAudioPlayer_) {
         continueReset = 0;
         return;
     }
@@ -928,7 +928,7 @@ void PlayerServerMem::ResetFrontGroundForMemManage()
 void PlayerServerMem::ResetBackGroundForMemManage()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (PlayerServer::IsPlaying()) {
+    if (PlayerServer::IsPlaying() || isAudioPlayer_) {
         continueReset = 0;
         return;
     }
