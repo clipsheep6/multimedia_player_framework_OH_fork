@@ -115,18 +115,18 @@ static GstMemory *gst_shmem_allocator_mem_copy(GstShMemMemory *mem, gssize offse
     g_return_val_if_fail(mem != nullptr && mem->mem != nullptr, nullptr);
     g_return_val_if_fail(mem->mem->GetBase() != nullptr, nullptr);
 
-    gssize realOffset = 0;
+    gssize offsetReal = 0;
     if (((gint64)mem->parent.offset + offset) > INT32_MAX) {
-        GST_ERROR("invalid offset");
+        GST_ERROR("invalid offset.");
         return nullptr;
     } else {
-        realOffset = static_cast<gssize>(mem->parent.offset) + offset;
+        offsetReal = static_cast<gssize>(mem->parent.offset) + offset;
     }
-    g_return_val_if_fail(realOffset >= 0, nullptr);
+    g_return_val_if_fail(offsetReal >= 0, nullptr);
 
     if (size == -1) {
         if (((gint64)mem->parent.size - offset) > INT32_MAX) {
-            GST_ERROR("invalid size");
+            GST_ERROR("invalid size.");
             return nullptr;
         } else {
             size = static_cast<gssize>(mem->parent.size) - offset;
@@ -134,37 +134,37 @@ static GstMemory *gst_shmem_allocator_mem_copy(GstShMemMemory *mem, gssize offse
     }
     g_return_val_if_fail(size > 0, nullptr);
 
-    if ((size < INT32_MAX) && ((INT32_MAX - size) <= realOffset)) {
-        GST_ERROR("invalid limit");
+    if ((size < INT32_MAX) && ((INT32_MAX - size) <= offsetReal)) {
+        GST_ERROR("invalid limit.");
         return nullptr;
     }
-    gsize realLimit = static_cast<gsize>(size) + static_cast<gsize>(realOffset);
+    gsize realLimit = static_cast<gsize>(size) + static_cast<gsize>(offsetReal);
     g_return_val_if_fail(realLimit <= static_cast<gsize>(mem->mem->GetSize()), nullptr);
 
-    GstMemory *copy = gst_allocator_alloc(nullptr, static_cast<gsize>(size), nullptr);
-    g_return_val_if_fail(copy != nullptr, nullptr);
+    GstMemory *copyMem = gst_allocator_alloc(nullptr, static_cast<gsize>(size), nullptr);
+    g_return_val_if_fail(copyMem != nullptr, nullptr);
 
     GstMapInfo info = GST_MAP_INFO_INIT;
-    if (!gst_memory_map(copy, &info, GST_MAP_READ)) {
-        gst_memory_unref(copy);
-        GST_ERROR("map failed");
+    if (!gst_memory_map(copyMem, &info, GST_MAP_READ)) {
+        gst_memory_unref(copyMem);
+        GST_ERROR("map failed.");
         return nullptr;
     }
 
-    uint8_t *src = mem->mem->GetBase() + realOffset;
+    uint8_t *src = mem->mem->GetBase() + offsetReal;
     errno_t rc = memcpy_s(info.data, info.size, src, static_cast<size_t>(size));
     if (rc != EOK) {
-        GST_ERROR("memcpy failed");
-        gst_memory_unmap(copy, &info);
-        gst_memory_unref(copy);
+        GST_ERROR("memcpy failed.");
+        gst_memory_unmap(copyMem, &info);
+        gst_memory_unref(copyMem);
         return nullptr;
     }
 
-    gst_memory_unmap(copy, &info);
+    gst_memory_unmap(copyMem, &info);
     GST_LOG("copy memory: 0x%06" PRIXPTR " for size: %" G_GSSIZE_FORMAT ", offset: %" G_GSSIZE_FORMAT
-        ", gstmemory: 0x%06" PRIXPTR, FAKE_POINTER(mem), size, offset, FAKE_POINTER(copy));
+        ", gstmemory: 0x%06" PRIXPTR, FAKE_POINTER(mem), size, offset, FAKE_POINTER(copyMem));
 
-    return copy;
+    return copyMem;
 }
 
 static GstShMemMemory *gst_shmem_allocator_mem_share(GstMemory *mem, gssize offset, gssize size)

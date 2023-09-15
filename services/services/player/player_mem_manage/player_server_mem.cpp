@@ -342,7 +342,7 @@ int32_t PlayerServerMem::Pause()
 int32_t PlayerServerMem::Stop()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Stop:RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
         if (isLocalResource_) {
@@ -358,14 +358,10 @@ int32_t PlayerServerMem::Stop()
 int32_t PlayerServerMem::Reset()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Reset:RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        if (isLocalResource_) {
-            return !isRecoverMemByUser_;
-        } else {
-            return !isSeekToCurrentTime_;
-        }
+        return (isLocalResource_ == true) ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Reset();
@@ -374,13 +370,13 @@ int32_t PlayerServerMem::Reset()
 int32_t PlayerServerMem::Release()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "RecoverMemByUser fail");
+    CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Release:RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        if (isLocalResource_) {
-            return !isRecoverMemByUser_;
-        } else {
+        if (isLocalResource_ == false) {
             return !isSeekToCurrentTime_;
+        } else {
+            return !isRecoverMemByUser_;
         }
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
@@ -675,24 +671,21 @@ int32_t PlayerServerMem::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode
     std::lock_guard<std::mutex> lock(PlayerServer::mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
-        lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+    if (lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_PREPARED) {
         MEDIA_LOGE("Can not Seek, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
         return MSERR_INVALID_OPERATION;
     }
 
-    if (IsValidSeekMode(mode) != true) {
-        MEDIA_LOGE("Seek failed, inValid mode");
-        return MSERR_INVALID_VAL;
-    }
+    CHECK_AND_RETURN_RET_LOG(IsValidSeekMode(mode) == true, MSERR_INVALID_VAL, "Seek failed, inValid mode");
 
     if (isLiveStream_) {
-        MEDIA_LOGE("Can not Seek, it is live-stream");
-        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream");
+        MEDIA_LOGE("Can not Seek, it is live-stream.");
+        OnErrorMessage(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "Can not Seek, it is live-stream.");
         return MSERR_INVALID_OPERATION;
     }
 
-    MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d", mSeconds, mode);
+    MEDIA_LOGD("seek position %{public}d, seek mode is %{public}d.", mSeconds, mode);
     mSeconds = std::max(0, mSeconds);
 
     auto seekTask = std::make_shared<TaskHandler<void>>([this, mSeconds, mode]() {
@@ -928,18 +921,18 @@ void PlayerServerMem::ResetFrontGroundForMemManage()
 void PlayerServerMem::ResetBackGroundForMemManage()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (PlayerServer::IsPlaying() || isAudioPlayer_) {
+    if (isAudioPlayer_ || PlayerServer::IsPlaying()) {
         continueReset = 0;
         return;
     }
-    if (continueReset < CONTINUE_RESET_MAX_NUM) {
+    if (CONTINUE_RESET_MAX_NUM > continueReset) {
         continueReset++;
         return;
     }
     continueReset = 0;
 
-    std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<
-        std::chrono::duration<double>>(std::chrono::steady_clock::now() - lastestUserSetTime_);
+    std::chrono::duration<double> lastSetToNow = std::chrono::duration_cast<std::chrono::duration<double>>(
+        std::chrono::steady_clock::now() - lastestUserSetTime_);
     if (lastSetToNow.count() > APP_BACK_GROUND_DESTROY_MEMERY_LAST_SET_TIME) {
         ReleaseMemByManage();
     }

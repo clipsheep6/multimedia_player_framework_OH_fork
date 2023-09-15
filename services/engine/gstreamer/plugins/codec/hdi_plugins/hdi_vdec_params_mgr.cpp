@@ -142,15 +142,15 @@ int32_t HdiVdecParamsMgr::SetMetadataMode()
 int32_t HdiVdecParamsMgr::GetInputVideoCommon(GstElement *element)
 {
     MEDIA_LOGD("GetInputVideoCommon");
-    GstVdecBase *base = GST_VDEC_BASE(element);
+    GstVdecBase *vdecBase = GST_VDEC_BASE(element);
     auto ret = HdiGetParameter(handle_, OMX_IndexParamPortDefinition, inPortDef_);
-    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "HdiGetParameter failed");
-    base->input.min_buffer_cnt = inPortDef_.nBufferCountMin;
-    base->input.buffer_cnt = inPortDef_.nBufferCountActual;
-    base->input.buffer_size = inPortDef_.nBufferSize;
-    base->input.height = (int32_t)inPortDef_.format.video.nFrameHeight;
-    base->input.width = (int32_t)inPortDef_.format.video.nFrameWidth;
-    base->input.frame_rate = (int32_t)inPortDef_.format.video.xFramerate;
+    CHECK_AND_RETURN_RET_LOG(ret == HDF_SUCCESS, GST_CODEC_ERROR, "Vdec HdiGetParameter failed");
+    vdecBase->input.min_buffer_cnt = inPortDef_.nBufferCountMin;
+    vdecBase->input.buffer_cnt = inPortDef_.nBufferCountActual;
+    vdecBase->input.buffer_size = inPortDef_.nBufferSize;
+    vdecBase->input.height = (int32_t)inPortDef_.format.video.nFrameHeight;
+    vdecBase->input.width = (int32_t)inPortDef_.format.video.nFrameWidth;
+    vdecBase->input.frame_rate = (int32_t)inPortDef_.format.video.xFramerate;
     return GST_CODEC_OK;
 }
 

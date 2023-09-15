@@ -66,19 +66,19 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
         return MSERR_INVALID_VAL;
     }
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        auto engineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
+        auto metaEngineFactory = EngineFactoryRepo::Instance().GetEngineFactory(
             IEngineFactory::Scene::SCENE_AVMETADATA, uriHelper_->FormattedUri());
-        CHECK_AND_RETURN_RET_LOG(engineFactory != nullptr, (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,
-            "Failed to get engine factory");
-        avMetadataHelperEngine_ = engineFactory->CreateAVMetadataHelperEngine();
+        CHECK_AND_RETURN_RET_LOG(metaEngineFactory != nullptr, (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED,
+            "Failed to get engine factory.");
+        avMetadataHelperEngine_ = metaEngineFactory->CreateAVMetadataHelperEngine();
         CHECK_AND_RETURN_RET_LOG(avMetadataHelperEngine_ != nullptr,
-            (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine");
+            (int32_t)MSERR_CREATE_AVMETADATAHELPER_ENGINE_FAILED, "Failed to create avmetadatahelper engine.");
         int32_t ret = avMetadataHelperEngine_->SetSource(uriHelper_->FormattedUri(), usage);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetSource failed!");
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SetSource failed");
         return ret;
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed.");
 
     auto result = task->GetResult();
     return result.Value();

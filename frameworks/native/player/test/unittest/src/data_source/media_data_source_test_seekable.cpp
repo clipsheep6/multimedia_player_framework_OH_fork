@@ -43,7 +43,7 @@ std::shared_ptr<MediaDataSourceTest> MediaDataSourceTestSeekable::Create(const s
 
 MediaDataSourceTestSeekable::MediaDataSourceTestSeekable(const std::string &uri, int32_t size)
     : uri_(uri),
-      fixedSize_(size)
+      fixedLen_(size)
 {
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -70,7 +70,7 @@ int32_t MediaDataSourceTestSeekable::Init()
 void MediaDataSourceTestSeekable::Reset()
 {
     std::cout<< "reset data source" << std::endl;
-    pos_ = 0;
+    position_ = 0;
     (void)fseek(fd_, 0, SEEK_SET);
 }
 
@@ -78,31 +78,28 @@ int32_t MediaDataSourceTestSeekable::ReadAt(const std::shared_ptr<AVSharedMemory
 {
     MEDIA_LOGD("ReadAt in, pos is %{public}" PRIu64 "", pos);
     CHECK_AND_RETURN_RET_LOG(mem != nullptr, MSERR_INVALID_VAL, "Mem is nullptr");
-    if (pos != pos_) {
+    if (pos != position_) {
         (void)fseek(fd_, static_cast<long>(pos), SEEK_SET);
-        pos_ = pos;
+        position_ = pos;
     }
     size_t readRet = 0;
-    int32_t realLen = static_cast<int32_t>(length);
-    if (pos_ >= fixedSize_) {
+    int32_t realLength = static_cast<int32_t>(length);
+    if (position_ >= fixedLen_) {
         MEDIA_LOGI("Is eos");
         return SOURCE_ERROR_EOF;
     }
-    if (mem->GetBase() == nullptr) {
-        MEDIA_LOGI("Is null mem");
-        return SOURCE_ERROR_IO;
-    }
+    CHECK_AND_RETURN_RET_LOG(mem->GetBase() != nullptr, SOURCE_ERROR_IO, "Is null mem");
     readRet = fread(mem->GetBase(), static_cast<size_t>(length), 1, fd_);
     if (ferror(fd_)) {
         MEDIA_LOGI("Failed to call fread");
         return SOURCE_ERROR_IO;
     }
     if (readRet == 0) {
-        realLen = static_cast<int32_t>(fixedSize_ - pos_);
+        realLength = static_cast<int32_t>(fixedLen_ - position_);
     }
-    MEDIA_LOGD("length %{public}u realLen %{public}d", length, realLen);
-    pos_ += realLen;
-    return realLen;
+    MEDIA_LOGD("length %{public}u realLength %{public}d", length, realLength);
+    position_ += realLength;
+    return realLength;
 }
 
 int32_t MediaDataSourceTestSeekable::ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem)
@@ -122,7 +119,7 @@ int32_t MediaDataSourceTestSeekable::ReadAt(uint32_t length, const std::shared_p
 
 int32_t MediaDataSourceTestSeekable::GetSize(int64_t &size)
 {
-    size = fixedSize_;
+    size = fixedLen_;
     return MSERR_OK;
 }
 } // namespace Media

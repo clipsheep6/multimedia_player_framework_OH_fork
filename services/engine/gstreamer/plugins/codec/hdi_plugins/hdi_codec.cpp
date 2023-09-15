@@ -375,9 +375,9 @@ int32_t HdiCodec::PullOutputBuffer(GstBuffer **buffer)
     MEDIA_LOGD("ret %{public}d", ret);
     {
         unique_lock<mutex> lock(mutex_);
-        if ((ret_ != GST_CODEC_OK && ret_ != GST_CODEC_FORMAT_CHANGE) ||
-            (ret_ == GST_CODEC_FORMAT_CHANGE && outBufferMgr_->GetWaitDisPlayBufNum() == 0)) {
-            MEDIA_LOGD("change ret from ret %{public}d to ret %{public}d", ret, ret_);
+        if ((ret_ == GST_CODEC_FORMAT_CHANGE && outBufferMgr_->GetWaitDisPlayBufNum() == 0) ||
+            (ret_ != GST_CODEC_FORMAT_CHANGE && ret_ != GST_CODEC_OK)) {
+            MEDIA_LOGD("change ret from %{public}d to %{public}d", ret, ret_);
             ret = ret_;
             ret_ = GST_CODEC_OK;
             return ret;

@@ -125,11 +125,11 @@ int32_t PlayerServiceProxyFuzzer::SetSource(uint8_t *inputData, size_t size, boo
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "Failed to write descriptor" << std::endl;
         return false;
     }
-    std::string url(reinterpret_cast<const char *>(inputData), size);
-    (void)data.WriteString(url);
+    std::string urlStr(reinterpret_cast<const char *>(inputData), size);
+    (void)data.WriteString(urlStr);
     return SendRequest(SET_SOURCE, data, reply, option);
 }
 
@@ -143,7 +143,7 @@ int32_t PlayerServiceProxyFuzzer::SetMediaDataSource(uint8_t *inputData, size_t 
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "SetMediaDataSource:Failed to write descriptor!" << std::endl;
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
@@ -158,7 +158,7 @@ int32_t PlayerServiceProxyFuzzer::SetFdSource(uint8_t *inputData, size_t size, b
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "SetFdSource:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -209,7 +209,7 @@ int32_t PlayerServiceProxyFuzzer::AddSubSource(uint8_t *inputData, size_t size, 
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "AddSubSource:Failed to write descriptor!" << std::endl;
         return false;
     }
     std::string url(reinterpret_cast<const char *>(inputData), size);
@@ -227,7 +227,7 @@ int32_t PlayerServiceProxyFuzzer::AddSubFdSource(uint8_t *inputData, size_t size
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "AddSubFdSource:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -250,7 +250,7 @@ int32_t PlayerServiceProxyFuzzer::Play(uint8_t *inputData, size_t size, bool isF
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "Play:Failed to write descriptor!" << std::endl;
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
@@ -267,7 +267,7 @@ int32_t PlayerServiceProxyFuzzer::Prepare(uint8_t *inputData, size_t size, bool 
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "Prepare:Failed to write descriptor!" << std::endl;
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
@@ -284,7 +284,7 @@ int32_t PlayerServiceProxyFuzzer::PrepareAsync(uint8_t *inputData, size_t size, 
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "PrepareAsync:Failed to write descriptor!" << std::endl;
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
@@ -301,7 +301,7 @@ int32_t PlayerServiceProxyFuzzer::Pause(uint8_t *inputData, size_t size, bool is
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "Pause:Failed to write descriptor!" << std::endl;
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
@@ -318,7 +318,7 @@ int32_t PlayerServiceProxyFuzzer::Stop(uint8_t *inputData, size_t size, bool isF
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "Stop:Failed to write descriptor!" << std::endl;
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
@@ -335,7 +335,7 @@ int32_t PlayerServiceProxyFuzzer::Reset(uint8_t *inputData, size_t size, bool is
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "Reset:Failed to write descriptor!" << std::endl;
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
@@ -352,7 +352,7 @@ int32_t PlayerServiceProxyFuzzer::Release(uint8_t *inputData, size_t size, bool 
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "Release:Failed to write descriptor!" << std::endl;
         return false;
     }
     (void)data.WriteInt32(*reinterpret_cast<int32_t *>(inputData));
@@ -369,7 +369,7 @@ int32_t PlayerServiceProxyFuzzer::SetVolume(uint8_t *inputData, size_t size, boo
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "SetVolume:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -388,7 +388,7 @@ int32_t PlayerServiceProxyFuzzer::Seek(uint8_t *inputData, size_t size, bool isF
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "Seek:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -407,7 +407,7 @@ int32_t PlayerServiceProxyFuzzer::GetCurrentTime(uint8_t *inputData, size_t size
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "GetCurrentTime:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -425,7 +425,7 @@ int32_t PlayerServiceProxyFuzzer::GetDuration(uint8_t *inputData, size_t size, b
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "GetDuration:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -443,7 +443,7 @@ int32_t PlayerServiceProxyFuzzer::SetPlaybackSpeed(uint8_t *inputData, size_t si
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "SetPlaybackSpeed:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -461,7 +461,7 @@ int32_t PlayerServiceProxyFuzzer::GetPlaybackSpeed(uint8_t *inputData, size_t si
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "GetPlaybackSpeed:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -479,7 +479,7 @@ int32_t PlayerServiceProxyFuzzer::SetVideoSurface(uint8_t *inputData, size_t siz
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "SetVideoSurface:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -497,7 +497,7 @@ int32_t PlayerServiceProxyFuzzer::IsPlaying(uint8_t *inputData, size_t size, boo
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "IsPlaying:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -515,7 +515,7 @@ int32_t PlayerServiceProxyFuzzer::IsLooping(uint8_t *inputData, size_t size, boo
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "IsLooping:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -533,7 +533,7 @@ int32_t PlayerServiceProxyFuzzer::SetLooping(uint8_t *inputData, size_t size, bo
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "SetLooping:Failed to write descriptor!" << std::endl;
         return false;
     }
     (void)data.WriteBool(*reinterpret_cast<int32_t *>(inputData) % 2);  // 2 true or false
@@ -586,7 +586,7 @@ int32_t PlayerServiceProxyFuzzer::SetPlayerCallback(uint8_t *inputData, size_t s
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "SetPlayerCallback:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -604,7 +604,7 @@ int32_t PlayerServiceProxyFuzzer::GetVideoTrackInfo(uint8_t *inputData, size_t s
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "GetVideoTrackInfo:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -622,7 +622,7 @@ int32_t PlayerServiceProxyFuzzer::GetAudioTrackInfo(uint8_t *inputData, size_t s
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "GetAudioTrackInfo:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -640,7 +640,7 @@ int32_t PlayerServiceProxyFuzzer::GetSubtitleTrackInfo(uint8_t *inputData, size_
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "GetSubtitleTrackInfo:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -658,7 +658,7 @@ int32_t PlayerServiceProxyFuzzer::GetVideoWidth(uint8_t *inputData, size_t size,
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "GetVideoWidth:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -676,7 +676,7 @@ int32_t PlayerServiceProxyFuzzer::GetVideoHeight(uint8_t *inputData, size_t size
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "GetVideoHeight:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -694,7 +694,7 @@ int32_t PlayerServiceProxyFuzzer::SelectBitRate(uint8_t *inputData, size_t size,
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "SelectBitRate:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -712,7 +712,7 @@ int32_t PlayerServiceProxyFuzzer::SelectTrack(uint8_t *inputData, size_t size, b
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "SelectTrack:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -730,7 +730,7 @@ int32_t PlayerServiceProxyFuzzer::DeselectTrack(uint8_t *inputData, size_t size,
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "DeselectTrack:Failed to write descriptor!" << std::endl;
         return false;
     }
 
@@ -748,7 +748,7 @@ int32_t PlayerServiceProxyFuzzer::GetCurrentTrack(uint8_t *inputData, size_t siz
 
     bool token = data.WriteInterfaceToken(PlayerServiceProxyFuzzer::GetDescriptor());
     if (!token) {
-        std::cout << "Failed to write descriptor!" << std::endl;
+        std::cout << "GetCurrentTrack:Failed to write descriptor!" << std::endl;
         return false;
     }
 

@@ -655,28 +655,28 @@ int32_t PlayerMock::AddSubSource(const std::string &path, int64_t offset, int64_
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr && callback_ != nullptr, -1, "player or callback is nullptr");
     std::string rawFile = path.substr(strlen("file://"));
-    int32_t fd = open(rawFile.c_str(), O_RDONLY);
-    if (fd <= 0) {
-        std::cout << "Open file failed" << std::endl;
+    int32_t fileDescriptor = open(rawFile.c_str(), O_RDONLY);
+    if (fileDescriptor <= 0) {
+        std::cout << "Open file failed." << std::endl;
         return -1;
     }
 
     struct stat64 st;
-    if (fstat64(fd, &st) != 0) {
+    if (fstat64(fileDescriptor, &st) != 0) {
         std::cout << "Get file state failed" << std::endl;
-        (void)close(fd);
+        (void)close(fileDescriptor);
         return -1;
     }
-    int64_t length = static_cast<int64_t>(st.st_size);
+    int64_t stLen = static_cast<int64_t>(st.st_size);
     if (size > 0) {
-        length = size;
+        stLen = size;
     }
-    int32_t ret = player_->AddSubSource(fd, offset, length);
+    int32_t ret = player_->AddSubSource(fileDescriptor, offset, stLen);
     if (ret != 0) {
-        (void)close(fd);
+        (void)close(fileDescriptor);
         return -1;
     }
-    (void)close(fd);
+    (void)close(fileDescriptor);
     std::cout << "wait for track info callback" << std::endl;
     return callback_->TrackInfoUpdateSync();
 }

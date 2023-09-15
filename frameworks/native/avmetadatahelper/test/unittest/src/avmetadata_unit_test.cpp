@@ -708,22 +708,22 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0300, Level2)
 {
     std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
         std::string("1kb.mp3");
-    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
-    ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    std::shared_ptr<AVMetadataMock> metaHelper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, metaHelper);
+    ASSERT_EQ(true, metaHelper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, metaHelper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
 
-    std::string value = helper->ResolveMetadata(AV_KEY_HAS_VIDEO);
+    std::string value = metaHelper->ResolveMetadata(AV_KEY_HAS_VIDEO);
     EXPECT_EQ(value, "");
-    helper->ResolveMetadata(AV_KEY_HAS_AUDIO);
+    metaHelper->ResolveMetadata(AV_KEY_HAS_AUDIO);
     EXPECT_EQ(value, "");
-    helper->ResolveMetadata();
+    metaHelper->ResolveMetadata();
     struct PixelMapParams param = {-1, 316, PixelFormat::RGB_565};
     int64_t timeUs = 0;
-    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
-    std::shared_ptr<PixelMap> frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    int32_t queryOpt = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
+    std::shared_ptr<PixelMap> frame = metaHelper->FetchFrameAtTime(timeUs, queryOpt, param);
     EXPECT_EQ(nullptr, frame);
-    helper->Release();
+    metaHelper->Release();
 }
 
 /**

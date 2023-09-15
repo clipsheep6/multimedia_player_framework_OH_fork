@@ -50,30 +50,30 @@ int32_t AVMetadataMock::SetSource(const std::string &uri, int32_t usage)
 int32_t AVMetadataMock::SetSource(const std::string &path, int64_t offset, int64_t size, int32_t usage)
 {
     UNITTEST_INFO_LOG("%s %s", __FUNCTION__, path.c_str());
-    std::string rawFile = path.substr(strlen("file://"));
-    int32_t fd = open(rawFile.c_str(), O_RDONLY);
-    if (fd <= 0) {
-        std::cout << "Open file failed" << std::endl;
+    std::string file = path.substr(strlen("file://"));
+    int32_t fileDes = open(file.c_str(), O_RDONLY);
+    if (fileDes <= 0) {
+        std::cout << "Open file failed!" << std::endl;
         return -1;
     }
 
     struct stat64 st;
-    if (fstat64(fd, &st) != 0) {
+    if (fstat64(fileDes, &st) != 0) {
         std::cout << "Get file state failed" << std::endl;
-        (void)close(fd);
+        (void)close(fileDes);
         return -1;
     }
-    int64_t length = static_cast<int64_t>(st.st_size);
+    int64_t len = static_cast<int64_t>(st.st_size);
     if (size > 0) {
-        length = size;
+        len = size;
     }
-    int32_t ret = avMetadataHelper_->SetSource(fd, offset, length, usage);
+    int32_t ret = avMetadataHelper_->SetSource(fileDes, offset, len, usage);
     if (ret != 0) {
-        (void)close(fd);
+        (void)close(fileDes);
         return -1;
     }
 
-    (void)close(fd);
+    (void)close(fileDes);
     return ret;
 }
 

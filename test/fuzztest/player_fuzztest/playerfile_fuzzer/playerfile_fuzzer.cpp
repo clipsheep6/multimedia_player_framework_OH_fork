@@ -85,16 +85,16 @@ bool PlayerFileFuzzer::FuzzFile(const uint8_t* data, size_t size)
 
 int32_t WriteDataToFile(const string &path, const uint8_t* data, size_t size)
 {
-    FILE *file = nullptr;
-    file = fopen(path.c_str(), "w+");
-    if (file == nullptr) {
+    FILE *fd = nullptr;
+    fd = fopen(path.c_str(), "w+");
+    if (fd == nullptr) {
         return -1;
     }
-    if (fwrite(data, 1, size, file) != size) {
-        (void)fclose(file);
+    if (fwrite(data, 1, size, fd) != size) {
+        (void)fclose(fd);
         return -1;
     }
-    (void)fclose(file);
+    (void)fclose(fd);
     return 0;
 }
 

@@ -62,18 +62,18 @@ int32_t PlayerServerMem::MemBaseState::MemRecoverToInitialized()
 int32_t PlayerServerMem::MemBaseState::MemRecoverToPrepared()
 {
     playerServerMem_.SetPlayerServerConfig();
-    auto ret = playerServerMem_.SetSourceInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "curState:%{public}s failed to SetSource url", GetStateName().c_str());
-    ret = playerServerMem_.SetConfigInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "curState:%{public}s failed to SetConfigInternal", GetStateName().c_str());
-    ret = playerServerMem_.PrepareAsyncInner();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "curState:%{public}s failed to PrepareAsyncInner", GetStateName().c_str());
-    ret = playerServerMem_.SetBehaviorInternal();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "curState:%{public}s failed to SetBehaviorInternal", GetStateName().c_str());
+    auto res = playerServerMem_.SetSourceInternal();
+    CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, MSERR_INVALID_OPERATION,
+        "curState:%{public}s failed to SetSource url.", GetStateName().c_str());
+    res = playerServerMem_.SetConfigInternal();
+    CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, MSERR_INVALID_OPERATION,
+        "curState:%{public}s failed to SetConfigInternal.", GetStateName().c_str());
+    res = playerServerMem_.PrepareAsyncInner();
+    CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, MSERR_INVALID_OPERATION,
+        "curState:%{public}s failed to PrepareAsyncInner.", GetStateName().c_str());
+    res = playerServerMem_.SetBehaviorInternal();
+    CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, MSERR_INVALID_OPERATION,
+        "curState:%{public}s failed to SetBehaviorInternal.", GetStateName().c_str());
 
     return MSERR_OK;
 }

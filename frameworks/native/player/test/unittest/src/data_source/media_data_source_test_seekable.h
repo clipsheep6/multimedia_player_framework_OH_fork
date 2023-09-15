@@ -27,19 +27,18 @@ public:
     static std::shared_ptr<MediaDataSourceTest> Create(const std::string &uri, int32_t size);
     MediaDataSourceTestSeekable(const std::string &uri, int32_t size);
     ~MediaDataSourceTestSeekable() override;
-
-    int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1) override;
-    int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
-    int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
-    int32_t GetSize(int64_t &size) override;
     void Reset() override;
+    int32_t GetSize(int64_t &size) override;
+    int32_t ReadAt(int64_t pos, uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
+    int32_t ReadAt(const std::shared_ptr<AVSharedMemory> &mem, uint32_t length, int64_t pos = -1) override;
+    int32_t ReadAt(uint32_t length, const std::shared_ptr<AVSharedMemory> &mem) override;
 
 private:
     int32_t Init();
     std::string uri_;
     FILE *fd_ = nullptr;
-    int64_t pos_ = 0;
-    int32_t fixedSize_ = 0;
+    int64_t position_ = 0;
+    int32_t fixedLen_ = 0;
 };
 } // namespace Media
 } // namespace OHOS
