@@ -20,6 +20,7 @@
 #include "recorder_private_param.h"
 #include "i_recorder_engine.h"
 #include "avcodeclist_engine_gst_impl.h"
+#include "avcodec_info.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN, "VideoEncoder"};
@@ -77,6 +78,7 @@ int32_t VideoEncoder::CreateH264Element()
 
     g_object_set(gstElem_, "i-frame-interval", DEFAULT_I_FRAME_INTERVAL, nullptr);
     g_object_set(gstElem_, "enable-surface", TRUE, nullptr);
+    g_object_set(gstElem_, "bitrate-mode", VideoEncodeBitrateMode::VBR, nullptr);
 
     MEDIA_LOGI("use %{public}s", encorderName_.c_str());
     return MSERR_OK;
